@@ -1,4 +1,4 @@
-name: Build and Test Rust Programs
+name: Program Token Vault 
 
 on:
   push:
@@ -12,23 +12,10 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
-  # -----------------
-  # Main Task: Build + Test 
-  # -----------------
-  build-and-test:
-    runs-on: ubuntu-latest
-    needs:
-      - test-token-vault
-    steps:
-      - run: echo "Done"
-
-  # -----------------
-  # Test Token Vault
-  # -----------------
-  test-token-vault:
+  build-and-test-token-vault:
     runs-on: ubuntu-latest
     env:
-      cache_id: test-token-vault-program 
+      cache_id: program-token-vault 
 
     steps:
       # Setup Deps
