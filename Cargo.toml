@@ -5,7 +5,9 @@ authors = ["Thorsten Lorenz <thlorenz@gmx.de>"]
 edition = "2018"
 
 [workspace]
-members=[]
+members=[
+  "token-vault/program"
+]
 exclude = []
 
 [dependencies]
