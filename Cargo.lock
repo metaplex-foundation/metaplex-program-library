@@ -1537,25 +1537,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "metaplex-token-vault"
-version = "0.0.1"
-dependencies = [
- "borsh",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "metaplex-token-vault-test-client"
 version = "0.1.0"
 dependencies = [
  "bincode",
  "borsh",
  "clap",
- "metaplex-token-vault",
+ "mpl-token-vault",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1600,6 +1588,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9f1c5b025cda876f66ef43a113f91ebc9f4ccef34843000e0adf6ebbab84e21"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "mpl-token-vault"
+version = "0.0.1"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
+ "thiserror",
 ]
 
 [[package]]
@@ -3176,10 +3176,6 @@ dependencies = [
  "libc",
  "xattr",
 ]
-
-[[package]]
-name = "teamplex"
-version = "0.0.0"
 
 [[package]]
 name = "tempfile"

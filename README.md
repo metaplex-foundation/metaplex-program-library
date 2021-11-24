@@ -1,4 +1,4 @@
-# teamplex 
+# Metaplex Program Library 
 
 Metaplex smart contracts and SDK.
 
@@ -6,4 +6,4 @@ Metaplex smart contracts and SDK.
 
 | Name        | Program                                                                                                                                                                                            | SDK |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------  | --- |
-| Token Vault | [![Program Token Vault](https://github.com/metaplex/teamplex/actions/workflows/program-token-vault.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-token-vault.yml) |     |
+| Token Vault | [![Program Token Vault](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-vault.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-token-vault.yml) |     |

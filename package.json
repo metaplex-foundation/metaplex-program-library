@@ -1,9 +1,9 @@
 {
-  "name": "teamplex",
+  "name": "@metaplex/metaplex-program-library",
   "version": "0.0.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
   "workspaces": [],
-  "repository": "git@github.com:metaplex/teamplex.git",
+  "repository": "git@github.com:metaplex/metaplex-program-library.git",
   "author": "Thorsten Lorenz <thlorenz@gmx.de>",
   "license": "MIT",
   "private": true

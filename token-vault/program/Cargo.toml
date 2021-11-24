@@ -1,5 +1,5 @@
 [package]
-name = "metaplex-token-vault"
+name = "mpl-token-vault"
 version = "0.0.1"
 description = "Metaplex Token Vault"
 authors = ["Metaplex Maintainers <maintainers@metaplex.com>"]

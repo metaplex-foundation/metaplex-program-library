@@ -17,5 +17,5 @@ borsh = "0.9.1"
 clap = "2.33.3"
 solana-clap-utils = "1.8.5"
 solana-cli-config = "1.8.5"
-metaplex-token-vault = { path = "../program", features = [ "no-entrypoint" ] }
+metaplex-token-vault = { package ="mpl-token-vault", path = "../program", features = [ "no-entrypoint" ] }
 spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
