@@ -1,5 +1,5 @@
 import { AccountInfo, Commitment, PublicKey, Connection } from '@solana/web3.js';
-import { AnyPublicKey } from './types';
+import { AnyPublicKey, ConnnectionWithRpcRequest } from './types';
 import { Buffer } from 'buffer';
 
 export type AccountConstructor<T> = {
@@ -31,7 +31,7 @@ export class Account<T = unknown> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  static isCompatible(data: Buffer): boolean {
+  static isCompatible(_data: Buffer): boolean {
     throw new Error(`method 'isCompatible' is not implemented`);
   }
 
@@ -75,7 +75,10 @@ export class Account<T = unknown> {
     commitment: Commitment,
   ) {
     const args = connection._buildArgs([pubkeys.map((k) => k.toString())], commitment, 'base64');
-    const unsafeRes = await (connection as any)._rpcRequest('getMultipleAccounts', args);
+    const unsafeRes = await (connection as ConnnectionWithRpcRequest)._rpcRequest(
+      'getMultipleAccounts',
+      args,
+    );
     if (unsafeRes.error) {
       throw new Error('failed to get info about accounts ' + unsafeRes.error.message);
     }

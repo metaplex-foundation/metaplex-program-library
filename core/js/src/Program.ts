@@ -7,6 +7,7 @@ import {
 } from '@solana/web3.js';
 import { Account } from './Account';
 import { Buffer } from 'buffer';
+import { ConnnectionWithRpcRequest } from './types';
 
 export abstract class Program {
   static readonly PUBKEY: PublicKey;
@@ -20,7 +21,7 @@ export abstract class Program {
     configOrCommitment?: GetProgramAccountsConfig | Commitment,
   ) {
     const extra: Pick<GetProgramAccountsConfig, 'dataSlice' | 'filters'> = {};
-    let commitment;
+    let commitment: Commitment;
     if (configOrCommitment) {
       if (typeof configOrCommitment === 'string') {
         commitment = configOrCommitment;
@@ -35,14 +36,15 @@ export abstract class Program {
       }
     }
     const args = connection._buildArgs([this.PUBKEY.toBase58()], commitment, 'base64', extra);
-    const unsafeRes = await (connection as any)._rpcRequest('getProgramAccounts', args);
+    const unsafeRes = await (connection as ConnnectionWithRpcRequest)._rpcRequest(
+      'getProgramAccounts',
+      args,
+    );
 
-    return (
-      unsafeRes.result as Array<{
-        account: AccountInfo<[string, string]>;
-        pubkey: string;
-      }>
-    )
+    return (unsafeRes.result as Array<{
+      account: AccountInfo<[string, string]>;
+      pubkey: string;
+    }>)
       .map(({ account: { data, executable, lamports, owner }, pubkey }) => ({
         account: {
           data: Buffer.from(data[0], 'base64'),

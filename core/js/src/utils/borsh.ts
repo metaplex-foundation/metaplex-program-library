@@ -1,34 +1,55 @@
 import { PublicKey } from '@solana/web3.js';
-import { deserializeUnchecked, serialize, deserialize, BinaryReader, BinaryWriter } from 'borsh';
+import {
+  deserializeUnchecked,
+  serialize,
+  deserialize,
+  BinaryReader,
+  BinaryWriter,
+  Schema,
+} from 'borsh';
 import base58 from 'bs58';
 
+type BinaryReaderExtended = BinaryReader & {
+  readPubkey(): PublicKey;
+  readPubkeyAsString(): string;
+};
+
+type BinaryWriterExtended = BinaryWriter & {
+  writePubkey(value: PublicKey): void;
+  writePubkeyAsString(value: string): void;
+};
 export const extendBorsh = () => {
-  (BinaryReader.prototype as any).readPubkey = function () {
-    const reader = this as unknown as BinaryReader;
-    const array = reader.readFixedArray(32);
+  (BinaryReader.prototype as BinaryReaderExtended).readPubkey = function (
+    this: BinaryReaderExtended,
+  ) {
+    const array = this.readFixedArray(32);
     return new PublicKey(array);
   };
-  (BinaryWriter.prototype as any).writePubkey = function (value: PublicKey) {
-    const writer = this as unknown as BinaryWriter;
-    writer.writeFixedArray(value.toBuffer());
+  (BinaryWriter.prototype as BinaryWriterExtended).writePubkey = function (
+    this: BinaryWriterExtended,
+    value: PublicKey,
+  ) {
+    this.writeFixedArray(value.toBuffer());
   };
-  (BinaryReader.prototype as any).readPubkeyAsString = function () {
-    const reader = this as unknown as BinaryReader;
-    const array = reader.readFixedArray(32);
+  (BinaryReader.prototype as BinaryReaderExtended).readPubkeyAsString = function (
+    this: BinaryReaderExtended,
+  ) {
+    const array = this.readFixedArray(32);
     return base58.encode(array); // pubkey string
   };
-  (BinaryWriter.prototype as any).writePubkeyAsString = function (
+  (BinaryWriter.prototype as BinaryWriterExtended).writePubkeyAsString = function (
+    this: BinaryWriterExtended,
     value: string, // pubkey string
   ) {
-    const writer = this as unknown as BinaryWriter;
-    writer.writeFixedArray(base58.decode(value));
+    this.writeFixedArray(base58.decode(value));
   };
 };
 
 extendBorsh();
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type DataConstructor<T, A> = {
-  readonly SCHEMA;
+  readonly SCHEMA: Schema;
   new (args: A): T;
 };
 
@@ -50,8 +71,9 @@ export class Data<T = {}> {
   }
 }
 
-export const struct = <T>(type: any, fields: any) => {
+export const struct = (type: any, fields: any) => {
   return new Map<any, any>([[type, { kind: 'struct', fields }]]);
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export { deserialize, deserializeUnchecked, serialize };
