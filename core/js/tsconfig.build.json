@@ -1,17 +1,8 @@
 {
+  "extends": "../..//tsconfig.build.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "target": "es6",
-    "declaration": true,
-    "removeComments": true,
-    "moduleResolution": "node",
-    "sourceMap": true,
-    "downlevelIteration": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "skipLibCheck": true,
-    "module": "commonjs"
+    "baseUrl": "."
   },
   "include": ["./src"],
   "exclude": ["node_modules", "dist", "build", "lib"]

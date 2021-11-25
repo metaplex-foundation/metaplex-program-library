@@ -8,5 +8,13 @@
   "repository": "git@github.com:metaplex/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.4.1",
+    "typescript": "^4.5.2"
+  }
 }
