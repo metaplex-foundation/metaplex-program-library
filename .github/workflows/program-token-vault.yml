@@ -2,7 +2,7 @@ name: Program Token Vault
 
 on:
   push:
-    branches: [master, thlorenz/feat/token-vault]
+    branches: [master]
   pull_request:
     branches: [master]
 
