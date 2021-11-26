@@ -10,7 +10,7 @@
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
-    "fix:prettier": "prettier --write",
+    "fix:prettier": "prettier --write src/",
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
