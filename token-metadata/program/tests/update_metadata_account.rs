@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use metaplex_token_metadata::{
+use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
     state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
@@ -18,7 +18,7 @@ use solana_sdk::{
 use utils::*;
 
 mod update_metadata_account {
-    use metaplex_token_metadata::state::Key;
+    use mpl_token_metadata::state::Key;
 
     use super::*;
     #[tokio::test]

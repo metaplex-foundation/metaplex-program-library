@@ -1,6 +1,6 @@
 use crate::*;
 use borsh::BorshSerialize;
-use metaplex_token_metadata::{
+use mpl_token_metadata::{
     id,
     instruction::{self, MetadataInstruction, MintNewEditionFromMasterEditionViaTokenArgs},
     state::{EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
@@ -78,7 +78,7 @@ impl EditionMarker {
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,
-    ) -> metaplex_token_metadata::state::EditionMarker {
+    ) -> mpl_token_metadata::state::EditionMarker {
         let account = get_account(context, &self.pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
@@ -90,7 +90,7 @@ impl EditionMarker {
         safety_deposit_box: &Pubkey,
         store: &Pubkey,
     ) -> transport::Result<()> {
-        let metaplex_token_vault_id = metaplex_token_vault::id();
+        let metaplex_token_vault_id = mpl_token_vault::id();
         let vault_pubkey = vault.keypair.pubkey();
 
         let vault_mint_seeds = &[
@@ -137,7 +137,7 @@ impl EditionMarker {
                     context.payer.pubkey(),
                     self.metadata_pubkey,
                     spl_token::id(),
-                    metaplex_token_vault::id(),
+                    mpl_token_vault::id(),
                     self.edition,
                 ),
             ],
@@ -197,7 +197,7 @@ impl EditionMarker {
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
         let fake_token_program = Keypair::new();
-        let program_id = metaplex_token_metadata::id();
+        let program_id = mpl_token_metadata::id();
 
         let edition_number = self.edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
         let as_string = edition_number.to_string();

@@ -1,8 +1,8 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use metaplex_token_metadata::{error::MetadataError, id, instruction, state::Key};
-use metaplex_token_vault::state::PREFIX;
+use mpl_token_metadata::{error::MetadataError, id, instruction, state::Key};
+use mpl_token_vault::state::PREFIX;
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
@@ -21,7 +21,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
     #[tokio::test]
     async fn success() {
         let mut program_test = program_test();
-        program_test.add_program("metaplex_token_vault", metaplex_token_vault::id(), None);
+        program_test.add_program("mpl_token_vault", mpl_token_vault::id(), None);
         let mut context = program_test.start_with_context().await;
 
         let test_metadata = Metadata::new();
@@ -90,7 +90,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
     #[tokio::test]
     async fn fail_invalid_store_owner_pda() {
         let mut program_test = program_test();
-        program_test.add_program("metaplex_token_vault", metaplex_token_vault::id(), None);
+        program_test.add_program("mpl_token_vault", mpl_token_vault::id(), None);
         let mut context = program_test.start_with_context().await;
 
         let test_metadata = Metadata::new();
@@ -173,7 +173,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                     context.payer.pubkey(),
                     test_edition_marker.metadata_pubkey,
                     spl_token::id(),
-                    metaplex_token_vault::id(),
+                    mpl_token_vault::id(),
                     test_edition_marker.edition,
                 ),
             ],
@@ -194,7 +194,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
     #[tokio::test]
     async fn fail_invalid_vault_authority() {
         let mut program_test = program_test();
-        program_test.add_program("metaplex_token_vault", metaplex_token_vault::id(), None);
+        program_test.add_program("mpl_token_vault", mpl_token_vault::id(), None);
         let mut context = program_test.start_with_context().await;
 
         let test_metadata = Metadata::new();
@@ -268,7 +268,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                     context.payer.pubkey(),
                     test_edition_marker.metadata_pubkey,
                     spl_token::id(),
-                    metaplex_token_vault::id(),
+                    mpl_token_vault::id(),
                     test_edition_marker.edition,
                 ),
             ],
@@ -285,14 +285,14 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
 
         assert_custom_error!(
             result,
-            metaplex_token_vault::error::VaultError::AuthorityDoesNotMatch
+            mpl_token_vault::error::VaultError::AuthorityDoesNotMatch
         );
     }
 
     #[tokio::test]
     async fn fail_store_account_mismatch() {
         let mut program_test = program_test();
-        program_test.add_program("metaplex_token_vault", metaplex_token_vault::id(), None);
+        program_test.add_program("mpl_token_vault", mpl_token_vault::id(), None);
         let mut context = program_test.start_with_context().await;
 
         let test_metadata = Metadata::new();
@@ -352,7 +352,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
         // Generate fake store
         let store = Keypair::new();
         let token_mint_pubkey = test_metadata.mint.pubkey();
-        let metaplex_token_vault_id = metaplex_token_vault::id();
+        let metaplex_token_vault_id = mpl_token_vault::id();
         let vault_pubkey = test_vault.keypair.pubkey();
 
         let seeds = &[
@@ -389,7 +389,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                     context.payer.pubkey(),
                     test_edition_marker.metadata_pubkey,
                     spl_token::id(),
-                    metaplex_token_vault::id(),
+                    mpl_token_vault::id(),
                     test_edition_marker.edition,
                 ),
             ],
@@ -406,7 +406,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
 
         assert_custom_error!(
             result,
-            metaplex_token_vault::error::VaultError::StoreDoesNotMatchSafetyDepositBox
+            mpl_token_vault::error::VaultError::StoreDoesNotMatchSafetyDepositBox
         );
     }
 }

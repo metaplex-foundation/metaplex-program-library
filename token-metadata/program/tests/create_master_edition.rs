@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use metaplex_token_metadata::{error::MetadataError, id, instruction, state::Key};
+use mpl_token_metadata::{error::MetadataError, id, instruction, state::Key};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{

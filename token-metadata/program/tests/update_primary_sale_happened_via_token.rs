@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use metaplex_token_metadata::{
+use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
     state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},

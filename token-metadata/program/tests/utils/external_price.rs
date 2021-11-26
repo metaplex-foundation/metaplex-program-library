@@ -1,5 +1,5 @@
 use crate::*;
-use metaplex_token_vault::instruction;
+use mpl_token_vault::instruction;
 use solana_program::{borsh::try_from_slice_unchecked, system_instruction};
 use solana_program_test::*;
 use solana_sdk::{
@@ -24,7 +24,7 @@ impl ExternalPrice {
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,
-    ) -> metaplex_token_vault::state::ExternalPriceAccount {
+    ) -> mpl_token_vault::state::ExternalPriceAccount {
         let account = get_account(context, &self.keypair.pubkey()).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
@@ -39,7 +39,7 @@ impl ExternalPrice {
         let tx = Transaction::new_signed_with_payer(
             &[
                 instruction::create_update_external_price_account_instruction(
-                    metaplex_token_vault::id(),
+                    mpl_token_vault::id(),
                     self.keypair.pubkey(),
                     price_per_share,
                     *price_mint,
@@ -68,9 +68,9 @@ impl ExternalPrice {
             &[system_instruction::create_account(
                 &context.payer.pubkey(),
                 &self.keypair.pubkey(),
-                rent.minimum_balance(metaplex_token_vault::state::MAX_EXTERNAL_ACCOUNT_SIZE),
-                metaplex_token_vault::state::MAX_EXTERNAL_ACCOUNT_SIZE as u64,
-                &metaplex_token_vault::id(),
+                rent.minimum_balance(mpl_token_vault::state::MAX_EXTERNAL_ACCOUNT_SIZE),
+                mpl_token_vault::state::MAX_EXTERNAL_ACCOUNT_SIZE as u64,
+                &mpl_token_vault::id(),
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer, &self.keypair],
