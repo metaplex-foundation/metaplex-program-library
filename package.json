@@ -2,6 +2,10 @@
   "name": "@metaplex/metaplex-program-library",
   "version": "0.0.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
+  "scripts": {
+    "lint": "lerna run --parallel lint",
+    "fix": "lerna run --parallel fix"
+  },
   "workspaces": {
     "packages": [
       "core/js",
@@ -18,6 +22,7 @@
     "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "lerna": "^4.0.0",
     "prettier": "^2.4.1",
     "typescript": "^4.5.2"
   }
