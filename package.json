@@ -1,10 +1,29 @@
 {
-  "name": "teamplex",
+  "name": "@metaplex/metaplex-program-library",
   "version": "0.0.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
-  "workspaces": [],
-  "repository": "git@github.com:metaplex/teamplex.git",
-  "author": "Thorsten Lorenz <thlorenz@gmx.de>",
+  "scripts": {
+    "lint": "lerna run --parallel lint",
+    "fix": "lerna run --parallel fix"
+  },
+  "workspaces": {
+    "packages": [
+      "core/js",
+      "token-vault/js"
+    ]
+  },
+  "repository": "git@github.com:metaplex/metaplex-program-library.git",
+  "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "eslint": "^8.3.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "lerna": "^4.0.0",
+    "prettier": "^2.4.1",
+    "typescript": "^4.5.2"
+  }
 }

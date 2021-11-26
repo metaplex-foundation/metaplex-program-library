@@ -1,11 +1,6 @@
-[package]
-name = "teamplex"
-version = "0.0.0"
-authors = ["Thorsten Lorenz <thlorenz@gmx.de>"]
-edition = "2018"
-
 [workspace]
-members=[]
+members=[
+  "token-vault/program",
+  "token-vault/test/"
+]
 exclude = []
-
-[dependencies]
