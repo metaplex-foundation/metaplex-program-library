@@ -41,10 +41,12 @@ export abstract class Program {
       args,
     );
 
-    return (unsafeRes.result as Array<{
-      account: AccountInfo<[string, string]>;
-      pubkey: string;
-    }>)
+    return (
+      unsafeRes.result as Array<{
+        account: AccountInfo<[string, string]>;
+        pubkey: string;
+      }>
+    )
       .map(({ account: { data, executable, lamports, owner }, pubkey }) => ({
         account: {
           data: Buffer.from(data[0], 'base64'),
