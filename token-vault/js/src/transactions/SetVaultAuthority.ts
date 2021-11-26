@@ -1,7 +1,6 @@
-import { Borsh } from '@metaplex/utils';
+import { Borsh, Transaction } from '@metaplex/mpl-core';
 import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solana/web3.js';
 import { VaultInstructions } from '../VaultProgram';
-import { Transaction } from '../../../Transaction';
 import { VaultProgram } from '../VaultProgram';
 
 export class SetVaultAuthorityArgs extends Borsh.Data {

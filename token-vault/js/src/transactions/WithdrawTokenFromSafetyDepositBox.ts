@@ -1,4 +1,4 @@
-import { ParamsWithStore } from '@metaplex/types';
+import { Transaction } from '@metaplex/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -8,9 +8,9 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { VaultInstructions } from '../VaultProgram';
-import { Transaction } from '../../../Transaction';
 import { AmountArgs } from '../accounts/Vault';
 import { VaultProgram } from '../VaultProgram';
+import { ParamsWithStore } from '../types';
 
 type WithdrawTokenFromSafetyDepositBoxParams = {
   vault: PublicKey;

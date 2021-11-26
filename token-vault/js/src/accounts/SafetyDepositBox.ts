@@ -1,10 +1,14 @@
 import { AccountInfo, PublicKey } from '@solana/web3.js';
-import { AnyPublicKey, StringPublicKey } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
-import { Account } from '../../../Account';
 import { VaultKey, VaultProgram } from '../VaultProgram';
-import { ERROR_INVALID_ACCOUNT_DATA, ERROR_INVALID_OWNER } from '@metaplex/errors';
 import { Buffer } from 'buffer';
+import {
+  Account,
+  AnyPublicKey,
+  Borsh,
+  ERROR_INVALID_ACCOUNT_DATA,
+  ERROR_INVALID_OWNER,
+  StringPublicKey,
+} from '@metaplex/mpl-core';
 
 type Args = {
   vault: StringPublicKey;

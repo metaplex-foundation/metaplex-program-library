@@ -1,12 +1,16 @@
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
-import { Account } from '../../../Account';
-import { AnyPublicKey, StringPublicKey } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
+import {
+  Account,
+  AnyPublicKey,
+  Borsh,
+  ERROR_INVALID_ACCOUNT_DATA,
+  ERROR_INVALID_OWNER,
+  StringPublicKey,
+} from '@metaplex/mpl-core';
 import { SafetyDepositBox } from './SafetyDepositBox';
 import { VaultKey, VaultProgram } from '../VaultProgram';
-import { ERROR_INVALID_ACCOUNT_DATA, ERROR_INVALID_OWNER } from '@metaplex/errors';
 import { Buffer } from 'buffer';
 
 export class AmountArgs extends Borsh.Data<{

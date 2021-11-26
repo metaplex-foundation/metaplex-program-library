@@ -2,9 +2,9 @@ import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solana/web3.js';
 import BN from 'bn.js';
 import { VaultInstructions } from '../VaultProgram';
-import { Transaction } from '../../../Transaction';
 import { NumberOfShareArgs } from '../accounts/Vault';
 import { VaultProgram } from '../VaultProgram';
+import { Transaction } from '@metaplex/mpl-core';
 
 type ActivateVaultParams = {
   vault: PublicKey;

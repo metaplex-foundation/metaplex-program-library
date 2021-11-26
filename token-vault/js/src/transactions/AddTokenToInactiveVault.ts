@@ -1,3 +1,4 @@
+import { Transaction } from '@metaplex/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -8,7 +9,6 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { AmountArgs } from '../accounts/Vault';
-import { Transaction } from '../../../Transaction';
 import { VaultProgram } from '../VaultProgram';
 import { VaultInstructions } from '../VaultProgram';
 
