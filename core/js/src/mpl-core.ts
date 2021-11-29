@@ -1,3 +1,4 @@
+export * from './accounts';
 export * from './Account';
 export * from './config';
 export * from './errors';
