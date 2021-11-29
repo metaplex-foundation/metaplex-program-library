@@ -1,6 +1,6 @@
 import { ERROR_INVALID_ACCOUNT_DATA, ERROR_INVALID_OWNER } from '../errors';
 import { AnyPublicKey } from '../types';
-import { Account } from '../Account';
+import { Account } from './Account';
 import {
   AccountInfo as TokenAccountInfo,
   AccountLayout,

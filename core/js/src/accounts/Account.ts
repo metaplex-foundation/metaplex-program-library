@@ -1,5 +1,5 @@
 import { AccountInfo, Commitment, PublicKey, Connection } from '@solana/web3.js';
-import { AnyPublicKey, ConnnectionWithRpcRequest } from './types';
+import { AnyPublicKey, ConnnectionWithRpcRequest } from '../types';
 import { Buffer } from 'buffer';
 
 export type AccountConstructor<T> = {
