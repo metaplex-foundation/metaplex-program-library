@@ -1,6 +1,8 @@
 [workspace]
 members=[
   "token-vault/program",
-  "token-vault/test/"
+  "token-vault/test/",
+  "token-metadata/program",
+  "token-metadata/test/"
 ]
 exclude = []

@@ -5,7 +5,7 @@ import {
   Commitment,
   AccountInfo,
 } from '@solana/web3.js';
-import { Account } from './Account';
+import { Account } from './accounts';
 import { Buffer } from 'buffer';
 import { ConnnectionWithRpcRequest } from './types';
 

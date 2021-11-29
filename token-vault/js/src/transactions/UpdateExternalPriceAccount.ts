@@ -10,7 +10,10 @@ export class UpdateExternalPriceAccountArgs extends Borsh.Data<{
 }> {
   static readonly SCHEMA = new Map([
     ...ExternalPriceAccountData.SCHEMA,
-    ...this.struct([['instruction', 'u8']]),
+    ...this.struct([
+      ['instruction', 'u8'],
+      ['externalPriceAccount', ExternalPriceAccountData],
+    ]),
   ]);
 
   instruction = VaultInstructions.UpdateExternalPriceAccount;

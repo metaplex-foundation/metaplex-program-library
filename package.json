@@ -9,7 +9,8 @@
   "workspaces": {
     "packages": [
       "core/js",
-      "token-vault/js"
+      "token-vault/js",
+      "token-metadata/js"
     ]
   },
   "repository": "git@github.com:metaplex/metaplex-program-library.git",
