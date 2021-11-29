@@ -2,7 +2,7 @@ name: Program Metadata
 
 on:
   push:
-    branches: [master, thlorenz/feat/token-metadata]
+    branches: [master]
   pull_request:
     branches: [master]
 
