@@ -1,13 +1,17 @@
-import { ERROR_INVALID_ACCOUNT_DATA, ERROR_INVALID_OWNER } from '@metaplex/errors';
-import { AnyPublicKey, StringPublicKey } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
+import {
+  config,
+  Borsh,
+  Account,
+  ERROR_INVALID_ACCOUNT_DATA,
+  ERROR_INVALID_OWNER,
+  AnyPublicKey,
+  StringPublicKey,
+  TokenAccount,
+} from '@metaplex/mpl-core';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { Buffer } from 'buffer';
-import { config } from '../../../config';
-import { Account } from '../../../Account';
-import { TokenAccount } from '../../shared';
 import { MetadataKey, MetadataProgram } from '../MetadataProgram';
 import { Edition } from './Edition';
 import { MasterEdition } from './MasterEdition';

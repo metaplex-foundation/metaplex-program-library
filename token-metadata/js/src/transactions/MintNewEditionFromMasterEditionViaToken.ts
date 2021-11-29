@@ -1,4 +1,4 @@
-import { Borsh } from '@metaplex/utils';
+import { Borsh, Transaction } from '@metaplex/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -8,7 +8,6 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
-import { Transaction } from '../../../Transaction';
 import { MetadataProgram } from '../MetadataProgram';
 
 export class MintNewEditionFromMasterEditionViaTokenArgs extends Borsh.Data<{ edition: BN }> {
