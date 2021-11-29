@@ -14,7 +14,7 @@ use solana_sdk::{
     transaction::{Transaction, TransactionError},
     transport::TransportError,
 };
-use metaplex_auction::{
+use mpl_auction::{
     errors::AuctionError,
     instruction,
     processor::{

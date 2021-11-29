@@ -1,4 +1,4 @@
-use metaplex_auction::{
+use mpl_auction::{
     instruction,
     processor::{
         CancelBidArgs, ClaimBidArgs, CreateAuctionArgs, CreateAuctionArgsV2, EndAuctionArgs,

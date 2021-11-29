@@ -1,5 +1,6 @@
 [workspace]
 members=[
+  "auction/program",
   "token-vault/program",
   "token-vault/test/",
   "token-metadata/program",
