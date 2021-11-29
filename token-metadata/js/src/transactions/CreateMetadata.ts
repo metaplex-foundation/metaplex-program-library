@@ -12,7 +12,7 @@ import { MetadataProgram } from '../MetadataProgram';
 export class CreateMetadataArgs extends Borsh.Data<{ data: MetadataDataData; isMutable: boolean }> {
   static readonly SCHEMA = new Map([
     ...MetadataDataData.SCHEMA,
-    ...this.struct([
+    ...CreateMetadataArgs.struct([
       ['instruction', 'u8'],
       ['data', MetadataDataData],
       ['isMutable', 'u8'],

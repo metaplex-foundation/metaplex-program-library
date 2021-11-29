@@ -3,7 +3,7 @@ import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solan
 import { MetadataProgram } from '../MetadataProgram';
 
 export class SignMetadataArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  static readonly SCHEMA = SignMetadataArgs.struct([['instruction', 'u8']]);
 
   instruction = 7;
 }

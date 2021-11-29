@@ -11,7 +11,7 @@ import BN from 'bn.js';
 import { MetadataProgram } from '../MetadataProgram';
 
 export class MintNewEditionFromMasterEditionViaTokenArgs extends Borsh.Data<{ edition: BN }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = MintNewEditionFromMasterEditionViaTokenArgs.struct([
     ['instruction', 'u8'],
     ['edition', 'u64'],
   ]);

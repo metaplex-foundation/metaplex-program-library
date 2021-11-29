@@ -11,6 +11,7 @@ import bs58 from 'bs58';
 import { Edition } from './Edition';
 import { MetadataKey, MetadataProgram } from '../MetadataProgram';
 import { Buffer } from 'buffer';
+import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 
 type ArgsV1 = {
   key: MetadataKey;
@@ -20,7 +21,7 @@ type ArgsV1 = {
   oneTimePrintingAuthorizationMint: StringPublicKey;
 };
 export class MasterEditionV1Data extends Borsh.Data<ArgsV1> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = MasterEditionV1Data.struct([
     ['key', 'u8'],
     ['supply', 'u64'],
     ['maxSupply', { kind: 'option', type: 'u64' }],
@@ -53,7 +54,7 @@ export class MasterEditionV1Data extends Borsh.Data<ArgsV1> {
 
 type ArgsV2 = { key: MetadataKey; supply: BN; maxSupply?: BN };
 export class MasterEditionV2Data extends Borsh.Data<ArgsV2> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = MasterEditionV2Data.struct([
     ['key', 'u8'],
     ['supply', 'u64'],
     ['maxSupply', { kind: 'option', type: 'u64' }],

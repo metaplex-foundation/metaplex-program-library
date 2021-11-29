@@ -18,7 +18,7 @@ import { MasterEdition } from './MasterEdition';
 
 type CreatorArgs = { address: StringPublicKey; verified: boolean; share: number };
 export class Creator extends Borsh.Data<CreatorArgs> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = Creator.struct([
     ['address', 'pubkeyAsString'],
     ['verified', 'u8'],
     ['share', 'u8'],
@@ -39,7 +39,7 @@ type DataArgs = {
 export class MetadataDataData extends Borsh.Data<DataArgs> {
   static readonly SCHEMA = new Map([
     ...Creator.SCHEMA,
-    ...this.struct([
+    ...MetadataDataData.struct([
       ['name', 'string'],
       ['symbol', 'string'],
       ['uri', 'string'],
@@ -75,7 +75,7 @@ type Args = {
 export class MetadataData extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
     ...MetadataDataData.SCHEMA,
-    ...this.struct([
+    ...MetadataData.struct([
       ['key', 'u8'],
       ['updateAuthority', 'pubkeyAsString'],
       ['mint', 'pubkeyAsString'],

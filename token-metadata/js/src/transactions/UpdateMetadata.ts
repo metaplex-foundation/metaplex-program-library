@@ -10,7 +10,7 @@ export class UpdateMetadataArgs extends Borsh.Data<{
 }> {
   static readonly SCHEMA = new Map([
     ...MetadataDataData.SCHEMA,
-    ...this.struct([
+    ...UpdateMetadataArgs.struct([
       ['instruction', 'u8'],
       ['data', { kind: 'option', type: MetadataDataData }],
       ['updateAuthority', { kind: 'option', type: 'pubkeyAsString' }],

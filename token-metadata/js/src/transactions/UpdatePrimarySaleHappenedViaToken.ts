@@ -3,7 +3,7 @@ import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solan
 import { MetadataProgram } from '../MetadataProgram';
 
 export class UpdatePrimarySaleHappenedViaTokenArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  static readonly SCHEMA = UpdatePrimarySaleHappenedViaTokenArgs.struct([['instruction', 'u8']]);
 
   instruction = 4;
 }

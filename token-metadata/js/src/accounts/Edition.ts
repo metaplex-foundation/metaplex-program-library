@@ -13,7 +13,7 @@ import { Buffer } from 'buffer';
 
 type Args = { key: MetadataKey; parent: StringPublicKey; edition: BN };
 export class EditionData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = EditionData.struct([
     ['key', 'u8'],
     ['parent', 'pubkeyAsString'],
     ['edition', 'u64'],

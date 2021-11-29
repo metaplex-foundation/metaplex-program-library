@@ -11,7 +11,7 @@ import BN from 'bn.js';
 import { MetadataProgram } from '../MetadataProgram';
 
 export class CreateMasterEditionArgs extends Borsh.Data<{ maxSupply: BN | null }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = CreateMasterEditionArgs.struct([
     ['instruction', 'u8'],
     ['maxSupply', { kind: 'option', type: 'u64' }],
   ]);
