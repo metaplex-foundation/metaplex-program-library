@@ -1,19 +1,6 @@
 #![allow(warnings)]
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::{borsh::try_from_slice_unchecked, instruction::InstructionError};
-use solana_program_test::*;
-use solana_sdk::program_pack::Pack;
-use solana_sdk::{
-    account::Account,
-    hash::Hash,
-    instruction::{AccountMeta, Instruction},
-    pubkey::Pubkey,
-    signature::{Keypair, Signer},
-    system_instruction, system_program,
-    transaction::{Transaction, TransactionError},
-    transport::TransportError,
-};
 use mpl_auction::{
     errors::AuctionError,
     instruction,
@@ -22,6 +9,19 @@ use mpl_auction::{
         CreateAuctionArgs, PlaceBidArgs, PriceFloor, StartAuctionArgs, WinnerLimit,
     },
     PREFIX,
+};
+use solana_program::{borsh::try_from_slice_unchecked, instruction::InstructionError};
+use solana_program_test::*;
+use solana_sdk::{
+    account::Account,
+    hash::Hash,
+    instruction::{AccountMeta, Instruction},
+    program_pack::Pack,
+    pubkey::Pubkey,
+    signature::{Keypair, Signer},
+    system_instruction, system_program,
+    transaction::{Transaction, TransactionError},
+    transport::TransportError,
 };
 use std::mem;
 
@@ -49,8 +49,11 @@ async fn setup_auction(
 ) {
     // Create a program to attach accounts to.
     let program_id = Pubkey::new_unique();
-    let mut program_test =
-        ProgramTest::new("metaplex_auction", program_id, processor!(process_instruction));
+    let mut program_test = ProgramTest::new(
+        "metaplex_auction",
+        program_id,
+        processor!(process_instruction),
+    );
 
     // Start executing test.
     let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
