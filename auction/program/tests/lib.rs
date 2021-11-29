@@ -49,11 +49,8 @@ async fn setup_auction(
 ) {
     // Create a program to attach accounts to.
     let program_id = Pubkey::new_unique();
-    let mut program_test = ProgramTest::new(
-        "metaplex_auction",
-        program_id,
-        processor!(process_instruction),
-    );
+    let mut program_test =
+        ProgramTest::new("mpl_auction", program_id, processor!(process_instruction));
 
     // Start executing test.
     let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
