@@ -1,0 +1,37 @@
+name: Yarn Install Build Test and Lint
+
+inputs:
+  cache_id:
+    description: ID to use in order to cache yarn install
+    required: true
+  working_dir:
+    description: Directory in which to perform the yarn tasks
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v2
+      with:
+        path: '**/node_modules'
+        key: ${{ inputs.cache_id }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+    - name: Install modules
+      run: yarn install
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+
+    - name: Build TypeScript 
+      run: yarn build
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+
+    - name: Test TypeScript
+      run: yarn test
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+
+    - name: Lint TypeScript 
+      run: yarn lint
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
