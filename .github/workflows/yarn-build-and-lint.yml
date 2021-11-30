@@ -21,8 +21,8 @@ jobs:
       - name: Install modules
         run: yarn install
 
-    - name: build-typescript 
-      run: yarn build
+      - name: build-typescript 
+        run: yarn build
 
-    - name: lint-typescript 
-      run: yarn lint
+      - name: lint-typescript 
+        run: yarn lint
