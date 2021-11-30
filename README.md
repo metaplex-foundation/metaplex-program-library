@@ -11,4 +11,4 @@ Metaplex smart contracts and SDK.
 | Auction        | [![Program Auction ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-auction.yml)        |     |
 
 
-## Metaplex SDK [![JS Lint All](https://github.com/metaplex/metaplex-program-library/actions/workflows/yarn-lint.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/yarn-lint.yml)
+## Metaplex SDK [![JS Build+Lint All](https://github.com/metaplex/metaplex-program-library/actions/workflows/yarn-build-and-lint.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/yarn-build-and-lint.yml)
