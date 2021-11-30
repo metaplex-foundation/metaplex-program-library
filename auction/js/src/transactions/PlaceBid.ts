@@ -1,4 +1,4 @@
-import { Borsh } from '@metaplex/utils';
+import { Borsh, Transaction, StringPublicKey } from '@metaplex/mpl-core';
 import {
   PublicKey,
   SystemProgram,
@@ -8,8 +8,6 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { AuctionProgram } from '../AuctionProgram';
-import { Transaction } from '../../../Transaction';
-import { StringPublicKey } from '@metaplex/types';
 import BN from 'bn.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 

@@ -1,5 +1,4 @@
-import { StringPublicKey } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
+import { Borsh, StringPublicKey, Transaction } from '@metaplex/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -9,7 +8,6 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Transaction } from '../../../Transaction';
 import { AuctionProgram } from '../AuctionProgram';
 
 export class CancelBidArgs extends Borsh.Data<{ resource: StringPublicKey }> {
