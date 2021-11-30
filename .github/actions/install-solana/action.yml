@@ -2,7 +2,7 @@ name: Install Solana
 
 inputs:
   solana_version:
-    description: Version of Solana to install, default env.SOLANA_VERSION
+    description: Version of Solana to install
     required: true
 
 runs:
@@ -13,7 +13,7 @@ runs:
       id: cache-solana-install
       uses: actions/cache@v2
       with:
-        path: "$HOME/.local/share/solana/install/releases/${{ env.SOLANA_VERSION }}"
+        path: "$HOME/.local/share/solana/install/releases/${{ inputs.solana_version }}"
         key: ${{ runner.os }}-Solana-v${{ inputs.solana_version  }}
 
     - name: Install Solana
