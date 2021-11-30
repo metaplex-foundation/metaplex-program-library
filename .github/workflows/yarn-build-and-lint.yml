@@ -1,4 +1,4 @@
-name: JS Lint All
+name: JS Build+Lint All
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
     branches: [master]
 
 jobs:
-  eslint-and-prettier:
+  build-and-lint-js:
+
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -20,5 +21,8 @@ jobs:
       - name: Install modules
         run: yarn install
 
-      - name: Run Lint
-        run: yarn lint
+    - name: build-typescript 
+      run: yarn build
+
+    - name: lint-typescript 
+      run: yarn lint
