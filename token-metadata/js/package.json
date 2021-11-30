@@ -2,8 +2,8 @@
   "name": "@metaplex/mpl-token-metadata",
   "version": "0.0.0",
   "description": "MPL Token Metadata JavaScript API.",
-  "main": "mpl-token-metadata.js",
-  "types": "dist/mpl-token-metadata.d.ts",
+  "main": "dist/src/mpl-token-metadata.js",
+  "types": "dist/src/mpl-token-metadata.d.ts",
   "scripts": {
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",

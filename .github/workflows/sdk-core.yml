@@ -16,3 +16,4 @@ jobs:
         with: 
           cache_id: sdk-core  
           working_dir: ./core/js
+          build_core: false

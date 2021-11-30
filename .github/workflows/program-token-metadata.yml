@@ -1,4 +1,4 @@
-name: Program Metadata
+name: Program Token Metadata
 
 on:
   push:

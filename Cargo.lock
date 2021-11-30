@@ -1706,6 +1706,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-metaplex"
+version = "0.0.1"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "mpl-auction",
+ "mpl-token-metadata",
+ "mpl-token-vault",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
 name = "mpl-token-metadata"
 version = "0.0.1"
 dependencies = [

@@ -3,7 +3,11 @@
   "version": "0.0.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
   "scripts": {
-    "build": "lerna run build --scope @metaplex/mpl-core && lerna run --ignore @metaplex/mpl-core --parallel build",
+    "build:core": "lerna run build --scope @metaplex/mpl-core",
+    "build:auction": "lerna run build --scope @metaplex/mpl-auction",
+    "build:parallel": "lerna run --ignore @metaplex/mpl-core --ignore @metaplex/mpl-auction --ignore @metaplex/mpl-metaplex --parallel build",
+    "build:metaplex": "lerna run build --scope @metaplex/mpl-metaplex",
+    "build": "yarn build:core && yarn build:auction && yarn build:parallel && yarn build:metaplex",
     "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
     "fix": "lerna run --parallel fix"
@@ -13,7 +17,8 @@
       "core/js",
       "token-vault/js",
       "token-metadata/js",
-      "auction/js"
+      "auction/js",
+      "metaplex/js"
     ]
   },
   "repository": "git@github.com:metaplex/metaplex-program-library.git",

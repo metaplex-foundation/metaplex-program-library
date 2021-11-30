@@ -8,6 +8,23 @@ inputs:
     description: Directory in which to perform the yarn tasks
     required: true
 
+  build_core:
+    description: If not false it will build the core package before running checks
+    required: false
+    default: true
+  build_auction:
+    description: If true it will build the auction package before running checks
+    required: false
+    default: false
+  build_token_metadata:
+    description: If true it will build the token_metadata package before running checks
+    required: false
+    default: false
+  build_token_vault:
+    description: If true it will build the token_vault package before running checks
+    required: false
+    default: false
+
 runs:
   using: composite
   steps:
@@ -17,22 +34,45 @@ runs:
         key: ${{ inputs.cache_id }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
     ##############
-    # Prepare Core
+    # Prepare Core and Dependencies
     ##############
     
     # All contract SDKs depend on mpl-core so we need to build at least that
-    # We avoid running this in the project root to avoid a check for a contract failing due to
+    # We avoid running build in the project root to avoid a check for a contract failing due to
     # an issue in another contract which would cause a build failure.
-    - name: Install Core modules
-      if: ${{ inputs.working_dir != './core/js' }}
-      run: yarn install
+    # For the metaplex contract this is unfortunately not entirely possible as it depends on core, token-metadat,
+    # token-vault and auction
+
+    - name: Install and Build core
+      if: ${{ inputs.build_core }}
+      run: |
+        yarn install
+        yarn build
       working-directory: ./core/js 
       shell: bash
 
-    - name: Build Core TypeScript 
-      if: ${{ inputs.working_dir != './core/js' }}
-      run: yarn build
-      working-directory: ./core/js 
+    - name: Install and Build auction
+      if: ${{ inputs.build_auction }}
+      run: |
+        yarn install
+        yarn build
+      working-directory: ./auction/js 
+      shell: bash
+
+    - name: Install and Build token-metadata
+      if: ${{ inputs.build_token_metadata }}
+      run: |
+        yarn install
+        yarn build
+      working-directory: ./token-metadata/js 
+      shell: bash
+
+    - name: Install and Build token-vault
+      if: ${{ inputs.build_token_vault }}
+      run: |
+        yarn install
+        yarn build
+      working-directory: ./token-vault/js 
       shell: bash
 
     ##############

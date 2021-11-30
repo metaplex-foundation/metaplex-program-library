@@ -1,0 +1,21 @@
+name: SDK Metaplex
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-lint-and-test-metaplex:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ./.github/actions/yarn-install-and-verify
+        with: 
+          cache_id: sdk-metaplex
+          working_dir: ./metaplex/js
+          build_auction: true
+          build_token_vault: true
+          build_token_metadata: true
