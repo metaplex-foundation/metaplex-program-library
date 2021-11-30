@@ -1,0 +1,18 @@
+name: SDK Token Metadata
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-lint-and-test-core:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ./.github/actions/yarn-install-and-verify
+        with: 
+          cache_id: sdk-token-metadata
+          working_dir: ./token-metadata/js
