@@ -3,7 +3,7 @@ import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solan
 import { AuctionProgram } from '../AuctionProgram';
 
 export class SetAuctionAuthorityArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  static readonly SCHEMA = SetAuctionAuthorityArgs.struct([['instruction', 'u8']]);
 
   instruction = 5;
 }

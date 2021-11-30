@@ -17,7 +17,7 @@ type Args = {
   emptied: boolean;
 };
 export class BidderPotData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = BidderPotData.struct([
     ['bidderPot', 'pubkeyAsString'],
     ['bidderAct', 'pubkeyAsString'],
     ['auctionAct', 'pubkeyAsString'],

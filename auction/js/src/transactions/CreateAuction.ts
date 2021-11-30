@@ -21,7 +21,7 @@ type WinnerLimitArgs = {
 };
 
 export class WinnerLimit extends Borsh.Data<WinnerLimitArgs> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = WinnerLimit.struct([
     ['type', 'u8'],
     ['usize', 'u64'],
   ]);
@@ -46,7 +46,7 @@ export class CreateAuctionArgs extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
     ...WinnerLimit.SCHEMA,
     ...PriceFloor.SCHEMA,
-    ...this.struct([
+    ...CreateAuctionArgs.struct([
       ['instruction', 'u8'],
       ['winners', WinnerLimit],
       ['endAuctionAt', { kind: 'option', type: 'u64' }],

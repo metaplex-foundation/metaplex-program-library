@@ -12,7 +12,7 @@ import BN from 'bn.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 export class PlaceBidArgs extends Borsh.Data<{ resource: StringPublicKey; amount: BN }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = PlaceBidArgs.struct([
     ['instruction', 'u8'],
     ['amount', 'u64'],
     ['resource', 'pubkeyAsString'],

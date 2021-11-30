@@ -19,7 +19,7 @@ type Args = CreateAuctionArgsType & {
 export class CreateAuctionV2Args extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
     ...CreateAuctionArgs.SCHEMA,
-    ...this.struct([
+    ...CreateAuctionV2Args.struct([
       ['instantSalePrice', { kind: 'option', type: 'u64' }],
       ['name', { kind: 'option', type: [32] }],
     ]),

@@ -19,7 +19,7 @@ type Args = {
   cancelled: boolean;
 };
 export class BidderMetadataData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = BidderMetadataData.struct([
     ['bidderPubkey', 'pubkeyAsString'],
     ['auctionPubkey', 'pubkeyAsString'],
     ['lastBid', 'u64'],

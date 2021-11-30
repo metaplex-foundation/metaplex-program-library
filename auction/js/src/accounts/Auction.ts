@@ -31,7 +31,7 @@ export enum PriceFloorType {
 
 type BidArgs = { key: StringPublicKey; amount: BN };
 export class Bid extends Borsh.Data<BidArgs> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = Bid.struct([
     ['key', 'pubkeyAsString'],
     ['amount', 'u64'],
   ]);
@@ -44,7 +44,7 @@ type BidStateArgs = { type: BidStateType; bids: Bid[]; max: BN };
 export class BidState extends Borsh.Data<BidStateArgs> {
   static readonly SCHEMA = new Map([
     ...Bid.SCHEMA,
-    ...this.struct([
+    ...BidState.struct([
       ['type', 'u8'],
       ['bids', [Bid]],
       ['max', 'u64'],
@@ -89,7 +89,7 @@ export class BidState extends Borsh.Data<BidStateArgs> {
 
 type PriceFloorArgs = { type: PriceFloorType; hash?: Uint8Array; minPrice?: BN };
 export class PriceFloor extends Borsh.Data {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = PriceFloor.struct([
     ['type', 'u8'],
     ['hash', [32]],
   ]);
@@ -130,7 +130,7 @@ export class AuctionData extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
     ...BidState.SCHEMA,
     ...PriceFloor.SCHEMA,
-    ...this.struct([
+    ...AuctionData.struct([
       ['authority', 'pubkeyAsString'],
       ['tokenMint', 'pubkeyAsString'],
       ['lastBid', { kind: 'option', type: 'u64' }],

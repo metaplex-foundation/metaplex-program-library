@@ -8,6 +8,7 @@ import {
 import BN from 'bn.js';
 import { AuctionProgram } from '../AuctionProgram';
 import { Buffer } from 'buffer';
+import { AccountInfo, PublicKey } from '@solana/web3.js';
 
 type Args = {
   totalUncancelledBids: BN;
@@ -17,7 +18,7 @@ type Args = {
   name: number[] | null;
 };
 export class AuctionDataExtended extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = AuctionDataExtended.struct([
     ['totalUncancelledBids', 'u64'],
     ['tickSize', { kind: 'option', type: 'u64' }],
     ['gapTickSizePercentage', { kind: 'option', type: 'u8' }],

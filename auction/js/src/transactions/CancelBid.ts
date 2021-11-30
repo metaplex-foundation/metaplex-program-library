@@ -11,7 +11,7 @@ import {
 import { AuctionProgram } from '../AuctionProgram';
 
 export class CancelBidArgs extends Borsh.Data<{ resource: StringPublicKey }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = CancelBidArgs.struct([
     ['instruction', 'u8'],
     ['resource', 'pubkeyAsString'],
   ]);
