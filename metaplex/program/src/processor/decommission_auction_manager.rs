@@ -1,20 +1,17 @@
-use {
-    crate::{
-        error::MetaplexError,
-        state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
-        utils::{
-            assert_authority_correct, assert_derivation, assert_owned_by, assert_signer,
-            end_auction,
-        },
+use crate::{
+    error::MetaplexError,
+    state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
+    utils::{
+        assert_authority_correct, assert_derivation, assert_owned_by, assert_signer, end_auction,
     },
-    metaplex_auction::processor::AuctionData,
-    metaplex_token_vault::{instruction::create_set_authority_instruction, state::Vault},
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        program::invoke_signed,
-        pubkey::Pubkey,
-    },
+};
+use mpl_auction::processor::AuctionData;
+use mpl_token_vault::{instruction::create_set_authority_instruction, state::Vault};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    program::invoke_signed,
+    pubkey::Pubkey,
 };
 
 fn set_vault_authority_to_auction_manager_authority<'a>(

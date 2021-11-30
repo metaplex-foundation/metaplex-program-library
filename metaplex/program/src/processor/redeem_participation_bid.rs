@@ -17,9 +17,9 @@ use {
         entrypoint::ProgramResult,
         pubkey::Pubkey,
     },
-    metaplex_auction::processor::{AuctionData, AuctionDataExtended, BidderMetadata},
+    mpl_auction::processor::{AuctionData, AuctionDataExtended, BidderMetadata},
     spl_token::state::Account,
-    metaplex_token_metadata::utils::get_supply_off_master_edition,
+    mpl_token_metadata::utils::get_supply_off_master_edition,
 };
 
 struct LegacyAccounts<'a> {
@@ -96,10 +96,10 @@ fn v2_validation<'a>(
         &store.auction_program,
         accounts.auction_extended_info,
         &[
-            metaplex_auction::PREFIX.as_bytes(),
+            mpl_auction::PREFIX.as_bytes(),
             store.auction_program.as_ref(),
             vault_info.key.as_ref(),
-            metaplex_auction::EXTENDED.as_bytes(),
+            mpl_auction::EXTENDED.as_bytes(),
         ],
     )?;
 

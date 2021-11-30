@@ -1,34 +1,31 @@
 use solana_program::msg;
 
-use {
-    crate::{
-        error::MetaplexError,
-        instruction::EmptyPaymentAccountArgs,
-        state::{
-            get_auction_manager, AuctionManager, Key, PayoutTicket, Store, MAX_PAYOUT_TICKET_SIZE,
-            PREFIX, TOTALS,
-        },
-        utils::{
-            assert_derivation, assert_initialized, assert_is_ata, assert_owned_by,
-            assert_rent_exempt, assert_safety_deposit_config_valid, create_or_allocate_account_raw,
-            spl_token_transfer,
-        },
+use crate::{
+    error::MetaplexError,
+    instruction::EmptyPaymentAccountArgs,
+    state::{
+        get_auction_manager, AuctionManager, Key, PayoutTicket, Store, MAX_PAYOUT_TICKET_SIZE,
+        PREFIX, TOTALS,
     },
-    borsh::BorshSerialize,
-    metaplex_auction::processor::AuctionData,
-    metaplex_token_metadata::state::{MasterEditionV1, Metadata},
-    metaplex_token_vault::state::SafetyDepositBox,
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        program_error::ProgramError,
-        program_option::COption,
-        pubkey::Pubkey,
-        rent::Rent,
-        sysvar::Sysvar,
+    utils::{
+        assert_derivation, assert_initialized, assert_is_ata, assert_owned_by, assert_rent_exempt,
+        assert_safety_deposit_config_valid, create_or_allocate_account_raw, spl_token_transfer,
     },
-    spl_token::state::Account,
 };
+use borsh::BorshSerialize;
+use mpl_auction::processor::AuctionData;
+use mpl_token_metadata::state::{MasterEditionV1, Metadata};
+use mpl_token_vault::state::SafetyDepositBox;
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    program_error::ProgramError,
+    program_option::COption,
+    pubkey::Pubkey,
+    rent::Rent,
+    sysvar::Sysvar,
+};
+use spl_token::state::Account;
 
 fn assert_destination_ownership_validity(
     auction_manager: &Box<dyn AuctionManager>,
@@ -334,7 +331,7 @@ pub fn process_empty_payment_account(
     // assert that the metadata sent up is the metadata in the safety deposit
     if metadata.mint != safety_deposit.token_mint {
         if master_edition_info.data.borrow()[0]
-            == metaplex_token_metadata::state::Key::MasterEditionV1 as u8
+            == mpl_token_metadata::state::Key::MasterEditionV1 as u8
         {
             // Could be a limited edition, in which case printing tokens or auth tokens were offered, not the original.
             let master_edition: MasterEditionV1 =

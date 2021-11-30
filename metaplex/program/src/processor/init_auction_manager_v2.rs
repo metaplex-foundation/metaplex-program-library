@@ -1,26 +1,24 @@
-use {
-    crate::{
-        error::MetaplexError,
-        state::{
-            AuctionManagerStatus, AuctionManagerV2, AuctionWinnerTokenTypeTracker, Key, Store,
-            TupleNumericType, MAX_AUCTION_MANAGER_V2_SIZE, PREFIX, TOTALS,
-        },
-        utils::{
-            assert_derivation, assert_initialized, assert_owned_by, create_or_allocate_account_raw,
-        },
+use crate::{
+    error::MetaplexError,
+    state::{
+        AuctionManagerStatus, AuctionManagerV2, AuctionWinnerTokenTypeTracker, Key, Store,
+        TupleNumericType, MAX_AUCTION_MANAGER_V2_SIZE, PREFIX, TOTALS,
     },
-    borsh::BorshSerialize,
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        program_error::ProgramError,
-        program_option::COption,
-        pubkey::Pubkey,
+    utils::{
+        assert_derivation, assert_initialized, assert_owned_by, create_or_allocate_account_raw,
     },
-    metaplex_auction::processor::{AuctionData, AuctionState},
-    spl_token::state::Account,
-    metaplex_token_vault::state::{Vault, VaultState},
 };
+use borsh::BorshSerialize;
+use mpl_auction::processor::{AuctionData, AuctionState};
+use mpl_token_vault::state::{Vault, VaultState};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    program_error::ProgramError,
+    program_option::COption,
+    pubkey::Pubkey,
+};
+use spl_token::state::Account;
 
 pub fn assert_common_checks(
     program_id: &Pubkey,
@@ -63,7 +61,7 @@ pub fn assert_common_checks(
         &store.auction_program,
         auction_info,
         &[
-            metaplex_auction::PREFIX.as_bytes(),
+            mpl_auction::PREFIX.as_bytes(),
             &store.auction_program.as_ref(),
             &vault_info.key.as_ref(),
         ],

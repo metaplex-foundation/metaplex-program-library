@@ -1,31 +1,29 @@
-use {
-    crate::{
-        error::MetaplexError,
-        state::{
-            AuctionManager, AuctionManagerStatus, AuctionManagerV2, AuctionWinnerTokenTypeTracker,
-            Key, OriginalAuthorityLookup, SafetyDepositConfig, Store, WinningConfigType,
-            MAX_AUTHORITY_LOOKUP_SIZE, PREFIX, TOTALS,
-        },
-        utils::{
-            assert_at_least_one_creator_matches_or_store_public_and_all_verified,
-            assert_authority_correct, assert_derivation, assert_initialized, assert_owned_by,
-            assert_store_safety_vault_manager_match, create_or_allocate_account_raw,
-            transfer_metadata_ownership,
-        },
+use crate::{
+    error::MetaplexError,
+    state::{
+        AuctionManager, AuctionManagerStatus, AuctionManagerV2, AuctionWinnerTokenTypeTracker, Key,
+        OriginalAuthorityLookup, SafetyDepositConfig, Store, WinningConfigType,
+        MAX_AUTHORITY_LOOKUP_SIZE, PREFIX, TOTALS,
     },
-    borsh::BorshSerialize,
-    metaplex_token_metadata::{
-        state::{MasterEditionV1, MasterEditionV2, Metadata},
-        utils::assert_update_authority_is_correct,
+    utils::{
+        assert_at_least_one_creator_matches_or_store_public_and_all_verified,
+        assert_authority_correct, assert_derivation, assert_initialized, assert_owned_by,
+        assert_store_safety_vault_manager_match, create_or_allocate_account_raw,
+        transfer_metadata_ownership,
     },
-    metaplex_token_vault::state::{SafetyDepositBox, Vault},
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        pubkey::Pubkey,
-    },
-    spl_token::state::{Account, Mint},
 };
+use borsh::BorshSerialize;
+use mpl_token_metadata::{
+    state::{MasterEditionV1, MasterEditionV2, Metadata},
+    utils::assert_update_authority_is_correct,
+};
+use mpl_token_vault::state::{SafetyDepositBox, Vault};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    pubkey::Pubkey,
+};
+use spl_token::state::{Account, Mint};
 pub fn make_safety_deposit_config<'a>(
     program_id: &Pubkey,
     auction_manager_info: &AccountInfo<'a>,
@@ -228,10 +226,10 @@ pub fn assert_supply_logic_check(args: SupplyLogicCheckArgs) -> ProgramResult {
     let safety_deposit_token_store: Account = assert_initialized(safety_deposit_token_store_info)?;
 
     let edition_seeds = &[
-        metaplex_token_metadata::state::PREFIX.as_bytes(),
+        mpl_token_metadata::state::PREFIX.as_bytes(),
         store.token_metadata_program.as_ref(),
         &metadata.mint.as_ref(),
-        metaplex_token_metadata::state::EDITION.as_bytes(),
+        mpl_token_metadata::state::EDITION.as_bytes(),
     ];
 
     let (edition_key, _) =

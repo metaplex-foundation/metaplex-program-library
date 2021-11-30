@@ -16,8 +16,8 @@ use {
         program_error::ProgramError,
         pubkey::Pubkey,
     },
-    metaplex_auction::processor::AuctionData,
-    metaplex_token_metadata::{
+    mpl_auction::processor::AuctionData,
+    mpl_token_metadata::{
         deprecated_instruction::deprecated_set_reservation_list, state::Reservation,
     },
 };
