@@ -2,8 +2,8 @@
   "name": "@metaplex/mpl-token-vault",
   "version": "0.0.0",
   "description": "MPL Token Vault JavaScript API.",
-  "main": "mpl-token-vault.js",
-  "types": "dist/mpl-token-vault.d.ts",
+  "main": "dist/src/mpl-token-vault.js",
+  "types": "dist/src/mpl-token-vault.d.ts",
   "scripts": {
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
