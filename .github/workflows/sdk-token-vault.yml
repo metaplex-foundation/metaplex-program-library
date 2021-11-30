@@ -7,7 +7,7 @@ on:
     branches: [master]
 
 jobs:
-  build-lint-and-test-core:
+  build-lint-and-test-token-vault:
     runs-on: ubuntu-latest
 
     steps:
