@@ -1,10 +1,14 @@
-import { ERROR_INVALID_ACCOUNT_DATA, ERROR_INVALID_OWNER } from '@metaplex/errors';
-import { AnyPublicKey } from '@metaplex/types';
-import { getBNFromData, TupleNumericType } from '@metaplex/utils';
+import {
+  Account,
+  AnyPublicKey,
+  ERROR_INVALID_ACCOUNT_DATA,
+  ERROR_INVALID_OWNER,
+  TupleNumericType,
+  getBNFromData,
+} from '@metaplex/mpl-core';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import { Buffer } from 'buffer';
-import { Account } from '../../../Account';
 import { MetaplexKey, MetaplexProgram } from '../MetaplexProgram';
 import { AmountRange } from './SafetyDepositConfig';
 

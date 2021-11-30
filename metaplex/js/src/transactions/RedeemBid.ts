@@ -1,5 +1,4 @@
-import { ParamsWithStore } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
+import { Borsh, Transaction } from '@metaplex/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -8,9 +7,8 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Transaction } from '../../../Transaction';
-import { MetadataProgram } from '../../metadata';
-import { VaultProgram } from '../../vault';
+import { MetadataProgram } from '@metaplex/mpl-token-metadata';
+import { VaultProgram, ParamsWithStore } from '@metaplex/mpl-token-vault';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class RedeemBidArgs extends Borsh.Data {

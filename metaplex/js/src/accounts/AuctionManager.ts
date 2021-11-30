@@ -1,18 +1,19 @@
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
-import { AnyPublicKey, StringPublicKey } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
-import { Account } from '../../../Account';
 import { BidRedemptionTicket, WINNER_INDEX_OFFSETS } from './BidRedemptionTicket';
 import { MetaplexKey, MetaplexProgram } from '../MetaplexProgram';
+import { Buffer } from 'buffer';
+import { Auction } from '@metaplex/mpl-auction';
 import {
+  Account,
+  AnyPublicKey,
+  Borsh,
   ERROR_DEPRECATED_ACCOUNT_DATA,
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
-} from '@metaplex/errors';
-import { Auction } from '../../auction';
-import { Buffer } from 'buffer';
+  StringPublicKey,
+} from '@metaplex/mpl-core';
 
 export enum AuctionManagerStatus {
   Initialized,

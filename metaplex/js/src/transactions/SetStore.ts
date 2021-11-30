@@ -1,3 +1,4 @@
+import { Borsh, Transaction } from '@metaplex/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -6,13 +7,11 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Borsh } from '@metaplex/utils';
-import { Transaction } from '../../../Transaction';
-import { VaultProgram } from '../../vault';
-import { MetadataProgram } from '../../metadata';
-import { AuctionProgram } from '../../auction';
+
+import { MetadataProgram } from '@metaplex/mpl-token-metadata';
+import { VaultProgram, ParamsWithStore } from '@metaplex/mpl-token-vault';
+import { AuctionProgram } from '@metaplex/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
-import { ParamsWithStore } from '@metaplex/types';
 
 export class SetStoreArgs extends Borsh.Data<{ public: boolean }> {
   static readonly SCHEMA = this.struct([

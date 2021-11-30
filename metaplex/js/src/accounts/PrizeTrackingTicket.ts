@@ -1,10 +1,13 @@
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-import { AnyPublicKey } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
-import { Account } from '../../../Account';
+import {
+  AnyPublicKey,
+  Account,
+  Borsh,
+  ERROR_INVALID_ACCOUNT_DATA,
+  ERROR_INVALID_OWNER,
+} from '@metaplex/mpl-core';
 import { MetaplexKey, MetaplexProgram } from '../MetaplexProgram';
-import { ERROR_INVALID_ACCOUNT_DATA, ERROR_INVALID_OWNER } from '@metaplex/errors';
 import { Buffer } from 'buffer';
 
 type Args = {

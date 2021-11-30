@@ -1,5 +1,5 @@
-import { ParamsWithStore } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
+import { Borsh, Transaction } from '@metaplex/mpl-core';
+import { ParamsWithStore } from '@metaplex/mpl-token-vault';
 import {
   PublicKey,
   SystemProgram,
@@ -7,7 +7,6 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Transaction } from '../../../Transaction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetWhitelistedCreatorArgs extends Borsh.Data<{ activated: boolean }> {

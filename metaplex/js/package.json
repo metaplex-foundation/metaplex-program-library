@@ -29,7 +29,10 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
+    "@metaplex/mpl-auction": "0.0.0",
     "@metaplex/mpl-core": "0.0.0",
+    "@metaplex/mpl-token-metadata": "0.0.0",
+    "@metaplex/mpl-token-vault": "0.0.0",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.31.0"
   },

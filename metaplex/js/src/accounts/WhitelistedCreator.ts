@@ -1,10 +1,14 @@
-import { AnyPublicKey, StringPublicKey } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
+import {
+  AnyPublicKey,
+  StringPublicKey,
+  Borsh,
+  Account,
+  ERROR_INVALID_ACCOUNT_DATA,
+  ERROR_INVALID_OWNER,
+} from '@metaplex/mpl-core';
 import { MetaplexProgram, MetaplexKey } from '../MetaplexProgram';
-import { AccountInfo, PublicKey } from '@solana/web3.js';
-import { Account } from '../../../Account';
-import { ERROR_INVALID_ACCOUNT_DATA, ERROR_INVALID_OWNER } from '@metaplex/errors';
 import { Buffer } from 'buffer';
+import { AccountInfo, PublicKey } from '@solana/web3.js';
 
 type Args = { address: string; activated: boolean };
 export class WhitelistedCreatorData extends Borsh.Data<Args> {

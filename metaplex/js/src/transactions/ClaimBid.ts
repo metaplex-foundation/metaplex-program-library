@@ -1,5 +1,6 @@
-import { ParamsWithStore } from '@metaplex/types';
-import { Borsh } from '@metaplex/utils';
+import { Borsh, Transaction } from '@metaplex/mpl-core';
+import { ParamsWithStore } from '@metaplex/mpl-token-vault';
+import { AuctionProgram } from '@metaplex/mpl-auction';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -7,8 +8,6 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Transaction } from '../../../Transaction';
-import { AuctionProgram } from '../../auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class ClaimBidArgs extends Borsh.Data {
