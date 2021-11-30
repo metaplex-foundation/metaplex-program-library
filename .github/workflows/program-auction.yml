@@ -2,7 +2,7 @@ name: Program Auction
 
 on:
   push:
-    branches: [master, thlorenz/feat/auction]
+    branches: [master]
   pull_request:
     branches: [master]
 
