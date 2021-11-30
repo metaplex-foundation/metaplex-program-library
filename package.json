@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
   "scripts": {
+    "build": "lerna run build --scope @metaplex/mpl-core && lerna run --ignore @metaplex/mpl-core --parallel build",
+    "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
     "fix": "lerna run --parallel fix"
   },

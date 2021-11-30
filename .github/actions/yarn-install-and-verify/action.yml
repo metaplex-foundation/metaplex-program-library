@@ -1,0 +1,59 @@
+name: Yarn Install Build Test and Lint
+
+inputs:
+  cache_id:
+    description: ID to use in order to cache yarn install
+    required: true
+  working_dir:
+    description: Directory in which to perform the yarn tasks
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v2
+      with:
+        path: '**/node_modules'
+        key: ${{ inputs.cache_id }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+    ##############
+    # Prepare Core
+    ##############
+    
+    # All contract SDKs depend on mpl-core so we need to build at least that
+    # We avoid running this in the project root to avoid a check for a contract failing due to
+    # an issue in another contract which would cause a build failure.
+    - name: Install Core modules
+      if: ${{ inputs.working_dir != './core/js' }}
+      run: yarn install
+      working-directory: ./core/js 
+      shell: bash
+
+    - name: Build Core TypeScript 
+      if: ${{ inputs.working_dir != './core/js' }}
+      run: yarn build
+      working-directory: ./core/js 
+      shell: bash
+
+    ##############
+    # Verify Contract 
+    ##############
+    - name: Install modules
+      run: yarn install
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+
+    - name: Build TypeScript 
+      run: yarn build
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+
+    - name: Test TypeScript
+      run: yarn test
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+
+    - name: Lint TypeScript 
+      run: yarn lint
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
