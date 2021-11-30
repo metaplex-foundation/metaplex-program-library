@@ -10,7 +10,8 @@
     "packages": [
       "core/js",
       "token-vault/js",
-      "token-metadata/js"
+      "token-metadata/js",
+      "auction/js"
     ]
   },
   "repository": "git@github.com:metaplex/metaplex-program-library.git",

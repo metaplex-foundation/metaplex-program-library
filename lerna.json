@@ -1,6 +1,6 @@
 {
   "npmClient": "yarn",
-  "packages": ["core/js", "token-vault/js", "token-metadata/js"],
+  "packages": ["core/js", "token-vault/js", "token-metadata/js", "auction/js"],
   "useWorkspaces": true,
   "version": "0.0.0"
 }
