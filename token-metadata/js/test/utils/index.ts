@@ -38,7 +38,7 @@ export async function airdrop(connection: Connection, publicKey: PublicKey, sol 
 }
 
 export function dump(x: any) {
-  logDebug(inspect(x, { depth: 5 }));
+  console.log(inspect(x, { depth: 5 }));
 }
 
 export function killStuckProcess() {
@@ -46,3 +46,6 @@ export function killStuckProcess() {
   // "fix" here
   test.onFinish(() => process.exit(0));
 }
+
+// Remove this if it causes issues
+killStuckProcess();

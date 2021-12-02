@@ -1,13 +1,19 @@
 import test from 'tape';
+import spok from 'spok';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { CreateMetadata, Edition, EditionData, Metadata, MetadataDataData } from '../';
+import {
+  CreateMetadata,
+  Edition,
+  EditionData,
+  Metadata,
+  MetadataData,
+  MetadataDataData,
+} from '../';
 import {
   TransactionHandler,
   connectionURL,
   airdrop,
   PayerTransactionHandler,
-  dump,
-  killStuckProcess,
   defaultSendOptions,
 } from './utils';
 import { createMintAccount } from './utils/CreateMint';
@@ -16,6 +22,8 @@ import { assertConfirmedTransaction, assertTransactionSummary } from './utils/as
 import BN from 'bn.js';
 
 import { logDebug } from './utils';
+import { addLabel, isKeyOf } from './utils/address-labels';
+import { MetadataKey } from 'src/MetadataProgram';
 
 // -----------------
 // Create Metadata
@@ -48,17 +56,24 @@ async function createMetadata({
     },
   );
 
-  return transactionHandler.sendAndConfirmTransaction(createMetadataTx, [], defaultSendOptions);
-}
+  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
+    createMetadataTx,
+    [],
+    defaultSendOptions,
+  );
 
-killStuckProcess();
+  return { metadata, createTxDetails };
+}
 
 const URI = 'uri';
 const NAME = 'test';
 const SYMBOL = 'sym';
+const SELLER_FEE_BASIS_POINTS = 10;
 
 test('create-metadata-account: success', async (t) => {
   const payer = Keypair.generate();
+  addLabel('create:payer', payer);
+
   const connection = new Connection(connectionURL, 'confirmed');
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
@@ -70,31 +85,54 @@ test('create-metadata-account: success', async (t) => {
     [mint],
     defaultSendOptions,
   );
+  addLabel('create:mint', mint);
 
   assertConfirmedTransaction(t, mintRes.txConfirmed);
 
-  const metadata = new MetadataDataData({
+  const initMetadataData = new MetadataDataData({
     uri: URI,
     name: NAME,
     symbol: SYMBOL,
-    sellerFeeBasisPoints: 10,
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
     creators: null,
   });
 
-  const createRes = await createMetadata({
+  const { createTxDetails, metadata } = await createMetadata({
     transactionHandler,
     publicKey: payer.publicKey,
     editionMint: mint.publicKey,
-    metadataData: metadata,
+    metadataData: initMetadataData,
   });
-  logDebug(createRes.txSummary.logMessages.join('\n'));
 
-  assertTransactionSummary(t, createRes.txSummary, {
+  addLabel('create:metadata', metadata);
+  logDebug(createTxDetails.txSummary.logMessages.join('\n'));
+
+  assertTransactionSummary(t, createTxDetails.txSummary, {
     fee: 5000,
     msgRx: [/Program.+metaq/i, /Instruction.+ Create Metadata Accounts/i],
   });
+  const metadataAccount = await connection.getAccountInfo(metadata);
+  logDebug({
+    metadataAccountOwner: metadataAccount.owner.toBase58(),
+    metadataAccountDataBytes: metadataAccount.data.byteLength,
+  });
 
-  logDebug('Mint Account: %s', mint.publicKey.toBase58());
+  const metadataData = MetadataData.deserialize(metadataAccount.data);
+  spok(t, metadataData, {
+    $topic: 'metadataData',
+    key: MetadataKey.MetadataV1,
+    updateAuthority: isKeyOf(payer),
+    mint: isKeyOf(mint),
+    data: {
+      name: NAME,
+      symbol: SYMBOL,
+      uri: URI,
+      sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
+    },
+    primarySaleHappened: 0,
+    isMutable: 1,
+  });
+
   const mintAccount = await connection.getAccountInfo(mint.publicKey);
   logDebug({
     mintAccountOwner: mintAccount.owner.toBase58(),
@@ -102,8 +140,8 @@ test('create-metadata-account: success', async (t) => {
   });
 
   t.ok(Edition.isCompatible(mintAccount.data), 'mint account data is mint edition');
+
   const editionData = EditionData.deserialize(mintAccount.data);
-  dump(editionData);
   const edition: BN = editionData.edition;
   t.ok(edition.toNumber() > 0, 'greater zero edition number');
 });
