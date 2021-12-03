@@ -6,7 +6,8 @@
   "command": {
     "version": {
       "allowBranch": ["master"],
-      "message": "chore: version updated packages"
+      "message": "chore: version updated packages",
+      "ignoreChanges": ["**/test/**", "**/*.md"]
     }
   }
 }
