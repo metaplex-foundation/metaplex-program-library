@@ -6,7 +6,7 @@
   "command": {
     "version": {
       "allowBranch": ["master"],
-      "message": "chore: publish %s"
+      "message": "chore: version updated packages"
     }
   }
 }
