@@ -12,7 +12,7 @@
     "lint": "lerna run --parallel lint",
     "fix": "lerna run --parallel fix",
     "lerna:version": "lerna version",
-    "lerna:publish": "lerna publish"
+    "lerna:publish": "lerna publish from-package"
   },
   "workspaces": {
     "packages": [

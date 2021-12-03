@@ -8,6 +8,9 @@
       "allowBranch": ["master"],
       "message": "chore: version updated packages",
       "ignoreChanges": ["**/test/**", "**/*.md"]
+    },
+    "publish": {
+      "registry": "https://registry.npmjs.org/"
     }
   }
 }
