@@ -1,16 +1,8 @@
 import test from 'tape';
 import spok from 'spok';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Connection, Keypair } from '@solana/web3.js';
+import { Edition, EditionData, MetadataData, MetadataDataData } from '../';
 import {
-  CreateMetadata,
-  Edition,
-  EditionData,
-  Metadata,
-  MetadataData,
-  MetadataDataData,
-} from '../';
-import {
-  TransactionHandler,
   connectionURL,
   airdrop,
   PayerTransactionHandler,
@@ -26,13 +18,15 @@ import { addLabel, isKeyOf } from './utils/address-labels';
 import { MetadataKey } from 'src/MetadataProgram';
 import { createMetadata, createMintAccount } from './actions';
 
+killStuckProcess();
+
 const URI = 'uri';
 const NAME = 'test';
 const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
 
-killStuckProcess();
-
+// TODO: at this point only success cases are tested, however tests for
+// incorrect inputs, etc. should be added ASAP
 test('create-metadata-account: success', async (t) => {
   const payer = Keypair.generate();
   addLabel('create:payer', payer);

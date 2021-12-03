@@ -24,8 +24,8 @@ function publicKeyString(key: Key) {
  * render more meaningful labels of accounts.
  */
 export function addLabel(label: string, key: Key) {
-  logDebug(`🔑 ${label}: ${publicKeyString}`);
   const keyString = publicKeyString(key);
+  logDebug(`🔑 ${label}: ${keyString}`);
 
   if (dataPath == null) return;
   data[keyString] = label;

@@ -11,6 +11,7 @@ import {
   TransactionError,
   TransactionSignature,
 } from '@solana/web3.js';
+import { defaultSendOptions } from '.';
 
 export type SendTransaction = (
   connection: Connection,
@@ -74,7 +75,7 @@ export class PayerTransactionHandler implements TransactionHandler {
     const txSignature = await this.connection.sendTransaction(
       transaction,
       [this.payer, ...signers],
-      options,
+      options ?? defaultSendOptions,
     );
     const txRpcResponse = await this.connection.confirmTransaction(txSignature);
     const txConfirmed = await this.connection.getConfirmedTransaction(txSignature);

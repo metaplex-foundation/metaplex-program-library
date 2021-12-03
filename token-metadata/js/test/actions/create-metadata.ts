@@ -7,14 +7,7 @@ import {
   TransactionHandler,
 } from '../utils';
 import { createMintAccount } from './create-mint';
-import {
-  CreateMetadata,
-  Edition,
-  EditionData,
-  Metadata,
-  MetadataData,
-  MetadataDataData,
-} from '../../';
+import { CreateMetadata, Metadata, MetadataDataData } from '../../';
 import { strict as assert } from 'assert';
 
 // -----------------
@@ -72,7 +65,7 @@ export async function mintAndCreateMetadata(
     [mint],
     defaultSendOptions,
   );
-  addLabel('create:mint', mint);
+  addLabel('mint', mint);
 
   assertConfirmedTransaction(assert, mintRes.txConfirmed);
 
@@ -85,6 +78,8 @@ export async function mintAndCreateMetadata(
     metadataData: initMetadataData,
   });
 
-  addLabel('create:metadata', metadata);
+  addLabel('metadata', metadata);
   logDebug(createTxDetails.txSummary.logMessages.join('\n'));
+
+  return { mint, metadata };
 }
