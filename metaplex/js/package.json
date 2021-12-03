@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-metaplex",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "MPL Token Metadata JavaScript API.",
   "main": "dist/src/mpl-metaplex.js",
   "types": "dist/src/mpl-metaplex.d.ts",
@@ -30,10 +30,10 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "@metaplex-foundation/mpl-auction": "0.0.0",
-    "@metaplex-foundation/mpl-core": "0.0.0",
-    "@metaplex-foundation/mpl-token-metadata": "0.0.0",
-    "@metaplex-foundation/mpl-token-vault": "0.0.0",
+    "@metaplex-foundation/mpl-auction": "^0.0.1",
+    "@metaplex-foundation/mpl-core": "^0.0.1",
+    "@metaplex-foundation/mpl-token-metadata": "^0.0.1",
+    "@metaplex-foundation/mpl-token-vault": "^0.0.1",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.31.0"
   },
