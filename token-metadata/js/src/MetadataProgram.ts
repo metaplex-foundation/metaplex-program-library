@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { Program, config } from '@metaplex/mpl-core';
+import { Program, config } from '@metaplex-foundation/mpl-core';
 
 export enum MetadataKey {
   Uninitialized = 0,

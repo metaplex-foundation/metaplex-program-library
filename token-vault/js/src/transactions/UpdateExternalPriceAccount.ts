@@ -1,4 +1,4 @@
-import { Borsh, Transaction } from '@metaplex/mpl-core';
+import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solana/web3.js';
 import { VaultInstructions } from '../VaultProgram';
 import { ExternalPriceAccountData } from '../accounts/ExternalPriceAccount';

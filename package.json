@@ -1,16 +1,18 @@
 {
-  "name": "@metaplex/metaplex-program-library",
+  "name": "@metaplex-foundation/metaplex-program-library",
   "version": "0.0.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
   "scripts": {
-    "build:core": "lerna run build --scope @metaplex/mpl-core",
-    "build:auction": "lerna run build --scope @metaplex/mpl-auction",
-    "build:parallel": "lerna run --ignore @metaplex/mpl-core --ignore @metaplex/mpl-auction --ignore @metaplex/mpl-metaplex --parallel build",
-    "build:metaplex": "lerna run build --scope @metaplex/mpl-metaplex",
+    "build:core": "lerna run build --scope @metaplex-foundation/mpl-core",
+    "build:auction": "lerna run build --scope @metaplex-foundation/mpl-auction",
+    "build:parallel": "lerna run --ignore @metaplex-foundation/mpl-core --ignore @metaplex-foundation/mpl-auction --ignore @metaplex-foundation/mpl-metaplex --parallel build",
+    "build:metaplex": "lerna run build --scope @metaplex-foundation/mpl-metaplex",
     "build": "yarn build:core && yarn build:auction && yarn build:parallel && yarn build:metaplex",
     "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
-    "fix": "lerna run --parallel fix"
+    "fix": "lerna run --parallel fix",
+    "lerna:version": "lerna version",
+    "lerna:publish": "lerna publish"
   },
   "workspaces": {
     "packages": [
@@ -21,7 +23,7 @@
       "metaplex/js"
     ]
   },
-  "repository": "git@github.com:metaplex/metaplex-program-library.git",
+  "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
   "private": true,

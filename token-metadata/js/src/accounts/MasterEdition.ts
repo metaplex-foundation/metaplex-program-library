@@ -5,7 +5,7 @@ import {
   ERROR_INVALID_OWNER,
   AnyPublicKey,
   StringPublicKey,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { Edition } from './Edition';

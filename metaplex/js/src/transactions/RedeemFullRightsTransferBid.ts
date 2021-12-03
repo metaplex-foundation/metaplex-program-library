@@ -1,4 +1,4 @@
-import { Borsh, Transaction } from '@metaplex/mpl-core';
+import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -7,8 +7,8 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { MetadataProgram } from '@metaplex/mpl-token-metadata';
-import { VaultProgram, ParamsWithStore } from '@metaplex/mpl-token-vault';
+import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+import { VaultProgram, ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
 import { MetaplexProgram } from '../MetaplexProgram';
 import { ProxyCallAddress, RedeemUnusedWinningConfigItemsAsAuctioneerArgs } from './RedeemBid';
 

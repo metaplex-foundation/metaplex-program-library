@@ -2,5 +2,12 @@
   "npmClient": "yarn",
   "packages": ["core/js", "auction/js", "token-vault/js", "token-metadata/js", "metaplex/js"],
   "useWorkspaces": true,
-  "version": "0.0.0"
+  "version": "independent",
+  "command": {
+    "version": {
+      "allowBranch": ["master"],
+      "message": "chore: version updated packages",
+      "ignoreChanges": ["**/test/**", "**/*.md"]
+    }
+  }
 }

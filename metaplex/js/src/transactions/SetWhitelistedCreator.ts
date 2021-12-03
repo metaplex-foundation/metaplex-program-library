@@ -1,5 +1,5 @@
-import { Borsh, Transaction } from '@metaplex/mpl-core';
-import { ParamsWithStore } from '@metaplex/mpl-token-vault';
+import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
+import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
 import {
   PublicKey,
   SystemProgram,

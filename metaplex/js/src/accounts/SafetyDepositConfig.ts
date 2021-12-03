@@ -9,7 +9,7 @@ import {
   ERROR_INVALID_OWNER,
   getBNFromData,
   TupleNumericType,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import { MetaplexKey, MetaplexProgram } from '../MetaplexProgram';
 import { Buffer } from 'buffer';
 

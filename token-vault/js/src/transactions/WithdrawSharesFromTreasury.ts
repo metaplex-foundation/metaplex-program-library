@@ -1,4 +1,4 @@
-import { Transaction } from '@metaplex/mpl-core';
+import { Transaction } from '@metaplex-foundation/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,

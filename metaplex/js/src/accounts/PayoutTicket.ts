@@ -8,7 +8,7 @@ import {
   Borsh,
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import { MetaplexKey, MetaplexProgram } from '../MetaplexProgram';
 import { Buffer } from 'buffer';
 
