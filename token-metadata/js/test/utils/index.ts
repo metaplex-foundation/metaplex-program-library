@@ -10,6 +10,8 @@ import debug from 'debug';
 import test from 'tape';
 
 export * from './TransactionHandler';
+export * from './asserts';
+export * from './address-labels';
 
 export const logError = debug('mpl:setup:error');
 export const logInfo = debug('mpl:setup:info');
@@ -46,6 +48,3 @@ export function killStuckProcess() {
   // "fix" here
   test.onFinish(() => process.exit(0));
 }
-
-// Remove this if it causes issues
-killStuckProcess();

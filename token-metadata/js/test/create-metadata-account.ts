@@ -15,8 +15,8 @@ import {
   airdrop,
   PayerTransactionHandler,
   defaultSendOptions,
+  killStuckProcess,
 } from './utils';
-import { createMintAccount } from './utils/CreateMint';
 import { assertConfirmedTransaction, assertTransactionSummary } from './utils/asserts';
 
 import BN from 'bn.js';
@@ -24,51 +24,14 @@ import BN from 'bn.js';
 import { logDebug } from './utils';
 import { addLabel, isKeyOf } from './utils/address-labels';
 import { MetadataKey } from 'src/MetadataProgram';
-
-// -----------------
-// Create Metadata
-// -----------------
-// src/actions/createMetadata.ts
-type CreateMetadataParams = {
-  transactionHandler: TransactionHandler;
-  publicKey: PublicKey;
-  editionMint: PublicKey;
-  metadataData: MetadataDataData;
-  updateAuthority?: PublicKey;
-};
-
-async function createMetadata({
-  transactionHandler,
-  publicKey,
-  editionMint,
-  metadataData,
-  updateAuthority,
-}: CreateMetadataParams) {
-  const metadata = await Metadata.getPDA(editionMint);
-  const createMetadataTx = new CreateMetadata(
-    { feePayer: publicKey },
-    {
-      metadata,
-      metadataData,
-      updateAuthority: updateAuthority ?? publicKey,
-      mint: editionMint,
-      mintAuthority: publicKey,
-    },
-  );
-
-  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
-    createMetadataTx,
-    [],
-    defaultSendOptions,
-  );
-
-  return { metadata, createTxDetails };
-}
+import { createMetadata, createMintAccount } from './actions';
 
 const URI = 'uri';
 const NAME = 'test';
 const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
+
+killStuckProcess();
 
 test('create-metadata-account: success', async (t) => {
   const payer = Keypair.generate();
