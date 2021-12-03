@@ -2,12 +2,11 @@ import test from 'tape';
 import spok from 'spok';
 
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { MetadataData, MetadataDataData } from '../';
+import { MetadataData, MetadataDataData, UpdateMetadata } from '../src/mpl-token-metadata';
 import { connectionURL, airdrop, PayerTransactionHandler, killStuckProcess } from './utils';
 
 import { addLabel } from './utils/address-labels';
 import { mintAndCreateMetadata } from './actions';
-import { UpdateMetadata } from 'src/transactions';
 
 killStuckProcess();
 

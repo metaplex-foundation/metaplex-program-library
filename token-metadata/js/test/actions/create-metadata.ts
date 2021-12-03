@@ -7,8 +7,8 @@ import {
   TransactionHandler,
 } from '../utils';
 import { createMintAccount } from './create-mint';
-import { CreateMetadata, Metadata, MetadataDataData } from '../../';
 import { strict as assert } from 'assert';
+import { CreateMetadata, Metadata, MetadataDataData } from '../../src/mpl-token-metadata';
 
 // -----------------
 // Create Metadata

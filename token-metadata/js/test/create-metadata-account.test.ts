@@ -1,7 +1,13 @@
 import test from 'tape';
 import spok from 'spok';
 import { Connection, Keypair } from '@solana/web3.js';
-import { Edition, EditionData, MetadataData, MetadataDataData } from '../';
+import {
+  Edition,
+  EditionData,
+  MetadataData,
+  MetadataDataData,
+  MetadataKey,
+} from '../src/mpl-token-metadata';
 import {
   connectionURL,
   airdrop,
@@ -15,7 +21,6 @@ import BN from 'bn.js';
 
 import { logDebug } from './utils';
 import { addLabel, isKeyOf } from './utils/address-labels';
-import { MetadataKey } from 'src/MetadataProgram';
 import { createMetadata, createMintAccount } from './actions';
 
 killStuckProcess();
