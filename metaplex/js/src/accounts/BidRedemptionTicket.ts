@@ -9,7 +9,7 @@ import {
   ERROR_DEPRECATED_ACCOUNT_DATA,
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import { Buffer } from 'buffer';
 
 export interface BidRedemptionTicketV2Data {

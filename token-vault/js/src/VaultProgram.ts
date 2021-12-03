@@ -1,4 +1,4 @@
-import { config, Program } from '@metaplex/mpl-core';
+import { config, Program } from '@metaplex-foundation/mpl-core';
 import { PublicKey } from '@solana/web3.js';
 
 export enum VaultKey {

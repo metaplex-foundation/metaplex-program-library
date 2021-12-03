@@ -8,7 +8,7 @@ import {
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
   StringPublicKey,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import { SafetyDepositBox } from './SafetyDepositBox';
 import { VaultKey, VaultProgram } from '../VaultProgram';
 import { Buffer } from 'buffer';

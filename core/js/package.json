@@ -1,5 +1,5 @@
 {
-  "name": "@metaplex/mpl-core",
+  "name": "@metaplex-foundation/mpl-core",
   "version": "0.0.0",
   "description": "MPL Core Tooling.",
   "main": "dist/src/mpl-core.js",
@@ -24,7 +24,7 @@
     "blockchain"
   ],
   "homepage": "https://metaplex.com",
-  "repository": "https://github.com/metaplex/metaplex-program-library.git",
+  "repository": "https://github.com/metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
   "private": false,

@@ -4,7 +4,7 @@ import {
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
   AnyPublicKey,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import BN from 'bn.js';
 import { AuctionProgram } from '../AuctionProgram';
 import { Buffer } from 'buffer';

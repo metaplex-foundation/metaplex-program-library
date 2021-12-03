@@ -5,7 +5,7 @@ import {
   ERROR_INVALID_OWNER,
   AnyPublicKey,
   StringPublicKey,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import { MetadataProgram, MetadataKey } from '../MetadataProgram';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';

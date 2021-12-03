@@ -1,4 +1,4 @@
-import { Borsh, Transaction } from '@metaplex/mpl-core';
+import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -8,9 +8,9 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 
-import { MetadataProgram } from '@metaplex/mpl-token-metadata';
-import { VaultProgram, ParamsWithStore } from '@metaplex/mpl-token-vault';
-import { AuctionProgram } from '@metaplex/mpl-auction';
+import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+import { VaultProgram, ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetStoreArgs extends Borsh.Data<{ public: boolean }> {

@@ -1,4 +1,4 @@
-import { Borsh, StringPublicKey, Transaction } from '@metaplex/mpl-core';
+import { Borsh, StringPublicKey, Transaction } from '@metaplex-foundation/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,

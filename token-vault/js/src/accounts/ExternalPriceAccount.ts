@@ -8,7 +8,7 @@ import {
   Account,
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import { VaultKey, VaultProgram } from '../VaultProgram';
 
 type Args = {

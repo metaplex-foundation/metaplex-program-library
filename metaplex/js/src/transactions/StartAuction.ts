@@ -1,13 +1,13 @@
-import { Borsh, Transaction } from '@metaplex/mpl-core';
+import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import {
   PublicKey,
   SYSVAR_CLOCK_PUBKEY,
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { AuctionProgram } from '@metaplex/mpl-auction';
+import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
-import { ParamsWithStore } from '@metaplex/mpl-token-vault';
+import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
 
 export class StartAuctionArgs extends Borsh.Data {
   static readonly SCHEMA = this.struct([['instruction', 'u8']]);

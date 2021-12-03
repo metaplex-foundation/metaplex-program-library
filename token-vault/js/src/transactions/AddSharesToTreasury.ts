@@ -9,7 +9,7 @@ import BN from 'bn.js';
 import { VaultInstructions } from '../VaultProgram';
 import { NumberOfShareArgs } from '../accounts/Vault';
 import { VaultProgram } from '../VaultProgram';
-import { Transaction } from '@metaplex/mpl-core';
+import { Transaction } from '@metaplex-foundation/mpl-core';
 import { ParamsWithStore } from '../types';
 
 type AddSharesToTreasuryParams = {

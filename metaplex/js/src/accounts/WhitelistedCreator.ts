@@ -5,7 +5,7 @@ import {
   Account,
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import { MetaplexProgram, MetaplexKey } from '../MetaplexProgram';
 import { Buffer } from 'buffer';
 import { AccountInfo, PublicKey } from '@solana/web3.js';

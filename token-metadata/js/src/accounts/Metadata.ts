@@ -7,7 +7,7 @@ import {
   AnyPublicKey,
   StringPublicKey,
   TokenAccount,
-} from '@metaplex/mpl-core';
+} from '@metaplex-foundation/mpl-core';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';

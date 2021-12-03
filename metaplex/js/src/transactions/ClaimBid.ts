@@ -1,6 +1,6 @@
-import { Borsh, Transaction } from '@metaplex/mpl-core';
-import { ParamsWithStore } from '@metaplex/mpl-token-vault';
-import { AuctionProgram } from '@metaplex/mpl-auction';
+import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
+import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
