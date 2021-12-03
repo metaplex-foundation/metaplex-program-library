@@ -5,6 +5,7 @@
   "main": "dist/src/mpl-metaplex.js",
   "types": "dist/src/mpl-metaplex.d.ts",
   "scripts": {
+    "prepublish": "yarn build && yarn test",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "test": "echo mpl-metaplex tests coming up ...",

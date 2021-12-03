@@ -5,6 +5,7 @@
   "main": "dist/src/mpl-token-vault.js",
   "types": "dist/src/mpl-token-vault.d.ts",
   "scripts": {
+    "prepublish": "yarn build && yarn test",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "test": "echo mpl-token-vault tests coming up ...",
