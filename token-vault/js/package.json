@@ -18,6 +18,9 @@
   "files": [
     "/dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "nft",
     "metaplex",
