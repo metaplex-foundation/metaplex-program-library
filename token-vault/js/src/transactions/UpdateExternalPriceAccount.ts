@@ -3,7 +3,6 @@ import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solan
 import { VaultInstructions } from '../VaultProgram';
 import { ExternalPriceAccountData } from '../accounts/ExternalPriceAccount';
 import { VaultProgram } from '../VaultProgram';
-import { ParamsWithStore } from '../types';
 
 export class UpdateExternalPriceAccountArgs extends Borsh.Data<{
   externalPriceAccount: ExternalPriceAccountData;
@@ -26,10 +25,7 @@ type UpdateExternalPriceAccountParams = {
 };
 
 export class UpdateExternalPriceAccount extends Transaction {
-  constructor(
-    options: TransactionCtorFields,
-    params: ParamsWithStore<UpdateExternalPriceAccountParams>,
-  ) {
+  constructor(options: TransactionCtorFields, params: UpdateExternalPriceAccountParams) {
     super(options);
     const { externalPriceAccount, externalPriceAccountData } = params;
 
