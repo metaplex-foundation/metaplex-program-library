@@ -76,14 +76,17 @@ export class BidState extends Borsh.Data<BidStateArgs> {
   }
 
   getWinnerIndex(bidder: StringPublicKey): number | null {
-    if (!this.bids) return null;
+    if (!this.bids) {
+      return null;
+    }
 
     const index = this.bids.findIndex((b) => b.key === bidder);
     // auction stores data in reverse order
     if (index !== -1) {
       const zeroBased = this.bids.length - index - 1;
       return zeroBased < this.max.toNumber() ? zeroBased : null;
-    } else return null;
+    }
+    return null;
   }
 }
 

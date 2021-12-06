@@ -1,6 +1,7 @@
 import { AccountInfo, Commitment, PublicKey, Connection } from '@solana/web3.js';
 import { AnyPublicKey, ConnnectionWithRpcRequest } from '../types';
 import { Buffer } from 'buffer';
+import { ERROR_ACCOUNT_NOT_FOUND } from '../errors';
 
 export type AccountConstructor<T> = {
   new (pubkey: AnyPublicKey, info: AccountInfo<Buffer>): T;
@@ -38,7 +39,7 @@ export class Account<T = unknown> {
   static async getInfo(connection: Connection, pubkey: AnyPublicKey) {
     const info = await connection.getAccountInfo(new PublicKey(pubkey));
     if (!info) {
-      throw new Error(`Unable to find account: ${pubkey}`);
+      throw ERROR_ACCOUNT_NOT_FOUND(pubkey);
     }
 
     return { ...info, data: Buffer.from(info?.data) };

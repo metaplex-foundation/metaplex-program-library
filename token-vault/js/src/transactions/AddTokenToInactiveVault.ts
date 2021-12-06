@@ -15,7 +15,6 @@ import { VaultInstructions } from '../VaultProgram';
 type AddTokenToInactiveVaultParams = {
   vault: PublicKey;
   vaultAuthority: PublicKey;
-  tokenMint: PublicKey;
   tokenAccount: PublicKey;
   tokenStoreAccount: PublicKey;
   transferAuthority: PublicKey;
