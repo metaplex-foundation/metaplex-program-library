@@ -10,9 +10,7 @@
     "build": "yarn build:core && yarn build:auction && yarn build:parallel && yarn build:metaplex",
     "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
-    "fix": "lerna run --parallel fix",
-    "lerna:version": "lerna version",
-    "lerna:publish": "lerna publish from-package"
+    "fix": "lerna run --parallel fix"
   },
   "workspaces": {
     "packages": [

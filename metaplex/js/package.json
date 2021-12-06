@@ -5,7 +5,7 @@
   "main": "dist/src/mpl-metaplex.js",
   "types": "dist/src/mpl-metaplex.d.ts",
   "scripts": {
-    "prepublish": "yarn build && yarn test",
+    "check:publish-ready": "yarn build && yarn test",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "test": "echo mpl-metaplex tests coming up ...",
@@ -19,7 +19,8 @@
     "/dist"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "keywords": [
     "nft",
@@ -42,6 +43,7 @@
   },
   "devDependencies": {
     "eslint": "^8.3.0",
+    "np": "^7.6.0",
     "rimraf": "^3.0.2"
   }
 }
