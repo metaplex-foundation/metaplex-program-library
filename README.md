@@ -15,21 +15,26 @@ Metaplex smart contracts and SDK.
 
 ### Versioning and Publishing Packages
 
-We use [np](https://github.com/sindresorhus/np) to manage versioning and publishing packages in
-order to ensure that the package builds and all tests pass.
+Smart contract SDK ackages are versioned indepenently since a contract isn't necessarily
+coupled to other contracts.
 
-You have to be on an up to date `master` branch in order to perform that step (`np` will verify
-that).
+We use the following `(pre|post)(version|publish)` npm scripts to manage related checks,
+tagging, commiting and pushing the version bump.
 
-NOTE: that packages are versioned indepenently since contracts aren't necessarily coupled to
-other contracts.
+- `preversion`: ensures that the package builds and its tests pass
+- `postversion`: adds and commits the version bump and adds a tag indicating package name and
+  new version, i.e. `@metaplex-foundation/mp-core@v0.0.1`
+- `prepublish`: ensures that the package builds and its tests pass again (just to be _really_
+  sure)
+- `postpublish`: pushes the committed change and new tag to github
 
-As part of that step proper git tags are generated and pushed. A commit with a proper commit
-message is generated as well and pushed.
+In order to version and then publish a package just run the following commands from the folder
+of the package you want to update:
 
-### Steps
+- `npm version <patch|minor|major>`
+- `npm publish`
 
-1. Make sure all changes are merged into the master branch
-2. Checkout master
-3. `cd` into the package `js` folder, i.e. `cd core/js`
-4. Run `yarn np`
+As you note if version + publish succeeds the scripts end up pushing those updates to the
+master branch. Therefore please ensure to be on an up to date `master` branch before running
+them. Please **don't ever publish from another branch** but only from the main one with only
+PR approved changes merged.
