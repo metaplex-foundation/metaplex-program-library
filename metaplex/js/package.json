@@ -39,7 +39,7 @@
   "private": false,
   "dependencies": {
     "@metaplex-foundation/mpl-auction": "^0.0.1",
-    "@metaplex-foundation/mpl-core": "^0.0.1",
+    "@metaplex-foundation/mpl-core": "^0.0.2",
     "@metaplex-foundation/mpl-token-metadata": "^0.0.1",
     "@metaplex-foundation/mpl-token-vault": "^0.0.1",
     "@solana/spl-token": "^0.1.8",
