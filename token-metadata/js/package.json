@@ -5,7 +5,7 @@
   "main": "dist/src/mpl-token-metadata.js",
   "types": "dist/src/mpl-token-metadata.d.ts",
   "scripts": {
-    "prepublish": "yarn build && yarn test",
+    "check:publish-ready": "yarn build && yarn test",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "test": "echo mpl-token-metadata tests coming up ...",
