@@ -26,8 +26,11 @@ export class BidderPotData extends Borsh.Data<Args> {
 
   /// Points at actual pot that is a token account
   bidderPot: StringPublicKey;
+  /// Originating bidder account
   bidderAct: StringPublicKey;
+  /// Auction account
   auctionAct: StringPublicKey;
+  /// emptied or not
   emptied: boolean;
 }
 

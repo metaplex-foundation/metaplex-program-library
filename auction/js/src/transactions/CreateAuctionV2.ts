@@ -9,7 +9,7 @@ import {
 import BN from 'bn.js';
 import { AuctionProgram } from '../AuctionProgram';
 import { PriceFloor } from '../accounts/Auction';
-import { Args as CreateAuctionArgsType, CreateAuctionArgs, WinnerLimit } from './CreateAuction';
+import { Args as CreateAuctionArgsType, WinnerLimit } from './CreateAuction';
 
 type Args = CreateAuctionArgsType & {
   instantSalePrice: BN | null;
@@ -18,8 +18,19 @@ type Args = CreateAuctionArgsType & {
 
 export class CreateAuctionV2Args extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
-    ...CreateAuctionArgs.SCHEMA,
-    ...CreateAuctionV2Args.struct([
+    ...WinnerLimit.SCHEMA,
+    ...PriceFloor.SCHEMA,
+    ...this.struct([
+      ['instruction', 'u8'],
+      ['winners', WinnerLimit],
+      ['endAuctionAt', { kind: 'option', type: 'u64' }],
+      ['auctionGap', { kind: 'option', type: 'u64' }],
+      ['tokenMint', 'pubkeyAsString'],
+      ['authority', 'pubkeyAsString'],
+      ['resource', 'pubkeyAsString'],
+      ['priceFloor', PriceFloor],
+      ['tickSize', { kind: 'option', type: 'u64' }],
+      ['gapTickSizePercentage', { kind: 'option', type: 'u8' }],
       ['instantSalePrice', { kind: 'option', type: 'u64' }],
       ['name', { kind: 'option', type: [32] }],
     ]),
