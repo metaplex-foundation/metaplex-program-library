@@ -6,10 +6,6 @@
   "types": "dist/src/mpl-core.d.ts",
   "scripts": {
     "check:publish-ready": "yarn build && yarn test",
-    "preversion": "yarn check:publish-ready",
-    "postversion": "git tag $npm_package_name@$npm_package_version",
-    "prepublish": "yarn check:publish-ready",
-    "postpublish": "git push --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "test": "echo mpl-core tests coming up ...",
@@ -23,7 +19,8 @@
     "/dist"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "keywords": [
     "nft",
