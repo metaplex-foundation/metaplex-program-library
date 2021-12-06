@@ -41,6 +41,5 @@
     "eslint": "^8.3.0",
     "np": "^7.6.0",
     "rimraf": "^3.0.2"
-  },
-  "gitHead": "d2d7cab0fe6706d3c33177395fdbb20e419a2ed4"
+  }
 }
