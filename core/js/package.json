@@ -44,7 +44,6 @@
   "devDependencies": {
     "@types/bs58": "^4.0.1",
     "eslint": "^8.3.0",
-    "np": "^7.6.0",
     "rimraf": "^3.0.2"
   }
 }
