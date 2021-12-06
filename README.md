@@ -26,3 +26,10 @@ other contracts.
 
 As part of that step proper git tags are generated and pushed. A commit with a proper commit
 message is generated as well and pushed.
+
+### Steps
+
+1. Make sure all changes are merged into the master branch
+2. Checkout master
+3. `cd` into the package `js` folder, i.e. `cd core/js`
+4. Run `yarn np`
