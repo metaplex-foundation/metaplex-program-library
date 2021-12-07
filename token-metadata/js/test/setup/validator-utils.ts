@@ -1,5 +1,5 @@
 import { Connection, Keypair, SystemProgram, Transaction } from '@solana/web3.js';
-import { airdrop, connectionURL, logDebug } from 'test/utils';
+import { airdrop, logDebug } from '../utils';
 import waitOn from 'wait-on';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));

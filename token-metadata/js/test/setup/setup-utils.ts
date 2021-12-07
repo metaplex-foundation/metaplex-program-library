@@ -2,15 +2,19 @@ import debug from 'debug';
 import { tmpdir } from 'os';
 import path from 'path';
 
+const runningFromDist = __filename.endsWith('dist/test/setup/setup-utils.js');
+
 export const logError = debug('mpl:setup:error');
 export const logInfo = debug('mpl:setup:info');
 export const logDebug = debug('mpl:setup:debug');
 export const logTrace = debug('mpl:setup:trace');
 
 export const ledgerDir = path.join(tmpdir(), 'mpl-tests-ledger');
-export const projectRoot = path.resolve(__dirname, '..', '..', '..', '..');
+export const projectRoot = runningFromDist
+  ? path.resolve(__dirname, '..', '..', '..', '..', '..')
+  : path.resolve(__dirname, '..', '..', '..', '..');
 export const localDeployDir = path.join(projectRoot, 'target', 'deploy');
-export const solanaConfigPath = path.join(__dirname, '..', 'config', 'solana-validator.yml');
+export const solanaConfigPath = path.join(__dirname, 'solana-validator.yml');
 
 export const programIds = {
   metadata: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
