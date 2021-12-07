@@ -12,6 +12,7 @@ import test from 'tape';
 export * from './TransactionHandler';
 export * from './asserts';
 export * from './address-labels';
+export * from './metadata';
 
 export const logError = debug('mpl:setup:error');
 export const logInfo = debug('mpl:setup:info');

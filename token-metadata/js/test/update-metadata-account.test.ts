@@ -1,101 +1,28 @@
 import test from 'tape';
-import spok from 'spok';
 
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { MetadataData, MetadataDataData, UpdateMetadata } from '../src/mpl-token-metadata';
+import { MetadataDataData, UpdateMetadata } from '../src/mpl-token-metadata';
 import {
-  connectionURL,
-  airdrop,
-  PayerTransactionHandler,
   killStuckProcess,
   assertError,
+  initMetadata,
+  getMetadataData,
+  assertMetadataDataUnchanged,
+  assertMetadataDataDataUnchanged,
+  URI,
+  NAME,
+  SYMBOL,
 } from './utils';
 
-import { addLabel } from './utils/address-labels';
-import { mintAndCreateMetadata } from './actions';
-
 killStuckProcess();
-
-const URI = 'uri';
-const NAME = 'test';
-const SYMBOL = 'sym';
-const SELLER_FEE_BASIS_POINTS = 10;
-
-async function init() {
-  const payer = Keypair.generate();
-  addLabel('payer', payer);
-
-  const connection = new Connection(connectionURL, 'confirmed');
-  const transactionHandler = new PayerTransactionHandler(connection, payer);
-
-  await airdrop(connection, payer.publicKey, 2);
-
-  const initMetadataData = new MetadataDataData({
-    uri: URI,
-    name: NAME,
-    symbol: SYMBOL,
-    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
-    creators: null,
-  });
-
-  const { mint, metadata } = await mintAndCreateMetadata(
-    connection,
-    transactionHandler,
-    payer,
-    initMetadataData,
-  );
-  const initialMetadata = await getMetadataData(connection, metadata);
-  return { connection, transactionHandler, payer, mint, metadata, initialMetadata };
-}
-
-async function getMetadataData(connection: Connection, metadata: PublicKey): Promise<MetadataData> {
-  const metadataAccount = await connection.getAccountInfo(metadata);
-  return MetadataData.deserialize(metadataAccount.data);
-}
-
-async function assertMetadataDataUnchanged(
-  t: test.Test,
-  initial: MetadataData,
-  updated: MetadataData,
-  except?: keyof MetadataData,
-) {
-  const x = { ...initial };
-  if (except != null) {
-    delete x[except];
-  }
-  delete x.data.creators;
-
-  const y = { $topic: `no change except '${except}' on metadata`, ...updated };
-  if (except != null) {
-    delete y[except];
-  }
-  delete y.data.creators;
-
-  spok(t, x, y);
-}
-
-async function assertMetadataDataDataUnchanged(
-  t: test.Test,
-  initial: MetadataDataData,
-  updated: MetadataDataData,
-  except: (keyof MetadataDataData)[],
-) {
-  const x = { ...initial };
-  except.forEach((f) => delete x[f]);
-  delete x.creators;
-
-  const y = { $topic: `no change except '${except}' on metadataData`, ...updated };
-  except.forEach((f) => delete y[f]);
-  delete y.creators;
-
-  spok(t, x, y);
-}
 
 // -----------------
 // Success Cases
 // -----------------
+
+// TODO: are we supposed to be able to toggle this via an update transaction
+// instead of using updatePrimarySaleHappend?
 test('update-metadata-account: toggle primarySaleHappened', async (t) => {
-  const { connection, transactionHandler, payer, metadata, initialMetadata } = await init();
+  const { connection, transactionHandler, payer, metadata, initialMetadata } = await initMetadata();
 
   t.notOk(initialMetadata.primarySaleHappened, 'initially sale has not happened');
   const tx = new UpdateMetadata(
@@ -114,7 +41,7 @@ test('update-metadata-account: toggle primarySaleHappened', async (t) => {
 });
 
 test('update-metadata-account: update with same data', async (t) => {
-  const { connection, transactionHandler, payer, metadata, initialMetadata } = await init();
+  const { connection, transactionHandler, payer, metadata, initialMetadata } = await initMetadata();
 
   const tx = new UpdateMetadata(
     {},
@@ -131,7 +58,7 @@ test('update-metadata-account: update with same data', async (t) => {
 });
 
 test('update-metadata-account: uri', async (t) => {
-  const { connection, transactionHandler, payer, metadata, initialMetadata } = await init();
+  const { connection, transactionHandler, payer, metadata, initialMetadata } = await initMetadata();
 
   const tx = new UpdateMetadata(
     {},
@@ -149,7 +76,7 @@ test('update-metadata-account: uri', async (t) => {
 });
 
 test('update-metadata-account: name and symbol', async (t) => {
-  const { connection, transactionHandler, payer, metadata, initialMetadata } = await init();
+  const { connection, transactionHandler, payer, metadata, initialMetadata } = await initMetadata();
 
   const tx = new UpdateMetadata(
     {},
@@ -181,7 +108,7 @@ test('update-metadata-account: name and symbol', async (t) => {
 // TODO: at this point lots of success cases are tested, however tests for
 // incorrect inputs, etc. should be added ASAP like the below example
 test('update-metadata-account: update symbol too long', async (t) => {
-  const { transactionHandler, payer, metadata, initialMetadata } = await init();
+  const { transactionHandler, payer, metadata, initialMetadata } = await initMetadata();
 
   const tx = new UpdateMetadata(
     {},
