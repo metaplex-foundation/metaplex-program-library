@@ -1,6 +1,12 @@
-import { Connection, Transaction } from '@metaplex-foundation/mpl-core';
+import { Transaction } from '@metaplex-foundation/mpl-core';
 import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Keypair, PublicKey, SystemProgram, TransactionCtorFields } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  TransactionCtorFields,
+} from '@solana/web3.js';
 
 // from: src/programs/shared/transactions/CreateMint.ts
 type CreateMintParams = {

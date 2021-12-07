@@ -3,7 +3,13 @@ import spok from 'spok';
 
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { MetadataData, MetadataDataData, UpdateMetadata } from '../src/mpl-token-metadata';
-import { connectionURL, airdrop, PayerTransactionHandler, killStuckProcess } from './utils';
+import {
+  connectionURL,
+  airdrop,
+  PayerTransactionHandler,
+  killStuckProcess,
+  assertError,
+} from './utils';
 
 import { addLabel } from './utils/address-labels';
 import { mintAndCreateMetadata } from './actions';
@@ -51,21 +57,43 @@ async function assertMetadataDataUnchanged(
   t: test.Test,
   initial: MetadataData,
   updated: MetadataData,
-  except: keyof MetadataData,
+  except?: keyof MetadataData,
 ) {
   const x = { ...initial };
-  delete x[except];
+  if (except != null) {
+    delete x[except];
+  }
   delete x.data.creators;
 
-  const y = { $topic: `no change except '${except}' on metadataData`, ...updated };
-  delete y[except];
+  const y = { $topic: `no change except '${except}' on metadata`, ...updated };
+  if (except != null) {
+    delete y[except];
+  }
   delete y.data.creators;
 
   spok(t, x, y);
 }
 
-// TODO: at this point only success cases are tested, however tests for
-// incorrect inputs, etc. should be added ASAP
+async function assertMetadataDataDataUnchanged(
+  t: test.Test,
+  initial: MetadataDataData,
+  updated: MetadataDataData,
+  except: (keyof MetadataDataData)[],
+) {
+  const x = { ...initial };
+  except.forEach((f) => delete x[f]);
+  delete x.creators;
+
+  const y = { $topic: `no change except '${except}' on metadataData`, ...updated };
+  except.forEach((f) => delete y[f]);
+  delete y.creators;
+
+  spok(t, x, y);
+}
+
+// -----------------
+// Success Cases
+// -----------------
 test('update-metadata-account: toggle primarySaleHappened', async (t) => {
   const { connection, transactionHandler, payer, metadata, initialMetadata } = await init();
 
@@ -85,10 +113,7 @@ test('update-metadata-account: toggle primarySaleHappened', async (t) => {
   assertMetadataDataUnchanged(t, initialMetadata, updatedMetadata, 'primarySaleHappened');
 });
 
-// TODO: this fails even though we pass the previously initialized data due
-// to serialization problems
-// `Error: Class MetadataDataData4 is missing in schema: data.data`
-test.skip('update-metadata-account: update with same data', async (t) => {
+test('update-metadata-account: update with same data', async (t) => {
   const { connection, transactionHandler, payer, metadata, initialMetadata } = await init();
 
   const tx = new UpdateMetadata(
@@ -102,6 +127,77 @@ test.skip('update-metadata-account: update with same data', async (t) => {
   await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
 
   const updatedMetadata = await getMetadataData(connection, metadata);
-  t.ok(updatedMetadata.primarySaleHappened, 'after update sale happened');
-  assertMetadataDataUnchanged(t, initialMetadata, updatedMetadata, 'primarySaleHappened');
+  assertMetadataDataUnchanged(t, initialMetadata, updatedMetadata);
+});
+
+test('update-metadata-account: uri', async (t) => {
+  const { connection, transactionHandler, payer, metadata, initialMetadata } = await init();
+
+  const tx = new UpdateMetadata(
+    {},
+    {
+      metadata,
+      metadataData: new MetadataDataData({ ...initialMetadata.data, uri: `${URI}-updated` }),
+      updateAuthority: payer.publicKey,
+    },
+  );
+  await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
+
+  const updatedMetadata = await getMetadataData(connection, metadata);
+  t.equal(updatedMetadata.data.uri, `${URI}-updated`, 'updates uri');
+  assertMetadataDataDataUnchanged(t, initialMetadata.data, updatedMetadata.data, ['uri']);
+});
+
+test('update-metadata-account: name and symbol', async (t) => {
+  const { connection, transactionHandler, payer, metadata, initialMetadata } = await init();
+
+  const tx = new UpdateMetadata(
+    {},
+    {
+      metadata,
+      metadataData: new MetadataDataData({
+        ...initialMetadata.data,
+        name: `${NAME}-updated`,
+        symbol: `${SYMBOL}++`,
+      }),
+      updateAuthority: payer.publicKey,
+    },
+  );
+  await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
+
+  const updatedMetadata = await getMetadataData(connection, metadata);
+  t.equal(updatedMetadata.data.name, `${NAME}-updated`, 'updates name');
+  t.equal(updatedMetadata.data.symbol, `${SYMBOL}++`, 'updates symbol');
+  assertMetadataDataDataUnchanged(t, initialMetadata.data, updatedMetadata.data, [
+    'name',
+    'symbol',
+  ]);
+});
+
+// -----------------
+// Failure Cases
+// -----------------
+
+// TODO: at this point lots of success cases are tested, however tests for
+// incorrect inputs, etc. should be added ASAP like the below example
+test('update-metadata-account: update symbol too long', async (t) => {
+  const { transactionHandler, payer, metadata, initialMetadata } = await init();
+
+  const tx = new UpdateMetadata(
+    {},
+    {
+      metadata,
+      metadataData: new MetadataDataData({
+        ...initialMetadata.data,
+        symbol: `${SYMBOL}-too-long`,
+      }),
+      updateAuthority: payer.publicKey,
+    },
+  );
+  try {
+    await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
+    t.fail('expected transaction to fail');
+  } catch (err) {
+    assertError(t, err, [/custom program error/i, /Symbol too long/i]);
+  }
 });

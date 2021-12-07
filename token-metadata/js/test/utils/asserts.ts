@@ -39,3 +39,21 @@ export function assertTransactionSummary(
     }
   }
 }
+
+export function assertError(t: Assert, err: Error & { logs?: string[] }, msgRxs: RegExp[]) {
+  t.ok(err != null, 'error encountered');
+  const errorMessages = err
+    .toString()
+    .split('\n')
+    .concat(err.logs ?? []);
+
+  for (const msgRx of msgRxs) {
+    const hasMatch = errorMessages.some((x) => msgRx.test(x));
+    if (!hasMatch) {
+      console.error('Failed to find %s inside', msgRx.toString());
+      console.error(errorMessages.join('\n  '));
+    }
+
+    t.ok(hasMatch, `match '${msgRx.toString()}' in error message`);
+  }
+}
