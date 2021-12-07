@@ -38,3 +38,7 @@ As you note if version + publish succeeds the scripts end up pushing those updat
 master branch. Therefore please ensure to be on an up to date `master` branch before running
 them. Please **don't ever publish from another branch** but only from the main one with only
 PR approved changes merged.
+
+## Reporting security issues
+
+To report a security issue, please follow the guidance on the [SECURITY](.github/SECURITY.md) page.
