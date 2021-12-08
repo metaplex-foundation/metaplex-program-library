@@ -8,3 +8,4 @@ export * from './SetStore';
 export * from './SetStoreV2';
 export * from './SetWhitelistedCreator';
 export * from './StartAuction';
+export * from './RedeemParticipationBidV3';
