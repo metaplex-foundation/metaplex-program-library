@@ -11,6 +11,10 @@ Metaplex smart contracts and SDK.
 | [Auction](./auction)               | [![Program Auction ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-auction.yml)                      | [![SDK Auction](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml)                      |
 | [Metaplex](./metaplex)             | [![Program Metaplex ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-metaplex.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-metaplex.yml)                   | [![SDK Metaplex](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml)                   |
 
+## Stability
+
+[Stability 1 - Experimental](https://docs.metaplex.com/stability). Direct use of this library is not recommended in production or mainnet environments.
+
 ## Development
 
 ### Versioning and Publishing Packages
