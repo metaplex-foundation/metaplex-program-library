@@ -13,7 +13,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "pretest": "yarn build",
-    "test:init-validator": "DEBUG=amman* amman validator ./.ammanrc.js",
+    "amman:validator": "DEBUG=amman* amman validator",
     "test": "tape ./dist/test/*.test.js",
     "posttest": "pkill solana-test-validator",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
@@ -46,6 +46,7 @@
     "@solana/web3.js": "^1.31.0"
   },
   "devDependencies": {
+    "@metaplex-foundation/amman": "^0.0.2",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
     "@types/wait-on": "^5.3.1",
