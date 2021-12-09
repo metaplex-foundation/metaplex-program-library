@@ -112,7 +112,7 @@ async fn fail_invalid_update_authority() {
 }
 
 #[tokio::test]
-async fn cannot_flip_immutable_to_true() {
+async fn cannot_flip_is_mutable_from_false_to_true() {
     let mut context = program_test().start_with_context().await;
     let test_metadata = Metadata::new();
     let name = "Test".to_string();
