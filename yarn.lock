@@ -773,11 +773,12 @@
     npmlog "^4.1.2"
     write-file-atomic "^3.0.3"
 
-"@metaplex-foundation/amman@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@metaplex-foundation/amman/-/amman-0.0.2.tgz#25838236d26ef04c237b26f343296a94696c20cc"
-  integrity sha512-bShWjJf6pLIzDdNlzV8parA/tl2WbCo+Q/0dAPUOnNSM/HWezV3a0UkccZ8E93AIpZJIbL9k7pM9LwPZGxKaCA==
+"@metaplex-foundation/amman@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@metaplex-foundation/amman/-/amman-0.0.3.tgz#b87bcfd7524c8b3ee9d19d14e9b3400644cd069e"
+  integrity sha512-A6XCxU0tbjDXtKxmGjWxNykIQ1o/z9QWWq8qlQGJiIHLSjW0kYsQXaS5UNl7smY5HAotEC/bbzb52t1iyqi7WA==
   dependencies:
+    "@solana/spl-token" "^0.1.8"
     "@solana/web3.js" "^1.31.0"
     debug "^4.3.3"
     wait-on "^6.0.0"

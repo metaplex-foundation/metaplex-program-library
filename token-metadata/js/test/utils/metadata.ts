@@ -3,7 +3,8 @@ import spok from 'spok';
 
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { MetadataData, MetadataDataData } from '../../src/mpl-token-metadata';
-import { connectionURL, airdrop, PayerTransactionHandler } from './';
+import { connectionURL } from './';
+import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 
 import { addLabel } from './address-labels';
 import { mintAndCreateMetadata } from '../actions';

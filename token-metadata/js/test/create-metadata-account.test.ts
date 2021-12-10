@@ -8,20 +8,21 @@ import {
   MetadataDataData,
   MetadataKey,
 } from '../src/mpl-token-metadata';
+import { connectionURL, killStuckProcess } from './utils';
 import {
-  connectionURL,
   airdrop,
+  assertConfirmedTransaction,
+  assertTransactionSummary,
+  Actions,
   PayerTransactionHandler,
   defaultSendOptions,
-  killStuckProcess,
-} from './utils';
-import { assertConfirmedTransaction, assertTransactionSummary } from './utils/asserts';
+} from '@metaplex-foundation/amman';
 
 import BN from 'bn.js';
 
 import { logDebug } from './utils';
 import { addLabel, isKeyOf } from './utils/address-labels';
-import { createMetadata, createMintAccount } from './actions';
+import { createMetadata } from './actions';
 
 killStuckProcess();
 
@@ -41,7 +42,7 @@ test('create-metadata-account: success', async (t) => {
 
   await airdrop(connection, payer.publicKey, 2);
 
-  const { mint, createMintTx } = await createMintAccount(connection, payer.publicKey);
+  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],

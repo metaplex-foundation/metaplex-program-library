@@ -1,16 +1,8 @@
-import {
-  clusterApiUrl,
-  Connection,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-  SendOptions,
-} from '@solana/web3.js';
+import { clusterApiUrl } from '@solana/web3.js';
 import { inspect } from 'util';
 import debug from 'debug';
 import test from 'tape';
 
-export * from './TransactionHandler';
-export * from './asserts';
 export * from './address-labels';
 export * from './metadata';
 
@@ -26,19 +18,9 @@ export const programIds = {
   metaplex: 'p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98',
 };
 
-export const defaultSendOptions: SendOptions = {
-  skipPreflight: false,
-  preflightCommitment: 'confirmed',
-};
-
 export const LOCALHOST = 'http://127.0.0.1:8899/';
 export const DEVNET = clusterApiUrl('devnet');
 export const connectionURL = process.env.USE_DEVNET != null ? DEVNET : LOCALHOST;
-
-export async function airdrop(connection: Connection, publicKey: PublicKey, sol = 1) {
-  const sig = await connection.requestAirdrop(publicKey, sol * LAMPORTS_PER_SOL);
-  return connection.confirmTransaction(sig);
-}
 
 export function dump(x: any) {
   console.log(inspect(x, { depth: 5 }));

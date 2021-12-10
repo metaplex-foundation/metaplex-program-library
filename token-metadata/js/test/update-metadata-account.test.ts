@@ -3,7 +3,6 @@ import test from 'tape';
 import { MetadataDataData, UpdateMetadata } from '../src/mpl-token-metadata';
 import {
   killStuckProcess,
-  assertError,
   initMetadata,
   getMetadataData,
   assertMetadataDataUnchanged,
@@ -12,6 +11,7 @@ import {
   NAME,
   SYMBOL,
 } from './utils';
+import { assertError } from '@metaplex-foundation/amman';
 
 killStuckProcess();
 

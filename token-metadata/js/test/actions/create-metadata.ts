@@ -1,12 +1,11 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { addLabel, logDebug } from '../utils';
 import {
-  addLabel,
+  Actions,
   assertConfirmedTransaction,
   defaultSendOptions,
-  logDebug,
   TransactionHandler,
-} from '../utils';
-import { createMintAccount } from './create-mint';
+} from '@metaplex-foundation/amman';
 import { strict as assert } from 'assert';
 import { CreateMetadata, Metadata, MetadataDataData } from '../../src/mpl-token-metadata';
 
@@ -59,7 +58,8 @@ export async function mintAndCreateMetadata(
   payer: Keypair,
   args: ConstructorParameters<typeof MetadataDataData>[0],
 ) {
-  const { mint, createMintTx } = await createMintAccount(connection, payer.publicKey);
+  const { createMintAccount } = new Actions(connection);
+  const { mint, createMintTx } = await createMintAccount(payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
