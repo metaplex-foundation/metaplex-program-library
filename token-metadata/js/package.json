@@ -49,13 +49,11 @@
     "@metaplex-foundation/amman": "^0.0.3",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
-    "@types/wait-on": "^5.3.1",
     "debug": "^4.3.3",
     "eslint": "^8.3.0",
     "rimraf": "^3.0.2",
     "spok": "^1.4.2",
     "supports-color": "^9.2.1",
-    "tape": "^5.3.2",
-    "wait-on": "^6.0.0"
+    "tape": "^5.3.2"
   }
 }
