@@ -2,7 +2,7 @@ name: Integration Token Metadata
 
 on:
   push:
-    branches: [master]
+    branches: [master,thlorenz/chore/token-metadata-tests]
   pull_request:
     branches: [master]
 
