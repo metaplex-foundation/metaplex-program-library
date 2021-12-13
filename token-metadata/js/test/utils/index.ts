@@ -6,10 +6,10 @@ import test from 'tape';
 export * from './address-labels';
 export * from './metadata';
 
-export const logError = debug('mpl:setup:error');
-export const logInfo = debug('mpl:setup:info');
-export const logDebug = debug('mpl:setup:debug');
-export const logTrace = debug('mpl:setup:trace');
+export const logError = debug('mpl:tm-test:error');
+export const logInfo = debug('mpl:tm-test:info');
+export const logDebug = debug('mpl:tm-test:debug');
+export const logTrace = debug('mpl:tm-test:trace');
 
 export const programIds = {
   metadata: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
@@ -22,7 +22,7 @@ export const LOCALHOST = 'http://127.0.0.1:8899/';
 export const DEVNET = clusterApiUrl('devnet');
 export const connectionURL = process.env.USE_DEVNET != null ? DEVNET : LOCALHOST;
 
-export function dump(x: any) {
+export function dump(x: object) {
   console.log(inspect(x, { depth: 5 }));
 }
 
