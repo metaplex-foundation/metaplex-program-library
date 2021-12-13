@@ -43,16 +43,21 @@ jobs:
       - uses: ./.github/actions/build-token-metadata
 
       # Install JS SDK deps
-      - uses: ./.github/actions/yarn-install-and-verify
+      - uses: ./.github/actions/yarn-install-and-build
         with: 
           cache_id: sdk-token-metadata
           working_dir: ./token-metadata/js
 
       # Run integration test
+      - name: start-local-test-validator
+        working-directory: ./token-metadata/js
+        run: DEBUG=amman* yarn amman:start
+
       - name: integration-test-token-metadata-program
         id: run_integration_test
         working-directory: ./token-metadata/js
-        run: |
-          yarn amman:start
-          yarn test 
-          yarn amman:stop
+        run: DEBUG=mpl* yarn test 
+
+      - name: stop-local-test-validator
+        working-directory: ./token-metadata/js
+        run: yarn amman:stop
