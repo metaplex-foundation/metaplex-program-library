@@ -11,7 +11,7 @@ use {
     },
     anchor_spl::token::{Mint, Token, TokenAccount},
     arrayref::array_ref,
-    metaplex_token_metadata::state::Metadata,
+    mpl_token_metadata::state::Metadata,
     spl_associated_token_account::get_associated_token_address,
     spl_token::{instruction::initialize_account2, state::Account},
     std::{convert::TryInto, slice::Iter},
@@ -75,11 +75,11 @@ pub fn assert_metadata_valid<'a>(
     token_account: &anchor_lang::Account<'a, TokenAccount>,
 ) -> ProgramResult {
     assert_derivation(
-        &metaplex_token_metadata::id(),
+        &mpl_token_metadata::id(),
         &metadata.to_account_info(),
         &[
-            metaplex_token_metadata::state::PREFIX.as_bytes(),
-            metaplex_token_metadata::id().as_ref(),
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
             token_account.mint.as_ref(),
         ],
     )?;
