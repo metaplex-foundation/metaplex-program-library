@@ -40,7 +40,7 @@ jobs:
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
 
       # Build Rust Program
-      - uses: ./.github/actions/build-token-vault
+      - uses: ./.github/actions/build-token-metadata
 
       # Install JS SDK deps
       - uses: ./.github/actions/yarn-install-and-verify
