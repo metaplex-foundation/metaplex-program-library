@@ -10,7 +10,10 @@ wallet = "~/.config/solana/id.json"
 
 [[test.genesis]]
 address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-program = "./tests/deps/spl_token_metadata.so"
+program = "fusion/program/tests/deps/mpl_token_metadata.so"
 
 [scripts]
-test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test = "npx ts-mocha -p ./tsconfig.json -t 1000000 fusion/program/tests/*.ts"
+
+[workspace]
+members = ["fusion/program"]

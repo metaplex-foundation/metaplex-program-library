@@ -18,11 +18,13 @@ spl-math = { version = "0.1", features = [ "no-entrypoint" ] }
 spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
 mpl-metaplex = { git = "https://github.com/metaplex-foundation/metaplex-program-library", features = ["no-entrypoint"] }
 mpl-token-metadata = { git = "https://github.com/metaplex-foundation/metaplex-program-library", features = [ "no-entrypoint" ] }
+mpl-token-vault = { git = "https://github.com/metaplex-foundation/metaplex-program-library", features = [ "no-entrypoint" ] }
 randomness-oracle-program = { git = "https://github.com/metaplex/randomness-oracle", features = [ "no-entrypoint" ] }
 
 [dev-dependencies]
 solana-program-test = "1.7.11"
 solana-sdk = "1.7.11"
+rand = { version="0.8.4" }
 
 [lib]
 crate-type = ["cdylib", "lib"]
