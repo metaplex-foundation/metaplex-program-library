@@ -57,7 +57,3 @@ jobs:
         id: run_integration_test
         working-directory: ./token-metadata/js
         run: DEBUG=mpl* yarn test 
-
-      - name: stop-local-test-validator
-        working-directory: ./token-metadata/js
-        run: yarn amman:stop
