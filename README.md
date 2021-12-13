@@ -11,6 +11,10 @@ Metaplex smart contracts and SDK.
 | [Auction](./auction)               | [![Program Auction ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-auction.yml)                      | [![SDK Auction](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml)                      |                                                                                                                                                                                                                                                                               |
 | [Metaplex](./metaplex)             | [![Program Metaplex ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-metaplex.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-metaplex.yml)                   | [![SDK Metaplex](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml)                   |                                                                                                                                                                                                                                                                               |
 
+## Stability
+
+[Stability 1 - Experimental](https://docs.metaplex.com/stability). Direct use of this library is not recommended in production or mainnet environments.
+
 ## Development
 
 ### Versioning and Publishing Packages
@@ -38,3 +42,7 @@ As you note if version + publish succeeds the scripts end up pushing those updat
 master branch. Therefore please ensure to be on and up to date `master` branch before running
 them. Please **don't ever publish from another branch** but only from the main one with only
 PR approved changes merged.
+
+## Reporting security issues
+
+To report a security issue, please follow the guidance on the [SECURITY](.github/SECURITY.md) page.
