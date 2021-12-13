@@ -2,6 +2,7 @@ import { clusterApiUrl } from '@solana/web3.js';
 import { inspect } from 'util';
 import debug from 'debug';
 import test from 'tape';
+import { LOCALHOST } from '@metaplex-foundation/amman';
 
 export * from './address-labels';
 export * from './metadata';
@@ -18,7 +19,6 @@ export const programIds = {
   metaplex: 'p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98',
 };
 
-export const LOCALHOST = 'http://127.0.0.1:8899/';
 export const DEVNET = clusterApiUrl('devnet');
 export const connectionURL = process.env.USE_DEVNET != null ? DEVNET : LOCALHOST;
 
