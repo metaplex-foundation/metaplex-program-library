@@ -1,0 +1,16 @@
+# Implicit dependencies
+# - actions/checkout@v2
+# - ./.github/actions/install-linux-build-deps
+# - ./.github/actions/install-solana
+# - ./.github/actions/install-rust
+
+name: Build Metaplex
+runs:
+  using: "composite"
+  steps:
+    - name: build-metaplex-program
+      working-directory: ./metaplex/program
+      run: |
+        cargo +${{ env.RUST_STABLE }} build-bpf --version
+        cargo +${{ env.RUST_STABLE }} build-bpf
+      shell: bash
