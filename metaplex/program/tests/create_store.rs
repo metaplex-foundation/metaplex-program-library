@@ -1,8 +1,8 @@
 #![cfg(feature = "test-bpf")]
-use num_traits::FromPrimitive;
 use mpl_metaplex::error::MetaplexError;
 use mpl_metaplex::state::{Key, Store, StoreConfig, CONFIG, PREFIX};
-use mpl_metaplex::{instruction, id};
+use mpl_metaplex::{id, instruction};
+use num_traits::FromPrimitive;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::{config, pubkey::Pubkey};
 use solana_program_test::*;
@@ -35,7 +35,7 @@ mod create_store {
     use super::*;
 
     pub fn program_test<'a>() -> ProgramTest {
-        ProgramTest::new("metaplex", metaplex::id(), None)
+        ProgramTest::new("mpl_metaplex", id(), None)
     }
 
     #[tokio::test]

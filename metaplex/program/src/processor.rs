@@ -16,7 +16,7 @@ use {
     redeem_printing_v2_bid::process_redeem_printing_v2_bid,
     redeem_unused_winning_config_items_as_auctioneer::process_redeem_unused_winning_config_items_as_auctioneer,
     set_auction_cache::process_set_auction_cache,
-    set_store::process_set_store,
+    set_store::{process_set_store, process_set_store_v2},
     set_store_index::process_set_store_index,
     set_whitelisted_creator::process_set_whitelisted_creator,
     solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey},
@@ -93,6 +93,10 @@ pub fn process_instruction<'a>(
         MetaplexInstruction::SetStore(args) => {
             msg!("Instruction: Set Store");
             process_set_store(program_id, accounts, args.public)
+        }
+        MetaplexInstruction::SetStoreV2(args) => {
+            msg!("Instruction: Set Store V2");
+            process_set_store_v2(program_id, accounts, args.public, args.settings_uri)
         }
         MetaplexInstruction::SetWhitelistedCreator(args) => {
             msg!("Instruction: Set Whitelisted Creator");
