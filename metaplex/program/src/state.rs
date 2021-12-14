@@ -1,21 +1,24 @@
-use crate::{
-    deprecated_state::AuctionManagerV1, error::MetaplexError, utils::try_from_slice_checked,
+use {
+    crate::{
+        deprecated_state::AuctionManagerV1, error::MetaplexError, utils::try_from_slice_checked,
+    },
+    arrayref::{array_mut_ref, array_ref, mut_array_refs},
+    borsh::{BorshDeserialize, BorshSerialize},
+    mpl_auction::processor::AuctionData,
+    mpl_token_metadata::state::Metadata,
+    mpl_token_vault::state::SafetyDepositBox,
+    solana_program::{
+        account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
+        pubkey::Pubkey,
+    },
+    std::cell::{Ref, RefMut},
 };
-use arrayref::{array_mut_ref, array_ref, mut_array_refs};
-use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_auction::processor::AuctionData;
-use mpl_token_metadata::state::Metadata;
-use mpl_token_vault::state::SafetyDepositBox;
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
-    pubkey::Pubkey,
-};
-use std::cell::{Ref, RefMut};
 /// prefix used for PDAs to avoid certain collision attacks (https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack)
 pub const PREFIX: &str = "metaplex";
 pub const TOTALS: &str = "totals";
 pub const INDEX: &str = "index";
 pub const CACHE: &str = "cache";
+pub const CONFIG: &str = "config";
 pub const BASE_TRACKER_SIZE: usize = 1 + 1 + 1 + 4;
 
 pub const MAX_INDEXED_ELEMENTS: usize = 100;
@@ -45,7 +48,15 @@ pub const MAX_AUCTION_MANAGER_V2_SIZE: usize = 1 + //key
 1 + //status
 8 + // winning configs validated
 200; // padding
-pub const MAX_STORE_SIZE: usize = 2 + 32 + 32 + 32 + 32 + 100;
+pub const MAX_STORE_SIZE: usize = 2 + // Store Version Key 
+32 + // Auction Program Key
+32 + // Token Vault Program Key
+32 + // Token Metadata Program Key
+32 + // Token Program Key
+100; // Padding;
+pub const MAX_STORE_CONFIG_V1_SIZE: usize = 2 + // StoreConfig Version Key 
+200 + // Settings Uri Len
+100; // Padding;
 pub const MAX_WHITELISTED_CREATOR_SIZE: usize = 2 + 32 + 10;
 pub const MAX_PAYOUT_TICKET_SIZE: usize = 1 + 32 + 8;
 pub const MAX_BID_REDEMPTION_TICKET_SIZE: usize = 3;
@@ -84,6 +95,7 @@ pub enum Key {
     AuctionWinnerTokenTypeTrackerV1,
     StoreIndexerV1,
     AuctionCacheV1,
+    StoreConfigV1,
 }
 
 pub struct CommonWinningIndexChecks<'a> {
@@ -724,6 +736,23 @@ impl Store {
     pub fn from_account_info(a: &AccountInfo) -> Result<Store, ProgramError> {
         let store: Store =
             try_from_slice_checked(&a.data.borrow_mut(), Key::StoreV1, MAX_STORE_SIZE)?;
+
+        Ok(store)
+    }
+}
+#[repr(C)]
+#[derive(Clone, BorshSerialize, BorshDeserialize)]
+pub struct StoreConfig {
+    pub key: Key,
+    pub settings_uri: Option<String>,
+}
+impl StoreConfig {
+    pub fn from_account_info(a: &AccountInfo) -> Result<StoreConfig, ProgramError> {
+        let store: StoreConfig = try_from_slice_checked(
+            &a.data.borrow_mut(),
+            Key::StoreConfigV1,
+            MAX_STORE_CONFIG_V1_SIZE,
+        )?;
 
         Ok(store)
     }
