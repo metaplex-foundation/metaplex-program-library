@@ -4,6 +4,7 @@ use crate::{
     state::*,
     error::*,
     pod::*,
+    equality_proof,
     ID,
 };
 
