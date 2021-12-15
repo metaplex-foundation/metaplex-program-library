@@ -1,1 +1,1 @@
-export const what = 'mpl-auction-house.ts';
+export const TODO = 'Generate TypeScript SDK from IDL via `solana-idl-to-api`';

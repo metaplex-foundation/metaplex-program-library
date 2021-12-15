@@ -13,7 +13,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "test": "echo mpl-auction-house tests coming up ...",
-    "anchor:gen-ts": "node scripts/anchor-gen-ts.js && prettier --write ./src/generated/auction_house.ts",
+    "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
