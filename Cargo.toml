@@ -1,6 +1,7 @@
 [workspace]
 members=[
   "auction/program",
+  "auction-house/program",
   "metaplex/program",
   "token-vault/program",
   "token-vault/test",
