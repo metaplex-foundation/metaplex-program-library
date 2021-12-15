@@ -10,7 +10,7 @@ In order to update the generated SDK when the rust contract was updated please r
 yarn gen:api
 ```
 
-NOTE: at this point this only generates the IDL json file but later we will generate TypeScript
+NOTE: at this point this only generates the IDL json file but later will generate TypeScript
 definitions and SDK code as well, derived from that IDL.
 
 ## LICENSE
