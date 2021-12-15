@@ -1,6 +1,13 @@
 {
   "npmClient": "yarn",
-  "packages": ["core/js", "auction/js", "token-vault/js", "token-metadata/js", "metaplex/js"],
+  "packages": [
+    "core/js",
+    "auction/js",
+    "token-vault/js",
+    "token-metadata/js",
+    "metaplex/js",
+    "auction-house/js"
+  ],
   "useWorkspaces": true,
   "version": "independent",
   "command": {
