@@ -1,4 +1,4 @@
-name: Yarn Install Build Test and Lint
+name: Yarn Install and Build
 
 inputs:
   cache_id:
@@ -7,25 +7,21 @@ inputs:
   working_dir:
     description: Directory in which to perform the yarn tasks
     required: true
-  skip_test:
-    description: If true, testing is skipped. This should be used when the tests are end-to-end and thus need a locally running test-validator with deployed Rust programs.
-    required: false
-    default: false
 
   build_core:
-    description: If not false it will build the core package before running checks
+    description: If not false it will build the core package
     required: false
     default: true
   build_auction:
-    description: If true it will build the auction package before running checks
+    description: If true it will build the auction package
     required: false
     default: false
   build_token_metadata:
-    description: If true it will build the token_metadata package before running checks
+    description: If true it will build the token_metadata package
     required: false
     default: false
   build_token_vault:
-    description: If true it will build the token_vault package before running checks
+    description: If true it will build the token_vault package
     required: false
     default: false
 
@@ -80,7 +76,7 @@ runs:
       shell: bash
 
     ##############
-    # Verify Contract 
+    # Build Contract 
     ##############
     - name: Install modules
       run: yarn install
@@ -89,16 +85,5 @@ runs:
 
     - name: Build TypeScript 
       run: yarn build
-      working-directory: ${{ inputs.working_dir }}
-      shell: bash
-
-    - name: Test TypeScript
-      if: ${{ !inputs.skip_test }}
-      run: yarn test
-      working-directory: ${{ inputs.working_dir }}
-      shell: bash
-
-    - name: Lint TypeScript 
-      run: yarn lint
       working-directory: ${{ inputs.working_dir }}
       shell: bash

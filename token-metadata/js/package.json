@@ -8,11 +8,14 @@
     "check:publish-ready": "yarn build && yarn test",
     "preversion": "yarn check:publish-ready",
     "postversion": "git add package.json && git commit -m \"chore: update $npm_package_name to v$npm_package_version\" && git tag $npm_package_name@$npm_package_version",
-    "prepublish": "yarn check:publish-ready",
+    "prepublishOnly": "yarn check:publish-ready",
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "test": "echo mpl-token-metadata tests coming up ...",
+    "pretest": "yarn build",
+    "amman:start": "DEBUG=amman* amman validator",
+    "amman:stop": "pkill solana-test-validator",
+    "test": "tape ./dist/test/*.test.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
@@ -43,7 +46,14 @@
     "@solana/web3.js": "^1.31.0"
   },
   "devDependencies": {
+    "@metaplex-foundation/amman": "^0.0.3",
+    "@types/debug": "^4.1.7",
+    "@types/tape": "^4.13.2",
+    "debug": "^4.3.3",
     "eslint": "^8.3.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "spok": "^1.4.2",
+    "supports-color": "^9.2.1",
+    "tape": "^5.3.2"
   }
 }
