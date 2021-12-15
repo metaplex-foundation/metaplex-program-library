@@ -1,0 +1,35 @@
+[package]
+name = "private-metadata"  # TODO. candy... tootsie-pop?
+version = "0.0.1"
+description = "Encrypted metadata URI and assets"
+authors = [
+    "Lawrence Wu <larry.wu@solana.com>",
+]
+keywords = ["solana"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+arrayref = "0.3.6"
+bytemuck = { version = "1.7.2", features = ["derive"] }
+curve25519-dalek = { version = "3.2.0", features = ["serde"]}
+merlin = "2"
+num-derive = "0.3"
+num-traits = "0.2"
+rand = "0.7"
+thiserror = "1"
+
+solana-program = "1.7.11"
+spl-token = { version="3.1.1", features = [ "no-entrypoint" ] }
+spl-token-metadata = { version = "0.0.1", features = [
+    "no-entrypoint"
+] }
+spl-zk-token-sdk = { path = "/Users/lwu/code/solana/spl-zk-token/sdk", features = [] }
