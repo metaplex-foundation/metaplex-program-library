@@ -1,5 +1,8 @@
 
-use crate::state::MAX_URI_LENGTH;
+use crate::state::{
+    MAX_URI_LENGTH,
+    CIPHER_KEY_CHUNKS,
+};
 use bytemuck::{Pod, Zeroable};
 use num_derive::{FromPrimitive, ToPrimitive};
 use num_traits::{FromPrimitive, ToPrimitive};
@@ -9,13 +12,14 @@ use solana_program::{
 };
 
 use spl_zk_token_sdk::{
-    zk_token_elgamal::{self},
+    zk_token_elgamal,
 };
 
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct ConfigureMetadataData {
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
+    pub encrypted_cipher_key: [zk_token_elgamal::pod::ElGamalCiphertext; CIPHER_KEY_CHUNKS],
     pub uri: [u8; MAX_URI_LENGTH],
 }
 
@@ -24,6 +28,12 @@ pub struct ConfigureMetadataData {
 pub enum PrivateMetadataInstruction {
 
     ConfigureMetadata,
+
+    InitTransfer,
+
+    FiniTransfer,
+
+    TransferChunk,
 }
 
 pub fn decode_instruction_type(

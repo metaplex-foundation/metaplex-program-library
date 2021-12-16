@@ -22,6 +22,12 @@ pub enum PrivateMetadataError {
 
     #[error("Invalid Private Metadata Key")]
     InvalidPrivateMetadataKey,
+
+    #[error("Transfer Buffer Already Initialized")]
+    BufferAlreadyInitialized,
+
+    #[error("Arithmetic Overflow")]
+    Overflow,
 }
 
 impl PrintProgramError for PrivateMetadataError {

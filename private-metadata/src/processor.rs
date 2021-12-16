@@ -4,7 +4,7 @@ use crate::{
     state::*,
     error::*,
     pod::*,
-    equality_proof,
+    transfer_proof,
     ID,
 };
 
@@ -12,6 +12,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
+    program_pack::Pack,
     program::{invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
@@ -25,6 +26,7 @@ use spl_token_metadata::{
 };
 
 use spl_zk_token_sdk::{
+    zk_token_elgamal,
 };
 
 use arrayref::{array_ref};
@@ -39,7 +41,25 @@ pub fn process_instruction(
             msg!("ConfigureMetadata!");
             process_configure_metadata(
                 accounts,
-                decode_instruction_data::<ConfigureMetadataData>(input)?)
+                decode_instruction_data::<ConfigureMetadataData>(input)?
+            )
+        }
+        PrivateMetadataInstruction::InitTransfer => {
+            msg!("InitTransfer!");
+            process_init_transfer(
+                accounts,
+                decode_instruction_data::<zk_token_elgamal::pod::ElGamalPubkey>(input)?
+            )
+        }
+        PrivateMetadataInstruction::FiniTransfer => {
+            msg!("FiniTransfer!");
+            process_fini_transfer(
+                accounts,
+            )
+        }
+        PrivateMetadataInstruction::TransferChunk => {
+            msg!("TransferChunk!");
+            Ok(())
         }
     }
 }
@@ -57,6 +77,9 @@ fn process_configure_metadata(
     let system_program_info = next_account_info(account_info_iter)?;
     let rent_sysvar_info = next_account_info(account_info_iter)?;
 
+    if !payer_info.is_signer {
+        return Err(ProgramError::InvalidArgument);
+    }
     validate_account_owner(mint_info, &spl_token::ID)?;
     validate_account_owner(metadata_info, &spl_token_metadata::ID)?;
 
@@ -134,7 +157,154 @@ fn process_configure_metadata(
 
     private_metadata.mint = *mint_info.key;
     private_metadata.elgamal_pk = data.elgamal_pk;
+    private_metadata.encrypted_cipher_key = data.encrypted_cipher_key;
     private_metadata.uri = data.uri;
+
+    Ok(())
+}
+
+fn process_init_transfer(
+    accounts: &[AccountInfo],
+    elgamal_pk: &zk_token_elgamal::pod::ElGamalPubkey,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let authority_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let token_account_info = next_account_info(account_info_iter)?;
+    let private_metadata_info = next_account_info(account_info_iter)?;
+    let transfer_buffer_info = next_account_info(account_info_iter)?;
+    let _system_program_info = next_account_info(account_info_iter)?;
+    let rent_sysvar_info = next_account_info(account_info_iter)?;
+
+    if !authority_info.is_signer {
+        return Err(ProgramError::InvalidArgument);
+    }
+    validate_account_owner(mint_info, &spl_token::ID)?;
+    validate_account_owner(token_account_info, &spl_token::ID)?;
+    validate_account_owner(private_metadata_info, &ID)?;
+    validate_account_owner(transfer_buffer_info, &ID)?;
+
+    let token_account = spl_token::state::Account::unpack(
+        &token_account_info.data.borrow())?;
+
+    if token_account.mint != *mint_info.key {
+        msg!("Mint mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if token_account.owner != *authority_info.key {
+        msg!("Owner mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    // TODO: this is a bit fucky since the nft token transfer should really happen at the same time
+    // as the private metadata transfer...
+    if token_account.amount != 1 {
+        msg!("Invalid amount");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+
+    // check that private metadata matches mint
+    let private_metadata_seeds = &[
+        PREFIX.as_bytes(),
+        mint_info.key.as_ref(),
+    ];
+    let (private_metadata_key, _private_metadata_bump_seed) =
+        Pubkey::find_program_address(private_metadata_seeds, &ID);
+
+    if private_metadata_key != *private_metadata_info.key {
+        return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
+    }
+
+
+    // check and initialize the cipher key transfer buffer
+    if transfer_buffer_info.data_len()
+            != CipherKeyTransferBuffer::get_packed_len() {
+        return Err(ProgramError::AccountDataTooSmall);
+    }
+
+    let rent = &Rent::from_account_info(rent_sysvar_info)?;
+    if transfer_buffer_info.lamports()
+            < rent.minimum_balance(CipherKeyTransferBuffer::get_packed_len()).max(1) {
+        return Err(ProgramError::InsufficientFunds);
+    }
+
+    let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
+        &transfer_buffer_info, &ID)?.into_mut();
+
+    if (transfer_buffer.updated & BUFFER_INITIALIZED_MASK) != 0 {
+        return Err(PrivateMetadataError::BufferAlreadyInitialized.into());
+    }
+    // low bits should be clear regardless...
+    transfer_buffer.updated = BUFFER_INITIALIZED_MASK;
+    transfer_buffer.authority = *authority_info.key;
+    transfer_buffer.private_metadata_key = *private_metadata_info.key;
+    transfer_buffer.elgamal_pk = *elgamal_pk;
+
+    Ok(())
+}
+
+// TODO: this should be cheap and should be bundled with the actual NFT transfer
+fn process_fini_transfer(
+    accounts: &[AccountInfo],
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let authority_info = next_account_info(account_info_iter)?;
+    let private_metadata_info = next_account_info(account_info_iter)?;
+    let transfer_buffer_info = next_account_info(account_info_iter)?;
+    let _system_program_info = next_account_info(account_info_iter)?;
+
+    if !authority_info.is_signer {
+        return Err(ProgramError::InvalidArgument);
+    }
+    validate_account_owner(private_metadata_info, &ID)?;
+    validate_account_owner(transfer_buffer_info, &ID)?;
+
+    // check that transfer buffer matches passed in arguments and that we have authority to do
+    // the transfer
+    //
+    // TODO: should we have a nother check for nft ownership here?
+    let transfer_buffer = CipherKeyTransferBuffer::from_account_info(
+        &transfer_buffer_info, &ID)?;
+
+    if transfer_buffer.authority != *authority_info.key {
+        msg!("Owner mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if transfer_buffer.private_metadata_key!= *private_metadata_info.key {
+        msg!("Private metadata mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if (transfer_buffer.updated & BUFFER_INITIALIZED_MASK) != BUFFER_INITIALIZED_MASK {
+        msg!("Transfer buffer not initialized");
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let all_chunks_set_mask = 1<<CIPHER_KEY_CHUNKS - 1;
+    if (transfer_buffer.updated & all_chunks_set_mask) != all_chunks_set_mask {
+        msg!("Not all chunks set");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+
+    // write the new cipher text over
+    let mut private_metadata = PrivateMetadataAccount::from_account_info(
+        &private_metadata_info, &ID)?.into_mut();
+
+    private_metadata.elgamal_pk = transfer_buffer.elgamal_pk;
+    private_metadata.encrypted_cipher_key = transfer_buffer.encrypted_cipher_key;
+
+
+    // close the transfer buffer
+    let starting_lamports = authority_info.lamports();
+    **authority_info.lamports.borrow_mut() = starting_lamports
+        .checked_add(transfer_buffer_info.lamports())
+        .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+
+    **transfer_buffer_info.lamports.borrow_mut() = 0;
 
     Ok(())
 }
