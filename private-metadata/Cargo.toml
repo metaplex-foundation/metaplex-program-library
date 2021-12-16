@@ -20,28 +20,28 @@ default = []
 [dependencies]
 arrayref = "0.3.6"
 base64 = "0.13"
+bincode = "1"
 bytemuck = { version = "1.7.2", features = ["derive"] }
-curve25519-dalek = { version = "3.2.0", features = ["serde"]}
-merlin = "2"
+curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
+lazy_static = "1.4.0"
+merlin = { path = "/Users/lwu/code/solana/merlin" }
 num-derive = "0.3"
 num-traits = "0.2"
-rand = "0.7"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 sha3 = "0.9"
 solana-program = "1.7.15"
-subtle = "2"
 spl-token = { version="3.1.1", features = [ "no-entrypoint" ] }
 spl-token-metadata = { version = "0.0.1", features = [
     "no-entrypoint"
 ] }
+subtle = "2"
 thiserror = "1"
 zeroize = { version = "1.2.0", default-features = false, features = ["zeroize_derive"] }
 
 
 [target.'cfg(not(target_arch = "bpf"))'.dependencies]
-bincode = "1"
-lazy_static = "1.4.0"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+rand = "0.7"
 solana-sdk = "1.7.15"
 
 

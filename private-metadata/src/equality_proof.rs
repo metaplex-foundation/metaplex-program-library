@@ -1,18 +1,14 @@
 #[cfg(not(target_arch = "bpf"))]
 use {
+    rand::rngs::OsRng,
+};
+use {
     arrayref::{array_ref, array_refs},
+    bytemuck::{Pod, Zeroable},
     curve25519_dalek::{
         ristretto::{RistrettoPoint},
         traits::{MultiscalarMul, VartimeMultiscalarMul},
     },
-    rand::rngs::OsRng,
-    crate::encryption::{
-        elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
-        pedersen::{PedersenBase, PedersenOpening},
-    },
-};
-use {
-    bytemuck::{Pod, Zeroable},
     curve25519_dalek::{
         ristretto::{CompressedRistretto},
         scalar::Scalar,
@@ -21,6 +17,10 @@ use {
     crate::{
         errors::ProofError,
         transcript::TranscriptProtocol,
+    },
+    crate::encryption::{
+        elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
+        pedersen::{PedersenBase, PedersenOpening},
     },
     merlin::Transcript,
     std::convert::TryFrom,
@@ -37,8 +37,8 @@ pub struct EqualityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_arch = "bpf"))]
 impl EqualityProof {
+    #[cfg(not(target_arch = "bpf"))]
     pub fn new(
         src_keypair: &ElGamalKeypair,
         dst_pubkey: &ElGamalPubkey,

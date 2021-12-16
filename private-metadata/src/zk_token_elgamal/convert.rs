@@ -10,7 +10,6 @@ impl From<(pod::PedersenCommitment, pod::PedersenDecryptHandle)> for pod::ElGama
     }
 }
 
-#[cfg(not(target_arch = "bpf"))]
 mod target_arch {
     use {
         super::pod,
@@ -125,6 +124,6 @@ mod target_arch {
     }
 }
 
-#[cfg(target_arch = "bpf")]
-#[allow(unused_variables)]
-mod target_arch {}
+// #[cfg(target_arch = "bpf")]
+// #[allow(unused_variables)]
+// mod target_arch {}

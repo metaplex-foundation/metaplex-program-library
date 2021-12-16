@@ -1,4 +1,4 @@
-#![cfg(not(target_arch = "bpf"))]
+// #![cfg(not(target_arch = "bpf"))]
 
 use {
     curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar, traits::Identity},

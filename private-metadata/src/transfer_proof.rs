@@ -1,9 +1,6 @@
 use {
-    crate::zk_token_elgamal::pod,
     bytemuck::{Pod, Zeroable},
-};
-#[cfg(not(target_arch = "bpf"))]
-use {
+    crate::zk_token_elgamal::pod,
     crate::equality_proof::{
         EqualityProof,
         PodEqualityProof,
@@ -22,7 +19,6 @@ use {
     std::convert::TryInto,
 };
 
-#[cfg(not(target_arch = "bpf"))]
 pub trait Verifiable {
     fn verify(&self) -> Result<(), ProofError>;
 }
@@ -119,7 +115,6 @@ impl TransferData {
     }
 }
 
-#[cfg(not(target_arch = "bpf"))]
 impl Verifiable for TransferData {
     fn verify(&self) -> Result<(), ProofError> {
         self.proof.verify(
@@ -139,12 +134,12 @@ pub struct TransferProof {
 
 // plumbing BS
 #[allow(non_snake_case)]
-#[cfg(not(target_arch = "bpf"))]
 impl TransferProof {
     fn transcript_new() -> Transcript {
         Transcript::new(b"TransferProof")
     }
 
+    #[cfg(not(target_arch = "bpf"))]
     pub fn new(
         src_keypair: &ElGamalKeypair,
         dst_pubkey: &ElGamalPubkey,

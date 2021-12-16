@@ -13,7 +13,7 @@ use {
     },
     serde::{Deserialize, Serialize},
     sha3::Sha3_512,
-    solana_sdk::{
+    solana_program::{
         instruction::Instruction,
         message::Message,
         pubkey::Pubkey,
@@ -192,7 +192,7 @@ impl ElGamalKeypair {
 
     pub fn to_bytes(&self) -> [u8; 64] {
         let mut bytes = self.public.to_bytes().to_vec();
-        bytes.extend(self.secret.to_bytes());
+        bytes.extend(&self.secret.to_bytes());
         bytes.try_into().expect("incorrect length")
     }
 
@@ -204,6 +204,7 @@ impl ElGamalKeypair {
     }
 
     /// Reads a JSON-encoded keypair from a `Reader` implementor
+    #[cfg(not(target_arch = "bpf"))]
     pub fn read_json<R: Read>(reader: &mut R) -> Result<Self, Box<dyn std::error::Error>> {
         let bytes: Vec<u8> = serde_json::from_reader(reader)?;
         Self::from_bytes(&bytes).ok_or_else(|| {
@@ -212,12 +213,14 @@ impl ElGamalKeypair {
     }
 
     /// Reads keypair from a file
+    #[cfg(not(target_arch = "bpf"))]
     pub fn read_json_file<F: AsRef<Path>>(path: F) -> Result<Self, Box<dyn std::error::Error>> {
         let mut file = File::open(path.as_ref())?;
         Self::read_json(&mut file)
     }
 
     /// Writes to a `Write` implementer with JSON-encoding
+    #[cfg(not(target_arch = "bpf"))]
     pub fn write_json<W: Write>(
         &self,
         writer: &mut W,
@@ -229,6 +232,7 @@ impl ElGamalKeypair {
     }
 
     /// Write keypair to a file with JSON-encoding
+    #[cfg(not(target_arch = "bpf"))]
     pub fn write_json_file<F: AsRef<Path>>(
         &self,
         outfile: F,
@@ -324,6 +328,7 @@ impl fmt::Display for ElGamalPubkey {
 #[zeroize(drop)]
 pub struct ElGamalSecretKey(Scalar);
 impl ElGamalSecretKey {
+    #[cfg(not(target_arch = "bpf"))]
     pub fn new(signer: &dyn Signer, address: &Pubkey) -> Result<Self, SignerError> {
         let message = Message::new(
             &[Instruction::new_with_bytes(
