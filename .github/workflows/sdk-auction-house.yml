@@ -1,4 +1,4 @@
-name: SDK Token Metadata
+name: SDK Auction House
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
     branches: [master]
 
 jobs:
-  build-lint-and-test-token-metadata:
+  build-lint-and-test-auction-house:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
       - uses: ./.github/actions/yarn-install-and-verify
         with: 
-          cache_id: sdk-token-metadata
-          working_dir: ./token-metadata/js
+          cache_id: sdk-auction  
+          working_dir: ./auction/js
           skip_test: true

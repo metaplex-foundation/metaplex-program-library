@@ -4,7 +4,7 @@
 # - ./.github/actions/install-solana
 # - ./.github/actions/install-rust
 
-name: Build Token Metadata
+name: Build Token Metadata 
 runs:
   using: "composite"
   steps:

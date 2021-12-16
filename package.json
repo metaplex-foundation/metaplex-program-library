@@ -18,7 +18,8 @@
       "token-vault/js",
       "token-metadata/js",
       "auction/js",
-      "metaplex/js"
+      "metaplex/js",
+      "auction-house/js"
     ]
   },
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
