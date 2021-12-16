@@ -202,3 +202,86 @@ impl TryFrom<PodEqualityProof> for EqualityProof {
         Self::from_bytes(&pod.0)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use spl_zk_token_sdk::encryption::pedersen::Pedersen;
+
+    #[test]
+    fn succesful_equality_proof() {
+        // success case
+        let src_keypair = ElGamalKeypair::default();
+        let dst_pubkey = ElGamalKeypair::default().public;
+        let message: u64 = 55;
+
+        let src_ciphertext = src_keypair.public.encrypt(message);
+
+        let (dst_comm, dst_opening) = Pedersen::new(message);
+        let dst_handle = dst_pubkey.decrypt_handle(&dst_opening);
+        let dst_ciphertext = ElGamalCiphertext {
+            message_comm: dst_comm,
+            decrypt_handle: dst_handle,
+        };
+
+        let mut transcript_prover = Transcript::new(b"Test");
+        let mut transcript_verifier = Transcript::new(b"Test");
+
+        let proof = EqualityProof::new(
+            &src_keypair,
+            &dst_pubkey,
+            &src_ciphertext,
+            &dst_opening,
+            &mut transcript_prover,
+        );
+
+        assert!(proof
+            .verify(
+                &src_keypair.public,
+                &dst_pubkey,
+                &src_ciphertext,
+                &dst_ciphertext,
+                &mut transcript_verifier
+            )
+            .is_ok());
+    }
+
+    #[test]
+    fn invalid_equality_proof() {
+        // failure case
+        let src_keypair = ElGamalKeypair::default();
+        let dst_pubkey = ElGamalKeypair::default().public;
+        let src_message: u64 = 55;
+        let dst_message: u64 = 56;
+
+        let src_ciphertext = src_keypair.public.encrypt(src_message);
+
+        let (dst_comm, dst_opening) = Pedersen::new(dst_message);
+        let dst_handle = dst_pubkey.decrypt_handle(&dst_opening);
+        let dst_ciphertext = ElGamalCiphertext {
+            message_comm: dst_comm,
+            decrypt_handle: dst_handle,
+        };
+
+        let mut transcript_prover = Transcript::new(b"Test");
+        let mut transcript_verifier = Transcript::new(b"Test");
+
+        let proof = EqualityProof::new(
+            &src_keypair,
+            &dst_pubkey,
+            &src_ciphertext,
+            &dst_opening,
+            &mut transcript_prover,
+        );
+
+        assert!(proof
+            .verify(
+                &src_keypair.public,
+                &dst_pubkey,
+                &src_ciphertext,
+                &dst_ciphertext,
+                &mut transcript_verifier
+            )
+            .is_err());
+    }
+}

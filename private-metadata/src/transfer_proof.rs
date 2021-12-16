@@ -246,3 +246,76 @@ pub struct TransferPubkeys {
     pub src_pubkey: pod::ElGamalPubkey,     // 32 bytes
     pub dst_pubkey: pod::ElGamalPubkey,     // 32 bytes
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_transfer_decryption() {
+        // ElGamalKeypair keys for source, destination, and auditor accounts
+        let src_keypair = ElGamalKeypair::default();
+        let dst_keypair = ElGamalKeypair::default();
+
+        let cipher_key_chunk: u32 = 77;
+        let cipher_key_chunk_ct = src_keypair.public.encrypt(cipher_key_chunk);
+
+        // create transfer data
+        let transfer_data = TransferData::new(
+            &src_keypair,
+            dst_keypair.public,
+            cipher_key_chunk,
+            cipher_key_chunk_ct,
+        );
+
+        assert_eq!(
+            transfer_data.decrypt_amount(Role::Source, &src_keypair.secret),
+            Ok(cipher_key_chunk),
+        );
+
+        assert_eq!(
+            transfer_data.decrypt_amount(Role::Dest, &dst_keypair.secret),
+            Ok(cipher_key_chunk),
+        );
+    }
+
+    #[test]
+    fn test_transfer_correctness() {
+        // ElGamalKeypair keys for source, destination, and auditor accounts
+        let src_keypair = ElGamalKeypair::default();
+        let dst_pubkey = ElGamalKeypair::default().public;
+
+        let cipher_key_chunk: u32 = 77;
+        let cipher_key_chunk_ct = src_keypair.public.encrypt(cipher_key_chunk);
+
+        // create transfer data
+        let transfer_data = TransferData::new(
+            &src_keypair,
+            dst_pubkey,
+            cipher_key_chunk,
+            cipher_key_chunk_ct,
+        );
+
+        assert_eq!(transfer_data.verify(), Ok(()));
+    }
+
+    #[test]
+    fn test_transfer_failure() {
+        // ElGamalKeypair keys for source, destination, and auditor accounts
+        let src_keypair = ElGamalKeypair::default();
+        let dst_pubkey = ElGamalKeypair::default().public;
+
+        let cipher_key_chunk: u32 = 77;
+        let cipher_key_chunk_ct = src_keypair.public.encrypt(cipher_key_chunk);
+
+        // create transfer data
+        let transfer_data = TransferData::new(
+            &src_keypair,
+            dst_pubkey,
+            cipher_key_chunk + 1,
+            cipher_key_chunk_ct,
+        );
+
+        assert!(transfer_data.verify().is_err());
+    }
+}
