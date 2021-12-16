@@ -4,7 +4,7 @@ use crate::{
     state::*,
     error::*,
     pod::*,
-    transfer_proof::{self, Verifiable},
+    transfer_proof::{Verifiable},
     ID,
 };
 

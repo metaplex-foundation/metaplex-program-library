@@ -16,12 +16,16 @@ mod target_arch {
         crate::{
             encryption::{
                 elgamal::{ElGamalCiphertext, ElGamalPubkey},
-                pedersen::{PedersenCommitment, PedersenDecryptHandle},
+                pedersen::{PedersenCommitment},
             },
             errors::ProofError,
         },
         curve25519_dalek::{ristretto::CompressedRistretto, scalar::Scalar},
         std::convert::TryFrom,
+    };
+    #[cfg(not(target_arch = "bpf"))]
+    use {
+        crate::encryption::pedersen::{PedersenDecryptHandle},
     };
 
     impl From<Scalar> for pod::Scalar {

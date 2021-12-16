@@ -1,26 +1,29 @@
 #[cfg(not(target_arch = "bpf"))]
 use {
     rand::rngs::OsRng,
+    curve25519_dalek::{
+        traits::{MultiscalarMul},
+    },
+    crate::encryption::{
+        elgamal::{ElGamalKeypair},
+        pedersen::{PedersenOpening},
+    },
 };
 use {
     arrayref::{array_ref, array_refs},
     bytemuck::{Pod, Zeroable},
     curve25519_dalek::{
-        ristretto::{RistrettoPoint},
-        traits::{MultiscalarMul, VartimeMultiscalarMul},
-    },
-    curve25519_dalek::{
-        ristretto::{CompressedRistretto},
+        ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::{IsIdentity},
+        traits::{IsIdentity, VartimeMultiscalarMul},
     },
     crate::{
         errors::ProofError,
         transcript::TranscriptProtocol,
     },
     crate::encryption::{
-        elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
-        pedersen::{PedersenBase, PedersenOpening},
+        elgamal::{ElGamalCiphertext, ElGamalPubkey},
+        pedersen::{PedersenBase},
     },
     merlin::Transcript,
     std::convert::TryFrom,

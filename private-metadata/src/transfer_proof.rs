@@ -1,3 +1,11 @@
+#[cfg(not(target_arch = "bpf"))]
+use {
+    crate::encryption::{
+        discrete_log::*,
+        elgamal::{ElGamalKeypair, ElGamalSecretKey},
+        pedersen::{Pedersen, PedersenOpening},
+    },
+};
 use {
     bytemuck::{Pod, Zeroable},
     crate::zk_token_elgamal::pod,
@@ -8,13 +16,8 @@ use {
     crate::{
         errors::ProofError,
         transcript::TranscriptProtocol,
-        encryption::{
-            discrete_log::*,
-            elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey, ElGamalSecretKey},
-            pedersen::{Pedersen, PedersenCommitment, PedersenDecryptHandle, PedersenOpening},
-        },
+        encryption::elgamal::{ElGamalCiphertext, ElGamalPubkey},
     },
-    curve25519_dalek::scalar::Scalar,
     merlin::Transcript,
     std::convert::TryInto,
 };

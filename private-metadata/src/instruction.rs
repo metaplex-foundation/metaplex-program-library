@@ -8,7 +8,7 @@ use crate::{
 };
 use bytemuck::{Pod, Zeroable};
 use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::{FromPrimitive};
 
 use solana_program::{
     program_error::ProgramError,

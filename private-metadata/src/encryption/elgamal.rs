@@ -12,12 +12,6 @@ use {
         scalar::Scalar,
     },
     serde::{Deserialize, Serialize},
-    sha3::Sha3_512,
-    solana_program::{
-        instruction::Instruction,
-        message::Message,
-        pubkey::Pubkey,
-    },
     std::{
         convert::TryInto,
         fmt,
@@ -28,7 +22,11 @@ use {
 #[cfg(not(target_arch = "bpf"))]
 use {
     rand::{rngs::OsRng, CryptoRng, RngCore},
+    sha3::Sha3_512,
     solana_sdk::{
+        instruction::Instruction,
+        message::Message,
+        pubkey::Pubkey,
         signature::Signature,
         signer::{Signer, SignerError},
     },
