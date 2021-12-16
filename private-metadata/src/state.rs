@@ -7,8 +7,7 @@ use {
 
 pub const PREFIX: &str = "metadata";
 
-// TODO: whats actually the max we can reasonably encrypt?
-pub const MAX_URI_LENGTH: usize = 30;
+pub const MAX_URI_LENGTH: usize = 100;
 pub const MAX_METADATA_LEN: usize
     = 8                     // discriminator
     + 32                    // mint
@@ -30,6 +29,13 @@ pub enum Key {
 unsafe impl Zeroable for Key {}
 unsafe impl Pod for Key {}
 
+#[derive(Clone, Copy)]
+#[repr(C)]
+pub struct URI(pub [u8; MAX_URI_LENGTH]);
+
+unsafe impl Zeroable for URI {}
+unsafe impl Pod for URI {}
+
 /// Account data
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
@@ -47,7 +53,7 @@ pub struct PrivateMetadataAccount {
     pub encrypted_cipher_key: [zk_token_elgamal::pod::ElGamalCiphertext; CIPHER_KEY_CHUNKS],
 
     /// URI of encrypted asset
-    pub uri: [u8; MAX_URI_LENGTH],
+    pub uri: URI,
 }
 impl PodAccountInfo<'_, '_> for PrivateMetadataAccount {}
 

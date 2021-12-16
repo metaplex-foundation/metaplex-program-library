@@ -23,7 +23,7 @@ use crate::{
 pub struct ConfigureMetadataData {
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
     pub encrypted_cipher_key: [zk_token_elgamal::pod::ElGamalCiphertext; CIPHER_KEY_CHUNKS],
-    pub uri: [u8; MAX_URI_LENGTH],
+    pub uri: crate::state::URI,
 }
 
 #[derive(Clone, Copy, Pod, Zeroable)]
