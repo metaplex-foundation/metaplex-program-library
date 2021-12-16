@@ -509,4 +509,129 @@ describe('mpl_auction_house', function () {
       sellerTradeStateBump,
     );
   });
+
+  it('Cancel.', async function () {
+    const buyerPrice: number = 1;
+    const tokenSize: number = 1;
+
+    // Obtain `AuctionHouse` native mint
+    const treasuryMint = WRAPPED_SOL_MINT;
+
+    // Create unique mint for `TokenMetadata`
+    const tokenMint = await createMint(provider, myWallet.publicKey);
+
+    // Create / Obtain associated token account for `AuctionHouse`
+    const [tokenAccount] = await getAtaForMint(tokenMint, myWallet.publicKey);
+    await createAssociatedTokenAccount(
+      transactionHandler,
+      tokenMint,
+      tokenAccount,
+      walletWrapper,
+      myWallet,
+    );
+
+    mintTo(transactionHandler, tokenMint, tokenAccount, myWallet, 1);
+
+    // Create `TokenMetadata`
+    const { metadata } = await createMetadata({
+      transactionHandler,
+      publicKey: myWallet.publicKey,
+      editionMint: tokenMint,
+      metadataData: new MetadataDataData({
+        creators: null,
+        name: 'TOK - token',
+        symbol: 'TOK',
+        uri: 'https://github.com',
+        sellerFeeBasisPoints: SFBP,
+      }),
+      updateAuthority: myWallet.publicKey,
+    });
+
+    // Obtain `AuctionHouse` state
+    const [auctionHouse] = await getAuctionHouse(myWallet.publicKey, treasuryMint);
+
+    // Obtain `AuctionHouse` fee account PDA
+    const [auctionHouseFeeAccount] = await getAuctionHouseFeeAcct(auctionHouse);
+
+    // Obtain `Program` authority with bump
+    const [programAsSigner, programAsSignerBump] = await getProgramAsSigner();
+
+    // Obtain seller trade state
+    const [sellerTradeState, sellerTradeStateBump] = await getSellerTradeState(
+      myWallet.publicKey,
+      auctionHouse,
+      tokenAccount,
+      treasuryMint,
+      tokenMint,
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+    );
+
+    // Obtain free seller trade state
+    const [freeSellerTradeState, freeSellerTradeStateBump] = await getSellerTradeState(
+      myWallet.publicKey,
+      auctionHouse,
+      tokenAccount,
+      treasuryMint,
+      tokenMint,
+      new anchor.BN(0),
+      new anchor.BN(tokenSize),
+    );
+
+    // Transfer enough lamports to create seller trade state
+    await transferLamports(transactionHandler, auctionHouseFeeAccount, myWallet, 10000000);
+
+    // Call `Sell` instruction by RPC
+    await program.rpc.sell(
+      new anchor.BN(sellerTradeStateBump),
+      new anchor.BN(freeSellerTradeStateBump),
+      new anchor.BN(programAsSignerBump),
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+      {
+        accounts: {
+          wallet: myWallet.publicKey,
+          tokenAccount: tokenAccount,
+          metadata: metadata,
+          authority: myWallet.publicKey,
+          auctionHouse: auctionHouse,
+          auctionHouseFeeAccount: auctionHouseFeeAccount,
+          sellerTradeState: sellerTradeState,
+          freeSellerTradeState: freeSellerTradeState,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          programAsSigner: programAsSigner,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [],
+      },
+    );
+
+    const feePayerBeforeLamports = (
+      await provider.connection.getAccountInfo(auctionHouseFeeAccount)
+    ).lamports;
+    const tradeStateLamports = (await provider.connection.getAccountInfo(sellerTradeState))
+      .lamports;
+
+    // Call `Cancel` instruction by RPC
+    await program.rpc.cancel(new anchor.BN(buyerPrice), new anchor.BN(tokenSize), {
+      accounts: {
+        wallet: myWallet.publicKey,
+        tokenAccount: tokenAccount,
+        tokenMint: tokenMint,
+        authority: myWallet.publicKey,
+        auctionHouse: auctionHouse,
+        auctionHouseFeeAccount: auctionHouseFeeAccount,
+        tradeState: sellerTradeState,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      },
+      signers: [],
+    });
+
+    const feePayerLamports = (await provider.connection.getAccountInfo(auctionHouseFeeAccount))
+      .lamports;
+
+    assert.equal(feePayerBeforeLamports + tradeStateLamports, feePayerLamports);
+    assert.equal(await provider.connection.getAccountInfo(sellerTradeState), null);
+  });
 });
