@@ -1,0 +1,51 @@
+name: Program Fusion
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+  SOLANA_VERSION: 1.8.5
+  RUST_TOOLCHAIN: stable
+  ANCHOR_GIT: https://github.com/project-serum/anchor
+
+jobs:
+  build-and-test-fusion:
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-fusion
+
+    steps:
+      # Setup Deps
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-solana
+        with: 
+          solana_version: ${{ env.SOLANA_VERSION }}
+      - uses: ./.github/actions/install-rust
+        with: 
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - uses: ./.github/actions/install-anchor
+        with:
+          anchor_git: ${{env.ANCHOR_GIT}}
+
+      # Restore Cache from previous build/test
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./rust/target
+          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+
+      # Run test
+      - name: test-fusion-program
+        id: run_test
+        working-directory: ./
+        run: |
+          anchor test
