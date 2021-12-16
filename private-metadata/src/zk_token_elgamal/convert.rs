@@ -16,14 +16,10 @@ mod target_arch {
         super::pod,
         crate::{
             encryption::{
-                auth_encryption::AeCiphertext,
                 elgamal::{ElGamalCiphertext, ElGamalPubkey},
                 pedersen::{PedersenCommitment, PedersenDecryptHandle},
             },
-            equality_proof::EqualityProof,
             errors::ProofError,
-            range_proof::RangeProof,
-            validity_proof::ValidityProof,
         },
         curve25519_dalek::{ristretto::CompressedRistretto, scalar::Scalar},
         std::convert::TryFrom,
@@ -125,107 +121,6 @@ mod target_arch {
 
         fn try_from(pod: pod::PedersenDecryptHandle) -> Result<Self, Self::Error> {
             Self::from_bytes(&pod.0).ok_or(ProofError::InconsistentCTData)
-        }
-    }
-
-    impl From<AeCiphertext> for pod::AeCiphertext {
-        fn from(ct: AeCiphertext) -> Self {
-            Self(ct.to_bytes())
-        }
-    }
-
-    impl TryFrom<pod::AeCiphertext> for AeCiphertext {
-        type Error = ProofError;
-
-        fn try_from(ct: pod::AeCiphertext) -> Result<Self, Self::Error> {
-            Self::from_bytes(&ct.0).ok_or(ProofError::InconsistentCTData)
-        }
-    }
-
-    impl From<EqualityProof> for pod::EqualityProof {
-        fn from(proof: EqualityProof) -> Self {
-            Self(proof.to_bytes())
-        }
-    }
-
-    impl TryFrom<pod::EqualityProof> for EqualityProof {
-        type Error = ProofError;
-
-        fn try_from(pod: pod::EqualityProof) -> Result<Self, Self::Error> {
-            Self::from_bytes(&pod.0)
-        }
-    }
-
-    impl From<ValidityProof> for pod::ValidityProof {
-        fn from(proof: ValidityProof) -> Self {
-            Self(proof.to_bytes())
-        }
-    }
-
-    impl TryFrom<pod::ValidityProof> for ValidityProof {
-        type Error = ProofError;
-
-        fn try_from(pod: pod::ValidityProof) -> Result<Self, Self::Error> {
-            Self::from_bytes(&pod.0)
-        }
-    }
-
-    impl TryFrom<RangeProof> for pod::RangeProof64 {
-        type Error = ProofError;
-
-        fn try_from(proof: RangeProof) -> Result<Self, Self::Error> {
-            if proof.ipp_proof.serialized_size() != 448 {
-                return Err(ProofError::VerificationError);
-            }
-
-            let mut buf = [0_u8; 672];
-            buf[..32].copy_from_slice(proof.A.as_bytes());
-            buf[32..64].copy_from_slice(proof.S.as_bytes());
-            buf[64..96].copy_from_slice(proof.T_1.as_bytes());
-            buf[96..128].copy_from_slice(proof.T_2.as_bytes());
-            buf[128..160].copy_from_slice(proof.t_x.as_bytes());
-            buf[160..192].copy_from_slice(proof.t_x_blinding.as_bytes());
-            buf[192..224].copy_from_slice(proof.e_blinding.as_bytes());
-            buf[224..672].copy_from_slice(&proof.ipp_proof.to_bytes());
-            Ok(pod::RangeProof64(buf))
-        }
-    }
-
-    impl TryFrom<pod::RangeProof64> for RangeProof {
-        type Error = ProofError;
-
-        fn try_from(pod: pod::RangeProof64) -> Result<Self, Self::Error> {
-            Self::from_bytes(&pod.0)
-        }
-    }
-
-    #[cfg(not(target_arch = "bpf"))]
-    impl TryFrom<RangeProof> for pod::RangeProof128 {
-        type Error = ProofError;
-
-        fn try_from(proof: RangeProof) -> Result<Self, Self::Error> {
-            if proof.ipp_proof.serialized_size() != 512 {
-                return Err(ProofError::VerificationError);
-            }
-
-            let mut buf = [0_u8; 736];
-            buf[..32].copy_from_slice(proof.A.as_bytes());
-            buf[32..64].copy_from_slice(proof.S.as_bytes());
-            buf[64..96].copy_from_slice(proof.T_1.as_bytes());
-            buf[96..128].copy_from_slice(proof.T_2.as_bytes());
-            buf[128..160].copy_from_slice(proof.t_x.as_bytes());
-            buf[160..192].copy_from_slice(proof.t_x_blinding.as_bytes());
-            buf[192..224].copy_from_slice(proof.e_blinding.as_bytes());
-            buf[224..736].copy_from_slice(&proof.ipp_proof.to_bytes());
-            Ok(pod::RangeProof128(buf))
-        }
-    }
-
-    impl TryFrom<pod::RangeProof128> for RangeProof {
-        type Error = ProofError;
-
-        fn try_from(pod: pod::RangeProof128) -> Result<Self, Self::Error> {
-            Self::from_bytes(&pod.0)
         }
     }
 }

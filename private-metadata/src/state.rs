@@ -2,7 +2,7 @@ use {
     crate::{pod::*},
     bytemuck::{Pod, Zeroable},
     solana_program::pubkey::Pubkey,
-    spl_zk_token_sdk::zk_token_elgamal,
+    crate::zk_token_elgamal,
 };
 
 pub const PREFIX: &str = "metadata";

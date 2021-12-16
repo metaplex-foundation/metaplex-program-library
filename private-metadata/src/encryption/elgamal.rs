@@ -12,23 +12,27 @@ use {
         scalar::Scalar,
     },
     serde::{Deserialize, Serialize},
+    sha3::Sha3_512,
     solana_sdk::{
         instruction::Instruction,
         message::Message,
         pubkey::Pubkey,
-        signature::Signature,
-        signer::{Signer, SignerError},
     },
-    std::convert::TryInto,
+    std::{
+        convert::TryInto,
+        fmt,
+    },
     subtle::{Choice, ConstantTimeEq},
     zeroize::Zeroize,
 };
 #[cfg(not(target_arch = "bpf"))]
 use {
     rand::{rngs::OsRng, CryptoRng, RngCore},
-    sha3::Sha3_512,
+    solana_sdk::{
+        signature::Signature,
+        signer::{Signer, SignerError},
+    },
     std::{
-        fmt,
         fs::{self, File, OpenOptions},
         io::{Read, Write},
         path::Path,

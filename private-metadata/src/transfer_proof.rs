@@ -1,5 +1,5 @@
 use {
-    spl_zk_token_sdk::zk_token_elgamal::pod,
+    crate::zk_token_elgamal::pod,
     bytemuck::{Pod, Zeroable},
 };
 #[cfg(not(target_arch = "bpf"))]
@@ -8,7 +8,7 @@ use {
         EqualityProof,
         PodEqualityProof,
     },
-    spl_zk_token_sdk::{
+    crate::{
         errors::ProofError,
         transcript::TranscriptProtocol,
         encryption::{

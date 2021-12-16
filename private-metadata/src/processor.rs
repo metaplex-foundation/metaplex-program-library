@@ -25,7 +25,7 @@ use spl_token_metadata::{
     state::MAX_METADATA_LEN,
 };
 
-use spl_zk_token_sdk::{
+use crate::{
     zk_token_elgamal,
 };
 

@@ -14,7 +14,7 @@ use solana_program::{
     program_error::ProgramError,
 };
 
-use spl_zk_token_sdk::{
+use crate::{
     zk_token_elgamal,
 };
 

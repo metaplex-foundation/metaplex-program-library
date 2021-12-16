@@ -6,7 +6,7 @@ use {
         traits::{MultiscalarMul, VartimeMultiscalarMul},
     },
     rand::rngs::OsRng,
-    spl_zk_token_sdk::encryption::{
+    crate::encryption::{
         elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
         pedersen::{PedersenBase, PedersenOpening},
     },
@@ -18,7 +18,7 @@ use {
         scalar::Scalar,
         traits::{IsIdentity},
     },
-    spl_zk_token_sdk::{
+    crate::{
         errors::ProofError,
         transcript::TranscriptProtocol,
     },
