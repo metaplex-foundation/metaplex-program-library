@@ -19,7 +19,7 @@ runs:
           ~/.cargo/git/db/
           ./target/
         key: cargo-${{ runner.os }}-anchor-${{ hashFiles('**/Cargo.lock') }}
-    - run: cargo install --git ${{anchor_git}} anchor-cli --locked --force
+    - run: cargo install --git ${{inputs.anchor_git}} anchor-cli --locked --force
     - uses: actions/upload-artifact@v2
       with:
         name: anchor-binary
