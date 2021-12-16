@@ -80,6 +80,7 @@ impl TransferData {
             src_keypair,
             &dst_pubkey,
             &src_cipher_key_chunk_ct,
+            &dst_cipher_key_chunk_ct,
             &dst_opening,
         );
 
@@ -148,6 +149,7 @@ impl TransferProof {
         src_keypair: &ElGamalKeypair,
         dst_pubkey: &ElGamalPubkey,
         src_cipher_key_chunk_ct: &ElGamalCiphertext,
+        dst_cipher_key_chunk_ct: &ElGamalCiphertext,
         dst_opening: &PedersenOpening,
     ) -> Self {
         let mut transcript = Self::transcript_new();
@@ -161,6 +163,8 @@ impl TransferProof {
         let D1_EG = src_cipher_key_chunk_ct.decrypt_handle.get_point();
 
         let P2_EG = dst_pubkey.get_point();
+        let C2_EG = dst_cipher_key_chunk_ct.message_comm.get_point();
+        let D2_EG = dst_cipher_key_chunk_ct.decrypt_handle.get_point();
 
         // append all current state to the transcript
         transcript.append_point(b"P1_EG", &P1_EG.compress());
@@ -168,6 +172,8 @@ impl TransferProof {
         transcript.append_point(b"D1_EG", &D1_EG.compress());
 
         transcript.append_point(b"P2_EG", &P2_EG.compress());
+        transcript.append_point(b"C2_EG", &C2_EG.compress());
+        transcript.append_point(b"D2_EG", &D2_EG.compress());
 
         // generate equality_proof
         let equality_proof = EqualityProof::new(
