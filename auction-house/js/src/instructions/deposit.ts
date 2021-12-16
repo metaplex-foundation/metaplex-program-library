@@ -41,7 +41,7 @@ export function createDepositInstruction(
     rent,
   } = accounts;
 
-  const [data, _] = depositInstructionArgsStruct.serialize(args);
+  const [data] = depositInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: wallet,

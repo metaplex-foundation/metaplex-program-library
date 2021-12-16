@@ -67,7 +67,7 @@ export function createExecuteSaleInstruction(
     rent,
   } = accounts;
 
-  const [data, _] = executeSaleInstructionArgsStruct.serialize(args);
+  const [data] = executeSaleInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: buyer,

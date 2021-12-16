@@ -26,7 +26,7 @@ export function createWithdrawFromFeeInstruction(
     systemProgram,
   } = accounts;
 
-  const [data, _] = withdrawFromFeeInstructionArgsStruct.serialize(args);
+  const [data] = withdrawFromFeeInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: authority,

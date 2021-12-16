@@ -48,7 +48,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     rent,
   } = accounts;
 
-  const [data, _] = buyInstructionArgsStruct.serialize(args);
+  const [data] = buyInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: wallet,

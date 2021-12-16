@@ -49,7 +49,7 @@ export function createSellInstruction(
     rent,
   } = accounts;
 
-  const [data, _] = sellInstructionArgsStruct.serialize(args);
+  const [data] = sellInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: wallet,

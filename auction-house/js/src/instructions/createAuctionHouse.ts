@@ -54,7 +54,7 @@ export function createCreateAuctionHouseInstruction(
     rent,
   } = accounts;
 
-  const [data, _] = createAuctionHouseInstructionArgsStruct.serialize(args);
+  const [data] = createAuctionHouseInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: treasuryMint,

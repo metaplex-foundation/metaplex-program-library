@@ -35,7 +35,7 @@ export function createCancelInstruction(
     tokenProgram,
   } = accounts;
 
-  const [data, _] = cancelInstructionArgsStruct.serialize(args);
+  const [data] = cancelInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: wallet,

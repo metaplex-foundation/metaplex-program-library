@@ -41,7 +41,7 @@ export function createWithdrawInstruction(
     rent,
   } = accounts;
 
-  const [data, _] = withdrawInstructionArgsStruct.serialize(args);
+  const [data] = withdrawInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: wallet,

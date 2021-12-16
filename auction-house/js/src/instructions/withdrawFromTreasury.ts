@@ -30,7 +30,7 @@ export function createWithdrawFromTreasuryInstruction(
     systemProgram,
   } = accounts;
 
-  const [data, _] = withdrawFromTreasuryInstructionArgsStruct.serialize(args);
+  const [data] = withdrawFromTreasuryInstructionArgsStruct.serialize(args);
   const keys: AccountMeta[] = [
     {
       pubkey: treasuryMint,
