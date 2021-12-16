@@ -154,6 +154,16 @@ describe('mpl_auction_house', function () {
     );
   };
 
+  const getEscrowPayment = async (
+    auctionHouse: anchor.web3.PublicKey,
+    wallet: anchor.web3.PublicKey,
+  ): Promise<[anchor.web3.PublicKey, number]> => {
+    return anchor.web3.PublicKey.findProgramAddress(
+      [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), wallet.toBuffer()],
+      programId,
+    );
+  };
+
   const getAuctionHouseTreasuryAcct = async (
     auctionHouse: anchor.web3.PublicKey,
   ): Promise<[PublicKey, number]> => {
@@ -633,5 +643,101 @@ describe('mpl_auction_house', function () {
 
     assert.equal(feePayerBeforeLamports + tradeStateLamports, feePayerLamports);
     assert.equal(await provider.connection.getAccountInfo(sellerTradeState), null);
+  });
+
+  it('Buy', async function () {
+    const buyerPrice: number = 1000;
+    const tokenSize: number = 1;
+
+    // Obtain `AuctionHouse` native mint
+    const treasuryMint = WRAPPED_SOL_MINT;
+
+    // Create unique mint for `TokenMetadata`
+    const tokenMint = await createMint(provider, myWallet.publicKey);
+
+    // Create / Obtain associated token account for `AuctionHouse`
+    const [tokenAccount] = await getAtaForMint(tokenMint, myWallet.publicKey);
+    await createAssociatedTokenAccount(
+      transactionHandler,
+      tokenMint,
+      tokenAccount,
+      walletWrapper,
+      myWallet,
+    );
+
+    mintTo(transactionHandler, tokenMint, tokenAccount, myWallet, 1);
+
+    // Create `TokenMetadata`
+    const { metadata } = await createMetadata({
+      transactionHandler,
+      publicKey: myWallet.publicKey,
+      editionMint: tokenMint,
+      metadataData: new MetadataDataData({
+        creators: null,
+        name: 'TOK - token',
+        symbol: 'TOK',
+        uri: 'https://github.com',
+        sellerFeeBasisPoints: SFBP,
+      }),
+      updateAuthority: myWallet.publicKey,
+    });
+
+    // Obtain `AuctionHouse` state PDA
+    const [auctionHouse] = await getAuctionHouse(myWallet.publicKey, treasuryMint);
+
+    // Obtain `AuctionHouse` fee account PDA
+    const [auctionHouseFeeAccount] = await getAuctionHouseFeeAcct(auctionHouse);
+
+    // Obtain escrow payment account PDA
+    const [escrowPaymentAccount, escrowPaymentAccountBump] = await getEscrowPayment(
+      auctionHouse,
+      myWallet.publicKey,
+    );
+
+    // Obtain buyer trade state PDA
+    const [buyerTradeState, buyerTradeStateBump] = await getSellerTradeState(
+      myWallet.publicKey,
+      auctionHouse,
+      tokenAccount,
+      treasuryMint,
+      tokenMint,
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+    );
+
+    // Transfer enough lamports to create seller trade state
+    await transferLamports(transactionHandler, auctionHouseFeeAccount, myWallet, 10000000);
+
+    // Call instruction by RPC
+    await program.rpc.buy(
+      new anchor.BN(buyerTradeStateBump),
+      new anchor.BN(escrowPaymentAccountBump),
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+      {
+        accounts: {
+          wallet: myWallet.publicKey,
+          paymentAccount: myWallet.publicKey,
+          transferAuthority: myWallet.publicKey,
+          treasuryMint: treasuryMint,
+          tokenAccount: tokenAccount,
+          metadata: metadata,
+          escrowPaymentAccount: escrowPaymentAccount,
+          authority: myWallet.publicKey,
+          auctionHouse: auctionHouse,
+          auctionHouseFeeAccount: auctionHouseFeeAccount,
+          buyerTradeState: buyerTradeState,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [],
+      },
+    );
+
+    assert.equal(
+      (await provider.connection.getAccountInfo(buyerTradeState)).data[0],
+      buyerTradeStateBump,
+    );
   });
 });
