@@ -1,7 +1,10 @@
 
-use crate::state::{
-    MAX_URI_LENGTH,
-    CIPHER_KEY_CHUNKS,
+use crate::{
+    state::{
+        MAX_URI_LENGTH,
+        CIPHER_KEY_CHUNKS,
+    },
+    transfer_proof::TransferData,
 };
 use bytemuck::{Pod, Zeroable};
 use num_derive::{FromPrimitive, ToPrimitive};
@@ -21,6 +24,13 @@ pub struct ConfigureMetadataData {
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
     pub encrypted_cipher_key: [zk_token_elgamal::pod::ElGamalCiphertext; CIPHER_KEY_CHUNKS],
     pub uri: [u8; MAX_URI_LENGTH],
+}
+
+#[derive(Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
+pub struct TransferChunkData {
+    pub chunk_idx: u8,
+    pub transfer: TransferData,
 }
 
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive)]

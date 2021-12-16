@@ -28,6 +28,9 @@ pub enum PrivateMetadataError {
 
     #[error("Arithmetic Overflow")]
     Overflow,
+
+    #[error("Proof Verification Error")]
+    ProofVerificationError,
 }
 
 impl PrintProgramError for PrivateMetadataError {

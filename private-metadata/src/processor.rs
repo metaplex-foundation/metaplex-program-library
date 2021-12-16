@@ -4,7 +4,7 @@ use crate::{
     state::*,
     error::*,
     pod::*,
-    transfer_proof,
+    transfer_proof::{self, Verifiable},
     ID,
 };
 
@@ -59,7 +59,10 @@ pub fn process_instruction(
         }
         PrivateMetadataInstruction::TransferChunk => {
             msg!("TransferChunk!");
-            Ok(())
+            process_transfer_chunk(
+                accounts,
+                decode_instruction_data::<TransferChunkData>(input)?
+            )
         }
     }
 }
@@ -305,6 +308,95 @@ fn process_fini_transfer(
         .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
 
     **transfer_buffer_info.lamports.borrow_mut() = 0;
+
+    Ok(())
+}
+
+fn process_transfer_chunk(
+    accounts: &[AccountInfo],
+    data: &TransferChunkData,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let authority_info = next_account_info(account_info_iter)?;
+    let private_metadata_info = next_account_info(account_info_iter)?;
+    let transfer_buffer_info = next_account_info(account_info_iter)?;
+    let _system_program_info = next_account_info(account_info_iter)?;
+
+    if !authority_info.is_signer {
+        return Err(ProgramError::InvalidArgument);
+    }
+    validate_account_owner(private_metadata_info, &ID)?;
+    validate_account_owner(transfer_buffer_info, &ID)?;
+
+    // check that transfer buffer matches passed in arguments and that we have authority to do
+    // the transfer
+    //
+    // TODO: should we have a nother check for nft ownership here?
+    // TODO: consolidate with fini
+    let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
+        &transfer_buffer_info, &ID)?.into_mut();
+
+    if transfer_buffer.authority != *authority_info.key {
+        msg!("Owner mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if transfer_buffer.private_metadata_key!= *private_metadata_info.key {
+        msg!("Private metadata mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if (transfer_buffer.updated & BUFFER_INITIALIZED_MASK) != BUFFER_INITIALIZED_MASK {
+        msg!("Transfer buffer not initialized");
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    let all_chunks_set_mask = 1<<CIPHER_KEY_CHUNKS - 1;
+    if (transfer_buffer.updated & all_chunks_set_mask) != all_chunks_set_mask {
+        msg!("Not all chunks set");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+
+    // check that this proof has matching pubkey fields and that we haven't already processed this
+    // chunk
+    let updated_mask = 1<<data.chunk_idx;
+    if (transfer_buffer.updated & updated_mask) != 0 {
+        msg!("Chunk already updated");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    // TODO: don't deserialize the whole thing
+    let private_metadata = PrivateMetadataAccount::from_account_info(
+        &private_metadata_info, &ID)?;
+    let transfer = &data.transfer;
+    let chunk_idx: usize = data.chunk_idx.into();
+
+    if transfer.transfer_public_keys.src_pubkey != private_metadata.elgamal_pk {
+        msg!("Source elgamal pubkey mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if transfer.src_cipher_key_chunk_ct != private_metadata.encrypted_cipher_key[chunk_idx] {
+        msg!("Source cipher text mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if transfer.transfer_public_keys.dst_pubkey != transfer_buffer.elgamal_pk {
+        msg!("Destination elgamal pubkey mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+
+    // actually verify the proof...
+    // TODO: make this work with bpf
+    if transfer.verify().is_err() {
+        return Err(PrivateMetadataError::ProofVerificationError.into());
+    }
+
+    transfer_buffer.updated |= updated_mask;
+    transfer_buffer.encrypted_cipher_key[chunk_idx] = transfer.dst_cipher_key_chunk_ct;
+
 
     Ok(())
 }
