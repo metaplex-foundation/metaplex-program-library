@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor';
-import { Wallet } from '@project-serum/common';
+import { Wallet, createMint, createTokenAccount } from '@project-serum/common';
 import assert from 'assert';
 import {
   Blockhash,
@@ -10,41 +10,49 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token } from '@solana/spl-token';
 import { AuctionHouse } from '../../../target/types/auction_house';
-import { AccountLayout, u64 } from '@solana/spl-token';
+import {
+  AccountLayout,
+  u64,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  Token,
+  MintLayout,
+} from '@solana/spl-token';
+import { createMetadata } from '../../../token-metadata/js/test/actions';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman';
+import { MetadataDataData } from '../../../token-metadata/js/src/mpl-token-metadata';
 
 const AUCTION_HOUSE = 'auction_house';
 const FEE_PAYER = 'fee_payer';
 const TREASURY = 'treasury';
+const SIGNER = 'signer';
 const SFBP = 1000;
 
 const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
-const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
-const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
-  'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
-);
 
-describe('metaplex_auction_house', function () {
+describe('mpl_auction_house', function () {
   // Configure the client to use the local cluster.
-  const idl = JSON.parse(
-    require('fs').readFileSync('../../../target/idl/auction_house.json', 'utf8'),
-  );
+  const idl = JSON.parse(require('fs').readFileSync('./target/idl/auction_house.json', 'utf8'));
 
   const myWallet = anchor.web3.Keypair.fromSecretKey(
     new Uint8Array(JSON.parse(require('fs').readFileSync(process.env.ANCHOR_WALLET, 'utf8'))),
   );
 
-  const connection = new anchor.web3.Connection('http://127.0.0.1:8899/', 'recent');
+  const connection = new anchor.web3.Connection('http://127.0.0.1:8899/', 'confirmed');
 
   // Address of the deployed program.
-  const programId = new anchor.web3.PublicKey('6Dtd5LSEZo3evRzWCjydocMJXtthFJKjcr8AnHdYrEuB');
+  const programId = new anchor.web3.PublicKey('6obx1FPBafLhqxXL3AaqDcdv5f22j81x99QbTgbdsVA7');
 
   const walletWrapper: Wallet = new (anchor as any).Wallet(myWallet);
 
   const provider = new anchor.Provider(connection, walletWrapper, {
     preflightCommitment: 'recent',
   });
+
+  // This handler is required to process actions from metaplex sdk
+  // Actions - typescript wrappers under raw instructions
+  const transactionHandler = new PayerTransactionHandler(provider.connection, myWallet);
 
   const program = new anchor.Program(idl, programId, provider);
 
@@ -64,8 +72,46 @@ describe('metaplex_auction_house', function () {
   ): Promise<[anchor.web3.PublicKey, number]> => {
     return await anchor.web3.PublicKey.findProgramAddress(
       [buyer.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
-      SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID,
     );
+  };
+
+  const createAssociatedTokenAccount = async (
+    transactionHandler: PayerTransactionHandler,
+    mint: anchor.web3.PublicKey,
+    associatedTokenAccount: anchor.web3.PublicKey,
+    wallet: Wallet,
+    payer: anchor.web3.Keypair,
+  ) => {
+    const tx = Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mint,
+      associatedTokenAccount,
+      wallet.publicKey,
+      wallet.publicKey,
+    );
+
+    await transactionHandler.sendAndConfirmTransaction(new Transaction().add(tx), [payer]);
+  };
+
+  const mintTo = async (
+    transactionHandler: PayerTransactionHandler,
+    mint: anchor.web3.PublicKey,
+    tokenAccount: anchor.web3.PublicKey,
+    payer: anchor.web3.Keypair,
+    amount: number,
+  ) => {
+    const tx = Token.createMintToInstruction(
+      TOKEN_PROGRAM_ID,
+      mint,
+      tokenAccount,
+      myWallet.publicKey,
+      [],
+      amount,
+    );
+
+    await transactionHandler.sendAndConfirmTransaction(new Transaction().add(tx), [payer]);
   };
 
   const getAuctionHouseFeeAcct = async (
@@ -77,6 +123,37 @@ describe('metaplex_auction_house', function () {
     );
   };
 
+  const getProgramAsSigner = async (): Promise<[anchor.web3.PublicKey, number]> => {
+    return anchor.web3.PublicKey.findProgramAddress(
+      [Buffer.from(AUCTION_HOUSE), Buffer.from(SIGNER)],
+      programId,
+    );
+  };
+
+  const getSellerTradeState = async (
+    wallet: anchor.web3.PublicKey,
+    auctionHouse: anchor.web3.PublicKey,
+    tokenAccount: anchor.web3.PublicKey,
+    treasuryMint: anchor.web3.PublicKey,
+    tokenAccountMint: anchor.web3.PublicKey,
+    buyerPrice: anchor.BN,
+    tokenSize: anchor.BN,
+  ): Promise<[anchor.web3.PublicKey, number]> => {
+    return anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from(AUCTION_HOUSE),
+        wallet.toBuffer(),
+        auctionHouse.toBuffer(),
+        tokenAccount.toBuffer(),
+        treasuryMint.toBuffer(),
+        tokenAccountMint.toBuffer(),
+        buyerPrice.toBuffer('le', 8),
+        tokenSize.toBuffer('le', 8),
+      ],
+      programId,
+    );
+  };
+
   const getAuctionHouseTreasuryAcct = async (
     auctionHouse: anchor.web3.PublicKey,
   ): Promise<[PublicKey, number]> => {
@@ -84,6 +161,21 @@ describe('metaplex_auction_house', function () {
       [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), Buffer.from(TREASURY)],
       programId,
     );
+  };
+
+  const transferLamports = async (
+    transactionHandler: PayerTransactionHandler,
+    to: anchor.web3.PublicKey,
+    payer: anchor.web3.Keypair,
+    amount: number,
+  ) => {
+    const tx = anchor.web3.SystemProgram.transfer({
+      fromPubkey: payer.publicKey,
+      toPubkey: to,
+      lamports: amount,
+    });
+
+    await transactionHandler.sendAndConfirmTransaction(new Transaction().add(tx), [payer]);
   };
 
   const deserializeAccount = (data: Buffer) => {
@@ -313,5 +405,108 @@ describe('metaplex_auction_house', function () {
         rent: anchor.web3.SYSVAR_RENT_PUBKEY,
       },
     });
+  });
+
+  it('Sell.', async function () {
+    const buyerPrice: number = 1;
+    const tokenSize: number = 1;
+
+    // Obtain `AuctionHouse` native mint
+    const treasuryMint = WRAPPED_SOL_MINT;
+
+    // Create unique mint for `TokenMetadata`
+    const tokenMint = await createMint(provider, myWallet.publicKey);
+
+    // Create / Obtain associated token account for `AuctionHouse`
+    const [tokenAccount] = await getAtaForMint(tokenMint, myWallet.publicKey);
+    await createAssociatedTokenAccount(
+      transactionHandler,
+      tokenMint,
+      tokenAccount,
+      walletWrapper,
+      myWallet,
+    );
+
+    mintTo(transactionHandler, tokenMint, tokenAccount, myWallet, 1);
+
+    // Create `TokenMetadata`
+    const { metadata } = await createMetadata({
+      transactionHandler,
+      publicKey: myWallet.publicKey,
+      editionMint: tokenMint,
+      metadataData: new MetadataDataData({
+        creators: null,
+        name: 'TOK - token',
+        symbol: 'TOK',
+        uri: 'https://github.com',
+        sellerFeeBasisPoints: SFBP,
+      }),
+      updateAuthority: myWallet.publicKey,
+    });
+
+    // Obtain `AuctionHouse` state
+    const [auctionHouse] = await getAuctionHouse(myWallet.publicKey, treasuryMint);
+
+    // Obtain `AuctionHouse` fee account PDA
+    const [auctionHouseFeeAccount] = await getAuctionHouseFeeAcct(auctionHouse);
+
+    // Obtain `Program` authority with bump
+    const [programAsSigner, programAsSignerBump] = await getProgramAsSigner();
+
+    // Obtain seller trade state
+    const [sellerTradeState, sellerTradeStateBump] = await getSellerTradeState(
+      myWallet.publicKey,
+      auctionHouse,
+      tokenAccount,
+      treasuryMint,
+      tokenMint,
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+    );
+
+    // Obtain free seller trade state
+    const [freeSellerTradeState, freeSellerTradeStateBump] = await getSellerTradeState(
+      myWallet.publicKey,
+      auctionHouse,
+      tokenAccount,
+      treasuryMint,
+      tokenMint,
+      new anchor.BN(0),
+      new anchor.BN(tokenSize),
+    );
+
+    // Transfer enough lamports to create seller trade state
+    await transferLamports(transactionHandler, auctionHouseFeeAccount, myWallet, 10000000);
+
+    // Call instruction by RPC
+    await program.rpc.sell(
+      new anchor.BN(sellerTradeStateBump),
+      new anchor.BN(freeSellerTradeStateBump),
+      new anchor.BN(programAsSignerBump),
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+      {
+        accounts: {
+          wallet: myWallet.publicKey,
+          tokenAccount: tokenAccount,
+          metadata: metadata,
+          authority: myWallet.publicKey,
+          auctionHouse: auctionHouse,
+          auctionHouseFeeAccount: auctionHouseFeeAccount,
+          sellerTradeState: sellerTradeState,
+          freeSellerTradeState: freeSellerTradeState,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          programAsSigner: programAsSigner,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [],
+      },
+    );
+
+    assert.equal(
+      (await provider.connection.getAccountInfo(sellerTradeState)).data[0],
+      sellerTradeStateBump,
+    );
   });
 });
