@@ -206,7 +206,7 @@ impl TryFrom<PodEqualityProof> for EqualityProof {
 #[cfg(test)]
 mod test {
     use super::*;
-    use spl_zk_token_sdk::encryption::pedersen::Pedersen;
+    use crate::encryption::pedersen::Pedersen;
 
     #[test]
     fn succesful_equality_proof() {
