@@ -41,6 +41,7 @@ jobs:
 
       # Build deps
       - uses: ./.github/actions/build-metaplex
+      - uses: ./.github/actions/build-token-metadata
       # Run test
       - name: test-nft-packs-program
         id: run_test
