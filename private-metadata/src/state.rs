@@ -17,12 +17,25 @@ pub const MAX_METADATA_LEN: usize
     ;
 
 pub const CIPHER_KEY_CHUNKS: usize = 6;
-pub const BUFFER_INITIALIZED_MASK: u8 = 1<<7;
+
+#[derive(Clone, Copy, PartialEq)]
+#[repr(u8)]
+pub enum Key {
+    Uninitialized,
+    PrivateMetadataAccountV1,
+    CipherKeyTransferBufferV1,
+}
+
+// wcgw
+unsafe impl Zeroable for Key {}
+unsafe impl Pod for Key {}
 
 /// Account data
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct PrivateMetadataAccount {
+    pub key: Key,
+
     /// The corresponding SPL Token Mint
     pub mint: Pubkey,
 
@@ -41,6 +54,8 @@ impl PodAccountInfo<'_, '_> for PrivateMetadataAccount {}
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct CipherKeyTransferBuffer {
+    pub key: Key,
+
     /// Bit mask of updated chunks
     pub updated: u8,
 

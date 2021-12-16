@@ -158,6 +158,7 @@ fn process_configure_metadata(
     let mut private_metadata = PrivateMetadataAccount::from_account_info(
         &private_metadata_info, &ID)?.into_mut();
 
+    private_metadata.key = Key::PrivateMetadataAccountV1;
     private_metadata.mint = *mint_info.key;
     private_metadata.elgamal_pk = data.elgamal_pk;
     private_metadata.encrypted_cipher_key = data.encrypted_cipher_key;
@@ -236,11 +237,13 @@ fn process_init_transfer(
     let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID)?.into_mut();
 
-    if (transfer_buffer.updated & BUFFER_INITIALIZED_MASK) != 0 {
+    if transfer_buffer.key != Key::Uninitialized {
+        msg!("Transfer buffer already initialized");
         return Err(PrivateMetadataError::BufferAlreadyInitialized.into());
     }
+
     // low bits should be clear regardless...
-    transfer_buffer.updated = BUFFER_INITIALIZED_MASK;
+    transfer_buffer.key = Key::CipherKeyTransferBufferV1;
     transfer_buffer.authority = *authority_info.key;
     transfer_buffer.private_metadata_key = *private_metadata_info.key;
     transfer_buffer.elgamal_pk = *elgamal_pk;
@@ -271,6 +274,11 @@ fn process_fini_transfer(
     let transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID)?;
 
+    if transfer_buffer.key != Key::CipherKeyTransferBufferV1 { // redundant?
+        msg!("Mismatched transfer buffer key");
+        return Err(ProgramError::InvalidArgument);
+    }
+
     if transfer_buffer.authority != *authority_info.key {
         msg!("Owner mismatch");
         return Err(ProgramError::InvalidArgument);
@@ -279,11 +287,6 @@ fn process_fini_transfer(
     if transfer_buffer.private_metadata_key!= *private_metadata_info.key {
         msg!("Private metadata mismatch");
         return Err(ProgramError::InvalidArgument);
-    }
-
-    if (transfer_buffer.updated & BUFFER_INITIALIZED_MASK) != BUFFER_INITIALIZED_MASK {
-        msg!("Transfer buffer not initialized");
-        return Err(ProgramError::UninitializedAccount);
     }
 
     let all_chunks_set_mask = 1<<CIPHER_KEY_CHUNKS - 1;
@@ -296,6 +299,11 @@ fn process_fini_transfer(
     // write the new cipher text over
     let mut private_metadata = PrivateMetadataAccount::from_account_info(
         &private_metadata_info, &ID)?.into_mut();
+
+    if private_metadata.key != Key::PrivateMetadataAccountV1 { // redundant?
+        msg!("Mismatched private metadata key");
+        return Err(ProgramError::InvalidArgument);
+    }
 
     private_metadata.elgamal_pk = transfer_buffer.elgamal_pk;
     private_metadata.encrypted_cipher_key = transfer_buffer.encrypted_cipher_key;
@@ -336,19 +344,19 @@ fn process_transfer_chunk(
     let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID)?.into_mut();
 
+    if transfer_buffer.key != Key::CipherKeyTransferBufferV1 {
+        msg!("Transfer buffer not initialized");
+        return Err(ProgramError::UninitializedAccount);
+    }
+
     if transfer_buffer.authority != *authority_info.key {
         msg!("Owner mismatch");
         return Err(ProgramError::InvalidArgument);
     }
 
-    if transfer_buffer.private_metadata_key!= *private_metadata_info.key {
+    if transfer_buffer.private_metadata_key != *private_metadata_info.key {
         msg!("Private metadata mismatch");
         return Err(ProgramError::InvalidArgument);
-    }
-
-    if (transfer_buffer.updated & BUFFER_INITIALIZED_MASK) != BUFFER_INITIALIZED_MASK {
-        msg!("Transfer buffer not initialized");
-        return Err(ProgramError::UninitializedAccount);
     }
 
     let all_chunks_set_mask = 1<<CIPHER_KEY_CHUNKS - 1;
@@ -369,6 +377,12 @@ fn process_transfer_chunk(
     // TODO: don't deserialize the whole thing
     let private_metadata = PrivateMetadataAccount::from_account_info(
         &private_metadata_info, &ID)?;
+
+    if private_metadata.key != Key::PrivateMetadataAccountV1 { // redundant?
+        msg!("Mismatched private metadata key");
+        return Err(ProgramError::InvalidArgument);
+    }
+
     let transfer = &data.transfer;
     let chunk_idx: usize = data.chunk_idx.into();
 
