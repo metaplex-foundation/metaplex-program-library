@@ -7,5 +7,6 @@ members=[
   "token-metadata/program",
   "token-metadata/test",
   "private-metadata/",
+  "private-metadata-demo/",
 ]
 exclude = []

@@ -2147,6 +2147,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "private-metadata-demo-cli"
+version = "0.0.1"
+dependencies = [
+ "clap",
+ "private-metadata",
+ "solana-clap-utils",
+ "solana-cli-config",
+ "solana-client",
+ "solana-logger",
+ "solana-remote-wallet",
+ "solana-sdk",
+ "tokio",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
