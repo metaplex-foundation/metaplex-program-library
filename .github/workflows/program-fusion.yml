@@ -48,4 +48,5 @@ jobs:
         id: run_test
         working-directory: ./
         run: |
+          solana-keygen new -o ~/.config/solana/id.json
           anchor test
