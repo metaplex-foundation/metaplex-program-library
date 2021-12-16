@@ -562,6 +562,15 @@ impl BidState {
             BidState::EnglishAuction { ref mut bids, max } => {
                 match bids.last() {
                     Some(top) => {
+                        match instant_sale_price {
+                            Some(instant_price) => {
+                                msg!("Pushing bid onto stack");
+                                bids.push(bid);
+                                return Ok(());
+                            },
+                            None => ()
+                        };
+
                         msg!("Looking to go over the loop, but check tick size first");
 
                         for i in (0..bids.len()).rev() {
