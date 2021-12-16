@@ -40,10 +40,11 @@ pub fn nft_packs_program_test<'a>() -> ProgramTest {
         mpl_token_metadata::id(),
         None,
     );
+    program.prefer_bpf(false);
     program.add_program(
         "randomness_oracle_program",
         randomness_oracle_program::id(),
-        None,
+        processor!(randomness_oracle_program::processor::Processor::process_instruction),
     );
     program
 }
