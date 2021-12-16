@@ -1,21 +1,31 @@
 
-use crate::{
-    state::{
-        MAX_URI_LENGTH,
-        CIPHER_KEY_CHUNKS,
+use {
+    crate::{
+        state::{
+            MAX_URI_LENGTH,
+            CIPHER_KEY_CHUNKS,
+        },
+        transfer_proof::TransferData,
     },
-    transfer_proof::TransferData,
+    bytemuck::{Pod, Zeroable},
+    num_derive::{FromPrimitive, ToPrimitive},
+    num_traits::{FromPrimitive},
+    solana_program::{
+        program_error::ProgramError,
+    },
+    crate::{
+        zk_token_elgamal,
+    },
 };
-use bytemuck::{Pod, Zeroable};
-use num_derive::{FromPrimitive, ToPrimitive};
-use num_traits::{FromPrimitive};
 
-use solana_program::{
-    program_error::ProgramError,
-};
-
-use crate::{
-    zk_token_elgamal,
+#[cfg(not(target_arch = "bpf"))]
+use {
+    num_traits::{ToPrimitive},
+    solana_program::{
+        instruction::{AccountMeta, Instruction},
+        pubkey::Pubkey,
+        sysvar,
+    },
 };
 
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -71,3 +81,60 @@ pub fn pod_from_bytes<T: Pod>(bytes: &[u8]) -> Option<&T> {
     bytemuck::try_from_bytes(bytes).ok()
 }
 
+pub fn get_metadata_address(mint: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            spl_token_metadata::state::PREFIX.as_bytes(),
+            spl_token_metadata::ID.as_ref(),
+            mint.as_ref(),
+        ],
+        &spl_token_metadata::ID,
+    )
+}
+
+pub fn get_private_metadata_address(mint: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            crate::state::PREFIX.as_bytes(),
+            mint.as_ref(),
+        ],
+        &crate::ID,
+    )
+}
+
+pub(crate) fn encode_instruction<T: Pod>(
+    accounts: Vec<AccountMeta>,
+    instruction_type: PrivateMetadataInstruction,
+    instruction_data: &T,
+) -> Instruction {
+    let mut data = vec![ToPrimitive::to_u8(&instruction_type).unwrap()];
+    data.extend_from_slice(bytemuck::bytes_of(instruction_data));
+    Instruction {
+        program_id: crate::ID,
+        accounts,
+        data,
+    }
+}
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn configure_metadata(
+    payer: Pubkey,
+    mint: Pubkey,
+    data: ConfigureMetadataData,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new_readonly(get_metadata_address(&mint).0, false),
+        AccountMeta::new_readonly(payer, true),
+        AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    encode_instruction(
+        accounts,
+        PrivateMetadataInstruction::ConfigureMetadata,
+        &data,
+    )
+}
