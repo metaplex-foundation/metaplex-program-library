@@ -11,7 +11,7 @@ test-bpf = []
 num-derive = "0.3"
 num-traits = "0.2"
 num_enum = "0.5.4"
-solana-program = "1.7.11"
+solana-program = "1.8.5"
 thiserror = "1.0"
 borsh = "0.9.1"
 spl-math = { version = "0.1", features = [ "no-entrypoint" ] }
@@ -22,8 +22,8 @@ mpl-token-vault = { git = "https://github.com/metaplex-foundation/metaplex-progr
 randomness-oracle-program = { git = "https://github.com/metaplex/randomness-oracle", features = [ "no-entrypoint" ] }
 
 [dev-dependencies]
-solana-program-test = "1.7.11"
-solana-sdk = "1.7.11"
+solana-program-test = "1.8.5"
+solana-sdk = "1.8.5"
 rand = { version="0.8.4" }
 
 [lib]
