@@ -49,5 +49,5 @@ jobs:
         working-directory: ./
         run: |
           solana-keygen new -o ~/.config/solana/id.json
-          yarn install
+          yarn install --force
           anchor test
