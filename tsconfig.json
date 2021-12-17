@@ -7,5 +7,5 @@
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true
     },
-    "include": ["tests/**/*.ts"]
-  }
+    "include": ["./**/program/tests/*.ts"]
+}
