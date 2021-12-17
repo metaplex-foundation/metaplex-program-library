@@ -1,5 +1,5 @@
 import * as anchor from '@project-serum/anchor';
-import { Wallet, createMint, createTokenAccount } from '@project-serum/common';
+import { Wallet, createMint, createTokenAccount, getTokenAccount } from '@project-serum/common';
 import assert from 'assert';
 import {
   Blockhash,
@@ -130,7 +130,7 @@ describe('mpl_auction_house', function () {
     );
   };
 
-  const getSellerTradeState = async (
+  const getTradeState = async (
     wallet: anchor.web3.PublicKey,
     auctionHouse: anchor.web3.PublicKey,
     tokenAccount: anchor.web3.PublicKey,
@@ -464,7 +464,7 @@ describe('mpl_auction_house', function () {
     const [programAsSigner, programAsSignerBump] = await getProgramAsSigner();
 
     // Obtain seller trade state
-    const [sellerTradeState, sellerTradeStateBump] = await getSellerTradeState(
+    const [sellerTradeState, sellerTradeStateBump] = await getTradeState(
       myWallet.publicKey,
       auctionHouse,
       tokenAccount,
@@ -475,7 +475,7 @@ describe('mpl_auction_house', function () {
     );
 
     // Obtain free seller trade state
-    const [freeSellerTradeState, freeSellerTradeStateBump] = await getSellerTradeState(
+    const [freeSellerTradeState, freeSellerTradeStateBump] = await getTradeState(
       myWallet.publicKey,
       auctionHouse,
       tokenAccount,
@@ -567,7 +567,7 @@ describe('mpl_auction_house', function () {
     const [programAsSigner, programAsSignerBump] = await getProgramAsSigner();
 
     // Obtain seller trade state
-    const [sellerTradeState, sellerTradeStateBump] = await getSellerTradeState(
+    const [sellerTradeState, sellerTradeStateBump] = await getTradeState(
       myWallet.publicKey,
       auctionHouse,
       tokenAccount,
@@ -578,7 +578,7 @@ describe('mpl_auction_house', function () {
     );
 
     // Obtain free seller trade state
-    const [freeSellerTradeState, freeSellerTradeStateBump] = await getSellerTradeState(
+    const [freeSellerTradeState, freeSellerTradeStateBump] = await getTradeState(
       myWallet.publicKey,
       auctionHouse,
       tokenAccount,
@@ -695,7 +695,7 @@ describe('mpl_auction_house', function () {
     );
 
     // Obtain buyer trade state PDA
-    const [buyerTradeState, buyerTradeStateBump] = await getSellerTradeState(
+    const [buyerTradeState, buyerTradeStateBump] = await getTradeState(
       myWallet.publicKey,
       auctionHouse,
       tokenAccount,
@@ -738,6 +738,222 @@ describe('mpl_auction_house', function () {
     assert.equal(
       (await provider.connection.getAccountInfo(buyerTradeState)).data[0],
       buyerTradeStateBump,
+    );
+  });
+
+  it('Execute Sell.', async function () {
+    const buyerPrice: number = 1;
+    const tokenSize: number = 1;
+
+    // Obtain `AuctionHouse` native mint
+    const treasuryMint = WRAPPED_SOL_MINT;
+
+    // Create unique mint for `TokenMetadata`
+    const tokenMint = await createMint(provider, myWallet.publicKey);
+
+    // Create buyer wallet
+    const buyerWallet = new anchor.web3.Keypair();
+    const buyerWalletWrapper: Wallet = new (anchor as any).Wallet(buyerWallet);
+
+    // Transfer enough lamports to create buyer wallet
+    await transferLamports(transactionHandler, buyerWallet.publicKey, myWallet, 1000000000);
+
+    // Create / Obtain associated token account for `AuctionHouse`
+    const [tokenAccount] = await getAtaForMint(tokenMint, myWallet.publicKey);
+    await createAssociatedTokenAccount(
+      transactionHandler,
+      tokenMint,
+      tokenAccount,
+      walletWrapper,
+      myWallet,
+    );
+
+    // Create / Obtain buyer associated token account for `AuctionHouse`
+    const [buyerTokenAccount] = await getAtaForMint(tokenMint, buyerWallet.publicKey);
+    await createAssociatedTokenAccount(
+      transactionHandler,
+      tokenMint,
+      buyerTokenAccount,
+      buyerWalletWrapper,
+      buyerWallet,
+    );
+
+    mintTo(transactionHandler, tokenMint, tokenAccount, myWallet, 1);
+    mintTo(transactionHandler, tokenMint, buyerTokenAccount, buyerWallet, 1);
+
+    // Create `TokenMetadata`
+    const { metadata } = await createMetadata({
+      transactionHandler,
+      publicKey: myWallet.publicKey,
+      editionMint: tokenMint,
+      metadataData: new MetadataDataData({
+        creators: null,
+        name: 'TOK - token',
+        symbol: 'TOK',
+        uri: 'https://github.com',
+        sellerFeeBasisPoints: SFBP,
+      }),
+      updateAuthority: myWallet.publicKey,
+    });
+
+    // Obtain `AuctionHouse` state
+    const [auctionHouse] = await getAuctionHouse(myWallet.publicKey, treasuryMint);
+
+    // Obtain `AuctionHouse` fee account PDA
+    const [auctionHouseFeeAccount] = await getAuctionHouseFeeAcct(auctionHouse);
+
+    // Obtain `Program` authority with bump
+    const [programAsSigner, programAsSignerBump] = await getProgramAsSigner();
+
+    // Obtain seller trade state
+    const [sellerTradeState, sellerTradeStateBump] = await getTradeState(
+      myWallet.publicKey,
+      auctionHouse,
+      tokenAccount,
+      treasuryMint,
+      tokenMint,
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+    );
+
+    // Obtain `AuctionHouse` treasury
+    const [auctionHouseTreasury] = await getAuctionHouseTreasuryAcct(auctionHouse);
+
+    // Obtain free seller trade state
+    const [freeSellerTradeState, freeSellerTradeStateBump] = await getTradeState(
+      myWallet.publicKey,
+      auctionHouse,
+      tokenAccount,
+      treasuryMint,
+      tokenMint,
+      new anchor.BN(0),
+      new anchor.BN(tokenSize),
+    );
+
+    // Transfer enough lamports to create seller trade state
+    await transferLamports(transactionHandler, auctionHouseFeeAccount, myWallet, 10000000);
+
+    // Call `Sell` instruction by RPC
+    await program.rpc.sell(
+      new anchor.BN(sellerTradeStateBump),
+      new anchor.BN(freeSellerTradeStateBump),
+      new anchor.BN(programAsSignerBump),
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+      {
+        accounts: {
+          wallet: myWallet.publicKey,
+          tokenAccount: tokenAccount,
+          metadata: metadata,
+          authority: myWallet.publicKey,
+          auctionHouse: auctionHouse,
+          auctionHouseFeeAccount: auctionHouseFeeAccount,
+          sellerTradeState: sellerTradeState,
+          freeSellerTradeState: freeSellerTradeState,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          programAsSigner: programAsSigner,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [],
+      },
+    );
+
+    // Obtain escrow payment account PDA
+    const [escrowPaymentAccount, escrowPaymentAccountBump] = await getEscrowPayment(
+      auctionHouse,
+      buyerWallet.publicKey,
+    );
+
+    // Transfer enough lamports to create escrow account
+    // This account will be created on-chain if provided mint is not native(WRAPPED_SOL_MINT)
+    await transferLamports(transactionHandler, escrowPaymentAccount, myWallet, 1000000000);
+
+    // Obtain buyer trade state PDA
+    const [buyerTradeState, buyerTradeStateBump] = await getTradeState(
+      buyerWallet.publicKey,
+      auctionHouse,
+      tokenAccount,
+      treasuryMint,
+      tokenMint,
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+    );
+
+    // Call `Buy` instruction by RPC
+    await program.rpc.buy(
+      new anchor.BN(buyerTradeStateBump),
+      new anchor.BN(escrowPaymentAccountBump),
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+      {
+        accounts: {
+          wallet: buyerWallet.publicKey,
+          paymentAccount: buyerWallet.publicKey,
+          transferAuthority: buyerWallet.publicKey,
+          treasuryMint: treasuryMint,
+          tokenAccount: tokenAccount,
+          metadata: metadata,
+          escrowPaymentAccount: escrowPaymentAccount,
+          authority: myWallet.publicKey,
+          auctionHouse: auctionHouse,
+          auctionHouseFeeAccount: auctionHouseFeeAccount,
+          buyerTradeState: buyerTradeState,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [buyerWallet],
+      },
+    );
+
+    const escrowLamportsBefore = (await provider.connection.getAccountInfo(escrowPaymentAccount))
+      .lamports;
+    const buyerTokenAccountBefore = (await getTokenAccount(provider, buyerTokenAccount)).amount;
+
+    // Call `ExecuteSell` instruction by RPC
+    await program.rpc.executeSale(
+      new anchor.BN(escrowPaymentAccountBump),
+      new anchor.BN(freeSellerTradeStateBump),
+      new anchor.BN(programAsSignerBump),
+      new anchor.BN(buyerPrice),
+      new anchor.BN(tokenSize),
+      {
+        accounts: {
+          buyer: buyerWallet.publicKey,
+          seller: myWallet.publicKey,
+          tokenAccount: tokenAccount,
+          tokenMint: tokenMint,
+          metadata: metadata,
+          treasuryMint: treasuryMint,
+          escrowPaymentAccount: escrowPaymentAccount,
+          sellerPaymentReceiptAccount: myWallet.publicKey,
+          buyerReceiptTokenAccount: buyerTokenAccount,
+          authority: myWallet.publicKey,
+          auctionHouse: auctionHouse,
+          auctionHouseFeeAccount: auctionHouseFeeAccount,
+          auctionHouseTreasury: auctionHouseTreasury,
+          buyerTradeState: buyerTradeState,
+          sellerTradeState: sellerTradeState,
+          freeTradeState: freeSellerTradeState,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          programAsSigner: programAsSigner,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [myWallet],
+      },
+    );
+
+    const escrowLamportsAfter = (await provider.connection.getAccountInfo(escrowPaymentAccount))
+      .lamports;
+    const buyerTokenAccountAfter = (await getTokenAccount(provider, buyerTokenAccount)).amount;
+
+    assert.equal(escrowLamportsAfter, escrowLamportsBefore - tokenSize);
+    assert.equal(
+      buyerTokenAccountAfter.toNumber(),
+      buyerTokenAccountBefore.add(new anchor.BN(tokenSize)).toNumber(),
     );
   });
 });
