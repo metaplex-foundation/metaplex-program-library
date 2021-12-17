@@ -166,3 +166,24 @@ pub fn init_transfer(
         &elgamal_pk,
     )
 }
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn transfer_chunk(
+    payer: Pubkey,
+    mint: Pubkey,
+    transfer_buffer: Pubkey,
+    data: TransferChunkData,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new(transfer_buffer, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    encode_instruction(
+        accounts,
+        PrivateMetadataInstruction::TransferChunk,
+        &data,
+    )
+}

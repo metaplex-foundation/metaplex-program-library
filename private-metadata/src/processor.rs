@@ -362,12 +362,6 @@ fn process_transfer_chunk(
         return Err(ProgramError::InvalidArgument);
     }
 
-    let all_chunks_set_mask = 1<<CIPHER_KEY_CHUNKS - 1;
-    if (transfer_buffer.updated & all_chunks_set_mask) != all_chunks_set_mask {
-        msg!("Not all chunks set");
-        return Err(ProgramError::InvalidArgument);
-    }
-
 
     // check that this proof has matching pubkey fields and that we haven't already processed this
     // chunk
