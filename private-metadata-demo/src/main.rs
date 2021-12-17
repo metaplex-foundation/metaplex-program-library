@@ -10,6 +10,7 @@ use {
         commitment_config::CommitmentConfig,
         instruction::Instruction,
         message::Message,
+        program_error::ProgramError,
         program_pack::Pack,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
@@ -103,21 +104,22 @@ fn process_demo(
     println!("Payer elgamal pubkey: {}", elgamal_pk_a);
 
 
-    let keypair_b = if let Some(kp) = dest_keypair {
+    let dest_keypair = if let Some(kp) = dest_keypair {
         Keypair::from_base58_string(kp)
     } else {
         Keypair::new()
     };
 
-    let elgamal_keypair_b = ElGamalKeypair::new(&keypair_b, &nft_mint)?;
+    let elgamal_keypair_b = ElGamalKeypair::new(&dest_keypair, &nft_mint)?;
     let elgamal_pk_b = elgamal_keypair_b.public;
 
-    println!("Dest keypair: {}", keypair_b.to_base58_string());
+    println!("Dest keypair: {}", dest_keypair.to_base58_string());
     println!("Dest elgamal pubkey: {}", elgamal_pk_b);
 
     let private_metadata_key = private_metadata::instruction::get_private_metadata_address(&nft_mint).0;
 
-    if rpc_client.get_account_data(&private_metadata_key)?.len() == 0 {
+    let mut private_metadata_data = rpc_client.get_account_data(&private_metadata_key)?;
+    if private_metadata_data.len() == 0 {
         let configure_metadata_ix = private_metadata::instruction::configure_metadata(
             payer.pubkey(),
             nft_mint,
@@ -143,6 +145,10 @@ fn process_demo(
             ],
             &[payer],
         )?;
+
+        private_metadata_data = rpc_client.get_account_data(&private_metadata_key)?;
+    } else {
+        println!("Private metadata already initialized: {}", private_metadata_key);
     }
 
     let transfer_buffer = if let Some(kp) = transfer_buffer {
@@ -151,7 +157,8 @@ fn process_demo(
         Keypair::new()
     };
 
-    if rpc_client.get_account_data(&transfer_buffer.pubkey())?.len() == 0 {
+    let mut transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey())?;
+    if transfer_buffer_data.len() == 0 {
         let buffer_len = private_metadata::state::CipherKeyTransferBuffer::get_packed_len();
         let buffer_minimum_balance_for_rent_exemption = rpc_client
             .get_minimum_balance_for_rent_exemption(buffer_len)?;
@@ -175,7 +182,56 @@ fn process_demo(
                 ),
             ],
             &[payer, &transfer_buffer],
+        )?;
+
+        transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey())?;
+    } else {
+        println!("Transfer buffer already initialized: {}", transfer_buffer.to_base58_string());
+    }
+
+
+    let transfer_buffer_account = private_metadata::state::CipherKeyTransferBuffer::from_bytes(
+        &transfer_buffer_data).ok_or(ProgramError::InvalidArgument)?;
+
+    let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
+        &private_metadata_data).ok_or(ProgramError::InvalidArgument)?;
+
+    for chunk in 0..private_metadata::state::CIPHER_KEY_CHUNKS {
+        let updated_mask = 1<<chunk;
+        if transfer_buffer_account.updated & updated_mask == updated_mask {
+            continue;
+        }
+
+        println!(
+            "Existing ct chunk {:#02x?}",
+            private_metadata_account.encrypted_cipher_key[chunk],
         );
+
+        let transfer_chunk_ix = private_metadata::instruction::transfer_chunk(
+            payer.pubkey(),
+            nft_mint,
+            transfer_buffer.pubkey(),
+            private_metadata::instruction::TransferChunkData {
+                chunk_idx: chunk as u8,
+                transfer: private_metadata::transfer_proof::TransferData::new(
+                    &elgamal_keypair_a,
+                    elgamal_pk_b,
+                    chunk as u32,
+                    private_metadata_account.encrypted_cipher_key[chunk].try_into()?,
+                ),
+            },
+        );
+
+        send(
+            rpc_client,
+            &format!("Transferring chunk {}", chunk),
+            &[
+                transfer_chunk_ix,
+            ],
+            &[payer],
+        )?;
+
+        break;
     }
 
     Ok(())
