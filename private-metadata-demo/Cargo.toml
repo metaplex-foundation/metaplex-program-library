@@ -17,6 +17,9 @@ solana-client = "1.7.15"
 solana-logger = "1.7.15"
 solana-remote-wallet = "1.7.15"
 solana-sdk = "1.7.15"
+spl-token-metadata = { version = "0.0.1", features = [
+    "no-entrypoint"
+] }
 tokio = { version = "1", features = ["full"] }
 private-metadata = { path = "../private-metadata", features = ["no-entrypoint"] }
 

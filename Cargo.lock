@@ -2159,6 +2159,7 @@ dependencies = [
  "solana-logger",
  "solana-remote-wallet",
  "solana-sdk",
+ "spl-token-metadata",
  "tokio",
 ]
 
