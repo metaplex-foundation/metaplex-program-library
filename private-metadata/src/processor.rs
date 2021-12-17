@@ -81,6 +81,7 @@ fn process_configure_metadata(
     let rent_sysvar_info = next_account_info(account_info_iter)?;
 
     if !payer_info.is_signer {
+        msg!("Payer is not a signer");
         return Err(ProgramError::InvalidArgument);
     }
     validate_account_owner(mint_info, &spl_token::ID)?;
@@ -97,23 +98,24 @@ fn process_configure_metadata(
         Pubkey::find_program_address(metadata_seeds, &spl_token_metadata::ID);
 
     if metadata_key != *metadata_info.key {
+        msg!("Invalid metadata key");
         return Err(PrivateMetadataError::InvalidMetadataKey.into());
     }
 
 
     // check that metadata authority matches and that metadata is mutable (adding private metadata
     // and not acting on a limited edition). TODO?
-    let metadata_data = metadata_info.try_borrow_data()?;
+    let metadata = spl_token_metadata::state::Metadata::from_account_info(metadata_info)?;
 
-    let authority_data = array_ref![metadata_data, 1, 32];
-    let authority_pubkey = Pubkey::new_from_array(*authority_data);
+    let authority_pubkey = metadata.update_authority;
 
     if authority_pubkey != *metadata_update_authority_info.key {
+        msg!("Invalid metadata update authority");
         return Err(PrivateMetadataError::InvalidUpdateAuthority.into());
     }
 
-    let is_mutable = metadata_data[MAX_METADATA_LEN - 172 - 9 - 1];
-    if is_mutable != 0x01 {
+    if !metadata.is_mutable {
+        msg!("Metadata is immutable");
         return Err(PrivateMetadataError::MetadataIsImmutable.into());
     }
 
@@ -127,6 +129,7 @@ fn process_configure_metadata(
         Pubkey::find_program_address(private_metadata_seeds, &ID);
 
     if private_metadata_key != *private_metadata_info.key {
+        msg!("Invalid private metadata key");
         return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
     }
 

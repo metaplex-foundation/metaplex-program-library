@@ -12,6 +12,7 @@ use {
     num_traits::{FromPrimitive},
     solana_program::{
         program_error::ProgramError,
+        pubkey::Pubkey,
     },
     crate::{
         zk_token_elgamal,
@@ -23,7 +24,6 @@ use {
     num_traits::{ToPrimitive},
     solana_program::{
         instruction::{AccountMeta, Instruction},
-        pubkey::Pubkey,
         sysvar,
     },
 };
@@ -102,7 +102,8 @@ pub fn get_private_metadata_address(mint: &Pubkey) -> (Pubkey, u8) {
     )
 }
 
-pub(crate) fn encode_instruction<T: Pod>(
+#[cfg(not(target_arch = "bpf"))]
+pub fn encode_instruction<T: Pod>(
     accounts: Vec<AccountMeta>,
     instruction_type: PrivateMetadataInstruction,
     instruction_data: &T,
@@ -127,7 +128,7 @@ pub fn configure_metadata(
         AccountMeta::new_readonly(mint, false),
         AccountMeta::new_readonly(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
-        AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new(get_private_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
