@@ -139,3 +139,30 @@ pub fn configure_metadata(
         &data,
     )
 }
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn init_transfer(
+    payer: Pubkey,
+    mint: Pubkey,
+    transfer_buffer: Pubkey,
+    elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new_readonly(
+            spl_associated_token_account::get_associated_token_address(&payer, &mint),
+            false,
+        ),
+        AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new(transfer_buffer, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    encode_instruction(
+        accounts,
+        PrivateMetadataInstruction::InitTransfer,
+        &elgamal_pk,
+    )
+}

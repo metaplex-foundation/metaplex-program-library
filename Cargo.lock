@@ -2138,6 +2138,7 @@ dependencies = [
  "sha3",
  "solana-program",
  "solana-sdk",
+ "spl-associated-token-account",
  "spl-token",
  "spl-token-metadata",
  "subtle",
