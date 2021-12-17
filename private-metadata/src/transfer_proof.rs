@@ -19,6 +19,7 @@ use {
         encryption::elgamal::{ElGamalCiphertext, ElGamalPubkey},
     },
     merlin::Transcript,
+    solana_program::msg,
     std::convert::TryInto,
 };
 
@@ -198,33 +199,30 @@ impl TransferProof {
         let equality_proof: EqualityProof = self.equality_proof.try_into()?;
 
         // add a domain separator to record the start of the protocol
+        msg!("Starting proof protocol");
         transcript.transfer_proof_domain_sep();
 
+        // append all current state to the transcript
+        msg!("Preparing proof statement");
+        transcript.append_point(b"P1_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&transfer_pubkeys.src_pubkey.0));
+        transcript.append_point(b"C1_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&src_cipher_key_chunk_ct.0[..32]));
+        transcript.append_point(b"D1_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&src_cipher_key_chunk_ct.0[32..]));
+
+        transcript.append_point(b"P2_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&transfer_pubkeys.dst_pubkey.0));
+        transcript.append_point(b"C2_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&dst_cipher_key_chunk_ct.0[..32]));
+        transcript.append_point(b"D2_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&dst_cipher_key_chunk_ct.0[32..]));
+
         // extract the relevant scalar and Ristretto points from the inputs
+        msg!("Extracting points from inputs");
         let src_pubkey: ElGamalPubkey = transfer_pubkeys.src_pubkey.try_into()?;
         let dst_pubkey: ElGamalPubkey = transfer_pubkeys.dst_pubkey.try_into()?;
 
+        msg!("Extracting cipher text from inputs");
         let src_cipher_key_chunk_ct: ElGamalCiphertext = (*src_cipher_key_chunk_ct).try_into()?;
         let dst_cipher_key_chunk_ct: ElGamalCiphertext = (*dst_cipher_key_chunk_ct).try_into()?;
 
-        let P1_EG = src_pubkey.get_point();
-        let C1_EG = src_cipher_key_chunk_ct.message_comm.get_point();
-        let D1_EG = src_cipher_key_chunk_ct.decrypt_handle.get_point();
-
-        let P2_EG = dst_pubkey.get_point();
-        let C2_EG = dst_cipher_key_chunk_ct.message_comm.get_point();
-        let D2_EG = dst_cipher_key_chunk_ct.decrypt_handle.get_point();
-
-        // append all current state to the transcript
-        transcript.append_point(b"P1_EG", &P1_EG.compress());
-        transcript.append_point(b"C1_EG", &C1_EG.compress());
-        transcript.append_point(b"D1_EG", &D1_EG.compress());
-
-        transcript.append_point(b"P2_EG", &P2_EG.compress());
-        transcript.append_point(b"C2_EG", &C2_EG.compress());
-        transcript.append_point(b"D2_EG", &D2_EG.compress());
-
         // verify equality proof
+        msg!("Verifying equality proof");
         equality_proof.verify(
             &src_pubkey,
             &dst_pubkey,
