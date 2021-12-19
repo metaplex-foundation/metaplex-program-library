@@ -956,4 +956,74 @@ describe('mpl_auction_house', function () {
       buyerTokenAccountBefore.add(new anchor.BN(tokenSize)).toNumber(),
     );
   });
+
+  it("Deposit.", async function(){
+    const amount = 5;
+    
+    // Obtain `AuctionHouse` native mint
+    const tMintKey = WRAPPED_SOL_MINT;
+    
+    const [auctionHouseKey, bump] = await getAuctionHouse(myWallet.publicKey, tMintKey);
+    const auctionHouseObj = await program.account.auctionHouse.fetch(auctionHouseKey);
+    
+    const amountAdjusted = await getPriceWithMantissa(
+      amount,
+      auctionHouseObj.treasuryMint,
+      myWallet,
+      program,
+    );
+  
+    const [escrowPaymentAccount, escrowPaymentAccountBump] = await getAuctionHouseBuyerEscrow(
+      auctionHouseKey,
+      myWallet.publicKey,
+    );
+  
+    // Make two deposit operation then subtract the lamport balance 
+    // after second deposit from the one after first one.
+    // The substraction result should be equal second deposit amount.
+    await program.rpc.deposit(escrowPaymentAccountBump, new anchor.BN(amountAdjusted), {
+      accounts: {
+        wallet: myWallet.publicKey,
+        paymentAccount: myWallet.publicKey,
+        transferAuthority: anchor.web3.SystemProgram.programId,
+        escrowPaymentAccount,
+        treasuryMint: auctionHouseObj.treasuryMint,
+        authority: auctionHouseObj.authority,
+        auctionHouse: auctionHouseKey,
+        auctionHouseFeeAccount: auctionHouseObj.auctionHouseFeeAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      }
+    });
+
+    const escrowPaymentAccountAfterFirstDeposit = 
+      (await provider.connection.getAccountInfo(escrowPaymentAccount)).lamports;
+
+    await program.rpc.deposit(escrowPaymentAccountBump, new anchor.BN(amountAdjusted), {
+      accounts: {
+        wallet: myWallet.publicKey,
+        paymentAccount: myWallet.publicKey,
+        transferAuthority: anchor.web3.SystemProgram.programId,
+        escrowPaymentAccount,
+        treasuryMint: auctionHouseObj.treasuryMint,
+        authority: auctionHouseObj.authority,
+        auctionHouse: auctionHouseKey,
+        auctionHouseFeeAccount: auctionHouseObj.auctionHouseFeeAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      }
+    });
+
+    const escrowPaymentAccountAfterSecondDeposit = 
+      (await provider.connection.getAccountInfo(escrowPaymentAccount)).lamports;
+
+    assert.equal(
+      escrowPaymentAccountAfterSecondDeposit - escrowPaymentAccountAfterFirstDeposit, 
+      new anchor.BN(amountAdjusted).toNumber()
+    );
+
+  });
+
 });
