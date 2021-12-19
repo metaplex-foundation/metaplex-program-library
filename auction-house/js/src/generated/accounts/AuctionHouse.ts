@@ -1,4 +1,4 @@
-import { AccountInfo, PublicKey } from '@solana/web3.js';
+import { AccountInfo, Commitment, Connection, PublicKey } from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 
@@ -81,6 +81,42 @@ export class AuctionHouseAccountData {
    */
   serialize(): [Buffer, number] {
     return auctionHouseAccountDataStruct.serialize(this);
+  }
+
+  static get byteSize() {
+    return auctionHouseAccountDataStruct.byteSize;
+  }
+
+  static async getMinimumBalanceForRentExemption(
+    connection: Connection,
+    commitment?: Commitment,
+  ): Promise<number> {
+    return connection.getMinimumBalanceForRentExemption(
+      AuctionHouseAccountData.byteSize,
+      commitment,
+    );
+  }
+
+  static isCompatible(buf: Buffer, offset = 0) {
+    return buf.byteLength - offset === AuctionHouseAccountData.byteSize;
+  }
+
+  get pretty() {
+    return {
+      auctionHouseFeeAccount: this.auctionHouseFeeAccount.toBase58(),
+      auctionHouseTreasury: this.auctionHouseTreasury.toBase58(),
+      treasuryWithdrawalDestination: this.treasuryWithdrawalDestination.toBase58(),
+      feeWithdrawalDestination: this.feeWithdrawalDestination.toBase58(),
+      treasuryMint: this.treasuryMint.toBase58(),
+      authority: this.authority.toBase58(),
+      creator: this.creator.toBase58(),
+      bump: this.bump,
+      treasuryBump: this.treasuryBump,
+      feePayerBump: this.feePayerBump,
+      sellerFeeBasisPoints: this.sellerFeeBasisPoints,
+      requiresSignOff: this.requiresSignOff,
+      canChangeSalePrice: this.canChangeSalePrice,
+    };
   }
 }
 
