@@ -18,6 +18,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
+borsh = "0.9.1"
 arrayref = "0.3.6"
 base64 = "0.13"
 bincode = "1"
