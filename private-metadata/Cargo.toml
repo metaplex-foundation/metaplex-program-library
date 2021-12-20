@@ -23,6 +23,7 @@ base64 = "0.13"
 bincode = "1"
 bytemuck = { version = "1.7.2", features = ["derive"] }
 curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
+curve25519-dalek-onchain = { path = "/Users/lwu/code/solana/curve25519-dalek-onchain/program", features = ["no-entrypoint"] }
 lazy_static = "1.4.0"
 merlin = { path = "/Users/lwu/code/solana/merlin" }
 num-derive = "0.3"

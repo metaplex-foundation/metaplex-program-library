@@ -43,6 +43,14 @@ pub struct TransferChunkData {
     pub transfer: TransferData,
 }
 
+#[derive(Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
+pub struct TransferChunkSlowData {
+    pub chunk_idx: u8,
+    pub transfer: TransferData,
+    pub challenge_c: [u8; 32],
+}
+
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive)]
 #[repr(u8)]
 pub enum PrivateMetadataInstruction {
@@ -54,6 +62,8 @@ pub enum PrivateMetadataInstruction {
     FiniTransfer,
 
     TransferChunk,
+
+    TransferChunkSlow,
 }
 
 pub fn decode_instruction_type(

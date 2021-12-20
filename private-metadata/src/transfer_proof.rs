@@ -212,6 +212,8 @@ impl TransferProof {
         transcript.append_point(b"C2_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&dst_cipher_key_chunk_ct.0[..32]));
         transcript.append_point(b"D2_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&dst_cipher_key_chunk_ct.0[32..]));
 
+        solana_program::log::sol_log_compute_units();
+
         // extract the relevant scalar and Ristretto points from the inputs
         msg!("Extracting points from inputs");
         let src_pubkey: ElGamalPubkey = transfer_pubkeys.src_pubkey.try_into()?;

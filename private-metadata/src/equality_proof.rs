@@ -1,9 +1,6 @@
 #[cfg(not(target_arch = "bpf"))]
 use {
     rand::rngs::OsRng,
-    curve25519_dalek::{
-        traits::{MultiscalarMul},
-    },
     crate::encryption::{
         elgamal::{ElGamalKeypair},
         pedersen::{PedersenOpening},
@@ -15,7 +12,7 @@ use {
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::{IsIdentity, VartimeMultiscalarMul},
+        traits::{IsIdentity, MultiscalarMul},
     },
     crate::{
         errors::ProofError,
@@ -26,6 +23,7 @@ use {
         pedersen::{PedersenBase},
     },
     merlin::Transcript,
+    solana_program::msg,
     std::convert::TryFrom,
 };
 
@@ -107,10 +105,12 @@ impl EqualityProof {
         let D2_EG = dst_ciphertext.decrypt_handle.get_point();
 
         // include Y_0, Y_1, Y_2 to transcript and extract challenges
+        msg!("Adding prover points");
         transcript.validate_and_append_point(b"Y_0", &self.Y_0)?;
         transcript.validate_and_append_point(b"Y_1", &self.Y_1)?;
         transcript.validate_and_append_point(b"Y_2", &self.Y_2)?;
 
+        msg!("Getting challenge scalars");
         let c = transcript.challenge_scalar(b"c");
         let w = transcript.challenge_scalar(b"w");
         let ww = w * w;
@@ -120,7 +120,8 @@ impl EqualityProof {
         let Y_1 = self.Y_1.decompress().ok_or(ProofError::VerificationError)?;
         let Y_2 = self.Y_2.decompress().ok_or(ProofError::VerificationError)?;
 
-        let check = RistrettoPoint::vartime_multiscalar_mul(
+        msg!("Proving challenge succeeds");
+        let check = RistrettoPoint::multiscalar_mul(
             vec![
                 // that s_1 is the secret key for P1_EG
                 self.sh_1,

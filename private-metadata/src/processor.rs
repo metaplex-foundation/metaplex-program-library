@@ -5,6 +5,7 @@ use crate::{
     error::*,
     pod::*,
     transfer_proof::{Verifiable},
+    equality_proof::{EqualityProof},
     ID,
 };
 
@@ -62,6 +63,13 @@ pub fn process_instruction(
             process_transfer_chunk(
                 accounts,
                 decode_instruction_data::<TransferChunkData>(input)?
+            )
+        }
+        PrivateMetadataInstruction::TransferChunkSlow => {
+            msg!("TransferChunkSlow!");
+            process_transfer_chunk_slow(
+                accounts,
+                decode_instruction_data::<TransferChunkSlowData>(input)?
             )
         }
     }
@@ -403,6 +411,211 @@ fn process_transfer_chunk(
     // TODO: make this work with bpf
     if transfer.verify().is_err() {
         return Err(PrivateMetadataError::ProofVerificationError.into());
+    }
+
+    transfer_buffer.updated |= updated_mask;
+    transfer_buffer.encrypted_cipher_key[chunk_idx] = transfer.dst_cipher_key_chunk_ct;
+
+
+    Ok(())
+}
+
+fn process_transfer_chunk_slow(
+    accounts: &[AccountInfo],
+    data: &TransferChunkSlowData,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let authority_info = next_account_info(account_info_iter)?;
+    let private_metadata_info = next_account_info(account_info_iter)?;
+    let transfer_buffer_info = next_account_info(account_info_iter)?;
+    let compute_buffer_info = next_account_info(account_info_iter)?;
+    let _system_program_info = next_account_info(account_info_iter)?;
+
+    if !authority_info.is_signer {
+        return Err(ProgramError::InvalidArgument);
+    }
+    validate_account_owner(private_metadata_info, &ID)?;
+    validate_account_owner(transfer_buffer_info, &ID)?;
+
+    // check that transfer buffer matches passed in arguments and that we have authority to do
+    // the transfer
+    //
+    // TODO: should we have a nother check for nft ownership here?
+    // TODO: consolidate with fini
+    let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
+        &transfer_buffer_info, &ID)?.into_mut();
+
+    if transfer_buffer.key != Key::CipherKeyTransferBufferV1 {
+        msg!("Transfer buffer not initialized");
+        return Err(ProgramError::UninitializedAccount);
+    }
+
+    if transfer_buffer.authority != *authority_info.key {
+        msg!("Owner mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if transfer_buffer.private_metadata_key != *private_metadata_info.key {
+        msg!("Private metadata mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+
+    // check that this proof has matching pubkey fields and that we haven't already processed this
+    // chunk
+    let updated_mask = 1<<data.chunk_idx;
+    if (transfer_buffer.updated & updated_mask) != 0 {
+        msg!("Chunk already updated");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    // TODO: don't deserialize the whole thing
+    let private_metadata = PrivateMetadataAccount::from_account_info(
+        &private_metadata_info, &ID)?;
+
+    if private_metadata.key != Key::PrivateMetadataAccountV1 { // redundant?
+        msg!("Mismatched private metadata key");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    let transfer = &data.transfer;
+    let chunk_idx: usize = data.chunk_idx.into();
+
+    if transfer.transfer_public_keys.src_pubkey != private_metadata.elgamal_pk {
+        msg!("Source elgamal pubkey mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if transfer.src_cipher_key_chunk_ct != private_metadata.encrypted_cipher_key[chunk_idx] {
+        msg!("Source cipher text mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if transfer.transfer_public_keys.dst_pubkey != transfer_buffer.elgamal_pk {
+        msg!("Destination elgamal pubkey mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+
+
+    /* we expect the compute buffer to be laid out as the following:
+     *
+     * [
+     *    // equality proof statement points
+     *    32 bytes:  src elgamal pubkey
+     *    32 bytes:  src cipher text pedersen commitment
+     *    32 bytes:  src cipher text pedersen decrypt handle
+     *    32 bytes:  dst elgamal pubkey
+     *    32 bytes:  dst cipher text pedersen commitment
+     *    32 bytes:  dst cipher text pedersen decrypt handle
+     *
+     *    // masking factors
+     *    32 bytes:  b_1 * src elegamal pubkey
+     *    32 bytes:  b_2 * dst elegamal pubkey
+     *    32 bytes:  b_1 * src decrypt handle - b_2 * H
+     *
+     *
+     *    // equality verification scalars
+     *    // that s_1 is the secret key for P1_EG
+     *    32 bytes:  self.sh_1
+     *    32 bytes:  -c
+     *    32 bytes:  -Scalar::one()
+     *
+     *    // that r_2 is the randomness used in D2_EG
+     *    32 bytes:  w * self.rh_2
+     *    32 bytes:  -w * c
+     *    32 bytes:  -w
+     *
+     *    // that the messages in C1_EG and C2_EG are equal under s_1 and r_2
+     *    32 bytes:  ww * c
+     *    32 bytes:  -ww * c
+     *    32 bytes:  ww * self.sh_1
+     *    32 bytes:  -ww * self.rh_2
+     *    32 bytes:  -ww
+     *
+     *
+     *    // DSL description of necessary computation to produce multiscalar mul results of the 3
+     *    // groups with the decompressed
+     *
+     *
+     *    // multiscalar mul results
+     *
+     */
+
+    let mut buffer_idx = 0;
+    let compute_buffer_data = compute_buffer_info.try_borrow_data()?;
+
+    let conv_error = || -> ProgramError { PrivateMetadataError::ProofVerificationError.into() };
+    let equality_proof = EqualityProof::from_bytes(&transfer.proof.equality_proof.0)
+        .map_err(|_| conv_error())?;
+
+    // verify proof values are as expected
+    let expected_pubkeys = [
+        // statement inputs
+        &transfer.transfer_public_keys.src_pubkey.0,
+        &transfer.src_cipher_key_chunk_ct.0[..32],
+        &transfer.src_cipher_key_chunk_ct.0[32..],
+        &transfer.transfer_public_keys.dst_pubkey.0,
+        &transfer.dst_cipher_key_chunk_ct.0[..32],
+        &transfer.dst_cipher_key_chunk_ct.0[32..],
+        // masking values
+        &equality_proof.Y_0.0,
+        &equality_proof.Y_1.0,
+        &equality_proof.Y_2.0,
+    ];
+    for i in 0..expected_pubkeys.len() {
+        let found_pubkey = &compute_buffer_data[buffer_idx..buffer_idx+32];
+        if *found_pubkey != *expected_pubkeys[i] {
+            msg!("Mismatched proof statement keys");
+            return Err(PrivateMetadataError::ProofVerificationError.into());
+        }
+        buffer_idx += 32;
+    }
+
+    // verify scalars are as expected
+    use curve25519_dalek::scalar::Scalar;
+    let challenge_c = Scalar::from_canonical_bytes(data.challenge_c).ok_or(conv_error())?;
+    let expected_scalars = [
+         equality_proof.sh_1,
+         -challenge_c,
+         -Scalar::one(),
+         equality_proof.rh_2,
+         -challenge_c,
+         -Scalar::one(),
+         challenge_c,
+         -challenge_c,
+         equality_proof.sh_1,
+         -equality_proof.rh_2,
+         -Scalar::one(),
+    ];
+
+    for i in 0..expected_scalars.len() {
+        use std::convert::TryInto;
+        let found_scalar =
+            compute_buffer_data[buffer_idx..buffer_idx+32]
+            .try_into()
+            .map_err(|_| conv_error())
+            .and_then(
+                |s| Scalar::from_canonical_bytes(s).ok_or(conv_error())
+            )?;
+        if found_scalar != expected_scalars[i] {
+            msg!("Mismatched proof statement scalars");
+            return Err(PrivateMetadataError::ProofVerificationError.into());
+        }
+        buffer_idx += 32;
+    }
+
+    // check that multiplication results are correct
+    use curve25519_dalek_onchain::traits::IsIdentity;
+    for i in 0..3 {
+        let mul_result = curve25519_dalek_onchain::edwards::EdwardsPoint::from_bytes(
+            &compute_buffer_data[buffer_idx..buffer_idx+128]
+        );
+
+        if ! curve25519_dalek_onchain::ristretto::RistrettoPoint(mul_result).is_identity() {
+            msg!("Proof statement did not verify");
+            return Err(PrivateMetadataError::ProofVerificationError.into());
+        }
     }
 
     transfer_buffer.updated |= updated_mask;
