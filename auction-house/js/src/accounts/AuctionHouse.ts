@@ -1,6 +1,3 @@
-// This will wrap the AuctionHouse account to include various checks
-// The generated account mainly serves to create/serialize/deserialize
-
 import { strict as assert } from 'assert';
 import { AccountInfo, Commitment, Connection, PublicKey } from '@solana/web3.js';
 import { AuctionHouseAccountData, AuctionHouseAccountDataArgs } from '../generated/accounts';
@@ -10,8 +7,9 @@ export class AuctionHouseAccount {
 
   static fromAccountInfo(pubkey: PublicKey, info: AccountInfo<Buffer>) {
     assert(
-      AuctionHouseAccount.isCompatible(info.data),
-      `Data of AccountInfo ${info.data} should be of an AuctionHouseAccount`,
+      AuctionHouseAccount.hasCorrectByteSize(info.data),
+      `Data of AccountInfo ${info.data} does not match byte size of AuctionHouseAccount.` +
+        `It should be ${AuctionHouseAccountData.byteSize} B, but is ${info.data.byteLength} B`,
     );
     const [data] = AuctionHouseAccountData.fromAccountInfo(info);
     return new AuctionHouseAccount(pubkey, data);
@@ -22,9 +20,7 @@ export class AuctionHouseAccount {
     return new AuctionHouseAccount(pubkey, data);
   }
 
-  static isCompatible(buf: Buffer) {
-    return AuctionHouseAccountData.isCompatible(buf);
-  }
+  static hasCorrectByteSize = AuctionHouseAccountData.hasCorrectByteSize;
 
   static async getMinimumBalanceForRentExemption(
     connection: Connection,
@@ -33,7 +29,7 @@ export class AuctionHouseAccount {
     return AuctionHouseAccountData.getMinimumBalanceForRentExemption(connection, commitment);
   }
 
-  get pretty() {
+  pretty() {
     return {
       pubkey: this.pubkey.toBase58(),
       data: this.data.pretty,

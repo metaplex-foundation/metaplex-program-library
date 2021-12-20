@@ -1,7 +1,10 @@
-import { AccountInfo, Commitment, Connection, PublicKey } from '@solana/web3.js';
+import { AccountInfo, Connection, Commitment, PublicKey } from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 
+/**
+ * Arguments used to create {@link AuctionHouseAccountData}
+ */
 export type AuctionHouseAccountDataArgs = {
   auctionHouseFeeAccount: PublicKey;
   auctionHouseTreasury: PublicKey;
@@ -18,6 +21,10 @@ export type AuctionHouseAccountDataArgs = {
   canChangeSalePrice: boolean;
 };
 
+/**
+ * Holds the data for the {@link AuctionHouseAccount} and provides de/serialization
+ * functionality for that data
+ */
 export class AuctionHouseAccountData {
   private constructor(
     readonly auctionHouseFeeAccount: PublicKey,
@@ -83,10 +90,18 @@ export class AuctionHouseAccountData {
     return auctionHouseAccountDataStruct.serialize(this);
   }
 
+  /**
+   * Returns the byteSize of a {@link Buffer} holding the serialized data of
+   * {@link AuctionHouseAccountData}
+   */
   static get byteSize() {
     return auctionHouseAccountDataStruct.byteSize;
   }
 
+  /**
+   * Fetches the minimum balance needed to exempt an account holding
+   * {@link AuctionHouseAccountData} data from rent
+   */
   static async getMinimumBalanceForRentExemption(
     connection: Connection,
     commitment?: Commitment,
@@ -97,11 +112,19 @@ export class AuctionHouseAccountData {
     );
   }
 
-  static isCompatible(buf: Buffer, offset = 0) {
+  /**
+   * Determines if the provided {@link Buffer} has the correct byte size to
+   * hold {@link AuctionHouseAccountData} data.
+   */
+  static hasCorrectByteSize(buf: Buffer, offset = 0) {
     return buf.byteLength - offset === AuctionHouseAccountData.byteSize;
   }
 
-  get pretty() {
+  /**
+   * Returns a readable version of {@link AuctionHouseAccountData} properties
+   * and can be used to convert to JSON and/or logging
+   */
+  pretty() {
     return {
       auctionHouseFeeAccount: this.auctionHouseFeeAccount.toBase58(),
       auctionHouseTreasury: this.auctionHouseTreasury.toBase58(),
