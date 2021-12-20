@@ -1026,4 +1026,51 @@ describe('mpl_auction_house', function () {
 
   });
 
+  it("Withdraw.", async function () {
+    const amount = 5;
+    
+    // Obtain `AuctionHouse` native mint
+    const tMintKey = WRAPPED_SOL_MINT;
+    
+    const [auctionHouseKey, bump] = await getAuctionHouse(myWallet.publicKey, tMintKey);
+    const auctionHouseObj = await program.account.auctionHouse.fetch(auctionHouseKey);
+    
+    const amountAdjusted = await getPriceWithMantissa(
+      amount,
+      auctionHouseObj.treasuryMint,
+      myWallet,
+      program,
+    );
+  
+    const [escrowPaymentAccount, escrowPaymentAccountBump] = await getAuctionHouseBuyerEscrow(
+      auctionHouseKey,
+      myWallet.publicKey,
+    );
+
+    const escrowPaymentAccountBeforeWithdraw = 
+      (await provider.connection.getAccountInfo(escrowPaymentAccount)).lamports;
+
+    await program.rpc.withdraw(escrowPaymentAccountBump, new anchor.BN(amountAdjusted), {
+      accounts: {
+        wallet: myWallet.publicKey,
+        receiptAccount: myWallet.publicKey,
+        escrowPaymentAccount,
+        treasuryMint: auctionHouseObj.treasuryMint,
+        authority: auctionHouseObj.authority,
+        auctionHouse: auctionHouseKey,
+        auctionHouseFeeAccount: auctionHouseObj.auctionHouseFeeAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+        ataProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      }
+    });
+
+    const escrowPaymentAccountAfterWithdraw = 
+      (await provider.connection.getAccountInfo(escrowPaymentAccount)).lamports;
+
+    assert.equal(escrowPaymentAccountBeforeWithdraw - escrowPaymentAccountAfterWithdraw, amountAdjusted);
+
+  });
+
 });
