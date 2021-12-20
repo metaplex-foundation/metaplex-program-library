@@ -966,11 +966,13 @@ describe('mpl_auction_house', function () {
     const [auctionHouseKey, bump] = await getAuctionHouse(myWallet.publicKey, tMintKey);
     const auctionHouseObj = await program.account.auctionHouse.fetch(auctionHouseKey);
     
-    const amountAdjusted = await getPriceWithMantissa(
-      amount,
-      auctionHouseObj.treasuryMint,
-      myWallet,
-      program,
+    const amountAdjusted = new anchor.BN(
+        await getPriceWithMantissa(
+        amount,
+        auctionHouseObj.treasuryMint,
+        myWallet,
+        program,
+      ),
     );
   
     const [escrowPaymentAccount, escrowPaymentAccountBump] = await getAuctionHouseBuyerEscrow(
@@ -981,7 +983,7 @@ describe('mpl_auction_house', function () {
     // Make two deposit operation then subtract the lamport balance 
     // after second deposit from the one after first one.
     // The substraction result should be equal second deposit amount.
-    await program.rpc.deposit(escrowPaymentAccountBump, new anchor.BN(amountAdjusted), {
+    await program.rpc.deposit(escrowPaymentAccountBump, amountAdjusted, {
       accounts: {
         wallet: myWallet.publicKey,
         paymentAccount: myWallet.publicKey,
@@ -1035,11 +1037,13 @@ describe('mpl_auction_house', function () {
     const [auctionHouseKey, bump] = await getAuctionHouse(myWallet.publicKey, tMintKey);
     const auctionHouseObj = await program.account.auctionHouse.fetch(auctionHouseKey);
     
-    const amountAdjusted = await getPriceWithMantissa(
-      amount,
-      auctionHouseObj.treasuryMint,
-      myWallet,
-      program,
+    const amountAdjusted = new anchor.BN(
+      await getPriceWithMantissa(
+        amount,
+        auctionHouseObj.treasuryMint,
+        myWallet,
+        program,
+      ),
     );
   
     const [escrowPaymentAccount, escrowPaymentAccountBump] = await getAuctionHouseBuyerEscrow(
@@ -1050,7 +1054,7 @@ describe('mpl_auction_house', function () {
     const escrowPaymentAccountBeforeWithdraw = 
       (await provider.connection.getAccountInfo(escrowPaymentAccount)).lamports;
 
-    await program.rpc.withdraw(escrowPaymentAccountBump, new anchor.BN(amountAdjusted), {
+    await program.rpc.withdraw(escrowPaymentAccountBump, amountAdjusted, {
       accounts: {
         wallet: myWallet.publicKey,
         receiptAccount: myWallet.publicKey,
@@ -1073,4 +1077,45 @@ describe('mpl_auction_house', function () {
 
   });
 
+  it('Withdraw From Fee.', async function () {
+    const amount = 5;
+    
+    // Obtain `AuctionHouse` native mint
+    const tMintKey = WRAPPED_SOL_MINT;
+    
+    const [auctionHouseKey, bump] = await getAuctionHouse(myWallet.publicKey, tMintKey);
+    const auctionHouseObj = await program.account.auctionHouse.fetch(auctionHouseKey);
+    
+    const amountAdjusted = new anchor.BN(
+      await getPriceWithMantissa(
+        amount,
+        auctionHouseObj.treasuryMint,
+        myWallet,
+        program,
+      ),
+    );
+
+    // Transfer enough lamports to withdraw
+    await transferLamports(transactionHandler, auctionHouseObj.auctionHouseFeeAccount, myWallet, amountAdjusted.toNumber()+10000);
+
+    const auctionHouseFeeAccountBeforeWithdraw =
+      (await provider.connection.getAccountInfo(auctionHouseObj.auctionHouseFeeAccount)).lamports;
+
+    // Call `WithdrawFromFee` instruction 
+    await program.rpc.withdrawFromFee (amountAdjusted, {
+      accounts: {
+        authority: auctionHouseObj.authority,
+        feeWithdrawalDestination: auctionHouseObj.feeWithdrawalDestination,
+        auctionHouseFeeAccount: auctionHouseObj.auctionHouseFeeAccount,
+        auctionHouse: auctionHouseKey,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      }
+    });
+
+    const auctionHouseFeeAccountAfterWithdraw =
+      (await provider.connection.getAccountInfo(auctionHouseObj.auctionHouseFeeAccount)).lamports;
+
+    assert.equal(auctionHouseFeeAccountBeforeWithdraw - auctionHouseFeeAccountAfterWithdraw, amountAdjusted);
+    
+  });
 });
