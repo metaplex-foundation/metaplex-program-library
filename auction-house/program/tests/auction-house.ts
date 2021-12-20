@@ -957,7 +957,7 @@ describe('mpl_auction_house', function () {
     );
   });
 
-  it("Deposit.", async function(){
+  it('Deposit.', async function(){
     const amount = 5;
     
     // Obtain `AuctionHouse` native mint
@@ -1028,7 +1028,7 @@ describe('mpl_auction_house', function () {
 
   });
 
-  it("Withdraw.", async function () {
+  it('Withdraw.', async function () {
     const amount = 5;
     
     // Obtain `AuctionHouse` native mint
@@ -1118,4 +1118,48 @@ describe('mpl_auction_house', function () {
     assert.equal(auctionHouseFeeAccountBeforeWithdraw - auctionHouseFeeAccountAfterWithdraw, amountAdjusted);
     
   });
+
+  it('Withdraw From Treasury.', async function() {
+    const amount = 5;
+    
+    // Obtain `AuctionHouse` native mint
+    const tMintKey = WRAPPED_SOL_MINT;
+    
+    const [auctionHouseKey, bump] = await getAuctionHouse(myWallet.publicKey, tMintKey);
+    const auctionHouseObj = await program.account.auctionHouse.fetch(auctionHouseKey);
+    
+    const amountAdjusted = new anchor.BN(
+      await getPriceWithMantissa(
+        amount,
+        auctionHouseObj.treasuryMint,
+        myWallet,
+        program,
+      ),
+    );
+
+    // Transfer enough lamports to withdraw
+    await transferLamports(transactionHandler, auctionHouseObj.auctionHouseTreasury, myWallet, amountAdjusted.toNumber()+10000);
+
+    const auctionHouseTreasuryBeforeWithdraw =
+      (await provider.connection.getAccountInfo(auctionHouseObj.auctionHouseTreasury)).lamports;
+
+    // Call `WithdrawFromTreasury` instruction 
+    await program.rpc.withdrawFromTreasury (amountAdjusted, {
+      accounts: {
+        treasuryMint: auctionHouseObj.treasuryMint,
+        authority: auctionHouseObj.authority,
+        treasuryWithdrawalDestination: auctionHouseObj.treasuryWithdrawalDestination,
+        auctionHouseTreasury: auctionHouseObj.auctionHouseTreasury,
+        auctionHouse: auctionHouseKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: anchor.web3.SystemProgram.programId,
+      }
+    });
+
+    const auctionHouseTreasuryAfterWithdraw =
+      (await provider.connection.getAccountInfo(auctionHouseObj.auctionHouseTreasury)).lamports;
+
+    assert.equal(auctionHouseTreasuryBeforeWithdraw - auctionHouseTreasuryAfterWithdraw, amountAdjusted);
+  });
+
 });
