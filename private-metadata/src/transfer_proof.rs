@@ -139,7 +139,7 @@ pub struct TransferProof {
 // plumbing BS
 #[allow(non_snake_case)]
 impl TransferProof {
-    fn transcript_new() -> Transcript {
+    pub fn transcript_new() -> Transcript {
         Transcript::new(b"TransferProof")
     }
 

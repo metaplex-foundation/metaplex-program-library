@@ -48,7 +48,6 @@ pub struct TransferChunkData {
 pub struct TransferChunkSlowData {
     pub chunk_idx: u8,
     pub transfer: TransferData,
-    pub challenge_c: [u8; 32],
 }
 
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive)]

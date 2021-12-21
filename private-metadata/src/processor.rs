@@ -4,8 +4,9 @@ use crate::{
     state::*,
     error::*,
     pod::*,
-    transfer_proof::{Verifiable},
+    transfer_proof::{Verifiable, TransferProof},
     equality_proof::*,
+    transcript::TranscriptProtocol,
     ID,
 };
 
@@ -618,9 +619,34 @@ fn process_transfer_chunk_slow(
         buffer_idx += 32;
     }
 
+    // same as in TransferProof::verify and EqualityProof::verify but with DSL outputs
+    use curve25519_dalek::ristretto::*;
+    let mut transcript = TransferProof::transcript_new();
+
+    msg!("Starting proof protocol");
+    transcript.transfer_proof_domain_sep();
+
+    msg!("Preparing proof statement");
+    transcript.append_point(b"P1_EG", &CompressedRistretto::from_slice(&transfer.transfer_public_keys.src_pubkey.0));
+    transcript.append_point(b"C1_EG", &CompressedRistretto::from_slice(&transfer.src_cipher_key_chunk_ct.0[..32]));
+    transcript.append_point(b"D1_EG", &CompressedRistretto::from_slice(&transfer.src_cipher_key_chunk_ct.0[32..]));
+
+    transcript.append_point(b"P2_EG", &CompressedRistretto::from_slice(&transfer.transfer_public_keys.dst_pubkey.0));
+    transcript.append_point(b"C2_EG", &CompressedRistretto::from_slice(&transfer.dst_cipher_key_chunk_ct.0[..32]));
+    transcript.append_point(b"D2_EG", &CompressedRistretto::from_slice(&transfer.dst_cipher_key_chunk_ct.0[32..]));
+
+    msg!("Adding prover points");
+    transcript.validate_and_append_point(b"Y_0", &equality_proof.Y_0).map_err(|_| conv_error())?;
+    transcript.validate_and_append_point(b"Y_1", &equality_proof.Y_1).map_err(|_| conv_error())?;
+    transcript.validate_and_append_point(b"Y_2", &equality_proof.Y_2).map_err(|_| conv_error())?;
+
+    msg!("Getting challenge scalars");
+    let challenge_c = transcript.challenge_scalar(b"c");
+    // TODO: do we need to fetch 'w'? should be deterministically after...
+
+
     // verify scalars are as expected
     use curve25519_dalek::scalar::Scalar;
-    let challenge_c = Scalar::from_canonical_bytes(data.challenge_c).ok_or(conv_error())?;
     let expected_scalars = [
          equality_proof.sh_1,
          -challenge_c,
