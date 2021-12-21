@@ -529,8 +529,8 @@ fn process_transfer_chunk_slow(
         msg!("Mismatched input buffer");
         return Err(ProgramError::InvalidArgument);
     }
-    if compute_buffer_header.instruction_num
-            != DSL_INSTRUCTION_COUNT.try_into().map_err(|_| conv_error())? {
+    let expected_count: u32 = DSL_INSTRUCTION_COUNT.try_into().map_err(|_| conv_error())?;
+    if compute_buffer_header.instruction_num != expected_count {
         msg!("Incomplete compute buffer");
         return Err(ProgramError::InvalidArgument);
     }

@@ -2170,6 +2170,8 @@ name = "private-metadata-demo-cli"
 version = "0.0.1"
 dependencies = [
  "clap",
+ "curve25519-dalek 3.2.0",
+ "curve25519-dalek-onchain",
  "private-metadata",
  "solana-clap-utils",
  "solana-cli-config",

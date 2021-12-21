@@ -196,3 +196,30 @@ pub fn transfer_chunk(
         &data,
     )
 }
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn transfer_chunk_slow(
+    payer: Pubkey,
+    mint: Pubkey,
+    transfer_buffer: Pubkey,
+    instruction_buffer: Pubkey,
+    input_buffer: Pubkey,
+    compute_buffer: Pubkey,
+    data: TransferChunkSlowData,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new(transfer_buffer, false),
+        AccountMeta::new_readonly(instruction_buffer, false),
+        AccountMeta::new_readonly(input_buffer, false),
+        AccountMeta::new_readonly(compute_buffer, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    encode_instruction(
+        accounts,
+        PrivateMetadataInstruction::TransferChunkSlow,
+        &data,
+    )
+}

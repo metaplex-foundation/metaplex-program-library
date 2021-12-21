@@ -22,4 +22,6 @@ spl-token-metadata = { version = "0.0.1", features = [
 ] }
 tokio = { version = "1", features = ["full"] }
 private-metadata = { path = "../private-metadata", features = ["no-entrypoint"] }
+curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
+curve25519-dalek-onchain = { path = "/Users/lwu/code/solana/curve25519-dalek-onchain/program", features = ["no-entrypoint"] }
 
