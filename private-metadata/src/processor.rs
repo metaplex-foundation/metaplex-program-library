@@ -538,6 +538,7 @@ fn process_transfer_chunk_slow(
         return Err(ProgramError::InvalidArgument);
     }
 
+    solana_program::log::sol_log_compute_units();
 
     /* we expect the input buffer to be laid out as the following:
      *
@@ -604,6 +605,7 @@ fn process_transfer_chunk_slow(
         &COMPRESSED_H,
         &equality_proof.Y_2.0,
     ];
+    msg!("Verifying input points");
     for i in 0..expected_pubkeys.len() {
         let found_pubkey = &input_buffer_data[buffer_idx..buffer_idx+32];
         if *found_pubkey != *expected_pubkeys[i] {
@@ -612,6 +614,8 @@ fn process_transfer_chunk_slow(
         }
         buffer_idx += 32;
     }
+
+    solana_program::log::sol_log_compute_units();
 
     // same as in TransferProof::verify and EqualityProof::verify but with DSL outputs
     let mut transcript = TransferProof::transcript_new();
@@ -628,47 +632,61 @@ fn process_transfer_chunk_slow(
         &mut transcript,
     ).map_err(|_| conv_error())?;
 
+    solana_program::log::sol_log_compute_units();
+
     msg!("Getting challenge scalars");
     let challenge_c = transcript.challenge_scalar(b"c");
     // TODO: do we need to fetch 'w'? should be deterministically after...
 
+    solana_program::log::sol_log_compute_units();
 
     // verify scalars are as expected
     use curve25519_dalek::scalar::Scalar;
+    let neg_challenge_c = -challenge_c;
+    let neg_rh_2 = -equality_proof.rh_2;
+    let neg_one = Scalar::from_canonical_bytes([
+        0xEC, 0xD3, 0xF5, 0x5C, 0x1A, 0x63, 0x12, 0x58,
+        0xD6, 0x9C, 0xF7, 0xA2, 0xDE, 0xF9, 0xDE, 0x14,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
+    ]).ok_or(conv_error())?;
     let expected_scalars = [
-         equality_proof.sh_1,
-         -challenge_c,
-         -Scalar::one(),
+         &equality_proof.sh_1,
+         &neg_challenge_c,
+         &neg_one,
 
-         equality_proof.rh_2,
-         -challenge_c,
-         -Scalar::one(),
+         &equality_proof.rh_2,
+         &neg_challenge_c,
+         &neg_one,
 
-         challenge_c,
-         -challenge_c,
-         equality_proof.sh_1,
-         -equality_proof.rh_2,
-         -Scalar::one(),
+         &challenge_c,
+         &neg_challenge_c,
+         &equality_proof.sh_1,
+         &neg_rh_2,
+         &neg_one,
     ];
 
+    solana_program::log::sol_log_compute_units();
+
+    msg!("Verifying input scalars");
     for i in 0..expected_scalars.len() {
-        let found_scalar =
-            input_buffer_data[buffer_idx..buffer_idx+32]
-            .try_into()
-            .map_err(|_| conv_error())
-            .and_then(
-                |s| Scalar::from_canonical_bytes(s).ok_or(conv_error())
-            )?;
-        if found_scalar != expected_scalars[i] {
+        let mut scalar_buffer = [0; 32];
+        scalar_buffer.copy_from_slice(&input_buffer_data[buffer_idx..buffer_idx+32]);
+        let found_scalar = Scalar::from_canonical_bytes(scalar_buffer)
+            .ok_or(conv_error())?;
+        if found_scalar != *expected_scalars[i] {
             msg!("Mismatched proof statement scalars");
             return Err(PrivateMetadataError::ProofVerificationError.into());
         }
         buffer_idx += 32;
     }
 
+    solana_program::log::sol_log_compute_units();
+
     // check that multiplication results are correct
     use curve25519_dalek::traits::IsIdentity;
     let mut buffer_idx = dalek::HEADER_SIZE;
+    msg!("Verifying multiscalar mul results");
     for _i in 0..3 {
         let mul_result = curve25519_dalek::edwards::EdwardsPoint::from_bytes(
             &compute_buffer_data[buffer_idx..buffer_idx+128]
