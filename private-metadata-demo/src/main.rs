@@ -228,82 +228,90 @@ fn process_demo(
 
     use curve25519_dalek_onchain::instruction as dalek;
     let instruction_buffer_len = (dalek::HEADER_SIZE + dsl.len()) as usize;
-    let input_buffer_len = dalek::HEADER_SIZE + 6 * 32 * 2 + 128;
 
     // pick a large number... at least > 8 * 128 * scalars.len()
-    let compute_buffer_len = dalek::HEADER_SIZE + 10000;
+    let compute_buffer_len = dalek::HEADER_SIZE + 15000;
 
-    let buffers = [
-        (&instruction_buffer, instruction_buffer_len, "instruction", dalek::Key::InstructionBufferV1),
-        (&input_buffer, input_buffer_len, "input", dalek::Key::InputBufferV1),
-        (&compute_buffer, compute_buffer_len, "compute", dalek::Key::ComputeBufferV1),
-    ];
+    let instruction_buffer_data = rpc_client.get_account_data(&instruction_buffer.pubkey());
+    if let Ok(data) = instruction_buffer_data {
+        assert!(data.len() >= instruction_buffer_len);
+    } else {
+        send(
+            rpc_client,
+            &format!("Creating instruction buffer"),
+            &[
+                system_instruction::create_account(
+                    &payer.pubkey(),
+                    &instruction_buffer.pubkey(),
+                    rpc_client.get_minimum_balance_for_rent_exemption(instruction_buffer_len)?,
+                    instruction_buffer_len as u64,
+                    &curve25519_dalek_onchain::id(),
+                ),
+                dalek::initialize_buffer(
+                    instruction_buffer.pubkey(),
+                    payer.pubkey(),
+                    dalek::Key::InstructionBufferV1,
+                    vec![],
+                ),
+            ],
+            &[payer, &instruction_buffer],
+        )?;
 
-    for (buffer, buffer_len, name, buffer_type) in buffers {
-        let buffer_data = rpc_client.get_account_data(&buffer.pubkey());
-        if let Ok(data) = buffer_data {
-            assert!(data.len() >= buffer_len);
-        } else {
-            let mut inputkeys = vec![];
-            if *buffer == compute_buffer {
-                inputkeys.extend_from_slice(&[instruction_buffer.pubkey(), input_buffer.pubkey()]);
-            }
+        let mut instructions = vec![];
+
+        // write the instructions
+        let mut dsl_idx = 0;
+        let dsl_chunk = 800;
+        loop {
+            let end = (dsl_idx+dsl_chunk).min(dsl.len());
+            let done = end == dsl.len();
+            instructions.push(
+                dalek::write_bytes(
+                    instruction_buffer.pubkey(),
+                    payer.pubkey(),
+                    (dalek::HEADER_SIZE + dsl_idx) as u32,
+                    done,
+                    &dsl[dsl_idx..end],
+                )
+            );
             send(
                 rpc_client,
-                &format!("Creating {} buffer", name),
-                &[
-                    system_instruction::create_account(
-                        &payer.pubkey(),
-                        &buffer.pubkey(),
-                        rpc_client.get_minimum_balance_for_rent_exemption(buffer_len)?,
-                        buffer_len as u64,
-                        &curve25519_dalek_onchain::id(),
-                    ),
-                    dalek::initialize_buffer(
-                        buffer.pubkey(),
-                        payer.pubkey(),
-                        buffer_type,
-                        inputkeys,
-                    ),
-                ],
-                &[payer, buffer],
+                &format!("Writing instructions"),
+                instructions.as_slice(),
+                &[payer],
             )?;
-
-            if *buffer == instruction_buffer {
-                let mut instructions = vec![];
-
-                // write the instructions
-                let mut dsl_idx = 0;
-                let dsl_chunk = 800;
-                loop {
-                    let end = (dsl_idx+dsl_chunk).min(dsl.len());
-                    let done = end == dsl.len();
-                    instructions.push(
-                        dalek::write_bytes(
-                            instruction_buffer.pubkey(),
-                            payer.pubkey(),
-                            (dalek::HEADER_SIZE + dsl_idx) as u32,
-                            done,
-                            &dsl[dsl_idx..end],
-                        )
-                    );
-                    send(
-                        rpc_client,
-                        &format!("Writing instructions"),
-                        instructions.as_slice(),
-                        &[payer],
-                    )?;
-                    instructions.clear();
-                    if done {
-                        break;
-                    } else {
-                        dsl_idx = end;
-                    }
-                }
+            instructions.clear();
+            if done {
+                break;
+            } else {
+                dsl_idx = end;
             }
         }
     }
 
+    let close_compute_and_input = || {
+        let mut instructions = vec![];
+        for buffer in [input_buffer.pubkey(), compute_buffer.pubkey()] {
+            if let Ok(_) = rpc_client.get_account_data(&input_buffer.pubkey()) {
+                instructions.push(
+                    dalek::close_buffer(
+                        buffer,
+                        payer.pubkey(),
+                    ),
+                );
+            }
+        }
+
+        send(
+            rpc_client,
+            &format!("Closing input and compute buffers"),
+            instructions.as_slice(),
+            &[payer],
+        )
+    };
+
+    // if previous run failed and we respecified...
+    close_compute_and_input()?;
 
     for chunk in 0..private_metadata::state::CIPHER_KEY_CHUNKS {
         let updated_mask = 1<<chunk;
@@ -328,19 +336,19 @@ fn process_demo(
 
         let points = [
             // statement inputs
-            &transfer.transfer_public_keys.src_pubkey.0,
-            &private_metadata::equality_proof::COMPRESSED_H,
-            &equality_proof.Y_0.0,
+            transfer.transfer_public_keys.src_pubkey.0,
+            private_metadata::equality_proof::COMPRESSED_H,
+            equality_proof.Y_0.0,
 
-            &transfer.transfer_public_keys.dst_pubkey.0,
-            &transfer.dst_cipher_key_chunk_ct.0[32..],
-            &equality_proof.Y_1.0,
+            transfer.transfer_public_keys.dst_pubkey.0,
+            transfer.dst_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
+            equality_proof.Y_1.0,
 
-            &transfer.src_cipher_key_chunk_ct.0[32..],
-            &transfer.src_cipher_key_chunk_ct.0[..32],
-            &transfer.dst_cipher_key_chunk_ct.0[..32],
-            &private_metadata::equality_proof::COMPRESSED_H,
-            &equality_proof.Y_2.0,
+            transfer.src_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
+            transfer.src_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
+            transfer.dst_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
+            private_metadata::equality_proof::COMPRESSED_H,
+            equality_proof.Y_2.0,
         ];
 
         use private_metadata::transcript::TranscriptProtocol;
@@ -362,7 +370,8 @@ fn process_demo(
         let challenge_c = transcript.challenge_scalar(b"c");
 
         use curve25519_dalek::scalar::Scalar;
-        let scalars = [
+        use curve25519_dalek_onchain::scalar::Scalar as OScalar;
+        let scalars = vec![
              equality_proof.sh_1,
              -challenge_c,
              -Scalar::one(),
@@ -376,73 +385,65 @@ fn process_demo(
              equality_proof.sh_1,
              -equality_proof.rh_2,
              -Scalar::one(),
-        ];
+        ]
+            .iter()
+            .map(|s| OScalar::from_canonical_bytes(s.bytes).unwrap())
+            .collect::<Vec<_>>();
 
-        let mut instructions = vec![];
-        // write the points
-        let mut points_as_bytes = vec![];
-        for i in 0..points.len(){
-            points_as_bytes.extend_from_slice(&points[i]);
-        }
-        instructions.push(
-            dalek::write_bytes(
-                input_buffer.pubkey(),
-                payer.pubkey(),
-                dalek::HEADER_SIZE as u32,
-                false,
-                points_as_bytes.as_slice()
-            ),
-        );
-        send(
-            rpc_client,
-            &format!("Writing mul points"),
-            instructions.as_slice(),
-            &[payer],
-        )?;
-        instructions.clear();
-
-
-        // write the scalars
-        let mut scalars_as_bytes = vec![];
-        for i in 0..scalars.len() {
-            scalars_as_bytes.extend_from_slice(&scalars[i].bytes);
-        }
-        instructions.push(
-            dalek::write_bytes(
-                input_buffer.pubkey(),
-                payer.pubkey(),
-                (dalek::HEADER_SIZE + scalars.len() * 32) as u32,
-                false,
-                scalars_as_bytes.as_slice()
-            ),
-        );
-
-        // write identity for results
-        use curve25519_dalek_onchain::traits::Identity;
-        instructions.push(
-            dalek::write_bytes(
-                input_buffer.pubkey(),
-                payer.pubkey(),
-                (dalek::HEADER_SIZE + scalars.len() * 32 * 2) as u32,
-                true,
-                &curve25519_dalek_onchain::edwards::EdwardsPoint::identity().to_bytes(),
-            ),
-        );
+        let input_buffer_len = dalek::HEADER_SIZE + 11 * 32 * 2 + 128;
 
         send(
             rpc_client,
-            &format!("Writing mul scalars and ident"),
-            instructions.as_slice(),
+            &format!("Creating input and compute buffers"),
+            &[
+                system_instruction::create_account(
+                    &payer.pubkey(),
+                    &input_buffer.pubkey(),
+                    rpc_client.get_minimum_balance_for_rent_exemption(input_buffer_len)?,
+                    input_buffer_len as u64,
+                    &curve25519_dalek_onchain::id(),
+                ),
+                system_instruction::create_account(
+                    &payer.pubkey(),
+                    &compute_buffer.pubkey(),
+                    rpc_client.get_minimum_balance_for_rent_exemption(compute_buffer_len)?,
+                    compute_buffer_len as u64,
+                    &curve25519_dalek_onchain::id(),
+                ),
+                dalek::initialize_buffer(
+                    input_buffer.pubkey(),
+                    payer.pubkey(),
+                    dalek::Key::InputBufferV1,
+                    vec![],
+                ),
+                dalek::initialize_buffer(
+                    compute_buffer.pubkey(),
+                    payer.pubkey(),
+                    dalek::Key::ComputeBufferV1,
+                    vec![instruction_buffer.pubkey(), input_buffer.pubkey()],
+                ),
+            ],
+            &[payer, &input_buffer, &compute_buffer],
+        )?;
+
+
+        send(
+            rpc_client,
+            &format!("Writing inputs"),
+            dalek::write_input_buffer(
+                input_buffer.pubkey(),
+                payer.pubkey(),
+                &points,
+                scalars.as_slice(),
+            ).as_slice(),
             &[payer],
         )?;
-        instructions.clear();
-
 
         let instructions_per_tx = 32;
         let num_cranks = dsl.len() / dalek::INSTRUCTION_SIZE;
         let mut current = 0;
         while current < num_cranks {
-            instructions.clear();
+            let mut instructions = vec![];
             let iter_start = current;
             for _j in 0..instructions_per_tx {
                 if current >= num_cranks {
@@ -492,28 +493,11 @@ fn process_demo(
             &[payer],
         )?;
 
+        close_compute_and_input()?;
+
+
         break;
     }
-
-    send(
-        rpc_client,
-        &format!("Closing buffers"),
-        &[
-            dalek::close_buffer(
-                instruction_buffer.pubkey(),
-                payer.pubkey(),
-            ),
-            dalek::close_buffer(
-                input_buffer.pubkey(),
-                payer.pubkey(),
-            ),
-            dalek::close_buffer(
-                compute_buffer.pubkey(),
-                payer.pubkey(),
-            ),
-        ],
-        &[payer],
-    )?;
 
     Ok(())
 }
