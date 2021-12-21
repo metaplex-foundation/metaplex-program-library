@@ -551,12 +551,12 @@ fn process_transfer_chunk_slow(
      *    32 bytes:  Y_0 (b_1 * src elegamal pubkey)
      *
      *    32 bytes:  dst elgamal pubkey
-     *    32 bytes:  dst cipher text pedersen decrypt handle
+     *    32 bytes:  D2_EG dst cipher text pedersen decrypt handle
      *    32 bytes:  Y_1 (b_2 * dst elegamal pubkey)
      *
-     *    32 bytes:  src cipher text pedersen decrypt handle
-     *    32 bytes:  src cipher text pedersen commitment
-     *    32 bytes:  dst cipher text pedersen commitment
+     *    32 bytes:  C2_EG dst cipher text pedersen commitment
+     *    32 bytes:  C1_EG src cipher text pedersen commitment
+     *    32 bytes:  D1_EG src cipher text pedersen decrypt handle
      *    32 bytes:  pedersen base H compressed
      *    32 bytes:  Y_2 (b_1 * src decrypt handle - b_2 * H)
      *
@@ -599,9 +599,9 @@ fn process_transfer_chunk_slow(
         &transfer.dst_cipher_key_chunk_ct.0[32..],
         &equality_proof.Y_1.0,
 
-        &transfer.src_cipher_key_chunk_ct.0[32..],
-        &transfer.src_cipher_key_chunk_ct.0[..32],
         &transfer.dst_cipher_key_chunk_ct.0[..32],
+        &transfer.src_cipher_key_chunk_ct.0[..32],
+        &transfer.src_cipher_key_chunk_ct.0[32..],
         &COMPRESSED_H,
         &equality_proof.Y_2.0,
     ];

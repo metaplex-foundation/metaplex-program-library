@@ -349,9 +349,9 @@ fn process_demo(
             transfer.dst_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
             equality_proof.Y_1.0,
 
-            transfer.src_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
-            transfer.src_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
             transfer.dst_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
+            transfer.src_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
+            transfer.src_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
             private_metadata::equality_proof::COMPRESSED_H,
             equality_proof.Y_2.0,
         ];
