@@ -679,14 +679,14 @@ fn process_transfer_chunk_slow(
     }
 
     // check that multiplication results are correct
-    use curve25519_dalek_onchain::traits::IsIdentity;
+    use curve25519_dalek::traits::IsIdentity;
     let mut buffer_idx = dalek::HEADER_SIZE;
     for _i in 0..3 {
-        let mul_result = curve25519_dalek_onchain::edwards::EdwardsPoint::from_bytes(
+        let mul_result = curve25519_dalek::edwards::EdwardsPoint::from_bytes(
             &compute_buffer_data[buffer_idx..buffer_idx+128]
         );
 
-        if ! curve25519_dalek_onchain::ristretto::RistrettoPoint(mul_result).is_identity() {
+        if ! curve25519_dalek::ristretto::RistrettoPoint(mul_result).is_identity() {
             msg!("Proof statement did not verify");
             return Err(PrivateMetadataError::ProofVerificationError.into());
         }
