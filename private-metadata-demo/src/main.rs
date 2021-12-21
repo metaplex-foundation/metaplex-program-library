@@ -499,9 +499,6 @@ fn process_demo(
         )?;
 
         close_compute_and_input()?;
-
-
-        break;
     }
 
     Ok(())
