@@ -23,15 +23,9 @@ use solana_program::{
     sysvar::{Sysvar},
 };
 
-use spl_token_metadata::{
-    state::MAX_METADATA_LEN,
-};
-
 use crate::{
     zk_token_elgamal,
 };
-
-use arrayref::{array_ref};
 
 pub fn process_instruction(
     _program_id: &Pubkey,
@@ -620,7 +614,6 @@ fn process_transfer_chunk_slow(
     }
 
     // same as in TransferProof::verify and EqualityProof::verify but with DSL outputs
-    use curve25519_dalek::ristretto::*;
     let mut transcript = TransferProof::transcript_new();
 
     TransferProof::build_transcript(

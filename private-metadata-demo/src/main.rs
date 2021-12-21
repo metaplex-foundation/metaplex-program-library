@@ -4,14 +4,13 @@ use {
         input_validators::{is_url_or_moniker, is_valid_signer, normalize_to_url_if_moniker},
         keypair::DefaultSigner,
     },
-    solana_client::{client_error, rpc_client::RpcClient},
+    solana_client::{rpc_client::RpcClient},
     solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solana_sdk::{
         commitment_config::CommitmentConfig,
         instruction::Instruction,
         message::Message,
         program_error::ProgramError,
-        program_pack::Pack,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
         system_instruction,
@@ -344,7 +343,6 @@ fn process_demo(
             &equality_proof.Y_2.0,
         ];
 
-        use curve25519_dalek::ristretto::*;
         use private_metadata::transcript::TranscriptProtocol;
         use private_metadata::transfer_proof::TransferProof;
         use private_metadata::equality_proof::EqualityProof;
@@ -446,7 +444,7 @@ fn process_demo(
         while current < num_cranks {
             instructions.clear();
             let iter_start = current;
-            for j in 0..instructions_per_tx {
+            for _j in 0..instructions_per_tx {
                 if current >= num_cranks {
                     break;
                 }

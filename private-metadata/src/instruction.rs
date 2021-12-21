@@ -2,7 +2,6 @@
 use {
     crate::{
         state::{
-            MAX_URI_LENGTH,
             CIPHER_KEY_CHUNKS,
         },
         transfer_proof::TransferData,
@@ -132,7 +131,7 @@ pub fn configure_metadata(
     mint: Pubkey,
     data: ConfigureMetadataData,
 ) -> Instruction {
-    let mut accounts = vec![
+    let accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(mint, false),
         AccountMeta::new_readonly(get_metadata_address(&mint).0, false),
@@ -156,7 +155,7 @@ pub fn init_transfer(
     transfer_buffer: Pubkey,
     elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
 ) -> Instruction {
-    let mut accounts = vec![
+    let accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(mint, false),
         AccountMeta::new_readonly(
@@ -183,7 +182,7 @@ pub fn transfer_chunk(
     transfer_buffer: Pubkey,
     data: TransferChunkData,
 ) -> Instruction {
-    let mut accounts = vec![
+    let accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
         AccountMeta::new(transfer_buffer, false),
@@ -207,7 +206,7 @@ pub fn transfer_chunk_slow(
     compute_buffer: Pubkey,
     data: TransferChunkSlowData,
 ) -> Instruction {
-    let mut accounts = vec![
+    let accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
         AccountMeta::new(transfer_buffer, false),
