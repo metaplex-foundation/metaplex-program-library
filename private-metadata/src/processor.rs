@@ -644,12 +644,12 @@ fn process_transfer_chunk_slow(
     use curve25519_dalek::scalar::Scalar;
     let neg_challenge_c = -challenge_c;
     let neg_rh_2 = -equality_proof.rh_2;
-    let neg_one = Scalar::from_canonical_bytes([
+    let neg_one = Scalar{ bytes: [
         0xEC, 0xD3, 0xF5, 0x5C, 0x1A, 0x63, 0x12, 0x58,
         0xD6, 0x9C, 0xF7, 0xA2, 0xDE, 0xF9, 0xDE, 0x14,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10,
-    ]).ok_or(conv_error())?;
+    ] };
     let expected_scalars = [
          &equality_proof.sh_1,
          &neg_challenge_c,
@@ -672,9 +672,10 @@ fn process_transfer_chunk_slow(
     for i in 0..expected_scalars.len() {
         let mut scalar_buffer = [0; 32];
         scalar_buffer.copy_from_slice(&input_buffer_data[buffer_idx..buffer_idx+32]);
-        let found_scalar = Scalar::from_canonical_bytes(scalar_buffer)
-            .ok_or(conv_error())?;
-        if found_scalar != *expected_scalars[i] {
+        // TODO: seems a bit weird that this doesn't go through from_canonical_bytes but we're just
+        // comparing exact equality...
+        let found_scalar = Scalar{ bytes: scalar_buffer };
+        if found_scalar.bytes != expected_scalars[i].bytes {
             msg!("Mismatched proof statement scalars");
             return Err(PrivateMetadataError::ProofVerificationError.into());
         }
