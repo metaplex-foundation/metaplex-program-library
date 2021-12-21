@@ -623,22 +623,17 @@ fn process_transfer_chunk_slow(
     use curve25519_dalek::ristretto::*;
     let mut transcript = TransferProof::transcript_new();
 
-    msg!("Starting proof protocol");
-    transcript.transfer_proof_domain_sep();
+    TransferProof::build_transcript(
+        &transfer.src_cipher_key_chunk_ct,
+        &transfer.dst_cipher_key_chunk_ct,
+        &transfer.transfer_public_keys,
+        &mut transcript,
+    ).map_err(|_| conv_error())?;
 
-    msg!("Preparing proof statement");
-    transcript.append_point(b"P1_EG", &CompressedRistretto::from_slice(&transfer.transfer_public_keys.src_pubkey.0));
-    transcript.append_point(b"C1_EG", &CompressedRistretto::from_slice(&transfer.src_cipher_key_chunk_ct.0[..32]));
-    transcript.append_point(b"D1_EG", &CompressedRistretto::from_slice(&transfer.src_cipher_key_chunk_ct.0[32..]));
-
-    transcript.append_point(b"P2_EG", &CompressedRistretto::from_slice(&transfer.transfer_public_keys.dst_pubkey.0));
-    transcript.append_point(b"C2_EG", &CompressedRistretto::from_slice(&transfer.dst_cipher_key_chunk_ct.0[..32]));
-    transcript.append_point(b"D2_EG", &CompressedRistretto::from_slice(&transfer.dst_cipher_key_chunk_ct.0[32..]));
-
-    msg!("Adding prover points");
-    transcript.validate_and_append_point(b"Y_0", &equality_proof.Y_0).map_err(|_| conv_error())?;
-    transcript.validate_and_append_point(b"Y_1", &equality_proof.Y_1).map_err(|_| conv_error())?;
-    transcript.validate_and_append_point(b"Y_2", &equality_proof.Y_2).map_err(|_| conv_error())?;
+    EqualityProof::build_transcript(
+        &equality_proof,
+        &mut transcript,
+    ).map_err(|_| conv_error())?;
 
     msg!("Getting challenge scalars");
     let challenge_c = transcript.challenge_scalar(b"c");

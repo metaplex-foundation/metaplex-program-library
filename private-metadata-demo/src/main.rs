@@ -346,17 +346,21 @@ fn process_demo(
 
         use curve25519_dalek::ristretto::*;
         use private_metadata::transcript::TranscriptProtocol;
-        let mut transcript = private_metadata::transfer_proof::TransferProof::transcript_new();
-        transcript.transfer_proof_domain_sep();
-        transcript.append_point(b"P1_EG", &CompressedRistretto::from_slice(&transfer.transfer_public_keys.src_pubkey.0));
-        transcript.append_point(b"C1_EG", &CompressedRistretto::from_slice(&transfer.src_cipher_key_chunk_ct.0[..32]));
-        transcript.append_point(b"D1_EG", &CompressedRistretto::from_slice(&transfer.src_cipher_key_chunk_ct.0[32..]));
-        transcript.append_point(b"P2_EG", &CompressedRistretto::from_slice(&transfer.transfer_public_keys.dst_pubkey.0));
-        transcript.append_point(b"C2_EG", &CompressedRistretto::from_slice(&transfer.dst_cipher_key_chunk_ct.0[..32]));
-        transcript.append_point(b"D2_EG", &CompressedRistretto::from_slice(&transfer.dst_cipher_key_chunk_ct.0[32..]));
-        transcript.validate_and_append_point(b"Y_0", &equality_proof.Y_0).unwrap();
-        transcript.validate_and_append_point(b"Y_1", &equality_proof.Y_1).unwrap();
-        transcript.validate_and_append_point(b"Y_2", &equality_proof.Y_2).unwrap();
+        use private_metadata::transfer_proof::TransferProof;
+        use private_metadata::equality_proof::EqualityProof;
+        let mut transcript = TransferProof::transcript_new();
+        TransferProof::build_transcript(
+            &transfer.src_cipher_key_chunk_ct,
+            &transfer.dst_cipher_key_chunk_ct,
+            &transfer.transfer_public_keys,
+            &mut transcript,
+        ).unwrap();
+
+        EqualityProof::build_transcript(
+            &equality_proof,
+            &mut transcript,
+        ).unwrap();
+
         let challenge_c = transcript.challenge_scalar(b"c");
 
         use curve25519_dalek::scalar::Scalar;

@@ -188,6 +188,28 @@ impl TransferProof {
         }
     }
 
+    pub fn build_transcript(
+        src_cipher_key_chunk_ct: &pod::ElGamalCiphertext,
+        dst_cipher_key_chunk_ct: &pod::ElGamalCiphertext,
+        transfer_pubkeys: &TransferPubkeys,
+        transcript: &mut Transcript,
+    ) -> Result<(), ProofError> {
+        // add a domain separator to record the start of the protocol
+        transcript.transfer_proof_domain_sep();
+
+        // append all current state to the transcript
+        use curve25519_dalek::ristretto::CompressedRistretto;
+        transcript.append_point(b"P1_EG", &CompressedRistretto::from_slice(&transfer_pubkeys.src_pubkey.0));
+        transcript.append_point(b"C1_EG", &CompressedRistretto::from_slice(&src_cipher_key_chunk_ct.0[..32]));
+        transcript.append_point(b"D1_EG", &CompressedRistretto::from_slice(&src_cipher_key_chunk_ct.0[32..]));
+
+        transcript.append_point(b"P2_EG", &CompressedRistretto::from_slice(&transfer_pubkeys.dst_pubkey.0));
+        transcript.append_point(b"C2_EG", &CompressedRistretto::from_slice(&dst_cipher_key_chunk_ct.0[..32]));
+        transcript.append_point(b"D2_EG", &CompressedRistretto::from_slice(&dst_cipher_key_chunk_ct.0[32..]));
+
+        Ok(())
+    }
+
     pub fn verify(
         self,
         src_cipher_key_chunk_ct: &pod::ElGamalCiphertext,
@@ -196,21 +218,14 @@ impl TransferProof {
     ) -> Result<(), ProofError> {
         let mut transcript = Self::transcript_new();
 
+        TransferProof::build_transcript(
+            &src_cipher_key_chunk_ct,
+            &dst_cipher_key_chunk_ct,
+            &transfer_pubkeys,
+            &mut transcript,
+        )?;
+
         let equality_proof: EqualityProof = self.equality_proof.try_into()?;
-
-        // add a domain separator to record the start of the protocol
-        msg!("Starting proof protocol");
-        transcript.transfer_proof_domain_sep();
-
-        // append all current state to the transcript
-        msg!("Preparing proof statement");
-        transcript.append_point(b"P1_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&transfer_pubkeys.src_pubkey.0));
-        transcript.append_point(b"C1_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&src_cipher_key_chunk_ct.0[..32]));
-        transcript.append_point(b"D1_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&src_cipher_key_chunk_ct.0[32..]));
-
-        transcript.append_point(b"P2_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&transfer_pubkeys.dst_pubkey.0));
-        transcript.append_point(b"C2_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&dst_cipher_key_chunk_ct.0[..32]));
-        transcript.append_point(b"D2_EG", &curve25519_dalek::ristretto::CompressedRistretto::from_slice(&dst_cipher_key_chunk_ct.0[32..]));
 
         solana_program::log::sol_log_compute_units();
 

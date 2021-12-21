@@ -86,6 +86,18 @@ impl EqualityProof {
         }
     }
 
+    pub fn build_transcript(
+        equality_proof: &EqualityProof,
+        transcript: &mut Transcript,
+    ) -> Result<(), ProofError> {
+        // include Y_0, Y_1, Y_2 to transcript and extract challenges
+        transcript.validate_and_append_point(b"Y_0", &equality_proof.Y_0)?;
+        transcript.validate_and_append_point(b"Y_1", &equality_proof.Y_1)?;
+        transcript.validate_and_append_point(b"Y_2", &equality_proof.Y_2)?;
+
+        Ok(())
+    }
+
     pub fn verify(
         self,
         src_pubkey: &ElGamalPubkey,
@@ -97,18 +109,14 @@ impl EqualityProof {
         // extract the relevant scalar and Ristretto points from the inputs
         let H = PedersenBase::default().H;
 
+        EqualityProof::build_transcript(&self, transcript)?;
+
         let P1_EG = src_pubkey.get_point();
         let P2_EG = dst_pubkey.get_point();
         let C1_EG = src_ciphertext.message_comm.get_point();
         let D1_EG = src_ciphertext.decrypt_handle.get_point();
         let C2_EG = dst_ciphertext.message_comm.get_point();
         let D2_EG = dst_ciphertext.decrypt_handle.get_point();
-
-        // include Y_0, Y_1, Y_2 to transcript and extract challenges
-        msg!("Adding prover points");
-        transcript.validate_and_append_point(b"Y_0", &self.Y_0)?;
-        transcript.validate_and_append_point(b"Y_1", &self.Y_1)?;
-        transcript.validate_and_append_point(b"Y_2", &self.Y_2)?;
 
         msg!("Getting challenge scalars");
         let c = transcript.challenge_scalar(b"c");
