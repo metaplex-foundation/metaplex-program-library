@@ -224,9 +224,14 @@ fn process_demo(
     println!("Input buffer keypair: {}", input_buffer.to_base58_string());
     println!("Compute buffer keypair: {}", compute_buffer.to_base58_string());
 
-    let dsl = private_metadata::equality_proof::DSL_INSTRUCTION_BYTES;
-
     use curve25519_dalek_onchain::instruction as dalek;
+
+    let dsl = dalek::transer_proof_instructions(vec![3, 3, 5]);
+    assert!(
+        dsl == private_metadata::equality_proof::DSL_INSTRUCTION_BYTES,
+        "DSL does not match!",
+    );
+
     let instruction_buffer_len = (dalek::HEADER_SIZE + dsl.len()) as usize;
 
     // pick a large number... at least > 8 * 128 * scalars.len()
