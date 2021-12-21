@@ -1,0 +1,6 @@
+{
+  "entryPoints": ["src/mpl-fair-launch.ts"],
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "out": "./docs"
+}
