@@ -55,6 +55,121 @@ fn send(
     Ok(())
 }
 
+fn specified_or_new(param: Option<String>) -> Keypair {
+    param.map_or_else(
+        || Keypair::new(),
+        |s| Keypair::from_base58_string(&s),
+    )
+}
+
+fn get_or_create_transfer_buffer(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    transfer_buffer: &dyn Signer,
+    mint: &Pubkey,
+    dest_elgamal: private_metadata::zk_token_elgamal::pod::ElGamalPubkey,
+) -> Result<private_metadata::state::CipherKeyTransferBuffer, Box<dyn std::error::Error>> {
+    let mut transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey())?;
+    if transfer_buffer_data.len() == 0 {
+        let buffer_len = private_metadata::state::CipherKeyTransferBuffer::get_packed_len();
+        let buffer_minimum_balance_for_rent_exemption = rpc_client
+            .get_minimum_balance_for_rent_exemption(buffer_len)?;
+
+        send(
+            rpc_client,
+            &format!("Initializing transfer buffer"),
+            &[
+                system_instruction::create_account(
+                    &payer.pubkey(),
+                    &transfer_buffer.pubkey(),
+                    buffer_minimum_balance_for_rent_exemption,
+                    buffer_len as u64,
+                    &private_metadata::ID,
+                ),
+                private_metadata::instruction::init_transfer(
+                    payer.pubkey(),
+                    *mint,
+                    transfer_buffer.pubkey(),
+                    dest_elgamal,
+                ),
+            ],
+            &[payer, transfer_buffer],
+        )?;
+
+        transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey())?;
+    } else {
+        println!("Transfer buffer already initialized");
+    }
+
+    private_metadata::state::CipherKeyTransferBuffer::from_bytes(
+        &transfer_buffer_data)
+        .map(|v| *v)  // seems a bit funky...
+        .ok_or(Box::new(ProgramError::InvalidArgument))
+}
+
+fn ensure_create_instruction_buffer(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    instruction_buffer: &dyn Signer,
+) -> Result<(), Box<dyn std::error::Error>> {
+    use curve25519_dalek_onchain::instruction as dalek;
+    let dsl = dalek::transer_proof_instructions(vec![3, 3, 5]);
+    assert!(
+        dsl == private_metadata::equality_proof::DSL_INSTRUCTION_BYTES,
+        "DSL does not match!",
+    );
+
+    let instruction_buffer_len = (dalek::HEADER_SIZE + dsl.len()) as usize;
+
+    let instruction_buffer_data = rpc_client.get_account_data(&instruction_buffer.pubkey());
+    if let Ok(data) = instruction_buffer_data {
+        assert!(data.len() >= instruction_buffer_len);
+    } else {
+        let txs = private_metadata::instruction::populate_transfer_proof_dsl(
+            payer,
+            instruction_buffer,
+            |len| rpc_client.get_minimum_balance_for_rent_exemption(len).unwrap(),
+        );
+
+        for (i, tx) in txs.iter().enumerate() {
+            send(
+                rpc_client,
+                &format!("Populating transfer proof DSL: {} of {}", i, txs.len()),
+                tx.instructions.as_slice(),
+                tx.signers.as_slice(),
+            )?;
+        }
+    }
+
+    Ok(())
+}
+
+fn ensure_buffers_closed(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    buffers: &[Pubkey],
+) -> Result<(), Box<dyn std::error::Error>> {
+    use curve25519_dalek_onchain::instruction as dalek;
+    let mut instructions = vec![];
+    for buffer in buffers {
+        if let Ok(_) = rpc_client.get_account_data(&buffer) {
+            instructions.push(
+                dalek::close_buffer(
+                    *buffer,
+                    payer.pubkey(),
+                ),
+            );
+        }
+    }
+
+    send(
+        rpc_client,
+        &format!("Closing input and compute buffers"),
+        instructions.as_slice(),
+        &[payer],
+    )
+}
+
 struct DemoParams {
     dest_keypair: Option<String>,
     transfer_buffer: Option<String>,
@@ -127,6 +242,17 @@ fn process_demo(
     println!("Dest keypair: {}", dest_keypair.to_base58_string());
     println!("Dest elgamal pubkey: {}", elgamal_pk_b);
 
+    let transfer_buffer = specified_or_new(transfer_buffer.clone());
+    let instruction_buffer = specified_or_new(instruction_buffer.clone());
+    let input_buffer = specified_or_new(input_buffer.clone());
+    let compute_buffer = specified_or_new(compute_buffer.clone());
+
+    println!("Transfer buffer keypair: {}", transfer_buffer.to_base58_string());
+    println!("Instruction buffer keypair: {}", instruction_buffer.to_base58_string());
+    println!("Input buffer keypair: {}", input_buffer.to_base58_string());
+    println!("Compute buffer keypair: {}", compute_buffer.to_base58_string());
+
+
     let private_metadata_key = private_metadata::instruction::get_private_metadata_address(&nft_mint).0;
 
     let mut private_metadata_data = rpc_client.get_account_data(&private_metadata_key)?;
@@ -160,127 +286,30 @@ fn process_demo(
         println!("Private metadata already initialized: {}", private_metadata_key);
     }
 
-    let transfer_buffer = if let Some(kp) = transfer_buffer {
-        Keypair::from_base58_string(kp)
-    } else {
-        Keypair::new()
-    };
-
-    let mut transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey())?;
-    if transfer_buffer_data.len() == 0 {
-        let buffer_len = private_metadata::state::CipherKeyTransferBuffer::get_packed_len();
-        let buffer_minimum_balance_for_rent_exemption = rpc_client
-            .get_minimum_balance_for_rent_exemption(buffer_len)?;
-
-        send(
-            rpc_client,
-            &format!("Initializing transfer buffer: {}", transfer_buffer.to_base58_string()),
-            &[
-                system_instruction::create_account(
-                    &payer.pubkey(),
-                    &transfer_buffer.pubkey(),
-                    buffer_minimum_balance_for_rent_exemption,
-                    buffer_len as u64,
-                    &private_metadata::ID,
-                ),
-                private_metadata::instruction::init_transfer(
-                    payer.pubkey(),
-                    nft_mint,
-                    transfer_buffer.pubkey(),
-                    elgamal_pk_b.into(),
-                ),
-            ],
-            &[payer, &transfer_buffer],
-        )?;
-
-        transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey())?;
-    } else {
-        println!("Transfer buffer already initialized: {}", transfer_buffer.to_base58_string());
-    }
-
-
-    let transfer_buffer_account = private_metadata::state::CipherKeyTransferBuffer::from_bytes(
-        &transfer_buffer_data).ok_or(ProgramError::InvalidArgument)?;
+    let transfer_buffer_account = get_or_create_transfer_buffer(
+        rpc_client,
+        payer,
+        &transfer_buffer,
+        &nft_mint,
+        elgamal_pk_b.into(),
+    )?;
 
     let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
         &private_metadata_data).ok_or(ProgramError::InvalidArgument)?;
 
 
-    let input_buffer = if let Some(kp) = input_buffer {
-        Keypair::from_base58_string(kp)
-    } else {
-        Keypair::new()
-    };
-
-    let instruction_buffer = if let Some(kp) = instruction_buffer {
-        Keypair::from_base58_string(kp)
-    } else {
-        Keypair::new()
-    };
-
-    let compute_buffer = if let Some(kp) = compute_buffer {
-        Keypair::from_base58_string(kp)
-    } else {
-        Keypair::new()
-    };
-
-    println!("Instruction buffer keypair: {}", instruction_buffer.to_base58_string());
-    println!("Input buffer keypair: {}", input_buffer.to_base58_string());
-    println!("Compute buffer keypair: {}", compute_buffer.to_base58_string());
-
-    use curve25519_dalek_onchain::instruction as dalek;
-
-    let dsl = dalek::transer_proof_instructions(vec![3, 3, 5]);
-    assert!(
-        dsl == private_metadata::equality_proof::DSL_INSTRUCTION_BYTES,
-        "DSL does not match!",
-    );
-
-    let instruction_buffer_len = (dalek::HEADER_SIZE + dsl.len()) as usize;
-
-    let instruction_buffer_data = rpc_client.get_account_data(&instruction_buffer.pubkey());
-    if let Ok(data) = instruction_buffer_data {
-        assert!(data.len() >= instruction_buffer_len);
-    } else {
-        let txs = private_metadata::instruction::populate_transfer_proof_dsl(
-            payer,
-            &instruction_buffer,
-            |len| rpc_client.get_minimum_balance_for_rent_exemption(len).unwrap(),
-        );
-
-        for (i, tx) in txs.iter().enumerate() {
-            send(
-                rpc_client,
-                &format!("Populating transfer proof DSL: {} of {}", i, txs.len()),
-                tx.instructions.as_slice(),
-                tx.signers.as_slice(),
-            )?;
-        }
-    }
-
-    let close_compute_and_input = || {
-        let mut instructions = vec![];
-        for buffer in [input_buffer.pubkey(), compute_buffer.pubkey()] {
-            if let Ok(_) = rpc_client.get_account_data(&input_buffer.pubkey()) {
-                instructions.push(
-                    dalek::close_buffer(
-                        buffer,
-                        payer.pubkey(),
-                    ),
-                );
-            }
-        }
-
-        send(
-            rpc_client,
-            &format!("Closing input and compute buffers"),
-            instructions.as_slice(),
-            &[payer],
-        )
-    };
+    ensure_create_instruction_buffer(
+        rpc_client,
+        payer,
+        &instruction_buffer,
+    )?;
 
     // if previous run failed and we respecified...
-    close_compute_and_input()?;
+    ensure_buffers_closed(
+        rpc_client,
+        payer,
+        &[input_buffer.pubkey(), compute_buffer.pubkey()],
+    )?;
 
     for chunk in 0..private_metadata::state::CIPHER_KEY_CHUNKS {
         let updated_mask = 1<<chunk;
@@ -340,7 +369,11 @@ fn process_demo(
             &[payer],
         )?;
 
-        close_compute_and_input()?;
+        ensure_buffers_closed(
+            rpc_client,
+            payer,
+            &[input_buffer.pubkey(), compute_buffer.pubkey()],
+        )?;
     }
 
     Ok(())
@@ -464,9 +497,169 @@ async fn process_decrypt_cipher_key(
     Ok(())
 }
 
+struct TransferParams {
+    mint: String,
+    recipient: String,
+    transfer_buffer: Option<String>,
+    instruction_buffer: Option<String>,
+    input_buffer: Option<String>,
+    compute_buffer: Option<String>,
+}
+
+async fn process_transfer(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    _config: &Config,
+    params: &TransferParams,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let recipient = Keypair::from_base58_string(&params.recipient);
+    let mint = Pubkey::new(
+        bs58::decode(&params.mint).into_vec()?.as_slice()
+    );
+
+    let private_metadata_key = private_metadata::instruction::get_private_metadata_address(&mint).0;
+    let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
+
+    if private_metadata_data.is_err() {
+        eprintln!("error: no private metadata found for mint {}", params.mint);
+        exit(1);
+    }
+
+    let private_metadata_data = private_metadata_data.unwrap();
+    let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
+        &private_metadata_data).unwrap();
+
+    let transfer_buffer = specified_or_new(params.transfer_buffer.clone());
+    let instruction_buffer = specified_or_new(params.instruction_buffer.clone());
+    let input_buffer = specified_or_new(params.input_buffer.clone());
+    let compute_buffer = specified_or_new(params.compute_buffer.clone());
+
+    println!("Transfer buffer keypair: {}", transfer_buffer.to_base58_string());
+    println!("Instruction buffer keypair: {}", instruction_buffer.to_base58_string());
+    println!("Input buffer keypair: {}", input_buffer.to_base58_string());
+    println!("Compute buffer keypair: {}", compute_buffer.to_base58_string());
+
+    let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
+    let dest_elgamal_keypair = ElGamalKeypair::new(&recipient, &mint)?;
+
+    let transfer_buffer_account = get_or_create_transfer_buffer(
+        rpc_client,
+        payer,
+        &transfer_buffer,
+        &mint,
+        dest_elgamal_keypair.public.into(),
+    )?;
+
+    ensure_create_instruction_buffer(
+        rpc_client,
+        payer,
+        &instruction_buffer,
+    )?;
+
+    // if previous run failed and we respecified...
+    ensure_buffers_closed(
+        rpc_client,
+        payer,
+        &[input_buffer.pubkey(), compute_buffer.pubkey()],
+    )?;
+
+    for chunk in 0..private_metadata::state::CIPHER_KEY_CHUNKS {
+        let updated_mask = 1<<chunk;
+        if transfer_buffer_account.updated & updated_mask == updated_mask {
+            continue;
+        }
+
+        let ct = private_metadata_account.encrypted_cipher_key[chunk].try_into()?;
+        let word = elgamal_keypair.secret.decrypt_u32(&ct).ok_or(ProgramError::InvalidArgument)?;
+
+        let transfer = private_metadata::transfer_proof::TransferData::new(
+            &elgamal_keypair,
+            dest_elgamal_keypair.public,
+            word,
+            ct,
+        );
+
+        let txs = private_metadata::instruction::transfer_chunk_slow_proof(
+            payer,
+            instruction_buffer.pubkey(),
+            &input_buffer,
+            &compute_buffer,
+            &transfer,
+            |len| rpc_client.get_minimum_balance_for_rent_exemption(len).unwrap(),
+        );
+
+        for (i, tx) in txs.iter().enumerate() {
+            send(
+                rpc_client,
+                &format!("Building transfer chunk slow proof: {} of {}", i, txs.len()),
+                tx.instructions.as_slice(),
+                tx.signers.as_slice(),
+            )?;
+        }
+
+        let transfer_chunk_ix = private_metadata::instruction::transfer_chunk_slow(
+            payer.pubkey(),
+            mint,
+            transfer_buffer.pubkey(),
+            instruction_buffer.pubkey(),
+            input_buffer.pubkey(),
+            compute_buffer.pubkey(),
+            private_metadata::instruction::TransferChunkSlowData {
+                chunk_idx: chunk as u8,
+                transfer,
+            },
+        );
+
+        send(
+            rpc_client,
+            &format!("Transferring chunk {}", chunk),
+            &[
+                transfer_chunk_ix,
+            ],
+            &[payer],
+        )?;
+
+        ensure_buffers_closed(
+            rpc_client,
+            payer,
+            &[input_buffer.pubkey(), compute_buffer.pubkey()],
+        )?;
+    }
+
+    Ok(())
+}
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let transfer_buffer_param =
+        Arg::with_name("transfer_buffer")
+            .long("transfer_buffer")
+            .value_name("KEYPAIR_STRING")
+            .takes_value(true)
+            .global(true)
+            .help("Transfer buffer keypair to use (or create)");
+    let instruction_buffer_param =
+        Arg::with_name("instruction_buffer")
+            .long("instruction_buffer")
+            .value_name("KEYPAIR_STRING")
+            .takes_value(true)
+            .global(true)
+            .help("Instruction buffer keypair to use (or create)");
+    let input_buffer_param =
+        Arg::with_name("input_buffer")
+            .long("input_buffer")
+            .value_name("KEYPAIR_STRING")
+            .takes_value(true)
+            .global(true)
+            .help("Input buffer keypair to use (or create)");
+    let compute_buffer_param =
+        Arg::with_name("compute_buffer")
+            .long("compute_buffer")
+            .value_name("KEYPAIR_STRING")
+            .takes_value(true)
+            .global(true)
+            .help("Compute buffer keypair to use (or create)");
     let matches = App::new(crate_name!())
         .about(crate_description!())
         .version(crate_version!())
@@ -519,38 +712,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .global(true)
                     .help("Destination keypair to encrypt to"),
             )
-            .arg(
-                Arg::with_name("transfer_buffer")
-                    .long("transfer_buffer")
-                    .value_name("KEYPAIR_STRING")
-                    .takes_value(true)
-                    .global(true)
-                    .help("Transfer buffer keypair to use (or create)"),
-            )
-            .arg(
-                Arg::with_name("instruction_buffer")
-                    .long("instruction_buffer")
-                    .value_name("KEYPAIR_STRING")
-                    .takes_value(true)
-                    .global(true)
-                    .help("Instruction buffer keypair to use (or create)"),
-            )
-            .arg(
-                Arg::with_name("input_buffer")
-                    .long("input_buffer")
-                    .value_name("KEYPAIR_STRING")
-                    .takes_value(true)
-                    .global(true)
-                    .help("Input buffer keypair to use (or create)"),
-            )
-            .arg(
-                Arg::with_name("compute_buffer")
-                    .long("compute_buffer")
-                    .value_name("KEYPAIR_STRING")
-                    .takes_value(true)
-                    .global(true)
-                    .help("Compute buffer keypair to use (or create)"),
-            )
+            .arg(transfer_buffer_param.clone())
+            .arg(instruction_buffer_param.clone())
+            .arg(input_buffer_param.clone())
+            .arg(compute_buffer_param.clone())
         )
         .subcommand(
             SubCommand::with_name("configure")
@@ -591,6 +756,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .global(true)
                     .help("Mint of NFT to decrypt cipher key of"),
             )
+        )
+        .subcommand(
+            SubCommand::with_name("transfer")
+            .about("Transfer NFT and private metadata cipher key")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("PUBKEY_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("NFT to transfer"),
+            )
+            .arg(
+                Arg::with_name("recipient")
+                    .long("recipient")
+                    .value_name("KEYPAIR_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Wallet keypair of recipient. TODO just pubkey"),
+            )
+            .arg(transfer_buffer_param.clone())
+            .arg(instruction_buffer_param.clone())
+            .arg(input_buffer_param.clone())
+            .arg(compute_buffer_param.clone())
         )
         .get_matches();
 
@@ -676,6 +865,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &config,
                 &DecryptCipherKeyParams {
                     mint: sub_m.value_of("mint").unwrap().to_string(),
+                },
+            ).await.unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+        }
+        ("transfer", Some(sub_m)) => {
+            process_transfer(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &config,
+                &TransferParams {
+                    mint: sub_m.value_of("mint").unwrap().to_string(),
+                    recipient: sub_m.value_of("recipient").unwrap().to_string(),
+                    transfer_buffer: sub_m.value_of("transfer_buffer").map(|s| s.into()),
+                    instruction_buffer: sub_m.value_of("instruction_buffer").map(|s| s.into()),
+                    input_buffer: sub_m.value_of("input_buffer").map(|s| s.into()),
+                    compute_buffer: sub_m.value_of("compute_buffer").map(|s| s.into()),
                 },
             ).await.unwrap_or_else(|err| {
                 eprintln!("error: {}", err);
