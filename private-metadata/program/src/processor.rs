@@ -87,6 +87,11 @@ fn process_configure_metadata(
         msg!("Payer is not a signer");
         return Err(ProgramError::InvalidArgument);
     }
+
+    if !metadata_update_authority_info.is_signer {
+        msg!("Metadata update authority is not a signer");
+        return Err(ProgramError::InvalidArgument);
+    }
     validate_account_owner(mint_info, &spl_token::ID)?;
     validate_account_owner(metadata_info, &spl_token_metadata::ID)?;
 
