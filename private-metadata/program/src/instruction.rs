@@ -187,6 +187,26 @@ pub fn init_transfer(
 }
 
 #[cfg(not(target_arch = "bpf"))]
+pub fn fini_transfer(
+    payer: Pubkey,
+    mint: Pubkey,
+    transfer_buffer: Pubkey,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(payer, true),
+        AccountMeta::new(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new(transfer_buffer, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    encode_instruction(
+        accounts,
+        PrivateMetadataInstruction::FiniTransfer,
+        &(),
+    )
+}
+
+#[cfg(not(target_arch = "bpf"))]
 pub fn transfer_chunk(
     payer: Pubkey,
     mint: Pubkey,

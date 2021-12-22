@@ -2182,6 +2182,8 @@ dependencies = [
  "solana-logger",
  "solana-remote-wallet",
  "solana-sdk",
+ "spl-associated-token-account",
+ "spl-token",
  "spl-token-metadata",
  "tokio",
 ]

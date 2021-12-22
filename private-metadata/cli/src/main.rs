@@ -626,6 +626,31 @@ async fn process_transfer(
         )?;
     }
 
+    use spl_associated_token_account::get_associated_token_address;
+    let payer_ata = get_associated_token_address(&payer.pubkey(), &mint);
+    let recipient_ata = get_associated_token_address(&payer.pubkey(), &mint);
+
+    send(
+        rpc_client,
+        &format!("Finalizing transfer"),
+        &[
+            spl_token::instruction::transfer(
+                &spl_token::id(),
+                &payer_ata,
+                &recipient_ata,
+                &payer.pubkey(),
+                &[],
+                1,
+            )?,
+            private_metadata::instruction::fini_transfer(
+                payer.pubkey(),
+                mint,
+                transfer_buffer.pubkey(),
+            ),
+        ],
+        &[payer],
+    )?;
+
     Ok(())
 }
 
