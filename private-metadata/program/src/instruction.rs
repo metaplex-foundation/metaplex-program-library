@@ -20,11 +20,15 @@ use {
 
 #[cfg(not(target_arch = "bpf"))]
 use {
+    crate::equality_proof,
     num_traits::{ToPrimitive},
     solana_program::{
         instruction::{AccountMeta, Instruction},
         sysvar,
+        system_instruction,
     },
+    solana_sdk::signer::Signer,
+    std::convert::TryInto,
 };
 
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -228,4 +232,233 @@ pub fn transfer_chunk_slow(
         PrivateMetadataInstruction::TransferChunkSlow,
         &data,
     )
+}
+
+#[cfg(not(target_arch = "bpf"))]
+pub struct InstructionsAndSigners<'a> {
+    pub instructions: Vec<Instruction>,
+    pub signers: Vec<&'a dyn Signer>,
+}
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn populate_transfer_proof_dsl<'a, F>(
+    payer: &'a dyn Signer,
+    instruction_buffer: &'a dyn Signer,
+    minimum_rent_balance: F,
+) -> Vec<InstructionsAndSigners<'a>>
+    where F: Fn(usize) -> u64,
+{
+    use curve25519_dalek_onchain::instruction as dalek;
+
+    let dsl_len = equality_proof::DSL_INSTRUCTION_BYTES.len();
+    let instruction_buffer_len = dalek::HEADER_SIZE + dsl_len;
+
+    let mut ret = vec![];
+
+    ret.push(InstructionsAndSigners{
+        instructions: vec![
+            system_instruction::create_account(
+                &payer.pubkey(),
+                &instruction_buffer.pubkey(),
+                minimum_rent_balance(instruction_buffer_len),
+                instruction_buffer_len as u64,
+                &curve25519_dalek_onchain::id(),
+            ),
+            dalek::initialize_buffer(
+                instruction_buffer.pubkey(),
+                payer.pubkey(),
+                dalek::Key::InstructionBufferV1,
+                vec![],
+            ),
+        ],
+        signers: vec![payer, instruction_buffer],
+    });
+
+    // write the instructions
+    let mut dsl_idx = 0;
+    let dsl_chunk = 800;
+    loop {
+        let mut instructions = vec![];
+        let end = (dsl_idx+dsl_chunk).min(dsl_len);
+        let done = end == dsl_len;
+        instructions.push(
+            dalek::write_bytes(
+                instruction_buffer.pubkey(),
+                payer.pubkey(),
+                (dalek::HEADER_SIZE + dsl_idx).try_into().unwrap(),
+                done,
+                &equality_proof::DSL_INSTRUCTION_BYTES[dsl_idx..end],
+            )
+        );
+        ret.push(InstructionsAndSigners{
+            instructions,
+            signers: vec![payer],
+        });
+        if done {
+            break;
+        } else {
+            dsl_idx = end;
+        }
+    }
+
+    ret
+}
+
+// Returns a list of transaction instructions that can be sent to build the zk proof state used in
+// a `transfer_chunk_slow`. These instructions assume that the instruction DSL has already been
+// populated with `populate_transfer_proof_dsl`
+#[cfg(not(target_arch = "bpf"))]
+pub fn transfer_chunk_slow_proof<'a, F>(
+    payer: &'a dyn Signer,
+    instruction_buffer: Pubkey,
+    input_buffer: &'a dyn Signer,
+    compute_buffer: &'a dyn Signer,
+    transfer: &'a TransferData,
+    minimum_rent_balance: F,
+) -> Vec<InstructionsAndSigners<'a>>
+    where F: Fn(usize) -> u64,
+{
+    use crate::transcript::TranscriptProtocol;
+    use crate::transfer_proof::TransferProof;
+    use curve25519_dalek::scalar::Scalar;
+    use curve25519_dalek_onchain::instruction as dalek;
+    use curve25519_dalek_onchain::scalar::Scalar as OScalar;
+
+    let equality_proof = equality_proof::EqualityProof::from_bytes(
+        &transfer.proof.equality_proof.0).unwrap();
+
+    let points = [
+        // statement inputs
+        transfer.transfer_public_keys.src_pubkey.0,
+        equality_proof::COMPRESSED_H,
+        equality_proof.Y_0.0,
+
+        transfer.transfer_public_keys.dst_pubkey.0,
+        transfer.dst_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
+        equality_proof.Y_1.0,
+
+        transfer.dst_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
+        transfer.src_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
+        transfer.src_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
+        equality_proof::COMPRESSED_H,
+        equality_proof.Y_2.0,
+    ];
+
+    let mut transcript = TransferProof::transcript_new();
+    TransferProof::build_transcript(
+        &transfer.src_cipher_key_chunk_ct,
+        &transfer.dst_cipher_key_chunk_ct,
+        &transfer.transfer_public_keys,
+        &mut transcript,
+    ).unwrap();
+
+    equality_proof::EqualityProof::build_transcript(
+        &equality_proof,
+        &mut transcript,
+    ).unwrap();
+
+    let challenge_c = transcript.challenge_scalar(b"c");
+
+    // the equality_proof points are normal 'Scalar' but the DSL crank expects it's version of the
+    // type
+    let scalars = vec![
+         equality_proof.sh_1,
+         -challenge_c,
+         -Scalar::one(),
+
+         equality_proof.rh_2,
+         -challenge_c,
+         -Scalar::one(),
+
+         challenge_c,
+         -challenge_c,
+         equality_proof.sh_1,
+         -equality_proof.rh_2,
+         -Scalar::one(),
+    ]
+        .iter()
+        .map(|s| OScalar::from_canonical_bytes(s.bytes).unwrap())
+        .collect::<Vec<_>>();
+
+    assert_eq!(points.len(), scalars.len());
+
+    let input_buffer_len = dalek::HEADER_SIZE + points.len() * 32 * 2 + 128;
+
+    let compute_buffer_len =
+        dalek::HEADER_SIZE
+        + 3 * 32 * 4                 // 3 proof groups
+        + 32 * 12                    // decompression space
+        + 32 * scalars.len()         // scalars
+        + 32 * 4 * 8 * points.len()  // point lookup tables
+        ;
+
+    let mut ret = vec![];
+
+    ret.push(InstructionsAndSigners{
+        instructions: vec![
+            system_instruction::create_account(
+                &payer.pubkey(),
+                &input_buffer.pubkey(),
+                minimum_rent_balance(input_buffer_len),
+                input_buffer_len as u64,
+                &curve25519_dalek_onchain::id(),
+            ),
+            system_instruction::create_account(
+                &payer.pubkey(),
+                &compute_buffer.pubkey(),
+                minimum_rent_balance(compute_buffer_len),
+                compute_buffer_len as u64,
+                &curve25519_dalek_onchain::id(),
+            ),
+            dalek::initialize_buffer(
+                input_buffer.pubkey(),
+                payer.pubkey(),
+                dalek::Key::InputBufferV1,
+                vec![],
+            ),
+            dalek::initialize_buffer(
+                compute_buffer.pubkey(),
+                payer.pubkey(),
+                dalek::Key::ComputeBufferV1,
+                vec![instruction_buffer, input_buffer.pubkey()],
+            ),
+        ],
+        signers: vec![payer, input_buffer, compute_buffer],
+    });
+
+    ret.push(InstructionsAndSigners{
+        instructions: dalek::write_input_buffer(
+            input_buffer.pubkey(),
+            payer.pubkey(),
+            &points,
+            scalars.as_slice(),
+        ),
+        signers: vec![payer],
+    });
+
+    let instructions_per_tx = 32;
+    let num_cranks = equality_proof::DSL_INSTRUCTION_COUNT;
+    let mut current = 0;
+    while current < num_cranks {
+        let mut instructions = vec![];
+        for _j in 0..instructions_per_tx {
+            if current >= num_cranks {
+                break;
+            }
+            instructions.push(
+                dalek::crank_compute(
+                    instruction_buffer,
+                    input_buffer.pubkey(),
+                    compute_buffer.pubkey(),
+                ),
+            );
+            current += 1;
+        }
+        ret.push(InstructionsAndSigners{
+            instructions,
+            signers: vec![payer],
+        });
+    }
+
+    ret
 }
