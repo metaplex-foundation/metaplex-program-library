@@ -621,7 +621,7 @@ async fn process_decrypt_cipher_key(
     let cipher_key_bytes = bytemuck::cast_slice::<u32, u8>(cipher_key_words.as_slice());
 
     let cipher_key = bs58::encode(cipher_key_bytes).into_string();
-    println!("decoded cipher key: {}", cipher_key);
+    println!("decrypted cipher key: {}", cipher_key);
 
     Ok(())
 }
