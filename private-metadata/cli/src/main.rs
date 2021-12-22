@@ -69,8 +69,8 @@ fn get_or_create_transfer_buffer(
     mint: &Pubkey,
     dest_elgamal: private_metadata::zk_token_elgamal::pod::ElGamalPubkey,
 ) -> Result<private_metadata::state::CipherKeyTransferBuffer, Box<dyn std::error::Error>> {
-    let mut transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey())?;
-    if transfer_buffer_data.len() == 0 {
+    let mut transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey());
+    if transfer_buffer_data.is_err() {
         let buffer_len = private_metadata::state::CipherKeyTransferBuffer::get_packed_len();
         let buffer_minimum_balance_for_rent_exemption = rpc_client
             .get_minimum_balance_for_rent_exemption(buffer_len)?;
@@ -96,13 +96,13 @@ fn get_or_create_transfer_buffer(
             &[payer, transfer_buffer],
         )?;
 
-        transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey())?;
+        transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey());
     } else {
         println!("Transfer buffer already initialized");
     }
 
     private_metadata::state::CipherKeyTransferBuffer::from_bytes(
-        &transfer_buffer_data)
+        &transfer_buffer_data.unwrap())
         .map(|v| *v)  // seems a bit funky...
         .ok_or(Box::new(ProgramError::InvalidArgument))
 }
@@ -626,14 +626,22 @@ async fn process_transfer(
         )?;
     }
 
-    use spl_associated_token_account::get_associated_token_address;
+    use spl_associated_token_account::{
+        create_associated_token_account,
+        get_associated_token_address,
+    };
     let payer_ata = get_associated_token_address(&payer.pubkey(), &mint);
-    let recipient_ata = get_associated_token_address(&payer.pubkey(), &mint);
+    let recipient_ata = get_associated_token_address(&recipient.pubkey(), &mint);
 
     send(
         rpc_client,
         &format!("Finalizing transfer"),
         &[
+            create_associated_token_account(
+                &payer.pubkey(),
+                &recipient.pubkey(),
+                &mint,
+            ),
             spl_token::instruction::transfer(
                 &spl_token::id(),
                 &payer_ata,
