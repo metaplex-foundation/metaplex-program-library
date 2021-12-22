@@ -173,6 +173,23 @@ fn process_configure_metadata(
     Ok(())
 }
 
+// TODO: since creating filling the transfer buffer (even just sending the instruction and if they
+// fail somehow or are snooped by someone along the way) fully allows the dest keypair to decrypt
+// so it needs to be some handshake process i think...
+//
+// can this be a separate program?
+//
+// - bid is marked accepted by the seller
+//     - seller commits some portion to escrow (10%?)
+//     - bid funds are locked for period X
+// - before X elapses, the seller does the full transfer and the program releases all funds to the
+//   seller once fini is accepted + nft has been transferred
+// - after X, buyer can show key has not yet been transfered and claim their funds back along with
+//   the seller escrow
+//
+// i think this means that only 1 sale can happen at a time? which does seem correct since their is
+// only 1 and this 'atomic' operation is kind of split
+
 fn process_init_transfer(
     accounts: &[AccountInfo],
     elgamal_pk: &zk_token_elgamal::pod::ElGamalPubkey,
@@ -715,10 +732,3 @@ fn validate_account_owner(account_info: &AccountInfo, owner: &Pubkey) -> Program
     }
 }
 
-// TODO: how do we ensure that the encryption key is actually re-encrypted on transfers? can we
-// lock some sol and poke the auditor?
-//
-// so something like the person selling the nft w/ private metadata transfers the token to our
-// contract and then we do an auction and then the seller needs to do encrypt the data at that
-// point with the pubkey of the winner and then the winner does a transaction where they answer
-// the challenge...
