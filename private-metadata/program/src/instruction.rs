@@ -34,37 +34,119 @@ use {
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct ConfigureMetadataData {
+    /// The ElGamal public key associated with the owner public key and this NFT mint.
+    /// NB: this is not checked on initialization but should be the canonical one for compatibility
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
+
+    /// AES Cipher key for the encrypted asset. This should already by encrypted with `elgamal_pk`
+    ///
+    /// This is chunked because the version of ElGamal we're using is slow in decrypting so we must
+    /// keep the encrypted values small (<32 bits).
     pub encrypted_cipher_key: [zk_token_elgamal::pod::ElGamalCiphertext; CIPHER_KEY_CHUNKS],
+
+    /// The URI of the encrypted asset
     pub uri: crate::state::URI,
 }
 
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct TransferChunkData {
+    /// Cipher key chunk that this transfer data / proof corresponds to
     pub chunk_idx: u8,
+
+    /// Transfer Data (proof statement and masking factors)
     pub transfer: TransferData,
 }
 
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct TransferChunkSlowData {
+    /// Cipher key chunk that this transfer data / proof corresponds to
     pub chunk_idx: u8,
+
+    /// Transfer Data (proof statement and masking factors)
     pub transfer: TransferData,
 }
 
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive)]
 #[repr(u8)]
 pub enum PrivateMetadataInstruction {
-
+    /// Configures private metadata for an NFT
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writeable,signer]` Payer
+    ///   1. `[]` The SPL Token mint account of the NFT
+    ///   2. `[]` The SPL Metadata account. Must be mutable
+    ///   3. `[signer]` The update authority for the SPL Metadata
+    ///   4. `[]` Private metadata PDA
+    ///   5. `[]` System program
+    ///   6. `[]` Rent sysvar
+    ///
+    /// Data expected by this instruction:
+    ///   ConfigureMetadataData
+    ///
     ConfigureMetadata,
 
+    /// Initialise transfer state for private metadata
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writeable,signer]` Authority. Must be the owner of the NFT
+    ///   1. `[]` The SPL Token mint account of the NFT
+    ///   2. `[]` The SPL Token account holding the NFT
+    ///   3. `[]` Private metadata PDA
+    ///   4. `[writable]` Transfer buffer program account. Will hold CipherKeyTransferBuffer
+    ///   5. `[]` System program
+    ///   6. `[]` Rent sysvar
+    ///
+    /// Data expected by this instruction:
+    ///   elgamal_pk: The recipients elgamal public-key
+    ///
     InitTransfer,
 
+    /// Finalise transfer state for private metadata and swap cipher texts
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writeable,signer]` Authority. Must be the authority on the transfer buffer
+    ///   1. `[]` Private metadata PDA
+    ///   2. `[writable]` Transfer buffer program account
+    ///   3. `[]` System program
+    ///
     FiniTransfer,
 
+    /// Validate encrypted cipher key chunk. NB: this will not run within compute limits without
+    /// syscall support for crypto instructions.
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writeable,signer]` Authority. Must be the authority on the transfer buffer
+    ///   1. `[]` Private metadata PDA
+    ///   2. `[writable]` Transfer buffer program account
+    ///   3. `[]` System program
+    ///
+    /// Data expected by this instruction:
+    ///   TransferChunkData
+    ///
     TransferChunk,
 
+    /// Validate encrypted cipher key chunk through a manual DSL cranked instruction.
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writeable,signer]` Authority. Must be the authority on the transfer buffer
+    ///   1. `[]` Private metadata PDA
+    ///   2. `[writable]` Transfer buffer program account
+    ///   3. `[]` Instruction buffer. Must match Header + equality_proof::DSL_INSTRUCTION_BYTES
+    ///   4. `[]` Input buffer. Must have the appropriate proof points and scalars
+    ///   5. `[]` Compute buffer. Must match the instruction + input buffers and have been cranked
+    ///      for all DSL instructions
+    ///   6. `[]` System program
+    ///
+    /// Data expected by this instruction:
+    ///   TransferChunkSlowData
+    ///
     TransferChunkSlow,
 }
 
