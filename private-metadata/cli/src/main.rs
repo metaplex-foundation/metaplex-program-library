@@ -633,15 +633,20 @@ async fn process_transfer(
     let payer_ata = get_associated_token_address(&payer.pubkey(), &mint);
     let recipient_ata = get_associated_token_address(&recipient.pubkey(), &mint);
 
-    send(
-        rpc_client,
-        &format!("Finalizing transfer"),
-        &[
+    let mut instructions = vec![];
+
+    if rpc_client.get_account_data(&recipient_ata).is_err() {
+        instructions.push(
             create_associated_token_account(
                 &payer.pubkey(),
                 &recipient.pubkey(),
                 &mint,
             ),
+        );
+    }
+
+    instructions.extend_from_slice(
+        &[
             spl_token::instruction::transfer(
                 &spl_token::id(),
                 &payer_ata,
@@ -656,6 +661,12 @@ async fn process_transfer(
                 transfer_buffer.pubkey(),
             ),
         ],
+    );
+
+    send(
+        rpc_client,
+        &format!("Finalizing transfer"),
+        instructions.as_slice(),
         &[payer],
     )?;
 
