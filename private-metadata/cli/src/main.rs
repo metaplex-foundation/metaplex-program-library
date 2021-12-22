@@ -134,18 +134,16 @@ fn process_demo(
         let configure_metadata_ix = private_metadata::instruction::configure_metadata(
             payer.pubkey(),
             nft_mint,
-            private_metadata::instruction::ConfigureMetadataData {
-                elgamal_pk: elgamal_pk_a.into(),
-                encrypted_cipher_key: [
-                    elgamal_pk_a.encrypt(0 as u32).into(),
-                    elgamal_pk_a.encrypt(1 as u32).into(),
-                    elgamal_pk_a.encrypt(2 as u32).into(),
-                    elgamal_pk_a.encrypt(3 as u32).into(),
-                    elgamal_pk_a.encrypt(4 as u32).into(),
-                    elgamal_pk_a.encrypt(5 as u32).into(),
-                ],
-                uri: private_metadata::state::URI([0; 100]),
-            },
+            elgamal_pk_a.into(),
+            &[
+                elgamal_pk_a.encrypt(0 as u32).into(),
+                elgamal_pk_a.encrypt(1 as u32).into(),
+                elgamal_pk_a.encrypt(2 as u32).into(),
+                elgamal_pk_a.encrypt(3 as u32).into(),
+                elgamal_pk_a.encrypt(4 as u32).into(),
+                elgamal_pk_a.encrypt(5 as u32).into(),
+            ],
+            &[],
         );
 
         send(
@@ -510,6 +508,58 @@ fn process_demo(
     Ok(())
 }
 
+
+struct ConfigureConfig {
+    mint: String,
+    cipher_key: String,
+    asset_url: String,
+}
+
+fn process_configure(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    _config: &Config,
+    ConfigureConfig{
+        mint,
+        cipher_key,
+        asset_url,
+    }: &ConfigureConfig,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mint = Pubkey::new(
+        bs58::decode(&mint).into_vec()?.as_slice()
+    );
+
+    let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
+    let elgamal_pk = elgamal_keypair.public;
+
+    let cipher_key_bytes = bs58::decode(&cipher_key).into_vec()?;
+    let cipher_key_words = bytemuck::cast_slice::<u8, u32>(cipher_key_bytes.as_slice());
+
+    let encrypted_cipher_key = cipher_key_words
+        .iter()
+        .map(|w| elgamal_pk.encrypt(*w).into())
+        .collect::<Vec<_>>();
+
+    let configure_metadata_ix = private_metadata::instruction::configure_metadata(
+        payer.pubkey(),
+        mint,
+        elgamal_pk.into(),
+        encrypted_cipher_key.as_slice(),
+        asset_url.as_bytes(),
+    );
+
+    send(
+        rpc_client,
+        &format!("Configuring private metadata"),
+        &[
+            configure_metadata_ix,
+        ],
+        &[payer],
+    )?;
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = App::new(crate_name!())
@@ -517,7 +567,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .version(crate_version!())
         .arg({
             let arg = Arg::with_name("config_file")
-                .short("C")
                 .long("config")
                 .value_name("PATH")
                 .takes_value(true)
@@ -541,15 +590,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .arg(
             Arg::with_name("verbose")
                 .long("verbose")
-                .short("v")
                 .takes_value(false)
                 .global(true)
                 .help("Show additional information"),
         )
         .arg(
             Arg::with_name("json_rpc_url")
-                .short("u")
-                .long("url")
+                .long("rpc_url")
                 .value_name("URL")
                 .takes_value(true)
                 .global(true)
@@ -558,11 +605,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .subcommand(
             SubCommand::with_name("demo")
-            .about("zk proof transfer demo")
+            .about("ZK proof transfer demo")
             .arg(
                 Arg::with_name("dest_keypair")
                     .long("dest_keypair")
-                    .value_name("DEST_KEYPAIR")
+                    .value_name("KEYPAIR_STRING")
                     .takes_value(true)
                     .global(true)
                     .help("Destination keypair to encrypt to"),
@@ -570,7 +617,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .arg(
                 Arg::with_name("transfer_buffer")
                     .long("transfer_buffer")
-                    .value_name("TRANSFER_BUFFER")
+                    .value_name("KEYPAIR_STRING")
                     .takes_value(true)
                     .global(true)
                     .help("Transfer buffer keypair to use (or create)"),
@@ -578,7 +625,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .arg(
                 Arg::with_name("instruction_buffer")
                     .long("instruction_buffer")
-                    .value_name("INSTRUCTION_BUFFER")
+                    .value_name("KEYPAIR_STRING")
                     .takes_value(true)
                     .global(true)
                     .help("Instruction buffer keypair to use (or create)"),
@@ -586,7 +633,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .arg(
                 Arg::with_name("input_buffer")
                     .long("input_buffer")
-                    .value_name("INPUT_BUFFER")
+                    .value_name("KEYPAIR_STRING")
                     .takes_value(true)
                     .global(true)
                     .help("Input buffer keypair to use (or create)"),
@@ -594,10 +641,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .arg(
                 Arg::with_name("compute_buffer")
                     .long("compute_buffer")
-                    .value_name("COMPUTE_BUFFER")
+                    .value_name("KEYPAIR_STRING")
                     .takes_value(true)
                     .global(true)
                     .help("Compute buffer keypair to use (or create)"),
+            )
+        )
+        .subcommand(
+            SubCommand::with_name("configure")
+            .about("Configure private metadata")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("PUBKEY_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Mint of NFT to configure metadata for"),
+            )
+            .arg(
+                Arg::with_name("asset_url")
+                    .long("asset_url")
+                    .value_name("URL")
+                    .takes_value(true)
+                    .global(true)
+                    .help("URI of encrypted asset"),
+            )
+            .arg(
+                Arg::with_name("cipher_key")
+                    .long("cipher_key")
+                    .value_name("STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Base-58 encoded cipher key"),
             )
         )
         .get_matches();
@@ -661,8 +736,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 eprintln!("error: {}", err);
                 exit(1);
             });
-
         },
+        ("configure", Some(sub_m)) => {
+            process_configure(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &config,
+                &ConfigureConfig {
+                    mint: sub_m.value_of("mint").unwrap().to_string(),
+                    cipher_key: sub_m.value_of("cipher_key").unwrap().to_string(),
+                    asset_url: sub_m.value_of("asset_url").unwrap().to_string(),
+                },
+            ).unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+        }
         _ => {
         },
     }

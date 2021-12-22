@@ -129,7 +129,9 @@ pub fn encode_instruction<T: Pod>(
 pub fn configure_metadata(
     payer: Pubkey,
     mint: Pubkey,
-    data: ConfigureMetadataData,
+    elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
+    encrypted_cipher_key: &[zk_token_elgamal::pod::ElGamalCiphertext],
+    uri: &[u8],
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(payer, true),
@@ -140,6 +142,11 @@ pub fn configure_metadata(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
+
+    let mut data = ConfigureMetadataData::zeroed();
+    data.elgamal_pk = elgamal_pk;
+    data.encrypted_cipher_key.copy_from_slice(encrypted_cipher_key);
+    data.uri.0[..uri.len()].copy_from_slice(uri);
 
     encode_instruction(
         accounts,
