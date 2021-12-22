@@ -439,7 +439,7 @@ async fn process_decrypt_cipher_key(
     rpc_client: &RpcClient,
     payer: &dyn Signer,
     _config: &Config,
-    params: &DecryptCipherKeyParams ,
+    params: &DecryptCipherKeyParams,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mint = Pubkey::new(
         bs58::decode(&params.mint).into_vec()?.as_slice()
@@ -456,8 +456,100 @@ async fn process_decrypt_cipher_key(
     }
 
     let private_metadata_data = private_metadata_data.unwrap();
+
     let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
         &private_metadata_data).unwrap();
+
+    let cipher_key_bytes = parallel_decrypt_cipher_key(
+        &elgamal_keypair,
+        &private_metadata_account,
+    ).await?;
+
+    let cipher_key = bs58::encode(cipher_key_bytes).into_string();
+    println!("decrypted cipher key: {}", cipher_key);
+
+    Ok(())
+}
+
+struct DecryptAssetParams {
+    mint: String,
+    out: String,
+}
+
+async fn process_decrypt_asset(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    _config: &Config,
+    params: &DecryptAssetParams,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mint = Pubkey::new(
+        bs58::decode(&params.mint).into_vec()?.as_slice()
+    );
+
+    let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
+
+    let private_metadata_key = private_metadata::instruction::get_private_metadata_address(&mint).0;
+    let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
+
+    if private_metadata_data.is_err() {
+        eprintln!("error: no private metadata found for mint {}", params.mint);
+        exit(1);
+    }
+
+    let private_metadata_data = private_metadata_data.unwrap();
+
+    let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
+        &private_metadata_data).unwrap();
+
+    let private_asset_url = String::from_utf8(
+        private_metadata_account.uri.0.to_vec())?
+        .replace("\x00", "");
+
+    let mut buf = Vec::new();
+    let mut handle = curl::easy::Easy::new();
+    handle.url(&private_asset_url).unwrap();
+    handle.follow_location(true).unwrap(); // areweave has a few
+
+    // something about mutable borrow in the lambda so open a scope
+    {
+        let mut transfer = handle.transfer();
+        transfer.write_function(|data| {
+            buf.extend_from_slice(data);
+            Ok(data.len())
+        }).unwrap();
+        transfer.perform().unwrap();
+    }
+
+    println!("read {} bytes from {}", buf.len(), private_asset_url);
+
+    let cipher = openssl::symm::Cipher::aes_192_cbc();
+
+    let cipher_iv = &buf[..cipher.block_size()];
+    let encrypted_bytes = &buf[cipher.block_size()..];
+
+    let cipher_key_bytes = parallel_decrypt_cipher_key(
+        &elgamal_keypair,
+        private_metadata_account,
+    ).await?;
+
+    let decrypted = openssl::symm::decrypt(
+        cipher,
+        cipher_key_bytes.as_slice(),
+        Some(cipher_iv),
+        encrypted_bytes,
+    ).unwrap();
+
+    use std::io::Write;
+    std::fs::File::create(params.out.clone())?
+        .write_all(decrypted.as_slice())?;
+
+    Ok(())
+}
+
+async fn parallel_decrypt_cipher_key(
+    elgamal_keypair: &ElGamalKeypair,
+    private_metadata_account: &private_metadata::state::PrivateMetadataAccount,
+) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
 
     let mut decrypt_tasks = vec![];
     for ct in private_metadata_account.encrypted_cipher_key {
@@ -482,6 +574,7 @@ async fn process_decrypt_cipher_key(
                     *w
                 }
                 _ => {
+                    // TODO: pass up
                     eprintln!("decrypt cipher text error");
                     exit(1);
                 }
@@ -491,10 +584,7 @@ async fn process_decrypt_cipher_key(
 
     let cipher_key_bytes = bytemuck::cast_slice::<u32, u8>(cipher_key_words.as_slice());
 
-    let cipher_key = bs58::encode(cipher_key_bytes).into_string();
-    println!("decrypted cipher key: {}", cipher_key);
-
-    Ok(())
+    Ok(cipher_key_bytes.to_vec())
 }
 
 struct TransferParams {
@@ -802,6 +892,26 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
         )
         .subcommand(
+            SubCommand::with_name("decrypt_asset")
+            .about("Decrypt asset from private metadata")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("PUBKEY_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Mint of NFT to decrypt cipher key of"),
+            )
+            .arg(
+                Arg::with_name("out")
+                    .long("out")
+                    .value_name("PATH")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Path to write the decrypted asset to"),
+            )
+        )
+        .subcommand(
             SubCommand::with_name("transfer")
             .about("Transfer NFT and private metadata cipher key")
             .arg(
@@ -909,6 +1019,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &config,
                 &DecryptCipherKeyParams {
                     mint: sub_m.value_of("mint").unwrap().to_string(),
+                },
+            ).await.unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+        }
+        ("decrypt_asset", Some(sub_m)) => {
+            process_decrypt_asset(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &config,
+                &DecryptAssetParams {
+                    mint: sub_m.value_of("mint").unwrap().to_string(),
+                    out: sub_m.value_of("out").unwrap().to_string(),
                 },
             ).await.unwrap_or_else(|err| {
                 eprintln!("error: {}", err);
