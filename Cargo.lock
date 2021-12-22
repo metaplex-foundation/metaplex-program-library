@@ -2166,7 +2166,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "private-metadata-demo-cli"
+name = "private-metadata-cli"
 version = "0.0.1"
 dependencies = [
  "clap",

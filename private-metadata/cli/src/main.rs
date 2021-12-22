@@ -1,5 +1,5 @@
 use {
-    clap::{crate_description, crate_name, crate_version, App, Arg},
+    clap::{crate_description, crate_name, crate_version, App, Arg, SubCommand},
     solana_clap_utils::{
         input_validators::{is_url_or_moniker, is_valid_signer, normalize_to_url_if_moniker},
         keypair::DefaultSigner,
@@ -28,11 +28,6 @@ struct Config {
     default_signer: Box<dyn Signer>,
     json_rpc_url: String,
     verbose: bool,
-    dest_keypair: Option<String>,
-    transfer_buffer: Option<String>,
-    instruction_buffer: Option<String>,
-    input_buffer: Option<String>,
-    compute_buffer: Option<String>,
 }
 
 fn send(
@@ -60,14 +55,25 @@ fn send(
     Ok(())
 }
 
+struct DemoConfig {
+    dest_keypair: Option<String>,
+    transfer_buffer: Option<String>,
+    instruction_buffer: Option<String>,
+    input_buffer: Option<String>,
+    compute_buffer: Option<String>,
+}
+
 fn process_demo(
     rpc_client: &RpcClient,
     payer: &dyn Signer,
-    dest_keypair: &Option<String>,
-    transfer_buffer: &Option<String>,
-    instruction_buffer: &Option<String>,
-    input_buffer: &Option<String>,
-    compute_buffer: &Option<String>,
+    _config: &Config,
+    DemoConfig{
+        dest_keypair,
+        transfer_buffer,
+        instruction_buffer,
+        input_buffer,
+        compute_buffer,
+    }: &DemoConfig,
 ) -> Result<(), Box<dyn std::error::Error>> {
 
     let nft_mint = Pubkey::new_from_array([
@@ -550,45 +556,49 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .validator(is_url_or_moniker)
                 .help("JSON RPC URL for the cluster [default: value from configuration file]"),
         )
-        .arg(
-            Arg::with_name("dest_keypair")
-                .long("dest_keypair")
-                .value_name("DEST_KEYPAIR")
-                .takes_value(true)
-                .global(true)
-                .help("Destination keypair to encrypt to"),
-        )
-        .arg(
-            Arg::with_name("transfer_buffer")
-                .long("transfer_buffer")
-                .value_name("TRANSFER_BUFFER")
-                .takes_value(true)
-                .global(true)
-                .help("Transfer buffer keypair to use (or create)"),
-        )
-        .arg(
-            Arg::with_name("instruction_buffer")
-                .long("instruction_buffer")
-                .value_name("INSTRUCTION_BUFFER")
-                .takes_value(true)
-                .global(true)
-                .help("Instruction buffer keypair to use (or create)"),
-        )
-        .arg(
-            Arg::with_name("input_buffer")
-                .long("input_buffer")
-                .value_name("INPUT_BUFFER")
-                .takes_value(true)
-                .global(true)
-                .help("Input buffer keypair to use (or create)"),
-        )
-        .arg(
-            Arg::with_name("compute_buffer")
-                .long("compute_buffer")
-                .value_name("COMPUTE_BUFFER")
-                .takes_value(true)
-                .global(true)
-                .help("Compute buffer keypair to use (or create)"),
+        .subcommand(
+            SubCommand::with_name("demo")
+            .about("zk proof transfer demo")
+            .arg(
+                Arg::with_name("dest_keypair")
+                    .long("dest_keypair")
+                    .value_name("DEST_KEYPAIR")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Destination keypair to encrypt to"),
+            )
+            .arg(
+                Arg::with_name("transfer_buffer")
+                    .long("transfer_buffer")
+                    .value_name("TRANSFER_BUFFER")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Transfer buffer keypair to use (or create)"),
+            )
+            .arg(
+                Arg::with_name("instruction_buffer")
+                    .long("instruction_buffer")
+                    .value_name("INSTRUCTION_BUFFER")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Instruction buffer keypair to use (or create)"),
+            )
+            .arg(
+                Arg::with_name("input_buffer")
+                    .long("input_buffer")
+                    .value_name("INPUT_BUFFER")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Input buffer keypair to use (or create)"),
+            )
+            .arg(
+                Arg::with_name("compute_buffer")
+                    .long("compute_buffer")
+                    .value_name("COMPUTE_BUFFER")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Compute buffer keypair to use (or create)"),
+            )
         )
         .get_matches();
 
@@ -624,11 +634,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }),
             verbose: matches.is_present("verbose"),
             commitment_config: CommitmentConfig::confirmed(),
-            dest_keypair: matches.value_of("dest_keypair").map(|s| s.into()),
-            transfer_buffer: matches.value_of("transfer_buffer").map(|s| s.into()),
-            instruction_buffer: matches.value_of("instruction_buffer").map(|s| s.into()),
-            input_buffer: matches.value_of("input_buffer").map(|s| s.into()),
-            compute_buffer: matches.value_of("compute_buffer").map(|s| s.into()),
         }
     };
     solana_logger::setup_with_default("solana=info");
@@ -639,18 +644,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rpc_client =
         RpcClient::new_with_commitment(config.json_rpc_url.clone(), config.commitment_config);
 
-    process_demo(
-        &rpc_client,
-        config.default_signer.as_ref(),
-        &config.dest_keypair,
-        &config.transfer_buffer,
-        &config.instruction_buffer,
-        &config.input_buffer,
-        &config.compute_buffer,
-    ).unwrap_or_else(|err| {
-        eprintln!("error: {}", err);
-        exit(1);
-    });
+    match matches.subcommand() {
+        ("demo", Some(sub_m)) => {
+            process_demo(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &config,
+                &DemoConfig {
+                    dest_keypair: sub_m.value_of("dest_keypair").map(|s| s.into()),
+                    transfer_buffer: sub_m.value_of("transfer_buffer").map(|s| s.into()),
+                    instruction_buffer: sub_m.value_of("instruction_buffer").map(|s| s.into()),
+                    input_buffer: sub_m.value_of("input_buffer").map(|s| s.into()),
+                    compute_buffer: sub_m.value_of("compute_buffer").map(|s| s.into()),
+                },
+            ).unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+
+        },
+        _ => {
+        },
+    }
 
     Ok(())
 }

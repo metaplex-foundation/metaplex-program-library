@@ -1,5 +1,5 @@
 [package]
-name = "private-metadata-demo-cli"
+name = "private-metadata-cli"
 version = "0.0.1"
 description = "Encrypted metadata URI and assets"
 authors = [
@@ -21,7 +21,7 @@ spl-token-metadata = { version = "0.0.1", features = [
     "no-entrypoint"
 ] }
 tokio = { version = "1", features = ["full"] }
-private-metadata = { path = "../private-metadata", features = ["no-entrypoint"] }
+private-metadata = { path = "../program", features = ["no-entrypoint"] }
 curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
 curve25519-dalek-onchain = { path = "/Users/lwu/code/solana/curve25519-dalek-onchain/program", features = ["no-entrypoint"] }
 
