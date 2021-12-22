@@ -13,6 +13,7 @@ publish = false
 bs58 = "0.4.0"
 bytemuck = { version = "1.7.2", features = ["derive"] }
 clap = "2.33.3"
+futures = "0.3.18"
 solana-clap-utils = "1.7.15"
 solana-cli-config = "1.7.15"
 solana-client = "1.7.15"

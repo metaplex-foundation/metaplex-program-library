@@ -55,7 +55,7 @@ fn send(
     Ok(())
 }
 
-struct DemoConfig {
+struct DemoParams {
     dest_keypair: Option<String>,
     transfer_buffer: Option<String>,
     instruction_buffer: Option<String>,
@@ -67,13 +67,13 @@ fn process_demo(
     rpc_client: &RpcClient,
     payer: &dyn Signer,
     _config: &Config,
-    DemoConfig{
+    DemoParams{
         dest_keypair,
         transfer_buffer,
         instruction_buffer,
         input_buffer,
         compute_buffer,
-    }: &DemoConfig,
+    }: &DemoParams,
 ) -> Result<(), Box<dyn std::error::Error>> {
 
     let nft_mint = Pubkey::new_from_array([
@@ -509,7 +509,7 @@ fn process_demo(
 }
 
 
-struct ConfigureConfig {
+struct ConfigureParams {
     mint: String,
     cipher_key: String,
     asset_url: String,
@@ -519,11 +519,11 @@ fn process_configure(
     rpc_client: &RpcClient,
     payer: &dyn Signer,
     _config: &Config,
-    ConfigureConfig{
+    ConfigureParams{
         mint,
         cipher_key,
         asset_url,
-    }: &ConfigureConfig,
+    }: &ConfigureParams,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let mint = Pubkey::new(
         bs58::decode(&mint).into_vec()?.as_slice()
@@ -559,6 +559,73 @@ fn process_configure(
 
     Ok(())
 }
+
+struct DecryptCipherKeyParams {
+    mint: String,
+}
+
+async fn process_decrypt_cipher_key(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    _config: &Config,
+    params: &DecryptCipherKeyParams ,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mint = Pubkey::new(
+        bs58::decode(&params.mint).into_vec()?.as_slice()
+    );
+
+    let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
+
+    let private_metadata_key = private_metadata::instruction::get_private_metadata_address(&mint).0;
+    let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
+
+    if private_metadata_data.is_err() {
+        eprintln!("error: no private metadata found for mint {}", params.mint);
+        exit(1);
+    }
+
+    let private_metadata_data = private_metadata_data.unwrap();
+    let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
+        &private_metadata_data).unwrap();
+
+    let mut decrypt_tasks = vec![];
+    for ct in private_metadata_account.encrypted_cipher_key {
+        // TODO: clone
+        let elgamal_secret = ElGamalSecretKey::from_bytes(elgamal_keypair.secret.to_bytes()).unwrap();
+        decrypt_tasks.push(
+            tokio::task::spawn(async move {
+                let ct: ElGamalCiphertext = ct.try_into().ok()?;
+
+                elgamal_secret.decrypt_u32(&ct)
+            })
+        );
+    }
+
+    let cipher_key_words = futures::future::join_all(decrypt_tasks).await;
+
+    let cipher_key_words = cipher_key_words
+        .iter()
+        .map(|r| {
+            match r {
+                Ok(Some(w)) => {
+                    *w
+                }
+                _ => {
+                    eprintln!("decrypt cipher text error");
+                    exit(1);
+                }
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let cipher_key_bytes = bytemuck::cast_slice::<u32, u8>(cipher_key_words.as_slice());
+
+    let cipher_key = bs58::encode(cipher_key_bytes).into_string();
+    println!("decoded cipher key: {}", cipher_key);
+
+    Ok(())
+}
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -675,6 +742,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .help("Base-58 encoded cipher key"),
             )
         )
+        .subcommand(
+            SubCommand::with_name("decrypt_key")
+            .about("Decrypt cipher key associated with private metadata")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("PUBKEY_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Mint of NFT to decrypt cipher key of"),
+            )
+        )
         .get_matches();
 
     let mut wallet_manager: Option<Arc<RemoteWalletManager>> = None;
@@ -725,7 +804,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &rpc_client,
                 config.default_signer.as_ref(),
                 &config,
-                &DemoConfig {
+                &DemoParams {
                     dest_keypair: sub_m.value_of("dest_keypair").map(|s| s.into()),
                     transfer_buffer: sub_m.value_of("transfer_buffer").map(|s| s.into()),
                     instruction_buffer: sub_m.value_of("instruction_buffer").map(|s| s.into()),
@@ -736,13 +815,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 eprintln!("error: {}", err);
                 exit(1);
             });
-        },
+        }
         ("configure", Some(sub_m)) => {
             process_configure(
                 &rpc_client,
                 config.default_signer.as_ref(),
                 &config,
-                &ConfigureConfig {
+                &ConfigureParams {
                     mint: sub_m.value_of("mint").unwrap().to_string(),
                     cipher_key: sub_m.value_of("cipher_key").unwrap().to_string(),
                     asset_url: sub_m.value_of("asset_url").unwrap().to_string(),
@@ -752,8 +831,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 exit(1);
             });
         }
+        ("decrypt_key", Some(sub_m)) => {
+            process_decrypt_cipher_key(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &config,
+                &DecryptCipherKeyParams {
+                    mint: sub_m.value_of("mint").unwrap().to_string(),
+                },
+            ).await.unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+        }
         _ => {
-        },
+        }
     }
 
     Ok(())
