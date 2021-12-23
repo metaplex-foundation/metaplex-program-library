@@ -763,6 +763,24 @@ async fn process_transfer(
     Ok(())
 }
 
+struct ElGamalPubkeyParams {
+    mint: String,
+}
+
+fn process_elgamal_pubkey(
+    _rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    _config: &Config,
+    params: &ElGamalPubkeyParams,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mint = Pubkey::new(
+        bs58::decode(&params.mint).into_vec()?.as_slice()
+    );
+    println!("{}", ElGamalKeypair::new(payer, &mint)?.public);
+
+    Ok(())
+}
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -935,6 +953,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .arg(input_buffer_param.clone())
             .arg(compute_buffer_param.clone())
         )
+        .subcommand(
+            SubCommand::with_name("elgamal_pubkey")
+            .about("Print the elgamal pubkey associated with KEYPAIR and the mint")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("PUBKEY_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("NFT to transfer"),
+            )
+        )
         .get_matches();
 
     let mut wallet_manager: Option<Arc<RemoteWalletManager>> = None;
@@ -1053,6 +1083,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     compute_buffer: sub_m.value_of("compute_buffer").map(|s| s.into()),
                 },
             ).await.unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+        }
+        ("elgamal_pubkey", Some(sub_m)) => {
+            process_elgamal_pubkey(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &config,
+                &ElGamalPubkeyParams {
+                    mint: sub_m.value_of("mint").unwrap().to_string(),
+                },
+            ).unwrap_or_else(|err| {
                 eprintln!("error: {}", err);
                 exit(1);
             });
