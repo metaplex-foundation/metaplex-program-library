@@ -589,7 +589,8 @@ async fn parallel_decrypt_cipher_key(
 
 struct TransferParams {
     mint: String,
-    recipient: String,
+    recipient_pubkey: String,
+    recipient_elgamal: String,
     transfer_buffer: Option<String>,
     instruction_buffer: Option<String>,
     input_buffer: Option<String>,
@@ -602,7 +603,6 @@ async fn process_transfer(
     _config: &Config,
     params: &TransferParams,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let recipient = Keypair::from_base58_string(&params.recipient);
     let mint = Pubkey::new(
         bs58::decode(&params.mint).into_vec()?.as_slice()
     );
@@ -630,14 +630,16 @@ async fn process_transfer(
     println!("Compute buffer keypair: {}", compute_buffer.to_base58_string());
 
     let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
-    let dest_elgamal_keypair = ElGamalKeypair::new(&recipient, &mint)?;
+    let recipient_elgamal = ElGamalPubkey::from_bytes(
+        base64::decode(&params.recipient_elgamal)?.as_slice().try_into()?
+    ).ok_or(ProgramError::InvalidArgument)?;
 
     let transfer_buffer_account = get_or_create_transfer_buffer(
         rpc_client,
         payer,
         &transfer_buffer,
         &mint,
-        dest_elgamal_keypair.public.into(),
+        recipient_elgamal.into(),
     )?;
 
     ensure_create_instruction_buffer(
@@ -664,7 +666,7 @@ async fn process_transfer(
 
         let transfer = private_metadata::transfer_proof::TransferData::new(
             &elgamal_keypair,
-            dest_elgamal_keypair.public,
+            recipient_elgamal,
             word,
             ct,
         );
@@ -721,7 +723,10 @@ async fn process_transfer(
         get_associated_token_address,
     };
     let payer_ata = get_associated_token_address(&payer.pubkey(), &mint);
-    let recipient_ata = get_associated_token_address(&recipient.pubkey(), &mint);
+    let recipient_pubkey  = Pubkey::new(
+        bs58::decode(&params.recipient_pubkey).into_vec()?.as_slice()
+    );
+    let recipient_ata = get_associated_token_address(&recipient_pubkey, &mint);
 
     let mut instructions = vec![];
 
@@ -729,7 +734,7 @@ async fn process_transfer(
         instructions.push(
             create_associated_token_account(
                 &payer.pubkey(),
-                &recipient.pubkey(),
+                &recipient_pubkey,
                 &mint,
             ),
         );
@@ -941,12 +946,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .help("NFT to transfer"),
             )
             .arg(
-                Arg::with_name("recipient")
-                    .long("recipient")
-                    .value_name("KEYPAIR_STRING")
+                Arg::with_name("recipient_pubkey")
+                    .long("recipient_pubkey")
+                    .value_name("PUBKEY_STRING")
                     .takes_value(true)
                     .global(true)
-                    .help("Wallet keypair of recipient. TODO just pubkey"),
+                    .help("Base-58 encoded public key of recipient"),
+            )
+            .arg(
+                Arg::with_name("recipient_elgamal")
+                    .long("recipient_elgamal")
+                    .value_name("BASE64_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Base-64 encoded elgamal public key of recipient. The recipient can find this with the `elgamal_pubkey` instruction"),
             )
             .arg(transfer_buffer_param.clone())
             .arg(instruction_buffer_param.clone())
@@ -1076,7 +1089,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &config,
                 &TransferParams {
                     mint: sub_m.value_of("mint").unwrap().to_string(),
-                    recipient: sub_m.value_of("recipient").unwrap().to_string(),
+                    recipient_pubkey: sub_m.value_of("recipient_pubkey").unwrap().to_string(),
+                    recipient_elgamal: sub_m.value_of("recipient_elgamal").unwrap().to_string(),
                     transfer_buffer: sub_m.value_of("transfer_buffer").map(|s| s.into()),
                     instruction_buffer: sub_m.value_of("instruction_buffer").map(|s| s.into()),
                     input_buffer: sub_m.value_of("input_buffer").map(|s| s.into()),

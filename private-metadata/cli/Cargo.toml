@@ -10,6 +10,7 @@ edition = "2018"
 publish = false
 
 [dependencies]
+base64 = "0.13"
 bs58 = "0.4.0"
 bytemuck = { version = "1.7.2", features = ["derive"] }
 clap = "2.33.3"
