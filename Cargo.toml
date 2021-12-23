@@ -6,6 +6,7 @@ members=[
   "token-vault/program",
   "token-vault/test",
   "token-metadata/program",
-  "token-metadata/test"
+  "token-metadata/test",
+  "nft-packs/program"
 ]
 exclude = []
