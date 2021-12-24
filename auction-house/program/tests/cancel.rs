@@ -1,4 +1,4 @@
-//! Module provide tests for `Sell` instruction.
+//! Module provide tests for `Cancel` instruction.
 
 mod utils;
 
@@ -92,7 +92,7 @@ fn success() -> Result<(), Box<dyn error::Error>> {
         5000,
     )?;
 
-    // Perform RPC instruction request
+    // Perform RPC `Sell` instruction request
     program
         .request()
         .accounts(mpl_auction_house::accounts::Sell {
@@ -118,9 +118,35 @@ fn success() -> Result<(), Box<dyn error::Error>> {
         })
         .send()?;
 
+    let fee_payer_before_lamports = connection.get_account(&auction_house_fee_account)?.lamports;
+    let trade_state_before_lamports = connection.get_account(&seller_trade_state)?.lamports;
+
+    // Perform RPC `Cancel` instruction request
+    program
+        .request()
+        .accounts(mpl_auction_house::accounts::Cancel {
+            auction_house,
+            auction_house_fee_account,
+            authority: wallet_pubkey,
+            token_account,
+            token_mint: token_mint.pubkey(),
+            token_program: spl_token::id(),
+            trade_state: seller_trade_state,
+            wallet: wallet_pubkey,
+        })
+        .args(mpl_auction_house::instruction::Cancel {
+            _buyer_price: BUYER_PRICE,
+            _token_size: TOKEN_SIZE,
+        })
+        .send()?;
+
+    let fee_payer_after_lamports = connection.get_account(&auction_house_fee_account)?.lamports;
+
     assert_eq!(
-        connection.get_account_data(&seller_trade_state).unwrap()[0],
-        seller_trade_state_bump
+        fee_payer_before_lamports + trade_state_before_lamports,
+        fee_payer_after_lamports
     );
+    assert!(connection.get_account(&seller_trade_state).is_err());
+
     Ok(())
 }
