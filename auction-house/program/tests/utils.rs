@@ -16,6 +16,36 @@ const FEE_PAYER: &str = "fee_payer";
 const TREASURY: &str = "treasury";
 const SIGNER: &str = "signer";
 
+/// Return `spl_token` token account.
+pub fn get_token_account(
+    connection: &RpcClient,
+    token_account: &Pubkey,
+) -> Result<spl_token::state::Account, ClientError> {
+    let data = connection.get_account_data(token_account)?;
+    Ok(spl_token::state::Account::unpack(&data).unwrap())
+}
+
+/// Perform native lamports transfer.
+pub fn transfer_lamports(
+    connection: &RpcClient,
+    wallet: &Keypair,
+    to: &Pubkey,
+    amount: u64,
+) -> Result<(), ClientError> {
+    let (recent_blockhash, _) = connection.get_recent_blockhash()?;
+
+    let tx = Transaction::new_signed_with_payer(
+        &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
+        Some(&wallet.pubkey()),
+        &[wallet],
+        recent_blockhash,
+    );
+
+    connection.send_and_confirm_transaction(&tx)?;
+
+    Ok(())
+}
+
 /// Create new `TokenMetadata` using `RpcClient`.
 pub fn create_token_metadata(
     connection: &RpcClient,
@@ -244,6 +274,14 @@ pub fn create_token_account(
     connection.send_and_confirm_transaction(&tx)?;
 
     Ok(())
+}
+
+/// Return escrow payment `Pubkey` address and bump seed.
+pub fn find_escrow_payment_address(auction_house: &Pubkey, wallet: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[PREFIX.as_bytes(), auction_house.as_ref(), wallet.as_ref()],
+        &mpl_auction_house::id(),
+    )
 }
 
 /// Return `AuctionHouse` `Pubkey` address and bump seed.
