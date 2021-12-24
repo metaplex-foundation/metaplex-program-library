@@ -16,6 +16,15 @@ const FEE_PAYER: &str = "fee_payer";
 const TREASURY: &str = "treasury";
 const SIGNER: &str = "signer";
 
+/// Return `spl_token` token account.
+pub fn get_token_account(
+    connection: &RpcClient,
+    token_account: &Pubkey,
+) -> Result<spl_token::state::Account, ClientError> {
+    let data = connection.get_account_data(token_account)?;
+    Ok(spl_token::state::Account::unpack(&data).unwrap())
+}
+
 /// Perform native lamports transfer.
 pub fn transfer_lamports(
     connection: &RpcClient,
