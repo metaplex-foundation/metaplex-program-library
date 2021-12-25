@@ -27,3 +27,15 @@ pub fn derive_auction_house_treasury_key(auction_house_key: &Pubkey) -> (Pubkey,
     ];
     Pubkey::find_program_address(auction_house_treasury_seeds, &mpl_auction_house::id())
 }
+
+pub fn derive_auction_house_buyer_escrow_account_key(
+    auction_house_key: &Pubkey,
+    wallet: &Pubkey,
+) -> (Pubkey, u8) {
+    let auction_house_buyer_escrow_seeds = &[
+        AUCTION_HOUSE.as_bytes(),
+        auction_house_key.as_ref(),
+        wallet.as_ref(),
+    ];
+    Pubkey::find_program_address(auction_house_buyer_escrow_seeds, &mpl_auction_house::id())
+}

@@ -79,7 +79,7 @@ pub fn setup_auction_house(
             fee_payer_bump,
             treasury_bump,
             seller_fee_basis_points,
-            requires_sign_off: true,
+            requires_sign_off: false,
             can_change_sale_price: true,
         })
         .send()
