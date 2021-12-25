@@ -1,4 +1,6 @@
 #![cfg(test)]
+mod utils;
+
 use anchor_client::{
     solana_sdk::{
         commitment_config::CommitmentConfig,
@@ -7,7 +9,7 @@ use anchor_client::{
         signer::Signer,
         system_program, sysvar,
     },
-    Client, Cluster,
+    Client, ClientError, Cluster,
 };
 use mpl_auction_house::{
     accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
@@ -15,24 +17,22 @@ use mpl_auction_house::{
 };
 use rand::rngs::OsRng;
 use spl_token;
-use std::{env, error};
+use std::env;
+
+use utils::constants::{AUCTION_HOUSE, FEE_PAYER, TREASURY};
 
 mod create_auction_house {
 
     use super::*;
 
-    const AUCTION_HOUSE: &str = "auction_house";
-    const FEE_PAYER: &str = "fee_payer";
-    const TREASURY: &str = "treasury";
-
     #[test]
-    fn success() -> Result<(), Box<dyn error::Error>> {
+    fn success() -> Result<(), ClientError> {
         let wallet_path = match env::var("LOCALNET_PAYER_WALLET") {
             Ok(val) => val,
             Err(_) => shellexpand::tilde("~/.config/solana/id.json").to_string(),
         };
 
-        let payer_wallet = read_keypair_file(wallet_path)?;
+        let payer_wallet = read_keypair_file(wallet_path).unwrap();
 
         // Client.
         let client = Client::new_with_options(
