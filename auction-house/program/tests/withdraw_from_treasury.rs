@@ -16,7 +16,7 @@ use utils::{
 };
 
 #[cfg(test)]
-mod withdraw_from_fee {
+mod withdraw_from_treasury {
 
     use super::*;
 
@@ -46,34 +46,37 @@ mod withdraw_from_fee {
         transfer_lamports(
             &program.rpc(),
             &wallet,
-            &auction_house_account.auction_house_fee_account,
+            &auction_house_account.auction_house_treasury,
             amount * 2,
         )?;
 
-        let fee_balance_before_withdraw = program
+        let treasury_balance_before_withdraw = program
             .rpc()
-            .get_balance(&auction_house_account.auction_house_fee_account)?;
+            .get_balance(&auction_house_account.auction_house_treasury)?;
 
         program
             .request()
             .signer(&authority_keypair)
-            .accounts(mpl_auction_house_accounts::WithdrawFromFee {
+            .accounts(mpl_auction_house_accounts::WithdrawFromTreasury {
+                treasury_mint: t_mint_key,
                 authority: authority_keypair.pubkey(),
-                fee_withdrawal_destination: auction_house_account.fee_withdrawal_destination,
-                auction_house_fee_account: auction_house_account.auction_house_fee_account,
+                treasury_withdrawal_destination: auction_house_account
+                    .treasury_withdrawal_destination,
+                auction_house_treasury: auction_house_account.auction_house_treasury,
                 auction_house: auction_house_key,
+                token_program: spl_token::id(),
                 system_program: system_program::id(),
             })
-            .args(mpl_auction_house_instruction::WithdrawFromFee { amount })
+            .args(mpl_auction_house_instruction::WithdrawFromTreasury { amount })
             .send()?;
 
-        let fee_balance_after_withdraw = program
+        let treasury_balance_after_withdraw = program
             .rpc()
-            .get_balance(&auction_house_account.auction_house_fee_account)?;
+            .get_balance(&auction_house_account.auction_house_treasury)?;
 
         assert_eq!(
             amount,
-            fee_balance_before_withdraw - fee_balance_after_withdraw
+            treasury_balance_before_withdraw - treasury_balance_after_withdraw
         );
 
         Ok(())
