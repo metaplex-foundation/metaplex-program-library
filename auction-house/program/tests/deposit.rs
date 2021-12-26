@@ -14,6 +14,7 @@ use utils::{
     setup_functions::{setup_auction_house, setup_client, setup_payer_wallet},
 };
 
+#[cfg(test)]
 mod deposit {
 
     use super::*;

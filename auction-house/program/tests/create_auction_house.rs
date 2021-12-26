@@ -1,4 +1,3 @@
-#![cfg(test)]
 mod utils;
 
 use anchor_client::{
@@ -21,6 +20,7 @@ use std::env;
 
 use utils::constants::{AUCTION_HOUSE, FEE_PAYER, TREASURY};
 
+#[cfg(test)]
 mod create_auction_house {
 
     use super::*;

@@ -1,4 +1,3 @@
-#![cfg(test)]
 pub mod utils;
 
 use anchor_client::{
@@ -12,6 +11,7 @@ use mpl_auction_house::{
 use rand::rngs::OsRng;
 use utils::setup_functions::{setup_auction_house, setup_client, setup_payer_wallet};
 
+#[cfg(test)]
 mod update_auction_house {
 
     use super::*;

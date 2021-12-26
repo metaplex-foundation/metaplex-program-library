@@ -16,6 +16,7 @@ use utils::{
     transfer_lamports,
 };
 
+#[cfg(test)]
 mod withdraw {
 
     use super::*;
