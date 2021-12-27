@@ -1,20 +1,31 @@
-import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+
+import * as splToken from '@solana/spl-token';
 
 export type WithdrawFromTreasuryInstructionArgs = {
   amount: beet.bignum;
 };
-const withdrawFromTreasuryInstructionArgsStruct =
-  new beet.BeetArgsStruct<WithdrawFromTreasuryInstructionArgs>([['amount', beet.u64]]);
+const withdrawFromTreasuryStruct = new beet.BeetArgsStruct<
+  WithdrawFromTreasuryInstructionArgs & {
+    instructionDiscriminator: number[];
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['amount', beet.u64],
+  ],
+  'WithdrawFromTreasuryInstructionArgs',
+);
 export type WithdrawFromTreasuryInstructionAccounts = {
-  treasuryMint: PublicKey;
-  authority: PublicKey;
-  treasuryWithdrawalDestination: PublicKey;
-  auctionHouseTreasury: PublicKey;
-  auctionHouse: PublicKey;
-  tokenProgram: PublicKey;
-  systemProgram: PublicKey;
+  treasuryMint: web3.PublicKey;
+  authority: web3.PublicKey;
+  treasuryWithdrawalDestination: web3.PublicKey;
+  auctionHouseTreasury: web3.PublicKey;
+  auctionHouse: web3.PublicKey;
 };
+
+const withdrawFromTreasuryInstructionDiscriminator = [0, 164, 86, 76, 56, 72, 12, 170];
 
 export function createWithdrawFromTreasuryInstruction(
   accounts: WithdrawFromTreasuryInstructionAccounts,
@@ -26,12 +37,13 @@ export function createWithdrawFromTreasuryInstruction(
     treasuryWithdrawalDestination,
     auctionHouseTreasury,
     auctionHouse,
-    tokenProgram,
-    systemProgram,
   } = accounts;
 
-  const [data] = withdrawFromTreasuryInstructionArgsStruct.serialize(args);
-  const keys: AccountMeta[] = [
+  const [data] = withdrawFromTreasuryStruct.serialize({
+    instructionDiscriminator: withdrawFromTreasuryInstructionDiscriminator,
+    ...args,
+  });
+  const keys: web3.AccountMeta[] = [
     {
       pubkey: treasuryMint,
       isWritable: false,
@@ -58,19 +70,19 @@ export function createWithdrawFromTreasuryInstruction(
       isSigner: false,
     },
     {
-      pubkey: tokenProgram,
+      pubkey: splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: systemProgram,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  const ix = new TransactionInstruction({
-    programId: new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  const ix = new web3.TransactionInstruction({
+    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
     keys,
     data,
   });

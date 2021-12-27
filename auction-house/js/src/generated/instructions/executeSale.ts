@@ -1,5 +1,7 @@
-import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+
+import * as splToken from '@solana/spl-token';
 
 export type ExecuteSaleInstructionArgs = {
   escrowPaymentBump: number;
@@ -8,36 +10,42 @@ export type ExecuteSaleInstructionArgs = {
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
 };
-const executeSaleInstructionArgsStruct = new beet.BeetArgsStruct<ExecuteSaleInstructionArgs>([
-  ['escrowPaymentBump', beet.u8],
-  ['freeTradeStateBump', beet.u8],
-  ['programAsSignerBump', beet.u8],
-  ['buyerPrice', beet.u64],
-  ['tokenSize', beet.u64],
-]);
+const executeSaleStruct = new beet.BeetArgsStruct<
+  ExecuteSaleInstructionArgs & {
+    instructionDiscriminator: number[];
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['escrowPaymentBump', beet.u8],
+    ['freeTradeStateBump', beet.u8],
+    ['programAsSignerBump', beet.u8],
+    ['buyerPrice', beet.u64],
+    ['tokenSize', beet.u64],
+  ],
+  'ExecuteSaleInstructionArgs',
+);
 export type ExecuteSaleInstructionAccounts = {
-  buyer: PublicKey;
-  seller: PublicKey;
-  tokenAccount: PublicKey;
-  tokenMint: PublicKey;
-  metadata: PublicKey;
-  treasuryMint: PublicKey;
-  escrowPaymentAccount: PublicKey;
-  sellerPaymentReceiptAccount: PublicKey;
-  buyerReceiptTokenAccount: PublicKey;
-  authority: PublicKey;
-  auctionHouse: PublicKey;
-  auctionHouseFeeAccount: PublicKey;
-  auctionHouseTreasury: PublicKey;
-  buyerTradeState: PublicKey;
-  sellerTradeState: PublicKey;
-  freeTradeState: PublicKey;
-  tokenProgram: PublicKey;
-  systemProgram: PublicKey;
-  ataProgram: PublicKey;
-  programAsSigner: PublicKey;
-  rent: PublicKey;
+  buyer: web3.PublicKey;
+  seller: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  tokenMint: web3.PublicKey;
+  metadata: web3.PublicKey;
+  treasuryMint: web3.PublicKey;
+  escrowPaymentAccount: web3.PublicKey;
+  sellerPaymentReceiptAccount: web3.PublicKey;
+  buyerReceiptTokenAccount: web3.PublicKey;
+  authority: web3.PublicKey;
+  auctionHouse: web3.PublicKey;
+  auctionHouseFeeAccount: web3.PublicKey;
+  auctionHouseTreasury: web3.PublicKey;
+  buyerTradeState: web3.PublicKey;
+  sellerTradeState: web3.PublicKey;
+  freeTradeState: web3.PublicKey;
+  programAsSigner: web3.PublicKey;
 };
+
+const executeSaleInstructionDiscriminator = [37, 74, 217, 157, 79, 49, 35, 6];
 
 export function createExecuteSaleInstruction(
   accounts: ExecuteSaleInstructionAccounts,
@@ -60,15 +68,14 @@ export function createExecuteSaleInstruction(
     buyerTradeState,
     sellerTradeState,
     freeTradeState,
-    tokenProgram,
-    systemProgram,
-    ataProgram,
     programAsSigner,
-    rent,
   } = accounts;
 
-  const [data] = executeSaleInstructionArgsStruct.serialize(args);
-  const keys: AccountMeta[] = [
+  const [data] = executeSaleStruct.serialize({
+    instructionDiscriminator: executeSaleInstructionDiscriminator,
+    ...args,
+  });
+  const keys: web3.AccountMeta[] = [
     {
       pubkey: buyer,
       isWritable: true,
@@ -150,17 +157,17 @@ export function createExecuteSaleInstruction(
       isSigner: false,
     },
     {
-      pubkey: tokenProgram,
+      pubkey: splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: systemProgram,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: ataProgram,
+      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
@@ -170,14 +177,14 @@ export function createExecuteSaleInstruction(
       isSigner: false,
     },
     {
-      pubkey: rent,
+      pubkey: web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  const ix = new TransactionInstruction({
-    programId: new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  const ix = new web3.TransactionInstruction({
+    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
     keys,
     data,
   });

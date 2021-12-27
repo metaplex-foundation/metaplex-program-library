@@ -21,6 +21,7 @@ export class AuctionHouseAccount {
   }
 
   static hasCorrectByteSize = AuctionHouseAccountData.hasCorrectByteSize;
+  static byteSize = AuctionHouseAccountData.byteSize;
 
   static async getMinimumBalanceForRentExemption(
     connection: Connection,

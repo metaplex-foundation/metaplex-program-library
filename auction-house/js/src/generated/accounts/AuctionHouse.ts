@@ -1,4 +1,4 @@
-import { AccountInfo, Connection, Commitment, PublicKey } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 
@@ -6,13 +6,13 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * Arguments used to create {@link AuctionHouseAccountData}
  */
 export type AuctionHouseAccountDataArgs = {
-  auctionHouseFeeAccount: PublicKey;
-  auctionHouseTreasury: PublicKey;
-  treasuryWithdrawalDestination: PublicKey;
-  feeWithdrawalDestination: PublicKey;
-  treasuryMint: PublicKey;
-  authority: PublicKey;
-  creator: PublicKey;
+  auctionHouseFeeAccount: web3.PublicKey;
+  auctionHouseTreasury: web3.PublicKey;
+  treasuryWithdrawalDestination: web3.PublicKey;
+  feeWithdrawalDestination: web3.PublicKey;
+  treasuryMint: web3.PublicKey;
+  authority: web3.PublicKey;
+  creator: web3.PublicKey;
   bump: number;
   treasuryBump: number;
   feePayerBump: number;
@@ -21,19 +21,20 @@ export type AuctionHouseAccountDataArgs = {
   canChangeSalePrice: boolean;
 };
 
+const auctionHouseAccountDiscriminator = [40, 108, 215, 107, 213, 85, 245, 48];
 /**
  * Holds the data for the {@link AuctionHouseAccount} and provides de/serialization
  * functionality for that data
  */
 export class AuctionHouseAccountData {
   private constructor(
-    readonly auctionHouseFeeAccount: PublicKey,
-    readonly auctionHouseTreasury: PublicKey,
-    readonly treasuryWithdrawalDestination: PublicKey,
-    readonly feeWithdrawalDestination: PublicKey,
-    readonly treasuryMint: PublicKey,
-    readonly authority: PublicKey,
-    readonly creator: PublicKey,
+    readonly auctionHouseFeeAccount: web3.PublicKey,
+    readonly auctionHouseTreasury: web3.PublicKey,
+    readonly treasuryWithdrawalDestination: web3.PublicKey,
+    readonly feeWithdrawalDestination: web3.PublicKey,
+    readonly treasuryMint: web3.PublicKey,
+    readonly authority: web3.PublicKey,
+    readonly creator: web3.PublicKey,
     readonly bump: number,
     readonly treasuryBump: number,
     readonly feePayerBump: number,
@@ -64,11 +65,11 @@ export class AuctionHouseAccountData {
   }
 
   /**
-   * Deserializes the {@link AuctionHouseAccountData} from the data of the provided {@link AccountInfo}.
+   * Deserializes the {@link AuctionHouseAccountData} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static fromAccountInfo(
-    accountInfo: AccountInfo<Buffer>,
+    accountInfo: web3.AccountInfo<Buffer>,
     offset = 0,
   ): [AuctionHouseAccountData, number] {
     return AuctionHouseAccountData.deserialize(accountInfo.data, offset);
@@ -87,7 +88,10 @@ export class AuctionHouseAccountData {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return auctionHouseAccountDataStruct.serialize(this);
+    return auctionHouseAccountDataStruct.serialize({
+      accountDiscriminator: auctionHouseAccountDiscriminator,
+      ...this,
+    });
   }
 
   /**
@@ -103,8 +107,8 @@ export class AuctionHouseAccountData {
    * {@link AuctionHouseAccountData} data from rent
    */
   static async getMinimumBalanceForRentExemption(
-    connection: Connection,
-    commitment?: Commitment,
+    connection: web3.Connection,
+    commitment?: web3.Commitment,
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
       AuctionHouseAccountData.byteSize,
@@ -145,9 +149,12 @@ export class AuctionHouseAccountData {
 
 const auctionHouseAccountDataStruct = new beet.BeetStruct<
   AuctionHouseAccountData,
-  AuctionHouseAccountDataArgs
+  AuctionHouseAccountDataArgs & {
+    accountDiscriminator: number[];
+  }
 >(
   [
+    ['accountDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
     ['auctionHouseFeeAccount', beetSolana.publicKey],
     ['auctionHouseTreasury', beetSolana.publicKey],
     ['treasuryWithdrawalDestination', beetSolana.publicKey],

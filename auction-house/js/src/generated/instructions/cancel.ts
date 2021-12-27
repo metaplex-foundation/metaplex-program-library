@@ -1,24 +1,35 @@
-import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+
+import * as splToken from '@solana/spl-token';
 
 export type CancelInstructionArgs = {
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
 };
-const cancelInstructionArgsStruct = new beet.BeetArgsStruct<CancelInstructionArgs>([
-  ['buyerPrice', beet.u64],
-  ['tokenSize', beet.u64],
-]);
+const cancelStruct = new beet.BeetArgsStruct<
+  CancelInstructionArgs & {
+    instructionDiscriminator: number[];
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['buyerPrice', beet.u64],
+    ['tokenSize', beet.u64],
+  ],
+  'CancelInstructionArgs',
+);
 export type CancelInstructionAccounts = {
-  wallet: PublicKey;
-  tokenAccount: PublicKey;
-  tokenMint: PublicKey;
-  authority: PublicKey;
-  auctionHouse: PublicKey;
-  auctionHouseFeeAccount: PublicKey;
-  tradeState: PublicKey;
-  tokenProgram: PublicKey;
+  wallet: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  tokenMint: web3.PublicKey;
+  authority: web3.PublicKey;
+  auctionHouse: web3.PublicKey;
+  auctionHouseFeeAccount: web3.PublicKey;
+  tradeState: web3.PublicKey;
 };
+
+const cancelInstructionDiscriminator = [232, 219, 223, 41, 219, 236, 220, 190];
 
 export function createCancelInstruction(
   accounts: CancelInstructionAccounts,
@@ -32,11 +43,13 @@ export function createCancelInstruction(
     auctionHouse,
     auctionHouseFeeAccount,
     tradeState,
-    tokenProgram,
   } = accounts;
 
-  const [data] = cancelInstructionArgsStruct.serialize(args);
-  const keys: AccountMeta[] = [
+  const [data] = cancelStruct.serialize({
+    instructionDiscriminator: cancelInstructionDiscriminator,
+    ...args,
+  });
+  const keys: web3.AccountMeta[] = [
     {
       pubkey: wallet,
       isWritable: true,
@@ -73,14 +86,14 @@ export function createCancelInstruction(
       isSigner: false,
     },
     {
-      pubkey: tokenProgram,
+      pubkey: splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  const ix = new TransactionInstruction({
-    programId: new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  const ix = new web3.TransactionInstruction({
+    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
     keys,
     data,
   });

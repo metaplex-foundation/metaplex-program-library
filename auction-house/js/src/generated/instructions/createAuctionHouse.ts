@@ -1,5 +1,7 @@
-import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+
+import * as splToken from '@solana/spl-token';
 
 export type CreateAuctionHouseInstructionArgs = {
   bump: number;
@@ -9,30 +11,35 @@ export type CreateAuctionHouseInstructionArgs = {
   requiresSignOff: boolean;
   canChangeSalePrice: boolean;
 };
-const createAuctionHouseInstructionArgsStruct =
-  new beet.BeetArgsStruct<CreateAuctionHouseInstructionArgs>([
+const createAuctionHouseStruct = new beet.BeetArgsStruct<
+  CreateAuctionHouseInstructionArgs & {
+    instructionDiscriminator: number[];
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
     ['bump', beet.u8],
     ['feePayerBump', beet.u8],
     ['treasuryBump', beet.u8],
     ['sellerFeeBasisPoints', beet.u16],
     ['requiresSignOff', beet.bool],
     ['canChangeSalePrice', beet.bool],
-  ]);
+  ],
+  'CreateAuctionHouseInstructionArgs',
+);
 export type CreateAuctionHouseInstructionAccounts = {
-  treasuryMint: PublicKey;
-  payer: PublicKey;
-  authority: PublicKey;
-  feeWithdrawalDestination: PublicKey;
-  treasuryWithdrawalDestination: PublicKey;
-  treasuryWithdrawalDestinationOwner: PublicKey;
-  auctionHouse: PublicKey;
-  auctionHouseFeeAccount: PublicKey;
-  auctionHouseTreasury: PublicKey;
-  tokenProgram: PublicKey;
-  systemProgram: PublicKey;
-  ataProgram: PublicKey;
-  rent: PublicKey;
+  treasuryMint: web3.PublicKey;
+  payer: web3.PublicKey;
+  authority: web3.PublicKey;
+  feeWithdrawalDestination: web3.PublicKey;
+  treasuryWithdrawalDestination: web3.PublicKey;
+  treasuryWithdrawalDestinationOwner: web3.PublicKey;
+  auctionHouse: web3.PublicKey;
+  auctionHouseFeeAccount: web3.PublicKey;
+  auctionHouseTreasury: web3.PublicKey;
 };
+
+const createAuctionHouseInstructionDiscriminator = [221, 66, 242, 159, 249, 206, 134, 241];
 
 export function createCreateAuctionHouseInstruction(
   accounts: CreateAuctionHouseInstructionAccounts,
@@ -48,14 +55,13 @@ export function createCreateAuctionHouseInstruction(
     auctionHouse,
     auctionHouseFeeAccount,
     auctionHouseTreasury,
-    tokenProgram,
-    systemProgram,
-    ataProgram,
-    rent,
   } = accounts;
 
-  const [data] = createAuctionHouseInstructionArgsStruct.serialize(args);
-  const keys: AccountMeta[] = [
+  const [data] = createAuctionHouseStruct.serialize({
+    instructionDiscriminator: createAuctionHouseInstructionDiscriminator,
+    ...args,
+  });
+  const keys: web3.AccountMeta[] = [
     {
       pubkey: treasuryMint,
       isWritable: false,
@@ -102,29 +108,29 @@ export function createCreateAuctionHouseInstruction(
       isSigner: false,
     },
     {
-      pubkey: tokenProgram,
+      pubkey: splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: systemProgram,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: ataProgram,
+      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: rent,
+      pubkey: web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  const ix = new TransactionInstruction({
-    programId: new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  const ix = new web3.TransactionInstruction({
+    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
     keys,
     data,
   });

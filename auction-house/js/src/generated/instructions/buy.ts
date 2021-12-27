@@ -1,5 +1,7 @@
-import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+
+import * as splToken from '@solana/spl-token';
 
 export type BuyInstructionArgs = {
   tradeStateBump: number;
@@ -7,28 +9,35 @@ export type BuyInstructionArgs = {
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
 };
-const buyInstructionArgsStruct = new beet.BeetArgsStruct<BuyInstructionArgs>([
-  ['tradeStateBump', beet.u8],
-  ['escrowPaymentBump', beet.u8],
-  ['buyerPrice', beet.u64],
-  ['tokenSize', beet.u64],
-]);
+const buyStruct = new beet.BeetArgsStruct<
+  BuyInstructionArgs & {
+    instructionDiscriminator: number[];
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['tradeStateBump', beet.u8],
+    ['escrowPaymentBump', beet.u8],
+    ['buyerPrice', beet.u64],
+    ['tokenSize', beet.u64],
+  ],
+  'BuyInstructionArgs',
+);
 export type BuyInstructionAccounts = {
-  wallet: PublicKey;
-  paymentAccount: PublicKey;
-  transferAuthority: PublicKey;
-  treasuryMint: PublicKey;
-  tokenAccount: PublicKey;
-  metadata: PublicKey;
-  escrowPaymentAccount: PublicKey;
-  authority: PublicKey;
-  auctionHouse: PublicKey;
-  auctionHouseFeeAccount: PublicKey;
-  buyerTradeState: PublicKey;
-  tokenProgram: PublicKey;
-  systemProgram: PublicKey;
-  rent: PublicKey;
+  wallet: web3.PublicKey;
+  paymentAccount: web3.PublicKey;
+  transferAuthority: web3.PublicKey;
+  treasuryMint: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  metadata: web3.PublicKey;
+  escrowPaymentAccount: web3.PublicKey;
+  authority: web3.PublicKey;
+  auctionHouse: web3.PublicKey;
+  auctionHouseFeeAccount: web3.PublicKey;
+  buyerTradeState: web3.PublicKey;
 };
+
+const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];
 
 export function createBuyInstruction(accounts: BuyInstructionAccounts, args: BuyInstructionArgs) {
   const {
@@ -43,13 +52,13 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     auctionHouse,
     auctionHouseFeeAccount,
     buyerTradeState,
-    tokenProgram,
-    systemProgram,
-    rent,
   } = accounts;
 
-  const [data] = buyInstructionArgsStruct.serialize(args);
-  const keys: AccountMeta[] = [
+  const [data] = buyStruct.serialize({
+    instructionDiscriminator: buyInstructionDiscriminator,
+    ...args,
+  });
+  const keys: web3.AccountMeta[] = [
     {
       pubkey: wallet,
       isWritable: false,
@@ -106,24 +115,24 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
       isSigner: false,
     },
     {
-      pubkey: tokenProgram,
+      pubkey: splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: systemProgram,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: rent,
+      pubkey: web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  const ix = new TransactionInstruction({
-    programId: new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  const ix = new web3.TransactionInstruction({
+    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
     keys,
     data,
   });

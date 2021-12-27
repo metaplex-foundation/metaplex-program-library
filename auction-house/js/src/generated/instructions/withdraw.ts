@@ -1,27 +1,35 @@
-import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+
+import * as splToken from '@solana/spl-token';
 
 export type WithdrawInstructionArgs = {
   escrowPaymentBump: number;
   amount: beet.bignum;
 };
-const withdrawInstructionArgsStruct = new beet.BeetArgsStruct<WithdrawInstructionArgs>([
-  ['escrowPaymentBump', beet.u8],
-  ['amount', beet.u64],
-]);
+const withdrawStruct = new beet.BeetArgsStruct<
+  WithdrawInstructionArgs & {
+    instructionDiscriminator: number[];
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['escrowPaymentBump', beet.u8],
+    ['amount', beet.u64],
+  ],
+  'WithdrawInstructionArgs',
+);
 export type WithdrawInstructionAccounts = {
-  wallet: PublicKey;
-  receiptAccount: PublicKey;
-  escrowPaymentAccount: PublicKey;
-  treasuryMint: PublicKey;
-  authority: PublicKey;
-  auctionHouse: PublicKey;
-  auctionHouseFeeAccount: PublicKey;
-  tokenProgram: PublicKey;
-  systemProgram: PublicKey;
-  ataProgram: PublicKey;
-  rent: PublicKey;
+  wallet: web3.PublicKey;
+  receiptAccount: web3.PublicKey;
+  escrowPaymentAccount: web3.PublicKey;
+  treasuryMint: web3.PublicKey;
+  authority: web3.PublicKey;
+  auctionHouse: web3.PublicKey;
+  auctionHouseFeeAccount: web3.PublicKey;
 };
+
+const withdrawInstructionDiscriminator = [183, 18, 70, 156, 148, 109, 161, 34];
 
 export function createWithdrawInstruction(
   accounts: WithdrawInstructionAccounts,
@@ -35,14 +43,13 @@ export function createWithdrawInstruction(
     authority,
     auctionHouse,
     auctionHouseFeeAccount,
-    tokenProgram,
-    systemProgram,
-    ataProgram,
-    rent,
   } = accounts;
 
-  const [data] = withdrawInstructionArgsStruct.serialize(args);
-  const keys: AccountMeta[] = [
+  const [data] = withdrawStruct.serialize({
+    instructionDiscriminator: withdrawInstructionDiscriminator,
+    ...args,
+  });
+  const keys: web3.AccountMeta[] = [
     {
       pubkey: wallet,
       isWritable: false,
@@ -79,29 +86,29 @@ export function createWithdrawInstruction(
       isSigner: false,
     },
     {
-      pubkey: tokenProgram,
+      pubkey: splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: systemProgram,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: ataProgram,
+      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: rent,
+      pubkey: web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  const ix = new TransactionInstruction({
-    programId: new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  const ix = new web3.TransactionInstruction({
+    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
     keys,
     data,
   });

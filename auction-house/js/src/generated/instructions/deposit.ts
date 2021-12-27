@@ -1,27 +1,36 @@
-import { AccountMeta, PublicKey, TransactionInstruction } from '@solana/web3.js';
+import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+
+import * as splToken from '@solana/spl-token';
 
 export type DepositInstructionArgs = {
   escrowPaymentBump: number;
   amount: beet.bignum;
 };
-const depositInstructionArgsStruct = new beet.BeetArgsStruct<DepositInstructionArgs>([
-  ['escrowPaymentBump', beet.u8],
-  ['amount', beet.u64],
-]);
+const depositStruct = new beet.BeetArgsStruct<
+  DepositInstructionArgs & {
+    instructionDiscriminator: number[];
+  }
+>(
+  [
+    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['escrowPaymentBump', beet.u8],
+    ['amount', beet.u64],
+  ],
+  'DepositInstructionArgs',
+);
 export type DepositInstructionAccounts = {
-  wallet: PublicKey;
-  paymentAccount: PublicKey;
-  transferAuthority: PublicKey;
-  escrowPaymentAccount: PublicKey;
-  treasuryMint: PublicKey;
-  authority: PublicKey;
-  auctionHouse: PublicKey;
-  auctionHouseFeeAccount: PublicKey;
-  tokenProgram: PublicKey;
-  systemProgram: PublicKey;
-  rent: PublicKey;
+  wallet: web3.PublicKey;
+  paymentAccount: web3.PublicKey;
+  transferAuthority: web3.PublicKey;
+  escrowPaymentAccount: web3.PublicKey;
+  treasuryMint: web3.PublicKey;
+  authority: web3.PublicKey;
+  auctionHouse: web3.PublicKey;
+  auctionHouseFeeAccount: web3.PublicKey;
 };
+
+const depositInstructionDiscriminator = [242, 35, 198, 137, 82, 225, 242, 182];
 
 export function createDepositInstruction(
   accounts: DepositInstructionAccounts,
@@ -36,13 +45,13 @@ export function createDepositInstruction(
     authority,
     auctionHouse,
     auctionHouseFeeAccount,
-    tokenProgram,
-    systemProgram,
-    rent,
   } = accounts;
 
-  const [data] = depositInstructionArgsStruct.serialize(args);
-  const keys: AccountMeta[] = [
+  const [data] = depositStruct.serialize({
+    instructionDiscriminator: depositInstructionDiscriminator,
+    ...args,
+  });
+  const keys: web3.AccountMeta[] = [
     {
       pubkey: wallet,
       isWritable: false,
@@ -84,24 +93,24 @@ export function createDepositInstruction(
       isSigner: false,
     },
     {
-      pubkey: tokenProgram,
+      pubkey: splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: systemProgram,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: rent,
+      pubkey: web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  const ix = new TransactionInstruction({
-    programId: new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+  const ix = new web3.TransactionInstruction({
+    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
     keys,
     data,
   });
