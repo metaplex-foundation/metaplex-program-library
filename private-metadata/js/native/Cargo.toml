@@ -1,0 +1,19 @@
+[package]
+name = "private-metadata-js"
+version = "0.1.0"
+authors = ["Lawrence Wu <larry.wu@solana.com>"]
+license = "MIT"
+exclude = ["artifacts.json", "index.node"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+bincode = "1"
+curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
+memmap = { path = "/Users/lwu/code/solana/memmap-rs" }
+private-metadata = { path = "../../program", default-features = false, features = ["no-entrypoint"] }
+serde = { version = "1.0", default-features = false, features = ["alloc"] }
+sha2 = "0.8.0"
+solana-sdk = { version = "1.7.15", default-features = false }
+wasm-bindgen = { version = "0.2.78", features = ["serde-serialize"] }
