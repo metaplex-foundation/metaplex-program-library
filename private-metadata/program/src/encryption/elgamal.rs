@@ -173,6 +173,10 @@ impl ElGamalKeypair {
         Ok(ElGamal::keygen_with_scalar(scalar))
     }
 
+    pub fn keygen_with_scalar(scalar: Scalar) -> Self {
+        ElGamal::keygen_with_scalar(scalar)
+    }
+
     /// Generates the public and secret keys for ElGamal encryption.
     #[cfg(not(target_arch = "bpf"))]
     #[allow(clippy::new_ret_no_self)]

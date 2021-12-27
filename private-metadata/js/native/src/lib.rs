@@ -4,15 +4,18 @@ extern crate curve25519_dalek;
 extern crate private_metadata;
 #[macro_use]
 extern crate serde;
-extern crate sha2;
+extern crate sha3;
 extern crate solana_sdk;
 extern crate wasm_bindgen;
 
+use curve25519_dalek::scalar::Scalar;
 use private_metadata::encryption::elgamal::ElGamalKeypair;
 use serde::de::{Deserialize, Deserializer, Visitor, SeqAccess, MapAccess, Error};
 use serde::ser::{Serialize, SerializeStruct, Serializer, SerializeTuple}; // traits
+use sha3::Sha3_512;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signer::keypair::Keypair;
+use solana_sdk::signature::Signature;
 use std::convert::TryInto;
 use std::fmt;
 use std::marker::PhantomData;
@@ -175,6 +178,22 @@ pub fn elgamal_keypair_new(signer: &JsValue, address: &JsValue) -> JsValue {
     debug(&format!("Processed Inputs"));
 
     let kp = ElGamalKeypair::new(&signer, &address).unwrap();
+
+    debug(&format!("Finished compute"));
+
+    JsValue::from_serde(&JSElGamalKeypair(kp)).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn elgamal_keypair_from_signature(signature: &JsValue) -> JsValue {
+    debug(&format!("Inputs\n\tsignature: {:?}", signature));
+
+    let signature: Signature = signature.into_serde().unwrap();
+
+    debug(&format!("Processed Inputs"));
+
+    let scalar = Scalar::hash_from_bytes::<Sha3_512>(signature.as_ref());
+    let kp = ElGamalKeypair::keygen_with_scalar(scalar);
 
     debug(&format!("Finished compute"));
 
