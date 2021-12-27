@@ -9,10 +9,11 @@ extern crate solana_sdk;
 extern crate wasm_bindgen;
 
 use private_metadata::encryption::elgamal::ElGamalKeypair;
-use serde::de::{Deserialize, Deserializer, Visitor, SeqAccess, Error};
+use serde::de::{Deserialize, Deserializer, Visitor, SeqAccess, MapAccess, Error};
 use serde::ser::{Serialize, SerializeStruct, Serializer, SerializeTuple}; // traits
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signer::keypair::Keypair;
+use std::convert::TryInto;
 use std::fmt;
 use std::marker::PhantomData;
 use wasm_bindgen::prelude::*;
@@ -86,6 +87,13 @@ struct KeypairBytes {
     bytes: [u8; 64],
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct ElGamalCiphertextBytes {
+    #[serde(with = "BigArray")]
+    bytes: [u8; 64],
+}
+
+#[derive(Debug)]
 pub struct JSElGamalKeypair(ElGamalKeypair);
 
 impl Serialize for JSElGamalKeypair {
@@ -100,24 +108,93 @@ impl Serialize for JSElGamalKeypair {
     }
 }
 
-#[wasm_bindgen]
+impl<'de> Deserialize<'de> for JSElGamalKeypair {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        #[serde(field_identifier, rename_all = "lowercase")]
+        enum Field { Public, Secret }
+
+        struct JSElGamalKeypairVisitor;
+        impl<'de> Visitor<'de> for JSElGamalKeypairVisitor
+        {
+            type Value = JSElGamalKeypair;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("struct JSElGamalKeypair")
+            }
+
+            fn visit_map<V>(self, mut map: V) -> Result<JSElGamalKeypair, V::Error>
+            where
+                V: MapAccess<'de>,
+            {
+                let mut public = None;
+                let mut secret = None;
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Field::Public => {
+                            if public.is_some() {
+                                return Err(Error::duplicate_field("public"));
+                            }
+                            public = Some(map.next_value()?);
+                        }
+                        Field::Secret => {
+                            if secret.is_some() {
+                                return Err(Error::duplicate_field("secret"));
+                            }
+                            secret = Some(map.next_value()?);
+                        }
+                    }
+                }
+                let public = public.ok_or_else(|| Error::missing_field("public"))?;
+                let secret = secret.ok_or_else(|| Error::missing_field("secret"))?;
+                Ok(JSElGamalKeypair(ElGamalKeypair { public, secret }))
+            }
+        }
+
+        const FIELDS: &'static [&'static str] = &["public", "secret"];
+        deserializer.deserialize_struct("JSElGamalKeypair", FIELDS, JSElGamalKeypairVisitor)
+    }
+}
+
+#[wasm_bindgen(module = "loglevel")]
 extern "C" {
-    // Use `js_namespace` here to bind `console.log(..)` instead of just
-    // `log(..)`
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
+    fn debug(s: &str);
 }
 
 #[wasm_bindgen]
 pub fn elgamal_keypair_new(signer: &JsValue, address: &JsValue) -> JsValue {
-    log(&format!("Inputs\n\tsigner: {:?}\n\taddress: {:?}", signer, address));
+    debug(&format!("Inputs\n\tsigner: {:?}\n\taddress: {:?}", signer, address));
 
     let signer_bytes: KeypairBytes = signer.into_serde().unwrap();
     let signer = Keypair::from_bytes(&signer_bytes.bytes).unwrap();
     let address: Pubkey = address.into_serde().unwrap();
 
-    log(&format!("Processed Inputs"));
+    debug(&format!("Processed Inputs"));
 
     let kp = ElGamalKeypair::new(&signer, &address).unwrap();
+
+    debug(&format!("Finished compute"));
+
     JsValue::from_serde(&JSElGamalKeypair(kp)).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn elgamal_decrypt_u32(elgamal_keypair: &JsValue, ciphertext: &JsValue) -> JsValue {
+    debug(&format!("Inputs\n\telgamal_keypair: {:?}\n\tciphertext: {:?}", elgamal_keypair, ciphertext));
+
+    let elgamal_keypair: JSElGamalKeypair = elgamal_keypair.into_serde().unwrap();
+    let ciphertext_bytes: ElGamalCiphertextBytes = ciphertext.into_serde().unwrap();
+
+    debug(&format!("Processed Inputs"));
+
+    let res = elgamal_keypair.0.secret.decrypt_u32(
+        &private_metadata::zk_token_elgamal::pod::ElGamalCiphertext(ciphertext_bytes.bytes).try_into().unwrap(),
+    ).unwrap();
+
+    debug(&format!("Finished compute"));
+
+    JsValue::from_serde(&res.to_le_bytes()).unwrap()
 }

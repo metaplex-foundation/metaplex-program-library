@@ -139,7 +139,7 @@ impl ElGamal {
 }
 
 /// A (twisted) ElGamal encryption keypair.
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct ElGamalKeypair {
     /// The public half of this keypair.
     pub public: ElGamalPubkey,
