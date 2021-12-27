@@ -1,27 +1,29 @@
-use crate::{
-    error::MetaplexError,
-    state::{
-        Key, PrintingV2CalculationCheckReturn, PrintingV2CalculationChecks, WinningConfigType,
-        MAX_PRIZE_TRACKING_TICKET_SIZE, PREFIX,
+use {
+    crate::{
+        error::MetaplexError,
+        state::{
+            Key, PrintingV2CalculationCheckReturn, PrintingV2CalculationChecks, WinningConfigType,
+            MAX_PRIZE_TRACKING_TICKET_SIZE, PREFIX,
+        },
+        utils::{
+            assert_derivation, assert_is_ata, assert_owned_by, common_redeem_checks,
+            common_redeem_finish, create_or_allocate_account_raw, get_amount_from_token_account,
+            CommonRedeemCheckArgs, CommonRedeemFinishArgs, CommonRedeemReturn,
+        },
     },
-    utils::{
-        assert_derivation, assert_is_ata, assert_owned_by, common_redeem_checks,
-        common_redeem_finish, create_or_allocate_account_raw, get_amount_from_token_account,
-        CommonRedeemCheckArgs, CommonRedeemFinishArgs, CommonRedeemReturn,
+    arrayref::{array_mut_ref, array_ref, mut_array_refs},
+    mpl_auction::processor::AuctionData,
+    mpl_token_metadata::{
+        instruction::mint_edition_from_master_edition_via_vault_proxy,
+        utils::get_supply_off_master_edition,
     },
-};
-use arrayref::{array_mut_ref, array_ref, mut_array_refs};
-use mpl_auction::processor::AuctionData;
-use mpl_token_metadata::{
-    instruction::mint_edition_from_master_edition_via_vault_proxy,
-    utils::get_supply_off_master_edition,
-};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    program::invoke_signed,
-    program_error::ProgramError,
-    pubkey::Pubkey,
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        program::invoke_signed,
+        program_error::ProgramError,
+        pubkey::Pubkey,
+    },
 };
 
 #[allow(clippy::too_many_arguments)]

@@ -1,18 +1,20 @@
-use crate::{
-    error::MetaplexError,
-    instruction::EndAuctionArgs as MetaplexEndAuctionArgs,
-    state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
-    utils::{assert_authority_correct, assert_owned_by},
-};
-use mpl_auction::{
-    instruction::{end_auction_instruction, EndAuctionArgs},
-    processor::{AuctionData, AuctionDataExtended, BidState},
-};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    program::invoke_signed,
-    pubkey::Pubkey,
+use {
+    crate::{
+        error::MetaplexError,
+        instruction::EndAuctionArgs as MetaplexEndAuctionArgs,
+        state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
+        utils::{assert_authority_correct, assert_owned_by},
+    },
+    mpl_auction::{
+        instruction::{end_auction_instruction, EndAuctionArgs},
+        processor::{AuctionData, AuctionDataExtended, BidState},
+    },
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        program::invoke_signed,
+        pubkey::Pubkey,
+    },
 };
 
 pub fn issue_end_auction<'a>(

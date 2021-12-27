@@ -1,38 +1,41 @@
-use crate::{
-    error::MetaplexError,
-    state::{
-        get_auction_manager, AuctionManager, AuctionManagerStatus, BidRedemptionTicket, Key,
-        OriginalAuthorityLookup, Store, WhitelistedCreator, PREFIX,
+use {
+    crate::{
+        error::MetaplexError,
+        state::{
+            get_auction_manager, AuctionManager, AuctionManagerStatus, BidRedemptionTicket, Key,
+            OriginalAuthorityLookup, Store, WhitelistedCreator, PREFIX,
+        },
     },
-};
-use arrayref::array_ref;
-use borsh::BorshDeserialize;
-use mpl_auction::{
-    instruction::end_auction_instruction,
-    processor::{
-        end_auction::EndAuctionArgs, AuctionData, AuctionDataExtended, AuctionState, BidderMetadata,
+    arrayref::array_ref,
+    borsh::BorshDeserialize,
+    mpl_auction::{
+        instruction::end_auction_instruction,
+        processor::{
+            end_auction::EndAuctionArgs, AuctionData, AuctionDataExtended, AuctionState,
+            BidderMetadata,
+        },
     },
+    mpl_token_metadata::{
+        instruction::update_metadata_accounts,
+        state::{Metadata, EDITION},
+    },
+    mpl_token_vault::{instruction::create_withdraw_tokens_instruction, state::Vault},
+    solana_program::{
+        account_info::AccountInfo,
+        borsh::try_from_slice_unchecked,
+        entrypoint::ProgramResult,
+        log::sol_log_compute_units,
+        msg,
+        program::{invoke, invoke_signed},
+        program_error::ProgramError,
+        program_pack::{IsInitialized, Pack},
+        pubkey::Pubkey,
+        system_instruction,
+        sysvar::{rent::Rent, Sysvar},
+    },
+    spl_token::instruction::{set_authority, AuthorityType},
+    std::{convert::TryInto, str::FromStr},
 };
-use mpl_token_metadata::{
-    instruction::update_metadata_accounts,
-    state::{Metadata, EDITION},
-};
-use mpl_token_vault::{instruction::create_withdraw_tokens_instruction, state::Vault};
-use solana_program::{
-    account_info::AccountInfo,
-    borsh::try_from_slice_unchecked,
-    entrypoint::ProgramResult,
-    log::sol_log_compute_units,
-    msg,
-    program::{invoke, invoke_signed},
-    program_error::ProgramError,
-    program_pack::{IsInitialized, Pack},
-    pubkey::Pubkey,
-    system_instruction,
-    sysvar::{rent::Rent, Sysvar},
-};
-use spl_token::instruction::{set_authority, AuthorityType};
-use std::{convert::TryInto, str::FromStr};
 
 /// Cheap method to just grab amount from token account, instead of deserializing entire thing
 pub fn get_amount_from_token_account(
@@ -491,7 +494,8 @@ pub fn assert_safety_deposit_config_valid(
                 ],
             )?;
 
-            if config.data.borrow()[0] != Key::SafetyDepositConfigV1 as u8 {
+            let key = config.data.borrow()[0];
+            if key != Key::SafetyDepositConfigV1 as u8 && key != Key::SafetyDepositConfigV2 as u8 {
                 return Err(MetaplexError::DataTypeMismatch.into());
             }
         }

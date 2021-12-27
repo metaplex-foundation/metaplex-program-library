@@ -1,3 +1,5 @@
+use crate::processor::set_store::process_set_store_v2;
+
 use {
     crate::instruction::MetaplexInstruction,
     borsh::BorshDeserialize,
@@ -16,12 +18,13 @@ use {
     redeem_printing_v2_bid::process_redeem_printing_v2_bid,
     redeem_unused_winning_config_items_as_auctioneer::process_redeem_unused_winning_config_items_as_auctioneer,
     set_auction_cache::process_set_auction_cache,
-    set_store::{process_set_store, process_set_store_v2},
+    set_store::process_set_store,
     set_store_index::process_set_store_index,
     set_whitelisted_creator::process_set_whitelisted_creator,
     solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey},
     start_auction::process_start_auction,
     validate_safety_deposit_box_v2::process_validate_safety_deposit_box_v2,
+    validate_safety_deposit_box_v3::process_validate_safety_deposit_box_v3,
     withdraw_master_edition::process_withdraw_master_edition,
 };
 
@@ -45,6 +48,7 @@ pub mod set_store_index;
 pub mod set_whitelisted_creator;
 pub mod start_auction;
 pub mod validate_safety_deposit_box_v2;
+pub mod validate_safety_deposit_box_v3;
 pub mod withdraw_master_edition;
 
 pub fn process_instruction<'a>(
@@ -164,6 +168,10 @@ pub fn process_instruction<'a>(
         MetaplexInstruction::SetAuctionCache => {
             msg!("Instruction: Set Auction Cache");
             process_set_auction_cache(program_id, accounts)
+        }
+        MetaplexInstruction::ValidateSafetyDepositBoxV3(safety_deposit_config) => {
+            msg!("Instruction: Validate Safety Deposit Box V3");
+            process_validate_safety_deposit_box_v3(program_id, accounts, safety_deposit_config)
         }
     }
 }

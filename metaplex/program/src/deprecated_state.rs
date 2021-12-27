@@ -1,20 +1,23 @@
-use crate::{
-    error::MetaplexError,
-    state::{
-        AuctionManager, AuctionManagerStatus, CommonWinningIndexChecks, CommonWinningIndexReturn,
-        Key, NonWinningConstraint, ParticipationConfigV2, PrintingV2CalculationCheckReturn,
-        PrintingV2CalculationChecks, WinningConfigType, WinningConstraint,
+use {
+    crate::{
+        error::MetaplexError,
+        state::{
+            AuctionManager, AuctionManagerStatus, CommonWinningIndexChecks,
+            CommonWinningIndexReturn, Key, NonWinningConstraint, ParticipationConfigV2,
+            PrintingV2CalculationCheckReturn, PrintingV2CalculationChecks, WinningConfigType,
+            WinningConstraint,
+        },
+        utils::try_from_slice_checked,
     },
-    utils::try_from_slice_checked,
-};
-use arrayref::array_ref;
-use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_auction::processor::AuctionData;
-use mpl_token_metadata::state::Metadata;
-use mpl_token_vault::state::SafetyDepositBox;
-use solana_program::{
-    account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
-    pubkey::Pubkey,
+    arrayref::array_ref,
+    borsh::{BorshDeserialize, BorshSerialize},
+    mpl_auction::processor::AuctionData,
+    mpl_token_metadata::state::Metadata,
+    mpl_token_vault::state::SafetyDepositBox,
+    solana_program::{
+        account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
+        pubkey::Pubkey,
+    },
 };
 
 pub const MAX_WINNERS: usize = 200;
