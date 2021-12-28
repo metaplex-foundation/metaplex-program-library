@@ -1,16 +1,26 @@
 // shared config (dev and prod)
 const { resolve } = require("path");
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx"],
+    fallback: {
+      "crypto": false,
+      "buffer": require.resolve('buffer'),
+    },
   },
   context: resolve(__dirname, "../../src"),
   module: {
     rules: [
       {
-        test: [/\.jsx?$/, /\.tsx?$/],
+        test: /\.tsx?$/,
+        use: ["ts-loader"],
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.jsx?$/,
         use: ["babel-loader"],
         exclude: /node_modules/,
       },
@@ -31,7 +41,17 @@ module.exports = {
       },
     ],
   },
-  plugins: [new HtmlWebpackPlugin({ template: "index.html.ejs" })],
+  plugins: [
+    // Work around for Buffer is undefined:
+    // https://github.com/webpack/changelog-v5/issues/10
+    new webpack.ProvidePlugin({
+        Buffer: ['buffer', 'Buffer'],
+    }),
+    new webpack.ProvidePlugin({
+        process: 'process/browser',
+    }),
+    new HtmlWebpackPlugin({ template: "index.html.ejs" }),
+  ],
   externals: {
     react: "React",
     "react-dom": "ReactDOM",
