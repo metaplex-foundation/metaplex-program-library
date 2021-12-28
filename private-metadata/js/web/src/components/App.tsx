@@ -64,7 +64,7 @@ import init, {
   elgamal_keypair_from_signature,
   elgamal_decrypt_u32,
 } from '../utils/privateMetadata/private_metadata_js';
-import { decodePrivateMetadata } from '../utils/privateSchema';
+import { decodePrivateMetadata, PrivateMetadataAccount } from '../utils/privateSchema';
 import { PRIVATE_METADATA_PROGRAM_ID } from '../utils/ids';
 async function getPrivateMetadata(
   mint: PublicKey,
@@ -107,46 +107,130 @@ async function getElgamalKeypair(
   console.log('Signature {}', bs58.encode(signature));
 
   await init();
-  const elgamalKeypair = elgamal_keypair_from_signature([...signature]);
+  return elgamal_keypair_from_signature([...signature]);
+}
 
-  const privateMetadataKey = await getPrivateMetadata(address);
-  const privateMetadataAccount = await connection.getAccountInfo(privateMetadataKey);
-  const privateMetadata = decodePrivateMetadata(privateMetadataAccount.data);
+async function getCipherKey(
+  connection: Connection,
+  wallet: WalletSigner,
+  address: PublicKey,
+  privateMetadata: PrivateMetadataAccount,
+): Promise<Buffer> {
+  const elgamalKeypair = getElgamalKeypair(connection, wallet, address);
 
-  console.log(privateMetadata);
-
-  const input = Buffer.from(await (await fetch(privateMetadata.uri)).arrayBuffer());
-  const iv = input.slice(0, 16);
-
-  console.log('Initialization vector', iv);
-
-  const key = Buffer.concat(privateMetadata.encryptedCipherKey.map(
+  return Buffer.concat(privateMetadata.encryptedCipherKey.map(
     chunk => (
       Buffer.from(elgamal_decrypt_u32(
         elgamalKeypair,
         { bytes: [...chunk] },
       ))
     )));
-
-  console.log(`Decoded cipher key bytes: ${[...key]}`);
-  console.log(`Decoded cipher key: ${bs58.encode(key)}`);
-
-  return new Uint8Array([]);
 }
 
-import { Button } from 'antd';
+import { Button, Input } from 'antd';
 import { useConnection } from '../contexts/ConnectionContext';
+import { useLocalStorageState } from '../utils/common';
+import * as CryptoJS from 'crypto-js';
 export const Demo = () => {
-  const mint = new PublicKey('D26Pw8hk4eyXCsZWVskA51YF7ntf6LAV2JdhgdSeVy6L');
   const connection = useConnection();
   const wallet = useWallet();
-  console.log('Demo', wallet, connection);
+
+  const [mint, setMint] = useLocalStorageState('mint', '');
+  const [privateMetadata, setPrivateMetadata]
+      = React.useState<PrivateMetadataAccount | null>(null);
+  const [privateImage, setPrivateImage]
+      = React.useState<Buffer | null>(null);
+  const [decryptedImage, setDecryptedImage]
+      = React.useState<Buffer | null>(null);
+
+  const parseAddress = (address: string): PublicKey | null => {
+    try {
+      return new PublicKey(address);
+    } catch {
+      return null;
+    }
+  };
+
+  React.useEffect(() => {
+    const mintKey = parseAddress(mint);
+    if (mintKey === null) return;
+
+    const wrap = async () => {
+      const privateMetadataKey = await getPrivateMetadata(mintKey);
+      const privateMetadataAccount = await connection.getAccountInfo(privateMetadataKey);
+      const privateMetadata = decodePrivateMetadata(privateMetadataAccount.data);
+
+      setPrivateMetadata(privateMetadata);
+    };
+    wrap();
+  }, [connection, mint]);
+
+  React.useEffect(() => {
+    if (privateMetadata === null) return;
+    const wrap = async () => {
+      setPrivateImage(Buffer.from(
+        await (
+          await fetch(privateMetadata.uri)
+        ).arrayBuffer()
+      ));
+    };
+    wrap();
+  }, [privateMetadata]);
+
   return (
     <div className="app">
       <AppBar />
+      <Input
+        id="mint-text-field"
+        value={mint}
+        onChange={(e) => setMint(e.target.value)}
+        style={{ fontFamily: 'Monospace' }}
+      />
+      {privateImage && <img
+        src={"data:image/png;base64," + privateImage.toString('base64')}
+      />}
+      {decryptedImage && <img
+        src={"data:image/png;base64," + decryptedImage.toString('base64')}
+      />}
       <Button
+        disabled={!privateMetadata}
         onClick={() => {
-          console.log(getElgamalKeypair(connection, wallet, mint));
+          if (!privateMetadata) {
+            return;
+          }
+          const mintKey = parseAddress(mint);
+          if (mintKey === null) {
+            console.error(`Failed to parse mint ${mint}`);
+          }
+          const wrap = async () => {
+            const cipherKey = await getCipherKey(
+              connection, wallet, mintKey, privateMetadata);
+            console.log(`Decoded cipher key bytes: ${[...cipherKey]}`);
+            console.log(`Decoded cipher key: ${bs58.encode(cipherKey)}`);
+
+            const input = Buffer.from(await (await fetch(privateMetadata.uri)).arrayBuffer());
+            const AES_BLOCK_SIZE = 16;
+            const iv = input.slice(0, AES_BLOCK_SIZE);
+
+            // expects a base64 encoded string by default (openSSL mode?)
+            // also possible to give a `format: CryptoJS.format.Hex`
+            const ciphertext = input.slice(AES_BLOCK_SIZE).toString('base64');
+            // this can be a string but I couldn't figure out which encoding it
+            // wants so just make it a WordArray
+            const cipherKeyWordArray
+              = CryptoJS.enc.Base64.parse(cipherKey.toString('base64'));
+            const ivWordArray
+              = CryptoJS.enc.Base64.parse(iv.toString('base64'));
+
+            const decrypted = CryptoJS.AES.decrypt(
+              ciphertext,
+              cipherKeyWordArray,
+              { iv: ivWordArray },
+            );
+
+            setDecryptedImage(Buffer.from(decrypted.toString(), 'hex'));
+          }
+          wrap();
         }}
       >
         Decrypt
