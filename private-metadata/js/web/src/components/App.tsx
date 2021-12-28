@@ -12,7 +12,7 @@ import {
 } from './CurrentUserBadge';
 
 import { shortenAddress } from '../utils/common';
-import { Tooltip } from 'antd';
+import { Layout, Tooltip } from 'antd';
 import { CopyOutlined } from '@ant-design/icons';
 
 
@@ -245,6 +245,7 @@ export const App = () => {
       <WalletProvider>
         <SPLTokenListProvider>
         <CoingeckoProvider>
+          <Layout>
           <BrowserRouter>
             <Switch>
               <Route path="/" component={() => (
@@ -252,6 +253,7 @@ export const App = () => {
               )} />
             </Switch>
           </BrowserRouter>
+          </Layout>
         </CoingeckoProvider>
         </SPLTokenListProvider>
       </WalletProvider>

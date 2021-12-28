@@ -13,7 +13,7 @@ import {
   getSolongWallet,
   getTorusWallet,
 } from "@solana/wallet-adapter-wallets";
-import { Button } from "antd";
+import { Button, Collapse } from "antd";
 import React, {
   createContext,
   FC,
@@ -25,9 +25,9 @@ import React, {
   useState,
 } from "react";
 import { notify } from "../../utils/common";
-import { DefaultModal } from "../../components/DefaultModal";
+import { MetaplexModal } from "../../components/MetaplexModal";
 
-import "./wallet.css";
+const { Panel } = Collapse;
 
 export interface WalletModalContextState {
   visible: boolean;
@@ -45,77 +45,116 @@ export function useWalletModal(): WalletModalContextState {
 export const WalletModal: FC = () => {
   const { wallets, wallet: selected, select } = useWallet();
   const { visible, setVisible } = useWalletModal();
-  const [ , setShowWallets] = useState(false);
+  const [showWallets, setShowWallets] = useState(false);
   const close = useCallback(() => {
     setVisible(false);
     setShowWallets(false);
   }, [setVisible, setShowWallets]);
 
+  const phatomWallet = useMemo(() => getPhantomWallet(), []);
+
   return (
-    <DefaultModal visible={visible} onCancel={close}>
-      <div
+    <MetaplexModal title="Connect Wallet" visible={visible} onCancel={close}>
+      <span
         style={{
-          background:
-            "linear-gradient(180deg, #D329FC 0%, #8F6DDE 49.48%, #19E6AD 100%)",
-          borderRadius: 36,
-          width: 50,
-          height: 50,
-          textAlign: "center",
-          verticalAlign: "middle",
-          fontWeight: 700,
-          fontSize: "1.3rem",
-          lineHeight: 2.4,
-          marginBottom: 10,
-        }}
-      ></div>
-      <h2
-        style={{
-          color: "white",
-          fontWeight: "bold",
-          fontSize: "1.2rem",
+          color: 'rgba(255, 255, 255, 0.75)',
+          fontSize: '14px',
+          lineHeight: '14px',
+          fontFamily: 'GraphikWeb',
+          letterSpacing: '0.02em',
+          marginBottom: 14,
         }}
       >
-        {selected ? "Change provider" : ""}
-      </h2>
-      <p style={{ color: "white", fontSize: "1rem"}}>
-        {selected
-          ? "Choose from the following options:"
-          : "Please sign into your wallet"}
-      </p>
+        RECOMMENDED
+      </span>
 
-      <br />
-      {wallets.map((wallet) => {
-        return (
-          <Button
-            key={wallet.name}
-            size="large"
-            type={wallet === selected ? "primary" : "ghost"}
-            onClick={() => {
-              select(wallet.name);
-              close();
-            }}
-            icon={
-              <img
-                alt={`${wallet.name}`}
-                width={20}
-                height={20}
-                src={wallet.icon}
-                style={{ marginRight: 30, float: "left" }}
+      <Button
+        className="phantom-button metaplex-button"
+        onClick={() => {
+          console.log(phatomWallet.name);
+          select(phatomWallet.name);
+          close();
+        }}
+      >
+        <img src={phatomWallet?.icon} style={{ width: '1.2rem' }} />
+        &nbsp;Connect to Phantom
+      </Button>
+      <Collapse
+        ghost
+        expandIcon={panelProps =>
+          panelProps.isActive ? (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15 7.5L10 12.5L5 7.5"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               />
-            }
-            style={{
-              display: "block",
-              width: "100%",
-              textAlign: "left",
-              marginBottom: 8,
-              color: "white",
-            }}
-          >
-            {wallet.name}
-          </Button>
-        );
-      })}
-    </DefaultModal>
+            </svg>
+          ) : (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M7.5 5L12.5 10L7.5 15"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )
+        }
+      >
+        <Panel
+          header={
+            <span
+              style={{
+                fontWeight: 600,
+                fontSize: '16px',
+                lineHeight: '16px',
+                letterSpacing: '-0.01em',
+                color: 'rgba(255, 255, 255, 255)',
+              }}
+            >
+              Other Wallets
+            </span>
+          }
+          key="1"
+        >
+          {wallets.map((wallet, idx) => {
+            if (wallet.name === 'Phantom') return null;
+
+            return (
+              <Button
+                key={idx}
+                className="metaplex-button w100"
+                style={{
+                  marginBottom: 5,
+                }}
+                onClick={() => {
+                  select(wallet.name);
+                  close();
+                }}
+              >
+                Connect to {wallet.name}
+              </Button>
+            );
+          })}
+        </Panel>
+      </Collapse>
+    </MetaplexModal>
   );
 };
 
@@ -172,13 +211,6 @@ export const WalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
     () => [
       getPhantomWallet(),
       getSolflareWallet(),
-      getTorusWallet({
-        options: {
-          clientId:
-            "BEB_D44HovHuXH0Ace97QVqSu1ahCKndjpGhzhVcMy_9XmDTbHyqTbzQTufcyaN0kFwtlVbfPzJwpJXg94gWJqE",
-          uxMode: "redirect",
-        },
-      }),
       getLedgerWallet(),
       getSolongWallet(),
       getMathWallet(),
