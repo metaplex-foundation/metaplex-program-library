@@ -58,9 +58,30 @@ export const AppBar = () => {
 };
 
 import { WalletSigner } from "../contexts/WalletContext";
-import { PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import * as bs58 from 'bs58';
+import init, {
+  elgamal_keypair_from_signature,
+  elgamal_decrypt_u32,
+} from '../utils/privateMetadata/private_metadata_js';
+import { decodePrivateMetadata } from '../utils/privateSchema';
+import { PRIVATE_METADATA_PROGRAM_ID } from '../utils/ids';
+async function getPrivateMetadata(
+  mint: PublicKey,
+): Promise<PublicKey> {
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        mint.toBuffer(),
+      ],
+      PRIVATE_METADATA_PROGRAM_ID,
+    )
+  )[0];
+};
+
 async function getElgamalKeypair(
+  connection: Connection,
   wallet: WalletSigner,
   address: PublicKey,
 ): Promise<Uint8Array> {
@@ -85,20 +106,47 @@ async function getElgamalKeypair(
   }
   console.log('Signature {}', bs58.encode(signature));
 
+  await init();
+  const elgamalKeypair = elgamal_keypair_from_signature([...signature]);
+
+  const privateMetadataKey = await getPrivateMetadata(address);
+  const privateMetadataAccount = await connection.getAccountInfo(privateMetadataKey);
+  const privateMetadata = decodePrivateMetadata(privateMetadataAccount.data);
+
+  console.log(privateMetadata);
+
+  const input = Buffer.from(await (await fetch(privateMetadata.uri)).arrayBuffer());
+  const iv = input.slice(0, 16);
+
+  console.log('Initialization vector', iv);
+
+  const key = Buffer.concat(privateMetadata.encryptedCipherKey.map(
+    chunk => (
+      Buffer.from(elgamal_decrypt_u32(
+        elgamalKeypair,
+        { bytes: [...chunk] },
+      ))
+    )));
+
+  console.log(`Decoded cipher key bytes: ${[...key]}`);
+  console.log(`Decoded cipher key: ${bs58.encode(key)}`);
+
   return new Uint8Array([]);
 }
 
 import { Button } from 'antd';
+import { useConnection } from '../contexts/ConnectionContext';
 export const Demo = () => {
   const mint = new PublicKey('D26Pw8hk4eyXCsZWVskA51YF7ntf6LAV2JdhgdSeVy6L');
+  const connection = useConnection();
   const wallet = useWallet();
-  console.log('Demo', wallet);
+  console.log('Demo', wallet, connection);
   return (
     <div className="app">
       <AppBar />
       <Button
         onClick={() => {
-          console.log(getElgamalKeypair(wallet, mint));
+          console.log(getElgamalKeypair(connection, wallet, mint));
         }}
       >
         Decrypt
@@ -108,7 +156,6 @@ export const Demo = () => {
 }
 
 export const App = () => {
-  console.log('App');
   return (
     <ConnectionProvider>
       <WalletProvider>
