@@ -1,61 +1,18 @@
 import * as React from "react";
-import { BrowserRouter, Switch, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Switch, Route } from 'react-router-dom';
 import { hot } from "react-hot-loader";
 
 import { CoingeckoProvider } from '../contexts/coingecko';
 import { ConnectionProvider } from '../contexts/ConnectionContext';
 import { SPLTokenListProvider } from '../contexts/tokenList';
 import { WalletProvider } from '../contexts/WalletContext';
-import {
-  Cog,
-  CurrentUserBadge,
-} from './CurrentUserBadge';
+import { AppLayout } from './Layout';
 
 import { shortenAddress } from '../utils/common';
 import { Layout, Tooltip } from 'antd';
 import { CopyOutlined } from '@ant-design/icons';
 
-
-import { ConnectButton } from './ConnectButton';
-import { useWallet } from '@solana/wallet-adapter-react';
-export const LogoLink = () => {
-  return (
-    <Link to={`/`}>
-      <p className={"janus-logo"}>Janus</p>
-    </Link>
-  );
-};
-
-export const AppBar = () => {
-  const { connected } = useWallet();
-  return (
-    <>
-      <div id="desktop-navbar">
-        <div className="app-left">
-          <LogoLink />
-        </div>
-        <div className="app-right">
-          {/*!connected && (
-            <HowToBuyModal buttonClassName="modal-button-default" />
-          )*/}
-          {!connected && (
-            <ConnectButton style={{ height: 48 }} allowWalletChange />
-          )}
-          {connected && (
-            <>
-              <CurrentUserBadge
-                showBalance={false}
-                showAddress={true}
-                iconSize={24}
-              />
-              <Cog />
-            </>
-          )}
-        </div>
-      </div>
-    </>
-  );
-};
+const { Header, Content } = Layout;
 
 import { WalletSigner } from "../contexts/WalletContext";
 import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
@@ -128,6 +85,7 @@ async function getCipherKey(
 }
 
 import { Button, Input } from 'antd';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '../contexts/ConnectionContext';
 import { useLocalStorageState } from '../utils/common';
 import * as CryptoJS from 'crypto-js';
@@ -179,7 +137,6 @@ export const Demo = () => {
 
   return (
     <div className="app">
-      <AppBar />
       <Input
         id="mint-text-field"
         value={mint}
@@ -193,6 +150,7 @@ export const Demo = () => {
         src={"data:image/png;base64," + decryptedImage.toString('base64')}
       />}
       <Button
+        className="metaplex-button"
         disabled={!privateMetadata}
         onClick={() => {
           if (!privateMetadata) {
@@ -242,21 +200,21 @@ export const Demo = () => {
 export const App = () => {
   return (
     <BrowserRouter>
-      <Switch>
-        <ConnectionProvider>
-        <WalletProvider>
-        <SPLTokenListProvider>
-        <CoingeckoProvider>
-          <Layout>
-              <Route path="/" component={() => (
-                <Demo />
-              )} />
-          </Layout>
-        </CoingeckoProvider>
-        </SPLTokenListProvider>
-        </WalletProvider>
-        </ConnectionProvider>
-      </Switch>
+      <ConnectionProvider>
+      <WalletProvider>
+      <SPLTokenListProvider>
+      <CoingeckoProvider>
+        <AppLayout>
+          <Switch>
+            <Route path="/" component={() => (
+              <Demo />
+            )} />
+          </Switch>
+        </AppLayout>
+      </CoingeckoProvider>
+      </SPLTokenListProvider>
+      </WalletProvider>
+      </ConnectionProvider>
     </BrowserRouter>
   );
 }

@@ -3,6 +3,10 @@
   font-family: 'GraphikWeb';
 }
 
+p {
+  margin: 0;
+}
+
 .ant-btn {
   height: 56px;
   font-weight: 600;
@@ -47,12 +51,6 @@
       color: #ffffff;
     }
   }
-}
-
-.ant-btn-primary:hover, .ant-btn-primary:focus {
-  color: #5969d4;
-  background: transparent;
-  border-color: #5969d4;
 }
 
 .metaplex-button {
@@ -294,5 +292,24 @@
         }
       }
     }
+  }
+}
+
+.connector {
+  color: #121212;
+  border-color: #121212;
+  background: white !important;
+  box-shadow: 0 0 24px rgba(26, 26, 26, 0.12);
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-family: "SF Pro Text";
+  font-style: normal;
+  font-weight: 600;
+  height: fit-content;
+
+  &:hover, &:focus {
+    background: transparent !important;
+    border-color: #FFFFFF;
+    color: #FFFFFF;
   }
 }
