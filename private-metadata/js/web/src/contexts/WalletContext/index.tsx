@@ -2,6 +2,7 @@ import { WalletAdapter, WalletError } from "@solana/wallet-adapter-base";
 import {
   useWallet,
   WalletProvider as BaseWalletProvider,
+  WalletContextState,
 } from "@solana/wallet-adapter-react";
 import {
   getLedgerWallet,
@@ -193,7 +194,6 @@ export const WalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
       description: error.message,
     });
   }, []);
-  console.log(children);
 
   return (
     <BaseWalletProvider wallets={wallets} onError={onError} autoConnect>
@@ -203,6 +203,6 @@ export const WalletProvider: FC<{ children: ReactNode }> = ({ children }) => {
 };
 
 export type WalletSigner = Pick<
-  WalletAdapter,
-  "publicKey" | "signTransaction" | "signAllTransactions"
+  WalletContextState,
+  "publicKey" | "signTransaction" | "signAllTransactions" | "signMessage"
 >;
