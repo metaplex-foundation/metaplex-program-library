@@ -241,23 +241,23 @@ export const Demo = () => {
 
 export const App = () => {
   return (
-    <ConnectionProvider>
-      <WalletProvider>
+    <BrowserRouter>
+      <Switch>
+        <ConnectionProvider>
+        <WalletProvider>
         <SPLTokenListProvider>
         <CoingeckoProvider>
           <Layout>
-          <BrowserRouter>
-            <Switch>
               <Route path="/" component={() => (
                 <Demo />
               )} />
-            </Switch>
-          </BrowserRouter>
           </Layout>
         </CoingeckoProvider>
         </SPLTokenListProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+        </WalletProvider>
+        </ConnectionProvider>
+      </Switch>
+    </BrowserRouter>
   );
 }
 

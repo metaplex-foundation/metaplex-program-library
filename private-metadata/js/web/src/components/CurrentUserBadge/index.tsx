@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
@@ -29,11 +29,7 @@ import {
   formatUSD,
   shortenAddress,
 } from '../../utils/common';
-
-export function useQuerySearch() {
-  const { search } = useLocation();
-  return useMemo(() => new URLSearchParams(search), [search]);
-}
+import { useQuerySearch } from '../../hooks/useQuerySearch';
 
 export const Identicon = (props: {
   address?: string | PublicKey;
@@ -448,7 +444,7 @@ export const Cog = () => {
                 window.location.hash = nextLocationHash;
                 window.location.reload();
               }}
-              value={endpoint}
+              value={endpoint.name}
               bordered={false}
               style={{
                 background: 'rgba(255, 255, 255, 0.05)',
@@ -458,7 +454,7 @@ export const Cog = () => {
               }}
             >
               {ENDPOINTS.map(({ name }) => (
-                <Select.Option value={name} key={endpoint}>
+                <Select.Option value={name} key={name}>
                   {name}
                 </Select.Option>
               ))}
