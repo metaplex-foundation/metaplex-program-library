@@ -2,7 +2,6 @@
 const { resolve } = require("path");
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const WorkerPlugin = require('worker-plugin');
 
 module.exports = {
   resolve: {
@@ -15,6 +14,10 @@ module.exports = {
   context: resolve(__dirname, "../../src"),
   module: {
     rules: [
+      {
+        test: /\.decryptWorker.js$/,
+        use: ["worker-loader"],
+      },
       {
         test: /\.tsx?$/,
         use: ["ts-loader"],
@@ -58,7 +61,6 @@ module.exports = {
     ],
   },
   plugins: [
-    new WorkerPlugin(),
     // Work around for Buffer is undefined:
     // https://github.com/webpack/changelog-v5/issues/10
     new webpack.ProvidePlugin({

@@ -67,6 +67,6 @@
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.6.0",
     "webpack-merge": "^5.8.0",
-    "worker-plugin": "^5.0.1"
+    "worker-loader": "^3.0.8"
   }
 }
