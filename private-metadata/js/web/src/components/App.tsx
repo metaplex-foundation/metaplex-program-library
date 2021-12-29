@@ -30,7 +30,7 @@ import {
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
 import * as bs58 from 'bs58';
-import { explorerLinkFor } from '../utils/transactions';
+import { explorerLinkFor, sendSignedTransaction } from '../utils/transactions';
 import {
   decodePrivateMetadata,
   decodeTransferBuffer,
@@ -353,19 +353,10 @@ export const Demo = () => {
     wrap();
   }, [privateMetadata, cipherKey]);
 
-  const sendTransactionWithNotify = async (
-    ixs: Array<TransactionInstruction>,
-    signers: Array<Keypair>,
+  const notifyResult = (
+    result: { txid: string } | string,
     name: string,
   ) => {
-    const result = await sendTransactionWithRetry(
-      connection,
-      wallet,
-      ixs,
-      signers,
-    );
-
-    console.log(result);
     if (typeof result === "string") {
       notify({
         message: `${name} failed`,
@@ -385,6 +376,22 @@ export const Demo = () => {
 
       return result.txid;
     }
+  }
+
+  const sendTransactionWithNotify = async (
+    ixs: Array<TransactionInstruction>,
+    signers: Array<Keypair>,
+    name: string,
+  ) => {
+    const result = await sendTransactionWithRetry(
+      connection,
+      wallet,
+      ixs,
+      signers,
+    );
+
+    console.log(result);
+    return notifyResult(result, name);
   };
 
   const { TextArea } = Input;
@@ -608,21 +615,114 @@ export const Demo = () => {
                 throw new Error(transferChunkTxsRes.Err);
               }
 
-              const transferChunkTxs = transferChunkTxsRes.Ok;
+              const [transferChunkTxs, transferDataBytes] = transferChunkTxsRes.Ok;
 
-              // fixup rent
+              // fixup rent and keys
               for (const tx of transferChunkTxs) {
                 for (const ix of tx.instructions) {
-                  if (!new PublicKey(ix.program_id).equals(SystemProgram.programId)) {
+                  ix.program_id = new PublicKey(ix.program_id);
+                  for (const meta of ix.accounts) {
+                    meta.pubkey = new PublicKey(meta.pubkey);
+                  }
+
+                  if (!ix.program_id.equals(SystemProgram.programId)) {
                     continue;
                   }
                   const space = new BN(ix.data.slice(12, 20), 'le').toNumber();
                   const lamports = await connection.getMinimumBalanceForRentExemption(space);
                   ix.data.splice(4, 8, ...new BN(lamports).toArray('le', 8));
                 }
+
+                for (let signer of tx.signers) {
+                  signer = new PublicKey(signer);
+                }
               }
 
+              // build the verification ix
+              const privateMetadataKey = await getPrivateMetadata(mintKey);
+              transferChunkTxs.push({
+                instructions: [
+                  new TransactionInstruction({
+                    programId: PRIVATE_METADATA_PROGRAM_ID,
+                    keys: [
+                      {
+                        pubkey: walletKey,
+                        isSigner: true,
+                        isWritable: false,
+                      },
+                      {
+                        pubkey: privateMetadataKey,
+                        isSigner: false,
+                        isWritable: false,
+                      },
+                      {
+                        pubkey: transferBufferKeypair.publicKey,
+                        isSigner: false,
+                        isWritable: true,
+                      },
+                      {
+                        pubkey: instructionBufferPubkey,
+                        isSigner: false,
+                        isWritable: false,
+                      },
+                      {
+                        pubkey: inputBufferKeypair.publicKey,
+                        isSigner: false,
+                        isWritable: false,
+                      },
+                      {
+                        pubkey: computeBufferKeypair.publicKey,
+                        isSigner: false,
+                        isWritable: false,
+                      },
+                      {
+                        pubkey: SystemProgram.programId,
+                        isSigner: false,
+                        isWritable: false,
+                      },
+                    ],
+                    data: Buffer.from([
+                      4,  // TransferChunkSlow...
+                      ...transferDataBytes,
+                    ]),
+                  }),
+                ],
+                signers: [walletKey],
+              })
+
               console.log(transferChunkTxs);
+
+              // sign this group...
+              const recentBlockhash = (
+                await connection.getRecentBlockhash()
+              ).blockhash;
+              const txns: Array<Transaction> = [];
+              for (const txParams of transferChunkTxs) {
+                const transaction = new Transaction();
+                for (const ix of txParams.instructions) {
+                  transaction.add(ix);
+                }
+                transaction.recentBlockhash = recentBlockhash;
+                transaction.setSigners(...txParams.signers);
+
+                for (const s of [inputBufferKeypair, computeBufferKeypair]) {
+                  if (txParams.signers.find((p: PublicKey) => s.publicKey.equals(p))) {
+                    transaction.partialSign(s);
+                  }
+                }
+                txns.push(transaction);
+              }
+
+              console.log('Singing transactions...');
+              const signedTxns = await wallet.signAllTransactions(txns);
+              for (let i = 0; i < signedTxns.length; ++i) {
+                const result = await sendSignedTransaction({
+                  connection,
+                  signedTransaction: signedTxns[i],
+                });
+
+                notifyResult(result, `Transfer crank ${i + 1} of ${signedTxns.length}`);
+              }
 
             } catch (err) {
               notify({
