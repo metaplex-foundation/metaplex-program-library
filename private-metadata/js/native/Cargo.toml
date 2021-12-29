@@ -10,9 +10,12 @@ crate-type = ["cdylib"]
 
 [dependencies]
 bincode = "1"
+console_error_panic_hook = "0.1.7"
 curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
 memmap = { path = "/Users/lwu/code/solana/memmap-rs" }
 private-metadata = { path = "../../program", default-features = false, features = ["no-entrypoint"] }
+getrandom = { version = "0.2", features = ["js"] }
+rand_core = { version = "0.6.3" }
 serde = { version = "1.0", default-features = false, features = ["alloc"] }
 sha3 = "0.9"
 solana-sdk = { version = "1.7.15", default-features = false }

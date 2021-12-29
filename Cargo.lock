@@ -511,6 +511,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "console_error_panic_hook"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
+dependencies = [
+ "cfg-if 1.0.0",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "constant_time_eq"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -700,7 +710,7 @@ version = "3.2.0"
 dependencies = [
  "byteorder",
  "digest 0.9.0",
- "rand_core 0.5.1",
+ "rand_core 0.6.3",
  "serde",
  "subtle",
  "zeroize",
@@ -729,7 +739,7 @@ dependencies = [
  "digest 0.9.0",
  "num-derive",
  "num-traits",
- "rand_core 0.5.1",
+ "rand_core 0.6.3",
  "solana-program",
  "subtle",
  "zeroize",
@@ -1200,8 +1210,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7fcd999463524c52659517fe2cea98493cfe485d10565e7b0fb07dbba7ad2753"
 dependencies = [
  "cfg-if 1.0.0",
+ "js-sys",
  "libc",
  "wasi 0.10.2+wasi-snapshot-preview1",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -1704,7 +1716,7 @@ version = "2.0.0"
 dependencies = [
  "byteorder",
  "keccak",
- "rand_core 0.5.1",
+ "rand_core 0.6.3",
  "zeroize",
 ]
 
@@ -2200,7 +2212,7 @@ dependencies = [
  "merlin",
  "num-derive",
  "num-traits",
- "rand 0.7.3",
+ "rand_core 0.6.3",
  "serde",
  "serde_json",
  "sha3",
@@ -2246,9 +2258,12 @@ name = "private-metadata-js"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "console_error_panic_hook",
  "curve25519-dalek 3.2.0",
+ "getrandom 0.2.3",
  "memmap",
  "private-metadata",
+ "rand_core 0.6.3",
  "serde",
  "sha3",
  "solana-sdk",

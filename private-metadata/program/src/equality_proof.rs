@@ -1,6 +1,6 @@
 #[cfg(not(target_arch = "bpf"))]
 use {
-    rand::rngs::OsRng,
+    rand_core::{OsRng},
     crate::encryption::{
         elgamal::{ElGamalKeypair},
         pedersen::{PedersenOpening},

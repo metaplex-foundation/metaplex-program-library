@@ -21,7 +21,7 @@ use {
 };
 #[cfg(not(target_arch = "bpf"))]
 use {
-    rand::{rngs::OsRng, CryptoRng, RngCore},
+    rand_core::{OsRng, CryptoRng, RngCore},
     sha3::Sha3_512,
     solana_sdk::{
         instruction::Instruction,

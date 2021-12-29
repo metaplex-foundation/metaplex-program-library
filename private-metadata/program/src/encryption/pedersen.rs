@@ -1,5 +1,5 @@
 #[cfg(not(target_arch = "bpf"))]
-use rand::{rngs::OsRng, CryptoRng, RngCore};
+use rand_core::{OsRng, CryptoRng, RngCore};
 use {
     crate::encryption::elgamal::ElGamalPubkey,
     core::ops::{Add, Div, Mul, Sub},

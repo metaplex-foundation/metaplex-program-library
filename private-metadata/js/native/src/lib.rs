@@ -1,5 +1,6 @@
 
 extern crate bincode;
+extern crate console_error_panic_hook;
 extern crate curve25519_dalek;
 extern crate private_metadata;
 #[macro_use]
@@ -273,16 +274,23 @@ pub fn transfer_chunk_txs(
         let recipient_elgamal_pubkey: ElGamalPubkey = recipient_elgamal_pubkey.into_serde().map_err(to_string)?;
         let ciphertext_bytes: ElGamalCiphertextBytes = ciphertext.into_serde().map_err(to_string)?;
         let decrypted_word: u32 = decrypted_word.into_serde().map_err(to_string)?;
+        debug(&format!("Processing accounts"));
         let accounts: TransferChunkAccounts = accounts.into_serde().map_err(to_string)?;
 
         debug(&format!("Processed Inputs"));
+
+        let ct =  pod::ElGamalCiphertext(ciphertext_bytes.bytes).try_into().map_err(to_string)?;
+
+        debug(&format!("Build ct"));
 
         let transfer = private_metadata::transfer_proof::TransferData::new(
             &elgamal_keypair.0,
             recipient_elgamal_pubkey,
             decrypted_word,
-            pod::ElGamalCiphertext(ciphertext_bytes.bytes).try_into().map_err(to_string)?,
+            ct,
         );
+
+        debug(&format!("Built transfer proof"));
 
         let txs = private_metadata::instruction::transfer_chunk_slow_proof(
             &accounts.payer,
