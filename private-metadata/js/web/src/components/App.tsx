@@ -96,6 +96,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '../contexts/ConnectionContext';
 import { useLocalStorageState } from '../utils/common';
 import * as CryptoJS from 'crypto-js';
+import { drawArray } from '../utils/image';
 export const Demo = () => {
   const connection = useConnection();
   const wallet = useWallet();
@@ -107,7 +108,7 @@ export const Demo = () => {
   const [privateImage, setPrivateImage]
       = React.useState<Buffer | null>(null);
   const [decryptedImage, setDecryptedImage]
-      = React.useState<Buffer | null>(null);
+      = useLocalStorageState('decryptedImage', '');
 
   const parseAddress = (address: string): PublicKey | null => {
     try {
@@ -151,13 +152,24 @@ export const Demo = () => {
         onChange={(e) => setMint(e.target.value)}
         style={{ fontFamily: 'Monospace' }}
       />
-      {privateImage && <img
-        src={"data:image/png;base64," + privateImage.toString('base64')}
-      />}
-      {decryptedImage && <img
-        src={"data:image/png;base64," + decryptedImage.toString('base64')}
-      />}
+      {privateImage && (
+        <div>
+          <img
+            style={{ margin: 'auto', display: 'block', padding: '30px' }}
+            src={"data:image/bmp;base64," + drawArray(privateImage, 8)}
+          />
+        </div>
+      )}
+      {decryptedImage && (
+        <div>
+          <img
+            style={{ margin: 'auto', display: 'block', paddingBottom: '30px' }}
+            src={"data:image/png;base64," + decryptedImage}
+          />
+        </div>
+      )}
       <Button
+        style={{ width: '100%' }}
         className="metaplex-button"
         disabled={!privateMetadata}
         onClick={() => {
@@ -194,7 +206,7 @@ export const Demo = () => {
               { iv: ivWordArray },
             );
 
-            setDecryptedImage(Buffer.from(decrypted.toString(), 'hex'));
+            setDecryptedImage(Buffer.from(decrypted.toString(), 'hex').toString('base64'));
           }
           wrap();
         }}
