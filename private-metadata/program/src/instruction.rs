@@ -407,6 +407,7 @@ pub fn populate_transfer_proof_dsl<'a, F>(
 }
 
 #[cfg(not(target_arch = "bpf"))]
+#[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct InstructionsAndSignerPubkeys {
     pub instructions: Vec<Instruction>,
     pub signers: Vec<Pubkey>,

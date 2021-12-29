@@ -9,7 +9,8 @@ extern crate solana_sdk;
 extern crate wasm_bindgen;
 
 use curve25519_dalek::scalar::Scalar;
-use private_metadata::encryption::elgamal::ElGamalKeypair;
+use private_metadata::encryption::elgamal::{ElGamalKeypair, ElGamalPubkey};
+use private_metadata::zk_token_elgamal::pod;
 use serde::de::{Deserialize, Deserializer, Visitor, SeqAccess, MapAccess, Error};
 use serde::ser::{Serialize, SerializeStruct, Serializer, SerializeTuple}; // traits
 use sha3::Sha3_512;
@@ -162,6 +163,14 @@ impl<'de> Deserialize<'de> for JSElGamalKeypair {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct TransferChunkAccounts {
+    pub payer: Pubkey,
+    pub instruction_buffer: Pubkey,
+    pub input_buffer: Pubkey,
+    pub compute_buffer: Pubkey,
+}
+
 #[wasm_bindgen(module = "loglevel")]
 extern "C" {
     fn debug(s: &str);
@@ -224,9 +233,8 @@ pub fn elgamal_decrypt_u32(elgamal_keypair: &JsValue, ciphertext: &JsValue) -> J
 
         debug(&format!("Processed Inputs"));
 
-        use private_metadata::zk_token_elgamal::pod::ElGamalCiphertext;
         let res = elgamal_keypair.0.secret.decrypt_u32(
-            &ElGamalCiphertext(ciphertext_bytes.bytes).try_into().map_err(to_string)?,
+            &pod::ElGamalCiphertext(ciphertext_bytes.bytes).try_into().map_err(to_string)?,
         ).ok_or("Failed to decode ciphertext")?;
 
         debug(&format!("Finished compute"));
@@ -235,4 +243,58 @@ pub fn elgamal_decrypt_u32(elgamal_keypair: &JsValue, ciphertext: &JsValue) -> J
     };
 
     JsValue::from_serde(&go().map(|v| v.to_le_bytes())).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn transfer_chunk_txs(
+    elgamal_keypair: &JsValue,
+    recipient_elgamal_pubkey: &JsValue,
+    ciphertext: &JsValue,
+    decrypted_word: &JsValue,
+    accounts: &JsValue,
+) -> JsValue {
+    let go = || -> Result<Vec<private_metadata::instruction::InstructionsAndSignerPubkeys>, String> {
+        debug(&format!("\
+            Inputs\n\
+            \telgamal_keypair: {:?}\n\
+            \trecipient_elgamal_pubkey: {:?}\n\
+            \tciphertext: {:?}\n\
+            \tdecrypted_word: {:?}\n\
+            \taccounts: {:?}\
+            ",
+            elgamal_keypair,
+            recipient_elgamal_pubkey,
+            ciphertext,
+            decrypted_word,
+            accounts,
+        ));
+
+        let elgamal_keypair: JSElGamalKeypair = elgamal_keypair.into_serde().map_err(to_string)?;
+        let recipient_elgamal_pubkey: ElGamalPubkey = recipient_elgamal_pubkey.into_serde().map_err(to_string)?;
+        let ciphertext_bytes: ElGamalCiphertextBytes = ciphertext.into_serde().map_err(to_string)?;
+        let decrypted_word: u32 = decrypted_word.into_serde().map_err(to_string)?;
+        let accounts: TransferChunkAccounts = accounts.into_serde().map_err(to_string)?;
+
+        debug(&format!("Processed Inputs"));
+
+        let transfer = private_metadata::transfer_proof::TransferData::new(
+            &elgamal_keypair.0,
+            recipient_elgamal_pubkey,
+            decrypted_word,
+            pod::ElGamalCiphertext(ciphertext_bytes.bytes).try_into().map_err(to_string)?,
+        );
+
+        let txs = private_metadata::instruction::transfer_chunk_slow_proof(
+            &accounts.payer,
+            &accounts.instruction_buffer,
+            &accounts.input_buffer,
+            &accounts.compute_buffer,
+            &transfer,
+            |len| len as u64,
+        );
+
+        Ok(txs)
+    };
+
+    JsValue::from_serde(&go()).unwrap()
 }
