@@ -298,7 +298,7 @@ pub fn transfer_chunk_txs(
             &accounts.input_buffer,
             &accounts.compute_buffer,
             &transfer,
-            |len| len as u64,
+            |_| u64::MAX,
         ).map_err(to_string)?;
 
         debug(&format!("Finished compute"));

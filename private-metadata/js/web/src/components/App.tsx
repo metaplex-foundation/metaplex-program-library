@@ -37,6 +37,7 @@ import {
   PrivateMetadataAccount,
 } from '../utils/privateSchema';
 import {
+  CURVE_DALEK_ONCHAIN_PROGRAM_ID,
   PRIVATE_METADATA_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
@@ -116,6 +117,42 @@ async function getCipherKey(
       return Buffer.from(result.Ok);
     }))
   ), elgamalKeypair];
+}
+
+const ensureBuffersClosed = async (
+  connection: Connection,
+  walletKey: PublicKey,
+  buffers: Array<PublicKey>,
+) => {
+  const infos = await connection.getMultipleAccountsInfo(buffers);
+  const ixs: Array<TransactionInstruction> = [];
+  for (let idx = 0; idx < buffers.length; ++idx) {
+    if (infos[idx] === null) continue;
+    ixs.push(new TransactionInstruction({
+      programId: CURVE_DALEK_ONCHAIN_PROGRAM_ID,
+      keys: [
+        {
+          pubkey: buffers[idx],
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: walletKey,
+          isSigner: true,
+          isWritable: false,
+        },
+        {
+          pubkey: SystemProgram.programId,
+          isSigner: false,
+          isWritable: false,
+        },
+      ],
+      data: Buffer.from([
+        5,  // CloseBuffer...
+      ]),
+    }));
+  }
+  return ixs;
 }
 
 const initializeTransferBuffer = async (
@@ -254,7 +291,7 @@ export const Demo = () => {
   // async useEffect set
   const [privateMetadata, setPrivateMetadata]
       = React.useState<PrivateMetadataAccount | null>(null);
-  const [elgamalKeypair, setElgamalKeypair]
+  const [elgamalKeypairStr, setElgamalKeypairStr]
       = useLocalStorageState('elgamalKeypair', '');
   const [cipherKey, setCipherKey]
       = useLocalStorageState('cipherKey', '');
@@ -316,6 +353,40 @@ export const Demo = () => {
     wrap();
   }, [privateMetadata, cipherKey]);
 
+  const sendTransactionWithNotify = async (
+    ixs: Array<TransactionInstruction>,
+    signers: Array<Keypair>,
+    name: string,
+  ) => {
+    const result = await sendTransactionWithRetry(
+      connection,
+      wallet,
+      ixs,
+      signers,
+    );
+
+    console.log(result);
+    if (typeof result === "string") {
+      notify({
+        message: `${name} failed`,
+        description: result,
+      });
+
+      return null;
+    } else {
+      notify({
+        message: `${name} succeeded`,
+        description: (
+          <a href={explorerLinkFor(result.txid, connection)}>
+            View transaction on explorer
+          </a>
+        ),
+      });
+
+      return result.txid;
+    }
+  };
+
   const { TextArea } = Input;
 
   return (
@@ -363,7 +434,7 @@ export const Demo = () => {
             console.log(`Decoded cipher key bytes: ${[...cipherKey]}`);
             console.log(`Decoded cipher key: ${bs58.encode(cipherKey)}`);
 
-            setElgamalKeypair(elgamalKeypair.toString('base64'));
+            setElgamalKeypairStr(JSON.stringify(elgamalKeypair));
             setCipherKey(cipherKey.toString('base64'));
           }
           const wrap = async () => {
@@ -433,10 +504,10 @@ export const Demo = () => {
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={!privateMetadata || !wallet?.connected || !elgamalKeypair}
+        disabled={!privateMetadata || !wallet?.connected || !elgamalKeypairStr}
         onClick={() => {
           // TODO: requiring elgamalKeypair from decryption is a bit weird here...
-          if (!privateMetadata || !wallet?.connected || !elgamalKeypair) {
+          if (!privateMetadata || !wallet?.connected || !elgamalKeypairStr) {
             return;
           }
 
@@ -448,6 +519,7 @@ export const Demo = () => {
               if (!res) {
                 throw new Error(`Could not parse ${name} buffer key '${secret}'`);
               }
+              return res;
             }
           }
 
@@ -478,57 +550,79 @@ export const Demo = () => {
                 const createInstructions = await initializeTransferBuffer(
                     connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientElgamalPubkey);
 
-                const createResult = await sendTransactionWithRetry(
-                  connection,
-                  wallet,
+                const createTxid = await sendTransactionWithNotify(
                   createInstructions,
-                  [transferBufferKeypair]
+                  [transferBufferKeypair],
+                  "Transfer buffer create",
                 );
 
-                console.log(createResult);
-                if (typeof createResult === "string") {
-                  notify({
-                    message: "Transfer buffer create failed",
-                    description: createResult,
-                  });
-                  return;
-                } else {
-                  notify({
-                    message: "Transfer buffer create succeeded",
-                    description: (
-                      <a href={explorerLinkFor(createResult.txid, connection)}>
-                        View transaction on explorer
-                      </a>
-                    ),
-                  });
-                }
+                await connection.confirmTransaction(createTxid, "max");
 
                 transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
               }
 
-              const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
+              const closeIxs = await ensureBuffersClosed(
+                connection,
+                walletKey,
+                [inputBufferKeypair.publicKey, computeBufferKeypair.publicKey],
+              );
+              if (closeIxs.length !== 0) {
+                const closeTxid = await sendTransactionWithNotify(
+                  closeIxs,
+                  [],
+                  "Input and compute buffer close",
+                );
 
+                await connection.confirmTransaction(closeTxid, "max");
+
+              }
+
+              const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
               if (transferBufferDecoded.updated !== 0) {
                 return;
               }
 
               const chunk = 0;
+              const keychunk = Buffer.from(cipherKey, 'base64')
+                  .slice(chunk * 4, (chunk + 1) * 4);
 
-              const txs = wasm.transferChunkTxs(
+              const elgamalKeypair = JSON.parse(elgamalKeypairStr);
+
+              console.log(elgamalKeypair);
+
+              const transferChunkTxsRes = wasm.transferChunkTxs(
                 elgamalKeypair,
-                recipientElgamalPubkey,
-                [...privateMetadata.encryptedCipherKey[chunk]],
+                [...recipientElgamalPubkey],
+                {bytes: [...privateMetadata.encryptedCipherKey[chunk]]},
                 // TODO: pass buffer and convert on rust side?
-                new BN(cipherKey.slice(chunk * 4, (chunk + 1) * 4), 'le').toNumber(),
+                new BN(keychunk, 'le').toNumber(),
                 {
-                  payer: walletKey,
-                  instruction_buffer: instructionBufferPubkey,
-                  input_buffer: inputBufferKeypair.publicKey,
-                  compute_buffer: computeBufferKeypair.publicKey,
+                  payer: [...walletKey.toBuffer()],
+                  instruction_buffer: [...instructionBufferPubkey.toBuffer()],
+                  input_buffer: [...inputBufferKeypair.publicKey.toBuffer()],
+                  compute_buffer: [...computeBufferKeypair.publicKey.toBuffer()],
                 },
               );
 
-              console.log(txs);
+              if (transferChunkTxsRes.Err) {
+                throw new Error(transferChunkTxsRes.Err);
+              }
+
+              const transferChunkTxs = transferChunkTxsRes.Ok;
+
+              // fixup rent
+              for (const tx of transferChunkTxs) {
+                for (const ix of tx.instructions) {
+                  if (!new PublicKey(ix.program_id).equals(SystemProgram.programId)) {
+                    continue;
+                  }
+                  const space = new BN(ix.data.slice(12, 20), 'le').toNumber();
+                  const lamports = await connection.getMinimumBalanceForRentExemption(space);
+                  ix.data.splice(4, 8, ...new BN(lamports).toArray('le', 8));
+                }
+              }
+
+              console.log(transferChunkTxs);
 
             } catch (err) {
               notify({

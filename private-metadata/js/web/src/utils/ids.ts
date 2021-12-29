@@ -11,3 +11,7 @@ export const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
 export const PRIVATE_METADATA_PROGRAM_ID = new PublicKey(
   '2gx9jYVrYTVJ2qrsnYmcm2AaZmfSTwbmSYgcqb9eohau',
 );
+
+export const CURVE_DALEK_ONCHAIN_PROGRAM_ID = new PublicKey(
+  '5wsqk1gtzFewn4Rx3w9uyYBYUPZJPr2uLTNJ7BGFav5g',
+);
