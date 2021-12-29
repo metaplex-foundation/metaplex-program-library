@@ -99,6 +99,32 @@ async function getCipherKey(
   );
 }
 
+const decryptImage = (
+  encryptedImage: Buffer,
+  cipherKey: Buffer,
+) => {
+  const AES_BLOCK_SIZE = 16;
+  const iv = encryptedImage.slice(0, AES_BLOCK_SIZE);
+
+  // expects a base64 encoded string by default (openSSL mode?)
+  // also possible to give a `format: CryptoJS.format.Hex`
+  const ciphertext = encryptedImage.slice(AES_BLOCK_SIZE).toString('base64');
+  // this can be a string but I couldn't figure out which encoding it
+  // wants so just make it a WordArray
+  const cipherKeyWordArray
+    = CryptoJS.enc.Base64.parse(cipherKey.toString('base64'));
+  const ivWordArray
+    = CryptoJS.enc.Base64.parse(iv.toString('base64'));
+
+  const decrypted = CryptoJS.AES.decrypt(
+    ciphertext,
+    cipherKeyWordArray,
+    { iv: ivWordArray },
+  );
+
+  return Buffer.from(decrypted.toString(), 'hex');
+};
+
 import { Button, Input } from 'antd';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '../contexts/ConnectionContext';
@@ -114,6 +140,8 @@ export const Demo = () => {
   const [mint, setMint] = useLocalStorageState('mint', '');
   const [privateMetadata, setPrivateMetadata]
       = React.useState<PrivateMetadataAccount | null>(null);
+  const [cipherKey, setCipherKey]
+      = useLocalStorageState('cipherKey', '');
   const [privateImage, setPrivateImage]
       = React.useState<Buffer | null>(null);
   const [decryptedImage, setDecryptedImage]
@@ -144,14 +172,25 @@ export const Demo = () => {
   React.useEffect(() => {
     if (privateMetadata === null) return;
     const wrap = async () => {
-      setPrivateImage(Buffer.from(
-        await (
-          await fetch(privateMetadata.uri)
-        ).arrayBuffer()
-      ));
+      let encryptedImage;
+      if (!privateImage) {
+        encryptedImage = Buffer.from(
+          await (
+            await fetch(privateMetadata.uri)
+          ).arrayBuffer()
+        );
+
+        setPrivateImage(encryptedImage);
+      } else {
+        encryptedImage = privateImage;
+      }
+
+      if (cipherKey) {
+        setDecryptedImage(decryptImage(encryptedImage, Buffer.from(cipherKey, 'base64')));
+      }
     };
     wrap();
-  }, [privateMetadata]);
+  }, [privateMetadata, cipherKey]);
 
   return (
     <div className="app stack">
@@ -185,7 +224,7 @@ export const Demo = () => {
         className="metaplex-button"
         disabled={!privateMetadata || !wallet?.connected}
         onClick={() => {
-          if (!privateMetadata) {
+          if (!privateMetadata || !wallet?.connected) {
             return;
           }
           const mintKey = parseAddress(mint);
@@ -198,27 +237,7 @@ export const Demo = () => {
             console.log(`Decoded cipher key bytes: ${[...cipherKey]}`);
             console.log(`Decoded cipher key: ${bs58.encode(cipherKey)}`);
 
-            const input = Buffer.from(await (await fetch(privateMetadata.uri)).arrayBuffer());
-            const AES_BLOCK_SIZE = 16;
-            const iv = input.slice(0, AES_BLOCK_SIZE);
-
-            // expects a base64 encoded string by default (openSSL mode?)
-            // also possible to give a `format: CryptoJS.format.Hex`
-            const ciphertext = input.slice(AES_BLOCK_SIZE).toString('base64');
-            // this can be a string but I couldn't figure out which encoding it
-            // wants so just make it a WordArray
-            const cipherKeyWordArray
-              = CryptoJS.enc.Base64.parse(cipherKey.toString('base64'));
-            const ivWordArray
-              = CryptoJS.enc.Base64.parse(iv.toString('base64'));
-
-            const decrypted = CryptoJS.AES.decrypt(
-              ciphertext,
-              cipherKeyWordArray,
-              { iv: ivWordArray },
-            );
-
-            setDecryptedImage(Buffer.from(decrypted.toString(), 'hex'));
+            setCipherKey(cipherKey.toString('base64'));
           }
           const wrap = async () => {
             try {
@@ -226,7 +245,7 @@ export const Demo = () => {
             } catch (err) {
               // console.error(err);
               notify({
-                message: 'Failed to decrypt image',
+                message: 'Failed to decrypt cipher key',
                 description: err.message,
               })
             }
