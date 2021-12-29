@@ -6,6 +6,7 @@ import { CoingeckoProvider } from '../contexts/coingecko';
 import { ConnectionProvider } from '../contexts/ConnectionContext';
 import { SPLTokenListProvider } from '../contexts/tokenList';
 import { WalletProvider } from '../contexts/WalletContext';
+import { WasmProvider } from '../contexts/WasmContext';
 import { AppLayout } from './Layout';
 
 import { shortenAddress } from '../utils/common';
@@ -15,12 +16,9 @@ import { CopyOutlined } from '@ant-design/icons';
 const { Header, Content } = Layout;
 
 import { WalletSigner } from "../contexts/WalletContext";
+import { useWasmConfig, WasmConfig } from "../contexts/WasmContext";
 import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import * as bs58 from 'bs58';
-import init, {
-  elgamal_keypair_from_signature,
-  elgamal_decrypt_u32,
-} from '../utils/privateMetadata/private_metadata_js';
 import { decodePrivateMetadata, PrivateMetadataAccount } from '../utils/privateSchema';
 import { PRIVATE_METADATA_PROGRAM_ID } from '../utils/ids';
 async function getPrivateMetadata(
@@ -41,6 +39,7 @@ async function getElgamalKeypair(
   connection: Connection,
   wallet: WalletSigner,
   address: PublicKey,
+  wasm: WasmConfig,
 ): Promise<Uint8Array> {
   let transaction = new Transaction();
   transaction.add(new TransactionInstruction({
@@ -63,8 +62,7 @@ async function getElgamalKeypair(
   }
   console.log('Signature {}', bs58.encode(signature));
 
-  await init();
-  return elgamal_keypair_from_signature([...signature]);
+  return wasm.elgamalKeypairFromSignature([...signature]);
 }
 
 async function getCipherKey(
@@ -72,12 +70,14 @@ async function getCipherKey(
   wallet: WalletSigner,
   address: PublicKey,
   privateMetadata: PrivateMetadataAccount,
+  wasm: WasmConfig,
 ): Promise<Buffer> {
-  const elgamalKeypair = getElgamalKeypair(connection, wallet, address);
+  const elgamalKeypair = await getElgamalKeypair(
+    connection, wallet, address, wasm);
 
   return Buffer.concat(privateMetadata.encryptedCipherKey.map(
     chunk => (
-      Buffer.from(elgamal_decrypt_u32(
+      Buffer.from(wasm.elgamalDecryptU32(
         elgamalKeypair,
         { bytes: [...chunk] },
       ))
@@ -92,6 +92,7 @@ import * as CryptoJS from 'crypto-js';
 export const Demo = () => {
   const connection = useConnection();
   const wallet = useWallet();
+  const wasmConfig = useWasmConfig();
 
   const [mint, setMint] = useLocalStorageState('mint', '');
   const [privateMetadata, setPrivateMetadata]
@@ -162,7 +163,7 @@ export const Demo = () => {
           }
           const wrap = async () => {
             const cipherKey = await getCipherKey(
-              connection, wallet, mintKey, privateMetadata);
+              connection, wallet, mintKey, privateMetadata, wasmConfig);
             console.log(`Decoded cipher key bytes: ${[...cipherKey]}`);
             console.log(`Decoded cipher key: ${bs58.encode(cipherKey)}`);
 
@@ -200,6 +201,7 @@ export const Demo = () => {
 export const App = () => {
   return (
     <BrowserRouter>
+      <WasmProvider>
       <ConnectionProvider>
       <WalletProvider>
       <SPLTokenListProvider>
@@ -215,6 +217,7 @@ export const App = () => {
       </SPLTokenListProvider>
       </WalletProvider>
       </ConnectionProvider>
+      </WasmProvider>
     </BrowserRouter>
   );
 }
