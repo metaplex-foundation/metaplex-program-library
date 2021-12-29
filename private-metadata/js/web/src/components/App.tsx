@@ -41,7 +41,7 @@ async function getElgamalKeypair(
   wallet: WalletSigner,
   address: PublicKey,
   wasm: WasmConfig,
-): Promise<Uint8Array> {
+): Promise<any> { // TODO: type
   let transaction = new Transaction();
   transaction.add(new TransactionInstruction({
     programId: address, // mint
@@ -73,8 +73,14 @@ async function getCipherKey(
   privateMetadata: PrivateMetadataAccount,
   wasm: WasmConfig,
 ): Promise<Buffer> {
-  const elgamalKeypair = await getElgamalKeypair(
+  const elgamalKeypairRes = await getElgamalKeypair(
     connection, wallet, address, wasm);
+
+  if (elgamalKeypairRes.Err) {
+    throw new Error(elgamalKeypairRes.Err);
+  }
+
+  const elgamalKeypair = elgamalKeypairRes.Ok;
 
   return Buffer.concat(await Promise.all(privateMetadata.encryptedCipherKey.map(
     async (chunk) => {
@@ -83,10 +89,12 @@ async function getCipherKey(
         import.meta.url,
       ));
       const decryptWorkerApi = wrap(decryptWorker) as any;
-      console.log(`Sending chunk to worker: ${chunk}`);
+      console.log('Sending chunk to worker', chunk);
       const result: any = await decryptWorkerApi.decrypt(elgamalKeypair, chunk);
-      console.log(`Got result from worker: ${result}`);
-      return Buffer.from(result);
+      if (result.Err) {
+        throw new Error(result.Err);
+      }
+      return Buffer.from(result.Ok);
     }))
   );
 }
@@ -97,6 +105,7 @@ import { useConnection } from '../contexts/ConnectionContext';
 import { useLocalStorageState } from '../utils/common';
 import * as CryptoJS from 'crypto-js';
 import { drawArray } from '../utils/image';
+import { notify } from '../utils/common';
 export const Demo = () => {
   const connection = useConnection();
   const wallet = useWallet();
@@ -183,7 +192,7 @@ export const Demo = () => {
           if (mintKey === null) {
             console.error(`Failed to parse mint ${mint}`);
           }
-          const wrap = async () => {
+          const run = async () => {
             const cipherKey = await getCipherKey(
               connection, wallet, mintKey, privateMetadata, wasmConfig);
             console.log(`Decoded cipher key bytes: ${[...cipherKey]}`);
@@ -209,8 +218,19 @@ export const Demo = () => {
               { iv: ivWordArray },
             );
 
-            setDecryptedImage(Buffer.from(decrypted.toString(), 'hex').toString('base64'));
+            setDecryptedImage(Buffer.from(decrypted.toString(), 'hex'));
           }
+          const wrap = async () => {
+            try {
+              await run();
+            } catch (err) {
+              // console.error(err);
+              notify({
+                message: 'Failed to decrypt image',
+                description: err.message,
+              })
+            }
+          };
           wrap();
         }}
       >
