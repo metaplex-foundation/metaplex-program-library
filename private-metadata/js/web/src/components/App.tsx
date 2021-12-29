@@ -108,7 +108,7 @@ export const Demo = () => {
   const [privateImage, setPrivateImage]
       = React.useState<Buffer | null>(null);
   const [decryptedImage, setDecryptedImage]
-      = useLocalStorageState('decryptedImage', '');
+      = React.useState<Buffer | null>(null);
 
   const parseAddress = (address: string): PublicKey | null => {
     try {
@@ -145,17 +145,20 @@ export const Demo = () => {
   }, [privateMetadata]);
 
   return (
-    <div className="app">
-      <Input
-        id="mint-text-field"
-        value={mint}
-        onChange={(e) => setMint(e.target.value)}
-        style={{ fontFamily: 'Monospace' }}
-      />
+    <div className="app stack">
+      <label className="action-field">
+        <span className="field-title">NFT Mint</span>
+        <Input
+          id="mint-text-field"
+          value={mint}
+          onChange={(e) => setMint(e.target.value)}
+          style={{ fontFamily: 'Monospace' }}
+        />
+      </label>
       {privateImage && (
         <div>
           <img
-            style={{ margin: 'auto', display: 'block', padding: '30px' }}
+            style={{ margin: 'auto', display: 'block'}}
             src={"data:image/bmp;base64," + drawArray(privateImage, 8)}
           />
         </div>
@@ -163,15 +166,15 @@ export const Demo = () => {
       {decryptedImage && (
         <div>
           <img
-            style={{ margin: 'auto', display: 'block', paddingBottom: '30px' }}
-            src={"data:image/png;base64," + decryptedImage}
+            style={{ margin: 'auto', display: 'block'}}
+            src={"data:image/png;base64," + decryptedImage.toString('base64')}
           />
         </div>
       )}
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={!privateMetadata}
+        disabled={!privateMetadata || !wallet?.connected}
         onClick={() => {
           if (!privateMetadata) {
             return;
