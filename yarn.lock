@@ -982,8 +982,11 @@ __metadata:
     "@metaplex-foundation/beet": 0.0.0
     "@metaplex-foundation/beet-solana": 0.0.0
     "@solana/web3.js": ^1.31.0
+    "@types/tape": ^4.13.2
     eslint: ^8.3.0
     rimraf: ^3.0.2
+    spok: ^1.4.3
+    tape: ^5.3.2
   languageName: unknown
   linkType: soft
 
@@ -2426,12 +2429,12 @@ __metadata:
   linkType: hard
 
 "conventional-changelog-writer@npm:^5.0.0":
-  version: 5.0.0
-  resolution: "conventional-changelog-writer@npm:5.0.0"
+  version: 5.0.1
+  resolution: "conventional-changelog-writer@npm:5.0.1"
   dependencies:
     conventional-commits-filter: ^2.0.7
     dateformat: ^3.0.0
-    handlebars: ^4.7.6
+    handlebars: ^4.7.7
     json-stringify-safe: ^5.0.1
     lodash: ^4.17.15
     meow: ^8.0.0
@@ -2440,7 +2443,7 @@ __metadata:
     through2: ^4.0.0
   bin:
     conventional-changelog-writer: cli.js
-  checksum: c310b949d354688b971f576c92cac77f11540fee56dccb990169e94e4fc42e40245d2c381f826b7d781deb04d4f7e01701cc29bdd1c3d3cdf8817e8b7a80ea18
+  checksum: 5c0129db44577f14b1f8de225b62a392a9927ba7fe3422cb21ad71a771b8472bd03badb7c87cb47419913abc3f2ce3759b69f59550cdc6f7a7b0459015b3b44c
   languageName: node
   linkType: hard
 
@@ -3636,7 +3639,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"handlebars@npm:^4.7.6":
+"handlebars@npm:^4.7.7":
   version: 4.7.7
   resolution: "handlebars@npm:4.7.7"
   dependencies:
@@ -6547,7 +6550,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spok@npm:^1.4.2":
+"spok@npm:^1.4.2, spok@npm:^1.4.3":
   version: 1.4.3
   resolution: "spok@npm:1.4.3"
   dependencies:

@@ -43,7 +43,10 @@
     "@solana/web3.js": "^1.31.0"
   },
   "devDependencies": {
+    "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "spok": "^1.4.3",
+    "tape": "^5.3.2"
   }
 }

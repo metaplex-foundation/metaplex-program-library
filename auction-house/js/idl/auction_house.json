@@ -956,5 +956,8 @@
       "name": "InvalidBasisPoints",
       "msg": "BP must be less than or equal to 10000"
     }
-  ]
+  ],
+  "metadata": {
+    "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
+  }
 }
