@@ -18,11 +18,6 @@ use anchor_client::{
 };
 use constants::{AUCTION_HOUSE, FEE_PAYER, SIGNER, TREASURY};
 
-// const PREFIX: &str = "auction_house";
-// const FEE_PAYER: &str = "fee_payer";
-// const TREASURY: &str = "treasury";
-// const SIGNER: &str = "signer";
-
 /// Return `spl_token` token account.
 pub fn get_token_account(
     connection: &RpcClient,

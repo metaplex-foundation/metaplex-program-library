@@ -29,7 +29,7 @@ main() {
     # Run Test.
     #
     cargo test --test create_auction_house --test update_auction_house --test deposit --test withdraw \
-                --test withdraw_from_fee --test withdraw_from_treasury
+                --test withdraw_from_fee --test withdraw_from_treasury --test buy
 }
 
 cleanup() {

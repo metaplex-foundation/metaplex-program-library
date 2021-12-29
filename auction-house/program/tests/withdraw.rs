@@ -17,7 +17,6 @@ mod withdraw {
         accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
         AuctionHouse,
     };
-    use rand::rngs::OsRng;
 
     #[test]
     fn success() -> Result<(), ClientError> {
@@ -37,7 +36,7 @@ mod withdraw {
         program.rpc().poll_for_signature(&signature)?;
 
         // Auction house authority
-        let authority = Keypair::generate(&mut OsRng).pubkey();
+        let authority = Keypair::new().pubkey();
 
         // Treasury mint key
         let t_mint_key = spl_token::native_mint::id();
