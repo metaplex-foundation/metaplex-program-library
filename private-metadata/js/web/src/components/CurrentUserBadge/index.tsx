@@ -13,7 +13,9 @@ import Jazzicon from 'jazzicon';
 import { CopyOutlined } from '@ant-design/icons';
 import bs58 from 'bs58';
 
-import cog from './cog.svg';
+import cogSvg from './cog.svg';
+import solSvg from './sol.svg';
+import ftxpayPng from './ftxpay.png';
 import {
   ENDPOINTS,
   useConnection,
@@ -200,7 +202,7 @@ const AddFundsModal = (props: {
                 lineHeight: 1,
               }}
             >
-              <img src="/sol.svg" width="10" />
+              <img src={solSvg} width="10" />
             </span>{' '}
             SOL
           </span>
@@ -250,7 +252,7 @@ const AddFundsModal = (props: {
             }}
           >
             <span style={{ marginRight: 5 }}>Sign with</span>
-            <img src="/ftxpay.png" width="80" />
+            <img src={ftxpayPng} width="80" />
           </div>
         </Button>
       </div>
@@ -471,7 +473,7 @@ export const Cog = () => {
         }
       >
         <Button className="wallet-key">
-          <img src={cog} />
+          <img src={cogSvg} />
         </Button>
       </Popover>
     </div>
@@ -533,7 +535,7 @@ export const CurrentUserBadgeMobile = (props: {
         <span className="balance-title">Balance</span>
         <span>
           <span className="sol-img-wrapper">
-            <img src="/sol.svg" width="10" />
+            <img src={solSvg} width="10" />
           </span>{' '}
           {formatNumber.format(balance)}&nbsp;&nbsp; SOL{' '}
           <span
