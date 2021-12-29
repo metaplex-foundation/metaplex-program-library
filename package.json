@@ -1,5 +1,6 @@
 {
   "name": "@metaplex-foundation/metaplex-program-library",
+  "packageManager": "yarn@3.1.1",
   "version": "0.0.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
   "scripts": {
@@ -12,16 +13,14 @@
     "lint": "lerna run --parallel lint",
     "fix": "lerna run --parallel fix"
   },
-  "workspaces": {
-    "packages": [
-      "core/js",
-      "token-vault/js",
-      "token-metadata/js",
-      "auction/js",
-      "metaplex/js",
-      "auction-house/js"
-    ]
-  },
+  "workspaces": [
+    "core/js",
+    "token-vault/js",
+    "token-metadata/js",
+    "auction/js",
+    "metaplex/js",
+    "auction-house/js"
+  ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
