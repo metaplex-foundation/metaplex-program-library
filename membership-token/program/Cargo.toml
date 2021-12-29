@@ -1,12 +1,12 @@
 [package]
-name = "membership-token"
+name = "mpl-membership-token"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "membership_token"
+name = "mpl_membership_token"
 
 [features]
 no-entrypoint = []
@@ -15,4 +15,4 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.18.2"
+anchor-lang = "0.19.0"
