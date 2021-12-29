@@ -17,6 +17,8 @@ const { Header, Content } = Layout;
 
 import { WalletSigner } from "../contexts/WalletContext";
 import { useWasmConfig, WasmConfig } from "../contexts/WasmContext";
+import type { DecryptWorker } from '../utils/decryptWorker';
+import { wrap } from 'comlink';
 import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
 import * as bs58 from 'bs58';
 import { decodePrivateMetadata, PrivateMetadataAccount } from '../utils/privateSchema';
@@ -75,13 +77,17 @@ async function getCipherKey(
   const elgamalKeypair = await getElgamalKeypair(
     connection, wallet, address, wasm);
 
-  return Buffer.concat(privateMetadata.encryptedCipherKey.map(
-    chunk => (
-      Buffer.from(wasm.elgamalDecryptU32(
-        elgamalKeypair,
-        { bytes: [...chunk] },
-      ))
-    )));
+  return Buffer.concat(await Promise.all(privateMetadata.encryptedCipherKey.map(
+    async (chunk) => {
+      const decryptWorker = new Worker(new URL(
+        '../utils/decryptWorker/index.ts',
+        import.meta.url,
+      ));
+      const decryptWorkerApi = wrap<DecryptWorker>(decryptWorker);
+      const result: any = await decryptWorkerApi.decrypt(elgamalKeypair, chunk);
+      return result;
+    }))
+  );
 }
 
 import { Button, Input } from 'antd';

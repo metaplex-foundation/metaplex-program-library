@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "lib": [
+      "webworker",
+      "es6"
+    ],
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "allowJs": false,
+    "baseUrl": "."
+  }
+}
