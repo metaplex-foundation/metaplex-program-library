@@ -2,7 +2,7 @@ debug/
 target/
 .DS_Store
 **/.DS_Store
-
+.anchor/
 
 node_modules/
 **/*.rs.bk
