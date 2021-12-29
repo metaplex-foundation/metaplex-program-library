@@ -13,7 +13,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "pretest": "yarn build",
-    "amman:start": "DEBUG=amman* amman validator",
+    "amman:start": "DEBUG=\"amman*\" amman validator",
     "amman:stop": "pkill solana-test-validator",
     "test": "tape ./dist/test/*.test.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
@@ -39,7 +39,6 @@
   "repository": "https://github.com/metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
-  "private": false,
   "dependencies": {
     "@metaplex-foundation/mpl-core": "^0.0.2",
     "@solana/spl-token": "^0.1.8",
