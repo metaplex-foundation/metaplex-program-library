@@ -1,38 +1,41 @@
 mod utils;
 
-use anchor_client::{
-    solana_sdk::{signature::Keypair, signer::Signer, system_program},
-    ClientError,
-};
-use mpl_auction_house::{
-    accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
-    AuctionHouse,
-};
-use rand::rngs::OsRng;
-use utils::{
-    clone_keypair,
-    setup_functions::{setup_auction_house, setup_client, setup_payer_wallet},
-    transfer_lamports,
-};
-
 #[cfg(test)]
 mod withdraw_from_fee {
 
-    use super::*;
+    use super::utils::{
+        clone_keypair,
+        setup_functions::{setup_auction_house, setup_client, setup_program},
+        transfer_lamports,
+    };
+    use anchor_client::{
+        solana_sdk::{signature::Keypair, signer::Signer, system_program},
+        ClientError,
+    };
+    use mpl_auction_house::{
+        accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
+        AuctionHouse,
+    };
 
     #[test]
     fn success() -> Result<(), ClientError> {
-        // Wallet
-        let wallet = setup_payer_wallet();
+        // Payer Wallet
+        let payer_wallet = Keypair::new();
 
         // Client
-        let client = setup_client(clone_keypair(&wallet));
+        let client = setup_client(clone_keypair(&payer_wallet));
 
         // Program
-        let program = client.program(mpl_auction_house::id());
+        let program = setup_program(client);
+
+        // Airdrop the payer wallet
+        let signature = program
+            .rpc()
+            .request_airdrop(&program.payer(), 10_000_000_000)?;
+        program.rpc().poll_for_signature(&signature)?;
 
         // Auction house authority
-        let authority_keypair = Keypair::generate(&mut OsRng);
+        let authority_keypair = Keypair::new();
 
         // Treasury mint key
         let t_mint_key = spl_token::native_mint::id();
@@ -45,7 +48,7 @@ mod withdraw_from_fee {
 
         transfer_lamports(
             &program.rpc(),
-            &wallet,
+            &payer_wallet,
             &auction_house_account.auction_house_fee_account,
             amount * 2,
         )?;

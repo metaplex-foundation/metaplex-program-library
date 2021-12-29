@@ -1,38 +1,30 @@
 mod utils;
 
-use anchor_client::{
-    solana_sdk::{
-        commitment_config::CommitmentConfig,
-        pubkey::Pubkey,
-        signature::{read_keypair_file, Keypair},
-        signer::Signer,
-        system_program, sysvar,
-    },
-    Client, ClientError, Cluster,
-};
-use mpl_auction_house::{
-    accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
-    AuctionHouse,
-};
-use rand::rngs::OsRng;
-use spl_token;
-use std::env;
-
-use utils::constants::{AUCTION_HOUSE, FEE_PAYER, TREASURY};
-
 #[cfg(test)]
 mod create_auction_house {
 
-    use super::*;
+    use anchor_client::{
+        solana_sdk::{
+            commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair,
+            signer::Signer, system_program, sysvar,
+        },
+        Client, ClientError, Cluster,
+    };
+    use mpl_auction_house::{
+        accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
+        AuctionHouse,
+    };
+    use spl_token;
+
+    use super::utils::{
+        constants::{AUCTION_HOUSE, FEE_PAYER, TREASURY},
+        setup_functions::setup_program,
+    };
 
     #[test]
     fn success() -> Result<(), ClientError> {
-        let wallet_path = match env::var("LOCALNET_PAYER_WALLET") {
-            Ok(val) => val,
-            Err(_) => shellexpand::tilde("~/.config/solana/id.json").to_string(),
-        };
-
-        let payer_wallet = read_keypair_file(wallet_path).unwrap();
+        // Payer Wallet
+        let payer_wallet = Keypair::new();
 
         // Client.
         let client = Client::new_with_options(
@@ -42,7 +34,13 @@ mod create_auction_house {
         );
 
         // Program client.
-        let program = client.program(mpl_auction_house::id());
+        let program = setup_program(client);
+
+        // Airdrop the payer wallet
+        let signature = program
+            .rpc()
+            .request_airdrop(&program.payer(), 10_000_000_000)?;
+        program.rpc().poll_for_signature(&signature)?;
 
         let twd_key = program.payer();
         let fwd_key = program.payer();
@@ -52,7 +50,7 @@ mod create_auction_house {
         let payer = program.payer();
         let seller_fee_basis_points: u16 = 100;
 
-        let authority = Keypair::generate(&mut OsRng).pubkey();
+        let authority = Keypair::new().pubkey();
 
         // Derive Auction House Key
         let auction_house_seeds = &[
@@ -61,7 +59,7 @@ mod create_auction_house {
             t_mint_key.as_ref(),
         ];
         let (auction_house_key, bump) =
-            Pubkey::find_program_address(auction_house_seeds, &mpl_auction_house::id());
+            Pubkey::find_program_address(auction_house_seeds, &program.id());
 
         // Derive Auction House Fee Account key
         let auction_fee_account_seeds = &[
@@ -70,7 +68,7 @@ mod create_auction_house {
             FEE_PAYER.as_bytes(),
         ];
         let (auction_fee_account_key, fee_payer_bump) =
-            Pubkey::find_program_address(auction_fee_account_seeds, &mpl_auction_house::id());
+            Pubkey::find_program_address(auction_fee_account_seeds, &program.id());
 
         // Derive Auction House Treasury Key
         let auction_house_treasury_seeds = &[
@@ -79,7 +77,7 @@ mod create_auction_house {
             TREASURY.as_bytes(),
         ];
         let (auction_house_treasury_key, treasury_bump) =
-            Pubkey::find_program_address(auction_house_treasury_seeds, &mpl_auction_house::id());
+            Pubkey::find_program_address(auction_house_treasury_seeds, &program.id());
 
         program
             .request()

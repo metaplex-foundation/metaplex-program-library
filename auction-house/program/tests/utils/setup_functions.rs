@@ -1,4 +1,4 @@
-use std::{env, error};
+use std::{env, error, str::FromStr};
 
 use super::{
     constants::{AUCTION_HOUSE, FEE_PAYER, TREASURY},
@@ -10,12 +10,12 @@ use super::{
 use anchor_client::{
     solana_sdk::{
         commitment_config::CommitmentConfig,
+        pubkey::Pubkey,
         signature::{read_keypair_file, Keypair, Signature},
         system_program, sysvar,
     },
     Client, ClientError, Cluster, Program,
 };
-use anchor_lang::prelude::Pubkey;
 use mpl_auction_house::{
     accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
     AuctionHouse,
@@ -38,6 +38,16 @@ pub fn setup_client(payer_wallet: Keypair) -> Client {
     )
 }
 
+pub fn setup_program(client: Client) -> Program {
+    let pid = match env::var("AUCTION_HOUSE_PID") {
+        Ok(val) => val,
+        Err(_) => mpl_auction_house::id().to_string(),
+    };
+
+    let auction_house_pid = Pubkey::from_str(&pid).unwrap();
+    client.program(auction_house_pid)
+}
+
 pub fn setup_auction_house(
     program: &Program,
     authority: &Pubkey,
@@ -49,13 +59,13 @@ pub fn setup_auction_house(
     let fwd_key = program.payer();
     let tdw_ata = twd_key;
 
-    let (auction_house_key, bump) = derive_auction_house_key(authority, mint_key);
+    let (auction_house_key, bump) = derive_auction_house_key(authority, mint_key, &program.id());
 
     let (auction_fee_account_key, fee_payer_bump) =
-        derive_auction_house_fee_account_key(&auction_house_key);
+        derive_auction_house_fee_account_key(&auction_house_key, &program.id());
 
     let (auction_house_treasury_key, treasury_bump) =
-        derive_auction_house_treasury_key(&auction_house_key);
+        derive_auction_house_treasury_key(&auction_house_key, &program.id());
 
     program
         .request()

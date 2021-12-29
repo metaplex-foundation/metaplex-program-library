@@ -1,34 +1,41 @@
 pub mod utils;
 
-use anchor_client::{
-    solana_sdk::{signature::Keypair, signer::Signer, system_program, sysvar},
-    ClientError,
-};
-use mpl_auction_house::{
-    accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
-    AuctionHouse,
-};
-use rand::rngs::OsRng;
-use utils::setup_functions::{setup_auction_house, setup_client, setup_payer_wallet};
-
 #[cfg(test)]
 mod update_auction_house {
 
-    use super::*;
+    use super::utils::setup_functions::{setup_auction_house, setup_client, setup_program};
+    use anchor_client::{
+        solana_sdk::{signature::Keypair, signer::Signer, system_program, sysvar},
+        ClientError,
+    };
+    use mpl_auction_house::{
+        accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
+        AuctionHouse,
+    };
 
     #[test]
     fn success() -> Result<(), ClientError> {
+        // Payer Wallet
+        let payer_wallet = Keypair::new();
+
         // Client
-        let client = setup_client(setup_payer_wallet());
+        let client = setup_client(payer_wallet);
 
         // Program
-        let program = client.program(mpl_auction_house::id());
+        let program = setup_program(client);
+
+        // Airdrop the payer wallet
+        let signature = program
+            .rpc()
+            .request_airdrop(&program.payer(), 10_000_000_000)?;
+        program.rpc().poll_for_signature(&signature)?;
 
         // Auction house authority
-        let authority_keypair = Keypair::generate(&mut OsRng);
+        let authority_keypair = Keypair::new();
         let authority = authority_keypair.pubkey();
+
         // New auction house authority
-        let new_authority = Keypair::generate(&mut OsRng).pubkey();
+        let new_authority = Keypair::new().pubkey();
 
         // Treasury mint key
         let t_mint_key = spl_token::native_mint::id();

@@ -1,16 +1,16 @@
 //! Module provide tests for `Buy` instruction.
 
 mod utils;
+use utils::setup_functions::setup_program;
 
 use anchor_client::{
-    solana_client::rpc_client::RpcClient,
     solana_sdk::{
-        signer::{keypair::read_keypair_file, Signer},
-        system_program, sysvar,
+        commitment_config::CommitmentConfig, signature::Keypair, signer::Signer, system_program,
+        sysvar,
     },
     Client, Cluster,
 };
-use std::{env, error};
+use std::error;
 
 #[test]
 fn success() -> Result<(), Box<dyn error::Error>> {
@@ -18,17 +18,27 @@ fn success() -> Result<(), Box<dyn error::Error>> {
     const TOKEN_SIZE: u64 = 1;
 
     // Load `Localnet` keypair
-    let wallet = read_keypair_file(env::var("LOCALNET_PAYER_WALLET")?)?;
+    let wallet = Keypair::new();
     let wallet_pubkey = wallet.pubkey();
 
     // Initialize anchor RPC `Client`
-    let client = Client::new(Cluster::Localnet, utils::clone_keypair(&wallet));
-
-    // Initialize vanilla `RpcClient`
-    let connection = RpcClient::new(Cluster::Localnet.url().to_string());
+    let client = Client::new_with_options(
+        Cluster::Localnet,
+        utils::clone_keypair(&wallet),
+        CommitmentConfig::processed(),
+    );
 
     // Initialize `Program` handle
-    let program = client.program(mpl_auction_house::id());
+    let program = setup_program(client);
+
+    // Initialize vanilla `RpcClient`
+    let connection = program.rpc();
+
+    // Airdrop the payer wallet
+    let signature = program
+        .rpc()
+        .request_airdrop(&program.payer(), 10_000_000_000)?;
+    connection.poll_for_signature(&signature)?;
 
     // Derive native(wrapped) sol mint
     let treasury_mint = spl_token::native_mint::id();
@@ -89,26 +99,26 @@ fn success() -> Result<(), Box<dyn error::Error>> {
     program
         .request()
         .accounts(mpl_auction_house::accounts::Buy {
-            auction_house,
-            auction_house_fee_account,
-            authority: wallet_pubkey,
-            buyer_trade_state,
-            escrow_payment_account,
-            metadata,
-            payment_account: wallet.pubkey(),
-            rent: sysvar::rent::id(),
-            system_program: system_program::id(),
-            token_account,
-            token_program: spl_token::id(),
+            wallet: wallet_pubkey,
+            payment_account: wallet_pubkey,
             transfer_authority: wallet_pubkey,
             treasury_mint,
-            wallet: wallet_pubkey,
+            token_account,
+            metadata,
+            escrow_payment_account,
+            authority: wallet_pubkey,
+            auction_house,
+            auction_house_fee_account,
+            buyer_trade_state,
+            token_program: spl_token::id(),
+            system_program: system_program::id(),
+            rent: sysvar::rent::id(),
         })
         .args(mpl_auction_house::instruction::Buy {
-            buyer_price: BUYER_PRICE,
-            escrow_payment_bump,
-            token_size: TOKEN_SIZE,
             trade_state_bump: buyer_trade_state_bump,
+            escrow_payment_bump,
+            buyer_price: BUYER_PRICE,
+            token_size: TOKEN_SIZE,
         })
         .send()?;
 

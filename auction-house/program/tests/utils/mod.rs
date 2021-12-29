@@ -6,6 +6,8 @@ pub mod constants;
 pub mod helpers;
 pub mod setup_functions;
 
+use std::{env, str::FromStr};
+
 use anchor_client::{
     solana_client::{client_error::ClientError, rpc_client::RpcClient},
     solana_sdk::{
@@ -14,11 +16,12 @@ use anchor_client::{
     },
     Program,
 };
+use constants::{AUCTION_HOUSE, FEE_PAYER, SIGNER, TREASURY};
 
-const PREFIX: &str = "auction_house";
-const FEE_PAYER: &str = "fee_payer";
-const TREASURY: &str = "treasury";
-const SIGNER: &str = "signer";
+// const PREFIX: &str = "auction_house";
+// const FEE_PAYER: &str = "fee_payer";
+// const TREASURY: &str = "treasury";
+// const SIGNER: &str = "signer";
 
 /// Return `spl_token` token account.
 pub fn get_token_account(
@@ -60,7 +63,13 @@ pub fn create_token_metadata(
     uri: String,
     seller_fee_basis_points: u16,
 ) -> Result<Pubkey, ClientError> {
-    let program_id = mpl_token_metadata::id();
+    let pid = match env::var("TOKEN_METADATA_PID") {
+        Ok(val) => val,
+        Err(_) => mpl_token_metadata::id().to_string(),
+    };
+
+    let program_id = Pubkey::from_str(&pid).unwrap();
+
     let (recent_blockhash, _) = connection.get_recent_blockhash()?;
 
     let (metadata_account, _) = Pubkey::find_program_address(
@@ -283,7 +292,11 @@ pub fn create_token_account(
 /// Return escrow payment `Pubkey` address and bump seed.
 pub fn find_escrow_payment_address(auction_house: &Pubkey, wallet: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
-        &[PREFIX.as_bytes(), auction_house.as_ref(), wallet.as_ref()],
+        &[
+            AUCTION_HOUSE.as_bytes(),
+            auction_house.as_ref(),
+            wallet.as_ref(),
+        ],
         &mpl_auction_house::id(),
     )
 }
@@ -292,7 +305,7 @@ pub fn find_escrow_payment_address(auction_house: &Pubkey, wallet: &Pubkey) -> (
 pub fn find_auction_house_address(authority: &Pubkey, treasury_mint: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            PREFIX.as_bytes(),
+            AUCTION_HOUSE.as_bytes(),
             authority.as_ref(),
             treasury_mint.as_ref(),
         ],
@@ -304,7 +317,7 @@ pub fn find_auction_house_address(authority: &Pubkey, treasury_mint: &Pubkey) ->
 pub fn find_auction_house_fee_account_address(auction_house: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            PREFIX.as_bytes(),
+            AUCTION_HOUSE.as_bytes(),
             auction_house.as_ref(),
             FEE_PAYER.as_bytes(),
         ],
@@ -324,7 +337,7 @@ pub fn find_trade_state_address(
 ) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            PREFIX.as_bytes(),
+            AUCTION_HOUSE.as_bytes(),
             wallet.as_ref(),
             auction_house.as_ref(),
             token_account.as_ref(),
@@ -340,7 +353,7 @@ pub fn find_trade_state_address(
 /// Return program as signer `Pubkey` address and bump seed.
 pub fn find_program_as_signer_address() -> (Pubkey, u8) {
     Pubkey::find_program_address(
-        &[PREFIX.as_bytes(), SIGNER.as_bytes()],
+        &[AUCTION_HOUSE.as_bytes(), SIGNER.as_bytes()],
         &mpl_auction_house::id(),
     )
 }
@@ -349,7 +362,7 @@ pub fn find_program_as_signer_address() -> (Pubkey, u8) {
 pub fn find_auction_house_treasury_address(auction_house: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            PREFIX.as_bytes(),
+            AUCTION_HOUSE.as_bytes(),
             auction_house.as_ref(),
             TREASURY.as_bytes(),
         ],
