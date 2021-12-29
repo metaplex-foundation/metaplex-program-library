@@ -299,7 +299,9 @@ pub fn transfer_chunk_txs(
             &accounts.compute_buffer,
             &transfer,
             |len| len as u64,
-        );
+        ).map_err(to_string)?;
+
+        debug(&format!("Finished compute"));
 
         Ok(txs)
     };

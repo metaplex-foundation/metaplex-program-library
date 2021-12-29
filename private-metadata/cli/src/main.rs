@@ -469,7 +469,7 @@ async fn process_transfer(
             &compute_buffer.pubkey(),
             &transfer,
             |len| rpc_client.get_minimum_balance_for_rent_exemption(len).unwrap(),
-        );
+        )?;
 
         for (i, tx) in txs.iter().enumerate() {
             send(

@@ -424,7 +424,7 @@ pub fn transfer_chunk_slow_proof<F>(
     compute_buffer: &Pubkey,
     transfer: &TransferData,
     minimum_rent_balance: F,
-) -> Vec<InstructionsAndSignerPubkeys>
+) -> Result<Vec<InstructionsAndSignerPubkeys>, Box<dyn std::error::Error>>
     where F: Fn(usize) -> u64,
 {
     use crate::transcript::TranscriptProtocol;
@@ -434,7 +434,7 @@ pub fn transfer_chunk_slow_proof<F>(
     use curve25519_dalek_onchain::scalar::Scalar as OScalar;
 
     let equality_proof = equality_proof::EqualityProof::from_bytes(
-        &transfer.proof.equality_proof.0).unwrap();
+        &transfer.proof.equality_proof.0)?;
 
     let points = [
         // statement inputs
@@ -443,12 +443,12 @@ pub fn transfer_chunk_slow_proof<F>(
         equality_proof.Y_0.0,
 
         transfer.transfer_public_keys.dst_pubkey.0,
-        transfer.dst_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
+        transfer.dst_cipher_key_chunk_ct.0[32..].try_into()?,
         equality_proof.Y_1.0,
 
-        transfer.dst_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
-        transfer.src_cipher_key_chunk_ct.0[..32].try_into().unwrap(),
-        transfer.src_cipher_key_chunk_ct.0[32..].try_into().unwrap(),
+        transfer.dst_cipher_key_chunk_ct.0[..32].try_into()?,
+        transfer.src_cipher_key_chunk_ct.0[..32].try_into()?,
+        transfer.src_cipher_key_chunk_ct.0[32..].try_into()?,
         equality_proof::COMPRESSED_H,
         equality_proof.Y_2.0,
     ];
@@ -459,12 +459,12 @@ pub fn transfer_chunk_slow_proof<F>(
         &transfer.dst_cipher_key_chunk_ct,
         &transfer.transfer_public_keys,
         &mut transcript,
-    ).unwrap();
+    )?;
 
     equality_proof::EqualityProof::build_transcript(
         &equality_proof,
         &mut transcript,
-    ).unwrap();
+    )?;
 
     let challenge_c = transcript.challenge_scalar(b"c");
 
@@ -486,8 +486,9 @@ pub fn transfer_chunk_slow_proof<F>(
          -Scalar::one(),
     ]
         .iter()
-        .map(|s| OScalar::from_canonical_bytes(s.bytes).unwrap())
-        .collect::<Vec<_>>();
+        .map(|s| OScalar::from_canonical_bytes(s.bytes))
+        .collect::<Option<Vec<_>>>()
+        .ok_or("failed to canonicalise equality proof scalars")?;
 
     assert_eq!(points.len(), scalars.len());
 
@@ -569,5 +570,5 @@ pub fn transfer_chunk_slow_proof<F>(
         });
     }
 
-    ret
+    Ok(ret)
 }
