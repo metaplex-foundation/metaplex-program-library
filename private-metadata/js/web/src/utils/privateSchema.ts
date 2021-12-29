@@ -119,6 +119,17 @@ export const decodePrivateMetadata = (
   return ret;
 };
 
+export const decodeTransferBuffer = (
+  buffer: Buffer
+): CipherKeyTransferBuffer => {
+  const ret = deserializeUnchecked(
+    PRIVATE_METADATA_SCHEMA,
+    CipherKeyTransferBuffer,
+    buffer,
+  ) as CipherKeyTransferBuffer;
+  return ret;
+};
+
 export const extendBorsh = () => {
   (BinaryReader.prototype as any).readElgamalPk = function () {
     const reader = this as unknown as BinaryReader;

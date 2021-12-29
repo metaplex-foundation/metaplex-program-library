@@ -15,13 +15,32 @@ import { CopyOutlined } from '@ant-design/icons';
 
 const { Header, Content } = Layout;
 
+import * as BN from 'bn.js';
 import { WalletSigner } from "../contexts/WalletContext";
 import { useWasmConfig, WasmConfig } from "../contexts/WasmContext";
+import { sendTransactionWithRetry } from '../contexts/ConnectionContext';
 import { wrap } from 'comlink';
-import { Connection, PublicKey, Transaction, TransactionInstruction } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+} from '@solana/web3.js';
 import * as bs58 from 'bs58';
-import { decodePrivateMetadata, PrivateMetadataAccount } from '../utils/privateSchema';
-import { PRIVATE_METADATA_PROGRAM_ID } from '../utils/ids';
+import { explorerLinkFor } from '../utils/transactions';
+import {
+  decodePrivateMetadata,
+  decodeTransferBuffer,
+  PrivateMetadataAccount,
+} from '../utils/privateSchema';
+import {
+  PRIVATE_METADATA_PROGRAM_ID,
+  SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from '../utils/ids';
 async function getPrivateMetadata(
   mint: PublicKey,
 ): Promise<PublicKey> {
@@ -72,7 +91,7 @@ async function getCipherKey(
   address: PublicKey,
   privateMetadata: PrivateMetadataAccount,
   wasm: WasmConfig,
-): Promise<Buffer> {
+): Promise<[Buffer, Buffer]> {
   const elgamalKeypairRes = await getElgamalKeypair(
     connection, wallet, address, wasm);
 
@@ -82,7 +101,7 @@ async function getCipherKey(
 
   const elgamalKeypair = elgamalKeypairRes.Ok;
 
-  return Buffer.concat(await Promise.all(privateMetadata.encryptedCipherKey.map(
+  return [Buffer.concat(await Promise.all(privateMetadata.encryptedCipherKey.map(
     async (chunk) => {
       const decryptWorker = new Worker(new URL(
         '../utils/decryptWorker.js',
@@ -96,7 +115,88 @@ async function getCipherKey(
       }
       return Buffer.from(result.Ok);
     }))
+  ), elgamalKeypair];
+}
+
+const initializeTransferBuffer = async (
+  connection: Connection,
+  wasm: WasmConfig,
+  walletKey: PublicKey,
+  mintKey: PublicKey,
+  transferBufferKeypair: Keypair,
+  recipientElgamalPubkey: Buffer,
+) => {
+  const transferBufferLen = wasm.transferBufferLen();
+  const lamports = await connection.getMinimumBalanceForRentExemption(
+      transferBufferLen);
+
+  const [walletATAKey, ] = await PublicKey.findProgramAddress(
+    [
+      walletKey.toBuffer(),
+      TOKEN_PROGRAM_ID.toBuffer(),
+      mintKey.toBuffer(),
+    ],
+    SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
   );
+
+  const privateMetadataKey = await getPrivateMetadata(mintKey);
+
+  const instructions = [
+    SystemProgram.createAccount({
+      fromPubkey: walletKey,
+      lamports,
+      newAccountPubkey: transferBufferKeypair.publicKey,
+      programId: PRIVATE_METADATA_PROGRAM_ID,
+      space: transferBufferLen,
+    }),
+    // InitTransfer
+    new TransactionInstruction({
+      programId: PRIVATE_METADATA_PROGRAM_ID,
+      keys: [
+        {
+          pubkey: walletKey,
+          isSigner: true,
+          isWritable: false,
+        },
+        {
+          pubkey: mintKey,
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: walletATAKey,
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: privateMetadataKey,
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: transferBufferKeypair.publicKey,
+          isSigner: true,
+          isWritable: true,
+        },
+        {
+          pubkey: SystemProgram.programId,
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: SYSVAR_RENT_PUBKEY,
+          isSigner: false,
+          isWritable: false,
+        },
+      ],
+      data: Buffer.from([
+        1,
+        ...recipientElgamalPubkey,
+      ])
+    }),
+  ];
+
+  return instructions;
 }
 
 const decryptImage = (
@@ -133,13 +233,29 @@ import * as CryptoJS from 'crypto-js';
 import { drawArray } from '../utils/image';
 import { notify } from '../utils/common';
 export const Demo = () => {
+  // contexts
   const connection = useConnection();
   const wallet = useWallet();
-  const wasmConfig = useWasmConfig();
+  const wasm = useWasmConfig();
 
+  // user inputs
   const [mint, setMint] = useLocalStorageState('mint', '');
+  const [recipientElgamal, setRecipientElgamal]
+    = useLocalStorageState('recipientElgamal', '');
+  const [transferBuffer, setTransferBuffer]
+    = useLocalStorageState('transferBuffer', '34BHKCEyS8zVTvEANG7W8uXcVTWoC2o7LbAdGiXezBFesFNMaGFf8fLYJYoK2p7ubiziwZjnTM7Ynk5fVC94AM2D');
+  const [instructionBuffer, setInstructionBuffer]
+    = useLocalStorageState('instructionBuffer', '4huNP6jLbA9FGwHhMbjYQFP57ZmH1y4xa3ipAJ7mERNM');
+  const [inputBuffer, setInputBuffer]
+    = useLocalStorageState('inputBuffer', '');
+  const [computeBuffer, setComputeBuffer]
+    = useLocalStorageState('computeBuffer', '');
+
+  // async useEffect set
   const [privateMetadata, setPrivateMetadata]
       = React.useState<PrivateMetadataAccount | null>(null);
+  const [elgamalKeypair, setElgamalKeypair]
+      = useLocalStorageState('elgamalKeypair', '');
   const [cipherKey, setCipherKey]
       = useLocalStorageState('cipherKey', '');
   const [privateImage, setPrivateImage]
@@ -150,6 +266,14 @@ export const Demo = () => {
   const parseAddress = (address: string): PublicKey | null => {
     try {
       return new PublicKey(address);
+    } catch {
+      return null;
+    }
+  };
+
+  const parseKeypair = (secret: string): Keypair | null => {
+    try {
+      return Keypair.fromSecretKey(bs58.decode(secret));
     } catch {
       return null;
     }
@@ -192,6 +316,8 @@ export const Demo = () => {
     wrap();
   }, [privateMetadata, cipherKey]);
 
+  const { TextArea } = Input;
+
   return (
     <div className="app stack">
       <label className="action-field">
@@ -232,11 +358,12 @@ export const Demo = () => {
             console.error(`Failed to parse mint ${mint}`);
           }
           const run = async () => {
-            const cipherKey = await getCipherKey(
-              connection, wallet, mintKey, privateMetadata, wasmConfig);
+            const [cipherKey, elgamalKeypair] = await getCipherKey(
+              connection, wallet, mintKey, privateMetadata, wasm);
             console.log(`Decoded cipher key bytes: ${[...cipherKey]}`);
             console.log(`Decoded cipher key: ${bs58.encode(cipherKey)}`);
 
+            setElgamalKeypair(elgamalKeypair.toString('base64'));
             setCipherKey(cipherKey.toString('base64'));
           }
           const wrap = async () => {
@@ -254,6 +381,166 @@ export const Demo = () => {
         }}
       >
         Decrypt
+      </Button>
+      <label className="action-field">
+        <span className="field-title">Recipient ElGamal Pubkey</span>
+        <Input
+          id="recipient-elgamal-field"
+          value={recipientElgamal}
+          onChange={(e) => setRecipientElgamal(e.target.value)}
+          style={{ fontFamily: 'Monospace' }}
+        />
+      </label>
+      <label className="action-field">
+        <span className="field-title">Instruction Buffer</span>
+        <Input
+          id="instruction-buffer-field"
+          value={instructionBuffer}
+          onChange={(e) => setInstructionBuffer(e.target.value)}
+          style={{ fontFamily: 'Monospace' }}
+        />
+      </label>
+      <label className="action-field">
+        <span className="field-title">Transfer Buffer</span>
+        <TextArea
+          rows={2}
+          id="transfer-buffer-field"
+          value={transferBuffer}
+          onChange={(e) => setTransferBuffer(e.target.value)}
+          style={{ fontFamily: 'Monospace' }}
+        />
+      </label>
+      <label className="action-field">
+        <span className="field-title">Input Buffer</span>
+        <TextArea
+          rows={2}
+          id="input-buffer-field"
+          value={inputBuffer}
+          onChange={(e) => setInputBuffer(e.target.value)}
+          style={{ fontFamily: 'Monospace' }}
+        />
+      </label>
+      <label className="action-field">
+        <span className="field-title">Compute Buffer</span>
+        <TextArea
+          rows={2}
+          id="compute-buffer-field"
+          value={computeBuffer}
+          onChange={(e) => setComputeBuffer(e.target.value)}
+          style={{ fontFamily: 'Monospace' }}
+        />
+      </label>
+      <Button
+        style={{ width: '100%' }}
+        className="metaplex-button"
+        disabled={!privateMetadata || !wallet?.connected || !elgamalKeypair}
+        onClick={() => {
+          // TODO: requiring elgamalKeypair from decryption is a bit weird here...
+          if (!privateMetadata || !wallet?.connected || !elgamalKeypair) {
+            return;
+          }
+
+          const validateKeypair = (secret: string, name: string) => {
+            if (secret.length === 0) {
+              return new Keypair();
+            } else {
+              const res = parseKeypair(secret);
+              if (!res) {
+                throw new Error(`Could not parse ${name} buffer key '${secret}'`);
+              }
+            }
+          }
+
+          const wrap = async () => {
+            try {
+              const walletKey = wallet.publicKey;
+              const mintKey = parseAddress(mint);
+              if (!mintKey) {
+                throw new Error(`Could not parse mint key '${mint}'`);
+              }
+
+              const instructionBufferPubkey = parseAddress(instructionBuffer);
+              if (!instructionBufferPubkey) {
+                throw new Error(`Could not parse instruction buffer key '${instructionBuffer}'`);
+              }
+
+              const inputBufferKeypair = validateKeypair(inputBuffer, 'input');
+              const computeBufferKeypair = validateKeypair(computeBuffer, 'compute');
+              const transferBufferKeypair = validateKeypair(transferBuffer, 'transfer');
+
+              const recipientElgamalPubkey = Buffer.from(recipientElgamal, 'base64');
+              if (recipientElgamalPubkey.length !== 32) {
+                throw new Error('Recipient elgamal pubkey does not look correct');
+              }
+
+              let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
+              if (transferBufferAccount === null) {
+                const createInstructions = await initializeTransferBuffer(
+                    connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientElgamalPubkey);
+
+                const createResult = await sendTransactionWithRetry(
+                  connection,
+                  wallet,
+                  createInstructions,
+                  [transferBufferKeypair]
+                );
+
+                console.log(createResult);
+                if (typeof createResult === "string") {
+                  notify({
+                    message: "Transfer buffer create failed",
+                    description: createResult,
+                  });
+                  return;
+                } else {
+                  notify({
+                    message: "Transfer buffer create succeeded",
+                    description: (
+                      <a href={explorerLinkFor(createResult.txid, connection)}>
+                        View transaction on explorer
+                      </a>
+                    ),
+                  });
+                }
+
+                transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
+              }
+
+              const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
+
+              if (transferBufferDecoded.updated !== 0) {
+                return;
+              }
+
+              const chunk = 0;
+
+              const txs = wasm.transferChunkTxs(
+                elgamalKeypair,
+                recipientElgamalPubkey,
+                [...privateMetadata.encryptedCipherKey[chunk]],
+                // TODO: pass buffer and convert on rust side?
+                new BN(cipherKey.slice(chunk * 4, (chunk + 1) * 4), 'le').toNumber(),
+                {
+                  payer: walletKey,
+                  instruction_buffer: instructionBufferPubkey,
+                  input_buffer: inputBufferKeypair.publicKey,
+                  compute_buffer: computeBufferKeypair.publicKey,
+                },
+              );
+
+              console.log(txs);
+
+            } catch (err) {
+              notify({
+                message: 'Failed to transfer NFT',
+                description: err.message,
+              })
+            }
+          };
+          wrap();
+        }}
+      >
+        Transfer
       </Button>
     </div>
   );

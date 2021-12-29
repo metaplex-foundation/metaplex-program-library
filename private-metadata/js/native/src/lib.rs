@@ -298,3 +298,9 @@ pub fn transfer_chunk_txs(
 
     JsValue::from_serde(&go()).unwrap()
 }
+
+#[wasm_bindgen]
+pub fn transfer_buffer_len() -> usize {
+    use private_metadata::pod::PodAccountInfo;
+    private_metadata::state::CipherKeyTransferBuffer::get_packed_len()
+}

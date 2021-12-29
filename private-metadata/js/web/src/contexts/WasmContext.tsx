@@ -3,11 +3,21 @@ import * as React from "react";
 import init, {
   elgamal_keypair_from_signature,
   elgamal_decrypt_u32,
+  transfer_chunk_txs,
+  transfer_buffer_len,
 } from '../utils/privateMetadata/private_metadata_js';
 
 export interface WasmConfig {
   elgamalKeypairFromSignature: (signature: any) => any;
   elgamalDecryptU32: (elgamalKeypair: any, ciphertext: any) => any;
+  transferChunkTxs: (
+    elgamal_keypair: any,
+    recipient_elgamal_pubkey: any,
+    ciphertext: any,
+    decrypted_word: any,
+    accounts: any,
+  ) => any;
+  transferBufferLen: () => any;
 }
 
 const WasmContext = React.createContext<WasmConfig | undefined>(undefined);
@@ -22,6 +32,8 @@ export function WasmProvider({ children }: { children: any }) {
       setContextValue({
         elgamalKeypairFromSignature: elgamal_keypair_from_signature,
         elgamalDecryptU32: elgamal_decrypt_u32,
+        transferChunkTxs: transfer_chunk_txs,
+        transferBufferLen: transfer_buffer_len,
       });
     };
     wrap();
