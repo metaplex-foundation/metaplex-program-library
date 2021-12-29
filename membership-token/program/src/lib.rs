@@ -44,7 +44,43 @@ pub fn find_trade_history_address(wallet: &Pubkey, market: &Pubkey) -> (Pubkey, 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
-pub mod membership_token {}
+pub mod membership_token {
+
+    use super::*;
+
+    pub fn create_store<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateStore<'info>>,
+        name: String,
+        description: String,
+    ) -> ProgramResult {
+        let admin = &ctx.accounts.admin;
+        let store = &mut ctx.accounts.store;
+
+        if !admin.to_account_info().is_signer || !store.to_account_info().is_signer {
+            return Err(ErrorCode::NoValidSignerPresent.into());
+        }
+
+        if name.len() > STRING_DEFAULT_SIZE || description.len() > STRING_DEFAULT_SIZE {
+            return Err(ErrorCode::StringIsTooLong.into());
+        }
+
+        store.admin = admin.key();
+        store.name = name;
+        store.description = description;
+
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+#[instruction(name: String, description: String)]
+pub struct CreateStore<'info> {
+    #[account(mut)]
+    admin: Signer<'info>,
+    #[account(init, space=Store::LEN, payer=admin)]
+    store: Account<'info, Store>,
+    system_program: Program<'info, System>,
+}
 
 #[account]
 pub struct Store {
@@ -54,7 +90,7 @@ pub struct Store {
 }
 
 impl Store {
-    pub const LEN: usize = 32 + STRING_DEFAULT_SIZE + STRING_DEFAULT_SIZE;
+    pub const LEN: usize = 32 + STRING_DEFAULT_SIZE * 4 + STRING_DEFAULT_SIZE * 4;
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
@@ -115,8 +151,8 @@ impl Market {
         + 32
         + 32
         + 32
-        + STRING_DEFAULT_SIZE
-        + STRING_DEFAULT_SIZE
+        + STRING_DEFAULT_SIZE * 4
+        + STRING_DEFAULT_SIZE * 4
         + 1
         + 8
         + 9
@@ -134,4 +170,12 @@ pub struct TradeHistory {
 
 impl TradeHistory {
     pub const LEN: usize = 32 + 32 + 8;
+}
+
+#[error]
+pub enum ErrorCode {
+    #[msg("No valid signer present")]
+    NoValidSignerPresent,
+    #[msg("Some string variable is longer than allowed")]
+    StringIsTooLong,
 }
