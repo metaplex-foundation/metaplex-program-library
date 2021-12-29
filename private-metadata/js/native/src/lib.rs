@@ -167,53 +167,72 @@ extern "C" {
     fn debug(s: &str);
 }
 
+// non-ref taking?
+// using ToString::to_string doesn't seem to work...
+fn to_string<T: ToString>(t: T) -> String {
+    t.to_string()
+}
+
 #[wasm_bindgen]
 pub fn elgamal_keypair_new(signer: &JsValue, address: &JsValue) -> JsValue {
-    debug(&format!("Inputs\n\tsigner: {:?}\n\taddress: {:?}", signer, address));
+    let go = || -> Result<ElGamalKeypair, String> {
+        debug(&format!("Inputs\n\tsigner: {:?}\n\taddress: {:?}", signer, address));
 
-    let signer_bytes: KeypairBytes = signer.into_serde().unwrap();
-    let signer = Keypair::from_bytes(&signer_bytes.bytes).unwrap();
-    let address: Pubkey = address.into_serde().unwrap();
+        let signer_bytes: KeypairBytes = signer.into_serde().map_err(to_string)?;
+        let signer = Keypair::from_bytes(&signer_bytes.bytes).map_err(to_string)?;
+        let address: Pubkey = address.into_serde().map_err(to_string)?;
 
-    debug(&format!("Processed Inputs"));
+        debug(&format!("Processed Inputs"));
 
-    let kp = ElGamalKeypair::new(&signer, &address).unwrap();
+        let kp = ElGamalKeypair::new(&signer, &address).map_err(to_string)?;
 
-    debug(&format!("Finished compute"));
+        debug(&format!("Finished compute"));
 
-    JsValue::from_serde(&JSElGamalKeypair(kp)).unwrap()
+        Ok(kp)
+    };
+
+    JsValue::from_serde(&go().map(JSElGamalKeypair)).unwrap()
 }
 
 #[wasm_bindgen]
 pub fn elgamal_keypair_from_signature(signature: &JsValue) -> JsValue {
-    debug(&format!("Inputs\n\tsignature: {:?}", signature));
+    let go = || -> Result<ElGamalKeypair, String> {
+        debug(&format!("Inputs\n\tsignature: {:?}", signature));
 
-    let signature: Signature = signature.into_serde().unwrap();
+        let signature: Signature = signature.into_serde().map_err(to_string)?;
 
-    debug(&format!("Processed Inputs"));
+        debug(&format!("Processed Inputs"));
 
-    let scalar = Scalar::hash_from_bytes::<Sha3_512>(signature.as_ref());
-    let kp = ElGamalKeypair::keygen_with_scalar(scalar);
+        let scalar = Scalar::hash_from_bytes::<Sha3_512>(signature.as_ref());
+        let kp = ElGamalKeypair::keygen_with_scalar(scalar);
 
-    debug(&format!("Finished compute"));
+        debug(&format!("Finished compute"));
 
-    JsValue::from_serde(&JSElGamalKeypair(kp)).unwrap()
+        Ok(kp)
+    };
+
+    JsValue::from_serde(&go().map(JSElGamalKeypair)).unwrap()
 }
 
 #[wasm_bindgen]
 pub fn elgamal_decrypt_u32(elgamal_keypair: &JsValue, ciphertext: &JsValue) -> JsValue {
-    debug(&format!("Inputs\n\telgamal_keypair: {:?}\n\tciphertext: {:?}", elgamal_keypair, ciphertext));
+    let go = || -> Result<u32, String> {
+        debug(&format!("Inputs\n\telgamal_keypair: {:?}\n\tciphertext: {:?}", elgamal_keypair, ciphertext));
 
-    let elgamal_keypair: JSElGamalKeypair = elgamal_keypair.into_serde().unwrap();
-    let ciphertext_bytes: ElGamalCiphertextBytes = ciphertext.into_serde().unwrap();
+        let elgamal_keypair: JSElGamalKeypair = elgamal_keypair.into_serde().map_err(to_string)?;
+        let ciphertext_bytes: ElGamalCiphertextBytes = ciphertext.into_serde().map_err(to_string)?;
 
-    debug(&format!("Processed Inputs"));
+        debug(&format!("Processed Inputs"));
 
-    let res = elgamal_keypair.0.secret.decrypt_u32(
-        &private_metadata::zk_token_elgamal::pod::ElGamalCiphertext(ciphertext_bytes.bytes).try_into().unwrap(),
-    ).unwrap();
+        use private_metadata::zk_token_elgamal::pod::ElGamalCiphertext;
+        let res = elgamal_keypair.0.secret.decrypt_u32(
+            &ElGamalCiphertext(ciphertext_bytes.bytes).try_into().map_err(to_string)?,
+        ).ok_or("Failed to decode ciphertext")?;
 
-    debug(&format!("Finished compute"));
+        debug(&format!("Finished compute"));
 
-    JsValue::from_serde(&res.to_le_bytes()).unwrap()
+        Ok(res)
+    };
+
+    JsValue::from_serde(&go().map(|v| v.to_le_bytes())).unwrap()
 }
