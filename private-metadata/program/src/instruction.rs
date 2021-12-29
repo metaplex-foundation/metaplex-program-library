@@ -406,18 +406,24 @@ pub fn populate_transfer_proof_dsl<'a, F>(
     ret
 }
 
+#[cfg(not(target_arch = "bpf"))]
+pub struct InstructionsAndSignerPubkeys {
+    pub instructions: Vec<Instruction>,
+    pub signers: Vec<Pubkey>,
+}
+
 // Returns a list of transaction instructions that can be sent to build the zk proof state used in
 // a `transfer_chunk_slow`. These instructions assume that the instruction DSL has already been
 // populated with `populate_transfer_proof_dsl`
 #[cfg(not(target_arch = "bpf"))]
-pub fn transfer_chunk_slow_proof<'a, F>(
-    payer: &'a dyn Signer,
-    instruction_buffer: Pubkey,
-    input_buffer: &'a dyn Signer,
-    compute_buffer: &'a dyn Signer,
-    transfer: &'a TransferData,
+pub fn transfer_chunk_slow_proof<F>(
+    payer: &Pubkey,
+    instruction_buffer: &Pubkey,
+    input_buffer: &Pubkey,
+    compute_buffer: &Pubkey,
+    transfer: &TransferData,
     minimum_rent_balance: F,
-) -> Vec<InstructionsAndSigners<'a>>
+) -> Vec<InstructionsAndSignerPubkeys>
     where F: Fn(usize) -> u64,
 {
     use crate::transcript::TranscriptProtocol;
@@ -496,46 +502,46 @@ pub fn transfer_chunk_slow_proof<'a, F>(
 
     let mut ret = vec![];
 
-    ret.push(InstructionsAndSigners{
+    ret.push(InstructionsAndSignerPubkeys{
         instructions: vec![
             system_instruction::create_account(
-                &payer.pubkey(),
-                &input_buffer.pubkey(),
+                payer,
+                input_buffer,
                 minimum_rent_balance(input_buffer_len),
                 input_buffer_len as u64,
                 &curve25519_dalek_onchain::id(),
             ),
             system_instruction::create_account(
-                &payer.pubkey(),
-                &compute_buffer.pubkey(),
+                payer,
+                compute_buffer,
                 minimum_rent_balance(compute_buffer_len),
                 compute_buffer_len as u64,
                 &curve25519_dalek_onchain::id(),
             ),
             dalek::initialize_buffer(
-                input_buffer.pubkey(),
-                payer.pubkey(),
+                *input_buffer,
+                *payer,
                 dalek::Key::InputBufferV1,
                 vec![],
             ),
             dalek::initialize_buffer(
-                compute_buffer.pubkey(),
-                payer.pubkey(),
+                *compute_buffer,
+                *payer,
                 dalek::Key::ComputeBufferV1,
-                vec![instruction_buffer, input_buffer.pubkey()],
+                vec![*instruction_buffer, *input_buffer],
             ),
         ],
-        signers: vec![payer, input_buffer, compute_buffer],
+        signers: vec![*payer, *input_buffer, *compute_buffer],
     });
 
-    ret.push(InstructionsAndSigners{
+    ret.push(InstructionsAndSignerPubkeys{
         instructions: dalek::write_input_buffer(
-            input_buffer.pubkey(),
-            payer.pubkey(),
+            *input_buffer,
+            *payer,
             &points,
             scalars.as_slice(),
         ),
-        signers: vec![payer],
+        signers: vec![*payer],
     });
 
     let instructions_per_tx = 32;
@@ -549,16 +555,16 @@ pub fn transfer_chunk_slow_proof<'a, F>(
             }
             instructions.push(
                 dalek::crank_compute(
-                    instruction_buffer,
-                    input_buffer.pubkey(),
-                    compute_buffer.pubkey(),
+                    *instruction_buffer,
+                    *input_buffer,
+                    *compute_buffer,
                 ),
             );
             current += 1;
         }
-        ret.push(InstructionsAndSigners{
+        ret.push(InstructionsAndSignerPubkeys{
             instructions,
-            signers: vec![payer],
+            signers: vec![*payer],
         });
     }
 

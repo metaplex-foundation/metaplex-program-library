@@ -463,10 +463,10 @@ async fn process_transfer(
         );
 
         let txs = private_metadata::instruction::transfer_chunk_slow_proof(
-            payer,
-            instruction_buffer.pubkey(),
-            &input_buffer,
-            &compute_buffer,
+            &payer.pubkey(),
+            &instruction_buffer.pubkey(),
+            &input_buffer.pubkey(),
+            &compute_buffer.pubkey(),
             &transfer,
             |len| rpc_client.get_minimum_balance_for_rent_exemption(len).unwrap(),
         );
@@ -476,7 +476,26 @@ async fn process_transfer(
                 rpc_client,
                 &format!("Building transfer chunk slow proof: {} of {}", i, txs.len()),
                 tx.instructions.as_slice(),
-                tx.signers.as_slice(),
+                tx.signers
+                    .as_slice()
+                    .into_iter()
+                    .map(|pk| -> Option<&dyn Signer> {
+                        if *pk == payer.pubkey() {
+                            Some(payer)
+                        } else if *pk == instruction_buffer.pubkey() {
+                            Some(&instruction_buffer)
+                        } else if *pk == input_buffer.pubkey() {
+                            Some(&input_buffer)
+                        } else if *pk == compute_buffer.pubkey() {
+                            Some(&compute_buffer)
+                        } else {
+                            None // shouldn't happen...
+                        }
+                    })
+                    .collect::<Option<Vec<_>>>()
+                    .unwrap()
+                    .as_slice()
+                    ,
             )?;
         }
 
