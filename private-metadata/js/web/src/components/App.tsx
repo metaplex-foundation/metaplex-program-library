@@ -619,13 +619,19 @@ export const Demo = () => {
 
               // fixup rent and keys
               for (const tx of transferChunkTxs) {
-                for (const ix of tx.instructions) {
-                  ix.program_id = new PublicKey(ix.program_id);
-                  for (const meta of ix.accounts) {
-                    meta.pubkey = new PublicKey(meta.pubkey);
-                  }
+                for (let idx = 0; idx < tx.instructions.length; ++idx) {
+                  const ix = tx.instructions[idx];
+                  ix.programId = new PublicKey(ix.program_id);
+                  ix.keys = ix.accounts.map((m: any) => ({
+                    pubkey: new PublicKey(m.pubkey),
+                    isSigner: m.is_signer,
+                    isWritable: m.is_writable,
+                  }));
 
-                  if (!ix.program_id.equals(SystemProgram.programId)) {
+                  delete ix.program_id;
+                  delete ix.accounts;
+
+                  if (!ix.programId.equals(SystemProgram.programId)) {
                     continue;
                   }
                   const space = new BN(ix.data.slice(12, 20), 'le').toNumber();
@@ -633,9 +639,7 @@ export const Demo = () => {
                   ix.data.splice(4, 8, ...new BN(lamports).toArray('le', 8));
                 }
 
-                for (let signer of tx.signers) {
-                  signer = new PublicKey(signer);
-                }
+                tx.signers = tx.signers.map((s: Array<number>) => new PublicKey(s));
               }
 
               // build the verification ix
@@ -716,12 +720,20 @@ export const Demo = () => {
               console.log('Singing transactions...');
               const signedTxns = await wallet.signAllTransactions(txns);
               for (let i = 0; i < signedTxns.length; ++i) {
-                const result = await sendSignedTransaction({
-                  connection,
-                  signedTransaction: signedTxns[i],
-                });
+                let result;
+                try {
+                  result = await sendSignedTransaction({
+                    connection,
+                    signedTransaction: signedTxns[i],
+                  });
+                } catch (error) {
+                  console.error(error);
+                  result = "See console logs";
+                }
 
-                notifyResult(result, `Transfer crank ${i + 1} of ${signedTxns.length}`);
+                if (!notifyResult(result, `Transfer crank ${i + 1} of ${signedTxns.length}`)) {
+                  return;
+                }
               }
 
             } catch (err) {
