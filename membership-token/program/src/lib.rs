@@ -181,6 +181,22 @@ pub struct CreateStore<'info> {
     system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+#[instruction(name: String, description: String, mutable: bool, price: u64, pieces_in_one_wallet: Option<u64>, start_date: u64, end_date: u64)]
+pub struct CreateMarket<'info> {
+    #[account(mut)]
+    market: Account<'info, Market>,
+    store: Account<'info, Store>,
+    #[account(mut)]
+    selling_resource_owner: Signer<'info>,
+    #[account(mut)]
+    selling_resource: UncheckedAccount<'info>,
+    treasury_mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    treasury_holder: Signer<'info>,
+    treasury_owner: UncheckedAccount<'info>,
+}
+
 #[account]
 pub struct Store {
     pub admin: Pubkey,
