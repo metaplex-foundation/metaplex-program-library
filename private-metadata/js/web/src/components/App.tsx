@@ -30,6 +30,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
+import { Token } from '@solana/spl-token';
 import * as bs58 from 'bs58';
 import { explorerLinkFor, sendSignedTransaction } from '../utils/transactions';
 import {
@@ -157,7 +158,7 @@ const ensureBuffersClosed = async (
   return ixs;
 }
 
-const initializeTransferBuffer = async (
+const initTransferIxs = async (
   connection: Connection,
   wasm: WasmConfig,
   walletKey: PublicKey,
@@ -234,6 +235,93 @@ const initializeTransferBuffer = async (
       ])
     }),
   ];
+
+  return instructions;
+}
+
+const finiTransferIxs = async (
+  connection: Connection,
+  walletKey: PublicKey,
+  destKey: PublicKey,
+  mintKey: PublicKey,
+  transferBufferKeypair: Keypair,
+) => {
+  const [walletATAKey, ] = await PublicKey.findProgramAddress(
+    [
+      walletKey.toBuffer(),
+      TOKEN_PROGRAM_ID.toBuffer(),
+      mintKey.toBuffer(),
+    ],
+    SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+  );
+
+  const [destATAKey, ] = await PublicKey.findProgramAddress(
+    [
+      destKey.toBuffer(),
+      TOKEN_PROGRAM_ID.toBuffer(),
+      mintKey.toBuffer(),
+    ],
+    SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+  );
+
+  const privateMetadataKey = await getPrivateMetadata(mintKey);
+
+  const instructions : Array<TransactionInstruction> = [];
+
+  if (await connection.getAccountInfo(walletATAKey) === null) {
+    instructions.push(
+      Token.createAssociatedTokenAccountInstruction(
+        SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        mintKey,
+        destATAKey,
+        destKey,
+        walletKey,
+      ),
+    );
+  }
+
+  instructions.push(
+    Token.createTransferInstruction(
+      TOKEN_PROGRAM_ID,
+      walletATAKey,
+      destATAKey,
+      walletKey,
+      [],
+      1,
+    ),
+  );
+
+  instructions.push(
+    new TransactionInstruction({
+      programId: PRIVATE_METADATA_PROGRAM_ID,
+      keys: [
+        {
+          pubkey: walletKey,
+          isSigner: true,
+          isWritable: true,
+        },
+        {
+          pubkey: privateMetadataKey,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: transferBufferKeypair.publicKey,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: SystemProgram.programId,
+          isSigner: false,
+          isWritable: false,
+        },
+      ],
+      data: Buffer.from([
+        2, // FiniTransfer
+      ])
+    }),
+  );
 
   return instructions;
 }
@@ -447,6 +535,8 @@ export const Demo = () => {
 
   // user inputs
   const [mint, setMint] = useLocalStorageState('mint', '');
+  const [recipientPubkeyStr, setRecipientPubkey]
+    = useLocalStorageState('recipientPubkey', '');
   const [recipientElgamal, setRecipientElgamal]
     = useLocalStorageState('recipientElgamal', '');
   const [transferBuffer, setTransferBuffer]
@@ -640,6 +730,15 @@ export const Demo = () => {
         />
       </label>
       <label className="action-field">
+        <span className="field-title">Recipient Pubkey</span>
+        <Input
+          id="recipient-pubkey-field"
+          value={recipientPubkeyStr}
+          onChange={(e) => setRecipientPubkey(e.target.value)}
+          style={{ fontFamily: 'Monospace' }}
+        />
+      </label>
+      <label className="action-field">
         <span className="field-title">Instruction Buffer</span>
         <Input
           id="instruction-buffer-field"
@@ -726,15 +825,17 @@ export const Demo = () => {
                 throw new Error('Recipient elgamal pubkey does not look correct');
               }
 
+              const recipientPubkey = new PublicKey(recipientPubkeyStr);
+
               let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
               if (transferBufferAccount === null) {
-                const createInstructions = await initializeTransferBuffer(
+                const createInstructions = await initTransferIxs(
                     connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientElgamalPubkey);
 
                 const createTxid = await sendTransactionWithNotify(
                   createInstructions,
                   [transferBufferKeypair],
-                  "Transfer buffer create",
+                  "Init transfer",
                 );
 
                 await connection.confirmTransaction(createTxid, "confirmed");
@@ -814,6 +915,20 @@ export const Demo = () => {
                   }
                 }
               }
+
+              const createTxid = await sendTransactionWithNotify(
+                await finiTransferIxs(
+                  connection,
+                  walletKey,
+                  recipientPubkey,
+                  mintKey,
+                  transferBufferKeypair,
+                ),
+                [],
+                "Fini transfer",
+              );
+
+              await connection.confirmTransaction(createTxid, "confirmed");
             } catch (err) {
               console.error(err);
               notify({
