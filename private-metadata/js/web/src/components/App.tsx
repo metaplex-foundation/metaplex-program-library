@@ -4,6 +4,7 @@ import { hot } from "react-hot-loader";
 
 import { CoingeckoProvider } from '../contexts/coingecko';
 import { ConnectionProvider } from '../contexts/ConnectionContext';
+import { LoaderProvider } from '../components/Loader';
 import { SPLTokenListProvider } from '../contexts/tokenList';
 import { WalletProvider } from '../contexts/WalletContext';
 import { WasmProvider } from '../contexts/WasmContext';
@@ -522,6 +523,7 @@ const decryptImage = (
 
 import { Button, Input } from 'antd';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useLoading } from '../components/Loader';
 import { useConnection } from '../contexts/ConnectionContext';
 import { useLocalStorageState } from '../utils/common';
 import * as CryptoJS from 'crypto-js';
@@ -532,6 +534,7 @@ export const Demo = () => {
   const connection = useConnection();
   const wallet = useWallet();
   const wasm = useWasmConfig();
+  const { loading, setLoading } = useLoading();
 
   // user inputs
   const [mint, setMint] = useLocalStorageState('mint', '');
@@ -686,7 +689,7 @@ export const Demo = () => {
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={!privateMetadata || !wallet?.connected}
+        disabled={loading || !privateMetadata || !wallet?.connected}
         onClick={() => {
           if (!privateMetadata || !wallet?.connected) {
             return;
@@ -694,7 +697,9 @@ export const Demo = () => {
           const mintKey = parseAddress(mint);
           if (mintKey === null) {
             console.error(`Failed to parse mint ${mint}`);
+            return;
           }
+
           const run = async () => {
             const [cipherKey, elgamalKeypair] = await getCipherKey(
               connection, wallet, mintKey, privateMetadata, wasm);
@@ -703,18 +708,27 @@ export const Demo = () => {
 
             setElgamalKeypairStr(JSON.stringify(elgamalKeypair));
             setCipherKey(cipherKey.toString('base64'));
-          }
+
+            notify({
+              message: 'Decrypted cipher key',
+            })
+          };
+
           const wrap = async () => {
             try {
               await run();
             } catch (err) {
-              // console.error(err);
+              console.error(err);
               notify({
                 message: 'Failed to decrypt cipher key',
                 description: err.message,
               })
+            } finally {
+              setLoading(false);
             }
           };
+
+          setLoading(true);
           wrap();
         }}
       >
@@ -780,7 +794,7 @@ export const Demo = () => {
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={!privateMetadata || !wallet?.connected || !elgamalKeypairStr}
+        disabled={loading || !privateMetadata || !wallet?.connected || !elgamalKeypairStr}
         onClick={() => {
           // TODO: requiring elgamalKeypair from decryption is a bit weird here...
           if (!privateMetadata || !wallet?.connected || !elgamalKeypairStr) {
@@ -799,144 +813,152 @@ export const Demo = () => {
             }
           }
 
-          const wrap = async () => {
-            try {
-              const walletKey = wallet.publicKey;
-              const mintKey = parseAddress(mint);
-              if (!mintKey) {
-                throw new Error(`Could not parse mint key '${mint}'`);
-              }
+          const run = async () => {
+            const walletKey = wallet.publicKey;
+            const mintKey = parseAddress(mint);
+            if (!mintKey) {
+              throw new Error(`Could not parse mint key '${mint}'`);
+            }
 
-              const instructionBufferPubkey = parseAddress(instructionBuffer);
-              if (!instructionBufferPubkey) {
-                throw new Error(`Could not parse instruction buffer key '${instructionBuffer}'`);
-              }
+            const instructionBufferPubkey = parseAddress(instructionBuffer);
+            if (!instructionBufferPubkey) {
+              throw new Error(`Could not parse instruction buffer key '${instructionBuffer}'`);
+            }
 
-              const inputBufferKeypair = validateKeypair(inputBuffer, 'input');
-              const computeBufferKeypair = validateKeypair(computeBuffer, 'compute');
-              const transferBufferKeypair = validateKeypair(transferBuffer, 'transfer');
+            const inputBufferKeypair = validateKeypair(inputBuffer, 'input');
+            const computeBufferKeypair = validateKeypair(computeBuffer, 'compute');
+            const transferBufferKeypair = validateKeypair(transferBuffer, 'transfer');
 
-              console.log('inputBufferKeypair', bs58.encode(inputBufferKeypair.secretKey));
-              console.log('computeBufferKeypair', bs58.encode(computeBufferKeypair.secretKey));
-              console.log('transferBufferKeypair', bs58.encode(transferBufferKeypair.secretKey));
+            console.log('inputBufferKeypair', bs58.encode(inputBufferKeypair.secretKey));
+            console.log('computeBufferKeypair', bs58.encode(computeBufferKeypair.secretKey));
+            console.log('transferBufferKeypair', bs58.encode(transferBufferKeypair.secretKey));
 
-              const recipientElgamalPubkey = Buffer.from(recipientElgamal, 'base64');
-              if (recipientElgamalPubkey.length !== 32) {
-                throw new Error('Recipient elgamal pubkey does not look correct');
-              }
+            const recipientElgamalPubkey = Buffer.from(recipientElgamal, 'base64');
+            if (recipientElgamalPubkey.length !== 32) {
+              throw new Error('Recipient elgamal pubkey does not look correct');
+            }
 
-              const recipientPubkey = new PublicKey(recipientPubkeyStr);
+            const recipientPubkey = new PublicKey(recipientPubkeyStr);
 
-              let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
-              if (transferBufferAccount === null) {
-                const createInstructions = await initTransferIxs(
-                    connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientElgamalPubkey);
-
-                const createTxid = await sendTransactionWithNotify(
-                  createInstructions,
-                  [transferBufferKeypair],
-                  "Init transfer",
-                );
-
-                await connection.confirmTransaction(createTxid, "confirmed");
-
-                transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
-              }
-
-              const closeIxs = await ensureBuffersClosed(
-                connection,
-                walletKey,
-                [inputBufferKeypair.publicKey, computeBufferKeypair.publicKey],
-              );
-              if (closeIxs.length !== 0) {
-                const closeTxid = await sendTransactionWithNotify(
-                  closeIxs,
-                  [],
-                  "Input and compute buffer close",
-                );
-
-                await connection.confirmTransaction(closeTxid, "confirmed");
-
-              }
-
-              const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
-              const elgamalKeypair = JSON.parse(elgamalKeypairStr);
-              console.log(elgamalKeypair);
-
-              const cipherKeyChunks = privateMetadata.encryptedCipherKey.length;
-              for (let chunk = 0; chunk < cipherKeyChunks; ++chunk) {
-                const updateMask = 1<<chunk;
-                if ((transferBufferDecoded.updated & updateMask) === updateMask) {
-                  continue;
-                }
-
-                console.log(`Transfering chunk ${chunk}`);
-
-                const txns = await buildTransferChunkTxns(
-                  connection,
-                  wasm,
-                  cipherKey,
-                  chunk,
-                  elgamalKeypair,
-                  recipientElgamalPubkey,
-                  privateMetadata,
-                  {
-                    walletKey,
-                    mintKey,
-                    transferBufferKeypair,
-                    instructionBufferPubkey,
-                    inputBufferKeypair,
-                    computeBufferKeypair,
-                  },
-                );
-
-                console.log('Singing transactions...');
-                const signedTxns = await wallet.signAllTransactions(txns);
-                for (let i = 0; i < signedTxns.length; ++i) {
-                  const resultTxid: TransactionSignature = await connection.sendRawTransaction(
-                    signedTxns[i].serialize(),
-                    {
-                      skipPreflight: true,
-                    },
-                  );
-
-                  console.log('Waiting on confirmations for', resultTxid);
-
-                  const confirmed = await connection.confirmTransaction(
-                      resultTxid, "confirmed");
-
-                  console.log(confirmed);
-                  const succeeded = notifyResult(
-                    confirmed.value.err ? 'See console logs' : {txid: resultTxid},
-                    `Transfer crank chunk ${chunk}: ${i + 1} of ${signedTxns.length}`,
-                  );
-                  if (!succeeded) {
-                    throw new Error('Crank failed');
-                  }
-                }
-              }
+            let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
+            if (transferBufferAccount === null) {
+              const createInstructions = await initTransferIxs(
+                  connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientElgamalPubkey);
 
               const createTxid = await sendTransactionWithNotify(
-                await finiTransferIxs(
-                  connection,
-                  walletKey,
-                  recipientPubkey,
-                  mintKey,
-                  transferBufferKeypair,
-                ),
-                [],
-                "Fini transfer",
+                createInstructions,
+                [transferBufferKeypair],
+                "Init transfer",
               );
 
               await connection.confirmTransaction(createTxid, "confirmed");
+
+              transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
+            }
+
+            const closeIxs = await ensureBuffersClosed(
+              connection,
+              walletKey,
+              [inputBufferKeypair.publicKey, computeBufferKeypair.publicKey],
+            );
+            if (closeIxs.length !== 0) {
+              const closeTxid = await sendTransactionWithNotify(
+                closeIxs,
+                [],
+                "Input and compute buffer close",
+              );
+
+              await connection.confirmTransaction(closeTxid, "confirmed");
+
+            }
+
+            const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
+            const elgamalKeypair = JSON.parse(elgamalKeypairStr);
+            console.log(elgamalKeypair);
+
+            const cipherKeyChunks = privateMetadata.encryptedCipherKey.length;
+            for (let chunk = 0; chunk < cipherKeyChunks; ++chunk) {
+              const updateMask = 1<<chunk;
+              if ((transferBufferDecoded.updated & updateMask) === updateMask) {
+                continue;
+              }
+
+              console.log(`Transfering chunk ${chunk}`);
+
+              const txns = await buildTransferChunkTxns(
+                connection,
+                wasm,
+                cipherKey,
+                chunk,
+                elgamalKeypair,
+                recipientElgamalPubkey,
+                privateMetadata,
+                {
+                  walletKey,
+                  mintKey,
+                  transferBufferKeypair,
+                  instructionBufferPubkey,
+                  inputBufferKeypair,
+                  computeBufferKeypair,
+                },
+              );
+
+              console.log('Singing transactions...');
+              const signedTxns = await wallet.signAllTransactions(txns);
+              for (let i = 0; i < signedTxns.length; ++i) {
+                const resultTxid: TransactionSignature = await connection.sendRawTransaction(
+                  signedTxns[i].serialize(),
+                  {
+                    skipPreflight: true,
+                  },
+                );
+
+                console.log('Waiting on confirmations for', resultTxid);
+
+                const confirmed = await connection.confirmTransaction(
+                    resultTxid, "confirmed");
+
+                console.log(confirmed);
+                const succeeded = notifyResult(
+                  confirmed.value.err ? 'See console logs' : {txid: resultTxid},
+                  `Transfer crank chunk ${chunk}: ${i + 1} of ${signedTxns.length}`,
+                );
+                if (!succeeded) {
+                  throw new Error('Crank failed');
+                }
+              }
+            }
+
+            const finiTxid = await sendTransactionWithNotify(
+              await finiTransferIxs(
+                connection,
+                walletKey,
+                recipientPubkey,
+                mintKey,
+                transferBufferKeypair,
+              ),
+              [],
+              "Fini transfer",
+            );
+
+            await connection.confirmTransaction(finiTxid, "confirmed");
+          };
+
+          const wrap = async () => {
+            try {
+              await run();
             } catch (err) {
               console.error(err);
               notify({
                 message: 'Failed to transfer NFT',
                 description: err.message,
               })
+            } finally {
+              setLoading(false);
             }
           };
+
+          setLoading(true);
           wrap();
         }}
       >
@@ -954,6 +976,7 @@ export const App = () => {
       <WalletProvider>
       <SPLTokenListProvider>
       <CoingeckoProvider>
+      <LoaderProvider>
         <AppLayout>
           <Switch>
             <Route path="/" component={() => (
@@ -961,6 +984,7 @@ export const App = () => {
             )} />
           </Switch>
         </AppLayout>
+      </LoaderProvider>
       </CoingeckoProvider>
       </SPLTokenListProvider>
       </WalletProvider>
