@@ -547,6 +547,10 @@ export const Demo = () => {
               const computeBufferKeypair = validateKeypair(computeBuffer, 'compute');
               const transferBufferKeypair = validateKeypair(transferBuffer, 'transfer');
 
+              console.log('inputBufferKeypair', bs58.encode(inputBufferKeypair.secretKey));
+              console.log('computeBufferKeypair', bs58.encode(computeBufferKeypair.secretKey));
+              console.log('transferBufferKeypair', bs58.encode(transferBufferKeypair.secretKey));
+
               const recipientElgamalPubkey = Buffer.from(recipientElgamal, 'base64');
               if (recipientElgamalPubkey.length !== 32) {
                 throw new Error('Recipient elgamal pubkey does not look correct');
@@ -687,6 +691,7 @@ export const Demo = () => {
                     ],
                     data: Buffer.from([
                       4,  // TransferChunkSlow...
+                      chunk,
                       ...transferDataBytes,
                     ]),
                   }),
@@ -731,9 +736,14 @@ export const Demo = () => {
                   result = "See console logs";
                 }
 
-                if (!notifyResult(result, `Transfer crank ${i + 1} of ${signedTxns.length}`)) {
+                const resultTxid = notifyResult(result, `Transfer crank ${i + 1} of ${signedTxns.length}`);
+                if (!resultTxid) {
                   return;
                 }
+
+                console.log('Waiting on confirmations for', resultTxid);
+
+                await connection.confirmTransaction(resultTxid, "max");
               }
 
             } catch (err) {

@@ -9,7 +9,7 @@ export const SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
 );
 
 export const PRIVATE_METADATA_PROGRAM_ID = new PublicKey(
-  '2gx9jYVrYTVJ2qrsnYmcm2AaZmfSTwbmSYgcqb9eohau',
+  '8SyzzxuZnMryDgLz6tWH3ubcEVikaVP3upq6cJce9jrL',
 );
 
 export const CURVE_DALEK_ONCHAIN_PROGRAM_ID = new PublicKey(
