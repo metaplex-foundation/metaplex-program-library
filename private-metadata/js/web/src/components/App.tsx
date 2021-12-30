@@ -124,11 +124,12 @@ const ensureBuffersClosed = async (
   connection: Connection,
   walletKey: PublicKey,
   buffers: Array<PublicKey>,
+  checkExists: boolean = true,
 ) => {
-  const infos = await connection.getMultipleAccountsInfo(buffers);
+  const infos = checkExists ? await connection.getMultipleAccountsInfo(buffers) : null;
   const ixs: Array<TransactionInstruction> = [];
   for (let idx = 0; idx < buffers.length; ++idx) {
-    if (infos[idx] === null) continue;
+    if (checkExists && infos[idx] === null) continue;
     ixs.push(new TransactionInstruction({
       programId: CURVE_DALEK_ONCHAIN_PROGRAM_ID,
       keys: [
@@ -363,11 +364,21 @@ const buildTransferChunkTxns = async (
   }
 
   // build the verification ix
-  transferChunkTxs.push(transferChunkSlowVerify(
+  transferChunkTxs.push(await transferChunkSlowVerify(
     keys,
     chunk,
     transferDataBytes,
   ));
+
+  transferChunkTxs.push({
+    instructions: await ensureBuffersClosed(
+      connection,
+      keys.walletKey,
+      [keys.inputBufferKeypair.publicKey, keys.computeBufferKeypair.publicKey],
+      false,
+    ),
+    signers: [keys.walletKey],
+  });
 
   console.log(transferChunkTxs);
 
@@ -758,6 +769,8 @@ export const Demo = () => {
                   continue;
                 }
 
+                console.log(`Transfering chunk ${chunk}`);
+
                 const txns = await buildTransferChunkTxns(
                   connection,
                   wasm,
@@ -794,7 +807,7 @@ export const Demo = () => {
                   console.log(confirmed);
                   const succeeded = notifyResult(
                     confirmed.value.err ? 'See console logs' : {txid: resultTxid},
-                    `Transfer crank ${i + 1} of ${signedTxns.length}`,
+                    `Transfer crank chunk ${chunk}: ${i + 1} of ${signedTxns.length}`,
                   );
                   if (!succeeded) {
                     throw new Error('Crank failed');
@@ -802,6 +815,7 @@ export const Demo = () => {
                 }
               }
             } catch (err) {
+              console.error(err);
               notify({
                 message: 'Failed to transfer NFT',
                 description: err.message,
