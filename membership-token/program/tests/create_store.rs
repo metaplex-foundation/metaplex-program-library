@@ -82,6 +82,7 @@ mod create_store {
 
         airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
 
+        // name is longer than allowed
         let name = String::from("123456789_123456789_12345");
         let description = String::from("123456789_123456789_");
 
@@ -130,6 +131,7 @@ mod create_store {
         airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
 
         let name = String::from("123456789_123456789_");
+        // description is longer than allowed
         let description = String::from("123456789_123456789_12345");
 
         let accounts = mpl_membership_token_accounts::CreateStore {
@@ -165,5 +167,48 @@ mod create_store {
             TransportError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
+    }
+
+    #[tokio::test]
+    #[should_panic]
+    async fn failure_signer_is_missed() {
+        let mut context = membership_token_program_test().start_with_context().await;
+
+        let admin_wallet = Keypair::new();
+        let store_keypair = Keypair::new();
+
+        airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
+
+        let name = String::from("123456789_123456789_");
+        let description = String::from("123456789_123456789_");
+
+        let accounts = mpl_membership_token_accounts::CreateStore {
+            admin: admin_wallet.pubkey(),
+            store: store_keypair.pubkey(),
+            system_program: system_program::id(),
+        }
+        .to_account_metas(None);
+
+        let data = mpl_membership_token_instruction::CreateStore {
+            name: name.to_owned(),
+            description: description.to_owned(),
+        }
+        .data();
+
+        let instruction = Instruction {
+            program_id: mpl_membership_token::id(),
+            data,
+            accounts,
+        };
+
+        // store_keypair is missed in the signing_keypaairs slice
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &admin_wallet],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
     }
 }
