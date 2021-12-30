@@ -237,6 +237,164 @@ const initializeTransferBuffer = async (
   return instructions;
 }
 
+type TransferChunkSlowKeys = {
+  walletKey: PublicKey,
+  mintKey: PublicKey,
+  transferBufferKeypair: Keypair,
+  instructionBufferPubkey: PublicKey,
+  inputBufferKeypair: Keypair,
+  computeBufferKeypair: Keypair,
+};
+
+const transferChunkSlowVerify = async (
+  keys: TransferChunkSlowKeys,
+  chunk: number,
+  transferDataBytes: Buffer,
+) => {
+  const privateMetadataKey = await getPrivateMetadata(keys.mintKey);
+  return {
+    instructions: [
+      new TransactionInstruction({
+        programId: PRIVATE_METADATA_PROGRAM_ID,
+        keys: [
+          {
+            pubkey: keys.walletKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: privateMetadataKey,
+            isSigner: false,
+            isWritable: false,
+          },
+          {
+            pubkey: keys.transferBufferKeypair.publicKey,
+            isSigner: false,
+            isWritable: true,
+          },
+          {
+            pubkey: keys.instructionBufferPubkey,
+            isSigner: false,
+            isWritable: false,
+          },
+          {
+            pubkey: keys.inputBufferKeypair.publicKey,
+            isSigner: false,
+            isWritable: false,
+          },
+          {
+            pubkey: keys.computeBufferKeypair.publicKey,
+            isSigner: false,
+            isWritable: false,
+          },
+          {
+            pubkey: SystemProgram.programId,
+            isSigner: false,
+            isWritable: false,
+          },
+        ],
+        data: Buffer.from([
+          4,  // TransferChunkSlow...
+          chunk,
+          ...transferDataBytes,
+        ]),
+      }),
+    ],
+    signers: [keys.walletKey],
+  };
+}
+
+const buildTransferChunkTxns = async (
+  connection: Connection,
+  wasm: WasmConfig,
+  cipherKey: string, // base64
+  chunk: number,
+  elgamalKeypair: Object, // TODO: typing
+  recipientElgamalPubkey: Buffer,
+  privateMetadata: PrivateMetadataAccount,
+  keys: TransferChunkSlowKeys,
+) => {
+  const keychunk = Buffer.from(cipherKey, 'base64')
+      .slice(chunk * 4, (chunk + 1) * 4);
+
+  const transferChunkTxsRes = wasm.transferChunkTxs(
+    elgamalKeypair,
+    [...recipientElgamalPubkey],
+    {bytes: [...privateMetadata.encryptedCipherKey[chunk]]},
+    // TODO: pass buffer and convert on rust side?
+    new BN(keychunk, 'le').toNumber(),
+    {
+      payer: [...keys.walletKey.toBuffer()],
+      instruction_buffer: [...keys.instructionBufferPubkey.toBuffer()],
+      input_buffer: [...keys.inputBufferKeypair.publicKey.toBuffer()],
+      compute_buffer: [...keys.computeBufferKeypair.publicKey.toBuffer()],
+    },
+  );
+
+  if (transferChunkTxsRes.Err) {
+    throw new Error(transferChunkTxsRes.Err);
+  }
+
+  const [transferChunkTxs, transferDataBytes] = transferChunkTxsRes.Ok;
+
+  // fixup rent and keys
+  for (const tx of transferChunkTxs) {
+    for (let idx = 0; idx < tx.instructions.length; ++idx) {
+      const ix = tx.instructions[idx];
+      ix.programId = new PublicKey(ix.program_id);
+      ix.keys = ix.accounts.map((m: any) => ({
+        pubkey: new PublicKey(m.pubkey),
+        isSigner: m.is_signer,
+        isWritable: m.is_writable,
+      }));
+
+      delete ix.program_id;
+      delete ix.accounts;
+
+      if (!ix.programId.equals(SystemProgram.programId)) {
+        continue;
+      }
+      const space = new BN(ix.data.slice(12, 20), 'le').toNumber();
+      const lamports = await connection.getMinimumBalanceForRentExemption(space);
+      ix.data.splice(4, 8, ...new BN(lamports).toArray('le', 8));
+    }
+
+    tx.signers = tx.signers.map((s: Array<number>) => new PublicKey(s));
+  }
+
+  // build the verification ix
+  transferChunkTxs.push(transferChunkSlowVerify(
+    keys,
+    chunk,
+    transferDataBytes,
+  ));
+
+  console.log(transferChunkTxs);
+
+  // sign this group...
+  const recentBlockhash = (
+    await connection.getRecentBlockhash()
+  ).blockhash;
+  const txns: Array<Transaction> = [];
+  for (const txParams of transferChunkTxs) {
+    const transaction = new Transaction();
+    for (const ix of txParams.instructions) {
+      transaction.add(ix);
+    }
+    transaction.recentBlockhash = recentBlockhash;
+    transaction.setSigners(...txParams.signers);
+
+    for (const s of [keys.inputBufferKeypair, keys.computeBufferKeypair]) {
+      if (txParams.signers.find((p: PublicKey) => s.publicKey.equals(p))) {
+        transaction.partialSign(s);
+      }
+    }
+    txns.push(transaction);
+  }
+
+  return txns;
+}
+
 const decryptImage = (
   encryptedImage: Buffer,
   cipherKey: Buffer,
@@ -590,161 +748,59 @@ export const Demo = () => {
               }
 
               const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
-              if (transferBufferDecoded.updated !== 0) {
-                return;
-              }
-
-              const chunk = 0;
-              const keychunk = Buffer.from(cipherKey, 'base64')
-                  .slice(chunk * 4, (chunk + 1) * 4);
-
               const elgamalKeypair = JSON.parse(elgamalKeypairStr);
-
               console.log(elgamalKeypair);
 
-              const transferChunkTxsRes = wasm.transferChunkTxs(
-                elgamalKeypair,
-                [...recipientElgamalPubkey],
-                {bytes: [...privateMetadata.encryptedCipherKey[chunk]]},
-                // TODO: pass buffer and convert on rust side?
-                new BN(keychunk, 'le').toNumber(),
-                {
-                  payer: [...walletKey.toBuffer()],
-                  instruction_buffer: [...instructionBufferPubkey.toBuffer()],
-                  input_buffer: [...inputBufferKeypair.publicKey.toBuffer()],
-                  compute_buffer: [...computeBufferKeypair.publicKey.toBuffer()],
-                },
-              );
-
-              if (transferChunkTxsRes.Err) {
-                throw new Error(transferChunkTxsRes.Err);
-              }
-
-              const [transferChunkTxs, transferDataBytes] = transferChunkTxsRes.Ok;
-
-              // fixup rent and keys
-              for (const tx of transferChunkTxs) {
-                for (let idx = 0; idx < tx.instructions.length; ++idx) {
-                  const ix = tx.instructions[idx];
-                  ix.programId = new PublicKey(ix.program_id);
-                  ix.keys = ix.accounts.map((m: any) => ({
-                    pubkey: new PublicKey(m.pubkey),
-                    isSigner: m.is_signer,
-                    isWritable: m.is_writable,
-                  }));
-
-                  delete ix.program_id;
-                  delete ix.accounts;
-
-                  if (!ix.programId.equals(SystemProgram.programId)) {
-                    continue;
-                  }
-                  const space = new BN(ix.data.slice(12, 20), 'le').toNumber();
-                  const lamports = await connection.getMinimumBalanceForRentExemption(space);
-                  ix.data.splice(4, 8, ...new BN(lamports).toArray('le', 8));
+              const cipherKeyChunks = privateMetadata.encryptedCipherKey.length;
+              for (let chunk = 0; chunk < cipherKeyChunks; ++chunk) {
+                const updateMask = 1<<chunk;
+                if ((transferBufferDecoded.updated & updateMask) === updateMask) {
+                  continue;
                 }
 
-                tx.signers = tx.signers.map((s: Array<number>) => new PublicKey(s));
-              }
-
-              // build the verification ix
-              const privateMetadataKey = await getPrivateMetadata(mintKey);
-              transferChunkTxs.push({
-                instructions: [
-                  new TransactionInstruction({
-                    programId: PRIVATE_METADATA_PROGRAM_ID,
-                    keys: [
-                      {
-                        pubkey: walletKey,
-                        isSigner: true,
-                        isWritable: false,
-                      },
-                      {
-                        pubkey: privateMetadataKey,
-                        isSigner: false,
-                        isWritable: false,
-                      },
-                      {
-                        pubkey: transferBufferKeypair.publicKey,
-                        isSigner: false,
-                        isWritable: true,
-                      },
-                      {
-                        pubkey: instructionBufferPubkey,
-                        isSigner: false,
-                        isWritable: false,
-                      },
-                      {
-                        pubkey: inputBufferKeypair.publicKey,
-                        isSigner: false,
-                        isWritable: false,
-                      },
-                      {
-                        pubkey: computeBufferKeypair.publicKey,
-                        isSigner: false,
-                        isWritable: false,
-                      },
-                      {
-                        pubkey: SystemProgram.programId,
-                        isSigner: false,
-                        isWritable: false,
-                      },
-                    ],
-                    data: Buffer.from([
-                      4,  // TransferChunkSlow...
-                      chunk,
-                      ...transferDataBytes,
-                    ]),
-                  }),
-                ],
-                signers: [walletKey],
-              })
-
-              console.log(transferChunkTxs);
-
-              // sign this group...
-              const recentBlockhash = (
-                await connection.getRecentBlockhash()
-              ).blockhash;
-              const txns: Array<Transaction> = [];
-              for (const txParams of transferChunkTxs) {
-                const transaction = new Transaction();
-                for (const ix of txParams.instructions) {
-                  transaction.add(ix);
-                }
-                transaction.recentBlockhash = recentBlockhash;
-                transaction.setSigners(...txParams.signers);
-
-                for (const s of [inputBufferKeypair, computeBufferKeypair]) {
-                  if (txParams.signers.find((p: PublicKey) => s.publicKey.equals(p))) {
-                    transaction.partialSign(s);
-                  }
-                }
-                txns.push(transaction);
-              }
-
-              console.log('Singing transactions...');
-              const signedTxns = await wallet.signAllTransactions(txns);
-              for (let i = 0; i < signedTxns.length; ++i) {
-                const resultTxid: TransactionSignature = await connection.sendRawTransaction(
-                  signedTxns[i].serialize(),
+                const txns = await buildTransferChunkTxns(
+                  connection,
+                  wasm,
+                  cipherKey,
+                  chunk,
+                  elgamalKeypair,
+                  recipientElgamalPubkey,
+                  privateMetadata,
                   {
-                    skipPreflight: true,
+                    walletKey,
+                    mintKey,
+                    transferBufferKeypair,
+                    instructionBufferPubkey,
+                    inputBufferKeypair,
+                    computeBufferKeypair,
                   },
                 );
 
-                console.log('Waiting on confirmations for', resultTxid);
+                console.log('Singing transactions...');
+                const signedTxns = await wallet.signAllTransactions(txns);
+                for (let i = 0; i < signedTxns.length; ++i) {
+                  const resultTxid: TransactionSignature = await connection.sendRawTransaction(
+                    signedTxns[i].serialize(),
+                    {
+                      skipPreflight: true,
+                    },
+                  );
 
-                const confirmed = await connection.confirmTransaction(
-                    resultTxid, "confirmed");
+                  console.log('Waiting on confirmations for', resultTxid);
 
-                console.log(confirmed);
-                notifyResult(
-                  confirmed.value.err ? 'See console logs' : {txid: resultTxid},
-                  `Transfer crank ${i + 1} of ${signedTxns.length}`,
-                );
+                  const confirmed = await connection.confirmTransaction(
+                      resultTxid, "confirmed");
+
+                  console.log(confirmed);
+                  const succeeded = notifyResult(
+                    confirmed.value.err ? 'See console logs' : {txid: resultTxid},
+                    `Transfer crank ${i + 1} of ${signedTxns.length}`,
+                  );
+                  if (!succeeded) {
+                    throw new Error('Crank failed');
+                  }
+                }
               }
-
             } catch (err) {
               notify({
                 message: 'Failed to transfer NFT',
