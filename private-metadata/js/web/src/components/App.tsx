@@ -677,8 +677,6 @@ export const Demo = () => {
     return notifyResult(result, name);
   };
 
-  const { TextArea } = Input;
-
   return (
     <div className="app stack" style={{ maxWidth: '80ch', margin: 'auto' }}>
       <label className="action-field">
@@ -789,8 +787,7 @@ export const Demo = () => {
         </label>
         <label className="action-field">
           <span className="field-title">Transfer Buffer</span>
-          <TextArea
-            rows={2}
+          <Input
             id="transfer-buffer-field"
             value={transferBuffer}
             onChange={(e) => setTransferBuffer(e.target.value)}
@@ -799,8 +796,7 @@ export const Demo = () => {
         </label>
         <label className="action-field">
           <span className="field-title">Input Buffer</span>
-          <TextArea
-            rows={2}
+          <Input
             id="input-buffer-field"
             value={inputBuffer}
             onChange={(e) => setInputBuffer(e.target.value)}
@@ -809,8 +805,7 @@ export const Demo = () => {
         </label>
         <label className="action-field">
           <span className="field-title">Compute Buffer</span>
-          <TextArea
-            rows={2}
+          <Input
             id="compute-buffer-field"
             value={computeBuffer}
             onChange={(e) => setComputeBuffer(e.target.value)}
