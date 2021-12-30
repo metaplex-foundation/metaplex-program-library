@@ -239,7 +239,7 @@ const initTransferIxs = async (
           isWritable: false,
         },
         {
-          pubkey: await getElgamalPubkeyAddress(walletKey, mintKey),
+          pubkey: await getElgamalPubkeyAddress(recipientKey, mintKey),
           isSigner: false,
           isWritable: false,
         },
@@ -894,7 +894,7 @@ export const Demo = () => {
                 "Init transfer",
               );
 
-              await connection.confirmTransaction(createTxid, "confirmed");
+              await connection.confirmTransaction(createTxid, "max");
 
               transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
             }
