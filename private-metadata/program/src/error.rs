@@ -31,6 +31,9 @@ pub enum PrivateMetadataError {
 
     #[error("Proof Verification Error")]
     ProofVerificationError,
+
+    #[error("Invalid Elgamal Pubkey PDA")]
+    InvalidElgamalPubkeyPDA,
 }
 
 impl PrintProgramError for PrivateMetadataError {

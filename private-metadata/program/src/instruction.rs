@@ -96,12 +96,13 @@ pub enum PrivateMetadataInstruction {
     ///   1. `[]` The SPL Token mint account of the NFT
     ///   2. `[]` The SPL Token account holding the NFT
     ///   3. `[]` Private metadata PDA
-    ///   4. `[writable]` Transfer buffer program account. Will hold CipherKeyTransferBuffer
-    ///   5. `[]` System program
-    ///   6. `[]` Rent sysvar
+    ///   4. `[]` Recipient wallet
+    ///   5. `[]` Recipient elgamal pubkey PDA
+    ///   6. `[writable]` Transfer buffer program account. Will hold CipherKeyTransferBuffer
+    ///   7. `[]` System program
+    ///   8. `[]` Rent sysvar
     ///
     /// Data expected by this instruction:
-    ///   elgamal_pk: The recipients elgamal public-key
     ///
     InitTransfer,
 
@@ -272,20 +273,22 @@ pub fn configure_metadata(
 
 #[cfg(not(target_arch = "bpf"))]
 pub fn init_transfer(
-    payer: Pubkey,
-    mint: Pubkey,
-    transfer_buffer: Pubkey,
-    elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
+    payer: &Pubkey,
+    mint: &Pubkey,
+    transfer_buffer: &Pubkey,
+    recipient: &Pubkey,
 ) -> Instruction {
     let accounts = vec![
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*mint, false),
         AccountMeta::new_readonly(
-            spl_associated_token_account::get_associated_token_address(&payer, &mint),
+            spl_associated_token_account::get_associated_token_address(payer, mint),
             false,
         ),
-        AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
-        AccountMeta::new(transfer_buffer, false),
+        AccountMeta::new_readonly(get_private_metadata_address(mint).0, false),
+        AccountMeta::new_readonly(*recipient, false),
+        AccountMeta::new_readonly(get_elgamal_pubkey_address(recipient, mint).0, false),
+        AccountMeta::new(*transfer_buffer, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
@@ -293,7 +296,7 @@ pub fn init_transfer(
     encode_instruction(
         accounts,
         PrivateMetadataInstruction::InitTransfer,
-        &elgamal_pk,
+        &(),
     )
 }
 

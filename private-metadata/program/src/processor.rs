@@ -44,7 +44,6 @@ pub fn process_instruction(
             msg!("InitTransfer!");
             process_init_transfer(
                 accounts,
-                decode_instruction_data::<zk_token_elgamal::pod::ElGamalPubkey>(input)?
             )
         }
         PrivateMetadataInstruction::FiniTransfer => {
@@ -204,13 +203,14 @@ fn process_configure_metadata(
 
 fn process_init_transfer(
     accounts: &[AccountInfo],
-    elgamal_pk: &zk_token_elgamal::pod::ElGamalPubkey,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let authority_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
     let private_metadata_info = next_account_info(account_info_iter)?;
+    let recipient_info = next_account_info(account_info_iter)?;
+    let recipient_elgamal_info = next_account_info(account_info_iter)?;
     let transfer_buffer_info = next_account_info(account_info_iter)?;
     let _system_program_info = next_account_info(account_info_iter)?;
     let rent_sysvar_info = next_account_info(account_info_iter)?;
@@ -256,6 +256,31 @@ fn process_init_transfer(
         return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
     }
 
+    // check that elgamal PDA matches
+    let elgamal_seeds = &[
+        PREFIX.as_bytes(),
+        recipient_info.key.as_ref(),
+        mint_info.key.as_ref(),
+    ];
+    let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
+        Pubkey::find_program_address(elgamal_seeds, &ID);
+
+    if elgamal_pubkey_key != *recipient_elgamal_info.key {
+        msg!("Invalid recipient elgamal PDA");
+        return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
+    }
+
+    use std::convert::TryInto;
+    let elgamal_pk = zk_token_elgamal::pod::ElGamalPubkey(
+        (*recipient_elgamal_info.try_borrow_data()?)
+            .as_ref()
+            .try_into()
+            .map_err(|_| -> ProgramError {
+                msg!("Invalid recipient elgamal PDA data");
+                PrivateMetadataError::InvalidElgamalPubkeyPDA.into()
+            })?
+    );
+
 
     // check and initialize the cipher key transfer buffer
     if transfer_buffer_info.data_len()
@@ -281,7 +306,7 @@ fn process_init_transfer(
     transfer_buffer.key = Key::CipherKeyTransferBufferV1;
     transfer_buffer.authority = *authority_info.key;
     transfer_buffer.private_metadata_key = *private_metadata_info.key;
-    transfer_buffer.elgamal_pk = *elgamal_pk;
+    transfer_buffer.elgamal_pk = elgamal_pk;
 
     Ok(())
 }
@@ -769,8 +794,8 @@ fn process_publish_elgamal_pubkey(
         Pubkey::find_program_address(seeds, &ID);
 
     if elgamal_pubkey_key != *elgamal_pubkey_info.key {
-        msg!("Invalid private metadata key");
-        return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
+        msg!("Invalid wallet elgamal PDA");
+        return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
     }
 
     // create and initialize PDA

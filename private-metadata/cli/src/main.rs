@@ -67,7 +67,7 @@ fn get_or_create_transfer_buffer(
     payer: &dyn Signer,
     transfer_buffer: &dyn Signer,
     mint: &Pubkey,
-    dest_elgamal: private_metadata::zk_token_elgamal::pod::ElGamalPubkey,
+    recipient: &Pubkey,
 ) -> Result<private_metadata::state::CipherKeyTransferBuffer, Box<dyn std::error::Error>> {
     let mut transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey());
     if transfer_buffer_data.is_err() {
@@ -87,10 +87,10 @@ fn get_or_create_transfer_buffer(
                     &private_metadata::ID,
                 ),
                 private_metadata::instruction::init_transfer(
-                    payer.pubkey(),
-                    *mint,
-                    transfer_buffer.pubkey(),
-                    dest_elgamal,
+                    &payer.pubkey(),
+                    mint,
+                    &transfer_buffer.pubkey(),
+                    recipient,
                 ),
             ],
             &[payer, transfer_buffer],
@@ -381,7 +381,6 @@ async fn parallel_decrypt_cipher_key(
 struct TransferParams {
     mint: String,
     recipient_pubkey: String,
-    recipient_elgamal: String,
     transfer_buffer: Option<String>,
     instruction_buffer: Option<String>,
     input_buffer: Option<String>,
@@ -421,16 +420,25 @@ async fn process_transfer(
     println!("Compute buffer keypair: {}", compute_buffer.to_base58_string());
 
     let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
-    let recipient_elgamal = ElGamalPubkey::from_bytes(
-        base64::decode(&params.recipient_elgamal)?.as_slice().try_into()?
-    ).ok_or(ProgramError::InvalidArgument)?;
+    let recipient_pubkey = Pubkey::new(
+        bs58::decode(&params.recipient_pubkey).into_vec()?.as_slice()
+    );
+
+    let recipient_elgamal = private_metadata::zk_token_elgamal::pod::ElGamalPubkey(
+        rpc_client.get_account_data(
+            &private_metadata::instruction::get_elgamal_pubkey_address(
+                &recipient_pubkey,
+                &mint,
+            ).0,
+        )?.as_slice().try_into()?
+    ).try_into()?;
 
     let transfer_buffer_account = get_or_create_transfer_buffer(
         rpc_client,
         payer,
         &transfer_buffer,
         &mint,
-        recipient_elgamal.into(),
+        &recipient_pubkey,
     )?;
 
     ensure_create_instruction_buffer(
@@ -774,14 +782,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .global(true)
                     .help("Base-58 encoded public key of recipient"),
             )
-            .arg(
-                Arg::with_name("recipient_elgamal")
-                    .long("recipient_elgamal")
-                    .value_name("BASE64_STRING")
-                    .takes_value(true)
-                    .global(true)
-                    .help("Base-64 encoded elgamal public key of recipient. The recipient can find this with the `elgamal_pubkey` instruction"),
-            )
             .arg(transfer_buffer_param.clone())
             .arg(instruction_buffer_param.clone())
             .arg(input_buffer_param.clone())
@@ -906,7 +906,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &TransferParams {
                     mint: sub_m.value_of("mint").unwrap().to_string(),
                     recipient_pubkey: sub_m.value_of("recipient_pubkey").unwrap().to_string(),
-                    recipient_elgamal: sub_m.value_of("recipient_elgamal").unwrap().to_string(),
                     transfer_buffer: sub_m.value_of("transfer_buffer").map(|s| s.into()),
                     instruction_buffer: sub_m.value_of("instruction_buffer").map(|s| s.into()),
                     input_buffer: sub_m.value_of("input_buffer").map(|s| s.into()),
