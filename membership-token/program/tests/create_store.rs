@@ -15,21 +15,21 @@ mod create_store {
     use solana_program_test::*;
     use solana_sdk::{transaction::Transaction, transport::TransportError};
 
-    pub fn auction_house_program_test() -> ProgramTest {
+    pub fn membership_token_program_test() -> ProgramTest {
         ProgramTest::new("mpl_membership_token", mpl_membership_token::id(), None)
     }
 
     #[tokio::test]
     async fn success() {
-        let mut context = auction_house_program_test().start_with_context().await;
+        let mut context = membership_token_program_test().start_with_context().await;
 
         let admin_wallet = Keypair::new();
         let store_keypair = Keypair::new();
 
         airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
 
-        let name = String::from("12345678901234567890");
-        let description = String::from("12345678901234567890");
+        let name = String::from("123456789_123456789_");
+        let description = String::from("123456789_123456789_");
 
         let accounts = mpl_membership_token_accounts::CreateStore {
             admin: admin_wallet.pubkey(),
@@ -75,15 +75,15 @@ mod create_store {
 
     #[tokio::test]
     async fn failure_name_is_long() {
-        let mut context = auction_house_program_test().start_with_context().await;
+        let mut context = membership_token_program_test().start_with_context().await;
 
         let admin_wallet = Keypair::new();
         let store_keypair = Keypair::new();
 
         airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
 
-        let name = String::from("1234567890123456789012345");
-        let description = String::from("12345678901234567890");
+        let name = String::from("123456789_123456789_12345");
+        let description = String::from("123456789_123456789_");
 
         let accounts = mpl_membership_token_accounts::CreateStore {
             admin: admin_wallet.pubkey(),
@@ -122,15 +122,15 @@ mod create_store {
 
     #[tokio::test]
     async fn failure_description_is_long() {
-        let mut context = auction_house_program_test().start_with_context().await;
+        let mut context = membership_token_program_test().start_with_context().await;
 
         let admin_wallet = Keypair::new();
         let store_keypair = Keypair::new();
 
         airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
 
-        let name = String::from("1234567890123456789012345");
-        let description = String::from("1234567890123456789012345");
+        let name = String::from("123456789_123456789_");
+        let description = String::from("123456789_123456789_12345");
 
         let accounts = mpl_membership_token_accounts::CreateStore {
             admin: admin_wallet.pubkey(),
