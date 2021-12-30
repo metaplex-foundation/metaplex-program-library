@@ -1,4 +1,6 @@
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
+use anchor_spl::token::{self, Token};
+use mpl_token_metadata;
 
 pub const STRING_DEFAULT_SIZE: usize = 20;
 
@@ -22,11 +24,11 @@ pub fn find_treasury_owner_address(
 }
 
 /// Return `vault_owner` Pubkey and bump seed.
-pub fn find_vault_owner_address(resource: &Pubkey, store: &Pubkey) -> (Pubkey, u8) {
+pub fn find_vault_owner_address(resource_mint: &Pubkey, store: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
             VAULT_OWNER_PREFIX.as_bytes(),
-            resource.as_ref(),
+            resource_mint.as_ref(),
             store.as_ref(),
         ],
         &id(),
@@ -44,7 +46,96 @@ pub fn find_trade_history_address(wallet: &Pubkey, market: &Pubkey) -> (Pubkey, 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
-pub mod membership_token {}
+pub mod membership_token {
+    use super::*;
+
+    pub fn init_selling_resource<'info>(
+        ctx: Context<'_, '_, '_, 'info, InitSellingResource<'info>>,
+        _master_edition_bump: u8,
+        _vault_owner_bump: u8,
+        max_supply: Option<u64>,
+    ) -> ProgramResult {
+        let store = &ctx.accounts.store;
+        let admin = &ctx.accounts.admin;
+        let selling_resource = &mut ctx.accounts.selling_resource;
+        let selling_resource_owner = &ctx.accounts.selling_resource_owner;
+        let resource_mint = &ctx.accounts.resource_mint;
+        let master_edition = mpl_token_metadata::state::MasterEditionV2::from_account_info(
+            &ctx.accounts.master_edition.to_account_info(),
+        )?;
+        let vault = &ctx.accounts.vault;
+        let vault_owner = &ctx.accounts.vault_owner;
+        let resource_token = &ctx.accounts.resource_token;
+        let _rent = &ctx.accounts.rent;
+        let token_program = &ctx.accounts.token_program;
+        let _system_program = &ctx.accounts.system_program;
+
+        let mut actual_max_supply = max_supply;
+
+        // Ensure, that provided `max_supply` is under `MasterEditionV2::max_supply` bounds
+        if let Some(me_max_supply) = master_edition.max_supply {
+            let x = if let Some(max_supply) = max_supply {
+                let available_supply = me_max_supply - master_edition.supply;
+                if max_supply > available_supply {
+                    // TODO: Error - Provided supply is gt than available on MasterEdition
+                    0
+                } else {
+                    max_supply
+                }
+            } else {
+                // TODO: Error - User try to create unlimited token
+                0
+            };
+
+            actual_max_supply = Some(x);
+        }
+
+        // Transfer `MasterEdition` ownership
+        let cpi_program = token_program.to_account_info();
+        let cpi_accounts = token::Transfer {
+            from: resource_token.to_account_info(),
+            to: vault.to_account_info(),
+            authority: admin.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        token::transfer(cpi_ctx, 1)?;
+
+        selling_resource.store = store.key();
+        selling_resource.owner = selling_resource_owner.key();
+        selling_resource.resource = resource_mint.key();
+        selling_resource.vault = vault.key();
+        selling_resource.vault_owner = vault_owner.key();
+        selling_resource.supply = 0;
+        selling_resource.max_supply = actual_max_supply;
+        selling_resource.state = SellingResourceState::Created;
+
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+#[instruction(master_edition_bump:u8, vault_owner_bump: u8, max_supply: Option<u64>)]
+pub struct InitSellingResource<'info> {
+    #[account(has_one=admin)]
+    store: Account<'info, Store>,
+    #[account(mut)]
+    admin: Signer<'info>,
+    #[account(init, payer=admin, space=SellingResource::LEN)]
+    selling_resource: Account<'info, SellingResource>,
+    selling_resource_owner: UncheckedAccount<'info>,
+    resource_mint: UncheckedAccount<'info>,
+    #[account(seeds=[mpl_token_metadata::state::PREFIX.as_bytes(), mpl_token_metadata::id().as_ref(), resource_mint.key().as_ref(), mpl_token_metadata::state::EDITION.as_bytes()], bump=master_edition_bump)]
+    master_edition: UncheckedAccount<'info>,
+    #[account(mut)]
+    vault: Signer<'info>,
+    #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), resource_mint.key().as_ref(), store.key().as_ref()], bump=vault_owner_bump)]
+    vault_owner: UncheckedAccount<'info>,
+    #[account(mut)]
+    resource_token: UncheckedAccount<'info>,
+    rent: Sysvar<'info, Rent>,
+    token_program: Program<'info, Token>,
+    system_program: Program<'info, System>,
+}
 
 #[account]
 pub struct Store {
