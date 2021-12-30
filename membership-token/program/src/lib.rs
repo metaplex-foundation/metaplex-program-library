@@ -1,9 +1,9 @@
+mod utils;
+
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 use anchor_spl::token::{self, Token};
-use mpl_token_metadata;
 
 pub const STRING_DEFAULT_SIZE: usize = 20;
-
 pub const HOLDER_PREFIX: &str = "holder";
 pub const HISTORY_PREFIX: &str = "history";
 pub const VAULT_OWNER_PREFIX: &str = "mt_vault";
@@ -60,15 +60,28 @@ pub mod membership_token {
         let selling_resource = &mut ctx.accounts.selling_resource;
         let selling_resource_owner = &ctx.accounts.selling_resource_owner;
         let resource_mint = &ctx.accounts.resource_mint;
-        let master_edition = mpl_token_metadata::state::MasterEditionV2::from_account_info(
-            &ctx.accounts.master_edition.to_account_info(),
-        )?;
+        let master_edition_info = &ctx.accounts.master_edition.to_account_info();
         let vault = &ctx.accounts.vault;
         let vault_owner = &ctx.accounts.vault_owner;
         let resource_token = &ctx.accounts.resource_token;
         let _rent = &ctx.accounts.rent;
         let token_program = &ctx.accounts.token_program;
         let _system_program = &ctx.accounts.system_program;
+
+        // Check `MasterEdition` derivation
+        utils::assert_derivation(
+            &mpl_token_metadata::id(),
+            master_edition_info,
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                resource_mint.key().as_ref(),
+                mpl_token_metadata::state::EDITION.as_bytes(),
+            ],
+        )?;
+
+        let master_edition =
+            mpl_token_metadata::state::MasterEditionV2::from_account_info(master_edition_info)?;
 
         let mut actual_max_supply = max_supply;
 
@@ -145,7 +158,7 @@ pub struct InitSellingResource<'info> {
     selling_resource: Account<'info, SellingResource>,
     selling_resource_owner: UncheckedAccount<'info>,
     resource_mint: UncheckedAccount<'info>,
-    #[account(seeds=[mpl_token_metadata::state::PREFIX.as_bytes(), mpl_token_metadata::id().as_ref(), resource_mint.key().as_ref(), mpl_token_metadata::state::EDITION.as_bytes()], bump=master_edition_bump)]
+    #[account(owner=mpl_token_metadata::id())]
     master_edition: UncheckedAccount<'info>,
     #[account(mut)]
     vault: Signer<'info>,
@@ -176,10 +189,10 @@ pub struct Store {
 }
 
 impl Store {
-    pub const LEN: usize = 32 + STRING_DEFAULT_SIZE * 4 + STRING_DEFAULT_SIZE * 4;
+    pub const LEN: usize = 8 + 32 + STRING_DEFAULT_SIZE * 4 + STRING_DEFAULT_SIZE * 4;
 }
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug, PartialEq, Eq)]
 pub enum SellingResourceState {
     Uninitialized,
     Created,
@@ -201,10 +214,10 @@ pub struct SellingResource {
 }
 
 impl SellingResource {
-    pub const LEN: usize = 32 + 32 + 32 + 32 + 32 + 8 + 9 + 1;
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 32 + 32 + 8 + 9 + 1;
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
 pub enum MarketState {
     Uninitialized,
     Created,
@@ -231,7 +244,8 @@ pub struct Market {
 }
 
 impl Market {
-    pub const LEN: usize = 32
+    pub const LEN: usize = 8
+        + 32
         + 32
         + 32
         + 32
@@ -255,7 +269,7 @@ pub struct TradeHistory {
 }
 
 impl TradeHistory {
-    pub const LEN: usize = 32 + 32 + 8;
+    pub const LEN: usize = 8 + 32 + 32 + 8;
 }
 
 #[error]
@@ -268,4 +282,6 @@ pub enum ErrorCode {
     SupplyIsGtThanAvailable,
     #[msg("Supply is not provided")]
     SupplyIsNotProvided,
+    #[msg("Derived key invalid")]
+    DerivedKeyInvalid,
 }
