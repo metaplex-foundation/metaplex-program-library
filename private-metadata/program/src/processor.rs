@@ -67,6 +67,13 @@ pub fn process_instruction(
                 decode_instruction_data::<TransferChunkSlowData>(input)?
             )
         }
+        PrivateMetadataInstruction::PublishElgamalPubkey => {
+            msg!("PublishElgamalPubkey!");
+            process_publish_elgamal_pubkey(
+                accounts,
+                decode_instruction_data::<zk_token_elgamal::pod::ElGamalPubkey>(input)?
+            )
+        }
     }
 }
 
@@ -732,6 +739,72 @@ fn process_transfer_chunk_slow(
     transfer_buffer.updated |= updated_mask;
     transfer_buffer.encrypted_cipher_key[chunk_idx] = transfer.dst_cipher_key_chunk_ct;
 
+
+    Ok(())
+}
+
+fn process_publish_elgamal_pubkey(
+    accounts: &[AccountInfo],
+    elgamal_pk: &zk_token_elgamal::pod::ElGamalPubkey,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let wallet_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let elgamal_pubkey_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
+    let rent_sysvar_info = next_account_info(account_info_iter)?;
+
+    if !wallet_info.is_signer {
+        return Err(ProgramError::InvalidArgument);
+    }
+    validate_account_owner(mint_info, &spl_token::ID)?;
+
+    // check that PDA matches
+    let seeds = &[
+        PREFIX.as_bytes(),
+        wallet_info.key.as_ref(),
+        mint_info.key.as_ref(),
+    ];
+    let (elgamal_pubkey_key, elgamal_pubkey_bump_seed) =
+        Pubkey::find_program_address(seeds, &ID);
+
+    if elgamal_pubkey_key != *elgamal_pubkey_info.key {
+        msg!("Invalid private metadata key");
+        return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
+    }
+
+    // create and initialize PDA
+    let rent = &Rent::from_account_info(rent_sysvar_info)?;
+    let space = std::mem::size_of::<zk_token_elgamal::pod::ElGamalPubkey>();
+    invoke_signed(
+        &system_instruction::create_account(
+            wallet_info.key,
+            elgamal_pubkey_info.key,
+            rent.minimum_balance(space).max(1),
+            space as u64,
+            &ID,
+        ),
+        &[
+            wallet_info.clone(),
+            elgamal_pubkey_info.clone(),
+            system_program_info.clone(),
+        ],
+        &[
+            &[
+                PREFIX.as_bytes(),
+                wallet_info.key.as_ref(),
+                mint_info.key.as_ref(),
+                &[elgamal_pubkey_bump_seed],
+            ],
+        ],
+    )?;
+
+    let mut elgamal_pubkey_data = elgamal_pubkey_info.try_borrow_mut_data()?;
+    elgamal_pubkey_data.copy_from_slice(
+        bytemuck::cast_slice::<zk_token_elgamal::pod::ElGamalPubkey, u8>(
+            std::slice::from_ref(elgamal_pk)
+        )
+    );
 
     Ok(())
 }

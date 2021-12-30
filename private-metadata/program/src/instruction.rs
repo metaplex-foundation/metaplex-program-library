@@ -79,7 +79,7 @@ pub enum PrivateMetadataInstruction {
     ///   1. `[]` The SPL Token mint account of the NFT
     ///   2. `[]` The SPL Metadata account. Must be mutable
     ///   3. `[signer]` The update authority for the SPL Metadata
-    ///   4. `[]` Private metadata PDA
+    ///   4. `[writeable]` Private metadata PDA
     ///   5. `[]` System program
     ///   6. `[]` Rent sysvar
     ///
@@ -148,6 +148,21 @@ pub enum PrivateMetadataInstruction {
     ///   TransferChunkSlowData
     ///
     TransferChunkSlow,
+
+    /// Write an elgamal pubkey into the associated buffer for this wallet and mint
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writeable,signer]` Wallet to publish for
+    ///   1. `[]` The SPL Token mint account of the NFT
+    ///   2. `[writable]` The elgamal pubkey PDA
+    ///   3. `[]` System program
+    ///   4. `[]` Rent sysvar
+    ///
+    /// Data expected by this instruction:
+    ///   elgamal_pk: The recipients elgamal public-key
+    ///
+    PublishElgamalPubkey,
 }
 
 pub fn decode_instruction_type(
@@ -190,6 +205,20 @@ pub fn get_private_metadata_address(mint: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
             crate::state::PREFIX.as_bytes(),
+            mint.as_ref(),
+        ],
+        &crate::ID,
+    )
+}
+
+pub fn get_elgamal_pubkey_address(
+    wallet: &Pubkey,
+    mint: &Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            crate::state::PREFIX.as_bytes(),
+            wallet.as_ref(),
             mint.as_ref(),
         ],
         &crate::ID,
@@ -333,6 +362,27 @@ pub fn transfer_chunk_slow(
         accounts,
         PrivateMetadataInstruction::TransferChunkSlow,
         &data,
+    )
+}
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn publish_elgamal_pubkey(
+    payer: &Pubkey,
+    mint: &Pubkey,
+    elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*mint, false),
+        AccountMeta::new(get_elgamal_pubkey_address(&payer, &mint).0, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    encode_instruction(
+        accounts,
+        PrivateMetadataInstruction::PublishElgamalPubkey,
+        &elgamal_pk,
     )
 }
 

@@ -596,6 +596,33 @@ fn process_elgamal_pubkey(
     Ok(())
 }
 
+fn process_publish_elgamal_pubkey(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    _config: &Config,
+    params: &ElGamalPubkeyParams,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mint = Pubkey::new(
+        bs58::decode(&params.mint).into_vec()?.as_slice()
+    );
+
+    let elgamal_pk = ElGamalKeypair::new(payer, &mint)?.public;
+    send(
+        rpc_client,
+        &format!("Publishing pubkey {}", elgamal_pk),
+        &[
+            private_metadata::instruction::publish_elgamal_pubkey(
+                &payer.pubkey(),
+                &mint,
+                elgamal_pk.into(),
+            ),
+        ],
+        &[payer],
+    )?;
+
+    Ok(())
+}
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -772,6 +799,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .help("NFT to transfer"),
             )
         )
+        .subcommand(
+            SubCommand::with_name("publish_elgamal_pubkey")
+            .about("Write the elgamal pubkey associated with KEYPAIR and the mint to chain")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("PUBKEY_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("NFT to transfer"),
+            )
+        )
         .get_matches();
 
     let mut wallet_manager: Option<Arc<RemoteWalletManager>> = None;
@@ -880,6 +919,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         ("elgamal_pubkey", Some(sub_m)) => {
             process_elgamal_pubkey(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &config,
+                &ElGamalPubkeyParams {
+                    mint: sub_m.value_of("mint").unwrap().to_string(),
+                },
+            ).unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+        }
+        ("publish_elgamal_pubkey", Some(sub_m)) => {
+            process_publish_elgamal_pubkey(
                 &rpc_client,
                 config.default_signer.as_ref(),
                 &config,
