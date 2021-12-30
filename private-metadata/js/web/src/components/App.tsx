@@ -557,8 +557,8 @@ export const Demo = () => {
       = React.useState<PrivateMetadataAccount | null>(null);
   const [elgamalKeypairStr, setElgamalKeypairStr]
       = useLocalStorageState('elgamalKeypair', '');
-  const [cipherKey, setCipherKey]
-      = useLocalStorageState('cipherKey', '');
+  const [cipherKeyAndWallet, setCipherKey]
+      = useLocalStorageState('cipherKeyAndWallet', '');
   const [privateImage, setPrivateImage]
       = React.useState<Buffer | null>(null);
   const [decryptedImage, setDecryptedImage]
@@ -579,6 +579,24 @@ export const Demo = () => {
       return null;
     }
   };
+
+  const parseCipherKey = (): string | null => {
+    if (!cipherKeyAndWallet)
+      return null;
+    return JSON.parse(cipherKeyAndWallet).cipherKey;
+  };
+
+  React.useEffect(() => {
+    if (!cipherKeyAndWallet || !wallet.publicKey)
+      return;
+    const cipherWallet = new PublicKey(JSON.parse(cipherKeyAndWallet).wallet);
+    console.log(wallet.publicKey.toBase58());
+    console.log(cipherWallet.toBase58());
+    if (!cipherWallet.equals(wallet.publicKey)) {
+      setCipherKey('');
+      setDecryptedImage(null);
+    }
+  }, [wallet]);
 
   React.useEffect(() => {
     const mintKey = parseAddress(mint);
@@ -610,12 +628,13 @@ export const Demo = () => {
         encryptedImage = privateImage;
       }
 
+      const cipherKey = parseCipherKey();
       if (cipherKey) {
         setDecryptedImage(decryptImage(encryptedImage, Buffer.from(cipherKey, 'base64')));
       }
     };
     wrap();
-  }, [privateMetadata, cipherKey]);
+  }, [privateMetadata, cipherKeyAndWallet]);
 
   const notifyResult = (
     result: { txid: string } | string,
@@ -661,7 +680,7 @@ export const Demo = () => {
   const { TextArea } = Input;
 
   return (
-    <div className="app stack">
+    <div className="app stack" style={{ maxWidth: '80ch', margin: 'auto' }}>
       <label className="action-field">
         <span className="field-title">NFT Mint</span>
         <Input
@@ -671,22 +690,22 @@ export const Demo = () => {
           style={{ fontFamily: 'Monospace' }}
         />
       </label>
-      {privateImage && (
-        <div>
-          <img
-            style={{ margin: 'auto', display: 'block'}}
-            src={"data:image/bmp;base64," + drawArray(privateImage, 8)}
-          />
-        </div>
-      )}
-      {decryptedImage && (
+      {decryptedImage ? (
         <div>
           <img
             style={{ margin: 'auto', display: 'block'}}
             src={"data:image/png;base64," + decryptedImage.toString('base64')}
           />
         </div>
-      )}
+      ) : privateImage ? (
+        <div>
+          <img
+            style={{ margin: 'auto', display: 'block', filter: 'blur(2px)'}}
+            src={"data:image/bmp;base64," + drawArray(privateImage, 8)}
+          />
+        </div>
+      ) : null
+      }
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
@@ -708,8 +727,10 @@ export const Demo = () => {
             console.log(`Decoded cipher key: ${bs58.encode(cipherKey)}`);
 
             setElgamalKeypairStr(JSON.stringify(elgamalKeypair));
-            setCipherKey(cipherKey.toString('base64'));
-
+            setCipherKey(JSON.stringify({
+              cipherKey: cipherKey.toString('base64'),
+              wallet: wallet.publicKey.toBase58(),
+            }));
             notify({
               message: 'Decrypted cipher key',
             })
@@ -883,6 +904,7 @@ export const Demo = () => {
             console.log(elgamalKeypair);
 
             const cipherKeyChunks = privateMetadata.encryptedCipherKey.length;
+            const cipherKey = parseCipherKey();
             for (let chunk = 0; chunk < cipherKeyChunks; ++chunk) {
               const updateMask = 1<<chunk;
               if ((transferBufferDecoded.updated & updateMask) === updateMask) {
