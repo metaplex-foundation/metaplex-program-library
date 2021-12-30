@@ -523,6 +523,7 @@ const decryptImage = (
 
 import { Button, Input } from 'antd';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { CollapsePanel } from '../components/CollapsePanel';
 import { useLoading } from '../components/Loader';
 import { useConnection } from '../contexts/ConnectionContext';
 import { useLocalStorageState } from '../utils/common';
@@ -752,45 +753,50 @@ export const Demo = () => {
           style={{ fontFamily: 'Monospace' }}
         />
       </label>
-      <label className="action-field">
-        <span className="field-title">Instruction Buffer</span>
-        <Input
-          id="instruction-buffer-field"
-          value={instructionBuffer}
-          onChange={(e) => setInstructionBuffer(e.target.value)}
-          style={{ fontFamily: 'Monospace' }}
-        />
-      </label>
-      <label className="action-field">
-        <span className="field-title">Transfer Buffer</span>
-        <TextArea
-          rows={2}
-          id="transfer-buffer-field"
-          value={transferBuffer}
-          onChange={(e) => setTransferBuffer(e.target.value)}
-          style={{ fontFamily: 'Monospace' }}
-        />
-      </label>
-      <label className="action-field">
-        <span className="field-title">Input Buffer</span>
-        <TextArea
-          rows={2}
-          id="input-buffer-field"
-          value={inputBuffer}
-          onChange={(e) => setInputBuffer(e.target.value)}
-          style={{ fontFamily: 'Monospace' }}
-        />
-      </label>
-      <label className="action-field">
-        <span className="field-title">Compute Buffer</span>
-        <TextArea
-          rows={2}
-          id="compute-buffer-field"
-          value={computeBuffer}
-          onChange={(e) => setComputeBuffer(e.target.value)}
-          style={{ fontFamily: 'Monospace' }}
-        />
-      </label>
+      <CollapsePanel
+        id="transfer-options-collapse"
+        panelName="Additional Options"
+      >
+        <label className="action-field">
+          <span className="field-title">Instruction Buffer</span>
+          <Input
+            id="instruction-buffer-field"
+            value={instructionBuffer}
+            onChange={(e) => setInstructionBuffer(e.target.value)}
+            style={{ fontFamily: 'Monospace' }}
+          />
+        </label>
+        <label className="action-field">
+          <span className="field-title">Transfer Buffer</span>
+          <TextArea
+            rows={2}
+            id="transfer-buffer-field"
+            value={transferBuffer}
+            onChange={(e) => setTransferBuffer(e.target.value)}
+            style={{ fontFamily: 'Monospace' }}
+          />
+        </label>
+        <label className="action-field">
+          <span className="field-title">Input Buffer</span>
+          <TextArea
+            rows={2}
+            id="input-buffer-field"
+            value={inputBuffer}
+            onChange={(e) => setInputBuffer(e.target.value)}
+            style={{ fontFamily: 'Monospace' }}
+          />
+        </label>
+        <label className="action-field">
+          <span className="field-title">Compute Buffer</span>
+          <TextArea
+            rows={2}
+            id="compute-buffer-field"
+            value={computeBuffer}
+            onChange={(e) => setComputeBuffer(e.target.value)}
+            style={{ fontFamily: 'Monospace' }}
+          />
+        </label>
+      </CollapsePanel>
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"

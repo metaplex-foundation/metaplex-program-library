@@ -13,7 +13,7 @@ import {
   getSolongWallet,
   getTorusWallet,
 } from "@solana/wallet-adapter-wallets";
-import { Button, Collapse } from "antd";
+import { Button } from "antd";
 import React, {
   createContext,
   FC,
@@ -26,8 +26,7 @@ import React, {
 } from "react";
 import { notify } from "../../utils/common";
 import { MetaplexModal } from "../../components/MetaplexModal";
-
-const { Panel } = Collapse;
+import { CollapsePanel } from "../../components/CollapsePanel";
 
 export interface WalletModalContextState {
   visible: boolean;
@@ -79,81 +78,30 @@ export const WalletModal: FC = () => {
         <img src={phatomWallet?.icon} style={{ width: '1.2rem' }} />
         &nbsp;Connect to Phantom
       </Button>
-      <Collapse
-        ghost
-        expandIcon={panelProps =>
-          panelProps.isActive ? (
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M15 7.5L10 12.5L5 7.5"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          ) : (
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M7.5 5L12.5 10L7.5 15"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          )
-        }
+      <CollapsePanel
+        id="other-wallets"
+        panelName="Other Wallets"
       >
-        <Panel
-          header={
-            <span
+        {wallets.map((wallet, idx) => {
+          if (wallet.name === 'Phantom') return null;
+
+          return (
+            <Button
+              key={idx}
+              className="metaplex-button w100"
               style={{
-                fontWeight: 600,
-                fontSize: '16px',
-                lineHeight: '16px',
-                letterSpacing: '-0.01em',
-                color: 'rgba(255, 255, 255, 255)',
+                marginBottom: 5,
+              }}
+              onClick={() => {
+                select(wallet.name);
+                close();
               }}
             >
-              Other Wallets
-            </span>
-          }
-          key="1"
-        >
-          {wallets.map((wallet, idx) => {
-            if (wallet.name === 'Phantom') return null;
-
-            return (
-              <Button
-                key={idx}
-                className="metaplex-button w100"
-                style={{
-                  marginBottom: 5,
-                }}
-                onClick={() => {
-                  select(wallet.name);
-                  close();
-                }}
-              >
-                Connect to {wallet.name}
-              </Button>
-            );
-          })}
-        </Panel>
-      </Collapse>
+              Connect to {wallet.name}
+            </Button>
+          );
+        })}
+      </CollapsePanel>
     </MetaplexModal>
   );
 };
