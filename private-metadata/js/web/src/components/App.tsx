@@ -79,12 +79,14 @@ async function getElgamalKeypair(
 
   transaction.setSigners(wallet.publicKey);
 
+  // NB / TODO: phantom wallet auto-approve seems to generate a different
+  // signature than the normal signMessage...
   const signature = await wallet.signMessage(
       transaction.compileMessage().serialize());
   if (signature === null) {
     throw new Error(`Failed ElGamal keypair generation: signature`);
   }
-  console.log('Signature {}', bs58.encode(signature));
+  console.log('Signature', bs58.encode(signature));
 
   return wasm.elgamalKeypairFromSignature([...signature]);
 }
@@ -115,6 +117,7 @@ async function getCipherKey(
       console.log('Sending chunk to worker', chunk);
       const result: any = await decryptWorkerApi.decrypt(elgamalKeypair, chunk);
       if (result.Err) {
+        console.error('Failed decrypt', result.Err, chunk);
         throw new Error(result.Err);
       }
       return Buffer.from(result.Ok);
@@ -544,7 +547,7 @@ export const Demo = () => {
   const [recipientElgamal, setRecipientElgamal]
     = useLocalStorageState('recipientElgamal', '');
   const [transferBuffer, setTransferBuffer]
-    = useLocalStorageState('transferBuffer', '34BHKCEyS8zVTvEANG7W8uXcVTWoC2o7LbAdGiXezBFesFNMaGFf8fLYJYoK2p7ubiziwZjnTM7Ynk5fVC94AM2D');
+    = useLocalStorageState('transferBuffer', '');
   const [instructionBuffer, setInstructionBuffer]
     = useLocalStorageState('instructionBuffer', '4huNP6jLbA9FGwHhMbjYQFP57ZmH1y4xa3ipAJ7mERNM');
   const [inputBuffer, setInputBuffer]
@@ -590,8 +593,6 @@ export const Demo = () => {
     if (!cipherKeyAndWallet || !wallet.publicKey)
       return;
     const cipherWallet = new PublicKey(JSON.parse(cipherKeyAndWallet).wallet);
-    console.log(wallet.publicKey.toBase58());
-    console.log(cipherWallet.toBase58());
     if (!cipherWallet.equals(wallet.publicKey)) {
       setCipherKey('');
       setDecryptedImage(null);
