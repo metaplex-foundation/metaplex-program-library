@@ -12,34 +12,17 @@ mod create_auction_house {
         accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
         AuctionHouse,
     };
-    use solana_program::{instruction::Instruction, system_instruction};
+    use solana_program::instruction::Instruction;
     use solana_sdk::transaction::Transaction;
     use spl_token;
 
-    use super::utils::constants::{AUCTION_HOUSE, FEE_PAYER, TREASURY};
+    use super::utils::{
+        airdrop,
+        constants::{AUCTION_HOUSE, FEE_PAYER, TREASURY},
+        setup_functions::auction_house_program_test,
+    };
 
     use solana_program_test::*;
-
-    pub fn auction_house_program_test<'a>() -> ProgramTest {
-        let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
-        program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-        program
-    }
-
-    pub async fn airdrop(context: &mut ProgramTestContext, receiver: &Pubkey, amount: u64) {
-        let tx = Transaction::new_signed_with_payer(
-            &[system_instruction::transfer(
-                &context.payer.pubkey(),
-                receiver,
-                amount,
-            )],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
-    }
 
     #[tokio::test]
     async fn success() -> Result<(), ClientError> {
