@@ -549,25 +549,31 @@ pub fn transfer_chunk_slow_proof<F>(
     let instructions_per_tx = 32;
     let num_cranks = equality_proof::DSL_INSTRUCTION_COUNT;
     let mut current = 0;
+    let mut crank_transactions = 0;
     while current < num_cranks {
         let mut instructions = vec![];
-        for _j in 0..instructions_per_tx {
+        for j in 0..instructions_per_tx {
             if current >= num_cranks {
                 break;
             }
             instructions.push(
-                dalek::crank_compute(
-                    *instruction_buffer,
-                    *input_buffer,
-                    *compute_buffer,
-                ),
+                if crank_transactions == j {
+                    dalek::noop()
+                } else {
+                    current += 1;
+                    dalek::crank_compute(
+                        *instruction_buffer,
+                        *input_buffer,
+                        *compute_buffer,
+                    )
+                },
             );
-            current += 1;
         }
         ret.push(InstructionsAndSignerPubkeys{
             instructions,
             signers: vec![*payer],
         });
+        crank_transactions += 1;
     }
 
     Ok(ret)
