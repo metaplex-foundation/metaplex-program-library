@@ -2258,6 +2258,7 @@ name = "private-metadata-js"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "bytemuck",
  "console_error_panic_hook",
  "curve25519-dalek 3.2.0",
  "getrandom 0.2.3",

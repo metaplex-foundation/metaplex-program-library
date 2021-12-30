@@ -254,7 +254,12 @@ pub fn transfer_chunk_txs(
     decrypted_word: &JsValue,
     accounts: &JsValue,
 ) -> JsValue {
-    let go = || -> Result<Vec<private_metadata::instruction::InstructionsAndSignerPubkeys>, String> {
+    let go = || -> Result<(
+            Vec<private_metadata::instruction::InstructionsAndSignerPubkeys>,
+            Vec<u8>,
+        ),
+        String
+    > {
         debug(&format!("\
             Inputs\n\
             \telgamal_keypair: {:?}\n\
@@ -303,7 +308,7 @@ pub fn transfer_chunk_txs(
 
         debug(&format!("Finished compute"));
 
-        Ok(txs)
+        Ok((txs, bytemuck::cast_slice(&[transfer]).to_vec()))
     };
 
     JsValue::from_serde(&go()).unwrap()

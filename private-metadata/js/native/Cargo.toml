@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 bincode = "1"
+bytemuck = { version = "1.7.2", features = ["derive"] }
 console_error_panic_hook = "0.1.7"
 curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
 memmap = { path = "/Users/lwu/code/solana/memmap-rs" }
