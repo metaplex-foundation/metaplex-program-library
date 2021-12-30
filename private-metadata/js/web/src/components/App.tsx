@@ -26,6 +26,7 @@ import {
   PublicKey,
   Transaction,
   TransactionInstruction,
+  TransactionSignature,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
@@ -567,7 +568,7 @@ export const Demo = () => {
                   "Transfer buffer create",
                 );
 
-                await connection.confirmTransaction(createTxid, "max");
+                await connection.confirmTransaction(createTxid, "confirmed");
 
                 transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
               }
@@ -584,7 +585,7 @@ export const Demo = () => {
                   "Input and compute buffer close",
                 );
 
-                await connection.confirmTransaction(closeTxid, "max");
+                await connection.confirmTransaction(closeTxid, "confirmed");
 
               }
 
@@ -725,25 +726,23 @@ export const Demo = () => {
               console.log('Singing transactions...');
               const signedTxns = await wallet.signAllTransactions(txns);
               for (let i = 0; i < signedTxns.length; ++i) {
-                let result;
-                try {
-                  result = await sendSignedTransaction({
-                    connection,
-                    signedTransaction: signedTxns[i],
-                  });
-                } catch (error) {
-                  console.error(error);
-                  result = "See console logs";
-                }
-
-                const resultTxid = notifyResult(result, `Transfer crank ${i + 1} of ${signedTxns.length}`);
-                if (!resultTxid) {
-                  return;
-                }
+                const resultTxid: TransactionSignature = await connection.sendRawTransaction(
+                  signedTxns[i].serialize(),
+                  {
+                    skipPreflight: true,
+                  },
+                );
 
                 console.log('Waiting on confirmations for', resultTxid);
 
-                await connection.confirmTransaction(resultTxid, "max");
+                const confirmed = await connection.confirmTransaction(
+                    resultTxid, "confirmed");
+
+                console.log(confirmed);
+                notifyResult(
+                  confirmed.value.err ? 'See console logs' : {txid: resultTxid},
+                  `Transfer crank ${i + 1} of ${signedTxns.length}`,
+                );
               }
 
             } catch (err) {
