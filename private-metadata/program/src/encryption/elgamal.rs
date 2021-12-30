@@ -173,6 +173,7 @@ impl ElGamalKeypair {
         Ok(ElGamal::keygen_with_scalar(scalar))
     }
 
+    #[cfg(not(target_arch = "bpf"))]
     pub fn keygen_with_scalar(scalar: Scalar) -> Self {
         ElGamal::keygen_with_scalar(scalar)
     }

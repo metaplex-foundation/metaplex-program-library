@@ -450,6 +450,8 @@ fn process_transfer_chunk_slow(
     let compute_buffer_info = next_account_info(account_info_iter)?;
     let _system_program_info = next_account_info(account_info_iter)?;
 
+    msg!("Verifying transfer inputs...");
+
     if !authority_info.is_signer {
         return Err(ProgramError::InvalidArgument);
     }
@@ -518,10 +520,15 @@ fn process_transfer_chunk_slow(
 
 
 
+    msg!("Verifying comopute inputs...");
     use curve25519_dalek_onchain::instruction as dalek;
     use std::borrow::Borrow;
     use std::convert::TryInto;
     use borsh::BorshDeserialize;
+
+    validate_account_owner(instruction_buffer_info, &curve25519_dalek_onchain::ID)?;
+    validate_account_owner(input_buffer_info, &curve25519_dalek_onchain::ID)?;
+    validate_account_owner(compute_buffer_info, &curve25519_dalek_onchain::ID)?;
 
     let conv_error = || -> ProgramError { PrivateMetadataError::ProofVerificationError.into() };
 
@@ -733,6 +740,7 @@ fn validate_account_owner(account_info: &AccountInfo, owner: &Pubkey) -> Program
     if account_info.owner == owner {
         Ok(())
     } else {
+        msg!("Mismatched account owner");
         Err(ProgramError::InvalidArgument)
     }
 }
