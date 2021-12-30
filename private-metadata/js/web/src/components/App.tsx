@@ -59,6 +59,22 @@ async function getPrivateMetadata(
   )[0];
 };
 
+async function getElgamalPubkeyAddress(
+  wallet: PublicKey,
+  mint: PublicKey,
+): Promise<PublicKey> {
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        wallet.toBuffer(),
+        mint.toBuffer(),
+      ],
+      PRIVATE_METADATA_PROGRAM_ID,
+    )
+  )[0];
+};
+
 async function getElgamalKeypair(
   connection: Connection,
   wallet: WalletSigner,
@@ -168,7 +184,7 @@ const initTransferIxs = async (
   walletKey: PublicKey,
   mintKey: PublicKey,
   transferBufferKeypair: Keypair,
-  recipientElgamalPubkey: Buffer,
+  recipientKey: PublicKey,
 ) => {
   const transferBufferLen = wasm.transferBufferLen();
   const lamports = await connection.getMinimumBalanceForRentExemption(
@@ -218,6 +234,16 @@ const initTransferIxs = async (
           isWritable: false,
         },
         {
+          pubkey: recipientKey,
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: await getElgamalPubkeyAddress(walletKey, mintKey),
+          isSigner: false,
+          isWritable: false,
+        },
+        {
           pubkey: transferBufferKeypair.publicKey,
           isSigner: true,
           isWritable: true,
@@ -235,7 +261,6 @@ const initTransferIxs = async (
       ],
       data: Buffer.from([
         1,
-        ...recipientElgamalPubkey,
       ])
     }),
   ];
@@ -544,8 +569,6 @@ export const Demo = () => {
   const [mint, setMint] = useLocalStorageState('mint', '');
   const [recipientPubkeyStr, setRecipientPubkey]
     = useLocalStorageState('recipientPubkey', '');
-  const [recipientElgamal, setRecipientElgamal]
-    = useLocalStorageState('recipientElgamal', '');
   const [transferBuffer, setTransferBuffer]
     = useLocalStorageState('transferBuffer', '');
   const [instructionBuffer, setInstructionBuffer]
@@ -756,15 +779,6 @@ export const Demo = () => {
         Decrypt
       </Button>
       <label className="action-field">
-        <span className="field-title">Recipient ElGamal Pubkey</span>
-        <Input
-          id="recipient-elgamal-field"
-          value={recipientElgamal}
-          onChange={(e) => setRecipientElgamal(e.target.value)}
-          style={{ fontFamily: 'Monospace' }}
-        />
-      </label>
-      <label className="action-field">
         <span className="field-title">Recipient Pubkey</span>
         <Input
           id="recipient-pubkey-field"
@@ -856,17 +870,23 @@ export const Demo = () => {
             console.log('computeBufferKeypair', bs58.encode(computeBufferKeypair.secretKey));
             console.log('transferBufferKeypair', bs58.encode(transferBufferKeypair.secretKey));
 
-            const recipientElgamalPubkey = Buffer.from(recipientElgamal, 'base64');
-            if (recipientElgamalPubkey.length !== 32) {
-              throw new Error('Recipient elgamal pubkey does not look correct');
+            const recipientPubkey = new PublicKey(recipientPubkeyStr);
+            if (recipientPubkey.equals(wallet.publicKey)) {
+              throw new Error('Invalid transfer recipient (self)');
             }
 
-            const recipientPubkey = new PublicKey(recipientPubkeyStr);
+            const recipientElgamalAddress = await getElgamalPubkeyAddress(recipientPubkey, mintKey);
+            const recipientElgamalAccount = await connection.getAccountInfo(recipientElgamalAddress);
+            if (recipientElgamalAccount === null) {
+              throw new Error('Recipient has not yet published their elgamal pubkey for this mint');
+            }
+
+            const recipientElgamalPubkey = recipientElgamalAccount.data;
 
             let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
             if (transferBufferAccount === null) {
               const createInstructions = await initTransferIxs(
-                  connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientElgamalPubkey);
+                  connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientPubkey);
 
               const createTxid = await sendTransactionWithNotify(
                 createInstructions,
