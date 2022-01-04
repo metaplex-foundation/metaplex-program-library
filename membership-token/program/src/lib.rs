@@ -2,11 +2,12 @@ pub mod error;
 pub mod state;
 pub mod utils;
 
+use crate::utils::puffed_out_string;
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use error::ErrorCode;
 use state::{SellingResource, SellingResourceState, Store};
-use utils::{STRING_DEFAULT_SIZE, VAULT_OWNER_PREFIX};
+use utils::{DESCRIPTION_MAX_LEN, NAME_MAX_LEN, VAULT_OWNER_PREFIX};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -94,17 +95,17 @@ pub mod membership_token {
         let admin = &ctx.accounts.admin;
         let store = &mut ctx.accounts.store;
 
-        if !admin.to_account_info().is_signer || !store.to_account_info().is_signer {
-            return Err(ErrorCode::NoValidSignerPresent.into());
+        if name.len() > NAME_MAX_LEN {
+            return Err(ErrorCode::NameIsTooLong.into());
         }
 
-        if name.len() > STRING_DEFAULT_SIZE || description.len() > STRING_DEFAULT_SIZE {
-            return Err(ErrorCode::StringIsTooLong.into());
+        if description.len() > DESCRIPTION_MAX_LEN {
+            return Err(ErrorCode::DescriptionIsTooLong.into());
         }
 
         store.admin = admin.key();
-        store.name = name;
-        store.description = description;
+        store.name = puffed_out_string(&name, NAME_MAX_LEN);
+        store.description = puffed_out_string(&description, DESCRIPTION_MAX_LEN);
 
         Ok(())
     }

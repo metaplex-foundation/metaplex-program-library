@@ -2,12 +2,15 @@ mod utils;
 
 #[cfg(test)]
 mod init_selling_resource {
-    use crate::utils::{
-        helpers::{
-            airdrop, create_master_edition, create_mint, create_token_account,
-            create_token_metadata, mint_to,
+    use crate::{
+        setup_context,
+        utils::{
+            helpers::{
+                create_master_edition, create_mint, create_token_account, create_token_metadata,
+                mint_to,
+            },
+            setup_functions::setup_store,
         },
-        membership_token_program_test,
     };
     use anchor_client::solana_sdk::{signature::Keypair, signer::Signer, system_program};
     use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
@@ -21,44 +24,8 @@ mod init_selling_resource {
 
     #[tokio::test]
     async fn success() {
-        let mut context = membership_token_program_test().start_with_context().await;
-
-        let admin_wallet = Keypair::new();
-        let store_keypair = Keypair::new();
-
-        // Create `Store`
-        airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
-
-        let name = String::from("123456789_123456789_");
-        let description = String::from("123456789_123456789_");
-
-        let accounts = mpl_membership_token_accounts::CreateStore {
-            admin: admin_wallet.pubkey(),
-            store: store_keypair.pubkey(),
-            system_program: system_program::id(),
-        }
-        .to_account_metas(None);
-
-        let data = mpl_membership_token_instruction::CreateStore {
-            name: name.to_owned(),
-            description: description.to_owned(),
-        }
-        .data();
-
-        let instruction = Instruction {
-            program_id: mpl_membership_token::id(),
-            data,
-            accounts,
-        };
-
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction],
-            Some(&context.payer.pubkey()),
-            &[&context.payer, &admin_wallet, &store_keypair],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        setup_context!(context, mpl_membership_token, mpl_token_metadata);
+        let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
         // Create `SellingResource`
         let resource_mint = Keypair::new();
@@ -176,44 +143,8 @@ mod init_selling_resource {
 
     #[tokio::test]
     async fn fail_supply_is_gt_than_available() {
-        let mut context = membership_token_program_test().start_with_context().await;
-
-        let admin_wallet = Keypair::new();
-        let store_keypair = Keypair::new();
-
-        // Create `Store`
-        airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
-
-        let name = String::from("123456789_123456789_");
-        let description = String::from("123456789_123456789_");
-
-        let accounts = mpl_membership_token_accounts::CreateStore {
-            admin: admin_wallet.pubkey(),
-            store: store_keypair.pubkey(),
-            system_program: system_program::id(),
-        }
-        .to_account_metas(None);
-
-        let data = mpl_membership_token_instruction::CreateStore {
-            name: name.to_owned(),
-            description: description.to_owned(),
-        }
-        .data();
-
-        let instruction = Instruction {
-            program_id: mpl_membership_token::id(),
-            data,
-            accounts,
-        };
-
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction],
-            Some(&context.payer.pubkey()),
-            &[&context.payer, &admin_wallet, &store_keypair],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        setup_context!(context, mpl_membership_token, mpl_token_metadata);
+        let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
         // Create `SellingResource`
         let resource_mint = Keypair::new();
@@ -327,44 +258,8 @@ mod init_selling_resource {
 
     #[tokio::test]
     async fn fail_supply_is_not_provided() {
-        let mut context = membership_token_program_test().start_with_context().await;
-
-        let admin_wallet = Keypair::new();
-        let store_keypair = Keypair::new();
-
-        // Create `Store`
-        airdrop(&mut context, &admin_wallet.pubkey(), 10_000_000_000).await;
-
-        let name = String::from("123456789_123456789_");
-        let description = String::from("123456789_123456789_");
-
-        let accounts = mpl_membership_token_accounts::CreateStore {
-            admin: admin_wallet.pubkey(),
-            store: store_keypair.pubkey(),
-            system_program: system_program::id(),
-        }
-        .to_account_metas(None);
-
-        let data = mpl_membership_token_instruction::CreateStore {
-            name: name.to_owned(),
-            description: description.to_owned(),
-        }
-        .data();
-
-        let instruction = Instruction {
-            program_id: mpl_membership_token::id(),
-            data,
-            accounts,
-        };
-
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction],
-            Some(&context.payer.pubkey()),
-            &[&context.payer, &admin_wallet, &store_keypair],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
+        setup_context!(context, mpl_membership_token, mpl_token_metadata);
+        let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
         // Create `SellingResource`
         let resource_mint = Keypair::new();

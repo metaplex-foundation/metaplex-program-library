@@ -8,6 +8,10 @@ pub enum ErrorCode {
     NoValidSignerPresent,
     #[msg("Some string variable is longer than allowed")]
     StringIsTooLong,
+    #[msg("Name string variable is longer than allowed")]
+    NameIsTooLong,
+    #[msg("Description string variable is longer than allowed")]
+    DescriptionIsTooLong,
     #[msg("Provided supply is gt than available")]
     SupplyIsGtThanAvailable,
     #[msg("Supply is not provided")]

@@ -1,6 +1,6 @@
 //! Module provide program defined state
 
-use crate::utils::STRING_DEFAULT_SIZE;
+use crate::utils::{DESCRIPTION_DEFAULT_SIZE, NAME_DEFAULT_SIZE};
 use anchor_lang::prelude::*;
 
 #[account]
@@ -11,7 +11,7 @@ pub struct Store {
 }
 
 impl Store {
-    pub const LEN: usize = 8 + 32 + STRING_DEFAULT_SIZE * 4 + STRING_DEFAULT_SIZE * 4;
+    pub const LEN: usize = 8 + 32 + NAME_DEFAULT_SIZE + DESCRIPTION_DEFAULT_SIZE;
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug, PartialEq, Eq)]
@@ -73,8 +73,8 @@ impl Market {
         + 32
         + 32
         + 32
-        + STRING_DEFAULT_SIZE * 4
-        + STRING_DEFAULT_SIZE * 4
+        + NAME_DEFAULT_SIZE
+        + DESCRIPTION_DEFAULT_SIZE
         + 1
         + 8
         + 9

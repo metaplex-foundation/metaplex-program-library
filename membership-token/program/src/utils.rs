@@ -3,7 +3,10 @@
 use crate::{id, ErrorCode};
 use anchor_lang::prelude::*;
 
-pub const STRING_DEFAULT_SIZE: usize = 20;
+pub const NAME_MAX_LEN: usize = 40; // max len of a string buffer in bytes
+pub const NAME_DEFAULT_SIZE: usize = 4 + NAME_MAX_LEN; // max lenght of serialized string (str_len + <buffer>)
+pub const DESCRIPTION_MAX_LEN: usize = 60;
+pub const DESCRIPTION_DEFAULT_SIZE: usize = 4 + DESCRIPTION_MAX_LEN;
 pub const HOLDER_PREFIX: &str = "holder";
 pub const HISTORY_PREFIX: &str = "history";
 pub const VAULT_OWNER_PREFIX: &str = "mt_vault";
@@ -54,4 +57,13 @@ pub fn find_trade_history_address(wallet: &Pubkey, market: &Pubkey) -> (Pubkey, 
         &[HISTORY_PREFIX.as_bytes(), wallet.as_ref(), market.as_ref()],
         &id(),
     )
+}
+
+pub fn puffed_out_string(s: &String, size: usize) -> String {
+    let mut array_of_zeroes = vec![];
+    let puff_amount = size - s.len();
+    while array_of_zeroes.len() < puff_amount {
+        array_of_zeroes.push(0u8);
+    }
+    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
