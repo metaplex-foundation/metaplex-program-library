@@ -3,7 +3,7 @@ pub mod state;
 pub mod utils;
 
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
-use anchor_spl::token::{self, Token};
+use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use error::ErrorCode;
 use state::{SellingResource, SellingResourceState, Store};
 use utils::{STRING_DEFAULT_SIZE, VAULT_OWNER_PREFIX};
@@ -27,7 +27,7 @@ pub mod membership_token {
         let resource_mint = &ctx.accounts.resource_mint;
         let master_edition_info = &ctx.accounts.master_edition.to_account_info();
         let vault = &ctx.accounts.vault;
-        let vault_owner = &ctx.accounts.vault_owner;
+        let owner = &ctx.accounts.owner;
         let resource_token = &ctx.accounts.resource_token;
         let token_program = &ctx.accounts.token_program;
 
@@ -42,8 +42,6 @@ pub mod membership_token {
                 mpl_token_metadata::state::EDITION.as_bytes(),
             ],
         )?;
-
-        utils::assert_spl_token_account_owner(&vault.to_account_info(), &vault_owner.key())?;
 
         let master_edition =
             mpl_token_metadata::state::MasterEditionV2::from_account_info(master_edition_info)?;
@@ -80,7 +78,7 @@ pub mod membership_token {
         selling_resource.owner = selling_resource_owner.key();
         selling_resource.resource = resource_mint.key();
         selling_resource.vault = vault.key();
-        selling_resource.vault_owner = vault_owner.key();
+        selling_resource.vault_owner = owner.key();
         selling_resource.supply = 0;
         selling_resource.max_supply = actual_max_supply;
         selling_resource.state = SellingResourceState::Created;
@@ -122,14 +120,13 @@ pub struct InitSellingResource<'info> {
     #[account(init, payer=admin, space=SellingResource::LEN)]
     selling_resource: Account<'info, SellingResource>,
     selling_resource_owner: UncheckedAccount<'info>,
-    #[account(owner=Token::id())]
-    resource_mint: UncheckedAccount<'info>,
+    resource_mint: Account<'info, Mint>,
     #[account(owner=mpl_token_metadata::id())]
     master_edition: UncheckedAccount<'info>,
-    #[account(mut)]
-    vault: Signer<'info>,
+    #[account(mut, signer, has_one=owner)]
+    vault: Account<'info, TokenAccount>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), resource_mint.key().as_ref(), store.key().as_ref()], bump=vault_owner_bump)]
-    vault_owner: UncheckedAccount<'info>,
+    owner: UncheckedAccount<'info>,
     #[account(mut)]
     resource_token: UncheckedAccount<'info>,
     rent: Sysvar<'info, Rent>,

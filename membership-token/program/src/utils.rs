@@ -2,7 +2,6 @@
 
 use crate::{id, ErrorCode};
 use anchor_lang::prelude::*;
-use anchor_spl::token::TokenAccount;
 
 pub const STRING_DEFAULT_SIZE: usize = 20;
 pub const HOLDER_PREFIX: &str = "holder";
@@ -20,19 +19,6 @@ pub fn assert_derivation(
         return Err(ErrorCode::DerivedKeyInvalid.into());
     }
     Ok(bump)
-}
-
-/// Runtime check of `spl_token` `Account` owner.
-pub fn assert_spl_token_account_owner(
-    account: &AccountInfo,
-    owner: &Pubkey,
-) -> Result<(), ProgramError> {
-    let account = TokenAccount::try_deserialize_unchecked(&mut account.data.borrow().as_ref())?;
-    if account.owner != *owner {
-        return Err(ProgramError::IllegalOwner);
-    }
-
-    Ok(())
 }
 
 /// Return `treasury_owner` Pubkey and bump seed.
