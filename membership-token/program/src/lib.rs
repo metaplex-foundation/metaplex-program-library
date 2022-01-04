@@ -1,47 +1,12 @@
-mod utils;
+pub mod error;
+pub mod state;
+pub mod utils;
 
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 use anchor_spl::token::{self, Token};
-
-pub const STRING_DEFAULT_SIZE: usize = 20;
-pub const HOLDER_PREFIX: &str = "holder";
-pub const HISTORY_PREFIX: &str = "history";
-pub const VAULT_OWNER_PREFIX: &str = "mt_vault";
-
-/// Return `treasury_owner` Pubkey and bump seed.
-pub fn find_treasury_owner_address(
-    treasury_mint: &Pubkey,
-    selling_resource: &Pubkey,
-) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[
-            HOLDER_PREFIX.as_bytes(),
-            treasury_mint.as_ref(),
-            selling_resource.as_ref(),
-        ],
-        &id(),
-    )
-}
-
-/// Return `vault_owner` Pubkey and bump seed.
-pub fn find_vault_owner_address(resource_mint: &Pubkey, store: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[
-            VAULT_OWNER_PREFIX.as_bytes(),
-            resource_mint.as_ref(),
-            store.as_ref(),
-        ],
-        &id(),
-    )
-}
-
-/// Return `TradeHistory` Pubkey and bump seed.
-pub fn find_trade_history_address(wallet: &Pubkey, market: &Pubkey) -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[HISTORY_PREFIX.as_bytes(), wallet.as_ref(), market.as_ref()],
-        &id(),
-    )
-}
+use error::ErrorCode;
+use state::{SellingResource, SellingResourceState, Store};
+use utils::{STRING_DEFAULT_SIZE, VAULT_OWNER_PREFIX};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -64,9 +29,7 @@ pub mod membership_token {
         let vault = &ctx.accounts.vault;
         let vault_owner = &ctx.accounts.vault_owner;
         let resource_token = &ctx.accounts.resource_token;
-        let _rent = &ctx.accounts.rent;
         let token_program = &ctx.accounts.token_program;
-        let _system_program = &ctx.accounts.system_program;
 
         // Check `MasterEdition` derivation
         utils::assert_derivation(
@@ -79,6 +42,8 @@ pub mod membership_token {
                 mpl_token_metadata::state::EDITION.as_bytes(),
             ],
         )?;
+
+        utils::assert_spl_token_account_owner(&vault.to_account_info(), &vault_owner.key())?;
 
         let master_edition =
             mpl_token_metadata::state::MasterEditionV2::from_account_info(master_edition_info)?;
@@ -157,6 +122,7 @@ pub struct InitSellingResource<'info> {
     #[account(init, payer=admin, space=SellingResource::LEN)]
     selling_resource: Account<'info, SellingResource>,
     selling_resource_owner: UncheckedAccount<'info>,
+    #[account(owner=Token::id())]
     resource_mint: UncheckedAccount<'info>,
     #[account(owner=mpl_token_metadata::id())]
     master_edition: UncheckedAccount<'info>,
@@ -179,125 +145,4 @@ pub struct CreateStore<'info> {
     #[account(init, space=Store::LEN, payer=admin)]
     store: Account<'info, Store>,
     system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(name: String, description: String, mutable: bool, price: u64, pieces_in_one_wallet: Option<u64>, start_date: u64, end_date: u64)]
-pub struct CreateMarket<'info> {
-    #[account(mut)]
-    market: Account<'info, Market>,
-    store: Account<'info, Store>,
-    #[account(mut)]
-    selling_resource_owner: Signer<'info>,
-    #[account(mut)]
-    selling_resource: UncheckedAccount<'info>,
-    treasury_mint: UncheckedAccount<'info>,
-    #[account(mut)]
-    treasury_holder: Signer<'info>,
-    treasury_owner: UncheckedAccount<'info>,
-}
-
-#[account]
-pub struct Store {
-    pub admin: Pubkey,
-    pub name: String,
-    pub description: String,
-}
-
-impl Store {
-    pub const LEN: usize = 8 + 32 + STRING_DEFAULT_SIZE * 4 + STRING_DEFAULT_SIZE * 4;
-}
-
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug, PartialEq, Eq)]
-pub enum SellingResourceState {
-    Uninitialized,
-    Created,
-    InUse,
-    Exhausted,
-    Stopped,
-}
-
-#[account]
-pub struct SellingResource {
-    pub store: Pubkey,
-    pub owner: Pubkey,
-    pub resource: Pubkey,
-    pub vault: Pubkey,
-    pub vault_owner: Pubkey,
-    pub supply: u64,
-    pub max_supply: Option<u64>,
-    pub state: SellingResourceState,
-}
-
-impl SellingResource {
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 32 + 32 + 8 + 9 + 1;
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
-pub enum MarketState {
-    Uninitialized,
-    Created,
-    Active,
-    Ended,
-}
-
-#[account]
-pub struct Market {
-    pub store: Pubkey,
-    pub selling_resource: Pubkey,
-    pub treasury_mint: Pubkey,
-    pub treasury_holder: Pubkey,
-    pub treasury_owner: Pubkey,
-    pub owner: Pubkey,
-    pub name: String,
-    pub description: String,
-    pub mutable: bool,
-    pub price: u64,
-    pub pieces_in_one_wallet: Option<u64>,
-    pub start_date: u64,
-    pub end_date: Option<u64>,
-    pub state: MarketState,
-}
-
-impl Market {
-    pub const LEN: usize = 8
-        + 32
-        + 32
-        + 32
-        + 32
-        + 32
-        + 32
-        + STRING_DEFAULT_SIZE * 4
-        + STRING_DEFAULT_SIZE * 4
-        + 1
-        + 8
-        + 9
-        + 8
-        + 9
-        + 1;
-}
-
-#[account]
-pub struct TradeHistory {
-    pub market: Pubkey,
-    pub wallet: Pubkey,
-    pub already_bought: u64,
-}
-
-impl TradeHistory {
-    pub const LEN: usize = 8 + 32 + 32 + 8;
-}
-
-#[error]
-pub enum ErrorCode {
-    #[msg("No valid signer present")]
-    NoValidSignerPresent,
-    #[msg("Some string variable is longer than allowed")]
-    StringIsTooLong,
-    #[msg("Provided supply is gt than available")]
-    SupplyIsGtThanAvailable,
-    #[msg("Supply is not provided")]
-    SupplyIsNotProvided,
-    #[msg("Derived key invalid")]
-    DerivedKeyInvalid,
 }

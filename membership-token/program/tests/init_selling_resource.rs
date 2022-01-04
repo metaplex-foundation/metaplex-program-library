@@ -2,27 +2,22 @@ mod utils;
 
 #[cfg(test)]
 mod init_selling_resource {
-    use crate::utils::helpers::{
-        airdrop, create_master_edition, create_mint, create_token_account, create_token_metadata,
-        mint_to,
+    use crate::utils::{
+        helpers::{
+            airdrop, create_master_edition, create_mint, create_token_account,
+            create_token_metadata, mint_to,
+        },
+        membership_token_program_test,
     };
     use anchor_client::solana_sdk::{signature::Keypair, signer::Signer, system_program};
     use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
     use mpl_membership_token::{
         accounts as mpl_membership_token_accounts, instruction as mpl_membership_token_instruction,
-        SellingResource, SellingResourceState,
+        state::{SellingResource, SellingResourceState},
     };
     use solana_program::{instruction::Instruction, sysvar};
     use solana_program_test::*;
     use solana_sdk::{transaction::Transaction, transport::TransportError};
-
-    pub fn membership_token_program_test() -> ProgramTest {
-        let mut program_test =
-            ProgramTest::new("mpl_membership_token", mpl_membership_token::id(), None);
-        program_test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-
-        program_test
-    }
 
     #[tokio::test]
     async fn success() {
@@ -78,19 +73,13 @@ mod init_selling_resource {
         )
         .await;
 
-        let vault = Keypair::new();
-        create_token_account(
-            &mut context,
-            &vault,
-            &resource_mint.pubkey(),
-            &admin_wallet.pubkey(),
-        )
-        .await;
-
-        let (vault_owner, vault_owner_bump) = mpl_membership_token::find_vault_owner_address(
+        let (vault_owner, vault_owner_bump) = mpl_membership_token::utils::find_vault_owner_address(
             &resource_mint.pubkey(),
             &store_keypair.pubkey(),
         );
+
+        let vault = Keypair::new();
+        create_token_account(&mut context, &vault, &resource_mint.pubkey(), &vault_owner).await;
 
         mint_to(
             &mut context,
@@ -248,7 +237,7 @@ mod init_selling_resource {
         )
         .await;
 
-        let (vault_owner, vault_owner_bump) = mpl_membership_token::find_vault_owner_address(
+        let (vault_owner, vault_owner_bump) = mpl_membership_token::utils::find_vault_owner_address(
             &resource_mint.pubkey(),
             &store_keypair.pubkey(),
         );
@@ -399,7 +388,7 @@ mod init_selling_resource {
         )
         .await;
 
-        let (vault_owner, vault_owner_bump) = mpl_membership_token::find_vault_owner_address(
+        let (vault_owner, vault_owner_bump) = mpl_membership_token::utils::find_vault_owner_address(
             &resource_mint.pubkey(),
             &store_keypair.pubkey(),
         );
