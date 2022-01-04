@@ -4,8 +4,8 @@ import { Connection, Keypair } from '@solana/web3.js';
 import {
   Edition,
   EditionData,
-  MetadataData,
-  MetadataDataData,
+  Metadata,
+  Data,
   MetadataKey,
 } from '../src/mpl-token-metadata';
 import { connectionURL, killStuckProcess } from './utils';
@@ -52,7 +52,7 @@ test('create-metadata-account: success', async (t) => {
 
   assertConfirmedTransaction(t, mintRes.txConfirmed);
 
-  const initMetadataData = new MetadataDataData({
+  const initData = new Data({
     uri: URI,
     name: NAME,
     symbol: SYMBOL,
@@ -64,7 +64,7 @@ test('create-metadata-account: success', async (t) => {
     transactionHandler,
     publicKey: payer.publicKey,
     editionMint: mint.publicKey,
-    metadataData: initMetadataData,
+    data: initData,
   });
 
   addLabel('create:metadata', metadata);
@@ -80,9 +80,9 @@ test('create-metadata-account: success', async (t) => {
     metadataAccountDataBytes: metadataAccount.data.byteLength,
   });
 
-  const metadataData = MetadataData.deserialize(metadataAccount.data);
-  spok(t, metadataData, {
-    $topic: 'metadataData',
+  const nftMetadata = Metadata.deserialize(metadataAccount.data);
+  spok(t, nftMetadata, {
+    $topic: 'nftMetadata',
     key: MetadataKey.MetadataV1,
     updateAuthority: isKeyOf(payer),
     mint: isKeyOf(mint),

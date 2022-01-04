@@ -6,27 +6,27 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { MetadataDataData } from '../accounts/Metadata';
+import { Data } from '../accounts/Metadata';
 import { MetadataProgram } from '../MetadataProgram';
 
-export class CreateMetadataArgs extends Borsh.Data<{ data: MetadataDataData; isMutable: boolean }> {
+export class CreateMetadataArgs extends Borsh.Data<{ data: Data; isMutable: boolean }> {
   static readonly SCHEMA = new Map([
-    ...MetadataDataData.SCHEMA,
+    ...Data.SCHEMA,
     ...CreateMetadataArgs.struct([
       ['instruction', 'u8'],
-      ['data', MetadataDataData],
+      ['data', Data],
       ['isMutable', 'u8'],
     ]),
   ]);
 
   instruction = 0;
-  data: MetadataDataData;
+  data: Data;
   isMutable: boolean;
 }
 
 type CreateMetadataParams = {
-  metadata: PublicKey;
-  metadataData: MetadataDataData;
+  pubkey: PublicKey;
+  data: Data;
   updateAuthority: PublicKey;
   mint: PublicKey;
   mintAuthority: PublicKey;
@@ -36,10 +36,10 @@ export class CreateMetadata extends Transaction {
   constructor(options: TransactionCtorFields, params: CreateMetadataParams) {
     super(options);
     const { feePayer } = options;
-    const { metadata, metadataData, updateAuthority, mint, mintAuthority } = params;
+    const { pubkey, data, updateAuthority, mint, mintAuthority } = params;
 
-    const data = CreateMetadataArgs.serialize({
-      data: metadataData,
+    const metadata = CreateMetadataArgs.serialize({
+      data,
       isMutable: true,
     });
 
@@ -47,7 +47,7 @@ export class CreateMetadata extends Transaction {
       new TransactionInstruction({
         keys: [
           {
-            pubkey: metadata,
+            pubkey: pubkey,
             isSigner: false,
             isWritable: true,
           },
@@ -83,7 +83,7 @@ export class CreateMetadata extends Transaction {
           },
         ],
         programId: MetadataProgram.PUBKEY,
-        data,
+        data: metadata,
       }),
     );
   }

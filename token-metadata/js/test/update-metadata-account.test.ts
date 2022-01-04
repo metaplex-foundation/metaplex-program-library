@@ -1,12 +1,12 @@
 import test from 'tape';
 
-import { MetadataDataData, UpdateMetadata } from '../src/mpl-token-metadata';
+import { Data, UpdateMetadata } from '../src/mpl-token-metadata';
 import {
   killStuckProcess,
   initMetadata,
-  getMetadataData,
-  assertMetadataDataUnchanged,
-  assertMetadataDataDataUnchanged,
+  getMetadata,
+  assertMetadataUnchanged,
+  assertDataUnchanged,
   URI,
   NAME,
   SYMBOL,
@@ -35,9 +35,9 @@ test('update-metadata-account: toggle primarySaleHappened', async (t) => {
   );
   await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
 
-  const updatedMetadata = await getMetadataData(connection, metadata);
+  const updatedMetadata = await getMetadata(connection, metadata);
   t.ok(updatedMetadata.primarySaleHappened, 'after update sale happened');
-  assertMetadataDataUnchanged(t, initialMetadata, updatedMetadata, 'primarySaleHappened');
+  assertMetadataUnchanged(t, initialMetadata, updatedMetadata, 'primarySaleHappened');
 });
 
 test('update-metadata-account: update with same data', async (t) => {
@@ -53,8 +53,8 @@ test('update-metadata-account: update with same data', async (t) => {
   );
   await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
 
-  const updatedMetadata = await getMetadataData(connection, metadata);
-  assertMetadataDataUnchanged(t, initialMetadata, updatedMetadata);
+  const updatedMetadata = await getMetadata(connection, metadata);
+  assertMetadataUnchanged(t, initialMetadata, updatedMetadata);
 });
 
 test('update-metadata-account: uri', async (t) => {
@@ -64,15 +64,15 @@ test('update-metadata-account: uri', async (t) => {
     {},
     {
       metadata,
-      metadataData: new MetadataDataData({ ...initialMetadata.data, uri: `${URI}-updated` }),
+      metadataData: new Data({ ...initialMetadata.data, uri: `${URI}-updated` }),
       updateAuthority: payer.publicKey,
     },
   );
   await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
 
-  const updatedMetadata = await getMetadataData(connection, metadata);
+  const updatedMetadata = await getMetadata(connection, metadata);
   t.equal(updatedMetadata.data.uri, `${URI}-updated`, 'updates uri');
-  assertMetadataDataDataUnchanged(t, initialMetadata.data, updatedMetadata.data, ['uri']);
+  assertDataUnchanged(t, initialMetadata.data, updatedMetadata.data, ['uri']);
 });
 
 test('update-metadata-account: name and symbol', async (t) => {
@@ -82,7 +82,7 @@ test('update-metadata-account: name and symbol', async (t) => {
     {},
     {
       metadata,
-      metadataData: new MetadataDataData({
+      metadataData: new Data({
         ...initialMetadata.data,
         name: `${NAME}-updated`,
         symbol: `${SYMBOL}++`,
@@ -92,10 +92,10 @@ test('update-metadata-account: name and symbol', async (t) => {
   );
   await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
 
-  const updatedMetadata = await getMetadataData(connection, metadata);
+  const updatedMetadata = await getMetadata(connection, metadata);
   t.equal(updatedMetadata.data.name, `${NAME}-updated`, 'updates name');
   t.equal(updatedMetadata.data.symbol, `${SYMBOL}++`, 'updates symbol');
-  assertMetadataDataDataUnchanged(t, initialMetadata.data, updatedMetadata.data, [
+  assertDataUnchanged(t, initialMetadata.data, updatedMetadata.data, [
     'name',
     'symbol',
   ]);
@@ -114,7 +114,7 @@ test('update-metadata-account: update symbol too long', async (t) => {
     {},
     {
       metadata,
-      metadataData: new MetadataDataData({
+      metadataData: new Data({
         ...initialMetadata.data,
         symbol: `${SYMBOL}-too-long`,
       }),

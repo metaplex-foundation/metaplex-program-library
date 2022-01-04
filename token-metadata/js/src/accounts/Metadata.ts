@@ -36,10 +36,10 @@ type DataArgs = {
   sellerFeeBasisPoints: number;
   creators: Creator[] | null;
 };
-export class MetadataDataData extends Borsh.Data<DataArgs> {
+export class Data extends Borsh.Data<DataArgs> {
   static readonly SCHEMA = new Map([
     ...Creator.SCHEMA,
-    ...MetadataDataData.struct([
+    ...Data.struct([
       ['name', 'string'],
       ['symbol', 'string'],
       ['uri', 'string'],
@@ -67,19 +67,19 @@ export class MetadataDataData extends Borsh.Data<DataArgs> {
 type Args = {
   updateAuthority: StringPublicKey;
   mint: StringPublicKey;
-  data: MetadataDataData;
+  data: Data;
   primarySaleHappened: boolean;
   isMutable: boolean;
   editionNonce: number | null;
 };
-export class MetadataData extends Borsh.Data<Args> {
+export class Metadata extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
-    ...MetadataDataData.SCHEMA,
-    ...MetadataData.struct([
+    ...Data.SCHEMA,
+    ...Metadata.struct([
       ['key', 'u8'],
       ['updateAuthority', 'pubkeyAsString'],
       ['mint', 'pubkeyAsString'],
-      ['data', MetadataDataData],
+      ['data', Data],
       ['primarySaleHappened', 'u8'], // bool
       ['isMutable', 'u8'], // bool
     ]),
@@ -88,7 +88,7 @@ export class MetadataData extends Borsh.Data<Args> {
   key: MetadataKey;
   updateAuthority: StringPublicKey;
   mint: StringPublicKey;
-  data: MetadataDataData;
+  data: Data;
   primarySaleHappened: boolean;
   isMutable: boolean;
   editionNonce: number | null;
@@ -103,7 +103,7 @@ export class MetadataData extends Borsh.Data<Args> {
   }
 }
 
-export class Metadata extends Account<MetadataData> {
+export class TokenData extends Account<Metadata> {
   constructor(pubkey: AnyPublicKey, info: AccountInfo<Buffer>) {
     super(pubkey, info);
 
@@ -111,11 +111,11 @@ export class Metadata extends Account<MetadataData> {
       throw ERROR_INVALID_OWNER();
     }
 
-    if (!Metadata.isCompatible(this.info.data)) {
+    if (!TokenData.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }
 
-    this.data = MetadataData.deserialize(this.info.data);
+    this.data = Metadata.deserialize(this.info.data);
   }
 
   static isCompatible(data: Buffer) {
@@ -187,10 +187,10 @@ export class Metadata extends Account<MetadataData> {
         )
       )
         .flat()
-        .map((account) => Metadata.from(account));
+        .map((account) => TokenData.from(account));
     } else {
       return (await MetadataProgram.getProgramAccounts(connection, { filters: baseFilters })).map(
-        (account) => Metadata.from(account),
+        (account) => TokenData.from(account),
       );
     }
   }
@@ -199,7 +199,7 @@ export class Metadata extends Account<MetadataData> {
     const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
     const accountMap = new Map(accounts.map(({ data }) => [data.mint.toString(), data]));
     // Slow method
-    const allMetadata = await Metadata.findMany(connection);
+    const allMetadata = await TokenData.findMany(connection);
 
     return allMetadata.filter(
       (metadata) =>
@@ -216,7 +216,7 @@ export class Metadata extends Account<MetadataData> {
 
     return (
       await Promise.all(
-        accountsWithAmount.map(({ mint }) => Metadata.findMany(connection, { mint })),
+        accountsWithAmount.map(({ mint }) => TokenData.findMany(connection, { mint })),
       )
     ).flat();
   }
@@ -224,19 +224,19 @@ export class Metadata extends Account<MetadataData> {
   static async findDataByOwner(
     connection: Connection,
     owner: AnyPublicKey,
-  ): Promise<MetadataData[]> {
+  ): Promise<Metadata[]> {
     const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
 
     const metadataPdaLookups = accounts.reduce((memo, { data }) => {
       // Only include tokens where amount equal to 1.
       // Note: This is not the same as mint supply.
       // NFTs by definition have supply of 1, but an account balance > 1 implies a mint supply > 1.
-      return data.amount?.eq(new BN(1)) ? [...memo, Metadata.getPDA(data.mint)] : memo;
+      return data.amount?.eq(new BN(1)) ? [...memo, TokenData.getPDA(data.mint)] : memo;
     }, []);
 
     const metadataAddresses = await Promise.all(metadataPdaLookups);
     const tokenInfo = await Account.getInfos(connection, metadataAddresses);
-    return Array.from(tokenInfo.values()).map((m) => MetadataData.deserialize(m.data));
+    return Array.from(tokenInfo.values()).map((m) => Metadata.deserialize(m.data));
   }
 
   static async getEdition(connection: Connection, mint: AnyPublicKey) {

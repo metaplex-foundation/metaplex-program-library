@@ -7,7 +7,7 @@ import {
   TransactionHandler,
 } from '@metaplex-foundation/amman';
 import { strict as assert } from 'assert';
-import { CreateMetadata, Metadata, MetadataDataData } from '../../src/mpl-token-metadata';
+import { CreateMetadata, TokenData, Data } from '../../src/mpl-token-metadata';
 
 // -----------------
 // Create Metadata
@@ -17,7 +17,7 @@ type CreateMetadataParams = {
   transactionHandler: TransactionHandler;
   publicKey: PublicKey;
   editionMint: PublicKey;
-  metadataData: MetadataDataData;
+  data: Data;
   updateAuthority?: PublicKey;
 };
 
@@ -25,15 +25,15 @@ export async function createMetadata({
   transactionHandler,
   publicKey,
   editionMint,
-  metadataData,
+  data,
   updateAuthority,
 }: CreateMetadataParams) {
-  const metadata = await Metadata.getPDA(editionMint);
+  const metadata = await TokenData.getPDA(editionMint);
   const createMetadataTx = new CreateMetadata(
     { feePayer: publicKey },
     {
-      metadata,
-      metadataData,
+      pubkey: publicKey,
+      data,
       updateAuthority: updateAuthority ?? publicKey,
       mint: editionMint,
       mintAuthority: publicKey,
@@ -56,7 +56,7 @@ export async function mintAndCreateMetadata(
   connection: Connection,
   transactionHandler: TransactionHandler,
   payer: Keypair,
-  args: ConstructorParameters<typeof MetadataDataData>[0],
+  args: ConstructorParameters<typeof Data>[0],
 ) {
   const { createMintAccount } = new Actions(connection);
   const { mint, createMintTx } = await createMintAccount(payer.publicKey);
@@ -69,13 +69,13 @@ export async function mintAndCreateMetadata(
 
   assertConfirmedTransaction(assert, mintRes.txConfirmed);
 
-  const initMetadataData = new MetadataDataData(args);
+  const initData = new Data(args);
 
   const { createTxDetails, metadata } = await createMetadata({
     transactionHandler,
     publicKey: payer.publicKey,
     editionMint: mint.publicKey,
-    metadataData: initMetadataData,
+    data: initData,
   });
 
   addLabel('metadata', metadata);

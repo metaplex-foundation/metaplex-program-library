@@ -1,7 +1,7 @@
 import test from 'tape';
 
 import { UpdatePrimarySaleHappenedViaToken } from '../src/mpl-token-metadata';
-import { killStuckProcess, initMetadata, getMetadataData, dump } from './utils';
+import { killStuckProcess, initMetadata, getMetadata, dump } from './utils';
 
 killStuckProcess();
 
@@ -34,6 +34,6 @@ test.skip('update-primary-sale-happened-via-token: toggle primarySaleHappened', 
   );
   await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
 
-  const updatedMetadata = await getMetadataData(connection, metadata);
+  const updatedMetadata = await getMetadata(connection, metadata);
   dump(updatedMetadata);
 });

@@ -2,7 +2,7 @@ import test from 'tape';
 import spok from 'spok';
 
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { MetadataData, MetadataDataData } from '../../src/mpl-token-metadata';
+import { Metadata, Data } from '../../src/mpl-token-metadata';
 import { connectionURL } from './';
 import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 
@@ -23,7 +23,7 @@ export async function initMetadata() {
 
   await airdrop(connection, payer.publicKey, 2);
 
-  const initMetadataData = new MetadataDataData({
+  const initMetadata = new Data({
     uri: URI,
     name: NAME,
     symbol: SYMBOL,
@@ -35,25 +35,25 @@ export async function initMetadata() {
     connection,
     transactionHandler,
     payer,
-    initMetadataData,
+    initMetadata,
   );
-  const initialMetadata = await getMetadataData(connection, metadata);
+  const initialMetadata = await getMetadata(connection, metadata);
   return { connection, transactionHandler, payer, mint, metadata, initialMetadata };
 }
 
-export async function getMetadataData(
+export async function getMetadata(
   connection: Connection,
   metadata: PublicKey,
-): Promise<MetadataData> {
+): Promise<Metadata> {
   const metadataAccount = await connection.getAccountInfo(metadata);
-  return MetadataData.deserialize(metadataAccount.data);
+  return Metadata.deserialize(metadataAccount.data);
 }
 
-export async function assertMetadataDataUnchanged(
+export async function assertMetadataUnchanged(
   t: test.Test,
-  initial: MetadataData,
-  updated: MetadataData,
-  except?: keyof MetadataData,
+  initial: Metadata,
+  updated: Metadata,
+  except?: keyof Metadata,
 ) {
   const x = { ...initial };
   if (except != null) {
@@ -70,17 +70,17 @@ export async function assertMetadataDataUnchanged(
   spok(t, x, y);
 }
 
-export async function assertMetadataDataDataUnchanged(
+export async function assertDataUnchanged(
   t: test.Test,
-  initial: MetadataDataData,
-  updated: MetadataDataData,
-  except: (keyof MetadataDataData)[],
+  initial: Data,
+  updated: Data,
+  except: (keyof Data)[],
 ) {
   const x = { ...initial };
   except.forEach((f) => delete x[f]);
   delete x.creators;
 
-  const y = { $topic: `no change except '${except}' on metadataData`, ...updated };
+  const y = { $topic: `no change except '${except}' on Metadata`, ...updated };
   except.forEach((f) => delete y[f]);
   delete y.creators;
 
