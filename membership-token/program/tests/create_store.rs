@@ -2,22 +2,16 @@ mod utils;
 
 #[cfg(test)]
 mod create_store {
-    use crate::utils::helpers::airdrop;
-
+    use crate::utils::{helpers::airdrop, membership_token_program_test};
     use anchor_client::solana_sdk::{signature::Keypair, signer::Signer, system_program};
     use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
     use mpl_membership_token::{
         accounts as mpl_membership_token_accounts, instruction as mpl_membership_token_instruction,
-        Store,
+        state::Store,
     };
-
     use solana_program::instruction::Instruction;
     use solana_program_test::*;
     use solana_sdk::{transaction::Transaction, transport::TransportError};
-
-    pub fn membership_token_program_test() -> ProgramTest {
-        ProgramTest::new("mpl_membership_token", mpl_membership_token::id(), None)
-    }
 
     #[tokio::test]
     async fn success() {
