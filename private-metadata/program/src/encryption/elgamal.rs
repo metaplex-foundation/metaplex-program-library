@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 use {
     crate::encryption::{
         discrete_log::{DecodeU32Precomputation, DiscreteLog},
@@ -10,6 +11,7 @@ use {
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
+        field::FieldElement,
     },
     serde::{Deserialize, Serialize},
     std::{
@@ -135,6 +137,95 @@ impl ElGamal {
     ) -> Option<u32> {
         let discrete_log_instance = Self::decrypt(secret, ct);
         discrete_log_instance.decode_u32_online(hashmap)
+    }
+
+
+    /// (x, y) -> (s, t)
+    pub fn edwards_to_jacobi_isogeny(
+        r: &RistrettoPoint,
+    ) -> (FieldElement, FieldElement) {
+        let z_inv = r.0.Z.invert();
+        let x = &r.0.X * &z_inv;
+        let y = &r.0.Y * &z_inv;
+
+        let x_sq = x.square();
+
+        let Ns = &curve25519_dalek::constants::SQRT_AD_MINUS_ONE * &(&x * &y);
+        let Nt = &y.square() - &x_sq;
+
+        let d_inv = (&FieldElement::one() + &x_sq).invert();
+
+        let s_dub = &Ns * &d_inv;
+        let t_dub = &Nt * &d_inv;
+
+        // // At this point we've applied the dual `dot` isogeny on (s, t) which is equivalent to
+        // // 2-multiplication on the corresponding Jacobi point.
+        //
+        // // i.e, we can also mimic this if we had the original (s, t) by doing...
+        // // Jacobi doubling in affine coordinates
+        // {
+        //     let x = s;
+        //     let y = t;
+        //
+        //     let one = FieldElement::one();
+        //     let two = &one + &one;
+        //
+        //     let a2 = &constants::MINUS_ONE;
+        //     let d2 = d;
+        //     let A = &(-&(a2 * &(a2 + d2))) * &(a2 - d2).invert();
+        //
+        //     let xx = &x * &x;
+        //     let yy = &y * &y;
+        //
+        //     let one_minus_xx_sq = &one - &xx.square();
+        //     let one_plus_xx_sq = &one + &xx.square();
+        //
+        //     let xr = &(&(&x * &y) + &(&y * &x)) * &one_minus_xx_sq.invert();
+        //     let yr = &(
+        //         &(&one_plus_xx_sq * &(&yy + &(&(&two * &A) * &xx)))
+        //         + &(&two * &xx).square()
+        //     ) * &one_minus_xx_sq.square().invert();
+        //
+        //     (xr, yr)
+        // }
+
+        // TODO
+        let s = s_dub;
+        let t = t_dub;
+
+        (s, t)
+    }
+
+    pub fn ristretto_elligator_inv(
+        s: &FieldElement,
+        t: &FieldElement,
+    ) -> Option<[u8; 32]> {
+        use curve25519_dalek::constants;
+
+        let one = FieldElement::one();
+
+        let a2 = &constants::MINUS_ONE;
+        let d2 = &constants::EDWARDS_D;
+
+        // (a + d) * s^2 + c * (t + 1) * (d - a)
+
+        let t1 = &(a2 + d2) * &s.square();
+
+        use subtle::ConditionallyNegatable;
+        let mut t2 = &(t + &one) * &(d2 - a2);
+        t2.conditional_negate(s.is_negative());
+
+        let r = &(&t1 + &t2) * &(&t1 - &t2).invert();
+
+        let i = &constants::SQRT_M1;
+        let (r_i_is_sq, r_0) = FieldElement::sqrt_ratio_i(&r, i);
+
+        println!("r_0 {:?}", r_0.to_bytes());
+        if r_i_is_sq.unwrap_u8() == 1u8 {
+            Some(r_0.to_bytes())
+        } else {
+            None
+        }
     }
 }
 

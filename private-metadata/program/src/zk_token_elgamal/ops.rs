@@ -241,7 +241,7 @@ mod tests {
         },
         bytemuck::Zeroable,
         curve25519_dalek::scalar::Scalar,
-        rand::rngs::OsRng,
+        rand_core::OsRng,
         std::convert::TryInto,
     };
 
