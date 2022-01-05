@@ -108,37 +108,58 @@ impl ElGamal {
     ///
     /// The output of the function is of type `DiscreteLog`. The exact message
     /// can be recovered via the DiscreteLog's decode method.
-    fn decrypt(secret: &ElGamalSecretKey, ct: &ElGamalCiphertext) -> DiscreteLog {
+    fn decrypt(secret: &ElGamalSecretKey, ct: &ElGamalCiphertext) -> [u8; 32] {
         let ElGamalSecretKey(s) = secret;
         let ElGamalCiphertext {
             message_comm,
             decrypt_handle,
         } = ct;
 
-        DiscreteLog {
-            generator: PedersenBase::default().G,
-            target: message_comm.get_point() - s * decrypt_handle.get_point(),
+        let hash_input = s * decrypt_handle.get_point();
+
+        use sha3::Digest;
+        let mut hash = sha3::Sha3_256::default();
+        hash.update(hash_input.compress().to_bytes());
+        let output = hash.finalize();
+
+        let mut output_bytes = [0; 32];
+        output_bytes.copy_from_slice(&output.as_slice());
+
+        let Q = message_comm.get_point().0;
+        for P in [Q, Q + curve25519_dalek::constants::EIGHT_TORSION[1]] {
+            let J = ElGamal::ristretto_to_jacobi_isogeny(
+                &RistrettoPoint(P)
+            );
+
+            for Jp in J.coset() {
+                let inv = ElGamal::jacobi_elligator_inv(&Jp);
+                match inv {
+                    Some(r) => {
+                        for rp in [r, -&r] {
+                            let mut buffer = output_bytes.clone();
+                            buffer
+                                .iter_mut()
+                                .zip(rp.to_bytes().iter())
+                                .for_each(|(x1, x2)| *x1 ^= *x2);
+                            // TODO: something about last bit....
+                            if buffer[24..31] == [0; 7] {
+                                return buffer;
+                            }
+                        }
+                    },
+                    _ => {},
+                }
+            }
         }
-    }
 
-    /// On input a secret key and a ciphertext, the function decrypts the
-    /// ciphertext for a u32 value.
-    fn decrypt_u32(secret: &ElGamalSecretKey, ct: &ElGamalCiphertext) -> Option<u32> {
-        let discrete_log_instance = Self::decrypt(secret, ct);
-        discrete_log_instance.decode_u32()
-    }
+        // TODO: err?
+        [0xcd; 32]
 
-    /// On input a secret key, ciphertext, and hashmap, the function decrypts the
-    /// ciphertext for a u32 value.
-    fn decrypt_u32_online(
-        secret: &ElGamalSecretKey,
-        ct: &ElGamalCiphertext,
-        hashmap: &DecodeU32Precomputation,
-    ) -> Option<u32> {
-        let discrete_log_instance = Self::decrypt(secret, ct);
-        discrete_log_instance.decode_u32_online(hashmap)
+        // DiscreteLog {
+        //     generator: PedersenBase::default().G,
+        //     target: message_comm.get_point() - s * decrypt_handle.get_point(),
+        // }
     }
-
 
     /// (x, y) -> (s, t)
     pub fn ristretto_to_jacobi_isogeny(
@@ -497,22 +518,8 @@ impl ElGamalSecretKey {
     }
 
     /// Utility method for code ergonomics.
-    pub fn decrypt(&self, ct: &ElGamalCiphertext) -> DiscreteLog {
+    pub fn decrypt(&self, ct: &ElGamalCiphertext) -> [u8; 32] {
         ElGamal::decrypt(self, ct)
-    }
-
-    /// Utility method for code ergonomics.
-    pub fn decrypt_u32(&self, ct: &ElGamalCiphertext) -> Option<u32> {
-        ElGamal::decrypt_u32(self, ct)
-    }
-
-    /// Utility method for code ergonomics.
-    pub fn decrypt_u32_online(
-        &self,
-        ct: &ElGamalCiphertext,
-        hashmap: &DecodeU32Precomputation,
-    ) -> Option<u32> {
-        ElGamal::decrypt_u32_online(self, ct, hashmap)
     }
 
     pub fn to_bytes(&self) -> [u8; 32] {
@@ -589,22 +596,8 @@ impl ElGamalCiphertext {
     }
 
     /// Utility method for code ergonomics.
-    pub fn decrypt(&self, secret: &ElGamalSecretKey) -> DiscreteLog {
+    pub fn decrypt(&self, secret: &ElGamalSecretKey) -> [u8; 32] {
         ElGamal::decrypt(secret, self)
-    }
-
-    /// Utility method for code ergonomics.
-    pub fn decrypt_u32(&self, secret: &ElGamalSecretKey) -> Option<u32> {
-        ElGamal::decrypt_u32(secret, self)
-    }
-
-    /// Utility method for code ergonomics.
-    pub fn decrypt_u32_online(
-        &self,
-        secret: &ElGamalSecretKey,
-        hashmap: &DecodeU32Precomputation,
-    ) -> Option<u32> {
-        ElGamal::decrypt_u32_online(secret, self, hashmap)
     }
 }
 
@@ -761,12 +754,12 @@ mod tests {
         let msg: u32 = 57;
         let ct = ElGamal::encrypt(&public, msg);
 
-        let expected_instance = DiscreteLog {
-            generator: PedersenBase::default().G,
-            target: Scalar::from(msg) * PedersenBase::default().G,
-        };
+        // let expected_instance = DiscreteLog {
+        //     generator: PedersenBase::default().G,
+        //     target: Scalar::from(msg) * PedersenBase::default().G,
+        // };
 
-        assert_eq!(expected_instance, ElGamal::decrypt(&secret, &ct));
+        assert_eq!(Scalar::from(msg).bytes[..24], ElGamal::decrypt(&secret, &ct)[..24]);
 
         // Commenting out for faster testing
         // assert_eq!(msg, ElGamalKeypair::decrypt_u32(&secret, &ct).unwrap());
@@ -792,99 +785,12 @@ mod tests {
         let ct_1: ElGamalCiphertext = (comm, decrypt_handle_1).into();
         let ct_2: ElGamalCiphertext = (comm, decrypt_handle_2).into();
 
-        let expected_instance = DiscreteLog {
-            generator: PedersenBase::default().G,
-            target: Scalar::from(msg) * PedersenBase::default().G,
-        };
-
-        assert_eq!(expected_instance, sk_1.decrypt(&ct_1));
-        assert_eq!(expected_instance, sk_2.decrypt(&ct_2));
+        assert_eq!(Scalar::from(msg).bytes[..24], sk_1.decrypt(&ct_1)[..24]);
+        assert_eq!(Scalar::from(msg).bytes[..24], sk_2.decrypt(&ct_2)[..24]);
 
         // Commenting out for faster testing
         // assert_eq!(msg, sk_1.decrypt_u32(&ct_1).unwrap());
         // assert_eq!(msg, sk_2.decrypt_u32(&ct_2).unwrap());
-    }
-
-    #[test]
-    fn test_homomorphic_addition() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::default();
-        let msg_0: u64 = 57;
-        let msg_1: u64 = 77;
-
-        // Add two ElGamal ciphertexts
-        let open_0 = PedersenOpening::random(&mut OsRng);
-        let open_1 = PedersenOpening::random(&mut OsRng);
-
-        let ct_0 = ElGamal::encrypt_with(&public, msg_0, &open_0);
-        let ct_1 = ElGamal::encrypt_with(&public, msg_1, &open_1);
-
-        let ct_sum = ElGamal::encrypt_with(&public, msg_0 + msg_1, &(open_0 + open_1));
-
-        assert_eq!(ct_sum, ct_0 + ct_1);
-
-        // Add to ElGamal ciphertext
-        let open = PedersenOpening::random(&mut OsRng);
-        let ct = ElGamal::encrypt_with(&public, msg_0, &open);
-        let ct_sum = ElGamal::encrypt_with(&public, msg_0 + msg_1, &open);
-
-        assert_eq!(ct_sum, ct.add_to_msg(msg_1));
-    }
-
-    #[test]
-    fn test_homomorphic_subtraction() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::default();
-        let msg_0: u64 = 77;
-        let msg_1: u64 = 55;
-
-        // Subtract two ElGamal ciphertexts
-        let open_0 = PedersenOpening::random(&mut OsRng);
-        let open_1 = PedersenOpening::random(&mut OsRng);
-
-        let ct_0 = ElGamal::encrypt_with(&public, msg_0, &open_0);
-        let ct_1 = ElGamal::encrypt_with(&public, msg_1, &open_1);
-
-        let ct_sub = ElGamal::encrypt_with(&public, msg_0 - msg_1, &(open_0 - open_1));
-
-        assert_eq!(ct_sub, ct_0 - ct_1);
-
-        // Subtract to ElGamal ciphertext
-        let open = PedersenOpening::random(&mut OsRng);
-        let ct = ElGamal::encrypt_with(&public, msg_0, &open);
-        let ct_sub = ElGamal::encrypt_with(&public, msg_0 - msg_1, &open);
-
-        assert_eq!(ct_sub, ct.sub_to_msg(msg_1));
-    }
-
-    #[test]
-    fn test_homomorphic_multiplication() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::default();
-        let msg_0: u64 = 57;
-        let msg_1: u64 = 77;
-
-        let open = PedersenOpening::random(&mut OsRng);
-
-        let ct = ElGamal::encrypt_with(&public, msg_0, &open);
-        let scalar = Scalar::from(msg_1);
-
-        let ct_prod = ElGamal::encrypt_with(&public, msg_0 * msg_1, &(open * scalar));
-
-        assert_eq!(ct_prod, ct * scalar);
-    }
-
-    #[test]
-    fn test_homomorphic_division() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::default();
-        let msg_0: u64 = 55;
-        let msg_1: u64 = 5;
-
-        let open = PedersenOpening::random(&mut OsRng);
-
-        let ct = ElGamal::encrypt_with(&public, msg_0, &open);
-        let scalar = Scalar::from(msg_1);
-
-        let ct_div = ElGamal::encrypt_with(&public, msg_0 / msg_1, &(open / scalar));
-
-        assert_eq!(ct_div, ct / scalar);
     }
 
     #[test]

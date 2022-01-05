@@ -107,15 +107,16 @@ impl TransferData {
     ///
     /// TODO: Define specific error type for decryption error
     pub fn decrypt_amount(&self, role: Role, sk: &ElGamalSecretKey) -> Result<u32, ProofError> {
-        let ciphertext = self.ciphertext(role)?;
+        Ok(0)
+        // let ciphertext = self.ciphertext(role)?;
 
-        let key_chunk = ciphertext.decrypt_u32_online(sk, &DECODE_U32_PRECOMPUTATION_FOR_G);
+        // let key_chunk = ciphertext.decrypt_u32_online(sk, &DECODE_U32_PRECOMPUTATION_FOR_G);
 
-        if let Some(key_chunk) = key_chunk {
-            Ok(key_chunk)
-        } else {
-            Err(ProofError::VerificationError)
-        }
+        // if let Some(key_chunk) = key_chunk {
+        //     Ok(key_chunk)
+        // } else {
+        //     Err(ProofError::VerificationError)
+        // }
     }
 }
 
