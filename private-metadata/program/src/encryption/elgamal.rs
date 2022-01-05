@@ -141,9 +141,9 @@ impl ElGamal {
 
 
     /// (x, y) -> (s, t)
-    pub fn edwards_to_jacobi_isogeny(
+    pub fn ristretto_to_jacobi_isogeny(
         r: &RistrettoPoint,
-    ) -> (FieldElement, FieldElement) {
+    ) -> JacobiPoint {
         let z_inv = r.0.Z.invert();
         let x = &r.0.X * &z_inv;
         let y = &r.0.Y * &z_inv;
@@ -155,50 +155,24 @@ impl ElGamal {
 
         let d_inv = (&FieldElement::one() + &x_sq).invert();
 
-        let s_dub = &Ns * &d_inv;
-        let t_dub = &Nt * &d_inv;
+        let st_dub = JacobiPoint {
+            X: &Ns * &d_inv,
+            Y: &Nt * &d_inv,
+        };
 
-        // // At this point we've applied the dual `dot` isogeny on (s, t) which is equivalent to
-        // // 2-multiplication on the corresponding Jacobi point.
-        //
-        // // i.e, we can also mimic this if we had the original (s, t) by doing...
-        // // Jacobi doubling in affine coordinates
-        // {
-        //     let x = s;
-        //     let y = t;
-        //
-        //     let one = FieldElement::one();
-        //     let two = &one + &one;
-        //
-        //     let a2 = &constants::MINUS_ONE;
-        //     let d2 = d;
-        //     let A = &(-&(a2 * &(a2 + d2))) * &(a2 - d2).invert();
-        //
-        //     let xx = &x * &x;
-        //     let yy = &y * &y;
-        //
-        //     let one_minus_xx_sq = &one - &xx.square();
-        //     let one_plus_xx_sq = &one + &xx.square();
-        //
-        //     let xr = &(&(&x * &y) + &(&y * &x)) * &one_minus_xx_sq.invert();
-        //     let yr = &(
-        //         &(&one_plus_xx_sq * &(&yy + &(&(&two * &A) * &xx)))
-        //         + &(&two * &xx).square()
-        //     ) * &one_minus_xx_sq.square().invert();
-        //
-        //     (xr, yr)
-        // }
+        println!("decoded {:?}", st_dub);
 
-        // TODO
-        let s = s_dub;
-        let t = t_dub;
+        // At this point we've applied the dual `dot` isogeny on (s, t) which is equivalent to
+        // 2-multiplication on the corresponding Jacobi point. i.e, we can also mimic this if we
+        // had the original (s, t) by doing Jacobi doubling in affine coordinates. Just reverse the
+        // doubling
 
-        (s, t)
+        let two = &Scalar::one() + &Scalar::one();
+        st_dub.mul(&two.invert())
     }
 
-    pub fn ristretto_elligator_inv(
-        s: &FieldElement,
-        t: &FieldElement,
+    pub fn jacobi_elligator_inv(
+        p: &JacobiPoint,
     ) -> Option<[u8; 32]> {
         use curve25519_dalek::constants;
 
@@ -208,6 +182,8 @@ impl ElGamal {
         let d2 = &constants::EDWARDS_D;
 
         // (a + d) * s^2 + c * (t + 1) * (d - a)
+        let s = &p.X;
+        let t = &p.Y;
 
         let t1 = &(a2 + d2) * &s.square();
 
@@ -226,6 +202,80 @@ impl ElGamal {
         } else {
             None
         }
+    }
+}
+
+// Jacobi quartic J_{a_1^2, a_1 - 2 d_1}
+// a.k.a          J_{a_2^2, -a_2 \quot{a_2 + d_2}{a_2 - d_2}}
+#[derive(Copy, Clone, Debug)]
+pub struct JacobiPoint {
+    pub X: FieldElement,
+    pub Y: FieldElement,
+}
+
+impl JacobiPoint {
+    pub fn add(&self, other: &JacobiPoint) -> JacobiPoint {
+        // constant `A` for this Jacobi quartic
+        let a2 = &curve25519_dalek::constants::MINUS_ONE;
+        let d2 = &curve25519_dalek::constants::EDWARDS_D;
+        let A = &(-&(a2 * &(a2 + d2))) * &(a2 - d2).invert();
+
+        let x1 = &self.X;
+        let y1 = &self.Y;
+        let x2 = &other.X;
+        let y2 = &other.Y;
+
+        let xx = x1 * x2;
+        let yy = y1 * y2;
+
+        let one_minus_xx_sq = &FieldElement::one() - &xx.square();
+        let one_plus_xx_sq = &FieldElement::one() + &xx.square();
+        let two = &FieldElement::one() + &FieldElement::one();
+
+        let xr = &(&(x1 * y2) + &(y1 * x2)) * &one_minus_xx_sq.invert();
+        let yr = &(
+            &(
+                &one_plus_xx_sq
+                * &(&yy + &(&(&A + &A) * &xx))
+            )
+            + &(
+                &(&two * &xx)
+                * &(&x1.square() + &x2.square())
+            )
+        ) * &one_minus_xx_sq.square().invert();
+
+        JacobiPoint { X: xr, Y: yr }
+    }
+
+    // not constant time
+    pub fn mul(&self, scalar: &Scalar) -> JacobiPoint {
+        // identity?...
+        let mut res = JacobiPoint {
+            X: FieldElement::zero(),
+            Y: FieldElement::one(),
+        };
+
+        let bits = scalar.bits();
+
+        for bit in bits.iter().rev() {
+            res = res.add(&res);
+            if *bit == 1 {
+                res = res.add(self);
+            }
+        }
+        res
+    }
+
+    pub fn coset(&self) -> [JacobiPoint; 4] {
+        let JacobiPoint { X: s, Y: t } = *self;
+        let a_s_inv = &FieldElement::one() * &s.invert();
+        let a_t_s_sq_inv = &t * &s.square().invert();
+        [
+            JacobiPoint{ X: s, Y: t },
+            JacobiPoint{ X: -&s, Y: -&t },
+            JacobiPoint{ X: a_s_inv, Y: -&a_t_s_sq_inv },
+            JacobiPoint{ X: -&a_s_inv, Y: a_t_s_sq_inv },
+        ]
     }
 }
 
