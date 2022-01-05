@@ -49,6 +49,29 @@ pub fn transfer_lamports(
     Ok(())
 }
 
+/// Perform native lamports transfer.
+pub fn transfer_lamports_v2(
+    context: &mut ProgramTestContext,
+    wallet: &Keypair,
+    to: &Pubkey,
+    amount: u64,
+) -> Result<(), ClientError> {
+    // let (recent_blockhash, _) = connection.get_recent_blockhash()?;
+    let recent_blockhash = context.last_blockhash;
+
+    let tx = Transaction::new_signed_with_payer(
+        &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
+        Some(&wallet.pubkey()),
+        &[wallet],
+        recent_blockhash,
+    );
+
+    // connection.send_and_confirm_transaction(&tx)?;
+    context.banks_client.process_transaction(tx);
+
+    Ok(())
+}
+
 /// Create new `TokenMetadata` using `RpcClient`.
 pub fn create_token_metadata(
     connection: &RpcClient,
@@ -102,6 +125,58 @@ pub fn create_token_metadata(
     Ok(metadata_account)
 }
 
+pub fn create_token_metadata_v2(
+    context: &mut ProgramTestContext,
+    wallet: &Keypair,
+    mint: &Pubkey,
+    name: String,
+    symbol: String,
+    uri: String,
+    seller_fee_basis_points: u16,
+) -> Result<Pubkey, ClientError> {
+    let pid = match env::var("TOKEN_METADATA_PID") {
+        Ok(val) => val,
+        Err(_) => mpl_token_metadata::id().to_string(),
+    };
+
+    let program_id = Pubkey::from_str(&pid).unwrap();
+    // let (recent_blockhash, _) = connection.get_recent_blockhash()?;
+    let recent_blockhash = context.last_blockhash;
+    let (metadata_account, _) = Pubkey::find_program_address(
+        &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint.as_ref(),
+        ],
+        &program_id,
+    );
+
+    let tx = Transaction::new_signed_with_payer(
+        &[mpl_token_metadata::instruction::create_metadata_accounts(
+            program_id,
+            metadata_account,
+            *mint,
+            wallet.pubkey(),
+            wallet.pubkey(),
+            wallet.pubkey(),
+            name,
+            symbol,
+            uri,
+            None,
+            seller_fee_basis_points,
+            false,
+            false,
+        )],
+        Some(&wallet.pubkey()),
+        &[wallet],
+        recent_blockhash,
+    );
+
+    // connection.send_and_confirm_transaction(&tx)?;
+    context.banks_client.process_transaction(tx);
+    Ok(metadata_account)
+}
+
 /// Mint tokens.
 pub fn mint_to(
     connection: &RpcClient,
@@ -131,6 +206,37 @@ pub fn mint_to(
 
     Ok(())
 }
+
+pub fn mint_to_v2(
+    context: &mut ProgramTestContext,
+    wallet: &Keypair,
+    mint: &Pubkey,
+    to: &Pubkey,
+    amount: u64,
+) -> Result<(), ClientError> {
+    // let (recent_blockhash, _) = connection.get_recent_blockhash()?;
+    let recent_blockhash = context.last_blockhash;
+    let tx = Transaction::new_signed_with_payer(
+        &[spl_token::instruction::mint_to(
+            &spl_token::id(),
+            mint,
+            to,
+            &wallet.pubkey(),
+            &[&wallet.pubkey()],
+            amount,
+        )
+        .unwrap()],
+        Some(&wallet.pubkey()),
+        &[wallet],
+        recent_blockhash,
+    );
+
+    // connection.send_and_confirm_transaction(&tx)?;
+    context.banks_client.process_transaction(tx);
+    // context.banks_client.process_transaction(tx);
+    Ok(())
+}
+
 
 /// Create new `AuctionHouse` using `Program`.
 pub fn create_auction_house(
@@ -218,6 +324,40 @@ pub fn create_mint(connection: &RpcClient, wallet: &Keypair) -> Result<Keypair, 
     Ok(mint)
 }
 
+/// Create and return new mint.
+pub async fn create_mint_v2(context: &mut ProgramTestContext, wallet: &Keypair) -> Result<Keypair, ClientError> {
+    let recent_blockhash = context.last_blockhash;
+    let mint = Keypair::new();
+    let cur_rent = context.banks_client.get_rent().await.unwrap().minimum_balance(spl_token::state::Mint::LEN);
+    
+    let tx = Transaction::new_signed_with_payer(
+        &[
+            system_instruction::create_account(
+                &wallet.pubkey(),
+                &mint.pubkey(),
+                cur_rent,
+                spl_token::state::Mint::LEN as u64,
+                &spl_token::id(),
+            ),
+            spl_token::instruction::initialize_mint(
+                &spl_token::id(),
+                &mint.pubkey(),
+                &wallet.pubkey(),
+                None,
+                9,
+            )
+            .unwrap(),
+        ],
+        Some(&wallet.pubkey()),
+        &[wallet, &mint],
+        recent_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx);
+
+    Ok(mint)
+}
+
 /// Create and return new associated token account.
 pub fn create_associated_token_account(
     connection: &RpcClient,
@@ -240,6 +380,36 @@ pub fn create_associated_token_account(
     );
 
     connection.send_and_confirm_transaction(&tx)?;
+
+    Ok(spl_associated_token_account::get_associated_token_address(
+        &wallet.pubkey(),
+        token_mint,
+    ))
+}
+
+pub fn create_associated_token_account_v2(
+    context: &mut ProgramTestContext,
+    wallet: &Keypair,
+    token_mint: &Pubkey,
+) -> Result<Pubkey, ClientError> {
+    // let (recent_blockhash, _) = connection.get_recent_blockhash()?;
+    let recent_blockhash = context.last_blockhash;
+    
+    let tx = Transaction::new_signed_with_payer(
+        &[
+            spl_associated_token_account::create_associated_token_account(
+                &wallet.pubkey(),
+                &wallet.pubkey(),
+                token_mint,
+            ),
+        ],
+        Some(&wallet.pubkey()),
+        &[wallet],
+        recent_blockhash,
+    );
+
+    // connection.send_and_confirm_transaction(&tx)?;
+    context.banks_client.process_transaction(tx);
 
     Ok(spl_associated_token_account::get_associated_token_address(
         &wallet.pubkey(),
