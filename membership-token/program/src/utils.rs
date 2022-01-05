@@ -3,12 +3,8 @@
 use crate::{id, ErrorCode};
 use anchor_lang::{
     prelude::*,
-    solana_program::{
-        program::{invoke, invoke_signed},
-        system_instruction,
-    },
+    solana_program::{program::invoke_signed, system_instruction},
 };
-use std::convert::TryInto;
 
 pub const NAME_MAX_LEN: usize = 40; // max len of a string buffer in bytes
 pub const NAME_DEFAULT_SIZE: usize = 4 + NAME_MAX_LEN; // max lenght of serialized string (str_len + <buffer>)
@@ -66,49 +62,19 @@ pub fn find_trade_history_address(wallet: &Pubkey, market: &Pubkey) -> (Pubkey, 
     )
 }
 
-/// Create account almost from scratch, lifted from
-/// https://github.com/solana-labs/solana-program-library/tree/master/associated-token-account/program/src/processor.rs#L51-L98
+/// Wrapper of `create_account` instruction from `system_program` program
 #[inline(always)]
-pub fn create_or_allocate_account_raw<'a>(
-    program_id: Pubkey,
-    new_account_info: &AccountInfo<'a>,
-    rent_sysvar_info: &AccountInfo<'a>,
-    system_program_info: &AccountInfo<'a>,
-    payer_info: &AccountInfo<'a>,
-    size: usize,
+pub fn sys_create_account<'a>(
+    from: &AccountInfo<'a>,
+    to: &AccountInfo<'a>,
+    lamports: u64,
+    space: usize,
+    owner: &Pubkey,
     signer_seeds: &[&[u8]],
 ) -> ProgramResult {
-    let rent = &Rent::from_account_info(rent_sysvar_info)?;
-    let required_lamports = rent
-        .minimum_balance(size)
-        .max(1)
-        .saturating_sub(new_account_info.lamports());
-
-    if required_lamports > 0 {
-        msg!("Transfer {} lamports to the new account", required_lamports);
-        invoke(
-            &system_instruction::transfer(&payer_info.key, new_account_info.key, required_lamports),
-            &[
-                payer_info.clone(),
-                new_account_info.clone(),
-                system_program_info.clone(),
-            ],
-        )?;
-    }
-
-    let accounts = &[new_account_info.clone(), system_program_info.clone()];
-
-    msg!("Allocate space for the account");
     invoke_signed(
-        &system_instruction::allocate(new_account_info.key, size.try_into().unwrap()),
-        accounts,
-        &[&signer_seeds],
-    )?;
-
-    msg!("Assign the account to the owning program");
-    invoke_signed(
-        &system_instruction::assign(new_account_info.key, &program_id),
-        accounts,
+        &system_instruction::create_account(from.key, to.key, lamports, space as u64, owner),
+        &[from.clone(), to.clone()],
         &[&signer_seeds],
     )?;
 

@@ -6,9 +6,9 @@ use crate::{
     error::ErrorCode,
     state::{Market, MarketState, SellingResource, SellingResourceState, Store, TradeHistory},
     utils::{
-        assert_derivation, assert_keys_equal, create_or_allocate_account_raw,
-        mpl_mint_new_edition_from_master_edition_via_token, puffed_out_string, DESCRIPTION_MAX_LEN,
-        HISTORY_PREFIX, HOLDER_PREFIX, NAME_MAX_LEN, VAULT_OWNER_PREFIX,
+        assert_derivation, assert_keys_equal, mpl_mint_new_edition_from_master_edition_via_token,
+        puffed_out_string, sys_create_account, DESCRIPTION_MAX_LEN, HISTORY_PREFIX, HOLDER_PREFIX,
+        NAME_MAX_LEN, VAULT_OWNER_PREFIX,
     },
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
@@ -160,15 +160,21 @@ pub mod membership_token {
             return Err(ErrorCode::MarketIsNotStarted.into());
         }
 
+        // Check, that `Market` is ended
+        if let Some(end_date) = market.end_date {
+            if clock.unix_timestamp as u64 > end_date {
+                return Err(ErrorCode::MarketIsEnded.into());
+            }
+        }
+
         let mut trade_history = if trade_history_account.lamports() == 0 {
             // `TradeHistory` does not exists, create on-chain
-            create_or_allocate_account_raw(
-                id(),
-                &trade_history_account.to_account_info(),
-                &rent.to_account_info(),
-                &system_program.to_account_info(),
+            sys_create_account(
                 &user_wallet.to_account_info(),
+                &trade_history_account.to_account_info(),
+                rent.minimum_balance(TradeHistory::LEN),
                 TradeHistory::LEN,
+                ctx.program_id,
                 &[
                     HISTORY_PREFIX.as_bytes(),
                     user_wallet.key().as_ref(),
@@ -189,7 +195,7 @@ pub mod membership_token {
 
         // Check, that user not reach buy limit
         if let Some(pieces_in_one_wallet) = market.pieces_in_one_wallet {
-            if trade_history.already_bought > pieces_in_one_wallet {
+            if trade_history.already_bought == pieces_in_one_wallet {
                 return Err(ErrorCode::UserReachBuyLimit.into());
             }
         }
@@ -237,6 +243,13 @@ pub mod membership_token {
             .supply
             .checked_add(1)
             .ok_or(ErrorCode::MathOverflow)?;
+
+        // Check, that `SellingResource::max_supply` is not overflowed by `supply`
+        if let Some(max_supply) = selling_resource.max_supply {
+            if selling_resource.supply > max_supply {
+                return Err(ErrorCode::SupplyIsGtThanMaxSupply.into());
+            }
+        }
 
         trade_history.serialize(&mut *trade_history_account.data.borrow_mut())?;
         selling_resource.serialize(&mut *selling_resource.to_account_info().data.borrow_mut())?;
