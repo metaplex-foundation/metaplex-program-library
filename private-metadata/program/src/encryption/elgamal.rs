@@ -160,8 +160,6 @@ impl ElGamal {
             Y: &Nt * &d_inv,
         };
 
-        println!("decoded {:?}", st_dub);
-
         // At this point we've applied the dual `dot` isogeny on (s, t) which is equivalent to
         // 2-multiplication on the corresponding Jacobi point. i.e, we can also mimic this if we
         // had the original (s, t) by doing Jacobi doubling in affine coordinates. Just reverse the
@@ -173,7 +171,7 @@ impl ElGamal {
 
     pub fn jacobi_elligator_inv(
         p: &JacobiPoint,
-    ) -> Option<[u8; 32]> {
+    ) -> Option<FieldElement> {
         use curve25519_dalek::constants;
 
         let one = FieldElement::one();
@@ -196,9 +194,8 @@ impl ElGamal {
         let i = &constants::SQRT_M1;
         let (r_i_is_sq, r_0) = FieldElement::sqrt_ratio_i(&r, i);
 
-        println!("r_0 {:?}", r_0.to_bytes());
         if r_i_is_sq.unwrap_u8() == 1u8 {
-            Some(r_0.to_bytes())
+            Some(r_0)
         } else {
             None
         }
@@ -695,6 +692,68 @@ mod tests {
         crate::encryption::pedersen::Pedersen,
         solana_sdk::{signature::Keypair, signer::null_signer::NullSigner},
     };
+
+    #[test]
+    fn test_elligator_inv() {
+        let bytes: [[u8;32]; 16] = [
+            [184, 249, 135, 49, 253, 123, 89, 113, 67, 160, 6, 239, 7, 105, 211, 41, 192, 249, 185, 57, 9, 102, 70, 198, 15, 127, 7, 26, 160, 102, 134, 71],
+            [229, 14, 241, 227, 75, 9, 118, 60, 128, 153, 226, 21, 183, 217, 91, 136, 98, 0, 231, 156, 124, 77, 82, 139, 142, 134, 164, 169, 169, 62, 250, 52],
+            [115, 109, 36, 220, 180, 223, 99, 6, 204, 169, 19, 29, 169, 68, 84, 23, 21, 109, 189, 149, 127, 205, 91, 102, 172, 35, 112, 35, 134, 69, 186, 34],
+            [16, 49, 96, 107, 171, 199, 164, 9, 129, 16, 64, 62, 241, 63, 132, 173, 209, 160, 112, 215, 105, 50, 157, 81, 253, 105, 1, 154, 229, 25, 120, 83],
+            [156, 131, 161, 162, 236, 251, 5, 187, 167, 171, 17, 178, 148, 210, 90, 207, 86, 21, 79, 161, 167, 215, 234, 1, 136, 242, 182, 248, 38, 85, 79, 86],
+            [251, 177, 124, 54, 18, 101, 75, 235, 245, 186, 19, 46, 133, 157, 229, 64, 10, 136, 181, 185, 78, 144, 254, 167, 137, 49, 107, 10, 61, 10, 21, 25],
+            [232, 193, 20, 68, 240, 77, 186, 77, 183, 40, 44, 86, 150, 31, 198, 212, 76, 81, 3, 217, 197, 8, 126, 128, 126, 152, 164, 208, 153, 44, 189, 77],
+            [173, 229, 149, 177, 37, 230, 30, 69, 61, 56, 172, 190, 219, 115, 167, 194, 71, 134, 59, 75, 28, 244, 118, 26, 162, 97, 64, 16, 15, 189, 30, 64],
+            [106, 71, 61, 107, 250, 117, 42, 151, 91, 202, 212, 100, 52, 188, 190, 21, 125, 218, 31, 18, 253, 241, 160, 133, 57, 242, 3, 164, 189, 68, 111, 75],
+            [112, 204, 182, 90, 220, 198, 120, 73, 173, 107, 193, 17, 227, 40, 162, 36, 150, 141, 235, 55, 172, 183, 12, 39, 194, 136, 43, 153, 244, 118, 91, 89],
+            [111, 24, 203, 123, 254, 189, 11, 162, 51, 196, 163, 136, 204, 143, 10, 222, 33, 112, 81, 205, 34, 35, 8, 66, 90, 6, 164, 58, 170, 177, 34, 25],
+            [225, 183, 30, 52, 236, 82, 6, 183, 109, 25, 227, 181, 25, 82, 41, 193, 80, 77, 161, 80, 242, 203, 79, 204, 136, 245, 131, 110, 237, 106, 3, 58],
+            [207, 246, 38, 56, 30, 86, 176, 90, 27, 200, 61, 42, 221, 27, 56, 210, 79, 178, 189, 120, 68, 193, 120, 167, 77, 185, 53, 197, 124, 128, 191, 126],
+            [1, 136, 215, 80, 240, 46, 63, 147, 16, 244, 230, 207, 82, 189, 74, 50, 106, 169, 138, 86, 30, 131, 214, 202, 166, 125, 251, 228, 98, 24, 36, 21],
+            [210, 207, 228, 56, 155, 116, 207, 54, 84, 195, 251, 215, 249, 199, 116, 75, 109, 239, 196, 251, 194, 246, 252, 228, 70, 146, 156, 35, 25, 39, 241, 4],
+            [34, 116, 123, 9, 8, 40, 93, 189, 9, 103, 57, 103, 66, 227, 3, 2, 157, 107, 134, 219, 202, 74, 230, 154, 78, 107, 219, 195, 214, 14, 84, 80],
+        ];
+
+        for i in 0..16 {
+            let r_0 = FieldElement::from_bytes(&bytes[i]);
+            println!("r_0 {:?}", r_0.to_bytes());
+
+            let Q = RistrettoPoint::elligator_ristretto_flavor(&r_0);
+
+            let mut found = 0;
+            {
+                let p = ElGamal::ristretto_to_jacobi_isogeny(&RistrettoPoint(Q.0));
+                for pc in p.coset() {
+                    if ElGamal::jacobi_elligator_inv(&pc).map(|r| (-&r).to_bytes()) == Some(bytes[i]) {
+                        println!("DECODED NEG {}", i);
+                        found += 1;
+                    }
+                    if ElGamal::jacobi_elligator_inv(&pc).map(|r| r.to_bytes()) == Some(bytes[i]) {
+                        println!("DECODED POS {}", i);
+                        found += 1;
+                    }
+                }
+            }
+
+            let Qp = Q.0 + curve25519_dalek::constants::EIGHT_TORSION[1];
+
+            {
+                let p = ElGamal::ristretto_to_jacobi_isogeny(&RistrettoPoint(Qp));
+                for pc in p.coset() {
+                    if ElGamal::jacobi_elligator_inv(&pc).map(|r| (-&r).to_bytes()) == Some(bytes[i]) {
+                        println!("DECODED TOR NEG {}", i);
+                        found += 1;
+                    }
+                    if ElGamal::jacobi_elligator_inv(&pc).map(|r| r.to_bytes()) == Some(bytes[i]) {
+                        println!("DECODED TOR POS {}", i);
+                        found += 1;
+                    }
+                }
+            }
+
+            assert_eq!(found, 1, "Did not find exactly 1 decoding!");
+        }
+    }
 
     #[test]
     fn test_encrypt_decrypt_correctness() {
