@@ -109,8 +109,8 @@ pub mod membership_token {
         }
 
         store.admin = admin.key();
-        store.name = puffed_out_string(&name, NAME_MAX_LEN);
-        store.description = puffed_out_string(&description, DESCRIPTION_MAX_LEN);
+        store.name = puffed_out_string(name, NAME_MAX_LEN);
+        store.description = puffed_out_string(description, DESCRIPTION_MAX_LEN);
 
         Ok(())
     }
@@ -311,8 +311,8 @@ pub mod membership_token {
         market.treasury_holder = treasury_holder.key();
         market.treasury_owner = owner.key();
         market.owner = selling_resource_owner.key();
-        market.name = puffed_out_string(&name, NAME_MAX_LEN);
-        market.description = puffed_out_string(&description, DESCRIPTION_MAX_LEN);
+        market.name = puffed_out_string(name, NAME_MAX_LEN);
+        market.description = puffed_out_string(description, DESCRIPTION_MAX_LEN);
         market.mutable = mutable;
         market.price = price;
         market.pieces_in_one_wallet = pieces_in_one_wallet;

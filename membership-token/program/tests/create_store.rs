@@ -66,9 +66,9 @@ mod create_store {
         let store_data = Store::try_deserialize(&mut store_acc.data.as_ref()).unwrap();
 
         assert_eq!(admin_wallet.pubkey(), store_data.admin);
-        assert_eq!(puffed_out_string(&name, NAME_MAX_LEN), store_data.name);
+        assert_eq!(puffed_out_string(name, NAME_MAX_LEN), store_data.name);
         assert_eq!(
-            puffed_out_string(&description, DESCRIPTION_MAX_LEN),
+            puffed_out_string(description, DESCRIPTION_MAX_LEN),
             store_data.description
         );
     }

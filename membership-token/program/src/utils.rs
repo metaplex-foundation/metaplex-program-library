@@ -20,7 +20,7 @@ pub fn assert_derivation(
     account: &AccountInfo,
     path: &[&[u8]],
 ) -> Result<u8, ProgramError> {
-    let (key, bump) = Pubkey::find_program_address(&path, program_id);
+    let (key, bump) = Pubkey::find_program_address(path, program_id);
     if key != *account.key {
         return Err(ErrorCode::DerivedKeyInvalid.into());
     }
@@ -141,13 +141,10 @@ pub fn mpl_mint_new_edition_from_master_edition_via_token<'a>(
     Ok(())
 }
 
-pub fn puffed_out_string(s: &String, size: usize) -> String {
-    let mut array_of_zeroes = vec![];
-    let puff_amount = size - s.len();
-    while array_of_zeroes.len() < puff_amount {
-        array_of_zeroes.push(0u8);
-    }
-    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
+/// Add zeroes to the end of the String.
+/// This allows to have the size of allocated for this string memory fixed.
+pub fn puffed_out_string(s: String, size: usize) -> String {
+    s.to_string() + std::str::from_utf8(&vec![0u8; size - s.len()]).unwrap()
 }
 
 /// Two keys equivalence check

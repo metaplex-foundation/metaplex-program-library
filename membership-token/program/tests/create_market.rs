@@ -138,9 +138,9 @@ mod create_market {
         );
         assert_eq!(treasury_owner, market_data.treasury_owner);
         assert_eq!(selling_resource_owner_keypair.pubkey(), market_data.owner);
-        assert_eq!(puffed_out_string(&name, NAME_MAX_LEN), market_data.name);
+        assert_eq!(puffed_out_string(name, NAME_MAX_LEN), market_data.name);
         assert_eq!(
-            puffed_out_string(&description, DESCRIPTION_MAX_LEN),
+            puffed_out_string(description, DESCRIPTION_MAX_LEN),
             market_data.description
         );
         assert_eq!(mutable, market_data.mutable);
