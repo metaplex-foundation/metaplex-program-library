@@ -18,4 +18,10 @@ pub enum ErrorCode {
     SupplyIsNotProvided,
     #[msg("Derived key invalid")]
     DerivedKeyInvalid,
+    #[msg("Market is not started")]
+    MarketIsNotStarted,
+    #[msg("User reach buy limit")]
+    UserReachBuyLimit,
+    #[msg("Math overflow")]
+    MathOverflow,
 }

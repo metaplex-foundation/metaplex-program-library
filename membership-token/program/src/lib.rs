@@ -2,12 +2,14 @@ pub mod error;
 pub mod state;
 pub mod utils;
 
-use crate::utils::puffed_out_string;
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
 use error::ErrorCode;
-use state::{SellingResource, SellingResourceState, Store};
-use utils::{DESCRIPTION_MAX_LEN, NAME_MAX_LEN, VAULT_OWNER_PREFIX};
+use state::{Market, SellingResource, SellingResourceState, Store, TradeHistory};
+use utils::{
+    create_or_allocate_account_raw, mpl_mint_new_edition_from_master_edition_via_token,
+    puffed_out_string, DESCRIPTION_MAX_LEN, HISTORY_PREFIX, NAME_MAX_LEN, VAULT_OWNER_PREFIX,
+};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -109,6 +111,133 @@ pub mod membership_token {
 
         Ok(())
     }
+
+    pub fn buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
+        trade_history_bump: u8,
+        vault_owner_bump: u8,
+    ) -> ProgramResult {
+        let market = &mut ctx.accounts.market;
+        let selling_resource = &mut ctx.accounts.selling_resource;
+        let user_token_account = &mut ctx.accounts.user_token_account;
+        let user_wallet = &mut ctx.accounts.user_wallet;
+        let trade_history_account = &mut ctx.accounts.trade_history;
+        let treasury_holder = &mut ctx.accounts.treasury_holder;
+        let new_metadata = &mut ctx.accounts.new_metadata;
+        let new_edition = &mut ctx.accounts.new_edition;
+        let master_edition = &mut ctx.accounts.master_edition;
+        let new_mint = &mut ctx.accounts.new_mint;
+        let edition_marker_info = &mut ctx.accounts.edition_marker.to_account_info();
+        let vault = &mut ctx.accounts.vault;
+        let owner = &mut ctx.accounts.owner;
+        let master_edition_metadata = &mut ctx.accounts.master_edition_metadata;
+        let clock = &ctx.accounts.clock;
+        let rent = &ctx.accounts.rent;
+        let token_program = &ctx.accounts.token_program;
+        let system_program = &ctx.accounts.system_program;
+
+        let metadata_mint = selling_resource.resource.clone();
+
+        // Check `MasterEdition` derivation
+        utils::assert_derivation(
+            &mpl_token_metadata::id(),
+            edition_marker_info,
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                selling_resource.resource.as_ref(),
+                mpl_token_metadata::state::EDITION.as_bytes(),
+                "1".as_bytes(),
+            ],
+        )?;
+
+        // Check, that `Market` is started
+        if market.start_date > clock.unix_timestamp as u64 {
+            return Err(ErrorCode::MarketIsNotStarted.into());
+        }
+
+        let mut trade_history = if trade_history_account.lamports() == 0 {
+            // `TradeHistory` does not exists, create on-chain
+            create_or_allocate_account_raw(
+                id(),
+                &trade_history_account.to_account_info(),
+                &rent.to_account_info(),
+                &system_program.to_account_info(),
+                &user_wallet.to_account_info(),
+                TradeHistory::LEN,
+                &[
+                    HISTORY_PREFIX.as_bytes(),
+                    user_wallet.key().as_ref(),
+                    market.key().as_ref(),
+                    &[trade_history_bump],
+                ],
+            )?;
+
+            TradeHistory::try_deserialize_unchecked(
+                &mut trade_history_account.data.borrow_mut().as_ref(),
+            )?
+        } else {
+            // `TradeHistory` exists, deserialize
+            TradeHistory::try_deserialize_unchecked(
+                &mut trade_history_account.data.borrow_mut().as_ref(),
+            )?
+        };
+
+        // Check, that user not reach buy limit
+        if let Some(pieces_in_one_wallet) = market.pieces_in_one_wallet {
+            if trade_history.already_bought > pieces_in_one_wallet {
+                return Err(ErrorCode::UserReachBuyLimit.into());
+            }
+        }
+
+        // Buy new edition
+        let cpi_program = token_program.to_account_info();
+        let cpi_accounts = token::Transfer {
+            from: user_token_account.to_account_info(),
+            to: treasury_holder.to_account_info(),
+            authority: user_wallet.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+        token::transfer(cpi_ctx, market.price)?;
+
+        mpl_mint_new_edition_from_master_edition_via_token(
+            &new_metadata.to_account_info(),
+            &new_edition.to_account_info(),
+            &new_mint.to_account_info(),
+            &user_wallet.to_account_info(),
+            &user_wallet.to_account_info(),
+            &owner.to_account_info(),
+            &vault.to_account_info(),
+            &master_edition_metadata.to_account_info(),
+            &master_edition.to_account_info(),
+            &metadata_mint,
+            &edition_marker_info,
+            &token_program.to_account_info(),
+            &system_program.to_account_info(),
+            &rent.to_account_info(),
+            1,
+            &[
+                VAULT_OWNER_PREFIX.as_bytes(),
+                selling_resource.resource.as_ref(),
+                selling_resource.store.as_ref(),
+                &[vault_owner_bump],
+            ],
+        )?;
+
+        trade_history.already_bought = trade_history
+            .already_bought
+            .checked_add(1)
+            .ok_or(ErrorCode::MathOverflow)?;
+
+        selling_resource.supply = selling_resource
+            .supply
+            .checked_add(1)
+            .ok_or(ErrorCode::MathOverflow)?;
+
+        trade_history.serialize(&mut *trade_history_account.data.borrow_mut())?;
+
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -142,5 +271,41 @@ pub struct CreateStore<'info> {
     admin: Signer<'info>,
     #[account(init, space=Store::LEN, payer=admin)]
     store: Account<'info, Store>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(trade_history_bump:u8, vault_owner_bump: u8)]
+pub struct Buy<'info> {
+    #[account(has_one=treasury_holder)]
+    market: Account<'info, Market>,
+    #[account(mut)]
+    selling_resource: Account<'info, SellingResource>,
+    #[account(mut)]
+    user_token_account: Account<'info, TokenAccount>,
+    user_wallet: Signer<'info>,
+    #[account(mut, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump=trade_history_bump)]
+    trade_history: UncheckedAccount<'info>,
+    #[account(mut)]
+    treasury_holder: Account<'info, TokenAccount>,
+    #[account(mut)]
+    new_metadata: UncheckedAccount<'info>,
+    #[account(mut)]
+    new_edition: UncheckedAccount<'info>,
+    #[account(mut, owner=mpl_token_metadata::id())]
+    master_edition: UncheckedAccount<'info>,
+    #[account(mut)]
+    new_mint: Account<'info, Mint>,
+    #[account(mut, owner=mpl_token_metadata::id())]
+    edition_marker: UncheckedAccount<'info>,
+    #[account(mut, signer, has_one=owner)]
+    vault: Account<'info, TokenAccount>,
+    #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
+    owner: UncheckedAccount<'info>,
+    #[account(owner=mpl_token_metadata::id())]
+    master_edition_metadata: UncheckedAccount<'info>,
+    clock: Sysvar<'info, Clock>,
+    rent: Sysvar<'info, Rent>,
+    token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
 }
