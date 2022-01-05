@@ -9,7 +9,7 @@ use {
         scalar::Scalar,
     },
     serde::{Deserialize, Serialize},
-    sha3::{Sha3_256, Sha3_512},
+    sha3::Sha3_512,
     std::convert::TryInto,
     subtle::{Choice, ConstantTimeEq},
     zeroize::Zeroize,
@@ -64,30 +64,18 @@ impl Pedersen {
         let x: Scalar = amount.into();
 
         if x.bytes[24..] != [0; 8] {
-            // ?
+            // TODO: KeyCipher
         }
 
         let r = open.get_scalar();
 
-        use sha3::Digest;
-        let mut hash = Sha3_256::default();
-        hash.update(H.mul(r).compress().to_bytes());
-        let output = hash.finalize();
-
-        let mut output_bytes = [0; 32];
-        output_bytes.copy_from_slice(&output.as_slice());
-        output_bytes
-            .iter_mut()
-            .zip(x.bytes.iter())
-            .for_each(|(x1, x2)| *x1 ^= *x2);
-
-        PedersenCommitment(
-            RistrettoPoint::elligator_ristretto_flavor(
-                &curve25519_dalek::field::FieldElement::from_bytes(
-                    &output_bytes
+        let M = RistrettoPoint::elligator_ristretto_flavor(
+            &curve25519_dalek::field::FieldElement::from_bytes(
+                &x.bytes
                 )
-            )
-        )
+            );
+
+        PedersenCommitment(M + H.mul(r))
     }
 }
 

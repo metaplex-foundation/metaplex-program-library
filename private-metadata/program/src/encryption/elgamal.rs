@@ -115,33 +115,18 @@ impl ElGamal {
             decrypt_handle,
         } = ct;
 
-        let hash_input = s * decrypt_handle.get_point();
-
-        use sha3::Digest;
-        let mut hash = sha3::Sha3_256::default();
-        hash.update(hash_input.compress().to_bytes());
-        let output = hash.finalize();
-
-        let mut output_bytes = [0; 32];
-        output_bytes.copy_from_slice(&output.as_slice());
-
-        let Q = message_comm.get_point().0;
-        for P in [Q, Q + curve25519_dalek::constants::EIGHT_TORSION[1]] {
+        let Q = (message_comm.get_point() - s * decrypt_handle.get_point()).0;
+        for P in &[Q, Q + curve25519_dalek::constants::EIGHT_TORSION[1]] {
             let J = ElGamal::ristretto_to_jacobi_isogeny(
-                &RistrettoPoint(P)
+                &RistrettoPoint(*P)
             );
 
-            for Jp in J.coset() {
+            for Jp in &J.coset() {
                 let inv = ElGamal::jacobi_elligator_inv(&Jp);
                 match inv {
                     Some(r) => {
-                        for rp in [r, -&r] {
-                            let mut bytes = output_bytes.clone();
-                            bytes
-                                .iter_mut()
-                                .zip(rp.to_bytes().iter())
-                                .for_each(|(x1, x2)| *x1 ^= *x2);
-
+                        for rp in &[r, -&r] {
+                            let bytes = rp.to_bytes();
                             match CipherKey::try_from(Scalar{ bytes }) {
                                 Ok(ck) => {
                                     return Ok(ck)

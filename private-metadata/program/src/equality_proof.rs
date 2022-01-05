@@ -528,7 +528,7 @@ mod test {
     use crate::encryption::pedersen::Pedersen;
 
     #[test]
-    fn succesful_equality_proof() {
+    fn successful_equality_proof() {
         // success case
         let src_keypair = ElGamalKeypair::default();
         let dst_pubkey = ElGamalKeypair::default().public;
