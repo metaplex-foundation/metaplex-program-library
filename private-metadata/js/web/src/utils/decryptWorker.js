@@ -95,7 +95,7 @@ var decrypt = function (elgamalKeypair, chunk) {
                 return [4 /*yield*/, Wasm.default()];
               case 1:
                 _a.sent();
-                resolve(Wasm.elgamal_decrypt_u32(elgamalKeypair, { bytes: __spreadArray([], __read(chunk), false) }));
+                resolve(Wasm.elgamal_decrypt(elgamalKeypair, { bytes: __spreadArray([], __read(chunk), false) }));
                 return [2 /*return*/];
             }
           });

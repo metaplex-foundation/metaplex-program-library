@@ -22,7 +22,7 @@ export class PrivateMetadataAccount {
 
     /// 192-bit AES cipher key encrypted with elgamal_pk
     /// ElGamalCiphertext encrypted 4-byte chunks so 6 chunks total
-    encryptedCipherKey: Array<ElgamalCipherText>;
+    encryptedCipherKey: ElgamalCipherText;
 
     /// URI of encrypted asset
     uri: string;
@@ -30,7 +30,7 @@ export class PrivateMetadataAccount {
     constructor(args: {
       mint: StringPublicKey,
       elgamalPk: ElgamalPk,
-      encryptedCipherKey: Array<ElgamalCipherText>,
+      encryptedCipherKey: ElgamalCipherText,
       uri: string,
     }) {
       this.key = PrivateMetadataKey.PrivateMetadataAccountV1;
@@ -57,14 +57,14 @@ export class CipherKeyTransferBuffer {
     elgamalPk: ElgamalPk;
 
     /// 192-bit AES cipher key encrypted with elgamal_pk
-    encryptedCipherKey: Array<ElgamalCipherText>;
+    encryptedCipherKey: ElgamalCipherText;
 
     constructor(args: {
       updated: number,
       authority: StringPublicKey,
       privateMetadataKey: StringPublicKey,
       elgamalPk: ElgamalPk,
-      encryptedCipherKey: Array<ElgamalCipherText>,
+      encryptedCipherKey: ElgamalCipherText,
     }) {
       this.key = PrivateMetadataKey.CipherKeyTransferBufferV1;
       this.updated = args.updated;
@@ -145,20 +145,14 @@ export const extendBorsh = () => {
 
   (BinaryReader.prototype as any).readEncryptedCipherKey = function () {
     const reader = this as unknown as BinaryReader;
-    const ret = new Array<ElgamalCipherText>(6);
-    for (let i = 0; i < 6; i += 1) {
-      ret[i] = reader.readFixedArray(64);
-    }
-    return ret;
+    return reader.readFixedArray(64);
   };
 
   (BinaryWriter.prototype as any).writeEncryptedCipherKey = function (
-    value: Array<ElgamalCipherText>,
+    value: ElgamalCipherText,
   ) {
     const writer = this as unknown as BinaryWriter;
-    for (let i = 0; i < 6; i += 1) {
-      writer.writeFixedArray(value[i]);
-    }
+    writer.writeFixedArray(value);
   };
 
   (BinaryReader.prototype as any).readPubkeyAsString = function () {

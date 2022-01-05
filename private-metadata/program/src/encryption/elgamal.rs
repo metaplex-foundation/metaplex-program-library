@@ -279,7 +279,7 @@ impl JacobiPoint {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct CipherKey(pub [u8; 24]);
 
 impl Eq for CipherKey {}

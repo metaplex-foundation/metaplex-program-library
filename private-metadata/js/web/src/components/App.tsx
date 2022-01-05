@@ -123,8 +123,8 @@ async function getCipherKey(
 
   const elgamalKeypair = elgamalKeypairRes.Ok;
 
-  return [Buffer.concat(await Promise.all(privateMetadata.encryptedCipherKey.map(
-    async (chunk) => {
+  const doDecrypt =
+    async (chunk: Uint8Array) => {
       const decryptWorker = new Worker(new URL(
         '../utils/decryptWorker.js',
         import.meta.url,
@@ -137,8 +137,8 @@ async function getCipherKey(
         throw new Error(result.Err);
       }
       return Buffer.from(result.Ok);
-    }))
-  ), elgamalKeypair];
+    };
+  return [await doDecrypt(privateMetadata.encryptedCipherKey), elgamalKeypair];
 }
 
 const ensureBuffersClosed = async (
@@ -297,7 +297,7 @@ const finiTransferIxs = async (
 
   const instructions : Array<TransactionInstruction> = [];
 
-  if (await connection.getAccountInfo(walletATAKey) === null) {
+  if (await connection.getAccountInfo(destATAKey) === null) {
     instructions.push(
       Token.createAssociatedTokenAccountInstruction(
         SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
@@ -366,7 +366,6 @@ type TransferChunkSlowKeys = {
 
 const transferChunkSlowVerify = async (
   keys: TransferChunkSlowKeys,
-  chunk: number,
   transferDataBytes: Buffer,
 ) => {
   const privateMetadataKey = await getPrivateMetadata(keys.mintKey);
@@ -413,7 +412,6 @@ const transferChunkSlowVerify = async (
         ],
         data: Buffer.from([
           4,  // TransferChunkSlow...
-          chunk,
           ...transferDataBytes,
         ]),
       }),
@@ -426,21 +424,16 @@ const buildTransferChunkTxns = async (
   connection: Connection,
   wasm: WasmConfig,
   cipherKey: string, // base64
-  chunk: number,
   elgamalKeypair: Object, // TODO: typing
   recipientElgamalPubkey: Buffer,
   privateMetadata: PrivateMetadataAccount,
   keys: TransferChunkSlowKeys,
 ) => {
-  const keychunk = Buffer.from(cipherKey, 'base64')
-      .slice(chunk * 4, (chunk + 1) * 4);
-
   const transferChunkTxsRes = wasm.transferChunkTxs(
     elgamalKeypair,
     [...recipientElgamalPubkey],
-    {bytes: [...privateMetadata.encryptedCipherKey[chunk]]},
-    // TODO: pass buffer and convert on rust side?
-    new BN(keychunk, 'le').toNumber(),
+    {bytes: [...privateMetadata.encryptedCipherKey]},
+    [...Buffer.from(cipherKey, 'base64')],
     {
       payer: [...keys.walletKey.toBuffer()],
       instruction_buffer: [...keys.instructionBufferPubkey.toBuffer()],
@@ -483,7 +476,6 @@ const buildTransferChunkTxns = async (
   // build the verification ix
   transferChunkTxs.push(await transferChunkSlowVerify(
     keys,
-    chunk,
     transferDataBytes,
   ));
 
@@ -921,19 +913,13 @@ export const Demo = () => {
 
             const cipherKeyChunks = privateMetadata.encryptedCipherKey.length;
             const cipherKey = parseCipherKey();
-            for (let chunk = 0; chunk < cipherKeyChunks; ++chunk) {
-              const updateMask = 1<<chunk;
-              if ((transferBufferDecoded.updated & updateMask) === updateMask) {
-                continue;
-              }
-
-              console.log(`Transfering chunk ${chunk}`);
+            if (!transferBufferDecoded.updated) {
+              console.log(`Transfering chunk`);
 
               const txns = await buildTransferChunkTxns(
                 connection,
                 wasm,
                 cipherKey,
-                chunk,
                 elgamalKeypair,
                 recipientElgamalPubkey,
                 privateMetadata,
@@ -965,7 +951,7 @@ export const Demo = () => {
                 console.log(confirmed);
                 const succeeded = notifyResult(
                   confirmed.value.err ? 'See console logs' : {txid: resultTxid},
-                  `Transfer crank chunk ${chunk}: ${i + 1} of ${signedTxns.length}`,
+                  `Transfer crank: ${i + 1} of ${signedTxns.length}`,
                 );
                 if (!succeeded) {
                   throw new Error('Crank failed');
