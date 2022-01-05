@@ -40,4 +40,7 @@ pub enum ErrorCode {
     // 6011
     #[msg("EndDate should not be earlier than StartDate")]
     EndDateIsEarlierThanBeginDate,
+    // 6012
+    #[msg("Incorrect account owner")]
+    IncorrectOwner,
 }

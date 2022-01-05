@@ -81,7 +81,7 @@ mod create_market {
             selling_resource: selling_resource_keypair.pubkey(),
             treasury_mint: treasury_mint_keypair.pubkey(),
             treasury_holder: treasury_holder_keypair.pubkey(),
-            treasury_owner,
+            owner: treasury_owner,
             system_program: system_program::id(),
         }
         .to_account_metas(None);
@@ -111,7 +111,6 @@ mod create_market {
                 &context.payer,
                 &market_keypair,
                 &selling_resource_owner_keypair,
-                &treasury_holder_keypair,
             ],
             context.last_blockhash,
         );

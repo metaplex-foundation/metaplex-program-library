@@ -16,6 +16,7 @@ declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
 #[program]
 pub mod membership_token {
+
     use super::*;
 
     pub fn init_selling_resource<'info>(
@@ -130,7 +131,7 @@ pub mod membership_token {
         let selling_resource = &ctx.accounts.selling_resource;
         let treasury_mint = &ctx.accounts.treasury_mint;
         let treasury_holder = &ctx.accounts.treasury_holder;
-        let treasury_owner = &ctx.accounts.treasury_owner;
+        let owner = &ctx.accounts.owner;
 
         if name.len() > NAME_MAX_LEN {
             return Err(ErrorCode::NameIsTooLong.into());
@@ -158,14 +159,17 @@ pub mod membership_token {
             return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
         }
 
-        // Check selling resopurce ownership
+        // Check selling resource ownership
         assert_keys_equal(selling_resource.owner, selling_resource_owner.key())?;
+
+        // Check if treasury_holder token account created for treasury_mint
+        assert_keys_equal(treasury_holder.mint, treasury_mint.key())?;
 
         market.store = store.key();
         market.selling_resource = selling_resource.key();
         market.treasury_mint = treasury_mint.key();
         market.treasury_holder = treasury_holder.key();
-        market.treasury_owner = treasury_owner.key();
+        market.treasury_owner = owner.key();
         market.owner = selling_resource_owner.key();
         market.name = puffed_out_string(&name, NAME_MAX_LEN);
         market.description = puffed_out_string(&description, DESCRIPTION_MAX_LEN);
@@ -225,9 +229,9 @@ pub struct CreateMarket<'info> {
     #[account(mut, has_one=store)]
     selling_resource: Account<'info, SellingResource>,
     treasury_mint: Account<'info, Mint>,
-    #[account(mut)]
-    treasury_holder: Signer<'info>,
+    #[account(mut, has_one=owner)]
+    treasury_holder: Account<'info, TokenAccount>,
     #[account(seeds=[HOLDER_PREFIX.as_bytes(), treasury_mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasyry_owner_bump)]
-    treasury_owner: UncheckedAccount<'info>,
+    owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
 }
