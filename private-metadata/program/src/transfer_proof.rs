@@ -1,7 +1,6 @@
 #[cfg(not(target_arch = "bpf"))]
 use {
     crate::encryption::{
-        discrete_log::*,
         elgamal::{ElGamalKeypair, ElGamalSecretKey},
         pedersen::{Pedersen, PedersenOpening},
     },
@@ -16,7 +15,11 @@ use {
     crate::{
         errors::ProofError,
         transcript::TranscriptProtocol,
-        encryption::elgamal::{ElGamalCiphertext, ElGamalPubkey},
+        encryption::elgamal::{
+            ElGamalCiphertext,
+            ElGamalPubkey,
+            CipherKey,
+        },
     },
     merlin::Transcript,
     solana_program::msg,
@@ -58,10 +61,10 @@ impl TransferData {
     pub fn new(
         src_keypair: &ElGamalKeypair,
         dst_pubkey: ElGamalPubkey,
-        cipher_key_chunk: u32,
+        cipher_key: CipherKey,
         src_cipher_key_chunk_ct: ElGamalCiphertext,
     ) -> Self {
-        let (dst_comm, dst_opening) = Pedersen::new(cipher_key_chunk);
+        let (dst_comm, dst_opening) = Pedersen::new(cipher_key);
 
         let dst_handle = dst_pubkey.decrypt_handle(&dst_opening);
 
@@ -106,17 +109,10 @@ impl TransferData {
     /// and make sure that the function does not terminate prematurely due to errors
     ///
     /// TODO: Define specific error type for decryption error
-    pub fn decrypt_amount(&self, role: Role, sk: &ElGamalSecretKey) -> Result<u32, ProofError> {
-        Ok(0)
-        // let ciphertext = self.ciphertext(role)?;
+    pub fn decrypt(&self, role: Role, sk: &ElGamalSecretKey) -> Result<CipherKey, ProofError> {
+        let ciphertext = self.ciphertext(role)?;
 
-        // let key_chunk = ciphertext.decrypt_u32_online(sk, &DECODE_U32_PRECOMPUTATION_FOR_G);
-
-        // if let Some(key_chunk) = key_chunk {
-        //     Ok(key_chunk)
-        // } else {
-        //     Err(ProofError::VerificationError)
-        // }
+        sk.decrypt(&ciphertext)
     }
 }
 
@@ -264,6 +260,7 @@ pub struct TransferPubkeys {
 #[cfg(test)]
 mod test {
     use super::*;
+    use curve25519_dalek::scalar::Scalar;
 
     #[test]
     fn test_transfer_decryption() {
@@ -272,24 +269,25 @@ mod test {
         let dst_keypair = ElGamalKeypair::default();
 
         let cipher_key_chunk: u32 = 77;
-        let cipher_key_chunk_ct = src_keypair.public.encrypt(cipher_key_chunk);
+        let cipher_key = CipherKey(Scalar::from(cipher_key_chunk).bytes[..24].try_into().unwrap());
+        let cipher_key_ct = src_keypair.public.encrypt(cipher_key);
 
         // create transfer data
         let transfer_data = TransferData::new(
             &src_keypair,
             dst_keypair.public,
-            cipher_key_chunk,
-            cipher_key_chunk_ct,
+            cipher_key,
+            cipher_key_ct,
         );
 
         assert_eq!(
-            transfer_data.decrypt_amount(Role::Source, &src_keypair.secret),
-            Ok(cipher_key_chunk),
+            transfer_data.decrypt(Role::Source, &src_keypair.secret),
+            Ok(cipher_key),
         );
 
         assert_eq!(
-            transfer_data.decrypt_amount(Role::Dest, &dst_keypair.secret),
-            Ok(cipher_key_chunk),
+            transfer_data.decrypt(Role::Dest, &dst_keypair.secret),
+            Ok(cipher_key),
         );
     }
 
@@ -300,14 +298,15 @@ mod test {
         let dst_pubkey = ElGamalKeypair::default().public;
 
         let cipher_key_chunk: u32 = 77;
-        let cipher_key_chunk_ct = src_keypair.public.encrypt(cipher_key_chunk);
+        let cipher_key = CipherKey(Scalar::from(cipher_key_chunk).bytes[..24].try_into().unwrap());
+        let cipher_key_ct = src_keypair.public.encrypt(cipher_key);
 
         // create transfer data
         let transfer_data = TransferData::new(
             &src_keypair,
             dst_pubkey,
-            cipher_key_chunk,
-            cipher_key_chunk_ct,
+            cipher_key,
+            cipher_key_ct,
         );
 
         assert_eq!(transfer_data.verify(), Ok(()));
@@ -320,14 +319,17 @@ mod test {
         let dst_pubkey = ElGamalKeypair::default().public;
 
         let cipher_key_chunk: u32 = 77;
-        let cipher_key_chunk_ct = src_keypair.public.encrypt(cipher_key_chunk);
+        let cipher_key = CipherKey(Scalar::from(cipher_key_chunk).bytes[..24].try_into().unwrap());
+        let cipher_key_ct = src_keypair.public.encrypt(cipher_key);
+
+        let wrong_cipher_key = CipherKey(Scalar::from(cipher_key_chunk + 1).bytes[..24].try_into().unwrap());
 
         // create transfer data
         let transfer_data = TransferData::new(
             &src_keypair,
             dst_pubkey,
-            cipher_key_chunk + 1,
-            cipher_key_chunk_ct,
+            wrong_cipher_key,
+            cipher_key_ct,
         );
 
         assert!(transfer_data.verify().is_err());

@@ -7,7 +7,6 @@ use {
         constants::{RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT},
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::MultiscalarMul,
     },
     serde::{Deserialize, Serialize},
     sha3::{Sha3_256, Sha3_512},
@@ -60,7 +59,6 @@ impl Pedersen {
     /// Pedersen commitment.
     #[allow(non_snake_case)]
     pub fn with<T: Into<Scalar>>(amount: T, open: &PedersenOpening) -> PedersenCommitment {
-        let G = PedersenBase::default().G;
         let H = PedersenBase::default().H;
 
         let x: Scalar = amount.into();
@@ -356,62 +354,6 @@ define_div_variants!(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_homomorphic_addition() {
-        let amt_0: u64 = 77;
-        let amt_1: u64 = 57;
-
-        let rng = &mut OsRng;
-        let open_0 = PedersenOpening(Scalar::random(rng));
-        let open_1 = PedersenOpening(Scalar::random(rng));
-
-        let comm_0 = Pedersen::with(amt_0, &open_0);
-        let comm_1 = Pedersen::with(amt_1, &open_1);
-        let comm_addition = Pedersen::with(amt_0 + amt_1, &(open_0 + open_1));
-
-        assert_eq!(comm_addition, comm_0 + comm_1);
-    }
-
-    #[test]
-    fn test_homomorphic_subtraction() {
-        let amt_0: u64 = 77;
-        let amt_1: u64 = 57;
-
-        let rng = &mut OsRng;
-        let open_0 = PedersenOpening(Scalar::random(rng));
-        let open_1 = PedersenOpening(Scalar::random(rng));
-
-        let comm_0 = Pedersen::with(amt_0, &open_0);
-        let comm_1 = Pedersen::with(amt_1, &open_1);
-        let comm_addition = Pedersen::with(amt_0 - amt_1, &(open_0 - open_1));
-
-        assert_eq!(comm_addition, comm_0 - comm_1);
-    }
-
-    #[test]
-    fn test_homomorphic_multiplication() {
-        let amt_0: u64 = 77;
-        let amt_1: u64 = 57;
-
-        let (comm, open) = Pedersen::new(amt_0);
-        let scalar = Scalar::from(amt_1);
-        let comm_addition = Pedersen::with(amt_0 * amt_1, &(open * scalar));
-
-        assert_eq!(comm_addition, comm * scalar);
-    }
-
-    #[test]
-    fn test_homomorphic_division() {
-        let amt_0: u64 = 77;
-        let amt_1: u64 = 7;
-
-        let (comm, open) = Pedersen::new(amt_0);
-        let scalar = Scalar::from(amt_1);
-        let comm_addition = Pedersen::with(amt_0 / amt_1, &(open / scalar));
-
-        assert_eq!(comm_addition, comm / scalar);
-    }
 
     #[test]
     fn test_commitment_bytes() {

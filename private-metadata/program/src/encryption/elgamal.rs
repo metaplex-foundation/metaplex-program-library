@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 use {
     crate::encryption::{
-        discrete_log::{DecodeU32Precomputation, DiscreteLog},
         pedersen::{
             Pedersen, PedersenBase, PedersenCommitment, PedersenDecryptHandle, PedersenOpening,
         },
     },
+    crate::errors::ProofError,
     arrayref::{array_ref, array_refs},
     core::ops::{Add, Div, Mul, Sub},
     curve25519_dalek::{
@@ -15,7 +15,7 @@ use {
     },
     serde::{Deserialize, Serialize},
     std::{
-        convert::TryInto,
+        convert::{TryInto, TryFrom},
         fmt,
     },
     subtle::{Choice, ConstantTimeEq},
@@ -108,7 +108,7 @@ impl ElGamal {
     ///
     /// The output of the function is of type `DiscreteLog`. The exact message
     /// can be recovered via the DiscreteLog's decode method.
-    fn decrypt(secret: &ElGamalSecretKey, ct: &ElGamalCiphertext) -> [u8; 32] {
+    fn decrypt(secret: &ElGamalSecretKey, ct: &ElGamalCiphertext) -> Result<CipherKey, ProofError> {
         let ElGamalSecretKey(s) = secret;
         let ElGamalCiphertext {
             message_comm,
@@ -136,14 +136,17 @@ impl ElGamal {
                 match inv {
                     Some(r) => {
                         for rp in [r, -&r] {
-                            let mut buffer = output_bytes.clone();
-                            buffer
+                            let mut bytes = output_bytes.clone();
+                            bytes
                                 .iter_mut()
                                 .zip(rp.to_bytes().iter())
                                 .for_each(|(x1, x2)| *x1 ^= *x2);
-                            // TODO: something about last bit....
-                            if buffer[24..31] == [0; 7] {
-                                return buffer;
+
+                            match CipherKey::try_from(Scalar{ bytes }) {
+                                Ok(ck) => {
+                                    return Ok(ck)
+                                },
+                                _ => {},
                             }
                         }
                     },
@@ -152,13 +155,7 @@ impl ElGamal {
             }
         }
 
-        // TODO: err?
-        [0xcd; 32]
-
-        // DiscreteLog {
-        //     generator: PedersenBase::default().G,
-        //     target: message_comm.get_point() - s * decrypt_handle.get_point(),
-        // }
+        Err(ProofError::InconsistentCTData)
     }
 
     /// (x, y) -> (s, t)
@@ -296,6 +293,41 @@ impl JacobiPoint {
         ]
     }
 }
+
+#[derive(Debug, Copy, Clone)]
+pub struct CipherKey(pub [u8; 24]);
+
+impl Eq for CipherKey {}
+impl PartialEq for CipherKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.eq(&other.0)
+    }
+}
+
+impl From<CipherKey> for Scalar {
+    fn from(x: CipherKey) -> Scalar {
+        let mut s_bytes = [0u8; 32];
+        s_bytes[..24].copy_from_slice(&x.0);
+        Scalar{ bytes: s_bytes }
+    }
+}
+
+impl TryFrom<Scalar> for CipherKey {
+    type Error = ProofError;
+
+    fn try_from(value: Scalar) -> Result<Self, Self::Error> {
+        if value.bytes[24..31] != [0; 7] || value.bytes[31] & 0x7F != 0 {
+            Err(ProofError::InconsistentCTData)
+        } else {
+            Ok(CipherKey(
+                value.bytes[..24].try_into()
+                    .map_err(|_| ProofError::InconsistentCTData)?
+                )
+            )
+        }
+    }
+}
+
 
 /// A (twisted) ElGamal encryption keypair.
 #[derive(PartialEq, Debug)]
@@ -518,7 +550,7 @@ impl ElGamalSecretKey {
     }
 
     /// Utility method for code ergonomics.
-    pub fn decrypt(&self, ct: &ElGamalCiphertext) -> [u8; 32] {
+    pub fn decrypt(&self, ct: &ElGamalCiphertext) -> Result<CipherKey, ProofError> {
         ElGamal::decrypt(self, ct)
     }
 
@@ -596,7 +628,7 @@ impl ElGamalCiphertext {
     }
 
     /// Utility method for code ergonomics.
-    pub fn decrypt(&self, secret: &ElGamalSecretKey) -> [u8; 32] {
+    pub fn decrypt(&self, secret: &ElGamalSecretKey) -> Result<CipherKey, ProofError> {
         ElGamal::decrypt(secret, self)
     }
 }
@@ -754,15 +786,11 @@ mod tests {
         let msg: u32 = 57;
         let ct = ElGamal::encrypt(&public, msg);
 
-        // let expected_instance = DiscreteLog {
-        //     generator: PedersenBase::default().G,
-        //     target: Scalar::from(msg) * PedersenBase::default().G,
-        // };
+        let expected = CipherKey::try_from(Scalar::from(msg));
+        assert!(expected.is_ok());
 
-        assert_eq!(Scalar::from(msg).bytes[..24], ElGamal::decrypt(&secret, &ct)[..24]);
-
-        // Commenting out for faster testing
-        // assert_eq!(msg, ElGamalKeypair::decrypt_u32(&secret, &ct).unwrap());
+        let expected = expected.unwrap();
+        assert_eq!(Ok(expected), ElGamal::decrypt(&secret, &ct));
     }
 
     #[test]
@@ -785,12 +813,12 @@ mod tests {
         let ct_1: ElGamalCiphertext = (comm, decrypt_handle_1).into();
         let ct_2: ElGamalCiphertext = (comm, decrypt_handle_2).into();
 
-        assert_eq!(Scalar::from(msg).bytes[..24], sk_1.decrypt(&ct_1)[..24]);
-        assert_eq!(Scalar::from(msg).bytes[..24], sk_2.decrypt(&ct_2)[..24]);
+        let expected = CipherKey::try_from(Scalar::from(msg));
+        assert!(expected.is_ok());
 
-        // Commenting out for faster testing
-        // assert_eq!(msg, sk_1.decrypt_u32(&ct_1).unwrap());
-        // assert_eq!(msg, sk_2.decrypt_u32(&ct_2).unwrap());
+        let expected = expected.unwrap();
+        assert_eq!(Ok(expected), sk_1.decrypt(&ct_1));
+        assert_eq!(Ok(expected), sk_2.decrypt(&ct_2));
     }
 
     #[test]
