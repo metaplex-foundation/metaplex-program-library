@@ -986,6 +986,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": 0.0.0
     "@metaplex-foundation/beet-solana": 0.0.0
+    "@metaplex-foundation/mpl-core": "workspace:*"
     "@solana/web3.js": ^1.31.0
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
@@ -1017,7 +1018,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/mpl-core@workspace:core/js":
+"@metaplex-foundation/mpl-core@workspace:*, @metaplex-foundation/mpl-core@workspace:core/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
   dependencies:

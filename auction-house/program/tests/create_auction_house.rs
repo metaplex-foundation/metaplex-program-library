@@ -15,16 +15,11 @@ mod create_auction_house {
     use solana_program::{instruction::Instruction, system_instruction};
     use solana_sdk::transaction::Transaction;
     use spl_token;
-
+    use super::utils::{
+        
+    };
     use super::utils::constants::{AUCTION_HOUSE, FEE_PAYER, TREASURY};
-
     use solana_program_test::*;
-
-    pub fn auction_house_program_test<'a>() -> ProgramTest {
-        let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
-        program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-        program
-    }
 
     pub async fn airdrop(context: &mut ProgramTestContext, receiver: &Pubkey, amount: u64) {
         let tx = Transaction::new_signed_with_payer(

@@ -63,7 +63,7 @@ pub fn make_ata<'a>(
             system_program,
             rent,
             token_program,
-        ],
+        ],  
         seeds,
     )?;
 

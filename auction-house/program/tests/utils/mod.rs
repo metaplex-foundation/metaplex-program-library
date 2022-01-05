@@ -19,117 +19,6 @@ use anchor_client::{
 use constants::{AUCTION_HOUSE, FEE_PAYER, SIGNER, TREASURY};
 
 /// Return `spl_token` token account.
-pub fn get_token_account(
-    connection: &RpcClient,
-    token_account: &Pubkey,
-) -> Result<spl_token::state::Account, ClientError> {
-    let data = connection.get_account_data(token_account)?;
-    Ok(spl_token::state::Account::unpack(&data).unwrap())
-}
-
-/// Perform native lamports transfer.
-pub fn transfer_lamports(
-    connection: &RpcClient,
-    wallet: &Keypair,
-    to: &Pubkey,
-    amount: u64,
-) -> Result<(), ClientError> {
-    let (recent_blockhash, _) = connection.get_recent_blockhash()?;
-
-    let tx = Transaction::new_signed_with_payer(
-        &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
-        Some(&wallet.pubkey()),
-        &[wallet],
-        recent_blockhash,
-    );
-
-    connection.send_and_confirm_transaction(&tx)?;
-
-    Ok(())
-}
-
-/// Create new `TokenMetadata` using `RpcClient`.
-pub fn create_token_metadata(
-    connection: &RpcClient,
-    wallet: &Keypair,
-    mint: &Pubkey,
-    name: String,
-    symbol: String,
-    uri: String,
-    seller_fee_basis_points: u16,
-) -> Result<Pubkey, ClientError> {
-    let pid = match env::var("TOKEN_METADATA_PID") {
-        Ok(val) => val,
-        Err(_) => mpl_token_metadata::id().to_string(),
-    };
-
-    let program_id = Pubkey::from_str(&pid).unwrap();
-
-    let (recent_blockhash, _) = connection.get_recent_blockhash()?;
-
-    let (metadata_account, _) = Pubkey::find_program_address(
-        &[
-            mpl_token_metadata::state::PREFIX.as_bytes(),
-            program_id.as_ref(),
-            mint.as_ref(),
-        ],
-        &program_id,
-    );
-
-    let tx = Transaction::new_signed_with_payer(
-        &[mpl_token_metadata::instruction::create_metadata_accounts(
-            program_id,
-            metadata_account,
-            *mint,
-            wallet.pubkey(),
-            wallet.pubkey(),
-            wallet.pubkey(),
-            name,
-            symbol,
-            uri,
-            None,
-            seller_fee_basis_points,
-            false,
-            false,
-        )],
-        Some(&wallet.pubkey()),
-        &[wallet],
-        recent_blockhash,
-    );
-
-    connection.send_and_confirm_transaction(&tx)?;
-    Ok(metadata_account)
-}
-
-/// Mint tokens.
-pub fn mint_to(
-    connection: &RpcClient,
-    wallet: &Keypair,
-    mint: &Pubkey,
-    to: &Pubkey,
-    amount: u64,
-) -> Result<(), ClientError> {
-    let (recent_blockhash, _) = connection.get_recent_blockhash()?;
-
-    let tx = Transaction::new_signed_with_payer(
-        &[spl_token::instruction::mint_to(
-            &spl_token::id(),
-            mint,
-            to,
-            &wallet.pubkey(),
-            &[&wallet.pubkey()],
-            amount,
-        )
-        .unwrap()],
-        Some(&wallet.pubkey()),
-        &[wallet],
-        recent_blockhash,
-    );
-
-    connection.send_and_confirm_transaction(&tx)?;
-
-    Ok(())
-}
 
 /// Create new `AuctionHouse` using `Program`.
 pub fn create_auction_house(
@@ -185,7 +74,10 @@ pub fn clone_keypair(keypair: &Keypair) -> Keypair {
 }
 
 /// Create and return new mint.
-pub fn create_mint(connection: &RpcClient, wallet: &Keypair) -> Result<Keypair, ClientError> {
+pub fn create_mint(
+    connection: &mut ProgramTestContext,
+    wallet: &Keypair,
+) -> Result<Keypair, ClientError> {
     let (recent_blockhash, _) = connection.get_recent_blockhash()?;
     let mint = Keypair::new();
 

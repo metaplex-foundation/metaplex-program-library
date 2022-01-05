@@ -154,6 +154,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "anchor-client"
+version = "0.19.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cac39d0e96187b40a943361120733299fad52550df837ffc4366a261a89114cb"
+dependencies = [
+ "anchor-lang",
+ "anyhow",
+ "regex",
+ "serde",
+ "solana-client",
+ "solana-sdk",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "anchor-derive-accounts"
 version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1982,10 +1998,18 @@ dependencies = [
 name = "mpl-auction-house"
 version = "0.1.0"
 dependencies = [
+ "anchor-client",
  "anchor-lang",
  "anchor-spl",
  "arrayref",
+ "mpl-testing-utils",
  "mpl-token-metadata 0.0.1",
+ "rand 0.7.3",
+ "serde_json",
+ "shellexpand",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -2045,6 +2069,21 @@ dependencies = [
  "spl-math",
  "spl-token",
  "thiserror",
+]
+
+[[package]]
+name = "mpl-testing-utils"
+version = "0.0.1"
+dependencies = [
+ "anchor-client",
+ "mpl-token-metadata 0.0.1",
+ "rand 0.7.3",
+ "serde_json",
+ "shellexpand",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-token",
 ]
 
 [[package]]
@@ -3049,6 +3088,15 @@ dependencies = [
  "digest 0.9.0",
  "keccak",
  "opaque-debug 0.3.0",
+]
+
+[[package]]
+name = "shellexpand"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83bdb7831b2d85ddf4a7b148aa19d0587eddbe8671a436b7bd1182eaad0f2829"
+dependencies = [
+ "dirs-next",
 ]
 
 [[package]]

@@ -20,6 +20,13 @@ use mpl_auction_house::{
     accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
     AuctionHouse,
 };
+use solana_program_test::*;
+
+pub fn auction_house_program_test<'a>() -> ProgramTest {
+    let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
+    program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program
+}
 
 pub fn setup_payer_wallet() -> Keypair {
     let wallet_path = match env::var("LOCALNET_PAYER_WALLET") {

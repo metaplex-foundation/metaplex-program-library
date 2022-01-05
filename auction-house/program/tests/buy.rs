@@ -4,13 +4,12 @@ mod utils;
 
 mod buy {
     use super::utils::{
-        clone_keypair, create_associated_token_account, create_mint, create_token_metadata,
+        clone_keypair, create_associated_token_account, create_mint,
         find_auction_house_fee_account_address, find_escrow_payment_address,
-        find_trade_state_address, mint_to,
+        find_trade_state_address,
         setup_functions::{setup_auction_house, setup_program},
-        transfer_lamports,
     };
-
+    use me
     use anchor_client::{
         solana_sdk::{
             commitment_config::CommitmentConfig, signature::Keypair, signer::Signer,
@@ -18,6 +17,7 @@ mod buy {
         },
         Client, Cluster,
     };
+    use solana_program_test::*;
     use std::error;
 
     #[test]
@@ -25,47 +25,25 @@ mod buy {
         const BUYER_PRICE: u64 = 1;
         const TOKEN_SIZE: u64 = 1;
 
-        // Load `Localnet` keypair
-        let wallet = Keypair::new();
-        let wallet_pubkey = wallet.pubkey();
+        let mut context = auction_house_program_test().start_with_context().await;
 
-        // Initialize anchor RPC `Client`
-        let client = Client::new_with_options(
-            Cluster::Localnet,
-            clone_keypair(&wallet),
-            CommitmentConfig::processed(),
-        );
+        // Payer Wallet
+        let payer_wallet = Keypair::new();
 
-        // Initialize `Program` handle
-        let program = setup_program(client);
-
-        // Initialize vanilla `RpcClient`
-        let connection = program.rpc();
-
-        // Airdrop the payer wallet
-        let signature = program
-            .rpc()
-            .request_airdrop(&program.payer(), 10_000_000_000)?;
-        connection.poll_for_signature(&signature)?;
+        airdrop(&mut context, &payer_wallet.pubkey(), 10_000_000_000).await;
 
         // Derive native(wrapped) sol mint
         let treasury_mint = spl_token::native_mint::id();
 
         // Token mint for `TokenMetadata`.
-        let token_mint = create_mint(&connection, &wallet)?;
+        let token_mint = create_mint(context, &wallet)?;
 
         // Derive / Create associated token account
         let token_account =
-            create_associated_token_account(&connection, &wallet, &token_mint.pubkey())?;
+            create_associated_token_account(context, &wallet, &token_mint.pubkey())?;
 
         // Mint tokens
-        mint_to(
-            &connection,
-            &wallet,
-            &token_mint.pubkey(),
-            &token_account,
-            1,
-        )?;
+        mint_to(context, &wallet, &token_mint.pubkey(), &token_account, 1)?;
 
         // Setup AuctionHouse
         let auction_house = setup_auction_house(&program, &wallet_pubkey, &treasury_mint).unwrap();
