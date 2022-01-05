@@ -2,14 +2,17 @@ pub mod error;
 pub mod state;
 pub mod utils;
 
+use crate::{
+    error::ErrorCode,
+    state::{Market, MarketState, SellingResource, SellingResourceState, Store, TradeHistory},
+    utils::{
+        assert_derivation, assert_keys_equal, create_or_allocate_account_raw,
+        mpl_mint_new_edition_from_master_edition_via_token, puffed_out_string, DESCRIPTION_MAX_LEN,
+        HISTORY_PREFIX, HOLDER_PREFIX, NAME_MAX_LEN, VAULT_OWNER_PREFIX,
+    },
+};
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
-use error::ErrorCode;
-use state::{Market, SellingResource, SellingResourceState, Store, TradeHistory};
-use utils::{
-    create_or_allocate_account_raw, mpl_mint_new_edition_from_master_edition_via_token,
-    puffed_out_string, DESCRIPTION_MAX_LEN, HISTORY_PREFIX, NAME_MAX_LEN, VAULT_OWNER_PREFIX,
-};
 
 declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
 
@@ -35,7 +38,7 @@ pub mod membership_token {
         let token_program = &ctx.accounts.token_program;
 
         // Check `MasterEdition` derivation
-        utils::assert_derivation(
+        assert_derivation(
             &mpl_token_metadata::id(),
             master_edition_info,
             &[
@@ -137,6 +140,7 @@ pub mod membership_token {
         let system_program = &ctx.accounts.system_program;
 
         let metadata_mint = selling_resource.resource.clone();
+        let edition = selling_resource.supply;
 
         // Check `MasterEdition` derivation
         utils::assert_derivation(
@@ -147,7 +151,7 @@ pub mod membership_token {
                 mpl_token_metadata::id().as_ref(),
                 selling_resource.resource.as_ref(),
                 mpl_token_metadata::state::EDITION.as_bytes(),
-                "1".as_bytes(),
+                edition.to_string().as_bytes(),
             ],
         )?;
 
@@ -215,7 +219,7 @@ pub mod membership_token {
             &token_program.to_account_info(),
             &system_program.to_account_info(),
             &rent.to_account_info(),
-            1,
+            edition,
             &[
                 VAULT_OWNER_PREFIX.as_bytes(),
                 selling_resource.resource.as_ref(),
@@ -235,6 +239,72 @@ pub mod membership_token {
             .ok_or(ErrorCode::MathOverflow)?;
 
         trade_history.serialize(&mut *trade_history_account.data.borrow_mut())?;
+
+        Ok(())
+    }
+
+    pub fn create_market<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateMarket<'info>>,
+        _treasyry_owner_bump: u8,
+        name: String,
+        description: String,
+        mutable: bool,
+        price: u64,
+        pieces_in_one_wallet: Option<u64>,
+        start_date: u64,
+        end_date: Option<u64>,
+    ) -> ProgramResult {
+        let market = &mut ctx.accounts.market;
+        let store = &ctx.accounts.store;
+        let selling_resource_owner = &ctx.accounts.selling_resource_owner;
+        let selling_resource = &ctx.accounts.selling_resource;
+        let mint = &ctx.accounts.mint;
+        let treasury_holder = &ctx.accounts.treasury_holder;
+        let owner = &ctx.accounts.owner;
+
+        if name.len() > NAME_MAX_LEN {
+            return Err(ErrorCode::NameIsTooLong.into());
+        }
+
+        if description.len() > DESCRIPTION_MAX_LEN {
+            return Err(ErrorCode::DescriptionIsTooLong.into());
+        }
+
+        // Pieces in one wallet cannot be greater than Max Supply value
+        if pieces_in_one_wallet.is_some()
+            && selling_resource.max_supply.is_some()
+            && pieces_in_one_wallet.unwrap() > selling_resource.max_supply.unwrap()
+        {
+            return Err(ErrorCode::PiecesInOneWalletIsTooMuch.into());
+        }
+
+        // start_date cannot be in the past
+        if start_date < Clock::get().unwrap().unix_timestamp as u64 {
+            return Err(ErrorCode::StartDateIsInPast.into());
+        }
+
+        // end_date should not be greater than start_date
+        if end_date.is_some() && start_date > end_date.unwrap() {
+            return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
+        }
+
+        // Check selling resource ownership
+        assert_keys_equal(selling_resource.owner, selling_resource_owner.key())?;
+
+        market.store = store.key();
+        market.selling_resource = selling_resource.key();
+        market.treasury_mint = mint.key();
+        market.treasury_holder = treasury_holder.key();
+        market.treasury_owner = owner.key();
+        market.owner = selling_resource_owner.key();
+        market.name = puffed_out_string(&name, NAME_MAX_LEN);
+        market.description = puffed_out_string(&description, DESCRIPTION_MAX_LEN);
+        market.mutable = mutable;
+        market.price = price;
+        market.pieces_in_one_wallet = pieces_in_one_wallet;
+        market.start_date = start_date;
+        market.end_date = end_date;
+        market.state = MarketState::Created;
 
         Ok(())
     }
@@ -307,5 +377,23 @@ pub struct Buy<'info> {
     clock: Sysvar<'info, Clock>,
     rent: Sysvar<'info, Rent>,
     token_program: Program<'info, Token>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(treasyry_owner_bump: u8, name: String, description: String, mutable: bool, price: u64, pieces_in_one_wallet: Option<u64>, start_date: u64, end_date: Option<u64>)]
+pub struct CreateMarket<'info> {
+    #[account(init, space=Market::LEN, payer=selling_resource_owner)]
+    market: Account<'info, Market>,
+    store: Account<'info, Store>,
+    #[account(mut)]
+    selling_resource_owner: Signer<'info>,
+    #[account(mut, has_one=store)]
+    selling_resource: Account<'info, SellingResource>,
+    mint: Account<'info, Mint>,
+    #[account(mut, has_one=owner, has_one=mint)]
+    treasury_holder: Account<'info, TokenAccount>,
+    #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasyry_owner_bump)]
+    owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
 }
