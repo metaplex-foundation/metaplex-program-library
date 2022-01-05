@@ -239,6 +239,7 @@ pub mod membership_token {
             .ok_or(ErrorCode::MathOverflow)?;
 
         trade_history.serialize(&mut *trade_history_account.data.borrow_mut())?;
+        selling_resource.serialize(&mut *selling_resource.to_account_info().data.borrow_mut())?;
 
         Ok(())
     }
