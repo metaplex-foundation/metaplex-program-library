@@ -67,3 +67,12 @@ pub fn puffed_out_string(s: &String, size: usize) -> String {
     }
     s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
+
+/// Two keys equivalence check
+pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
+    if key1 != key2 {
+        Err(ErrorCode::PublicKeyMismatch.into())
+    } else {
+        Ok(())
+    }
+}
