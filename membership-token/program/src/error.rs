@@ -38,6 +38,6 @@ pub enum ErrorCode {
     #[msg("StartDate cannot be in the past")]
     StartDateIsInPast,
     // 6011
-    #[msg("EndDate should not be greater than StartDate")]
-    EndDateIsGreaterThanBeginDate,
+    #[msg("EndDate should not be earlier than StartDate")]
+    EndDateIsEarlierThanBeginDate,
 }

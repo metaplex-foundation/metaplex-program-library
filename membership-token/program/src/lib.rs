@@ -155,7 +155,7 @@ pub mod membership_token {
 
         // end_date should not be greater than start_date
         if end_date.is_some() && start_date > end_date.unwrap() {
-            return Err(ErrorCode::EndDateIsGreaterThanBeginDate.into());
+            return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
         }
 
         // Check selling resopurce ownership
