@@ -15,8 +15,6 @@ pub const MAX_METADATA_LEN: usize
     + MAX_URI_LENGTH        // uri
     ;
 
-pub const CIPHER_KEY_CHUNKS: usize = 6;
-
 #[derive(Clone, Copy, PartialEq)]
 #[repr(u8)]
 pub enum Key {
@@ -49,8 +47,7 @@ pub struct PrivateMetadataAccount {
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
 
     /// 192-bit AES cipher key encrypted with elgamal_pk
-    /// ElGamalCiphertext encrypted 4-byte chunks so 6 chunks total
-    pub encrypted_cipher_key: [zk_token_elgamal::pod::ElGamalCiphertext; CIPHER_KEY_CHUNKS],
+    pub encrypted_cipher_key: zk_token_elgamal::pod::ElGamalCiphertext,
 
     /// URI of encrypted asset
     pub uri: URI,
@@ -62,8 +59,7 @@ impl PodAccountInfo<'_, '_> for PrivateMetadataAccount {}
 pub struct CipherKeyTransferBuffer {
     pub key: Key,
 
-    /// Bit mask of updated chunks
-    pub updated: u8,
+    pub updated: PodBool,
 
     /// Source pubkey. Should match the currently encrypted elgamal_pk
     pub authority: Pubkey,
@@ -75,6 +71,6 @@ pub struct CipherKeyTransferBuffer {
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
 
     /// 192-bit AES cipher key encrypted with elgamal_pk
-    pub encrypted_cipher_key: [zk_token_elgamal::pod::ElGamalCiphertext; CIPHER_KEY_CHUNKS],
+    pub encrypted_cipher_key: zk_token_elgamal::pod::ElGamalCiphertext,
 }
 impl PodAccountInfo<'_, '_> for CipherKeyTransferBuffer {}

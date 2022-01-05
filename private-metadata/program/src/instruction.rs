@@ -1,9 +1,6 @@
 
 use {
     crate::{
-        state::{
-            CIPHER_KEY_CHUNKS,
-        },
         transfer_proof::TransferData,
     },
     bytemuck::{Pod, Zeroable},
@@ -42,7 +39,7 @@ pub struct ConfigureMetadataData {
     ///
     /// This is chunked because the version of ElGamal we're using is slow in decrypting so we must
     /// keep the encrypted values small (<32 bits).
-    pub encrypted_cipher_key: [zk_token_elgamal::pod::ElGamalCiphertext; CIPHER_KEY_CHUNKS],
+    pub encrypted_cipher_key: zk_token_elgamal::pod::ElGamalCiphertext,
 
     /// The URI of the encrypted asset
     pub uri: crate::state::URI,
@@ -51,9 +48,6 @@ pub struct ConfigureMetadataData {
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct TransferChunkData {
-    /// Cipher key chunk that this transfer data / proof corresponds to
-    pub chunk_idx: u8,
-
     /// Transfer Data (proof statement and masking factors)
     pub transfer: TransferData,
 }
@@ -61,9 +55,6 @@ pub struct TransferChunkData {
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct TransferChunkSlowData {
-    /// Cipher key chunk that this transfer data / proof corresponds to
-    pub chunk_idx: u8,
-
     /// Transfer Data (proof statement and masking factors)
     pub transfer: TransferData,
 }
@@ -246,7 +237,7 @@ pub fn configure_metadata(
     payer: Pubkey,
     mint: Pubkey,
     elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
-    encrypted_cipher_key: &[zk_token_elgamal::pod::ElGamalCiphertext],
+    encrypted_cipher_key: &zk_token_elgamal::pod::ElGamalCiphertext,
     uri: &[u8],
 ) -> Instruction {
     let accounts = vec![
@@ -261,7 +252,7 @@ pub fn configure_metadata(
 
     let mut data = ConfigureMetadataData::zeroed();
     data.elgamal_pk = elgamal_pk;
-    data.encrypted_cipher_key.copy_from_slice(encrypted_cipher_key);
+    data.encrypted_cipher_key = *encrypted_cipher_key;
     data.uri.0[..uri.len()].copy_from_slice(uri);
 
     encode_instruction(

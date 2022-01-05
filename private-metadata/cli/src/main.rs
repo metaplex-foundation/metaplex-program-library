@@ -195,18 +195,17 @@ fn process_configure(
     let elgamal_pk = elgamal_keypair.public;
 
     let cipher_key_bytes = bs58::decode(&cipher_key).into_vec()?;
-    let cipher_key_words = bytemuck::cast_slice::<u8, u32>(cipher_key_bytes.as_slice());
-
-    let encrypted_cipher_key = cipher_key_words
-        .iter()
-        .map(|w| elgamal_pk.encrypt(*w).into())
-        .collect::<Vec<_>>();
+    let mut scalar_bytes = [0; 32];
+    scalar_bytes[..24].copy_from_slice(cipher_key_bytes.as_slice());
+    let encrypted_cipher_key = elgamal_pk.encrypt(
+        curve25519_dalek::scalar::Scalar { bytes: scalar_bytes }
+    ).into();
 
     let configure_metadata_ix = private_metadata::instruction::configure_metadata(
         payer.pubkey(),
         mint,
         elgamal_pk.into(),
-        encrypted_cipher_key.as_slice(),
+        &encrypted_cipher_key,
         asset_url.as_bytes(),
     );
 
@@ -341,41 +340,11 @@ async fn parallel_decrypt_cipher_key(
     elgamal_keypair: &ElGamalKeypair,
     private_metadata_account: &private_metadata::state::PrivateMetadataAccount,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let cipher_key = elgamal_keypair.secret.decrypt(
+        &private_metadata_account.encrypted_cipher_key.try_into()?
+    )?;
 
-    let mut decrypt_tasks = vec![];
-    for ct in private_metadata_account.encrypted_cipher_key {
-        // TODO: clone
-        let elgamal_secret = ElGamalSecretKey::from_bytes(elgamal_keypair.secret.to_bytes()).unwrap();
-        decrypt_tasks.push(
-            tokio::task::spawn(async move {
-                let ct: ElGamalCiphertext = ct.try_into().ok()?;
-
-                elgamal_secret.decrypt_u32(&ct)
-            })
-        );
-    }
-
-    let cipher_key_words = futures::future::join_all(decrypt_tasks).await;
-
-    let cipher_key_words = cipher_key_words
-        .iter()
-        .map(|r| {
-            match r {
-                Ok(Some(w)) => {
-                    *w
-                }
-                _ => {
-                    // TODO: pass up
-                    eprintln!("decrypt cipher text error");
-                    exit(1);
-                }
-            }
-        })
-        .collect::<Vec<_>>();
-
-    let cipher_key_bytes = bytemuck::cast_slice::<u32, u8>(cipher_key_words.as_slice());
-
-    Ok(cipher_key_bytes.to_vec())
+    Ok(cipher_key.0.to_vec())
 }
 
 struct TransferParams {
@@ -454,14 +423,9 @@ async fn process_transfer(
         &[input_buffer.pubkey(), compute_buffer.pubkey()],
     )?;
 
-    for chunk in 0..private_metadata::state::CIPHER_KEY_CHUNKS {
-        let updated_mask = 1<<chunk;
-        if transfer_buffer_account.updated & updated_mask == updated_mask {
-            continue;
-        }
-
-        let ct = private_metadata_account.encrypted_cipher_key[chunk].try_into()?;
-        let word = elgamal_keypair.secret.decrypt_u32(&ct).ok_or(ProgramError::InvalidArgument)?;
+    if !bool::from(&transfer_buffer_account.updated) {
+        let ct = private_metadata_account.encrypted_cipher_key.try_into()?;
+        let word = elgamal_keypair.secret.decrypt(&ct)?;
 
         let transfer = private_metadata::transfer_proof::TransferData::new(
             &elgamal_keypair,
@@ -507,7 +471,7 @@ async fn process_transfer(
             )?;
         }
 
-        let transfer_chunk_ix = private_metadata::instruction::transfer_chunk_slow(
+        let transfer_ix = private_metadata::instruction::transfer_chunk_slow(
             payer.pubkey(),
             mint,
             transfer_buffer.pubkey(),
@@ -515,16 +479,15 @@ async fn process_transfer(
             input_buffer.pubkey(),
             compute_buffer.pubkey(),
             private_metadata::instruction::TransferChunkSlowData {
-                chunk_idx: chunk as u8,
                 transfer,
             },
         );
 
         send(
             rpc_client,
-            &format!("Transferring chunk {}", chunk),
+            &format!("Transferring data"),
             &[
-                transfer_chunk_ix,
+                transfer_ix,
             ],
             &[payer],
         )?;

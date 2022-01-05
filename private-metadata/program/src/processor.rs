@@ -349,8 +349,7 @@ fn process_fini_transfer(
         return Err(ProgramError::InvalidArgument);
     }
 
-    let all_chunks_set_mask = 1<<CIPHER_KEY_CHUNKS - 1;
-    if (transfer_buffer.updated & all_chunks_set_mask) != all_chunks_set_mask {
+    if !bool::from(&transfer_buffer.updated) {
         msg!("Not all chunks set");
         return Err(ProgramError::InvalidArgument);
     }
@@ -422,8 +421,7 @@ fn process_transfer_chunk(
 
     // check that this proof has matching pubkey fields and that we haven't already processed this
     // chunk
-    let updated_mask = 1<<data.chunk_idx;
-    if (transfer_buffer.updated & updated_mask) != 0 {
+    if bool::from(&transfer_buffer.updated) {
         msg!("Chunk already updated");
         return Err(ProgramError::InvalidArgument);
     }
@@ -438,14 +436,12 @@ fn process_transfer_chunk(
     }
 
     let transfer = &data.transfer;
-    let chunk_idx: usize = data.chunk_idx.into();
-
     if transfer.transfer_public_keys.src_pubkey != private_metadata.elgamal_pk {
         msg!("Source elgamal pubkey mismatch");
         return Err(ProgramError::InvalidArgument);
     }
 
-    if transfer.src_cipher_key_chunk_ct != private_metadata.encrypted_cipher_key[chunk_idx] {
+    if transfer.src_cipher_key_chunk_ct != private_metadata.encrypted_cipher_key {
         msg!("Source cipher text mismatch");
         return Err(ProgramError::InvalidArgument);
     }
@@ -462,8 +458,8 @@ fn process_transfer_chunk(
         return Err(PrivateMetadataError::ProofVerificationError.into());
     }
 
-    transfer_buffer.updated |= updated_mask;
-    transfer_buffer.encrypted_cipher_key[chunk_idx] = transfer.dst_cipher_key_chunk_ct;
+    transfer_buffer.updated = true.into();
+    transfer_buffer.encrypted_cipher_key = transfer.dst_cipher_key_chunk_ct;
 
 
     Ok(())
@@ -516,8 +512,7 @@ fn process_transfer_chunk_slow(
 
     // check that this proof has matching pubkey fields and that we haven't already processed this
     // chunk
-    let updated_mask = 1<<data.chunk_idx;
-    if (transfer_buffer.updated & updated_mask) != 0 {
+    if bool::from(&transfer_buffer.updated) {
         msg!("Chunk already updated");
         return Err(ProgramError::InvalidArgument);
     }
@@ -532,14 +527,12 @@ fn process_transfer_chunk_slow(
     }
 
     let transfer = &data.transfer;
-    let chunk_idx: usize = data.chunk_idx.into();
-
     if transfer.transfer_public_keys.src_pubkey != private_metadata.elgamal_pk {
         msg!("Source elgamal pubkey mismatch");
         return Err(ProgramError::InvalidArgument);
     }
 
-    if transfer.src_cipher_key_chunk_ct != private_metadata.encrypted_cipher_key[chunk_idx] {
+    if transfer.src_cipher_key_chunk_ct != private_metadata.encrypted_cipher_key {
         msg!("Source cipher text mismatch");
         return Err(ProgramError::InvalidArgument);
     }
@@ -761,8 +754,8 @@ fn process_transfer_chunk_slow(
         buffer_idx += 128;
     }
 
-    transfer_buffer.updated |= updated_mask;
-    transfer_buffer.encrypted_cipher_key[chunk_idx] = transfer.dst_cipher_key_chunk_ct;
+    transfer_buffer.updated = true.into();
+    transfer_buffer.encrypted_cipher_key = transfer.dst_cipher_key_chunk_ct;
 
 
     Ok(())
