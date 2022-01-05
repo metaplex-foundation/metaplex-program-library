@@ -129,7 +129,7 @@ pub mod membership_token {
         let store = &ctx.accounts.store;
         let selling_resource_owner = &ctx.accounts.selling_resource_owner;
         let selling_resource = &ctx.accounts.selling_resource;
-        let treasury_mint = &ctx.accounts.treasury_mint;
+        let mint = &ctx.accounts.mint;
         let treasury_holder = &ctx.accounts.treasury_holder;
         let owner = &ctx.accounts.owner;
 
@@ -162,12 +162,9 @@ pub mod membership_token {
         // Check selling resource ownership
         assert_keys_equal(selling_resource.owner, selling_resource_owner.key())?;
 
-        // Check if treasury_holder token account created for treasury_mint
-        assert_keys_equal(treasury_holder.mint, treasury_mint.key())?;
-
         market.store = store.key();
         market.selling_resource = selling_resource.key();
-        market.treasury_mint = treasury_mint.key();
+        market.treasury_mint = mint.key();
         market.treasury_holder = treasury_holder.key();
         market.treasury_owner = owner.key();
         market.owner = selling_resource_owner.key();
@@ -228,10 +225,10 @@ pub struct CreateMarket<'info> {
     selling_resource_owner: Signer<'info>,
     #[account(mut, has_one=store)]
     selling_resource: Account<'info, SellingResource>,
-    treasury_mint: Account<'info, Mint>,
-    #[account(mut, has_one=owner)]
+    mint: Account<'info, Mint>,
+    #[account(mut, has_one=owner, has_one=mint)]
     treasury_holder: Account<'info, TokenAccount>,
-    #[account(seeds=[HOLDER_PREFIX.as_bytes(), treasury_mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasyry_owner_bump)]
+    #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasyry_owner_bump)]
     owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
 }

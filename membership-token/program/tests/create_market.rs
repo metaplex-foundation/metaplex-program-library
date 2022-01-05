@@ -79,7 +79,7 @@ mod create_market {
             store: store_keypair.pubkey(),
             selling_resource_owner: selling_resource_owner_keypair.pubkey(),
             selling_resource: selling_resource_keypair.pubkey(),
-            treasury_mint: treasury_mint_keypair.pubkey(),
+            mint: treasury_mint_keypair.pubkey(),
             treasury_holder: treasury_holder_keypair.pubkey(),
             owner: treasury_owner,
             system_program: system_program::id(),
