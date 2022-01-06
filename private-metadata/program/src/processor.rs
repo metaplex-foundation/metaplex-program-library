@@ -73,6 +73,12 @@ pub fn process_instruction(
                 decode_instruction_data::<zk_token_elgamal::pod::ElGamalPubkey>(input)?
             )
         }
+        PrivateMetadataInstruction::CloseElgamalPubkey => {
+            msg!("CloseElgamalPubkey!");
+            process_close_elgamal_pubkey(
+                accounts,
+            )
+        }
     }
 }
 
@@ -823,6 +829,46 @@ fn process_publish_elgamal_pubkey(
             std::slice::from_ref(elgamal_pk)
         )
     );
+
+    Ok(())
+}
+
+fn process_close_elgamal_pubkey(
+    accounts: &[AccountInfo],
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let wallet_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let elgamal_pubkey_info = next_account_info(account_info_iter)?;
+    let _system_program_info = next_account_info(account_info_iter)?;
+
+    if !wallet_info.is_signer {
+        return Err(ProgramError::InvalidArgument);
+    }
+    validate_account_owner(mint_info, &spl_token::ID)?;
+    validate_account_owner(elgamal_pubkey_info, &ID)?;
+
+    // check that PDA matches
+    let seeds = &[
+        PREFIX.as_bytes(),
+        wallet_info.key.as_ref(),
+        mint_info.key.as_ref(),
+    ];
+    let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
+        Pubkey::find_program_address(seeds, &ID);
+
+    if elgamal_pubkey_key != *elgamal_pubkey_info.key {
+        msg!("Invalid wallet elgamal PDA");
+        return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
+    }
+
+    // close the elgamal pubkey buffer
+    let starting_lamports = wallet_info.lamports();
+    **wallet_info.lamports.borrow_mut() = starting_lamports
+        .checked_add(elgamal_pubkey_info.lamports())
+        .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+
+    **elgamal_pubkey_info.lamports.borrow_mut() = 0;
 
     Ok(())
 }

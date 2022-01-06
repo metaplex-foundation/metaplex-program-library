@@ -155,6 +155,19 @@ pub enum PrivateMetadataInstruction {
     ///   elgamal_pk: The recipients elgamal public-key
     ///
     PublishElgamalPubkey,
+
+    /// Close the associated elgamal pubkey buffer for this wallet and mint
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writeable,signer]` Wallet to close buffer for
+    ///   1. `[]` The SPL Token mint account of the NFT
+    ///   2. `[writable]` The elgamal pubkey PDA
+    ///   3. `[]` System program
+    ///
+    /// Data expected by this instruction:
+    ///
+    CloseElgamalPubkey,
 }
 
 pub fn decode_instruction_type(
@@ -377,6 +390,25 @@ pub fn publish_elgamal_pubkey(
         accounts,
         PrivateMetadataInstruction::PublishElgamalPubkey,
         &elgamal_pk,
+    )
+}
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn close_elgamal_pubkey(
+    payer: &Pubkey,
+    mint: &Pubkey,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*mint, false),
+        AccountMeta::new(get_elgamal_pubkey_address(&payer, &mint).0, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+    ];
+
+    encode_instruction(
+        accounts,
+        PrivateMetadataInstruction::CloseElgamalPubkey,
+        &(),
     )
 }
 

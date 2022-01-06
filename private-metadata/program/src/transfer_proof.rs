@@ -1,7 +1,7 @@
 #[cfg(not(target_arch = "bpf"))]
 use {
     crate::encryption::{
-        elgamal::{ElGamalKeypair, ElGamalSecretKey},
+        elgamal::{CipherKey, ElGamalKeypair, ElGamalSecretKey},
         pedersen::{Pedersen, PedersenOpening},
     },
 };
@@ -18,7 +18,6 @@ use {
         encryption::elgamal::{
             ElGamalCiphertext,
             ElGamalPubkey,
-            CipherKey,
         },
     },
     merlin::Transcript,

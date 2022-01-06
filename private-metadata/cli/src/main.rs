@@ -594,6 +594,30 @@ fn process_publish_elgamal_pubkey(
     Ok(())
 }
 
+fn process_close_elgamal_pubkey(
+    rpc_client: &RpcClient,
+    payer: &dyn Signer,
+    _config: &Config,
+    params: &ElGamalPubkeyParams,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let mint = Pubkey::new(
+        bs58::decode(&params.mint).into_vec()?.as_slice()
+    );
+
+    send(
+        rpc_client,
+        &format!("Closing pubkey"),
+        &[
+            private_metadata::instruction::close_elgamal_pubkey(
+                &payer.pubkey(),
+                &mint,
+            ),
+        ],
+        &[payer],
+    )?;
+
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -759,7 +783,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .value_name("PUBKEY_STRING")
                     .takes_value(true)
                     .global(true)
-                    .help("NFT to transfer"),
             )
         )
         .subcommand(
@@ -771,7 +794,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .value_name("PUBKEY_STRING")
                     .takes_value(true)
                     .global(true)
-                    .help("NFT to transfer"),
+            )
+        )
+        .subcommand(
+            SubCommand::with_name("close_elgamal_pubkey")
+            .about("Close the elgamal pubkey buffer associated with KEYPAIR and the mint")
+            .arg(
+                Arg::with_name("mint")
+                    .long("mint")
+                    .value_name("PUBKEY_STRING")
+                    .takes_value(true)
+                    .global(true)
             )
         )
         .get_matches();
@@ -894,6 +927,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         ("publish_elgamal_pubkey", Some(sub_m)) => {
             process_publish_elgamal_pubkey(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &config,
+                &ElGamalPubkeyParams {
+                    mint: sub_m.value_of("mint").unwrap().to_string(),
+                },
+            ).unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+        }
+        ("close_elgamal_pubkey", Some(sub_m)) => {
+            process_close_elgamal_pubkey(
                 &rpc_client,
                 config.default_signer.as_ref(),
                 &config,
