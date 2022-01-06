@@ -19,3 +19,48 @@ export const PRIVATE_METADATA_PROGRAM_ID = new PublicKey(
 export const CURVE_DALEK_ONCHAIN_PROGRAM_ID = new PublicKey(
   '5wsqk1gtzFewn4Rx3w9uyYBYUPZJPr2uLTNJ7BGFav5g',
 );
+
+export async function getMetadata(
+  mint: PublicKey,
+): Promise<PublicKey> {
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        mint.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID,
+    )
+  )[0];
+};
+
+export async function getPrivateMetadata(
+  mint: PublicKey,
+): Promise<PublicKey> {
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        mint.toBuffer(),
+      ],
+      PRIVATE_METADATA_PROGRAM_ID,
+    )
+  )[0];
+};
+
+export async function getElgamalPubkeyAddress(
+  wallet: PublicKey,
+  mint: PublicKey,
+): Promise<PublicKey> {
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        wallet.toBuffer(),
+        mint.toBuffer(),
+      ],
+      PRIVATE_METADATA_PROGRAM_ID,
+    )
+  )[0];
+};
