@@ -10,6 +10,7 @@ import { AccountLayout } from '@solana/spl-token';
 import * as BN from 'bn.js';
 
 import { useWindowDimensions } from '../../components/AppBar';
+import { useLoading } from '../../components/Loader';
 import {
   CachedImageContent,
 } from '../../components/ArtContent';
@@ -17,9 +18,11 @@ import {
   explorerLinkCForAddress,
   useConnection,
 } from '../../contexts/ConnectionContext';
+import { notify } from '../../utils/common';
 import { getMultipleAccounts } from '../../utils/getMultipleAccounts';
 import {
   getMetadata,
+  getPrivateMetadata,
   TOKEN_PROGRAM_ID,
 } from '../../utils/ids';
 import {
@@ -33,6 +36,7 @@ export const GalleryView = (
   // contexts
   const connection = useConnection();
   const wallet = useWallet();
+  const { loading, setLoading } = useLoading();
 
   // async useEffect set
   const [lastFetchedPubkey, setLastFetchedPubkey] = React.useState<PublicKey | null>(null);
@@ -52,7 +56,7 @@ export const GalleryView = (
     // seems a bit race-conditioney...
     setLastFetchedPubkey(wallet.publicKey);
 
-    const wrap = async () => {
+    const run = async () => {
       const tokenAccounts = await connection.getTokenAccountsByOwner(
         wallet.publicKey,
         { programId: TOKEN_PROGRAM_ID },
@@ -61,11 +65,20 @@ export const GalleryView = (
         v => AccountLayout.decode(v.account.data)
       );
 
-      const mints = accountsDecoded
+      let mints = accountsDecoded
         .filter(r => new BN(r.amount, 'le').toNumber() > 0)
         .map(r => new PublicKey(r.mint))
         .sort((lft, rht) => lft.toBase58().localeCompare(rht.toBase58()))
       ;
+
+      const privateMetadatas = await Promise.all(mints.map(m => getPrivateMetadata(m)));
+      const { array: pmAccounts } = await getMultipleAccounts(
+        connection,
+        privateMetadatas.map(p => p.toBase58()),
+        'singleGossip',
+      );
+
+      mints = mints.filter((mint, idx) => !!pmAccounts[idx]?.data);
 
       const metadatas = await Promise.all(mints.map(m => getMetadata(m)));
 
@@ -89,6 +102,22 @@ export const GalleryView = (
       setGalleryMints(mints);
       setPublicManifests(manifests);
     };
+
+    const wrap = async () => {
+      try {
+        await run();
+      } catch (err) {
+        console.error(err);
+        notify({
+          message: 'Failed to fetch NFT gallery',
+          description: err.message,
+        })
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    setLoading(true);
     wrap();
   }, [wallet]);
 
