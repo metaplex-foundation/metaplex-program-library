@@ -1,7 +1,8 @@
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { RouteComponentProps } from 'react-router-dom';
 
-import { Row, Col } from 'antd';
+import { Button, Col, Row } from 'antd';
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
   PublicKey,
@@ -39,6 +40,7 @@ export const GalleryView = (
   const { loading, setLoading } = useLoading();
 
   // async useEffect set
+  // TODO: cache locally
   const [lastFetchedPubkey, setLastFetchedPubkey] = React.useState<PublicKey | null>(null);
   const [galleryMints, setGalleryMints] = React.useState<Array<PublicKey>>([]);
   const [publicManifests, setPublicManifests] = React.useState<Array<any>>([]);
@@ -199,6 +201,24 @@ export const GalleryView = (
                           <div>
                             {explorerLinkCForAddress(mint, connection)}
                           </div>
+                          <span>
+                          <Button
+                            style={{
+                              borderRadius: "30px",
+                              height: "35px",
+                            }}
+                          >
+                            <Link
+                              to={`/stealth?mint=${mint.toBase58()}`}
+                              style={{
+                                color: 'inherit',
+                                display: 'block',
+                              }}
+                            >
+                              View Details
+                            </Link>
+                          </Button>
+                          </span>
                         </div>
                       </Col>
                     );
