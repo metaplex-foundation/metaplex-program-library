@@ -10,6 +10,7 @@ import { WalletProvider } from '../contexts/WalletContext';
 import { WasmProvider } from '../contexts/WasmContext';
 import { AppLayout } from './Layout';
 
+import { GalleryView } from '../views/GalleryView';
 import { StealthView } from '../views/StealthView';
 
 export const App = () => {
@@ -23,7 +24,8 @@ export const App = () => {
       <LoaderProvider>
         <AppLayout>
           <Switch>
-            <Route path="/" component={StealthView} />
+            <Route exact path="/" component={GalleryView} />
+            <Route exact path="/stealth" component={StealthView} />
           </Switch>
         </AppLayout>
       </LoaderProvider>

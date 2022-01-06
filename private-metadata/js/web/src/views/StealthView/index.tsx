@@ -28,6 +28,7 @@ import {
   DataUrlImageContent,
 } from '../../components/ArtContent';
 import {
+  explorerLinkCForAddress,
   sendTransactionWithRetry,
   useConnection,
 } from '../../contexts/ConnectionContext';
@@ -42,7 +43,6 @@ import {
   useLocalStorageState,
 } from '../../utils/common';
 import {
-  envFor,
   explorerLinkFor,
   sendSignedTransaction,
 } from '../../utils/transactions';
@@ -596,22 +596,6 @@ export const StealthView = (
     }
   };
 
-  const explorerLinkForAddress = (key : PublicKey, shorten: boolean = true) => {
-    return (
-      <a
-        href={`https://explorer.solana.com/address/${key.toBase58()}?cluster=${envFor(connection)}`}
-        target="_blank"
-        rel="noreferrer"
-        title={key.toBase58()}
-        style={{
-          fontFamily: 'Monospace',
-          color: '#19b784',
-        }}
-      >
-        {shorten ? shortenAddress(key.toBase58()) : key.toBase58()}
-      </a>
-    );
-  };
   React.useEffect(() => {
     if (wallet.disconnecting) {
       setCipherKey('');
@@ -791,7 +775,9 @@ export const StealthView = (
             </p>
           </div>
           <div>
-            {publicImageManifest?.description && explorerLinkForAddress(parseAddress(mint))}
+            {publicImageManifest?.description
+              && explorerLinkCForAddress(parseAddress(mint), connection)
+            }
           </div>
         </div>
       </div>

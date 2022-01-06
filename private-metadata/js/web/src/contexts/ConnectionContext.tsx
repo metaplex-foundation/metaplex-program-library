@@ -1,7 +1,8 @@
 import {
-  Keypair,
   Commitment,
   Connection,
+  Keypair,
+  PublicKey,
   Transaction,
   TransactionInstruction,
   Blockhash,
@@ -17,8 +18,8 @@ import { WalletNotConnectedError } from "@solana/wallet-adapter-base";
 
 import { WalletSigner } from "./WalletContext";
 import { useQuerySearch } from '../hooks/useQuerySearch';
-import { sendSignedTransaction } from "../utils/transactions";
-import { useLocalStorageState } from "../utils/common";
+import { envFor, sendSignedTransaction } from "../utils/transactions";
+import { shortenAddress, useLocalStorageState } from "../utils/common";
 
 interface BlockhashAndFeeCalculator {
   blockhash: Blockhash;
@@ -172,6 +173,27 @@ export function useConnectionConfig() {
     tokens: context.tokens,
   };
 }
+
+export const explorerLinkCForAddress = (
+  key : PublicKey,
+  connection: Connection,
+  shorten: boolean = true,
+) => {
+  return (
+    <a
+      href={`https://explorer.solana.com/address/${key.toBase58()}?cluster=${envFor(connection)}`}
+      target="_blank"
+      rel="noreferrer"
+      title={key.toBase58()}
+      style={{
+        fontFamily: 'Monospace',
+        color: '#19b784',
+      }}
+    >
+      {shorten ? shortenAddress(key.toBase58()) : key.toBase58()}
+    </a>
+  );
+};
 
 export const getErrorForTransaction = async (
   connection: Connection,
