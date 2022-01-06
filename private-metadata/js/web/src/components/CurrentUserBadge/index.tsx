@@ -89,7 +89,7 @@ export const Settings = ({
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          padding: '15px 0',
+          paddingTop: '15px',
         }}
       >
         <Identicon
@@ -100,7 +100,7 @@ export const Settings = ({
         />
         {publicKey && (
           <>
-            <Tooltip title="Address copied">
+            <Tooltip title="Copy address">
               <div
                 style={{
                   fontWeight: 600,
@@ -122,6 +122,7 @@ export const Settings = ({
           style={{
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
             width: 'calc(100% + 32px)',
+            marginTop: 10,
             marginBottom: 10,
           }}
         ></span>
