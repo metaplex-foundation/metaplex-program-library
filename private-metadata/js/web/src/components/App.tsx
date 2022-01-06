@@ -40,11 +40,32 @@ import {
   PrivateMetadataAccount,
 } from '../utils/privateSchema';
 import {
+  decodeMetadata,
+  Metadata,
+} from '../utils/publicSchema';
+import {
   CURVE_DALEK_ONCHAIN_PROGRAM_ID,
   PRIVATE_METADATA_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  TOKEN_METADATA_PROGRAM_ID,
 } from '../utils/ids';
+
+async function getMetadata(
+  mint: PublicKey,
+): Promise<PublicKey> {
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+        mint.toBuffer(),
+      ],
+      TOKEN_METADATA_PROGRAM_ID,
+    )
+  )[0];
+};
+
 async function getPrivateMetadata(
   mint: PublicKey,
 ): Promise<PublicKey> {
@@ -546,9 +567,12 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { CollapsePanel } from '../components/CollapsePanel';
 import { useLoading } from '../components/Loader';
 import { useConnection } from '../contexts/ConnectionContext';
+import {
+  CachedImageContent,
+  DataUrlImageContent,
+} from '../components/ArtContent';
 import { useLocalStorageState } from '../utils/common';
 import * as CryptoJS from 'crypto-js';
-import { drawArray } from '../utils/image';
 import { notify } from '../utils/common';
 export const Demo = () => {
   // contexts
@@ -571,14 +595,16 @@ export const Demo = () => {
     = useLocalStorageState('computeBuffer', '');
 
   // async useEffect set
+  const [publicMetadata, setPublicMetadata]
+      = React.useState<Metadata | null>(null);
+  const [publicImageUri, setPublicImageUri]
+      = React.useState<string>('');
   const [privateMetadata, setPrivateMetadata]
       = React.useState<PrivateMetadataAccount | null>(null);
   const [elgamalKeypairStr, setElgamalKeypairStr]
       = useLocalStorageState('elgamalKeypair', '');
   const [cipherKeyAndWallet, setCipherKey]
       = useLocalStorageState('cipherKeyAndWallet', '');
-  const [privateImage, setPrivateImage]
-      = React.useState<Buffer | null>(null);
   const [decryptedImage, setDecryptedImage]
       = React.useState<Buffer | null>(null);
 
@@ -620,32 +646,46 @@ export const Demo = () => {
 
     const wrap = async () => {
       const privateMetadataKey = await getPrivateMetadata(mintKey);
-      const privateMetadataAccount = await connection.getAccountInfo(privateMetadataKey);
-      const privateMetadata = decodePrivateMetadata(privateMetadataAccount.data);
+      const publicMetadataKey = await getMetadata(mintKey);
 
-      setPrivateMetadata(privateMetadata);
+      const [privateMetadataAccount, publicMetadataAccount] =
+        await connection.getMultipleAccountsInfo(
+          [privateMetadataKey, publicMetadataKey]
+        );
+
+      if (privateMetadataAccount !== null) {
+        const privateMetadata = decodePrivateMetadata(privateMetadataAccount.data);
+        setPrivateMetadata(privateMetadata);
+      }
+
+      if (publicMetadataAccount !== null) {
+        const publicMetadata = decodeMetadata(publicMetadataAccount.data);
+        setPublicMetadata(publicMetadata);
+      }
     };
     wrap();
   }, [connection, mint]);
 
   React.useEffect(() => {
+    if (publicMetadata === null) return;
+    const wrap = async () => {
+      const response = await fetch(publicMetadata.data.uri);
+      const manifest = await response.json();
+      setPublicImageUri(manifest.image);
+    };
+    wrap();
+  }, [publicMetadata]);
+
+  React.useEffect(() => {
     if (privateMetadata === null) return;
     const wrap = async () => {
-      let encryptedImage;
-      if (!privateImage) {
-        encryptedImage = Buffer.from(
+      const cipherKey = parseCipherKey();
+      if (cipherKey) {
+        const encryptedImage = Buffer.from(
           await (
             await fetch(privateMetadata.uri)
           ).arrayBuffer()
         );
-
-        setPrivateImage(encryptedImage);
-      } else {
-        encryptedImage = privateImage;
-      }
-
-      const cipherKey = parseCipherKey();
-      if (cipherKey) {
         setDecryptedImage(decryptImage(encryptedImage, Buffer.from(cipherKey, 'base64')));
       }
     };
@@ -704,22 +744,12 @@ export const Demo = () => {
           style={{ fontFamily: 'Monospace' }}
         />
       </label>
-      {decryptedImage ? (
-        <div>
-          <img
-            style={{ margin: 'auto', display: 'block'}}
-            src={"data:image/png;base64," + decryptedImage.toString('base64')}
-          />
-        </div>
-      ) : privateImage ? (
-        <div>
-          <img
-            style={{ margin: 'auto', display: 'block', filter: 'blur(2px)'}}
-            src={"data:image/bmp;base64," + drawArray(privateImage, 8)}
-          />
-        </div>
-      ) : null
-      }
+      <div>
+        <CachedImageContent
+          uri={publicImageUri}
+          style={{ maxWidth: '40ch', margin: 'auto', display: 'block' }}
+        />
+      </div>
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
@@ -770,6 +800,14 @@ export const Demo = () => {
       >
         Decrypt
       </Button>
+      {decryptedImage && (
+        <div>
+          <DataUrlImageContent
+            data={"data:image/png;base64," + decryptedImage.toString('base64')}
+            style={{ maxWidth: '40ch', margin: 'auto', display: 'block' }}
+          />
+        </div>
+      )}
       <label className="action-field">
         <span className="field-title">Recipient Pubkey</span>
         <Input
