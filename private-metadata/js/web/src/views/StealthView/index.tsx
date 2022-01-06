@@ -566,9 +566,9 @@ export const StealthView = (
   const [privateMetadata, setPrivateMetadata]
       = React.useState<PrivateMetadataAccount | null>(null);
   const [elgamalKeypairStr, setElgamalKeypairStr]
-      = useLocalStorageState('elgamalKeypair', '');
+      = useLocalStorageState(`elgamalKeypair:${mint}`, '');
   const [cipherKey, setCipherKey]
-      = useLocalStorageState('cipherKey', '');
+      = useLocalStorageState(`cipherKey:${mint}`, '');
   const [decryptedImage, setDecryptedImage]
       = React.useState<Buffer | null>(null);
 
