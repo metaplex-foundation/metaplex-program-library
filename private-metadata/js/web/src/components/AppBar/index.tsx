@@ -21,7 +21,7 @@ function getWindowDimensions() {
   };
 }
 
-export default function useWindowDimensions() {
+export function useWindowDimensions() {
   const [windowDimensions, setWindowDimensions] = React.useState(
     getWindowDimensions(),
   );

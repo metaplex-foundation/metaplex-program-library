@@ -33,7 +33,7 @@ import {
 } from '@solana/web3.js';
 import { Token } from '@solana/spl-token';
 import * as bs58 from 'bs58';
-import { explorerLinkFor, sendSignedTransaction } from '../utils/transactions';
+import { explorerLinkFor, envFor, sendSignedTransaction } from '../utils/transactions';
 import {
   decodePrivateMetadata,
   decodeTransferBuffer,
@@ -562,11 +562,15 @@ const decryptImage = (
   return Buffer.from(decrypted.toString(), 'hex');
 };
 
+import { RouteComponentProps } from 'react-router-dom';
+import queryString from 'query-string';
+
 import { Button, Input } from 'antd';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { CollapsePanel } from '../components/CollapsePanel';
 import { useLoading } from '../components/Loader';
 import { useConnection } from '../contexts/ConnectionContext';
+import { useWindowDimensions } from '../components/AppBar';
 import {
   CachedImageContent,
   DataUrlImageContent,
@@ -574,15 +578,21 @@ import {
 import { useLocalStorageState } from '../utils/common';
 import * as CryptoJS from 'crypto-js';
 import { notify } from '../utils/common';
-export const Demo = () => {
+export const StealthView = (
+  props: RouteComponentProps<{}>,
+) => {
   // contexts
   const connection = useConnection();
   const wallet = useWallet();
   const wasm = useWasmConfig();
   const { loading, setLoading } = useLoading();
 
+  // nav inputs
+  const query = props.location.search;
+  const params = queryString.parse(query);
+  const [mint, setMint] = React.useState(params.mint as string || '');
+
   // user inputs
-  const [mint, setMint] = useLocalStorageState('mint', '');
   const [recipientPubkeyStr, setRecipientPubkey]
     = useLocalStorageState('recipientPubkey', '');
   const [transferBuffer, setTransferBuffer]
@@ -597,8 +607,8 @@ export const Demo = () => {
   // async useEffect set
   const [publicMetadata, setPublicMetadata]
       = React.useState<Metadata | null>(null);
-  const [publicImageUri, setPublicImageUri]
-      = React.useState<string>('');
+  const [publicImageManifest, setPublicImageManifest]
+      = React.useState<any>({}); // Object...
   const [privateMetadata, setPrivateMetadata]
       = React.useState<PrivateMetadataAccount | null>(null);
   const [elgamalKeypairStr, setElgamalKeypairStr]
@@ -607,6 +617,14 @@ export const Demo = () => {
       = useLocalStorageState('cipherKey', '');
   const [decryptedImage, setDecryptedImage]
       = React.useState<Buffer | null>(null);
+
+  const clearFetchedState = () => {
+    setPublicMetadata(null);
+    setPrivateMetadata(null);
+    setElgamalKeypairStr('');
+    setCipherKey('');
+    setDecryptedImage(null);
+  };
 
   const parseAddress = (address: string): PublicKey | null => {
     try {
@@ -624,6 +642,22 @@ export const Demo = () => {
     }
   };
 
+  const explorerLinkForAddress = (key : PublicKey, shorten: boolean = true) => {
+    return (
+      <a
+        href={`https://explorer.solana.com/address/${key.toBase58()}?cluster=${envFor(connection)}`}
+        target="_blank"
+        rel="noreferrer"
+        title={key.toBase58()}
+        style={{
+          fontFamily: 'Monospace',
+          color: '#19b784',
+        }}
+      >
+        {shorten ? shortenAddress(key.toBase58()) : key.toBase58()}
+      </a>
+    );
+  };
   React.useEffect(() => {
     if (wallet.disconnecting) {
       setCipherKey('');
@@ -633,7 +667,10 @@ export const Demo = () => {
 
   React.useEffect(() => {
     const mintKey = parseAddress(mint);
-    if (mintKey === null) return;
+    if (mintKey === null) {
+      clearFetchedState();
+      return;
+    }
 
     const wrap = async () => {
       const privateMetadataKey = await getPrivateMetadata(mintKey);
@@ -662,7 +699,7 @@ export const Demo = () => {
     const wrap = async () => {
       const response = await fetch(publicMetadata.data.uri);
       const manifest = await response.json();
-      setPublicImageUri(manifest.image);
+      setPublicImageManifest(manifest);
     };
     wrap();
   }, [publicMetadata]);
@@ -723,22 +760,86 @@ export const Demo = () => {
     return notifyResult(result, name);
   };
 
+  // TODO: more robust
+  const maxWidth = 1440;
+  const outerPadding = 96 * 2;
+  const columnsGap = 40;
+  const maxColumns = 4;
+  const columnWidth = (maxWidth - outerPadding - columnsGap * (maxColumns - 1)) / maxColumns;
+
+  const tilePadding = 0;
+  const imageWidth = columnWidth - tilePadding * 2;
+
+  const { width } = useWindowDimensions();
+  const sizedColumns = (width : number) => {
+           if (width > columnWidth * 4 + columnsGap * 3 + outerPadding) {
+      return 4;
+    } else if (width > columnWidth * 3 + columnsGap * 2 + outerPadding) {
+      return 3;
+    } else if (width > columnWidth * 2 + columnsGap * 1 + outerPadding) {
+      return 2;
+    } else {
+      return 1;
+    }
+  };
+  const cols = sizedColumns(width);
+  const actualColumnWidth = (Math.min(width, maxWidth) - outerPadding - columnsGap * (cols - 1)) / cols;
   return (
-    <div className="app stack" style={{ maxWidth: '80ch', margin: 'auto' }}>
-      <label className="action-field">
-        <span className="field-title">NFT Mint</span>
-        <Input
-          id="mint-text-field"
-          value={mint}
-          onChange={(e) => setMint(e.target.value)}
-          style={{ fontFamily: 'Monospace' }}
-        />
-      </label>
-      <div>
+    <div className="app stack" style={{ margin: 'auto' }}>
+      <p
+        className={"text-title"}
+        style={{
+          marginBottom: '15px',
+        }}
+      >
+        {publicImageManifest?.name}
+      </p>
+      <div
+        style={
+          cols > 1
+          ? {
+            display: 'flex',
+            flexDirection: 'row',
+          }
+          : {
+            display: 'flex',
+            flexDirection: 'column',
+          }
+        }
+      >
         <CachedImageContent
-          uri={publicImageUri}
-          style={{ maxWidth: '40ch', margin: 'auto', display: 'block' }}
+          uri={publicImageManifest?.image}
+          className={"fullAspectRatio"}
+          style={{
+            ...(cols > 1 ? { maxWidth: actualColumnWidth } : {}),
+            minWidth: actualColumnWidth,
+          }}
         />
+        <div
+          style={{
+            ...(cols > 3 ? { paddingRight: '200px' } : {}),
+            ...(
+              cols > 1
+              ? { paddingLeft: `${columnsGap}px` }
+              : { paddingTop: '20px', paddingBottom: '20px', }
+            ),
+          }}
+        >
+          <div>
+            <p
+              className={"text-subtitle"}
+              style={{
+                fontSize: '15px',
+                marginBottom: '10px',
+              }}
+            >
+              {publicImageManifest?.description}
+            </p>
+          </div>
+          <div>
+            {publicImageManifest?.description && explorerLinkForAddress(parseAddress(mint))}
+          </div>
+        </div>
       </div>
       <Button
         style={{ width: '100%' }}
@@ -1032,9 +1133,7 @@ export const App = () => {
       <LoaderProvider>
         <AppLayout>
           <Switch>
-            <Route path="/" component={() => (
-              <Demo />
-            )} />
+            <Route path="/" component={StealthView} />
           </Switch>
         </AppLayout>
       </LoaderProvider>
