@@ -4,6 +4,7 @@ use anchor_client::solana_sdk::{
     pubkey::Pubkey,
     signer::{keypair::Keypair, Signer},
 };
+use chrono::{Duration, Utc};
 use solana_program::system_instruction;
 use solana_program_test::*;
 use solana_sdk::{program_pack::Pack, transaction::Transaction};
@@ -182,6 +183,24 @@ pub async fn create_token_metadata(
     context.banks_client.process_transaction(tx).await.unwrap();
 
     metadata
+}
+
+pub async fn wait(context: &mut ProgramTestContext, duration: Duration) {
+    let actual_time = context
+        .banks_client
+        .get_clock()
+        .await
+        .unwrap()
+        .unix_timestamp;
+
+    loop {
+        let last_clock = context.banks_client.get_clock().await.unwrap();
+        if last_clock.unix_timestamp >= actual_time + duration.num_milliseconds() {
+            break;
+        }
+
+        context.warp_to_slot(last_clock.slot + 1000);
+    }
 }
 
 pub async fn airdrop(context: &mut ProgramTestContext, receiver: &Pubkey, amount: u64) {

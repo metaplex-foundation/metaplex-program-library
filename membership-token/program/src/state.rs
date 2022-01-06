@@ -84,6 +84,7 @@ impl Market {
 }
 
 #[account]
+#[derive(Default)]
 pub struct TradeHistory {
     pub market: Pubkey,
     pub wallet: Pubkey,

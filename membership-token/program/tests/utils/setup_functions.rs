@@ -1,20 +1,18 @@
 #![allow(unused)]
 
+use super::helpers::{
+    airdrop, create_master_edition, create_mint, create_token_account, create_token_metadata,
+    mint_to,
+};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_membership_token::{
     accounts as mpl_membership_token_accounts, instruction as mpl_membership_token_instruction,
     utils::find_vault_owner_address,
 };
-
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
     instruction::Instruction, signature::Keypair, signer::Signer, system_program, sysvar,
     transaction::Transaction,
-};
-
-use super::helpers::{
-    airdrop, create_master_edition, create_mint, create_token_account, create_token_metadata,
-    mint_to,
 };
 
 /// Seup Program Test Context
@@ -75,7 +73,7 @@ pub async fn setup_selling_resource(
     context: &mut ProgramTestContext,
     admin_wallet: &Keypair,
     store_keypair: &Keypair,
-) -> (Keypair, Keypair) {
+) -> (Keypair, Keypair, Keypair) {
     // Create `SellingResource`
     let resource_mint = Keypair::new();
     create_mint(context, &resource_mint, &admin_wallet.pubkey(), 0).await;
@@ -124,7 +122,7 @@ pub async fn setup_selling_resource(
         &resource_mint.pubkey(),
         &admin_wallet,
         &metadata,
-        Some(3),
+        Some(1),
     )
     .await;
 
@@ -174,5 +172,9 @@ pub async fn setup_selling_resource(
 
     context.banks_client.process_transaction(tx).await.unwrap();
 
-    (selling_resource_keypair, selling_resource_owner_keypair)
+    (
+        selling_resource_keypair,
+        selling_resource_owner_keypair,
+        vault,
+    )
 }

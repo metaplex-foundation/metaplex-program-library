@@ -22,35 +22,40 @@ pub enum ErrorCode {
     // 6005
     #[msg("Supply is not provided")]
     SupplyIsNotProvided,
+    // 6006
     #[msg("Supply is gt than max supply")]
     SupplyIsGtThanMaxSupply,
-    // 6006
+    // 6007
     #[msg("Derived key invalid")]
     DerivedKeyInvalid,
+    // 6008
     #[msg("Market is not started")]
     MarketIsNotStarted,
+    // 6009
     #[msg("Market is ended")]
     MarketIsEnded,
+    // 6010
     #[msg("User reach buy limit")]
     UserReachBuyLimit,
+    // 6011
     #[msg("Math overflow")]
     MathOverflow,
-    // 6007
+    // 6012
     #[msg("Invalid selling resource owner provided")]
     SellingResourceOwnerInvalid,
-    // 6008
+    // 6013
     #[msg("PublicKeyMismatch")]
     PublicKeyMismatch,
-    // 6009
+    // 6014
     #[msg("Pieces in one wallet cannot be greater than Max Supply value")]
     PiecesInOneWalletIsTooMuch,
-    // 6010
+    // 6015
     #[msg("StartDate cannot be in the past")]
     StartDateIsInPast,
-    // 6011
+    // 6016
     #[msg("EndDate should not be earlier than StartDate")]
     EndDateIsEarlierThanBeginDate,
-    // 6012
+    // 6017
     #[msg("Incorrect account owner")]
     IncorrectOwner,
 }

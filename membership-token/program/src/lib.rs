@@ -7,8 +7,8 @@ use crate::{
     state::{Market, MarketState, SellingResource, SellingResourceState, Store, TradeHistory},
     utils::{
         assert_derivation, assert_keys_equal, mpl_mint_new_edition_from_master_edition_via_token,
-        puffed_out_string, sys_create_account, DESCRIPTION_MAX_LEN, HISTORY_PREFIX, HOLDER_PREFIX,
-        NAME_MAX_LEN, VAULT_OWNER_PREFIX,
+        puffed_out_string, DESCRIPTION_MAX_LEN, HISTORY_PREFIX, HOLDER_PREFIX, NAME_MAX_LEN,
+        VAULT_OWNER_PREFIX,
     },
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
@@ -117,14 +117,14 @@ pub mod membership_token {
 
     pub fn buy<'info>(
         ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
-        trade_history_bump: u8,
+        _trade_history_bump: u8,
         vault_owner_bump: u8,
     ) -> ProgramResult {
         let market = &mut ctx.accounts.market;
         let selling_resource = &mut ctx.accounts.selling_resource;
         let user_token_account = &mut ctx.accounts.user_token_account;
         let user_wallet = &mut ctx.accounts.user_wallet;
-        let trade_history_account = &mut ctx.accounts.trade_history;
+        let trade_history = &mut ctx.accounts.trade_history;
         let treasury_holder = &mut ctx.accounts.treasury_holder;
         let new_metadata = &mut ctx.accounts.new_metadata;
         let new_edition = &mut ctx.accounts.new_edition;
@@ -142,19 +142,6 @@ pub mod membership_token {
         let metadata_mint = selling_resource.resource.clone();
         let edition = selling_resource.supply;
 
-        // Check `MasterEdition` derivation
-        utils::assert_derivation(
-            &mpl_token_metadata::id(),
-            edition_marker_info,
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                selling_resource.resource.as_ref(),
-                mpl_token_metadata::state::EDITION.as_bytes(),
-                edition.to_string().as_bytes(),
-            ],
-        )?;
-
         // Check, that `Market` is started
         if market.start_date > clock.unix_timestamp as u64 {
             return Err(ErrorCode::MarketIsNotStarted.into());
@@ -167,31 +154,13 @@ pub mod membership_token {
             }
         }
 
-        let mut trade_history = if trade_history_account.lamports() == 0 {
-            // `TradeHistory` does not exists, create on-chain
-            sys_create_account(
-                &user_wallet.to_account_info(),
-                &trade_history_account.to_account_info(),
-                rent.minimum_balance(TradeHistory::LEN),
-                TradeHistory::LEN,
-                ctx.program_id,
-                &[
-                    HISTORY_PREFIX.as_bytes(),
-                    user_wallet.key().as_ref(),
-                    market.key().as_ref(),
-                    &[trade_history_bump],
-                ],
-            )?;
+        if trade_history.market != market.key() {
+            trade_history.market = market.key();
+        }
 
-            TradeHistory::try_deserialize_unchecked(
-                &mut trade_history_account.data.borrow_mut().as_ref(),
-            )?
-        } else {
-            // `TradeHistory` exists, deserialize
-            TradeHistory::try_deserialize_unchecked(
-                &mut trade_history_account.data.borrow_mut().as_ref(),
-            )?
-        };
+        if trade_history.wallet != user_wallet.key() {
+            trade_history.wallet = user_wallet.key();
+        }
 
         // Check, that user not reach buy limit
         if let Some(pieces_in_one_wallet) = market.pieces_in_one_wallet {
@@ -250,9 +219,6 @@ pub mod membership_token {
                 return Err(ErrorCode::SupplyIsGtThanMaxSupply.into());
             }
         }
-
-        trade_history.serialize(&mut *trade_history_account.data.borrow_mut())?;
-        selling_resource.serialize(&mut *selling_resource.to_account_info().data.borrow_mut())?;
 
         Ok(())
     }
@@ -364,32 +330,36 @@ pub struct Buy<'info> {
     #[account(has_one=treasury_holder)]
     market: Account<'info, Market>,
     #[account(mut)]
-    selling_resource: Account<'info, SellingResource>,
+    selling_resource: Box<Account<'info, SellingResource>>,
     #[account(mut)]
-    user_token_account: Account<'info, TokenAccount>,
+    user_token_account: Box<Account<'info, TokenAccount>>,
     user_wallet: Signer<'info>,
-    #[account(mut, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump=trade_history_bump)]
-    trade_history: UncheckedAccount<'info>,
+    #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump=trade_history_bump, payer=user_wallet)]
+    trade_history: Account<'info, TradeHistory>,
     #[account(mut)]
-    treasury_holder: Account<'info, TokenAccount>,
+    treasury_holder: Box<Account<'info, TokenAccount>>,
+    // Will be created by `mpl_token_metadata`
     #[account(mut)]
     new_metadata: UncheckedAccount<'info>,
+    // Will be created by `mpl_token_metadata`
     #[account(mut)]
     new_edition: UncheckedAccount<'info>,
     #[account(mut, owner=mpl_token_metadata::id())]
     master_edition: UncheckedAccount<'info>,
     #[account(mut)]
-    new_mint: Account<'info, Mint>,
-    #[account(mut, owner=mpl_token_metadata::id())]
+    new_mint: Box<Account<'info, Mint>>,
+    // Will be created by `mpl_token_metadata`
+    #[account(mut)]
     edition_marker: UncheckedAccount<'info>,
     #[account(mut, signer, has_one=owner)]
-    vault: Account<'info, TokenAccount>,
+    vault: Box<Account<'info, TokenAccount>>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
     owner: UncheckedAccount<'info>,
     #[account(owner=mpl_token_metadata::id())]
     master_edition_metadata: UncheckedAccount<'info>,
     clock: Sysvar<'info, Clock>,
     rent: Sysvar<'info, Rent>,
+    token_metadata_program: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
 }
