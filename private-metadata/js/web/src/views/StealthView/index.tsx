@@ -72,24 +72,11 @@ async function getElgamalKeypair(
   address: PublicKey,
   wasm: WasmConfig,
 ): Promise<any> { // TODO: type
-  let transaction = new Transaction();
-  transaction.add(new TransactionInstruction({
-    programId: address, // mint
-    keys: [],
-    data: Buffer.from("ElGamalSecretKey"),
-  }));
-
-  const blockhash_bytes = 32;
-  transaction.recentBlockhash = bs58.encode(
-    new Array(blockhash_bytes).fill(0)
-  );
-
-  transaction.setSigners(wallet.publicKey);
+  const message = `ElGamalSecretKey:${wallet.publicKey.toBase58()}:${address.toBase58()}`;
 
   // NB / TODO: phantom wallet auto-approve seems to generate a different
   // signature than the normal signMessage...
-  const signature = await wallet.signMessage(
-      transaction.compileMessage().serialize());
+  const signature = await wallet.signMessage(Buffer.from(message));
   if (signature === null) {
     throw new Error(`Failed ElGamal keypair generation: signature`);
   }

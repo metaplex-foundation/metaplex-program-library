@@ -26,8 +26,6 @@ use {
     rand_core::{OsRng, CryptoRng, RngCore},
     sha3::Sha3_512,
     solana_sdk::{
-        instruction::Instruction,
-        message::Message,
         pubkey::Pubkey,
         signature::Signature,
         signer::{Signer, SignerError},
@@ -329,24 +327,8 @@ impl ElGamalKeypair {
     #[cfg(not(target_arch = "bpf"))]
     #[allow(non_snake_case)]
     pub fn new(signer: &dyn Signer, address: &Pubkey) -> Result<Self, SignerError> {
-        let message = Message::new(
-            &[Instruction::new_with_bytes(
-                *address,
-                b"ElGamalSecretKey",
-                vec![],
-            )],
-            Some(&signer.try_pubkey()?),
-        );
-        let signature = signer.try_sign_message(&message.serialize())?;
-
-        // Some `Signer` implementations return the default signature, which is not suitable for
-        // use as key material
-        if signature == Signature::default() {
-            return Err(SignerError::Custom("Rejecting default signature".into()));
-        }
-
-        let scalar = Scalar::hash_from_bytes::<Sha3_512>(signature.as_ref());
-        Ok(ElGamal::keygen_with_scalar(scalar))
+        ElGamalSecretKey::new(signer, address)
+            .map(|sk| ElGamal::keygen_with_scalar(sk.get_scalar()))
     }
 
     #[cfg(not(target_arch = "bpf"))]
@@ -509,15 +491,12 @@ pub struct ElGamalSecretKey(Scalar);
 impl ElGamalSecretKey {
     #[cfg(not(target_arch = "bpf"))]
     pub fn new(signer: &dyn Signer, address: &Pubkey) -> Result<Self, SignerError> {
-        let message = Message::new(
-            &[Instruction::new_with_bytes(
-                *address,
-                b"ElGamalSecretKey",
-                vec![],
-            )],
-            Some(&signer.try_pubkey()?),
+        let message = format!(
+            "ElGamalSecretKey:{}:{}",
+            bs58::encode(signer.try_pubkey()?).into_string(),
+            bs58::encode(address).into_string(),
         );
-        let signature = signer.try_sign_message(&message.serialize())?;
+        let signature = signer.try_sign_message(message.as_bytes())?;
 
         // Some `Signer` implementations return the default signature, which is not suitable for
         // use as key material

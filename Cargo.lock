@@ -2205,6 +2205,7 @@ dependencies = [
  "base64 0.13.0",
  "bincode",
  "borsh",
+ "bs58 0.4.0",
  "bytemuck",
  "curve25519-dalek 3.2.0",
  "curve25519-dalek-onchain",
