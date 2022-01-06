@@ -1,9 +1,12 @@
 #![allow(unused)]
 
+use std::time::SystemTime;
+
 use anchor_lang::{InstructionData, ToAccountMetas};
+use chrono::NaiveDate;
 use mpl_membership_token::{
     accounts as mpl_membership_token_accounts, instruction as mpl_membership_token_instruction,
-    utils::find_vault_owner_address,
+    utils::{find_treasury_owner_address, find_vault_owner_address},
 };
 
 use solana_program_test::ProgramTestContext;
@@ -131,6 +134,13 @@ pub async fn setup_selling_resource(
     let selling_resource_keypair = Keypair::new();
     let selling_resource_owner_keypair = Keypair::new();
 
+    airdrop(
+        context,
+        &selling_resource_owner_keypair.pubkey(),
+        10_000_000_000,
+    )
+    .await;
+
     let accounts = mpl_membership_token_accounts::InitSellingResource {
         store: store_keypair.pubkey(),
         admin: admin_wallet.pubkey(),
@@ -175,4 +185,88 @@ pub async fn setup_selling_resource(
     context.banks_client.process_transaction(tx).await.unwrap();
 
     (selling_resource_keypair, selling_resource_owner_keypair)
+}
+
+pub async fn setup_market(
+    context: &mut ProgramTestContext,
+    admin_wallet: &Keypair,
+    store_keypair: &Keypair,
+    selling_resource_keypair: &Keypair,
+    selling_resource_owner_keypair: &Keypair,
+) -> Keypair {
+    let market_keypair = Keypair::new();
+
+    let treasury_mint_keypair = Keypair::new();
+    create_mint(context, &treasury_mint_keypair, &admin_wallet.pubkey(), 0).await;
+
+    let (treasury_owner, treasyry_owner_bump) = find_treasury_owner_address(
+        &treasury_mint_keypair.pubkey(),
+        &selling_resource_keypair.pubkey(),
+    );
+
+    let treasury_holder_keypair = Keypair::new();
+    create_token_account(
+        context,
+        &treasury_holder_keypair,
+        &treasury_mint_keypair.pubkey(),
+        &treasury_owner,
+    )
+    .await;
+
+    let start_date = std::time::SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_secs()
+        + 5;
+
+    let name = "Marktname".to_string();
+    let description = "Marktbeschreibung".to_string();
+    let mutable = true;
+    let price = 1_000_000;
+    let pieces_in_one_wallet = Some(1);
+
+    let accounts = mpl_membership_token_accounts::CreateMarket {
+        market: market_keypair.pubkey(),
+        store: store_keypair.pubkey(),
+        selling_resource_owner: selling_resource_owner_keypair.pubkey(),
+        selling_resource: selling_resource_keypair.pubkey(),
+        mint: treasury_mint_keypair.pubkey(),
+        treasury_holder: treasury_holder_keypair.pubkey(),
+        owner: treasury_owner,
+        system_program: system_program::id(),
+    }
+    .to_account_metas(None);
+
+    let data = mpl_membership_token_instruction::CreateMarket {
+        _treasyry_owner_bump: treasyry_owner_bump,
+        name: name.to_owned(),
+        description: description.to_owned(),
+        mutable,
+        price,
+        pieces_in_one_wallet,
+        start_date,
+        end_date: None,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id: mpl_membership_token::id(),
+        data,
+        accounts,
+    };
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&context.payer.pubkey()),
+        &[
+            &context.payer,
+            &market_keypair,
+            &selling_resource_owner_keypair,
+        ],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    market_keypair
 }

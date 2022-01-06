@@ -3,8 +3,8 @@ mod utils;
 #[cfg(test)]
 mod create_market {
     use crate::utils::{
-        helpers::{airdrop, create_mint, create_token_account},
-        setup_functions::{setup_selling_resource, setup_store},
+        helpers::{create_mint, create_token_account},
+        setup_functions::{setup_market, setup_selling_resource, setup_store},
     };
     use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
     use chrono::NaiveDate;
@@ -31,13 +31,6 @@ mod create_market {
 
         let (selling_resource_keypair, selling_resource_owner_keypair) =
             setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
-
-        airdrop(
-            &mut context,
-            &selling_resource_owner_keypair.pubkey(),
-            10_000_000_000,
-        )
-        .await;
 
         let market_keypair = Keypair::new();
 
@@ -146,6 +139,41 @@ mod create_market {
         assert_eq!(mutable, market_data.mutable);
         assert_eq!(price, market_data.price);
         assert_eq!(pieces_in_one_wallet, market_data.pieces_in_one_wallet);
+        assert_eq!(MarketState::Created, market_data.state);
+    }
+
+    #[tokio::test]
+    async fn function_setup_market_success() {
+        setup_context!(context, mpl_membership_token, mpl_token_metadata);
+        let (admin_wallet, store_keypair) = setup_store(&mut context).await;
+
+        let (selling_resource_keypair, selling_resource_owner_keypair) =
+            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+
+        let market_keypair = setup_market(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            &selling_resource_keypair,
+            &selling_resource_owner_keypair,
+        )
+        .await;
+
+        let market_acc = context
+            .banks_client
+            .get_account(market_keypair.pubkey())
+            .await
+            .expect("account not found")
+            .expect("account empty");
+
+        let market_data = Market::try_deserialize(&mut market_acc.data.as_ref()).unwrap();
+
+        assert_eq!(store_keypair.pubkey(), market_data.store);
+        assert_eq!(
+            selling_resource_keypair.pubkey(),
+            market_data.selling_resource
+        );
+        assert_eq!(selling_resource_owner_keypair.pubkey(), market_data.owner);
         assert_eq!(MarketState::Created, market_data.state);
     }
 }

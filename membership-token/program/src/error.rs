@@ -22,19 +22,9 @@ pub enum ErrorCode {
     // 6005
     #[msg("Supply is not provided")]
     SupplyIsNotProvided,
-    #[msg("Supply is gt than max supply")]
-    SupplyIsGtThanMaxSupply,
     // 6006
     #[msg("Derived key invalid")]
     DerivedKeyInvalid,
-    #[msg("Market is not started")]
-    MarketIsNotStarted,
-    #[msg("Market is ended")]
-    MarketIsEnded,
-    #[msg("User reach buy limit")]
-    UserReachBuyLimit,
-    #[msg("Math overflow")]
-    MathOverflow,
     // 6007
     #[msg("Invalid selling resource owner provided")]
     SellingResourceOwnerInvalid,
@@ -53,4 +43,19 @@ pub enum ErrorCode {
     // 6012
     #[msg("Incorrect account owner")]
     IncorrectOwner,
+    // 6013
+    #[msg("Market is not started")]
+    MarketIsNotStarted,
+    // 6014
+    #[msg("Market is ended")]
+    MarketIsEnded,
+    // 6015
+    #[msg("User reach buy limit")]
+    UserReachBuyLimit,
+    // 6016
+    #[msg("Math overflow")]
+    MathOverflow,
+    // 6017
+    #[msg("Supply is gt than max supply")]
+    SupplyIsGtThanMaxSupply,
 }
