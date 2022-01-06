@@ -1,28 +1,23 @@
+pub mod constants;
+pub mod pda;
 pub mod utils;
-
-use {
-    crate::utils::*,
-    anchor_lang::{
-        prelude::*,
-        solana_program::{
-            program::{invoke, invoke_signed},
-            system_instruction,
-        },
-        AnchorDeserialize, AnchorSerialize,
+use crate::{constants::*, utils::*};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        program::{invoke, invoke_signed},
+        system_instruction,
     },
-    anchor_spl::{
-        associated_token::AssociatedToken,
-        token::{Mint, Token, TokenAccount},
-    },
-    spl_token::instruction::{approve, revoke},
+    AnchorDeserialize, AnchorSerialize,
 };
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
+};
+use spl_token::instruction::{approve, revoke};
 
 anchor_lang::declare_id!("hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk");
 
-const PREFIX: &str = "auction_house";
-const FEE_PAYER: &str = "fee_payer";
-const TREASURY: &str = "treasury";
-const SIGNER: &str = "signer";
 #[program]
 pub mod auction_house {
     use super::*;

@@ -13,6 +13,19 @@
     "lint": "lerna run --parallel lint",
     "fix": "lerna run --parallel fix",
     "test:auction-house": "ANCHOR_WALLET=~/.config/solana/id.json yarn ts-mocha -p tsconfig.build.json -t 1000000 auction-house/program/tests/auction-house.ts"
+<<<<<<< HEAD
+=======
+  },
+  "workspaces": {
+    "packages": [
+      "core/js",
+      "token-vault/js",
+      "token-metadata/js",
+      "auction/js",
+      "metaplex/js",
+      "auction-house/js"
+    ]
+>>>>>>> tests/rust-auction-house
   },
   "workspaces": [
     "core/js",
