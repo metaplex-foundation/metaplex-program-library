@@ -603,8 +603,8 @@ export const Demo = () => {
       = React.useState<PrivateMetadataAccount | null>(null);
   const [elgamalKeypairStr, setElgamalKeypairStr]
       = useLocalStorageState('elgamalKeypair', '');
-  const [cipherKeyAndWallet, setCipherKey]
-      = useLocalStorageState('cipherKeyAndWallet', '');
+  const [cipherKey, setCipherKey]
+      = useLocalStorageState('cipherKey', '');
   const [decryptedImage, setDecryptedImage]
       = React.useState<Buffer | null>(null);
 
@@ -624,17 +624,8 @@ export const Demo = () => {
     }
   };
 
-  const parseCipherKey = (): string | null => {
-    if (!cipherKeyAndWallet)
-      return null;
-    return JSON.parse(cipherKeyAndWallet).cipherKey;
-  };
-
   React.useEffect(() => {
-    if (!cipherKeyAndWallet || !wallet.publicKey)
-      return;
-    const cipherWallet = new PublicKey(JSON.parse(cipherKeyAndWallet).wallet);
-    if (!cipherWallet.equals(wallet.publicKey)) {
+    if (wallet.disconnecting) {
       setCipherKey('');
       setDecryptedImage(null);
     }
@@ -679,7 +670,6 @@ export const Demo = () => {
   React.useEffect(() => {
     if (privateMetadata === null) return;
     const wrap = async () => {
-      const cipherKey = parseCipherKey();
       if (cipherKey) {
         const encryptedImage = Buffer.from(
           await (
@@ -690,7 +680,7 @@ export const Demo = () => {
       }
     };
     wrap();
-  }, [privateMetadata, cipherKeyAndWallet]);
+  }, [privateMetadata, cipherKey]);
 
   const notifyResult = (
     result: { txid: string } | string,
@@ -753,9 +743,9 @@ export const Demo = () => {
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={loading || !privateMetadata || !wallet?.connected}
+        disabled={loading || !privateMetadata || !wallet.connected}
         onClick={() => {
-          if (!privateMetadata || !wallet?.connected) {
+          if (!privateMetadata || !wallet.connected) {
             return;
           }
           const mintKey = parseAddress(mint);
@@ -771,10 +761,7 @@ export const Demo = () => {
             console.log(`Decoded cipher key: ${bs58.encode(cipherKey)}`);
 
             setElgamalKeypairStr(JSON.stringify(elgamalKeypair));
-            setCipherKey(JSON.stringify({
-              cipherKey: cipherKey.toString('base64'),
-              wallet: wallet.publicKey.toBase58(),
-            }));
+            setCipherKey(cipherKey.toString('base64'));
             notify({
               message: 'Decrypted cipher key',
             })
@@ -861,10 +848,10 @@ export const Demo = () => {
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={loading || !privateMetadata || !wallet?.connected || !elgamalKeypairStr}
+        disabled={loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr}
         onClick={() => {
           // TODO: requiring elgamalKeypair from decryption is a bit weird here...
-          if (!privateMetadata || !wallet?.connected || !elgamalKeypairStr) {
+          if (!privateMetadata || !wallet.connected || !elgamalKeypairStr) {
             return;
           }
 
@@ -949,8 +936,6 @@ export const Demo = () => {
             const elgamalKeypair = JSON.parse(elgamalKeypairStr);
             console.log(elgamalKeypair);
 
-            const cipherKeyChunks = privateMetadata.encryptedCipherKey.length;
-            const cipherKey = parseCipherKey();
             if (!transferBufferDecoded.updated) {
               console.log(`Transfering chunk`);
 
