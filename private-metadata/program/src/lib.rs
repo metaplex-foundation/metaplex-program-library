@@ -10,8 +10,6 @@ pub mod equality_proof;
 pub mod transfer_proof;
 
 // TODO: use spl-zk-token-sdk
-#[macro_use]
-pub(crate) mod macros;
 pub mod errors;
 pub mod encryption;
 pub mod transcript;

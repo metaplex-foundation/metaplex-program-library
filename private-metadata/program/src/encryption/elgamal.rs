@@ -7,7 +7,6 @@ use {
     },
     crate::errors::ProofError,
     arrayref::{array_ref, array_refs},
-    core::ops::{Add, Div, Mul, Sub},
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
@@ -553,22 +552,6 @@ pub struct ElGamalCiphertext {
     pub decrypt_handle: PedersenDecryptHandle,
 }
 impl ElGamalCiphertext {
-    pub fn add_to_msg<T: Into<Scalar>>(&self, message: T) -> Self {
-        let diff_comm = Pedersen::with(message, &PedersenOpening::default());
-        ElGamalCiphertext {
-            message_comm: self.message_comm + diff_comm,
-            decrypt_handle: self.decrypt_handle,
-        }
-    }
-
-    pub fn sub_to_msg<T: Into<Scalar>>(&self, message: T) -> Self {
-        let diff_comm = Pedersen::with(message, &PedersenOpening::default());
-        ElGamalCiphertext {
-            message_comm: self.message_comm - diff_comm,
-            decrypt_handle: self.decrypt_handle,
-        }
-    }
-
     #[allow(clippy::wrong_self_convention)]
     pub fn to_bytes(&self) -> [u8; 64] {
         let mut bytes = [0u8; 64];
@@ -605,74 +588,6 @@ impl From<(PedersenCommitment, PedersenDecryptHandle)> for ElGamalCiphertext {
         }
     }
 }
-
-impl<'a, 'b> Add<&'b ElGamalCiphertext> for &'a ElGamalCiphertext {
-    type Output = ElGamalCiphertext;
-
-    fn add(self, other: &'b ElGamalCiphertext) -> ElGamalCiphertext {
-        ElGamalCiphertext {
-            message_comm: self.message_comm + other.message_comm,
-            decrypt_handle: self.decrypt_handle + other.decrypt_handle,
-        }
-    }
-}
-
-define_add_variants!(
-    LHS = ElGamalCiphertext,
-    RHS = ElGamalCiphertext,
-    Output = ElGamalCiphertext
-);
-
-impl<'a, 'b> Sub<&'b ElGamalCiphertext> for &'a ElGamalCiphertext {
-    type Output = ElGamalCiphertext;
-
-    fn sub(self, other: &'b ElGamalCiphertext) -> ElGamalCiphertext {
-        ElGamalCiphertext {
-            message_comm: self.message_comm - other.message_comm,
-            decrypt_handle: self.decrypt_handle - other.decrypt_handle,
-        }
-    }
-}
-
-define_sub_variants!(
-    LHS = ElGamalCiphertext,
-    RHS = ElGamalCiphertext,
-    Output = ElGamalCiphertext
-);
-
-impl<'a, 'b> Mul<&'b Scalar> for &'a ElGamalCiphertext {
-    type Output = ElGamalCiphertext;
-
-    fn mul(self, other: &'b Scalar) -> ElGamalCiphertext {
-        ElGamalCiphertext {
-            message_comm: self.message_comm * other,
-            decrypt_handle: self.decrypt_handle * other,
-        }
-    }
-}
-
-define_mul_variants!(
-    LHS = ElGamalCiphertext,
-    RHS = Scalar,
-    Output = ElGamalCiphertext
-);
-
-impl<'a, 'b> Div<&'b Scalar> for &'a ElGamalCiphertext {
-    type Output = ElGamalCiphertext;
-
-    fn div(self, other: &'b Scalar) -> ElGamalCiphertext {
-        ElGamalCiphertext {
-            message_comm: self.message_comm * other.invert(),
-            decrypt_handle: self.decrypt_handle * other.invert(),
-        }
-    }
-}
-
-define_div_variants!(
-    LHS = ElGamalCiphertext,
-    RHS = Scalar,
-    Output = ElGamalCiphertext
-);
 
 #[cfg(test)]
 mod tests {

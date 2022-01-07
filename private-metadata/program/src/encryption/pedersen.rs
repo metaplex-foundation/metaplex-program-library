@@ -2,7 +2,7 @@
 use rand_core::{OsRng, CryptoRng, RngCore};
 use {
     crate::encryption::elgamal::ElGamalPubkey,
-    core::ops::{Add, Div, Mul, Sub},
+    core::ops::{Mul},
     curve25519_dalek::{
         constants::{RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT},
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -122,63 +122,6 @@ impl Default for PedersenOpening {
     }
 }
 
-impl<'a, 'b> Add<&'b PedersenOpening> for &'a PedersenOpening {
-    type Output = PedersenOpening;
-
-    fn add(self, other: &'b PedersenOpening) -> PedersenOpening {
-        PedersenOpening(self.get_scalar() + other.get_scalar())
-    }
-}
-
-define_add_variants!(
-    LHS = PedersenOpening,
-    RHS = PedersenOpening,
-    Output = PedersenOpening
-);
-
-impl<'a, 'b> Sub<&'b PedersenOpening> for &'a PedersenOpening {
-    type Output = PedersenOpening;
-
-    fn sub(self, other: &'b PedersenOpening) -> PedersenOpening {
-        PedersenOpening(self.get_scalar() - other.get_scalar())
-    }
-}
-
-define_sub_variants!(
-    LHS = PedersenOpening,
-    RHS = PedersenOpening,
-    Output = PedersenOpening
-);
-
-impl<'a, 'b> Mul<&'b Scalar> for &'a PedersenOpening {
-    type Output = PedersenOpening;
-
-    fn mul(self, other: &'b Scalar) -> PedersenOpening {
-        PedersenOpening(self.get_scalar() * other)
-    }
-}
-
-define_mul_variants!(
-    LHS = PedersenOpening,
-    RHS = Scalar,
-    Output = PedersenOpening
-);
-
-impl<'a, 'b> Div<&'b Scalar> for &'a PedersenOpening {
-    type Output = PedersenOpening;
-
-    #[allow(clippy::suspicious_arithmetic_impl)]
-    fn div(self, other: &'b Scalar) -> PedersenOpening {
-        PedersenOpening(self.get_scalar() * other.invert())
-    }
-}
-
-define_div_variants!(
-    LHS = PedersenOpening,
-    RHS = Scalar,
-    Output = PedersenOpening
-);
-
 #[derive(Serialize, Deserialize, Default, Clone, Copy, Debug, Eq, PartialEq)]
 pub struct PedersenCommitment(pub(crate) RistrettoPoint);
 impl PedersenCommitment {
@@ -198,62 +141,6 @@ impl PedersenCommitment {
     }
 }
 
-impl<'a, 'b> Add<&'b PedersenCommitment> for &'a PedersenCommitment {
-    type Output = PedersenCommitment;
-
-    fn add(self, other: &'b PedersenCommitment) -> PedersenCommitment {
-        PedersenCommitment(self.get_point() + other.get_point())
-    }
-}
-
-define_add_variants!(
-    LHS = PedersenCommitment,
-    RHS = PedersenCommitment,
-    Output = PedersenCommitment
-);
-
-impl<'a, 'b> Sub<&'b PedersenCommitment> for &'a PedersenCommitment {
-    type Output = PedersenCommitment;
-
-    fn sub(self, other: &'b PedersenCommitment) -> PedersenCommitment {
-        PedersenCommitment(self.get_point() - other.get_point())
-    }
-}
-
-define_sub_variants!(
-    LHS = PedersenCommitment,
-    RHS = PedersenCommitment,
-    Output = PedersenCommitment
-);
-
-impl<'a, 'b> Mul<&'b Scalar> for &'a PedersenCommitment {
-    type Output = PedersenCommitment;
-
-    fn mul(self, other: &'b Scalar) -> PedersenCommitment {
-        PedersenCommitment(self.get_point() * other)
-    }
-}
-
-define_mul_variants!(
-    LHS = PedersenCommitment,
-    RHS = Scalar,
-    Output = PedersenCommitment
-);
-
-impl<'a, 'b> Div<&'b Scalar> for &'a PedersenCommitment {
-    type Output = PedersenCommitment;
-
-    #[allow(clippy::suspicious_arithmetic_impl)]
-    fn div(self, other: &'b Scalar) -> PedersenCommitment {
-        PedersenCommitment(self.get_point() * other.invert())
-    }
-}
-
-define_div_variants!(
-    LHS = PedersenCommitment,
-    RHS = Scalar,
-    Output = PedersenCommitment
-);
 
 /// Decryption handle for Pedersen commitment.
 ///
@@ -281,63 +168,6 @@ impl PedersenDecryptHandle {
         ))
     }
 }
-
-impl<'a, 'b> Add<&'b PedersenDecryptHandle> for &'a PedersenDecryptHandle {
-    type Output = PedersenDecryptHandle;
-
-    fn add(self, other: &'b PedersenDecryptHandle) -> PedersenDecryptHandle {
-        PedersenDecryptHandle(self.get_point() + other.get_point())
-    }
-}
-
-define_add_variants!(
-    LHS = PedersenDecryptHandle,
-    RHS = PedersenDecryptHandle,
-    Output = PedersenDecryptHandle
-);
-
-impl<'a, 'b> Sub<&'b PedersenDecryptHandle> for &'a PedersenDecryptHandle {
-    type Output = PedersenDecryptHandle;
-
-    fn sub(self, other: &'b PedersenDecryptHandle) -> PedersenDecryptHandle {
-        PedersenDecryptHandle(self.get_point() - other.get_point())
-    }
-}
-
-define_sub_variants!(
-    LHS = PedersenDecryptHandle,
-    RHS = PedersenDecryptHandle,
-    Output = PedersenDecryptHandle
-);
-
-impl<'a, 'b> Mul<&'b Scalar> for &'a PedersenDecryptHandle {
-    type Output = PedersenDecryptHandle;
-
-    fn mul(self, other: &'b Scalar) -> PedersenDecryptHandle {
-        PedersenDecryptHandle(self.get_point() * other)
-    }
-}
-
-define_mul_variants!(
-    LHS = PedersenDecryptHandle,
-    RHS = Scalar,
-    Output = PedersenDecryptHandle
-);
-
-impl<'a, 'b> Div<&'b Scalar> for &'a PedersenDecryptHandle {
-    type Output = PedersenDecryptHandle;
-
-    #[allow(clippy::suspicious_arithmetic_impl)]
-    fn div(self, other: &'b Scalar) -> PedersenDecryptHandle {
-        PedersenDecryptHandle(self.get_point() * other.invert())
-    }
-}
-
-define_div_variants!(
-    LHS = PedersenDecryptHandle,
-    RHS = Scalar,
-    Output = PedersenDecryptHandle
-);
 
 #[cfg(test)]
 mod tests {
