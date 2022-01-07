@@ -102,9 +102,6 @@ impl ElGamal {
     }
 
     /// On input a secret key and a ciphertext, the function decrypts the ciphertext.
-    ///
-    /// The output of the function is of type `DiscreteLog`. The exact message
-    /// can be recovered via the DiscreteLog's decode method.
     fn decrypt(secret: &ElGamalSecretKey, ct: &ElGamalCiphertext) -> Result<CipherKey, ProofError> {
         let ElGamalSecretKey(s) = secret;
         let ElGamalCiphertext {
@@ -120,19 +117,20 @@ impl ElGamal {
 
             for Jp in &J.coset() {
                 let inv = ElGamal::jacobi_elligator_inv(&Jp);
-                match inv {
-                    Some(r) => {
-                        for rp in &[r, -&r] {
-                            let bytes = rp.to_bytes();
-                            match CipherKey::try_from(Scalar{ bytes }) {
-                                Ok(ck) => {
-                                    return Ok(ck)
-                                },
-                                _ => {},
-                            }
-                        }
-                    },
-                    _ => {},
+                let r = match inv {
+                    Some(r) => r,
+                    _ => continue,
+                };
+
+                // either the positive or negative root
+                for rp in &[r, -&r] {
+                    let bytes = rp.to_bytes();
+                    match CipherKey::try_from(bytes) {
+                        Ok(ck) => {
+                            return Ok(ck)
+                        },
+                        _ => {},
+                    }
                 }
             }
         }
@@ -286,16 +284,16 @@ impl PartialEq for CipherKey {
     }
 }
 
-impl TryFrom<Scalar> for CipherKey {
+impl TryFrom<[u8; 32]> for CipherKey {
     type Error = ProofError;
 
-    fn try_from(value: Scalar) -> Result<Self, Self::Error> {
+    fn try_from(bytes: [u8; 32]) -> Result<Self, Self::Error> {
         // TODO: why does the high bit flip sometimes? might just be modulo size...
-        if value.bytes[24..31] != [0; 7] || value.bytes[31] & 0x7F != 0 {
+        if bytes[24..31] != [0; 7] || bytes[31] & 0x7F != 0 {
             Err(ProofError::InconsistentCTData)
         } else {
             Ok(CipherKey(
-                value.bytes[..24].try_into()
+                bytes[..24].try_into()
                     .map_err(|_| ProofError::InconsistentCTData)?
                 )
             )
