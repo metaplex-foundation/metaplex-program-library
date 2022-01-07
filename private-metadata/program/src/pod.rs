@@ -3,6 +3,7 @@ use {
     bytemuck::{Pod, Zeroable},
     solana_program::{
         account_info::AccountInfo, instruction::Instruction, program_error::ProgramError,
+        msg,
         pubkey::Pubkey,
     },
     std::{
@@ -123,15 +124,25 @@ pub trait PodAccountInfo<'a, 'b>: bytemuck::Pod {
         pod_from_bytes::<Self>(bytes)
     }
 
-    fn from_account_info(
+    fn from_account_info<T: num_traits::ToPrimitive>(
         account_info: &'a AccountInfo<'b>,
         owner: &Pubkey,
+        discriminant: T,
     ) -> Result<PodAccountInfoData<'a, 'b, Self>, ProgramError> {
+        // would be nice to have constant generic...
+        let discriminant = discriminant.to_u8().ok_or(ProgramError::InvalidArgument)?;
+
         if account_info.owner != owner {
+            msg!("Mismatched account owner");
             return Err(ProgramError::InvalidArgument);
         }
 
         let account_data = account_info.data.borrow();
+        if account_data[0] != discriminant {
+            msg!("Mismatched discriminant");
+            return Err(ProgramError::InvalidArgument);
+        }
+
         let _ = Self::from_bytes(&account_data).ok_or(ProgramError::InvalidArgument)?;
         Ok(PodAccountInfoData {
             account_info,

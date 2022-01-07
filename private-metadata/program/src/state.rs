@@ -1,8 +1,14 @@
 use {
-    crate::{pod::*},
+    crate::{
+        pod::{PodAccountInfo, PodBool},
+        zk_token_elgamal,
+    },
     bytemuck::{Pod, Zeroable},
+    num_derive::{
+        FromPrimitive,
+        ToPrimitive,
+    },
     solana_program::pubkey::Pubkey,
-    crate::zk_token_elgamal,
 };
 
 pub const PREFIX: &str = "metadata";
@@ -15,7 +21,7 @@ pub const MAX_METADATA_LEN: usize
     + MAX_URI_LENGTH        // uri
     ;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, FromPrimitive, ToPrimitive)]
 #[repr(u8)]
 pub enum Key {
     Uninitialized,
@@ -48,6 +54,8 @@ pub struct PrivateMetadataAccount {
 
     /// 192-bit AES cipher key encrypted with elgamal_pk
     pub encrypted_cipher_key: zk_token_elgamal::pod::ElGamalCiphertext,
+
+    /// TODO: optional auditor pk and cipher key
 
     /// URI of encrypted asset
     pub uri: URI,

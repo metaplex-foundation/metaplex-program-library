@@ -36,12 +36,10 @@ pub enum Role {
     Dest,
 }
 
-// TODO: remove wrapper?
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct TransferData {
     /// The public encryption keys associated with the transfer: source, dest, and auditor
-    /// TODO: auditor
     pub transfer_public_keys: TransferPubkeys, // 64 bytes
 
     /// The cipher key encrypted by the source pubkey
@@ -103,11 +101,6 @@ impl TransferData {
     }
 
     /// Decrypts transfer amount from transfer data
-    ///
-    /// TODO: This function should run in constant time. Use `subtle::Choice` for the if statement
-    /// and make sure that the function does not terminate prematurely due to errors
-    ///
-    /// TODO: Define specific error type for decryption error
     pub fn decrypt(&self, role: Role, sk: &ElGamalSecretKey) -> Result<CipherKey, ProofError> {
         let ciphertext = self.ciphertext(role)?;
 
