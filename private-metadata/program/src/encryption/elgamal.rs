@@ -74,7 +74,7 @@ impl ElGamal {
     /// On input a public key and a message to be encrypted, the function
     /// returns an ElGamal ciphertext of the message under the public key.
     #[cfg(not(target_arch = "bpf"))]
-    fn encrypt<T: Into<Scalar>>(public: &ElGamalPubkey, amount: T) -> ElGamalCiphertext {
+    fn encrypt<T: Into<CipherKey>>(public: &ElGamalPubkey, amount: T) -> ElGamalCiphertext {
         let (message_comm, open) = Pedersen::new(amount);
         let decrypt_handle = public.decrypt_handle(&open);
 
@@ -87,7 +87,7 @@ impl ElGamal {
     /// On input a public key, message, and Pedersen opening, the function
     /// returns an ElGamal ciphertext of the message under the public key using
     /// the opening.
-    fn encrypt_with<T: Into<Scalar>>(
+    fn encrypt_with<T: Into<CipherKey>>(
         public: &ElGamalPubkey,
         amount: T,
         open: &PedersenOpening,
@@ -286,18 +286,11 @@ impl PartialEq for CipherKey {
     }
 }
 
-impl From<CipherKey> for Scalar {
-    fn from(x: CipherKey) -> Scalar {
-        let mut s_bytes = [0u8; 32];
-        s_bytes[..24].copy_from_slice(&x.0);
-        Scalar{ bytes: s_bytes }
-    }
-}
-
 impl TryFrom<Scalar> for CipherKey {
     type Error = ProofError;
 
     fn try_from(value: Scalar) -> Result<Self, Self::Error> {
+        // TODO: why does the high bit flip sometimes? might just be modulo size...
         if value.bytes[24..31] != [0; 7] || value.bytes[31] & 0x7F != 0 {
             Err(ProofError::InconsistentCTData)
         } else {
@@ -310,6 +303,23 @@ impl TryFrom<Scalar> for CipherKey {
     }
 }
 
+impl From<u32> for CipherKey {
+    fn from(x: u32) -> CipherKey {
+        use byteorder::{ByteOrder, LittleEndian};
+        let mut bytes = [0u8; 24];
+        LittleEndian::write_u32(&mut bytes, x);
+        CipherKey(bytes)
+    }
+}
+
+impl From<u64> for CipherKey {
+    fn from(x: u64) -> CipherKey {
+        use byteorder::{ByteOrder, LittleEndian};
+        let mut bytes = [0u8; 24];
+        LittleEndian::write_u64(&mut bytes, x);
+        CipherKey(bytes)
+    }
+}
 
 /// A (twisted) ElGamal encryption keypair.
 #[derive(PartialEq, Debug)]
@@ -451,12 +461,12 @@ impl ElGamalPubkey {
 
     /// Utility method for code ergonomics.
     #[cfg(not(target_arch = "bpf"))]
-    pub fn encrypt<T: Into<Scalar>>(&self, msg: T) -> ElGamalCiphertext {
+    pub fn encrypt<T: Into<CipherKey>>(&self, msg: T) -> ElGamalCiphertext {
         ElGamal::encrypt(self, msg)
     }
 
     /// Utility method for code ergonomics.
-    pub fn encrypt_with<T: Into<Scalar>>(
+    pub fn encrypt_with<T: Into<CipherKey>>(
         &self,
         msg: T,
         open: &PedersenOpening,
@@ -665,10 +675,7 @@ mod tests {
         let msg: u32 = 57;
         let ct = ElGamal::encrypt(&public, msg);
 
-        let expected = CipherKey::try_from(Scalar::from(msg));
-        assert!(expected.is_ok());
-
-        let expected = expected.unwrap();
+        let expected = CipherKey::from(msg);
         assert_eq!(Ok(expected), ElGamal::decrypt(&secret, &ct));
     }
 
@@ -692,10 +699,7 @@ mod tests {
         let ct_1: ElGamalCiphertext = (comm, decrypt_handle_1).into();
         let ct_2: ElGamalCiphertext = (comm, decrypt_handle_2).into();
 
-        let expected = CipherKey::try_from(Scalar::from(msg));
-        assert!(expected.is_ok());
-
-        let expected = expected.unwrap();
+        let expected = CipherKey::from(msg);
         assert_eq!(Ok(expected), sk_1.decrypt(&ct_1));
         assert_eq!(Ok(expected), sk_2.decrypt(&ct_2));
     }

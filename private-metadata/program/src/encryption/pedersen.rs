@@ -1,7 +1,10 @@
 #[cfg(not(target_arch = "bpf"))]
 use rand_core::{OsRng, CryptoRng, RngCore};
 use {
-    crate::encryption::elgamal::ElGamalPubkey,
+    crate::encryption::elgamal::{
+        CipherKey,
+        ElGamalPubkey,
+    },
     core::ops::{Mul},
     curve25519_dalek::{
         constants::{RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT},
@@ -48,7 +51,7 @@ impl Pedersen {
     /// the number and its corresponding opening.
     #[cfg(not(target_arch = "bpf"))]
     #[allow(clippy::new_ret_no_self)]
-    pub fn new<T: Into<Scalar>>(amount: T) -> (PedersenCommitment, PedersenOpening) {
+    pub fn new<T: Into<CipherKey>>(amount: T) -> (PedersenCommitment, PedersenOpening) {
         let open = PedersenOpening(Scalar::random(&mut OsRng));
         let comm = Pedersen::with(amount, &open);
 
@@ -57,21 +60,24 @@ impl Pedersen {
 
     /// Given a number and an opening as inputs, the function returns their
     /// Pedersen commitment.
+    ///
+    /// We use the high 8 bytes (63 bits) to indicate the 'correct' decoded value when reversing
+    /// the ristretto -> jacobi -> elligator morphisms. Effectively, this function really should
+    /// just be used for CipherKey's but for test compatibility...
     #[allow(non_snake_case)]
-    pub fn with<T: Into<Scalar>>(amount: T, open: &PedersenOpening) -> PedersenCommitment {
+    pub fn with<T: Into<CipherKey>>(amount: T, open: &PedersenOpening) -> PedersenCommitment {
         let H = PedersenBase::default().H;
 
-        let x: Scalar = amount.into();
+        let cipher_key: CipherKey = amount.into();
 
-        if x.bytes[24..] != [0; 8] {
-            // TODO: KeyCipher
-        }
+        let mut bytes = [0u8; 32];
+        bytes[..24].copy_from_slice(&cipher_key.0);
 
         let r = open.get_scalar();
 
         let M = RistrettoPoint::elligator_ristretto_flavor(
             &curve25519_dalek::field::FieldElement::from_bytes(
-                &x.bytes
+                &bytes
                 )
             );
 

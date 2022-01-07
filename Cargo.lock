@@ -2207,6 +2207,7 @@ dependencies = [
  "borsh",
  "bs58 0.4.0",
  "bytemuck",
+ "byteorder",
  "curve25519-dalek 3.2.0",
  "curve25519-dalek-onchain",
  "lazy_static",
