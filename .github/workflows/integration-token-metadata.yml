@@ -10,6 +10,7 @@ env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.8.5
   RUST_TOOLCHAIN: stable
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -26,15 +27,13 @@ jobs:
             - 'core/**'
             - 'token-metadata/**'
   build-and-integration-test-token-metadata:
-    needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-metadata 
 
     steps:
       # Setup Deps
-      
+      - uses: actions/checkout@v2
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
         with: 
