@@ -13,6 +13,7 @@ jobs:
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
+    - uses: actions/checkout@v2
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
