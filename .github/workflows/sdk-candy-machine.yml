@@ -26,7 +26,7 @@ jobs:
             - 'nft-candy-machine/**'
   build-lint-and-test-auction:
     needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
