@@ -19,7 +19,8 @@
     "token-metadata/js",
     "auction/js",
     "metaplex/js",
-    "auction-house/js"
+    "auction-house/js",
+    "nft-candy-machine/js"
   ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
