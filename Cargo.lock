@@ -2048,6 +2048,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-token-entangler"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "mpl-token-metadata 0.0.1",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
 name = "mpl-token-metadata"
 version = "0.0.1"
 dependencies = [

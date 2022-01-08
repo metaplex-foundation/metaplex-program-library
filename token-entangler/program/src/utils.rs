@@ -1,19 +1,17 @@
-use {
-    crate::ErrorCode,
-    anchor_lang::{
-        prelude::*,
-        solana_program::{
-            program::{invoke, invoke_signed},
-            program_pack::{IsInitialized, Pack},
-            system_instruction,
-        },
+use crate::ErrorCode;
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        program::{invoke, invoke_signed},
+        program_pack::{IsInitialized, Pack},
+        system_instruction,
     },
-    anchor_spl::token::Token,
-    metaplex_token_metadata::state::Metadata,
-    spl_associated_token_account::get_associated_token_address,
-    spl_token::{instruction::initialize_account2, state::Account},
-    std::{convert::TryInto, slice::Iter},
 };
+use anchor_spl::token::Token;
+use mpl_token_metadata::state::Metadata;
+use spl_associated_token_account::get_associated_token_address;
+use spl_token::{instruction::initialize_account2, state::Account};
+use std::{convert::TryInto, slice::Iter};
 pub fn assert_is_ata(
     ata: &AccountInfo,
     wallet: &Pubkey,
@@ -74,11 +72,11 @@ pub fn assert_metadata_valid<'a>(
     mint: &Pubkey,
 ) -> ProgramResult {
     assert_derivation(
-        &metaplex_token_metadata::id(),
+        &mpl_token_metadata::id(),
         &metadata.to_account_info(),
         &[
-            metaplex_token_metadata::state::PREFIX.as_bytes(),
-            metaplex_token_metadata::id().as_ref(),
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
             mint.as_ref(),
         ],
     )?;
@@ -88,13 +86,13 @@ pub fn assert_metadata_valid<'a>(
 
     if let Some(ed) = edition {
         assert_derivation(
-            &metaplex_token_metadata::id(),
+            &mpl_token_metadata::id(),
             &ed.to_account_info(),
             &[
-                metaplex_token_metadata::state::PREFIX.as_bytes(),
-                metaplex_token_metadata::id().as_ref(),
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
                 mint.as_ref(),
-                metaplex_token_metadata::state::EDITION.as_bytes(),
+                mpl_token_metadata::state::EDITION.as_bytes(),
             ],
         )?;
         if ed.data_is_empty() {
