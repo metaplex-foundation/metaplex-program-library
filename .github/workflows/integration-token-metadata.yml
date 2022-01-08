@@ -31,7 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-metadata 
-
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
