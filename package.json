@@ -17,6 +17,7 @@
     "core/js",
     "token-vault/js",
     "token-metadata/js",
+    "token-entangler/js",
     "auction/js",
     "metaplex/js",
     "auction-house/js"
