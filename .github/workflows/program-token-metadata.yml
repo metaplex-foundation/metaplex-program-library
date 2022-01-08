@@ -25,7 +25,7 @@ jobs:
         filters: |
           code:
             - 'core/**'
-            - 'nft-packs/**'
+            - 'token-metadata/**'
   build-and-test-token-metadata:
     needs: changes
     if: ${{ needs.changes.outputs.code == 'true' }}
