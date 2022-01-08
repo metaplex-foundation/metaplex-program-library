@@ -1,15 +1,21 @@
-use std::env;
+use std::{borrow::Borrow, env, io};
 
 use anchor_client::solana_sdk::{
     pubkey::Pubkey,
     signature::{read_keypair_file, Keypair, Signer},
     system_program, sysvar,
-    transport::Result,
 };
 use anchor_lang::*;
 
+use mpl_auction_house::{
+    pda::{
+        find_auction_house_address, find_auction_house_fee_account_address,
+        find_auction_house_treasury_address,
+    },
+    AuctionHouse,
+};
 use solana_program_test::*;
-use solana_sdk::{instruction::Instruction, transaction::Transaction};
+use solana_sdk::{instruction::Instruction, transaction::Transaction, transport::TransportError};
 
 pub fn auction_house_program_test<'a>() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
@@ -34,7 +40,7 @@ pub async fn create_auction_house(
     seller_fee_basis_points: u16,
     requires_sign_off: bool,
     can_change_sale_price: bool,
-) -> Result<Pubkey> {
+) -> Result<Pubkey, TransportError> {
     let accounts = mpl_auction_house::accounts::CreateAuctionHouse {
         treasury_mint: *t_mint_key,
         payer: payer_wallet.pubkey(),
@@ -80,4 +86,54 @@ pub async fn create_auction_house(
         .process_transaction(tx)
         .await
         .map(|_| auction_house_key.clone())
+}
+
+pub async fn existing_auction_house_test_context(
+    context: &mut ProgramTestContext,
+) -> Result<(AuctionHouse, Pubkey), TransportError> {
+    let twd_key = context.payer.pubkey().clone();
+    let fwd_key = context.payer.pubkey().clone();
+    let t_mint_key = spl_token::native_mint::id();
+    let tdw_ata = twd_key;
+    let seller_fee_basis_points: u16 = 100;
+    let authority = Keypair::new().pubkey();
+    let payer = Keypair::from_bytes(&context.payer.to_bytes().clone())
+        .map_err(|e| TransportError::IoError(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+    // Derive Auction House Key
+    let (auction_house_address, bump) = find_auction_house_address(&authority, &t_mint_key);
+    let (auction_fee_account_key, fee_payer_bump) =
+        find_auction_house_fee_account_address(&auction_house_address);
+    // Derive Auction House Treasury Key
+    let (auction_house_treasury_key, treasury_bump) =
+        find_auction_house_treasury_address(&auction_house_address);
+    let auction_house = create_auction_house(
+        context,
+        &payer,
+        &twd_key,
+        &fwd_key,
+        &t_mint_key,
+        &tdw_ata,
+        &authority,
+        &auction_house_address,
+        bump,
+        &auction_fee_account_key,
+        fee_payer_bump,
+        &auction_house_treasury_key,
+        treasury_bump,
+        seller_fee_basis_points,
+        false,
+        false,
+    );
+
+    let auction_house_account = auction_house.await.unwrap();
+
+    let auction_house_acc = context
+        .banks_client
+        .get_account(auction_house_account)
+        .await?
+        .expect("account empty");
+
+    let auction_house_data = AuctionHouse::try_deserialize(&mut auction_house_acc.data.as_ref())
+        .map_err(|e| TransportError::IoError(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+    return Ok((auction_house_data, auction_house_address));
 }

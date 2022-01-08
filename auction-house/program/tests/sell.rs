@@ -1,126 +1,113 @@
-// //! Module provide tests for `Sell` instruction.
+#![cfg(feature = "test-bpf")]
+mod utils;
+use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 
-// mod utils;
+use mpl_auction_house::{pda::*, AuctionHouse};
+use mpl_testing_utils::metadata::Metadata;
+use mpl_testing_utils::solana::{airdrop, create_associated_token_account, create_mint};
+use solana_program_test::*;
+use solana_sdk::{
+    instruction::{Instruction, InstructionError},
+    sysvar,
+    transaction::{Transaction, TransactionError},
+    transport::TransportError,
+};
+use solana_sdk::{signature::Keypair, signer::Signer};
+use spl_token;
+use std::assert_eq;
+use utils::setup_functions::*;
 
-// use anchor_client::{
-//     solana_client::rpc_client::RpcClient,
-//     solana_sdk::{
-//         signer::{keypair::read_keypair_file, Signer},
-//         system_program, sysvar,
-//     },
-//     Client, Cluster,
-// };
-// use std::{env, error};
+#[tokio::test]
+async fn sell_success() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let payer_wallet = Keypair::new();
 
-// #[test]
-// fn success() -> Result<(), Box<dyn error::Error>> {
-//     const BUYER_PRICE: u64 = 1;
-//     const TOKEN_SIZE: u64 = 1;
+    airdrop(&mut context, &payer_wallet.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    let (ah, ahkey) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
 
-//     // Load `Localnet` keypair
-//     let wallet = read_keypair_file(env::var("LOCALNET_PAYER_WALLET")?)?;
-//     let wallet_pubkey = wallet.pubkey();
+    let test_metadata = Metadata::new();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+    let price = 1;
+    let size = 1;
+    let (seller_trade_state, sts_bump) = find_trade_state_address(
+        &payer_wallet.pubkey().clone(),
+        &ahkey,
+        &payer_wallet.pubkey().clone(),
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        price,
+        size,
+    );
+    let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
+        &payer_wallet.pubkey().clone(),
+        &ahkey,
+        &payer_wallet.pubkey().clone(),
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        0,
+        size,
+    );
+    let (pas, pas_bump) = find_program_as_signer_address();
+    let accounts = mpl_auction_house::accounts::Sell {
+        wallet: payer_wallet.pubkey().clone(),
+        token_account: payer_wallet.pubkey().clone(),
+        metadata: test_metadata.pubkey,
+        authority: ah.authority,
+        auction_house: ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        seller_trade_state,
+        free_seller_trade_state: free_seller_trade_state,
+        token_program: spl_token::id(),
+        system_program: solana_program::system_program::id(),
+        program_as_signer: pas,
+        rent: sysvar::rent::id(),
+    }
+    .to_account_metas(None);
 
-//     // Initialize anchor RPC `Client`
-//     let client = Client::new(Cluster::Localnet, utils::clone_keypair(&wallet));
+    let data = mpl_auction_house::instruction::Sell {
+        trade_state_bump: sts_bump,
+        _free_trade_state_bump: free_sts_bump,
+        _program_as_signer_bump: pas_bump,
+        token_size: size,
+        buyer_price: price,
+    }
+    .data();
 
-//     // Initialize vanilla `RpcClient`
-//     let connection = RpcClient::new(Cluster::Localnet.url().to_string());
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data,
+        accounts,
+    };
 
-//     // Initialize `Program` handle
-//     let program = client.program(mpl_auction_house::id());
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&payer_wallet.pubkey()),
+        &[&payer_wallet],
+        context.last_blockhash,
+    );
 
-//     // Derive native(wrapped) sol mint
-//     let treasury_mint = spl_token::native_mint::id();
-
-//     // Token mint for `TokenMetadata`.
-//     let token_mint = utils::create_mint(&connection, &wallet)?;
-
-//     // Derive / Create associated token account
-//     let token_account =
-//         utils::create_associated_token_account(&connection, &wallet, &token_mint.pubkey())?;
-
-//     // Mint tokens
-//     utils::mint_to(
-//         &connection,
-//         &wallet,
-//         &token_mint.pubkey(),
-//         &token_account,
-//         1,
-//     )?;
-
-//     // Derive `AuctionHouse` address
-//     let (auction_house, _) = utils::find_auction_house_address(&wallet_pubkey, &treasury_mint);
-
-//     // Derive `AuctionHouse` fee account
-//     let (auction_house_fee_account, _) =
-//         utils::find_auction_house_fee_account_address(&auction_house);
-
-//     // Derive `Program` as a signer address
-//     let (program_as_signer, program_as_signer_bump) = utils::find_program_as_signer_address();
-
-//     // Derive free seller trade state address
-//     let (free_seller_trade_state, free_seller_trade_state_bump) = utils::find_trade_state_address(
-//         &wallet_pubkey,
-//         &auction_house,
-//         &token_account,
-//         &treasury_mint,
-//         &token_mint.pubkey(),
-//         0,
-//         TOKEN_SIZE,
-//     );
-
-//     // Derive seller trade state address
-//     let (seller_trade_state, seller_trade_state_bump) = utils::find_trade_state_address(
-//         &wallet_pubkey,
-//         &auction_house,
-//         &token_account,
-//         &treasury_mint,
-//         &token_mint.pubkey(),
-//         BUYER_PRICE,
-//         TOKEN_SIZE,
-//     );
-
-//     // Create `TokenMetadata`
-//     let metadata = utils::create_token_metadata(
-//         &connection,
-//         &wallet,
-//         &token_mint.pubkey(),
-//         String::from("TEST"),
-//         String::from("TST"),
-//         String::from("https://github.com"),
-//         5000,
-//     )?;
-
-//     // Perform RPC instruction request
-//     program
-//         .request()
-//         .accounts(mpl_auction_house::accounts::Sell {
-//             auction_house,
-//             auction_house_fee_account,
-//             authority: wallet_pubkey,
-//             free_seller_trade_state,
-//             metadata,
-//             program_as_signer,
-//             rent: sysvar::rent::id(),
-//             seller_trade_state,
-//             system_program: system_program::id(),
-//             token_account,
-//             token_program: spl_token::id(),
-//             wallet: wallet_pubkey,
-//         })
-//         .args(mpl_auction_house::instruction::Sell {
-//             _free_trade_state_bump: free_seller_trade_state_bump,
-//             _program_as_signer_bump: program_as_signer_bump,
-//             buyer_price: BUYER_PRICE,
-//             token_size: TOKEN_SIZE,
-//             trade_state_bump: seller_trade_state_bump,
-//         })
-//         .send()?;
-
-//     assert_eq!(
-//         connection.get_account_data(&seller_trade_state).unwrap()[0],
-//         seller_trade_state_bump
-//     );
-//     Ok(())
-// }
+    context.banks_client.process_transaction(tx).await.unwrap();
+    let sts = context
+        .banks_client
+        .get_account(seller_trade_state)
+        .await
+        .expect("Error Getting Trade State")
+        .expect("Trade State Empty");
+    assert!(sts.data.len() == 1);
+}
