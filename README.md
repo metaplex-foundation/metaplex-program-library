@@ -21,7 +21,7 @@ Metaplex smart contracts and SDK.
 
 ### Versioning and Publishing Packages
 
-Smart contract SDK ackages are versioned indepenently since a contract isn't necessarily
+Smart contract SDK packages are versioned independently since a contract isn't necessarily
 coupled to other contracts.
 
 We use the following `(pre|post)(version|publish)` npm scripts to manage related checks,
