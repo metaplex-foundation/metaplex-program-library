@@ -18,7 +18,7 @@ use {
     },
     anchor_spl::token::Token,
     arrayref::array_ref,
-    metaplex_token_metadata::{
+    mpl_token_metadata::{
         instruction::{create_master_edition, create_metadata_accounts, update_metadata_accounts},
         state::{
             MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
@@ -101,7 +101,9 @@ pub mod nft_candy_machine_v2 {
             }
             // verifies that the gatway token was not created before the candy
             // machine go_live_date (avoids pre-solving the captcha)
-            let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<::solana_gateway::state::GatewayToken,>(*gateway_token_info.data.borrow())?;
+            let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
+                ::solana_gateway::state::GatewayToken,
+            >(*gateway_token_info.data.borrow())?;
             let expire_time = gateway_token
                 .expire_time
                 .ok_or(ErrorCode::GatewayTokenExpireTimeInvalid)?
@@ -110,7 +112,11 @@ pub mod nft_candy_machine_v2 {
                 Some(val) => {
                     // Civic f-ed up - expire time is actually the time it was made...
                     if expire_time < val {
-                        msg!("Invalid gateway token expire time: {} compared with go live of {}", expire_time, val);
+                        msg!(
+                            "Invalid gateway token expire time: {} compared with go live of {}",
+                            expire_time,
+                            val
+                        );
                         return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
                     }
                 }
@@ -248,15 +254,15 @@ pub mod nft_candy_machine_v2 {
         let cm_key = candy_machine.key();
         let authority_seeds = [PREFIX.as_bytes(), cm_key.as_ref(), &[creator_bump]];
 
-        let mut creators: Vec<metaplex_token_metadata::state::Creator> =
-            vec![metaplex_token_metadata::state::Creator {
+        let mut creators: Vec<mpl_token_metadata::state::Creator> =
+            vec![mpl_token_metadata::state::Creator {
                 address: candy_machine_creator.key(),
                 verified: true,
                 share: 0,
             }];
 
         for c in &candy_machine.data.creators {
-            creators.push(metaplex_token_metadata::state::Creator {
+            creators.push(mpl_token_metadata::state::Creator {
                 address: c.address,
                 verified: false,
                 share: c.share,
@@ -682,7 +688,7 @@ pub struct MintNFT<'info> {
     update_authority: Signer<'info>,
     #[account(mut)]
     master_edition: UncheckedAccount<'info>,
-    #[account(address = metaplex_token_metadata::id())]
+    #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,

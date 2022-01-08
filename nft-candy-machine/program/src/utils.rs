@@ -1,3 +1,5 @@
+use anchor_lang::prelude::{Sysvar, Signer};
+
 use {
     crate::{CandyMachine, ErrorCode},
     anchor_lang::{
@@ -6,7 +8,6 @@ use {
             program::invoke_signed,
             program_pack::{IsInitialized, Pack},
         },
-        Signer, Sysvar,
     },
     spl_associated_token_account::get_associated_token_address,
 };

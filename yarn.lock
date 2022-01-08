@@ -1031,6 +1031,7 @@ __metadata:
     "@metaplex-foundation/beet-solana": 0.0.0
     "@solana/web3.js": ^1.31.0
     eslint: ^8.3.0
+    prettier: ^2.5.1
     rimraf: ^3.0.2
   languageName: unknown
   linkType: soft
