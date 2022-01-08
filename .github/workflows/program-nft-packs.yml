@@ -13,6 +13,8 @@ env:
 
 jobs:
   build-and-test-nft-packs:
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-nft-packs 
