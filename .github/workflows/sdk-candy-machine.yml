@@ -19,8 +19,9 @@ jobs:
       id: filter
       with:
         filters: |
-          code:
+          core:
             - 'core/**'
+          package:
             - 'nft-candy-machine/**'
   build-lint-and-test-auction:
     needs: changes

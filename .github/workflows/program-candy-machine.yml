@@ -24,8 +24,9 @@ jobs:
       id: filter
       with:
         filters: |
-          code:
+          core:
             - 'core/**'
+          package:
             - 'nft-candy-machine/**'
   build-and-test-candy-machine:
     needs: changes
