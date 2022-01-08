@@ -1,4 +1,4 @@
-name: Program Token Vault 
+name: Program Token Entangler 
 
 on:
   push:
@@ -28,13 +28,13 @@ jobs:
           core:
             - 'core/**'
           package:
-            - 'token-vault/**'
-  build-and-test-token-vault:
+            - 'token-entangler/**'
+  build-and-test-token-entangler:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
-      cache_id: program-token-vault 
+      cache_id: program-token-entangler 
 
     steps:
       # Setup Deps
@@ -58,10 +58,14 @@ jobs:
             ./rust/target
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
 
+      # Build deps
+      - uses: ./.github/actions/build-metaplex
+      - uses: ./.github/actions/build-token-metadata
+
       # Run test
-      - name: test-token-vault-program
+      - name: test-token-entangler-program
         id: run_test
-        working-directory: ./token-vault/program
+        working-directory: ./token-entangler/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version

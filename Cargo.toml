@@ -3,6 +3,7 @@ members=[
   "auction/program",
   "auction-house/program",
   "metaplex/program",
+  "token-entangler/program",
   "token-vault/program",
   "token-vault/test",
   "token-metadata/program",
