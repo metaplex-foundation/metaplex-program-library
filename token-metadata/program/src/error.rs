@@ -308,6 +308,25 @@ pub enum MetadataError {
     /// Is Mutable can only be flipped to false
     #[error("Is Mutable can only be flipped to false")]
     IsMutableCanOnlyBeFlippedToFalse,
+
+    /// Is Mutable can only be flipped to false
+    #[error("Cannont Verify Collection in this Instruction")]
+    CollectionCannotBeVerifiedInThisInstruction,
+
+    #[error("This instruction was deprecated in a previous release and is now removed")]
+    Removed, //For the curious we cannot get rid of an instruction in the enum or move them or it will break our api, this is a friendly way to get rid of them
+
+    #[error("This token use method is burn and there are no remaining uses, it must be burned")]
+    // Do we freeze?
+    MustBeBurned,
+
+    #[error("This use method is invalid")]
+    InvalidUseMethod,
+    #[error("Collection Not Found on Metadata")]
+    CollectionNotFound,
+
+    #[error("Collection Update Authority is invalid")]
+    InvalidCollectionUpdateAuthority,
 }
 
 impl PrintProgramError for MetadataError {

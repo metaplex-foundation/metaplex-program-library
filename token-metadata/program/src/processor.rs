@@ -1,15 +1,13 @@
 use crate::{
+    assertions::collection::assert_collection_update_is_valid,
     deprecated_processor::{
-        process_deprecated_create_master_edition, process_deprecated_create_reservation_list,
-        process_deprecated_mint_new_edition_from_master_edition_via_printing_token,
-        process_deprecated_mint_printing_tokens, process_deprecated_mint_printing_tokens_via_token,
-        process_deprecated_set_reservation_list,
+        process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
     },
     error::MetadataError,
     instruction::MetadataInstruction,
     state::{
-        Data, Key, MasterEditionV1, MasterEditionV2, Metadata, EDITION, MAX_MASTER_EDITION_LEN,
-        PREFIX,
+        Collection, Data, DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard,
+        EDITION, MAX_MASTER_EDITION_LEN, PREFIX,
     },
     utils::{
         assert_data_valid, assert_derivation, assert_initialized,
@@ -42,8 +40,8 @@ pub fn process_instruction<'a>(
     let instruction = MetadataInstruction::try_from_slice(input)?;
     match instruction {
         MetadataInstruction::CreateMetadataAccount(args) => {
-            msg!("Instruction: Create Metadata Accounts");
-            process_create_metadata_accounts(
+            msg!("(Deprecated as of 1.1.0) Instruction: Create Metadata Accounts");
+            process_deprecated_create_metadata_accounts(
                 program_id,
                 accounts,
                 args.data,
@@ -52,8 +50,8 @@ pub fn process_instruction<'a>(
             )
         }
         MetadataInstruction::UpdateMetadataAccount(args) => {
-            msg!("Instruction: Update Metadata Accounts");
-            process_update_metadata_accounts(
+            msg!("(Deprecated as of 1.1.0) Instruction: Update Metadata Accounts");
+            process_deprecated_update_metadata_accounts(
                 program_id,
                 accounts,
                 args.data,
@@ -61,8 +59,18 @@ pub fn process_instruction<'a>(
                 args.primary_sale_happened,
             )
         }
+        MetadataInstruction::CreateMetadataAccountV2(args) => {
+            msg!("Instruction: Create Metadata Accounts v2");
+            process_create_metadata_accounts_v2(
+                program_id,
+                accounts,
+                args.data,
+                false,
+                args.is_mutable,
+            )
+        }
         MetadataInstruction::UpdateMetadataAccountV2(args) => {
-            msg!("Instruction: Update Metadata Accounts");
+            msg!("Instruction: Update Metadata Accounts v2");
             process_update_metadata_accounts_v2(
                 program_id,
                 accounts,
@@ -73,48 +81,43 @@ pub fn process_instruction<'a>(
             )
         }
         MetadataInstruction::DeprecatedCreateMasterEdition(args) => {
-            msg!("Instruction: Deprecated Create Master Edition");
-            process_deprecated_create_master_edition(program_id, accounts, args.max_supply)
+            msg!("Instruction: Deprecated Create Master Edition, Removed in 1.1.0");
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::DeprecatedMintNewEditionFromMasterEditionViaPrintingToken => {
-            msg!("Instruction: Deprecated Mint New Edition from Master Edition Via Token");
-            process_deprecated_mint_new_edition_from_master_edition_via_printing_token(
-                program_id, accounts,
-            )
+            msg!("Instruction: Deprecated Mint New Edition from Master Edition Via Token, Removed in 1.1.0");
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::UpdatePrimarySaleHappenedViaToken => {
             msg!("Instruction: Update primary sale via token");
             process_update_primary_sale_happened_via_token(program_id, accounts)
         }
         MetadataInstruction::DeprecatedSetReservationList(args) => {
-            msg!("Instruction: Deprecated Set Reservation List");
-            process_deprecated_set_reservation_list(
-                program_id,
-                accounts,
-                args.reservations,
-                args.total_reservation_spots,
-                args.offset,
-                args.total_spot_offset,
-            )
+            msg!("Instruction: Deprecated Set Reservation List, Removed in 1.1.0");
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::DeprecatedCreateReservationList => {
-            msg!("Instruction: Deprecated Create Reservation List");
-            process_deprecated_create_reservation_list(program_id, accounts)
+            msg!("Instruction: Deprecated Create Reservation List, Removed in 1.1.0");
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::SignMetadata => {
             msg!("Instruction: Sign Metadata");
             process_sign_metadata(program_id, accounts)
         }
         MetadataInstruction::DeprecatedMintPrintingTokensViaToken(args) => {
-            msg!("Instruction: Deprecated Mint Printing Tokens Via Token");
-            process_deprecated_mint_printing_tokens_via_token(program_id, accounts, args.supply)
+            msg!("Instruction: Deprecated Mint Printing Tokens Via Token, Removed in 1.1.0");
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::DeprecatedMintPrintingTokens(args) => {
-            msg!("Instruction: Deprecated Mint Printing Tokens");
-            process_deprecated_mint_printing_tokens(program_id, accounts, args.supply)
+            msg!("Instruction: Deprecated Mint Printing Tokens, Removed in 1.1.0");
+            Err(MetadataError::Removed.into())
         }
         MetadataInstruction::CreateMasterEdition(args) => {
-            msg!("Instruction: Create Master Edition");
+            msg!("(Deprecated as of 1.1.0, please use V3 Create Master Edition)\n V2 Create Master Edition");
+            process_create_master_edition(program_id, accounts, args.max_supply)
+        }
+        MetadataInstruction::CreateMasterEditionV3(args) => {
+            msg!("V3 Create Master Edition");
             process_create_master_edition(program_id, accounts, args.max_supply)
         }
         MetadataInstruction::MintNewEditionFromMasterEditionViaToken(args) => {
@@ -142,13 +145,17 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Puff Metadata");
             process_puff_metadata_account(program_id, accounts)
         }
+        MetadataInstruction::VerifyCollection => {
+            msg!("Instruction: Verify Collection");
+            verify_collection(program_id, accounts)
+        }
     }
 }
 
-pub fn process_create_metadata_accounts<'a>(
+pub fn process_create_metadata_accounts_v2<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
-    data: Data,
+    data: DataV2,
     allow_direct_creator_writes: bool,
     is_mutable: bool,
 ) -> ProgramResult {
@@ -175,65 +182,16 @@ pub fn process_create_metadata_accounts<'a>(
         data,
         allow_direct_creator_writes,
         is_mutable,
+        false,
+        true,
     )
-}
-
-/// Update existing account instruction
-pub fn process_update_metadata_accounts(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    optional_data: Option<Data>,
-    update_authority: Option<Pubkey>,
-    primary_sale_happened: Option<bool>,
-) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-
-    let metadata_account_info = next_account_info(account_info_iter)?;
-    let update_authority_info = next_account_info(account_info_iter)?;
-    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
-
-    assert_owned_by(metadata_account_info, program_id)?;
-    assert_update_authority_is_correct(&metadata, update_authority_info)?;
-
-    if let Some(data) = optional_data {
-        if metadata.is_mutable {
-            assert_data_valid(
-                &data,
-                update_authority_info.key,
-                &metadata,
-                false,
-                update_authority_info.is_signer,
-                true,
-            )?;
-            metadata.data = data;
-        } else {
-            return Err(MetadataError::DataIsImmutable.into());
-        }
-    }
-
-    if let Some(val) = update_authority {
-        metadata.update_authority = val;
-    }
-
-    if let Some(val) = primary_sale_happened {
-        if val {
-            metadata.primary_sale_happened = val
-        } else {
-            return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
-        }
-    }
-
-    puff_out_data_fields(&mut metadata);
-
-    metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
-    Ok(())
 }
 
 // Update existing account instruction
 pub fn process_update_metadata_accounts_v2(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
-    optional_data: Option<Data>,
+    optional_data: Option<DataV2>,
     update_authority: Option<Pubkey>,
     primary_sale_happened: Option<bool>,
     is_mutable: Option<bool>,
@@ -249,15 +207,18 @@ pub fn process_update_metadata_accounts_v2(
 
     if let Some(data) = optional_data {
         if metadata.is_mutable {
+            let compatible_data = data.to_v1();
             assert_data_valid(
-                &data,
+                &compatible_data,
                 update_authority_info.key,
                 &metadata,
                 false,
                 update_authority_info.is_signer,
                 true,
             )?;
-            metadata.data = data;
+            metadata.data = compatible_data;
+            assert_collection_update_is_valid(&metadata.collection, &data.collection)?;
+            metadata.collection = data.collection;
         } else {
             return Err(MetadataError::DataIsImmutable.into());
         }
@@ -432,6 +393,11 @@ pub fn process_create_master_edition(
     edition.supply = 0;
     edition.max_supply = max_supply;
     edition.serialize(&mut *edition_account_info.data.borrow_mut())?;
+    if metadata_account_info.is_writable {
+        let mut metadata_mut = Metadata::from_account_info(metadata_account_info)?;
+        metadata_mut.token_standard = Some(TokenStandard::NonFungible);
+        metadata_mut.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+    }
 
     // While you can't mint any more of your master record, you can
     // mint as many limited editions as you like within your max supply.
@@ -674,5 +640,42 @@ pub fn process_puff_metadata_account(
     metadata.edition_nonce = Some(edition_bump_seed);
 
     metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+    Ok(())
+}
+
+pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let metadata_info = next_account_info(account_info_iter)?;
+    let collection_authority_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let collection_mint = next_account_info(account_info_iter)?;
+    let collection_info = next_account_info(account_info_iter)?;
+
+    assert_signer(collection_authority_info)?;
+    assert_signer(payer_info)?;
+
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(collection_info, program_id)?;
+
+    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let collecton_data = Metadata::from_account_info(collection_info)?;
+    match &metadata.collection {
+        Some(collection) => {
+            if collection.key != *collection_mint.key || collecton_data.mint != *collection_mint.key
+            {
+                return Err(MetadataError::CollectionNotFound.into());
+            }
+            if collecton_data.update_authority != *collection_authority_info.key {
+                return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
+            }
+        }
+        None => {
+            return Err(MetadataError::CollectionNotFound.into());
+        }
+    }
+    if let Some(collection) = &mut metadata.collection {
+        collection.verified = true;
+    }
+    metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     Ok(())
 }

@@ -1,6 +1,6 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
-    state::{Creator, Data, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
+    state::{Collection, Creator, Data, DataV2, Uses, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
@@ -22,7 +22,7 @@ pub struct UpdateMetadataAccountArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 /// Args for update call
 pub struct UpdateMetadataAccountArgsV2 {
-    pub data: Option<Data>,
+    pub data: Option<DataV2>,
     pub update_authority: Option<Pubkey>,
     pub primary_sale_happened: Option<bool>,
     pub is_mutable: Option<bool>,
@@ -34,6 +34,16 @@ pub struct UpdateMetadataAccountArgsV2 {
 pub struct CreateMetadataAccountArgs {
     /// Note that unique metadatas are disabled for now.
     pub data: Data,
+    /// Whether you want your metadata to be updateable in the future.
+    pub is_mutable: bool,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+/// Args for create call
+pub struct CreateMetadataAccountV2Args {
+    /// Note that unique metadatas are disabled for now.
+    pub data: DataV2,
     /// Whether you want your metadata to be updateable in the future.
     pub is_mutable: bool,
 }
@@ -68,11 +78,6 @@ pub enum MetadataInstruction {
     ///   0. `[writable]` Metadata account
     ///   1. `[signer]` Update authority key
     UpdateMetadataAccount(UpdateMetadataAccountArgs),
-
-    /// Update a Metadata with is_mutable as a parameter
-    ///   0. `[writable]` Metadata account
-    ///   1. `[signer]` Update authority key
-    UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2),
 
     /// Register a Metadata as a Master Edition V1, which means Editions can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
@@ -255,9 +260,48 @@ pub enum MetadataInstruction {
     /// so that it can be found using offset searches by the RPC to make client lookups cheaper.
     ///   0. `[writable]` Metadata account
     PuffMetadata,
+
+    /// Update a Metadata with is_mutable as a parameter
+    ///   0. `[writable]` Metadata account
+    ///   1. `[signer]` Update authority key
+    UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2),
+
+    /// Create Metadata object.
+    ///   0. `[writable]`  Metadata key (pda of ['metadata', program id, mint id])
+    ///   1. `[]` Mint of token asset
+    ///   2. `[signer]` Mint authority
+    ///   3. `[signer]` payer
+    ///   4. `[]` update authority info
+    ///   5. `[]` System program
+    ///   6. `[]` Rent info
+    CreateMetadataAccountV2(CreateMetadataAccountV2Args),
+    /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
+    /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
+    /// token exists, and will throw an error if less than one token exists in this primary mint.
+    ///   0. `[writable]` Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']
+    ///   1. `[writable]` Metadata mint
+    ///   2. `[signer]` Update authority
+    ///   3. `[signer]` Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
+    ///   4. `[signer]` payer
+    ///   5.  [writable] Metadata account
+    ///   6. `[]` Token program
+    ///   7. `[]` System program
+    ///   8. `[]` Rent info
+    CreateMasterEditionV3(CreateMasterEditionArgs),
+    /// If and MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection
+    ///   0. `[writable]` Metadata account
+    ///   1. `[signer]` Collection Update authority
+    ///   2. `[signer]` payer
+    ///   3. `[]` Mint of the Collection
+    ///   4. `[]` Metadata Account of the Collection
+    ///   5. `[]` Token program
+    ///   6. `[]` System program
+    ///   7. `[]` Rent info
+    VerifyCollection,
 }
 
 /// Creates an CreateMetadataAccounts instruction
+/// #[deprecated(since="1.1.0", note="please use `create_metadata_accounts_v2` instead")]
 #[allow(clippy::too_many_arguments)]
 pub fn create_metadata_accounts(
     program_id: Pubkey,
@@ -300,7 +344,55 @@ pub fn create_metadata_accounts(
     }
 }
 
+/// Creates an CreateMetadataAccounts instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_metadata_accounts_v2(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    mint: Pubkey,
+    mint_authority: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    name: String,
+    symbol: String,
+    uri: String,
+    creators: Option<Vec<Creator>>,
+    seller_fee_basis_points: u16,
+    update_authority_is_signer: bool,
+    is_mutable: bool,
+    collection: Option<Collection>,
+    uses: Option<Uses>,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata_account, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(mint_authority, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(update_authority, update_authority_is_signer),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: MetadataInstruction::CreateMetadataAccountV2(CreateMetadataAccountV2Args {
+            data: DataV2 {
+                name,
+                symbol,
+                uri,
+                seller_fee_basis_points,
+                creators,
+                collection,
+                uses,
+            },
+            is_mutable,
+        })
+        .try_to_vec()
+        .unwrap(),
+    }
+}
+
 /// update metadata account instruction
+/// #[deprecated(since="1.1.0", note="please use `update_metadata_accounts_v2` instead")]
 pub fn update_metadata_accounts(
     program_id: Pubkey,
     metadata_account: Pubkey,
@@ -331,7 +423,7 @@ pub fn update_metadata_accounts_v2(
     metadata_account: Pubkey,
     update_authority: Pubkey,
     new_update_authority: Option<Pubkey>,
-    data: Option<Data>,
+    data: Option<DataV2>,
     primary_sale_happened: Option<bool>,
     is_mutable: Option<bool>,
 ) -> Instruction {
@@ -384,6 +476,7 @@ pub fn update_primary_sale_happened_via_token(
 
 /// creates a create_master_edition instruction
 #[allow(clippy::too_many_arguments)]
+/// [deprecated(since="1.1.0", note="please use `create_master_edition_v2` instead")]
 pub fn create_master_edition(
     program_id: Pubkey,
     edition: Pubkey,
@@ -401,6 +494,73 @@ pub fn create_master_edition(
         AccountMeta::new_readonly(mint_authority, true),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(metadata, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::CreateMasterEdition(CreateMasterEditionArgs { max_supply })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+/// creates a create_master_edition instruction
+#[allow(clippy::too_many_arguments)]
+/// [deprecated(since="1.1.0", note="please use `create_master_edition_v2` instead")]
+pub fn create_master_edition_v3(
+    program_id: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+    update_authority: Pubkey,
+    mint_authority: Pubkey,
+    metadata: Pubkey,
+    payer: Pubkey,
+    max_supply: Option<u64>,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(edition, false),
+        AccountMeta::new(mint, false),
+        AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(mint_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new(metadata, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::CreateMasterEdition(CreateMasterEditionArgs { max_supply })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+/// creates a create_master_edition instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_master_edition_v2(
+    program_id: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+    update_authority: Pubkey,
+    mint_authority: Pubkey,
+    metadata: Pubkey,
+    payer: Pubkey,
+    max_supply: Option<u64>,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(edition, false),
+        AccountMeta::new(mint, false),
+        AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(mint_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(metadata, true),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
@@ -556,5 +716,28 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
         )
         .try_to_vec()
         .unwrap(),
+    }
+}
+
+/// Verify Collection
+#[allow(clippy::too_many_arguments)]
+pub fn verify_collection(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    collection_authority: Pubkey,
+    payer: Pubkey,
+    collection_mint: Pubkey,
+    collection: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata, false),
+            AccountMeta::new(collection_authority, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(collection_mint, false),
+            AccountMeta::new_readonly(collection, false),
+        ],
+        data: MetadataInstruction::VerifyCollection.try_to_vec().unwrap(),
     }
 }

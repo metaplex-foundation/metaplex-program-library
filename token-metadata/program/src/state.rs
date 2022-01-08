@@ -18,7 +18,18 @@ pub const MAX_SYMBOL_LENGTH: usize = 10;
 
 pub const MAX_URI_LENGTH: usize = 200;
 
-pub const MAX_METADATA_LEN: usize = 1 + 32 + 32 + MAX_DATA_SIZE + 1 + 1 + 9 + 172;
+pub const MAX_METADATA_LEN: usize = 
+1 //key 
++ 32 // update auth pubkey
++ 32 // mint pubkey
++ MAX_DATA_SIZE 
++ 1 // primary sale
++ 1 // mutable
++ 9 // nonce (we only need one byte but what the heck)
++ 34 // collection
++ 18 // use method
++ 2 // token standard
++ 118; // Padding
 
 pub const MAX_DATA_SIZE: usize = 4
     + MAX_NAME_LENGTH
@@ -82,6 +93,70 @@ pub struct Data {
 }
 
 #[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct DataV2 {
+    /// The name of the asset
+    pub name: String,
+    /// The symbol for the asset
+    pub symbol: String,
+    /// URI pointing to JSON representing the asset
+    pub uri: String,
+    /// Royalty basis points that goes to creators in secondary sales (0-10000)
+    pub seller_fee_basis_points: u16,
+    /// Array of creators, optional
+    pub creators: Option<Vec<Creator>>,
+    /// Collection
+    pub collection: Option<Collection>,
+    /// Uses
+    pub uses: Option<Uses>,
+}
+
+impl DataV2 {
+    pub fn to_v1(&self) -> Data {
+        let ns = self.clone();
+        Data {
+            name: ns.name,
+            symbol: ns.symbol,
+            uri: ns.uri,
+            seller_fee_basis_points: ns.seller_fee_basis_points,
+            creators: ns.creators,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub enum UseMethod {
+    Burn,
+    Multiple,
+    Single,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct Uses {
+    pub use_method: UseMethod,
+    pub remaining: u64,
+    pub available: u64,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub enum TokenStandard {
+    NonFungible,  // This is a master edition
+    SemiFungible, // A token with metadata that can also have attrributes
+    Fungible,     // A token with simple metadata
+    Edition,      // This is a limited edition
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct Collection {
+    pub verified: bool,
+    pub key: Pubkey,
+}
+
+#[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub struct Metadata {
     pub key: Key,
@@ -94,6 +169,14 @@ pub struct Metadata {
     pub is_mutable: bool,
     /// nonce for easy calculation of editions, if present
     pub edition_nonce: Option<u8>,
+    /// Since we cannot easily change Metadata, we add the new DataV2 fields here at the end.
+    /// Collection
+    pub collection: Option<Collection>,
+    /// Uses
+    pub uses: Option<Uses>,
+    /// Token Standard is deterministic and will change from SemiFungible to NonFungible if
+    /// you call the create master edition call and it succeeds.
+    pub token_standard: Option<TokenStandard>,
 }
 
 impl Metadata {
