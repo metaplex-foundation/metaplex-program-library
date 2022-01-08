@@ -16,8 +16,13 @@ program = "target/deploy/mpl_token_metadata.so"
 address = "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
 program = "target/deploy/mpl_auction_house.so"
 
+[[test.genesis]]
+address = "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd"
+program = "target/deploy/mpl_token_entangler.so"
+
 [workspace]
 members = [
+  "token-entangler/program",
   "token-metadata/program",
   "auction-house/program"
 ] 
