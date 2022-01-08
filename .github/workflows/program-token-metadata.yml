@@ -1,4 +1,4 @@
-name: Program Token Metadata
+name: Program Candy Machine
 
 on:
   push:
@@ -26,13 +26,13 @@ jobs:
         filters: |
           code:
             - 'core/**'
-            - 'token-metadata/**'
-  build-and-test-token-metadata:
+            - 'nft-candy-machine/**'
+  build-and-test-candy-machine:
     needs: changes
     if: ${{ needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     env:
-      cache_id: program-token-metadata 
+      cache_id: program-candy-machine
 
     steps:
       # Setup Deps
@@ -60,9 +60,9 @@ jobs:
       - uses: ./.github/actions/build-token-vault
 
       # Run test
-      - name: test-token-metadata-program
+      - name: test-candy-machine
         id: run_test
-        working-directory: ./token-metadata/program
+        working-directory: ./nft-candy-machine/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version

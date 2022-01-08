@@ -5,9 +5,10 @@ const PROGRAM_NAME = 'nft-candy-machine-v2';
 
 const path = require('path');
 const generatedIdlDir = path.join(__dirname, '..', 'idl');
+const programDir = path.join(__dirname, '..', '..', 'program');
 const { spawn } = require('child_process');
 
-const anchor = spawn('anchor', ['build', '--idl', generatedIdlDir])
+const anchor = spawn('anchor', ['build', '--idl', generatedIdlDir], { cwd: programDir })
   .on('error', (err) => {
     console.error(err);
     // @ts-ignore this err does have a code
