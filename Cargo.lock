@@ -2289,6 +2289,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl_gumdrop"
+version = "0.0.1"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "mpl-token-metadata 0.0.1",
+ "solana-program",
+ "spl-associated-token-account",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"

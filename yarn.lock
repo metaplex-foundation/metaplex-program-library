@@ -1058,6 +1058,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@metaplex-foundation/mpl-gumdrop@workspace:gumdrop/js":
+  version: 0.0.0-use.local
+  resolution: "@metaplex-foundation/mpl-gumdrop@workspace:gumdrop/js"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.0.1
+    "@metaplex-foundation/beet-solana": ^0.0.1
+    "@solana/web3.js": ^1.31.0
+    "@types/tape": ^4.13.2
+    eslint: ^8.3.0
+    rimraf: ^3.0.2
+    spok: ^1.4.3
+    tape: ^5.3.2
+  languageName: unknown
+  linkType: soft
+
 "@metaplex-foundation/mpl-metaplex@workspace:metaplex/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-metaplex@workspace:metaplex/js"
@@ -6598,7 +6613,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spok@npm:^1.4.2":
+"spok@npm:^1.4.2, spok@npm:^1.4.3":
   version: 1.4.3
   resolution: "spok@npm:1.4.3"
   dependencies:
