@@ -9,11 +9,11 @@ cd "$SCRIPT_DIR"
 
 # build token metadata
 cd ../../token-metadata/program
-cargo build-bpf
+cargo build-bpf --dump
 
 # build private metadata
 cd ../../private-metadata/program
-cargo build-bpf
+cargo build-bpf --dump
 
 FIXTURES_DIR="tests/fixtures"
 
