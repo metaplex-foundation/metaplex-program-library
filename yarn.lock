@@ -1006,6 +1006,7 @@ __metadata:
     "@metaplex-foundation/beet-solana": 0.0.0
     "@solana/web3.js": ^1.31.0
     eslint: ^8.3.0
+    prettier: ^2.5.1
     rimraf: ^3.0.2
   languageName: unknown
   linkType: soft
@@ -1018,6 +1019,19 @@ __metadata:
     "@solana/spl-token": ^0.1.8
     "@solana/web3.js": ^1.31.0
     eslint: ^8.3.0
+    rimraf: ^3.0.2
+  languageName: unknown
+  linkType: soft
+
+"@metaplex-foundation/mpl-candy-machine@workspace:nft-candy-machine/js":
+  version: 0.0.0-use.local
+  resolution: "@metaplex-foundation/mpl-candy-machine@workspace:nft-candy-machine/js"
+  dependencies:
+    "@metaplex-foundation/beet": 0.0.0
+    "@metaplex-foundation/beet-solana": 0.0.0
+    "@solana/web3.js": ^1.31.0
+    eslint: ^8.3.0
+    prettier: ^2.5.1
     rimraf: ^3.0.2
   languageName: unknown
   linkType: soft
@@ -5813,7 +5827,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^2.4.1":
+"prettier@npm:^2.4.1, prettier@npm:^2.5.1":
   version: 2.5.1
   resolution: "prettier@npm:2.5.1"
   bin:
