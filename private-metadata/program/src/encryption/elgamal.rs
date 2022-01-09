@@ -277,6 +277,15 @@ impl JacobiPoint {
 #[derive(Debug, Copy, Clone, Serialize, Deserialize)]
 pub struct CipherKey(pub [u8; 24]);
 
+impl CipherKey {
+    #[cfg(not(target_arch = "bpf"))]
+    pub fn random<R: RngCore + CryptoRng>(rng: &mut R) -> Self {
+        let mut bytes = [0u8; 24];
+        rng.fill_bytes(&mut bytes);
+        CipherKey(bytes)
+    }
+}
+
 impl Eq for CipherKey {}
 impl PartialEq for CipherKey {
     fn eq(&self, other: &Self) -> bool {
