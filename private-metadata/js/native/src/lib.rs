@@ -1,19 +1,10 @@
 
-extern crate bincode;
-extern crate console_error_panic_hook;
-extern crate curve25519_dalek;
-extern crate private_metadata;
-#[macro_use]
-extern crate serde;
-extern crate sha3;
-extern crate solana_sdk;
-extern crate wasm_bindgen;
-
 use curve25519_dalek::scalar::Scalar;
 use private_metadata::encryption::elgamal::{CipherKey, ElGamalKeypair, ElGamalPubkey};
 use private_metadata::zk_token_elgamal::pod;
-use serde::de::{Deserialize, Deserializer, Visitor, SeqAccess, MapAccess, Error};
-use serde::ser::{Serialize, SerializeStruct, Serializer, SerializeTuple}; // traits
+use serde::de::{Deserializer, Visitor, SeqAccess, MapAccess, Error};
+use serde::ser::{SerializeStruct, Serializer, SerializeTuple}; // traits
+use serde::{Deserialize, Serialize};
 use sha3::Sha3_512;
 use solana_sdk::pubkey::Pubkey;
 use solana_sdk::signer::keypair::Keypair;
