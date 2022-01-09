@@ -1,9 +1,9 @@
 {
-  "name": "@metaplex-foundation/mpl-auction-house",
-  "version": "0.0.2",
-  "description": "MPL Auction House JavaScript API.",
-  "main": "dist/src/mpl-auction-house.js",
-  "types": "dist/src/mpl-auction-house.d.ts",
+  "name": "@metaplex-foundation/mpl-candy-machine",
+  "version": "0.0.1",
+  "description": "MPL Candy Machine JavaScript API. This MPL package is for the current generation of candy machine which is 2.0.0",
+  "main": "dist/src/mpl-candy-machine.js",
+  "types": "dist/src/mpl-candy-machine.d.ts",
   "scripts": {
     "check:publish-ready": "yarn build && yarn test",
     "preversion": "yarn check:publish-ready",
@@ -12,7 +12,7 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "test": "echo mpl-auction-house tests coming up ...",
+    "test": "echo mpl-candy-machine tests coming up ...",
     "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
