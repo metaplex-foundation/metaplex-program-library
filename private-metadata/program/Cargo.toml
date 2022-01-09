@@ -49,10 +49,10 @@ zeroize = { version = "1.2.0", default-features = false, features = ["zeroize_de
 bs58 = "0.4.0"
 rand_core = "0.6.3"
 serde_json = "1.0"
-solana-program-test = "1.9.3"
 solana-sdk = "1.9.3"
 mpl-token-metadata = { path = "../../token-metadata/program" }
 
 
 [dev-dependencies]
 time = "0.1.40"
+solana-program-test = "1.9.3"
