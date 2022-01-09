@@ -6,6 +6,7 @@ import { Button, Input } from 'antd';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { wrap } from 'comlink';
 import {
+  Blockhash,
   Connection,
   Keypair,
   PublicKey,
@@ -405,6 +406,7 @@ const buildTransferChunkTxns = async (
   elgamalKeypair: Object, // TODO: typing
   recipientElgamalPubkey: Buffer,
   privateMetadata: PrivateMetadataAccount,
+  recentBlockhash: Blockhash,
   keys: TransferChunkSlowKeys,
 ) => {
   const transferChunkTxsRes = wasm.transferChunkTxs(
@@ -470,9 +472,6 @@ const buildTransferChunkTxns = async (
   console.log(transferChunkTxs);
 
   // sign this group...
-  const recentBlockhash = (
-    await connection.getRecentBlockhash()
-  ).blockhash;
   const txns: Array<Transaction> = [];
   for (const txParams of transferChunkTxs) {
     const transaction = new Transaction();
@@ -491,6 +490,28 @@ const buildTransferChunkTxns = async (
   }
 
   return txns;
+}
+
+export const buildTransaction = (
+  walletKey: PublicKey,
+  instructions: TransactionInstruction[],
+  signers: Keypair[],
+  recentBlockhash: Blockhash,
+) => {
+  const transaction = new Transaction();
+  instructions.forEach((instruction) => transaction.add(instruction));
+  transaction.recentBlockhash = recentBlockhash;
+  transaction.setSigners(
+    // fee payed by the wallet owner
+    walletKey,
+    ...signers.map((s) => s.publicKey)
+  );
+
+  if (signers.length > 0) {
+    transaction.partialSign(...signers);
+  }
+
+  return transaction;
 }
 
 const decryptImage = (
@@ -927,53 +948,58 @@ export const StealthView = (
             }
 
             const recipientElgamalPubkey = recipientElgamalAccount.data;
+            const elgamalKeypair = JSON.parse(elgamalKeypairStr);
+
+            const recentBlockhash = (
+              await connection.getRecentBlockhash()
+            ).blockhash;
+
+            const transferTxns: Array<Transaction> = [];
 
             let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
+            let transferBufferUpdated;
             if (transferBufferAccount === null) {
               const createInstructions = await initTransferIxs(
                   connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientPubkey);
-
-              const createTxid = await sendTransactionWithNotify(
-                createInstructions,
-                [transferBufferKeypair],
-                "Init transfer",
+              transferTxns.push(
+                buildTransaction(
+                  walletKey,
+                  createInstructions,
+                  [transferBufferKeypair],
+                  recentBlockhash
+                )
               );
-
-              await connection.confirmTransaction(createTxid, "max");
-
-              transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
+              transferBufferUpdated = false;
+            } else {
+              const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
+              transferBufferUpdated = transferBufferDecoded.updated;
             }
 
-            const closeIxs = await ensureBuffersClosed(
+            const closeInstructions = await ensureBuffersClosed(
               connection,
               walletKey,
               [inputBufferKeypair.publicKey, computeBufferKeypair.publicKey],
             );
-            if (closeIxs.length !== 0) {
-              const closeTxid = await sendTransactionWithNotify(
-                closeIxs,
-                [],
-                "Input and compute buffer close",
+            if (closeInstructions.length !== 0) {
+              transferTxns.push(
+                buildTransaction(
+                  walletKey,
+                  closeInstructions,
+                  [],
+                  recentBlockhash
+                )
               );
-
-              await connection.confirmTransaction(closeTxid, "confirmed");
-
             }
 
-            const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
-            const elgamalKeypair = JSON.parse(elgamalKeypairStr);
-            console.log(elgamalKeypair);
-
-            if (!transferBufferDecoded.updated) {
-              console.log(`Transfering chunk`);
-
-              const txns = await buildTransferChunkTxns(
+            if (!transferBufferUpdated) {
+              const transferCrankTxns = await buildTransferChunkTxns(
                 connection,
                 wasm,
                 cipherKey,
                 elgamalKeypair,
                 recipientElgamalPubkey,
                 privateMetadata,
+                recentBlockhash,
                 {
                   walletKey,
                   mintKey,
@@ -983,46 +1009,48 @@ export const StealthView = (
                   computeBufferKeypair,
                 },
               );
-
-              console.log('Singing transactions...');
-              const signedTxns = await wallet.signAllTransactions(txns);
-              for (let i = 0; i < signedTxns.length; ++i) {
-                const resultTxid: TransactionSignature = await connection.sendRawTransaction(
-                  signedTxns[i].serialize(),
-                  {
-                    skipPreflight: true,
-                  },
-                );
-
-                console.log('Waiting on confirmations for', resultTxid);
-
-                const confirmed = await connection.confirmTransaction(
-                    resultTxid, "confirmed");
-
-                console.log(confirmed);
-                const succeeded = notifyResult(
-                  confirmed.value.err ? 'See console logs' : {txid: resultTxid},
-                  `Transfer crank: ${i + 1} of ${signedTxns.length}`,
-                );
-                if (!succeeded) {
-                  throw new Error('Crank failed');
-                }
-              }
+              transferTxns.push(...transferCrankTxns);
             }
 
-            const finiTxid = await sendTransactionWithNotify(
-              await finiTransferIxs(
-                connection,
+            transferTxns.push(
+              buildTransaction(
                 walletKey,
-                recipientPubkey,
-                mintKey,
-                transferBufferKeypair,
-              ),
-              [],
-              "Fini transfer",
+                await finiTransferIxs(
+                  connection,
+                  walletKey,
+                  recipientPubkey,
+                  mintKey,
+                  transferBufferKeypair,
+                ),
+                [],
+                recentBlockhash
+              )
             );
 
-            await connection.confirmTransaction(finiTxid, "confirmed");
+            console.log('Singing transactions...');
+            const signedTxns = await wallet.signAllTransactions(transferTxns);
+            for (let i = 0; i < signedTxns.length; ++i) {
+              const resultTxid: TransactionSignature = await connection.sendRawTransaction(
+                signedTxns[i].serialize(),
+                {
+                  skipPreflight: true,
+                },
+              );
+
+              console.log('Waiting on confirmations for', resultTxid);
+
+              const confirmed = await connection.confirmTransaction(
+                  resultTxid, "confirmed");
+
+              console.log(confirmed);
+              const succeeded = notifyResult(
+                confirmed.value.err ? 'See console logs' : {txid: resultTxid},
+                `Transfer crank: ${i + 1} of ${signedTxns.length}`,
+              );
+              if (!succeeded) {
+                throw new Error('Crank failed');
+              }
+            }
           };
 
           const wrap = async () => {
