@@ -137,16 +137,16 @@ pub enum UseMethod {
 pub struct Uses {
     pub use_method: UseMethod,
     pub remaining: u64,
-    pub available: u64,
+    pub total: u64,
 }
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum TokenStandard {
     NonFungible,  // This is a master edition
-    SemiFungible, // A token with metadata that can also have attrributes
+    FungibleAsset, // A token with metadata that can also have attrributes
     Fungible,     // A token with simple metadata
-    Edition,      // This is a limited edition
+    NonFungibleEdition,      // This is a limited edition
 }
 
 #[repr(C)]

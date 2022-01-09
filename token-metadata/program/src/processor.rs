@@ -650,15 +650,20 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let payer_info = next_account_info(account_info_iter)?;
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
 
     assert_signer(collection_authority_info)?;
     assert_signer(payer_info)?;
 
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
+    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let collecton_data = Metadata::from_account_info(collection_info)?;
+    let collection_nft_data = Metadata::from_account_info(collection_info)?;
+
     match &metadata.collection {
         Some(collection) => {
             if collection.key != *collection_mint.key || collecton_data.mint != *collection_mint.key
@@ -672,6 +677,14 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         None => {
             return Err(MetadataError::CollectionNotFound.into());
         }
+    }
+    let edition = MasterEditionV2::from_account_info(edition_account_info)
+        .map_err(|_err: ProgramError| MetadataError::CollectionMustBeAUniqueMasterEdition)?;
+    if collection_nft_data.token_standard != Some(TokenStandard::NonFungible)
+        || edition.max_supply != Some(1)
+    {
+        msg!("{:?}", collection_nft_data.token_standard);
+        return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into());
     }
     if let Some(collection) = &mut metadata.collection {
         collection.verified = true;

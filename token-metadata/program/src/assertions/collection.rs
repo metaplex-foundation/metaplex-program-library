@@ -6,10 +6,11 @@ use crate::{
 };
 
 pub fn assert_collection_update_is_valid(
-    existing: &Option<Collection>,
+    _existing: &Option<Collection>,
     incoming: &Option<Collection>,
 ) -> Result<(), ProgramError> {
-    if !existing.is_some() && incoming.is_some() && incoming.as_ref().unwrap().verified == true {
+    if incoming.is_some() && incoming.as_ref().unwrap().verified == true {
+        // Never allow a collection to be verified outside of verify_collection instruction
         return Err(MetadataError::CollectionCannotBeVerifiedInThisInstruction.into());
     }
     Ok(())

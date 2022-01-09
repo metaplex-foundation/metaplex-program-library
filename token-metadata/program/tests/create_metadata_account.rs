@@ -71,7 +71,7 @@ mod create_meta_accounts {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         let uses = Some(Uses {
-            available: 1,
+            total: 1,
             remaining: 1,
             use_method: UseMethod::Single,
         });
@@ -183,7 +183,7 @@ mod create_meta_accounts {
             None,
             Some(Uses {
                 remaining: 10,
-                available: 10,
+                total: 10,
                 use_method: UseMethod::Multiple,
             }),
         );

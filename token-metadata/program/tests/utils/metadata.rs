@@ -240,20 +240,22 @@ impl Metadata {
         &self,
         context: &mut ProgramTestContext,
         collection: Pubkey,
-        collection_authority: Pubkey,
+        collection_authority: Keypair,
         collection_mint: Pubkey,
+        collection_master_edition_account: Pubkey,
     ) -> transport::Result<()> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::verify_collection(
                 id(),
                 self.pubkey,
-                collection_authority,
+                collection_authority.pubkey(),
                 context.payer.pubkey().clone(),
                 collection_mint,
                 collection,
+                collection_master_edition_account,
             )],
             Some(&context.payer.pubkey()),
-            &[&context.payer],
+            &[&context.payer, &collection_authority],
             context.last_blockhash,
         );
 

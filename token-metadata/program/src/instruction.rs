@@ -41,7 +41,7 @@ pub struct CreateMetadataAccountArgs {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 /// Args for create call
-pub struct CreateMetadataAccountV2Args {
+pub struct CreateMetadataAccountArgsV2 {
     /// Note that unique metadatas are disabled for now.
     pub data: DataV2,
     /// Whether you want your metadata to be updateable in the future.
@@ -274,7 +274,7 @@ pub enum MetadataInstruction {
     ///   4. `[]` update authority info
     ///   5. `[]` System program
     ///   6. `[]` Rent info
-    CreateMetadataAccountV2(CreateMetadataAccountV2Args),
+    CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
     /// token exists, and will throw an error if less than one token exists in this primary mint.
@@ -294,9 +294,7 @@ pub enum MetadataInstruction {
     ///   2. `[signer]` payer
     ///   3. `[]` Mint of the Collection
     ///   4. `[]` Metadata Account of the Collection
-    ///   5. `[]` Token program
-    ///   6. `[]` System program
-    ///   7. `[]` Rent info
+    ///   5. `[]` MasterEdition2 Account of the Collection Token
     VerifyCollection,
 }
 
@@ -374,7 +372,7 @@ pub fn create_metadata_accounts_v2(
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
-        data: MetadataInstruction::CreateMetadataAccountV2(CreateMetadataAccountV2Args {
+        data: MetadataInstruction::CreateMetadataAccountV2(CreateMetadataAccountArgsV2 {
             data: DataV2 {
                 name,
                 symbol,
@@ -728,6 +726,7 @@ pub fn verify_collection(
     payer: Pubkey,
     collection_mint: Pubkey,
     collection: Pubkey,
+    collection_master_edition_account: Pubkey,
 ) -> Instruction {
     Instruction {
         program_id,
@@ -737,6 +736,7 @@ pub fn verify_collection(
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(collection_mint, false),
             AccountMeta::new_readonly(collection, false),
+            AccountMeta::new_readonly(collection_master_edition_account, false),
         ],
         data: MetadataInstruction::VerifyCollection.try_to_vec().unwrap(),
     }

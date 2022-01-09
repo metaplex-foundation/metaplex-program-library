@@ -3,7 +3,7 @@ use crate::{
     error::MetadataError,
     state::{
         get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, Metadata,
-        TokenStandard, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
+        TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
         MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
         MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
@@ -593,7 +593,11 @@ pub fn mint_limited_edition<'a>(
         seller_fee_basis_points: master_data.seller_fee_basis_points,
         creators: master_data.creators,
         collection: master_metadata.collection,
-        uses: master_metadata.uses,
+        uses: master_metadata.uses.map(|u| Uses {
+            use_method: u.use_method,
+            remaining: u.total, // reset remaining uses per edition for extra fun
+            total: u.total,
+        }),
     };
     // create the metadata the normal way...
 
@@ -828,7 +832,7 @@ pub fn process_create_metadata_accounts_logic(
     data: DataV2,
     allow_direct_creator_writes: bool,
     mut is_mutable: bool,
-    mut is_edition: bool,
+    is_edition: bool,
     add_token_standard: bool,
 ) -> ProgramResult {
     let CreateMetadataAccountsLogicArgs {
@@ -905,13 +909,7 @@ pub fn process_create_metadata_accounts_logic(
 
     metadata.mint = *mint_info.key;
     metadata.key = Key::MetadataV1;
-    metadata.data = Data {
-        name: data.name,
-        symbol: data.symbol,
-        uri: data.uri,
-        seller_fee_basis_points: data.seller_fee_basis_points,
-        creators: data.creators,
-    };
+    metadata.data = data.to_v1();
     metadata.is_mutable = is_mutable;
     metadata.update_authority = update_authority_key;
     assert_valid_use(&data.uses, &None)?;
@@ -920,9 +918,9 @@ pub fn process_create_metadata_accounts_logic(
     metadata.collection = data.collection;
     if add_token_standard {
         let token_standard = if is_edition {
-            TokenStandard::Edition
+            TokenStandard::NonFungibleEdition
         } else if mint_decimals == 0 {
-            TokenStandard::SemiFungible
+            TokenStandard::FungibleAsset
         } else {
             TokenStandard::Fungible
         };
