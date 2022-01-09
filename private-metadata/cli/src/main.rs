@@ -40,8 +40,8 @@ fn send(
     let mut transaction =
         Transaction::new_unsigned(Message::new(instructions, Some(&signers[0].pubkey())));
 
-    let (recent_blockhash, _fee_calculator) = rpc_client
-        .get_recent_blockhash()
+    let recent_blockhash = rpc_client
+        .get_latest_blockhash()
         .map_err(|err| format!("error: unable to get recent blockhash: {}", err))?;
 
     transaction
@@ -195,10 +195,8 @@ fn process_configure(
     let elgamal_pk = elgamal_keypair.public;
 
     let cipher_key_bytes = bs58::decode(&cipher_key).into_vec()?;
-    let mut scalar_bytes = [0; 32];
-    scalar_bytes[..24].copy_from_slice(cipher_key_bytes.as_slice());
     let encrypted_cipher_key = elgamal_pk.encrypt(
-        curve25519_dalek::scalar::Scalar { bytes: scalar_bytes }
+        CipherKey(cipher_key_bytes.as_slice().try_into()?)
     ).into();
 
     let configure_metadata_ix = private_metadata::instruction::configure_metadata(
