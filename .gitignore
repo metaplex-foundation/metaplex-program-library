@@ -17,3 +17,5 @@ yarn-error.log*
 .env
 .vscode
 .idea
+
+/private-metadata/program/tests/fixtures
