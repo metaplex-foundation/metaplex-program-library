@@ -19,3 +19,4 @@ yarn-error.log*
 .idea
 
 /private-metadata/program/tests/fixtures
+/private-metadata/program/farf
