@@ -20,6 +20,10 @@ program = "target/deploy/mpl_auction_house.so"
 address = "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd"
 program = "target/deploy/mpl_token_entangler.so"
 
+[[test.genesis]]
+address = "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
+program = "target/deploy/mpl_gumdrop.so"
+
 [workspace]
 members = [
   "token-entangler/program",
