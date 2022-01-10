@@ -2,7 +2,17 @@ import * as React from "react";
 import { RouteComponentProps } from 'react-router-dom';
 import queryString from 'query-string';
 
-import { Button, Input } from 'antd';
+import {
+  Button,
+  Card,
+  Input,
+  Modal,
+  Spin,
+  Steps,
+} from 'antd';
+import {
+  LoadingOutlined,
+} from '@ant-design/icons';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { wrap } from 'comlink';
 import {
@@ -492,7 +502,7 @@ const buildTransferChunkTxns = async (
   return txns;
 }
 
-export const buildTransaction = (
+const buildTransaction = (
   walletKey: PublicKey,
   instructions: TransactionInstruction[],
   signers: Keypair[],
@@ -540,6 +550,84 @@ const decryptImage = (
   return Buffer.from(decrypted.toString(), 'hex');
 };
 
+type TransactionAndStep = {
+  transaction: Transaction,
+  step: number,
+};
+
+const WaitingOverlay = (props: {
+  step: number;
+  visible: boolean;
+}) => {
+  const setIconForStep = (currentStep: number, componentStep: number) => {
+    if (currentStep === componentStep) {
+      return <LoadingOutlined />;
+    }
+    return null;
+  };
+
+  const { Step } = Steps;
+
+  const content = (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        pointerEvents: 'auto',
+        justifyContent: 'center',
+      }}
+    >
+      <Card>
+        <Steps direction="vertical" current={props.step}>
+          <Step
+            className={'white-description'}
+            title="Building transfer transactions"
+            icon={setIconForStep(props.step, 0)}
+          />
+          <Step
+            className={'white-description'}
+            title="Signing transfer transactions"
+            description="Approve the transactions from your wallet"
+            icon={setIconForStep(props.step, 1)}
+          />
+          <Step
+            className={'white-description'}
+            title="Initializing buffers"
+            icon={setIconForStep(props.step, 2)}
+          />
+          <Step
+            className={'white-description'}
+            title="Validating transfer encryption"
+            icon={setIconForStep(props.step, 3)}
+          />
+          <Step
+            className={'white-description'}
+            title="Finalizing transfer"
+            icon={setIconForStep(props.step, 4)}
+          />
+          <Step
+            className={'white-description'}
+            title="Waiting for Final Confirmation"
+            description="This will take a few seconds."
+            icon={setIconForStep(props.step, 5)}
+          />
+        </Steps>
+      </Card>
+    </div>
+  );
+
+  return (
+    <Modal
+      centered
+      modalRender={() => content}
+      width={'100vw'}
+      mask={false}
+      visible={props.visible}
+    ></Modal>
+  );
+};
+
 export const StealthView = (
   props: RouteComponentProps<{}>,
 ) => {
@@ -579,6 +667,10 @@ export const StealthView = (
       = useLocalStorageState(`cipherKey:${mint}`, '');
   const [decryptedImage, setDecryptedImage]
       = React.useState<Buffer | null>(null);
+  const [transferring, setTransferring]
+      = React.useState<boolean>(false);
+  const [transferProgress, setTransferProgress]
+      = React.useState<number>(0);
 
   const clearFetchedState = () => {
     setPublicMetadata(null);
@@ -954,21 +1046,22 @@ export const StealthView = (
               await connection.getRecentBlockhash()
             ).blockhash;
 
-            const transferTxns: Array<Transaction> = [];
+            const transferTxns: Array<TransactionAndStep> = [];
 
             let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
             let transferBufferUpdated;
             if (transferBufferAccount === null) {
               const createInstructions = await initTransferIxs(
                   connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientPubkey);
-              transferTxns.push(
-                buildTransaction(
+              transferTxns.push({
+                transaction: buildTransaction(
                   walletKey,
                   createInstructions,
                   [transferBufferKeypair],
                   recentBlockhash
-                )
-              );
+                ),
+                step: 2,
+              });
               transferBufferUpdated = false;
             } else {
               const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
@@ -981,14 +1074,15 @@ export const StealthView = (
               [inputBufferKeypair.publicKey, computeBufferKeypair.publicKey],
             );
             if (closeInstructions.length !== 0) {
-              transferTxns.push(
-                buildTransaction(
+              transferTxns.push({
+                transaction: buildTransaction(
                   walletKey,
                   closeInstructions,
                   [],
                   recentBlockhash
-                )
-              );
+                ),
+                step: 2,
+              });
             }
 
             if (!transferBufferUpdated) {
@@ -1009,11 +1103,16 @@ export const StealthView = (
                   computeBufferKeypair,
                 },
               );
-              transferTxns.push(...transferCrankTxns);
+              transferTxns.push(...transferCrankTxns.map(
+                transaction => ({
+                  transaction,
+                  step: 3,
+                })
+              ));
             }
 
-            transferTxns.push(
-              buildTransaction(
+            transferTxns.push({
+              transaction: buildTransaction(
                 walletKey,
                 await finiTransferIxs(
                   connection,
@@ -1024,12 +1123,20 @@ export const StealthView = (
                 ),
                 [],
                 recentBlockhash
-              )
-            );
+              ),
+              step: 4,
+            });
 
             console.log('Singing transactions...');
-            const signedTxns = await wallet.signAllTransactions(transferTxns);
+            let lastProgressStep = 1;
+            setTransferProgress(lastProgressStep);
+            const signedTxns = await wallet.signAllTransactions(transferTxns.map(t => t.transaction));
             for (let i = 0; i < signedTxns.length; ++i) {
+              if (transferTxns[i].step != lastProgressStep) {
+                lastProgressStep = transferTxns[i].step;
+                setTransferProgress(lastProgressStep);
+              }
+
               const resultTxid: TransactionSignature = await connection.sendRawTransaction(
                 signedTxns[i].serialize(),
                 {
@@ -1039,16 +1146,18 @@ export const StealthView = (
 
               console.log('Waiting on confirmations for', resultTxid);
 
-              const confirmed = await connection.confirmTransaction(
-                  resultTxid, "confirmed");
+              let confirmed;
+              if (i < signedTxns.length - 1) {
+                confirmed = await connection.confirmTransaction(resultTxid, 'confirmed');
+              } else {
+                lastProgressStep += 1;
+                setTransferProgress(lastProgressStep);
+                confirmed = await connection.confirmTransaction(resultTxid, 'finalized');
+              }
 
               console.log(confirmed);
-              const succeeded = notifyResult(
-                confirmed.value.err ? 'See console logs' : {txid: resultTxid},
-                `Transfer crank: ${i + 1} of ${signedTxns.length}`,
-              );
-              if (!succeeded) {
-                throw new Error('Crank failed');
+              if (confirmed.value.err) {
+                throw new Error('Crank failed. See console logs');
               }
             }
           };
@@ -1063,16 +1172,20 @@ export const StealthView = (
                 description: err.message,
               })
             } finally {
-              setLoading(false);
+              setTransferring(false);
             }
           };
 
-          setLoading(true);
+          setTransferring(true);
           wrap();
         }}
       >
         Transfer
       </Button>
+      <WaitingOverlay
+        step={transferProgress}
+        visible={transferring}
+      />
     </div>
   );
 }
