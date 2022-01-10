@@ -12,10 +12,11 @@ import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { Buffer } from 'buffer';
-import { CollectionData } from '.';
+import { Collection, TokenStandard } from '.';
 import { MetadataKey, MetadataProgram } from '../MetadataProgram';
 import { Edition } from './Edition';
 import { MasterEdition } from './MasterEdition';
+import { Uses } from './Uses';
 
 type CreatorArgs = { address: StringPublicKey; verified: boolean; share: number };
 export class Creator extends Borsh.Data<CreatorArgs> {
@@ -37,6 +38,35 @@ type DataArgs = {
   sellerFeeBasisPoints: number;
   creators: Creator[] | null;
 };
+
+type DataV2Args = {
+  name: string;
+  symbol: string;
+  uri: string;
+  sellerFeeBasisPoints: number;
+  creators: Creator[] | null;
+  collection: Collection | null;
+  uses: Uses | null;
+};
+export class DataV2 extends Borsh.Data<DataV2Args> {
+  static readonly SCHEMA = new Map([
+    ...Creator.SCHEMA,
+    ...Collection.SCHEMA,
+    ...DataV2.struct([
+      ['name', 'string'],
+      ['symbol', 'string'],
+      ['uri', 'string'],
+      ['sellerFeeBasisPoints', 'u16'],
+      ['creators', { kind: 'option', type: [Creator] }],
+      ['collection', { kind: 'option', type: Collection }],
+      ['uses', { kind: 'option', type: Uses }],
+    ]),
+  ]);
+
+  instruction = 0;
+  data: MetadataDataData;
+  isMutable: boolean;
+}
 export class MetadataDataData extends Borsh.Data<DataArgs> {
   static readonly SCHEMA = new Map([
     ...Creator.SCHEMA,
@@ -85,7 +115,7 @@ export class MetadataData extends Borsh.Data<Args> {
       ['isMutable', 'u8'], // bool
       ['editionNonce', { kind: 'option', type: 'u8' }],
       ['tokenStandard', { kind: 'option', type: 'u8' }],
-      ['collection', { kind: 'option', type: CollectionData }],
+      ['collection', { kind: 'option', type: Collection }],
       ['uses', { kind: 'option', type: Uses }],
     ]),
   ]);
@@ -97,7 +127,9 @@ export class MetadataData extends Borsh.Data<Args> {
   primarySaleHappened: boolean;
   isMutable: boolean;
   editionNonce: number | null;
-
+  tokenStandard: TokenStandard | null;
+  collection: Collection | null;
+  uses: Uses | null;
 
   // set lazy
   masterEdition?: StringPublicKey;

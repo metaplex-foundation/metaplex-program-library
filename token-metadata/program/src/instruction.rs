@@ -300,13 +300,7 @@ pub enum MetadataInstruction {
     ///   7. `[]` System program
     ///   8. `[]` Rent info
     CreateMasterEditionV3(CreateMasterEditionArgs),
-    /// If and MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection
-    ///   0. `[writable]` Metadata account
-    ///   1. `[signer]` Collection Update authority
-    ///   2. `[signer]` payer
-    ///   3. `[]` Mint of the Collection
-    ///   4. `[]` Metadata Account of the Collection
-    ///   5. `[]` MasterEdition2 Account of the Collection Token
+    ///See [verify_collection] for Doc
     VerifyCollection,
     ///See [utilize] for Doc
     Utilize(UtilizeArgs),
@@ -738,7 +732,7 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
 
 /// # Verify Collection
 ///
-/// If and MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection
+/// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection
 ///
 /// ### Accounts:
 ///

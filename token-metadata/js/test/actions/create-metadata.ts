@@ -7,8 +7,8 @@ import {
   TransactionHandler,
 } from '@metaplex-foundation/amman';
 import { strict as assert } from 'assert';
-import { CreateMetadata, Metadata, MetadataDataData } from '../../src/mpl-token-metadata';
-
+import { CreateMetadata, CreateMasterEditionV3, CreateMetadataV2, DataV2, MasterEdition, Metadata, MetadataDataData } from '../../src/mpl-token-metadata';
+import BN from 'bn.js';
 // -----------------
 // Create Metadata
 // -----------------
@@ -20,6 +20,42 @@ type CreateMetadataParams = {
   metadataData: MetadataDataData;
   updateAuthority?: PublicKey;
 };
+
+type CreateMetadataV2Params = {
+  transactionHandler: TransactionHandler;
+  publicKey: PublicKey;
+  mint: PublicKey;
+  metadataData: DataV2;
+  updateAuthority?: PublicKey;
+};
+
+export async function createMetadataV2({
+  transactionHandler,
+  publicKey,
+  mint,
+  metadataData,
+  updateAuthority,
+}: CreateMetadataV2Params) {
+  const metadata = await Metadata.getPDA(mint);
+  const createMetadataTx = new CreateMetadataV2(
+    { feePayer: publicKey },
+    {
+      metadata,
+      metadataData,
+      updateAuthority: updateAuthority ?? publicKey,
+      mint: mint,
+      mintAuthority: publicKey,
+    },
+  );
+
+  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
+    createMetadataTx,
+    [],
+    defaultSendOptions,
+  );
+
+  return { metadata, createTxDetails };
+}
 
 export async function createMetadata({
   transactionHandler,
@@ -82,4 +118,78 @@ export async function mintAndCreateMetadata(
   logDebug(createTxDetails.txSummary.logMessages.join('\n'));
 
   return { mint, metadata };
+}
+
+// -----------------
+// Prepare Mint and Create Metaata
+// -----------------
+export async function mintAndCreateMetadataV2(
+  connection: Connection,
+  transactionHandler: TransactionHandler,
+  payer: Keypair,
+  args: ConstructorParameters<typeof DataV2>[0],
+) {
+  const { createMintAccount } = new Actions(connection);
+  const { mint, createMintTx } = await createMintAccount(payer.publicKey);
+  const mintRes = await transactionHandler.sendAndConfirmTransaction(
+    createMintTx,
+    [mint],
+    defaultSendOptions,
+  );
+  addLabel('mint', mint);
+
+  assertConfirmedTransaction(assert, mintRes.txConfirmed);
+
+  const initMetadataData = new DataV2(args);
+
+  const { createTxDetails, metadata } = await createMetadataV2({
+    transactionHandler,
+    publicKey: payer.publicKey,
+    mint: mint.publicKey,
+    metadataData: initMetadataData,
+  });
+
+  addLabel('metadata', metadata);
+  logDebug(createTxDetails.txSummary.logMessages.join('\n'));
+
+  return { mint, metadata };
+}
+
+
+// -----------------
+// Create A Master Edition
+// -----------------
+export async function createMasterEdition(
+  connection: Connection,
+  transactionHandler: TransactionHandler,
+  payer: Keypair,
+  args: ConstructorParameters<typeof DataV2>[0],
+) {
+  let { mint, metadata } = await mintAndCreateMetadataV2(
+    connection,
+    transactionHandler,
+    payer,
+    args,
+  );
+
+  const masterEditionPubkey = await MasterEdition.getPDA(mint.publicKey);
+  const createMev3 = new CreateMasterEditionV3(
+    { feePayer: payer.publicKey },
+    {
+      edition: masterEditionPubkey,
+      metadata: metadata,
+      updateAuthority: payer.publicKey,
+      mint: mint.publicKey,
+      mintAuthority: payer.publicKey,
+      maxSupply: new BN(1)
+    },
+  );
+
+  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
+    createMev3,
+    [],
+    defaultSendOptions,
+  );
+
+  return { mint, metadata, masterEditionPubkey, createTxDetails };
 }

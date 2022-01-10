@@ -8,34 +8,27 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
+import { CreateMasterEditionParams } from '.';
 import { MetadataProgram } from '../MetadataProgram';
 
-export class CreateMasterEditionArgs extends Borsh.Data<{ maxSupply: BN | null }> {
-  static readonly SCHEMA = CreateMasterEditionArgs.struct([
+export class CreateMasterEditionV3Args extends Borsh.Data<{ maxSupply: BN | null }> {
+  static readonly SCHEMA = CreateMasterEditionV3Args.struct([
     ['instruction', 'u8'],
     ['maxSupply', { kind: 'option', type: 'u64' }],
   ]);
 
-  instruction = 10;
+  instruction = 17;
   maxSupply: BN | null;
 }
 
-export type CreateMasterEditionParams = {
-  edition: PublicKey;
-  metadata: PublicKey;
-  updateAuthority: PublicKey;
-  mint: PublicKey;
-  mintAuthority: PublicKey;
-  maxSupply?: BN;
-};
 
-export class CreateMasterEdition extends Transaction {
+export class CreateMasterEditionV3 extends Transaction {
   constructor(options: TransactionCtorFields, params: CreateMasterEditionParams) {
     super(options);
     const { feePayer } = options;
     const { edition, metadata, updateAuthority, mint, mintAuthority, maxSupply } = params;
 
-    const data = CreateMasterEditionArgs.serialize({
+    const data = CreateMasterEditionV3Args.serialize({
       maxSupply: maxSupply || null,
     });
 
@@ -70,7 +63,7 @@ export class CreateMasterEdition extends Transaction {
           {
             pubkey: metadata,
             isSigner: false,
-            isWritable: false,
+            isWritable: true,
           },
 
           {
