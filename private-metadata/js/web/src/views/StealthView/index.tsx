@@ -659,9 +659,7 @@ export const StealthView = (
   const [transferProgress, setTransferProgress]
       = React.useState<number>(0);
 
-  const clearFetchedState = () => {
-    setPublicMetadata(null);
-    setPrivateMetadata(null);
+  const clearPrivateState = () => {
     setElgamalKeypairStr('');
     setCipherKey('');
     setDecryptedImage(null);
@@ -685,17 +683,13 @@ export const StealthView = (
 
   React.useEffect(() => {
     if (wallet.disconnecting) {
-      setCipherKey('');
-      setDecryptedImage(null);
+      clearPrivateState();
     }
   }, [wallet]);
 
   React.useEffect(() => {
     const mintKey = parseAddress(mint);
-    if (mintKey === null) {
-      clearFetchedState();
-      return;
-    }
+    if (mintKey === null) return;
 
     const wrap = async () => {
       const privateMetadataKey = await getPrivateMetadata(mintKey);
@@ -1135,6 +1129,10 @@ export const StealthView = (
             const wrap = async () => {
               try {
                 await run();
+                clearPrivateState();
+                notify({
+                  message: 'Transfer complete',
+                })
               } catch (err) {
                 console.error(err);
                 notify({
