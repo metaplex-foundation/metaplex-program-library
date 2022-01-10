@@ -1,6 +1,6 @@
 mod utils;
 
-#[cfg(test)]
+#[cfg(feature = "test-bpf")]
 mod create_market {
     use std::time::SystemTime;
 

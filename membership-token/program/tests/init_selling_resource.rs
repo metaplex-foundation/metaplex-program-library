@@ -1,6 +1,6 @@
 mod utils;
 
-#[cfg(test)]
+#[cfg(feature = "test-bpf")]
 mod init_selling_resource {
     use crate::{
         setup_context,

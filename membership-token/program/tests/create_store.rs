@@ -1,6 +1,6 @@
 mod utils;
 
-#[cfg(test)]
+#[cfg(feature = "test-bpf")]
 mod create_store {
     use crate::{setup_context, utils::helpers::airdrop};
     use anchor_client::solana_sdk::{signature::Keypair, signer::Signer, system_program};

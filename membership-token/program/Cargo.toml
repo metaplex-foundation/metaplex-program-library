@@ -10,6 +10,7 @@ name = "mpl_membership_token"
 
 [features]
 no-entrypoint = []
+test-bpf = []
 no-idl = []
 cpi = ["no-entrypoint"]
 default = []
