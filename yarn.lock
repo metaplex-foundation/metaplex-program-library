@@ -1073,6 +1073,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@metaplex-foundation/mpl-membership-token@workspace:membership-token/js":
+  version: 0.0.0-use.local
+  resolution: "@metaplex-foundation/mpl-membership-token@workspace:membership-token/js"
+  dependencies:
+    "@solana/web3.js": ^1.31.0
+    eslint: ^8.3.0
+    rimraf: ^3.0.2
+  languageName: unknown
+  linkType: soft
+
 "@metaplex-foundation/mpl-metaplex@workspace:metaplex/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-metaplex@workspace:metaplex/js"
