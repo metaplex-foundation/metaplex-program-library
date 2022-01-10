@@ -687,6 +687,8 @@ export const StealthView = (
     }
   }, [wallet]);
 
+  const [toggleRunFetchMetadata, setRunFetchMetadata]
+      = React.useState<boolean>(false);
   React.useEffect(() => {
     const mintKey = parseAddress(mint);
     if (mintKey === null) return;
@@ -711,7 +713,8 @@ export const StealthView = (
       }
     };
     wrap();
-  }, [connection, mint]);
+  }, [connection, mint, toggleRunFetchMetadata]);
+  const runFetchMetadata = () => setRunFetchMetadata(!toggleRunFetchMetadata);
 
   React.useEffect(() => {
     if (publicMetadata === null) return;
@@ -1130,6 +1133,7 @@ export const StealthView = (
               try {
                 await run();
                 clearPrivateState();
+                runFetchMetadata();
                 notify({
                   message: 'Transfer complete',
                 })
