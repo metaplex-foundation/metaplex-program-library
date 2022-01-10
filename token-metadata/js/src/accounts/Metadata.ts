@@ -12,6 +12,7 @@ import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { Buffer } from 'buffer';
+import { CollectionData } from '.';
 import { MetadataKey, MetadataProgram } from '../MetadataProgram';
 import { Edition } from './Edition';
 import { MasterEdition } from './MasterEdition';
@@ -82,6 +83,10 @@ export class MetadataData extends Borsh.Data<Args> {
       ['data', MetadataDataData],
       ['primarySaleHappened', 'u8'], // bool
       ['isMutable', 'u8'], // bool
+      ['editionNonce', { kind: 'option', type: 'u8' }],
+      ['tokenStandard', { kind: 'option', type: 'u8' }],
+      ['collection', { kind: 'option', type: CollectionData }],
+      ['uses', { kind: 'option', type: Uses }],
     ]),
   ]);
 
@@ -92,6 +97,7 @@ export class MetadataData extends Borsh.Data<Args> {
   primarySaleHappened: boolean;
   isMutable: boolean;
   editionNonce: number | null;
+
 
   // set lazy
   masterEdition?: StringPublicKey;
