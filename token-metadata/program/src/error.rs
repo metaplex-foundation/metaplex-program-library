@@ -334,6 +334,17 @@ pub enum MetadataError {
 
     #[error("Collection Must Be a Unique Master Edition v2")]
     CollectionMustBeAUniqueMasterEdition,
+
+    #[error("The Use Authority Record Already Exists, to modify it Revoke, then Approve")]
+    UseAuthorityRecordAlreadyExists,
+
+    #[error("This token has no uses")]
+    Unusable,
+
+    #[error("There ar not enough Uses left on this token.")]
+    NotEnoughUses,
+
+    
 }
 
 impl PrintProgramError for MetadataError {

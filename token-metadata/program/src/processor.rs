@@ -5,9 +5,10 @@ use crate::{
     },
     error::MetadataError,
     instruction::MetadataInstruction,
+    pda::find_use_authority_account,
     state::{
         Collection, Data, DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard,
-        EDITION, MAX_MASTER_EDITION_LEN, PREFIX,
+        UseAuthorityRecord, EDITION, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER,
     },
     utils::{
         assert_data_valid, assert_derivation, assert_initialized,
@@ -149,6 +150,12 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Verify Collection");
             verify_collection(program_id, accounts)
         }
+        MetadataInstruction::Utilize(_) => todo!(),
+        MetadataInstruction::ApproveUseAuthority(args) => {
+            msg!("Instruction: Approve Use Authority");
+            process_approve_use_authority(program_id, accounts, args.number_of_uses)
+        }
+        MetadataInstruction::RevokeUseAuthority => todo!(),
     }
 }
 
@@ -690,5 +697,90 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         collection.verified = true;
     }
     metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
+    Ok(())
+}
+
+pub fn process_approve_use_authority(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    number_of_uses: u64,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let use_authority_record_info = next_account_info(account_info_iter)?;
+    let owner_info = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let user_info = next_account_info(account_info_iter)?;
+    let token_account_info = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+
+    let system_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
+    assert_signer(&owner_info)?;
+    assert_signer(&payer)?;
+
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+
+    let token_account: Account = assert_initialized(token_account_info)?;
+    assert_owned_by(token_account_info, &spl_token::id())?;
+    let metadata = Metadata::from_account_info(metadata_info)?;
+
+    if token_account.owner != *owner_info.key {
+        return Err(MetadataError::InvalidOwner.into());
+    }
+
+    if token_account.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if token_account.amount < 1 {
+        return Err(MetadataError::NotEnoughTokens.into());
+    }
+
+    if token_account.mint != metadata.mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if metadata.uses.is_none() {
+        return Err(MetadataError::Unusable.into());
+    }
+
+    let metadata_uses = metadata.uses.unwrap();
+    let record_info_empty = use_authority_record_info.try_data_is_empty()?;
+    if !record_info_empty {
+        return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
+    }
+    let use_authority_seeds = Vec::from([
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        &mint_info.key.as_ref(),
+        USER.as_bytes(),
+        &user_info.key.as_ref(),
+    ]);
+
+    let bump_seed = assert_derivation(program_id, use_authority_record_info, &use_authority_seeds)?;
+    let seed_ref = &[bump_seed];
+    let mut sign_seeds: Vec<&[u8]> = use_authority_seeds.clone();
+    sign_seeds.push(seed_ref);
+
+    create_or_allocate_account_raw(
+        *program_id,
+        use_authority_record_info,
+        rent_info,
+        system_account_info,
+        payer,
+        MAX_METADATA_LEN,
+        &sign_seeds,
+    )?;
+
+    let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+    if number_of_uses > metadata_uses.remaining {
+        return Err(MetadataError::NotEnoughUses.into());
+    }
+    record.allowed_uses = number_of_uses;
+    record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
+
     Ok(())
 }

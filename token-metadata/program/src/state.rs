@@ -12,6 +12,8 @@ pub const EDITION: &str = "edition";
 
 pub const RESERVATION: &str = "reservation";
 
+pub const USER: &str = "user";
+
 pub const MAX_NAME_LENGTH: usize = 32;
 
 pub const MAX_SYMBOL_LENGTH: usize = 10;
@@ -25,9 +27,9 @@ pub const MAX_METADATA_LEN: usize =
 + MAX_DATA_SIZE 
 + 1 // primary sale
 + 1 // mutable
-+ 9 // nonce (we only need one byte but what the heck)
++ 9 // nonce (pretty sure this only needs to be 2)
 + 34 // collection
-+ 18 // use method
++ 18 // uses
 + 2 // token standard
 + 118; // Padding
 
@@ -65,6 +67,8 @@ pub const MAX_EDITION_MARKER_SIZE: usize = 32;
 
 pub const EDITION_MARKER_BIT_SIZE: u64 = 248;
 
+pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; // Double Padding
+
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
 pub enum Key {
@@ -76,6 +80,7 @@ pub enum Key {
     ReservationListV2,
     MasterEditionV2,
     EditionMarker,
+    UseAuthorityRecord
 }
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -134,10 +139,10 @@ pub enum UseMethod {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub struct Uses {
-    pub use_method: UseMethod,
-    pub remaining: u64,
-    pub total: u64,
+pub struct Uses { // 17 bytes + Option byte
+    pub use_method: UseMethod, //1
+    pub remaining: u64, //8
+    pub total: u64, //8
 }
 
 #[repr(C)]
@@ -147,6 +152,22 @@ pub enum TokenStandard {
     FungibleAsset, // A token with metadata that can also have attrributes
     Fungible,     // A token with simple metadata
     NonFungibleEdition,      // This is a limited edition
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct UseAuthorityRecord {
+    pub allowed_uses: u64, //8
+    pub key: Key //1
+}
+
+impl UseAuthorityRecord {
+    pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
+        let ua: UseAuthorityRecord =
+            try_from_slice_checked(&a.data.borrow_mut(), Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+
+        Ok(ua)
+    }
 }
 
 #[repr(C)]
@@ -170,13 +191,11 @@ pub struct Metadata {
     /// nonce for easy calculation of editions, if present
     pub edition_nonce: Option<u8>,
     /// Since we cannot easily change Metadata, we add the new DataV2 fields here at the end.
+    pub token_standard: Option<TokenStandard>,
     /// Collection
     pub collection: Option<Collection>,
     /// Uses
     pub uses: Option<Uses>,
-    /// Token Standard is deterministic and will change from SemiFungible to NonFungible if
-    /// you call the create master edition call and it succeeds.
-    pub token_standard: Option<TokenStandard>,
 }
 
 impl Metadata {
