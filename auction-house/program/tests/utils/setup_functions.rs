@@ -88,6 +88,38 @@ pub async fn create_auction_house(
         .map(|_| auction_house_key.clone())
 }
 
+pub async fn sell(auction_house_key: &Pubkey, payer_wallet: &Keypair, mint: &Pubkey) {
+    let accounts = mpl_auction_house::accounts::Sell {
+        auction_house: *auction_house_key,
+        payer: payer_wallet.pubkey(),
+        mint: *mint,
+        wallet: payer_wallet.pubkey(),
+    }
+    .to_account_metas(None);
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data: mpl_auction_house::instruction::Sell {
+            bump: 0,
+        }
+        .data(),
+        accounts,
+    };
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&payer_wallet.pubkey()),
+        &[payer_wallet],
+        context.last_blockhash,
+    );
+
+    context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap();
+}
+
 pub async fn existing_auction_house_test_context(
     context: &mut ProgramTestContext,
 ) -> Result<(AuctionHouse, Pubkey), TransportError> {
