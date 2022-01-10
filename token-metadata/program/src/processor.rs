@@ -8,7 +8,7 @@ use crate::{
     pda::find_use_authority_account,
     state::{
         Collection, Data, DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard,
-        UseAuthorityRecord, EDITION, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER,
+        UseAuthorityRecord, EDITION, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
         assert_data_valid, assert_derivation, assert_initialized,
@@ -724,6 +724,7 @@ pub fn process_approve_use_authority(
     assert_owned_by(mint_info, &spl_token::id())?;
 
     let token_account: Account = assert_initialized(token_account_info)?;
+
     assert_owned_by(token_account_info, &spl_token::id())?;
     let metadata = Metadata::from_account_info(metadata_info)?;
 
@@ -771,11 +772,12 @@ pub fn process_approve_use_authority(
         rent_info,
         system_account_info,
         payer,
-        MAX_METADATA_LEN,
+        USE_AUTHORITY_RECORD_SIZE,
         &sign_seeds,
     )?;
 
     let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+
     if number_of_uses > metadata_uses.remaining {
         return Err(MetadataError::NotEnoughUses.into());
     }
