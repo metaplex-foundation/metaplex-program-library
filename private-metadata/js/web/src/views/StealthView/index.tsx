@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   Input,
-  Modal,
   Spin,
   Steps,
 } from 'antd';
@@ -33,6 +32,7 @@ import * as BN from 'bn.js';
 
 import { CollapsePanel } from '../../components/CollapsePanel';
 import { useLoading } from '../../components/Loader';
+import { MetaplexModal } from '../../components/MetaplexModal';
 import { useWindowDimensions } from '../../components/AppBar';
 import {
   CachedImageContent,
@@ -52,6 +52,7 @@ import {
   notify,
   shortenAddress,
   useLocalStorageState,
+  sleep,
 } from '../../utils/common';
 import {
   explorerLinkFor,
@@ -568,63 +569,47 @@ const WaitingOverlay = (props: {
 
   const { Step } = Steps;
 
-  const content = (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        pointerEvents: 'auto',
-        justifyContent: 'center',
-      }}
-    >
-      <Card>
-        <Steps direction="vertical" current={props.step}>
-          <Step
-            className={'white-description'}
-            title="Building transfer transactions"
-            icon={setIconForStep(props.step, 0)}
-          />
-          <Step
-            className={'white-description'}
-            title="Signing transfer transactions"
-            description="Approve the transactions from your wallet"
-            icon={setIconForStep(props.step, 1)}
-          />
-          <Step
-            className={'white-description'}
-            title="Initializing buffers"
-            icon={setIconForStep(props.step, 2)}
-          />
-          <Step
-            className={'white-description'}
-            title="Validating transfer encryption"
-            icon={setIconForStep(props.step, 3)}
-          />
-          <Step
-            className={'white-description'}
-            title="Finalizing transfer"
-            icon={setIconForStep(props.step, 4)}
-          />
-          <Step
-            className={'white-description'}
-            title="Waiting for Final Confirmation"
-            description="This will take a few seconds."
-            icon={setIconForStep(props.step, 5)}
-          />
-        </Steps>
-      </Card>
-    </div>
-  );
-
+  // closes after end of async function
   return (
-    <Modal
-      centered
-      modalRender={() => content}
-      width={'100vw'}
-      mask={false}
+    <MetaplexModal
       visible={props.visible}
-    ></Modal>
+      closable={false}
+    >
+      <Steps direction="vertical" current={props.step}>
+        <Step
+          className={'white-description'}
+          title="Building transfer transactions"
+          icon={setIconForStep(props.step, 0)}
+        />
+        <Step
+          className={'white-description'}
+          title="Signing transfer transactions"
+          description="Approve the transactions from your wallet"
+          icon={setIconForStep(props.step, 1)}
+        />
+        <Step
+          className={'white-description'}
+          title="Initializing buffers"
+          icon={setIconForStep(props.step, 2)}
+        />
+        <Step
+          className={'white-description'}
+          title="Validating transfer encryption"
+          icon={setIconForStep(props.step, 3)}
+        />
+        <Step
+          className={'white-description'}
+          title="Finalizing transfer"
+          icon={setIconForStep(props.step, 4)}
+        />
+        <Step
+          className={'white-description'}
+          title="Waiting for Final Confirmation"
+          description="This will take a few seconds."
+          icon={setIconForStep(props.step, 5)}
+        />
+      </Steps>
+    </MetaplexModal>
   );
 };
 
@@ -667,6 +652,8 @@ export const StealthView = (
       = useLocalStorageState(`cipherKey:${mint}`, '');
   const [decryptedImage, setDecryptedImage]
       = React.useState<Buffer | null>(null);
+  const [transferInputting, setTransferInputting]
+      = React.useState<boolean>(false);
   const [transferring, setTransferring]
       = React.useState<boolean>(false);
   const [transferProgress, setTransferProgress]
@@ -782,21 +769,172 @@ export const StealthView = (
     }
   }
 
-  const sendTransactionWithNotify = async (
-    ixs: Array<TransactionInstruction>,
-    signers: Array<Keypair>,
-    name: string,
-  ) => {
-    const result = await sendTransactionWithRetry(
-      connection,
-      wallet,
-      ixs,
-      signers,
-    );
+  const validateKeypair = (secret: string, name: string) => {
+    if (secret.length === 0) {
+      return new Keypair();
+    } else {
+      const res = parseKeypair(secret);
+      if (!res) {
+        throw new Error(`Could not parse ${name} buffer key '${secret}'`);
+      }
+      return res;
+    }
+  }
 
-    console.log(result);
-    return notifyResult(result, name);
+  const run = async () => {
+    const walletKey = wallet.publicKey;
+    const mintKey = parseAddress(mint);
+    if (!mintKey) {
+      throw new Error(`Could not parse mint key '${mint}'`);
+    }
+
+    const instructionBufferPubkey = parseAddress(instructionBuffer);
+    if (!instructionBufferPubkey) {
+      throw new Error(`Could not parse instruction buffer key '${instructionBuffer}'`);
+    }
+
+    const inputBufferKeypair = validateKeypair(inputBuffer, 'input');
+    const computeBufferKeypair = validateKeypair(computeBuffer, 'compute');
+    const transferBufferKeypair = validateKeypair(transferBuffer, 'transfer');
+
+    console.log('inputBufferKeypair', bs58.encode(inputBufferKeypair.secretKey));
+    console.log('computeBufferKeypair', bs58.encode(computeBufferKeypair.secretKey));
+    console.log('transferBufferKeypair', bs58.encode(transferBufferKeypair.secretKey));
+
+    const recipientPubkey = new PublicKey(recipientPubkeyStr);
+    if (recipientPubkey.equals(wallet.publicKey)) {
+      throw new Error('Invalid transfer recipient (self)');
+    }
+
+    const recipientElgamalAddress = await getElgamalPubkeyAddress(recipientPubkey, mintKey);
+    const recipientElgamalAccount = await connection.getAccountInfo(recipientElgamalAddress);
+    if (recipientElgamalAccount === null) {
+      throw new Error('Recipient has not yet published their elgamal pubkey for this mint');
+    }
+
+    const recipientElgamalPubkey = recipientElgamalAccount.data;
+    const elgamalKeypair = JSON.parse(elgamalKeypairStr);
+
+    const recentBlockhash = (
+      await connection.getRecentBlockhash()
+    ).blockhash;
+
+    const transferTxns: Array<TransactionAndStep> = [];
+
+    let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
+    let transferBufferUpdated;
+    if (transferBufferAccount === null) {
+      const createInstructions = await initTransferIxs(
+          connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientPubkey);
+      transferTxns.push({
+        transaction: buildTransaction(
+          walletKey,
+          createInstructions,
+          [transferBufferKeypair],
+          recentBlockhash
+        ),
+        step: 2,
+      });
+      transferBufferUpdated = false;
+    } else {
+      const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
+      transferBufferUpdated = transferBufferDecoded.updated;
+    }
+
+    const closeInstructions = await ensureBuffersClosed(
+      connection,
+      walletKey,
+      [inputBufferKeypair.publicKey, computeBufferKeypair.publicKey],
+    );
+    if (closeInstructions.length !== 0) {
+      transferTxns.push({
+        transaction: buildTransaction(
+          walletKey,
+          closeInstructions,
+          [],
+          recentBlockhash
+        ),
+        step: 2,
+      });
+    }
+
+    if (!transferBufferUpdated) {
+      const transferCrankTxns = await buildTransferChunkTxns(
+        connection,
+        wasm,
+        cipherKey,
+        elgamalKeypair,
+        recipientElgamalPubkey,
+        privateMetadata,
+        recentBlockhash,
+        {
+          walletKey,
+          mintKey,
+          transferBufferKeypair,
+          instructionBufferPubkey,
+          inputBufferKeypair,
+          computeBufferKeypair,
+        },
+      );
+      transferTxns.push(...transferCrankTxns.map(
+        transaction => ({
+          transaction,
+          step: 3,
+        })
+      ));
+    }
+
+    transferTxns.push({
+      transaction: buildTransaction(
+        walletKey,
+        await finiTransferIxs(
+          connection,
+          walletKey,
+          recipientPubkey,
+          mintKey,
+          transferBufferKeypair,
+        ),
+        [],
+        recentBlockhash
+      ),
+      step: 4,
+    });
+
+    console.log('Singing transactions...');
+    let lastProgressStep = 1;
+    setTransferProgress(lastProgressStep);
+    const signedTxns = await wallet.signAllTransactions(transferTxns.map(t => t.transaction));
+    for (let i = 0; i < signedTxns.length; ++i) {
+      if (transferTxns[i].step != lastProgressStep) {
+        lastProgressStep = transferTxns[i].step;
+        setTransferProgress(lastProgressStep);
+      }
+
+      const resultTxid: TransactionSignature = await connection.sendRawTransaction(
+        signedTxns[i].serialize(),
+        {
+          skipPreflight: true,
+        },
+      );
+
+      console.log('Waiting on confirmations for', resultTxid);
+
+      let confirmed;
+      if (i < signedTxns.length - 1) {
+        confirmed = await connection.confirmTransaction(resultTxid, 'confirmed');
+      } else {
+        lastProgressStep += 1;
+        setTransferProgress(lastProgressStep);
+        confirmed = await connection.confirmTransaction(resultTxid, 'finalized');
+      }
+
+      console.log(confirmed);
+      if (confirmed.value.err) {
+        throw new Error('Crank failed. See console logs');
+      }
+    }
   };
+
 
   // TODO: more robust
   const maxWidth = 1440;
@@ -830,7 +968,7 @@ export const StealthView = (
           marginBottom: '15px',
         }}
       >
-        {publicImageManifest?.name}
+        {publicImageManifest.name}
       </p>
       <div
         style={
@@ -846,7 +984,7 @@ export const StealthView = (
         }
       >
         <CachedImageContent
-          uri={publicImageManifest?.image}
+          uri={publicImageManifest.image}
           className={"fullAspectRatio"}
           style={{
             ...(cols > 1 ? { maxWidth: actualColumnWidth } : {}),
@@ -871,11 +1009,11 @@ export const StealthView = (
                 marginBottom: '10px',
               }}
             >
-              {publicImageManifest?.description}
+              {publicImageManifest.description}
             </p>
           </div>
           <div>
-            {publicImageManifest?.description
+            {publicImageManifest.description
               && explorerLinkCForAddress(parseAddress(mint), connection)
             }
           </div>
@@ -936,249 +1074,92 @@ export const StealthView = (
           />
         </div>
       )}
-      <label className="action-field">
-        <span className="field-title">Recipient Pubkey</span>
-        <Input
-          id="recipient-pubkey-field"
-          value={recipientPubkeyStr}
-          onChange={(e) => setRecipientPubkey(e.target.value)}
-          style={{ fontFamily: 'Monospace' }}
-        />
-      </label>
-      <CollapsePanel
-        id="transfer-options-collapse"
-        panelName="Additional Options"
+      <MetaplexModal
+        title={`Send ${publicImageManifest.name}`}
+        visible={transferInputting}
+        onCancel={() => setTransferInputting(false)}
       >
         <label className="action-field">
-          <span className="field-title">Instruction Buffer</span>
+          <span className="field-title">Recipient Pubkey</span>
           <Input
-            id="instruction-buffer-field"
-            value={instructionBuffer}
-            onChange={(e) => setInstructionBuffer(e.target.value)}
+            id="recipient-pubkey-field"
+            value={recipientPubkeyStr}
+            onChange={(e) => setRecipientPubkey(e.target.value)}
             style={{ fontFamily: 'Monospace' }}
           />
         </label>
-        <label className="action-field">
-          <span className="field-title">Transfer Buffer</span>
-          <Input
-            id="transfer-buffer-field"
-            value={transferBuffer}
-            onChange={(e) => setTransferBuffer(e.target.value)}
-            style={{ fontFamily: 'Monospace' }}
-          />
-        </label>
-        <label className="action-field">
-          <span className="field-title">Input Buffer</span>
-          <Input
-            id="input-buffer-field"
-            value={inputBuffer}
-            onChange={(e) => setInputBuffer(e.target.value)}
-            style={{ fontFamily: 'Monospace' }}
-          />
-        </label>
-        <label className="action-field">
-          <span className="field-title">Compute Buffer</span>
-          <Input
-            id="compute-buffer-field"
-            value={computeBuffer}
-            onChange={(e) => setComputeBuffer(e.target.value)}
-            style={{ fontFamily: 'Monospace' }}
-          />
-        </label>
-      </CollapsePanel>
+        <CollapsePanel
+          id="transfer-options-collapse"
+          panelName="Additional Options"
+        >
+          <label className="action-field">
+            <span className="field-title">Instruction Buffer</span>
+            <Input
+              id="instruction-buffer-field"
+              value={instructionBuffer}
+              onChange={(e) => setInstructionBuffer(e.target.value)}
+              style={{ fontFamily: 'Monospace' }}
+            />
+          </label>
+          <label className="action-field">
+            <span className="field-title">Transfer Buffer</span>
+            <Input
+              id="transfer-buffer-field"
+              value={transferBuffer}
+              onChange={(e) => setTransferBuffer(e.target.value)}
+              style={{ fontFamily: 'Monospace' }}
+            />
+          </label>
+          <label className="action-field">
+            <span className="field-title">Input Buffer</span>
+            <Input
+              id="input-buffer-field"
+              value={inputBuffer}
+              onChange={(e) => setInputBuffer(e.target.value)}
+              style={{ fontFamily: 'Monospace' }}
+            />
+          </label>
+          <label className="action-field">
+            <span className="field-title">Compute Buffer</span>
+            <Input
+              id="compute-buffer-field"
+              value={computeBuffer}
+              onChange={(e) => setComputeBuffer(e.target.value)}
+              style={{ fontFamily: 'Monospace' }}
+            />
+          </label>
+        </CollapsePanel>
+        <Button
+          className="metaplex-button"
+          onClick={() => {
+            const wrap = async () => {
+              try {
+                await run();
+              } catch (err) {
+                console.error(err);
+                notify({
+                  message: 'Failed to transfer NFT',
+                  description: err.message,
+                })
+              } finally {
+                setTransferring(false);
+                setTransferProgress(0);
+              }
+            };
+
+            setTransferInputting(false);
+            setTransferring(true);
+            wrap();
+          }}
+        >
+          Transfer
+        </Button>
+      </MetaplexModal>
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr}
-        onClick={() => {
-          // TODO: requiring elgamalKeypair from decryption is a bit weird here...
-          if (!privateMetadata || !wallet.connected || !elgamalKeypairStr) {
-            return;
-          }
-
-          const validateKeypair = (secret: string, name: string) => {
-            if (secret.length === 0) {
-              return new Keypair();
-            } else {
-              const res = parseKeypair(secret);
-              if (!res) {
-                throw new Error(`Could not parse ${name} buffer key '${secret}'`);
-              }
-              return res;
-            }
-          }
-
-          const run = async () => {
-            const walletKey = wallet.publicKey;
-            const mintKey = parseAddress(mint);
-            if (!mintKey) {
-              throw new Error(`Could not parse mint key '${mint}'`);
-            }
-
-            const instructionBufferPubkey = parseAddress(instructionBuffer);
-            if (!instructionBufferPubkey) {
-              throw new Error(`Could not parse instruction buffer key '${instructionBuffer}'`);
-            }
-
-            const inputBufferKeypair = validateKeypair(inputBuffer, 'input');
-            const computeBufferKeypair = validateKeypair(computeBuffer, 'compute');
-            const transferBufferKeypair = validateKeypair(transferBuffer, 'transfer');
-
-            console.log('inputBufferKeypair', bs58.encode(inputBufferKeypair.secretKey));
-            console.log('computeBufferKeypair', bs58.encode(computeBufferKeypair.secretKey));
-            console.log('transferBufferKeypair', bs58.encode(transferBufferKeypair.secretKey));
-
-            const recipientPubkey = new PublicKey(recipientPubkeyStr);
-            if (recipientPubkey.equals(wallet.publicKey)) {
-              throw new Error('Invalid transfer recipient (self)');
-            }
-
-            const recipientElgamalAddress = await getElgamalPubkeyAddress(recipientPubkey, mintKey);
-            const recipientElgamalAccount = await connection.getAccountInfo(recipientElgamalAddress);
-            if (recipientElgamalAccount === null) {
-              throw new Error('Recipient has not yet published their elgamal pubkey for this mint');
-            }
-
-            const recipientElgamalPubkey = recipientElgamalAccount.data;
-            const elgamalKeypair = JSON.parse(elgamalKeypairStr);
-
-            const recentBlockhash = (
-              await connection.getRecentBlockhash()
-            ).blockhash;
-
-            const transferTxns: Array<TransactionAndStep> = [];
-
-            let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
-            let transferBufferUpdated;
-            if (transferBufferAccount === null) {
-              const createInstructions = await initTransferIxs(
-                  connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientPubkey);
-              transferTxns.push({
-                transaction: buildTransaction(
-                  walletKey,
-                  createInstructions,
-                  [transferBufferKeypair],
-                  recentBlockhash
-                ),
-                step: 2,
-              });
-              transferBufferUpdated = false;
-            } else {
-              const transferBufferDecoded = decodeTransferBuffer(transferBufferAccount.data);
-              transferBufferUpdated = transferBufferDecoded.updated;
-            }
-
-            const closeInstructions = await ensureBuffersClosed(
-              connection,
-              walletKey,
-              [inputBufferKeypair.publicKey, computeBufferKeypair.publicKey],
-            );
-            if (closeInstructions.length !== 0) {
-              transferTxns.push({
-                transaction: buildTransaction(
-                  walletKey,
-                  closeInstructions,
-                  [],
-                  recentBlockhash
-                ),
-                step: 2,
-              });
-            }
-
-            if (!transferBufferUpdated) {
-              const transferCrankTxns = await buildTransferChunkTxns(
-                connection,
-                wasm,
-                cipherKey,
-                elgamalKeypair,
-                recipientElgamalPubkey,
-                privateMetadata,
-                recentBlockhash,
-                {
-                  walletKey,
-                  mintKey,
-                  transferBufferKeypair,
-                  instructionBufferPubkey,
-                  inputBufferKeypair,
-                  computeBufferKeypair,
-                },
-              );
-              transferTxns.push(...transferCrankTxns.map(
-                transaction => ({
-                  transaction,
-                  step: 3,
-                })
-              ));
-            }
-
-            transferTxns.push({
-              transaction: buildTransaction(
-                walletKey,
-                await finiTransferIxs(
-                  connection,
-                  walletKey,
-                  recipientPubkey,
-                  mintKey,
-                  transferBufferKeypair,
-                ),
-                [],
-                recentBlockhash
-              ),
-              step: 4,
-            });
-
-            console.log('Singing transactions...');
-            let lastProgressStep = 1;
-            setTransferProgress(lastProgressStep);
-            const signedTxns = await wallet.signAllTransactions(transferTxns.map(t => t.transaction));
-            for (let i = 0; i < signedTxns.length; ++i) {
-              if (transferTxns[i].step != lastProgressStep) {
-                lastProgressStep = transferTxns[i].step;
-                setTransferProgress(lastProgressStep);
-              }
-
-              const resultTxid: TransactionSignature = await connection.sendRawTransaction(
-                signedTxns[i].serialize(),
-                {
-                  skipPreflight: true,
-                },
-              );
-
-              console.log('Waiting on confirmations for', resultTxid);
-
-              let confirmed;
-              if (i < signedTxns.length - 1) {
-                confirmed = await connection.confirmTransaction(resultTxid, 'confirmed');
-              } else {
-                lastProgressStep += 1;
-                setTransferProgress(lastProgressStep);
-                confirmed = await connection.confirmTransaction(resultTxid, 'finalized');
-              }
-
-              console.log(confirmed);
-              if (confirmed.value.err) {
-                throw new Error('Crank failed. See console logs');
-              }
-            }
-          };
-
-          const wrap = async () => {
-            try {
-              await run();
-            } catch (err) {
-              console.error(err);
-              notify({
-                message: 'Failed to transfer NFT',
-                description: err.message,
-              })
-            } finally {
-              setTransferring(false);
-            }
-          };
-
-          setTransferring(true);
-          wrap();
-        }}
+        disabled={loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr || !publicImageManifest.name}
+        onClick={() => setTransferInputting(true)}
       >
         Transfer
       </Button>
