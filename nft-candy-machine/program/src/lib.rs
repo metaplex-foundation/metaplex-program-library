@@ -642,7 +642,7 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
 pub struct InitializeCandyMachine<'info> {
-    #[account(zero, constraint= candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= get_space_for_candy(data)?)]
+    #[account(zero, rent_exempt = skip, constraint= candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= get_space_for_candy(data)?)]
     candy_machine: UncheckedAccount<'info>,
     wallet: UncheckedAccount<'info>,
     authority: UncheckedAccount<'info>,
