@@ -2224,8 +2224,8 @@ dependencies = [
 name = "mpl-token-entangler"
 version = "0.1.0"
 dependencies = [
- "anchor-lang",
- "anchor-spl",
+ "anchor-lang 0.19.0",
+ "anchor-spl 0.19.0",
  "mpl-token-metadata 0.0.1",
  "spl-associated-token-account",
  "spl-token",
@@ -2292,8 +2292,8 @@ dependencies = [
 name = "mpl_gumdrop"
 version = "0.0.1"
 dependencies = [
- "anchor-lang",
- "anchor-spl",
+ "anchor-lang 0.19.0",
+ "anchor-spl 0.19.0",
  "mpl-token-metadata 0.0.1",
  "solana-program",
  "spl-associated-token-account",

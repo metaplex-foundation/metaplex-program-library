@@ -751,10 +751,10 @@ pub struct CandyMachine {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct WhitelistMintSettings {
-    mode: WhitelistMintMode,
-    mint: Pubkey,
-    presale: bool,
-    discount_price: Option<u64>,
+    pub mode: WhitelistMintMode,
+    pub mint: Pubkey,
+    pub presale: bool,
+    pub discount_price: Option<u64>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
@@ -791,10 +791,10 @@ pub struct CandyMachineData {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct GatekeeperConfig {
     /// The network for the gateway token required
-    gatekeeper_network: Pubkey,
+    pub gatekeeper_network: Pubkey,
     /// Whether or not the token should expire after minting.
     /// The gatekeeper network must support this if true.
-    expire_on_use: bool,
+    pub expire_on_use: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -805,8 +805,8 @@ pub enum EndSettingType {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct EndSettings {
-    end_setting_type: EndSettingType,
-    number: u64,
+    pub end_setting_type: EndSettingType,
+    pub number: u64,
 }
 
 pub const CONFIG_ARRAY_START: usize = 8 + // key
@@ -840,9 +840,9 @@ pub const CONFIG_ARRAY_START: usize = 8 + // key
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct HiddenSettings {
-    name: String,
-    uri: String,
-    hash: [u8; 32],
+    pub name: String,
+    pub uri: String,
+    pub hash: [u8; 32],
 }
 
 pub fn get_config_count(data: &RefMut<&mut [u8]>) -> core::result::Result<usize, ProgramError> {
