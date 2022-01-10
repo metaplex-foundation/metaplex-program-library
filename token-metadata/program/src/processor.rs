@@ -1,24 +1,26 @@
 use crate::{
-    assertions::collection::assert_collection_update_is_valid,
+    assertions::{
+        collection::assert_collection_update_is_valid, uses::process_use_authority_validation,
+    },
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
     },
     error::MetadataError,
     instruction::MetadataInstruction,
-    pda::find_use_authority_account,
     state::{
         Collection, Data, DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard,
-        UseAuthorityRecord, EDITION, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        UseAuthorityRecord, UseMethod, Uses, BURN, EDITION, MAX_MASTER_EDITION_LEN,
+        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
-        assert_data_valid, assert_derivation, assert_initialized,
+        assert_currently_holding, assert_data_valid, assert_derivation, assert_initialized,
         assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
         create_or_allocate_account_raw, get_owner_from_token_account,
         process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
-        transfer_mint_authority, CreateMetadataAccountsLogicArgs,
-        MintNewEditionFromMasterEditionViaTokenLogicArgs,
+        spl_token_burn, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
+        MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams,
     },
 };
 use arrayref::array_ref;
@@ -28,10 +30,14 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
+    program::invoke_signed,
     program_error::ProgramError,
     pubkey::Pubkey,
 };
-use spl_token::state::{Account, Mint};
+use spl_token::{
+    instruction::approve,
+    state::{Account, Mint},
+};
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
@@ -150,12 +156,18 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Verify Collection");
             verify_collection(program_id, accounts)
         }
-        MetadataInstruction::Utilize(_) => todo!(),
+        MetadataInstruction::Utilize(args) => {
+            msg!("Instruction: Use/Utilize Token");
+            process_utilize(program_id, accounts, args.number_of_uses)
+        }
         MetadataInstruction::ApproveUseAuthority(args) => {
             msg!("Instruction: Approve Use Authority");
             process_approve_use_authority(program_id, accounts, args.number_of_uses)
         }
-        MetadataInstruction::RevokeUseAuthority => todo!(),
+        MetadataInstruction::RevokeUseAuthority => {
+            msg!("Instruction: Revoke Use Authority");
+            process_revoke_use_authority(program_id, accounts)
+        }
     }
 }
 
@@ -713,58 +725,46 @@ pub fn process_approve_use_authority(
     let token_account_info = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
-
+    let program_as_burner = next_account_info(account_info_iter)?;
+    let token_program_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
-
-    assert_signer(&owner_info)?;
-    assert_signer(&payer)?;
-
-    assert_owned_by(metadata_info, program_id)?;
-    assert_owned_by(mint_info, &spl_token::id())?;
-
-    let token_account: Account = assert_initialized(token_account_info)?;
-
-    assert_owned_by(token_account_info, &spl_token::id())?;
     let metadata = Metadata::from_account_info(metadata_info)?;
-
-    if token_account.owner != *owner_info.key {
-        return Err(MetadataError::InvalidOwner.into());
-    }
-
-    if token_account.mint != *mint_info.key {
-        return Err(MetadataError::MintMismatch.into());
-    }
-
-    if token_account.amount < 1 {
-        return Err(MetadataError::NotEnoughTokens.into());
-    }
-
-    if token_account.mint != metadata.mint {
-        return Err(MetadataError::MintMismatch.into());
-    }
-
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
+    assert_signer(&owner_info)?;
+    assert_signer(&payer)?;
+    assert_currently_holding(
+        program_id,
+        owner_info,
+        metadata_info,
+        &metadata,
+        mint_info,
+        token_account_info,
+    )?;
+
+    let bump_seed = process_use_authority_validation(
+        program_id,
+        use_authority_record_info,
+        user_info,
+        mint_info,
+        true,
+    )?;
 
     let metadata_uses = metadata.uses.unwrap();
     let record_info_empty = use_authority_record_info.try_data_is_empty()?;
     if !record_info_empty {
         return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
     }
-    let use_authority_seeds = Vec::from([
+    let use_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
         &mint_info.key.as_ref(),
         USER.as_bytes(),
         &user_info.key.as_ref(),
-    ]);
-
-    let bump_seed = assert_derivation(program_id, use_authority_record_info, &use_authority_seeds)?;
-    let seed_ref = &[bump_seed];
-    let mut sign_seeds: Vec<&[u8]> = use_authority_seeds.clone();
-    sign_seeds.push(seed_ref);
+        &[bump_seed],
+    ];
 
     create_or_allocate_account_raw(
         *program_id,
@@ -773,7 +773,7 @@ pub fn process_approve_use_authority(
         system_account_info,
         payer,
         USE_AUTHORITY_RECORD_SIZE,
-        &sign_seeds,
+        use_authority_seeds,
     )?;
 
     let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
@@ -783,6 +783,173 @@ pub fn process_approve_use_authority(
     }
     record.allowed_uses = number_of_uses;
     record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
+    if metadata_uses.use_method == UseMethod::Burn {
+        invoke_signed(
+            &approve(
+                &token_program_account_info.key,
+                &token_account_info.key,
+                &program_as_burner.key,
+                &owner_info.key,
+                &[],
+                1,
+            )
+            .unwrap(),
+            &[
+                token_program_account_info.clone(),
+                token_account_info.clone(),
+                program_as_burner.clone(),
+                owner_info.clone(),
+            ],
+            &[],
+        )?;
+    }
+    Ok(())
+}
 
+pub fn process_revoke_use_authority(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let use_authority_record_info = next_account_info(account_info_iter)?;
+    let owner_info = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let user_info = next_account_info(account_info_iter)?;
+    let token_account_info = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let metadata = Metadata::from_account_info(metadata_info)?;
+    if metadata.uses.is_none() {
+        return Err(MetadataError::Unusable.into());
+    }
+    assert_signer(&owner_info)?;
+    assert_signer(&payer)?;
+    assert_currently_holding(
+        program_id,
+        owner_info,
+        metadata_info,
+        &metadata,
+        mint_info,
+        token_account_info,
+    )?;
+    process_use_authority_validation(
+        program_id,
+        use_authority_record_info,
+        user_info,
+        mint_info,
+        false,
+    )?;
+    let lamports = **use_authority_record_info.lamports.borrow();
+    **use_authority_record_info.lamports.borrow_mut() = 0;
+    **owner_info.lamports.borrow_mut() = lamports;
+
+    Ok(())
+}
+
+pub fn process_utilize(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    number_of_uses: u64,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let owner_info = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let user_info = next_account_info(account_info_iter)?;
+    let token_account_info = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let token_program_account_info = next_account_info(account_info_iter)?;
+    let _system_account_info = next_account_info(account_info_iter)?;
+    let _rent_info = next_account_info(account_info_iter)?;
+
+    let metadata = Metadata::from_account_info(metadata_info)?;
+    let approved_authority_is_using = accounts.len() == 12;
+
+    if metadata.uses.is_none() {
+        return Err(MetadataError::Unusable.into());
+    }
+    if *token_program_account_info.key != spl_token::id() {
+        return Err(MetadataError::InvalidTokenProgram.into());
+    }
+    assert_signer(&payer)?;
+    assert_currently_holding(
+        program_id,
+        owner_info,
+        metadata_info,
+        &metadata,
+        mint_info,
+        token_account_info,
+    )?;
+    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata_uses = metadata.uses.unwrap();
+    let must_burn = metadata_uses.use_method == UseMethod::Burn;
+    if number_of_uses > metadata_uses.total || number_of_uses > metadata_uses.remaining {
+        return Err(MetadataError::NotEnoughUses.into());
+    }
+    let remaining_uses = metadata_uses
+        .remaining
+        .checked_sub(number_of_uses)
+        .ok_or(MetadataError::NotEnoughUses)?;
+    metadata.uses = Some(Uses {
+        use_method: metadata_uses.use_method,
+        total: metadata_uses.total,
+        remaining: remaining_uses,
+    });
+
+    if approved_authority_is_using {
+        let use_authority_record_info = next_account_info(account_info_iter)?;
+        let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+        record.allowed_uses = record
+            .allowed_uses
+            .checked_sub(number_of_uses)
+            .ok_or(MetadataError::NotEnoughUses)?;
+        assert_signer(&user_info)?;
+        process_use_authority_validation(
+            program_id,
+            use_authority_record_info,
+            user_info,
+            mint_info,
+            false,
+        )?;
+        record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
+    } else {
+        assert_signer(&owner_info)?;
+    }
+
+    metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
+    if remaining_uses <= 0 && must_burn {
+        if approved_authority_is_using {
+            let burn_path = &[PREFIX.as_bytes(), program_id.as_ref(), BURN.as_bytes()];
+            let burn_authority_info = next_account_info(account_info_iter)?;
+            assert_owned_by(burn_authority_info, program_id)?;
+            let burn_bump_ref = &[
+                PREFIX.as_bytes(),
+                program_id.as_ref(),
+                BURN.as_bytes(),
+                &[assert_derivation(
+                    &program_id,
+                    burn_authority_info,
+                    burn_path,
+                )?],
+            ];
+            spl_token_burn(TokenBurnParams {
+                mint: mint_info.clone(),
+                amount: 1,
+                authority: owner_info.clone(),
+                token_program: token_program_account_info.clone(),
+                source: token_account_info.clone(),
+                authority_signer_seeds: Some(burn_bump_ref),
+            })?;
+        } else {
+            spl_token_burn(TokenBurnParams {
+                mint: mint_info.clone(),
+                amount: 1,
+                authority: owner_info.clone(),
+                token_program: token_program_account_info.clone(),
+                source: token_account_info.clone(),
+                authority_signer_seeds: None,
+            })?;
+        }
+    }
     Ok(())
 }

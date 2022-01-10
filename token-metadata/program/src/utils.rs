@@ -5,7 +5,7 @@ use crate::{
         get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, Metadata,
         TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
         MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
-        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX, USER,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -1098,5 +1098,37 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         None,
         Some(edition),
     )?;
+    Ok(())
+}
+pub fn assert_currently_holding(
+    program_id: &Pubkey,
+    owner_info: &AccountInfo,
+    metadata_info: &AccountInfo,
+    metadata: &Metadata,
+    mint_info: &AccountInfo,
+    token_account_info: &AccountInfo,
+) -> ProgramResult {
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+
+    let token_account: Account = assert_initialized(token_account_info)?;
+
+    assert_owned_by(token_account_info, &spl_token::id())?;
+
+    if token_account.owner != *owner_info.key {
+        return Err(MetadataError::InvalidOwner.into());
+    }
+
+    if token_account.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if token_account.amount < 1 {
+        return Err(MetadataError::NotEnoughTokens.into());
+    }
+
+    if token_account.mint != metadata.mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
     Ok(())
 }

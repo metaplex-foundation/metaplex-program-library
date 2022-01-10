@@ -313,6 +313,7 @@ pub enum MetadataInstruction {
 
     ///See [approve_use_authority] for Doc
     ApproveUseAuthority(ApproveUseAuthorityArgs),
+    ///See [revoke_use_authority] for Doc
     RevokeUseAuthority,
 }
 
@@ -781,14 +782,14 @@ pub fn verify_collection(
 ///   0. `[writable]` Metadata account
 ///   1. `[writable]` Token Account Of NFT
 ///   2. `[writable]` Mint of the Metadata
-///   3. `[writable]` Use Authority Record PDA
-///   2. `[signer]` A Use Authority
+///   2. `[signer]` A Use Authority / Can be the current Owner of the NFT
 ///   3. `[signer]` Payer
 ///   4. `[]` Owner
 ///   5. `[]` Token program
 ///   6. `[]` Associated Token program
 ///   7. `[]` System program
 ///   8. `[]` Rent info
+///   9. Optional `[writable]` Use Authority Record PDA If present the program Assumes a delegated use authority
 
 #[allow(clippy::too_many_arguments)]
 pub fn utilize(
@@ -796,27 +797,35 @@ pub fn utilize(
     metadata: Pubkey,
     token_account: Pubkey,
     mint: Pubkey,
-    use_authority_record_pda: Pubkey,
+    use_authority_record_pda: Option<Pubkey>,
     use_authority: Pubkey,
     payer: Pubkey,
     owner: Pubkey,
+    burner: Option<Pubkey>,
     number_of_uses: u64,
 ) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(token_account, false),
+        AccountMeta::new(mint, false),
+        AccountMeta::new(use_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(owner, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+    if use_authority_record_pda.is_some() {
+        accounts.push(AccountMeta::new(use_authority_record_pda.unwrap(), false));
+    }
+    if burner.is_some() {
+        accounts.push(AccountMeta::new_readonly(burner.unwrap(), false));
+    }
+
     Instruction {
         program_id,
-        accounts: vec![
-            AccountMeta::new(metadata, false),
-            AccountMeta::new(token_account, false),
-            AccountMeta::new(mint, false),
-            AccountMeta::new(use_authority_record_pda, false),
-            AccountMeta::new(use_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new(owner, true),
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
-        ],
+        accounts,
         data: MetadataInstruction::Utilize(UtilizeArgs { number_of_uses })
             .try_to_vec()
             .unwrap(),
@@ -825,7 +834,7 @@ pub fn utilize(
 
 ///# Approve Use Authority
 ///
-///Approve another account to call [use] this NFT
+///Approve another account to call [utilize] on this NFT
 ///
 ///### Args:
 ///
@@ -840,8 +849,8 @@ pub fn utilize(
 ///   4. `[]` A Use Authority
 ///   5. `[]` Metadata account
 ///   6. `[]` Mint of Metadata
-///   7. `[]` Token program
-///   8. `[]` Associated Token program
+///   7. `[]` Program As Signer (Burner)
+///   8. `[]` Token program
 ///   9. `[]` System program
 ///   10. `[]` Rent info
 #[allow(clippy::too_many_arguments)]
@@ -854,6 +863,7 @@ pub fn approve_use_authority(
     owner_token_account: Pubkey,
     metadata: Pubkey,
     mint: Pubkey,
+    burner: Pubkey,
     number_of_uses: u64,
 ) -> Instruction {
     Instruction {
@@ -866,6 +876,8 @@ pub fn approve_use_authority(
             AccountMeta::new_readonly(owner_token_account, false),
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(burner, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
@@ -874,4 +886,50 @@ pub fn approve_use_authority(
             .unwrap(),
     }
 }
-    
+
+//# Revoke Use Authority
+///
+///Revoke account to call [utilize] on this NFT
+///
+///### Accounts:
+///
+///   0. `[writable]` Use Authority Record PDA
+///   1. `[writable]` Owned Token Account Of Mint
+///   2. `[signer]` Owner
+///   3. `[signer]` Payer
+///   4. `[]` A Use Authority
+///   5. `[]` Metadata account
+///   6. `[]` Mint of Metadata
+///   7. `[]` Token program
+///   8. `[]` System program
+///   9. `[]` Rent info
+#[allow(clippy::too_many_arguments)]
+pub fn revoke_use_authority(
+    program_id: Pubkey,
+    use_authority_record: Pubkey,
+    user: Pubkey,
+    owner: Pubkey,
+    payer: Pubkey,
+    owner_token_account: Pubkey,
+    metadata: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(use_authority_record, false),
+            AccountMeta::new(owner, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(user, false),
+            AccountMeta::new_readonly(owner_token_account, false),
+            AccountMeta::new_readonly(metadata, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: MetadataInstruction::RevokeUseAuthority
+            .try_to_vec()
+            .unwrap(),
+    }
+}

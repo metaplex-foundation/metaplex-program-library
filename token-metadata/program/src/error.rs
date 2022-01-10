@@ -338,6 +338,9 @@ pub enum MetadataError {
     #[error("The Use Authority Record Already Exists, to modify it Revoke, then Approve")]
     UseAuthorityRecordAlreadyExists,
 
+    #[error("The Use Authority Record is empty or already revoked")]
+    UseAuthorityRecordAlreadyRevoked,
+
     #[error("This token has no uses")]
     Unusable,
 

@@ -1,8 +1,8 @@
-use solana_program::program_error::ProgramError;
+use solana_program::{program_error::ProgramError, account_info::AccountInfo, pubkey::Pubkey};
 
 use crate::{
     error::MetadataError,
-    state::{UseMethod, Uses},
+    state::{UseMethod, Uses, USER, PREFIX}, utils::assert_derivation,
 };
 
 pub fn assert_valid_use(
@@ -32,4 +32,32 @@ pub fn assert_valid_use(
         }
         _ => Ok(()),
     };
+}
+
+pub fn process_use_authority_validation(
+    program_id: &Pubkey,
+    use_authority_record_info: &AccountInfo,
+    user_info: &AccountInfo,
+    mint_info: &AccountInfo,
+    must_be_empty: bool,
+) -> Result<u8, ProgramError> {
+    let record_info_empty = use_authority_record_info.try_data_is_empty()?;
+    if must_be_empty {
+        if !record_info_empty {
+            return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
+        }
+    } else {
+        if !record_info_empty {
+            return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
+        }
+    }
+    let use_authority_seeds = [
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        &mint_info.key.as_ref(),
+        USER.as_bytes(),
+        &user_info.key.as_ref(),
+    ];
+
+    assert_derivation(&program_id, use_authority_record_info, &use_authority_seeds)
 }
