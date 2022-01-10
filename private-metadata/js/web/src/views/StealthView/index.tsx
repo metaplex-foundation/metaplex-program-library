@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Input,
+  Progress,
   Spin,
   Steps,
 } from 'antd';
@@ -551,14 +552,19 @@ const decryptImage = (
   return Buffer.from(decrypted.toString(), 'hex');
 };
 
-type TransactionAndStep = {
-  transaction: Transaction,
+type TransferProgress = {
   step: number,
+  substep?: number,
+};
+
+type TransactionAndProgress = {
+  transaction: Transaction,
+  progress: TransferProgress
 };
 
 const WaitingOverlay = (props: {
-  step: number;
   visible: boolean;
+  progress: TransferProgress,
 }) => {
   const setIconForStep = (currentStep: number, componentStep: number) => {
     if (currentStep === componentStep) {
@@ -568,6 +574,7 @@ const WaitingOverlay = (props: {
   };
 
   const { Step } = Steps;
+  const { step, substep } = props.progress;
 
   // closes after end of async function
   return (
@@ -575,38 +582,40 @@ const WaitingOverlay = (props: {
       visible={props.visible}
       closable={false}
     >
-      <Steps direction="vertical" current={props.step}>
+      <Steps direction="vertical" current={step}>
         <Step
           className={'white-description'}
           title="Building transfer transactions"
-          icon={setIconForStep(props.step, 0)}
+          icon={setIconForStep(step, 0)}
         />
         <Step
           className={'white-description'}
           title="Signing transfer transactions"
           description="Approve the transactions from your wallet"
-          icon={setIconForStep(props.step, 1)}
+          icon={setIconForStep(step, 1)}
         />
         <Step
           className={'white-description'}
           title="Initializing buffers"
-          icon={setIconForStep(props.step, 2)}
+          icon={setIconForStep(step, 2)}
         />
         <Step
           className={'white-description'}
           title="Validating transfer encryption"
-          icon={setIconForStep(props.step, 3)}
+          description=
+            {step === 3 && <Progress percent={substep} />}
+          icon={setIconForStep(step, 3)}
         />
         <Step
           className={'white-description'}
           title="Finalizing transfer"
-          icon={setIconForStep(props.step, 4)}
+          icon={setIconForStep(step, 4)}
         />
         <Step
           className={'white-description'}
           title="Waiting for Final Confirmation"
           description="This will take a few seconds."
-          icon={setIconForStep(props.step, 5)}
+          icon={setIconForStep(step, 5)}
         />
       </Steps>
     </MetaplexModal>
@@ -657,7 +666,7 @@ export const StealthView = (
   const [transferring, setTransferring]
       = React.useState<boolean>(false);
   const [transferProgress, setTransferProgress]
-      = React.useState<number>(0);
+      = React.useState<TransferProgress>({ step: 0 });
 
   const clearPrivateState = () => {
     setElgamalKeypairStr('');
@@ -816,7 +825,7 @@ export const StealthView = (
       await connection.getRecentBlockhash()
     ).blockhash;
 
-    const transferTxns: Array<TransactionAndStep> = [];
+    const transferTxns: Array<TransactionAndProgress> = [];
 
     let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
     let transferBufferUpdated;
@@ -830,7 +839,7 @@ export const StealthView = (
           [transferBufferKeypair],
           recentBlockhash
         ),
-        step: 2,
+        progress: { step: 2 },
       });
       transferBufferUpdated = false;
     } else {
@@ -851,7 +860,7 @@ export const StealthView = (
           [],
           recentBlockhash
         ),
-        step: 2,
+        progress: { step: 2 },
       });
     }
 
@@ -874,9 +883,12 @@ export const StealthView = (
         },
       );
       transferTxns.push(...transferCrankTxns.map(
-        transaction => ({
+        (transaction, idx) => ({
           transaction,
-          step: 3,
+          progress: {
+            step: 3,
+            substep: Math.floor(idx * 100 / transferCrankTxns.length),
+          },
         })
       ));
     }
@@ -894,17 +906,19 @@ export const StealthView = (
         [],
         recentBlockhash
       ),
-      step: 4,
+      progress: { step: 4 },
     });
 
     console.log('Singing transactions...');
-    let lastProgressStep = 1;
-    setTransferProgress(lastProgressStep);
+    let lastProgress: TransferProgress = { step: 1 };
+    setTransferProgress(lastProgress);
     const signedTxns = await wallet.signAllTransactions(transferTxns.map(t => t.transaction));
     for (let i = 0; i < signedTxns.length; ++i) {
-      if (transferTxns[i].step != lastProgressStep) {
-        lastProgressStep = transferTxns[i].step;
-        setTransferProgress(lastProgressStep);
+      const curProgress = transferTxns[i].progress;
+      if (curProgress.step != lastProgress.step
+          || curProgress.substep != lastProgress.substep) {
+        lastProgress = curProgress;
+        setTransferProgress(lastProgress);
       }
 
       const resultTxid: TransactionSignature = await connection.sendRawTransaction(
@@ -920,8 +934,8 @@ export const StealthView = (
       if (i < signedTxns.length - 1) {
         confirmed = await connection.confirmTransaction(resultTxid, 'confirmed');
       } else {
-        lastProgressStep += 1;
-        setTransferProgress(lastProgressStep);
+        lastProgress = { step: 6 };
+        setTransferProgress(lastProgress);
         confirmed = await connection.confirmTransaction(resultTxid, 'finalized');
       }
 
@@ -1145,7 +1159,7 @@ export const StealthView = (
                 })
               } finally {
                 setTransferring(false);
-                setTransferProgress(0);
+                setTransferProgress({ step: 0 });
               }
             };
 
@@ -1166,8 +1180,8 @@ export const StealthView = (
         Transfer
       </Button>
       <WaitingOverlay
-        step={transferProgress}
         visible={transferring}
+        progress={transferProgress}
       />
     </div>
   );
