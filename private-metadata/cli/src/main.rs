@@ -13,7 +13,6 @@ use {
         program_error::ProgramError,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
-        system_instruction,
         transaction::Transaction,
     },
     private_metadata::pod::*,
@@ -65,38 +64,26 @@ fn specified_or_new(param: Option<String>) -> Keypair {
 fn get_or_create_transfer_buffer(
     rpc_client: &RpcClient,
     payer: &dyn Signer,
-    transfer_buffer: &dyn Signer,
+    transfer_buffer_key: &Pubkey,
     mint: &Pubkey,
     recipient: &Pubkey,
 ) -> Result<private_metadata::state::CipherKeyTransferBuffer, Box<dyn std::error::Error>> {
-    let mut transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey());
+    let mut transfer_buffer_data = rpc_client.get_account_data(transfer_buffer_key);
     if transfer_buffer_data.is_err() {
-        let buffer_len = private_metadata::state::CipherKeyTransferBuffer::get_packed_len();
-        let buffer_minimum_balance_for_rent_exemption = rpc_client
-            .get_minimum_balance_for_rent_exemption(buffer_len)?;
-
         send(
             rpc_client,
             &format!("Initializing transfer buffer"),
             &[
-                system_instruction::create_account(
-                    &payer.pubkey(),
-                    &transfer_buffer.pubkey(),
-                    buffer_minimum_balance_for_rent_exemption,
-                    buffer_len as u64,
-                    &private_metadata::ID,
-                ),
                 private_metadata::instruction::init_transfer(
                     &payer.pubkey(),
                     mint,
-                    &transfer_buffer.pubkey(),
                     recipient,
                 ),
             ],
-            &[payer, transfer_buffer],
+            &[payer],
         )?;
 
-        transfer_buffer_data = rpc_client.get_account_data(&transfer_buffer.pubkey());
+        transfer_buffer_data = rpc_client.get_account_data(transfer_buffer_key);
     } else {
         println!("Transfer buffer already initialized");
     }
@@ -376,7 +363,6 @@ async fn parallel_decrypt_cipher_key(
 struct TransferParams {
     mint: String,
     recipient_pubkey: String,
-    transfer_buffer: Option<String>,
     instruction_buffer: Option<String>,
     input_buffer: Option<String>,
     compute_buffer: Option<String>,
@@ -404,12 +390,10 @@ async fn process_transfer(
     let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
         &private_metadata_data).unwrap();
 
-    let transfer_buffer = specified_or_new(params.transfer_buffer.clone());
     let instruction_buffer = specified_or_new(params.instruction_buffer.clone());
     let input_buffer = specified_or_new(params.input_buffer.clone());
     let compute_buffer = specified_or_new(params.compute_buffer.clone());
 
-    println!("Transfer buffer keypair: {}", transfer_buffer.to_base58_string());
     println!("Instruction buffer keypair: {}", instruction_buffer.to_base58_string());
     println!("Input buffer keypair: {}", input_buffer.to_base58_string());
     println!("Compute buffer keypair: {}", compute_buffer.to_base58_string());
@@ -428,10 +412,13 @@ async fn process_transfer(
         )?.as_slice().try_into()?
     ).try_into()?;
 
+    let transfer_buffer_key = private_metadata::instruction::get_transfer_buffer_address(
+        &recipient_pubkey, &mint).0;
+
     let transfer_buffer_account = get_or_create_transfer_buffer(
         rpc_client,
         payer,
-        &transfer_buffer,
+        &transfer_buffer_key,
         &mint,
         &recipient_pubkey,
     )?;
@@ -500,7 +487,7 @@ async fn process_transfer(
         let transfer_ix = private_metadata::instruction::transfer_chunk_slow(
             payer.pubkey(),
             mint,
-            transfer_buffer.pubkey(),
+            transfer_buffer_key,
             instruction_buffer.pubkey(),
             input_buffer.pubkey(),
             compute_buffer.pubkey(),
@@ -560,7 +547,7 @@ async fn process_transfer(
             private_metadata::instruction::fini_transfer(
                 payer.pubkey(),
                 mint,
-                transfer_buffer.pubkey(),
+                transfer_buffer_key,
             ),
         ],
     );
@@ -647,13 +634,6 @@ fn process_close_elgamal_pubkey(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let transfer_buffer_param =
-        Arg::with_name("transfer_buffer")
-            .long("transfer_buffer")
-            .value_name("KEYPAIR_STRING")
-            .takes_value(true)
-            .global(true)
-            .help("Transfer buffer keypair to use (or create)");
     let instruction_buffer_param =
         Arg::with_name("instruction_buffer")
             .long("instruction_buffer")
@@ -795,7 +775,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .global(true)
                     .help("Base-58 encoded public key of recipient"),
             )
-            .arg(transfer_buffer_param.clone())
             .arg(instruction_buffer_param.clone())
             .arg(input_buffer_param.clone())
             .arg(compute_buffer_param.clone())
@@ -928,7 +907,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &TransferParams {
                     mint: sub_m.value_of("mint").unwrap().to_string(),
                     recipient_pubkey: sub_m.value_of("recipient_pubkey").unwrap().to_string(),
-                    transfer_buffer: sub_m.value_of("transfer_buffer").map(|s| s.into()),
                     instruction_buffer: sub_m.value_of("instruction_buffer").map(|s| s.into()),
                     input_buffer: sub_m.value_of("input_buffer").map(|s| s.into()),
                     compute_buffer: sub_m.value_of("compute_buffer").map(|s| s.into()),
