@@ -105,17 +105,17 @@ fn process_configure_metadata(
         return Err(ProgramError::InvalidArgument);
     }
     validate_account_owner(mint_info, &spl_token::ID)?;
-    validate_account_owner(metadata_info, &spl_token_metadata::ID)?;
+    validate_account_owner(metadata_info, &mpl_token_metadata::ID)?;
 
 
     // check metadata matches mint
     let metadata_seeds = &[
-        spl_token_metadata::state::PREFIX.as_bytes(),
-        spl_token_metadata::ID.as_ref(),
+        mpl_token_metadata::state::PREFIX.as_bytes(),
+        mpl_token_metadata::ID.as_ref(),
         mint_info.key.as_ref(),
     ];
     let (metadata_key, _metadata_bump_seed) =
-        Pubkey::find_program_address(metadata_seeds, &spl_token_metadata::ID);
+        Pubkey::find_program_address(metadata_seeds, &mpl_token_metadata::ID);
 
     if metadata_key != *metadata_info.key {
         msg!("Invalid metadata key");
@@ -125,7 +125,7 @@ fn process_configure_metadata(
 
     // check that metadata authority matches and that metadata is mutable (adding private metadata
     // and not acting on a limited edition). TODO?
-    let metadata = spl_token_metadata::state::Metadata::from_account_info(metadata_info)?;
+    let metadata = mpl_token_metadata::state::Metadata::from_account_info(metadata_info)?;
 
     let authority_pubkey = metadata.update_authority;
 

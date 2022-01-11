@@ -207,11 +207,11 @@ pub fn pod_from_bytes<T: Pod>(bytes: &[u8]) -> Option<&T> {
 pub fn get_metadata_address(mint: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            spl_token_metadata::state::PREFIX.as_bytes(),
-            spl_token_metadata::ID.as_ref(),
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::ID.as_ref(),
             mint.as_ref(),
         ],
-        &spl_token_metadata::ID,
+        &mpl_token_metadata::ID,
     )
 }
 
