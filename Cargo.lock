@@ -1969,6 +1969,7 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token",
  "subtle",
+ "tarpc",
  "thiserror",
  "time",
  "zeroize",

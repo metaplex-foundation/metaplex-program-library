@@ -12,6 +12,7 @@ use {
     rand_core::OsRng,
     solana_program_test::*,
     solana_sdk::{
+        native_token::LAMPORTS_PER_SOL,
         program_pack::Pack,
         pubkey::Pubkey,
         signer::keypair::Keypair,
@@ -187,7 +188,7 @@ async fn test_transfer() {
             system_instruction::transfer(
                 &payer.pubkey(),
                 &dest.pubkey(),
-                solana_sdk::native_token::LAMPORTS_PER_SOL,
+                LAMPORTS_PER_SOL,
             ),
             private_metadata::instruction::publish_elgamal_pubkey(
                 &dest.pubkey(),
@@ -205,6 +206,7 @@ async fn test_transfer() {
                 &payer.pubkey(),
                 &mint.pubkey(),
                 &dest.pubkey(),
+                &payer.pubkey(),
             ),
             private_metadata::instruction::transfer_chunk(
                 payer.pubkey(),
@@ -256,6 +258,215 @@ async fn test_transfer() {
     // transfer landed...
     let private_metadata_account = banks_client.get_account(
         get_private_metadata_address(&mint.pubkey()).0).await.unwrap().unwrap();
+    let private_metadata = PrivateMetadataAccount::from_bytes(
+        private_metadata_account.data.as_slice()).unwrap();
+    // successfully decrypt with dest_elgamal_kp
+    assert_eq!(
+        private_metadata.encrypted_cipher_key.try_into().and_then(
+            |ct: ElGamalCiphertext| ct.decrypt(&dest_elgamal_kp.secret)),
+        Ok(cipher_key),
+    );
+    // and old fails to decrypt...
+    assert!(
+        private_metadata.encrypted_cipher_key.try_into().and_then(
+            |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)).is_err(),
+    );
+}
+
+#[tokio::test]
+async fn test_transfer_buyer_init() {
+    let mut pc = ProgramTest::default();
+
+    pc.prefer_bpf(true);
+
+    pc.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    pc.add_program("private_metadata", private_metadata::id(), None);
+
+    // 100x lol
+    pc.set_compute_max_units(20_000_000);
+
+    let (mut banks_client, payer, recent_blockhash) = pc.start().await;
+
+    let rent = banks_client.get_rent().await;
+    let rent = rent.unwrap();
+
+    let mint = Keypair::from_base58_string("47WBGggARowPAzDVdCMCGxTVhNBqXhxgyDcFFyGrVx3VqUyPU7UZTz9umQifQA8yXxKNX8sKGujtDKu7kKX1rLB8");
+
+    let elgamal_kp = ElGamalKeypair::new(&payer, &mint.pubkey()).unwrap();
+    let cipher_key = CipherKey::random(&mut OsRng);
+
+    println!("mint {:?}", mint);
+
+    // smoke test
+    assert_eq!(
+        elgamal_kp.public.encrypt(cipher_key).decrypt(&elgamal_kp.secret),
+        Ok(cipher_key),
+    );
+
+    let nft_setup = nft_setup_transaction(
+        &payer,
+        &mint,
+        &recent_blockhash,
+        &rent,
+        &elgamal_kp,
+        &cipher_key,
+    ).await.unwrap();
+
+    banks_client.process_transaction(nft_setup).await.unwrap();
+
+    // data landed...
+    let private_metadata_key = get_private_metadata_address(&mint.pubkey()).0;
+    let private_metadata_account = banks_client.get_account(
+        private_metadata_key).await.unwrap().unwrap();
+    let private_metadata = PrivateMetadataAccount::from_bytes(
+        private_metadata_account.data.as_slice()).unwrap();
+    assert_eq!(
+        private_metadata.encrypted_cipher_key.try_into().and_then(
+            |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)),
+        Ok(cipher_key),
+    );
+
+    let dest = Keypair::new();
+    let dest_elgamal_kp = ElGamalKeypair::new(&dest, &mint.pubkey()).unwrap();
+    let transfer_buffer_key = private_metadata::instruction::get_transfer_buffer_address(
+        &dest.pubkey(), &mint.pubkey()).0;
+
+    let transfer = Transaction::new_signed_with_payer(
+        &[
+            // seed destination and publish elgamal pk to encrypt with
+            system_instruction::transfer(
+                &payer.pubkey(),
+                &dest.pubkey(),
+                2 * LAMPORTS_PER_SOL,
+            ),
+            private_metadata::instruction::publish_elgamal_pubkey(
+                &payer.pubkey(),
+                &mint.pubkey(),
+                elgamal_kp.public.into(),
+            ),
+
+            // transfer nft 'out of band' and send some sol to PM account
+            spl_associated_token_account::create_associated_token_account(
+                &payer.pubkey(), // funding
+                &dest.pubkey(), // wallet to create for
+                &mint.pubkey(),
+            ),
+            spl_token::instruction::transfer(
+                &spl_token::id(),
+                &spl_associated_token_account::get_associated_token_address(
+                    &payer.pubkey(),
+                    &mint.pubkey(),
+                ),
+                &spl_associated_token_account::get_associated_token_address(
+                    &dest.pubkey(),
+                    &mint.pubkey(),
+                ),
+                &payer.pubkey(),
+                &[],
+                1,
+            ).unwrap(),
+        ],
+        Some(&payer.pubkey()),
+        &[&payer],
+        recent_blockhash,
+    );
+
+    banks_client.process_transaction(transfer).await.unwrap();
+
+    // no lamports yet
+    assert_eq!(
+        banks_client.get_account(transfer_buffer_key).await.unwrap(),
+        None,
+    );
+
+    let request_reencrypt = Transaction::new_signed_with_payer(
+        &[
+            // buyer side transfer
+            system_instruction::transfer(
+                &dest.pubkey(),
+                &private_metadata_key,
+                LAMPORTS_PER_SOL,
+            ),
+
+            // publish and init
+            private_metadata::instruction::publish_elgamal_pubkey(
+                &dest.pubkey(),
+                &mint.pubkey(),
+                dest_elgamal_kp.public.into(),
+            ),
+            private_metadata::instruction::init_transfer(
+                &dest.pubkey(), // payer
+                &mint.pubkey(),
+                &dest.pubkey(),
+                &payer.pubkey(), // current
+            ),
+        ],
+        Some(&dest.pubkey()),
+        &[&dest],
+        recent_blockhash,
+    );
+
+    banks_client.process_transaction(request_reencrypt).await.unwrap();
+
+    let start_seller_lamports = banks_client.get_account(
+        payer.pubkey()).await.unwrap().unwrap().lamports;
+
+    let start_transfer_lamports = banks_client.get_account(
+        transfer_buffer_key).await.unwrap().unwrap().lamports;
+
+    // at least price + min balance...
+    assert!(start_transfer_lamports > LAMPORTS_PER_SOL);
+
+    let reencrypt = Transaction::new_signed_with_payer(
+        &[
+            // do the transfer prep
+            private_metadata::instruction::transfer_chunk(
+                payer.pubkey(),
+                mint.pubkey(),
+                transfer_buffer_key,
+                private_metadata::instruction::TransferChunkData {
+                    transfer: private_metadata::transfer_proof::TransferData::new(
+                        &elgamal_kp,
+                        dest_elgamal_kp.public.into(),
+                        cipher_key,
+                        private_metadata.encrypted_cipher_key.try_into().unwrap(),
+                    ),
+                },
+            ),
+
+            // finish
+            private_metadata::instruction::fini_transfer(
+                payer.pubkey(),
+                mint.pubkey(),
+                transfer_buffer_key,
+            ),
+        ],
+        Some(&payer.pubkey()),
+        &[&payer],
+        recent_blockhash,
+    );
+
+    let mut ctx = tarpc::context::current();
+    ctx.deadline += std::time::Duration::from_secs(50);
+    let reencrypt_tx_fee = banks_client.get_fee_for_message_with_commitment_and_context(
+        ctx,
+        solana_sdk::commitment_config::CommitmentLevel::Confirmed,
+        reencrypt.message().clone(),
+    ).await.unwrap().unwrap();
+
+    banks_client.process_transaction(reencrypt).await.unwrap();
+
+    // transfer landed...
+    let fin_seller_lamports = banks_client.get_account(
+        payer.pubkey()).await.unwrap().unwrap().lamports;
+
+    assert_eq!(
+        fin_seller_lamports,
+        start_seller_lamports + start_transfer_lamports - reencrypt_tx_fee,
+    );
+
+    let private_metadata_account = banks_client.get_account(
+        private_metadata_key).await.unwrap().unwrap();
     let private_metadata = PrivateMetadataAccount::from_bytes(
         private_metadata_account.data.as_slice()).unwrap();
     // successfully decrypt with dest_elgamal_kp

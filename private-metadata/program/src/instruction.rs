@@ -98,7 +98,7 @@ pub enum PrivateMetadataInstruction {
     ///   2. `[]` The SPL Token account holding the NFT
     ///   3. `[]` The wallet currently encrypting the cipherkey
     ///   4. `[]` The elgamal pubkey PDA matching private_metadata.elgamal_pk
-    ///   5. `[]` Private metadata PDA
+    ///   5. `[writable]` Private metadata PDA
     ///   6. `[]` Recipient wallet
     ///   7. `[]` Recipient elgamal pubkey PDA
     ///   8. `[writable]` Transfer buffer PDA. Will hold CipherKeyTransferBuffer
@@ -307,6 +307,7 @@ pub fn init_transfer(
     payer: &Pubkey,
     mint: &Pubkey,
     recipient: &Pubkey,
+    current: &Pubkey,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(*payer, true),
@@ -315,9 +316,9 @@ pub fn init_transfer(
             spl_associated_token_account::get_associated_token_address(payer, mint),
             false,
         ),
-        AccountMeta::new_readonly(*payer, false),
-        AccountMeta::new_readonly(get_elgamal_pubkey_address(payer, mint).0, false),
-        AccountMeta::new_readonly(get_private_metadata_address(mint).0, false),
+        AccountMeta::new_readonly(*current, false),
+        AccountMeta::new_readonly(get_elgamal_pubkey_address(current, mint).0, false),
+        AccountMeta::new(get_private_metadata_address(mint).0, false),
         AccountMeta::new_readonly(*recipient, false),
         AccountMeta::new_readonly(get_elgamal_pubkey_address(recipient, mint).0, false),
         AccountMeta::new(get_transfer_buffer_address(recipient, mint).0, false),
