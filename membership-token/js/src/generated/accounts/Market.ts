@@ -50,7 +50,7 @@ export class MarketAccountData {
     readonly piecesInOneWallet: beet.COption<beet.bignum>,
     readonly startDate: beet.bignum,
     readonly endDate: beet.COption<beet.bignum>,
-    readonly state: MarketState;
+    readonly state: MarketState,
   ) {}
 
   /**
@@ -79,7 +79,7 @@ export class MarketAccountData {
       args.piecesInOneWallet,
       args.startDate,
       args.endDate,
-      args.state
+      args.state,
     );
   }
 
