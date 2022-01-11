@@ -50,6 +50,9 @@ pub struct PrivateMetadataAccount {
     /// The corresponding SPL Token Mint
     pub mint: Pubkey,
 
+    /// The signing key associated with `elgamal_pk`
+    pub wallet_pk: Pubkey,
+
     /// The public key associated with ElGamal encryption
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
 
@@ -70,11 +73,11 @@ pub struct CipherKeyTransferBuffer {
 
     pub updated: PodBool,
 
-    /// Source pubkey. Should match the currently encrypted elgamal_pk
-    pub authority: Pubkey,
-
     /// Account that will have its encrypted key updated
     pub private_metadata_key: Pubkey,
+
+    /// The destination signing key associated with `elgamal_pk`
+    pub wallet_pk: Pubkey,
 
     /// Destination public key
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,

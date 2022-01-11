@@ -96,14 +96,12 @@ pub enum PrivateMetadataInstruction {
     ///   0. `[writeable,signer]` The owner of the NFT
     ///   1. `[]` The SPL Token mint account of the NFT
     ///   2. `[]` The SPL Token account holding the NFT
-    ///   3. `[]` The wallet currently encrypting the cipherkey
-    ///   4. `[]` The elgamal pubkey PDA matching private_metadata.elgamal_pk
-    ///   5. `[writable]` Private metadata PDA
-    ///   6. `[]` Recipient wallet
-    ///   7. `[]` Recipient elgamal pubkey PDA
-    ///   8. `[writable]` Transfer buffer PDA. Will hold CipherKeyTransferBuffer
-    ///   9. `[]` System program
-    ///   10. `[]` Rent sysvar
+    ///   3. `[writable]` Private metadata PDA
+    ///   4. `[]` Recipient wallet
+    ///   5. `[]` Recipient elgamal pubkey PDA
+    ///   6. `[writable]` Transfer buffer PDA. Will hold CipherKeyTransferBuffer
+    ///   7. `[]` System program
+    ///   8. `[]` Rent sysvar
     ///
     /// Data expected by this instruction:
     ///
@@ -307,7 +305,6 @@ pub fn init_transfer(
     payer: &Pubkey,
     mint: &Pubkey,
     recipient: &Pubkey,
-    current: &Pubkey,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(*payer, true),
@@ -316,8 +313,6 @@ pub fn init_transfer(
             spl_associated_token_account::get_associated_token_address(payer, mint),
             false,
         ),
-        AccountMeta::new_readonly(*current, false),
-        AccountMeta::new_readonly(get_elgamal_pubkey_address(current, mint).0, false),
         AccountMeta::new(get_private_metadata_address(mint).0, false),
         AccountMeta::new_readonly(*recipient, false),
         AccountMeta::new_readonly(get_elgamal_pubkey_address(recipient, mint).0, false),

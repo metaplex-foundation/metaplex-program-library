@@ -267,6 +267,7 @@ fn process_configure_metadata(
 
     private_metadata.key = Key::PrivateMetadataAccountV1;
     private_metadata.mint = *mint_info.key;
+    private_metadata.wallet_pk = *payer_info.key;
     private_metadata.elgamal_pk = data.elgamal_pk;
     private_metadata.encrypted_cipher_key = data.encrypted_cipher_key;
     private_metadata.uri = data.uri;
@@ -298,8 +299,6 @@ fn process_init_transfer(
     let payer_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
-    let current_encrypt_info = next_account_info(account_info_iter)?;
-    let current_elgamal_info = next_account_info(account_info_iter)?;
     let private_metadata_info = next_account_info(account_info_iter)?;
     let recipient_info = next_account_info(account_info_iter)?;
     let recipient_elgamal_info = next_account_info(account_info_iter)?;
@@ -343,7 +342,8 @@ fn process_init_transfer(
         return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
     }
 
-    let private_metadata = PrivateMetadataAccount::from_account_info(
+    // deserialize to verify it exists...
+    let _private_metadata = PrivateMetadataAccount::from_account_info(
         &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
 
     // check that elgamal PDAs match
@@ -369,14 +369,6 @@ fn process_init_transfer(
                 })?
         ))
     };
-
-    let current_elgamal_pk = get_elgamal_pk(
-        &current_encrypt_info, &current_elgamal_info)?;
-
-    if current_elgamal_pk != private_metadata.elgamal_pk {
-        msg!("Mismatched current elgamal pubkey");
-        return Err(ProgramError::InvalidArgument);
-    }
 
     let recipient_elgamal_pk = get_elgamal_pk(
         &recipient_info, &recipient_elgamal_info)?;
@@ -420,8 +412,8 @@ fn process_init_transfer(
 
     // low bits should be clear regardless...
     transfer_buffer.key = Key::CipherKeyTransferBufferV1;
-    transfer_buffer.authority = *current_encrypt_info.key;
     transfer_buffer.private_metadata_key = *private_metadata_info.key;
+    transfer_buffer.wallet_pk = *recipient_info.key;
     transfer_buffer.elgamal_pk = recipient_elgamal_pk;
 
     let minimum_rent = rent.minimum_balance(
@@ -465,8 +457,12 @@ fn process_fini_transfer(
     let transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?;
 
+    let mut private_metadata = PrivateMetadataAccount::from_account_info(
+        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?.into_mut();
+
     validate_transfer_buffer(
         &transfer_buffer,
+        &private_metadata,
         authority_info.key,
         private_metadata_info.key,
     )?;
@@ -478,9 +474,8 @@ fn process_fini_transfer(
 
 
     // write the new cipher text over
-    let mut private_metadata = PrivateMetadataAccount::from_account_info(
-        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?.into_mut();
 
+    private_metadata.wallet_pk = transfer_buffer.wallet_pk;
     private_metadata.elgamal_pk = transfer_buffer.elgamal_pk;
     private_metadata.encrypted_cipher_key = transfer_buffer.encrypted_cipher_key;
 
@@ -517,8 +512,12 @@ fn process_transfer_chunk(
     let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?.into_mut();
 
+    let private_metadata = PrivateMetadataAccount::from_account_info(
+        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
+
     validate_transfer_buffer(
         &transfer_buffer,
+        &private_metadata,
         authority_info.key,
         private_metadata_info.key,
     )?;
@@ -529,9 +528,6 @@ fn process_transfer_chunk(
         msg!("Chunk already updated");
         return Err(ProgramError::InvalidArgument);
     }
-
-    let private_metadata = PrivateMetadataAccount::from_account_info(
-        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
 
     let transfer = &data.transfer;
     if transfer.transfer_public_keys.src_pubkey != private_metadata.elgamal_pk {
@@ -587,8 +583,12 @@ fn process_transfer_chunk_slow(
     let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?.into_mut();
 
+    let private_metadata = PrivateMetadataAccount::from_account_info(
+        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
+
     validate_transfer_buffer(
         &transfer_buffer,
+        &private_metadata,
         authority_info.key,
         private_metadata_info.key,
     )?;
@@ -599,9 +599,6 @@ fn process_transfer_chunk_slow(
         msg!("Chunk already updated");
         return Err(ProgramError::InvalidArgument);
     }
-
-    let private_metadata = PrivateMetadataAccount::from_account_info(
-        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
 
     let transfer = &data.transfer;
     if transfer.transfer_public_keys.src_pubkey != private_metadata.elgamal_pk {
@@ -951,15 +948,16 @@ fn validate_account_owner(account_info: &AccountInfo, owner: &Pubkey) -> Program
 
 fn validate_transfer_buffer(
     transfer_buffer: &CipherKeyTransferBuffer,
+    private_metadata: &PrivateMetadataAccount,
     authority: &Pubkey,
-    private_metadata: &Pubkey,
+    private_metadata_key: &Pubkey,
 ) -> ProgramResult {
-    if transfer_buffer.authority != *authority {
+    if private_metadata.wallet_pk != *authority {
         msg!("Owner mismatch");
         return Err(ProgramError::InvalidArgument);
     }
 
-    if transfer_buffer.private_metadata_key != *private_metadata {
+    if transfer_buffer.private_metadata_key != *private_metadata_key {
         msg!("Private metadata mismatch");
         return Err(ProgramError::InvalidArgument);
     }

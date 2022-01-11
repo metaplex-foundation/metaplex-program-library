@@ -206,7 +206,6 @@ async fn test_transfer() {
                 &payer.pubkey(),
                 &mint.pubkey(),
                 &dest.pubkey(),
-                &payer.pubkey(),
             ),
             private_metadata::instruction::transfer_chunk(
                 payer.pubkey(),
@@ -333,16 +332,11 @@ async fn test_transfer_buyer_init() {
 
     let transfer = Transaction::new_signed_with_payer(
         &[
-            // seed destination and publish elgamal pk to encrypt with
+            // seed destination
             system_instruction::transfer(
                 &payer.pubkey(),
                 &dest.pubkey(),
                 2 * LAMPORTS_PER_SOL,
-            ),
-            private_metadata::instruction::publish_elgamal_pubkey(
-                &payer.pubkey(),
-                &mint.pubkey(),
-                elgamal_kp.public.into(),
             ),
 
             // transfer nft 'out of band' and send some sol to PM account
@@ -398,7 +392,6 @@ async fn test_transfer_buyer_init() {
                 &dest.pubkey(), // payer
                 &mint.pubkey(),
                 &dest.pubkey(),
-                &payer.pubkey(), // current
             ),
         ],
         Some(&dest.pubkey()),
