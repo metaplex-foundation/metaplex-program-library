@@ -295,23 +295,24 @@ fn process_init_transfer(
     accounts: &[AccountInfo],
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
-    let authority_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
+    let current_encrypt_info = next_account_info(account_info_iter)?;
+    let current_elgamal_info = next_account_info(account_info_iter)?;
     let private_metadata_info = next_account_info(account_info_iter)?;
     let recipient_info = next_account_info(account_info_iter)?;
     let recipient_elgamal_info = next_account_info(account_info_iter)?;
     let transfer_buffer_info = next_account_info(account_info_iter)?;
-    let _system_program_info = next_account_info(account_info_iter)?;
+    let system_program_info = next_account_info(account_info_iter)?;
     let rent_sysvar_info = next_account_info(account_info_iter)?;
 
-    if !authority_info.is_signer {
+    if !payer_info.is_signer {
         return Err(ProgramError::InvalidArgument);
     }
     validate_account_owner(mint_info, &spl_token::ID)?;
     validate_account_owner(token_account_info, &spl_token::ID)?;
     validate_account_owner(private_metadata_info, &ID)?;
-    validate_account_owner(transfer_buffer_info, &ID)?;
 
     let token_account = spl_token::state::Account::unpack(
         &token_account_info.data.borrow())?;
@@ -321,7 +322,7 @@ fn process_init_transfer(
         return Err(ProgramError::InvalidArgument);
     }
 
-    if token_account.owner != *authority_info.key {
+    if token_account.owner != *payer_info.key {
         msg!("Owner mismatch");
         return Err(ProgramError::InvalidArgument);
     }
@@ -335,66 +336,93 @@ fn process_init_transfer(
 
 
     // check that private metadata matches mint
-    let private_metadata_seeds = &[
-        PREFIX.as_bytes(),
-        mint_info.key.as_ref(),
-    ];
     let (private_metadata_key, _private_metadata_bump_seed) =
-        Pubkey::find_program_address(private_metadata_seeds, &ID);
+        get_private_metadata_address(mint_info.key);
 
     if private_metadata_key != *private_metadata_info.key {
         return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
     }
 
-    if private_metadata_info.data_len() != PrivateMetadataAccount::get_packed_len() {
-        return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
+    let private_metadata = PrivateMetadataAccount::from_account_info(
+        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
+
+    // check that elgamal PDAs match
+    let get_elgamal_pk = |
+        wallet_info: &AccountInfo,
+        elgamal_info: &AccountInfo,
+    | -> Result<zk_token_elgamal::pod::ElGamalPubkey, ProgramError> {
+        let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
+            get_elgamal_pubkey_address(wallet_info.key, mint_info.key);
+
+        if elgamal_pubkey_key != *elgamal_info.key {
+            msg!("Invalid elgamal PDA");
+            return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
+        }
+
+        Ok(zk_token_elgamal::pod::ElGamalPubkey(
+            (*elgamal_info.try_borrow_data()?)
+                .as_ref()
+                .try_into()
+                .map_err(|_| -> ProgramError {
+                    msg!("Invalid elgamal PDA data");
+                    PrivateMetadataError::InvalidElgamalPubkeyPDA.into()
+                })?
+        ))
+    };
+
+    let current_elgamal_pk = get_elgamal_pk(
+        &current_encrypt_info, &current_elgamal_info)?;
+
+    if current_elgamal_pk != private_metadata.elgamal_pk {
+        msg!("Mismatched current elgamal pubkey");
+        return Err(ProgramError::InvalidArgument);
     }
 
-    // check that elgamal PDA matches
-    let elgamal_seeds = &[
-        PREFIX.as_bytes(),
-        recipient_info.key.as_ref(),
-        mint_info.key.as_ref(),
-    ];
-    let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
-        Pubkey::find_program_address(elgamal_seeds, &ID);
-
-    if elgamal_pubkey_key != *recipient_elgamal_info.key {
-        msg!("Invalid recipient elgamal PDA");
-        return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
-    }
-
-    let elgamal_pk = zk_token_elgamal::pod::ElGamalPubkey(
-        (*recipient_elgamal_info.try_borrow_data()?)
-            .as_ref()
-            .try_into()
-            .map_err(|_| -> ProgramError {
-                msg!("Invalid recipient elgamal PDA data");
-                PrivateMetadataError::InvalidElgamalPubkeyPDA.into()
-            })?
-    );
+    let recipient_elgamal_pk = get_elgamal_pk(
+        &recipient_info, &recipient_elgamal_info)?;
 
 
     // check and initialize the cipher key transfer buffer
-    if transfer_buffer_info.data_len()
-            != CipherKeyTransferBuffer::get_packed_len() {
-        return Err(ProgramError::AccountDataTooSmall);
+    let (transfer_buffer_key, transfer_buffer_bump_seed) =
+        get_transfer_buffer_address(recipient_info.key, mint_info.key);
+
+    if transfer_buffer_key != *transfer_buffer_info.key {
+        msg!("Invalid transfer buffer key");
+        return Err(ProgramError::InvalidArgument);
     }
 
     let rent = &Rent::from_account_info(rent_sysvar_info)?;
-    if transfer_buffer_info.lamports()
-            < rent.minimum_balance(CipherKeyTransferBuffer::get_packed_len()).max(1) {
-        return Err(ProgramError::InsufficientFunds);
-    }
+    invoke_signed(
+        &system_instruction::create_account(
+            payer_info.key,
+            transfer_buffer_info.key,
+            rent.minimum_balance(CipherKeyTransferBuffer::get_packed_len()).max(1),
+            CipherKeyTransferBuffer::get_packed_len() as u64,
+            &ID,
+        ),
+        &[
+            payer_info.clone(),
+            transfer_buffer_info.clone(),
+            system_program_info.clone(),
+        ],
+        &[
+            &[
+                TRANSFER.as_bytes(),
+                recipient_info.key.as_ref(),
+                mint_info.key.as_ref(),
+                &[transfer_buffer_bump_seed],
+            ],
+        ],
+    )?;
 
     let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::Uninitialized)?.into_mut();
 
     // low bits should be clear regardless...
     transfer_buffer.key = Key::CipherKeyTransferBufferV1;
-    transfer_buffer.authority = *authority_info.key;
+    transfer_buffer.authority = *current_encrypt_info.key;
     transfer_buffer.private_metadata_key = *private_metadata_info.key;
-    transfer_buffer.elgamal_pk = elgamal_pk;
+    transfer_buffer.elgamal_pk = recipient_elgamal_pk;
 
     let minimum_rent = rent.minimum_balance(
         PrivateMetadataAccount::get_packed_len()).max(1);

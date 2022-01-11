@@ -93,15 +93,17 @@ pub enum PrivateMetadataInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[writeable,signer]` Authority. Must be the owner of the NFT
+    ///   0. `[writeable,signer]` The owner of the NFT
     ///   1. `[]` The SPL Token mint account of the NFT
     ///   2. `[]` The SPL Token account holding the NFT
-    ///   3. `[]` Private metadata PDA
-    ///   4. `[]` Recipient wallet
-    ///   5. `[]` Recipient elgamal pubkey PDA
-    ///   6. `[writable]` Transfer buffer program account. Will hold CipherKeyTransferBuffer
-    ///   7. `[]` System program
-    ///   8. `[]` Rent sysvar
+    ///   3. `[]` The wallet currently encrypting the cipherkey
+    ///   4. `[]` The elgamal pubkey PDA matching private_metadata.elgamal_pk
+    ///   5. `[]` Private metadata PDA
+    ///   6. `[]` Recipient wallet
+    ///   7. `[]` Recipient elgamal pubkey PDA
+    ///   8. `[writable]` Transfer buffer PDA. Will hold CipherKeyTransferBuffer
+    ///   9. `[]` System program
+    ///   10. `[]` Rent sysvar
     ///
     /// Data expected by this instruction:
     ///
@@ -240,6 +242,20 @@ pub fn get_elgamal_pubkey_address(
     )
 }
 
+pub fn get_transfer_buffer_address(
+    wallet: &Pubkey,
+    mint: &Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            crate::state::TRANSFER.as_bytes(),
+            wallet.as_ref(),
+            mint.as_ref(),
+        ],
+        &crate::ID,
+    )
+}
+
 #[cfg(not(target_arch = "bpf"))]
 pub fn encode_instruction<T: Pod>(
     accounts: Vec<AccountMeta>,
@@ -290,7 +306,6 @@ pub fn configure_metadata(
 pub fn init_transfer(
     payer: &Pubkey,
     mint: &Pubkey,
-    transfer_buffer: &Pubkey,
     recipient: &Pubkey,
 ) -> Instruction {
     let accounts = vec![
@@ -300,10 +315,12 @@ pub fn init_transfer(
             spl_associated_token_account::get_associated_token_address(payer, mint),
             false,
         ),
+        AccountMeta::new_readonly(*payer, false),
+        AccountMeta::new_readonly(get_elgamal_pubkey_address(payer, mint).0, false),
         AccountMeta::new_readonly(get_private_metadata_address(mint).0, false),
         AccountMeta::new_readonly(*recipient, false),
         AccountMeta::new_readonly(get_elgamal_pubkey_address(recipient, mint).0, false),
-        AccountMeta::new(*transfer_buffer, false),
+        AccountMeta::new(get_transfer_buffer_address(recipient, mint).0, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];

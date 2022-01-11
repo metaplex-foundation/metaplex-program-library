@@ -178,9 +178,8 @@ async fn test_transfer() {
 
     let dest = Keypair::new();
     let dest_elgamal_kp = ElGamalKeypair::new(&dest, &mint.pubkey()).unwrap();
-    let transfer_buffer = Keypair::new();
-    let transfer_buffer_len = private_metadata::state::CipherKeyTransferBuffer::get_packed_len();
-    let transfer_buffer_rent_lamports = rent.minimum_balance(transfer_buffer_len);
+    let transfer_buffer_key = private_metadata::instruction::get_transfer_buffer_address(
+        &dest.pubkey(), &mint.pubkey()).0;
 
     let transfer = Transaction::new_signed_with_payer(
         &[
@@ -195,25 +194,22 @@ async fn test_transfer() {
                 &mint.pubkey(),
                 dest_elgamal_kp.public.into(),
             ),
+            private_metadata::instruction::publish_elgamal_pubkey(
+                &payer.pubkey(),
+                &mint.pubkey(),
+                elgamal_kp.public.into(),
+            ),
 
             // do the transfer prep
-            system_instruction::create_account(
-                &payer.pubkey(),
-                &transfer_buffer.pubkey(),
-                transfer_buffer_rent_lamports,
-                transfer_buffer_len as u64,
-                &private_metadata::id(),
-            ),
             private_metadata::instruction::init_transfer(
                 &payer.pubkey(),
                 &mint.pubkey(),
-                &transfer_buffer.pubkey(),
                 &dest.pubkey(),
             ),
             private_metadata::instruction::transfer_chunk(
                 payer.pubkey(),
                 mint.pubkey(),
-                transfer_buffer.pubkey(),
+                transfer_buffer_key,
                 private_metadata::instruction::TransferChunkData {
                     transfer: private_metadata::transfer_proof::TransferData::new(
                         &elgamal_kp,
@@ -228,7 +224,7 @@ async fn test_transfer() {
             private_metadata::instruction::fini_transfer(
                 payer.pubkey(),
                 mint.pubkey(),
-                transfer_buffer.pubkey(),
+                transfer_buffer_key,
             ),
             spl_associated_token_account::create_associated_token_account(
                 &payer.pubkey(), // funding
@@ -251,7 +247,7 @@ async fn test_transfer() {
             ).unwrap(),
         ],
         Some(&payer.pubkey()),
-        &[&payer, &dest, &transfer_buffer],
+        &[&payer, &dest],
         recent_blockhash,
     );
 

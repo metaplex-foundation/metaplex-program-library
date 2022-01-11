@@ -12,6 +12,7 @@ use {
 };
 
 pub const PREFIX: &str = "metadata";
+pub const TRANSFER: &str = "transfer";
 
 pub const MAX_URI_LENGTH: usize = 100;
 pub const MAX_METADATA_LEN: usize
