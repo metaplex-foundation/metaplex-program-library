@@ -1,7 +1,8 @@
-import test from 'tape';
+// import test from 'tape';
 
-import { UpdatePrimarySaleHappenedViaToken } from '../src/mpl-token-metadata';
-import { killStuckProcess, initMetadata, getMetadataData, dump } from './utils';
+// import { UpdatePrimarySaleHappenedViaToken } from '../src/mpl-token-metadata';
+// import { killStuckProcess, initMetadata, getMetadataData, dump } from './utils';
+import { killStuckProcess } from './utils';
 
 killStuckProcess();
 

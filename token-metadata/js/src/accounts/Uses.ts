@@ -1,6 +1,4 @@
-import {
-  Borsh,
-} from '@metaplex-foundation/mpl-core';
+import { Borsh } from '@metaplex-foundation/mpl-core';
 import { UseMethod } from '.';
 
 type Args = { useMethod: UseMethod; total: number; remaining: number };
