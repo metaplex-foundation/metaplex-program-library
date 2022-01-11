@@ -1,6 +1,6 @@
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solana/web3.js';
-import { DataV2, MetadataDataData } from '../accounts/Metadata';
+import { DataV2 } from '../accounts/Metadata';
 import { MetadataProgram } from '../MetadataProgram';
 
 export class UpdateMetadataV2Args extends Borsh.Data<{
