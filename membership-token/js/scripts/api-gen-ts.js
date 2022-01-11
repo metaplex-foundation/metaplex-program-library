@@ -2,7 +2,7 @@
 'use strict';
 
 const PROGRAM_NAME = 'membership_token';
-const PROGRAM_ID = 'qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd'; // ToDo: change
+const PROGRAM_ID = '5KtWMwMnvTzF9Uqg7idUR43hdMhEbgKUwXX5ef9Wajrq'; // ToDo: change
 
 const path = require('path');
 const generatedIdlDir = path.join(__dirname, '..', 'idl');

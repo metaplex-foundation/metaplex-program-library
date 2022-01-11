@@ -60,7 +60,7 @@ export function createCreateStoreInstruction(
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd'),
+    programId: new web3.PublicKey('5KtWMwMnvTzF9Uqg7idUR43hdMhEbgKUwXX5ef9Wajrq'),
     keys,
     data,
   });

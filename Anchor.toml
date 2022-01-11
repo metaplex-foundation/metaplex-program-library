@@ -21,6 +21,10 @@ address = "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd"
 program = "target/deploy/mpl_token_entangler.so"
 
 [[test.genesis]]
+address = "5KtWMwMnvTzF9Uqg7idUR43hdMhEbgKUwXX5ef9Wajrq"
+program = "target/deploy/mpl_membership_token.so"
+
+[[test.genesis]]
 address = "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
 program = "target/deploy/mpl_gumdrop.so"
 
