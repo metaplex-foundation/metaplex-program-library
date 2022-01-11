@@ -6,18 +6,22 @@ mod utils;
 use clap::Parser;
 use cli_args::{CliArgs, Commands};
 use solana_client::rpc_client::RpcClient;
-use solana_sdk::{pubkey::Pubkey, signer::keypair::read_keypair_file, transaction::Transaction};
+use solana_sdk::{
+    pubkey::Pubkey,
+    signer::{keypair::read_keypair_file, Signer},
+    transaction::Transaction,
+};
 use std::str::FromStr;
 
 fn main() -> Result<(), error::Error> {
     let args = CliArgs::parse();
 
     let client = RpcClient::new(args.url);
-    let _payer_wallet = read_keypair_file(&args.payer_keypair)?;
+    let payer_wallet = read_keypair_file(&args.payer_keypair)?;
 
     // Handle provided commands
     // Build transaction
-    let tx_data: Option<(Transaction, Box<dyn ToString>)> = match args.command {
+    let tx_data: Option<(Transaction, Box<dyn processor::UiTransactionInfo>)> = match args.command {
         Commands::GetSellingResource { account } => {
             let selling_resource = processor::get_account_state::<
                 mpl_membership_token::state::SellingResource,
@@ -112,13 +116,141 @@ fn main() -> Result<(), error::Error> {
 
             None
         }
-        _ => None,
+        Commands::CreateStore {
+            admin_keypair,
+            name,
+            description,
+        } => {
+            let admin_keypair = if let Some(keypair) = admin_keypair {
+                read_keypair_file(keypair)?
+            } else {
+                utils::clone_keypair(&payer_wallet)
+            };
+
+            Some(processor::create_store(
+                &client,
+                &payer_wallet,
+                &admin_keypair,
+                &name,
+                &description,
+            )?)
+        }
+        Commands::InitSellingResource {
+            store,
+            admin_keypair,
+            selling_resource_owner,
+            resource_mint,
+            master_edition,
+            vault_keypair,
+            resource_token,
+            max_supply,
+        } => {
+            let admin_keypair = if let Some(keypair) = admin_keypair {
+                read_keypair_file(keypair)?
+            } else {
+                utils::clone_keypair(&payer_wallet)
+            };
+
+            let selling_resource_owner = if let Some(owner) = selling_resource_owner {
+                Pubkey::from_str(&owner)?
+            } else {
+                payer_wallet.pubkey()
+            };
+
+            Some(processor::init_selling_resource(
+                &client,
+                &payer_wallet,
+                &Pubkey::from_str(&store)?,
+                &admin_keypair,
+                &selling_resource_owner,
+                &Pubkey::from_str(&resource_mint)?,
+                &Pubkey::from_str(&master_edition)?,
+                &read_keypair_file(vault_keypair)?,
+                &Pubkey::from_str(&resource_token)?,
+                max_supply,
+            )?)
+        }
+        Commands::CreateMarket {
+            store,
+            selling_resource_owner_keypair,
+            selling_resource,
+            mint,
+            treasury_holder,
+            name,
+            description,
+            mutable,
+            price,
+            pieces_in_one_wallet,
+            start_date,
+            end_date,
+        } => {
+            let mint = Pubkey::from_str(&mint)?;
+            let decimals = utils::get_mint(&client, &mint)?.decimals;
+
+            let selling_resource_owner = if let Some(owner) = selling_resource_owner_keypair {
+                read_keypair_file(&owner)?
+            } else {
+                utils::clone_keypair(&payer_wallet)
+            };
+
+            Some(processor::create_market(
+                &client,
+                &payer_wallet,
+                &Pubkey::from_str(&store)?,
+                &selling_resource_owner,
+                &Pubkey::from_str(&selling_resource)?,
+                &mint,
+                &Pubkey::from_str(&treasury_holder)?,
+                &name,
+                &description,
+                mutable,
+                spl_token::ui_amount_to_amount(price, decimals),
+                pieces_in_one_wallet,
+                start_date,
+                end_date,
+            )?)
+        }
+        Commands::Buy {
+            market,
+            selling_resource,
+            user_token_account,
+            user_wallet_keypair,
+            treasury_holder,
+            master_edition,
+            new_mint,
+            vault_keypair,
+            master_edition_metadata,
+            resource_mint,
+            store,
+        } => {
+            let user_wallet = if let Some(keypair) = user_wallet_keypair {
+                read_keypair_file(keypair)?
+            } else {
+                utils::clone_keypair(&payer_wallet)
+            };
+
+            Some(processor::buy(
+                &client,
+                &payer_wallet,
+                &Pubkey::from_str(&market)?,
+                &Pubkey::from_str(&selling_resource)?,
+                &Pubkey::from_str(&user_token_account)?,
+                &user_wallet,
+                &Pubkey::from_str(&treasury_holder)?,
+                &Pubkey::from_str(&master_edition)?,
+                &Pubkey::from_str(&new_mint)?,
+                &read_keypair_file(vault_keypair)?,
+                &Pubkey::from_str(&master_edition_metadata)?,
+                &Pubkey::from_str(&resource_mint)?,
+                &Pubkey::from_str(&store)?,
+            )?)
+        }
     };
 
-    // Process builded transaction
-    if let Some((tx, data)) = tx_data {
+    // Send builded transaction
+    if let Some((tx, ui_info)) = tx_data {
         client.send_and_confirm_transaction(&tx)?;
-        println!("{}", data.to_string());
+        ui_info.print();
     }
 
     Ok(())

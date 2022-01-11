@@ -82,6 +82,12 @@ pub enum Commands {
 
         #[clap(long, value_name = "PUBKEY")]
         master_edition_metadata: String,
+
+        #[clap(long, value_name = "PUBKEY")]
+        resource_mint: String,
+
+        #[clap(long, value_name = "PUBKEY")]
+        store: String,
     },
     /// Perform `InitSellingResource` instruction of `mpl_membership_token` program.
     InitSellingResource {
