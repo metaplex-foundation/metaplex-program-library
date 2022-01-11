@@ -18,6 +18,7 @@ jobs:
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
+    - uses: actions/checkout@v2
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
@@ -30,7 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-metadata 
-
+    needs: changes
+    if: ${{ needs.changes.outputs.code == 'true' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
