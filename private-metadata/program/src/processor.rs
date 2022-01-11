@@ -16,7 +16,7 @@ use solana_program::{
     entrypoint::ProgramResult,
     msg,
     program_pack::Pack,
-    program::{invoke_signed},
+    program::{invoke, invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
@@ -110,7 +110,7 @@ fn scale_creator_shares(
         }
         new_creators.push(mpl_token_metadata::state::Creator {
             address: *private_metadata_key,
-            verified: true,
+            verified: false,
             share: remaining_share,
         });
     }
@@ -198,7 +198,7 @@ fn process_configure_metadata(
     // 100%
     let new_creators = scale_creator_shares(&private_metadata_key, &metadata)
         .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
-    invoke_signed(
+    invoke(
         &mpl_token_metadata::instruction::update_metadata_accounts(
             *metadata_program_info.key,
             *metadata_info.key,
@@ -215,6 +215,19 @@ fn process_configure_metadata(
             metadata_program_info.clone(),
             metadata_info.clone(),
             metadata_update_authority_info.clone(),
+        ],
+    )?;
+
+    invoke_signed(
+        &mpl_token_metadata::instruction::sign_metadata(
+            *metadata_program_info.key,
+            *metadata_info.key,
+            *private_metadata_info.key,
+        ),
+        &[
+            metadata_program_info.clone(),
+            metadata_info.clone(),
+            private_metadata_info.clone(),
         ],
         &[
             &[
