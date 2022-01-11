@@ -26,7 +26,7 @@ pub fn find_master_edition_account(mint: &Pubkey) -> (Pubkey, u8) {
     )
 }
 
-pub fn find_medata_account(mint: &Pubkey) -> (Pubkey, u8) {
+pub fn find_metadata_account(mint: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[PREFIX.as_bytes(), crate::id().as_ref(), mint.as_ref()],
         &crate::id(),
