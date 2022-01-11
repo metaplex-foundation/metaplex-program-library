@@ -1,6 +1,7 @@
 use crate::{
     assertions::{
-        collection::assert_collection_update_is_valid, uses::process_use_authority_validation,
+        collection::{assert_collection_update_is_valid, assert_collection_verify_if_valid},
+        uses::process_use_authority_validation,
     },
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
@@ -155,6 +156,10 @@ pub fn process_instruction<'a>(
         MetadataInstruction::VerifyCollection => {
             msg!("Instruction: Verify Collection");
             verify_collection(program_id, accounts)
+        }
+        MetadataInstruction::UnverifyCollection => {
+            msg!("Instruction: Unverify Collection");
+            unverify_collection(program_id, accounts)
         }
         MetadataInstruction::Utilize(args) => {
             msg!("Instruction: Use/Utilize Token");
@@ -680,33 +685,49 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
-    let collecton_data = Metadata::from_account_info(collection_info)?;
-    let collection_nft_data = Metadata::from_account_info(collection_info)?;
-
-    match &metadata.collection {
-        Some(collection) => {
-            if collection.key != *collection_mint.key || collecton_data.mint != *collection_mint.key
-            {
-                return Err(MetadataError::CollectionNotFound.into());
-            }
-            if collecton_data.update_authority != *collection_authority_info.key {
-                return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
-            }
-        }
-        None => {
-            return Err(MetadataError::CollectionNotFound.into());
-        }
-    }
-    let edition = MasterEditionV2::from_account_info(edition_account_info)
-        .map_err(|_err: ProgramError| MetadataError::CollectionMustBeAUniqueMasterEdition)?;
-    if collection_nft_data.token_standard != Some(TokenStandard::NonFungible)
-        || edition.max_supply != Some(0)
-    {
-        msg!("{:?}", collection_nft_data.token_standard);
-        return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into());
-    }
+    let collection_data = Metadata::from_account_info(collection_info)?;
+    assert_collection_verify_if_valid(
+        &metadata,
+        &collection_data,
+        collection_mint,
+        collection_authority_info,
+        edition_account_info,
+    )?;
     if let Some(collection) = &mut metadata.collection {
         collection.verified = true;
+    }
+    metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
+    Ok(())
+}
+
+pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let metadata_info = next_account_info(account_info_iter)?;
+    let collection_authority_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let collection_mint = next_account_info(account_info_iter)?;
+    let collection_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
+
+    assert_signer(collection_authority_info)?;
+    assert_signer(payer_info)?;
+
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(collection_info, program_id)?;
+    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by(edition_account_info, program_id)?;
+
+    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let collection_data = Metadata::from_account_info(collection_info)?;
+    assert_collection_verify_if_valid(
+        &metadata,
+        &collection_data,
+        collection_mint,
+        collection_authority_info,
+        edition_account_info,
+    )?;
+    if let Some(collection) = &mut metadata.collection {
+        collection.verified = false;
     }
     metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     Ok(())

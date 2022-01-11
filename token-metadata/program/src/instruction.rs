@@ -309,6 +309,8 @@ pub enum MetadataInstruction {
     ApproveUseAuthority(ApproveUseAuthorityArgs),
     ///See [revoke_use_authority] for Doc
     RevokeUseAuthority,
+
+    UnverifyCollection,
 }
 
 /// Creates an CreateMetadataAccounts instruction
