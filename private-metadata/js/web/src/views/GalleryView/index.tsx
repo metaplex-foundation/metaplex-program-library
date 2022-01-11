@@ -46,6 +46,14 @@ export const GalleryView = (
   const [publicManifests, setPublicManifests] = React.useState<Array<any>>([]);
 
   React.useEffect(() => {
+    if (wallet.disconnecting) {
+      setLastFetchedPubkey(null);
+      setGalleryMints([]);
+      setPublicManifests([]);
+    }
+  }, [wallet]);
+
+  React.useEffect(() => {
     if (!wallet.connected) {
       return;
     }

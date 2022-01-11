@@ -17,6 +17,9 @@ export class PrivateMetadataAccount {
     /// The corresponding SPL Token Mint
     mint: StringPublicKey;
 
+    /// The signing key associated with `elgamal_pk`
+    walletPk: StringPublicKey;
+
     /// The public key associated with ElGamal encryption
     elgamalPk: ElgamalPk;
 
@@ -29,12 +32,14 @@ export class PrivateMetadataAccount {
 
     constructor(args: {
       mint: StringPublicKey,
+      walletPk: StringPublicKey,
       elgamalPk: ElgamalPk,
       encryptedCipherKey: ElgamalCipherText,
       uri: string,
     }) {
       this.key = PrivateMetadataKey.PrivateMetadataAccountV1;
       this.mint = args.mint;
+      this.walletPk = args.walletPk;
       this.elgamalPk = args.elgamalPk;
       this.encryptedCipherKey = args.encryptedCipherKey;
       this.uri = args.uri;
@@ -47,11 +52,11 @@ export class CipherKeyTransferBuffer {
     /// Bit mask of updated chunks
     updated: number;
 
-    /// Source pubkey. Should match the currently encrypted elgamal_pk
-    authority: StringPublicKey;
-
     /// Account that will have its encrypted key updated
     privateMetadataKey: StringPublicKey;
+
+    /// The destination signing key associated with `elgamal_pk`
+    walletPk: StringPublicKey;
 
     /// Destination public key
     elgamalPk: ElgamalPk;
@@ -61,15 +66,15 @@ export class CipherKeyTransferBuffer {
 
     constructor(args: {
       updated: number,
-      authority: StringPublicKey,
       privateMetadataKey: StringPublicKey,
+      walletPk: StringPublicKey,
       elgamalPk: ElgamalPk,
       encryptedCipherKey: ElgamalCipherText,
     }) {
       this.key = PrivateMetadataKey.CipherKeyTransferBufferV1;
       this.updated = args.updated;
-      this.authority = args.authority;
       this.privateMetadataKey = args.privateMetadataKey;
+      this.walletPk = args.walletPk;
       this.elgamalPk = args.elgamalPk;
       this.encryptedCipherKey = args.encryptedCipherKey;
     }
@@ -83,6 +88,7 @@ export const PRIVATE_METADATA_SCHEMA = new Map<any, any>([
       fields: [
         ['key', 'u8'],
         ['mint', 'pubkeyAsString'],
+        ['walletPk', 'pubkeyAsString'],
         ['elgamalPk', 'elgamalPk'],
         ['encryptedCipherKey', 'encryptedCipherKey'],
         ['uri', 'uriString'],
@@ -96,8 +102,8 @@ export const PRIVATE_METADATA_SCHEMA = new Map<any, any>([
       fields: [
         ['key', 'u8'],
         ['updated', 'u8'],
-        ['authority', 'pubkeyAsString'],
         ['privateMetadataKey', 'pubkeyAsString'],
+        ['walletPk', 'pubkeyAsString'],
         ['elgamalPk', 'elgamalPk'],
         ['encryptedCipherKey', 'encryptedCipherKey'],
       ],

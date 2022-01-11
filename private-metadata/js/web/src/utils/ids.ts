@@ -64,3 +64,19 @@ export async function getElgamalPubkeyAddress(
     )
   )[0];
 };
+
+export async function getTransferBufferAddress(
+  wallet: PublicKey,
+  mint: PublicKey,
+): Promise<PublicKey> {
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        Buffer.from('transfer'),
+        wallet.toBuffer(),
+        mint.toBuffer(),
+      ],
+      PRIVATE_METADATA_PROGRAM_ID,
+    )
+  )[0];
+};

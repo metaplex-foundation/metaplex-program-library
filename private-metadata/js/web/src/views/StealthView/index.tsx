@@ -70,8 +70,9 @@ import {
 } from '../../utils/publicSchema';
 import {
   getElgamalPubkeyAddress,
-  getPrivateMetadata,
   getMetadata,
+  getPrivateMetadata,
+  getTransferBufferAddress,
   CURVE_DALEK_ONCHAIN_PROGRAM_ID,
   PRIVATE_METADATA_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
@@ -174,7 +175,7 @@ const initTransferIxs = async (
   wasm: WasmConfig,
   walletKey: PublicKey,
   mintKey: PublicKey,
-  transferBufferKeypair: Keypair,
+  transferBufferPubkey: PublicKey,
   recipientKey: PublicKey,
 ) => {
   const transferBufferLen = wasm.transferBufferLen();
@@ -193,13 +194,6 @@ const initTransferIxs = async (
   const privateMetadataKey = await getPrivateMetadata(mintKey);
 
   const instructions = [
-    SystemProgram.createAccount({
-      fromPubkey: walletKey,
-      lamports,
-      newAccountPubkey: transferBufferKeypair.publicKey,
-      programId: PRIVATE_METADATA_PROGRAM_ID,
-      space: transferBufferLen,
-    }),
     // InitTransfer
     new TransactionInstruction({
       programId: PRIVATE_METADATA_PROGRAM_ID,
@@ -235,8 +229,8 @@ const initTransferIxs = async (
           isWritable: false,
         },
         {
-          pubkey: transferBufferKeypair.publicKey,
-          isSigner: true,
+          pubkey: transferBufferPubkey,
+          isSigner: false,
           isWritable: true,
         },
         {
@@ -264,7 +258,7 @@ const finiTransferIxs = async (
   walletKey: PublicKey,
   destKey: PublicKey,
   mintKey: PublicKey,
-  transferBufferKeypair: Keypair,
+  transferBufferPubkey: PublicKey
 ) => {
   const [walletATAKey, ] = await PublicKey.findProgramAddress(
     [
@@ -327,7 +321,7 @@ const finiTransferIxs = async (
           isWritable: true,
         },
         {
-          pubkey: transferBufferKeypair.publicKey,
+          pubkey: transferBufferPubkey,
           isSigner: false,
           isWritable: true,
         },
@@ -349,7 +343,7 @@ const finiTransferIxs = async (
 type TransferChunkSlowKeys = {
   walletKey: PublicKey,
   mintKey: PublicKey,
-  transferBufferKeypair: Keypair,
+  transferBufferPubkey: PublicKey,
   instructionBufferPubkey: PublicKey,
   inputBufferKeypair: Keypair,
   computeBufferKeypair: Keypair,
@@ -376,7 +370,7 @@ const transferChunkSlowVerify = async (
             isWritable: false,
           },
           {
-            pubkey: keys.transferBufferKeypair.publicKey,
+            pubkey: keys.transferBufferPubkey,
             isSigner: false,
             isWritable: true,
           },
@@ -651,8 +645,6 @@ export const StealthView = (
   // user inputs
   const [recipientPubkeyStr, setRecipientPubkey]
     = useLocalStorageState('recipientPubkey', '');
-  const [transferBuffer, setTransferBuffer]
-    = useLocalStorageState('transferBuffer', '');
   const [instructionBuffer, setInstructionBuffer]
     = useLocalStorageState('instructionBuffer', '4huNP6jLbA9FGwHhMbjYQFP57ZmH1y4xa3ipAJ7mERNM');
   const [inputBuffer, setInputBuffer]
@@ -825,11 +817,9 @@ export const StealthView = (
 
     const inputBufferKeypair = validateKeypair(inputBuffer, 'input');
     const computeBufferKeypair = validateKeypair(computeBuffer, 'compute');
-    const transferBufferKeypair = validateKeypair(transferBuffer, 'transfer');
 
     console.log('inputBufferKeypair', bs58.encode(inputBufferKeypair.secretKey));
     console.log('computeBufferKeypair', bs58.encode(computeBufferKeypair.secretKey));
-    console.log('transferBufferKeypair', bs58.encode(transferBufferKeypair.secretKey));
 
     const recipientPubkey = new PublicKey(recipientPubkeyStr);
     if (recipientPubkey.equals(wallet.publicKey)) {
@@ -851,16 +841,17 @@ export const StealthView = (
 
     const transferTxns: Array<TransactionAndProgress> = [];
 
-    let transferBufferAccount = await connection.getAccountInfo(transferBufferKeypair.publicKey);
+    const transferBufferPubkey = await getTransferBufferAddress(recipientPubkey, mintKey);
+    let transferBufferAccount = await connection.getAccountInfo(transferBufferPubkey);
     let transferBufferUpdated;
     if (transferBufferAccount === null) {
       const createInstructions = await initTransferIxs(
-          connection, wasm, walletKey, mintKey, transferBufferKeypair, recipientPubkey);
+          connection, wasm, walletKey, mintKey, transferBufferPubkey, recipientPubkey);
       transferTxns.push({
         transaction: buildTransaction(
           walletKey,
           createInstructions,
-          [transferBufferKeypair],
+          [],
           recentBlockhash
         ),
         progress: { step: 2 },
@@ -900,7 +891,7 @@ export const StealthView = (
         {
           walletKey,
           mintKey,
-          transferBufferKeypair,
+          transferBufferPubkey,
           instructionBufferPubkey,
           inputBufferKeypair,
           computeBufferKeypair,
@@ -925,7 +916,7 @@ export const StealthView = (
           walletKey,
           recipientPubkey,
           mintKey,
-          transferBufferKeypair,
+          transferBufferPubkey,
         ),
         [],
         recentBlockhash
@@ -1175,15 +1166,6 @@ export const StealthView = (
               id="instruction-buffer-field"
               value={instructionBuffer}
               onChange={(e) => setInstructionBuffer(e.target.value)}
-              style={{ fontFamily: 'Monospace' }}
-            />
-          </label>
-          <label className="action-field">
-            <span className="field-title">Transfer Buffer</span>
-            <Input
-              id="transfer-buffer-field"
-              value={transferBuffer}
-              onChange={(e) => setTransferBuffer(e.target.value)}
               style={{ fontFamily: 'Monospace' }}
             />
           </label>
