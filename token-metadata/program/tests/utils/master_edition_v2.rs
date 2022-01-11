@@ -113,7 +113,7 @@ impl MasterEditionV2 {
                 max_supply,
             )],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &context.payer, &context.payer],
+            &[&context.payer],
             context.last_blockhash,
         );
 
@@ -137,7 +137,7 @@ impl MasterEditionV2 {
                 max_supply,
             )],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &context.payer, &context.payer],
+            &[&context.payer],
             context.last_blockhash,
         );
 
