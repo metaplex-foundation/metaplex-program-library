@@ -14,10 +14,10 @@ import {
   DataV2,
   MasterEdition,
   Metadata,
-  MetadataDataData
+  MetadataDataData,
 } from '@metaplex-foundation/mpl-token-metadata';
 import BN from 'bn.js';
-import * as spl from "@solana/spl-token";
+import * as spl from '@solana/spl-token';
 // -----------------
 // Create Metadata
 // -----------------
@@ -57,11 +57,9 @@ export async function createMetadataV2({
     },
   );
 
-  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
-    createMetadataTx,
-    [],
-    { skipPreflight: false },
-  );
+  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(createMetadataTx, [], {
+    skipPreflight: false,
+  });
 
   return { metadata, createTxDetails };
 }
@@ -147,16 +145,9 @@ export async function mintAndCreateMetadataV2(
     spl.TOKEN_PROGRAM_ID,
   );
 
-  const fromTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
-    payer.publicKey,
-  );
+  const fromTokenAccount = await mint.getOrCreateAssociatedAccountInfo(payer.publicKey);
 
-  await mint.mintTo(
-    fromTokenAccount.address,
-    payer.publicKey,
-    [],
-    1,
-  );
+  await mint.mintTo(fromTokenAccount.address, payer.publicKey, [], 1);
   addLabel('mint', mint.publicKey);
   const initMetadataData = args;
   const { createTxDetails, metadata } = await createMetadataV2({
@@ -171,7 +162,6 @@ export async function mintAndCreateMetadataV2(
   return { mint, metadata };
 }
 
-
 // -----------------
 // Create A Master Edition
 // -----------------
@@ -181,7 +171,7 @@ export async function createMasterEdition(
   payer: Keypair,
   args: DataV2,
 ) {
-  let { mint, metadata } = await mintAndCreateMetadataV2(
+  const { mint, metadata } = await mintAndCreateMetadataV2(
     connection,
     transactionHandler,
     payer,
@@ -197,15 +187,13 @@ export async function createMasterEdition(
       updateAuthority: payer.publicKey,
       mint: mint.publicKey,
       mintAuthority: payer.publicKey,
-      maxSupply: new BN(1)
+      maxSupply: new BN(1),
     },
   );
 
-  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
-    createMev3,
-    [],
-    { skipPreflight: true },
-  );
+  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(createMev3, [], {
+    skipPreflight: true,
+  });
 
   return { mint, metadata, masterEditionPubkey, createTxDetails };
 }

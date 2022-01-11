@@ -21,7 +21,6 @@ export class CreateMasterEditionV3Args extends Borsh.Data<{ maxSupply: BN | null
   maxSupply: BN | null;
 }
 
-
 export class CreateMasterEditionV3 extends Transaction {
   constructor(options: TransactionCtorFields, params: CreateMasterEditionParams) {
     super(options);

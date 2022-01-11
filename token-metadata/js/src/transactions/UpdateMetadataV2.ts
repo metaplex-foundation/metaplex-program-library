@@ -40,8 +40,14 @@ export type UpdateMetadataV2Params = {
 export class UpdateMetadataV2 extends Transaction {
   constructor(options: TransactionCtorFields, params: UpdateMetadataV2Params) {
     super(options);
-    const { metadata, metadataData, updateAuthority, newUpdateAuthority, primarySaleHappened, isMutable } =
-      params;
+    const {
+      metadata,
+      metadataData,
+      updateAuthority,
+      newUpdateAuthority,
+      primarySaleHappened,
+      isMutable,
+    } = params;
 
     const data = UpdateMetadataV2Args.serialize({
       data: metadataData,
