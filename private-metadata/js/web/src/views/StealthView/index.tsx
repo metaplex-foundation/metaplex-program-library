@@ -1054,29 +1054,47 @@ export const StealthView = (
           </div>
         </div>
       </div>
-      {privateImageManifest && (
-      <div
-        style={
-          cols > 1
-          ? {
-            display: 'flex',
-            flexDirection: 'row',
-          }
-          : {
-            display: 'flex',
-            flexDirection: 'column',
-          }
-        }
+      <p
+        className={"text-title"}
+        style={{
+          marginBottom: '15px',
+        }}
       >
-        <CachedImageContent
-          uri={privateImageManifest.cover_image.uri}
-          className={"fullAspectRatio"}
-          style={{
-            ...(cols > 1 ? { maxWidth: actualColumnWidth } : {}),
-            minWidth: actualColumnWidth,
-          }}
-        />
-      </div>
+        {privateImageManifest?.encrypted_assets?.length || 0} stealthed assets detected
+      </p>
+      {decryptedImage ? (
+        <div>
+          {privateImageManifest.encrypted_assets[0].type === "video/mp4"
+            // TODO: less janky / hardcoded
+            ? (
+              <video
+                controls
+              >
+                <source
+                  type="video/mp4"
+                  src={"data:video/mp4;base64," + decryptedImage.toString('base64')}
+                />
+              </video>
+            )
+            : (
+              <img
+                src={"data:video/mp4;base64," + decryptedImage.toString('base64')}
+                style={{ maxWidth: '40ch', margin: 'auto', display: 'block' }}
+              />
+            )
+          }
+        </div>
+      ) : privateImageManifest && (
+        <React.Fragment>
+          <CachedImageContent
+            uri={privateImageManifest.cover_image.uri}
+            className={"fullAspectRatio"}
+            style={{
+              ...(cols > 1 ? { maxWidth: actualColumnWidth } : {}),
+              minWidth: actualColumnWidth,
+            }}
+          />
+        </React.Fragment>
       )}
       <Button
         style={{ width: '100%' }}
@@ -1125,29 +1143,14 @@ export const StealthView = (
       >
         Decrypt
       </Button>
-      {decryptedImage && (
-        <div>
-          {privateImageManifest.encrypted_assets[0].type === "video/mp4"
-            // TODO: less janky / hardcoded
-            ? (
-              <video
-                controls
-              >
-                <source
-                  type="video/mp4"
-                  src={"data:video/mp4;base64," + decryptedImage.toString('base64')}
-                />
-              </video>
-            )
-            : (
-              <img
-                src={"data:video/mp4;base64," + decryptedImage.toString('base64')}
-                style={{ maxWidth: '40ch', margin: 'auto', display: 'block' }}
-              />
-            )
-          }
-        </div>
-      )}
+      <Button
+        style={{ width: '100%' }}
+        className="metaplex-button"
+        disabled={loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr || !publicImageManifest.name}
+        onClick={() => setTransferInputting(true)}
+      >
+        Transfer
+      </Button>
       <MetaplexModal
         title={`Send ${publicImageManifest.name}`}
         visible={transferInputting}
@@ -1234,14 +1237,6 @@ export const StealthView = (
           Transfer
         </Button>
       </MetaplexModal>
-      <Button
-        style={{ width: '100%' }}
-        className="metaplex-button"
-        disabled={loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr || !publicImageManifest.name}
-        onClick={() => setTransferInputting(true)}
-      >
-        Transfer
-      </Button>
       <WaitingOverlay
         visible={transferring}
         progress={transferProgress}
