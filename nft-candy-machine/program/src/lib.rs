@@ -650,6 +650,7 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
     Ok(num)
 }
 
+/// Create a new candy machine.
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
 pub struct InitializeCandyMachine<'info> {
@@ -662,12 +663,15 @@ pub struct InitializeCandyMachine<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
+/// Add multiple config lines to the candy machine.
 #[derive(Accounts)]
 pub struct AddConfigLines<'info> {
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
 }
+
+/// Withdraw SOL from candy machine account.
 #[derive(Accounts)]
 pub struct WithdrawFunds<'info> {
     #[account(mut, has_one = authority)]
@@ -676,6 +680,7 @@ pub struct WithdrawFunds<'info> {
     authority: Signer<'info>,
 }
 
+/// Mint a new NFT pseudo-randomly from the config array.
 #[derive(Accounts)]
 #[instruction(creator_bump: u8)]
 pub struct MintNFT<'info> {
@@ -724,6 +729,7 @@ pub struct MintNFT<'info> {
     // transfer_authority_info
 }
 
+/// Update the candy machine state.
 #[derive(Accounts)]
 pub struct UpdateCandyMachine<'info> {
     #[account(
@@ -735,6 +741,7 @@ pub struct UpdateCandyMachine<'info> {
     wallet: UncheckedAccount<'info>,
 }
 
+/// Candy machine state and config data.
 #[account]
 #[derive(Default)]
 pub struct CandyMachine {
@@ -766,6 +773,7 @@ pub enum WhitelistMintMode {
     NeverBurn,
 }
 
+/// Candy machine settings data.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct CandyMachineData {
     pub uuid: String,
@@ -787,7 +795,7 @@ pub struct CandyMachineData {
     pub gatekeeper: Option<GatekeeperConfig>,
 }
 
-/// Configurations options for the gatekeeper
+/// Configurations options for the gatekeeper.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct GatekeeperConfig {
     /// The network for the gateway token required
@@ -838,6 +846,7 @@ pub const CONFIG_ARRAY_START: usize = 8 + // key
 1 + 32 + 1 // gatekeeper
 ;
 
+/// Hidden Settings for large mints used with offline data.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct HiddenSettings {
     pub name: String,
@@ -995,6 +1004,7 @@ pub fn get_config_line<'info>(
     Ok(config_line)
 }
 
+/// Individual config line for storing NFT data pre-mint.
 pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct ConfigLine {
