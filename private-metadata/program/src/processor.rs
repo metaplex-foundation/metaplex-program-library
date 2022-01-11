@@ -7,6 +7,7 @@ use crate::{
     transfer_proof::{Verifiable, TransferProof},
     equality_proof::*,
     transcript::TranscriptProtocol,
+    zk_token_elgamal,
     ID,
 };
 
@@ -23,9 +24,7 @@ use solana_program::{
     sysvar::{Sysvar},
 };
 
-use crate::{
-    zk_token_elgamal,
-};
+use std::convert::TryInto;
 
 pub fn process_instruction(
     _program_id: &Pubkey,
@@ -82,6 +81,42 @@ pub fn process_instruction(
     }
 }
 
+// TODO: Result instead of assuming overflow
+fn scale_creator_shares(
+    private_metadata_key: &Pubkey,
+    metadata: &mpl_token_metadata::state::Metadata,
+) -> Option<Vec<mpl_token_metadata::state::Creator>> {
+    let mut new_creators = vec![];
+    if let Some(creators) = &metadata.data.creators {
+        let current_seller_bp = u64::from(metadata.data.seller_fee_basis_points);
+        let mut remaining_share: u8 = 100;
+        for creator in creators {
+            let current_creator_bp = current_seller_bp
+                .checked_mul(u64::from(creator.share))?
+                .checked_div(100)?;
+            let next_creator_share: u8 = match current_creator_bp.checked_div(100)?.try_into() {
+                Ok(v) => v,
+                Err(_) => {
+                    msg!("Internal error: share recalculation failed");
+                    return None;
+                }
+            };
+            remaining_share = remaining_share
+                .checked_sub(next_creator_share)?;
+            new_creators.push(mpl_token_metadata::state::Creator {
+                share: next_creator_share,
+                ..*creator
+            });
+        }
+        new_creators.push(mpl_token_metadata::state::Creator {
+            address: *private_metadata_key,
+            verified: true,
+            share: remaining_share,
+        });
+    }
+    Some(new_creators)
+}
+
 fn process_configure_metadata(
     accounts: &[AccountInfo],
     data: &ConfigureMetadataData
@@ -92,6 +127,7 @@ fn process_configure_metadata(
     let metadata_info = next_account_info(account_info_iter)?;
     let metadata_update_authority_info = next_account_info(account_info_iter)?;
     let private_metadata_info = next_account_info(account_info_iter)?;
+    let metadata_program_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
     let rent_sysvar_info = next_account_info(account_info_iter)?;
 
@@ -107,6 +143,10 @@ fn process_configure_metadata(
     validate_account_owner(mint_info, &spl_token::ID)?;
     validate_account_owner(metadata_info, &mpl_token_metadata::ID)?;
 
+    if *metadata_program_info.key != mpl_token_metadata::ID {
+        msg!("Mismatched metadata program");
+        return Err(ProgramError::InvalidArgument);
+    }
 
     // check metadata matches mint
     let metadata_seeds = &[
@@ -153,6 +193,37 @@ fn process_configure_metadata(
         return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
     }
 
+
+    // make the PDA a 'creator' so that it receives a portion of the fees and bump seller fees to
+    // 100%
+    let new_creators = scale_creator_shares(&private_metadata_key, &metadata)
+        .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+    invoke_signed(
+        &mpl_token_metadata::instruction::update_metadata_accounts(
+            *metadata_program_info.key,
+            *metadata_info.key,
+            *metadata_update_authority_info.key,
+            None, // new update auth
+            Some(mpl_token_metadata::state::Data {
+                seller_fee_basis_points: 10000,
+                creators: Some(new_creators),
+                ..metadata.data
+            }),
+            None, // primary sale happened
+        ),
+        &[
+            metadata_program_info.clone(),
+            metadata_info.clone(),
+            metadata_update_authority_info.clone(),
+        ],
+        &[
+            &[
+                PREFIX.as_bytes(),
+                mint_info.key.as_ref(),
+                &[private_metadata_bump_seed],
+            ],
+        ],
+    )?;
 
     // create and initialize PDA
     let rent = &Rent::from_account_info(rent_sysvar_info)?;
@@ -280,7 +351,6 @@ fn process_init_transfer(
         return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
     }
 
-    use std::convert::TryInto;
     let elgamal_pk = zk_token_elgamal::pod::ElGamalPubkey(
         (*recipient_elgamal_info.try_borrow_data()?)
             .as_ref()
@@ -514,7 +584,6 @@ fn process_transfer_chunk_slow(
     msg!("Verifying comopute inputs...");
     use curve25519_dalek_onchain::instruction as dalek;
     use std::borrow::Borrow;
-    use std::convert::TryInto;
     use borsh::BorshDeserialize;
 
     validate_account_owner(instruction_buffer_info, &curve25519_dalek_onchain::ID)?;

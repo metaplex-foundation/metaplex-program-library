@@ -71,8 +71,9 @@ pub enum PrivateMetadataInstruction {
     ///   2. `[]` The SPL Metadata account. Must be mutable
     ///   3. `[signer]` The update authority for the SPL Metadata
     ///   4. `[writeable]` Private metadata PDA
-    ///   5. `[]` System program
-    ///   6. `[]` Rent sysvar
+    ///   5. `[]` Metadata program
+    ///   6. `[]` System program
+    ///   7. `[]` Rent sysvar
     ///
     /// Data expected by this instruction:
     ///   ConfigureMetadataData
