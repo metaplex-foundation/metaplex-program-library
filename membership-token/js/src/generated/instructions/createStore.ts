@@ -1,6 +1,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
-import { DESCRIPTION_DEFAULT_SIZE, NAME_DEFAULT_SIZE } from '../consts';
+
+import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
 
 export type CreateStoreInstructionArgs = {
   name: string;
@@ -13,8 +14,8 @@ const createStoreStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
-    ['name', beet.fixedSizeUtf8String(NAME_DEFAULT_SIZE)],
-    ['description', beet.fixedSizeUtf8String(DESCRIPTION_DEFAULT_SIZE)],
+    ['name', beet.fixedSizeUtf8String(NAME_MAX_LEN)],
+    ['description', beet.fixedSizeUtf8String(DESCRIPTION_MAX_LEN)],
   ],
   'CreateStoreInstructionArgs',
 );

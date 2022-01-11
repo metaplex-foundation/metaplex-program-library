@@ -1,7 +1,8 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-import { DESCRIPTION_DEFAULT_SIZE, NAME_DEFAULT_SIZE } from '../consts';
+
+import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
 
 export enum MarketState {
   Uninitialized,
@@ -169,8 +170,8 @@ const marketAccountDataStruct = new beet.BeetStruct<
     ['treasuryHolder', beetSolana.publicKey],
     ['treasuryOwner', beetSolana.publicKey],
     ['owner', beetSolana.publicKey],
-    ['name', beet.fixedSizeUtf8String(NAME_DEFAULT_SIZE)],
-    ['description', beet.fixedSizeUtf8String(DESCRIPTION_DEFAULT_SIZE)],
+    ['name', beet.fixedSizeUtf8String(NAME_MAX_LEN)],
+    ['description', beet.fixedSizeUtf8String(DESCRIPTION_MAX_LEN)],
     ['mutable', beet.bool],
     ['price', beet.u64],
     ['piecesInOneWallet', beet.coption(beet.u64)],
