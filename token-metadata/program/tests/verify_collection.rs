@@ -45,7 +45,7 @@ mod verify_collection {
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
-            .create_v3(&mut context, Some(1))
+            .create_v3(&mut context, Some(0))
             .await
             .unwrap();
 
@@ -143,7 +143,7 @@ mod verify_collection {
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
-            .create(&mut context, Some(1))
+            .create(&mut context, Some(0))
             .await
             .unwrap();
 
@@ -216,7 +216,7 @@ mod verify_collection {
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
-            .create(&mut context, Some(2))
+            .create(&mut context, Some(1))
             .await
             .unwrap();
 
@@ -359,7 +359,7 @@ mod verify_collection {
             .unwrap();
         let collection_master_edition_account = MasterEditionV2::new(&test_collection);
         collection_master_edition_account
-            .create_v3(&mut context, Some(1))
+            .create_v3(&mut context, Some(0))
             .await
             .unwrap();
 

@@ -209,6 +209,8 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
     ) -> transport::Result<()> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
@@ -222,8 +224,8 @@ impl Metadata {
                     uri,
                     creators,
                     seller_fee_basis_points,
-                    collection: None,
-                    uses: None,
+                    collection: collection,
+                    uses: uses,
                 }),
                 None,
                 Some(is_mutable),

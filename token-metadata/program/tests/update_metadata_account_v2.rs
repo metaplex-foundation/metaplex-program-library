@@ -21,7 +21,7 @@ mod update_metadata_account_v2 {
     use super::*;
 
     #[tokio::test]
-    async fn success() {
+    async fn success_compatible() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         let name = "Test".to_string();
@@ -48,7 +48,80 @@ mod update_metadata_account_v2 {
         let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
 
         test_metadata
-            .update_v2(&mut context, updated_name, symbol, uri, None, 10, false)
+            .update_v2(
+                &mut context,
+                updated_name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                Some(Collection {
+                    key: test_metadata.pubkey,
+                    verified: false,
+                }),
+                None,
+            )
+            .await
+            .unwrap();
+
+        let metadata = test_metadata.get_data(&mut context).await;
+
+        assert_eq!(metadata.data.name, puffed_updated_name,);
+        assert_eq!(metadata.data.symbol, puffed_symbol);
+        assert_eq!(metadata.data.uri, puffed_uri);
+        assert_eq!(metadata.data.seller_fee_basis_points, 10);
+        assert_eq!(metadata.data.creators, None);
+
+        assert_eq!(metadata.primary_sale_happened, false);
+        assert_eq!(metadata.is_mutable, false);
+        assert_eq!(metadata.mint, test_metadata.mint.pubkey());
+        assert_eq!(metadata.update_authority, context.payer.pubkey());
+        assert_eq!(metadata.key, Key::MetadataV1);
+        assert_eq!(metadata.collection.unwrap().key, test_metadata.pubkey);
+    }
+
+    #[tokio::test]
+    async fn success() {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        let name = "Test".to_string();
+        let symbol = "TST".to_string();
+        let uri = "uri".to_string();
+
+        let puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
+        let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
+
+        test_metadata
+            .create_v2(
+                &mut context,
+                name,
+                symbol.clone(),
+                uri.clone(),
+                None,
+                10,
+                true,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let updated_name = "New Name".to_string();
+        let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
+
+        test_metadata
+            .update_v2(
+                &mut context,
+                updated_name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                None,
+                None,
+            )
             .await
             .unwrap();
 

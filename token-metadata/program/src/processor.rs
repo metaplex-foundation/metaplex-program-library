@@ -8,9 +8,9 @@ use crate::{
     error::MetadataError,
     instruction::MetadataInstruction,
     state::{
-        Collection, Data, DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard,
-        UseAuthorityRecord, UseMethod, Uses, BURN, EDITION, MAX_MASTER_EDITION_LEN,
-        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord,
+        UseMethod, Uses, BURN, EDITION, MAX_MASTER_EDITION_LEN, PREFIX, USER,
+        USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_derivation, assert_initialized,
@@ -700,7 +700,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let edition = MasterEditionV2::from_account_info(edition_account_info)
         .map_err(|_err: ProgramError| MetadataError::CollectionMustBeAUniqueMasterEdition)?;
     if collection_nft_data.token_standard != Some(TokenStandard::NonFungible)
-        || edition.max_supply != Some(1)
+        || edition.max_supply != Some(0)
     {
         msg!("{:?}", collection_nft_data.token_standard);
         return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into());
