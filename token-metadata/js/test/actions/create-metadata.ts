@@ -9,6 +9,7 @@ import {
 import { strict as assert } from 'assert';
 import { CreateMetadata, CreateMasterEditionV3, CreateMetadataV2, DataV2, MasterEdition, Metadata, MetadataDataData } from '../../src/mpl-token-metadata';
 import BN from 'bn.js';
+import * as spl from "@solana/spl-token";
 // -----------------
 // Create Metadata
 // -----------------
@@ -51,7 +52,7 @@ export async function createMetadataV2({
   const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
     createMetadataTx,
     [],
-    defaultSendOptions,
+    { skipPreflight: false },
   );
 
   return { metadata, createTxDetails };
@@ -127,21 +128,29 @@ export async function mintAndCreateMetadataV2(
   connection: Connection,
   transactionHandler: TransactionHandler,
   payer: Keypair,
-  args: ConstructorParameters<typeof DataV2>[0],
+  args: DataV2,
 ) {
-  const { createMintAccount } = new Actions(connection);
-  const { mint, createMintTx } = await createMintAccount(payer.publicKey);
-  const mintRes = await transactionHandler.sendAndConfirmTransaction(
-    createMintTx,
-    [mint],
-    defaultSendOptions,
+  const mint = await spl.Token.createMint(
+    connection,
+    payer,
+    payer.publicKey,
+    null,
+    0,
+    spl.TOKEN_PROGRAM_ID,
   );
-  addLabel('mint', mint);
 
-  assertConfirmedTransaction(assert, mintRes.txConfirmed);
+  const fromTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
+    payer.publicKey,
+  );
 
-  const initMetadataData = new DataV2(args);
-
+  await mint.mintTo(
+    fromTokenAccount.address,
+    payer.publicKey,
+    [],
+    1,
+  );
+  addLabel('mint', mint.publicKey);
+  const initMetadataData = args;
   const { createTxDetails, metadata } = await createMetadataV2({
     transactionHandler,
     publicKey: payer.publicKey,
@@ -151,7 +160,6 @@ export async function mintAndCreateMetadataV2(
 
   addLabel('metadata', metadata);
   logDebug(createTxDetails.txSummary.logMessages.join('\n'));
-
   return { mint, metadata };
 }
 
@@ -163,7 +171,7 @@ export async function createMasterEdition(
   connection: Connection,
   transactionHandler: TransactionHandler,
   payer: Keypair,
-  args: ConstructorParameters<typeof DataV2>[0],
+  args: DataV2,
 ) {
   let { mint, metadata } = await mintAndCreateMetadataV2(
     connection,
@@ -188,7 +196,7 @@ export async function createMasterEdition(
   const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
     createMev3,
     [],
-    defaultSendOptions,
+    { skipPreflight: true },
   );
 
   return { mint, metadata, masterEditionPubkey, createTxDetails };

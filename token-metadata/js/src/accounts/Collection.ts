@@ -6,8 +6,8 @@ import {
 type Args = { key: StringPublicKey; verified: boolean };
 export class Collection extends Borsh.Data<Args> {
     static readonly SCHEMA = Collection.struct([
-        ['key', 'pubkeyAsString'],
         ['verified', 'u8'],
+        ['key', 'pubkeyAsString'],
     ]);
     key: StringPublicKey;
     verified: boolean;

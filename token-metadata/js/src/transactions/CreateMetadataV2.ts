@@ -6,7 +6,7 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { MetadataDataData, DataV2 } from '../accounts/Metadata';
+import { DataV2 } from '../accounts/Metadata';
 import { MetadataProgram } from '../MetadataProgram';
 
 export class CreateMetadataV2Args extends Borsh.Data<{ data: DataV2; isMutable: boolean }> {
@@ -20,13 +20,13 @@ export class CreateMetadataV2Args extends Borsh.Data<{ data: DataV2; isMutable: 
   ]);
 
   instruction = 16;
-  data: MetadataDataData;
+  data: DataV2;
   isMutable: boolean;
 }
 
 export type CreateMetadataV2Params = {
   metadata: PublicKey;
-  metadataData: CreateMetadataV2Args;
+  metadataData: DataV2;
   updateAuthority: PublicKey;
   mint: PublicKey;
   mintAuthority: PublicKey;

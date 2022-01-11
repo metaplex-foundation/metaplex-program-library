@@ -48,10 +48,12 @@ type DataV2Args = {
   collection: Collection | null;
   uses: Uses | null;
 };
+
 export class DataV2 extends Borsh.Data<DataV2Args> {
   static readonly SCHEMA = new Map([
     ...Creator.SCHEMA,
     ...Collection.SCHEMA,
+    ...Uses.SCHEMA,
     ...DataV2.struct([
       ['name', 'string'],
       ['symbol', 'string'],
@@ -63,9 +65,13 @@ export class DataV2 extends Borsh.Data<DataV2Args> {
     ]),
   ]);
 
-  instruction = 0;
-  data: MetadataDataData;
-  isMutable: boolean;
+  name: string;
+  symbol: string;
+  uri: string;
+  sellerFeeBasisPoints: number;
+  creators: Creator[] | null;
+  collection: Collection | null;
+  uses: Uses | null;
 }
 export class MetadataDataData extends Borsh.Data<DataArgs> {
   static readonly SCHEMA = new Map([
@@ -106,6 +112,8 @@ type Args = {
 export class MetadataData extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
     ...MetadataDataData.SCHEMA,
+    ...Collection.SCHEMA,
+    ...Uses.SCHEMA,
     ...MetadataData.struct([
       ['key', 'u8'],
       ['updateAuthority', 'pubkeyAsString'],

@@ -25,7 +25,7 @@ async function createCollection(
     transactionHandler: TransactionHandler,
     payer: Keypair,
 ) {
-    const initMetadataData = {
+    const initMetadataData = new DataV2({
         uri: URI,
         name: NAME,
         symbol: SYMBOL,
@@ -33,7 +33,7 @@ async function createCollection(
         creators: null,
         collection: null,
         uses: null,
-    };
+    });
     return await createMasterEdition(
         connection,
         transactionHandler,
@@ -47,7 +47,7 @@ async function createCollection(
 // Success Cases
 // -----------------
 
-test('update-metadata-account: toggle primarySaleHappened', async (t) => {
+test('verify-collection', async (t) => {
     const payer = Keypair.generate();
     const connection = new Connection(connectionURL, 'confirmed');
     const transactionHandler = new PayerTransactionHandler(connection, payer);
@@ -56,7 +56,7 @@ test('update-metadata-account: toggle primarySaleHappened', async (t) => {
 
     let collectionNft = await createCollection(connection, transactionHandler, payer);
 
-    const initMetadataData = {
+    const initMetadataData = new DataV2({
         uri: URI,
         name: NAME,
         symbol: SYMBOL,
@@ -64,32 +64,26 @@ test('update-metadata-account: toggle primarySaleHappened', async (t) => {
         creators: null,
         collection: new Collection({ key: collectionNft.mint.publicKey.toBase58(), verified: false }),
         uses: null,
-    };
+    });
     let collectionMemberNft = await createMasterEdition(
         connection,
         transactionHandler,
         payer,
         initMetadataData,
     );
-
+    console.log('collectionMemberNft', collectionMemberNft.metadata.toBase58());
     const updatedMetadataBeforeVerification = await getMetadataData(connection, collectionMemberNft.metadata);
     t.ok(updatedMetadataBeforeVerification.collection, 'collection should be not null');
     t.not(updatedMetadataBeforeVerification.collection.verified, 'collection should be not be verified');
-
-    const collectionVerifyCollectionTransaction = new VerifyCollection({}, {
+    const collectionVerifyCollectionTransaction = new VerifyCollection({ feePayer: payer.publicKey }, {
         metadata: collectionMemberNft.metadata,
         collectionAuthority: payer.publicKey,
         collectionMint: collectionNft.mint.publicKey,
         collectionMetadata: collectionNft.metadata,
         collectionMasterEdition: collectionNft.masterEditionPubkey,
-    })
-
-    await transactionHandler.sendAndConfirmTransaction(collectionVerifyCollectionTransaction, [payer]);
-
-    const updatedMetadata = await getMetadataData(connection, collectionMemberNft.metadata);
-
+    });
+    const tx = await transactionHandler.sendAndConfirmTransaction(collectionVerifyCollectionTransaction, [payer], { skipPreflight: true });
     const updatedMetadataAfterVerification = await getMetadataData(connection, collectionMemberNft.metadata);
-    t.ok(updatedMetadataBeforeVerification.collection, 'collection should be not null');
-    t.ok(updatedMetadataBeforeVerification.collection.verified, 'collection should be not be verified');
-
+    t.ok(updatedMetadataAfterVerification.collection, 'collection should be not null');
+    t.ok(updatedMetadataAfterVerification.collection.verified, 'collection should be verified');
 });

@@ -52,11 +52,6 @@ export class VerifyCollection extends Transaction {
                         isWritable: true,
                     },
                     {
-                        pubkey: feePayer,
-                        isSigner: true,
-                        isWritable: false,
-                    },
-                    {
                         pubkey: collectionMint,
                         isSigner: false,
                         isWritable: false,
