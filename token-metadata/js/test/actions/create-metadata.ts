@@ -15,7 +15,7 @@ import {
   MasterEdition,
   Metadata,
   MetadataDataData,
-} from '@metaplex-foundation/mpl-token-metadata';
+} from '../../src/mpl-token-metadata';
 import BN from 'bn.js';
 import * as spl from '@solana/spl-token';
 // -----------------

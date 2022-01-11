@@ -28,7 +28,7 @@ export class UpdateMetadataV2Args extends Borsh.Data<{
   isMutable: boolean | null;
 }
 
-export type UpdateMetadataV2Params = {
+type UpdateMetadataV2Params = {
   metadata: PublicKey;
   updateAuthority: PublicKey;
   metadataData?: DataV2;

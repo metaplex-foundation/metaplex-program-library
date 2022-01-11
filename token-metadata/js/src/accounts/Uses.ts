@@ -1,9 +1,5 @@
 import {
   Borsh,
-  Account,
-  ERROR_INVALID_ACCOUNT_DATA,
-  ERROR_INVALID_OWNER,
-  AnyPublicKey,
 } from '@metaplex-foundation/mpl-core';
 import { UseMethod } from '.';
 

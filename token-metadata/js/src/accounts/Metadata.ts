@@ -13,10 +13,11 @@ import BN from 'bn.js';
 import bs58 from 'bs58';
 import { Buffer } from 'buffer';
 import { Collection, TokenStandard } from '.';
-import { MetadataKey, MetadataProgram } from '../MetadataProgram';
+import { MetadataProgram } from '../MetadataProgram';
 import { Edition } from './Edition';
 import { MasterEdition } from './MasterEdition';
 import { Uses } from './Uses';
+import { MetadataKey } from './constants';
 
 type CreatorArgs = { address: StringPublicKey; verified: boolean; share: number };
 export class Creator extends Borsh.Data<CreatorArgs> {
