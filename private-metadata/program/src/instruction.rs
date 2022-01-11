@@ -81,6 +81,15 @@ pub enum PrivateMetadataInstruction {
 
     /// Initialise transfer state for private metadata
     ///
+    /// In the normal workflow, royalties for private-metadata NFTs will be 100% and the
+    /// non-creator fees are all sent to the private-metadata account.
+    /// In case of sale through marketplace or contract that doesn't handle private metadata,
+    /// this instruction allows the seller to claim those lamports by transferring ownership and
+    /// claiming on `fini_transfer`
+    ///
+    /// TODO: there is wonkiness around multiple parties transacting without a proper private
+    /// metadata call...
+    ///
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writeable,signer]` Authority. Must be the owner of the NFT

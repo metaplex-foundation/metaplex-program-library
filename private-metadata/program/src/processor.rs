@@ -262,6 +262,10 @@ fn process_init_transfer(
         return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
     }
 
+    if private_metadata_info.data_len() != PrivateMetadataAccount::get_packed_len() {
+        return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
+    }
+
     // check that elgamal PDA matches
     let elgamal_seeds = &[
         PREFIX.as_bytes(),
@@ -308,6 +312,23 @@ fn process_init_transfer(
     transfer_buffer.authority = *authority_info.key;
     transfer_buffer.private_metadata_key = *private_metadata_info.key;
     transfer_buffer.elgamal_pk = elgamal_pk;
+
+    let minimum_rent = rent.minimum_balance(
+        PrivateMetadataAccount::get_packed_len()).max(1);
+    let paid_amount =
+        private_metadata_info.lamports()
+        .checked_sub(minimum_rent)
+        .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+    if paid_amount != 0 {
+        // transfer the seller's fee portion to the transfer buffer (which can be claimed by them)
+        // TODO: expiration so buyer can reclaim if this doesn't happen
+        let starting_lamports = transfer_buffer_info.lamports();
+        **transfer_buffer_info.lamports.borrow_mut() = starting_lamports
+            .checked_add(paid_amount)
+            .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+
+        **private_metadata_info.lamports.borrow_mut() = minimum_rent;
+    }
 
     Ok(())
 }
