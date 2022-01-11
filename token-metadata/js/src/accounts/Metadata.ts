@@ -12,12 +12,12 @@ import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { Buffer } from 'buffer';
-import { Collection, TokenStandard } from '.';
 import { MetadataProgram } from '../MetadataProgram';
 import { Edition } from './Edition';
 import { MasterEdition } from './MasterEdition';
 import { Uses } from './Uses';
-import { MetadataKey } from './constants';
+import { Collection } from './Collection';
+import { MetadataKey, TokenStandard } from './constants';
 
 type CreatorArgs = { address: StringPublicKey; verified: boolean; share: number };
 export class Creator extends Borsh.Data<CreatorArgs> {
