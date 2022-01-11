@@ -280,7 +280,7 @@ pub fn configure_metadata(
     let accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(mint, false),
-        AccountMeta::new_readonly(get_metadata_address(&mint).0, false),
+        AccountMeta::new(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
         AccountMeta::new(get_private_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(mpl_token_metadata::id(), false),
