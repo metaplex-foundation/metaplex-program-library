@@ -1989,6 +1989,8 @@ dependencies = [
  "futures",
  "openssl",
  "private-metadata",
+ "regex",
+ "serde_json",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",

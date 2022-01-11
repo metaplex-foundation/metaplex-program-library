@@ -15,23 +15,21 @@ bs58 = "0.4.0"
 bytemuck = { version = "1.7.2", features = ["derive"] }
 clap = "2.33.3"
 curl = "0.4.41"
+curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
+curve25519-dalek-onchain = { path = "/Users/lwu/code/solana/curve25519-dalek-onchain/program", features = ["no-entrypoint"] }
 futures = "0.3.18"
 openssl = "0.10.38"
+private-metadata = { path = "../program", features = ["no-entrypoint"] }
+regex = "1.5.4"
+serde_json = "1.0"
 solana-clap-utils = "1.7.15"
 solana-cli-config = "1.7.15"
 solana-client = "1.7.15"
 solana-logger = "1.7.15"
 solana-remote-wallet = "1.7.15"
 solana-sdk = "1.7.15"
-spl-associated-token-account = { version = "1.0.3", features = [
-    "no-entrypoint"
-] }
+spl-associated-token-account = { version = "1.0.3", features = [ "no-entrypoint" ] }
 spl-token = { version = "3.1.1", features = [ "no-entrypoint" ] }
-spl-token-metadata = { version = "0.0.1", features = [
-    "no-entrypoint"
-] }
+spl-token-metadata = { version = "0.0.1", features = [ "no-entrypoint" ] }
 tokio = { version = "1", features = ["full"] }
-private-metadata = { path = "../program", features = ["no-entrypoint"] }
-curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features = ["serde"] }
-curve25519-dalek-onchain = { path = "/Users/lwu/code/solana/curve25519-dalek-onchain/program", features = ["no-entrypoint"] }
 

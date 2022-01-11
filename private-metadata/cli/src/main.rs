@@ -293,43 +293,71 @@ async fn process_decrypt_asset(
         private_metadata_account.uri.0.to_vec())?
         .replace("\x00", "");
 
-    let mut buf = Vec::new();
     let mut handle = curl::easy::Easy::new();
-    handle.url(&private_asset_url).unwrap();
     handle.follow_location(true).unwrap(); // areweave has a few
 
-    // something about mutable borrow in the lambda so open a scope
-    {
-        let mut transfer = handle.transfer();
-        transfer.write_function(|data| {
-            buf.extend_from_slice(data);
-            Ok(data.len())
-        }).unwrap();
-        transfer.perform().unwrap();
-    }
+    // mut so that we can reset handle.url
+    let mut read_all = |url: &str| -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+        handle.url(url)?;
+        let mut buf = vec![];
 
-    println!("read {} bytes from {}", buf.len(), private_asset_url);
+        // something about mutable borrow in the lambda so open a scope
+        {
+            let mut transfer = handle.transfer();
+            transfer.write_function(|data| {
+                buf.extend_from_slice(data);
+                Ok(data.len())
+            })?;
+            transfer.perform()?;
+        }
+
+        println!("read {} bytes from {}", buf.len(), url);
+
+        Ok(buf)
+    };
+
+    let manifest_buf = read_all(&private_asset_url)?;
+
+    let manifest: serde_json::Value = serde_json::from_str(
+        std::str::from_utf8(manifest_buf.as_slice())?
+    )?;
+
+    let out_dir = std::path::Path::new(&params.out);
+    std::fs::create_dir_all(out_dir)?;
 
     let cipher = openssl::symm::Cipher::aes_192_cbc();
-
-    let cipher_iv = &buf[..cipher.block_size()];
-    let encrypted_bytes = &buf[cipher.block_size()..];
-
     let cipher_key_bytes = parallel_decrypt_cipher_key(
         &elgamal_keypair,
         private_metadata_account,
     ).await?;
 
-    let decrypted = openssl::symm::decrypt(
-        cipher,
-        cipher_key_bytes.as_slice(),
-        Some(cipher_iv),
-        encrypted_bytes,
-    ).unwrap();
+    let url_re = regex::Regex::new(r"https://www.arweave.net/(.*)")?;
 
-    use std::io::Write;
-    std::fs::File::create(params.out.clone())?
-        .write_all(decrypted.as_slice())?;
+    let invalid_manifest = "Invalid Manifest";
+    for asset in manifest["encrypted_assets"].as_array().ok_or(invalid_manifest)? {
+        let asset_url = asset["uri"].as_str().ok_or(invalid_manifest)?;
+        let basename = url_re
+            .captures(asset_url).ok_or(invalid_manifest)?
+            // firsrt capture group that is not the whole match
+            .get(1).ok_or(invalid_manifest)?
+            .as_str();
+
+        let encrypted_buf = read_all(&asset_url)?;
+        let cipher_iv = &encrypted_buf[..cipher.block_size()];
+        let encrypted_bytes = &encrypted_buf[cipher.block_size()..];
+
+        let decrypted = openssl::symm::decrypt(
+            cipher,
+            cipher_key_bytes.as_slice(),
+            Some(cipher_iv),
+            encrypted_bytes,
+        )?;
+
+        use std::io::Write;
+
+        std::fs::File::create(out_dir.join(basename))?
+            .write_all(decrypted.as_slice())?;
+    }
 
     Ok(())
 }
