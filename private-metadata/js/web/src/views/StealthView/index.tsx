@@ -622,6 +622,18 @@ const WaitingOverlay = (props: {
   );
 };
 
+type AssetAndType = {
+  uri: string,
+  type: string,
+};
+
+type PrivateImageManifest = {
+  name: string,
+  cover_image: AssetAndType,
+  encrypted_assets: Array<AssetAndType>,
+  encrypted_blob: string,
+};
+
 export const StealthView = (
   props: RouteComponentProps<{}>,
 ) => {
@@ -655,6 +667,8 @@ export const StealthView = (
       = React.useState<any>({}); // Object...
   const [privateMetadata, setPrivateMetadata]
       = React.useState<PrivateMetadataAccount | null>(null);
+  const [privateImageManifest, setPrivateImageManifest]
+      = React.useState<PrivateImageManifest| null>(null);
   const [elgamalKeypairStr, setElgamalKeypairStr]
       = useLocalStorageState(`elgamalKeypair:${mint}`, '');
   const [cipherKey, setCipherKey]
@@ -738,17 +752,27 @@ export const StealthView = (
   React.useEffect(() => {
     if (privateMetadata === null) return;
     const wrap = async () => {
+      const response = await fetch(privateMetadata.uri);
+      const manifest = await response.json();
+      setPrivateImageManifest(manifest);
+    };
+    wrap();
+  }, [privateMetadata]);
+
+  React.useEffect(() => {
+    if (privateImageManifest === null) return;
+    const wrap = async () => {
       if (cipherKey) {
         const encryptedImage = Buffer.from(
           await (
-            await fetch(privateMetadata.uri)
+            await fetch(privateImageManifest.encrypted_assets[0].uri)
           ).arrayBuffer()
         );
         setDecryptedImage(decryptImage(encryptedImage, Buffer.from(cipherKey, 'base64')));
       }
     };
     wrap();
-  }, [privateMetadata, cipherKey]);
+  }, [privateImageManifest, cipherKey]);
 
   const notifyResult = (
     result: { txid: string } | string,
@@ -1030,6 +1054,30 @@ export const StealthView = (
           </div>
         </div>
       </div>
+      {privateImageManifest && (
+      <div
+        style={
+          cols > 1
+          ? {
+            display: 'flex',
+            flexDirection: 'row',
+          }
+          : {
+            display: 'flex',
+            flexDirection: 'column',
+          }
+        }
+      >
+        <CachedImageContent
+          uri={privateImageManifest.cover_image.uri}
+          className={"fullAspectRatio"}
+          style={{
+            ...(cols > 1 ? { maxWidth: actualColumnWidth } : {}),
+            minWidth: actualColumnWidth,
+          }}
+        />
+      </div>
+      )}
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
@@ -1079,10 +1127,25 @@ export const StealthView = (
       </Button>
       {decryptedImage && (
         <div>
-          <DataUrlImageContent
-            data={"data:image/png;base64," + decryptedImage.toString('base64')}
-            style={{ maxWidth: '40ch', margin: 'auto', display: 'block' }}
-          />
+          {privateImageManifest.encrypted_assets[0].type === "video/mp4"
+            // TODO: less janky / hardcoded
+            ? (
+              <video
+                controls
+              >
+                <source
+                  type="video/mp4"
+                  src={"data:video/mp4;base64," + decryptedImage.toString('base64')}
+                />
+              </video>
+            )
+            : (
+              <img
+                src={"data:video/mp4;base64," + decryptedImage.toString('base64')}
+                style={{ maxWidth: '40ch', margin: 'auto', display: 'block' }}
+              />
+            )
+          }
         </div>
       )}
       <MetaplexModal
