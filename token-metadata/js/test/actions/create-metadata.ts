@@ -170,6 +170,7 @@ export async function createMasterEdition(
   transactionHandler: TransactionHandler,
   payer: Keypair,
   args: DataV2,
+  maxSupply: number
 ) {
   const { mint, metadata } = await mintAndCreateMetadataV2(
     connection,
@@ -187,7 +188,7 @@ export async function createMasterEdition(
       updateAuthority: payer.publicKey,
       mint: mint.publicKey,
       mintAuthority: payer.publicKey,
-      maxSupply: new BN(1),
+      maxSupply: new BN(maxSupply),
     },
   );
 
