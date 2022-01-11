@@ -7,7 +7,15 @@ import {
   TransactionHandler,
 } from '@metaplex-foundation/amman';
 import { strict as assert } from 'assert';
-import { CreateMetadata, CreateMasterEditionV3, CreateMetadataV2, DataV2, MasterEdition, Metadata, MetadataDataData } from '../../src/mpl-token-metadata';
+import {
+  CreateMetadata,
+  CreateMasterEditionV3,
+  CreateMetadataV2,
+  DataV2,
+  MasterEdition,
+  Metadata,
+  MetadataDataData
+} from '@metaplex-foundation/mpl-token-metadata';
 import BN from 'bn.js';
 import * as spl from "@solana/spl-token";
 // -----------------

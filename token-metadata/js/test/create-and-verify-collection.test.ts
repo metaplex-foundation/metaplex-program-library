@@ -1,6 +1,6 @@
 import test from 'tape';
 
-import { DataV2, MetadataDataData, UpdateMetadataV2, VerifyCollection } from '../src/mpl-token-metadata';
+import { DataV2, VerifyCollection } from '@metaplex-foundation/mpl-token-metadata';
 import {
     killStuckProcess,
     initMetadata,

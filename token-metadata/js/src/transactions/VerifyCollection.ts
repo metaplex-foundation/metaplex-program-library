@@ -1,8 +1,6 @@
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import {
     PublicKey,
-    SystemProgram,
-    SYSVAR_RENT_PUBKEY,
     TransactionCtorFields,
     TransactionInstruction,
 } from '@solana/web3.js';
