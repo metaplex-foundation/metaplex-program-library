@@ -28,7 +28,7 @@ curve25519-dalek = { path = "/Users/lwu/code/solana/curve25519-dalek", features 
 curve25519-dalek-onchain = { path = "/Users/lwu/code/solana/curve25519-dalek-onchain/program", features = ["no-entrypoint"] }
 lazy_static = "1.4.0"
 merlin = { path = "/Users/lwu/code/solana/merlin" }
-mpl-token-metadata = { path = "../../token-metadata/program", features = ["no-entrypoint"] }
+mpl-token-metadata = { git = "https://github.com/metaplex-foundation/metaplex-program-library", rev = "2f5a1489c6b01e79282db499370b668f45641557", features = ["no-entrypoint"] }
 num-derive = "0.3"
 num-traits = "0.2"
 serde = { version = "1.0", features = ["derive"] }

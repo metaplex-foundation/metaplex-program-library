@@ -1522,7 +1522,7 @@ dependencies = [
  "bincode",
  "borsh",
  "clap",
- "mpl-token-metadata",
+ "mpl-token-metadata 0.0.1",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1538,7 +1538,7 @@ dependencies = [
  "bincode",
  "borsh",
  "clap",
- "mpl-token-vault",
+ "mpl-token-vault 0.0.1",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1607,8 +1607,8 @@ dependencies = [
  "arrayref",
  "borsh",
  "mpl-auction",
- "mpl-token-metadata",
- "mpl-token-vault",
+ "mpl-token-metadata 0.0.1",
+ "mpl-token-vault 0.0.1",
  "num-derive",
  "num-traits",
  "solana-program",
@@ -1624,7 +1624,7 @@ version = "0.0.1"
 dependencies = [
  "arrayref",
  "borsh",
- "mpl-token-vault",
+ "mpl-token-vault 0.0.1",
  "num-derive",
  "num-traits",
  "solana-program",
@@ -1635,8 +1635,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-token-metadata"
+version = "0.0.1"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?rev=2f5a1489c6b01e79282db499370b668f45641557#2f5a1489c6b01e79282db499370b668f45641557"
+dependencies = [
+ "arrayref",
+ "borsh",
+ "mpl-token-vault 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library?rev=2f5a1489c6b01e79282db499370b668f45641557)",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
 name = "mpl-token-vault"
 version = "0.0.1"
+dependencies = [
+ "borsh",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-vault"
+version = "0.0.1"
+source = "git+https://github.com/metaplex-foundation/metaplex-program-library?rev=2f5a1489c6b01e79282db499370b668f45641557#2f5a1489c6b01e79282db499370b668f45641557"
 dependencies = [
  "borsh",
  "num-derive",
@@ -1956,7 +1984,7 @@ dependencies = [
  "curve25519-dalek-onchain",
  "lazy_static",
  "merlin",
- "mpl-token-metadata",
+ "mpl-token-metadata 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library?rev=2f5a1489c6b01e79282db499370b668f45641557)",
  "num-derive",
  "num-traits",
  "rand_core 0.6.3",
@@ -1999,7 +2027,6 @@ dependencies = [
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
- "spl-token-metadata",
  "tokio",
 ]
 
@@ -3347,36 +3374,6 @@ dependencies = [
  "num-traits",
  "num_enum",
  "solana-program",
- "thiserror",
-]
-
-[[package]]
-name = "spl-token-metadata"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf729ee1809c761a9fc7d0c15cdb9f8caf4f53b543a035867ce31c8c4eb345e4"
-dependencies = [
- "arrayref",
- "borsh",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
- "spl-token-vault",
- "thiserror",
-]
-
-[[package]]
-name = "spl-token-vault"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19326eb47c4d0be70265ad0fe47d4571a1625d843b333f785c43483eb673ea59"
-dependencies = [
- "borsh",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
  "thiserror",
 ]
 
