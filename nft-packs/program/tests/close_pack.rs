@@ -4,7 +4,7 @@ use mpl_nft_packs::{
     instruction::{AddCardToPackArgs, InitPackSetArgs},
     state::{PackDistributionType, PackSetState},
 };
-use solana_program::system_instruction;
+use solana_program::{clock::Clock, system_instruction};
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
 use utils::*;
@@ -22,7 +22,7 @@ async fn setup() -> (
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = None;

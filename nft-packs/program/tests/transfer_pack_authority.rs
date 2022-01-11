@@ -6,7 +6,7 @@ use mpl_nft_packs::{
     state::PackDistributionType,
 };
 use num_traits::FromPrimitive;
-use solana_program::{instruction::InstructionError, system_instruction};
+use solana_program::{instruction::InstructionError, system_instruction, clock::Clock};
 use solana_program_test::*;
 use solana_sdk::{
     signature::Keypair,
@@ -30,7 +30,7 @@ async fn setup() -> (
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = None;
