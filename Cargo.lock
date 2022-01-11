@@ -1952,7 +1952,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "nft-candy-machine-v2"
+name = "nft-candy-machine"
 version = "2.0.0"
 dependencies = [
  "anchor-lang",

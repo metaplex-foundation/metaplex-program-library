@@ -1,12 +1,12 @@
 [package]
-name = "nft-candy-machine-v2"
+name = "nft-candy-machine"
 version = "2.0.0"
 description = "Created with Anchor"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "nft_candy_machine_v2"
+name = "nft_candy_machine"
 
 [features]
 no-entrypoint = []
