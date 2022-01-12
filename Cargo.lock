@@ -836,11 +836,12 @@ dependencies = [
 [[package]]
 name = "curve25519-dalek"
 version = "3.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0b9fdf9972b2bd6af2d913799d9ebc165ea4d2e65878e329d9c6b372c4491b61"
 dependencies = [
  "byteorder",
  "digest 0.9.0",
- "rand_core 0.6.3",
- "serde",
+ "rand_core 0.5.1",
  "subtle",
  "zeroize",
 ]
@@ -848,12 +849,12 @@ dependencies = [
 [[package]]
 name = "curve25519-dalek"
 version = "3.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b9fdf9972b2bd6af2d913799d9ebc165ea4d2e65878e329d9c6b372c4491b61"
+source = "git+https://github.com/lwus/curve25519-dalek#acde86eb4327f67f6b14a85f91863394fdaa0260"
 dependencies = [
  "byteorder",
  "digest 0.9.0",
- "rand_core 0.5.1",
+ "rand_core 0.6.3",
+ "serde",
  "subtle",
  "zeroize",
 ]
@@ -1795,6 +1796,7 @@ dependencies = [
 [[package]]
 name = "merlin"
 version = "2.0.0"
+source = "git+https://github.com/lwus/merlin#59329f12086c68485728036a6eeae1cacaa20b48"
 dependencies = [
  "byteorder",
  "keccak",
@@ -2311,7 +2313,7 @@ dependencies = [
  "bs58 0.4.0",
  "bytemuck",
  "byteorder",
- "curve25519-dalek 3.2.0",
+ "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
  "curve25519-dalek-onchain",
  "lazy_static",
  "merlin",
@@ -2343,7 +2345,7 @@ dependencies = [
  "bytemuck",
  "clap",
  "curl",
- "curve25519-dalek 3.2.0",
+ "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
  "curve25519-dalek-onchain",
  "futures",
  "openssl",
@@ -2368,7 +2370,7 @@ dependencies = [
  "bincode",
  "bytemuck",
  "console_error_panic_hook",
- "curve25519-dalek 3.2.0",
+ "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
  "getrandom 0.2.3",
  "private-metadata",
  "rand_core 0.6.3",
