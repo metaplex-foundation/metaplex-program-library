@@ -1,7 +1,7 @@
 //! Module provide handler for `Buy` command.
 
 use super::{get_account_state, UiTransactionInfo};
-use crate::error;
+use crate::{error, utils};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_membership_token::utils::{find_trade_history_address, find_vault_owner_address};
 use solana_client::rpc_client::RpcClient;
@@ -23,6 +23,7 @@ pub struct BuyUiInfo {
     edition_marker: Pubkey,
     new_metadata: Pubkey,
     new_edition: Pubkey,
+    new_mint: Pubkey,
 }
 
 impl UiTransactionInfo for BuyUiInfo {
@@ -32,6 +33,7 @@ impl UiTransactionInfo for BuyUiInfo {
         println!("Buy::edition_marker - {}", self.edition_marker);
         println!("Buy::new_metadata - {}", self.new_metadata);
         println!("Buy::new_edition - {}", self.new_edition);
+        println!("Buy::new_mint - {}", self.new_mint);
     }
 }
 
@@ -39,27 +41,50 @@ pub fn buy(
     client: &RpcClient,
     payer: &Keypair,
     market: &Pubkey,
-    selling_resource: &Pubkey,
     user_token_account: &Pubkey,
     user_wallet: &Keypair,
-    treasury_holder: &Pubkey,
-    master_edition: &Pubkey,
-    new_mint: &Pubkey,
-    vault: &Keypair,
-    master_edition_metadata: &Pubkey,
-    resource_mint: &Pubkey,
-    store: &Pubkey,
 ) -> Result<(Transaction, Box<dyn UiTransactionInfo>), error::Error> {
-    let (owner, vault_owner_bump) = find_vault_owner_address(resource_mint, store);
+    let market_state = get_account_state::<mpl_membership_token::state::Market>(client, market)?;
+    let selling_resource_state = get_account_state::<mpl_membership_token::state::SellingResource>(
+        client,
+        &market_state.selling_resource,
+    )?;
+    let store = market_state.store;
+    let resource_mint = selling_resource_state.resource;
+
+    let new_mint = Keypair::new();
+    utils::create_mint(client, payer, &new_mint, 0)?;
+
+    let new_mint_token_account = Keypair::new();
+    utils::create_token_account(
+        client,
+        payer,
+        &new_mint_token_account,
+        &new_mint.pubkey(),
+        &payer.pubkey(),
+    )?;
+    utils::mint_to(
+        client,
+        payer,
+        &new_mint.pubkey(),
+        &new_mint_token_account.pubkey(),
+        1,
+    )?;
+
+    let (owner, vault_owner_bump) = find_vault_owner_address(&resource_mint, &store);
     let (trade_history, trade_history_bump) =
         find_trade_history_address(&user_wallet.pubkey(), market);
 
-    let selling_resource_supply =
-        get_account_state::<mpl_membership_token::state::SellingResource>(
-            client,
-            selling_resource,
-        )?
-        .supply;
+    // Should be created
+    let (master_edition, _) = Pubkey::find_program_address(
+        &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
+            resource_mint.as_ref(),
+            mpl_token_metadata::state::EDITION.as_bytes(),
+        ],
+        &mpl_token_metadata::id(),
+    );
 
     let (edition_marker, _) = Pubkey::find_program_address(
         &[
@@ -67,7 +92,17 @@ pub fn buy(
             mpl_token_metadata::id().as_ref(),
             resource_mint.as_ref(),
             mpl_token_metadata::state::EDITION.as_bytes(),
-            selling_resource_supply.to_string().as_bytes(),
+            selling_resource_state.supply.to_string().as_bytes(),
+        ],
+        &mpl_token_metadata::id(),
+    );
+
+    // Should be created
+    let (master_edition_metadata, _) = Pubkey::find_program_address(
+        &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
+            resource_mint.as_ref(),
         ],
         &mpl_token_metadata::id(),
     );
@@ -76,7 +111,7 @@ pub fn buy(
         &[
             mpl_token_metadata::state::PREFIX.as_bytes(),
             mpl_token_metadata::id().as_ref(),
-            new_mint.as_ref(),
+            new_mint.pubkey().as_ref(),
         ],
         &mpl_token_metadata::id(),
     );
@@ -85,7 +120,7 @@ pub fn buy(
         &[
             mpl_token_metadata::state::PREFIX.as_bytes(),
             mpl_token_metadata::id().as_ref(),
-            new_mint.as_ref(),
+            new_mint.pubkey().as_ref(),
             mpl_token_metadata::state::EDITION.as_bytes(),
         ],
         &mpl_token_metadata::id(),
@@ -93,19 +128,19 @@ pub fn buy(
 
     let accounts = mpl_membership_token::accounts::Buy {
         market: *market,
-        selling_resource: *selling_resource,
+        selling_resource: market_state.selling_resource,
         user_token_account: *user_token_account,
         user_wallet: user_wallet.pubkey(),
         trade_history,
-        treasury_holder: *treasury_holder,
+        treasury_holder: market_state.treasury_holder,
         new_metadata,
         new_edition,
-        master_edition: *master_edition,
-        new_mint: *new_mint,
+        master_edition,
+        new_mint: new_mint.pubkey(),
         edition_marker,
-        vault: vault.pubkey(),
+        vault: selling_resource_state.vault,
         owner,
-        master_edition_metadata: *master_edition_metadata,
+        master_edition_metadata,
         clock: clock::id(),
         rent: rent::id(),
         token_metadata_program: mpl_token_metadata::id(),
@@ -132,7 +167,7 @@ pub fn buy(
         Transaction::new_signed_with_payer(
             &[instruction],
             Some(&payer.pubkey()),
-            &[payer, user_wallet, vault],
+            &[payer, user_wallet],
             recent_blockhash,
         ),
         Box::new(BuyUiInfo {
@@ -141,6 +176,7 @@ pub fn buy(
             new_edition,
             new_metadata,
             trade_history,
+            new_mint: new_mint.pubkey(),
         }),
     ))
 }

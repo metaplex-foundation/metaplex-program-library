@@ -60,34 +60,10 @@ pub enum Commands {
         market: String,
 
         #[clap(long, value_name = "PUBKEY")]
-        selling_resource: String,
-
-        #[clap(long, value_name = "PUBKEY")]
         user_token_account: String,
 
         #[clap(long, value_name = "FILE")]
         user_wallet_keypair: Option<String>,
-
-        #[clap(long, value_name = "PUBKEY")]
-        treasury_holder: String,
-
-        #[clap(long, value_name = "PUBKEY")]
-        master_edition: String,
-
-        #[clap(long, value_name = "PUBKEY")]
-        new_mint: String,
-
-        #[clap(long, value_name = "FILE")]
-        vault_keypair: String,
-
-        #[clap(long, value_name = "PUBKEY")]
-        master_edition_metadata: String,
-
-        #[clap(long, value_name = "PUBKEY")]
-        resource_mint: String,
-
-        #[clap(long, value_name = "PUBKEY")]
-        store: String,
     },
     /// Perform `InitSellingResource` instruction of `mpl_membership_token` program.
     InitSellingResource {
@@ -102,12 +78,6 @@ pub enum Commands {
 
         #[clap(long, value_name = "PUBKEY")]
         resource_mint: String,
-
-        #[clap(long, value_name = "PUBKEY")]
-        master_edition: String,
-
-        #[clap(long, value_name = "FILE")]
-        vault_keypair: String,
 
         #[clap(long, value_name = "PUBKEY")]
         resource_token: String,
@@ -127,10 +97,7 @@ pub enum Commands {
         selling_resource: String,
 
         #[clap(long, value_name = "PUBKEY")]
-        mint: String,
-
-        #[clap(long, value_name = "PUBKEY")]
-        treasury_holder: String,
+        mint: Option<String>,
 
         #[clap(long, value_name = "STRING")]
         name: String,
@@ -148,9 +115,9 @@ pub enum Commands {
         pieces_in_one_wallet: Option<u64>,
 
         #[clap(long, value_name = "TIMESTAMP")]
-        start_date: i64,
+        start_date: Option<u64>,
 
         #[clap(long, value_name = "TIMESTAMP")]
-        end_date: Option<i64>,
+        end_date: Option<u64>,
     },
 }

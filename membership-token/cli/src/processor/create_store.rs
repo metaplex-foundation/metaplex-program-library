@@ -5,20 +5,19 @@ use crate::error;
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::{
-    instruction::Instruction, signature::Signer, signer::keypair::Keypair, system_program,
-    transaction::Transaction,
+    instruction::Instruction, pubkey::Pubkey, signature::Signer, signer::keypair::Keypair,
+    system_program, transaction::Transaction,
 };
 
 /// Additional `CreateStore` instruction info, that need to be displayed in TUI.
 #[derive(Debug)]
 pub struct CreateStoreUiInfo {
-    store: Keypair,
+    store: Pubkey,
 }
 
 impl UiTransactionInfo for CreateStoreUiInfo {
     fn print(&self) {
-        println!("CreateStore::store(pubkey) - {}", self.store.pubkey());
-        println!("CreateStore::store(bytes) - {:?}", self.store.to_bytes());
+        println!("CreateStore::store - {}", self.store);
     }
 }
 
@@ -59,6 +58,8 @@ pub fn create_store(
             &[payer, admin_wallet, &store],
             recent_blockhash,
         ),
-        Box::new(CreateStoreUiInfo { store }),
+        Box::new(CreateStoreUiInfo {
+            store: store.pubkey(),
+        }),
     ))
 }

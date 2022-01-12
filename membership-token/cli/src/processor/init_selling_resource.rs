@@ -1,7 +1,7 @@
 //! Module provide handler for `InitSellingResource` command.
 
 use super::UiTransactionInfo;
-use crate::error;
+use crate::{error, utils};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_membership_token::utils::find_vault_owner_address;
 use solana_client::rpc_client::RpcClient;
@@ -13,20 +13,18 @@ use solana_sdk::{
 /// Additional `InitSellingResource` instruction info, that need to be displayed in TUI.
 #[derive(Debug)]
 pub struct InitSellingResourceUiInfo {
-    selling_resource: Keypair,
+    selling_resource: Pubkey,
+    vault: Pubkey,
     vault_owner: Pubkey,
 }
 
 impl UiTransactionInfo for InitSellingResourceUiInfo {
     fn print(&self) {
         println!(
-            "InitSellingResource::selling_resource(pubkey) - {}",
-            self.selling_resource.pubkey()
+            "InitSellingResource::selling_resource - {}",
+            self.selling_resource
         );
-        println!(
-            "InitSellingResource::selling_resource(bytes) - {:?}",
-            self.selling_resource.to_bytes()
-        );
+        println!("InitSellingResource::vault - {}", self.vault);
         println!("InitSellingResource::vault_owner - {}", self.vault_owner);
     }
 }
@@ -38,15 +36,14 @@ pub fn init_selling_resource(
     admin_keypair: &Keypair,
     selling_resource_owner: &Pubkey,
     resource_mint: &Pubkey,
-    master_edition: &Pubkey,
-    vault_keypair: &Keypair,
     resource_token: &Pubkey,
     max_supply: Option<u64>,
 ) -> Result<(Transaction, Box<dyn UiTransactionInfo>), error::Error> {
     let (vault_owner, vault_owner_bump) = find_vault_owner_address(resource_mint, store);
     let selling_resource = Keypair::new();
 
-    let (_, master_edition_bump) = Pubkey::find_program_address(
+    // Should be created
+    let (master_edition, master_edition_bump) = Pubkey::find_program_address(
         &[
             mpl_token_metadata::state::PREFIX.as_bytes(),
             mpl_token_metadata::id().as_ref(),
@@ -56,13 +53,16 @@ pub fn init_selling_resource(
         &mpl_token_metadata::id(),
     );
 
+    let vault_keypair = Keypair::new();
+    utils::create_token_account(client, payer, &vault_keypair, &resource_mint, &vault_owner)?;
+
     let accounts = mpl_membership_token::accounts::InitSellingResource {
         store: *store,
         admin: admin_keypair.pubkey(),
         selling_resource: selling_resource.pubkey(),
         selling_resource_owner: *selling_resource_owner,
         resource_mint: *resource_mint,
-        master_edition: *master_edition,
+        master_edition,
         vault: vault_keypair.pubkey(),
         owner: vault_owner,
         resource_token: *resource_token,
@@ -91,11 +91,12 @@ pub fn init_selling_resource(
         Transaction::new_signed_with_payer(
             &[instruction],
             Some(&payer.pubkey()),
-            &[payer, admin_keypair, &selling_resource, vault_keypair],
+            &[payer, admin_keypair, &selling_resource, &vault_keypair],
             recent_blockhash,
         ),
         Box::new(InitSellingResourceUiInfo {
-            selling_resource,
+            selling_resource: selling_resource.pubkey(),
+            vault: vault_keypair.pubkey(),
             vault_owner,
         }),
     ))

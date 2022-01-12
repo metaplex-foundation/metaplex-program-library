@@ -1,7 +1,7 @@
 //! Module provide handler for `CreateMarket` command.
 
 use super::UiTransactionInfo;
-use crate::error;
+use crate::{error, utils};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_membership_token::utils::find_treasury_owner_address;
 use solana_client::rpc_client::RpcClient;
@@ -13,15 +13,16 @@ use solana_sdk::{
 /// Additional `CreateMarket` instruction info, that need to be displayed in TUI.
 #[derive(Debug)]
 pub struct CreateMarketUiInfo {
-    market: Keypair,
-    owner: Pubkey,
+    market: Pubkey,
+    treasury_owner: Pubkey,
+    treasury_holder: Pubkey,
 }
 
 impl UiTransactionInfo for CreateMarketUiInfo {
     fn print(&self) {
-        println!("CreateMarket::market(pubkey) - {}", self.market.pubkey());
-        println!("CreateMarket::market(bytes) - {:?}", self.market.to_bytes());
-        println!("CreateMarket::owner - {}", self.owner);
+        println!("CreateMarket::market - {}", self.market);
+        println!("CreateMarket::treasury_owner - {}", self.treasury_owner);
+        println!("CreateMarket::treasury_holder - {}", self.treasury_holder);
     }
 }
 
@@ -32,27 +33,29 @@ pub fn create_market(
     selling_resource_owner: &Keypair,
     selling_resource: &Pubkey,
     mint: &Pubkey,
-    treasury_holder: &Pubkey,
     name: &String,
     description: &String,
     mutable: bool,
     price: u64,
     pieces_in_one_wallet: Option<u64>,
-    start_date: i64,
-    end_date: Option<i64>,
+    start_date: u64,
+    end_date: Option<u64>,
 ) -> Result<(Transaction, Box<dyn UiTransactionInfo>), error::Error> {
-    let (owner, treasury_owner_bump) = find_treasury_owner_address(mint, selling_resource);
+    let (treasury_owner, treasury_owner_bump) =
+        find_treasury_owner_address(&mint, selling_resource);
+
+    let treasury_holder = Keypair::new();
+    utils::create_token_account(client, payer, &treasury_holder, &mint, &treasury_owner)?;
 
     let market = Keypair::new();
-
     let accounts = mpl_membership_token::accounts::CreateMarket {
         market: market.pubkey(),
         store: *store,
         selling_resource_owner: selling_resource_owner.pubkey(),
         selling_resource: *selling_resource,
         mint: *mint,
-        treasury_holder: *treasury_holder,
-        owner,
+        treasury_holder: treasury_holder.pubkey(),
+        owner: treasury_owner,
         system_program: system_program::id(),
     }
     .to_account_metas(None);
@@ -64,12 +67,8 @@ pub fn create_market(
         mutable,
         price,
         pieces_in_one_wallet,
-        start_date: start_date as u64,
-        end_date: if let Some(end_date) = end_date {
-            Some(end_date as u64)
-        } else {
-            None
-        },
+        start_date,
+        end_date,
     }
     .data();
 
@@ -88,6 +87,10 @@ pub fn create_market(
             &[payer, &market, selling_resource_owner],
             recent_blockhash,
         ),
-        Box::new(CreateMarketUiInfo { market, owner }),
+        Box::new(CreateMarketUiInfo {
+            market: market.pubkey(),
+            treasury_owner,
+            treasury_holder: treasury_holder.pubkey(),
+        }),
     ))
 }

@@ -3,6 +3,7 @@ mod error;
 mod processor;
 mod utils;
 
+use chrono::prelude::*;
 use clap::Parser;
 use cli_args::{CliArgs, Commands};
 use solana_client::rpc_client::RpcClient;
@@ -140,8 +141,6 @@ fn main() -> Result<(), error::Error> {
             admin_keypair,
             selling_resource_owner,
             resource_mint,
-            master_edition,
-            vault_keypair,
             resource_token,
             max_supply,
         } => {
@@ -164,8 +163,6 @@ fn main() -> Result<(), error::Error> {
                 &admin_keypair,
                 &selling_resource_owner,
                 &Pubkey::from_str(&resource_mint)?,
-                &Pubkey::from_str(&master_edition)?,
-                &read_keypair_file(vault_keypair)?,
                 &Pubkey::from_str(&resource_token)?,
                 max_supply,
             )?)
@@ -175,7 +172,6 @@ fn main() -> Result<(), error::Error> {
             selling_resource_owner_keypair,
             selling_resource,
             mint,
-            treasury_holder,
             name,
             description,
             mutable,
@@ -184,14 +180,31 @@ fn main() -> Result<(), error::Error> {
             start_date,
             end_date,
         } => {
-            let mint = Pubkey::from_str(&mint)?;
-            let decimals = utils::get_mint(&client, &mint)?.decimals;
-
             let selling_resource_owner = if let Some(owner) = selling_resource_owner_keypair {
                 read_keypair_file(&owner)?
             } else {
                 utils::clone_keypair(&payer_wallet)
             };
+
+            let mint = if let Some(mint) = mint {
+                Some(Pubkey::from_str(&mint)?)
+            } else {
+                None
+            };
+
+            let mint = if let Some(mint) = mint {
+                mint
+            } else {
+                spl_token::native_mint::id()
+            };
+
+            let start_date = if let Some(start_date) = start_date {
+                start_date as u64
+            } else {
+                Utc::now().timestamp() as u64
+            };
+
+            let decimals = utils::get_mint(&client, &mint)?.decimals;
 
             Some(processor::create_market(
                 &client,
@@ -200,7 +213,6 @@ fn main() -> Result<(), error::Error> {
                 &selling_resource_owner,
                 &Pubkey::from_str(&selling_resource)?,
                 &mint,
-                &Pubkey::from_str(&treasury_holder)?,
                 &name,
                 &description,
                 mutable,
@@ -212,16 +224,8 @@ fn main() -> Result<(), error::Error> {
         }
         Commands::Buy {
             market,
-            selling_resource,
             user_token_account,
             user_wallet_keypair,
-            treasury_holder,
-            master_edition,
-            new_mint,
-            vault_keypair,
-            master_edition_metadata,
-            resource_mint,
-            store,
         } => {
             let user_wallet = if let Some(keypair) = user_wallet_keypair {
                 read_keypair_file(keypair)?
@@ -233,16 +237,8 @@ fn main() -> Result<(), error::Error> {
                 &client,
                 &payer_wallet,
                 &Pubkey::from_str(&market)?,
-                &Pubkey::from_str(&selling_resource)?,
                 &Pubkey::from_str(&user_token_account)?,
                 &user_wallet,
-                &Pubkey::from_str(&treasury_holder)?,
-                &Pubkey::from_str(&master_edition)?,
-                &Pubkey::from_str(&new_mint)?,
-                &read_keypair_file(vault_keypair)?,
-                &Pubkey::from_str(&master_edition_metadata)?,
-                &Pubkey::from_str(&resource_mint)?,
-                &Pubkey::from_str(&store)?,
             )?)
         }
     };
