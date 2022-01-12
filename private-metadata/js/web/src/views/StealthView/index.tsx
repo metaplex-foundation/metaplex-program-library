@@ -974,12 +974,8 @@ export const StealthView = (
   const cols = sizedColumns(width);
   const actualColumnWidth = (Math.min(width, maxWidth) - outerPadding - columnsGap * (cols - 1)) / cols;
 
-  if (privateImageManifest === null || publicImageManifest == null) {
-    return null;
-  }
-
-  return (
-    <div className="app stack" style={{ margin: 'auto' }}>
+  const publicPreviewC = () => (
+    <React.Fragment>
       <p
         className={"text-title"}
         style={{
@@ -1037,13 +1033,26 @@ export const StealthView = (
           </div>
         </div>
       </div>
+    </React.Fragment>
+  );
+
+  if (privateImageManifest === null) {
+    if (publicImageManifest === null) {
+      return null;
+    }
+    return publicPreviewC();
+  }
+
+  return (
+    <div className="app stack" style={{ margin: 'auto' }}>
+      {publicPreviewC()}
       <p
         className={"text-title"}
         style={{
           marginBottom: '15px',
         }}
       >
-        {privateImageManifest.encrypted_assets?.length || 0} stealthed assets detected
+        stealthed assets
       </p>
       {decryptedImage ? (
         <div>
