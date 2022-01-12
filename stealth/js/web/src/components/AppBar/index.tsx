@@ -40,7 +40,7 @@ export function useWindowDimensions() {
 
 export const LogoLink = () => {
   return (
-    <Link to={`/`}>
+    <Link to={`/stealth`}>
       <p className={"janus-logo"}>JANUS</p>
     </Link>
   );

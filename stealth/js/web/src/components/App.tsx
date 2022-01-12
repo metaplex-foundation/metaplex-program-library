@@ -24,8 +24,8 @@ export const App = () => {
       <LoaderProvider>
         <AppLayout>
           <Switch>
-            <Route exact path="/" component={GalleryView} />
-            <Route exact path="/stealth" component={StealthView} />
+            <Route exact path="/stealth/" component={GalleryView} />
+            <Route exact path="/stealth/view" component={StealthView} />
           </Switch>
         </AppLayout>
       </LoaderProvider>

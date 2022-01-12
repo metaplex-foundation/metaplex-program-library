@@ -1,6 +1,7 @@
 {
   "name": "Janus",
   "version": "0.1.0",
+  "homepage": "https://lwus.github.io/stealth/",
   "author": "Lawrence Wu <larry.wu@solana.com>",
   "license": "MIT",
   "scripts": {
@@ -9,7 +10,8 @@
     "lint": "eslint './src/**/*.{js,ts,tsx}' --quiet",
     "start": "yarn run start-dev",
     "start-dev": "webpack serve --config=configs/webpack/dev.js",
-    "start-prod": "yarn run build && node express.js"
+    "start-prod": "yarn run build && node express.js",
+    "deploy": "gh-pages -d dist"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
@@ -46,6 +48,7 @@
     "eslint-plugin-react": "^7.27.1",
     "express": "^4.17.1",
     "file-loader": "^6.2.0",
+    "gh-pages": "^3.2.3",
     "html-webpack-plugin": "^5.5.0",
     "image-webpack-loader": "^8.0.1",
     "jazzicon": "^1.5.0",

@@ -233,7 +233,7 @@ export const GalleryView = (
                             }}
                           >
                             <Link
-                              to={`/stealth?mint=${mint}`}
+                              to={`/stealth/view?mint=${mint}`}
                               style={{
                                 color: 'inherit',
                                 display: 'block',
