@@ -431,21 +431,9 @@ export const Cog = () => {
                 // The app will be re-initialized with the correct network
                 // (which will also be saved to local storage for future visits)
                 // for all its lifecycle.
-
-                // Because we use react-router's HashRouter, we must append
-                // the query parameters to the window location's hash & reload
-                // explicitly. We cannot update the window location's search
-                // property the standard way, see examples below.
-
-                // doesn't work: https://localhost/?network=devnet#/
-                // works: https://localhost/#/?network=devnet
-                const windowHash = window.location.hash;
                 routerSearchParams.set('network', network as any);
-                const nextLocationHash = `${
-                  windowHash.split('?')[0]
-                }?${routerSearchParams.toString()}`;
-                window.location.hash = nextLocationHash;
-                window.location.reload();
+                console.log(`Set window search to ${network} ${routerSearchParams.toString()}: ${window.location.search}`);
+                window.location.search = `?${routerSearchParams.toString()}`;
               }}
               value={endpoint.name}
               bordered={false}
