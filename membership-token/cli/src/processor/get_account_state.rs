@@ -9,7 +9,8 @@ pub fn get_account_state<T>(client: &RpcClient, account: &Pubkey) -> Result<T, e
 where
     T: BorshDeserialize,
 {
-    let account_data = client.get_account_data(account)?;
+    // First 8-bytes filled with sha256 hash by anchor
+    let account_data = client.get_account_data(account)?[8..].to_vec();
 
     Ok(try_from_slice_unchecked(&account_data)?)
 }

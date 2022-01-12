@@ -19,8 +19,9 @@ pub struct CreateMarketUiInfo {
 
 impl UiTransactionInfo for CreateMarketUiInfo {
     fn print(&self) {
-        println!("CreateMarket::market - {:?}", self.market);
-        println!("CreateMarket::owner - {:?}", self.owner);
+        println!("CreateMarket::market(pubkey) - {}", self.market.pubkey());
+        println!("CreateMarket::market(bytes) - {:?}", self.market.to_bytes());
+        println!("CreateMarket::owner - {}", self.owner);
     }
 }
 

@@ -20,10 +20,14 @@ pub struct InitSellingResourceUiInfo {
 impl UiTransactionInfo for InitSellingResourceUiInfo {
     fn print(&self) {
         println!(
-            "InitSellingResource::selling_resource - {:?}",
-            self.selling_resource
+            "InitSellingResource::selling_resource(pubkey) - {}",
+            self.selling_resource.pubkey()
         );
-        println!("InitSellingResource::vault_owner - {:?}", self.vault_owner);
+        println!(
+            "InitSellingResource::selling_resource(bytes) - {:?}",
+            self.selling_resource.to_bytes()
+        );
+        println!("InitSellingResource::vault_owner - {}", self.vault_owner);
     }
 }
 

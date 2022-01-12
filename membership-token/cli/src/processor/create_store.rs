@@ -17,7 +17,8 @@ pub struct CreateStoreUiInfo {
 
 impl UiTransactionInfo for CreateStoreUiInfo {
     fn print(&self) {
-        println!("CreateStore::store - {:?}", self.store);
+        println!("CreateStore::store(pubkey) - {}", self.store.pubkey());
+        println!("CreateStore::store(bytes) - {:?}", self.store.to_bytes());
     }
 }
 
