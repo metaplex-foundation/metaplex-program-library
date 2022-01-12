@@ -32,7 +32,11 @@ import * as bs58 from 'bs58';
 import * as BN from 'bn.js';
 
 import { CollapsePanel } from '../../components/CollapsePanel';
-import { useLoading } from '../../components/Loader';
+import {
+  useLoading,
+  incLoading,
+  decLoading,
+} from '../../components/Loader';
 import { MetaplexModal } from '../../components/MetaplexModal';
 import { useWindowDimensions } from '../../components/AppBar';
 import {
@@ -720,15 +724,19 @@ export const StealthView = (
       if (privateMetadataAccount !== null) {
         const privateMetadata = decodePrivateMetadata(privateMetadataAccount.data);
         setPrivateMetadata(privateMetadata);
+      } else {
+        setLoading(decLoading);
       }
 
       if (publicMetadataAccount !== null) {
         const publicMetadata = decodeMetadata(publicMetadataAccount.data);
         setPublicMetadata(publicMetadata);
+      } else {
+        setLoading(decLoading);
       }
     };
 
-    setLoading(true);
+    setLoading(p => incLoading(incLoading(p)));
     wrap();
   }, [connection, mint, toggleRunFetchMetadata]);
   const runFetchMetadata = () => setRunFetchMetadata(!toggleRunFetchMetadata);
@@ -739,6 +747,7 @@ export const StealthView = (
       const response = await fetch(publicMetadata.data.uri);
       const manifest = await response.json();
       setPublicImageManifest(manifest);
+      setLoading(decLoading);
     };
     wrap();
   }, [publicMetadata]);
@@ -749,15 +758,10 @@ export const StealthView = (
       const response = await fetch(privateMetadata.uri);
       const manifest = await response.json();
       setPrivateImageManifest(manifest);
+      setLoading(decLoading);
     };
     wrap();
   }, [privateMetadata]);
-
-  React.useEffect(() => {
-    if (privateImageManifest !== null && publicImageManifest != null) {
-      setLoading(false);
-    }
-  }, [privateImageManifest, publicImageManifest]);
 
   React.useEffect(() => {
     if (privateImageManifest === null) return;
@@ -1078,7 +1082,7 @@ export const StealthView = (
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={loading || !privateMetadata || !wallet.connected}
+        disabled={!!loading || !privateMetadata || !wallet.connected}
         onClick={() => {
           if (!privateMetadata || !wallet.connected) {
             return;
@@ -1112,11 +1116,11 @@ export const StealthView = (
                 description: err.message,
               })
             } finally {
-              setLoading(false);
+              setLoading(decLoading);
             }
           };
 
-          setLoading(true);
+          setLoading(incLoading);
           wrap();
         }}
       >
@@ -1125,7 +1129,7 @@ export const StealthView = (
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr || !publicImageManifest.name}
+        disabled={!!loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr || !publicImageManifest.name}
         onClick={() => setTransferInputting(true)}
       >
         Transfer

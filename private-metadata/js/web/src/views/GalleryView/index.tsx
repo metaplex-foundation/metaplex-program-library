@@ -11,7 +11,11 @@ import { AccountLayout } from '@solana/spl-token';
 import * as BN from 'bn.js';
 
 import { useWindowDimensions } from '../../components/AppBar';
-import { useLoading } from '../../components/Loader';
+import {
+  useLoading,
+  incLoading,
+  decLoading,
+} from '../../components/Loader';
 import {
   CachedImageContent,
 } from '../../components/ArtContent';
@@ -125,11 +129,11 @@ export const GalleryView = (
           description: err.message,
         })
       } finally {
-        setLoading(false);
+        setLoading(decLoading);
       }
     };
 
-    setLoading(true);
+    setLoading(incLoading);
     wrap();
   }, [wallet]);
 

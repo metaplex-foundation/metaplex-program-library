@@ -1,9 +1,14 @@
 import React from 'react';
 
-export const LoadingContext = React.createContext({});
+export type LoadingContextState = {
+  loading: number,
+  setLoading: React.Dispatch<React.SetStateAction<number>>,
+}
+
+export const LoadingContext = React.createContext<LoadingContextState | null>(null);
 
 export const LoaderProvider: React.FC = ({ children }) => {
-  const [loading, setLoading] = React.useState(false);
+  const [loading, setLoading] = React.useState(0);
   return (
     <LoadingContext.Provider
       value={{
@@ -22,9 +27,12 @@ export const LoaderProvider: React.FC = ({ children }) => {
   );
 };
 
-export const useLoading = (): any => {
+export const incLoading = (p: number) => p + 1;
+export const decLoading = (p: number) => p - 1;
+
+export const useLoading = () => {
   const context = React.useContext(LoadingContext);
-  if (!context) {
+  if (context === null) {
     throw new Error(`useLoading must be used with a LoadingProvider`);
   }
   return context;
