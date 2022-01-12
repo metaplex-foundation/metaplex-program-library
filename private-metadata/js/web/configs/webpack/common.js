@@ -15,10 +15,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.decryptWorker.js$/,
-        use: ["worker-loader"],
-      },
-      {
         test: /\.tsx?$/,
         use: ["ts-loader"],
         exclude: /node_modules/,

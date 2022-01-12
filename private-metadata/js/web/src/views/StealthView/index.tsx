@@ -115,22 +115,15 @@ async function getCipherKey(
 
   const elgamalKeypair = elgamalKeypairRes.Ok;
 
-  const doDecrypt =
-    async (chunk: Uint8Array) => {
-      const decryptWorker = new Worker(new URL(
-        '../../utils/decryptWorker.js',
-        import.meta.url,
-      ));
-      const decryptWorkerApi = wrap(decryptWorker) as any;
-      console.log('Sending chunk to worker', chunk);
-      const result: any = await decryptWorkerApi.decrypt(elgamalKeypair, chunk);
-      if (result.Err) {
-        console.error('Failed decrypt', result.Err, chunk);
-        throw new Error(result.Err);
-      }
-      return Buffer.from(result.Ok);
-    };
-  return [await doDecrypt(privateMetadata.encryptedCipherKey), elgamalKeypair];
+  const result = wasm.elgamalDecrypt(
+      elgamalKeypair, { bytes: [...privateMetadata.encryptedCipherKey] });
+  if (result.Err) {
+    console.error('Failed decrypt', result.Err, privateMetadata.encryptedCipherKey);
+    throw new Error(result.Err);
+  }
+  const decrypted = Buffer.from(result.Ok);
+
+  return [decrypted, elgamalKeypair];
 }
 
 const ensureBuffersClosed = async (
