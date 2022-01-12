@@ -159,7 +159,7 @@ version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cac39d0e96187b40a943361120733299fad52550df837ffc4366a261a89114cb"
 dependencies = [
- "anchor-lang 0.19.0",
+ "anchor-lang",
  "anyhow",
  "regex",
  "serde",
@@ -1823,10 +1823,10 @@ name = "mpl-membership-token"
 version = "0.1.0"
 dependencies = [
  "anchor-client",
- "anchor-lang 0.19.0",
- "anchor-spl 0.19.0",
+ "anchor-lang",
+ "anchor-spl",
  "chrono",
- "mpl-token-metadata 0.0.1",
+ "mpl-token-metadata",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
