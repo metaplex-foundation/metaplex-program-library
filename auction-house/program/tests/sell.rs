@@ -3,8 +3,8 @@ mod utils;
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 
 use mpl_auction_house::{pda::*, AuctionHouse};
-use mpl_testing_utils::metadata::Metadata;
 use mpl_testing_utils::solana::{airdrop, create_associated_token_account, create_mint};
+use mpl_testing_utils::utils::Metadata;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::{Instruction, InstructionError},

@@ -5,7 +5,7 @@ use mpl_nft_packs::{
     instruction::{AddCardToPackArgs, InitPackSetArgs},
     state::{CleanUpActions, PackConfig, PackDistributionType},
 };
-use solana_program::{program_pack::Pack, system_instruction};
+use solana_program::{clock::Clock, program_pack::Pack, system_instruction};
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer, transaction::Transaction};
 use utils::*;
@@ -51,7 +51,7 @@ async fn success_clean_up_change() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -169,10 +169,8 @@ async fn success_clean_up_change() {
 
     context.warp_to_slot(5).unwrap();
 
-    let (pack_config_key, _) = find_pack_config_program_address(
-        &mpl_nft_packs::id(),
-        &test_pack_set.keypair.pubkey(),
-    );
+    let (pack_config_key, _) =
+        find_pack_config_program_address(&mpl_nft_packs::id(), &test_pack_set.keypair.pubkey());
 
     let pack_config_account = get_account(&mut context, &pack_config_key).await;
     let pack_config = PackConfig::unpack_from_slice(&pack_config_account.data).unwrap();
@@ -200,7 +198,7 @@ async fn success_clean_up_sort() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -323,10 +321,8 @@ async fn success_clean_up_sort() {
 
     test_pack_set.activate(&mut context).await.unwrap();
 
-    let (pack_config_key, _) = find_pack_config_program_address(
-        &mpl_nft_packs::id(),
-        &test_pack_set.keypair.pubkey(),
-    );
+    let (pack_config_key, _) =
+        find_pack_config_program_address(&mpl_nft_packs::id(), &test_pack_set.keypair.pubkey());
     let pack_config_account = get_account(&mut context, &pack_config_key).await;
     let pack_config = PackConfig::unpack_from_slice(&pack_config_account.data).unwrap();
 

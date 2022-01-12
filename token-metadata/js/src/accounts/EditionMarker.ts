@@ -8,8 +8,9 @@ import {
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import { Edition } from './Edition';
-import { MetadataKey, MetadataProgram } from '../MetadataProgram';
+import { MetadataProgram } from '../MetadataProgram';
 import { Buffer } from 'buffer';
+import { MetadataKey } from './constants';
 
 type Args = { key: MetadataKey; ledger: number[] };
 export class EditionMarkerData extends Borsh.Data<Args> {

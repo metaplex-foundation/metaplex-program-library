@@ -1,6 +1,6 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
-    state::{Creator, Data, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
+    state::{Collection, Creator, Data, DataV2, Uses, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
@@ -22,7 +22,7 @@ pub struct UpdateMetadataAccountArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 /// Args for update call
 pub struct UpdateMetadataAccountArgsV2 {
-    pub data: Option<Data>,
+    pub data: Option<DataV2>,
     pub update_authority: Option<Pubkey>,
     pub primary_sale_happened: Option<bool>,
     pub is_mutable: Option<bool>,
@@ -40,6 +40,16 @@ pub struct CreateMetadataAccountArgs {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+/// Args for create call
+pub struct CreateMetadataAccountArgsV2 {
+    /// Note that unique metadatas are disabled for now.
+    pub data: DataV2,
+    /// Whether you want your metadata to be updateable in the future.
+    pub is_mutable: bool,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct CreateMasterEditionArgs {
     /// If set, means that no more than this number of editions can ever be minted. This is immutable.
     pub max_supply: Option<u64>,
@@ -49,6 +59,18 @@ pub struct CreateMasterEditionArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct MintNewEditionFromMasterEditionViaTokenArgs {
     pub edition: u64,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct ApproveUseAuthorityArgs {
+    pub number_of_uses: u64,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct UtilizeArgs {
+    pub number_of_uses: u64,
 }
 
 /// Instructions supported by the Metadata program.
@@ -68,11 +90,6 @@ pub enum MetadataInstruction {
     ///   0. `[writable]` Metadata account
     ///   1. `[signer]` Update authority key
     UpdateMetadataAccount(UpdateMetadataAccountArgs),
-
-    /// Update a Metadata with is_mutable as a parameter
-    ///   0. `[writable]` Metadata account
-    ///   1. `[signer]` Update authority key
-    UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2),
 
     /// Register a Metadata as a Master Edition V1, which means Editions can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
@@ -255,9 +272,49 @@ pub enum MetadataInstruction {
     /// so that it can be found using offset searches by the RPC to make client lookups cheaper.
     ///   0. `[writable]` Metadata account
     PuffMetadata,
+
+    /// Update a Metadata with is_mutable as a parameter
+    ///   0. `[writable]` Metadata account
+    ///   1. `[signer]` Update authority key
+    UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2),
+
+    /// Create Metadata object.
+    ///   0. `[writable]`  Metadata key (pda of ['metadata', program id, mint id])
+    ///   1. `[]` Mint of token asset
+    ///   2. `[signer]` Mint authority
+    ///   3. `[signer]` payer
+    ///   4. `[]` update authority info
+    ///   5. `[]` System program
+    ///   6. `[]` Rent info
+    CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
+    /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
+    /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
+    /// token exists, and will throw an error if less than one token exists in this primary mint.
+    ///   0. `[writable]` Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']
+    ///   1. `[writable]` Metadata mint
+    ///   2. `[signer]` Update authority
+    ///   3. `[signer]` Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
+    ///   4. `[signer]` payer
+    ///   5.  [writable] Metadata account
+    ///   6. `[]` Token program
+    ///   7. `[]` System program
+    ///   8. `[]` Rent info
+    CreateMasterEditionV3(CreateMasterEditionArgs),
+    ///See [verify_collection] for Doc
+    VerifyCollection,
+    ///See [utilize] for Doc
+    Utilize(UtilizeArgs),
+
+    ///See [approve_use_authority] for Doc
+    ApproveUseAuthority(ApproveUseAuthorityArgs),
+    ///See [revoke_use_authority] for Doc
+    RevokeUseAuthority,
+
+    UnverifyCollection,
 }
 
 /// Creates an CreateMetadataAccounts instruction
+/// #[deprecated(since="1.1.0", note="please use `create_metadata_accounts_v2` instead")]
 #[allow(clippy::too_many_arguments)]
 pub fn create_metadata_accounts(
     program_id: Pubkey,
@@ -300,7 +357,55 @@ pub fn create_metadata_accounts(
     }
 }
 
+/// Creates an CreateMetadataAccounts instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_metadata_accounts_v2(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    mint: Pubkey,
+    mint_authority: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    name: String,
+    symbol: String,
+    uri: String,
+    creators: Option<Vec<Creator>>,
+    seller_fee_basis_points: u16,
+    update_authority_is_signer: bool,
+    is_mutable: bool,
+    collection: Option<Collection>,
+    uses: Option<Uses>,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata_account, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(mint_authority, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(update_authority, update_authority_is_signer),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: MetadataInstruction::CreateMetadataAccountV2(CreateMetadataAccountArgsV2 {
+            data: DataV2 {
+                name,
+                symbol,
+                uri,
+                seller_fee_basis_points,
+                creators,
+                collection,
+                uses,
+            },
+            is_mutable,
+        })
+        .try_to_vec()
+        .unwrap(),
+    }
+}
+
 /// update metadata account instruction
+/// #[deprecated(since="1.1.0", note="please use `update_metadata_accounts_v2` instead")]
 pub fn update_metadata_accounts(
     program_id: Pubkey,
     metadata_account: Pubkey,
@@ -331,7 +436,7 @@ pub fn update_metadata_accounts_v2(
     metadata_account: Pubkey,
     update_authority: Pubkey,
     new_update_authority: Option<Pubkey>,
-    data: Option<Data>,
+    data: Option<DataV2>,
     primary_sale_happened: Option<bool>,
     is_mutable: Option<bool>,
 ) -> Instruction {
@@ -384,6 +489,7 @@ pub fn update_primary_sale_happened_via_token(
 
 /// creates a create_master_edition instruction
 #[allow(clippy::too_many_arguments)]
+/// [deprecated(since="1.1.0", note="please use `create_master_edition_v3` instead")]
 pub fn create_master_edition(
     program_id: Pubkey,
     edition: Pubkey,
@@ -410,6 +516,39 @@ pub fn create_master_edition(
         program_id,
         accounts,
         data: MetadataInstruction::CreateMasterEdition(CreateMasterEditionArgs { max_supply })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+/// creates a create_master_edition instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_master_edition_v3(
+    program_id: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+    update_authority: Pubkey,
+    mint_authority: Pubkey,
+    metadata: Pubkey,
+    payer: Pubkey,
+    max_supply: Option<u64>,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(edition, false),
+        AccountMeta::new(mint, false),
+        AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(mint_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new(metadata, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::CreateMasterEditionV3(CreateMasterEditionArgs { max_supply })
             .try_to_vec()
             .unwrap(),
     }
@@ -556,5 +695,203 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
         )
         .try_to_vec()
         .unwrap(),
+    }
+}
+
+/// # Verify Collection
+///
+/// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection
+///
+/// ### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[signer]` Collection Update authority
+///   2. `[signer]` payer
+///   3. `[]` Mint of the Collection
+///   4. `[]` Metadata Account of the Collection
+///   5. `[]` MasterEdition2 Account of the Collection Token
+#[allow(clippy::too_many_arguments)]
+pub fn verify_collection(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    collection_authority: Pubkey,
+    payer: Pubkey,
+    collection_mint: Pubkey,
+    collection: Pubkey,
+    collection_master_edition_account: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata, false),
+            AccountMeta::new(collection_authority, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(collection_mint, false),
+            AccountMeta::new_readonly(collection, false),
+            AccountMeta::new_readonly(collection_master_edition_account, false),
+        ],
+        data: MetadataInstruction::VerifyCollection.try_to_vec().unwrap(),
+    }
+}
+
+///# Utilize
+///
+///Utilize or Use an NFT , burns the NFT and returns the lamports to the update authority if the use method is burn and its out of uses.
+///Use Authority can be the Holder of the NFT, or a Delegated Use Authority.
+///
+///### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[writable]` Token Account Of NFT
+///   2. `[writable]` Mint of the Metadata
+///   2. `[signer]` A Use Authority / Can be the current Owner of the NFT
+///   3. `[signer]` Payer
+///   4. `[]` Owner
+///   5. `[]` Token program
+///   6. `[]` Associated Token program
+///   7. `[]` System program
+///   8. `[]` Rent info
+///   9. Optional `[writable]` Use Authority Record PDA If present the program Assumes a delegated use authority
+
+#[allow(clippy::too_many_arguments)]
+pub fn utilize(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    token_account: Pubkey,
+    mint: Pubkey,
+    use_authority_record_pda: Option<Pubkey>,
+    use_authority: Pubkey,
+    payer: Pubkey,
+    owner: Pubkey,
+    burner: Option<Pubkey>,
+    number_of_uses: u64,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(token_account, false),
+        AccountMeta::new(mint, false),
+        AccountMeta::new(use_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(owner, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+    if use_authority_record_pda.is_some() {
+        accounts.push(AccountMeta::new(use_authority_record_pda.unwrap(), false));
+    }
+    if burner.is_some() {
+        accounts.push(AccountMeta::new_readonly(burner.unwrap(), false));
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::Utilize(UtilizeArgs { number_of_uses })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+///# Approve Use Authority
+///
+///Approve another account to call [utilize] on this NFT
+///
+///### Args:
+///
+///See: [ApproveUseAuthorityArgs]
+///
+///### Accounts:
+///
+///   0. `[writable]` Use Authority Record PDA
+///   1. `[writable]` Owned Token Account Of Mint
+///   2. `[signer]` Owner
+///   3. `[signer]` Payer
+///   4. `[]` A Use Authority
+///   5. `[]` Metadata account
+///   6. `[]` Mint of Metadata
+///   7. `[]` Program As Signer (Burner)
+///   8. `[]` Token program
+///   9. `[]` System program
+///   10. `[]` Rent info
+#[allow(clippy::too_many_arguments)]
+pub fn approve_use_authority(
+    program_id: Pubkey,
+    use_authority_record: Pubkey,
+    user: Pubkey,
+    owner: Pubkey,
+    payer: Pubkey,
+    owner_token_account: Pubkey,
+    metadata: Pubkey,
+    mint: Pubkey,
+    burner: Pubkey,
+    number_of_uses: u64,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(use_authority_record, false),
+            AccountMeta::new(owner, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(user, false),
+            AccountMeta::new_readonly(owner_token_account, false),
+            AccountMeta::new_readonly(metadata, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(burner, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: MetadataInstruction::ApproveUseAuthority(ApproveUseAuthorityArgs { number_of_uses })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+//# Revoke Use Authority
+///
+///Revoke account to call [utilize] on this NFT
+///
+///### Accounts:
+///
+///   0. `[writable]` Use Authority Record PDA
+///   1. `[writable]` Owned Token Account Of Mint
+///   2. `[signer]` Owner
+///   3. `[signer]` Payer
+///   4. `[]` A Use Authority
+///   5. `[]` Metadata account
+///   6. `[]` Mint of Metadata
+///   7. `[]` Token program
+///   8. `[]` System program
+///   9. `[]` Rent info
+#[allow(clippy::too_many_arguments)]
+pub fn revoke_use_authority(
+    program_id: Pubkey,
+    use_authority_record: Pubkey,
+    user: Pubkey,
+    owner: Pubkey,
+    payer: Pubkey,
+    owner_token_account: Pubkey,
+    metadata: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(use_authority_record, false),
+            AccountMeta::new(owner, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(user, false),
+            AccountMeta::new_readonly(owner_token_account, false),
+            AccountMeta::new_readonly(metadata, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: MetadataInstruction::RevokeUseAuthority
+            .try_to_vec()
+            .unwrap(),
     }
 }

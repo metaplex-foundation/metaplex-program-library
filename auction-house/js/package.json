@@ -41,12 +41,13 @@
   "dependencies": {
     "@metaplex-foundation/beet": "0.0.0",
     "@metaplex-foundation/beet-solana": "0.0.0",
-    "@metaplex-foundation/mpl-core": "workspace:*",
+    "@metaplex-foundation/mpl-core": "0.0.2",
     "@solana/web3.js": "^1.31.0"
   },
   "devDependencies": {
     "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
+    "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "spok": "^1.4.3",
     "tape": "^5.3.2"

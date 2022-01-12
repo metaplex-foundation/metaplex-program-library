@@ -20,7 +20,7 @@ export class CreateMasterEditionArgs extends Borsh.Data<{ maxSupply: BN | null }
   maxSupply: BN | null;
 }
 
-type CreateMasterEditionParams = {
+export type CreateMasterEditionParams = {
   edition: PublicKey;
   metadata: PublicKey;
   updateAuthority: PublicKey;

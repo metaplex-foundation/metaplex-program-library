@@ -12,10 +12,6 @@ export class AuctionHouseProgram extends Program {
     static readonly instructions = instructions;
     static readonly errors = errors;
     static readonly accounts = accounts;
-
-    async function name(params:type) {
-        
-    }
 }
 
 

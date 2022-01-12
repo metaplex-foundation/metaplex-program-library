@@ -16,9 +16,9 @@ thiserror = "1.0"
 borsh = "0.9.1"
 spl-math = { version = "0.1", features = [ "no-entrypoint" ] }
 spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
-mpl-metaplex = { git = "https://github.com/metaplex-foundation/metaplex-program-library", features = ["no-entrypoint"] }
-mpl-token-metadata = { git = "https://github.com/metaplex-foundation/metaplex-program-library", features = [ "no-entrypoint" ] }
-mpl-token-vault = { git = "https://github.com/metaplex-foundation/metaplex-program-library", features = [ "no-entrypoint" ] }
+mpl-metaplex = { path = "../../metaplex/program", features = ["no-entrypoint"] }
+mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ] }
+mpl-token-vault = { path = "../../token-vault/program", features = [ "no-entrypoint" ] }
 randomness-oracle-program = { git = "https://github.com/metaplex/randomness-oracle", features = [ "no-entrypoint" ] }
 
 [dev-dependencies]

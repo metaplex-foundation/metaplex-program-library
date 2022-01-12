@@ -10,6 +10,7 @@ use mpl_nft_packs::{
 };
 use num_traits::FromPrimitive;
 use solana_program::{
+    clock::Clock,
     instruction::{AccountMeta, Instruction},
     program_pack::Pack,
     pubkey::Pubkey,
@@ -66,7 +67,7 @@ async fn success_fixed_probability() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -236,7 +237,7 @@ async fn success_max_supply_probability() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -400,7 +401,7 @@ async fn success_claim_two_same_cards() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -594,7 +595,7 @@ async fn success_claim_decrement_redeem_cards() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -803,7 +804,7 @@ async fn success_claim_two_indexes() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -1015,7 +1016,7 @@ async fn success_claim_after_redeem_end_date() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 1);
@@ -1139,7 +1140,7 @@ async fn success_claim_after_redeem_end_date() {
     warp_sleep(&mut context, std::time::Duration::from_secs(1)).await;
     let last_timestamp = context
         .banks_client
-        .get_clock()
+        .get_sysvar::<Clock>()
         .await
         .unwrap()
         .unix_timestamp as u64;
@@ -1175,7 +1176,7 @@ async fn fail_wrong_user_wallet() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -1425,7 +1426,7 @@ async fn fail_claim_twice() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);

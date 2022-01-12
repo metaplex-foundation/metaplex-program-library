@@ -113,7 +113,31 @@ impl MasterEditionV2 {
                 max_supply,
             )],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &context.payer, &context.payer],
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        Ok(context.banks_client.process_transaction(tx).await?)
+    }
+
+    pub async fn create_v3(
+        &self,
+        context: &mut ProgramTestContext,
+        max_supply: Option<u64>,
+    ) -> transport::Result<()> {
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::create_master_edition_v3(
+                id(),
+                self.pubkey,
+                self.mint_pubkey,
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                self.metadata_pubkey,
+                context.payer.pubkey(),
+                max_supply,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
             context.last_blockhash,
         );
 

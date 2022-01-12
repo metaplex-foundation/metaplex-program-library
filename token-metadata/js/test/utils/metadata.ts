@@ -60,12 +60,18 @@ export async function assertMetadataDataUnchanged(
     delete x[except];
   }
   delete x.data.creators;
+  delete x.tokenStandard;
+  delete x.collection;
+  delete x.uses;
 
   const y = { $topic: `no change except '${except}' on metadata`, ...updated };
   if (except != null) {
     delete y[except];
   }
   delete y.data.creators;
+  delete y.tokenStandard;
+  delete y.collection;
+  delete y.uses;
 
   spok(t, x, y);
 }

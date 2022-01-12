@@ -18,8 +18,10 @@ solana-program = "1.8.5"
 solana-sdk = "1.8.5" 
 spl-token = { version = "3.2",  features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "1.0.3",  features = ["no-entrypoint"] }
-mpl-token-metadata = { path = "../../../token-metadata/program", features = [ "no-entrypoint" ], version="0.0.1" }
+mpl-token-metadata = { path = "../../../token-metadata/program", features = [ "no-entrypoint" ] }
+mpl-token-vault = { path = "../../../token-vault/program", features = [ "no-entrypoint" ] }
 rand = "0.7.3"
 num = "0.4"
 num-derive = "0.3"
 num-traits = "0.2"
+borsh = "0.9.1"

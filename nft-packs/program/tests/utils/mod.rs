@@ -22,6 +22,7 @@ pub use pack_card::TestPackCard;
 pub use pack_set::TestPackSet;
 pub use pack_voucher::TestPackVoucher;
 pub use randomness_oracle::TestRandomnessOracle;
+use solana_program::clock::Clock;
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
@@ -35,11 +36,7 @@ pub use vault::TestVault;
 pub fn nft_packs_program_test<'a>() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_nft_packs", mpl_nft_packs::id(), None);
     program.add_program("mpl_metaplex", mpl_metaplex::id(), None);
-    program.add_program(
-        "mpl_token_metadata",
-        mpl_token_metadata::id(),
-        None,
-    );
+    program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     program.prefer_bpf(false);
     program.add_program(
         "randomness_oracle_program",
@@ -74,7 +71,7 @@ pub async fn get_mint(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Mint
 pub async fn warp_sleep(context: &mut ProgramTestContext, duration: time::Duration) {
     let current_time = context
         .banks_client
-        .get_clock()
+        .get_sysvar::<Clock>()
         .await
         .unwrap()
         .unix_timestamp;
@@ -83,7 +80,7 @@ pub async fn warp_sleep(context: &mut ProgramTestContext, duration: time::Durati
     loop {
         let last_time = context
             .banks_client
-            .get_clock()
+            .get_sysvar::<Clock>()
             .await
             .unwrap()
             .unix_timestamp;

@@ -1,10 +1,11 @@
 use crate::{
+    assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
     error::MetadataError,
     state::{
-        get_reservation_list, Data, EditionMarker, Key, MasterEditionV1, Metadata, EDITION,
-        EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
-        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-        MAX_URI_LENGTH, PREFIX,
+        get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, Metadata,
+        TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
+        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX, USER,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -253,6 +254,14 @@ pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> 
     let bytes = array_ref![data, 36, 8];
 
     Ok(u64::from_le_bytes(*bytes))
+}
+
+/// cheap method to just get supply off a mint without unpacking whole object
+pub fn get_mint_decimals(account_info: &AccountInfo) -> Result<u8, ProgramError> {
+    // In token program, 36, 8, 1, 1, is the layout, where the first 1 is decimals u8.
+    // so we start at 36.
+    let data = account_info.try_borrow_data().unwrap();
+    Ok(data[44])
 }
 
 pub fn assert_mint_authority_matches_mint(
@@ -575,8 +584,23 @@ pub fn mint_limited_edition<'a>(
     if mint_supply != 1 {
         return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
     }
-
+    let master_data = master_metadata.data;
+    // bundle data into v2
+    let data_v2 = DataV2 {
+        name: master_data.name,
+        symbol: master_data.symbol,
+        uri: master_data.uri,
+        seller_fee_basis_points: master_data.seller_fee_basis_points,
+        creators: master_data.creators,
+        collection: master_metadata.collection,
+        uses: master_metadata.uses.map(|u| Uses {
+            use_method: u.use_method,
+            remaining: u.total, // reset remaining uses per edition for extra fun
+            total: u.total,
+        }),
+    };
     // create the metadata the normal way...
+
     process_create_metadata_accounts_logic(
         &program_id,
         CreateMetadataAccountsLogicArgs {
@@ -588,9 +612,11 @@ pub fn mint_limited_edition<'a>(
             system_account_info,
             rent_info,
         },
-        master_metadata.data,
+        data_v2,
         true,
         false,
+        true,
+        true,
     )?;
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),
@@ -803,9 +829,11 @@ const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
 pub fn process_create_metadata_accounts_logic(
     program_id: &Pubkey,
     accounts: CreateMetadataAccountsLogicArgs,
-    data: Data,
+    data: DataV2,
     allow_direct_creator_writes: bool,
     mut is_mutable: bool,
+    is_edition: bool,
+    add_token_standard: bool,
 ) -> ProgramResult {
     let CreateMetadataAccountsLogicArgs {
         metadata_account_info,
@@ -867,8 +895,9 @@ pub fn process_create_metadata_accounts_logic(
     )?;
 
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+    let compatible_data = data.to_v1();
     assert_data_valid(
-        &data,
+        &compatible_data,
         &update_authority_key,
         &metadata,
         allow_direct_creator_writes,
@@ -876,11 +905,29 @@ pub fn process_create_metadata_accounts_logic(
         false,
     )?;
 
+    let mint_decimals = get_mint_decimals(mint_info)?;
+
     metadata.mint = *mint_info.key;
     metadata.key = Key::MetadataV1;
-    metadata.data = data;
+    metadata.data = data.to_v1();
     metadata.is_mutable = is_mutable;
     metadata.update_authority = update_authority_key;
+    assert_valid_use(&data.uses, &None)?;
+    metadata.uses = data.uses;
+    assert_collection_update_is_valid(&None, &data.collection)?;
+    metadata.collection = data.collection;
+    if add_token_standard {
+        let token_standard = if is_edition {
+            TokenStandard::NonFungibleEdition
+        } else if mint_decimals == 0 {
+            TokenStandard::FungibleAsset
+        } else {
+            TokenStandard::Fungible
+        };
+        metadata.token_standard = Some(token_standard);
+    } else {
+        metadata.token_standard = None;
+    }
 
     puff_out_data_fields(&mut metadata);
 
@@ -892,7 +939,6 @@ pub fn process_create_metadata_accounts_logic(
     ];
     let (_, edition_bump_seed) = Pubkey::find_program_address(edition_seeds, program_id);
     metadata.edition_nonce = Some(edition_bump_seed);
-
     metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
 
     Ok(())
@@ -1052,5 +1098,37 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         None,
         Some(edition),
     )?;
+    Ok(())
+}
+pub fn assert_currently_holding(
+    program_id: &Pubkey,
+    owner_info: &AccountInfo,
+    metadata_info: &AccountInfo,
+    metadata: &Metadata,
+    mint_info: &AccountInfo,
+    token_account_info: &AccountInfo,
+) -> ProgramResult {
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+
+    let token_account: Account = assert_initialized(token_account_info)?;
+
+    assert_owned_by(token_account_info, &spl_token::id())?;
+
+    if token_account.owner != *owner_info.key {
+        return Err(MetadataError::InvalidOwner.into());
+    }
+
+    if token_account.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if token_account.amount < 1 {
+        return Err(MetadataError::NotEnoughTokens.into());
+    }
+
+    if token_account.mint != metadata.mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
     Ok(())
 }
