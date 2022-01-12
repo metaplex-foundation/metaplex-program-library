@@ -29,7 +29,6 @@ use {
 };
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
-const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
 #[program]
 pub mod nft_candy_machine_v2 {
@@ -112,12 +111,24 @@ pub mod nft_candy_machine_v2 {
                 Some(val) => {
                     // Civic f-ed up - expire time is actually the time it was made...
                     if expire_time < val {
-                        msg!(
-                            "Invalid gateway token expire time: {} compared with go live of {}",
-                            expire_time,
-                            val
-                        );
-                        return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
+                        if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
+                            // when dealing with whitelist, the expire_time can be
+                            // before the go_live_date only if presale enabled
+                            if !ws.presale {
+                                msg!(
+                                    "Invalid gateway token expire time: {} compared with go live of {}",
+                                    expire_time,
+                                    val);
+                                return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
+                            }
+                        } else {
+                            msg!(
+                                "Invalid gateway token expire time: {} compared with go live of {}",
+                                expire_time,
+                                val
+                            );
+                            return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
+                        }
                     }
                 }
                 None => {}
@@ -639,6 +650,7 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
     Ok(num)
 }
 
+/// Create a new candy machine.
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
 pub struct InitializeCandyMachine<'info> {
@@ -651,12 +663,15 @@ pub struct InitializeCandyMachine<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
+/// Add multiple config lines to the candy machine.
 #[derive(Accounts)]
 pub struct AddConfigLines<'info> {
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
 }
+
+/// Withdraw SOL from candy machine account.
 #[derive(Accounts)]
 pub struct WithdrawFunds<'info> {
     #[account(mut, has_one = authority)]
@@ -665,6 +680,7 @@ pub struct WithdrawFunds<'info> {
     authority: Signer<'info>,
 }
 
+/// Mint a new NFT pseudo-randomly from the config array.
 #[derive(Accounts)]
 #[instruction(creator_bump: u8)]
 pub struct MintNFT<'info> {
@@ -713,6 +729,7 @@ pub struct MintNFT<'info> {
     // transfer_authority_info
 }
 
+/// Update the candy machine state.
 #[derive(Accounts)]
 pub struct UpdateCandyMachine<'info> {
     #[account(
@@ -724,6 +741,7 @@ pub struct UpdateCandyMachine<'info> {
     wallet: UncheckedAccount<'info>,
 }
 
+/// Candy machine state and config data.
 #[account]
 #[derive(Default)]
 pub struct CandyMachine {
@@ -740,10 +758,10 @@ pub struct CandyMachine {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct WhitelistMintSettings {
-    mode: WhitelistMintMode,
-    mint: Pubkey,
-    presale: bool,
-    discount_price: Option<u64>,
+    pub mode: WhitelistMintMode,
+    pub mint: Pubkey,
+    pub presale: bool,
+    pub discount_price: Option<u64>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
@@ -755,6 +773,7 @@ pub enum WhitelistMintMode {
     NeverBurn,
 }
 
+/// Candy machine settings data.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct CandyMachineData {
     pub uuid: String,
@@ -776,14 +795,14 @@ pub struct CandyMachineData {
     pub gatekeeper: Option<GatekeeperConfig>,
 }
 
-/// Configurations options for the gatekeeper
+/// Configurations options for the gatekeeper.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct GatekeeperConfig {
     /// The network for the gateway token required
-    gatekeeper_network: Pubkey,
+    pub gatekeeper_network: Pubkey,
     /// Whether or not the token should expire after minting.
     /// The gatekeeper network must support this if true.
-    expire_on_use: bool,
+    pub expire_on_use: bool,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -794,8 +813,8 @@ pub enum EndSettingType {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct EndSettings {
-    end_setting_type: EndSettingType,
-    number: u64,
+    pub end_setting_type: EndSettingType,
+    pub number: u64,
 }
 
 pub const CONFIG_ARRAY_START: usize = 8 + // key
@@ -827,11 +846,12 @@ pub const CONFIG_ARRAY_START: usize = 8 + // key
 1 + 32 + 1 // gatekeeper
 ;
 
+/// Hidden Settings for large mints used with offline data.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct HiddenSettings {
-    name: String,
-    uri: String,
-    hash: [u8; 32],
+    pub name: String,
+    pub uri: String,
+    pub hash: [u8; 32],
 }
 
 pub fn get_config_count(data: &RefMut<&mut [u8]>) -> core::result::Result<usize, ProgramError> {
@@ -984,6 +1004,7 @@ pub fn get_config_line<'info>(
     Ok(config_line)
 }
 
+/// Individual config line for storing NFT data pre-mint.
 pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct ConfigLine {

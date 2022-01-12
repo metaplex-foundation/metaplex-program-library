@@ -1,5 +1,4 @@
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
   SystemProgram,
@@ -7,54 +6,54 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import BN from 'bn.js';
+import { DataV2 } from '../accounts/Metadata';
 import { MetadataProgram } from '../MetadataProgram';
 
-export class CreateMasterEditionArgs extends Borsh.Data<{ maxSupply: BN | null }> {
-  static readonly SCHEMA = CreateMasterEditionArgs.struct([
-    ['instruction', 'u8'],
-    ['maxSupply', { kind: 'option', type: 'u64' }],
+export class CreateMetadataV2Args extends Borsh.Data<{ data: DataV2; isMutable: boolean }> {
+  static readonly SCHEMA = new Map([
+    ...DataV2.SCHEMA,
+    ...CreateMetadataV2Args.struct([
+      ['instruction', 'u8'],
+      ['data', DataV2],
+      ['isMutable', 'u8'],
+    ]),
   ]);
 
-  instruction = 10;
-  maxSupply: BN | null;
+  instruction = 16;
+  data: DataV2;
+  isMutable: boolean;
 }
 
-export type CreateMasterEditionParams = {
-  edition: PublicKey;
+export type CreateMetadataV2Params = {
   metadata: PublicKey;
+  metadataData: DataV2;
   updateAuthority: PublicKey;
   mint: PublicKey;
   mintAuthority: PublicKey;
-  maxSupply?: BN;
 };
 
-export class CreateMasterEdition extends Transaction {
-  constructor(options: TransactionCtorFields, params: CreateMasterEditionParams) {
+export class CreateMetadataV2 extends Transaction {
+  constructor(options: TransactionCtorFields, params: CreateMetadataV2Params) {
     super(options);
     const { feePayer } = options;
-    const { edition, metadata, updateAuthority, mint, mintAuthority, maxSupply } = params;
+    const { metadata, metadataData, updateAuthority, mint, mintAuthority } = params;
 
-    const data = CreateMasterEditionArgs.serialize({
-      maxSupply: maxSupply || null,
+    const data = CreateMetadataV2Args.serialize({
+      data: metadataData,
+      isMutable: true,
     });
 
     this.add(
       new TransactionInstruction({
         keys: [
           {
-            pubkey: edition,
+            pubkey: metadata,
             isSigner: false,
             isWritable: true,
           },
           {
             pubkey: mint,
             isSigner: false,
-            isWritable: true,
-          },
-          {
-            pubkey: updateAuthority,
-            isSigner: true,
             isWritable: false,
           },
           {
@@ -68,13 +67,7 @@ export class CreateMasterEdition extends Transaction {
             isWritable: false,
           },
           {
-            pubkey: metadata,
-            isSigner: false,
-            isWritable: false,
-          },
-
-          {
-            pubkey: TOKEN_PROGRAM_ID,
+            pubkey: updateAuthority,
             isSigner: false,
             isWritable: false,
           },
