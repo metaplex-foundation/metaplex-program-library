@@ -168,7 +168,6 @@ fn main() -> Result<(), error::Error> {
             )?)
         }
         Commands::CreateMarket {
-            store,
             selling_resource_owner_keypair,
             selling_resource,
             mint,
@@ -209,7 +208,6 @@ fn main() -> Result<(), error::Error> {
             Some(processor::create_market(
                 &client,
                 &payer_wallet,
-                &Pubkey::from_str(&store)?,
                 &selling_resource_owner,
                 &Pubkey::from_str(&selling_resource)?,
                 &mint,

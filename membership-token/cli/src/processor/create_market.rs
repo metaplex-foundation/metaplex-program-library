@@ -1,6 +1,6 @@
 //! Module provide handler for `CreateMarket` command.
 
-use super::UiTransactionInfo;
+use super::{get_account_state, UiTransactionInfo};
 use crate::{error, utils};
 use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_membership_token::utils::find_treasury_owner_address;
@@ -29,7 +29,6 @@ impl UiTransactionInfo for CreateMarketUiInfo {
 pub fn create_market(
     client: &RpcClient,
     payer: &Keypair,
-    store: &Pubkey,
     selling_resource_owner: &Keypair,
     selling_resource: &Pubkey,
     mint: &Pubkey,
@@ -47,10 +46,15 @@ pub fn create_market(
     let treasury_holder = Keypair::new();
     utils::create_token_account(client, payer, &treasury_holder, &mint, &treasury_owner)?;
 
+    let selling_resource_state = get_account_state::<mpl_membership_token::state::SellingResource>(
+        client,
+        selling_resource,
+    )?;
+
     let market = Keypair::new();
     let accounts = mpl_membership_token::accounts::CreateMarket {
         market: market.pubkey(),
-        store: *store,
+        store: selling_resource_state.store,
         selling_resource_owner: selling_resource_owner.pubkey(),
         selling_resource: *selling_resource,
         mint: *mint,

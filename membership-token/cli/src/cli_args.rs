@@ -87,9 +87,6 @@ pub enum Commands {
     },
     /// Perform `CreateMarket` instruction of `mpl_membership_token` program.
     CreateMarket {
-        #[clap(long, value_name = "PUBKEY")]
-        store: String,
-
         #[clap(long, value_name = "FILE")]
         selling_resource_owner_keypair: Option<String>,
 
