@@ -166,9 +166,7 @@ export const GalleryView = (
   const cols = sizedColumns(width);
 
   if (!wallet.publicKey
-      || wallet.publicKey.toBase58() !== lastFetchedPubkey
-      || galleryMints.length === 0
-      || publicManifests.length === 0) {
+      || wallet.publicKey.toBase58() !== lastFetchedPubkey) {
     return (
       <div className="app stack" style={{ margin: 'auto' }}>
         <p className={"text-title"}>
@@ -186,11 +184,6 @@ export const GalleryView = (
       <p className={"text-title"}>
         NFT Gallery
       </p>
-      {!wallet.connected && (
-        <p className={"text-subtitle"}>
-          Connect your wallet to view your NFTs
-        </p>
-      )}
       <div>
         {galleryMints.length > 0
           && publicManifests.length > 0
