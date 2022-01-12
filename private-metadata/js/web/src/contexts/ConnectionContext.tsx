@@ -175,22 +175,22 @@ export function useConnectionConfig() {
 }
 
 export const explorerLinkCForAddress = (
-  key : PublicKey,
+  key : string,
   connection: Connection,
   shorten: boolean = true,
 ) => {
   return (
     <a
-      href={`https://explorer.solana.com/address/${key.toBase58()}?cluster=${envFor(connection)}`}
+      href={`https://explorer.solana.com/address/${key}?cluster=${envFor(connection)}`}
       target="_blank"
       rel="noreferrer"
-      title={key.toBase58()}
+      title={key}
       style={{
         fontFamily: 'Monospace',
         color: '#19b784',
       }}
     >
-      {shorten ? shortenAddress(key.toBase58()) : key.toBase58()}
+      {shorten ? shortenAddress(key) : key}
     </a>
   );
 };

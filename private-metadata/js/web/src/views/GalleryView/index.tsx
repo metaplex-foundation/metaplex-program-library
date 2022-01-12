@@ -19,7 +19,10 @@ import {
   explorerLinkCForAddress,
   useConnection,
 } from '../../contexts/ConnectionContext';
-import { notify } from '../../utils/common';
+import {
+  notify,
+  useLocalStorageState,
+} from '../../utils/common';
 import { getMultipleAccounts } from '../../utils/getMultipleAccounts';
 import {
   getMetadata,
@@ -40,31 +43,30 @@ export const GalleryView = (
   const { loading, setLoading } = useLoading();
 
   // async useEffect set
-  // TODO: cache locally
-  const [lastFetchedPubkey, setLastFetchedPubkey] = React.useState<PublicKey | null>(null);
-  const [galleryMints, setGalleryMints] = React.useState<Array<PublicKey>>([]);
-  const [publicManifests, setPublicManifests] = React.useState<Array<any>>([]);
+  const [lastFetchedPubkey, setLastFetchedPubkey]
+      = useLocalStorageState('lastFetchedPubkey', '');
+  const [galleryMints, setGalleryMints]
+      = useLocalStorageState('galleryMints', []);
+  const [publicManifests, setPublicManifests]
+      = useLocalStorageState('publicManifests', []);
 
   React.useEffect(() => {
-    if (wallet.disconnecting) {
-      setLastFetchedPubkey(null);
+    if (!wallet.publicKey) {
+      setLastFetchedPubkey('');
       setGalleryMints([]);
       setPublicManifests([]);
-    }
-  }, [wallet]);
-
-  React.useEffect(() => {
-    if (!wallet.connected) {
       return;
     }
 
     // janky memo
-    if (lastFetchedPubkey !== null && lastFetchedPubkey.equals(wallet.publicKey)) {
+    if (lastFetchedPubkey === wallet.publicKey.toBase58()) {
       return;
     }
 
     // seems a bit race-conditioney...
-    setLastFetchedPubkey(wallet.publicKey);
+    setLastFetchedPubkey(wallet.publicKey.toBase58());
+    setGalleryMints([]);
+    setPublicManifests([]);
 
     const run = async () => {
       const tokenAccounts = await connection.getTokenAccountsByOwner(
@@ -109,7 +111,7 @@ export const GalleryView = (
         responses.map(r => r.json())
       );
 
-      setGalleryMints(mints);
+      setGalleryMints(mints.map(p => p.toBase58()));
       setPublicManifests(manifests);
     };
 
@@ -162,6 +164,23 @@ export const GalleryView = (
     }
   };
   const cols = sizedColumns(width);
+
+  if (!wallet.publicKey
+      || wallet.publicKey.toBase58() !== lastFetchedPubkey
+      || galleryMints.length === 0
+      || publicManifests.length === 0) {
+    return (
+      <div className="app stack" style={{ margin: 'auto' }}>
+        <p className={"text-title"}>
+          NFT Gallery
+        </p>
+        <p>
+          Connect your wallet to view your NFTs
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="app stack" style={{ margin: 'auto' }}>
       <p className={"text-title"}>
@@ -217,7 +236,7 @@ export const GalleryView = (
                             }}
                           >
                             <Link
-                              to={`/stealth?mint=${mint.toBase58()}`}
+                              to={`/stealth?mint=${mint}`}
                               style={{
                                 color: 'inherit',
                                 display: 'block',

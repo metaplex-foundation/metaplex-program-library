@@ -621,6 +621,13 @@ type AssetAndType = {
   type: string,
 };
 
+type PublicImageManifest = {
+  name: string,
+  image: string,
+  description: string,
+  // others...
+};
+
 type PrivateImageManifest = {
   name: string,
   cover_image: AssetAndType,
@@ -656,7 +663,7 @@ export const StealthView = (
   const [publicMetadata, setPublicMetadata]
       = React.useState<Metadata | null>(null);
   const [publicImageManifest, setPublicImageManifest]
-      = React.useState<any>({}); // Object...
+      = React.useState<PublicImageManifest | null>(null);
   const [privateMetadata, setPrivateMetadata]
       = React.useState<PrivateMetadataAccount | null>(null);
   const [privateImageManifest, setPrivateImageManifest]
@@ -727,6 +734,8 @@ export const StealthView = (
         setPublicMetadata(publicMetadata);
       }
     };
+
+    setLoading(true);
     wrap();
   }, [connection, mint, toggleRunFetchMetadata]);
   const runFetchMetadata = () => setRunFetchMetadata(!toggleRunFetchMetadata);
@@ -752,6 +761,12 @@ export const StealthView = (
   }, [privateMetadata]);
 
   React.useEffect(() => {
+    if (privateImageManifest !== null && publicImageManifest != null) {
+      setLoading(false);
+    }
+  }, [privateImageManifest, publicImageManifest]);
+
+  React.useEffect(() => {
     if (privateImageManifest === null) return;
     const wrap = async () => {
       if (cipherKey) {
@@ -765,31 +780,6 @@ export const StealthView = (
     };
     wrap();
   }, [privateImageManifest, cipherKey]);
-
-  const notifyResult = (
-    result: { txid: string } | string,
-    name: string,
-  ) => {
-    if (typeof result === "string") {
-      notify({
-        message: `${name} failed`,
-        description: result,
-      });
-
-      return null;
-    } else {
-      notify({
-        message: `${name} succeeded`,
-        description: (
-          <a href={explorerLinkFor(result.txid, connection)}>
-            View transaction on explorer
-          </a>
-        ),
-      });
-
-      return result.txid;
-    }
-  }
 
   const validateKeypair = (secret: string, name: string) => {
     if (secret.length === 0) {
@@ -986,6 +976,11 @@ export const StealthView = (
   };
   const cols = sizedColumns(width);
   const actualColumnWidth = (Math.min(width, maxWidth) - outerPadding - columnsGap * (cols - 1)) / cols;
+
+  if (privateImageManifest === null || publicImageManifest == null) {
+    return null;
+  }
+
   return (
     <div className="app stack" style={{ margin: 'auto' }}>
       <p
@@ -1040,7 +1035,7 @@ export const StealthView = (
           </div>
           <div>
             {publicImageManifest.description
-              && explorerLinkCForAddress(parseAddress(mint), connection)
+              && explorerLinkCForAddress(parseAddress(mint).toBase58(), connection)
             }
           </div>
         </div>
@@ -1051,7 +1046,7 @@ export const StealthView = (
           marginBottom: '15px',
         }}
       >
-        {privateImageManifest?.encrypted_assets?.length || 0} stealthed assets detected
+        {privateImageManifest.encrypted_assets?.length || 0} stealthed assets detected
       </p>
       {decryptedImage ? (
         <div>
@@ -1075,10 +1070,10 @@ export const StealthView = (
             )
           }
         </div>
-      ) : privateImageManifest && (
+      ) : (
         <React.Fragment>
           <CachedImageContent
-            uri={privateImageManifest.cover_image.uri}
+            uri={privateImageManifest && privateImageManifest.cover_image.uri}
             className={"fullAspectRatio"}
             style={{
               ...(cols > 1 ? { maxWidth: actualColumnWidth } : {}),

@@ -38,7 +38,7 @@ export const useLocalStorage = (): UseStorageReturnValue => {
 export function useLocalStorageState<T>(
   key: string,
   defaultState?: T,
-): [T, (key: string) => void] {
+): [T, (key: T) => void] {
   const localStorage = useLocalStorage();
   const [state, setState] = React.useState(() => {
     console.debug('Querying local storage', key);
