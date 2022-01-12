@@ -906,6 +906,7 @@ pub fn process_create_metadata_accounts_logic(
     )?;
 
     let mint_decimals = get_mint_decimals(mint_info)?;
+    let mint_supply   = get_mint_decimals(mint_info)?;
 
     metadata.mint = *mint_info.key;
     metadata.key = Key::MetadataV1;
@@ -919,6 +920,8 @@ pub fn process_create_metadata_accounts_logic(
     if add_token_standard {
         let token_standard = if is_edition {
             TokenStandard::NonFungibleEdition
+        } else if mint_supply == 1 && mint_decimals == 0 {
+            TokenStandard::NonFungible
         } else if mint_decimals == 0 {
             TokenStandard::FungibleAsset
         } else {
