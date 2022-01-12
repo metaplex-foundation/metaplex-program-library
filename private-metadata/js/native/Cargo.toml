@@ -20,5 +20,5 @@ getrandom = { version = "0.2", features = ["js"] }
 rand_core = { version = "0.6.3" }
 serde = { version = "1.0", default-features = false, features = ["alloc"] }
 sha3 = "0.9"
-solana-sdk = { version = "1.9.3", default-features = false }
+solana-sdk = { version = "1.9.4", default-features = false }
 wasm-bindgen = { version = "0.2.78", features = ["serde-serialize"] }
