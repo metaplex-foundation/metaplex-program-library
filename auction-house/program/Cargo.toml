@@ -20,6 +20,6 @@ anchor-lang = "0.19.0"
 anchor-spl = "0.19.0"
 spl-token = { version = "3.2",  features = ["no-entrypoint"] }
 spl-associated-token-account = {version = "1.0.3", features = ["no-entrypoint"]}
-mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ], version="0.0.1" }
+mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ]}
 thiserror = "1.0"
 arrayref = "0.3.6"

@@ -261,9 +261,9 @@ checksum = "9b34d609dfbaf33d6889b2b7106d3ca345eacad44200913df5ba02bfd31d2ba9"
 
 [[package]]
 name = "async-trait"
-version = "0.1.51"
+version = "0.1.52"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44318e776df68115a881de9a8fd1b9e53368d7a4a5ce4cc48517da3393233a5e"
+checksum = "061a7acccaa286c011ddc30970520b98fa40e00c9d644633fb26b5fc63a265e3"
 dependencies = [
  "proc-macro2 1.0.32",
  "quote 1.0.10",
@@ -1711,7 +1711,7 @@ dependencies = [
  "bincode",
  "borsh 0.9.1",
  "clap",
- "mpl-token-metadata 0.0.1",
+ "mpl-token-metadata",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1727,7 +1727,7 @@ dependencies = [
  "bincode",
  "borsh 0.9.1",
  "clap",
- "mpl-token-vault 0.0.1",
+ "mpl-token-vault",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -1790,27 +1790,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-auction"
-version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library#febf9a4e56d5b9f1cd52e5d2e7f35216888e919a"
-dependencies = [
- "arrayref",
- "borsh 0.9.1",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "mpl-auction-house"
 version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
  "arrayref",
- "mpl-token-metadata 0.0.1",
+ "mpl-token-metadata",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -1822,9 +1808,9 @@ version = "0.0.1"
 dependencies = [
  "arrayref",
  "borsh 0.9.1",
- "mpl-auction 0.0.1",
- "mpl-token-metadata 0.0.1",
- "mpl-token-vault 0.0.1",
+ "mpl-auction",
+ "mpl-token-metadata",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "solana-program",
@@ -1835,30 +1821,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-metaplex"
-version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library#febf9a4e56d5b9f1cd52e5d2e7f35216888e919a"
-dependencies = [
- "arrayref",
- "borsh 0.9.1",
- "mpl-auction 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library)",
- "mpl-token-metadata 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library)",
- "mpl-token-vault 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library)",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "mpl-nft-packs"
 version = "0.1.0"
 dependencies = [
  "borsh 0.9.1",
- "mpl-metaplex 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library)",
- "mpl-token-metadata 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library)",
- "mpl-token-vault 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library)",
+ "mpl-metaplex",
+ "mpl-token-metadata",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "num_enum",
@@ -1878,7 +1847,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "mpl-token-metadata 0.0.1",
+ "mpl-token-metadata",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -1886,31 +1855,17 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "0.0.1"
+version = "1.1.0"
 dependencies = [
  "arrayref",
  "borsh 0.9.1",
- "mpl-token-vault 0.0.1",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-metadata"
-version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library#febf9a4e56d5b9f1cd52e5d2e7f35216888e919a"
-dependencies = [
- "arrayref",
- "borsh 0.9.1",
- "mpl-token-vault 0.0.1 (git+https://github.com/metaplex-foundation/metaplex-program-library)",
- "num-derive",
- "num-traits",
- "solana-program",
+ "spl-associated-token-account",
  "spl-token",
  "thiserror",
 ]
@@ -1918,19 +1873,6 @@ dependencies = [
 [[package]]
 name = "mpl-token-vault"
 version = "0.0.1"
-dependencies = [
- "borsh 0.9.1",
- "num-derive",
- "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-vault"
-version = "0.0.1"
-source = "git+https://github.com/metaplex-foundation/metaplex-program-library#febf9a4e56d5b9f1cd52e5d2e7f35216888e919a"
 dependencies = [
  "borsh 0.9.1",
  "num-derive",
@@ -1946,7 +1888,7 @@ version = "0.0.1"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
- "mpl-token-metadata 0.0.1",
+ "mpl-token-metadata",
  "solana-program",
  "spl-associated-token-account",
 ]
@@ -1958,7 +1900,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "arrayref",
- "mpl-token-metadata 0.0.1",
+ "mpl-token-metadata",
  "solana-gateway",
  "solana-program",
  "spl-associated-token-account",

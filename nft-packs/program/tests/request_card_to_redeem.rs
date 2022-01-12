@@ -7,7 +7,9 @@ use mpl_nft_packs::{
     state::{PackDistributionType, ProvingProcess},
 };
 use num_traits::FromPrimitive;
-use solana_program::{instruction::InstructionError, program_pack::Pack, system_instruction};
+use solana_program::{
+    clock::Clock, instruction::InstructionError, program_pack::Pack, system_instruction,
+};
 use solana_program_test::*;
 use solana_sdk::{
     signature::Keypair,
@@ -58,7 +60,7 @@ async fn success() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -197,7 +199,7 @@ async fn success_two_cards() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -357,7 +359,7 @@ async fn fail_request_without_clean_up() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -506,7 +508,7 @@ async fn fail_request_after_end_date() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -630,7 +632,7 @@ async fn fail_request_after_end_date() {
     warp_sleep(&mut context, std::time::Duration::from_secs(5)).await;
     let last_timestamp = context
         .banks_client
-        .get_clock()
+        .get_sysvar::<Clock>()
         .await
         .unwrap()
         .unix_timestamp as u64;
@@ -661,7 +663,7 @@ async fn fail_request_with_invalid_voucher() {
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let clock = context.banks_client.get_clock().await.unwrap();
+    let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
 
     let redeem_start_date = Some(clock.unix_timestamp as u64);
     let redeem_end_date = Some(redeem_start_date.unwrap() + 100);
@@ -785,7 +787,7 @@ async fn fail_request_with_invalid_voucher() {
     warp_sleep(&mut context, std::time::Duration::from_secs(5)).await;
     let last_timestamp = context
         .banks_client
-        .get_clock()
+        .get_sysvar::<Clock>()
         .await
         .unwrap()
         .unix_timestamp as u64;

@@ -12,13 +12,28 @@ pub const EDITION: &str = "edition";
 
 pub const RESERVATION: &str = "reservation";
 
+pub const USER: &str = "user";
+
+pub const BURN: &str = "burn";
+
 pub const MAX_NAME_LENGTH: usize = 32;
 
 pub const MAX_SYMBOL_LENGTH: usize = 10;
 
 pub const MAX_URI_LENGTH: usize = 200;
 
-pub const MAX_METADATA_LEN: usize = 1 + 32 + 32 + MAX_DATA_SIZE + 1 + 1 + 9 + 172;
+pub const MAX_METADATA_LEN: usize = 
+1 //key 
++ 32 // update auth pubkey
++ 32 // mint pubkey
++ MAX_DATA_SIZE 
++ 1 // primary sale
++ 1 // mutable
++ 9 // nonce (pretty sure this only needs to be 2)
++ 34 // collection
++ 18 // uses
++ 2 // token standard
++ 118; // Padding
 
 pub const MAX_DATA_SIZE: usize = 4
     + MAX_NAME_LENGTH
@@ -54,6 +69,8 @@ pub const MAX_EDITION_MARKER_SIZE: usize = 32;
 
 pub const EDITION_MARKER_BIT_SIZE: u64 = 248;
 
+pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; // Double Padding
+
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
 pub enum Key {
@@ -65,6 +82,7 @@ pub enum Key {
     ReservationListV2,
     MasterEditionV2,
     EditionMarker,
+    UseAuthorityRecord
 }
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -82,6 +100,86 @@ pub struct Data {
 }
 
 #[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct DataV2 {
+    /// The name of the asset
+    pub name: String,
+    /// The symbol for the asset
+    pub symbol: String,
+    /// URI pointing to JSON representing the asset
+    pub uri: String,
+    /// Royalty basis points that goes to creators in secondary sales (0-10000)
+    pub seller_fee_basis_points: u16,
+    /// Array of creators, optional
+    pub creators: Option<Vec<Creator>>,
+    /// Collection
+    pub collection: Option<Collection>,
+    /// Uses
+    pub uses: Option<Uses>,
+}
+
+impl DataV2 {
+    pub fn to_v1(&self) -> Data {
+        let ns = self.clone();
+        Data {
+            name: ns.name,
+            symbol: ns.symbol,
+            uri: ns.uri,
+            seller_fee_basis_points: ns.seller_fee_basis_points,
+            creators: ns.creators,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub enum UseMethod {
+    Burn,
+    Multiple,
+    Single,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct Uses { // 17 bytes + Option byte
+    pub use_method: UseMethod, //1
+    pub remaining: u64, //8
+    pub total: u64, //8
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub enum TokenStandard {
+    NonFungible,  // This is a master edition
+    FungibleAsset, // A token with metadata that can also have attrributes
+    Fungible,     // A token with simple metadata
+    NonFungibleEdition,      // This is a limited edition
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct UseAuthorityRecord {
+    pub allowed_uses: u64, //8
+    pub key: Key //1
+}
+
+impl UseAuthorityRecord {
+    pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
+        let ua: UseAuthorityRecord =
+            try_from_slice_checked(&a.data.borrow_mut(), Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+
+        Ok(ua)
+    }
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct Collection {
+    pub verified: bool,
+    pub key: Pubkey,
+}
+
+#[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub struct Metadata {
     pub key: Key,
@@ -94,6 +192,12 @@ pub struct Metadata {
     pub is_mutable: bool,
     /// nonce for easy calculation of editions, if present
     pub edition_nonce: Option<u8>,
+    /// Since we cannot easily change Metadata, we add the new DataV2 fields here at the end.
+    pub token_standard: Option<TokenStandard>,
+    /// Collection
+    pub collection: Option<Collection>,
+    /// Uses
+    pub uses: Option<Uses>,
 }
 
 impl Metadata {

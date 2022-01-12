@@ -1,7 +1,7 @@
 use crate::*;
 use mpl_token_metadata::{
     id, instruction,
-    state::{Creator, Data, PREFIX},
+    state::{Collection, Creator, Data, DataV2, TokenStandard, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
@@ -93,6 +93,62 @@ impl Metadata {
         Ok(context.banks_client.process_transaction(tx).await?)
     }
 
+    pub async fn create_v2(
+        &self,
+        context: &mut ProgramTestContext,
+        name: String,
+        symbol: String,
+        uri: String,
+        creators: Option<Vec<Creator>>,
+        seller_fee_basis_points: u16,
+        is_mutable: bool,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
+    ) -> transport::Result<()> {
+        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &self.mint.pubkey(),
+            &self.token.pubkey(),
+            1,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::create_metadata_accounts_v2(
+                id(),
+                self.pubkey.clone(),
+                self.mint.pubkey(),
+                context.payer.pubkey().clone(),
+                context.payer.pubkey().clone(),
+                context.payer.pubkey().clone(),
+                name,
+                symbol,
+                uri,
+                creators,
+                seller_fee_basis_points,
+                false,
+                is_mutable,
+                collection,
+                uses,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        Ok(context.banks_client.process_transaction(tx).await?)
+    }
+
     pub async fn update_primary_sale_happened_via_token(
         &self,
         context: &mut ProgramTestContext,
@@ -153,6 +209,8 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
     ) -> transport::Result<()> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
@@ -160,18 +218,46 @@ impl Metadata {
                 self.pubkey,
                 context.payer.pubkey().clone(),
                 None,
-                Some(Data {
+                Some(DataV2 {
                     name,
                     symbol,
                     uri,
                     creators,
                     seller_fee_basis_points,
+                    collection: collection,
+                    uses: uses,
                 }),
                 None,
                 Some(is_mutable),
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
+            context.last_blockhash,
+        );
+
+        Ok(context.banks_client.process_transaction(tx).await?)
+    }
+
+    pub async fn verify_collection(
+        &self,
+        context: &mut ProgramTestContext,
+        collection: Pubkey,
+        collection_authority: Keypair,
+        collection_mint: Pubkey,
+        collection_master_edition_account: Pubkey,
+    ) -> transport::Result<()> {
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::verify_collection(
+                id(),
+                self.pubkey,
+                collection_authority.pubkey(),
+                context.payer.pubkey().clone(),
+                collection_mint,
+                collection,
+                collection_master_edition_account,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &collection_authority],
             context.last_blockhash,
         );
 

@@ -17,8 +17,10 @@ use solana_sdk::{
     transport::TransportError,
 };
 use utils::*;
-
+use mpl_token_metadata::state::{UseMethod, Uses};
 mod create_meta_accounts {
+    
+
     use super::*;
     #[tokio::test]
     async fn success() {
@@ -44,6 +46,58 @@ mod create_meta_accounts {
         assert_eq!(metadata.data.uri, puffed_uri);
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
         assert_eq!(metadata.data.creators, None);
+
+        assert_eq!(metadata.primary_sale_happened, false);
+        assert_eq!(metadata.is_mutable, false);
+        assert_eq!(metadata.mint, test_metadata.mint.pubkey());
+        assert_eq!(metadata.update_authority, context.payer.pubkey());
+        assert_eq!(metadata.key, Key::MetadataV1);
+
+        assert_eq!(metadata.token_standard, None);
+        assert_eq!(metadata.collection, None);
+        assert_eq!(metadata.uses, None);
+    }
+
+    #[tokio::test]
+    async fn success_v2() {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        let name = "Test".to_string();
+        let symbol = "TST".to_string();
+        let uri = "uri".to_string();
+
+        let puffed_name = puffed_out_string(&name, MAX_NAME_LENGTH);
+        let puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
+        let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
+
+        let uses = Some(Uses {
+            total: 1,
+            remaining: 1,
+            use_method: UseMethod::Single,
+        });
+        test_metadata
+            .create_v2(
+                &mut context,
+                name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                None,
+                uses.to_owned(),
+            )
+            .await
+            .unwrap();
+
+        let metadata = test_metadata.get_data(&mut context).await;
+
+        assert_eq!(metadata.data.name, puffed_name);
+        assert_eq!(metadata.data.symbol, puffed_symbol);
+        assert_eq!(metadata.data.uri, puffed_uri);
+        assert_eq!(metadata.data.seller_fee_basis_points, 10);
+        assert_eq!(metadata.data.creators, None);
+        assert_eq!(metadata.uses, uses.to_owned());
 
         assert_eq!(metadata.primary_sale_happened, false);
         assert_eq!(metadata.is_mutable, false);
@@ -111,6 +165,43 @@ mod create_meta_accounts {
             .unwrap_err();
 
         assert_custom_error!(result, MetadataError::InvalidMintAuthority);
+
+        let ix2 = instruction::create_metadata_accounts_v2(
+            id(),
+            test_metadata.pubkey.clone(),
+            test_metadata.mint.pubkey(),
+            fake_mint_authority.pubkey(),
+            context.payer.pubkey().clone(),
+            context.payer.pubkey().clone(),
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            false,
+            None,
+            Some(Uses {
+                remaining: 10,
+                total: 10,
+                use_method: UseMethod::Multiple,
+            }),
+        );
+
+        let tx2 = Transaction::new_signed_with_payer(
+            &[ix2],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &fake_mint_authority],
+            context.last_blockhash,
+        );
+
+        let result2 = context
+            .banks_client
+            .process_transaction(tx2)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(result2, MetadataError::InvalidMintAuthority);
     }
 
     #[tokio::test]
