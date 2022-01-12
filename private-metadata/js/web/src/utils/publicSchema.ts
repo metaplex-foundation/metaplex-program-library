@@ -1,9 +1,9 @@
 import { BinaryReader, BinaryWriter, deserializeUnchecked } from 'borsh';
 import base58 from 'bs58';
+import * as BN from 'bn.js';
 import { PublicKey } from '@solana/web3.js';
 type StringPublicKey = string;
 
-import { BN } from '@project-serum/anchor';
 
 export enum MetadataKey {
   Uninitialized = 0,
