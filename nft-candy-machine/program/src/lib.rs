@@ -29,6 +29,7 @@ use {
 };
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
+const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
 #[program]
 pub mod nft_candy_machine_v2 {
@@ -72,6 +73,16 @@ pub mod nft_candy_machine_v2 {
                 return Err(ErrorCode::GatewayTokenMissing.into());
             }
             let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
+            let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
+                ::solana_gateway::state::GatewayToken,
+            >(*gateway_token_info.data.borrow())?;
+            // stores the expire_time before the verification, since the verification
+            // will update the expire_time of the token and we won't be able to
+            // calculate the creation time
+            let expire_time = gateway_token
+                .expire_time
+                .ok_or(ErrorCode::GatewayTokenExpireTimeInvalid)?
+                as i64;
             remaining_accounts_counter += 1;
             if gatekeeper.expire_on_use {
                 if ctx.remaining_accounts.len() <= remaining_accounts_counter {
@@ -100,33 +111,28 @@ pub mod nft_candy_machine_v2 {
             }
             // verifies that the gatway token was not created before the candy
             // machine go_live_date (avoids pre-solving the captcha)
-            let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
-                ::solana_gateway::state::GatewayToken,
-            >(*gateway_token_info.data.borrow())?;
-            let expire_time = gateway_token
-                .expire_time
-                .ok_or(ErrorCode::GatewayTokenExpireTimeInvalid)?
-                as i64;
             match candy_machine.data.go_live_date {
                 Some(val) => {
-                    // Civic f-ed up - expire time is actually the time it was made...
-                    if expire_time < val {
+                    msg!(
+                        "Comparing token expire time {} and go_live_date {}",
+                        expire_time,
+                        val);
+                    if (expire_time - EXPIRE_OFFSET) < val {
                         if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
                             // when dealing with whitelist, the expire_time can be
                             // before the go_live_date only if presale enabled
                             if !ws.presale {
                                 msg!(
-                                    "Invalid gateway token expire time: {} compared with go live of {}",
-                                    expire_time,
+                                    "Invalid gateway token: calculated creation time {} and go_live_date {}",
+                                    expire_time - EXPIRE_OFFSET,
                                     val);
                                 return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
                             }
                         } else {
                             msg!(
-                                "Invalid gateway token expire time: {} compared with go live of {}",
-                                expire_time,
-                                val
-                            );
+                                "Invalid gateway token: calculated creation time {} and go_live_date {}",
+                                expire_time - EXPIRE_OFFSET,
+                                val);
                             return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
                         }
                     }
