@@ -308,6 +308,46 @@ pub enum MetadataError {
     /// Is Mutable can only be flipped to false
     #[error("Is Mutable can only be flipped to false")]
     IsMutableCanOnlyBeFlippedToFalse,
+
+    #[error("Cannont Verify Collection in this Instruction")]
+    CollectionCannotBeVerifiedInThisInstruction,
+
+    #[error("This instruction was deprecated in a previous release and is now removed")]
+    Removed, //For the curious we cannot get rid of an instruction in the enum or move them or it will break our api, this is a friendly way to get rid of them
+
+    #[error("This token use method is burn and there are no remaining uses, it must be burned")]
+    MustBeBurned,
+
+    #[error("This use method is invalid")]
+    InvalidUseMethod,
+    #[error("Cannot Change Use Method after the first use")]
+    CannotChangeUseMethodAfterFirstUse,
+
+    #[error("Cannot Change Remaining or Available uses after the first use")]
+    CannotChangeUsesAfterFirstUse,
+
+    #[error("Collection Not Found on Metadata")]
+    CollectionNotFound,
+
+    #[error("Collection Update Authority is invalid")]
+    InvalidCollectionUpdateAuthority,
+
+    #[error("Collection Must Be a Unique Master Edition v2")]
+    CollectionMustBeAUniqueMasterEdition,
+
+    #[error("The Use Authority Record Already Exists, to modify it Revoke, then Approve")]
+    UseAuthorityRecordAlreadyExists,
+
+    #[error("The Use Authority Record is empty or already revoked")]
+    UseAuthorityRecordAlreadyRevoked,
+
+    #[error("This token has no uses")]
+    Unusable,
+
+    #[error("There ar not enough Uses left on this token.")]
+    NotEnoughUses,
+
+    
 }
 
 impl PrintProgramError for MetadataError {

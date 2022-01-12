@@ -36,7 +36,6 @@
   "repository": "https://github.com/metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
-  "private": false,
   "dependencies": {
     "@metaplex-foundation/mpl-auction": "^0.0.2",
     "@metaplex-foundation/mpl-core": "^0.0.2",

@@ -12,14 +12,14 @@ no-entrypoint = []
 test-bpf = []
 
 [dependencies]
-mpl-auction = { path = "../../auction/program", features = [ "no-entrypoint" ], version="0.0.1" }
+mpl-auction = { path = "../../auction/program", features = [ "no-entrypoint" ]}
 num-derive = "0.3"
 num-traits = "0.2"
 arrayref = "0.3.6"
 solana-program = "1.7.11"
 spl-token = { version="3.1.1", features = [ "no-entrypoint" ] }
-mpl-token-vault = { path = "../../token-vault/program", features = [ "no-entrypoint" ], version="0.0.1" }
-mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ], version="0.0.1" }
+mpl-token-vault = { path = "../../token-vault/program", features = [ "no-entrypoint" ]}
+mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ] }
 thiserror = "1.0"
 borsh = "0.9.1"
 

@@ -6,10 +6,11 @@ import {
   AnyPublicKey,
   StringPublicKey,
 } from '@metaplex-foundation/mpl-core';
-import { MetadataProgram, MetadataKey } from '../MetadataProgram';
+import { MetadataProgram } from '../MetadataProgram';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import { Buffer } from 'buffer';
+import { MetadataKey } from './constants';
 
 type Args = { key: MetadataKey; parent: StringPublicKey; edition: BN };
 export class EditionData extends Borsh.Data<Args> {

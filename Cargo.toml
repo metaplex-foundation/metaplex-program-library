@@ -1,11 +1,16 @@
 [workspace]
 members=[
   "auction/program",
+  "auction-house/program",
+  "gumdrop/program",
   "metaplex/program",
+  "token-entangler/program",
   "token-vault/program",
   "token-vault/test",
   "token-metadata/program",
   "token-metadata/test",
+  "nft-packs/program",
+  "nft-candy-machine/program",
   "private-metadata/program",
   "private-metadata/cli",
   "private-metadata/js/native",

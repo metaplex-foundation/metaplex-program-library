@@ -18,5 +18,16 @@ yarn-error.log*
 .vscode
 .idea
 
+.anchor
+
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.vercel
+
 /private-metadata/program/tests/fixtures
 /private-metadata/program/farf
