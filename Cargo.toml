@@ -13,4 +13,6 @@ members=[
   "nft-candy-machine/program",
   "membership-token/program"
 ]
-exclude = []
+exclude = [
+  "membership-token/cli"
+]
