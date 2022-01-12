@@ -861,6 +861,7 @@ dependencies = [
 [[package]]
 name = "curve25519-dalek-onchain"
 version = "0.0.1"
+source = "git+https://github.com/lwus/curve25519-dalek-onchain#d1b6e08fa1fdf56eac5d9f1b56b882950099171b"
 dependencies = [
  "borsh 0.9.1",
  "bytemuck",
@@ -1774,14 +1775,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "308cc39be01b73d0d18f82a0e7b2a3df85245f84af96fdddc5d202d27e47b86a"
 
 [[package]]
-name = "memmap"
-version = "0.7.0"
-dependencies = [
- "libc",
- "winapi",
-]
-
-[[package]]
 name = "memmap2"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1805,7 +1798,7 @@ version = "2.0.0"
 dependencies = [
  "byteorder",
  "keccak",
- "rand_core 0.6.3",
+ "rand_core 0.5.1",
  "zeroize",
 ]
 
@@ -2377,7 +2370,6 @@ dependencies = [
  "console_error_panic_hook",
  "curve25519-dalek 3.2.0",
  "getrandom 0.2.3",
- "memmap",
  "private-metadata",
  "rand_core 0.6.3",
  "serde",
