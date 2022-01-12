@@ -3299,11 +3299,11 @@ __metadata:
   linkType: hard
 
 "@solana/spl-token-registry@npm:^0.2.1107":
-  version: 0.2.1436
-  resolution: "@solana/spl-token-registry@npm:0.2.1436"
+  version: 0.2.1445
+  resolution: "@solana/spl-token-registry@npm:0.2.1445"
   dependencies:
     cross-fetch: 3.0.6
-  checksum: 3ae667669ac9ad8d207795f0c8a33e4ccb8973e8980493a3aef6be480ff4d776b320d603657826daa2a08b9a76b6c22024aafcd0fe9d7aeb132b7310e8194394
+  checksum: 8c155112ea3cfabaebd7312c421d88f0bfc9ebc2d6776a7cbe6b38f174d77405a25b6564d97ad0eac966724141938d3520463b18a39cf93a60aa216138532df7
   languageName: node
   linkType: hard
 
@@ -4498,9 +4498,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"Janus@workspace:private-metadata/js/web":
+"Janus@workspace:stealth/js/web":
   version: 0.0.0-use.local
-  resolution: "Janus@workspace:private-metadata/js/web"
+  resolution: "Janus@workspace:stealth/js/web"
   dependencies:
     "@babel/cli": ^7.16.0
     "@babel/core": ^7.16.0
@@ -7367,9 +7367,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.17":
-  version: 1.4.43
-  resolution: "electron-to-chromium@npm:1.4.43"
-  checksum: c096a42ec6af0c22736f7151d1386e6597b125ad9a6379a747e67d33d03b3b2923336dbe17edad0037299e7aa1daa0f3feb726d797375e652b6918c1a467b39a
+  version: 1.4.44
+  resolution: "electron-to-chromium@npm:1.4.44"
+  checksum: 76b0c723cf4fa3f542e4e34add8c559d5c3668192d1f359d24b45546b34791dff716e9fd905fbcddd6875cb849b72106c6f5edd682bba2f78c1c2eb6bccd647d
   languageName: node
   linkType: hard
 

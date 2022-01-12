@@ -11,7 +11,7 @@ cd native
 wasm-pack build --target web
 
 # fixup duplicate init manually...
-GLUE_FILE="pkg/private_metadata_js.js"
+GLUE_FILE="pkg/stealth_js.js"
 
 # in-place sed. extra empty argument to indicate we don't care about creating a
 # backup. delete it on linux or with gnu sed

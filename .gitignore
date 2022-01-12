@@ -29,5 +29,5 @@ yarn-error.log*
 !.yarn/versions
 .vercel
 
-/private-metadata/program/tests/fixtures
-/private-metadata/program/farf
+/stealth/program/tests/fixtures
+/stealth/program/farf

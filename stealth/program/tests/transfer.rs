@@ -1,5 +1,5 @@
 use {
-    private_metadata::{
+    stealth::{
         encryption::elgamal::{
             ElGamalCiphertext,
             ElGamalKeypair,
@@ -111,7 +111,7 @@ async fn nft_setup_transaction(
                 payer.pubkey(), // payer
                 None, // limited edition supply
             ),
-            private_metadata::instruction::configure_metadata(
+            stealth::instruction::configure_metadata(
                 payer.pubkey(),
                 mint.pubkey(),
                 elgamal_kp.public.into(),
@@ -132,7 +132,7 @@ async fn test_transfer() {
     pc.prefer_bpf(true);
 
     pc.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-    pc.add_program("private_metadata", private_metadata::id(), None);
+    pc.add_program("stealth", stealth::id(), None);
 
     // 100x lol
     pc.set_compute_max_units(20_000_000);
@@ -169,17 +169,17 @@ async fn test_transfer() {
     // data landed...
     let private_metadata_account = banks_client.get_account(
         get_private_metadata_address(&mint.pubkey()).0).await.unwrap().unwrap();
-    let private_metadata = PrivateMetadataAccount::from_bytes(
+    let stealth = PrivateMetadataAccount::from_bytes(
         private_metadata_account.data.as_slice()).unwrap();
     assert_eq!(
-        private_metadata.encrypted_cipher_key.try_into().and_then(
+        stealth.encrypted_cipher_key.try_into().and_then(
             |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)),
         Ok(cipher_key),
     );
 
     let dest = Keypair::new();
     let dest_elgamal_kp = ElGamalKeypair::new(&dest, &mint.pubkey()).unwrap();
-    let transfer_buffer_key = private_metadata::instruction::get_transfer_buffer_address(
+    let transfer_buffer_key = stealth::instruction::get_transfer_buffer_address(
         &dest.pubkey(), &mint.pubkey()).0;
 
     let transfer = Transaction::new_signed_with_payer(
@@ -190,39 +190,39 @@ async fn test_transfer() {
                 &dest.pubkey(),
                 LAMPORTS_PER_SOL,
             ),
-            private_metadata::instruction::publish_elgamal_pubkey(
+            stealth::instruction::publish_elgamal_pubkey(
                 &dest.pubkey(),
                 &mint.pubkey(),
                 dest_elgamal_kp.public.into(),
             ),
-            private_metadata::instruction::publish_elgamal_pubkey(
+            stealth::instruction::publish_elgamal_pubkey(
                 &payer.pubkey(),
                 &mint.pubkey(),
                 elgamal_kp.public.into(),
             ),
 
             // do the transfer prep
-            private_metadata::instruction::init_transfer(
+            stealth::instruction::init_transfer(
                 &payer.pubkey(),
                 &mint.pubkey(),
                 &dest.pubkey(),
             ),
-            private_metadata::instruction::transfer_chunk(
+            stealth::instruction::transfer_chunk(
                 payer.pubkey(),
                 mint.pubkey(),
                 transfer_buffer_key,
-                private_metadata::instruction::TransferChunkData {
-                    transfer: private_metadata::transfer_proof::TransferData::new(
+                stealth::instruction::TransferChunkData {
+                    transfer: stealth::transfer_proof::TransferData::new(
                         &elgamal_kp,
                         dest_elgamal_kp.public.into(),
                         cipher_key,
-                        private_metadata.encrypted_cipher_key.try_into().unwrap(),
+                        stealth.encrypted_cipher_key.try_into().unwrap(),
                     ),
                 },
             ),
 
             // finish and transfer
-            private_metadata::instruction::fini_transfer(
+            stealth::instruction::fini_transfer(
                 payer.pubkey(),
                 mint.pubkey(),
                 transfer_buffer_key,
@@ -257,17 +257,17 @@ async fn test_transfer() {
     // transfer landed...
     let private_metadata_account = banks_client.get_account(
         get_private_metadata_address(&mint.pubkey()).0).await.unwrap().unwrap();
-    let private_metadata = PrivateMetadataAccount::from_bytes(
+    let stealth = PrivateMetadataAccount::from_bytes(
         private_metadata_account.data.as_slice()).unwrap();
     // successfully decrypt with dest_elgamal_kp
     assert_eq!(
-        private_metadata.encrypted_cipher_key.try_into().and_then(
+        stealth.encrypted_cipher_key.try_into().and_then(
             |ct: ElGamalCiphertext| ct.decrypt(&dest_elgamal_kp.secret)),
         Ok(cipher_key),
     );
     // and old fails to decrypt...
     assert!(
-        private_metadata.encrypted_cipher_key.try_into().and_then(
+        stealth.encrypted_cipher_key.try_into().and_then(
             |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)).is_err(),
     );
 }
@@ -279,7 +279,7 @@ async fn test_transfer_buyer_init() {
     pc.prefer_bpf(true);
 
     pc.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-    pc.add_program("private_metadata", private_metadata::id(), None);
+    pc.add_program("stealth", stealth::id(), None);
 
     // 100x lol
     pc.set_compute_max_units(20_000_000);
@@ -317,17 +317,17 @@ async fn test_transfer_buyer_init() {
     let private_metadata_key = get_private_metadata_address(&mint.pubkey()).0;
     let private_metadata_account = banks_client.get_account(
         private_metadata_key).await.unwrap().unwrap();
-    let private_metadata = PrivateMetadataAccount::from_bytes(
+    let stealth = PrivateMetadataAccount::from_bytes(
         private_metadata_account.data.as_slice()).unwrap();
     assert_eq!(
-        private_metadata.encrypted_cipher_key.try_into().and_then(
+        stealth.encrypted_cipher_key.try_into().and_then(
             |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)),
         Ok(cipher_key),
     );
 
     let dest = Keypair::new();
     let dest_elgamal_kp = ElGamalKeypair::new(&dest, &mint.pubkey()).unwrap();
-    let transfer_buffer_key = private_metadata::instruction::get_transfer_buffer_address(
+    let transfer_buffer_key = stealth::instruction::get_transfer_buffer_address(
         &dest.pubkey(), &mint.pubkey()).0;
 
     let transfer = Transaction::new_signed_with_payer(
@@ -383,12 +383,12 @@ async fn test_transfer_buyer_init() {
             ),
 
             // publish and init
-            private_metadata::instruction::publish_elgamal_pubkey(
+            stealth::instruction::publish_elgamal_pubkey(
                 &dest.pubkey(),
                 &mint.pubkey(),
                 dest_elgamal_kp.public.into(),
             ),
-            private_metadata::instruction::init_transfer(
+            stealth::instruction::init_transfer(
                 &dest.pubkey(), // payer
                 &mint.pubkey(),
                 &dest.pubkey(),
@@ -413,22 +413,22 @@ async fn test_transfer_buyer_init() {
     let reencrypt = Transaction::new_signed_with_payer(
         &[
             // do the transfer prep
-            private_metadata::instruction::transfer_chunk(
+            stealth::instruction::transfer_chunk(
                 payer.pubkey(),
                 mint.pubkey(),
                 transfer_buffer_key,
-                private_metadata::instruction::TransferChunkData {
-                    transfer: private_metadata::transfer_proof::TransferData::new(
+                stealth::instruction::TransferChunkData {
+                    transfer: stealth::transfer_proof::TransferData::new(
                         &elgamal_kp,
                         dest_elgamal_kp.public.into(),
                         cipher_key,
-                        private_metadata.encrypted_cipher_key.try_into().unwrap(),
+                        stealth.encrypted_cipher_key.try_into().unwrap(),
                     ),
                 },
             ),
 
             // finish
-            private_metadata::instruction::fini_transfer(
+            stealth::instruction::fini_transfer(
                 payer.pubkey(),
                 mint.pubkey(),
                 transfer_buffer_key,
@@ -460,17 +460,17 @@ async fn test_transfer_buyer_init() {
 
     let private_metadata_account = banks_client.get_account(
         private_metadata_key).await.unwrap().unwrap();
-    let private_metadata = PrivateMetadataAccount::from_bytes(
+    let stealth = PrivateMetadataAccount::from_bytes(
         private_metadata_account.data.as_slice()).unwrap();
     // successfully decrypt with dest_elgamal_kp
     assert_eq!(
-        private_metadata.encrypted_cipher_key.try_into().and_then(
+        stealth.encrypted_cipher_key.try_into().and_then(
             |ct: ElGamalCiphertext| ct.decrypt(&dest_elgamal_kp.secret)),
         Ok(cipher_key),
     );
     // and old fails to decrypt...
     assert!(
-        private_metadata.encrypted_cipher_key.try_into().and_then(
+        stealth.encrypted_cipher_key.try_into().and_then(
             |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)).is_err(),
     );
 }

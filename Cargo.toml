@@ -11,8 +11,8 @@ members=[
   "token-metadata/test",
   "nft-packs/program",
   "nft-candy-machine/program",
-  "private-metadata/program",
-  "private-metadata/cli",
-  "private-metadata/js/native",
+  "stealth/program",
+  "stealth/cli",
+  "stealth/js/native",
 ]
 exclude = []

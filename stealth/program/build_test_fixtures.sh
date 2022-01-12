@@ -12,7 +12,7 @@ cd ../../token-metadata/program
 cargo build-bpf --dump
 
 # build private metadata
-cd ../../private-metadata/program
+cd ../../stealth/program
 cargo build-bpf --dump
 
 FIXTURES_DIR="tests/fixtures"
@@ -21,4 +21,4 @@ rm -r "$FIXTURES_DIR"
 mkdir "$FIXTURES_DIR"
 
 cp ../../target/deploy/mpl_token_metadata.so "$FIXTURES_DIR"
-cp ../../target/deploy/private_metadata.so "$FIXTURES_DIR"
+cp ../../target/deploy/stealth.so "$FIXTURES_DIR"

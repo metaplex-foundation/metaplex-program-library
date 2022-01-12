@@ -15,8 +15,8 @@ use {
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
-    private_metadata::pod::*,
-    private_metadata::encryption::{
+    stealth::pod::*,
+    stealth::encryption::{
         elgamal::*,
     },
     std::{convert::TryInto, process::exit, sync::Arc},
@@ -67,14 +67,14 @@ fn get_or_create_transfer_buffer(
     transfer_buffer_key: &Pubkey,
     mint: &Pubkey,
     recipient: &Pubkey,
-) -> Result<private_metadata::state::CipherKeyTransferBuffer, Box<dyn std::error::Error>> {
+) -> Result<stealth::state::CipherKeyTransferBuffer, Box<dyn std::error::Error>> {
     let mut transfer_buffer_data = rpc_client.get_account_data(transfer_buffer_key);
     if transfer_buffer_data.is_err() {
         send(
             rpc_client,
             &format!("Initializing transfer buffer"),
             &[
-                private_metadata::instruction::init_transfer(
+                stealth::instruction::init_transfer(
                     &payer.pubkey(),
                     mint,
                     recipient,
@@ -88,7 +88,7 @@ fn get_or_create_transfer_buffer(
         println!("Transfer buffer already initialized");
     }
 
-    private_metadata::state::CipherKeyTransferBuffer::from_bytes(
+    stealth::state::CipherKeyTransferBuffer::from_bytes(
         &transfer_buffer_data.unwrap())
         .map(|v| *v)  // seems a bit funky...
         .ok_or(Box::new(ProgramError::InvalidArgument))
@@ -102,7 +102,7 @@ fn ensure_create_instruction_buffer(
     use curve25519_dalek_onchain::instruction as dalek;
     let dsl = dalek::transer_proof_instructions(vec![3, 3, 5]);
     assert!(
-        dsl == private_metadata::equality_proof::DSL_INSTRUCTION_BYTES,
+        dsl == stealth::equality_proof::DSL_INSTRUCTION_BYTES,
         "DSL does not match!",
     );
 
@@ -112,7 +112,7 @@ fn ensure_create_instruction_buffer(
     if let Ok(data) = instruction_buffer_data {
         assert!(data.len() >= instruction_buffer_len);
     } else {
-        let txs = private_metadata::instruction::populate_transfer_proof_dsl(
+        let txs = stealth::instruction::populate_transfer_proof_dsl(
             payer,
             instruction_buffer,
             |len| rpc_client.get_minimum_balance_for_rent_exemption(len).unwrap(),
@@ -186,7 +186,7 @@ fn process_configure(
         CipherKey(cipher_key_bytes.as_slice().try_into()?)
     ).into();
 
-    let configure_metadata_ix = private_metadata::instruction::configure_metadata(
+    let configure_metadata_ix = stealth::instruction::configure_metadata(
         payer.pubkey(),
         mint,
         elgamal_pk.into(),
@@ -222,7 +222,7 @@ async fn process_decrypt_cipher_key(
 
     let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
 
-    let private_metadata_key = private_metadata::instruction::get_private_metadata_address(&mint).0;
+    let private_metadata_key = stealth::instruction::get_private_metadata_address(&mint).0;
     let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
 
     if private_metadata_data.is_err() {
@@ -232,7 +232,7 @@ async fn process_decrypt_cipher_key(
 
     let private_metadata_data = private_metadata_data.unwrap();
 
-    let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
+    let private_metadata_account = stealth::state::PrivateMetadataAccount::from_bytes(
         &private_metadata_data).unwrap();
 
     let cipher_key_bytes = parallel_decrypt_cipher_key(
@@ -263,7 +263,7 @@ async fn process_decrypt_asset(
 
     let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
 
-    let private_metadata_key = private_metadata::instruction::get_private_metadata_address(&mint).0;
+    let private_metadata_key = stealth::instruction::get_private_metadata_address(&mint).0;
     let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
 
     if private_metadata_data.is_err() {
@@ -273,7 +273,7 @@ async fn process_decrypt_asset(
 
     let private_metadata_data = private_metadata_data.unwrap();
 
-    let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
+    let private_metadata_account = stealth::state::PrivateMetadataAccount::from_bytes(
         &private_metadata_data).unwrap();
 
     let private_asset_url = String::from_utf8(
@@ -351,7 +351,7 @@ async fn process_decrypt_asset(
 
 async fn parallel_decrypt_cipher_key(
     elgamal_keypair: &ElGamalKeypair,
-    private_metadata_account: &private_metadata::state::PrivateMetadataAccount,
+    private_metadata_account: &stealth::state::PrivateMetadataAccount,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let cipher_key = elgamal_keypair.secret.decrypt(
         &private_metadata_account.encrypted_cipher_key.try_into()?
@@ -378,7 +378,7 @@ async fn process_transfer(
         bs58::decode(&params.mint).into_vec()?.as_slice()
     );
 
-    let private_metadata_key = private_metadata::instruction::get_private_metadata_address(&mint).0;
+    let private_metadata_key = stealth::instruction::get_private_metadata_address(&mint).0;
     let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
 
     if private_metadata_data.is_err() {
@@ -387,7 +387,7 @@ async fn process_transfer(
     }
 
     let private_metadata_data = private_metadata_data.unwrap();
-    let private_metadata_account = private_metadata::state::PrivateMetadataAccount::from_bytes(
+    let private_metadata_account = stealth::state::PrivateMetadataAccount::from_bytes(
         &private_metadata_data).unwrap();
 
     let instruction_buffer = specified_or_new(params.instruction_buffer.clone());
@@ -403,16 +403,16 @@ async fn process_transfer(
         bs58::decode(&params.recipient_pubkey).into_vec()?.as_slice()
     );
 
-    let recipient_elgamal = private_metadata::zk_token_elgamal::pod::ElGamalPubkey(
+    let recipient_elgamal = stealth::zk_token_elgamal::pod::ElGamalPubkey(
         rpc_client.get_account_data(
-            &private_metadata::instruction::get_elgamal_pubkey_address(
+            &stealth::instruction::get_elgamal_pubkey_address(
                 &recipient_pubkey,
                 &mint,
             ).0,
         )?.as_slice().try_into()?
     ).try_into()?;
 
-    let transfer_buffer_key = private_metadata::instruction::get_transfer_buffer_address(
+    let transfer_buffer_key = stealth::instruction::get_transfer_buffer_address(
         &recipient_pubkey, &mint).0;
 
     let transfer_buffer_account = get_or_create_transfer_buffer(
@@ -440,14 +440,14 @@ async fn process_transfer(
         let ct = private_metadata_account.encrypted_cipher_key.try_into()?;
         let word = elgamal_keypair.secret.decrypt(&ct)?;
 
-        let transfer = private_metadata::transfer_proof::TransferData::new(
+        let transfer = stealth::transfer_proof::TransferData::new(
             &elgamal_keypair,
             recipient_elgamal,
             word,
             ct,
         );
 
-        let txs = private_metadata::instruction::transfer_chunk_slow_proof(
+        let txs = stealth::instruction::transfer_chunk_slow_proof(
             &payer.pubkey(),
             &instruction_buffer.pubkey(),
             &input_buffer.pubkey(),
@@ -484,14 +484,14 @@ async fn process_transfer(
             )?;
         }
 
-        let transfer_ix = private_metadata::instruction::transfer_chunk_slow(
+        let transfer_ix = stealth::instruction::transfer_chunk_slow(
             payer.pubkey(),
             mint,
             transfer_buffer_key,
             instruction_buffer.pubkey(),
             input_buffer.pubkey(),
             compute_buffer.pubkey(),
-            private_metadata::instruction::TransferChunkSlowData {
+            stealth::instruction::TransferChunkSlowData {
                 transfer,
             },
         );
@@ -544,7 +544,7 @@ async fn process_transfer(
                 &[],
                 1,
             )?,
-            private_metadata::instruction::fini_transfer(
+            stealth::instruction::fini_transfer(
                 payer.pubkey(),
                 mint,
                 transfer_buffer_key,
@@ -595,7 +595,7 @@ fn process_publish_elgamal_pubkey(
         rpc_client,
         &format!("Publishing pubkey {}", elgamal_pk),
         &[
-            private_metadata::instruction::publish_elgamal_pubkey(
+            stealth::instruction::publish_elgamal_pubkey(
                 &payer.pubkey(),
                 &mint,
                 elgamal_pk.into(),
@@ -621,7 +621,7 @@ fn process_close_elgamal_pubkey(
         rpc_client,
         &format!("Closing pubkey"),
         &[
-            private_metadata::instruction::close_elgamal_pubkey(
+            stealth::instruction::close_elgamal_pubkey(
                 &payer.pubkey(),
                 &mint,
             ),

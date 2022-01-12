@@ -1,7 +1,7 @@
 
 use curve25519_dalek::scalar::Scalar;
-use private_metadata::encryption::elgamal::{CipherKey, ElGamalKeypair, ElGamalPubkey};
-use private_metadata::zk_token_elgamal::pod;
+use stealth::encryption::elgamal::{CipherKey, ElGamalKeypair, ElGamalPubkey};
+use stealth::zk_token_elgamal::pod;
 use serde::de::{Deserializer, Visitor, SeqAccess, MapAccess, Error};
 use serde::ser::{SerializeStruct, Serializer, SerializeTuple}; // traits
 use serde::{Deserialize, Serialize};
@@ -246,7 +246,7 @@ pub fn transfer_chunk_txs(
     accounts: &JsValue,
 ) -> JsValue {
     let go = || -> Result<(
-            Vec<private_metadata::instruction::InstructionsAndSignerPubkeys>,
+            Vec<stealth::instruction::InstructionsAndSignerPubkeys>,
             Vec<u8>,
         ),
         String
@@ -279,7 +279,7 @@ pub fn transfer_chunk_txs(
 
         debug(&format!("Build ct"));
 
-        let transfer = private_metadata::transfer_proof::TransferData::new(
+        let transfer = stealth::transfer_proof::TransferData::new(
             &elgamal_keypair.0,
             recipient_elgamal_pubkey,
             cipherkey,
@@ -288,7 +288,7 @@ pub fn transfer_chunk_txs(
 
         debug(&format!("Built transfer proof"));
 
-        let txs = private_metadata::instruction::transfer_chunk_slow_proof(
+        let txs = stealth::instruction::transfer_chunk_slow_proof(
             &accounts.payer,
             &accounts.instruction_buffer,
             &accounts.input_buffer,
@@ -307,6 +307,6 @@ pub fn transfer_chunk_txs(
 
 #[wasm_bindgen]
 pub fn transfer_buffer_len() -> usize {
-    use private_metadata::pod::PodAccountInfo;
-    private_metadata::state::CipherKeyTransferBuffer::get_packed_len()
+    use stealth::pod::PodAccountInfo;
+    stealth::state::CipherKeyTransferBuffer::get_packed_len()
 }

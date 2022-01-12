@@ -2303,84 +2303,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed0cfbc8191465bed66e1718596ee0b0b35d5ee1f41c5df2189d0fe8bde535ba"
 
 [[package]]
-name = "private-metadata"
-version = "0.0.1"
-dependencies = [
- "arrayref",
- "base64 0.13.0",
- "bincode",
- "borsh 0.9.1",
- "bs58 0.4.0",
- "bytemuck",
- "byteorder",
- "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
- "curve25519-dalek-onchain",
- "lazy_static",
- "merlin",
- "mpl-token-metadata",
- "num-derive",
- "num-traits",
- "rand_core 0.6.3",
- "serde",
- "serde_json",
- "sha3",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
- "subtle",
- "tarpc",
- "thiserror",
- "time",
- "zeroize",
-]
-
-[[package]]
-name = "private-metadata-cli"
-version = "0.0.1"
-dependencies = [
- "base64 0.13.0",
- "bs58 0.4.0",
- "bytemuck",
- "clap",
- "curl",
- "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
- "curve25519-dalek-onchain",
- "futures",
- "openssl",
- "private-metadata",
- "regex",
- "serde_json",
- "solana-clap-utils",
- "solana-cli-config",
- "solana-client",
- "solana-logger",
- "solana-remote-wallet",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
- "tokio",
-]
-
-[[package]]
-name = "private-metadata-js"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "bytemuck",
- "console_error_panic_hook",
- "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
- "getrandom 0.2.3",
- "private-metadata",
- "rand_core 0.6.3",
- "serde",
- "sha3",
- "solana-sdk",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "proc-macro-crate"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3792,6 +3714,84 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "stealth"
+version = "0.0.1"
+dependencies = [
+ "arrayref",
+ "base64 0.13.0",
+ "bincode",
+ "borsh 0.9.1",
+ "bs58 0.4.0",
+ "bytemuck",
+ "byteorder",
+ "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
+ "curve25519-dalek-onchain",
+ "lazy_static",
+ "merlin",
+ "mpl-token-metadata",
+ "num-derive",
+ "num-traits",
+ "rand_core 0.6.3",
+ "serde",
+ "serde_json",
+ "sha3",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-associated-token-account",
+ "spl-token",
+ "subtle",
+ "tarpc",
+ "thiserror",
+ "time",
+ "zeroize",
+]
+
+[[package]]
+name = "stealth-cli"
+version = "0.0.1"
+dependencies = [
+ "base64 0.13.0",
+ "bs58 0.4.0",
+ "bytemuck",
+ "clap",
+ "curl",
+ "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
+ "curve25519-dalek-onchain",
+ "futures",
+ "openssl",
+ "regex",
+ "serde_json",
+ "solana-clap-utils",
+ "solana-cli-config",
+ "solana-client",
+ "solana-logger",
+ "solana-remote-wallet",
+ "solana-sdk",
+ "spl-associated-token-account",
+ "spl-token",
+ "stealth",
+ "tokio",
+]
+
+[[package]]
+name = "stealth-js"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "bytemuck",
+ "console_error_panic_hook",
+ "curve25519-dalek 3.2.0 (git+https://github.com/lwus/curve25519-dalek)",
+ "getrandom 0.2.3",
+ "rand_core 0.6.3",
+ "serde",
+ "sha3",
+ "solana-sdk",
+ "stealth",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "strsim"

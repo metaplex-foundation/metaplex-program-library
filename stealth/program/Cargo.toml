@@ -1,5 +1,5 @@
 [package]
-name = "private-metadata"  # TODO. candy... tootsie-pop?
+name = "stealth"
 version = "0.0.1"
 description = "Encrypted metadata URI and assets"
 authors = [
