@@ -18,6 +18,7 @@ mod buy {
             find_trade_history_address, find_treasury_owner_address, find_vault_owner_address,
         },
     };
+    use solana_program::clock::Clock;
     use solana_program_test::*;
     use solana_sdk::{
         instruction::Instruction, pubkey::Pubkey, signature::Keypair, signer::Signer,
@@ -270,7 +271,7 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let clock = context.banks_client.get_clock().await.unwrap();
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
 
         // Checks
@@ -1061,7 +1062,7 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let clock = context.banks_client.get_clock().await.unwrap();
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
 
         let tx = Transaction::new_signed_with_payer(
@@ -1330,7 +1331,7 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let clock = context.banks_client.get_clock().await.unwrap();
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
 
         // Second user emitation
