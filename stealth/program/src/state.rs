@@ -26,7 +26,7 @@ pub const MAX_METADATA_LEN: usize
 #[repr(u8)]
 pub enum Key {
     Uninitialized,
-    PrivateMetadataAccountV1,
+    StealthAccountV1,
     CipherKeyTransferBufferV1,
 }
 
@@ -44,7 +44,7 @@ unsafe impl Pod for URI {}
 /// Account data
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
-pub struct PrivateMetadataAccount {
+pub struct StealthAccount {
     pub key: Key,
 
     /// The corresponding SPL Token Mint
@@ -64,7 +64,7 @@ pub struct PrivateMetadataAccount {
     /// URI of encrypted asset
     pub uri: URI,
 }
-impl PodAccountInfo<'_, '_> for PrivateMetadataAccount {}
+impl PodAccountInfo<'_, '_> for StealthAccount {}
 
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
@@ -74,7 +74,7 @@ pub struct CipherKeyTransferBuffer {
     pub updated: PodBool,
 
     /// Account that will have its encrypted key updated
-    pub private_metadata_key: Pubkey,
+    pub stealth_key: Pubkey,
 
     /// The destination signing key associated with `elgamal_pk`
     pub wallet_pk: Pubkey,

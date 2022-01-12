@@ -61,7 +61,7 @@ pub struct TransferChunkSlowData {
 
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive)]
 #[repr(u8)]
-pub enum PrivateMetadataInstruction {
+pub enum StealthInstruction {
     /// Configures private metadata for an NFT
     ///
     /// Accounts expected by this instruction:
@@ -70,7 +70,7 @@ pub enum PrivateMetadataInstruction {
     ///   1. `[]` The SPL Token mint account of the NFT
     ///   2. `[]` The SPL Metadata account. Must be mutable
     ///   3. `[signer]` The update authority for the SPL Metadata
-    ///   4. `[writeable]` Private metadata PDA
+    ///   4. `[writeable]` Stealth PDA
     ///   5. `[]` Metadata program
     ///   6. `[]` System program
     ///   7. `[]` Rent sysvar
@@ -96,7 +96,7 @@ pub enum PrivateMetadataInstruction {
     ///   0. `[writeable,signer]` The owner of the NFT
     ///   1. `[]` The SPL Token mint account of the NFT
     ///   2. `[]` The SPL Token account holding the NFT
-    ///   3. `[writable]` Private metadata PDA
+    ///   3. `[writable]` Stealth PDA
     ///   4. `[]` Recipient wallet
     ///   5. `[]` Recipient elgamal pubkey PDA
     ///   6. `[writable]` Transfer buffer PDA. Will hold CipherKeyTransferBuffer
@@ -112,7 +112,7 @@ pub enum PrivateMetadataInstruction {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writeable,signer]` Authority. Must be the authority on the transfer buffer
-    ///   1. `[]` Private metadata PDA
+    ///   1. `[]` Stealth PDA
     ///   2. `[writable]` Transfer buffer program account
     ///   3. `[]` System program
     ///
@@ -124,7 +124,7 @@ pub enum PrivateMetadataInstruction {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writeable,signer]` Authority. Must be the authority on the transfer buffer
-    ///   1. `[]` Private metadata PDA
+    ///   1. `[]` Stealth PDA
     ///   2. `[writable]` Transfer buffer program account
     ///   3. `[]` System program
     ///
@@ -138,7 +138,7 @@ pub enum PrivateMetadataInstruction {
     /// Accounts expected by this instruction:
     ///
     ///   0. `[writeable,signer]` Authority. Must be the authority on the transfer buffer
-    ///   1. `[]` Private metadata PDA
+    ///   1. `[]` Stealth PDA
     ///   2. `[writable]` Transfer buffer program account
     ///   3. `[]` Instruction buffer. Must match Header + equality_proof::DSL_INSTRUCTION_BYTES
     ///   4. `[]` Input buffer. Must have the appropriate proof points and scalars
@@ -182,7 +182,7 @@ pub enum PrivateMetadataInstruction {
 
 pub fn decode_instruction_type(
     input: &[u8]
-) -> Result<PrivateMetadataInstruction, ProgramError> {
+) -> Result<StealthInstruction, ProgramError> {
     if input.is_empty() {
         Err(ProgramError::InvalidInstructionData)
     } else {
@@ -216,7 +216,7 @@ pub fn get_metadata_address(mint: &Pubkey) -> (Pubkey, u8) {
     )
 }
 
-pub fn get_private_metadata_address(mint: &Pubkey) -> (Pubkey, u8) {
+pub fn get_stealth_address(mint: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
             crate::state::PREFIX.as_bytes(),
@@ -257,7 +257,7 @@ pub fn get_transfer_buffer_address(
 #[cfg(not(target_arch = "bpf"))]
 pub fn encode_instruction<T: Pod>(
     accounts: Vec<AccountMeta>,
-    instruction_type: PrivateMetadataInstruction,
+    instruction_type: StealthInstruction,
     instruction_data: &T,
 ) -> Instruction {
     let mut data = vec![ToPrimitive::to_u8(&instruction_type).unwrap()];
@@ -282,7 +282,7 @@ pub fn configure_metadata(
         AccountMeta::new_readonly(mint, false),
         AccountMeta::new(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
-        AccountMeta::new(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new(get_stealth_address(&mint).0, false),
         AccountMeta::new_readonly(mpl_token_metadata::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
@@ -295,7 +295,7 @@ pub fn configure_metadata(
 
     encode_instruction(
         accounts,
-        PrivateMetadataInstruction::ConfigureMetadata,
+        StealthInstruction::ConfigureMetadata,
         &data,
     )
 }
@@ -313,7 +313,7 @@ pub fn init_transfer(
             spl_associated_token_account::get_associated_token_address(payer, mint),
             false,
         ),
-        AccountMeta::new(get_private_metadata_address(mint).0, false),
+        AccountMeta::new(get_stealth_address(mint).0, false),
         AccountMeta::new_readonly(*recipient, false),
         AccountMeta::new_readonly(get_elgamal_pubkey_address(recipient, mint).0, false),
         AccountMeta::new(get_transfer_buffer_address(recipient, mint).0, false),
@@ -323,7 +323,7 @@ pub fn init_transfer(
 
     encode_instruction(
         accounts,
-        PrivateMetadataInstruction::InitTransfer,
+        StealthInstruction::InitTransfer,
         &(),
     )
 }
@@ -336,14 +336,14 @@ pub fn fini_transfer(
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(payer, true),
-        AccountMeta::new(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new(get_stealth_address(&mint).0, false),
         AccountMeta::new(transfer_buffer, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
 
     encode_instruction(
         accounts,
-        PrivateMetadataInstruction::FiniTransfer,
+        StealthInstruction::FiniTransfer,
         &(),
     )
 }
@@ -357,14 +357,14 @@ pub fn transfer_chunk(
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new_readonly(get_stealth_address(&mint).0, false),
         AccountMeta::new(transfer_buffer, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
     ];
 
     encode_instruction(
         accounts,
-        PrivateMetadataInstruction::TransferChunk,
+        StealthInstruction::TransferChunk,
         &data,
     )
 }
@@ -381,7 +381,7 @@ pub fn transfer_chunk_slow(
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(get_private_metadata_address(&mint).0, false),
+        AccountMeta::new_readonly(get_stealth_address(&mint).0, false),
         AccountMeta::new(transfer_buffer, false),
         AccountMeta::new_readonly(instruction_buffer, false),
         AccountMeta::new_readonly(input_buffer, false),
@@ -391,7 +391,7 @@ pub fn transfer_chunk_slow(
 
     encode_instruction(
         accounts,
-        PrivateMetadataInstruction::TransferChunkSlow,
+        StealthInstruction::TransferChunkSlow,
         &data,
     )
 }
@@ -412,7 +412,7 @@ pub fn publish_elgamal_pubkey(
 
     encode_instruction(
         accounts,
-        PrivateMetadataInstruction::PublishElgamalPubkey,
+        StealthInstruction::PublishElgamalPubkey,
         &elgamal_pk,
     )
 }
@@ -431,7 +431,7 @@ pub fn close_elgamal_pubkey(
 
     encode_instruction(
         accounts,
-        PrivateMetadataInstruction::CloseElgamalPubkey,
+        StealthInstruction::CloseElgamalPubkey,
         &(),
     )
 }

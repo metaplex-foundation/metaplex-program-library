@@ -8,9 +8,9 @@ use solana_program::{
 };
 use thiserror::Error;
 
-/// Errors that may be returned by the Private Metadata program.
+/// Errors that may be returned by the Stealth program.
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
-pub enum PrivateMetadataError {
+pub enum StealthError {
     #[error("Invalid Update Authority")]
     InvalidUpdateAuthority,
 
@@ -20,8 +20,8 @@ pub enum PrivateMetadataError {
     #[error("Invalid Metadata Key")]
     InvalidMetadataKey,
 
-    #[error("Invalid Private Metadata Key")]
-    InvalidPrivateMetadataKey,
+    #[error("Invalid Stealth Key")]
+    InvalidStealthKey,
 
     #[error("Transfer Buffer Already Initialized")]
     BufferAlreadyInitialized,
@@ -36,20 +36,20 @@ pub enum PrivateMetadataError {
     InvalidElgamalPubkeyPDA,
 }
 
-impl PrintProgramError for PrivateMetadataError {
+impl PrintProgramError for StealthError {
     fn print<E>(&self) {
         msg!(&self.to_string());
     }
 }
 
-impl From<PrivateMetadataError> for ProgramError {
-    fn from(e: PrivateMetadataError) -> Self {
+impl From<StealthError> for ProgramError {
+    fn from(e: StealthError) -> Self {
         ProgramError::Custom(e as u32)
     }
 }
 
-impl<T> DecodeError<T> for PrivateMetadataError {
+impl<T> DecodeError<T> for StealthError {
     fn type_of() -> &'static str {
-        "Private Metadata Error"
+        "Stealth Error"
     }
 }

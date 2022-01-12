@@ -32,47 +32,47 @@ pub fn process_instruction(
     input: &[u8],
 ) -> ProgramResult {
     match decode_instruction_type(input)? {
-        PrivateMetadataInstruction::ConfigureMetadata => {
+        StealthInstruction::ConfigureMetadata => {
             msg!("ConfigureMetadata!");
             process_configure_metadata(
                 accounts,
                 decode_instruction_data::<ConfigureMetadataData>(input)?
             )
         }
-        PrivateMetadataInstruction::InitTransfer => {
+        StealthInstruction::InitTransfer => {
             msg!("InitTransfer!");
             process_init_transfer(
                 accounts,
             )
         }
-        PrivateMetadataInstruction::FiniTransfer => {
+        StealthInstruction::FiniTransfer => {
             msg!("FiniTransfer!");
             process_fini_transfer(
                 accounts,
             )
         }
-        PrivateMetadataInstruction::TransferChunk => {
+        StealthInstruction::TransferChunk => {
             msg!("TransferChunk!");
             process_transfer_chunk(
                 accounts,
                 decode_instruction_data::<TransferChunkData>(input)?
             )
         }
-        PrivateMetadataInstruction::TransferChunkSlow => {
+        StealthInstruction::TransferChunkSlow => {
             msg!("TransferChunkSlow!");
             process_transfer_chunk_slow(
                 accounts,
                 decode_instruction_data::<TransferChunkSlowData>(input)?
             )
         }
-        PrivateMetadataInstruction::PublishElgamalPubkey => {
+        StealthInstruction::PublishElgamalPubkey => {
             msg!("PublishElgamalPubkey!");
             process_publish_elgamal_pubkey(
                 accounts,
                 decode_instruction_data::<zk_token_elgamal::pod::ElGamalPubkey>(input)?
             )
         }
-        PrivateMetadataInstruction::CloseElgamalPubkey => {
+        StealthInstruction::CloseElgamalPubkey => {
             msg!("CloseElgamalPubkey!");
             process_close_elgamal_pubkey(
                 accounts,
@@ -83,7 +83,7 @@ pub fn process_instruction(
 
 // TODO: Result instead of assuming overflow
 fn scale_creator_shares(
-    private_metadata_key: &Pubkey,
+    stealth_key: &Pubkey,
     metadata: &mpl_token_metadata::state::Metadata,
 ) -> Option<Vec<mpl_token_metadata::state::Creator>> {
     let mut new_creators = vec![];
@@ -109,7 +109,7 @@ fn scale_creator_shares(
             });
         }
         new_creators.push(mpl_token_metadata::state::Creator {
-            address: *private_metadata_key,
+            address: *stealth_key,
             verified: false,
             share: remaining_share,
         });
@@ -126,7 +126,7 @@ fn process_configure_metadata(
     let mint_info = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
     let metadata_update_authority_info = next_account_info(account_info_iter)?;
-    let private_metadata_info = next_account_info(account_info_iter)?;
+    let stealth_info = next_account_info(account_info_iter)?;
     let metadata_program_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
     let rent_sysvar_info = next_account_info(account_info_iter)?;
@@ -159,11 +159,11 @@ fn process_configure_metadata(
 
     if metadata_key != *metadata_info.key {
         msg!("Invalid metadata key");
-        return Err(PrivateMetadataError::InvalidMetadataKey.into());
+        return Err(StealthError::InvalidMetadataKey.into());
     }
 
 
-    // check that metadata authority matches and that metadata is mutable (adding private metadata
+    // check that metadata authority matches and that metadata is mutable (adding Stealth
     // and not acting on a limited edition). TODO?
     let metadata = mpl_token_metadata::state::Metadata::from_account_info(metadata_info)?;
 
@@ -171,33 +171,33 @@ fn process_configure_metadata(
 
     if authority_pubkey != *metadata_update_authority_info.key {
         msg!("Invalid metadata update authority");
-        return Err(PrivateMetadataError::InvalidUpdateAuthority.into());
+        return Err(StealthError::InvalidUpdateAuthority.into());
     }
 
     if !metadata.is_mutable {
         msg!("Metadata is immutable");
-        return Err(PrivateMetadataError::MetadataIsImmutable.into());
+        return Err(StealthError::MetadataIsImmutable.into());
     }
 
 
-    // check that private metadata matches mint
-    let private_metadata_seeds = &[
+    // check that Stealth matches mint
+    let stealth_seeds = &[
         PREFIX.as_bytes(),
         mint_info.key.as_ref(),
     ];
-    let (private_metadata_key, private_metadata_bump_seed) =
-        Pubkey::find_program_address(private_metadata_seeds, &ID);
+    let (stealth_key, stealth_bump_seed) =
+        Pubkey::find_program_address(stealth_seeds, &ID);
 
-    if private_metadata_key != *private_metadata_info.key {
-        msg!("Invalid private metadata key");
-        return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
+    if stealth_key != *stealth_info.key {
+        msg!("Invalid stealth key");
+        return Err(StealthError::InvalidStealthKey.into());
     }
 
 
     // make the PDA a 'creator' so that it receives a portion of the fees and bump seller fees to
     // 100%
-    let new_creators = scale_creator_shares(&private_metadata_key, &metadata)
-        .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+    let new_creators = scale_creator_shares(&stealth_key, &metadata)
+        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
     invoke(
         &mpl_token_metadata::instruction::update_metadata_accounts(
             *metadata_program_info.key,
@@ -222,18 +222,18 @@ fn process_configure_metadata(
         &mpl_token_metadata::instruction::sign_metadata(
             *metadata_program_info.key,
             *metadata_info.key,
-            *private_metadata_info.key,
+            *stealth_info.key,
         ),
         &[
             metadata_program_info.clone(),
             metadata_info.clone(),
-            private_metadata_info.clone(),
+            stealth_info.clone(),
         ],
         &[
             &[
                 PREFIX.as_bytes(),
                 mint_info.key.as_ref(),
-                &[private_metadata_bump_seed],
+                &[stealth_bump_seed],
             ],
         ],
     )?;
@@ -243,34 +243,34 @@ fn process_configure_metadata(
     invoke_signed(
         &system_instruction::create_account(
             payer_info.key,
-            private_metadata_info.key,
-            rent.minimum_balance(PrivateMetadataAccount::get_packed_len()).max(1),
-            PrivateMetadataAccount::get_packed_len() as u64,
+            stealth_info.key,
+            rent.minimum_balance(StealthAccount::get_packed_len()).max(1),
+            StealthAccount::get_packed_len() as u64,
             &ID,
         ),
         &[
             payer_info.clone(),
-            private_metadata_info.clone(),
+            stealth_info.clone(),
             system_program_info.clone(),
         ],
         &[
             &[
                 PREFIX.as_bytes(),
                 mint_info.key.as_ref(),
-                &[private_metadata_bump_seed],
+                &[stealth_bump_seed],
             ],
         ],
     )?;
 
-    let mut private_metadata = PrivateMetadataAccount::from_account_info(
-        &private_metadata_info, &ID, Key::Uninitialized)?.into_mut();
+    let mut stealth = StealthAccount::from_account_info(
+        &stealth_info, &ID, Key::Uninitialized)?.into_mut();
 
-    private_metadata.key = Key::PrivateMetadataAccountV1;
-    private_metadata.mint = *mint_info.key;
-    private_metadata.wallet_pk = *payer_info.key;
-    private_metadata.elgamal_pk = data.elgamal_pk;
-    private_metadata.encrypted_cipher_key = data.encrypted_cipher_key;
-    private_metadata.uri = data.uri;
+    stealth.key = Key::StealthAccountV1;
+    stealth.mint = *mint_info.key;
+    stealth.wallet_pk = *payer_info.key;
+    stealth.elgamal_pk = data.elgamal_pk;
+    stealth.encrypted_cipher_key = data.encrypted_cipher_key;
+    stealth.uri = data.uri;
 
     Ok(())
 }
@@ -299,7 +299,7 @@ fn process_init_transfer(
     let payer_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
-    let private_metadata_info = next_account_info(account_info_iter)?;
+    let stealth_info = next_account_info(account_info_iter)?;
     let recipient_info = next_account_info(account_info_iter)?;
     let recipient_elgamal_info = next_account_info(account_info_iter)?;
     let transfer_buffer_info = next_account_info(account_info_iter)?;
@@ -311,7 +311,7 @@ fn process_init_transfer(
     }
     validate_account_owner(mint_info, &spl_token::ID)?;
     validate_account_owner(token_account_info, &spl_token::ID)?;
-    validate_account_owner(private_metadata_info, &ID)?;
+    validate_account_owner(stealth_info, &ID)?;
 
     let token_account = spl_token::state::Account::unpack(
         &token_account_info.data.borrow())?;
@@ -327,24 +327,24 @@ fn process_init_transfer(
     }
 
     // TODO: this is a bit fucky since the nft token transfer should really happen at the same time
-    // as the private metadata transfer...
+    // as the stealth transfer...
     if token_account.amount != 1 {
         msg!("Invalid amount");
         return Err(ProgramError::InvalidArgument);
     }
 
 
-    // check that private metadata matches mint
-    let (private_metadata_key, _private_metadata_bump_seed) =
-        get_private_metadata_address(mint_info.key);
+    // check that stealth matches mint
+    let (stealth_key, _stealth_bump_seed) =
+        get_stealth_address(mint_info.key);
 
-    if private_metadata_key != *private_metadata_info.key {
-        return Err(PrivateMetadataError::InvalidPrivateMetadataKey.into());
+    if stealth_key != *stealth_info.key {
+        return Err(StealthError::InvalidStealthKey.into());
     }
 
     // deserialize to verify it exists...
-    let _private_metadata = PrivateMetadataAccount::from_account_info(
-        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
+    let _stealth = StealthAccount::from_account_info(
+        &stealth_info, &ID, Key::StealthAccountV1)?;
 
     // check that elgamal PDAs match
     let get_elgamal_pk = |
@@ -356,7 +356,7 @@ fn process_init_transfer(
 
         if elgamal_pubkey_key != *elgamal_info.key {
             msg!("Invalid elgamal PDA");
-            return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
+            return Err(StealthError::InvalidElgamalPubkeyPDA.into());
         }
 
         Ok(zk_token_elgamal::pod::ElGamalPubkey(
@@ -365,7 +365,7 @@ fn process_init_transfer(
                 .try_into()
                 .map_err(|_| -> ProgramError {
                     msg!("Invalid elgamal PDA data");
-                    PrivateMetadataError::InvalidElgamalPubkeyPDA.into()
+                    StealthError::InvalidElgamalPubkeyPDA.into()
                 })?
         ))
     };
@@ -412,25 +412,25 @@ fn process_init_transfer(
 
     // low bits should be clear regardless...
     transfer_buffer.key = Key::CipherKeyTransferBufferV1;
-    transfer_buffer.private_metadata_key = *private_metadata_info.key;
+    transfer_buffer.stealth_key = *stealth_info.key;
     transfer_buffer.wallet_pk = *recipient_info.key;
     transfer_buffer.elgamal_pk = recipient_elgamal_pk;
 
     let minimum_rent = rent.minimum_balance(
-        PrivateMetadataAccount::get_packed_len()).max(1);
+        StealthAccount::get_packed_len()).max(1);
     let paid_amount =
-        private_metadata_info.lamports()
+        stealth_info.lamports()
         .checked_sub(minimum_rent)
-        .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
     if paid_amount != 0 {
         // transfer the seller's fee portion to the transfer buffer (which can be claimed by them)
         // TODO: expiration so buyer can reclaim if this doesn't happen
         let starting_lamports = transfer_buffer_info.lamports();
         **transfer_buffer_info.lamports.borrow_mut() = starting_lamports
             .checked_add(paid_amount)
-            .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+            .ok_or::<ProgramError>(StealthError::Overflow.into())?;
 
-        **private_metadata_info.lamports.borrow_mut() = minimum_rent;
+        **stealth_info.lamports.borrow_mut() = minimum_rent;
     }
 
     Ok(())
@@ -442,7 +442,7 @@ fn process_fini_transfer(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let authority_info = next_account_info(account_info_iter)?;
-    let private_metadata_info = next_account_info(account_info_iter)?;
+    let stealth_info = next_account_info(account_info_iter)?;
     let transfer_buffer_info = next_account_info(account_info_iter)?;
     let _system_program_info = next_account_info(account_info_iter)?;
 
@@ -457,14 +457,14 @@ fn process_fini_transfer(
     let transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?;
 
-    let mut private_metadata = PrivateMetadataAccount::from_account_info(
-        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?.into_mut();
+    let mut stealth = StealthAccount::from_account_info(
+        &stealth_info, &ID, Key::StealthAccountV1)?.into_mut();
 
     validate_transfer_buffer(
         &transfer_buffer,
-        &private_metadata,
+        &stealth,
         authority_info.key,
-        private_metadata_info.key,
+        stealth_info.key,
     )?;
 
     if !bool::from(&transfer_buffer.updated) {
@@ -475,16 +475,16 @@ fn process_fini_transfer(
 
     // write the new cipher text over
 
-    private_metadata.wallet_pk = transfer_buffer.wallet_pk;
-    private_metadata.elgamal_pk = transfer_buffer.elgamal_pk;
-    private_metadata.encrypted_cipher_key = transfer_buffer.encrypted_cipher_key;
+    stealth.wallet_pk = transfer_buffer.wallet_pk;
+    stealth.elgamal_pk = transfer_buffer.elgamal_pk;
+    stealth.encrypted_cipher_key = transfer_buffer.encrypted_cipher_key;
 
 
     // close the transfer buffer
     let starting_lamports = authority_info.lamports();
     **authority_info.lamports.borrow_mut() = starting_lamports
         .checked_add(transfer_buffer_info.lamports())
-        .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
 
     **transfer_buffer_info.lamports.borrow_mut() = 0;
 
@@ -497,7 +497,7 @@ fn process_transfer_chunk(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let authority_info = next_account_info(account_info_iter)?;
-    let private_metadata_info = next_account_info(account_info_iter)?;
+    let stealth_info = next_account_info(account_info_iter)?;
     let transfer_buffer_info = next_account_info(account_info_iter)?;
     let _system_program_info = next_account_info(account_info_iter)?;
 
@@ -512,14 +512,14 @@ fn process_transfer_chunk(
     let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?.into_mut();
 
-    let private_metadata = PrivateMetadataAccount::from_account_info(
-        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
+    let stealth = StealthAccount::from_account_info(
+        &stealth_info, &ID, Key::StealthAccountV1)?;
 
     validate_transfer_buffer(
         &transfer_buffer,
-        &private_metadata,
+        &stealth,
         authority_info.key,
-        private_metadata_info.key,
+        stealth_info.key,
     )?;
 
     // check that this proof has matching pubkey fields and that we haven't already processed this
@@ -530,12 +530,12 @@ fn process_transfer_chunk(
     }
 
     let transfer = &data.transfer;
-    if transfer.transfer_public_keys.src_pubkey != private_metadata.elgamal_pk {
+    if transfer.transfer_public_keys.src_pubkey != stealth.elgamal_pk {
         msg!("Source elgamal pubkey mismatch");
         return Err(ProgramError::InvalidArgument);
     }
 
-    if transfer.src_cipher_key_chunk_ct != private_metadata.encrypted_cipher_key {
+    if transfer.src_cipher_key_chunk_ct != stealth.encrypted_cipher_key {
         msg!("Source cipher text mismatch");
         return Err(ProgramError::InvalidArgument);
     }
@@ -549,7 +549,7 @@ fn process_transfer_chunk(
     // actually verify the proof...
     // TODO: syscalls when available
     if transfer.verify().is_err() {
-        return Err(PrivateMetadataError::ProofVerificationError.into());
+        return Err(StealthError::ProofVerificationError.into());
     }
 
     transfer_buffer.updated = true.into();
@@ -565,7 +565,7 @@ fn process_transfer_chunk_slow(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let authority_info = next_account_info(account_info_iter)?;
-    let private_metadata_info = next_account_info(account_info_iter)?;
+    let stealth_info = next_account_info(account_info_iter)?;
     let transfer_buffer_info = next_account_info(account_info_iter)?;
     let instruction_buffer_info = next_account_info(account_info_iter)?;
     let input_buffer_info = next_account_info(account_info_iter)?;
@@ -583,14 +583,14 @@ fn process_transfer_chunk_slow(
     let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?.into_mut();
 
-    let private_metadata = PrivateMetadataAccount::from_account_info(
-        &private_metadata_info, &ID, Key::PrivateMetadataAccountV1)?;
+    let stealth = StealthAccount::from_account_info(
+        &stealth_info, &ID, Key::StealthAccountV1)?;
 
     validate_transfer_buffer(
         &transfer_buffer,
-        &private_metadata,
+        &stealth,
         authority_info.key,
-        private_metadata_info.key,
+        stealth_info.key,
     )?;
 
     // check that this proof has matching pubkey fields and that we haven't already processed this
@@ -601,12 +601,12 @@ fn process_transfer_chunk_slow(
     }
 
     let transfer = &data.transfer;
-    if transfer.transfer_public_keys.src_pubkey != private_metadata.elgamal_pk {
+    if transfer.transfer_public_keys.src_pubkey != stealth.elgamal_pk {
         msg!("Source elgamal pubkey mismatch");
         return Err(ProgramError::InvalidArgument);
     }
 
-    if transfer.src_cipher_key_chunk_ct != private_metadata.encrypted_cipher_key {
+    if transfer.src_cipher_key_chunk_ct != stealth.encrypted_cipher_key {
         msg!("Source cipher text mismatch");
         return Err(ProgramError::InvalidArgument);
     }
@@ -628,7 +628,7 @@ fn process_transfer_chunk_slow(
     validate_account_owner(input_buffer_info, &curve25519_dalek_onchain::ID)?;
     validate_account_owner(compute_buffer_info, &curve25519_dalek_onchain::ID)?;
 
-    let conv_error = || -> ProgramError { PrivateMetadataError::ProofVerificationError.into() };
+    let conv_error = || -> ProgramError { StealthError::ProofVerificationError.into() };
 
     // check that the compute buffer points to the right things
     let compute_buffer_data = compute_buffer_info.try_borrow_data()?;
@@ -737,7 +737,7 @@ fn process_transfer_chunk_slow(
         let found_pubkey = &input_buffer_data[buffer_idx..buffer_idx+32];
         if *found_pubkey != *expected_pubkeys[i] {
             msg!("Mismatched proof statement keys");
-            return Err(PrivateMetadataError::ProofVerificationError.into());
+            return Err(StealthError::ProofVerificationError.into());
         }
         buffer_idx += 32;
     }
@@ -801,7 +801,7 @@ fn process_transfer_chunk_slow(
         scalar_buffer.copy_from_slice(&input_buffer_data[buffer_idx..buffer_idx+32]);
         if scalar_buffer != expected_scalars[i].bytes {
             msg!("Mismatched proof statement scalars");
-            return Err(PrivateMetadataError::ProofVerificationError.into());
+            return Err(StealthError::ProofVerificationError.into());
         }
         buffer_idx += 32;
     }
@@ -819,7 +819,7 @@ fn process_transfer_chunk_slow(
 
         if ! curve25519_dalek::ristretto::RistrettoPoint(mul_result).is_identity() {
             msg!("Proof statement did not verify");
-            return Err(PrivateMetadataError::ProofVerificationError.into());
+            return Err(StealthError::ProofVerificationError.into());
         }
         buffer_idx += 128;
     }
@@ -858,7 +858,7 @@ fn process_publish_elgamal_pubkey(
 
     if elgamal_pubkey_key != *elgamal_pubkey_info.key {
         msg!("Invalid wallet elgamal PDA");
-        return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
+        return Err(StealthError::InvalidElgamalPubkeyPDA.into());
     }
 
     // create and initialize PDA
@@ -923,14 +923,14 @@ fn process_close_elgamal_pubkey(
 
     if elgamal_pubkey_key != *elgamal_pubkey_info.key {
         msg!("Invalid wallet elgamal PDA");
-        return Err(PrivateMetadataError::InvalidElgamalPubkeyPDA.into());
+        return Err(StealthError::InvalidElgamalPubkeyPDA.into());
     }
 
     // close the elgamal pubkey buffer
     let starting_lamports = wallet_info.lamports();
     **wallet_info.lamports.borrow_mut() = starting_lamports
         .checked_add(elgamal_pubkey_info.lamports())
-        .ok_or::<ProgramError>(PrivateMetadataError::Overflow.into())?;
+        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
 
     **elgamal_pubkey_info.lamports.borrow_mut() = 0;
 
@@ -948,17 +948,17 @@ fn validate_account_owner(account_info: &AccountInfo, owner: &Pubkey) -> Program
 
 fn validate_transfer_buffer(
     transfer_buffer: &CipherKeyTransferBuffer,
-    private_metadata: &PrivateMetadataAccount,
+    stealth: &StealthAccount,
     authority: &Pubkey,
-    private_metadata_key: &Pubkey,
+    stealth_key: &Pubkey,
 ) -> ProgramResult {
-    if private_metadata.wallet_pk != *authority {
+    if stealth.wallet_pk != *authority {
         msg!("Owner mismatch");
         return Err(ProgramError::InvalidArgument);
     }
 
-    if transfer_buffer.private_metadata_key != *private_metadata_key {
-        msg!("Private metadata mismatch");
+    if transfer_buffer.stealth_key != *stealth_key {
+        msg!("Stealth mismatch");
         return Err(ProgramError::InvalidArgument);
     }
 

@@ -5,9 +5,9 @@ use {
             ElGamalKeypair,
             CipherKey,
         },
-        instruction::get_private_metadata_address,
+        instruction::get_stealth_address,
         pod::PodAccountInfo,
-        state::PrivateMetadataAccount,
+        state::StealthAccount,
     },
     rand_core::OsRng,
     solana_program_test::*,
@@ -167,10 +167,10 @@ async fn test_transfer() {
     banks_client.process_transaction(nft_setup).await.unwrap();
 
     // data landed...
-    let private_metadata_account = banks_client.get_account(
-        get_private_metadata_address(&mint.pubkey()).0).await.unwrap().unwrap();
-    let stealth = PrivateMetadataAccount::from_bytes(
-        private_metadata_account.data.as_slice()).unwrap();
+    let stealth_account = banks_client.get_account(
+        get_stealth_address(&mint.pubkey()).0).await.unwrap().unwrap();
+    let stealth = StealthAccount::from_bytes(
+        stealth_account.data.as_slice()).unwrap();
     assert_eq!(
         stealth.encrypted_cipher_key.try_into().and_then(
             |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)),
@@ -255,10 +255,10 @@ async fn test_transfer() {
     banks_client.process_transaction(transfer).await.unwrap();
 
     // transfer landed...
-    let private_metadata_account = banks_client.get_account(
-        get_private_metadata_address(&mint.pubkey()).0).await.unwrap().unwrap();
-    let stealth = PrivateMetadataAccount::from_bytes(
-        private_metadata_account.data.as_slice()).unwrap();
+    let stealth_account = banks_client.get_account(
+        get_stealth_address(&mint.pubkey()).0).await.unwrap().unwrap();
+    let stealth = StealthAccount::from_bytes(
+        stealth_account.data.as_slice()).unwrap();
     // successfully decrypt with dest_elgamal_kp
     assert_eq!(
         stealth.encrypted_cipher_key.try_into().and_then(
@@ -314,11 +314,11 @@ async fn test_transfer_buyer_init() {
     banks_client.process_transaction(nft_setup).await.unwrap();
 
     // data landed...
-    let private_metadata_key = get_private_metadata_address(&mint.pubkey()).0;
-    let private_metadata_account = banks_client.get_account(
-        private_metadata_key).await.unwrap().unwrap();
-    let stealth = PrivateMetadataAccount::from_bytes(
-        private_metadata_account.data.as_slice()).unwrap();
+    let stealth_key = get_stealth_address(&mint.pubkey()).0;
+    let stealth_account = banks_client.get_account(
+        stealth_key).await.unwrap().unwrap();
+    let stealth = StealthAccount::from_bytes(
+        stealth_account.data.as_slice()).unwrap();
     assert_eq!(
         stealth.encrypted_cipher_key.try_into().and_then(
             |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)),
@@ -378,7 +378,7 @@ async fn test_transfer_buyer_init() {
             // buyer side transfer
             system_instruction::transfer(
                 &dest.pubkey(),
-                &private_metadata_key,
+                &stealth_key,
                 LAMPORTS_PER_SOL,
             ),
 
@@ -458,10 +458,10 @@ async fn test_transfer_buyer_init() {
         start_seller_lamports + start_transfer_lamports - reencrypt_tx_fee,
     );
 
-    let private_metadata_account = banks_client.get_account(
-        private_metadata_key).await.unwrap().unwrap();
-    let stealth = PrivateMetadataAccount::from_bytes(
-        private_metadata_account.data.as_slice()).unwrap();
+    let stealth_account = banks_client.get_account(
+        stealth_key).await.unwrap().unwrap();
+    let stealth = StealthAccount::from_bytes(
+        stealth_account.data.as_slice()).unwrap();
     // successfully decrypt with dest_elgamal_kp
     assert_eq!(
         stealth.encrypted_cipher_key.try_into().and_then(

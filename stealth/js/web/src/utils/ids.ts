@@ -12,7 +12,7 @@ export const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
   'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
 );
 
-export const PRIVATE_METADATA_PROGRAM_ID = new PublicKey(
+export const STEALTH_PROGRAM_ID = new PublicKey(
   '8SyzzxuZnMryDgLz6tWH3ubcEVikaVP3upq6cJce9jrL',
 );
 
@@ -35,7 +35,7 @@ export async function getMetadata(
   )[0];
 };
 
-export async function getPrivateMetadata(
+export async function getStealth(
   mint: PublicKey,
 ): Promise<PublicKey> {
   return (
@@ -44,7 +44,7 @@ export async function getPrivateMetadata(
         Buffer.from('metadata'),
         mint.toBuffer(),
       ],
-      PRIVATE_METADATA_PROGRAM_ID,
+      STEALTH_PROGRAM_ID,
     )
   )[0];
 };
@@ -60,7 +60,7 @@ export async function getElgamalPubkeyAddress(
         wallet.toBuffer(),
         mint.toBuffer(),
       ],
-      PRIVATE_METADATA_PROGRAM_ID,
+      STEALTH_PROGRAM_ID,
     )
   )[0];
 };
@@ -76,7 +76,7 @@ export async function getTransferBufferAddress(
         wallet.toBuffer(),
         mint.toBuffer(),
       ],
-      PRIVATE_METADATA_PROGRAM_ID,
+      STEALTH_PROGRAM_ID,
     )
   )[0];
 };

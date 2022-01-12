@@ -11,7 +11,7 @@ cd "$SCRIPT_DIR"
 cd ../../token-metadata/program
 cargo build-bpf --dump
 
-# build private metadata
+# build stealth
 cd ../../stealth/program
 cargo build-bpf --dump
 

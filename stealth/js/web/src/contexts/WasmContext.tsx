@@ -5,7 +5,7 @@ import init, {
   elgamal_decrypt,
   transfer_chunk_txs,
   transfer_buffer_len,
-} from '../utils/privateMetadata/stealth_js';
+} from '../utils/stealth/stealth_js';
 
 export interface WasmConfig {
   elgamalKeypairFromSignature: (signature: any) => any;

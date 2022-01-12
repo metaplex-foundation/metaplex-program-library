@@ -64,10 +64,10 @@ import {
   sendSignedTransaction,
 } from '../../utils/transactions';
 import {
-  decodePrivateMetadata,
+  decodeStealth,
   decodeTransferBuffer,
-  PrivateMetadataAccount,
-} from '../../utils/privateSchema';
+  StealthAccount,
+} from '../../utils/stealthSchema';
 import {
   decodeMetadata,
   Metadata,
@@ -75,10 +75,10 @@ import {
 import {
   getElgamalPubkeyAddress,
   getMetadata,
-  getPrivateMetadata,
+  getStealth,
   getTransferBufferAddress,
   CURVE_DALEK_ONCHAIN_PROGRAM_ID,
-  PRIVATE_METADATA_PROGRAM_ID,
+  STEALTH_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   TOKEN_METADATA_PROGRAM_ID,
@@ -107,7 +107,7 @@ async function getCipherKey(
   connection: Connection,
   wallet: WalletSigner,
   address: PublicKey,
-  privateMetadata: PrivateMetadataAccount,
+  privateMetadata: StealthAccount,
   wasm: WasmConfig,
 ): Promise<[Buffer, Buffer]> {
   const elgamalKeypairRes = await getElgamalKeypair(
@@ -188,12 +188,12 @@ const initTransferIxs = async (
     SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
   );
 
-  const privateMetadataKey = await getPrivateMetadata(mintKey);
+  const privateMetadataKey = await getStealth(mintKey);
 
   const instructions = [
     // InitTransfer
     new TransactionInstruction({
-      programId: PRIVATE_METADATA_PROGRAM_ID,
+      programId: STEALTH_PROGRAM_ID,
       keys: [
         {
           pubkey: walletKey,
@@ -275,7 +275,7 @@ const finiTransferIxs = async (
     SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
   );
 
-  const privateMetadataKey = await getPrivateMetadata(mintKey);
+  const privateMetadataKey = await getStealth(mintKey);
 
   const instructions : Array<TransactionInstruction> = [];
 
@@ -305,7 +305,7 @@ const finiTransferIxs = async (
 
   instructions.push(
     new TransactionInstruction({
-      programId: PRIVATE_METADATA_PROGRAM_ID,
+      programId: STEALTH_PROGRAM_ID,
       keys: [
         {
           pubkey: walletKey,
@@ -350,11 +350,11 @@ const transferChunkSlowVerify = async (
   keys: TransferChunkSlowKeys,
   transferDataBytes: Buffer,
 ) => {
-  const privateMetadataKey = await getPrivateMetadata(keys.mintKey);
+  const privateMetadataKey = await getStealth(keys.mintKey);
   return {
     instructions: [
       new TransactionInstruction({
-        programId: PRIVATE_METADATA_PROGRAM_ID,
+        programId: STEALTH_PROGRAM_ID,
         keys: [
           {
             pubkey: keys.walletKey,
@@ -408,7 +408,7 @@ const buildTransferChunkTxns = async (
   cipherKey: string, // base64
   elgamalKeypair: Object, // TODO: typing
   recipientElgamalPubkey: Buffer,
-  privateMetadata: PrivateMetadataAccount,
+  privateMetadata: StealthAccount,
   recentBlockhash: Blockhash,
   keys: TransferChunkSlowKeys,
 ) => {
@@ -662,7 +662,7 @@ export const StealthView = (
   const [publicImageManifest, setPublicImageManifest]
       = React.useState<PublicImageManifest | null>(null);
   const [privateMetadata, setPrivateMetadata]
-      = React.useState<PrivateMetadataAccount | null>(null);
+      = React.useState<StealthAccount | null>(null);
   const [privateImageManifest, setPrivateImageManifest]
       = React.useState<PrivateImageManifest| null>(null);
   const [elgamalKeypairStr, setElgamalKeypairStr]
@@ -713,7 +713,7 @@ export const StealthView = (
     if (mintKey === null) return;
 
     const wrap = async () => {
-      const privateMetadataKey = await getPrivateMetadata(mintKey);
+      const privateMetadataKey = await getStealth(mintKey);
       const publicMetadataKey = await getMetadata(mintKey);
 
       const [privateMetadataAccount, publicMetadataAccount] =
@@ -722,7 +722,7 @@ export const StealthView = (
         );
 
       if (privateMetadataAccount !== null) {
-        const privateMetadata = decodePrivateMetadata(privateMetadataAccount.data);
+        const privateMetadata = decodeStealth(privateMetadataAccount.data);
         setPrivateMetadata(privateMetadata);
       } else {
         setLoading(decLoading);

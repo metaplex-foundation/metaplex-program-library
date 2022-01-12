@@ -222,22 +222,22 @@ async fn process_decrypt_cipher_key(
 
     let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
 
-    let private_metadata_key = stealth::instruction::get_private_metadata_address(&mint).0;
-    let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
+    let stealth_key = stealth::instruction::get_stealth_address(&mint).0;
+    let stealth_data = rpc_client.get_account_data(&stealth_key);
 
-    if private_metadata_data.is_err() {
+    if stealth_data.is_err() {
         eprintln!("error: no private metadata found for mint {}", params.mint);
         exit(1);
     }
 
-    let private_metadata_data = private_metadata_data.unwrap();
+    let stealth_data = stealth_data.unwrap();
 
-    let private_metadata_account = stealth::state::PrivateMetadataAccount::from_bytes(
-        &private_metadata_data).unwrap();
+    let stealth_account = stealth::state::StealthAccount::from_bytes(
+        &stealth_data).unwrap();
 
     let cipher_key_bytes = parallel_decrypt_cipher_key(
         &elgamal_keypair,
-        &private_metadata_account,
+        &stealth_account,
     ).await?;
 
     let cipher_key = bs58::encode(cipher_key_bytes).into_string();
@@ -263,21 +263,21 @@ async fn process_decrypt_asset(
 
     let elgamal_keypair = ElGamalKeypair::new(payer, &mint)?;
 
-    let private_metadata_key = stealth::instruction::get_private_metadata_address(&mint).0;
-    let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
+    let stealth_key = stealth::instruction::get_stealth_address(&mint).0;
+    let stealth_data = rpc_client.get_account_data(&stealth_key);
 
-    if private_metadata_data.is_err() {
+    if stealth_data.is_err() {
         eprintln!("error: no private metadata found for mint {}", params.mint);
         exit(1);
     }
 
-    let private_metadata_data = private_metadata_data.unwrap();
+    let stealth_data = stealth_data.unwrap();
 
-    let private_metadata_account = stealth::state::PrivateMetadataAccount::from_bytes(
-        &private_metadata_data).unwrap();
+    let stealth_account = stealth::state::StealthAccount::from_bytes(
+        &stealth_data).unwrap();
 
     let private_asset_url = String::from_utf8(
-        private_metadata_account.uri.0.to_vec())?
+        stealth_account.uri.0.to_vec())?
         .replace("\x00", "");
 
     let mut handle = curl::easy::Easy::new();
@@ -315,7 +315,7 @@ async fn process_decrypt_asset(
     let cipher = openssl::symm::Cipher::aes_192_cbc();
     let cipher_key_bytes = parallel_decrypt_cipher_key(
         &elgamal_keypair,
-        private_metadata_account,
+        stealth_account,
     ).await?;
 
     let url_re = regex::Regex::new(r"https://www.arweave.net/(.*)")?;
@@ -351,10 +351,10 @@ async fn process_decrypt_asset(
 
 async fn parallel_decrypt_cipher_key(
     elgamal_keypair: &ElGamalKeypair,
-    private_metadata_account: &stealth::state::PrivateMetadataAccount,
+    stealth_account: &stealth::state::StealthAccount,
 ) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
     let cipher_key = elgamal_keypair.secret.decrypt(
-        &private_metadata_account.encrypted_cipher_key.try_into()?
+        &stealth_account.encrypted_cipher_key.try_into()?
     )?;
 
     Ok(cipher_key.0.to_vec())
@@ -378,17 +378,17 @@ async fn process_transfer(
         bs58::decode(&params.mint).into_vec()?.as_slice()
     );
 
-    let private_metadata_key = stealth::instruction::get_private_metadata_address(&mint).0;
-    let private_metadata_data = rpc_client.get_account_data(&private_metadata_key);
+    let stealth_key = stealth::instruction::get_stealth_address(&mint).0;
+    let stealth_data = rpc_client.get_account_data(&stealth_key);
 
-    if private_metadata_data.is_err() {
+    if stealth_data.is_err() {
         eprintln!("error: no private metadata found for mint {}", params.mint);
         exit(1);
     }
 
-    let private_metadata_data = private_metadata_data.unwrap();
-    let private_metadata_account = stealth::state::PrivateMetadataAccount::from_bytes(
-        &private_metadata_data).unwrap();
+    let stealth_data = stealth_data.unwrap();
+    let stealth_account = stealth::state::StealthAccount::from_bytes(
+        &stealth_data).unwrap();
 
     let instruction_buffer = specified_or_new(params.instruction_buffer.clone());
     let input_buffer = specified_or_new(params.input_buffer.clone());
@@ -437,7 +437,7 @@ async fn process_transfer(
     )?;
 
     if !bool::from(&transfer_buffer_account.updated) {
-        let ct = private_metadata_account.encrypted_cipher_key.try_into()?;
+        let ct = stealth_account.encrypted_cipher_key.try_into()?;
         let word = elgamal_keypair.secret.decrypt(&ct)?;
 
         let transfer = stealth::transfer_proof::TransferData::new(

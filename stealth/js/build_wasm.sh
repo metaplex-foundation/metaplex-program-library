@@ -22,6 +22,6 @@ sed -i '' 's/init.__wbindgen_wasm_module/wasm_init.__wbindgen_wasm_module/g' "$G
 
 cd ..
 
-WEB_UTILS_DIR="web/src/utils/privateMetadata"
-rm -r $WEB_UTILS_DIR
+WEB_UTILS_DIR="web/src/utils/stealth"
+rm -r $WEB_UTILS_DIR || true
 mv native/pkg $WEB_UTILS_DIR

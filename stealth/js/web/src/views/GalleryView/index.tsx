@@ -30,7 +30,7 @@ import {
 import { getMultipleAccounts } from '../../utils/getMultipleAccounts';
 import {
   getMetadata,
-  getPrivateMetadata,
+  getStealth,
   TOKEN_PROGRAM_ID,
 } from '../../utils/ids';
 import {
@@ -87,7 +87,7 @@ export const GalleryView = (
         .sort((lft, rht) => lft.toBase58().localeCompare(rht.toBase58()))
       ;
 
-      const privateMetadatas = await Promise.all(mints.map(m => getPrivateMetadata(m)));
+      const privateMetadatas = await Promise.all(mints.map(m => getStealth(m)));
       const { array: pmAccounts } = await getMultipleAccounts(
         connection,
         privateMetadatas.map(p => p.toBase58()),

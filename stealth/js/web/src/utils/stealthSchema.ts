@@ -1,9 +1,9 @@
 import { BinaryReader, BinaryWriter, deserializeUnchecked } from 'borsh';
 import base58 from 'bs58';
 
-export enum PrivateMetadataKey {
+export enum StealthKey {
     Uninitialized = 0,
-    PrivateMetadataAccountV1 = 1,
+    StealthAccountV1 = 1,
     CipherKeyTransferBufferV1  = 2,
 }
 
@@ -11,8 +11,8 @@ type StringPublicKey = string;
 type ElgamalPk = Uint8Array;
 type ElgamalCipherText = Uint8Array;
 
-export class PrivateMetadataAccount {
-    key: PrivateMetadataKey;
+export class StealthAccount {
+    key: StealthKey;
 
     /// The corresponding SPL Token Mint
     mint: StringPublicKey;
@@ -37,7 +37,7 @@ export class PrivateMetadataAccount {
       encryptedCipherKey: ElgamalCipherText,
       uri: string,
     }) {
-      this.key = PrivateMetadataKey.PrivateMetadataAccountV1;
+      this.key = StealthKey.StealthAccountV1;
       this.mint = args.mint;
       this.walletPk = args.walletPk;
       this.elgamalPk = args.elgamalPk;
@@ -47,13 +47,13 @@ export class PrivateMetadataAccount {
 }
 
 export class CipherKeyTransferBuffer {
-    key: PrivateMetadataKey;
+    key: StealthKey;
 
     /// Bit mask of updated chunks
     updated: number;
 
     /// Account that will have its encrypted key updated
-    privateMetadataKey: StringPublicKey;
+    stealthKey: StringPublicKey;
 
     /// The destination signing key associated with `elgamal_pk`
     walletPk: StringPublicKey;
@@ -66,23 +66,23 @@ export class CipherKeyTransferBuffer {
 
     constructor(args: {
       updated: number,
-      privateMetadataKey: StringPublicKey,
+      stealthKey: StringPublicKey,
       walletPk: StringPublicKey,
       elgamalPk: ElgamalPk,
       encryptedCipherKey: ElgamalCipherText,
     }) {
-      this.key = PrivateMetadataKey.CipherKeyTransferBufferV1;
+      this.key = StealthKey.CipherKeyTransferBufferV1;
       this.updated = args.updated;
-      this.privateMetadataKey = args.privateMetadataKey;
+      this.stealthKey = args.stealthKey;
       this.walletPk = args.walletPk;
       this.elgamalPk = args.elgamalPk;
       this.encryptedCipherKey = args.encryptedCipherKey;
     }
 }
 
-export const PRIVATE_METADATA_SCHEMA = new Map<any, any>([
+export const STEALTH_SCHEMA = new Map<any, any>([
   [
-    PrivateMetadataAccount,
+    StealthAccount,
     {
       kind: 'struct',
       fields: [
@@ -102,7 +102,7 @@ export const PRIVATE_METADATA_SCHEMA = new Map<any, any>([
       fields: [
         ['key', 'u8'],
         ['updated', 'u8'],
-        ['privateMetadataKey', 'pubkeyAsString'],
+        ['stealthKey', 'pubkeyAsString'],
         ['walletPk', 'pubkeyAsString'],
         ['elgamalPk', 'elgamalPk'],
         ['encryptedCipherKey', 'encryptedCipherKey'],
@@ -111,17 +111,17 @@ export const PRIVATE_METADATA_SCHEMA = new Map<any, any>([
   ],
 ]);
 
-const PRIVATE_METADATA_REPLACE = new RegExp('\u0000', 'g');
+const STEALTH_REPLACE = new RegExp('\u0000', 'g');
 
-export const decodePrivateMetadata = (
+export const decodeStealth = (
   buffer: Buffer
-): PrivateMetadataAccount => {
+): StealthAccount => {
   const ret = deserializeUnchecked(
-    PRIVATE_METADATA_SCHEMA,
-    PrivateMetadataAccount,
+    STEALTH_SCHEMA,
+    StealthAccount,
     buffer,
-  ) as PrivateMetadataAccount;
-  ret.uri = ret.uri.replace(PRIVATE_METADATA_REPLACE, '');
+  ) as StealthAccount;
+  ret.uri = ret.uri.replace(STEALTH_REPLACE, '');
   return ret;
 };
 
@@ -129,7 +129,7 @@ export const decodeTransferBuffer = (
   buffer: Buffer
 ): CipherKeyTransferBuffer => {
   const ret = deserializeUnchecked(
-    PRIVATE_METADATA_SCHEMA,
+    STEALTH_SCHEMA,
     CipherKeyTransferBuffer,
     buffer,
   ) as CipherKeyTransferBuffer;
