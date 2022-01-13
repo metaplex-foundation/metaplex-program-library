@@ -119,7 +119,7 @@ pub async fn create_master_edition(
     );
 
     let tx = Transaction::new_signed_with_payer(
-        &[mpl_token_metadata::instruction::create_master_edition(
+        &[mpl_token_metadata::instruction::create_master_edition_v3(
             mpl_token_metadata::id(),
             edition,
             *mint,
@@ -160,7 +160,7 @@ pub async fn create_token_metadata(
     );
 
     let tx = Transaction::new_signed_with_payer(
-        &[mpl_token_metadata::instruction::create_metadata_accounts(
+        &[mpl_token_metadata::instruction::create_metadata_accounts_v2(
             mpl_token_metadata::id(),
             metadata,
             *mint,
@@ -174,6 +174,8 @@ pub async fn create_token_metadata(
             seller_fee_basis_points,
             update_authority_is_signer,
             is_mutable,
+            None,
+            None,
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, mint_authority],
