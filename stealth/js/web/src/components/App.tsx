@@ -12,6 +12,7 @@ import { AppLayout } from './Layout';
 
 import { GalleryView } from '../views/GalleryView';
 import { StealthView } from '../views/StealthView';
+import { PublishView } from '../views/PublishView';
 
 export const App = () => {
   return (
@@ -26,6 +27,7 @@ export const App = () => {
           <Switch>
             <Route exact path="/stealth/" component={GalleryView} />
             <Route exact path="/stealth/view" component={StealthView} />
+            <Route exact path="/stealth/publish" component={PublishView} />
           </Switch>
         </AppLayout>
       </LoaderProvider>

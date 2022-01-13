@@ -50,6 +50,7 @@ import {
 } from '../../contexts/ConnectionContext';
 import { WalletSigner } from "../../contexts/WalletContext";
 import {
+  getElgamalKeypair,
   useWasmConfig,
   WasmConfig,
 } from "../../contexts/WasmContext";
@@ -77,31 +78,14 @@ import {
   getMetadata,
   getStealth,
   getTransferBufferAddress,
+  parseAddress,
+  parseKeypair,
   CURVE_DALEK_ONCHAIN_PROGRAM_ID,
   STEALTH_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   TOKEN_METADATA_PROGRAM_ID,
 } from '../../utils/ids';
-
-async function getElgamalKeypair(
-  connection: Connection,
-  wallet: WalletSigner,
-  address: PublicKey,
-  wasm: WasmConfig,
-): Promise<any> { // TODO: type
-  const message = `ElGamalSecretKey:${wallet.publicKey.toBase58()}:${address.toBase58()}`;
-
-  // NB / TODO: phantom wallet auto-approve seems to generate a different
-  // signature than the normal signMessage...
-  const signature = await wallet.signMessage(Buffer.from(message));
-  if (signature === null) {
-    throw new Error(`Failed ElGamal keypair generation: signature`);
-  }
-  console.log('Signature', bs58.encode(signature));
-
-  return wasm.elgamalKeypairFromSignature([...signature]);
-}
 
 async function getCipherKey(
   connection: Connection,
@@ -682,22 +666,6 @@ export const StealthView = (
     setElgamalKeypairStr('');
     setCipherKey('');
     setDecryptedImage(null);
-  };
-
-  const parseAddress = (address: string): PublicKey | null => {
-    try {
-      return new PublicKey(address);
-    } catch {
-      return null;
-    }
-  };
-
-  const parseKeypair = (secret: string): Keypair | null => {
-    try {
-      return Keypair.fromSecretKey(bs58.decode(secret));
-    } catch {
-      return null;
-    }
   };
 
   React.useEffect(() => {

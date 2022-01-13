@@ -1,11 +1,18 @@
 import * as React from "react";
 
+import {
+  Connection,
+  PublicKey,
+} from '@solana/web3.js';
+import * as bs58 from 'bs58';
+
 import init, {
   elgamal_keypair_from_signature,
   elgamal_decrypt,
   transfer_chunk_txs,
   transfer_buffer_len,
 } from '../utils/stealth/stealth_js';
+import { WalletSigner } from "./WalletContext";
 
 export interface WasmConfig {
   elgamalKeypairFromSignature: (signature: any) => any;
@@ -52,4 +59,23 @@ export function useWasmConfig() {
     throw new Error('WasmContext must be used with a WasmProvider');
   }
   return context;
+}
+
+export async function getElgamalKeypair(
+  connection: Connection,
+  wallet: WalletSigner,
+  address: PublicKey,
+  wasm: WasmConfig,
+): Promise<any> { // TODO: type
+  const message = `ElGamalSecretKey:${wallet.publicKey.toBase58()}:${address.toBase58()}`;
+
+  // NB / TODO: phantom wallet auto-approve seems to generate a different
+  // signature than the normal signMessage...
+  const signature = await wallet.signMessage(Buffer.from(message));
+  if (signature === null) {
+    throw new Error(`Failed ElGamal keypair generation: signature`);
+  }
+  console.log('Signature', bs58.encode(signature));
+
+  return wasm.elgamalKeypairFromSignature([...signature]);
 }

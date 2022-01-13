@@ -458,6 +458,14 @@ export const Cog = () => {
             >
               Change wallet
             </Button>
+            <Button
+              className="metaplex-button-default"
+              style={btnStyle}
+            >
+              <Link to={`/stealth/publish`}>
+                Manage encryption keys
+              </Link>
+            </Button>
           </div>
         }
       >

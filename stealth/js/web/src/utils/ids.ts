@@ -1,4 +1,9 @@
-import { PublicKey } from '@solana/web3.js';
+import {
+  Keypair,
+  PublicKey,
+} from '@solana/web3.js';
+
+import * as bs58 from 'bs58';
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
@@ -79,4 +84,20 @@ export async function getTransferBufferAddress(
       STEALTH_PROGRAM_ID,
     )
   )[0];
+};
+
+export const parseAddress = (address: string): PublicKey | null => {
+  try {
+    return new PublicKey(address);
+  } catch {
+    return null;
+  }
+};
+
+export const parseKeypair = (secret: string): Keypair | null => {
+  try {
+    return Keypair.fromSecretKey(bs58.decode(secret));
+  } catch {
+    return null;
+  }
 };
