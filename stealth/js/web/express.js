@@ -7,6 +7,10 @@ const sourceDir = 'dist';
 
 app.use('/stealth', express.static(sourceDir));
 
+app.use(function (req, res, next) {
+  res.status(404).sendFile(__dirname + `/dist/404.html`)
+})
+
 app.listen(portNumber, () => {
   console.log(`Express web server started: http://localhost:${portNumber}`);
   console.log(`Serving content from /${sourceDir}/`);
