@@ -5,13 +5,11 @@ import * as instructions from './generated/instructions';
 import * as accounts from './generated/accounts';
 
 export class AuctionHouseProgram extends Program {
-    static readonly PREFIX = 'metaplex';
-    static readonly CONFIG = 'config';
-    static readonly TOTALS = 'totals';
-    static readonly PUBKEY = new PublicKey(config.programs.auctionHouse);
-    static readonly instructions = instructions;
-    static readonly errors = errors;
-    static readonly accounts = accounts;
+  static readonly PREFIX = 'metaplex';
+  static readonly CONFIG = 'config';
+  static readonly TOTALS = 'totals';
+  static readonly PUBKEY = new PublicKey(config.programs.auctionHouse);
+  static readonly instructions = instructions;
+  static readonly errors = errors;
+  static readonly accounts = accounts;
 }
-
-
