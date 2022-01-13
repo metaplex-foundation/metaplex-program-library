@@ -2,6 +2,7 @@ import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
 import * as splToken from '@solana/spl-token';
+import { PROGRAM_ID } from '../../consts';
 
 export type BuyInstructionArgs = {
   tradeHistoryBump: number;
@@ -169,7 +170,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('5KtWMwMnvTzF9Uqg7idUR43hdMhEbgKUwXX5ef9Wajrq'),
+    programId: new web3.PublicKey(PROGRAM_ID),
     keys,
     data,
   });

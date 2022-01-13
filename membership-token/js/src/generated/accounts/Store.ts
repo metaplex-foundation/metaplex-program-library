@@ -2,7 +2,7 @@ import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 
-import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
+import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../../consts';
 
 /**
  * Arguments used to create {@link StoreAccountData}
