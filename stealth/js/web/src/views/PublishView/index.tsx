@@ -4,7 +4,11 @@ import { RouteComponentProps } from 'react-router-dom';
 import {
   Button,
   Input,
+  List,
 } from 'antd';
+import {
+  DeleteOutlined,
+} from '@ant-design/icons';
 import {
   Connection,
   PublicKey,
@@ -14,7 +18,9 @@ import {
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
+import * as bs58 from 'bs58';
 
+import { CollapsePanel } from '../../components/CollapsePanel';
 import {
   useLoading,
   incLoading,
@@ -27,6 +33,7 @@ import {
 } from "../../contexts/WasmContext";
 import { WalletSigner } from "../../contexts/WalletContext";
 import {
+  explorerLinkCForAddress,
   sendTransactionWithRetry,
   useConnection,
 } from '../../contexts/ConnectionContext';
@@ -40,6 +47,10 @@ import {
   parseKeypair,
   STEALTH_PROGRAM_ID,
 } from '../../utils/ids';
+import {
+  decodeEncryptionKeyBuffer,
+  EncryptionKeyBuffer,
+} from '../../utils/stealthSchema';
 import {
   explorerLinkFor,
 } from '../../utils/transactions';
@@ -204,6 +215,60 @@ export const PublishView = (
   const [mintStr, setMintStr]
     = useLocalStorageState('publishMintStr', '');
 
+  // async useEffect set
+  const [publishedKeys, setPublishedKeys]
+    = React.useState<Array<EncryptionKeyBuffer>>([]);
+
+  React.useEffect(() => {
+    if (!wallet.publicKey) return;
+
+    const match = bs58.encode([
+      3,  // struct key
+      ...wallet.publicKey.toBuffer(),  // owner
+    ]);
+
+    const run = async () => {
+      const keyAccounts = await connection.getProgramAccounts(
+        STEALTH_PROGRAM_ID,
+        {
+          filters: [
+            {
+              memcmp: {
+                offset: 0,
+                bytes: match,
+              },
+            },
+          ],
+        },
+      );
+
+      console.log(keyAccounts);
+
+      const keys = keyAccounts.map(o => {
+        return decodeEncryptionKeyBuffer(o.account.data);
+      });
+
+      setPublishedKeys(keys);
+    };
+
+    const wrap = async () => {
+      try {
+        await run();
+      } catch (err) {
+        console.error(err);
+        notify({
+          message: 'Failed to fetch encryption keys',
+          description: err.message,
+        })
+      } finally {
+        setLoading(decLoading);
+      }
+    };
+
+    setLoading(incLoading);
+    wrap();
+  }, [connection, wallet]);
+
   return (
     <div className="app stack" style={{ margin: 'auto' }}>
       <label className="action-field">
@@ -246,37 +311,57 @@ export const PublishView = (
       >
         Publish
       </Button>
-      <Button
-        style={{ width: '100%' }}
-        className="metaplex-button"
-        disabled={!!loading || !wallet.connected || !parseAddress(mintStr)}
-        onClick={() => {
-          const mintKey = parseAddress(mintStr);
-          if (mintKey === null) {
-            console.error(`Failed to parse mint ${mintStr}`);
-            return;
-          }
-
-          const wrap = async () => {
-            try {
-              await close(connection, wallet, mintKey);
-            } catch (err) {
-              console.error(err);
-              notify({
-                message: 'Failed to close encryption key',
-                description: err.message,
-              })
-            } finally {
-              setLoading(decLoading);
-            }
-          };
-
-          setLoading(incLoading);
-          wrap();
-        }}
+      <CollapsePanel
+        id="published-encryption-collapse"
+        panelName="Published encryption keys"
       >
-        Close
-      </Button>
+        <List
+          itemLayout="horizontal"
+          dataSource={publishedKeys}
+          renderItem={key => (
+            <List.Item>
+              <List.Item.Meta
+                avatar={
+                  <Button
+                    onClick={() => {
+                      const wrap = async () => {
+                        try {
+                          await close(connection, wallet, new PublicKey(key.mint));
+                        } catch (err) {
+                          console.error(err);
+                          notify({
+                            message: 'Failed to close encryption key',
+                            description: err.message,
+                          })
+                        } finally {
+                          setLoading(decLoading);
+                        }
+                      };
+
+                      setLoading(incLoading);
+                      wrap();
+                    }}
+                  >
+                    <DeleteOutlined />
+                  </Button>
+                }
+                title={(
+                  <div>
+                    <span className="field-title">Mint{"\u00A0"}</span>
+                    {explorerLinkCForAddress(key.mint, connection, false)}
+                  </div>
+                )}
+                description={(
+                  <div>
+                    <span className="field-title">Encryption key{"\u00A0"}</span>
+                    {Buffer.from([...key.elgamalPk]).toString('base64')}
+                  </div>
+                )}
+              />
+            </List.Item>
+          )}
+        />
+      </CollapsePanel>
     </div>
   );
 }

@@ -4,11 +4,12 @@ import base58 from 'bs58';
 export enum StealthKey {
     Uninitialized = 0,
     StealthAccountV1 = 1,
-    CipherKeyTransferBufferV1  = 2,
+    CipherKeyTransferBufferV1 = 2,
+    EncryptionKeyBufferV1 = 3,
 }
 
 type StringPublicKey = string;
-type ElgamalPk = Uint8Array;
+export type ElgamalPk = Uint8Array;
 type ElgamalCipherText = Uint8Array;
 
 export class StealthAccount {
@@ -80,6 +81,30 @@ export class CipherKeyTransferBuffer {
     }
 }
 
+export class EncryptionKeyBuffer {
+    key: StealthKey;
+
+    /// The destination signing key associated with `elgamal_pk`
+    walletPk: StringPublicKey;
+
+    /// The corresponding SPL Token Mint
+    mint: StringPublicKey;
+
+    /// Destination public key
+    elgamalPk: ElgamalPk;
+
+    constructor(args: {
+      walletPk: StringPublicKey,
+      mint: StringPublicKey,
+      elgamalPk: ElgamalPk,
+    }) {
+      this.key = StealthKey.EncryptionKeyBufferV1;
+      this.mint = args.mint;
+      this.walletPk = args.walletPk;
+      this.elgamalPk = args.elgamalPk;
+    }
+}
+
 export const STEALTH_SCHEMA = new Map<any, any>([
   [
     StealthAccount,
@@ -109,6 +134,18 @@ export const STEALTH_SCHEMA = new Map<any, any>([
       ],
     },
   ],
+  [
+    EncryptionKeyBuffer,
+    {
+      kind: 'struct',
+      fields: [
+        ['key', 'u8'],
+        ['walletPk', 'pubkeyAsString'],
+        ['mint', 'pubkeyAsString'],
+        ['elgamalPk', 'elgamalPk'],
+      ],
+    },
+  ],
 ]);
 
 const STEALTH_REPLACE = new RegExp('\u0000', 'g');
@@ -133,6 +170,17 @@ export const decodeTransferBuffer = (
     CipherKeyTransferBuffer,
     buffer,
   ) as CipherKeyTransferBuffer;
+  return ret;
+};
+
+export const decodeEncryptionKeyBuffer = (
+  buffer: Buffer
+): EncryptionKeyBuffer => {
+  const ret = deserializeUnchecked(
+    STEALTH_SCHEMA,
+    EncryptionKeyBuffer,
+    buffer,
+  ) as EncryptionKeyBuffer;
   return ret;
 };
 
