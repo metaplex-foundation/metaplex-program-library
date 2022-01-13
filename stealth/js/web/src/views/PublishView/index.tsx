@@ -125,7 +125,7 @@ const publish = async (
     throw new Error(result);
   } else {
     notify({
-      message: "Publish succeeded",
+      message: "Publish succeeded. Waiting for finalization",
       description: (
         <a
           href={explorerLinkFor(result.txid, connection)}
@@ -136,6 +136,7 @@ const publish = async (
         </a>
       ),
     });
+    await connection.confirmTransaction(result.txid, 'finalized');
   }
 };
 
@@ -188,7 +189,7 @@ const close = async (
     throw new Error(result);
   } else {
     notify({
-      message: "Close succeeded",
+      message: "Close succeeded. Waiting for finalization",
       description: (
         <a
           href={explorerLinkFor(result.txid, connection)}
@@ -199,6 +200,7 @@ const close = async (
         </a>
       ),
     });
+    await connection.confirmTransaction(result.txid, 'finalized');
   }
 };
 
@@ -219,6 +221,8 @@ export const PublishView = (
   const [publishedKeys, setPublishedKeys]
     = React.useState<Array<EncryptionKeyBuffer>>([]);
 
+  const [toggleRunFetchKeys, setRunFetchKeys]
+      = React.useState<boolean>(false);
   React.useEffect(() => {
     if (!wallet.publicKey) return;
 
@@ -267,7 +271,14 @@ export const PublishView = (
 
     setLoading(incLoading);
     wrap();
-  }, [connection, wallet]);
+  }, [connection, toggleRunFetchKeys]);
+  const runFetchKeys = () => setRunFetchKeys(!toggleRunFetchKeys);
+
+  React.useEffect(() => {
+    if (wallet.connecting || wallet.disconnecting) {
+      runFetchKeys();
+    }
+  }, [wallet]);
 
   return (
     <div className="app stack" style={{ margin: 'auto' }}>
@@ -294,6 +305,7 @@ export const PublishView = (
           const wrap = async () => {
             try {
               await publish(connection, wallet, mintKey, wasm);
+              runFetchKeys();
             } catch (err) {
               console.error(err);
               notify({
@@ -327,6 +339,7 @@ export const PublishView = (
                       const wrap = async () => {
                         try {
                           await close(connection, wallet, new PublicKey(key.mint));
+                          runFetchKeys();
                         } catch (err) {
                           console.error(err);
                           notify({
