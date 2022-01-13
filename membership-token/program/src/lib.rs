@@ -14,7 +14,7 @@ use crate::{
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 use anchor_spl::token::{self, Mint, Token, TokenAccount};
 
-declare_id!("5KtWMwMnvTzF9Uqg7idUR43hdMhEbgKUwXX5ef9Wajrq");
+declare_id!("EHE2kYEETZbRfhQoNtknbnqrrpKEojbohSagkGdiJ6wm");
 
 #[program]
 pub mod membership_token {
