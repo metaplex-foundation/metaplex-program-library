@@ -57,7 +57,7 @@ jobs:
             ~/.cargo/git/db/
             ./rust/target
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
-
+      - uses: ./.github/actions/build-token-metadata
       # Run test
       - name: test-auction-house-program
         id: run_test
