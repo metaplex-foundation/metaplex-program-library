@@ -1,7 +1,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
-import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
+import { PROGRAM_ID, DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../../consts';
 
 export type CreateMarketInstructionArgs = {
   treasyryOwnerBump: number;
@@ -104,7 +104,7 @@ export function createCreateMarketInstruction(
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('5KtWMwMnvTzF9Uqg7idUR43hdMhEbgKUwXX5ef9Wajrq'),
+    programId: new web3.PublicKey(PROGRAM_ID),
     keys,
     data,
   });
