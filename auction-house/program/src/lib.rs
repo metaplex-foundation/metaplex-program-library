@@ -1,28 +1,23 @@
+pub mod constants;
+pub mod pda;
 pub mod utils;
-
-use {
-    crate::utils::*,
-    anchor_lang::{
-        prelude::*,
-        solana_program::{
-            program::{invoke, invoke_signed},
-            system_instruction,
-        },
-        AnchorDeserialize, AnchorSerialize,
+use crate::{constants::*, utils::*};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        program::{invoke, invoke_signed},
+        system_instruction,
     },
-    anchor_spl::{
-        associated_token::AssociatedToken,
-        token::{Mint, Token, TokenAccount},
-    },
-    spl_token::instruction::{approve, revoke},
+    AnchorDeserialize, AnchorSerialize,
 };
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
+};
+use spl_token::instruction::{approve, revoke};
 
 anchor_lang::declare_id!("hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk");
 
-const PREFIX: &str = "auction_house";
-const FEE_PAYER: &str = "fee_payer";
-const TREASURY: &str = "treasury";
-const SIGNER: &str = "signer";
 #[program]
 pub mod auction_house {
     use super::*;
@@ -465,7 +460,7 @@ pub mod auction_house {
 
         if !is_native {
             assert_is_ata(payment_account, &wallet.key(), &treasury_mint.key())?;
-            invoke_signed(
+            invoke(
                 &spl_token::instruction::transfer(
                     token_program.key,
                     &payment_account.key(),
@@ -480,11 +475,10 @@ pub mod auction_house {
                     token_program.to_account_info(),
                     transfer_authority.to_account_info(),
                 ],
-                &[],
             )?;
         } else {
             assert_keys_equal(payment_account.key(), wallet.key())?;
-            invoke_signed(
+            invoke(
                 &system_instruction::transfer(
                     &payment_account.key(),
                     &escrow_payment_account.key(),
@@ -495,7 +489,6 @@ pub mod auction_house {
                     payment_account.to_account_info(),
                     system_program.to_account_info(),
                 ],
-                &[],
             )?;
         }
 
@@ -538,16 +531,8 @@ pub mod auction_house {
             &seeds,
         )?;
 
-        let curr_lamp = trade_state.lamports();
-        **trade_state.lamports.borrow_mut() = 0;
-
-        **fee_payer.lamports.borrow_mut() = fee_payer
-            .lamports()
-            .checked_add(curr_lamp)
-            .ok_or(ErrorCode::NumericalOverflow)?;
-
         if token_account.owner == wallet.key() && wallet.is_signer {
-            invoke_signed(
+            invoke(
                 &revoke(
                     &token_program.key(),
                     &token_account.key(),
@@ -560,10 +545,16 @@ pub mod auction_house {
                     token_account.to_account_info(),
                     wallet.to_account_info(),
                 ],
-                &[],
             )?;
         }
 
+        let curr_lamp = trade_state.lamports();
+        **trade_state.lamports.borrow_mut() = 0;
+
+        **fee_payer.lamports.borrow_mut() = fee_payer
+            .lamports()
+            .checked_add(curr_lamp)
+            .ok_or(ErrorCode::NumericalOverflow)?;
         Ok(())
     }
 
@@ -910,7 +901,6 @@ pub mod auction_house {
             auction_house_fee_account.to_account_info(),
             &seeds,
         )?;
-
         assert_is_ata(
             &token_account.to_account_info(),
             &wallet.key(),
@@ -924,7 +914,7 @@ pub mod auction_house {
         }
 
         if wallet.is_signer {
-            invoke_signed(
+            invoke(
                 &approve(
                     &token_program.key(),
                     &token_account.key(),
@@ -940,7 +930,6 @@ pub mod auction_house {
                     program_as_signer.to_account_info(),
                     wallet.to_account_info(),
                 ],
-                &[],
             )?;
         }
 
@@ -1046,7 +1035,7 @@ pub mod auction_house {
                 let diff = buyer_price
                     .checked_sub(escrow_payment_account.lamports())
                     .ok_or(ErrorCode::NumericalOverflow)?;
-                invoke_signed(
+                invoke(
                     &system_instruction::transfer(
                         &payment_account.key(),
                         &escrow_payment_account.key(),
@@ -1057,7 +1046,6 @@ pub mod auction_house {
                         escrow_payment_account.to_account_info(),
                         system_program.to_account_info(),
                     ],
-                    &[],
                 )?;
             }
         } else {

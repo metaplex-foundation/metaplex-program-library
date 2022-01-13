@@ -12,6 +12,7 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
+    "build:watch": "rimraf dist && tsc -p tsconfig.json --watch",
     "test": "echo mpl-auction-house tests coming up ...",
     "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
@@ -40,11 +41,15 @@
   "dependencies": {
     "@metaplex-foundation/beet": "0.0.0",
     "@metaplex-foundation/beet-solana": "0.0.0",
+    "@metaplex-foundation/mpl-core": "0.0.2",
     "@solana/web3.js": "^1.31.0"
   },
   "devDependencies": {
+    "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
     "prettier": "^2.5.1",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "spok": "^1.4.3",
+    "tape": "^5.3.2"
   }
 }

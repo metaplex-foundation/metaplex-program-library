@@ -11,8 +11,7 @@
     "build": "yarn build:core && yarn build:auction && yarn build:parallel && yarn build:metaplex",
     "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
-    "fix": "lerna run --parallel fix",
-    "test:auction-house": "ANCHOR_WALLET=~/.config/solana/id.json yarn ts-mocha -p tsconfig.build.json -t 1000000 auction-house/program/tests/auction-house.ts"
+    "fix": "lerna run --parallel fix"
   },
   "workspaces": [
     "core/js",

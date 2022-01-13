@@ -1,21 +1,19 @@
-use {
-    crate::{AuctionHouse, ErrorCode},
-    anchor_lang::{
-        prelude::*,
-        solana_program::{
-            program::invoke_signed,
-            program_option::COption,
-            program_pack::{IsInitialized, Pack},
-            system_instruction,
-        },
+use crate::{AuctionHouse, ErrorCode};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        program::invoke_signed,
+        program_option::COption,
+        program_pack::{IsInitialized, Pack},
+        system_instruction,
     },
-    anchor_spl::token::{Mint, Token, TokenAccount},
-    arrayref::array_ref,
-    mpl_token_metadata::state::Metadata,
-    spl_associated_token_account::get_associated_token_address,
-    spl_token::{instruction::initialize_account2, state::Account},
-    std::{convert::TryInto, slice::Iter},
 };
+use anchor_spl::token::{Mint, Token, TokenAccount};
+use arrayref::array_ref;
+use mpl_token_metadata::state::Metadata;
+use spl_associated_token_account::get_associated_token_address;
+use spl_token::{instruction::initialize_account2, state::Account};
+use std::{convert::TryInto, slice::Iter};
 pub fn assert_is_ata(
     ata: &AccountInfo,
     wallet: &Pubkey,

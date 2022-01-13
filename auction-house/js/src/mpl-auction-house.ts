@@ -1,1 +1,2 @@
-export const TODO = 'Generate TypeScript SDK from IDL via `solana-idl-to-api`';
+import { PublicKey } from '@solana/web3.js';
+export * from './AuctionHouseProgram';
