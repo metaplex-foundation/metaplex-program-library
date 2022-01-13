@@ -74,4 +74,7 @@ module.exports = {
   performance: {
     hints: false,
   },
+  output: {
+    publicPath: "/stealth/",
+  },
 };
