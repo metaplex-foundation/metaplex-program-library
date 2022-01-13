@@ -65,6 +65,7 @@ import {
   sendSignedTransaction,
 } from '../../utils/transactions';
 import {
+  decodeEncryptionKeyBuffer,
   decodeStealth,
   decodeTransferBuffer,
   StealthAccount,
@@ -787,7 +788,7 @@ export const StealthView = (
       throw new Error('Recipient has not yet published their elgamal pubkey for this mint');
     }
 
-    const recipientElgamalPubkey = recipientElgamalAccount.data;
+    const recipientElgamalPubkey = Buffer.from(decodeEncryptionKeyBuffer(recipientElgamalAccount.data).elgamalPk);
     const elgamalKeypair = JSON.parse(elgamalKeypairStr);
 
     const recentBlockhash = (
@@ -1106,13 +1107,13 @@ export const StealthView = (
       <Button
         style={{ width: '100%' }}
         className="metaplex-button"
-        disabled={!!loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr || !publicImageManifest.name}
+        disabled={!!loading || !privateMetadata || !wallet.connected || !elgamalKeypairStr || !publicImageManifest?.name}
         onClick={() => setTransferInputting(true)}
       >
         Transfer
       </Button>
       <MetaplexModal
-        title={`Send ${publicImageManifest.name}`}
+        title={`Send ${publicImageManifest?.name}`}
         visible={transferInputting}
         onCancel={() => setTransferInputting(false)}
       >
