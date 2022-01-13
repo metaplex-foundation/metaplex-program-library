@@ -28,6 +28,7 @@ pub enum Key {
     Uninitialized,
     StealthAccountV1,
     CipherKeyTransferBufferV1,
+    EncryptionKeyBufferV1,
 }
 
 // wcgw
@@ -86,3 +87,19 @@ pub struct CipherKeyTransferBuffer {
     pub encrypted_cipher_key: zk_token_elgamal::pod::ElGamalCiphertext,
 }
 impl PodAccountInfo<'_, '_> for CipherKeyTransferBuffer {}
+
+#[derive(Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
+pub struct EncryptionKeyBuffer {
+    pub key: Key,
+
+    /// Wallet Key for this buffer
+    pub owner: Pubkey,
+
+    /// Stealth NFT mint
+    pub mint: Pubkey,
+
+    /// ElGamal encryption key associated with owner:mint
+    pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
+}
+impl PodAccountInfo<'_, '_> for EncryptionKeyBuffer {}

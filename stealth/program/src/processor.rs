@@ -359,15 +359,10 @@ fn process_init_transfer(
             return Err(StealthError::InvalidElgamalPubkeyPDA.into());
         }
 
-        Ok(zk_token_elgamal::pod::ElGamalPubkey(
-            (*elgamal_info.try_borrow_data()?)
-                .as_ref()
-                .try_into()
-                .map_err(|_| -> ProgramError {
-                    msg!("Invalid elgamal PDA data");
-                    StealthError::InvalidElgamalPubkeyPDA.into()
-                })?
-        ))
+        let encryption_buffer = EncryptionKeyBuffer::from_account_info(
+            &recipient_elgamal_info, &ID, Key::EncryptionKeyBufferV1)?;
+
+        Ok(encryption_buffer.elgamal_pk)
     };
 
     let recipient_elgamal_pk = get_elgamal_pk(
@@ -863,7 +858,7 @@ fn process_publish_elgamal_pubkey(
 
     // create and initialize PDA
     let rent = &Rent::from_account_info(rent_sysvar_info)?;
-    let space = std::mem::size_of::<zk_token_elgamal::pod::ElGamalPubkey>();
+    let space = EncryptionKeyBuffer::get_packed_len();
     invoke_signed(
         &system_instruction::create_account(
             wallet_info.key,
@@ -887,12 +882,13 @@ fn process_publish_elgamal_pubkey(
         ],
     )?;
 
-    let mut elgamal_pubkey_data = elgamal_pubkey_info.try_borrow_mut_data()?;
-    elgamal_pubkey_data.copy_from_slice(
-        bytemuck::cast_slice::<zk_token_elgamal::pod::ElGamalPubkey, u8>(
-            std::slice::from_ref(elgamal_pk)
-        )
-    );
+    let mut encryption_buffer = EncryptionKeyBuffer::from_account_info(
+        &elgamal_pubkey_info, &ID, Key::Uninitialized)?.into_mut();
+
+    encryption_buffer.key = Key::EncryptionKeyBufferV1;
+    encryption_buffer.owner = *wallet_info.key;
+    encryption_buffer.mint = *mint_info.key;
+    encryption_buffer.elgamal_pk = *elgamal_pk;
 
     Ok(())
 }
