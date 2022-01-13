@@ -265,7 +265,7 @@ mod buy {
         let tx = Transaction::new_signed_with_payer(
             &[instruction],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &vault],
+            &[&context.payer],
             context.last_blockhash,
         );
 
@@ -538,7 +538,7 @@ mod buy {
         let tx = Transaction::new_signed_with_payer(
             &[instruction],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &vault],
+            &[&context.payer],
             context.last_blockhash,
         );
 
@@ -799,7 +799,7 @@ mod buy {
         let tx = Transaction::new_signed_with_payer(
             &[instruction],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &vault],
+            &[&context.payer],
             context.last_blockhash,
         );
 
@@ -1056,7 +1056,7 @@ mod buy {
         let tx = Transaction::new_signed_with_payer(
             &[instruction.clone()],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &vault],
+            &[&context.payer],
             context.last_blockhash,
         );
 
@@ -1068,7 +1068,7 @@ mod buy {
         let tx = Transaction::new_signed_with_payer(
             &[instruction],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &vault],
+            &[&context.payer],
             context.last_blockhash,
         );
 
@@ -1325,7 +1325,7 @@ mod buy {
         let tx = Transaction::new_signed_with_payer(
             &[instruction.clone()],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &vault],
+            &[&context.payer],
             context.last_blockhash,
         );
 
@@ -1438,7 +1438,7 @@ mod buy {
         let tx = Transaction::new_signed_with_payer(
             &[instruction.clone()],
             Some(&user_wallet.pubkey()),
-            &[&user_wallet, &vault],
+            &[&user_wallet],
             context.last_blockhash,
         );
 

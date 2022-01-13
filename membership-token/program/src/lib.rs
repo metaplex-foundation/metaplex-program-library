@@ -294,17 +294,17 @@ pub mod membership_token {
 #[instruction(master_edition_bump:u8, vault_owner_bump: u8, max_supply: Option<u64>)]
 pub struct InitSellingResource<'info> {
     #[account(has_one=admin)]
-    store: Account<'info, Store>,
+    store: Box<Account<'info, Store>>,
     #[account(mut)]
     admin: Signer<'info>,
     #[account(init, payer=admin, space=SellingResource::LEN)]
-    selling_resource: Account<'info, SellingResource>,
+    selling_resource: Box<Account<'info, SellingResource>>,
     selling_resource_owner: UncheckedAccount<'info>,
-    resource_mint: Account<'info, Mint>,
+    resource_mint: Box<Account<'info, Mint>>,
     #[account(owner=mpl_token_metadata::id())]
     master_edition: UncheckedAccount<'info>,
-    #[account(mut, signer, has_one=owner)]
-    vault: Account<'info, TokenAccount>,
+    #[account(mut, has_one=owner)]
+    vault: Box<Account<'info, TokenAccount>>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), resource_mint.key().as_ref(), store.key().as_ref()], bump=vault_owner_bump)]
     owner: UncheckedAccount<'info>,
     #[account(mut)]
@@ -320,7 +320,7 @@ pub struct CreateStore<'info> {
     #[account(mut)]
     admin: Signer<'info>,
     #[account(init, space=Store::LEN, payer=admin)]
-    store: Account<'info, Store>,
+    store: Box<Account<'info, Store>>,
     system_program: Program<'info, System>,
 }
 
@@ -351,7 +351,7 @@ pub struct Buy<'info> {
     // Will be created by `mpl_token_metadata`
     #[account(mut)]
     edition_marker: UncheckedAccount<'info>,
-    #[account(mut, signer, has_one=owner)]
+    #[account(mut, has_one=owner)]
     vault: Box<Account<'info, TokenAccount>>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
     owner: UncheckedAccount<'info>,
@@ -368,15 +368,15 @@ pub struct Buy<'info> {
 #[instruction(treasyry_owner_bump: u8, name: String, description: String, mutable: bool, price: u64, pieces_in_one_wallet: Option<u64>, start_date: u64, end_date: Option<u64>)]
 pub struct CreateMarket<'info> {
     #[account(init, space=Market::LEN, payer=selling_resource_owner)]
-    market: Account<'info, Market>,
-    store: Account<'info, Store>,
+    market: Box<Account<'info, Market>>,
+    store: Box<Account<'info, Store>>,
     #[account(mut)]
     selling_resource_owner: Signer<'info>,
     #[account(mut, has_one=store)]
-    selling_resource: Account<'info, SellingResource>,
-    mint: Account<'info, Mint>,
+    selling_resource: Box<Account<'info, SellingResource>>,
+    mint: Box<Account<'info, Mint>>,
     #[account(mut, has_one=owner, has_one=mint)]
-    treasury_holder: Account<'info, TokenAccount>,
+    treasury_holder: Box<Account<'info, TokenAccount>>,
     #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasyry_owner_bump)]
     owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,

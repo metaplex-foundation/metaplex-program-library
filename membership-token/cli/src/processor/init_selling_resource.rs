@@ -91,7 +91,7 @@ pub fn init_selling_resource(
         Transaction::new_signed_with_payer(
             &[instruction],
             Some(&payer.pubkey()),
-            &[payer, admin_keypair, &selling_resource, &vault_keypair],
+            &[payer, admin_keypair, &selling_resource],
             recent_blockhash,
         ),
         Box::new(InitSellingResourceUiInfo {

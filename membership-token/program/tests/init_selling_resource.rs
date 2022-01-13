@@ -115,7 +115,7 @@ mod init_selling_resource {
         let tx = Transaction::new_signed_with_payer(
             &[instruction],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &admin_wallet, &selling_resource, &vault],
+            &[&context.payer, &admin_wallet, &selling_resource],
             context.last_blockhash,
         );
 
@@ -240,7 +240,7 @@ mod init_selling_resource {
         let tx = Transaction::new_signed_with_payer(
             &[instruction],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &admin_wallet, &selling_resource, &vault],
+            &[&context.payer, &admin_wallet, &selling_resource],
             context.last_blockhash,
         );
 
@@ -355,7 +355,7 @@ mod init_selling_resource {
         let tx = Transaction::new_signed_with_payer(
             &[instruction],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &admin_wallet, &selling_resource, &vault],
+            &[&context.payer, &admin_wallet, &selling_resource],
             context.last_blockhash,
         );
 

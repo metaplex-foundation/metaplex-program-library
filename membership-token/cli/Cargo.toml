@@ -14,5 +14,5 @@ mpl-membership-token = { path = "../program", features = [ "no-entrypoint" ] }
 mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ] }
 borsh = "0.9.1"
 spl-token = { version = "3.2.0", features = [ "no-entrypoint" ] }
-anchor-lang = "0.19.0"
+anchor-lang = "0.20.1"
 chrono = "0.4.19"

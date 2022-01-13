@@ -170,12 +170,7 @@ pub async fn setup_selling_resource(
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
         Some(&context.payer.pubkey()),
-        &[
-            &context.payer,
-            &admin_wallet,
-            &selling_resource_keypair,
-            &vault,
-        ],
+        &[&context.payer, &admin_wallet, &selling_resource_keypair],
         context.last_blockhash,
     );
 
