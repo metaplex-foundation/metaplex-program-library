@@ -531,14 +531,6 @@ pub mod auction_house {
             &seeds,
         )?;
 
-        let curr_lamp = trade_state.lamports();
-        **trade_state.lamports.borrow_mut() = 0;
-
-        **fee_payer.lamports.borrow_mut() = fee_payer
-            .lamports()
-            .checked_add(curr_lamp)
-            .ok_or(ErrorCode::NumericalOverflow)?;
-
         if token_account.owner == wallet.key() && wallet.is_signer {
             invoke(
                 &revoke(
@@ -556,6 +548,13 @@ pub mod auction_house {
             )?;
         }
 
+        let curr_lamp = trade_state.lamports();
+        **trade_state.lamports.borrow_mut() = 0;
+
+        **fee_payer.lamports.borrow_mut() = fee_payer
+            .lamports()
+            .checked_add(curr_lamp)
+            .ok_or(ErrorCode::NumericalOverflow)?;
         Ok(())
     }
 
@@ -902,7 +901,6 @@ pub mod auction_house {
             auction_house_fee_account.to_account_info(),
             &seeds,
         )?;
-
         assert_is_ata(
             &token_account.to_account_info(),
             &wallet.key(),

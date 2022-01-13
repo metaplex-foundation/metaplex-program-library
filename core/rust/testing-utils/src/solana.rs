@@ -59,19 +59,18 @@ pub async fn create_associated_token_account(
     wallet: &Keypair,
     token_mint: &Pubkey,
 ) -> Result<Pubkey, TransportError> {
-    // let (recent_blockhash, _) = connection.get_recent_blockhash()?;
     let recent_blockhash = context.last_blockhash;
 
     let tx = Transaction::new_signed_with_payer(
         &[
             spl_associated_token_account::create_associated_token_account(
-                &wallet.pubkey(),
+                &context.payer.pubkey(),
                 &wallet.pubkey(),
                 token_mint,
             ),
         ],
-        Some(&wallet.pubkey()),
-        &[wallet],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
         recent_blockhash,
     );
 
@@ -189,6 +188,31 @@ pub async fn create_mint(
         ],
         Some(&context.payer.pubkey()),
         &[&context.payer, &mint],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn transfer(
+    context: &mut ProgramTestContext,
+    mint: &Pubkey,
+    from: &Keypair,
+    to: &Keypair,
+) -> Result<(), TransportError> {
+    create_associated_token_account(context, to, mint).await?;
+    let tx = Transaction::new_signed_with_payer(
+        &[spl_token::instruction::transfer(
+            &spl_token::id(),
+            &from.pubkey(),
+            &to.pubkey(),
+            &from.pubkey(),
+            &[&from.pubkey()],
+            0,
+        )
+        .unwrap()],
+        Some(&from.pubkey()),
+        &[from],
         context.last_blockhash,
     );
 

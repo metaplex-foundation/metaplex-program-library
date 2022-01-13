@@ -29,9 +29,13 @@ async fn init_native_success() {
     let t_mint_key = spl_token::native_mint::id();
     let tdw_ata = twd_key;
     let seller_fee_basis_points: u16 = 100;
-    let authority = Keypair::new().pubkey();
+    let authority = Keypair::new();
+    airdrop(&mut context, &authority.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
     // Derive Auction House Key
-    let (auction_house_address, bump) = find_auction_house_address(&authority, &t_mint_key);
+    let (auction_house_address, bump) =
+        find_auction_house_address(&authority.pubkey(), &t_mint_key);
     let (auction_fee_account_key, fee_payer_bump) =
         find_auction_house_fee_account_address(&auction_house_address);
     // Derive Auction House Treasury Key
@@ -39,12 +43,11 @@ async fn init_native_success() {
         find_auction_house_treasury_address(&auction_house_address);
     let auction_house = setup_functions::create_auction_house(
         &mut context,
-        &payer_wallet,
+        &authority,
         &twd_key,
         &fwd_key,
         &t_mint_key,
         &tdw_ata,
-        &authority,
         &auction_house_address,
         bump,
         &auction_fee_account_key,
@@ -79,8 +82,8 @@ async fn init_native_success() {
     assert_eq!(tdw_ata, auction_house_data.treasury_withdrawal_destination);
     assert_eq!(fwd_key, auction_house_data.fee_withdrawal_destination);
     assert_eq!(t_mint_key, auction_house_data.treasury_mint);
-    assert_eq!(authority, auction_house_data.authority);
-    assert_eq!(authority, auction_house_data.creator);
+    assert_eq!(authority.pubkey(), auction_house_data.authority);
+    assert_eq!(authority.pubkey(), auction_house_data.creator);
 
     assert_eq!(bump, auction_house_data.bump);
     assert_eq!(treasury_bump, auction_house_data.treasury_bump);
@@ -109,9 +112,13 @@ async fn init_native_success_reinitialize_fail() {
     let t_mint_key = spl_token::native_mint::id();
     let tdw_ata = twd_key;
     let seller_fee_basis_points: u16 = 100;
-    let authority = Keypair::new().pubkey();
+    let authority = Keypair::new();
+    airdrop(&mut context, &authority.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
     // Derive Auction House Key
-    let (auction_house_address, bump) = find_auction_house_address(&authority, &t_mint_key);
+    let (auction_house_address, bump) =
+        find_auction_house_address(&authority.pubkey(), &t_mint_key);
     let (auction_fee_account_key, fee_payer_bump) =
         find_auction_house_fee_account_address(&auction_house_address);
     // Derive Auction House Treasury Key
@@ -119,12 +126,11 @@ async fn init_native_success_reinitialize_fail() {
         find_auction_house_treasury_address(&auction_house_address);
     setup_functions::create_auction_house(
         &mut context,
-        &payer_wallet,
+        &authority,
         &twd_key,
         &fwd_key,
         &t_mint_key,
         &tdw_ata,
-        &authority,
         &auction_house_address,
         bump,
         &auction_fee_account_key,
@@ -150,12 +156,11 @@ async fn init_native_success_reinitialize_fail() {
 
     let hacked_auction_house = setup_functions::create_auction_house(
         &mut context,
-        &payer_wallet,
+        &authority,
         &hacked_twd_key,
         &hacked_fwd_key,
         &t_mint_key,
         &hacked_tdw_ata,
-        &authority,
         &auction_house_address,
         bump,
         &auction_fee_account_key,
@@ -188,7 +193,7 @@ async fn init_mint_success() {
         .await
         .unwrap();
     let mint_key = Keypair::new();
-    let mint = create_mint(&mut context, &mint_key, &payer_wallet.pubkey(), None)
+    create_mint(&mut context, &mint_key, &payer_wallet.pubkey(), None)
         .await
         .unwrap();
     let twd_key = payer_wallet.pubkey();
@@ -198,9 +203,13 @@ async fn init_mint_success() {
         .await
         .unwrap();
     let seller_fee_basis_points: u16 = 100;
-    let authority = Keypair::new().pubkey();
+    let authority = Keypair::new();
+    airdrop(&mut context, &authority.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
     // Derive Auction House Key
-    let (auction_house_address, bump) = find_auction_house_address(&authority, &t_mint_key);
+    let (auction_house_address, bump) =
+        find_auction_house_address(&authority.pubkey(), &t_mint_key);
     let (auction_fee_account_key, fee_payer_bump) =
         find_auction_house_fee_account_address(&auction_house_address);
     // Derive Auction House Treasury Key
@@ -208,12 +217,11 @@ async fn init_mint_success() {
         find_auction_house_treasury_address(&auction_house_address);
     let auction_house = setup_functions::create_auction_house(
         &mut context,
-        &payer_wallet,
+        &authority,
         &twd_key,
         &fwd_key,
         &t_mint_key,
         &tdw_ata,
-        &authority,
         &auction_house_address,
         bump,
         &auction_fee_account_key,
@@ -249,8 +257,8 @@ async fn init_mint_success() {
     assert_eq!(tdw_ata, auction_house_data.treasury_withdrawal_destination);
     assert_eq!(fwd_key, auction_house_data.fee_withdrawal_destination);
     assert_eq!(t_mint_key, auction_house_data.treasury_mint);
-    assert_eq!(authority, auction_house_data.authority);
-    assert_eq!(authority, auction_house_data.creator);
+    assert_eq!(authority.pubkey(), auction_house_data.authority);
+    assert_eq!(authority.pubkey(), auction_house_data.creator);
 
     assert_eq!(bump, auction_house_data.bump);
     assert_eq!(treasury_bump, auction_house_data.treasury_bump);
@@ -280,9 +288,13 @@ async fn init_mint_failure() {
         .await
         .unwrap();
     let seller_fee_basis_points: u16 = 100;
-    let authority = Keypair::new().pubkey();
+    let authority = Keypair::new();
+    airdrop(&mut context, &authority.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
     // Derive Auction House Key
-    let (auction_house_address, bump) = find_auction_house_address(&authority, &t_mint_key);
+    let (auction_house_address, bump) =
+        find_auction_house_address(&authority.pubkey(), &t_mint_key);
     let (auction_fee_account_key, fee_payer_bump) =
         find_auction_house_fee_account_address(&auction_house_address);
     // Derive Auction House Treasury Key
@@ -290,12 +302,11 @@ async fn init_mint_failure() {
         find_auction_house_treasury_address(&auction_house_address);
     let err = setup_functions::create_auction_house(
         &mut context,
-        &payer_wallet,
+        &authority,
         &twd_key,
         &fwd_key,
         &t_mint_key,
         &tdw_ata,
-        &authority,
         &auction_house_address,
         bump,
         &auction_fee_account_key,

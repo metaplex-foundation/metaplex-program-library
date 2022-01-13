@@ -47,7 +47,7 @@ pub fn process_use_authority_validation(
             return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
         }
     } else {
-        if !record_info_empty {
+        if record_info_empty {
             return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
         }
     }

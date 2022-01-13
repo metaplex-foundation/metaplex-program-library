@@ -44,7 +44,7 @@ pub fn find_program_as_signer_address() -> (Pubkey, u8) {
 pub fn find_escrow_payment_address(auction_house: &Pubkey, wallet: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[PREFIX.as_bytes(), auction_house.as_ref(), wallet.as_ref()],
-        &crate::id(),
+        &id(),
     )
 }
 
@@ -69,6 +69,6 @@ pub fn find_trade_state_address(
             &price.to_le_bytes(),
             &token_size.to_le_bytes(),
         ],
-        &crate::id(),
+        &id(),
     )
 }
