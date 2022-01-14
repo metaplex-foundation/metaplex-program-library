@@ -11,6 +11,7 @@
 //! are not winning bids from the state.
 
 use borsh::try_to_vec_with_schema;
+use solana_program::system_program;
 
 use crate::{
     errors::AuctionError,
@@ -19,10 +20,10 @@ use crate::{
     },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, assert_signer,
-        assert_token_program_matches_package, create_or_allocate_account_raw, spl_token_transfer,
-        TokenTransferParams,
+        assert_token_program_matches_package, assert_uninitialized, create_or_allocate_account_raw,
+        spl_token_create_account, spl_token_transfer, TokenCreateAccount, TokenTransferParams,
     },
-    EXTENDED, PREFIX,
+    BIDDER_POT_TOKEN, EXTENDED, PREFIX,
 };
 
 use super::BIDDER_METADATA_LEN;
@@ -108,7 +109,6 @@ fn parse_accounts<'a, 'b: 'a>(
     }
 
     assert_owned_by(accounts.mint, &spl_token::id())?;
-    assert_owned_by(accounts.bidder_pot_token, &spl_token::id())?;
     assert_signer(accounts.bidder)?;
     assert_signer(accounts.payer)?;
     assert_signer(accounts.transfer_authority)?;
@@ -197,31 +197,34 @@ pub fn place_bid<'r, 'b: 'r>(
             accounts.bidder.key.as_ref(),
         ],
     )?;
-
-    // The account within the pot must be owned by us.
-    let actual_account: Account = assert_initialized(accounts.bidder_pot_token)?;
-    if actual_account.owner != *accounts.auction.key {
-        return Err(AuctionError::BidderPotTokenAccountOwnerMismatch.into());
-    }
-
-    if actual_account.delegate != COption::None {
-        return Err(AuctionError::DelegateShouldBeNone.into());
-    }
-
-    if actual_account.close_authority != COption::None {
-        return Err(AuctionError::CloseAuthorityShouldBeNone.into());
-    }
-
-    // Derive and load Auction.
-    let auction_bump = assert_derivation(
+    // The account within the pot must be new
+    assert_uninitialized::<Account>(accounts.bidder_pot_token)?;
+    let bidder_token_account_bump = assert_derivation(
         program_id,
-        accounts.auction,
+        accounts.bidder_pot_token,
         &[
             PREFIX.as_bytes(),
-            program_id.as_ref(),
-            args.resource.as_ref(),
+            &accounts.bidder_pot.key.as_ref(),
+            BIDDER_POT_TOKEN.as_bytes(),
         ],
     )?;
+    let bidder_token_account_seeds = &[
+        PREFIX.as_bytes(),
+        &accounts.bidder_pot.key.as_ref(),
+        BIDDER_POT_TOKEN.as_bytes(),
+        &[bidder_token_account_bump],
+    ];
+
+    spl_token_create_account(TokenCreateAccount {
+        payer: accounts.payer.clone(),
+        authority: accounts.auction.clone(),
+        authority_seeds: bidder_token_account_seeds,
+        token_program: accounts.token_program.clone(),
+        mint: accounts.mint.clone(),
+        account: accounts.bidder_pot_token.clone(),
+        system_program: accounts.system.clone(),
+        rent: accounts.rent.clone(),
+    })?;
 
     // Can't bid on an auction that isn't running.
     if auction.state != AuctionState::Started {

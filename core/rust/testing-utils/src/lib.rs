@@ -25,3 +25,19 @@ macro_rules! assert_error {
         };
     };
 }
+
+#[macro_export]
+macro_rules! assert_custom_error {
+    ($error:expr, $matcher:pat) => {
+        match $error {
+            TransportError::TransactionError(TransactionError::InstructionError(
+                0,
+                InstructionError::Custom(x),
+            )) => match FromPrimitive::from_i32(x as i32) {
+                Some($matcher) => assert!(true),
+                _ => assert!(false),
+            },
+            _ => assert!(false),
+        };
+    };
+}
