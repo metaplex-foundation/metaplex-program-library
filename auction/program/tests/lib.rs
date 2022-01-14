@@ -1131,3 +1131,136 @@ async fn test_cancel_bid_with_instant_sale_price() {
         }
     }
 }
+
+#[cfg(feature = "test-bpf")]
+#[tokio::test]
+async fn test_fail_spoof_bidder_pot_token() {
+    let instant_sale_price = 500;
+    let bid_price = 500;
+
+    let (
+        program_id,
+        mut banks_client,
+        bidders,
+        payer,
+        resource,
+        mint,
+        mint_authority,
+        auction_pubkey,
+        recent_blockhash,
+    ) = setup_auction(true, 1, None, PriceFloor::None([0; 32]), Some(0), None).await;
+
+    // Get balances pre bidding.
+    let pre_balance = (
+        helpers::get_token_balance(&mut banks_client, &bidders[0].0.pubkey()).await,
+        helpers::get_token_balance(&mut banks_client, &bidders[0].1.pubkey()).await,
+    );
+
+    let transfer_authority = Keypair::new();
+    helpers::approve(
+        &mut banks_client,
+        &recent_blockhash,
+        &payer,
+        &transfer_authority.pubkey(),
+        &bidders[0].0,
+        bid_price,
+    )
+    .await
+    .expect("approve");
+    helpers::approve(
+        &mut banks_client,
+        &recent_blockhash,
+        &payer,
+        &transfer_authority.pubkey(),
+        &bidders[1].0,
+        bid_price,
+    )
+    .await
+    .expect("approve");
+    helpers::place_bid(
+        &mut banks_client,
+        &recent_blockhash,
+        &program_id,
+        &payer,
+        &bidders[0].0,
+        &bidders[0].1,
+        &transfer_authority,
+        &resource,
+        &mint,
+        bid_price,
+    )
+    .await
+    .expect("place_bid");
+    let pre_hack_balance = (
+        helpers::get_token_balance(&mut banks_client, &bidders[1].0.pubkey()).await,
+        helpers::get_token_balance(&mut banks_client, &bidders[1].1.pubkey()).await,
+    );
+    // Make bid with price above instant_sale_price to check if it reduce amount
+    println!("pre_hack_balance: {:?}", pre_hack_balance.0);
+    helpers::place_bid(
+        &mut banks_client,
+        &recent_blockhash,
+        &program_id,
+        &payer,
+        &bidders[1].0,
+        &bidders[0].1,
+        &transfer_authority,
+        &resource,
+        &mint,
+        bid_price,
+    )
+    .await
+    .expect("place_bid");
+
+    let post_balance = (
+        helpers::get_token_balance(&mut banks_client, &bidders[0].0.pubkey()).await,
+        helpers::get_token_balance(&mut banks_client, &bidders[0].1.pubkey()).await,
+    );
+
+    assert_eq!(post_balance.0, pre_balance.0 - instant_sale_price);
+    assert_eq!(post_balance.1, pre_balance.1 + instant_sale_price * 2);
+
+    let pre_cancel_hack_balance = (
+        helpers::get_token_balance(&mut banks_client, &bidders[1].0.pubkey()).await,
+        helpers::get_token_balance(&mut banks_client, &bidders[1].1.pubkey()).await,
+    );
+    println!(
+        "after_bid - pre_cancel_hack_balance: {:?}",
+        pre_cancel_hack_balance.0
+    );
+    assert_eq!(pre_cancel_hack_balance.0, pre_cancel_hack_balance.0);
+    assert_eq!(pre_cancel_hack_balance.1, 0);
+
+    helpers::cancel_bid(
+        &mut banks_client,
+        &recent_blockhash,
+        &program_id,
+        &payer,
+        &bidders[1].0,
+        &bidders[0].1,
+        &resource,
+        &mint,
+    )
+    .await
+    .expect("place_bid");
+
+    let post_hack_balance = (
+        helpers::get_token_balance(&mut banks_client, &bidders[1].0.pubkey()).await,
+        helpers::get_token_balance(&mut banks_client, &bidders[1].1.pubkey()).await,
+    );
+    let post_hack_exploited_user_balance = (
+        helpers::get_token_balance(&mut banks_client, &bidders[0].0.pubkey()).await,
+        helpers::get_token_balance(&mut banks_client, &bidders[0].1.pubkey()).await,
+    );
+    println!(
+        "after_cancel - post_hack_balance: {:?}",
+        post_hack_balance.0
+    );
+    println!(
+        "after cancel - user who was exploited pot balance: {:?}",
+        post_hack_exploited_user_balance.1
+    );
+    assert_eq!(post_hack_balance.1, 0);
+    assert_eq!(post_hack_balance.0, pre_hack_balance.0 + instant_sale_price);
+    assert_eq!(post_hack_exploited_user_balance.1, 0);
+}
