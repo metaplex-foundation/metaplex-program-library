@@ -14,7 +14,7 @@
     "build": "rimraf dist && tsc -p tsconfig.json",
     "amman:start": "DEBUG=\"amman*\" amman validator",
     "amman:stop": "pkill solana-test-validator",
-    "test": "DEBUG=\"*\" tape ./dist/test/*.test.js",
+    "test": "DEBUG=\"mpl:tm-test:*\" tape ./dist/test/*.test.js",
     "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",

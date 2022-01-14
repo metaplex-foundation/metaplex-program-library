@@ -25,7 +25,7 @@ type MintNFTParams = {
   connection: Connection;
 };
 
-const URI = 'uri';
+const URI = 'https://arweave.net/Rmg4pcIv-0FQ7M7X838p2r592Q4NU63Fj7o7XsvBHEE';
 const NAME = 'test';
 const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
