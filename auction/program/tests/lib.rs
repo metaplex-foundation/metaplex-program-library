@@ -1226,8 +1226,8 @@ async fn test_fail_spoof_bidder_pot_token() {
         &recent_blockhash,
         &program_id,
         &payer,
-        &bidders[0].0,
-        &bidders[0].1,
+        &bidders[1].0,
+        &bidders[1].1,
         &transfer_authority,
         &resource,
         &mint,
@@ -1235,4 +1235,19 @@ async fn test_fail_spoof_bidder_pot_token() {
     )
     .await
     .expect("place_bid");
+
+    let err2 = helpers::cancel_bid(
+        &mut banks_client,
+        &recent_blockhash,
+        &program_id,
+        &payer,
+        &bidders[0].0,
+        &bidders[1].1,
+        &resource,
+        &mint,
+    )
+    .await
+    .unwrap_err();
+
+    assert_custom_error!(err2, AuctionError::BidderPotTokenAccountOwnerMismatch);
 }

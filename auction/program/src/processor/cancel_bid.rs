@@ -209,12 +209,6 @@ pub fn cancel_bid(
         token_program: accounts.token_program.clone(),
         amount: account.amount,
     })?;
-    close_token_account(
-        accounts.bidder_pot_token.clone(),
-        accounts.bidder.clone(),
-        accounts.auction.clone(),
-        auction_seeds,
-    )?;
 
     // Update Metadata
     let metadata = BidderMetadata::from_account_info(accounts.bidder_meta)?;
