@@ -1220,4 +1220,19 @@ async fn test_fail_spoof_bidder_pot_token() {
     );
     assert_eq!(post_cancel_balance.0, pre_balance.0);
     assert_eq!(post_cancel_balance.1, pre_balance.1);
+
+    helpers::place_bid(
+        &mut banks_client,
+        &recent_blockhash,
+        &program_id,
+        &payer,
+        &bidders[0].0,
+        &bidders[0].1,
+        &transfer_authority,
+        &resource,
+        &mint,
+        bid_price,
+    )
+    .await
+    .expect("place_bid");
 }
