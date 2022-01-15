@@ -23,6 +23,7 @@ thiserror = "1.0"
 [dev-dependencies]
 solana-program-test = "1.7.11"
 solana-sdk = "1.7.11"
+mpl-testing-utils={path="../../core/rust/testing-utils", version="0.0.1"}
 
 [lib]
 crate-type = ["cdylib", "lib"]

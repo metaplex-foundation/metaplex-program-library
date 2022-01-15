@@ -27,6 +27,15 @@ pub fn assert_initialized<T: Pack + IsInitialized>(
     }
 }
 
+pub fn assert_uninitialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> ProgramResult {
+    msg!("assert_uninitialized");
+    let err = T::unpack_unchecked(&account_info.data.borrow());
+    match err {
+        Ok(account) => Err(AuctionError::BidderPotTokenAccountMustBeNew.into()),
+        Err(err) => Ok(()),
+    }
+}
+
 pub fn assert_token_program_matches_package(token_program_info: &AccountInfo) -> ProgramResult {
     if *token_program_info.key != spl_token::id() {
         return Err(AuctionError::InvalidTokenProgram.into());
@@ -166,8 +175,25 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult 
     result.map_err(|_| AuctionError::TokenTransferFailed.into())
 }
 
+pub fn close_token_account<'a>(
+    account: AccountInfo<'a>,
+    destination: AccountInfo<'a>,
+    owner: AccountInfo<'a>,
+    signer_seeds: &[&[u8]],
+) -> ProgramResult {
+    let ix = spl_token::instruction::close_account(
+        &spl_token::id(),
+        account.key,
+        destination.key,
+        owner.key,
+        &[],
+    )?;
+
+    invoke_signed(&ix, &[account, destination, owner], &[signer_seeds])
+}
+
 /// TokenMintToParams
-pub struct TokenCreateAccount<'a> {
+pub struct TokenCreateAccount<'a: 'b, 'b> {
     /// payer
     pub payer: AccountInfo<'a>,
     /// mint
@@ -177,16 +203,17 @@ pub struct TokenCreateAccount<'a> {
     /// authority
     pub authority: AccountInfo<'a>,
     /// authority seeds
-    pub authority_seeds: &'a [&'a [u8]],
+    pub authority_seeds: &'b [&'b [u8]],
     /// token_program
     pub token_program: AccountInfo<'a>,
+    pub system_program: AccountInfo<'a>,
     /// rent information
     pub rent: AccountInfo<'a>,
 }
 
 /// Create a new SPL token account.
 #[inline(always)]
-pub fn spl_token_create_account(params: TokenCreateAccount<'_>) -> ProgramResult {
+pub fn spl_token_create_account<'a>(params: TokenCreateAccount<'_, '_>) -> ProgramResult {
     let TokenCreateAccount {
         payer,
         mint,
@@ -194,34 +221,36 @@ pub fn spl_token_create_account(params: TokenCreateAccount<'_>) -> ProgramResult
         authority,
         authority_seeds,
         token_program,
+        system_program,
         rent,
     } = params;
-    let size = spl_token::state::Account::LEN;
-    let rent = &Rent::from_account_info(&rent)?;
-    let required_lamports = rent
-        .minimum_balance(size)
-        .max(1)
-        .saturating_sub(payer.lamports());
+    let acct = &account.key.clone();
 
-    invoke(
-        &system_instruction::create_account(
-            payer.key,
-            account.key,
-            required_lamports,
-            size as u64,
-            &spl_token::id(),
-        ),
-        &[payer, account.clone(), token_program],
+    create_or_allocate_account_raw(
+        *token_program.key,
+        &account,
+        &rent,
+        &system_program,
+        &payer,
+        spl_token::state::Account::LEN,
+        authority_seeds,
     )?;
-
+    msg!("Created account {}", acct);
     invoke_signed(
         &spl_token::instruction::initialize_account(
             &spl_token::id(),
-            account.key,
+            acct,
             mint.key,
             authority.key,
         )?,
-        &[],
+        &[
+            account,
+            authority,
+            mint,
+            token_program,
+            system_program,
+            rent,
+        ],
         &[authority_seeds],
     )?;
 
