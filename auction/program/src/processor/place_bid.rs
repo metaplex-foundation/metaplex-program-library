@@ -198,33 +198,6 @@ pub fn place_bid<'r, 'b: 'r>(
         ],
     )?;
     // The account within the pot must be new
-    assert_uninitialized::<Account>(accounts.bidder_pot_token)?;
-    let bidder_token_account_bump = assert_derivation(
-        program_id,
-        accounts.bidder_pot_token,
-        &[
-            PREFIX.as_bytes(),
-            &accounts.bidder_pot.key.as_ref(),
-            BIDDER_POT_TOKEN.as_bytes(),
-        ],
-    )?;
-    let bidder_token_account_seeds = &[
-        PREFIX.as_bytes(),
-        &accounts.bidder_pot.key.as_ref(),
-        BIDDER_POT_TOKEN.as_bytes(),
-        &[bidder_token_account_bump],
-    ];
-
-    spl_token_create_account(TokenCreateAccount {
-        payer: accounts.payer.clone(),
-        authority: accounts.auction.clone(),
-        authority_seeds: bidder_token_account_seeds,
-        token_program: accounts.token_program.clone(),
-        mint: accounts.mint.clone(),
-        account: accounts.bidder_pot_token.clone(),
-        system_program: accounts.system.clone(),
-        rent: accounts.rent.clone(),
-    })?;
 
     // Can't bid on an auction that isn't running.
     if auction.state != AuctionState::Started {
@@ -257,12 +230,41 @@ pub fn place_bid<'r, 'b: 'r>(
         pot.bidder_act = *accounts.bidder.key;
         pot.auction_act = *accounts.auction.key;
         pot.serialize(&mut *accounts.bidder_pot.data.borrow_mut())?;
+
+        assert_uninitialized::<Account>(accounts.bidder_pot_token)?;
+        let bidder_token_account_bump = assert_derivation(
+            program_id,
+            accounts.bidder_pot_token,
+            &[
+                PREFIX.as_bytes(),
+                &accounts.bidder_pot.key.as_ref(),
+                BIDDER_POT_TOKEN.as_bytes(),
+            ],
+        )?;
+        let bidder_token_account_seeds = &[
+            PREFIX.as_bytes(),
+            &accounts.bidder_pot.key.as_ref(),
+            BIDDER_POT_TOKEN.as_bytes(),
+            &[bidder_token_account_bump],
+        ];
+
+        spl_token_create_account(TokenCreateAccount {
+            payer: accounts.payer.clone(),
+            authority: accounts.auction.clone(),
+            authority_seeds: bidder_token_account_seeds,
+            token_program: accounts.token_program.clone(),
+            mint: accounts.mint.clone(),
+            account: accounts.bidder_pot_token.clone(),
+            system_program: accounts.system.clone(),
+            rent: accounts.rent.clone(),
+        })?;
     } else {
         // Already exists, verify that the pot contains the specified SPL address.
         let bidder_pot = BidderPot::from_account_info(accounts.bidder_pot)?;
         if bidder_pot.bidder_pot != *accounts.bidder_pot_token.key {
             return Err(AuctionError::BidderPotTokenAccountOwnerMismatch.into());
         }
+        assert_initialized::<Account>(accounts.bidder_pot_token)?;
     }
 
     // Update now we have new bid.
