@@ -12,7 +12,7 @@ use crate::{
         assert_token_program_matches_package, close_token_account, create_or_allocate_account_raw,
         spl_token_transfer, TokenTransferParams,
     },
-    EXTENDED, PREFIX, BIDDER_POT_TOKEN,
+    BIDDER_POT_TOKEN, EXTENDED, PREFIX,
 };
 
 use super::AuctionState;
@@ -80,15 +80,6 @@ fn parse_accounts<'a, 'b: 'a>(
     assert_owned_by(accounts.mint, &spl_token::id())?;
     assert_owned_by(accounts.bidder_pot, program_id)?;
     assert_owned_by(accounts.bidder_pot_token, &spl_token::id())?;
-    assert_derivation(
-        program_id,
-        accounts.bidder_pot_token,
-        &[
-            PREFIX.as_bytes(),
-            &accounts.bidder_pot.key.as_ref(),
-            BIDDER_POT_TOKEN.as_bytes(),
-        ],
-    )?;
     assert_signer(accounts.bidder)?;
     assert_token_program_matches_package(accounts.token_program)?;
 
