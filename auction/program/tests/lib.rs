@@ -1249,5 +1249,20 @@ async fn test_fail_spoof_bidder_pot_token() {
     .await
     .unwrap_err();
 
-    assert_custom_error!(err2, AuctionError::DerivedKeyInvalid);
+    assert_custom_error!(err2, AuctionError::BidderPotTokenAccountOwnerMismatch);
+
+    let err3 = helpers::cancel_bid(
+        &mut banks_client,
+        &recent_blockhash,
+        &program_id,
+        &payer,
+        &bidders[1].0,
+        &bidders[0].1,
+        &resource,
+        &mint,
+    )
+    .await
+    .unwrap_err();
+
+    assert_custom_error!(err3, AuctionError::BidderPotTokenAccountOwnerMismatch);
 }
