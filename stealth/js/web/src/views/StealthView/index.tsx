@@ -4,17 +4,14 @@ import queryString from 'query-string';
 
 import {
   Button,
-  Card,
   Input,
   Progress,
-  Spin,
   Steps,
 } from 'antd';
 import {
   LoadingOutlined,
 } from '@ant-design/icons';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { wrap } from 'comlink';
 import {
   Blockhash,
   Connection,
@@ -41,11 +38,9 @@ import { MetaplexModal } from '../../components/MetaplexModal';
 import { useWindowDimensions } from '../../components/AppBar';
 import {
   CachedImageContent,
-  DataUrlImageContent,
 } from '../../components/ArtContent';
 import {
   explorerLinkCForAddress,
-  sendTransactionWithRetry,
   useConnection,
 } from '../../contexts/ConnectionContext';
 import { WalletSigner } from "../../contexts/WalletContext";
@@ -56,14 +51,8 @@ import {
 } from "../../contexts/WasmContext";
 import {
   notify,
-  shortenAddress,
   useLocalStorageState,
-  sleep,
 } from '../../utils/common';
-import {
-  explorerLinkFor,
-  sendSignedTransaction,
-} from '../../utils/transactions';
 import {
   decodeEncryptionKeyBuffer,
   decodeStealth,
@@ -85,18 +74,16 @@ import {
   STEALTH_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
-  TOKEN_METADATA_PROGRAM_ID,
 } from '../../utils/ids';
 
 async function getCipherKey(
-  connection: Connection,
   wallet: WalletSigner,
   address: PublicKey,
   privateMetadata: StealthAccount,
   wasm: WasmConfig,
 ): Promise<[Buffer, Buffer]> {
   const elgamalKeypairRes = await getElgamalKeypair(
-    connection, wallet, address, wasm);
+    wallet, address, wasm);
 
   if (elgamalKeypairRes.Err) {
     throw new Error(elgamalKeypairRes.Err);
@@ -153,17 +140,11 @@ const ensureBuffersClosed = async (
 }
 
 const initTransferIxs = async (
-  connection: Connection,
-  wasm: WasmConfig,
   walletKey: PublicKey,
   mintKey: PublicKey,
   transferBufferPubkey: PublicKey,
   recipientKey: PublicKey,
 ) => {
-  const transferBufferLen = wasm.transferBufferLen();
-  const lamports = await connection.getMinimumBalanceForRentExemption(
-      transferBufferLen);
-
   const [walletATAKey, ] = await PublicKey.findProgramAddress(
     [
       walletKey.toBuffer(),
@@ -629,7 +610,7 @@ export const StealthView = (
   // nav inputs
   const query = props.location.search;
   const params = queryString.parse(query);
-  const [mint, setMint] = React.useState(params.mint as string || '');
+  const mint = params.mint as string || '';
 
   // user inputs
   const [recipientPubkeyStr, setRecipientPubkey]
@@ -802,7 +783,7 @@ export const StealthView = (
     let transferBufferUpdated;
     if (transferBufferAccount === null) {
       const createInstructions = await initTransferIxs(
-          connection, wasm, walletKey, mintKey, transferBufferPubkey, recipientPubkey);
+          walletKey, mintKey, transferBufferPubkey, recipientPubkey);
       transferTxns.push({
         transaction: buildTransaction(
           walletKey,
@@ -924,9 +905,6 @@ export const StealthView = (
   const columnsGap = 40;
   const maxColumns = 4;
   const columnWidth = (maxWidth - outerPadding - columnsGap * (maxColumns - 1)) / maxColumns;
-
-  const tilePadding = 0;
-  const imageWidth = columnWidth - tilePadding * 2;
 
   const { width } = useWindowDimensions();
   const sizedColumns = (width : number) => {
@@ -1073,7 +1051,7 @@ export const StealthView = (
 
           const run = async () => {
             const [cipherKey, elgamalKeypair] = await getCipherKey(
-              connection, wallet, mintKey, privateMetadata, wasm);
+              wallet, mintKey, privateMetadata, wasm);
             console.log(`Decoded cipher key bytes: ${[...cipherKey]}`);
             console.log(`Decoded cipher key: ${bs58.encode(cipherKey)}`);
 

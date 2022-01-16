@@ -2,13 +2,12 @@ import {
   Commitment,
   Connection,
   Keypair,
-  PublicKey,
   Transaction,
   TransactionInstruction,
   Blockhash,
   FeeCalculator,
 } from "@solana/web3.js";
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   TokenInfo,
   TokenListProvider,

@@ -39,7 +39,6 @@
     "bs58": "^4.0.1",
     "buffer": "^6.0.3",
     "buffer-layout": "^1.2.2",
-    "comlink": "^4.3.1",
     "crypto-js": "^4.1.1",
     "css-loader": "^6.5.1",
     "eslint": "^8.3.0",
@@ -71,7 +70,6 @@
     "webpack": "^5.64.4",
     "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.6.0",
-    "webpack-merge": "^5.8.0",
-    "worker-loader": "^3.0.8"
+    "webpack-merge": "^5.8.0"
   }
 }

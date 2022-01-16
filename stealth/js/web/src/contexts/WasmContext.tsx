@@ -1,7 +1,6 @@
 import * as React from "react";
 
 import {
-  Connection,
   PublicKey,
 } from '@solana/web3.js';
 import * as bs58 from 'bs58';
@@ -35,7 +34,7 @@ export function WasmProvider({ children }: { children: any }) {
   React.useEffect(() => {
     const wrap = async () => {
       // TODO: figure out why reading functions of output don't work here...
-      const bindings = await init();
+      await init();
       setContextValue({
         elgamalKeypairFromSignature: elgamal_keypair_from_signature,
         elgamalDecrypt: elgamal_decrypt,
@@ -62,7 +61,6 @@ export function useWasmConfig() {
 }
 
 export async function getElgamalKeypair(
-  connection: Connection,
   wallet: WalletSigner,
   address: PublicKey,
   wasm: WasmConfig,

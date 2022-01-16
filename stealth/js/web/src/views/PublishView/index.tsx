@@ -1,5 +1,4 @@
 import * as React from "react";
-import { RouteComponentProps } from 'react-router-dom';
 
 import {
   Button,
@@ -13,7 +12,6 @@ import {
   Connection,
   PublicKey,
   SystemProgram,
-  Transaction,
   TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
@@ -44,7 +42,6 @@ import {
 import {
   getElgamalPubkeyAddress,
   parseAddress,
-  parseKeypair,
   STEALTH_PROGRAM_ID,
 } from '../../utils/ids';
 import {
@@ -67,7 +64,7 @@ const publish = async (
     throw new Error(`Encryption key is already published for ${wallet.publicKey.toBase58()}:${mintKey.toBase58()}`);
   }
   const elgamalKeypairRes = await getElgamalKeypair(
-    connection, wallet, mintKey, wasm);
+    wallet, mintKey, wasm);
 
   if (elgamalKeypairRes.Err) {
     throw new Error(elgamalKeypairRes.Err);
@@ -205,7 +202,6 @@ const close = async (
 };
 
 export const PublishView = (
-  props: RouteComponentProps<{}>,
 ) => {
   // contexts
   const connection = useConnection();

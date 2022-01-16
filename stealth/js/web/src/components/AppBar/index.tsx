@@ -105,8 +105,6 @@ export const MetaplexMenu = () => {
   return null;
 };
 export const MobileNavbar = () => {
-  const { connected } = useWallet();
-
   return (
     <div id="mobile-navbar">
       <LogoLink />

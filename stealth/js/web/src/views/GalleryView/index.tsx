@@ -1,6 +1,5 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { RouteComponentProps } from 'react-router-dom';
 
 import { Button, Col, Row } from 'antd';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -35,16 +34,14 @@ import {
 } from '../../utils/ids';
 import {
   decodeMetadata,
-  Metadata,
 } from '../../utils/publicSchema';
 
 export const GalleryView = (
-  props: RouteComponentProps<{}>,
 ) => {
   // contexts
   const connection = useConnection();
   const wallet = useWallet();
-  const { loading, setLoading } = useLoading();
+  const { setLoading } = useLoading();
 
   // async useEffect set
   const [lastFetchedPubkey, setLastFetchedPubkey]
@@ -94,11 +91,11 @@ export const GalleryView = (
         'singleGossip',
       );
 
-      mints = mints.filter((mint, idx) => !!pmAccounts[idx]?.data);
+      mints = mints.filter((_, idx) => !!pmAccounts[idx]?.data);
 
       const metadatas = await Promise.all(mints.map(m => getMetadata(m)));
 
-      const { keys, array } = await getMultipleAccounts(
+      const { array } = await getMultipleAccounts(
         connection,
         metadatas.map(p => p.toBase58()),
         'singleGossip',
@@ -137,23 +134,12 @@ export const GalleryView = (
     wrap();
   }, [wallet]);
 
-  const parseAddress = (address: string): PublicKey | null => {
-    try {
-      return new PublicKey(address);
-    } catch {
-      return null;
-    }
-  };
-
   // TODO: more robust
   const maxWidth = 1440;
   const outerPadding = 96 * 2;
   const columnsGap = 40;
   const maxColumns = 4;
   const columnWidth = (maxWidth - outerPadding - columnsGap * (maxColumns - 1)) / maxColumns;
-
-  const tilePadding = 0;
-  const imageWidth = columnWidth - tilePadding * 2;
 
   const { width } = useWindowDimensions();
   const sizedColumns = (width : number) => {

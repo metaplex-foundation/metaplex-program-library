@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 
 import { useWallet } from '@solana/wallet-adapter-react';
 import {
-  AccountInfo,
-  LAMPORTS_PER_SOL,
   PublicKey,
+  LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
-import { Button, Popover, Select, Tooltip, Modal } from 'antd';
+import { Button, Popover, Select, Tooltip } from 'antd';
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions';
 import Jazzicon from 'jazzicon';
 import { CopyOutlined } from '@ant-design/icons';
@@ -18,7 +17,6 @@ import solSvg from './sol.svg';
 import ftxpayPng from './ftxpay.png';
 import {
   ENDPOINTS,
-  useConnection,
   useConnectionConfig,
 } from '../../contexts/ConnectionContext';
 import { useWalletModal } from '../../contexts/WalletContext';
@@ -78,9 +76,7 @@ export const Settings = ({
 }: {
   additionalSettings?: JSX.Element;
 }) => {
-  const { connected, disconnect, publicKey } = useWallet();
-  const { setVisible } = useWalletModal();
-  const open = React.useCallback(() => setVisible(true), [setVisible]);
+  const { publicKey } = useWallet();
 
   return (
     <>

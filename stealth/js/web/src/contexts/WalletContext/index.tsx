@@ -1,4 +1,4 @@
-import { WalletAdapter, WalletError } from "@solana/wallet-adapter-base";
+import { WalletError } from "@solana/wallet-adapter-base";
 import {
   useWallet,
   WalletProvider as BaseWalletProvider,
@@ -11,7 +11,6 @@ import {
   getSolflareWallet,
   getSolletWallet,
   getSolongWallet,
-  getTorusWallet,
 } from "@solana/wallet-adapter-wallets";
 import { Button } from "antd";
 import React, {
@@ -42,13 +41,11 @@ export function useWalletModal(): WalletModalContextState {
 }
 
 export const WalletModal: FC = () => {
-  const { wallets, wallet: selected, select } = useWallet();
+  const { wallets, select } = useWallet();
   const { visible, setVisible } = useWalletModal();
-  const [showWallets, setShowWallets] = useState(false);
   const close = useCallback(() => {
     setVisible(false);
-    setShowWallets(false);
-  }, [setVisible, setShowWallets]);
+  }, [setVisible]);
 
   const phatomWallet = useMemo(() => getPhantomWallet(), []);
 
