@@ -1,14 +1,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+import * as definedTypes from '../types';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-
-export const enum SellingResourceState {
-  Uninitialized,
-  Created,
-  InUse,
-  Exhausted,
-  Stopped,
-}
 
 /**
  * Arguments used to create {@link SellingResourceAccountData}
@@ -21,7 +14,7 @@ export type SellingResourceAccountDataArgs = {
   vaultOwner: web3.PublicKey;
   supply: beet.bignum;
   maxSupply: beet.COption<beet.bignum>;
-  state: SellingResourceState;
+  state: definedTypes.SellingResourceState;
 };
 
 const sellingResourceAccountDiscriminator = [15, 32, 69, 235, 249, 39, 18, 167];
@@ -29,7 +22,7 @@ const sellingResourceAccountDiscriminator = [15, 32, 69, 235, 249, 39, 18, 167];
  * Holds the data for the {@link SellingResourceAccount} and provides de/serialization
  * functionality for that data
  */
-export class SellingResourceAccountData {
+export class SellingResourceAccountData implements SellingResourceAccountDataArgs {
   private constructor(
     readonly store: web3.PublicKey,
     readonly owner: web3.PublicKey,
@@ -38,38 +31,8 @@ export class SellingResourceAccountData {
     readonly vaultOwner: web3.PublicKey,
     readonly supply: beet.bignum,
     readonly maxSupply: beet.COption<beet.bignum>,
-    readonly state: SellingResourceState,
+    readonly state: definedTypes.SellingResourceState,
   ) {}
-
-  /**
-   * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link SellingResourceAccountData}
-   */
-  static get byteSize() {
-    return sellingResourceAccountDataStruct.byteSize;
-  }
-
-  /**
-   * Fetches the minimum balance needed to exempt an account holding
-   * {@link SellingResourceAccountData} data from rent
-   */
-  static async getMinimumBalanceForRentExemption(
-    connection: web3.Connection,
-    commitment?: web3.Commitment,
-  ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      SellingResourceAccountData.byteSize,
-      commitment,
-    );
-  }
-
-  /**
-   * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link SellingResourceAccountData} data.
-   */
-  static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === SellingResourceAccountData.byteSize;
-  }
 
   /**
    * Creates a {@link SellingResourceAccountData} instance from the provided args.
@@ -107,6 +70,40 @@ export class SellingResourceAccountData {
   }
 
   /**
+   * Returns the byteSize of a {@link Buffer} holding the serialized data of
+   * {@link SellingResourceAccountData} for the provided args.
+   *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
+   */
+  static byteSize(args: SellingResourceAccountDataArgs) {
+    const instance = SellingResourceAccountData.fromArgs(args);
+    return sellingResourceAccountDataStruct.toFixedFromValue({
+      accountDiscriminator: sellingResourceAccountDiscriminator,
+      ...instance,
+    }).byteSize;
+  }
+
+  /**
+   * Fetches the minimum balance needed to exempt an account holding
+   * {@link SellingResourceAccountData} data from rent
+   *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
+   * @param connection used to retrieve the rent exemption information
+   */
+  static async getMinimumBalanceForRentExemption(
+    args: SellingResourceAccountDataArgs,
+    connection: web3.Connection,
+    commitment?: web3.Commitment,
+  ): Promise<number> {
+    return connection.getMinimumBalanceForRentExemption(
+      SellingResourceAccountData.byteSize(args),
+      commitment,
+    );
+  }
+
+  /**
    * Serializes the {@link SellingResourceAccountData} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
@@ -135,14 +132,14 @@ export class SellingResourceAccountData {
   }
 }
 
-const sellingResourceAccountDataStruct = new beet.BeetStruct<
+const sellingResourceAccountDataStruct = new beet.FixableBeetStruct<
   SellingResourceAccountData,
   SellingResourceAccountDataArgs & {
     accountDiscriminator: number[];
   }
 >(
   [
-    ['accountDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['store', beetSolana.publicKey],
     ['owner', beetSolana.publicKey],
     ['resource', beetSolana.publicKey],
@@ -150,7 +147,7 @@ const sellingResourceAccountDataStruct = new beet.BeetStruct<
     ['vaultOwner', beetSolana.publicKey],
     ['supply', beet.u64],
     ['maxSupply', beet.coption(beet.u64)],
-    ['state', beet.u8],
+    ['state', definedTypes.sellingResourceStateEnum],
   ],
   SellingResourceAccountData.fromArgs,
   'SellingResourceAccountData',

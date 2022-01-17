@@ -365,7 +365,9 @@
           },
           {
             "name": "state",
-            "type": "u8"
+            "type": {
+              "defined": "SellingResourceState"
+            }
           }
         ]
       }
@@ -433,7 +435,9 @@
           },
           {
             "name": "state",
-            "type": "u8"
+            "type": {
+              "defined": "MarketState"
+            }
           }
         ]
       }

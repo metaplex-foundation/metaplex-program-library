@@ -1,11 +1,10 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
-import { PROGRAM_ID, DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
-import { checkByteSizes } from '../utils';
+import { PROGRAM_ID } from '../consts';
 
 export type CreateMarketInstructionArgs = {
-  treasyryOwnerBump: number;
+  treasuryOwnerBump: number;
   name: string;
   description: string;
   mutable: boolean;
@@ -14,16 +13,16 @@ export type CreateMarketInstructionArgs = {
   startDate: beet.bignum;
   endDate: beet.COption<beet.bignum>;
 };
-const createMarketStruct = new beet.BeetArgsStruct<
+const createMarketStruct = new beet.FixableBeetArgsStruct<
   CreateMarketInstructionArgs & {
     instructionDiscriminator: number[];
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
-    ['treasyryOwnerBump', beet.u8],
-    ['name', beet.fixedSizeUtf8String(NAME_MAX_LEN)],
-    ['description', beet.fixedSizeUtf8String(DESCRIPTION_MAX_LEN)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['treasuryOwnerBump', beet.u8],
+    ['name', beet.utf8String],
+    ['description', beet.utf8String],
     ['mutable', beet.bool],
     ['price', beet.u64],
     ['piecesInOneWallet', beet.coption(beet.u64)],
@@ -56,11 +55,6 @@ export function createCreateMarketInstruction(
 ) {
   const { market, store, sellingResourceOwner, sellingResource, mint, treasuryHolder, owner } =
     accounts;
-
-  const name = checkByteSizes(args['name'], NAME_MAX_LEN);
-  const description = checkByteSizes(args['description'], DESCRIPTION_MAX_LEN);
-
-  Object.assign(args, { name, description });
 
   const [data] = createMarketStruct.serialize({
     instructionDiscriminator: createMarketInstructionDiscriminator,

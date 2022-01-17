@@ -1,15 +1,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+import * as definedTypes from '../types';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-
-import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
-
-export enum MarketState {
-  Uninitialized,
-  Created,
-  Active,
-  Ended,
-}
 
 /**
  * Arguments used to create {@link MarketAccountData}
@@ -28,7 +20,7 @@ export type MarketAccountDataArgs = {
   piecesInOneWallet: beet.COption<beet.bignum>;
   startDate: beet.bignum;
   endDate: beet.COption<beet.bignum>;
-  state: MarketState;
+  state: definedTypes.MarketState;
 };
 
 const marketAccountDiscriminator = [219, 190, 213, 55, 0, 227, 198, 154];
@@ -36,7 +28,7 @@ const marketAccountDiscriminator = [219, 190, 213, 55, 0, 227, 198, 154];
  * Holds the data for the {@link MarketAccount} and provides de/serialization
  * functionality for that data
  */
-export class MarketAccountData {
+export class MarketAccountData implements MarketAccountDataArgs {
   private constructor(
     readonly store: web3.PublicKey,
     readonly sellingResource: web3.PublicKey,
@@ -51,16 +43,8 @@ export class MarketAccountData {
     readonly piecesInOneWallet: beet.COption<beet.bignum>,
     readonly startDate: beet.bignum,
     readonly endDate: beet.COption<beet.bignum>,
-    readonly state: MarketState,
+    readonly state: definedTypes.MarketState,
   ) {}
-
-  /**
-   * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link MarketAccountData}
-   */
-  static get byteSize() {
-    return marketAccountDataStruct.byteSize;
-  }
 
   /**
    * Creates a {@link MarketAccountData} instance from the provided args.
@@ -96,30 +80,45 @@ export class MarketAccountData {
   }
 
   /**
-   * Fetches the minimum balance needed to exempt an account holding
-   * {@link MarketAccountData} data from rent
-   */
-  static async getMinimumBalanceForRentExemption(
-    connection: web3.Connection,
-    commitment?: web3.Commitment,
-  ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(MarketAccountData.byteSize, commitment);
-  }
-
-  /**
-   * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link MarketAccountData} data.
-   */
-  static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === MarketAccountData.byteSize;
-  }
-
-  /**
    * Deserializes the {@link MarketAccountData} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [MarketAccountData, number] {
     return marketAccountDataStruct.deserialize(buf, offset);
+  }
+
+  /**
+   * Returns the byteSize of a {@link Buffer} holding the serialized data of
+   * {@link MarketAccountData} for the provided args.
+   *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
+   */
+  static byteSize(args: MarketAccountDataArgs) {
+    const instance = MarketAccountData.fromArgs(args);
+    return marketAccountDataStruct.toFixedFromValue({
+      accountDiscriminator: marketAccountDiscriminator,
+      ...instance,
+    }).byteSize;
+  }
+
+  /**
+   * Fetches the minimum balance needed to exempt an account holding
+   * {@link MarketAccountData} data from rent
+   *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
+   * @param connection used to retrieve the rent exemption information
+   */
+  static async getMinimumBalanceForRentExemption(
+    args: MarketAccountDataArgs,
+    connection: web3.Connection,
+    commitment?: web3.Commitment,
+  ): Promise<number> {
+    return connection.getMinimumBalanceForRentExemption(
+      MarketAccountData.byteSize(args),
+      commitment,
+    );
   }
 
   /**
@@ -152,32 +151,33 @@ export class MarketAccountData {
       piecesInOneWallet: this.piecesInOneWallet,
       startDate: this.startDate,
       endDate: this.endDate,
+      state: this.state,
     };
   }
 }
 
-const marketAccountDataStruct = new beet.BeetStruct<
+const marketAccountDataStruct = new beet.FixableBeetStruct<
   MarketAccountData,
   MarketAccountDataArgs & {
     accountDiscriminator: number[];
   }
 >(
   [
-    ['accountDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['store', beetSolana.publicKey],
     ['sellingResource', beetSolana.publicKey],
     ['treasuryMint', beetSolana.publicKey],
     ['treasuryHolder', beetSolana.publicKey],
     ['treasuryOwner', beetSolana.publicKey],
     ['owner', beetSolana.publicKey],
-    ['name', beet.fixedSizeUtf8String(NAME_MAX_LEN)],
-    ['description', beet.fixedSizeUtf8String(DESCRIPTION_MAX_LEN)],
+    ['name', beet.utf8String],
+    ['description', beet.utf8String],
     ['mutable', beet.bool],
     ['price', beet.u64],
     ['piecesInOneWallet', beet.coption(beet.u64)],
     ['startDate', beet.u64],
     ['endDate', beet.coption(beet.u64)],
-    ['state', beet.u8],
+    ['state', definedTypes.marketStateEnum],
   ],
   MarketAccountData.fromArgs,
   'MarketAccountData',
