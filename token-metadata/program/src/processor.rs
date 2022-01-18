@@ -932,20 +932,19 @@ pub fn process_utilize(
     let token_account_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let user_info = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
     let owner_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
+    let _ata_program_account_info = next_account_info(account_info_iter)?;
     let _system_account_info = next_account_info(account_info_iter)?;
     let _rent_info = next_account_info(account_info_iter)?;
     let metadata = Metadata::from_account_info(metadata_info)?;
-    let approved_authority_is_using = accounts.len() == 12;
+    let approved_authority_is_using = accounts.len() == 11;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
     if *token_program_account_info.key != spl_token::id() {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
-    assert_signer(&payer)?;
     assert_currently_holding(
         program_id,
         owner_info,
@@ -960,7 +959,6 @@ pub fn process_utilize(
     if number_of_uses > metadata_uses.total || number_of_uses > metadata_uses.remaining {
         return Err(MetadataError::NotEnoughUses.into());
     }
-    msg!("TEST2");
     let remaining_uses = metadata_uses
         .remaining
         .checked_sub(number_of_uses)
@@ -970,7 +968,6 @@ pub fn process_utilize(
         total: metadata_uses.total,
         remaining: remaining_uses,
     });
-    msg!("TEST3");
     if approved_authority_is_using {
         let use_authority_record_info = next_account_info(account_info_iter)?;
         let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
@@ -990,9 +987,9 @@ pub fn process_utilize(
     } else {
         assert_signer(&owner_info)?;
     }
-    msg!("TEST4");
     metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     if remaining_uses <= 0 && must_burn {
+        msg!("Need to burn");
         if approved_authority_is_using {
             let burn_path = &[PREFIX.as_bytes(), program_id.as_ref(), BURN.as_bytes()];
             let burn_authority_info = next_account_info(account_info_iter)?;
@@ -1010,7 +1007,7 @@ pub fn process_utilize(
             spl_token_burn(TokenBurnParams {
                 mint: mint_info.clone(),
                 amount: 1,
-                authority: owner_info.clone(),
+                authority: burn_authority_info.clone(),
                 token_program: token_program_account_info.clone(),
                 source: token_account_info.clone(),
                 authority_signer_seeds: Some(burn_bump_ref),

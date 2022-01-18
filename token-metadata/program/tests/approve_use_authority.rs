@@ -52,15 +52,6 @@ mod approve_use_authority {
             find_use_authority_account(&test_meta.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
 
-        let thing = context
-            .banks_client
-            .get_account(test_meta.token.pubkey())
-            .await
-            .unwrap()
-            .unwrap();
-
-        println!("{:?}", Account::unpack_from_slice(&thing.data).unwrap());
-
         let ix = mpl_token_metadata::instruction::approve_use_authority(
             mpl_token_metadata::id(),
             record,
