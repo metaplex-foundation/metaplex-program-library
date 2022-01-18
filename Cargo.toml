@@ -14,5 +14,6 @@ members=[
   "membership-token/program"
 ]
 exclude = [
-  "membership-token/cli"
+  "membership-token/cli",
+  "membership-token/indexer"
 ]
