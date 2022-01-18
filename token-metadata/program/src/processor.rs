@@ -835,14 +835,9 @@ pub fn process_approve_use_authority(
         USE_AUTHORITY_RECORD_SIZE,
         use_authority_seeds,
     )?;
-
-    let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
-
     if number_of_uses > metadata_uses.remaining {
         return Err(MetadataError::NotEnoughUses.into());
     }
-    record.allowed_uses = number_of_uses;
-    record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
     if metadata_uses.use_method == UseMethod::Burn {
         invoke(
             &approve(
@@ -862,6 +857,10 @@ pub fn process_approve_use_authority(
             ],
         )?;
     }
+    let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+    record.key = Key::UseAuthorityRecord;
+    record.allowed_uses = number_of_uses;
+    record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
     Ok(())
 }
 
@@ -949,6 +948,8 @@ pub fn process_utilize(
     if *token_program_account_info.key != spl_token::id() {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
+
+    assert_signer(&user_info)?;
     assert_currently_holding(
         program_id,
         owner_info,
@@ -974,12 +975,6 @@ pub fn process_utilize(
     });
     if approved_authority_is_using {
         let use_authority_record_info = next_account_info(account_info_iter)?;
-        let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
-        record.allowed_uses = record
-            .allowed_uses
-            .checked_sub(number_of_uses)
-            .ok_or(MetadataError::NotEnoughUses)?;
-        assert_signer(&user_info)?;
         process_use_authority_validation(
             program_id,
             use_authority_record_info,
@@ -987,9 +982,14 @@ pub fn process_utilize(
             mint_info,
             false,
         )?;
+        msg!("{:?}", use_authority_record_info);
+        assert_owned_by(use_authority_record_info, program_id)?;
+        let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+        record.allowed_uses = record
+            .allowed_uses
+            .checked_sub(number_of_uses)
+            .ok_or(MetadataError::NotEnoughUses)?;
         record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
-    } else {
-        assert_signer(&owner_info)?;
     }
     metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     if remaining_uses <= 0 && must_burn {
