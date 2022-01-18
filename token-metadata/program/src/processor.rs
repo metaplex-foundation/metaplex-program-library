@@ -985,7 +985,6 @@ pub fn process_utilize(
             mint_info,
             false,
         )?;
-        msg!("{:?}", use_authority_record_info);
         assert_owned_by(use_authority_record_info, program_id)?;
         let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
         record.allowed_uses = record
