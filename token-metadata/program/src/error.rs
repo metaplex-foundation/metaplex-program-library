@@ -344,10 +344,14 @@ pub enum MetadataError {
     #[error("This token has no uses")]
     Unusable,
 
-    #[error("There ar not enough Uses left on this token.")]
+    #[error("There are not enough Uses left on this token.")]
     NotEnoughUses,
 
-    
+    #[error("This Collection Authority Record Already Exists.")]
+    CollectionAuthorityRecordAlreadyExists,
+
+    #[error("This Collection Authoritty Record Does Not Exist.")]
+    CollectionAuthorityDoesNotExist,
 }
 
 impl PrintProgramError for MetadataError {

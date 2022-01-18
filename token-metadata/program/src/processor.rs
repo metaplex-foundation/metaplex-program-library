@@ -1,6 +1,9 @@
 use crate::{
     assertions::{
-        collection::{assert_collection_update_is_valid, assert_collection_verify_if_valid},
+        collection::{
+            assert_collection_update_is_valid, assert_collection_verify_is_valid,
+            assert_has_collection_authority,
+        },
         uses::process_use_authority_validation,
     },
     deprecated_processor::{
@@ -9,8 +12,9 @@ use crate::{
     error::MetadataError,
     instruction::MetadataInstruction,
     state::{
-        DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord,
-        UseMethod, Uses, BURN, EDITION, MAX_MASTER_EDITION_LEN, PREFIX, USER,
+        CollectionAuthorityRecord, DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata,
+        TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
+        COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN, PREFIX, USER,
         USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
@@ -34,6 +38,7 @@ use solana_program::{
     program::invoke_signed,
     program_error::ProgramError,
     pubkey::Pubkey,
+    system_program,
 };
 use spl_token::{
     instruction::approve,
@@ -172,6 +177,14 @@ pub fn process_instruction<'a>(
         MetadataInstruction::RevokeUseAuthority => {
             msg!("Instruction: Revoke Use Authority");
             process_revoke_use_authority(program_id, accounts)
+        }
+        MetadataInstruction::ApproveCollectionAuthority => {
+            msg!("Instruction: Approve Collection Authority");
+            process_approve_collection_authority(program_id, accounts)
+        }
+        MetadataInstruction::RevokeCollectionAuthority => {
+            msg!("Instruction: Revoke Collection Authority");
+            process_revoke_collection_authority(program_id, accounts)
         }
     }
 }
@@ -675,7 +688,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
-
+    let using_delegated_collection_authority = accounts.len() == 7;
     assert_signer(collection_authority_info)?;
     assert_signer(payer_info)?;
 
@@ -686,13 +699,28 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let collection_data = Metadata::from_account_info(collection_info)?;
-    assert_collection_verify_if_valid(
+    assert_collection_verify_is_valid(
         &metadata,
         &collection_data,
         collection_mint,
-        collection_authority_info,
         edition_account_info,
     )?;
+    if using_delegated_collection_authority {
+        let collection_authority_record = next_account_info(account_info_iter)?;
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            Some(collection_authority_record),
+        )?;
+    } else {
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            None,
+        )?;
+    }
     if let Some(collection) = &mut metadata.collection {
         collection.verified = true;
     }
@@ -704,14 +732,12 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     let account_info_iter = &mut accounts.iter();
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
-    let payer_info = next_account_info(account_info_iter)?;
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
+    let using_delegated_collection_authority = accounts.len() == 6;
 
     assert_signer(collection_authority_info)?;
-    assert_signer(payer_info)?;
-
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
     assert_owned_by(collection_mint, &spl_token::id())?;
@@ -719,13 +745,28 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let collection_data = Metadata::from_account_info(collection_info)?;
-    assert_collection_verify_if_valid(
+    assert_collection_verify_is_valid(
         &metadata,
         &collection_data,
         collection_mint,
-        collection_authority_info,
         edition_account_info,
     )?;
+    if using_delegated_collection_authority {
+        let collection_authority_record = next_account_info(account_info_iter)?;
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            Some(collection_authority_record),
+        )?;
+    } else {
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            None,
+        )?;
+    }
     if let Some(collection) = &mut metadata.collection {
         collection.verified = false;
     }
@@ -774,10 +815,6 @@ pub fn process_approve_use_authority(
     )?;
 
     let metadata_uses = metadata.uses.unwrap();
-    let record_info_empty = use_authority_record_info.try_data_is_empty()?;
-    if !record_info_empty {
-        return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
-    }
     let use_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -863,7 +900,6 @@ pub fn process_revoke_use_authority(
     let lamports = **use_authority_record_info.lamports.borrow();
     **use_authority_record_info.lamports.borrow_mut() = 0;
     **owner_info.lamports.borrow_mut() = lamports;
-
     Ok(())
 }
 
@@ -882,10 +918,8 @@ pub fn process_utilize(
     let token_program_account_info = next_account_info(account_info_iter)?;
     let _system_account_info = next_account_info(account_info_iter)?;
     let _rent_info = next_account_info(account_info_iter)?;
-
     let metadata = Metadata::from_account_info(metadata_info)?;
     let approved_authority_is_using = accounts.len() == 12;
-
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
@@ -972,5 +1006,102 @@ pub fn process_utilize(
             })?;
         }
     }
+    Ok(())
+}
+
+pub fn process_approve_collection_authority(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let collection_authority_record = next_account_info(account_info_iter)?;
+    let new_collection_authority = next_account_info(account_info_iter)?;
+    let update_authority = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
+    let metadata = Metadata::from_account_info(metadata_info)?;
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_signer(&update_authority)?;
+    assert_signer(&payer)?;
+    if metadata.update_authority != *update_authority.key {
+        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+    if metadata.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+    let collection_authority_info_empty = collection_authority_record.try_data_is_empty()?;
+    if !collection_authority_info_empty {
+        return Err(MetadataError::CollectionAuthorityRecordAlreadyExists.into());
+    }
+    let collection_authority_path = Vec::from([
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        &mint_info.key.as_ref(),
+        COLLECTION_AUTHORITY.as_bytes(),
+        &new_collection_authority.key.as_ref(),
+    ]);
+    let collection_authority_bump_seed = &[assert_derivation(
+        program_id,
+        collection_authority_record,
+        &collection_authority_path,
+    )?];
+    let mut collection_authority_seeds = collection_authority_path.clone();
+    collection_authority_seeds.push(collection_authority_bump_seed);
+    create_or_allocate_account_raw(
+        *program_id,
+        collection_authority_record,
+        rent_info,
+        system_account_info,
+        payer,
+        COLLECTION_AUTHORITY_RECORD_SIZE,
+        &collection_authority_seeds,
+    )?;
+
+    let mut record = CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
+    record.key = Key::CollectionAuthorityRecord;
+    record.serialize(&mut *collection_authority_record.data.borrow_mut())?;
+    Ok(())
+}
+
+pub fn process_revoke_collection_authority(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let collection_authority_record = next_account_info(account_info_iter)?;
+    let new_collection_authority = next_account_info(account_info_iter)?;
+    let update_authority = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let metadata = Metadata::from_account_info(metadata_info)?;
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_signer(&update_authority)?;
+    if metadata.update_authority != *update_authority.key {
+        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+    if metadata.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+    let collection_authority_info_empty = collection_authority_record.try_data_is_empty()?;
+    if collection_authority_info_empty {
+        return Err(MetadataError::CollectionAuthorityDoesNotExist.into());
+    }
+    assert_has_collection_authority(
+        new_collection_authority,
+        &metadata,
+        &mint_info.key,
+        Some(collection_authority_record),
+    )?;
+    let lamports = **collection_authority_record.lamports.borrow();
+    **collection_authority_record.lamports.borrow_mut() = 0;
+    **update_authority.lamports.borrow_mut() = lamports;
+    let mut data = collection_authority_record.try_borrow_mut_data()?;
+    data[0] = 0;
     Ok(())
 }

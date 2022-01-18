@@ -342,15 +342,6 @@ mod approve_use_authority {
 
         let (burner, _) = find_program_as_burner_account();
 
-        let thing = context
-            .banks_client
-            .get_account(test_meta.token.pubkey())
-            .await
-            .unwrap()
-            .unwrap();
-
-        println!("{:?}", Account::unpack_from_slice(&thing.data).unwrap());
-
         let ix = mpl_token_metadata::instruction::approve_use_authority(
             mpl_token_metadata::id(),
             record,
@@ -363,6 +354,8 @@ mod approve_use_authority {
             burner,
             1,
         );
+
+        
 
         let tx = Transaction::new_signed_with_payer(
             &[ix],

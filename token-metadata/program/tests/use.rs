@@ -21,6 +21,8 @@ use solana_sdk::{
 use utils::*;
 mod uses {
 
+    use mpl_token_metadata::pda::find_program_as_burner_account;
+
     use super::*;
     #[tokio::test]
     async fn success() {}
