@@ -38,7 +38,6 @@ use solana_program::{
     program::invoke_signed,
     program_error::ProgramError,
     pubkey::Pubkey,
-    system_program,
 };
 use spl_token::{
     instruction::{approve, revoke},
@@ -929,12 +928,12 @@ pub fn process_utilize(
     number_of_uses: u64,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
-    let owner_info = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
-    let user_info = next_account_info(account_info_iter)?;
-    let token_account_info = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
+    let token_account_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
+    let user_info = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let owner_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
     let _system_account_info = next_account_info(account_info_iter)?;
     let _rent_info = next_account_info(account_info_iter)?;
@@ -961,6 +960,7 @@ pub fn process_utilize(
     if number_of_uses > metadata_uses.total || number_of_uses > metadata_uses.remaining {
         return Err(MetadataError::NotEnoughUses.into());
     }
+    msg!("TEST2");
     let remaining_uses = metadata_uses
         .remaining
         .checked_sub(number_of_uses)
@@ -970,7 +970,7 @@ pub fn process_utilize(
         total: metadata_uses.total,
         remaining: remaining_uses,
     });
-
+    msg!("TEST3");
     if approved_authority_is_using {
         let use_authority_record_info = next_account_info(account_info_iter)?;
         let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
@@ -990,7 +990,7 @@ pub fn process_utilize(
     } else {
         assert_signer(&owner_info)?;
     }
-
+    msg!("TEST4");
     metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     if remaining_uses <= 0 && must_burn {
         if approved_authority_is_using {
