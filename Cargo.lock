@@ -1796,6 +1796,7 @@ version = "0.0.1"
 dependencies = [
  "arrayref",
  "borsh 0.9.1",
+ "mpl-testing-utils",
  "num-derive",
  "num-traits",
  "solana-program",

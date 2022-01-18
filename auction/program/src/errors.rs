@@ -134,6 +134,10 @@ pub enum AuctionError {
     /// Gap tick size percentage must be between 0 and 100
     #[error("Gap tick size percentage must be between 0 and 100")]
     InvalidGapTickSizePercentage,
+
+    /// Gap tick size percentage must be between 0 and 100
+    #[error("Bidder Pot Token Must be a new account")]
+    BidderPotTokenAccountMustBeNew,
 }
 
 impl PrintProgramError for AuctionError {

@@ -9,10 +9,10 @@ use crate::{
     processor::{AuctionData, AuctionDataExtended, BidderMetadata, BidderPot},
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, assert_signer,
-        assert_token_program_matches_package, create_or_allocate_account_raw, spl_token_transfer,
-        TokenTransferParams,
+        assert_token_program_matches_package, close_token_account, create_or_allocate_account_raw,
+        spl_token_transfer, TokenTransferParams,
     },
-    EXTENDED, PREFIX,
+    BIDDER_POT_TOKEN, EXTENDED, PREFIX,
 };
 
 use super::AuctionState;
