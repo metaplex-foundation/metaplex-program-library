@@ -1,7 +1,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
-import { PROGRAM_ID, DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../../consts';
+import { PROGRAM_ID, DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
 
 export type CreateStoreInstructionArgs = {
   name: string;
