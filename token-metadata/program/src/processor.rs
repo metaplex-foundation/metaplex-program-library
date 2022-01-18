@@ -922,6 +922,9 @@ pub fn process_revoke_use_authority(
         .lamports()
         .checked_add(lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
+    let mut data = use_authority_record_info.try_borrow_mut_data()?;
+    data[0] = 0;
+
     Ok(())
 }
 
@@ -993,7 +996,6 @@ pub fn process_utilize(
     }
     metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     if remaining_uses <= 0 && must_burn {
-        msg!("Need to burn");
         if approved_authority_is_using {
             let burn_path = &[PREFIX.as_bytes(), program_id.as_ref(), BURN.as_bytes()];
             let burn_authority_info = next_account_info(account_info_iter)?;

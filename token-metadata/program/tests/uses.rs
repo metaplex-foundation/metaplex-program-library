@@ -131,7 +131,9 @@ mod uses {
     async fn multi_use_delegated_success() {
         let mut context = program_test().start_with_context().await;
         let use_authority = Keypair::new();
-        airdrop(&mut context, &use_authority.pubkey(), 10000000).await;
+        airdrop(&mut context, &use_authority.pubkey(), 10000000)
+            .await
+            .unwrap();
 
         let test_metadata = Metadata::new();
         test_metadata
@@ -215,7 +217,9 @@ mod uses {
     async fn multi_use_revoke_delegate_fail() {
         let mut context = program_test().start_with_context().await;
         let use_authority = Keypair::new();
-        airdrop(&mut context, &use_authority.pubkey(), 10000000).await;
+        airdrop(&mut context, &use_authority.pubkey(), 10000000)
+            .await
+            .unwrap();
         let test_metadata = Metadata::new();
         test_metadata
             .create_v2(
@@ -314,6 +318,7 @@ mod uses {
             .await
             .unwrap();
 
+        context.warp_to_slot(100).unwrap();
         let utilize_with_use_authority_fail = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
             test_metadata.pubkey.clone(),
