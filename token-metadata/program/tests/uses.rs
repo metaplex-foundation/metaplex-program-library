@@ -2,20 +2,20 @@
 mod utils;
 
 use mpl_token_metadata::state::{UseMethod, Uses};
+use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
-    signature::{Signer},
-    transaction::{Transaction},
-    instruction::InstructionError,
-    transaction::{TransactionError},
-    transport::TransportError,
+    instruction::InstructionError, signature::Signer, transaction::Transaction,
+    transaction::TransactionError, transport::TransportError,
 };
-use num_traits::FromPrimitive;
 
 use utils::*;
 
 mod uses {
-    use mpl_token_metadata::{pda::{find_program_as_burner_account, find_use_authority_account}, error::MetadataError};
+    use mpl_token_metadata::{
+        error::MetadataError,
+        pda::{find_program_as_burner_account, find_use_authority_account},
+    };
     use solana_sdk::signature::Keypair;
 
     use super::*;
@@ -62,7 +62,7 @@ mod uses {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
-    
+
         let metadata = test_metadata.get_data(&mut context).await;
         let metadata_uses = metadata.uses.unwrap();
         let total_uses = metadata_uses.total;
@@ -74,12 +74,64 @@ mod uses {
     }
 
     #[tokio::test]
-    async fn multi_use_with_a_second_use_authority_success() {
+    async fn single_use_fail() {
         let mut context = program_test().start_with_context().await;
-        let use_authority = Keypair::new();
         let test_metadata = Metadata::new();
         test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                Some(Uses {
+                    use_method: UseMethod::Single,
+                    total: 1,
+                    remaining: 1,
+                }),
+            )
+            .await
+            .unwrap();
 
+        let ix = mpl_token_metadata::instruction::utilize(
+            mpl_token_metadata::id(),
+            test_metadata.pubkey.clone(),
+            test_metadata.token.pubkey(),
+            test_metadata.mint.pubkey(),
+            None,
+            test_metadata.token.pubkey(),
+            context.payer.pubkey(),
+            None,
+            2,
+        );
+
+        let tx_error = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &test_metadata.token],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx_error.clone())
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::NotEnoughUses);
+    }
+
+    #[tokio::test]
+    async fn multi_use_delegated_success() {
+        let mut context = program_test().start_with_context().await;
+        let use_authority = Keypair::new();
+        airdrop(&mut context, &use_authority.pubkey(), 10000000).await;
+
+        let test_metadata = Metadata::new();
+        test_metadata
             .create_v2(
                 &mut context,
                 "Test".to_string(),
@@ -92,30 +144,17 @@ mod uses {
                 Some(Uses {
                     use_method: UseMethod::Multiple,
                     total: 5,
-                    remaining: 4, // Intentionally making this < total
+                    remaining: 5,
                 }),
             )
             .await
             .unwrap();
 
-        let utilize_owner = mpl_token_metadata::instruction::utilize(
-            test_metadata.pubkey.clone(),
-            test_metadata.token.pubkey(),
-            test_metadata.mint.pubkey(),
-            None,
-            test_metadata.token.pubkey(),
-            context.payer.pubkey(),
-            context.payer.pubkey(),
-            None,
-            2,
-        );
-
         let (record, _) =
-        find_use_authority_account(&test_metadata.mint.pubkey(), &use_authority.pubkey());
+            find_use_authority_account(&test_metadata.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
 
         let add_use_authority = mpl_token_metadata::instruction::approve_use_authority(
-
             mpl_token_metadata::id(),
             record,
             use_authority.pubkey(),
@@ -128,22 +167,35 @@ mod uses {
             1,
         );
 
+        let tx_add_authority = Transaction::new_signed_with_payer(
+            &[add_use_authority],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(tx_add_authority)
+            .await
+            .unwrap();
+
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
+            mpl_token_metadata::id(),
             test_metadata.pubkey.clone(),
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
-            None,
+            Some(record),
             use_authority.pubkey(),
             context.payer.pubkey(),
-            context.payer.pubkey(),
-            None,
-            1,
+            Some(burner),
+            2,
         );
 
         let tx = Transaction::new_signed_with_payer(
-            &[utilize_owner, add_use_authority, utilize_with_use_authority],
-            Some(&context.payer.pubkey()),
-            &[&context.payer, &test_metadata.token, &use_authority],
+            &[utilize_with_use_authority],
+            Some(&use_authority.pubkey()),
+            &[&use_authority],
             context.last_blockhash,
         );
 
@@ -153,13 +205,14 @@ mod uses {
         let metadata_uses = metadata.uses.unwrap();
         let remaining_uses = metadata_uses.remaining;
 
-        assert_eq!(remaining_uses, 1);
+        assert_eq!(remaining_uses, 2);
     }
 
     #[tokio::test]
-    async fn multi_use_add_and_revoke_use_authority_fail() {
+    async fn multi_use_revoke_delegate_fail() {
         let mut context = program_test().start_with_context().await;
         let use_authority = Keypair::new();
+        airdrop(&mut context, &use_authority.pubkey(), 10000000).await;
         let test_metadata = Metadata::new();
         test_metadata
             .create_v2(
@@ -173,15 +226,15 @@ mod uses {
                 None,
                 Some(Uses {
                     use_method: UseMethod::Multiple,
-                    total: 2,
-                    remaining: 2,
+                    total: 5,
+                    remaining: 5,
                 }),
             )
             .await
             .unwrap();
 
         let (record, _) =
-        find_use_authority_account(&test_metadata.mint.pubkey(), &use_authority.pubkey());
+            find_use_authority_account(&test_metadata.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
 
         let add_use_authority = mpl_token_metadata::instruction::approve_use_authority(
@@ -197,26 +250,43 @@ mod uses {
             1,
         );
 
+        let tx_add_authority = Transaction::new_signed_with_payer(
+            &[add_use_authority],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(tx_add_authority)
+            .await
+            .unwrap();
+
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
+            mpl_token_metadata::id(),
             test_metadata.pubkey.clone(),
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             Some(record),
             use_authority.pubkey(),
-            use_authority.pubkey(),
             context.payer.pubkey(),
-            None,
+            Some(burner),
             1,
         );
 
-        let tx = Transaction::new_signed_with_payer(
-            &[add_use_authority, utilize_with_use_authority],
+        let tx_utilize_with_use_authority = Transaction::new_signed_with_payer(
+            &[utilize_with_use_authority],
             Some(&use_authority.pubkey()),
-            &[&context.payer, &use_authority],
+            &[&use_authority],
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx.clone()).await.unwrap();
+        context
+            .banks_client
+            .process_transaction(tx_utilize_with_use_authority.clone())
+            .await
+            .unwrap();
 
         let revoke_use_authority = mpl_token_metadata::instruction::revoke_use_authority(
             mpl_token_metadata::id(),
@@ -228,6 +298,19 @@ mod uses {
             test_metadata.mint.pubkey(),
         );
 
+        let tx_revoke_use_authority = Transaction::new_signed_with_payer(
+            &[revoke_use_authority],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(tx_revoke_use_authority.clone())
+            .await
+            .unwrap();
+
         let utilize_with_use_authority_fail = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
             test_metadata.pubkey.clone(),
@@ -235,20 +318,17 @@ mod uses {
             test_metadata.mint.pubkey(),
             Some(record),
             use_authority.pubkey(),
-            use_authority.pubkey(),
             context.payer.pubkey(),
-            None,
+            Some(burner),
             1,
         );
 
         let tx_error = Transaction::new_signed_with_payer(
-            &[revoke_use_authority, utilize_with_use_authority_fail],
-            Some(&use_authority.pubkey(),),
-            &[&context.payer, &use_authority],
+            &[utilize_with_use_authority_fail],
+            Some(&use_authority.pubkey()),
+            &[&use_authority],
             context.last_blockhash,
         );
-
-        context.banks_client.process_transaction(tx_error.clone()).await.unwrap();
 
         let err = context
             .banks_client
@@ -283,13 +363,12 @@ mod uses {
             )
             .await
             .unwrap();
-        airdrop(&mut context, &use_authority.pubkey(), 1)
+        airdrop(&mut context, &use_authority.pubkey(), 10_000_000_000)
             .await
             .unwrap();
         let (record, _) =
             find_use_authority_account(&test_meta.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
-        airdrop(&mut context, &burner, 1).await.unwrap();
         let approveix = mpl_token_metadata::instruction::approve_use_authority(
             mpl_token_metadata::id(),
             record,
