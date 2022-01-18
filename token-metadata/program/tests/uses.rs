@@ -192,7 +192,7 @@ mod uses {
             use_authority.pubkey(),
             context.payer.pubkey(),
             Some(burner),
-            2,
+            1,
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -208,7 +208,7 @@ mod uses {
         let metadata_uses = metadata.uses.unwrap();
         let remaining_uses = metadata_uses.remaining;
 
-        assert_eq!(remaining_uses, 2);
+        assert_eq!(remaining_uses, 4);
     }
 
     #[tokio::test]
