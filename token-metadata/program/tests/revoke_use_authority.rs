@@ -100,7 +100,6 @@ mod revoke_use_authority {
             record,
             use_authority.pubkey(),
             context.payer.pubkey(),
-            context.payer.pubkey(),
             test_meta.token.pubkey(),
             test_meta.pubkey,
             test_meta.mint.pubkey(),
