@@ -837,8 +837,8 @@ pub fn process_revoke_use_authority(
     let payer = next_account_info(account_info_iter)?;
     let user_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
-    let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
     let metadata = Metadata::from_account_info(metadata_info)?;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
@@ -860,6 +860,8 @@ pub fn process_revoke_use_authority(
         mint_info,
         false,
     )?;
+    // Need to zero out account data
+
     let lamports = **use_authority_record_info.lamports.borrow();
     **use_authority_record_info.lamports.borrow_mut() = 0;
     **owner_info.lamports.borrow_mut() = lamports;
