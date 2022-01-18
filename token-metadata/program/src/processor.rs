@@ -960,7 +960,6 @@ pub fn process_utilize(
     if number_of_uses > metadata_uses.total || number_of_uses > metadata_uses.remaining {
         return Err(MetadataError::NotEnoughUses.into());
     }
-    msg!("TEST2");
     let remaining_uses = metadata_uses
         .remaining
         .checked_sub(number_of_uses)
@@ -970,7 +969,6 @@ pub fn process_utilize(
         total: metadata_uses.total,
         remaining: remaining_uses,
     });
-    msg!("TEST3");
     if approved_authority_is_using {
         let use_authority_record_info = next_account_info(account_info_iter)?;
         let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
@@ -990,7 +988,6 @@ pub fn process_utilize(
     } else {
         assert_signer(&owner_info)?;
     }
-    msg!("TEST4");
     metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     if remaining_uses <= 0 && must_burn {
         if approved_authority_is_using {
