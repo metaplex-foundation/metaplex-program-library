@@ -165,8 +165,8 @@ pub enum TokenStandard {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct UseAuthorityRecord {
+    pub key: Key, //1
     pub allowed_uses: u64, //8
-    pub key: Key //1
 }
 
 impl UseAuthorityRecord {
