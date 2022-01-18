@@ -2,8 +2,8 @@
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "devnet"
+wallet = "/Users/sarahstrange/Programming/newt.json"
 
 [programs.localnet]
 mpl_auction_house="hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
@@ -21,7 +21,7 @@ address = "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd"
 program = "target/deploy/mpl_token_entangler.so"
 
 [[test.genesis]]
-address = "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
+address = "3hPhRB3M16RerH3B8j56P8ZSnFuKs2ZEQojfSspnhfNW"
 program = "target/deploy/mpl_gumdrop.so"
 
 [workspace]

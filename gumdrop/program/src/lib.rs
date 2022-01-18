@@ -12,7 +12,7 @@ use std::io::Write;
 
 pub mod merkle_proof;
 
-declare_id!("gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a");
+declare_id!("3hPhRB3M16RerH3B8j56P8ZSnFuKs2ZEQojfSspnhfNW");
 
 fn get_or_create_claim_count<'a>(
     distributor: &Account<'a, MerkleDistributor>,
@@ -25,7 +25,7 @@ fn get_or_create_claim_count<'a>(
     claimant_secret: Pubkey,
 ) -> core::result::Result<anchor_lang::Account<'a, ClaimCount>, ProgramError> {
     let rent = &Rent::get()?;
-    let space = 8 + ClaimCount::default().try_to_vec().unwrap().len();
+    let space = 32 + ClaimCount::default().try_to_vec().unwrap().len();
     let create_claim_state = claim_count.lamports() == 0; // TODO: support initial lamports?
     if create_claim_state {
         let lamports = rent.minimum_balance(space);
@@ -312,11 +312,12 @@ pub mod merkle_distributor {
         // TODO: this is a bit weird but we verify elsewhere that the candy_machine_config is
         // actually a config thing and not a mint
         // Verify the merkle proof.
+        msg!("preserial {:?} ", ctx.accounts.candy_machine.key);
         let node = solana_program::keccak::hashv(&[
             &[0x00],
             &index.to_le_bytes(),
             &claimant_secret.to_bytes(),
-            &ctx.accounts.candy_machine_config.key.to_bytes(),
+            &ctx.accounts.candy_machine.key.to_bytes(),
             &amount.to_le_bytes(),
         ]);
         require!(
@@ -334,7 +335,10 @@ pub mod merkle_distributor {
         let required_lamports;
         {
             let rent = &Rent::get()?;
+            msg!("rent {:?} ", rent);
+            msg!("candy machine {:?} ", ctx.accounts.candy_machine);
             let mut candy_machine_data: &[u8] = &ctx.accounts.candy_machine.try_borrow_data()?;
+            msg!("deserial {:?} ", candy_machine_data);
             required_lamports = CandyMachine::try_deserialize(&mut candy_machine_data)?
                 .data
                 .price
@@ -365,7 +369,6 @@ pub mod merkle_distributor {
         ];
 
         let candy_machine_infos = [
-            ctx.accounts.candy_machine_config.clone(),
             ctx.accounts.candy_machine.to_account_info().clone(),
             ctx.accounts.distributor_wallet.clone(),
             ctx.accounts.candy_machine_wallet.clone(),
@@ -380,11 +383,11 @@ pub mod merkle_distributor {
             ctx.accounts.clock.to_account_info().clone(),
         ];
 
+        msg!("program id {:?} ", ctx.accounts.candy_machine_program.key,);
         invoke_signed(
             &Instruction {
                 program_id: *ctx.accounts.candy_machine_program.key,
                 accounts: vec![
-                    AccountMeta::new_readonly(*ctx.accounts.candy_machine_config.key, false),
                     AccountMeta::new(ctx.accounts.candy_machine.key(), false),
                     AccountMeta::new(*ctx.accounts.distributor_wallet.key, true),
                     AccountMeta::new(*ctx.accounts.candy_machine_wallet.key, false),
@@ -698,9 +701,6 @@ pub struct ClaimCandy<'info> {
     /// `update_authority` for `candy_machine_metadata`
     pub payer: Signer<'info>,
 
-    /// Candy-machine Config
-    pub candy_machine_config: AccountInfo<'info>,
-
     /// Candy-Machine. Verified through CPI
     #[account(mut)]
     pub candy_machine: AccountInfo<'info>,
@@ -881,18 +881,85 @@ pub struct CandyMachine {
     pub authority: Pubkey,
     pub wallet: Pubkey,
     pub token_mint: Option<Pubkey>,
-    pub config: Pubkey,
     pub data: CandyMachineData,
     pub items_redeemed: u64,
-    pub bump: u8,
+    // pub bump: u8,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct WhitelistMintSettings {
+    pub mode: WhitelistMintMode,
+    pub mint: Pubkey,
+    pub presale: bool,
+    pub discount_price: Option<u64>,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
+pub enum WhitelistMintMode {
+    // Only captcha uses the bytes, the others just need to have same length
+    // for front end borsh to not crap itself
+    // Holds the validation window
+    BurnEveryTime,
+    NeverBurn,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 pub struct CandyMachineData {
     pub uuid: String,
     pub price: u64,
-    pub items_available: u64,
+    /// The symbol for the asset
+    pub symbol: String,
+    /// Royalty basis points that goes to creators in secondary sales (0-10000)
+    pub seller_fee_basis_points: u16,
+    pub max_supply: u64,
+    pub is_mutable: bool,
+    pub retain_authority: bool,
     pub go_live_date: Option<i64>,
+    pub end_settings: Option<EndSettings>,
+    pub creators: Vec<Creator>,
+    pub hidden_settings: Option<HiddenSettings>,
+    pub whitelist_mint_settings: Option<WhitelistMintSettings>,
+    pub items_available: u64,
+    /// If [`Some`] requires gateway tokens on mint
+    pub gatekeeper: Option<GatekeeperConfig>,
+}
+
+/// Configurations options for the gatekeeper.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct GatekeeperConfig {
+    /// The network for the gateway token required
+    pub gatekeeper_network: Pubkey,
+    /// Whether or not the token should expire after minting.
+    /// The gatekeeper network must support this if true.
+    pub expire_on_use: bool,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub enum EndSettingType {
+    Date,
+    Amount,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct EndSettings {
+    pub end_setting_type: EndSettingType,
+    pub number: u64,
+}
+
+/// Hidden Settings for large mints used with offline data.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
+pub struct HiddenSettings {
+    pub name: String,
+    pub uri: String,
+    pub hash: [u8; 32],
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct Creator {
+    pub address: Pubkey,
+    pub verified: bool,
+    // In percentages, NOT basis points ;) Watch out!
+    pub share: u8,
 }
 
 #[error]

@@ -3,7 +3,7 @@
 
 // NOTE: ideally we'd rename the anchor program to gumdrop
 const PROGRAM_NAME = 'merkle_distributor';
-const PROGRAM_ID = 'gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a';
+const PROGRAM_ID = '3hPhRB3M16RerH3B8j56P8ZSnFuKs2ZEQojfSspnhfNW';
 
 const path = require('path');
 const programDir = path.join(__dirname, '..', '..', 'program');

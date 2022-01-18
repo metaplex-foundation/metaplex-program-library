@@ -240,11 +240,6 @@
           "isSigner": true
         },
         {
-          "name": "candyMachineConfig",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "candyMachine",
           "isMut": true,
           "isSigner": false
@@ -553,10 +548,6 @@
             }
           },
           {
-            "name": "config",
-            "type": "publicKey"
-          },
-          {
             "name": "data",
             "type": {
               "defined": "CandyMachineData"
@@ -652,6 +643,6 @@
     }
   ],
   "metadata": {
-    "address": "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
+    "address": "3hPhRB3M16RerH3B8j56P8ZSnFuKs2ZEQojfSspnhfNW"
   }
 }
