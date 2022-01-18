@@ -41,7 +41,7 @@ use solana_program::{
     system_program,
 };
 use spl_token::{
-    instruction::approve,
+    instruction::{approve, revoke},
     state::{Account, Mint},
 };
 
@@ -871,17 +871,16 @@ pub fn process_revoke_use_authority(
     let account_info_iter = &mut accounts.iter();
     let use_authority_record_info = next_account_info(account_info_iter)?;
     let owner_info = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
     let user_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
-    let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let token_program_account_info = next_account_info(account_info_iter)?;
     let metadata = Metadata::from_account_info(metadata_info)?;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
     assert_signer(&owner_info)?;
-    assert_signer(&payer)?;
     assert_currently_holding(
         program_id,
         owner_info,
@@ -897,9 +896,30 @@ pub fn process_revoke_use_authority(
         mint_info,
         false,
     )?;
-    let lamports = **use_authority_record_info.lamports.borrow();
+    let metadata_uses = metadata.uses.unwrap();
+    if metadata_uses.use_method == UseMethod::Burn {
+        invoke_signed(
+            &revoke(
+                &token_program_account_info.key,
+                &token_account_info.key,
+                &owner_info.key,
+                &[],
+            )
+            .unwrap(),
+            &[
+                token_program_account_info.clone(),
+                token_account_info.clone(),
+                owner_info.clone(),
+            ],
+            &[],
+        )?;
+    }
+    let lamports = use_authority_record_info.lamports();
     **use_authority_record_info.lamports.borrow_mut() = 0;
-    **owner_info.lamports.borrow_mut() = lamports;
+    **owner_info.lamports.borrow_mut() = owner_info
+        .lamports()
+        .checked_add(lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
     Ok(())
 }
 
