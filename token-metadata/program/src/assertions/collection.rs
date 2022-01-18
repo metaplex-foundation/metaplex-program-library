@@ -47,6 +47,7 @@ pub fn assert_has_collection_authority(
         if delegate_collection_authority_record
             .unwrap()
             .try_data_is_empty()?
+            || delegate_collection_authority_record.unwrap().data.borrow()[0] == 0
         {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }

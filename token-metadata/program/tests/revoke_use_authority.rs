@@ -7,7 +7,7 @@ use mpl_token_metadata::pda::find_use_authority_account;
 use solana_program_test::*;
 use solana_sdk::{
     signature::{Keypair, Signer},
-    transaction::{Transaction},
+    transaction::Transaction,
 };
 use utils::*;
 mod revoke_use_authority {
@@ -44,15 +44,6 @@ mod revoke_use_authority {
         let (record, _) =
             find_use_authority_account(&test_meta.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
-
-        let thing = context
-            .banks_client
-            .get_account(test_meta.token.pubkey())
-            .await
-            .unwrap()
-            .unwrap();
-
-        println!("{:?}", Account::unpack_from_slice(&thing.data).unwrap());
 
         let approve_ix = mpl_token_metadata::instruction::approve_use_authority(
             mpl_token_metadata::id(),
@@ -107,5 +98,12 @@ mod revoke_use_authority {
             .process_transaction(revoke_tx)
             .await
             .unwrap();
+
+        let accountafter = context
+            .banks_client
+            .get_account(record)
+            .await
+            .expect("account not found");
+        assert_eq!(accountafter.is_none(), true);
     }
 }
