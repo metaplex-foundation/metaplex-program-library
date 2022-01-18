@@ -35,7 +35,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
-    program::invoke_signed,
+    program::{invoke, invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
 };
@@ -794,6 +794,9 @@ pub fn process_approve_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
+    if *token_program_account_info.key != spl_token::id() {
+        return Err(MetadataError::InvalidTokenProgram.into());
+    }
     assert_signer(&owner_info)?;
     assert_signer(&payer)?;
     assert_currently_holding(
@@ -841,7 +844,7 @@ pub fn process_approve_use_authority(
     record.allowed_uses = number_of_uses;
     record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
     if metadata_uses.use_method == UseMethod::Burn {
-        invoke_signed(
+        invoke(
             &approve(
                 &token_program_account_info.key,
                 &token_account_info.key,
@@ -857,7 +860,6 @@ pub fn process_approve_use_authority(
                 program_as_burner.clone(),
                 owner_info.clone(),
             ],
-            &[],
         )?;
     }
     Ok(())
@@ -879,6 +881,9 @@ pub fn process_revoke_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
+    if *token_program_account_info.key != spl_token::id() {
+        return Err(MetadataError::InvalidTokenProgram.into());
+    }
     assert_signer(&owner_info)?;
     assert_currently_holding(
         program_id,
@@ -897,7 +902,7 @@ pub fn process_revoke_use_authority(
     )?;
     let metadata_uses = metadata.uses.unwrap();
     if metadata_uses.use_method == UseMethod::Burn {
-        invoke_signed(
+        invoke(
             &revoke(
                 &token_program_account_info.key,
                 &token_account_info.key,
@@ -910,7 +915,6 @@ pub fn process_revoke_use_authority(
                 token_account_info.clone(),
                 owner_info.clone(),
             ],
-            &[],
         )?;
     }
     let lamports = use_authority_record_info.lamports();

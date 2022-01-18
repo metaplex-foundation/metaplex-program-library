@@ -1905,7 +1905,6 @@ version = "1.1.0"
 dependencies = [
  "arrayref",
  "borsh 0.9.1",
- "mpl-testing-utils",
  "mpl-token-vault",
  "num-derive",
  "num-traits",

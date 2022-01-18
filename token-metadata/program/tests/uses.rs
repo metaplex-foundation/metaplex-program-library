@@ -1,7 +1,6 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use mpl_testing_utils::solana::airdrop;
 use mpl_token_metadata::state::{UseMethod, Uses};
 use solana_program_test::*;
 use solana_sdk::{signature::Signer, transaction::Transaction};
@@ -93,7 +92,7 @@ mod uses {
         let (record, _) =
             find_use_authority_account(&test_meta.mint.pubkey(), &use_authority.pubkey());
         let (burner, _) = find_program_as_burner_account();
-
+        airdrop(&mut context, &burner, 1).await.unwrap();
         let approveix = mpl_token_metadata::instruction::approve_use_authority(
             mpl_token_metadata::id(),
             record,
