@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-membership-token",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "MPL Membership Token JavaScript API.",
   "main": "dist/src/mpl-membership-token.js",
   "types": "dist/src/mpl-membership-token.d.ts",
@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.0.9",
-    "@metaplex-foundation/mpl-token-metadata": "0.0.2",
+    "@metaplex-foundation/mpl-token-metadata": "1.1.0",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
     "debug": "^4.3.3",
