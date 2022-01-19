@@ -1828,6 +1828,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-membership-token"
+version = "0.1.0"
+dependencies = [
+ "anchor-client",
+ "anchor-lang",
+ "anchor-spl",
+ "chrono",
+ "mpl-token-metadata",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-token",
+]
+
+[[package]]
 name = "mpl-metaplex"
 version = "0.0.1"
 dependencies = [

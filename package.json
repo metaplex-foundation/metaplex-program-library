@@ -22,7 +22,8 @@
     "metaplex/js",
     "auction-house/js",
     "gumdrop/js",
-    "nft-candy-machine/js"
+    "nft-candy-machine/js",
+    "membership-token/js"
   ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",

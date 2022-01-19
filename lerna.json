@@ -6,7 +6,8 @@
     "token-vault/js",
     "token-metadata/js",
     "metaplex/js",
-    "auction-house/js"
+    "auction-house/js",
+    "membership-token/js"
   ],
   "useWorkspaces": true,
   "version": "independent",
