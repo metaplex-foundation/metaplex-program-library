@@ -21,6 +21,10 @@ address = "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd"
 program = "target/deploy/mpl_token_entangler.so"
 
 [[test.genesis]]
+address = "EHE2kYEETZbRfhQoNtknbnqrrpKEojbohSagkGdiJ6wm"
+program = "target/deploy/mpl_membership_token.so"
+
+[[test.genesis]]
 address = "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
 program = "target/deploy/mpl_gumdrop.so"
 
@@ -28,5 +32,6 @@ program = "target/deploy/mpl_gumdrop.so"
 members = [
   "token-entangler/program",
   "token-metadata/program",
-  "auction-house/program"
-] 
+  "auction-house/program",
+  "membership-token/program",
+]

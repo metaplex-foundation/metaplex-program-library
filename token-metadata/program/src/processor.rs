@@ -1,6 +1,9 @@
 use crate::{
     assertions::{
-        collection::{assert_collection_update_is_valid, assert_collection_verify_if_valid},
+        collection::{
+            assert_collection_update_is_valid, assert_collection_verify_is_valid,
+            assert_has_collection_authority,
+        },
         uses::process_use_authority_validation,
     },
     deprecated_processor::{
@@ -9,8 +12,9 @@ use crate::{
     error::MetadataError,
     instruction::MetadataInstruction,
     state::{
-        DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord,
-        UseMethod, Uses, BURN, EDITION, MAX_MASTER_EDITION_LEN, PREFIX, USER,
+        CollectionAuthorityRecord, DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata,
+        TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
+        COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN, PREFIX, USER,
         USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
@@ -31,12 +35,12 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
-    program::invoke_signed,
+    program::{invoke, invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
 };
 use spl_token::{
-    instruction::approve,
+    instruction::{approve, revoke},
     state::{Account, Mint},
 };
 
@@ -172,6 +176,14 @@ pub fn process_instruction<'a>(
         MetadataInstruction::RevokeUseAuthority => {
             msg!("Instruction: Revoke Use Authority");
             process_revoke_use_authority(program_id, accounts)
+        }
+        MetadataInstruction::ApproveCollectionAuthority => {
+            msg!("Instruction: Approve Collection Authority");
+            process_approve_collection_authority(program_id, accounts)
+        }
+        MetadataInstruction::RevokeCollectionAuthority => {
+            msg!("Instruction: Revoke Collection Authority");
+            process_revoke_collection_authority(program_id, accounts)
         }
     }
 }
@@ -675,7 +687,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
-
+    let using_delegated_collection_authority = accounts.len() == 7;
     assert_signer(collection_authority_info)?;
     assert_signer(payer_info)?;
 
@@ -686,13 +698,28 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let collection_data = Metadata::from_account_info(collection_info)?;
-    assert_collection_verify_if_valid(
+    assert_collection_verify_is_valid(
         &metadata,
         &collection_data,
         collection_mint,
-        collection_authority_info,
         edition_account_info,
     )?;
+    if using_delegated_collection_authority {
+        let collection_authority_record = next_account_info(account_info_iter)?;
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            Some(collection_authority_record),
+        )?;
+    } else {
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            None,
+        )?;
+    }
     if let Some(collection) = &mut metadata.collection {
         collection.verified = true;
     }
@@ -704,14 +731,12 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     let account_info_iter = &mut accounts.iter();
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
-    let payer_info = next_account_info(account_info_iter)?;
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
+    let using_delegated_collection_authority = accounts.len() == 6;
 
     assert_signer(collection_authority_info)?;
-    assert_signer(payer_info)?;
-
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
     assert_owned_by(collection_mint, &spl_token::id())?;
@@ -719,13 +744,28 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
     let collection_data = Metadata::from_account_info(collection_info)?;
-    assert_collection_verify_if_valid(
+    assert_collection_verify_is_valid(
         &metadata,
         &collection_data,
         collection_mint,
-        collection_authority_info,
         edition_account_info,
     )?;
+    if using_delegated_collection_authority {
+        let collection_authority_record = next_account_info(account_info_iter)?;
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            Some(collection_authority_record),
+        )?;
+    } else {
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            None,
+        )?;
+    }
     if let Some(collection) = &mut metadata.collection {
         collection.verified = false;
     }
@@ -754,6 +794,9 @@ pub fn process_approve_use_authority(
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
+    if *token_program_account_info.key != spl_token::id() {
+        return Err(MetadataError::InvalidTokenProgram.into());
+    }
     assert_signer(&owner_info)?;
     assert_signer(&payer)?;
     assert_currently_holding(
@@ -774,10 +817,6 @@ pub fn process_approve_use_authority(
     )?;
 
     let metadata_uses = metadata.uses.unwrap();
-    let record_info_empty = use_authority_record_info.try_data_is_empty()?;
-    if !record_info_empty {
-        return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
-    }
     let use_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -796,16 +835,11 @@ pub fn process_approve_use_authority(
         USE_AUTHORITY_RECORD_SIZE,
         use_authority_seeds,
     )?;
-
-    let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
-
     if number_of_uses > metadata_uses.remaining {
         return Err(MetadataError::NotEnoughUses.into());
     }
-    record.allowed_uses = number_of_uses;
-    record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
     if metadata_uses.use_method == UseMethod::Burn {
-        invoke_signed(
+        invoke(
             &approve(
                 &token_program_account_info.key,
                 &token_account_info.key,
@@ -821,9 +855,12 @@ pub fn process_approve_use_authority(
                 program_as_burner.clone(),
                 owner_info.clone(),
             ],
-            &[],
         )?;
     }
+    let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+    record.key = Key::UseAuthorityRecord;
+    record.allowed_uses = number_of_uses;
+    record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
     Ok(())
 }
 
@@ -834,17 +871,19 @@ pub fn process_revoke_use_authority(
     let account_info_iter = &mut accounts.iter();
     let use_authority_record_info = next_account_info(account_info_iter)?;
     let owner_info = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
     let user_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
-    let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let token_program_account_info = next_account_info(account_info_iter)?;
     let metadata = Metadata::from_account_info(metadata_info)?;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
+    if *token_program_account_info.key != spl_token::id() {
+        return Err(MetadataError::InvalidTokenProgram.into());
+    }
     assert_signer(&owner_info)?;
-    assert_signer(&payer)?;
     assert_currently_holding(
         program_id,
         owner_info,
@@ -860,9 +899,31 @@ pub fn process_revoke_use_authority(
         mint_info,
         false,
     )?;
-    let lamports = **use_authority_record_info.lamports.borrow();
+    let metadata_uses = metadata.uses.unwrap();
+    if metadata_uses.use_method == UseMethod::Burn {
+        invoke(
+            &revoke(
+                &token_program_account_info.key,
+                &token_account_info.key,
+                &owner_info.key,
+                &[],
+            )
+            .unwrap(),
+            &[
+                token_program_account_info.clone(),
+                token_account_info.clone(),
+                owner_info.clone(),
+            ],
+        )?;
+    }
+    let lamports = use_authority_record_info.lamports();
     **use_authority_record_info.lamports.borrow_mut() = 0;
-    **owner_info.lamports.borrow_mut() = lamports;
+    **owner_info.lamports.borrow_mut() = owner_info
+        .lamports()
+        .checked_add(lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+    let mut data = use_authority_record_info.try_borrow_mut_data()?;
+    data[0] = 0;
 
     Ok(())
 }
@@ -873,26 +934,25 @@ pub fn process_utilize(
     number_of_uses: u64,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
-    let owner_info = next_account_info(account_info_iter)?;
-    let payer = next_account_info(account_info_iter)?;
-    let user_info = next_account_info(account_info_iter)?;
-    let token_account_info = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
+    let token_account_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
+    let user_info = next_account_info(account_info_iter)?;
+    let owner_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
+    let _ata_program_account_info = next_account_info(account_info_iter)?;
     let _system_account_info = next_account_info(account_info_iter)?;
     let _rent_info = next_account_info(account_info_iter)?;
-
     let metadata = Metadata::from_account_info(metadata_info)?;
-    let approved_authority_is_using = accounts.len() == 12;
-
+    let approved_authority_is_using = accounts.len() == 11;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
     if *token_program_account_info.key != spl_token::id() {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
-    assert_signer(&payer)?;
+
+    assert_signer(&user_info)?;
     assert_currently_holding(
         program_id,
         owner_info,
@@ -916,15 +976,8 @@ pub fn process_utilize(
         total: metadata_uses.total,
         remaining: remaining_uses,
     });
-
     if approved_authority_is_using {
         let use_authority_record_info = next_account_info(account_info_iter)?;
-        let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
-        record.allowed_uses = record
-            .allowed_uses
-            .checked_sub(number_of_uses)
-            .ok_or(MetadataError::NotEnoughUses)?;
-        assert_signer(&user_info)?;
         process_use_authority_validation(
             program_id,
             use_authority_record_info,
@@ -932,17 +985,19 @@ pub fn process_utilize(
             mint_info,
             false,
         )?;
+        assert_owned_by(use_authority_record_info, program_id)?;
+        let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+        record.allowed_uses = record
+            .allowed_uses
+            .checked_sub(number_of_uses)
+            .ok_or(MetadataError::NotEnoughUses)?;
         record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
-    } else {
-        assert_signer(&owner_info)?;
     }
-
     metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     if remaining_uses <= 0 && must_burn {
         if approved_authority_is_using {
             let burn_path = &[PREFIX.as_bytes(), program_id.as_ref(), BURN.as_bytes()];
             let burn_authority_info = next_account_info(account_info_iter)?;
-            assert_owned_by(burn_authority_info, program_id)?;
             let burn_bump_ref = &[
                 PREFIX.as_bytes(),
                 program_id.as_ref(),
@@ -956,7 +1011,7 @@ pub fn process_utilize(
             spl_token_burn(TokenBurnParams {
                 mint: mint_info.clone(),
                 amount: 1,
-                authority: owner_info.clone(),
+                authority: burn_authority_info.clone(),
                 token_program: token_program_account_info.clone(),
                 source: token_account_info.clone(),
                 authority_signer_seeds: Some(burn_bump_ref),
@@ -972,5 +1027,102 @@ pub fn process_utilize(
             })?;
         }
     }
+    Ok(())
+}
+
+pub fn process_approve_collection_authority(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let collection_authority_record = next_account_info(account_info_iter)?;
+    let new_collection_authority = next_account_info(account_info_iter)?;
+    let update_authority = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
+    let metadata = Metadata::from_account_info(metadata_info)?;
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_signer(&update_authority)?;
+    assert_signer(&payer)?;
+    if metadata.update_authority != *update_authority.key {
+        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+    if metadata.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+    let collection_authority_info_empty = collection_authority_record.try_data_is_empty()?;
+    if !collection_authority_info_empty {
+        return Err(MetadataError::CollectionAuthorityRecordAlreadyExists.into());
+    }
+    let collection_authority_path = Vec::from([
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        &mint_info.key.as_ref(),
+        COLLECTION_AUTHORITY.as_bytes(),
+        &new_collection_authority.key.as_ref(),
+    ]);
+    let collection_authority_bump_seed = &[assert_derivation(
+        program_id,
+        collection_authority_record,
+        &collection_authority_path,
+    )?];
+    let mut collection_authority_seeds = collection_authority_path.clone();
+    collection_authority_seeds.push(collection_authority_bump_seed);
+    create_or_allocate_account_raw(
+        *program_id,
+        collection_authority_record,
+        rent_info,
+        system_account_info,
+        payer,
+        COLLECTION_AUTHORITY_RECORD_SIZE,
+        &collection_authority_seeds,
+    )?;
+
+    let mut record = CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
+    record.key = Key::CollectionAuthorityRecord;
+    record.serialize(&mut *collection_authority_record.data.borrow_mut())?;
+    Ok(())
+}
+
+pub fn process_revoke_collection_authority(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let collection_authority_record = next_account_info(account_info_iter)?;
+    let new_collection_authority = next_account_info(account_info_iter)?;
+    let update_authority = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let metadata = Metadata::from_account_info(metadata_info)?;
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(mint_info, &spl_token::id())?;
+    assert_signer(&update_authority)?;
+    if metadata.update_authority != *update_authority.key {
+        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+    if metadata.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+    let collection_authority_info_empty = collection_authority_record.try_data_is_empty()?;
+    if collection_authority_info_empty {
+        return Err(MetadataError::CollectionAuthorityDoesNotExist.into());
+    }
+    assert_has_collection_authority(
+        new_collection_authority,
+        &metadata,
+        &mint_info.key,
+        Some(collection_authority_record),
+    )?;
+    let lamports = **collection_authority_record.lamports.borrow();
+    **collection_authority_record.lamports.borrow_mut() = 0;
+    **update_authority.lamports.borrow_mut() = lamports;
+    let mut data = collection_authority_record.try_borrow_mut_data()?;
+    data[0] = 0;
     Ok(())
 }

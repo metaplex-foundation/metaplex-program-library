@@ -1,8 +1,9 @@
-use solana_program::{program_error::ProgramError, account_info::AccountInfo, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
 
 use crate::{
     error::MetadataError,
-    state::{UseMethod, Uses, USER, PREFIX}, utils::assert_derivation,
+    state::{UseMethod, Uses, PREFIX, USER},
+    utils::assert_derivation,
 };
 
 pub fn assert_valid_use(
@@ -47,7 +48,7 @@ pub fn process_use_authority_validation(
             return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
         }
     } else {
-        if record_info_empty {
+        if record_info_empty || use_authority_record_info.data.borrow()[0] == 0 {
             return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
         }
     }

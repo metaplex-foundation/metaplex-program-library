@@ -5,7 +5,7 @@ use crate::{
         get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, Metadata,
         TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
         MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
-        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX, USER,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -956,6 +956,17 @@ pub fn puff_out_data_fields(metadata: &mut Metadata) {
 /// Pads the string to the desired size with `0u8`s.
 /// NOTE: it is assumed that the string's size is never larger than the given size.
 pub fn puffed_out_string(s: &String, size: usize) -> String {
+    let mut array_of_zeroes = vec![];
+    let puff_amount = size - s.len();
+    while array_of_zeroes.len() < puff_amount {
+        array_of_zeroes.push(0u8);
+    }
+    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
+}
+
+/// Pads the string to the desired size with `0u8`s.
+/// NOTE: it is assumed that the string's size is never larger than the given size.
+pub fn zero_account(s: &String, size: usize) -> String {
     let mut array_of_zeroes = vec![];
     let puff_amount = size - s.len();
     while array_of_zeroes.len() < puff_amount {

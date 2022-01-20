@@ -1,0 +1,29 @@
+[package]
+name = "mpl-membership-token"
+version = "0.1.0"
+description = "Created with Anchor"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "mpl_membership_token"
+
+[features]
+no-entrypoint = []
+test-bpf = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.20.1"
+anchor-spl = "0.20.1"
+mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ], version="1.1.0" }
+
+[dev-dependencies]
+anchor-client = "0.20.1"
+solana-program-test = "1.8.5"
+solana-program = "1.8.5"
+solana-sdk = "1.8.5"
+spl-token = "3.2.0"
+chrono = "0.4.19"
