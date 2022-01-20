@@ -248,24 +248,21 @@ pub fn empty_account_balance(
     Ok(())
 }
 
-/// get random value from oracle account
-pub fn get_random_oracle_value(
-    randomness_oracle_account: &AccountInfo,
+/// get random value
+pub fn get_random_value(
+    index: u64,
     proving_process: &ProvingProcess,
     clock: &Clock,
 ) -> Result<u16, ProgramError> {
-    let (oracle_random_value, slot) =
-        randomness_oracle_program::read_value(randomness_oracle_account)?;
-
-    if clock.slot.error_sub(slot)? > MAX_LAG_SLOTS {
-        return Err(NFTPacksError::RandomOracleOutOfDate.into());
-    }
-
-    // Hash random value from the oracle with current slot and proving process data and receive new random u16
+    // Hash slot, current timestamp and value from last slothash and proving process data and receive new random u16
     let mut hasher = DefaultHasher::new();
-    hasher.write(oracle_random_value.as_ref());
-    hasher.write(proving_process.try_to_vec()?.as_ref());
+    
+    // last slothash
+    hasher.write_u64(index);
+    // slot
     hasher.write_u64(clock.slot);
+    // timestamp
+    hasher.write_i64(clock.unix_timestamp);
 
     let mut random_value: [u8; 2] = [0u8; 2];
     random_value.copy_from_slice(&hasher.finish().to_le_bytes()[..2]);

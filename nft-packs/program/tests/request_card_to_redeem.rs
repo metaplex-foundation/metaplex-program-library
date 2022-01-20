@@ -70,9 +70,6 @@ async fn success() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -87,7 +84,6 @@ async fn success() {
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();
@@ -160,8 +156,6 @@ async fn success() {
     test_pack_set.activate(&mut context).await.unwrap();
     test_pack_set.clean_up(&mut context).await.unwrap();
 
-    test_randomness_oracle.update(&mut context).await.unwrap();
-
     test_pack_set
         .request_card_for_redeem(
             &mut context,
@@ -170,7 +164,6 @@ async fn success() {
             &voucher_edition.mint.pubkey(),
             &edition_authority,
             &Some(voucher_edition.token.pubkey()),
-            &test_randomness_oracle.keypair.pubkey(),
             1,
         )
         .await
@@ -209,9 +202,6 @@ async fn success_two_cards() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -226,7 +216,6 @@ async fn success_two_cards() {
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();
@@ -319,8 +308,6 @@ async fn success_two_cards() {
     test_pack_set.activate(&mut context).await.unwrap();
     test_pack_set.clean_up(&mut context).await.unwrap();
 
-    test_randomness_oracle.update(&mut context).await.unwrap();
-
     test_pack_set
         .request_card_for_redeem(
             &mut context,
@@ -329,7 +316,6 @@ async fn success_two_cards() {
             &voucher_edition.mint.pubkey(),
             &edition_authority,
             &Some(voucher_edition.token.pubkey()),
-            &test_randomness_oracle.keypair.pubkey(),
             1,
         )
         .await
@@ -369,9 +355,6 @@ async fn fail_request_without_clean_up() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -386,7 +369,6 @@ async fn fail_request_without_clean_up() {
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();
@@ -459,8 +441,6 @@ async fn fail_request_without_clean_up() {
     test_pack_set.activate(&mut context).await.unwrap();
     test_pack_set.clean_up(&mut context).await.unwrap();
 
-    test_randomness_oracle.update(&mut context).await.unwrap();
-
     test_pack_set
         .request_card_for_redeem(
             &mut context,
@@ -469,7 +449,6 @@ async fn fail_request_without_clean_up() {
             &voucher_edition.mint.pubkey(),
             &edition_authority,
             &Some(voucher_edition.token.pubkey()),
-            &test_randomness_oracle.keypair.pubkey(),
             1,
         )
         .await
@@ -486,7 +465,6 @@ async fn fail_request_without_clean_up() {
             &voucher_edition.mint.pubkey(),
             &edition_authority,
             &Some(voucher_edition.token.pubkey()),
-            &test_randomness_oracle.keypair.pubkey(),
             1,
         )
         .await;
@@ -518,9 +496,6 @@ async fn fail_request_after_end_date() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -535,7 +510,6 @@ async fn fail_request_after_end_date() {
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();
@@ -626,8 +600,6 @@ async fn fail_request_after_end_date() {
     test_pack_set.activate(&mut context).await.unwrap();
     test_pack_set.clean_up(&mut context).await.unwrap();
 
-    test_randomness_oracle.update(&mut context).await.unwrap();
-
     // Wait until we reach over `redeem_end_date` timestamp
     warp_sleep(&mut context, std::time::Duration::from_secs(5)).await;
     let last_timestamp = context
@@ -646,7 +618,6 @@ async fn fail_request_after_end_date() {
             &voucher_edition.mint.pubkey(),
             &edition_authority,
             &Some(voucher_edition.token.pubkey()),
-            &test_randomness_oracle.keypair.pubkey(),
             1,
         )
         .await
@@ -673,9 +644,6 @@ async fn fail_request_with_invalid_voucher() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -690,7 +658,6 @@ async fn fail_request_with_invalid_voucher() {
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();
@@ -781,8 +748,6 @@ async fn fail_request_with_invalid_voucher() {
     test_pack_set.activate(&mut context).await.unwrap();
     test_pack_set.clean_up(&mut context).await.unwrap();
 
-    test_randomness_oracle.update(&mut context).await.unwrap();
-
     // Wait until we reach over `redeem_end_date` timestamp
     warp_sleep(&mut context, std::time::Duration::from_secs(5)).await;
     let last_timestamp = context
@@ -801,7 +766,6 @@ async fn fail_request_with_invalid_voucher() {
             &voucher_edition.mint.pubkey(),
             &edition_authority,
             &Some(voucher_edition.token.pubkey()),
-            &test_randomness_oracle.keypair.pubkey(),
             1,
         )
         .await

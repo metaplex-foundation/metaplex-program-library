@@ -8,7 +8,6 @@ mod metadata;
 mod pack_card;
 mod pack_set;
 mod pack_voucher;
-mod randomness_oracle;
 mod user;
 mod vault;
 
@@ -21,7 +20,6 @@ pub use metadata::TestMetadata;
 pub use pack_card::TestPackCard;
 pub use pack_set::TestPackSet;
 pub use pack_voucher::TestPackVoucher;
-pub use randomness_oracle::TestRandomnessOracle;
 use solana_program::clock::Clock;
 use solana_program_test::*;
 use solana_sdk::{
@@ -38,11 +36,6 @@ pub fn nft_packs_program_test<'a>() -> ProgramTest {
     program.add_program("mpl_metaplex", mpl_metaplex::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     program.prefer_bpf(false);
-    program.add_program(
-        "randomness_oracle_program",
-        randomness_oracle_program::id(),
-        processor!(randomness_oracle_program::processor::Processor::process_instruction),
-    );
     program
 }
 

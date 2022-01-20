@@ -26,7 +26,6 @@ pub fn init_pack(
     let pack_set_account = next_account_info(account_info_iter)?;
     let authority_account = next_account_info(account_info_iter)?;
     let store_account = next_account_info(account_info_iter)?;
-    let random_oracle_account = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
     let rent = &Rent::from_account_info(rent_info)?;
     let clock_info = next_account_info(account_info_iter)?;
@@ -36,7 +35,6 @@ pub fn init_pack(
     assert_rent_exempt(rent, pack_set_account)?;
     assert_signer(authority_account)?;
     assert_owned_by(store_account, &mpl_metaplex::id())?;
-    assert_owned_by(random_oracle_account, &randomness_oracle_program::id())?;
     assert_admin_whitelisted(
         store_account,
         whitelisted_creator_account,
@@ -45,12 +43,6 @@ pub fn init_pack(
 
     let mut pack_set = PackSet::unpack_unchecked(&pack_set_account.data.borrow_mut())?;
 
-    // make sure that random oracle account is already initialized
-    if random_oracle_account.data.borrow()[0]
-        != randomness_oracle_program::state::AccountType::RandomnessOracle as u8
-    {
-        return Err(ProgramError::UninitializedAccount);
-    }
 
     if pack_set.is_initialized() {
         return Err(ProgramError::AccountAlreadyInitialized);
@@ -93,7 +85,6 @@ pub fn init_pack(
         allowed_amount_to_redeem: args.allowed_amount_to_redeem,
         redeem_start_date: redeem_start_date,
         redeem_end_date: args.redeem_end_date,
-        random_oracle: *random_oracle_account.key,
     });
 
     pack_set.puff_out_data_fields();
