@@ -43,6 +43,7 @@ impl SellingResource {
 pub enum MarketState {
     Uninitialized,
     Created,
+    Suspended,
     Active,
     Ended,
 }
