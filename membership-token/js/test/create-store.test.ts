@@ -37,7 +37,7 @@ test('create-store: success', async (t) => {
   assertConfirmedTransaction(t, createStoreRes.txConfirmed);
 });
 
-test('create-store: bad name', async (t) => {
+test('create-store: name length is longer the specification value', async (t) => {
   const payer = Keypair.generate();
   const store = Keypair.generate();
   addLabel('create:payer', payer);
@@ -52,14 +52,14 @@ test('create-store: bad name', async (t) => {
         admin: payer.publicKey,
       },
       {
-        name: 'izd5Pr9ltIAJL4ac8cYMUDlakSXNPnJPfR9awYq2',
-        description: '',
+        name: 'n'.repeat(41),
+        description: 'd'.repeat(60),
       },
     ),
   );
 });
 
-test('create-store: bad description', async (t) => {
+test('create-store: description length is longer the specification value', async (t) => {
   const payer = Keypair.generate();
   const store = Keypair.generate();
   addLabel('create:payer', payer);
@@ -74,8 +74,8 @@ test('create-store: bad description', async (t) => {
         admin: payer.publicKey,
       },
       {
-        name: 'izd5Pr9ltIAJL4ac8cYMUDlakSXNPnJPfR9awYq2',
-        description: '',
+        name: 'n'.repeat(10),
+        description: 'd'.repeat(61),
       },
     ),
   );

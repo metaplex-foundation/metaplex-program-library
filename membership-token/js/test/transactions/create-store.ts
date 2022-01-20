@@ -14,8 +14,8 @@ export const createStoreTransaction = async (
       admin: payer.publicKey,
     },
     {
-      name: 'izd5Pr9ltIAJL4ac8cYMUDlakSXNPnJPfR9awYq2',
-      description: 'HBtoUA5sTkPZRo5dkkP01WgFX4A6yPflFRtG3nZOAaWZ7Pipe3xIgvBRdLTY',
+      name: 'Brand new Store',
+      description: 'Description the Store',
     },
   );
 
