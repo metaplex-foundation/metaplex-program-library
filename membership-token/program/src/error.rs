@@ -58,4 +58,16 @@ pub enum ErrorCode {
     // 6017
     #[msg("Supply is gt than max supply")]
     SupplyIsGtThanMaxSupply,
+    // 6018
+    #[msg("Market duration is not unlimited")]
+    MarketDurationIsNotUnlimited,
+    // 6019
+    #[msg("Market is suspended")]
+    MarketIsSuspended,
+    // 6020
+    #[msg("Market is immutable")]
+    MarketIsImmutable,
+    // 6021
+    #[msg("Market in invalid state")]
+    MarketInInvalidState,
 }

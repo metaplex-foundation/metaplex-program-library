@@ -142,6 +142,11 @@ pub mod membership_token {
         let metadata_mint = selling_resource.resource.clone();
         let edition = selling_resource.supply;
 
+        // Check, that `Market` is not in `Suspended` state
+        if market.state == MarketState::Suspended {
+            return Err(ErrorCode::MarketIsSuspended.into());
+        }
+
         // Check, that `Market` is started
         if market.start_date > clock.unix_timestamp as u64 {
             return Err(ErrorCode::MarketIsNotStarted.into());
@@ -152,6 +157,8 @@ pub mod membership_token {
             if clock.unix_timestamp as u64 > end_date {
                 return Err(ErrorCode::MarketIsEnded.into());
             }
+        } else if market.state == MarketState::Ended {
+            return Err(ErrorCode::MarketIsEnded.into());
         }
 
         if trade_history.market != market.key() {
@@ -219,6 +226,140 @@ pub mod membership_token {
                 return Err(ErrorCode::SupplyIsGtThanMaxSupply.into());
             }
         }
+
+        Ok(())
+    }
+
+    pub fn close_market<'info>(
+        ctx: Context<'_, '_, '_, 'info, CloseMarket<'info>>,
+    ) -> ProgramResult {
+        let market = &mut ctx.accounts.market;
+
+        // Check, that `Market` is with unlimited duration
+        if market.end_date.is_some() {
+            return Err(ErrorCode::MarketDurationIsNotUnlimited.into());
+        }
+
+        market.state = MarketState::Ended;
+
+        Ok(())
+    }
+
+    pub fn suspend_market<'info>(
+        ctx: Context<'_, '_, '_, 'info, SuspendMarket<'info>>,
+    ) -> ProgramResult {
+        let market = &mut ctx.accounts.market;
+        let clock = &ctx.accounts.clock;
+
+        // Check, that `Market` is in `Active` state
+        if market.state == MarketState::Ended {
+            return Err(ErrorCode::MarketIsEnded.into());
+        }
+
+        if let Some(end_date) = market.end_date {
+            if clock.unix_timestamp as u64 > end_date {
+                return Err(ErrorCode::MarketIsEnded.into());
+            }
+        }
+
+        // Check, that `Market` is mutable
+        if !market.mutable {
+            return Err(ErrorCode::MarketIsImmutable.into());
+        }
+
+        // Check, that `Market` is not in `Suspended` state
+        if market.state == MarketState::Suspended {
+            return Err(ErrorCode::MarketIsSuspended.into());
+        }
+
+        market.state = MarketState::Suspended;
+
+        Ok(())
+    }
+
+    pub fn change_market<'info>(
+        ctx: Context<'_, '_, '_, 'info, ChangeMarket<'info>>,
+        new_name: Option<String>,
+        new_description: Option<String>,
+        mutable: Option<bool>,
+        new_price: Option<u64>,
+        new_pieces_in_one_wallet: Option<u64>,
+    ) -> ProgramResult {
+        let market = &mut ctx.accounts.market;
+        let clock = &ctx.accounts.clock;
+
+        // Check, that `Market` is in `Suspended` state
+        if market.state != MarketState::Suspended {
+            return Err(ErrorCode::MarketInInvalidState.into());
+        }
+
+        // Check, that `Market` is not in `Ended` state
+        if let Some(end_date) = market.end_date {
+            if clock.unix_timestamp as u64 > end_date {
+                return Err(ErrorCode::MarketIsEnded.into());
+            }
+        }
+
+        // Check, that `Market` is mutable
+        if !market.mutable {
+            return Err(ErrorCode::MarketIsImmutable.into());
+        }
+
+        if let Some(new_name) = new_name {
+            if new_name.len() > NAME_MAX_LEN {
+                return Err(ErrorCode::NameIsTooLong.into());
+            }
+
+            market.name = puffed_out_string(new_name, NAME_MAX_LEN);
+        }
+
+        if let Some(new_description) = new_description {
+            if new_description.len() > DESCRIPTION_MAX_LEN {
+                return Err(ErrorCode::DescriptionIsTooLong.into());
+            }
+
+            market.description = puffed_out_string(new_description, DESCRIPTION_MAX_LEN);
+        }
+
+        if let Some(mutable) = mutable {
+            market.mutable = mutable;
+        }
+
+        if let Some(new_price) = new_price {
+            market.price = new_price;
+        }
+
+        // Check is required, because we can overwrite existing value
+        if let Some(new_pieces_in_one_wallet) = new_pieces_in_one_wallet {
+            market.pieces_in_one_wallet = Some(new_pieces_in_one_wallet);
+        }
+
+        Ok(())
+    }
+
+    pub fn resume_market<'info>(
+        ctx: Context<'_, '_, '_, 'info, ResumeMarket<'info>>,
+    ) -> ProgramResult {
+        let market = &mut ctx.accounts.market;
+        let clock = &ctx.accounts.clock;
+
+        // Check, that `Market` is not in `Ended` state
+        if market.state == MarketState::Ended {
+            return Err(ErrorCode::MarketIsEnded.into());
+        }
+
+        if let Some(end_date) = market.end_date {
+            if clock.unix_timestamp as u64 > end_date {
+                return Err(ErrorCode::MarketIsEnded.into());
+            }
+        }
+
+        // Check, that `Market` is in `Suspended` state
+        if market.state != MarketState::Suspended {
+            return Err(ErrorCode::MarketInInvalidState.into());
+        }
+
+        market.state = MarketState::Active;
 
         Ok(())
     }
@@ -362,6 +503,41 @@ pub struct Buy<'info> {
     token_metadata_program: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction()]
+pub struct CloseMarket<'info> {
+    #[account(mut, has_one=owner)]
+    market: Box<Account<'info, Market>>,
+    owner: Signer<'info>,
+}
+
+#[derive(Accounts)]
+#[instruction()]
+pub struct SuspendMarket<'info> {
+    #[account(mut, has_one=owner)]
+    market: Box<Account<'info, Market>>,
+    owner: Signer<'info>,
+    clock: Sysvar<'info, Clock>,
+}
+
+#[derive(Accounts)]
+#[instruction()]
+pub struct ResumeMarket<'info> {
+    #[account(mut, has_one=owner)]
+    market: Box<Account<'info, Market>>,
+    owner: Signer<'info>,
+    clock: Sysvar<'info, Clock>,
+}
+
+#[derive(Accounts)]
+#[instruction(new_name: Option<String>, new_description: Option<String>, mutable: Option<bool>, new_price: Option<u64>, new_pieces_in_one_wallet: Option<u64>)]
+pub struct ChangeMarket<'info> {
+    #[account(mut, has_one=owner)]
+    market: Box<Account<'info, Market>>,
+    owner: Signer<'info>,
+    clock: Sysvar<'info, Clock>,
 }
 
 #[derive(Accounts)]
