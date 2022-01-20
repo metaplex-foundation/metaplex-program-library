@@ -9,3 +9,9 @@ export const findVaultOwnerAddress = (mint: PublicKey, store: PublicKey) => {
     new PublicKey(PROGRAM_ID),
   );
 };
+
+export const checkByteSizes = (value: String, length: number): String => {
+  const bytesLength = Buffer.from(value, 'utf8').byteLength;
+
+  return bytesLength < length ? value + ' '.repeat(length - bytesLength) : value;
+};
