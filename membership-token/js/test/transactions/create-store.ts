@@ -1,6 +1,7 @@
 import { Connection, Keypair, Transaction } from '@solana/web3.js';
 
 import { createCreateStoreInstruction } from '../../src/mpl-membership-token';
+import { createAndSignTransaction } from '../utils';
 
 export const createStoreTransaction = async (
   payer: Keypair,
@@ -19,11 +20,7 @@ export const createStoreTransaction = async (
     },
   );
 
-  const transaction = new Transaction();
-  transaction.add(instruction);
-  transaction.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-  transaction.feePayer = payer.publicKey;
-  transaction.partialSign(store);
+  const transaction = await createAndSignTransaction(instruction, connection, payer, [store]);
 
   return {
     store,

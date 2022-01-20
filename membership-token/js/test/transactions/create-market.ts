@@ -2,6 +2,7 @@ import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
 import { createCreateMarketInstruction } from '../../src/mpl-membership-token';
+import { createAndSignTransaction } from '../utils';
 
 export const createMarketTransaction = async ({
   store,
@@ -62,12 +63,10 @@ export const createMarketTransaction = async ({
     },
   );
 
-  const marketTx = new Transaction();
-  marketTx.add(instruction);
-  marketTx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-  marketTx.feePayer = payer.publicKey;
-  marketTx.partialSign(market, sellingResourceOwner);
-
+  const marketTx: Transaction = await createAndSignTransaction(instruction, connection, payer, [
+    market,
+    sellingResourceOwner,
+  ]);
   return {
     market,
     marketTx,
