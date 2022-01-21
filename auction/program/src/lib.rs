@@ -11,4 +11,4 @@ pub mod processor;
 pub const PREFIX: &str = "auction";
 pub const EXTENDED: &str = "extended";
 pub const BIDDER_POT_TOKEN: &str = "bidder_pot_token";
-solana_program::declare_id!("NH1kx3qaCqEMABLf3H5Dh3XKzFXd6LgoSmTyZj9p3L8");
+solana_program::declare_id!("GsgdMuQZnMAg4zCkc86JGSgZqRq55jTb8iBf4omiKnND");
