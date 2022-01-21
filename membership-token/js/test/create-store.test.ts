@@ -1,6 +1,6 @@
 import test from 'tape';
 import { Connection, Keypair } from '@solana/web3.js';
-import { connectionURL, killStuckProcess } from './utils';
+import { connectionURL, killStuckProcess, logDebug } from './utils';
 import {
   airdrop,
   assertConfirmedTransaction,
@@ -31,6 +31,8 @@ test('create-store: success', async (t) => {
     defaultSendOptions,
   );
   addLabel('create:store', store);
+  logDebug(`store: ${store.publicKey}`);
+  logDebug(createStoreRes.txSummary.logMessages.join('\n'));
 
   assertConfirmedTransaction(t, createStoreRes.txConfirmed);
 });

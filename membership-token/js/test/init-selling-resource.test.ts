@@ -10,7 +10,7 @@ import {
 
 import { findVaultOwnerAddress } from '../src/utils';
 
-import { addLabel } from './utils';
+import { addLabel, logDebug } from './utils';
 import { createStoreTransaction } from './transactions/create-store';
 import { mintNFT } from './actions/mint-nft';
 import { createInitSellingResourceTransaction } from './transactions/init-selling-resouce';
@@ -47,6 +47,7 @@ test('init-selling-resource: success', async (t) => {
     payer: payer.publicKey,
     connection,
   });
+  logDebug(`mint: ${resourceMint.publicKey}`);
 
   const [vaultOwner, vaultOwnerBump] = await findVaultOwnerAddress(
     resourceMint.publicKey,
@@ -87,4 +88,7 @@ test('init-selling-resource: success', async (t) => {
 
   addLabel('create:selling-resource', sellingResource);
   assertConfirmedTransaction(t, initSellingResourceRes.txConfirmed);
+
+  logDebug(`sellingResource: ${store.publicKey}`);
+  logDebug(initSellingResourceRes.txSummary.logMessages.join('\n'));
 });
