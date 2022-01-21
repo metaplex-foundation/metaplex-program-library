@@ -11,10 +11,14 @@ use crate::{
         HOLDER_PREFIX, NAME_MAX_LEN, PAYOUT_TICKET_PREFIX, VAULT_OWNER_PREFIX,
     },
 };
-use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program::invoke, system_instruction},
+    AnchorDeserialize, AnchorSerialize, System,
+};
 use anchor_spl::{
     associated_token::{self, get_associated_token_address, AssociatedToken},
-    token::{self, Mint, Token, TokenAccount},
+    token::{self, Mint, Token, TokenAccount, accessor},
 };
 use spl_token::native_mint;
 
@@ -181,14 +185,31 @@ pub mod membership_token {
         }
 
         // Buy new edition
-        let cpi_program = token_program.to_account_info();
-        let cpi_accounts = token::Transfer {
-            from: user_token_account.to_account_info(),
-            to: treasury_holder.to_account_info(),
-            authority: user_wallet.to_account_info(),
-        };
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        token::transfer(cpi_ctx, market.price)?;
+        let is_native = market.treasury_mint == System::id();
+
+        if !is_native {
+            let cpi_program = token_program.to_account_info();
+            let cpi_accounts = token::Transfer {
+                from: user_token_account.to_account_info(),
+                to: treasury_holder.to_account_info(),
+                authority: user_wallet.to_account_info(),
+            };
+            let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+            token::transfer(cpi_ctx, market.price)?;
+        } else {
+            invoke(
+                // for native SOL transfer user_wallet key == user_token_account key
+                &system_instruction::transfer(
+                    &user_token_account.key(),
+                    &treasury_holder.key(),
+                    market.price,
+                ),
+                &[
+                    user_token_account.to_account_info(),
+                    treasury_holder.to_account_info(),
+                ],
+            )?;
+        }
 
         mpl_mint_new_edition_from_master_edition_via_token(
             &new_metadata.to_account_info(),
@@ -591,8 +612,8 @@ pub mod membership_token {
         let store = &ctx.accounts.store;
         let selling_resource_owner = &ctx.accounts.selling_resource_owner;
         let selling_resource = &ctx.accounts.selling_resource;
-        let mint = &ctx.accounts.mint;
-        let treasury_holder = &ctx.accounts.treasury_holder;
+        let mint = ctx.accounts.mint.to_account_info();
+        let treasury_holder = ctx.accounts.treasury_holder.to_account_info();
         let owner = &ctx.accounts.owner;
 
         if name.len() > NAME_MAX_LEN {
@@ -619,6 +640,30 @@ pub mod membership_token {
         // end_date should not be greater than start_date
         if end_date.is_some() && start_date > end_date.unwrap() {
             return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
+        }
+
+        let is_native = mint.key() == System::id();
+
+        if !is_native {
+            if mint.owner != &anchor_spl::token::ID
+                || treasury_holder.owner != &anchor_spl::token::ID
+            {
+                return Err(ProgramError::IllegalOwner);
+            }
+
+            if accessor::mint(&treasury_holder)? != *mint.key {
+                return Err(ProgramError::InvalidAccountData);
+            }
+
+            if accessor::authority(&treasury_holder)? != owner.key() {
+                return Err(ProgramError::InvalidAccountData);
+            }
+        } else {
+            // for native SOL we use PDA as a treasury holder
+            // because of security reasons(only program can spend this SOL)
+            if treasury_holder.key != owner.key {
+                return Err(ProgramError::InvalidAccountData);
+            }
         }
 
         // Check selling resource ownership
@@ -685,12 +730,12 @@ pub struct Buy<'info> {
     #[account(mut)]
     selling_resource: Box<Account<'info, SellingResource>>,
     #[account(mut)]
-    user_token_account: Box<Account<'info, TokenAccount>>,
+    user_token_account: UncheckedAccount<'info>,
     user_wallet: Signer<'info>,
     #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump=trade_history_bump, payer=user_wallet)]
     trade_history: Account<'info, TradeHistory>,
     #[account(mut)]
-    treasury_holder: Box<Account<'info, TokenAccount>>,
+    treasury_holder: UncheckedAccount<'info>,
     // Will be created by `mpl_token_metadata`
     #[account(mut)]
     new_metadata: UncheckedAccount<'info>,
@@ -778,7 +823,7 @@ pub struct Withdraw<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(treasyry_owner_bump: u8, name: String, description: String, mutable: bool, price: u64, pieces_in_one_wallet: Option<u64>, start_date: u64, end_date: Option<u64>)]
+#[instruction(treasury_owner_bump: u8, name: String, description: String, mutable: bool, price: u64, pieces_in_one_wallet: Option<u64>, start_date: u64, end_date: Option<u64>)]
 pub struct CreateMarket<'info> {
     #[account(init, space=Market::LEN, payer=selling_resource_owner)]
     market: Box<Account<'info, Market>>,
@@ -787,10 +832,10 @@ pub struct CreateMarket<'info> {
     selling_resource_owner: Signer<'info>,
     #[account(mut, has_one=store)]
     selling_resource: Box<Account<'info, SellingResource>>,
-    mint: Box<Account<'info, Mint>>,
-    #[account(mut, has_one=owner, has_one=mint)]
-    treasury_holder: Box<Account<'info, TokenAccount>>,
-    #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasyry_owner_bump)]
+    mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    treasury_holder: UncheckedAccount<'info>,
+    #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasury_owner_bump)]
     owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
 }
