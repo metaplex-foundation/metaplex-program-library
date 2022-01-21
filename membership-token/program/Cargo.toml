@@ -18,6 +18,7 @@ default = []
 [dependencies]
 anchor-lang = "0.20.1"
 anchor-spl = "0.20.1"
+spl-token = "3.2.0"
 mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ], version="1.1.0" }
 
 [dev-dependencies]
@@ -25,5 +26,5 @@ anchor-client = "0.20.1"
 solana-program-test = "1.8.5"
 solana-program = "1.8.5"
 solana-sdk = "1.8.5"
-spl-token = "3.2.0"
 chrono = "0.4.19"
+spl-associated-token-account = "1.0.3"

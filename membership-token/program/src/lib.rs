@@ -7,12 +7,16 @@ use crate::{
     state::{Market, MarketState, SellingResource, SellingResourceState, Store, TradeHistory},
     utils::{
         assert_derivation, assert_keys_equal, mpl_mint_new_edition_from_master_edition_via_token,
-        puffed_out_string, DESCRIPTION_MAX_LEN, HISTORY_PREFIX, HOLDER_PREFIX, NAME_MAX_LEN,
-        VAULT_OWNER_PREFIX,
+        puffed_out_string, sys_create_account, sys_transfer, DESCRIPTION_MAX_LEN, HISTORY_PREFIX,
+        HOLDER_PREFIX, NAME_MAX_LEN, PAYOUT_TICKET_PREFIX, VAULT_OWNER_PREFIX,
     },
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
-use anchor_spl::token::{self, Mint, Token, TokenAccount};
+use anchor_spl::{
+    associated_token::{self, get_associated_token_address, AssociatedToken},
+    token::{self, Mint, Token, TokenAccount},
+};
+use spl_token::native_mint;
 
 declare_id!("EHE2kYEETZbRfhQoNtknbnqrrpKEojbohSagkGdiJ6wm");
 
@@ -326,6 +330,10 @@ pub mod membership_token {
         }
 
         if let Some(new_price) = new_price {
+            if new_price == 0 {
+                return Err(ErrorCode::PriceIsZero.into());
+            }
+
             market.price = new_price;
         }
 
@@ -360,6 +368,210 @@ pub mod membership_token {
         }
 
         market.state = MarketState::Active;
+
+        Ok(())
+    }
+
+    pub fn withdraw<'info>(
+        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
+        treasury_owner_bump: u8,
+        payout_ticket_bump: u8,
+    ) -> ProgramResult {
+        let market = &ctx.accounts.market;
+        let token_program = &ctx.accounts.token_program;
+        let associated_token_program = &ctx.accounts.associated_token_program;
+        let system_program = &ctx.accounts.system_program;
+        let treasury_holder = &ctx.accounts.treasury_holder;
+        let treasury_mint = &ctx.accounts.treasury_mint;
+        let treasury_owner = &ctx.accounts.owner;
+        let destination = &ctx.accounts.destination;
+        let selling_resource = &ctx.accounts.selling_resource;
+        let funder = &ctx.accounts.funder;
+        let payer = &ctx.accounts.payer;
+        let payout_ticket = &ctx.accounts.payout_ticket;
+        let rent = &ctx.accounts.rent;
+        let clock = &ctx.accounts.clock;
+        let metadata = &ctx.accounts.metadata.to_account_info();
+
+        let selling_resource_key = selling_resource.key().clone();
+        let treasury_mint_key = market.treasury_mint.clone();
+        let funder_key = funder.key();
+
+        // Check, that `Market` is `Ended`
+        if let Some(end_date) = market.end_date {
+            if clock.unix_timestamp as u64 <= end_date {
+                return Err(ErrorCode::MarketInInvalidState.into());
+            }
+        } else {
+            if market.state != MarketState::Ended {
+                return Err(ErrorCode::MarketInInvalidState.into());
+            }
+        }
+
+        // Check, that provided metadata is correct
+        assert_derivation(
+            &mpl_token_metadata::id(),
+            metadata,
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                selling_resource.resource.as_ref(),
+            ],
+        )?;
+
+        // Check, that funder is `Creator` or `Market` owner
+        let metadata = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
+
+        // `Some` mean funder is `Creator`
+        // `None` mean funder is `Market` owner
+        let funder_creator = if let Some(creators) = metadata.data.creators {
+            let funder_creator = creators.iter().find(|&c| c.address == funder_key).cloned();
+            if funder_creator.is_none() && funder_key != market.owner {
+                return Err(ErrorCode::FunderIsInvalid.into());
+            }
+
+            funder_creator
+        } else if funder_key != market.owner {
+            return Err(ErrorCode::FunderIsInvalid.into());
+        } else {
+            None
+        };
+
+        // Check, that tokens is available for funder
+        if payout_ticket.lamports() > 0 && !payout_ticket.data_is_empty() {
+            return Err(ErrorCode::PayoutTicketExists.into());
+        }
+
+        // Calculate amount
+        let total_amount = treasury_holder.amount;
+        let amount = if metadata.primary_sale_happened {
+            if let Some(funder_creator) = funder_creator {
+                let share_bp = (funder_creator.share as u64)
+                    .checked_mul(100)
+                    .ok_or(ErrorCode::MathOverflow)?;
+                total_amount
+                    .checked_mul(share_bp)
+                    .ok_or(ErrorCode::MathOverflow)?
+                    .checked_div(10000)
+                    .ok_or(ErrorCode::MathOverflow)?
+            } else {
+                0
+            }
+        } else {
+            if funder_creator.is_some() && funder_key == market.owner {
+                let funder_creator = funder_creator.as_ref().unwrap();
+
+                let x = (total_amount
+                    .checked_mul(metadata.data.seller_fee_basis_points as u64)
+                    .ok_or(ErrorCode::MathOverflow)?
+                    .checked_div(10000)
+                    .ok_or(ErrorCode::MathOverflow)?)
+                .checked_mul(funder_creator.share as u64)
+                .ok_or(ErrorCode::MathOverflow)?
+                .checked_div(100)
+                .ok_or(ErrorCode::MathOverflow)?;
+
+                let y = total_amount
+                    .checked_sub(
+                        total_amount
+                            .checked_mul(metadata.data.seller_fee_basis_points as u64)
+                            .ok_or(ErrorCode::MathOverflow)?
+                            .checked_div(10000)
+                            .ok_or(ErrorCode::MathOverflow)?,
+                    )
+                    .ok_or(ErrorCode::MathOverflow)?;
+
+                x.checked_add(y).ok_or(ErrorCode::MathOverflow)?
+            } else if let Some(funder_creator) = &funder_creator {
+                (total_amount
+                    .checked_mul(metadata.data.seller_fee_basis_points as u64)
+                    .ok_or(ErrorCode::MathOverflow)?
+                    .checked_div(10000)
+                    .ok_or(ErrorCode::MathOverflow)?)
+                .checked_mul(funder_creator.share as u64)
+                .ok_or(ErrorCode::MathOverflow)?
+                .checked_div(100)
+                .ok_or(ErrorCode::MathOverflow)?
+            } else {
+                total_amount
+                    .checked_sub(
+                        total_amount
+                            .checked_mul(metadata.data.seller_fee_basis_points as u64)
+                            .ok_or(ErrorCode::MathOverflow)?
+                            .checked_div(10000)
+                            .ok_or(ErrorCode::MathOverflow)?,
+                    )
+                    .ok_or(ErrorCode::MathOverflow)?
+            }
+        };
+
+        // Transfer royalties
+        let signer_seeds: &[&[&[u8]]] = &[&[
+            HOLDER_PREFIX.as_bytes(),
+            treasury_mint_key.as_ref(),
+            selling_resource_key.as_ref(),
+            &[treasury_owner_bump],
+        ]];
+
+        if market.treasury_mint == native_mint::id() {
+            if funder_key != destination.key() {
+                return Err(ErrorCode::InvalidFunderDestination.into());
+            }
+
+            sys_transfer(
+                &treasury_holder.to_account_info(),
+                &destination.to_account_info(),
+                amount,
+                signer_seeds[0],
+            )?;
+        } else {
+            let associated_token_account =
+                get_associated_token_address(&funder_key, &market.treasury_mint);
+
+            // Check, that provided destination is associated token account
+            if associated_token_account != destination.key() {
+                return Err(ErrorCode::InvalidFunderDestination.into());
+            }
+
+            // Check, that provided destination is exists
+            if destination.lamports() == 0 && destination.data_is_empty() {
+                let cpi_program = associated_token_program.to_account_info();
+                let cpi_accounts = associated_token::Create {
+                    payer: payer.to_account_info(),
+                    associated_token: destination.to_account_info(),
+                    authority: funder.to_account_info(),
+                    mint: treasury_mint.to_account_info(),
+                    rent: rent.to_account_info(),
+                    token_program: token_program.to_account_info(),
+                    system_program: system_program.to_account_info(),
+                };
+                let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+                associated_token::create(cpi_ctx)?;
+            }
+
+            let cpi_program = token_program.to_account_info();
+            let cpi_accounts = token::Transfer {
+                from: treasury_holder.to_account_info(),
+                to: destination.to_account_info(),
+                authority: treasury_owner.to_account_info(),
+            };
+            let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
+            token::transfer(cpi_ctx, amount)?;
+        }
+
+        sys_create_account(
+            &payer.to_account_info(),
+            &payout_ticket.to_account_info(),
+            rent.minimum_balance(1),
+            1,
+            &id(),
+            &[
+                PAYOUT_TICKET_PREFIX.as_bytes(),
+                market.key().as_ref(),
+                funder_key.as_ref(),
+                &[payout_ticket_bump],
+            ],
+        )?;
 
         Ok(())
     }
@@ -509,7 +721,7 @@ pub struct Buy<'info> {
 #[instruction()]
 pub struct CloseMarket<'info> {
     #[account(mut, has_one=owner)]
-    market: Box<Account<'info, Market>>,
+    market: Account<'info, Market>,
     owner: Signer<'info>,
 }
 
@@ -517,7 +729,7 @@ pub struct CloseMarket<'info> {
 #[instruction()]
 pub struct SuspendMarket<'info> {
     #[account(mut, has_one=owner)]
-    market: Box<Account<'info, Market>>,
+    market: Account<'info, Market>,
     owner: Signer<'info>,
     clock: Sysvar<'info, Clock>,
 }
@@ -526,7 +738,7 @@ pub struct SuspendMarket<'info> {
 #[instruction()]
 pub struct ResumeMarket<'info> {
     #[account(mut, has_one=owner)]
-    market: Box<Account<'info, Market>>,
+    market: Account<'info, Market>,
     owner: Signer<'info>,
     clock: Sysvar<'info, Clock>,
 }
@@ -535,9 +747,34 @@ pub struct ResumeMarket<'info> {
 #[instruction(new_name: Option<String>, new_description: Option<String>, mutable: Option<bool>, new_price: Option<u64>, new_pieces_in_one_wallet: Option<u64>)]
 pub struct ChangeMarket<'info> {
     #[account(mut, has_one=owner)]
-    market: Box<Account<'info, Market>>,
+    market: Account<'info, Market>,
     owner: Signer<'info>,
     clock: Sysvar<'info, Clock>,
+}
+
+#[derive(Accounts)]
+#[instruction(treasury_owner_bump: u8, payout_ticket_bump: u8)]
+pub struct Withdraw<'info> {
+    #[account(has_one=treasury_holder, has_one=selling_resource, has_one=treasury_mint)]
+    market: Account<'info, Market>,
+    selling_resource: Account<'info, SellingResource>,
+    metadata: UncheckedAccount<'info>,
+    #[account(mut, has_one=owner)]
+    treasury_holder: Box<Account<'info, TokenAccount>>,
+    treasury_mint: Box<Account<'info, Mint>>,
+    #[account(seeds=[HOLDER_PREFIX.as_bytes(), market.treasury_mint.as_ref(), market.selling_resource.as_ref()], bump=treasury_owner_bump)]
+    owner: UncheckedAccount<'info>,
+    #[account(mut)]
+    destination: UncheckedAccount<'info>,
+    funder: UncheckedAccount<'info>,
+    payer: Signer<'info>,
+    #[account(mut, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump=payout_ticket_bump)]
+    payout_ticket: UncheckedAccount<'info>,
+    rent: Sysvar<'info, Rent>,
+    clock: Sysvar<'info, Clock>,
+    token_program: Program<'info, Token>,
+    associated_token_program: Program<'info, AssociatedToken>,
+    system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
