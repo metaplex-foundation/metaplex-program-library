@@ -16,7 +16,8 @@ use solana_program::system_program;
 use crate::{
     errors::AuctionError,
     processor::{
-        AuctionData, AuctionDataExtended, AuctionState, Bid, BidderMetadata, BidderPot, PriceFloor,
+        AuctionData, AuctionDataExtended, AuctionState, Bid, BidState, BidderMetadata, BidderPot,
+        PriceFloor,
     },
     utils::{
         assert_derivation, assert_initialized, assert_owned_by, assert_signer,
@@ -267,6 +268,20 @@ pub fn place_bid<'r, 'b: 'r>(
         assert_initialized::<Account>(accounts.bidder_pot_token)?;
     }
 
+    //Check the bidtype:
+    let bid_type = match auction.bid_state {
+        BidState::EnglishAuction { ref bids, max } => 0,
+        BidState::OpenEdition { ref bids, max } => 1,
+        BidState::DutchAuction { ref bids, max } => 2,
+    };
+
+    let lamp = 1000000000;
+
+    let price_floor = match auction.price_floor {
+        PriceFloor::MinimumPrice(v) => v[0],
+        _ => 0,
+    };
+
     // Update now we have new bid.
     assert_derivation(
         program_id,
@@ -284,6 +299,60 @@ pub fn place_bid<'r, 'b: 'r>(
         .total_uncancelled_bids
         .checked_add(1)
         .ok_or(AuctionError::NumericalOverflowError)?;
+    if bid_type == 2 {
+        msg!("{}", "Inside Auction Data Extended");
+        let price_ceiling: u64 = match auction_extended.instant_sale_price {
+            Some(v) => v as u64,
+            None => 0,
+        };
+
+        let decrease_rate = 2 * lamp;
+
+        let decrease_rate_float: f64 = decrease_rate as f64 / lamp as f64;
+
+        let current_time = clock.unix_timestamp;
+
+        let auction_start_time: u64 = match auction_extended.auction_start_time {
+            Some(v) => v as u64,
+            None => 0,
+        };
+
+        let decrease_interval = match auction_extended.decrease_interval {
+            Some(v) => v as u64,
+            None => 0,
+        };
+
+        //time in minutes
+        let decrease_interval_float: f64 = decrease_interval as f64 / lamp as f64;
+
+        let time_difference = current_time as u64 - auction_start_time;
+
+        let remaining_time = 180 - (time_difference as u64) / 60;
+
+        if remaining_time <= 0 {
+            //handle this
+        }
+
+        //Check the parameters before placing bid
+        BidState::assert_dutch_parameters(Some(price_ceiling), price_floor);
+
+        //Updated ceiling price only if it is greater than the decline interval:
+
+        if time_difference as u64 > decrease_interval {
+            //Next ceiling price calulation
+
+            let decrease_value: f64 =
+                price_ceiling as f64 / lamp as f64 - price_floor as f64 / lamp as f64;
+
+            let decline_value: f64 = decrease_value * (decrease_rate_float / 100.0);
+
+            let val: u64 =
+                ((price_ceiling as f64 / lamp as f64 - decline_value) * lamp as f64) as u64;
+
+            //Now update the ceiling price:
+            auction_extended.instant_sale_price = Some(val);
+        }
+    }
     auction_extended.serialize(&mut *accounts.auction_extended.data.borrow_mut())?;
 
     let mut bid_price = args.amount;
@@ -324,6 +393,8 @@ pub fn place_bid<'r, 'b: 'r>(
         auction_extended.gap_tick_size_percentage,
         clock.unix_timestamp,
         auction_extended.instant_sale_price,
+        auction_extended.decrease_rate,
+        auction_extended.decrease_interval,
     )?;
     auction.serialize(&mut *accounts.auction.data.borrow_mut())?;
 

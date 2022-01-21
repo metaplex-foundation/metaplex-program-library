@@ -75,6 +75,7 @@ pub fn create_auction(
     args: CreateAuctionArgs,
     instant_sale_price: Option<u64>,
     name: Option<AuctionName>,
+    bid_type: Option<u8>,
 ) -> ProgramResult {
     msg!("+ Processing CreateAuction");
     let accounts = parse_accounts(program_id, accounts)?;
@@ -99,10 +100,64 @@ pub fn create_auction(
         WinnerLimit::Unlimited(_) => BASE_AUCTION_DATA_SIZE,
     };
 
+    let bid_type_u64: u64 = match bid_type {
+        Some(v) => v as u64,
+        None => 0,
+    };
+
     let bid_state = match args.winners {
-        WinnerLimit::Capped(n) => BidState::new_english(n),
+        WinnerLimit::Capped(n) => match bid_type_u64 {
+            0 => BidState::new_english(n),
+            2 => BidState::new_dutch(n),
+            _ => BidState::new_english(n),
+        },
         WinnerLimit::Unlimited(_) => BidState::new_open_edition(),
     };
+
+    let mut decline_interval = 0;
+    let lamp = 1000000000;
+    let decline_rate = 2 * lamp;
+    let mut send_decrease_rate: u64 = 0;
+
+    if (bid_type_u64 == 2) {
+        let price_ceiling: u64 = match instant_sale_price {
+            Some(v) => v as u64,
+            None => 0,
+        };
+
+        let price_floor = match args.price_floor {
+            PriceFloor::MinimumPrice(v) => v[0],
+            _ => 0,
+        };
+
+        let decrease_value: f64 =
+            price_ceiling as f64 / lamp as f64 - price_floor as f64 / lamp as f64;
+
+        let act_dec_rate: f64 = decline_rate as f64 / lamp as f64;
+
+        //decrease/minute
+        let decline_value: f64 = decrease_value * (act_dec_rate / 100.0);
+
+        send_decrease_rate = (decline_value * lamp as f64) as u64;
+
+        //Considering the toal time of dutch auction to be 180 minutes:
+        msg!("The decline value {}", decline_value);
+
+        //Calculating the decline_interval on the basis of decline value
+        decline_interval = (((180.0 / decrease_value) * decline_value) * lamp as f64) as u64;
+
+        // 1 minute = 10^9
+
+        if price_ceiling < 0 {
+            msg!("Ceiling price Price is either not set, or is set less than 0");
+            return Err(AuctionError::CeilingPriceMandatoryDuctchAuction.into());
+        }
+
+        if price_ceiling < price_floor as u64 {
+            msg!("Ceiling price can never be less than Floor price");
+            return Err(AuctionError::CeilingPriceLessThanFloorPrice.into());
+        }
+    }
 
     if let Some(gap_tick) = args.gap_tick_size_percentage {
         if gap_tick > 100 {
@@ -160,13 +215,16 @@ pub fn create_auction(
         gap_tick_size_percentage: args.gap_tick_size_percentage,
         instant_sale_price,
         name,
+        decrease_rate: Some(send_decrease_rate),
+        decrease_interval: Some(decline_interval),
+        auction_start_time: None,
     }
     .serialize(&mut *accounts.auction_extended.data.borrow_mut())?;
 
     // Configure Auction.
     AuctionData {
         authority: args.authority,
-        bid_state: bid_state,
+        bid_state,
         end_auction_at: args.end_auction_at,
         end_auction_gap: args.end_auction_gap,
         ended_at: None,

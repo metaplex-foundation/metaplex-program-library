@@ -111,6 +111,39 @@ pub fn assert_store_safety_vault_manager_match(
     Ok(())
 }
 
+pub fn assert_store_public_and_all_verified(
+    program_id: &Pubkey,
+    auction_manager: &AuctionManager,
+    metadata: &Metadata,
+    store_info: &AccountInfo,
+) -> ProgramResult {
+    let store = Store::from_account_info(store_info)?;
+    if store.public {
+        return Ok(());
+    }
+    if let Some(creators) = &metadata.data.creators {
+        for creator in creators {
+            // Now find at least one creator that can make this pda in the list
+            let (key, _) = Pubkey::find_program_address(
+                &[
+                    PREFIX.as_bytes(),
+                    program_id.as_ref(),
+                    auction_manager.store().as_ref(),
+                    creator.address.as_ref(),
+                ],
+                program_id,
+            );
+
+            if !creator.verified {
+                return Err(MetaplexError::CreatorHasNotVerifiedMetadata.into());
+            }
+        }
+
+        return Ok(());
+    }
+    Err(MetaplexError::InvalidWhitelistedCreator.into())
+}
+
 pub fn assert_at_least_one_creator_matches_or_store_public_and_all_verified(
     program_id: &Pubkey,
     auction_manager: &dyn AuctionManager,
