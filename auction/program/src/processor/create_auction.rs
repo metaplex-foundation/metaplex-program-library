@@ -100,13 +100,13 @@ pub fn create_auction(
         WinnerLimit::Unlimited(_) => BASE_AUCTION_DATA_SIZE,
     };
 
-    let bidType: u64 = match bid_type {
+    let bid_type_u64: u64 = match bid_type {
         Some(v) => v as u64,
         None => 0,
     };
 
     let bid_state = match args.winners {
-        WinnerLimit::Capped(n) => match bidType {
+        WinnerLimit::Capped(n) => match bid_type_u64 {
             0 => BidState::new_english(n),
             2 => BidState::new_dutch(n),
             _ => BidState::new_english(n),
@@ -119,7 +119,7 @@ pub fn create_auction(
     let decline_rate = 2 * lamp;
     let mut send_decrease_rate: u64 = 0;
 
-    if (bidType == 2) {
+    if (bid_type_u64 == 2) {
         let price_ceiling: u64 = match instant_sale_price {
             Some(v) => v as u64,
             None => 0,
@@ -224,7 +224,7 @@ pub fn create_auction(
     // Configure Auction.
     AuctionData {
         authority: args.authority,
-        bid_state: bid_state,
+        bid_state,
         end_auction_at: args.end_auction_at,
         end_auction_gap: args.end_auction_gap,
         ended_at: None,

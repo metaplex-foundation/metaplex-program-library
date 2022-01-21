@@ -433,9 +433,6 @@ impl AuctionData {
             gap_val,
             minimum,
             instant_sale_price,
-            &mut self.state,
-            decrease_rate,
-            decrease_interval,
         )?;
 
         self.consider_instant_bid(instant_sale_price);
@@ -594,9 +591,6 @@ impl BidState {
         gap_tick_size_percentage: Option<u8>,
         minimum: u64,
         instant_sale_price: Option<u64>,
-        auction_state: &mut AuctionState,
-        decrease_rate: Option<u64>,
-        decrease_interval: Option<u64>,
     ) -> Result<(), ProgramError> {
         msg!("Placing bid {:?}", &bid.1.to_string());
         BidState::assert_valid_tick_size_bid(&bid, tick_size)?;
@@ -685,25 +679,6 @@ impl BidState {
                     //insert just 1 bid and return the array to metaplex contract
                     bids.push(bid);
                 }
-                Ok(())
-            }
-
-            // In an open auction, bidding simply succeeds.
-            BidState::OpenEdition { bids, max } => Ok(()),
-
-            //---Dutch Auction
-            BidState::DutchAuction { ref mut bids, max } => {
-                //Checking the paramters
-                BidState::assert_dutch_parameters(instant_sale_price, minimum);
-
-                //if everything is okay, then insert at the end
-                msg!("Doing an on the end insert if there are no items in the bids array");
-
-                if (bids.len() == 0) {
-                    //insert just 1 bid and return the array to metaplex contract
-                    bids.push(bid);
-                }
-                //else simply return, everytime else
                 Ok(())
             }
         }
