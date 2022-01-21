@@ -13,6 +13,7 @@ pub const DESCRIPTION_DEFAULT_SIZE: usize = 4 + DESCRIPTION_MAX_LEN;
 pub const HOLDER_PREFIX: &str = "holder";
 pub const HISTORY_PREFIX: &str = "history";
 pub const VAULT_OWNER_PREFIX: &str = "mt_vault";
+pub const PAYOUT_TICKET_PREFIX: &str = "payout_ticket";
 
 /// Runtime derivation check
 pub fn assert_derivation(
@@ -62,6 +63,18 @@ pub fn find_trade_history_address(wallet: &Pubkey, market: &Pubkey) -> (Pubkey, 
     )
 }
 
+/// Return payout ticket Pubkey and bump seed.
+pub fn find_payout_ticket_address(market: &Pubkey, funder: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PAYOUT_TICKET_PREFIX.as_bytes(),
+            market.as_ref(),
+            funder.as_ref(),
+        ],
+        &id(),
+    )
+}
+
 /// Wrapper of `create_account` instruction from `system_program` program
 #[inline(always)]
 pub fn sys_create_account<'a>(
@@ -74,6 +87,23 @@ pub fn sys_create_account<'a>(
 ) -> ProgramResult {
     invoke_signed(
         &system_instruction::create_account(from.key, to.key, lamports, space as u64, owner),
+        &[from.clone(), to.clone()],
+        &[&signer_seeds],
+    )?;
+
+    Ok(())
+}
+
+/// Wrapper of `transfer` instruction from `system_program` program
+#[inline(always)]
+pub fn sys_transfer<'a>(
+    from: &AccountInfo<'a>,
+    to: &AccountInfo<'a>,
+    lamports: u64,
+    signer_seeds: &[&[u8]],
+) -> ProgramResult {
+    invoke_signed(
+        &system_instruction::transfer(from.key, to.key, lamports),
         &[from.clone(), to.clone()],
         &[&signer_seeds],
     )?;
