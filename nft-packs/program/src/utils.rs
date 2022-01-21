@@ -263,6 +263,8 @@ pub fn get_random_value(
     hasher.write_u64(clock.slot);
     // timestamp
     hasher.write_i64(clock.unix_timestamp);
+    // ProvingProcess(to make hash different for each instruction in the same slot)
+    hasher.write(proving_process.try_to_vec()?.as_ref());
 
     let mut random_value: [u8; 2] = [0u8; 2];
     random_value.copy_from_slice(&hasher.finish().to_le_bytes()[..2]);
