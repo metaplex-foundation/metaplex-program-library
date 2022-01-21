@@ -1,31 +1,30 @@
 #![allow(warnings)]
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use mpl_auction::{
-    errors::AuctionError,
-    instruction,
-    processor::{
-        process_instruction, AuctionData, AuctionState, Bid, BidState, BidderPot, CancelBidArgs,
-        CreateAuctionArgs, PlaceBidArgs, PriceFloor, StartAuctionArgs, WinnerLimit,
-    },
-    BIDDER_POT_TOKEN, PREFIX,
-};
-use mpl_testing_utils::assert_custom_error;
-use num_traits::FromPrimitive;
 use solana_program::{borsh::try_from_slice_unchecked, instruction::InstructionError};
 use solana_program_test::*;
+use solana_sdk::program_pack::Pack;
 use solana_sdk::{
     account::Account,
     hash::Hash,
     instruction::{AccountMeta, Instruction},
-    program_pack::Pack,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_instruction, system_program,
     transaction::{Transaction, TransactionError},
     transport::TransportError,
 };
+use metaplex_auction::{
+    errors::AuctionError,
+    instruction,
+    processor::{
+        process_instruction, AuctionData, AuctionState, Bid, BidState, BidderPot, CancelBidArgs,
+        CreateAuctionArgs, PlaceBidArgs, PriceFloor, StartAuctionArgs, WinnerLimit,
+    },
+    PREFIX,
+};
 use std::mem;
+
 mod helpers;
 
 /// Initialize an auction with a random resource, and generate bidders with tokens that can be used
@@ -40,7 +39,7 @@ async fn setup_auction(
 ) -> (
     Pubkey,
     BanksClient,
-    Vec<(Keypair, Pubkey, Pubkey)>,
+    Vec<(Keypair, Keypair, Pubkey)>,
     Keypair,
     Pubkey,
     Pubkey,
@@ -51,7 +50,7 @@ async fn setup_auction(
     // Create a program to attach accounts to.
     let program_id = Pubkey::new_unique();
     let mut program_test =
-        ProgramTest::new("mpl_auction", program_id, processor!(process_instruction));
+        ProgramTest::new("metaplex_auction", program_id, processor!(process_instruction));
 
     // Start executing test.
     let (mut banks_client, payer, recent_blockhash) = program_test.start().await;
@@ -91,6 +90,7 @@ async fn setup_auction(
         // Bidder SPL Account, with Minted Tokens
         let bidder = Keypair::new();
         // PDA in the auction for the Bidder to deposit their funds to.
+        let auction_spl_pot = Keypair::new();
 
         // Generate User SPL Wallet Account
         helpers::create_token_account(
@@ -114,13 +114,18 @@ async fn setup_auction(
             ],
             &program_id,
         );
-        let pot_token_seeds = &[
-            PREFIX.as_bytes(),
-            bid_pot_pubkey.as_ref(),
-            BIDDER_POT_TOKEN.as_bytes(),
-        ];
-        let (pot_token, pot_token_bump) =
-            Pubkey::find_program_address(pot_token_seeds, &program_id);
+
+        // Generate Auction SPL Pot to Transfer to.
+        helpers::create_token_account(
+            &mut banks_client,
+            &payer,
+            &recent_blockhash,
+            &auction_spl_pot,
+            &mint_keypair.pubkey(),
+            &auction_pubkey,
+        )
+        .await
+        .unwrap();
 
         // Mint Tokens
         helpers::mint_tokens(
@@ -135,7 +140,7 @@ async fn setup_auction(
         .await
         .unwrap();
 
-        bidders.push((bidder, pot_token, bid_pot_pubkey));
+        bidders.push((bidder, auction_spl_pot, bid_pot_pubkey));
     }
 
     // Verify Auction was created as expected.
@@ -304,7 +309,8 @@ async fn test_correct_runs() {
                     let pre_balance = (
                         helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                             .await,
-                        helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                        helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                            .await,
                     );
 
                     let transfer_authority = Keypair::new();
@@ -337,7 +343,8 @@ async fn test_correct_runs() {
                     let post_balance = (
                         helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                             .await,
-                        helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                        helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                            .await,
                     );
 
                     assert_eq!(post_balance.0, pre_balance.0 - amount);
@@ -349,7 +356,8 @@ async fn test_correct_runs() {
                     let pre_balance = (
                         helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                             .await,
-                        helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                        helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                            .await,
                     );
 
                     helpers::cancel_bid(
@@ -374,7 +382,8 @@ async fn test_correct_runs() {
                     let post_balance = (
                         helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                             .await,
-                        helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                        helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                            .await,
                     );
 
                     // Assert the balance successfully moves.
@@ -474,9 +483,11 @@ async fn test_correct_runs() {
                         err.expect("claim_bid");
 
                         // Bid pot should be empty
-                        let balance =
-                            helpers::get_token_balance(&mut banks_client, &bidders[index.0].1)
-                                .await;
+                        let balance = helpers::get_token_balance(
+                            &mut banks_client,
+                            &bidders[index.0].1.pubkey(),
+                        )
+                        .await;
                         assert_eq!(balance, 0);
                     }
 
@@ -496,7 +507,7 @@ async fn handle_failing_action(
     banks_client: &mut BanksClient,
     recent_blockhash: &Hash,
     program_id: &Pubkey,
-    bidders: &Vec<(Keypair, Pubkey, Pubkey)>,
+    bidders: &Vec<(Keypair, Keypair, Pubkey)>,
     mint: &Pubkey,
     payer: &Keypair,
     resource: &Pubkey,
@@ -508,7 +519,7 @@ async fn handle_failing_action(
             // Get balances pre bidding.
             let pre_balance = (
                 helpers::get_token_balance(banks_client, &bidders[bidder].0.pubkey()).await,
-                helpers::get_token_balance(banks_client, &bidders[bidder].1).await,
+                helpers::get_token_balance(banks_client, &bidders[bidder].1.pubkey()).await,
             );
 
             let transfer_authority = Keypair::new();
@@ -538,7 +549,7 @@ async fn handle_failing_action(
 
             let post_balance = (
                 helpers::get_token_balance(banks_client, &bidders[bidder].0.pubkey()).await,
-                helpers::get_token_balance(banks_client, &bidders[bidder].1).await,
+                helpers::get_token_balance(banks_client, &bidders[bidder].1.pubkey()).await,
             );
 
             assert_eq!(post_balance.0, pre_balance.0 - amount);
@@ -549,7 +560,7 @@ async fn handle_failing_action(
             // Get balances pre bidding.
             let pre_balance = (
                 helpers::get_token_balance(banks_client, &bidders[bidder].0.pubkey()).await,
-                helpers::get_token_balance(banks_client, &bidders[bidder].1).await,
+                helpers::get_token_balance(banks_client, &bidders[bidder].1.pubkey()).await,
             );
 
             helpers::cancel_bid(
@@ -572,7 +583,7 @@ async fn handle_failing_action(
 
             let post_balance = (
                 helpers::get_token_balance(banks_client, &bidders[bidder].0.pubkey()).await,
-                helpers::get_token_balance(banks_client, &bidders[bidder].1).await,
+                helpers::get_token_balance(banks_client, &bidders[bidder].1.pubkey()).await,
             );
 
             // Assert the balance successfully moves.
@@ -727,7 +738,7 @@ async fn test_place_instant_sale_bid() {
     // Get balances pre bidding.
     let pre_balance = (
         helpers::get_token_balance(&mut banks_client, &bidders[0].0.pubkey()).await,
-        helpers::get_token_balance(&mut banks_client, &bidders[0].1).await,
+        helpers::get_token_balance(&mut banks_client, &bidders[0].1.pubkey()).await,
     );
 
     let transfer_authority = Keypair::new();
@@ -760,7 +771,7 @@ async fn test_place_instant_sale_bid() {
 
     let post_balance = (
         helpers::get_token_balance(&mut banks_client, &bidders[0].0.pubkey()).await,
-        helpers::get_token_balance(&mut banks_client, &bidders[0].1).await,
+        helpers::get_token_balance(&mut banks_client, &bidders[0].1.pubkey()).await,
     );
 
     assert_eq!(post_balance.0, pre_balance.0 - instant_sale_price);
@@ -823,7 +834,8 @@ async fn test_all_bids_are_taken_by_instant_sale_price() {
                 let pre_balance = (
                     helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                         .await,
-                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                        .await,
                 );
 
                 let transfer_authority = Keypair::new();
@@ -856,7 +868,8 @@ async fn test_all_bids_are_taken_by_instant_sale_price() {
                 let post_balance = (
                     helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                         .await,
-                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                        .await,
                 );
 
                 assert_eq!(post_balance.0, pre_balance.0 - amount);
@@ -900,9 +913,7 @@ async fn test_all_bids_are_taken_by_instant_sale_price() {
 }
 
 #[cfg(feature = "test-bpf")]
-// #[tokio::test]
-// TODO(thlorenz): This test is failing in git@github.com:metaplex-foundation/metaplex.git as well
-// Once all contracts were pulled over we need to fix this
+#[tokio::test]
 async fn test_claim_bid_with_instant_sale_price() {
     let instant_sale_price = 5000;
 
@@ -984,7 +995,7 @@ async fn test_claim_bid_with_instant_sale_price() {
     .unwrap();
 
     // Bid pot should be empty
-    let balance = helpers::get_token_balance(&mut banks_client, &bidders[0].1).await;
+    let balance = helpers::get_token_balance(&mut banks_client, &bidders[0].1.pubkey()).await;
     assert_eq!(balance, 0);
 
     let balance = helpers::get_token_balance(&mut banks_client, &collection.pubkey()).await;
@@ -1042,7 +1053,8 @@ async fn test_cancel_bid_with_instant_sale_price() {
                 let pre_balance = (
                     helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                         .await,
-                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                        .await,
                 );
 
                 let transfer_authority = Keypair::new();
@@ -1075,7 +1087,8 @@ async fn test_cancel_bid_with_instant_sale_price() {
                 let post_balance = (
                     helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                         .await,
-                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                        .await,
                 );
 
                 assert_eq!(post_balance.0, pre_balance.0 - amount);
@@ -1086,7 +1099,8 @@ async fn test_cancel_bid_with_instant_sale_price() {
                 let pre_balance = (
                     helpers::get_token_balance(&mut banks_client, &bidders[bidder].0.pubkey())
                         .await,
-                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1).await,
+                    helpers::get_token_balance(&mut banks_client, &bidders[bidder].1.pubkey())
+                        .await,
                 );
 
                 let err = helpers::cancel_bid(
@@ -1114,140 +1128,4 @@ async fn test_cancel_bid_with_instant_sale_price() {
             _ => {}
         }
     }
-}
-
-#[cfg(feature = "test-bpf")]
-#[tokio::test]
-async fn test_fail_spoof_bidder_pot_token() {
-    use mpl_testing_utils::{assert_custom_error, assert_error};
-
-    let instant_sale_price = 500;
-    let bid_price = 500;
-    let (
-        program_id,
-        mut banks_client,
-        bidders,
-        payer,
-        resource,
-        mint,
-        mint_authority,
-        auction_pubkey,
-        recent_blockhash,
-    ) = setup_auction(true, 1, None, PriceFloor::None([0; 32]), Some(0), None).await;
-
-    // Get balances pre bidding.
-    let pre_balance = (
-        helpers::get_token_balance(&mut banks_client, &bidders[0].0.pubkey()).await,
-        helpers::get_token_balance(&mut banks_client, &bidders[0].1).await,
-    );
-
-    let transfer_authority = Keypair::new();
-    helpers::approve(
-        &mut banks_client,
-        &recent_blockhash,
-        &payer,
-        &transfer_authority.pubkey(),
-        &bidders[0].0,
-        bid_price,
-    )
-    .await
-    .expect("approve");
-    helpers::approve(
-        &mut banks_client,
-        &recent_blockhash,
-        &payer,
-        &transfer_authority.pubkey(),
-        &bidders[1].0,
-        bid_price,
-    )
-    .await
-    .expect("approve");
-
-    helpers::place_bid(
-        &mut banks_client,
-        &recent_blockhash,
-        &program_id,
-        &payer,
-        &bidders[0].0,
-        &bidders[0].1,
-        &transfer_authority,
-        &resource,
-        &mint,
-        bid_price,
-    )
-    .await
-    .expect("place_bid");
-    let post_balance = (
-        helpers::get_token_balance(&mut banks_client, &bidders[0].0.pubkey()).await,
-        helpers::get_token_balance(&mut banks_client, &bidders[0].1).await,
-    );
-    assert_eq!(post_balance.0, pre_balance.0 - instant_sale_price);
-    assert_eq!(post_balance.1, pre_balance.1 + instant_sale_price);
-
-    let err = helpers::place_bid(
-        &mut banks_client,
-        &recent_blockhash,
-        &program_id,
-        &payer,
-        &bidders[1].0,
-        &bidders[0].1,
-        &transfer_authority,
-        &resource,
-        &mint,
-        bid_price,
-    )
-    .await
-    .unwrap_err();
-
-    assert_custom_error!(err, AuctionError::BidderPotTokenAccountMustBeNew);
-
-    helpers::cancel_bid(
-        &mut banks_client,
-        &recent_blockhash,
-        &program_id,
-        &payer,
-        &bidders[0].0,
-        &bidders[0].1,
-        &resource,
-        &mint,
-    )
-    .await
-    .expect("place_bid");
-
-    let post_cancel_balance = (
-        helpers::get_token_balance(&mut banks_client, &bidders[0].0.pubkey()).await,
-        helpers::get_token_balance(&mut banks_client, &bidders[0].1).await,
-    );
-    assert_eq!(post_cancel_balance.0, pre_balance.0);
-    assert_eq!(post_cancel_balance.1, pre_balance.1);
-
-    helpers::place_bid(
-        &mut banks_client,
-        &recent_blockhash,
-        &program_id,
-        &payer,
-        &bidders[1].0,
-        &bidders[1].1,
-        &transfer_authority,
-        &resource,
-        &mint,
-        bid_price,
-    )
-    .await
-    .expect("place_bid");
-
-    let err2 = helpers::cancel_bid(
-        &mut banks_client,
-        &recent_blockhash,
-        &program_id,
-        &payer,
-        &bidders[0].0,
-        &bidders[1].1,
-        &resource,
-        &mint,
-    )
-    .await
-    .unwrap_err();
-
-    assert_custom_error!(err2, AuctionError::BidderPotTokenAccountOwnerMismatch);
 }

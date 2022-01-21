@@ -37,7 +37,7 @@ pub fn process_instruction(
         AuctionInstruction::CancelBid(args) => cancel_bid(program_id, accounts, args),
         AuctionInstruction::ClaimBid(args) => claim_bid(program_id, accounts, args),
         AuctionInstruction::CreateAuction(args) => {
-            create_auction(program_id, accounts, args, None, None)
+            create_auction(program_id, accounts, args, None, None, None)
         }
         AuctionInstruction::CreateAuctionV2(args) => create_auction_v2(program_id, accounts, args),
         AuctionInstruction::EndAuction(args) => end_auction(program_id, accounts, args),
@@ -116,6 +116,12 @@ pub struct AuctionDataExtended {
     pub instant_sale_price: Option<u64>,
     /// Auction name
     pub name: Option<AuctionName>,
+    ///decrease rate
+    pub decrease_rate: Option<u64>,
+    ///decrease interval
+    pub decrease_interval: Option<u64>,
+    /// Auction start time
+    pub auction_start_time: Option<UnixTimestamp>,
 }
 
 impl AuctionDataExtended {
@@ -383,6 +389,17 @@ impl AuctionData {
         }
     }
 
+    pub fn consider_dutch_auction(&mut self, instant_sale_price: Option<u64>) {
+        // Check if all the lots were sold with instant_sale_price
+        if let Some(price) = instant_sale_price {
+            msg!("{}", "inside consider dutch auction");
+            {
+                msg!("All the lots were sold with instant_sale_price of the dutch auction, so the auction is ended");
+                self.state = AuctionState::Ended;
+            }
+        }
+    }
+
     pub fn place_bid(
         &mut self,
         bid: Bid,
@@ -390,6 +407,8 @@ impl AuctionData {
         gap_tick_size_percentage: Option<u8>,
         now: UnixTimestamp,
         instant_sale_price: Option<u64>,
+        decrease_rate: Option<u64>,
+        decrease_interval: Option<u64>,
     ) -> Result<(), ProgramError> {
         let gap_val = match self.ended_at {
             Some(end) => {
@@ -415,9 +434,12 @@ impl AuctionData {
             minimum,
             instant_sale_price,
             &mut self.state,
+            decrease_rate,
+            decrease_interval,
         )?;
 
         self.consider_instant_bid(instant_sale_price);
+        self.consider_dutch_auction(instant_sale_price);
 
         Ok(())
     }
@@ -467,6 +489,7 @@ pub struct Bid(pub Pubkey, pub u64);
 pub enum BidState {
     EnglishAuction { bids: Vec<Bid>, max: usize },
     OpenEdition { bids: Vec<Bid>, max: usize },
+    DutchAuction { bids: Vec<Bid>, max: usize },
 }
 
 /// Bidding Implementations.
@@ -488,6 +511,14 @@ impl BidState {
         BidState::OpenEdition {
             bids: vec![],
             max: 0,
+        }
+    }
+
+    pub fn new_dutch(n: usize) -> Self {
+        msg!("{}", "Initialized Dutch Auction");
+        BidState::DutchAuction {
+            bids: vec![],
+            max: n,
         }
     }
 
@@ -513,6 +544,20 @@ impl BidState {
             }
         } else {
             msg!("No tick size on this auction")
+        }
+
+        Ok(())
+    }
+
+    fn assert_dutch_parameters(price_ceiling: Option<u64>, minimum: u64) -> ProgramResult {
+        if price_ceiling <= Some(0 as u64) {
+            msg!("Ceiling price Price is either not set, or is set less than 0");
+            return Err(AuctionError::CeilingPriceMandatoryDuctchAuction.into());
+        }
+
+        if price_ceiling <= Some(minimum as u64) {
+            msg!("Ceiling price can never be less than Floor price");
+            return Err(AuctionError::CeilingPriceLessThanFloorPrice.into());
         }
 
         Ok(())
@@ -550,6 +595,8 @@ impl BidState {
         minimum: u64,
         instant_sale_price: Option<u64>,
         auction_state: &mut AuctionState,
+        decrease_rate: Option<u64>,
+        decrease_interval: Option<u64>,
     ) -> Result<(), ProgramError> {
         msg!("Placing bid {:?}", &bid.1.to_string());
         BidState::assert_valid_tick_size_bid(&bid, tick_size)?;
@@ -625,6 +672,40 @@ impl BidState {
 
             // In an open auction, bidding simply succeeds.
             BidState::OpenEdition { bids, max } => Ok(()),
+
+            //---Dutch Auction
+            BidState::DutchAuction { ref mut bids, max } => {
+                //Checking the parameters
+                BidState::assert_dutch_parameters(instant_sale_price, minimum);
+
+                //if everything is okay, then insert at the end
+                msg!("Doing an on the end insert if there are no items in the bids array");
+
+                if bids.len() == 0 {
+                    //insert just 1 bid and return the array to metaplex contract
+                    bids.push(bid);
+                }
+                Ok(())
+            }
+
+            // In an open auction, bidding simply succeeds.
+            BidState::OpenEdition { bids, max } => Ok(()),
+
+            //---Dutch Auction
+            BidState::DutchAuction { ref mut bids, max } => {
+                //Checking the paramters
+                BidState::assert_dutch_parameters(instant_sale_price, minimum);
+
+                //if everything is okay, then insert at the end
+                msg!("Doing an on the end insert if there are no items in the bids array");
+
+                if (bids.len() == 0) {
+                    //insert just 1 bid and return the array to metaplex contract
+                    bids.push(bid);
+                }
+                //else simply return, everytime else
+                Ok(())
+            }
         }
     }
 
@@ -640,6 +721,11 @@ impl BidState {
             // In an open auction, cancelling simply succeeds. It's up to the manager of an auction
             // to decide what to do with open edition bids.
             BidState::OpenEdition { bids, max } => Ok(()),
+
+            BidState::DutchAuction { ref mut bids, max } => {
+                bids.retain(|b| b.0 != key);
+                Ok(())
+            }
         }
     }
 
@@ -653,6 +739,14 @@ impl BidState {
                 }
             }
             BidState::OpenEdition { bids, max } => 0,
+
+            BidState::DutchAuction { bids, max } => {
+                if index >= 0 as usize && index < bids.len() {
+                    return bids[bids.len() - index - 1].1;
+                } else {
+                    return 0;
+                }
+            }
         }
     }
 
@@ -678,6 +772,20 @@ impl BidState {
             // There are no winners in an open edition, it is up to the auction manager to decide
             // what to do with open edition bids.
             BidState::OpenEdition { bids, max } => None,
+
+            BidState::DutchAuction { bids, max } => {
+                match bids.iter().position(|bid| &bid.0 == key && bid.1 >= min) {
+                    Some(val) => {
+                        let zero_based_index = bids.len() - val - 1;
+                        if zero_based_index < *max {
+                            Some(zero_based_index)
+                        } else {
+                            None
+                        }
+                    }
+                    None => None,
+                }
+            }
         }
     }
 
@@ -685,6 +793,7 @@ impl BidState {
         match self {
             BidState::EnglishAuction { bids, max } => cmp::min(bids.len(), *max) as u64,
             BidState::OpenEdition { bids, max } => 0,
+            BidState::DutchAuction { bids, max } => cmp::min(bids.len(), *max) as u64,
         }
     }
 
@@ -692,6 +801,7 @@ impl BidState {
         match self {
             BidState::EnglishAuction { bids, max } => *max as u64,
             BidState::OpenEdition { bids, max } => 0,
+            BidState::DutchAuction { bids, max } => *max as u64,
         }
     }
 
@@ -707,6 +817,13 @@ impl BidState {
                 }
             }
             BidState::OpenEdition { bids, max } => None,
+            BidState::DutchAuction { bids, max } => {
+                if index < *max && index < bids.len() {
+                    Some(bids[bids.len() - index - 1].0)
+                } else {
+                    None
+                }
+            }
         }
     }
 

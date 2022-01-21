@@ -48,13 +48,13 @@ pub const MAX_AUCTION_MANAGER_V2_SIZE: usize = 1 + //key
 1 + //status
 8 + // winning configs validated
 200; // padding
-pub const MAX_STORE_SIZE: usize = 2 + // Store Version Key 
+pub const MAX_STORE_SIZE: usize = 2 + // Store Version Key
 32 + // Auction Program Key
 32 + // Token Vault Program Key
 32 + // Token Metadata Program Key
 32 + // Token Program Key
 100; // Padding;
-pub const MAX_STORE_CONFIG_V1_SIZE: usize = 2 + // StoreConfig Version Key 
+pub const MAX_STORE_CONFIG_V1_SIZE: usize = 2 + // StoreConfig Version Key
 200 + // Settings Uri Len
 100; // Padding;
 pub const MAX_WHITELISTED_CREATOR_SIZE: usize = 2 + 32 + 10;

@@ -49,6 +49,8 @@ pub struct CreateAuctionArgsV2 {
     pub instant_sale_price: Option<u64>,
     /// Auction name
     pub name: Option<AuctionName>,
+    /// Set a bid type
+    pub bid_type: Option<u8>,
 }
 
 struct Accounts<'a, 'b: 'a> {
@@ -95,5 +97,6 @@ pub fn create_auction_v2(
         },
         args.instant_sale_price,
         args.name,
+        args.bid_type,
     )
 }

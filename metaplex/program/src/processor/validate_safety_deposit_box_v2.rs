@@ -6,10 +6,9 @@ use crate::{
         MAX_AUTHORITY_LOOKUP_SIZE, PREFIX, TOTALS,
     },
     utils::{
-        assert_at_least_one_creator_matches_or_store_public_and_all_verified,
-        assert_authority_correct, assert_derivation, assert_initialized, assert_owned_by,
-        assert_store_safety_vault_manager_match, create_or_allocate_account_raw,
-        transfer_metadata_ownership,
+        assert_store_public_and_all_verified, assert_authority_correct, assert_derivation,
+        assert_initialized, assert_owned_by, assert_store_safety_vault_manager_match,
+        create_or_allocate_account_raw, transfer_metadata_ownership,
     },
 };
 use borsh::BorshSerialize;
@@ -124,13 +123,6 @@ pub fn assert_common_checks(args: CommonCheckArgs) -> ProgramResult {
         return Err(MetaplexError::AlreadyInitialized.into());
     }
 
-    if *whitelisted_creator_info.key != solana_program::system_program::id() {
-        if whitelisted_creator_info.data_is_empty() {
-            return Err(MetaplexError::Uninitialized.into());
-        }
-        assert_owned_by(whitelisted_creator_info, program_id)?;
-    }
-
     assert_owned_by(auction_manager_store_info, program_id)?;
     assert_owned_by(safety_deposit_info, &store.token_vault_program)?;
     assert_owned_by(safety_deposit_token_store_info, &store.token_program)?;
@@ -152,11 +144,10 @@ pub fn assert_common_checks(args: CommonCheckArgs) -> ProgramResult {
         vault_info,
         &store.token_vault_program,
     )?;
-    assert_at_least_one_creator_matches_or_store_public_and_all_verified(
+    assert_store_public_and_all_verified(
         program_id,
         auction_manager,
         &metadata,
-        whitelisted_creator_info,
         auction_manager_store_info,
     )?;
 

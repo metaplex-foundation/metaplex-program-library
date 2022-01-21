@@ -107,6 +107,9 @@ pub fn process_end_auction(
             BidState::OpenEdition { .. } => {
                 auction_manager.set_status(AuctionManagerStatus::Finished);
             }
+            BidState::DutchAuction { .. } => {
+                auction_manager.set_status(AuctionManagerStatus::Disbursing);
+            }
         }
     } else {
         auction_manager.set_status(AuctionManagerStatus::Disbursing);
