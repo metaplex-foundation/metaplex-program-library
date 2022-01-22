@@ -36,7 +36,7 @@ type ValidateSafetyDepositBoxV2Params = {
   tokenAccount: PublicKey;
   tokenMint: PublicKey;
   edition: PublicKey;
-  whitelistedCreator: PublicKey | undefined;
+  whitelistedCreator: PublicKey;
   safetyDepositBox: PublicKey;
   safetyDepositTokenStore: PublicKey;
   safetyDepositConfig: PublicKey;
@@ -101,7 +101,7 @@ export class ValidateSafetyDepositBoxV2 extends Transaction {
             isWritable: true,
           },
           {
-            pubkey: whitelistedCreator || SystemProgram.programId,
+            pubkey: whitelistedCreator,
             isSigner: false,
             isWritable: false,
           },
