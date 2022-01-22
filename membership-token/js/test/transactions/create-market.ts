@@ -1,7 +1,7 @@
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
-import { createCreateMarketInstruction } from '../../src/mpl-membership-token';
+import { createCreateMarketInstruction } from '../../src/instructions';
 import { createAndSignTransaction } from '../utils';
 
 export const createMarketTransaction = async ({
@@ -13,7 +13,7 @@ export const createMarketTransaction = async ({
   mint,
   treasuryHolder,
   owner,
-  treasyryOwnerBump,
+  treasuryOwnerBump,
   name,
   description,
   mutable,
@@ -30,7 +30,7 @@ export const createMarketTransaction = async ({
   mint: PublicKey;
   treasuryHolder: PublicKey;
   owner: PublicKey;
-  treasyryOwnerBump: number;
+  treasuryOwnerBump: number;
   name: string;
   description: string;
   mutable: boolean;
@@ -54,7 +54,7 @@ export const createMarketTransaction = async ({
     {
       name,
       description,
-      treasyryOwnerBump,
+      treasuryOwnerBump,
       mutable,
       price,
       piecesInOneWallet,

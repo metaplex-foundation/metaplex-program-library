@@ -5,7 +5,7 @@ import { PROGRAM_ID, DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
 import { checkByteSizes } from '../utils';
 
 export type CreateMarketInstructionArgs = {
-  treasyryOwnerBump: number;
+  treasuryOwnerBump: number;
   name: string;
   description: string;
   mutable: boolean;
@@ -21,7 +21,7 @@ const createMarketStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
-    ['treasyryOwnerBump', beet.u8],
+    ['treasuryOwnerBump', beet.u8],
     ['name', beet.fixedSizeUtf8String(NAME_MAX_LEN)],
     ['description', beet.fixedSizeUtf8String(DESCRIPTION_MAX_LEN)],
     ['mutable', beet.bool],
