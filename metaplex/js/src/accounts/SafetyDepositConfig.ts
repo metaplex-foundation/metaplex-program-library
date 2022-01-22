@@ -1,13 +1,11 @@
-import { AccountInfo, PublicKey, SystemProgram } from '@solana/web3.js';
+import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-import bs58 from 'bs58';
 import {
   AnyPublicKey,
   StringPublicKey,
   Account,
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
-  getBNFromData,
   TupleNumericType,
   Borsh,
 } from '@metaplex-foundation/mpl-core';
@@ -65,12 +63,6 @@ export class AmountRange extends Borsh.Data<AmountRangeArgs> {
 
   amount: BN;
   length: BN;
-
-  constructor(args: AmountRangeArgs) {
-    super(args);
-    this.amount = args.amount || new BN(1);
-    this.length = args.length || new BN(1);
-  }
 }
 
 export interface ParticipationConfigV2Args {
@@ -89,14 +81,6 @@ export class ParticipationConfigV2 extends Borsh.Data<ParticipationConfigV2Args>
   winnerConstraint: WinningConstraint;
   nonWinningConstraint: NonWinningConstraint;
   fixedPrice: BN | null;
-
-  constructor(args: ParticipationConfigV2Args) {
-    super(args);
-    this.winnerConstraint = args.winnerConstraint || WinningConstraint.NoParticipationPrize;
-    this.nonWinningConstraint =
-      args.nonWinningConstraint || NonWinningConstraint.GivenForFixedPrice;
-    this.fixedPrice = args.fixedPrice || null;
-  }
 }
 
 export interface ParticipationStateV2Args {
@@ -107,11 +91,6 @@ export class ParticipationStateV2 extends Borsh.Data<ParticipationStateV2Args> {
   static readonly SCHEMA = this.struct([['collectedToAcceptPayment', 'u64']]);
 
   collectedToAcceptPayment: BN;
-
-  constructor(args: ParticipationStateV2Args) {
-    super(args);
-    this.collectedToAcceptPayment = args.collectedToAcceptPayment || new BN(0);
-  }
 }
 
 export interface SafetyDepositConfigDataArgs {
@@ -156,14 +135,6 @@ export class SafetyDepositConfigData extends Borsh.Data<SafetyDepositConfigDataA
   constructor(args: SafetyDepositConfigDataArgs) {
     super(args);
     this.key = MetaplexKey.SafetyDepositConfigV1;
-    this.auctionManager = args.auctionManager || SystemProgram.programId.toString();
-    this.order = args.order || new BN(0);
-    this.winningConfigType = args.winningConfigType || WinningConfigType.PrintingV2;
-    this.amountType = args.amountType || TupleNumericType.U8;
-    this.lengthType = args.lengthType || TupleNumericType.U8;
-    this.amountRanges = args.amountRanges || [];
-    this.participationConfig = args.participationConfig || null;
-    this.participationState = args.participationState || null;
   }
 }
 
