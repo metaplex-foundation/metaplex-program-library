@@ -1,0 +1,13 @@
+[package]
+name = "mpl_membership_token_indexer_core"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+diesel = { version = "1.4.4", features = ["postgres"] }
+dotenv = "0.15.0"
+solana-client = "1.8.5"
+solana-sdk = "1.8.5"
+solana-transaction-status = "1.8.5"
