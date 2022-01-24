@@ -5,7 +5,10 @@ use std::{
 
 use indexer_core::{solana_rpc_client, Db, SolanaRpcClient};
 use solana_sdk::pubkey::Pubkey;
-use tokio::sync::broadcast::{Receiver, Sender};
+use tokio::{
+    sync::broadcast::{Receiver, Sender},
+    time::{sleep, Duration},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct ConnectionConfig {
@@ -105,9 +108,11 @@ pub async fn run(
                         .store_transaction(&signature, encoded_transaction)
                         .unwrap();
                 }
-                println!("{}", signature);
+                println!("{} -- {}", channel_id, signature);
             }
         }
+
+        sleep(Duration::from_millis(500)).await;
     }
 }
 

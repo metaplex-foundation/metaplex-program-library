@@ -5,7 +5,10 @@ use indexer_core::{
 
 use solana_sdk::{pubkey::Pubkey, signature::Signature};
 use std::str::FromStr;
-use tokio::sync::broadcast::{Receiver, Sender};
+use tokio::{
+    sync::broadcast::{Receiver, Sender},
+    time::{sleep, Duration},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub struct ConnectionConfig {
@@ -91,6 +94,8 @@ pub async fn run(id: u8, tx: Sender<Message>, mut rx: Receiver<Command>) {
                 .store_signatures_in_queue(signatures)
                 .unwrap();
         }
+
+        sleep(Duration::from_millis(500)).await;
     }
 }
 
