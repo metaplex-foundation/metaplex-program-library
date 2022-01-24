@@ -35,7 +35,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
-    program::{invoke, invoke_signed},
+    program::invoke,
     program_error::ProgramError,
     pubkey::Pubkey,
 };
@@ -92,7 +92,7 @@ pub fn process_instruction<'a>(
                 args.is_mutable,
             )
         }
-        MetadataInstruction::DeprecatedCreateMasterEdition(args) => {
+        MetadataInstruction::DeprecatedCreateMasterEdition(_args) => {
             msg!("Instruction: Deprecated Create Master Edition, Removed in 1.1.0");
             Err(MetadataError::Removed.into())
         }
@@ -104,7 +104,7 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Update primary sale via token");
             process_update_primary_sale_happened_via_token(program_id, accounts)
         }
-        MetadataInstruction::DeprecatedSetReservationList(args) => {
+        MetadataInstruction::DeprecatedSetReservationList(_args) => {
             msg!("Instruction: Deprecated Set Reservation List, Removed in 1.1.0");
             Err(MetadataError::Removed.into())
         }
@@ -116,11 +116,11 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Sign Metadata");
             process_sign_metadata(program_id, accounts)
         }
-        MetadataInstruction::DeprecatedMintPrintingTokensViaToken(args) => {
+        MetadataInstruction::DeprecatedMintPrintingTokensViaToken(_args) => {
             msg!("Instruction: Deprecated Mint Printing Tokens Via Token, Removed in 1.1.0");
             Err(MetadataError::Removed.into())
         }
-        MetadataInstruction::DeprecatedMintPrintingTokens(args) => {
+        MetadataInstruction::DeprecatedMintPrintingTokens(_args) => {
             msg!("Instruction: Deprecated Mint Printing Tokens, Removed in 1.1.0");
             Err(MetadataError::Removed.into())
         }
