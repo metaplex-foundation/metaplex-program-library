@@ -71,6 +71,7 @@ jobs:
         working-directory: ./membership-token/js
         run: cd /home/runner/work/metaplex-program-library/metaplex-program-library/target/deploy | ls -la
         # run: DEBUG=amman* yarn amman:start
+        
 
       - name: integration-test-membership-token-program
         id: run_integration_test
