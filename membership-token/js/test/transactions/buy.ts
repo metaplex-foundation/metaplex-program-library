@@ -2,7 +2,6 @@ import { Connection, PublicKey, Transaction, SYSVAR_CLOCK_PUBKEY } from '@solana
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 
 import { createBuyInstruction } from '../../src/instructions';
-import { createAndSignTransaction } from '../utils';
 
 interface BuyMembershipTokenParams {
   connection: Connection;
@@ -14,14 +13,14 @@ interface BuyMembershipTokenParams {
   market: PublicKey;
   marketTreasuryHolder: PublicKey;
   vault: PublicKey;
-  vaultOwner: PublicKey;
+  treasuryOwner: PublicKey;
   vaultOwnerBump: number;
-  resourceMint: PublicKey;
-  resourceMintEdition: PublicKey;
-  resourceMintEditionMarker: PublicKey;
-  resourceMintMetadata: PublicKey;
-  resourceMintMasterEdition: PublicKey;
-  resourceMintMasterMetadata: PublicKey;
+  newMint: PublicKey;
+  newMintEdition: PublicKey;
+  newMintEditionMarker: PublicKey;
+  newMintMetadata: PublicKey;
+  newMintMasterEdition: PublicKey;
+  newMintMasterMetadata: PublicKey;
 }
 
 export const createBuyTransaction = async ({
@@ -34,45 +33,45 @@ export const createBuyTransaction = async ({
   market,
   marketTreasuryHolder,
   vault,
-  vaultOwner,
+  treasuryOwner,
   vaultOwnerBump,
-  resourceMint,
-  resourceMintEdition,
-  resourceMintEditionMarker,
-  resourceMintMetadata,
-  resourceMintMasterEdition,
-  resourceMintMasterMetadata,
+  newMint,
+  newMintEdition,
+  newMintEditionMarker,
+  newMintMetadata,
+  newMintMasterEdition,
+  newMintMasterMetadata,
 }: BuyMembershipTokenParams) => {
   const instruction = await createBuyInstruction(
     {
-      // market account
-      market,
-      // account which holds selling entities
-      sellingResource,
-      // buyer token account
-      userTokenAccount: buyerTokenAccount,
       // buyer wallet
       userWallet: buyer,
+      // user token account
+      userTokenAccount: buyerTokenAccount,
+      // account which holds selling entities
+      sellingResource,
+      // token account for selling resource
+      vault,
+      // owner of selling resource token account PDA
+      owner: treasuryOwner,
+      // market account
+      market,
       // PDA which creates on market for each buyer
       tradeHistory,
       // market treasury holder (buyer will send tokens to this account)
       treasuryHolder: marketTreasuryHolder,
-      // newly generated mint metadata PDA
-      newMetadata: resourceMintMetadata,
-      // newly generated mint edition PDA
-      newEdition: resourceMintEdition,
-      // master edition for newly generated mint (genesis mint)
-      masterEdition: resourceMintMasterEdition,
       // newly generated mint address
-      newMint: resourceMint,
+      newMint: newMint,
+      // newly generated mint metadata PDA
+      newMetadata: newMintMetadata,
+      // newly generated mint edition PDA
+      newEdition: newMintEdition,
       // PDA which will be taken by newMint + newEdition
-      editionMarker: resourceMintEditionMarker,
-      // token account for selling resource
-      vault,
-      // owner of selling resource token account PDA
-      owner: vaultOwner,
+      editionMarker: newMintEditionMarker,
+      // master edition for newly generated mint (genesis mint)
+      masterEdition: newMintMasterEdition,
       // master edition metadata PDA (genesis mint metadata)
-      masterEditionMetadata: resourceMintMasterMetadata,
+      masterEditionMetadata: newMintMasterMetadata,
       // solana system account
       clock: SYSVAR_CLOCK_PUBKEY,
       // metaplex token metadata program address
