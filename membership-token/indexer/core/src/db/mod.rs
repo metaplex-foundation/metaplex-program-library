@@ -1,11 +1,12 @@
 pub mod models;
 pub mod schema;
 
-use super::schema::signatures::dsl::*;
+use self::models::{NewSignature, NewTransaction};
+use super::schema::{signatures, signatures::dsl::*, transactions::dsl::*};
 use diesel::{pg::PgConnection, prelude::*};
 use dotenv::{dotenv, Error};
-use models::NewSignature;
 use solana_client::rpc_response::RpcConfirmedTransactionStatusWithSignature;
+use solana_transaction_status::EncodedConfirmedTransaction;
 use std::env;
 
 pub struct Db {
@@ -41,6 +42,38 @@ impl Db {
                 .execute(&self.connection)
                 .unwrap();
         }
+        Ok(())
+    }
+
+    pub fn get_signature_from_queue(&self) -> Result<(i32, Option<String>), diesel::result::Error> {
+        signatures
+            .select((signatures::columns::id, signatures::columns::signature))
+            .first::<(i32, Option<String>)>(&self.connection)
+    }
+
+    pub fn delete_signature_from_queue(&self, record_id: i32) {
+        diesel::delete(signatures.filter(signatures::columns::id.eq(record_id)))
+            .execute(&self.connection)
+            .unwrap();
+    }
+
+    pub fn store_transaction(
+        &self,
+        sign: &str,
+        transn: EncodedConfirmedTransaction,
+    ) -> Result<(), Error> {
+        let new_transaction = NewTransaction {
+            signature: sign,
+            slot: transn.slot as i32,
+            transaction: &format_or_empty(Some(transn.transaction)),
+            block_time: transn.block_time.unwrap_or_default() as i32,
+        };
+
+        diesel::insert_into(transactions)
+            .values(&new_transaction)
+            .execute(&self.connection)
+            .unwrap();
+
         Ok(())
     }
 }

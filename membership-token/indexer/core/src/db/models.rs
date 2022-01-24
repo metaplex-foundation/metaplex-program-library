@@ -1,4 +1,4 @@
-use super::schema::signatures;
+use super::schema::{signatures, transactions};
 
 #[derive(Insertable)]
 #[table_name = "signatures"]
@@ -12,7 +12,7 @@ pub struct NewSignature<'a> {
 }
 
 #[derive(Queryable)]
-pub struct Signatere {
+pub struct Signature {
     pub id: i32,
     pub signature: String,
     pub slot: i32,
@@ -20,4 +20,13 @@ pub struct Signatere {
     pub memo: String,
     pub block_time: i32,
     pub confirmation_status: String,
+}
+
+#[derive(Insertable)]
+#[table_name = "transactions"]
+pub struct NewTransaction<'a> {
+    pub signature: &'a str,
+    pub slot: i32,
+    pub transaction: &'a str,
+    pub block_time: i32,
 }

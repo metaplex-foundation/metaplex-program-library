@@ -5,11 +5,11 @@ use indexer_core::{
 
 use solana_sdk::{pubkey::Pubkey, signature::Signature};
 use std::str::FromStr;
-use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::broadcast::{Receiver, Sender};
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ConnectionConfig {
-    pub url: String,
+    pub url: &'static str,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -18,7 +18,7 @@ pub struct SignaturesForAddressConfig {
     _until: Option<Signature>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Command {
     Start { config: ConnectionConfig },
     Stop,
@@ -46,11 +46,8 @@ struct SignaturesLoaderRegistry {
     db: Option<Db>,
 }
 
-pub async fn run(
-    sgnloader_dispatcher_tx: Sender<Message>,
-    mut dispatcher_sgnloader_rx: Receiver<Command>,
-) {
-    println!("SignaturesLoader::run()");
+pub async fn run(id: u8, tx: Sender<Message>, mut rx: Receiver<Command>) {
+    println!("SignaturesLoader{}::run()", id);
 
     let mut registry = SignaturesLoaderRegistry {
         state: SignaturesLoaderState::NotStarted,
@@ -63,8 +60,8 @@ pub async fn run(
     let until: Option<Signature> = None;
 
     loop {
-        if let Ok(command) = dispatcher_sgnloader_rx.try_recv() {
-            process_command(command, &mut registry, &sgnloader_dispatcher_tx).await;
+        if let Ok(command) = rx.try_recv() {
+            process_command(command, &mut registry, &tx).await;
         }
 
         // Skip all following instructions and do nothing if this actor was not started
@@ -104,7 +101,7 @@ async fn process_command(
 ) {
     match command {
         Command::Start { config } => {
-            start(config.url, registry, tx).await;
+            start(config.url.to_string(), registry, tx).await;
         }
         Command::Stop => {}
         Command::Load { .. } => {}
@@ -113,7 +110,7 @@ async fn process_command(
 
 async fn start(url: String, registry: &mut SignaturesLoaderRegistry, tx: &Sender<Message>) {
     if SignaturesLoaderState::Started == registry.state {
-        tx.send(Message::AlreadyStarted).await.unwrap();
+        tx.send(Message::AlreadyStarted).unwrap();
     } else {
         let solana_rpc_client_config = solana_rpc_client::SolanaRpcClientConfig {
             url,
@@ -123,6 +120,6 @@ async fn start(url: String, registry: &mut SignaturesLoaderRegistry, tx: &Sender
         registry.rpc_client = Some(SolanaRpcClient::new_with_config(solana_rpc_client_config));
         registry.state = SignaturesLoaderState::Started;
         registry.db = Some(Db::default());
-        tx.send(Message::Started).await.unwrap();
+        tx.send(Message::Started).unwrap();
     }
 }

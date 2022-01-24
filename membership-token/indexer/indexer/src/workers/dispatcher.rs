@@ -1,33 +1,84 @@
-use super::{
-    signatures_loader,
-    signatures_loader::{Command, ConnectionConfig},
-};
+use std::sync::{Arc, Mutex};
 
-use tokio::sync::mpsc;
+use super::{signatures_loader, transactions_loader};
+
+use indexer_core::Db;
+use tokio::sync::broadcast::{self, Receiver, Sender};
+
+struct Connection<C, M> {
+    _tx: Sender<C>,
+    rx: Receiver<M>,
+}
 
 pub async fn run() {
     println!("Dispatcher::run()");
 
-    // The channel for sending messages from main to signatures_loader
-    let (dispatcher_sgnloader_tx, dispatcher_sgnloader_rx) = mpsc::channel::<Command>(8);
-
-    // The channel for sending messages from signatures_loader to main
-    let (sgnloader_dispatcher_tx, mut sgnloader_dispatcher_rx) =
-        mpsc::channel::<signatures_loader::Message>(8);
-
-    tokio::spawn(super::signatures_loader::run(
-        sgnloader_dispatcher_tx,
-        dispatcher_sgnloader_rx,
-    ));
-
-    let config = ConnectionConfig {
-        url: "https://api.mainnet-beta.solana.com".to_string(),
-    };
-    let cmd = Command::Start { config };
-
-    dispatcher_sgnloader_tx.send(cmd).await.unwrap();
+    let mut dispatcher_sgnloader_connection = setup_and_start_signatures_loader().await;
+    let mut dispatcher_trnsloaders_connection = setup_and_start_transactions_loaders().await;
 
     loop {
-        if let Some(_message) = sgnloader_dispatcher_rx.recv().await {}
+        if let Ok(_message) = dispatcher_sgnloader_connection.rx.try_recv() {}
+        if let Ok(_message) = dispatcher_trnsloaders_connection.rx.try_recv() {}
+    }
+}
+
+async fn setup_and_start_signatures_loader(
+) -> Connection<signatures_loader::Command, signatures_loader::Message> {
+    // The channel for sending messages from main to signatures_loader
+    let (dispatcher_sgnloader_tx, dispatcher_sgnloader_rx) =
+        broadcast::channel::<signatures_loader::Command>(8);
+
+    // The channel for sending messages from signatures_loader to main
+    let (sgnloader_dispatcher_tx, sgnloader_dispatcher_rx) =
+        broadcast::channel::<signatures_loader::Message>(8);
+
+    tokio::spawn(async move {
+        super::signatures_loader::run(1, sgnloader_dispatcher_tx, dispatcher_sgnloader_rx).await
+    });
+
+    let config = signatures_loader::ConnectionConfig {
+        url: "https://api.mainnet-beta.solana.com",
+    };
+    let cmd = signatures_loader::Command::Start { config };
+
+    dispatcher_sgnloader_tx.send(cmd).unwrap();
+
+    Connection {
+        _tx: dispatcher_sgnloader_tx,
+        rx: sgnloader_dispatcher_rx,
+    }
+}
+
+async fn setup_and_start_transactions_loaders(
+) -> Connection<transactions_loader::Command, transactions_loader::Message> {
+    // The channel for sending messages from main to signatures_loader
+    let (dispatcher_trnsloader_tx, _dispatcher_trnsloader_rx) =
+        broadcast::channel::<transactions_loader::Command>(8);
+
+    // The channel for sending messages from signatures_loader to main
+    let (trnsloader_dispatcher_tx, trnsloader_dispatcher_rx) =
+        broadcast::channel::<transactions_loader::Message>(8);
+
+    let db = Db::default();
+    let db_mutex = Arc::new(Mutex::new(db));
+
+    for i in 1..4 {
+        let tx = trnsloader_dispatcher_tx.clone();
+        let rx = dispatcher_trnsloader_tx.subscribe();
+        let db_mutex = db_mutex.clone();
+        tokio::spawn(async move { super::transactions_loader::run(i, tx, rx, db_mutex).await });
+
+        let config = transactions_loader::ConnectionConfig {
+            url: "https://api.mainnet-beta.solana.com",
+        };
+
+        let cmd = transactions_loader::Command::Start { config };
+
+        dispatcher_trnsloader_tx.send(cmd).unwrap();
+    }
+
+    Connection {
+        _tx: dispatcher_trnsloader_tx,
+        rx: trnsloader_dispatcher_rx,
     }
 }

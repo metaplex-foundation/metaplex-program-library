@@ -5,7 +5,7 @@ use tokio::{runtime::Builder, signal};
 #[tokio::main]
 async fn main() {
     let runtime = Builder::new_multi_thread()
-        .worker_threads(1)
+        .worker_threads(100)
         .thread_name("indexer-main-worker")
         .enable_time()
         .build()

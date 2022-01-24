@@ -1,8 +1,12 @@
+use std::str::FromStr;
+
 use solana_client::{
+    client_error::ClientError,
     rpc_client::{GetConfirmedSignaturesForAddress2Config, RpcClient},
     rpc_response::RpcConfirmedTransactionStatusWithSignature,
 };
 use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Signature};
+use solana_transaction_status::{EncodedConfirmedTransaction, UiTransactionEncoding};
 
 const TRANSACTIONS_BATCH_LEN: usize = 100;
 
@@ -38,5 +42,15 @@ impl SolanaRpcClient {
         self.rpc_client
             .get_signatures_for_address_with_config(&self.program_address, config)
             .unwrap()
+    }
+
+    pub fn load_trqansaction_info(
+        &self,
+        signature: &str,
+    ) -> Result<EncodedConfirmedTransaction, ClientError> {
+        let signature = Signature::from_str(signature).unwrap();
+
+        self.rpc_client
+            .get_transaction(&signature, UiTransactionEncoding::Json)
     }
 }
