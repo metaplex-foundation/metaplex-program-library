@@ -69,7 +69,8 @@ jobs:
       # Run integration test
       - name: start-local-test-validator
         working-directory: ./membership-token/js
-        run: DEBUG=amman* yarn amman:start
+        run: cd /home/runner/work/metaplex-program-library/metaplex-program-library/target/deploy | ls -la
+        # run: DEBUG=amman* yarn amman:start
 
       - name: integration-test-membership-token-program
         id: run_integration_test
