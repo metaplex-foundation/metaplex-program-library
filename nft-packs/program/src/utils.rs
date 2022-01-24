@@ -1,8 +1,6 @@
 //! Program utils
 
 use crate::{
-    error::NFTPacksError,
-    math::SafeMath,
     state::{ProvingProcess, MAX_LAG_SLOTS},
 };
 use borsh::BorshSerialize;
@@ -250,15 +248,15 @@ pub fn empty_account_balance(
 
 /// get random value
 pub fn get_random_value(
-    index: u64,
+    recent_slothash: &[u8],
     proving_process: &ProvingProcess,
     clock: &Clock,
 ) -> Result<u16, ProgramError> {
     // Hash slot, current timestamp and value from last slothash and proving process data and receive new random u16
     let mut hasher = DefaultHasher::new();
     
-    // last slothash
-    hasher.write_u64(index);
+    // recent slothash
+    hasher.write(recent_slothash);
     // slot
     hasher.write_u64(clock.slot);
     // timestamp

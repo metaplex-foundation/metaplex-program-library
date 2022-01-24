@@ -27,7 +27,6 @@ use solana_program::{
     sysvar::{
         rent::Rent,
         Sysvar,
-        slot_hashes::SlotHashes
     },
 };
 use spl_token::state::Account;
@@ -172,11 +171,10 @@ pub fn request_card_for_redeem(
 
     // get slot hash 
     let data = recent_slothashes_info.data.borrow();
-    let most_recent = array_ref![data, 8, 8];
-    let index = u64::from_le_bytes(*most_recent);
+    let most_recent_slothash = array_ref![data, 8, 8];
 
     // get random value 
-    let random_value = get_random_value(index, &proving_process, &clock)?;
+    let random_value = get_random_value(most_recent_slothash, &proving_process, &clock)?;
     let weight_sum = if pack_set.distribution_type == PackDistributionType::MaxSupply {
         pack_set.total_editions
     } else {
