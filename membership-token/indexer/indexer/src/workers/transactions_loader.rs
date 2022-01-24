@@ -14,7 +14,10 @@ pub struct ConnectionConfig {
 
 #[derive(Debug, Clone, Copy)]
 pub enum Command {
-    Start { config: ConnectionConfig },
+    Start {
+        channel_id: u8,
+        config: ConnectionConfig,
+    },
     Stop,
 }
 
@@ -34,15 +37,22 @@ pub enum Message {
 }
 
 struct TransactionsLoaderRegistry {
+    channel_id: u8,
     state: TransactionsLoaderState,
     rpc_client: Option<solana_rpc_client::SolanaRpcClient>,
     db: Option<Db>,
 }
 
-pub async fn run(id: u8, tx: Sender<Message>, mut rx: Receiver<Command>, db_mutex: Arc<Mutex<Db>>) {
-    println!("TransactionsLoader{}::run()", id);
+pub async fn run(
+    channel_id: u8,
+    tx: Sender<Message>,
+    mut rx: Receiver<Command>,
+    guarded_db: Arc<Mutex<Db>>,
+) {
+    println!("TransactionsLoader{}::run()", channel_id);
 
     let mut registry = TransactionsLoaderRegistry {
+        channel_id,
         state: TransactionsLoaderState::NotStarted,
         rpc_client: None,
         db: None,
@@ -62,16 +72,16 @@ pub async fn run(id: u8, tx: Sender<Message>, mut rx: Receiver<Command>, db_mute
         let signature: Option<String>;
 
         {
-            let guarded_db = db_mutex.lock().unwrap();
+            let db = guarded_db.lock().unwrap();
 
-            result = match guarded_db.get_signature_from_queue() {
+            result = match db.get_signature_from_queue() {
                 Ok(result) => Some(result),
                 _ => None,
             };
 
             if result.is_some() {
                 let signature_record = result.unwrap();
-                guarded_db.delete_signature_from_queue(signature_record.0);
+                db.delete_signature_from_queue(signature_record.0);
                 signature = Some(signature_record.1.unwrap());
             } else {
                 signature = None;
@@ -107,8 +117,10 @@ async fn process_command(
     tx: &Sender<Message>,
 ) {
     match command {
-        Command::Start { config } => {
-            start(config.url.to_string(), registry, tx).await;
+        Command::Start { channel_id, config } => {
+            if registry.channel_id == channel_id {
+                start(config.url.to_string(), registry, tx).await;
+            }
         }
         Command::Stop => {}
     }

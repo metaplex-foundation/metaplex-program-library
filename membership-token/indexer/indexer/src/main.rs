@@ -6,12 +6,12 @@ use tokio::{runtime::Builder, signal};
 async fn main() {
     let runtime = Builder::new_multi_thread()
         .worker_threads(100)
-        .thread_name("indexer-main-worker")
+        .thread_name("indexer-main-pool")
         .enable_time()
         .build()
         .unwrap();
 
-    let _ = runtime.spawn(workers::dispatcher::run());
+    let _ = runtime.spawn(async move { workers::dispatcher::run().await });
 
     match signal::ctrl_c().await {
         Ok(()) => {}

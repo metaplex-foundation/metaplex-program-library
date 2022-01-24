@@ -62,17 +62,19 @@ async fn setup_and_start_transactions_loaders(
     let db = Db::default();
     let db_mutex = Arc::new(Mutex::new(db));
 
-    for i in 1..4 {
+    for channel_id in 1..4 {
         let tx = trnsloader_dispatcher_tx.clone();
         let rx = dispatcher_trnsloader_tx.subscribe();
-        let db_mutex = db_mutex.clone();
-        tokio::spawn(async move { super::transactions_loader::run(i, tx, rx, db_mutex).await });
+        let guarded_db = db_mutex.clone();
+        tokio::spawn(async move {
+            super::transactions_loader::run(channel_id, tx, rx, guarded_db).await
+        });
 
         let config = transactions_loader::ConnectionConfig {
             url: "https://api.mainnet-beta.solana.com",
         };
 
-        let cmd = transactions_loader::Command::Start { config };
+        let cmd = transactions_loader::Command::Start { channel_id, config };
 
         dispatcher_trnsloader_tx.send(cmd).unwrap();
     }
