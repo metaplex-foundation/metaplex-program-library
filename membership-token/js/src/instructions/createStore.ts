@@ -2,6 +2,7 @@ import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
 import { PROGRAM_ID, DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
+import { checkByteSizes } from '../utils';
 
 export type CreateStoreInstructionArgs = {
   name: string;
@@ -37,6 +38,11 @@ export function createCreateStoreInstruction(
   args: CreateStoreInstructionArgs,
 ) {
   const { admin, store } = accounts;
+
+  const name = checkByteSizes(args['name'], NAME_MAX_LEN);
+  const description = checkByteSizes(args['description'], DESCRIPTION_MAX_LEN);
+
+  Object.assign(args, { name, description });
 
   const [data] = createStoreStruct.serialize({
     instructionDiscriminator: createStoreInstructionDiscriminator,
