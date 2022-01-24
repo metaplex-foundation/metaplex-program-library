@@ -13,17 +13,17 @@ document are available at:
 ## Source
 
 The Token Metadata Program's source is available on
-[github](https://github.com/metaplex-foundation/metaplex)
+[github](https://github.com/metaplex-foundation/metaplex-program-library)
 
 There is also an example Rust client located at
-[github](https://github.com/metaplex-foundation/metaplex/tree/master/rust/token-metadata/test/src/main.rs)
+[github](https://github.com/metaplex-foundation/metaplex-program-library/tree/master/token-metadata/test/src/main.rs)
 that can be perused for learning and run if desired with `cargo run --bin metaplex-token-metadata-test-client`. It allows testing out a variety of scenarios.
 
 ## Interface
 
 The on-chain Token Metadata program is written in Rust and available on crates.io as
-[metaplex-token-metadata](https://crates.io/crates/metaplex-token-metadata) and
-[docs.rs](https://docs.rs/metaplex-token-metadata).
+[mpl-token-metadata](https://crates.io/crates/mpl-token-metadata) and
+[docs.rs](https://docs.rs/mpl-token-metadata).
 
 The crate provides four instructions, `create_metadata_accounts()`, `update_metadata_account()`, `create_master_edition()`, `mint_new_edition_from_master_edition_via_token(),` to easily create instructions for the program.
 

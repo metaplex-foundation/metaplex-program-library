@@ -1,12 +1,9 @@
-use solana_program::{account_info::AccountInfo, msg, program_error::ProgramError, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
 
 use crate::{
     error::MetadataError,
     pda::find_collection_authority_account,
-    state::{
-        Collection, DataV2, MasterEditionV2, Metadata, TokenStandard, COLLECTION_AUTHORITY, PREFIX,
-    },
-    utils::assert_derivation,
+    state::{Collection, MasterEditionV2, Metadata, TokenStandard},
 };
 
 pub fn assert_collection_update_is_valid(
