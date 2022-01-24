@@ -1932,7 +1932,7 @@ dependencies = [
  "bincode",
  "borsh 0.9.1",
  "clap",
- "mpl-token-vault",
+ "mpl-token-vault 0.1.0",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -2039,7 +2039,7 @@ dependencies = [
  "borsh 0.9.1",
  "mpl-auction",
  "mpl-token-metadata",
- "mpl-token-vault",
+ "mpl-token-vault 0.1.0",
  "num-derive",
  "num-traits",
  "solana-program",
@@ -2056,7 +2056,7 @@ dependencies = [
  "borsh 0.9.1",
  "mpl-metaplex",
  "mpl-token-metadata",
- "mpl-token-vault",
+ "mpl-token-vault 0.1.0",
  "num-derive",
  "num-traits",
  "num_enum",
@@ -2077,7 +2077,7 @@ dependencies = [
  "anchor-client 0.19.0",
  "borsh 0.9.1",
  "mpl-token-metadata",
- "mpl-token-vault",
+ "mpl-token-vault 0.1.0",
  "num",
  "num-derive",
  "num-traits",
@@ -2109,7 +2109,7 @@ version = "1.1.0"
 dependencies = [
  "arrayref",
  "borsh 0.9.1",
- "mpl-token-vault",
+ "mpl-token-vault 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-derive",
  "num-traits",
  "solana-program",
@@ -2123,6 +2123,20 @@ dependencies = [
 [[package]]
 name = "mpl-token-vault"
 version = "0.1.0"
+dependencies = [
+ "borsh 0.9.1",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-vault"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ade4ef15bc06a6033076c4ff28cba9b42521df5ec61211d6f419415ace2746a"
 dependencies = [
  "borsh 0.9.1",
  "num-derive",
