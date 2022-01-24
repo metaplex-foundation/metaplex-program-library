@@ -6,27 +6,30 @@ import { createBuyInstruction } from '../../src/instructions';
 interface BuyMembershipTokenParams {
   connection: Connection;
   buyer: PublicKey;
-  buyerTokenAccount: PublicKey;
+  userTokenAccount: PublicKey;
+  resourceMintEditionMarker: PublicKey;
+  resourceMintMasterEdition: PublicKey;
+  resourceMintMasterMetadata: PublicKey;
   sellingResource: PublicKey;
   tradeHistory: PublicKey;
   tradeHistoryBump: number;
   market: PublicKey;
   marketTreasuryHolder: PublicKey;
-  vault: PublicKey;
   treasuryOwner: PublicKey;
+  vault: PublicKey;
   vaultOwnerBump: number;
   newMint: PublicKey;
   newMintEdition: PublicKey;
-  newMintEditionMarker: PublicKey;
   newMintMetadata: PublicKey;
-  newMintMasterEdition: PublicKey;
-  newMintMasterMetadata: PublicKey;
 }
 
 export const createBuyTransaction = async ({
   connection,
   buyer,
-  buyerTokenAccount,
+  userTokenAccount,
+  resourceMintEditionMarker,
+  resourceMintMasterEdition,
+  resourceMintMasterMetadata,
   sellingResource,
   tradeHistory,
   tradeHistoryBump,
@@ -37,21 +40,24 @@ export const createBuyTransaction = async ({
   vaultOwnerBump,
   newMint,
   newMintEdition,
-  newMintEditionMarker,
   newMintMetadata,
-  newMintMasterEdition,
-  newMintMasterMetadata,
 }: BuyMembershipTokenParams) => {
   const instruction = await createBuyInstruction(
     {
       // buyer wallet
       userWallet: buyer,
       // user token account
-      userTokenAccount: buyerTokenAccount,
-      // account which holds selling entities
-      sellingResource,
+      userTokenAccount,
+      // resource mint edition marker PDA
+      editionMarker: resourceMintEditionMarker,
+      // resource mint master edition
+      masterEdition: resourceMintMasterEdition,
+      // resource mint master edition metadata PDA
+      masterEditionMetadata: resourceMintMasterMetadata,
       // token account for selling resource
       vault,
+      // account which holds selling entities
+      sellingResource,
       // owner of selling resource token account PDA
       owner: treasuryOwner,
       // market account
@@ -61,17 +67,11 @@ export const createBuyTransaction = async ({
       // market treasury holder (buyer will send tokens to this account)
       treasuryHolder: marketTreasuryHolder,
       // newly generated mint address
-      newMint: newMint,
+      newMint,
       // newly generated mint metadata PDA
       newMetadata: newMintMetadata,
       // newly generated mint edition PDA
       newEdition: newMintEdition,
-      // PDA which will be taken by newMint + newEdition
-      editionMarker: newMintEditionMarker,
-      // master edition for newly generated mint (genesis mint)
-      masterEdition: newMintMasterEdition,
-      // master edition metadata PDA (genesis mint metadata)
-      masterEditionMetadata: newMintMasterMetadata,
       // solana system account
       clock: SYSVAR_CLOCK_PUBKEY,
       // metaplex token metadata program address

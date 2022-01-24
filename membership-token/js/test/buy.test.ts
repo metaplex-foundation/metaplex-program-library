@@ -1,7 +1,6 @@
 import BN from 'bn.js';
 import test from 'tape';
 import {
-  Actions,
   airdrop,
   assertConfirmedTransaction,
   defaultSendOptions,
@@ -24,10 +23,9 @@ import {
 } from './transactions';
 import { mintNFT } from './actions/mint-nft';
 import { addLabel, connectionURL, logDebug } from './utils';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { strict as assert } from 'assert';
+import { mintTokenToAccount } from './actions/mint-token-to-account';
 
-test('buy: success', async (t) => {
+test('buy: success purchase with native SOL', async (t) => {
   const payer = Keypair.generate();
 
   const connection = new Connection(connectionURL, 'confirmed');
@@ -48,7 +46,7 @@ test('buy: success', async (t) => {
   assertConfirmedTransaction(t, createStoreRes.txConfirmed);
 
   const {
-    edition: resourceMasterEdition,
+    edition: resourceMintMasterEdition,
     editionBump: resourceMasterEditionBump,
     tokenAccount: resourceToken,
     mint: resourceMint,
@@ -58,13 +56,9 @@ test('buy: success', async (t) => {
     connection,
   });
 
-  // const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
-  //
-  // const resourceMintMasterMetadata = await Metadata.getPDA(resourceMasterEdition);
-  //
-  // const resourceMintEdition = await Edition.getPDA(resourceMint.publicKey);
-  //
-  // const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintMasterMetadata = await Metadata.getPDA(resourceMintMasterEdition);
+
+  const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
 
   const [vaultOwner, vaultOwnerBump] = await findVaultOwnerAddress(
     resourceMint.publicKey,
@@ -94,7 +88,7 @@ test('buy: success', async (t) => {
     payer,
     connection,
     store,
-    masterEdition: resourceMasterEdition,
+    masterEdition: resourceMintMasterEdition,
     masterEditionBump: resourceMasterEditionBump,
     resourceMint: resourceMint.publicKey,
     resourceToken: resourceToken.publicKey,
@@ -114,27 +108,7 @@ test('buy: success', async (t) => {
   addLabel('create:selling-resource', sellingResource.publicKey.toBase58());
   assertConfirmedTransaction(t, initSellingResourceRes.txConfirmed);
 
-  // const {
-  //   mint: treasuryMint,
-  //   edition: treasuryMintMasterEdition,
-  //   tokenAccount: treasuryToken,
-  // } = await mintNFT({
-  //   transactionHandler,
-  //   payer: payer.publicKey,
-  //   connection,
-  // });
-
   const treasuryMint = new PublicKey('11111111111111111111111111111111');
-
-  addLabel('create:market-treasury-mint', treasuryMint);
-
-  // const treasuryMintMetadata = await Metadata.getPDA(treasuryMint.publicKey);
-  //
-  // const treasuryMintEdition = await Edition.getPDA(treasuryMint.publicKey);
-  //
-  // const treasuryMintMasterMetadata = await Metadata.getPDA(treasuryMintMasterEdition);
-  //
-  // const treasuryMintEditionMarker = await EditionMarker.getPDA(treasuryMint.publicKey, new BN(1));
 
   const [treasuryOwner, treasuryOwnerBump] = await findTresuryOwnerAddress(
     treasuryMint,
@@ -142,24 +116,6 @@ test('buy: success', async (t) => {
   );
 
   addLabel('get:market-treasury-owner', treasuryOwner);
-
-  // const { tokenAccount: treasuryHolder, createTokenTx: createTreasuryTx } =
-  //   await createTokenAccount({
-  //     payer: payer.publicKey,
-  //     connection,
-  //     mint: treasuryMint,
-  //     owner: treasuryOwner,
-  //   });
-
-  // const createTreasuryRes = await transactionHandler.sendAndConfirmTransaction(
-  //   createTreasuryTx,
-  //   [treasuryHolder],
-  //   defaultSendOptions,
-  // );
-  //
-  // logDebug('buy:: created market treasury holder', treasuryHolder.publicKey.toBase58());
-  // addLabel('create:market-treasury-holder', treasuryHolder.publicKey.toBase58());
-  // assertConfirmedTransaction(t, createTreasuryRes.txConfirmed);
 
   const { marketTx, market } = await createMarketTransaction({
     payer,
@@ -197,76 +153,33 @@ test('buy: success', async (t) => {
 
   addLabel('get:trade-history', tradeHistory);
 
-  // const { mint: newMint, edition: newMintMasterEdition } = await mintNFT({
-  //   transactionHandler,
-  //   payer: payer.publicKey,
-  //   connection,
-  // });
-
-  const { mint: newMint, createMintTx } = await new Actions(connection).createMintAccount(
-    payer.publicKey,
-  );
-  await transactionHandler.sendAndConfirmTransaction(createMintTx, [newMint], defaultSendOptions);
-
-  const { tokenAccount, createTokenTx } = await createTokenAccount({
-    payer: payer.publicKey,
-    mint: newMint.publicKey,
+  const { mint: newMint } = await mintTokenToAccount({
     connection,
+    payer: payer.publicKey,
+    transactionHandler,
   });
-  createTokenTx.add(
-    Token.createMintToInstruction(
-      new PublicKey(TOKEN_PROGRAM_ID),
-      newMint.publicKey,
-      tokenAccount.publicKey,
-      payer.publicKey,
-      [],
-      1,
-    ),
-  );
-  await transactionHandler.sendAndConfirmTransaction(
-    createTokenTx,
-    [tokenAccount],
-    defaultSendOptions,
-  );
 
-  const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
-  //
   const newMintEdition = await Edition.getPDA(newMint.publicKey);
-  //
-  const resourceMintMasterMetadata = await Metadata.getPDA(resourceMasterEdition);
-  //
-  const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
 
   const { tx: buyTx } = await createBuyTransaction({
     connection,
     buyer: payer.publicKey,
-    buyerTokenAccount: payer.publicKey,
+    userTokenAccount: payer.publicKey,
+    resourceMintEditionMarker,
+    resourceMintMasterEdition,
+    resourceMintMasterMetadata,
     sellingResource: sellingResource.publicKey,
     market: market.publicKey,
     marketTreasuryHolder: treasuryOwner,
+    treasuryOwner,
     tradeHistory,
     tradeHistoryBump,
     vault: vault.publicKey,
     vaultOwnerBump,
-    treasuryOwner,
-    // newMint: resourceMint.publicKey,
-    // newMintEdition: resourceMintEdition,
-    // newMintMetadata: resourceMintMetadata,
-    // newMintEditionMarker: resourceMintEditionMarker,
-    // newMintMasterEdition: resourceMasterEdition,
-    // newMintMasterMetadata: resourceMintMasterMetadata,
-    // newMint: treasuryMint.publicKey, // ?
-    // newMintEdition: treasuryMintEdition,
-    // newMintMetadata: treasuryMintMetadata,
-    // newMintEditionMarker: treasuryMintEditionMarker,
-    // newMintMasterEdition: treasuryMintMasterEdition,
-    // newMintMasterMetadata: treasuryMintMasterMetadata,
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
-    newMintEditionMarker: resourceMintEditionMarker,
-    newMintMasterEdition: resourceMasterEdition,
-    newMintMasterMetadata: resourceMintMasterMetadata,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
