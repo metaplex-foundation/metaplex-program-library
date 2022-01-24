@@ -62,11 +62,17 @@ mod init_selling_resource {
             &mut context,
             &resource_mint.pubkey(),
             &admin_wallet,
+            &admin_wallet,
             String::from("TEST"),
             String::from("TST"),
             String::from("https://github.com/"),
+            Some(vec![mpl_token_metadata::state::Creator {
+                address: admin_wallet.pubkey(),
+                share: 100,
+                verified: false,
+            }]),
             100,
-            false,
+            true,
             false,
         )
         .await;
@@ -75,6 +81,7 @@ mod init_selling_resource {
         let (master_edition, master_edition_bump) = create_master_edition(
             &mut context,
             &resource_mint.pubkey(),
+            &admin_wallet,
             &admin_wallet,
             &metadata,
             Some(3),
@@ -90,6 +97,7 @@ mod init_selling_resource {
             selling_resource_owner: admin_wallet.pubkey(),
             resource_mint: resource_mint.pubkey(),
             master_edition,
+            metadata,
             vault: vault.pubkey(),
             owner: vault_owner,
             resource_token: resource_token.pubkey(),
@@ -187,11 +195,17 @@ mod init_selling_resource {
             &mut context,
             &resource_mint.pubkey(),
             &admin_wallet,
+            &admin_wallet,
             String::from("TEST"),
             String::from("TST"),
             String::from("https://github.com/"),
+            Some(vec![mpl_token_metadata::state::Creator {
+                address: admin_wallet.pubkey(),
+                share: 100,
+                verified: false,
+            }]),
             100,
-            false,
+            true,
             false,
         )
         .await;
@@ -200,6 +214,7 @@ mod init_selling_resource {
         let (master_edition, master_edition_bump) = create_master_edition(
             &mut context,
             &resource_mint.pubkey(),
+            &admin_wallet,
             &admin_wallet,
             &metadata,
             Some(3),
@@ -215,6 +230,7 @@ mod init_selling_resource {
             selling_resource_owner: admin_wallet.pubkey(),
             resource_mint: resource_mint.pubkey(),
             master_edition,
+            metadata,
             vault: vault.pubkey(),
             owner: vault_owner,
             resource_token: resource_token.pubkey(),
@@ -302,11 +318,17 @@ mod init_selling_resource {
             &mut context,
             &resource_mint.pubkey(),
             &admin_wallet,
+            &admin_wallet,
             String::from("TEST"),
             String::from("TST"),
             String::from("https://github.com/"),
+            Some(vec![mpl_token_metadata::state::Creator {
+                address: admin_wallet.pubkey(),
+                share: 100,
+                verified: false,
+            }]),
             100,
-            false,
+            true,
             false,
         )
         .await;
@@ -315,6 +337,7 @@ mod init_selling_resource {
         let (master_edition, master_edition_bump) = create_master_edition(
             &mut context,
             &resource_mint.pubkey(),
+            &admin_wallet,
             &admin_wallet,
             &metadata,
             Some(3),
@@ -330,6 +353,7 @@ mod init_selling_resource {
             selling_resource_owner: admin_wallet.pubkey(),
             resource_mint: resource_mint.pubkey(),
             master_edition,
+            metadata,
             vault: vault.pubkey(),
             owner: vault_owner,
             resource_token: resource_token.pubkey(),

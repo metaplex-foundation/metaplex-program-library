@@ -75,7 +75,14 @@ pub async fn setup_selling_resource(
     context: &mut ProgramTestContext,
     admin_wallet: &Keypair,
     store_keypair: &Keypair,
+    seller_fee_basis_points: u16,
+    creators: Option<Vec<mpl_token_metadata::state::Creator>>,
+    selling_resource_owner_creator: bool,
+    is_mutable: bool,
 ) -> (Keypair, Keypair, Keypair) {
+    let selling_resource_keypair = Keypair::new();
+    let selling_resource_owner_keypair = Keypair::new();
+
     // Create `SellingResource`
     let resource_mint = Keypair::new();
     create_mint(context, &resource_mint, &admin_wallet.pubkey(), 0).await;
@@ -104,17 +111,42 @@ pub async fn setup_selling_resource(
     )
     .await;
 
+    let mut creators = creators;
+    let mut actual_update_authority = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+    if selling_resource_owner_creator {
+        if let Some(creators_captured) = creators {
+            let mut cr = creators_captured.clone();
+            cr.push(mpl_token_metadata::state::Creator {
+                address: selling_resource_owner_keypair.pubkey(),
+                share: 100,
+                verified: false,
+            });
+            creators = Some(cr);
+        } else {
+            creators = Some(vec![mpl_token_metadata::state::Creator {
+                address: selling_resource_owner_keypair.pubkey(),
+                share: 100,
+                verified: false,
+            }]);
+        }
+
+        actual_update_authority =
+            Keypair::from_bytes(&selling_resource_owner_keypair.to_bytes()).unwrap();
+    }
+
     // Create metadata
     let metadata = create_token_metadata(
         context,
         &resource_mint.pubkey(),
         &admin_wallet,
+        &actual_update_authority,
         String::from("TEST"),
         String::from("TST"),
         String::from("https://github.com/"),
-        100,
-        false,
-        false,
+        creators,
+        seller_fee_basis_points,
+        selling_resource_owner_creator,
+        is_mutable,
     )
     .await;
 
@@ -122,14 +154,12 @@ pub async fn setup_selling_resource(
     let (master_edition, master_edition_bump) = create_master_edition(
         context,
         &resource_mint.pubkey(),
+        &actual_update_authority,
         &admin_wallet,
         &metadata,
         Some(1),
     )
     .await;
-
-    let selling_resource_keypair = Keypair::new();
-    let selling_resource_owner_keypair = Keypair::new();
 
     airdrop(
         context,
@@ -145,6 +175,7 @@ pub async fn setup_selling_resource(
         selling_resource_owner: selling_resource_owner_keypair.pubkey(),
         resource_mint: resource_mint.pubkey(),
         master_edition,
+        metadata,
         vault: vault.pubkey(),
         owner: vault_owner,
         resource_token: resource_token.pubkey(),

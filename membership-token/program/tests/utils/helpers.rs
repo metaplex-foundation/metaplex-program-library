@@ -1,5 +1,7 @@
 #![allow(unused)]
 
+use std::convert::TryFrom;
+
 use anchor_client::solana_sdk::{
     pubkey::Pubkey,
     signer::{keypair::Keypair, Signer},
@@ -104,6 +106,7 @@ pub async fn create_mint(
 pub async fn create_master_edition(
     context: &mut ProgramTestContext,
     mint: &Pubkey,
+    update_authority: &Keypair,
     mint_authority: &Keypair,
     metadata: &Pubkey,
     max_supply: Option<u64>,
@@ -123,14 +126,14 @@ pub async fn create_master_edition(
             mpl_token_metadata::id(),
             edition,
             *mint,
-            context.payer.pubkey(),
+            update_authority.pubkey(),
             mint_authority.pubkey(),
             *metadata,
             context.payer.pubkey(),
             max_supply,
         )],
         Some(&context.payer.pubkey()),
-        &[&context.payer, mint_authority, &context.payer],
+        &[&context.payer, mint_authority, update_authority],
         context.last_blockhash,
     );
 
@@ -143,9 +146,11 @@ pub async fn create_token_metadata(
     context: &mut ProgramTestContext,
     mint: &Pubkey,
     mint_authority: &Keypair,
+    update_authority: &Keypair,
     name: String,
     symbol: String,
     uri: String,
+    creators: Option<Vec<mpl_token_metadata::state::Creator>>,
     seller_fee_basis_points: u16,
     update_authority_is_signer: bool,
     is_mutable: bool,
@@ -167,11 +172,11 @@ pub async fn create_token_metadata(
                 *mint,
                 mint_authority.pubkey(),
                 context.payer.pubkey(),
-                context.payer.pubkey(),
+                update_authority.pubkey(),
                 name,
                 symbol,
                 uri,
-                None,
+                creators,
                 seller_fee_basis_points,
                 update_authority_is_signer,
                 is_mutable,
@@ -180,7 +185,7 @@ pub async fn create_token_metadata(
             ),
         ],
         Some(&context.payer.pubkey()),
-        &[&context.payer, mint_authority],
+        &[&context.payer, mint_authority, update_authority],
         context.last_blockhash,
     );
 
@@ -190,20 +195,25 @@ pub async fn create_token_metadata(
 }
 
 pub async fn wait(context: &mut ProgramTestContext, duration: Duration) {
-    let actual_time = context
+    let start_time = context
         .banks_client
         .get_sysvar::<Clock>()
         .await
         .unwrap()
         .unix_timestamp;
 
+    let end_time = chrono::NaiveDateTime::from_timestamp(start_time, 0)
+        .checked_add_signed(duration)
+        .unwrap()
+        .timestamp();
+
     loop {
         let last_clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
-        if last_clock.unix_timestamp >= actual_time + duration.num_milliseconds() {
+        if last_clock.unix_timestamp >= end_time {
             break;
         }
 
-        context.warp_to_slot(last_clock.slot + 1000);
+        context.warp_to_slot(last_clock.slot + 100);
     }
 }
 

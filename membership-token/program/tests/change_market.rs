@@ -19,18 +19,30 @@ mod change_market {
     };
     use solana_program_test::*;
     use solana_sdk::{
-        instruction::Instruction, signature::Keypair, signer::Signer, system_program, sysvar,
-        transaction::Transaction, transport::TransportError,
+        instruction::Instruction,
+        signature::Keypair,
+        signer::Signer,
+        system_program,
+        sysvar::{self, clock::Clock},
+        transaction::Transaction,
+        transport::TransportError,
     };
-    use std::time::SystemTime;
 
     #[tokio::test]
     async fn success() {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -57,11 +69,9 @@ mod change_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
+        let start_date = chrono::Utc::now()
+            .checked_add_signed(chrono::Duration::seconds(5))
+            .unwrap();
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -89,7 +99,7 @@ mod change_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date.timestamp() as u64,
             end_date: None,
         }
         .data();
@@ -112,6 +122,8 @@ mod change_market {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        wait(&mut context, chrono::Duration::seconds(6)).await;
 
         // SuspendMarket
         let accounts = mpl_membership_token_accounts::SuspendMarket {
@@ -170,7 +182,8 @@ mod change_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        context.warp_to_slot(3).unwrap();
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 3).unwrap();
 
         let market_acc = context
             .banks_client
@@ -195,8 +208,16 @@ mod change_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -223,11 +244,9 @@ mod change_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
+        let start_date = chrono::Utc::now()
+            .checked_add_signed(chrono::Duration::seconds(5))
+            .unwrap();
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -255,7 +274,7 @@ mod change_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date.timestamp() as u64,
             end_date: None,
         }
         .data();
@@ -278,6 +297,8 @@ mod change_market {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        wait(&mut context, chrono::Duration::seconds(6)).await;
 
         // SuspendMarket
         let accounts = mpl_membership_token_accounts::SuspendMarket {
@@ -304,9 +325,14 @@ mod change_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 3).unwrap();
+
+        // CloseMarket
         let accounts = mpl_membership_token_accounts::CloseMarket {
             market: market_keypair.pubkey(),
             owner: selling_resource_owner_keypair.pubkey(),
+            clock: sysvar::clock::id(),
         }
         .to_account_metas(None);
 
@@ -326,6 +352,9 @@ mod change_market {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 3).unwrap();
 
         // ChangeMarket
         let accounts = mpl_membership_token_accounts::ChangeMarket {
@@ -375,8 +404,16 @@ mod change_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -403,13 +440,12 @@ mod change_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
-
-        let end_date = start_date + 2000;
+        let start_date = chrono::Utc::now()
+            .checked_add_signed(chrono::Duration::seconds(5))
+            .unwrap();
+        let end_date = start_date
+            .checked_add_signed(chrono::Duration::seconds(5))
+            .unwrap();
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -437,8 +473,8 @@ mod change_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
-            end_date: Some(end_date),
+            start_date: start_date.timestamp() as u64,
+            end_date: Some(end_date.timestamp() as u64),
         }
         .data();
 
@@ -460,6 +496,11 @@ mod change_market {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 3).unwrap();
+
+        wait(&mut context, chrono::Duration::seconds(6)).await;
 
         // SuspendMarket
         let accounts = mpl_membership_token_accounts::SuspendMarket {
@@ -485,6 +526,9 @@ mod change_market {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 3).unwrap();
 
         wait(&mut context, chrono::Duration::seconds(3)).await;
 

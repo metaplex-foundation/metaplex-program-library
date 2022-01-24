@@ -5,7 +5,7 @@ mod close_market {
     use crate::{
         setup_context,
         utils::{
-            helpers::{create_mint, create_token_account},
+            helpers::{create_mint, create_token_account, wait},
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
@@ -17,18 +17,25 @@ mod close_market {
     };
     use solana_program_test::*;
     use solana_sdk::{
-        instruction::Instruction, signature::Keypair, signer::Signer, system_program,
+        instruction::Instruction, signature::Keypair, signer::Signer, system_program, sysvar,
         transaction::Transaction, transport::TransportError,
     };
-    use std::time::SystemTime;
 
     #[tokio::test]
     async fn success() {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -55,11 +62,7 @@ mod close_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
+        let start_date = chrono::Utc::now().timestamp() as u64;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -111,10 +114,13 @@ mod close_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
+        wait(&mut context, chrono::Duration::seconds(1)).await;
+
         // CloseMarket
         let accounts = mpl_membership_token_accounts::CloseMarket {
             market: market_keypair.pubkey(),
             owner: selling_resource_owner_keypair.pubkey(),
+            clock: sysvar::clock::id(),
         }
         .to_account_metas(None);
 
@@ -151,8 +157,16 @@ mod close_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -179,11 +193,7 @@ mod close_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
+        let start_date = chrono::Utc::now().timestamp() as u64;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -235,10 +245,13 @@ mod close_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
+        wait(&mut context, chrono::Duration::seconds(1)).await;
+
         // CloseMarket
         let accounts = mpl_membership_token_accounts::CloseMarket {
             market: market_keypair.pubkey(),
             owner: selling_resource_owner_keypair.pubkey(),
+            clock: sysvar::clock::id(),
         }
         .to_account_metas(None);
 

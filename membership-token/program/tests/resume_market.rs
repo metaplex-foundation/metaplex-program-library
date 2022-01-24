@@ -20,15 +20,22 @@ mod resume_market {
         instruction::Instruction, signature::Keypair, signer::Signer, system_program, sysvar,
         transaction::Transaction, transport::TransportError,
     };
-    use std::time::SystemTime;
 
     #[tokio::test]
     async fn success() {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -55,11 +62,7 @@ mod resume_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
+        let start_date = chrono::Utc::now().timestamp() as u64;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -110,6 +113,8 @@ mod resume_market {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        wait(&mut context, chrono::Duration::seconds(1)).await;
 
         // SuspendMarket
         let accounts = mpl_membership_token_accounts::SuspendMarket {
@@ -177,8 +182,16 @@ mod resume_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -205,11 +218,7 @@ mod resume_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
+        let start_date = chrono::Utc::now().timestamp() as u64;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -261,10 +270,13 @@ mod resume_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
+        wait(&mut context, chrono::Duration::seconds(1)).await;
+
         // CloseMarket
         let accounts = mpl_membership_token_accounts::CloseMarket {
             market: market_keypair.pubkey(),
             owner: selling_resource_owner_keypair.pubkey(),
+            clock: sysvar::clock::id(),
         }
         .to_account_metas(None);
 
@@ -325,8 +337,16 @@ mod resume_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -353,13 +373,10 @@ mod resume_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
-
-        let end_date = start_date + 1000;
+        let start_date = chrono::Utc::now();
+        let end_date = start_date
+            .checked_add_signed(chrono::Duration::seconds(5))
+            .unwrap();
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -387,8 +404,8 @@ mod resume_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
-            end_date: Some(end_date),
+            start_date: start_date.timestamp() as u64,
+            end_date: Some(end_date.timestamp() as u64),
         }
         .data();
 
@@ -410,6 +427,8 @@ mod resume_market {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        wait(&mut context, chrono::Duration::seconds(1)).await;
 
         // SuspendMarket
         let accounts = mpl_membership_token_accounts::SuspendMarket {
@@ -436,7 +455,7 @@ mod resume_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, chrono::Duration::seconds(2)).await;
+        wait(&mut context, chrono::Duration::seconds(6)).await;
 
         // ResumeMarket
         let accounts = mpl_membership_token_accounts::ResumeMarket {
@@ -479,8 +498,16 @@ mod resume_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -507,11 +534,7 @@ mod resume_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_secs()
-            + 5;
+        let start_date = chrono::Utc::now().timestamp() as u64;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -562,6 +585,8 @@ mod resume_market {
         );
 
         context.banks_client.process_transaction(tx).await.unwrap();
+
+        wait(&mut context, chrono::Duration::seconds(1)).await;
 
         // ResumeMarket
         let accounts = mpl_membership_token_accounts::ResumeMarket {

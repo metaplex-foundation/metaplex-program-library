@@ -82,4 +82,13 @@ pub enum ErrorCode {
     // 6025
     #[msg("Funder provide invalid destination")]
     InvalidFunderDestination,
+    // 6026
+    #[msg("Treasury is not empty")]
+    TreasuryIsNotEmpty,
+    // 6027
+    #[msg("Selling resource in invalid state")]
+    SellingResourceInInvalidState,
+    // 6028
+    #[msg("Metadata creators is empty")]
+    MetadataCreatorsIsEmpty,
 }

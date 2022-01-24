@@ -14,6 +14,7 @@ pub const HOLDER_PREFIX: &str = "holder";
 pub const HISTORY_PREFIX: &str = "history";
 pub const VAULT_OWNER_PREFIX: &str = "mt_vault";
 pub const PAYOUT_TICKET_PREFIX: &str = "payout_ticket";
+pub const FLAG_ACCOUNT_SIZE: usize = 1; // Size for flag account to indicate something
 
 /// Runtime derivation check
 pub fn assert_derivation(
@@ -165,6 +166,30 @@ pub fn mpl_mint_new_edition_from_master_edition_via_token<'a>(
             system_program.clone(),
             rent.clone(),
         ],
+        &[&signers_seeds],
+    )?;
+
+    Ok(())
+}
+
+/// Wrapper of `update_primary_sale_happened_via_token` instruction from `mpl_token_metadata` program
+#[inline(always)]
+pub fn mpl_update_primary_sale_happened_via_token<'a>(
+    metadata: &AccountInfo<'a>,
+    owner: &AccountInfo<'a>,
+    token: &AccountInfo<'a>,
+    signers_seeds: &[&[u8]],
+) -> ProgramResult {
+    let tx = mpl_token_metadata::instruction::update_primary_sale_happened_via_token(
+        mpl_token_metadata::id(),
+        metadata.key(),
+        owner.key(),
+        token.key(),
+    );
+
+    invoke_signed(
+        &tx,
+        &[metadata.clone(), owner.clone(), token.clone()],
         &[&signers_seeds],
     )?;
 

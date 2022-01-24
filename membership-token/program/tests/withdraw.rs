@@ -33,7 +33,16 @@ mod withdraw {
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
         let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+            setup_selling_resource(
+                &mut context,
+                &admin_wallet,
+                &store_keypair,
+                100,
+                None,
+                true,
+                false,
+            )
+            .await;
 
         airdrop(
             &mut context,
@@ -280,6 +289,7 @@ mod withdraw {
         let accounts = mpl_membership_token_accounts::CloseMarket {
             market: market_keypair.pubkey(),
             owner: selling_resource_owner_keypair.pubkey(),
+            clock: sysvar::clock::id(),
         }
         .to_account_metas(None);
 
@@ -376,7 +386,7 @@ mod withdraw {
             .unwrap();
         let destination_token_acc =
             spl_token::state::Account::unpack(&destination_acc.data).unwrap();
-        assert_eq!(destination_token_acc.amount, 990000);
+        assert_eq!(destination_token_acc.amount, 1000000);
     }
 
     #[tokio::test]
@@ -385,7 +395,16 @@ mod withdraw {
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
         let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+            setup_selling_resource(
+                &mut context,
+                &admin_wallet,
+                &store_keypair,
+                100,
+                None,
+                true,
+                false,
+            )
+            .await;
 
         airdrop(
             &mut context,
@@ -632,6 +651,7 @@ mod withdraw {
         let accounts = mpl_membership_token_accounts::CloseMarket {
             market: market_keypair.pubkey(),
             owner: selling_resource_owner_keypair.pubkey(),
+            clock: sysvar::clock::id(),
         }
         .to_account_metas(None);
 
@@ -725,7 +745,16 @@ mod withdraw {
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
         let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+            setup_selling_resource(
+                &mut context,
+                &admin_wallet,
+                &store_keypair,
+                100,
+                None,
+                true,
+                false,
+            )
+            .await;
 
         airdrop(
             &mut context,
@@ -972,6 +1001,7 @@ mod withdraw {
         let accounts = mpl_membership_token_accounts::CloseMarket {
             market: market_keypair.pubkey(),
             owner: selling_resource_owner_keypair.pubkey(),
+            clock: sysvar::clock::id(),
         }
         .to_account_metas(None);
 
@@ -1064,7 +1094,16 @@ mod withdraw {
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
         let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+            setup_selling_resource(
+                &mut context,
+                &admin_wallet,
+                &store_keypair,
+                100,
+                None,
+                true,
+                false,
+            )
+            .await;
 
         airdrop(
             &mut context,
@@ -1311,6 +1350,7 @@ mod withdraw {
         let accounts = mpl_membership_token_accounts::CloseMarket {
             market: market_keypair.pubkey(),
             owner: selling_resource_owner_keypair.pubkey(),
+            clock: sysvar::clock::id(),
         }
         .to_account_metas(None);
 

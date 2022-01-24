@@ -30,8 +30,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -150,8 +158,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = setup_market(
             &mut context,
@@ -185,8 +201,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -281,8 +305,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -380,8 +412,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -466,8 +506,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -563,8 +611,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -646,8 +702,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
@@ -736,8 +800,16 @@ mod create_market {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, _) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _) = setup_selling_resource(
+            &mut context,
+            &admin_wallet,
+            &store_keypair,
+            100,
+            None,
+            true,
+            false,
+        )
+        .await;
 
         let market_keypair = Keypair::new();
 
