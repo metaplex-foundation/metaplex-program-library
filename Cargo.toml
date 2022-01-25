@@ -1,0 +1,32 @@
+[package]
+name = "sugar"
+version = "0.0.1"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anchor-client = "0.19.0"
+anchor-lang = "0.19.0"
+anchor-spl = "0.19.0"
+anyhow = "1.0.52"
+chrono = "0.4.19"
+clap = { version = "3.0.0", features = ["derive"] }
+glob = "0.3.0"
+indicatif = { version = "0.16.2", features = ["rayon"] }
+metaplex-token-metadata = "0.0.1"
+mpl-candy-machine = { version = "2.0.1", features = ["no-entrypoint"] }
+rand = "0.7.0"
+rayon = "1.5.1"
+serde = { version = "1.0.133", features = ["derive"] }
+serde_json = "1.0.74"
+serde_yaml = "0.8.23"
+shellexpand = "2.1.0"
+slog = "2.7.0"
+slog-async = "2.7.0"
+slog-json = "2.4.0"
+slog-term = "2.8.0"
+spl-associated-token-account = "1.0.3"
+spl-token = "3.2.0"
+structopt = "0.3.25"
+thiserror = "1.0.30"
