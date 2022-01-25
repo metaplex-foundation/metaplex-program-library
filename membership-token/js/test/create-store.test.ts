@@ -10,6 +10,8 @@ import {
 
 import { addLabel } from './utils';
 import { createCreateStoreInstruction } from '../src/mpl-membership-token';
+import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../src/consts';
+
 import { createStoreTransaction } from './transactions/create-store';
 
 killStuckProcess();
@@ -37,7 +39,7 @@ test('create-store: success', async (t) => {
   assertConfirmedTransaction(t, createStoreRes.txConfirmed);
 });
 
-test('create-store: bad name', async (t) => {
+test('create-store: name length is longer the specification value', async (t) => {
   const payer = Keypair.generate();
   const store = Keypair.generate();
   addLabel('create:payer', payer);
@@ -52,14 +54,14 @@ test('create-store: bad name', async (t) => {
         admin: payer.publicKey,
       },
       {
-        name: 'izd5Pr9ltIAJL4ac8cYMUDlakSXNPnJPfR9awYq2',
-        description: '',
+        name: 'n'.repeat(NAME_MAX_LEN + 1),
+        description: 'd'.repeat(DESCRIPTION_MAX_LEN - 3),
       },
     ),
   );
 });
 
-test('create-store: bad description', async (t) => {
+test('create-store: description length is longer the specification value', async (t) => {
   const payer = Keypair.generate();
   const store = Keypair.generate();
   addLabel('create:payer', payer);
@@ -74,8 +76,8 @@ test('create-store: bad description', async (t) => {
         admin: payer.publicKey,
       },
       {
-        name: 'izd5Pr9ltIAJL4ac8cYMUDlakSXNPnJPfR9awYq2',
-        description: '',
+        name: 'n'.repeat(NAME_MAX_LEN - 2),
+        description: 'd'.repeat(DESCRIPTION_MAX_LEN + 1),
       },
     ),
   );

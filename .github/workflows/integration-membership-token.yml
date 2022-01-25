@@ -57,8 +57,9 @@ jobs:
             ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
             env.RUSTC_HASH }}
 
-      # Build Rust Program
+      # Build Rust Programs
       - uses: ./.github/actions/build-membership-token
+      - uses: ./.github/actions/build-token-metadata
 
       # Install JS SDK deps
       - uses: ./.github/actions/yarn-install-and-build

@@ -2,6 +2,7 @@ import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { bignum } from '@metaplex-foundation/beet';
 
 import { createInitSellingResourceInstruction } from '../../src/mpl-membership-token';
+import { createAndSignTransaction } from '../utils';
 
 export const createInitSellingResourceTransaction = async ({
   payer,
@@ -49,11 +50,10 @@ export const createInitSellingResourceTransaction = async ({
     },
   );
 
-  const initSellingResourceTx = new Transaction();
-  initSellingResourceTx.add(instruction);
-  initSellingResourceTx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-  initSellingResourceTx.feePayer = payer.publicKey;
-  initSellingResourceTx.partialSign(sellingResource, vault);
+  const initSellingResourceTx = await createAndSignTransaction(instruction, connection, payer, [
+    sellingResource,
+    vault,
+  ]);
 
   return {
     sellingResource,
