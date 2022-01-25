@@ -47,7 +47,7 @@
   },
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.0.9",
-    "@metaplex-foundation/mpl-token-metadata": "0.0.2",
+    "@metaplex-foundation/mpl-token-metadata": "1.1.0",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
     "debug": "^4.3.3",
