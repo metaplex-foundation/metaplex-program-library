@@ -1916,7 +1916,7 @@ dependencies = [
  "bincode",
  "borsh 0.9.1",
  "clap",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.1.0",
  "solana-clap-utils",
  "solana-cli-config",
  "solana-client",
@@ -2005,7 +2005,7 @@ dependencies = [
  "arrayref",
  "env_logger",
  "mpl-testing-utils",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.1.0",
  "serde_json",
  "shellexpand",
  "solana-program",
@@ -2024,7 +2024,7 @@ dependencies = [
  "anchor-lang 0.20.1",
  "anchor-spl 0.20.1",
  "chrono",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.1.0",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -2038,7 +2038,7 @@ dependencies = [
  "arrayref",
  "borsh 0.9.1",
  "mpl-auction",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.1.0",
  "mpl-token-vault 0.1.0",
  "num-derive",
  "num-traits",
@@ -2050,12 +2050,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-nft-candy-machine"
+version = "2.0.1"
+dependencies = [
+ "anchor-lang 0.19.0",
+ "anchor-spl 0.19.0",
+ "arrayref",
+ "mpl-token-metadata 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "solana-gateway",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
+
+[[package]]
 name = "mpl-nft-packs"
 version = "0.1.0"
 dependencies = [
  "borsh 0.9.1",
  "mpl-metaplex",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.1.0",
  "mpl-token-vault 0.1.0",
  "num-derive",
  "num-traits",
@@ -2076,7 +2090,7 @@ version = "0.0.1"
 dependencies = [
  "anchor-client 0.19.0",
  "borsh 0.9.1",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.1.0",
  "mpl-token-vault 0.1.0",
  "num",
  "num-derive",
@@ -2097,7 +2111,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang 0.19.0",
  "anchor-spl 0.19.0",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.1.0",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -2115,6 +2129,23 @@ dependencies = [
  "solana-program",
  "solana-program-test",
  "solana-sdk",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-token-metadata"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe5e23f9f14cbd35ab82c471e7a024f617a8f65b0468fa2c8c7eb4def7ebaa18"
+dependencies = [
+ "arrayref",
+ "borsh 0.9.1",
+ "mpl-token-vault 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num-derive",
+ "num-traits",
+ "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -2152,23 +2183,9 @@ version = "0.0.1"
 dependencies = [
  "anchor-lang 0.19.0",
  "anchor-spl 0.19.0",
- "mpl-token-metadata",
+ "mpl-token-metadata 1.1.0",
  "solana-program",
  "spl-associated-token-account",
-]
-
-[[package]]
-name = "nft-candy-machine"
-version = "2.0.0"
-dependencies = [
- "anchor-lang 0.19.0",
- "anchor-spl 0.19.0",
- "arrayref",
- "mpl-token-metadata",
- "solana-gateway",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
 ]
 
 [[package]]
@@ -3377,8 +3394,9 @@ dependencies = [
 
 [[package]]
 name = "solana-gateway"
-version = "0.0.4"
-source = "git+https://github.com/identity-com/on-chain-identity-gateway?rev=2d195dcd33bcd1a26b09d79ee90cc6f7282c87aa#2d195dcd33bcd1a26b09d79ee90cc6f7282c87aa"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6959300f6f428ee036e9b20d227f45b8908ebe9c7decf9d6c559d713de02ac55"
 dependencies = [
  "bitflags",
  "borsh 0.9.1",

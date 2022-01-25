@@ -107,6 +107,7 @@ pub mod nft_candy_machine_v2 {
                     gateway_token_info,
                     &payer.key(),
                     &gatekeeper.gatekeeper_network,
+                    None,
                 )?;
             }
             // verifies that the gatway token was not created before the candy
@@ -116,7 +117,8 @@ pub mod nft_candy_machine_v2 {
                     msg!(
                         "Comparing token expire time {} and go_live_date {}",
                         expire_time,
-                        val);
+                        val
+                    );
                     if (expire_time - EXPIRE_OFFSET) < val {
                         if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
                             // when dealing with whitelist, the expire_time can be
