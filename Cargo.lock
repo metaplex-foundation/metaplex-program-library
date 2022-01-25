@@ -2017,6 +2017,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-candy-machine"
+version = "2.0.1"
+dependencies = [
+ "anchor-lang 0.19.0",
+ "anchor-spl 0.19.0",
+ "arrayref",
+ "mpl-token-metadata 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "solana-gateway",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
+
+[[package]]
 name = "mpl-membership-token"
 version = "0.1.0"
 dependencies = [
@@ -2047,20 +2061,6 @@ dependencies = [
  "solana-sdk",
  "spl-token",
  "thiserror",
-]
-
-[[package]]
-name = "mpl-nft-candy-machine"
-version = "2.0.1"
-dependencies = [
- "anchor-lang 0.19.0",
- "anchor-spl 0.19.0",
- "arrayref",
- "mpl-token-metadata 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "solana-gateway",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
 ]
 
 [[package]]
