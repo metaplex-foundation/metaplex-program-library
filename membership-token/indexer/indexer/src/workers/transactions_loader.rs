@@ -1,12 +1,13 @@
-use std::{
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
+use parking_lot::Mutex;
+use std::{str::FromStr, sync::Arc};
 
 use indexer_core::{solana_rpc_client, Db, SolanaRpcClient};
 use solana_sdk::pubkey::Pubkey;
 use tokio::{
-    sync::broadcast::{Receiver, Sender},
+    sync::{
+        broadcast::{Receiver, Sender},
+        mpsc,
+    },
     time::{sleep, Duration},
 };
 
@@ -48,6 +49,8 @@ struct TransactionsLoaderRegistry {
 
 pub async fn run(
     channel_id: u8,
+    mut stop_rx: Receiver<u8>,
+    _stop_fb_tx: mpsc::Sender<()>,
     tx: Sender<Message>,
     mut rx: Receiver<Command>,
     guarded_db: Arc<Mutex<Db>>,
@@ -66,6 +69,12 @@ pub async fn run(
             process_command(command, &mut registry, &tx).await;
         }
 
+        if stop_rx.try_recv().is_ok() {
+            break;
+        }
+
+        sleep(Duration::from_millis(100)).await;
+
         // Skip all following instructions and do nothing if this actor was not started
         if TransactionsLoaderState::Started != registry.state {
             continue;
@@ -75,7 +84,7 @@ pub async fn run(
         let signature: Option<String>;
 
         {
-            let db = guarded_db.lock().unwrap();
+            let db = guarded_db.lock();
 
             result = match db.get_signature_from_queue() {
                 Ok(result) => Some(result),
@@ -111,9 +120,9 @@ pub async fn run(
                 println!("{} -- {}", channel_id, signature);
             }
         }
-
-        sleep(Duration::from_millis(500)).await;
     }
+
+    println!("TransactionsLoader{}::stop()", channel_id);
 }
 
 async fn process_command(

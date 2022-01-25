@@ -6,7 +6,10 @@ use indexer_core::{
 use solana_sdk::{pubkey::Pubkey, signature::Signature};
 use std::str::FromStr;
 use tokio::{
-    sync::broadcast::{Receiver, Sender},
+    sync::{
+        broadcast::{Receiver, Sender},
+        mpsc,
+    },
     time::{sleep, Duration},
 };
 
@@ -49,7 +52,13 @@ struct SignaturesLoaderRegistry {
     db: Option<Db>,
 }
 
-pub async fn run(id: u8, tx: Sender<Message>, mut rx: Receiver<Command>) {
+pub async fn run(
+    id: u8,
+    mut stop_rx: Receiver<u8>,
+    _stop_fb_tx: mpsc::Sender<()>,
+    tx: Sender<Message>,
+    mut rx: Receiver<Command>,
+) {
     println!("SignaturesLoader{}::run()", id);
 
     let mut registry = SignaturesLoaderRegistry {
@@ -66,6 +75,12 @@ pub async fn run(id: u8, tx: Sender<Message>, mut rx: Receiver<Command>) {
         if let Ok(command) = rx.try_recv() {
             process_command(command, &mut registry, &tx).await;
         }
+
+        if stop_rx.try_recv().is_ok() {
+            break;
+        }
+
+        sleep(Duration::from_millis(100)).await;
 
         // Skip all following instructions and do nothing if this actor was not started
         if SignaturesLoaderState::Started != registry.state {
@@ -94,9 +109,9 @@ pub async fn run(id: u8, tx: Sender<Message>, mut rx: Receiver<Command>) {
                 .store_signatures_in_queue(signatures)
                 .unwrap();
         }
-
-        sleep(Duration::from_millis(500)).await;
     }
+
+    println!("SignaturesLoader{}::stop()", id);
 }
 
 async fn process_command(
