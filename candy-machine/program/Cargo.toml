@@ -1,5 +1,5 @@
 [package]
-name = "mpl-nft-candy-machine"
+name = "mpl-candy-machine"
 version = "2.0.1"
 description = "NFT Candy Machine v2: programmatic and trustless NFT drops."
 authors = ["Jordan Prince", "Metaplex Developers <dev@metaplex.com>"]
