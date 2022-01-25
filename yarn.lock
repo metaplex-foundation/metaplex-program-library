@@ -1059,9 +1059,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/mpl-candy-machine@workspace:nft-candy-machine/js":
+"@metaplex-foundation/mpl-candy-machine@workspace:candy-machine/js":
   version: 0.0.0-use.local
-  resolution: "@metaplex-foundation/mpl-candy-machine@workspace:nft-candy-machine/js"
+  resolution: "@metaplex-foundation/mpl-candy-machine@workspace:candy-machine/js"
   dependencies:
     "@metaplex-foundation/beet": 0.0.0
     "@metaplex-foundation/beet-solana": 0.0.0
