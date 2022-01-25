@@ -91,4 +91,7 @@ pub enum ErrorCode {
     // 6028
     #[msg("Metadata creators is empty")]
     MetadataCreatorsIsEmpty,
+    // 6029
+    #[msg("User wallet must match user token account")]
+    UserWalletMustMatchUserTokenAccount,
 }

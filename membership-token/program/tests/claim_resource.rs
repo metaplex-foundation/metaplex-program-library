@@ -414,7 +414,7 @@ mod claim_resource {
     }
 
     #[tokio::test]
-    async fn fail_invalid_selling_resource_state() {
+    async fn fail_invalid_treasury_amount() {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
@@ -524,9 +524,12 @@ mod claim_resource {
             .unwrap()
             .unwrap()
             .data;
+
         let selling_resource =
             SellingResource::try_deserialize(&mut selling_resource_data.as_ref()).unwrap();
 
+        let (trade_history, trade_history_bump) =
+            find_trade_history_address(&context.payer.pubkey(), &market_keypair.pubkey());
         let (owner, vault_owner_bump) =
             find_vault_owner_address(&selling_resource.resource, &selling_resource.store);
 
@@ -572,6 +575,100 @@ mod claim_resource {
         )
         .await;
 
+        let (master_edition_metadata, _) = Pubkey::find_program_address(
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                selling_resource.resource.as_ref(),
+            ],
+            &mpl_token_metadata::id(),
+        );
+
+        let (master_edition, _) = Pubkey::find_program_address(
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                selling_resource.resource.as_ref(),
+                mpl_token_metadata::state::EDITION.as_bytes(),
+            ],
+            &mpl_token_metadata::id(),
+        );
+
+        let (edition_marker, _) = Pubkey::find_program_address(
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                selling_resource.resource.as_ref(),
+                mpl_token_metadata::state::EDITION.as_bytes(),
+                selling_resource.supply.to_string().as_bytes(),
+            ],
+            &mpl_token_metadata::id(),
+        );
+
+        let (new_metadata, _) = Pubkey::find_program_address(
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                new_mint_keypair.pubkey().as_ref(),
+            ],
+            &mpl_token_metadata::id(),
+        );
+
+        let (new_edition, _) = Pubkey::find_program_address(
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                new_mint_keypair.pubkey().as_ref(),
+                mpl_token_metadata::state::EDITION.as_bytes(),
+            ],
+            &mpl_token_metadata::id(),
+        );
+
+        // Buy
+        let accounts = mpl_membership_token_accounts::Buy {
+            market: market_keypair.pubkey(),
+            selling_resource: selling_resource_keypair.pubkey(),
+            user_token_account: user_token_account.pubkey(),
+            user_wallet: context.payer.pubkey(),
+            trade_history,
+            treasury_holder: treasury_holder_keypair.pubkey(),
+            new_metadata,
+            new_edition,
+            master_edition,
+            new_mint: new_mint_keypair.pubkey(),
+            edition_marker,
+            vault: selling_resource.vault,
+            owner,
+            master_edition_metadata,
+            clock: sysvar::clock::id(),
+            rent: sysvar::rent::id(),
+            token_metadata_program: mpl_token_metadata::id(),
+            token_program: spl_token::id(),
+            system_program: system_program::id(),
+        }
+        .to_account_metas(None);
+
+        let data = mpl_membership_token_instruction::Buy {
+            _trade_history_bump: trade_history_bump,
+            vault_owner_bump,
+        }
+        .data();
+
+        let instruction = Instruction {
+            program_id: mpl_membership_token::id(),
+            data,
+            accounts,
+        };
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
 
@@ -600,17 +697,6 @@ mod claim_resource {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        // Withdraw
-        let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
-            &market_keypair.pubkey(),
-            &selling_resource_owner_keypair.pubkey(),
-        );
-
-        let destination = spl_associated_token_account::get_associated_token_address(
-            &selling_resource_owner_keypair.pubkey(),
-            &treasury_mint_keypair.pubkey(),
-        );
-
         let (metadata, _) = Pubkey::find_program_address(
             &[
                 mpl_token_metadata::state::PREFIX.as_bytes(),
@@ -619,46 +705,6 @@ mod claim_resource {
             ],
             &mpl_token_metadata::id(),
         );
-
-        let accounts = mpl_membership_token_accounts::Withdraw {
-            market: market_keypair.pubkey(),
-            selling_resource: selling_resource_keypair.pubkey(),
-            metadata,
-            treasury_holder: treasury_holder_keypair.pubkey(),
-            treasury_mint: treasury_mint_keypair.pubkey(),
-            owner: treasury_owner,
-            destination,
-            funder: selling_resource_owner_keypair.pubkey(),
-            payer: payer_pubkey,
-            payout_ticket,
-            rent: sysvar::rent::id(),
-            clock: sysvar::clock::id(),
-            token_program: spl_token::id(),
-            associated_token_program: spl_associated_token_account::id(),
-            system_program: system_program::id(),
-        }
-        .to_account_metas(None);
-
-        let data = mpl_membership_token_instruction::Withdraw {
-            payout_ticket_bump,
-            treasury_owner_bump: treasyry_owner_bump,
-        }
-        .data();
-
-        let instruction = Instruction {
-            program_id: mpl_membership_token::id(),
-            data,
-            accounts,
-        };
-
-        let tx = Transaction::new_signed_with_payer(
-            &[instruction],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
-            context.last_blockhash,
-        );
-
-        context.banks_client.process_transaction(tx).await.unwrap();
 
         // ClaimResource
         let claim_token = Keypair::new();
