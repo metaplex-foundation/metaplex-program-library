@@ -25,7 +25,11 @@ import { mintNFT } from './actions/mint-nft';
 import { addLabel, connectionURL, logDebug } from './utils';
 import { mintTokenToAccount } from './actions/mint-token-to-account';
 
-test('buy: success purchase with native SOL', async (t) => {
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve: any) => setTimeout(resolve, ms));
+}
+
+test('buy: successful purchase with native SOL', async (t) => {
   const payer = Keypair.generate();
 
   const connection = new Connection(connectionURL, 'confirmed');
@@ -41,7 +45,7 @@ test('buy: success purchase with native SOL', async (t) => {
     defaultSendOptions,
   );
 
-  logDebug('buy:: created store', store.publicKey.toBase58());
+  logDebug('buy-sol:: created store', store.publicKey.toBase58());
   addLabel('create:store', store.publicKey.toBase58());
   assertConfirmedTransaction(t, createStoreRes.txConfirmed);
 
@@ -56,7 +60,7 @@ test('buy: success purchase with native SOL', async (t) => {
     connection,
   });
 
-  const resourceMintMasterMetadata = await Metadata.getPDA(resourceMintMasterEdition);
+  const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
 
   const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
 
@@ -80,7 +84,7 @@ test('buy: success purchase with native SOL', async (t) => {
     defaultSendOptions,
   );
 
-  logDebug('buy:: created vault', vault.publicKey.toBase58());
+  logDebug('buy-sol:: created vault', vault.publicKey.toBase58());
   addLabel('create:vault', vault.publicKey.toBase58());
   assertConfirmedTransaction(t, createVaultRes.txConfirmed);
 
@@ -100,11 +104,11 @@ test('buy: success purchase with native SOL', async (t) => {
 
   const initSellingResourceRes = await transactionHandler.sendAndConfirmTransaction(
     initSellingResourceTx,
-    [sellingResource, vault],
+    [sellingResource],
     defaultSendOptions,
   );
 
-  logDebug('buy:: created selling resource', sellingResource.publicKey.toBase58());
+  logDebug('buy-sol:: created selling resource', sellingResource.publicKey.toBase58());
   addLabel('create:selling-resource', sellingResource.publicKey.toBase58());
   assertConfirmedTransaction(t, initSellingResourceRes.txConfirmed);
 
@@ -116,6 +120,8 @@ test('buy: success purchase with native SOL', async (t) => {
   );
 
   addLabel('get:market-treasury-owner', treasuryOwner);
+
+  const startDate = Math.round(Date.now() / 1000);
 
   const { marketTx, market } = await createMarketTransaction({
     payer,
@@ -130,10 +136,10 @@ test('buy: success purchase with native SOL', async (t) => {
     name: 'Market Name',
     description: 'Market Description',
     mutable: true,
-    price: 1,
+    price: 0.1,
     piecesInOneWallet: 10,
-    startDate: Math.round(Date.now() / 1000),
-    endDate: Math.round(Date.now() / 1000) + 5 * 20,
+    startDate: startDate,
+    endDate: startDate + 100000,
   });
 
   const marketRes = await transactionHandler.sendAndConfirmTransaction(
@@ -142,7 +148,9 @@ test('buy: success purchase with native SOL', async (t) => {
     defaultSendOptions,
   );
 
-  logDebug('buy:: created market', market.publicKey.toBase58());
+  logDebug('--------', startDate);
+
+  logDebug('buy-sol:: created market', market.publicKey.toBase58());
   addLabel('create:market', market.publicKey.toBase58());
   assertConfirmedTransaction(t, marketRes.txConfirmed);
 
@@ -162,17 +170,19 @@ test('buy: success purchase with native SOL', async (t) => {
   const newMintEdition = await Edition.getPDA(newMint.publicKey);
   const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
 
+  await sleep(1000);
+
   const { tx: buyTx } = await createBuyTransaction({
     connection,
     buyer: payer.publicKey,
     userTokenAccount: payer.publicKey,
+    resourceMintMetadata,
     resourceMintEditionMarker,
     resourceMintMasterEdition,
-    resourceMintMasterMetadata,
     sellingResource: sellingResource.publicKey,
     market: market.publicKey,
     marketTreasuryHolder: treasuryOwner,
-    treasuryOwner,
+    vaultOwner,
     tradeHistory,
     tradeHistoryBump,
     vault: vault.publicKey,
@@ -188,6 +198,6 @@ test('buy: success purchase with native SOL', async (t) => {
     defaultSendOptions,
   );
 
-  logDebug('buy:: successful purchase');
+  logDebug('buy-sol:: successful purchase');
   assertConfirmedTransaction(t, buyRes.txConfirmed);
 });

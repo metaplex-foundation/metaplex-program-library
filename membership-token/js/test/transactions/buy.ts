@@ -7,15 +7,15 @@ interface BuyMembershipTokenParams {
   connection: Connection;
   buyer: PublicKey;
   userTokenAccount: PublicKey;
+  resourceMintMetadata: PublicKey;
   resourceMintEditionMarker: PublicKey;
   resourceMintMasterEdition: PublicKey;
-  resourceMintMasterMetadata: PublicKey;
   sellingResource: PublicKey;
   tradeHistory: PublicKey;
   tradeHistoryBump: number;
   market: PublicKey;
   marketTreasuryHolder: PublicKey;
-  treasuryOwner: PublicKey;
+  vaultOwner: PublicKey;
   vault: PublicKey;
   vaultOwnerBump: number;
   newMint: PublicKey;
@@ -27,16 +27,16 @@ export const createBuyTransaction = async ({
   connection,
   buyer,
   userTokenAccount,
+  resourceMintMetadata,
   resourceMintEditionMarker,
   resourceMintMasterEdition,
-  resourceMintMasterMetadata,
   sellingResource,
   tradeHistory,
   tradeHistoryBump,
   market,
   marketTreasuryHolder,
   vault,
-  treasuryOwner,
+  vaultOwner,
   vaultOwnerBump,
   newMint,
   newMintEdition,
@@ -52,14 +52,14 @@ export const createBuyTransaction = async ({
       editionMarker: resourceMintEditionMarker,
       // resource mint master edition
       masterEdition: resourceMintMasterEdition,
-      // resource mint master edition metadata PDA
-      masterEditionMetadata: resourceMintMasterMetadata,
+      // resource mint metadata PDA
+      masterEditionMetadata: resourceMintMetadata,
       // token account for selling resource
       vault,
       // account which holds selling entities
       sellingResource,
       // owner of selling resource token account PDA
-      owner: treasuryOwner,
+      owner: vaultOwner,
       // market account
       market,
       // PDA which creates on market for each buyer

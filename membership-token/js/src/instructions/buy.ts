@@ -1,7 +1,7 @@
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+
 import { PROGRAM_ID } from '../consts';
 
 export type BuyInstructionArgs = {
@@ -14,7 +14,7 @@ const buyStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['tradeHistoryBump', beet.u8],
     ['vaultOwnerBump', beet.u8],
   ],

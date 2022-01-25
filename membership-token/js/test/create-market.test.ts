@@ -10,12 +10,14 @@ import {
 
 import { findTresuryOwnerAddress, findVaultOwnerAddress } from '../src/utils';
 
+import {
+  createMarketTransaction,
+  createTokenAccount,
+  createInitSellingResourceTransaction,
+  createStoreTransaction,
+} from './transactions';
 import { addLabel, logDebug } from './utils';
-import { createStoreTransaction } from './transactions/create-store';
 import { mintNFT } from './actions/mint-nft';
-import { createInitSellingResourceTransaction } from './transactions/init-selling-resouce';
-import { createTokenAccount } from './transactions/create-token-account';
-import { createMarketTransaction } from './transactions/create-market';
 
 killStuckProcess();
 
@@ -100,7 +102,7 @@ test('create-market: success', async (t) => {
 
   const initSellingResourceRes = await transactionHandler.sendAndConfirmTransaction(
     initSellingResourceTx,
-    [sellingResource, vault],
+    [sellingResource],
     defaultSendOptions,
   );
 

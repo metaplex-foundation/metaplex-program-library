@@ -82,7 +82,7 @@ test('init-selling-resource: success', async (t) => {
   });
   const initSellingResourceRes = await transactionHandler.sendAndConfirmTransaction(
     initSellingResourceTx,
-    [sellingResource, vault],
+    [sellingResource],
     defaultSendOptions,
   );
 

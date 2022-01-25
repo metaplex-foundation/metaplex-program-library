@@ -16,42 +16,12 @@ const tradeHistoryAccountDiscriminator = [190, 117, 218, 114, 66, 112, 56, 41];
  * Holds the data for the {@link TradeHistoryAccount} and provides de/serialization
  * functionality for that data
  */
-export class TradeHistoryAccountData {
+export class TradeHistoryAccountData implements TradeHistoryAccountDataArgs {
   private constructor(
     readonly market: web3.PublicKey,
     readonly wallet: web3.PublicKey,
     readonly alreadyBought: beet.bignum,
   ) {}
-
-  /**
-   * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link TradeHistoryAccountData}
-   */
-  static get byteSize() {
-    return tradeHistoryAccountDataStruct.byteSize;
-  }
-
-  /**
-   * Fetches the minimum balance needed to exempt an account holding
-   * {@link TradeHistoryAccountData} data from rent
-   */
-  static async getMinimumBalanceForRentExemption(
-    connection: web3.Connection,
-    commitment?: web3.Commitment,
-  ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      TradeHistoryAccountData.byteSize,
-      commitment,
-    );
-  }
-
-  /**
-   * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link TradeHistoryAccountData} data.
-   */
-  static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === TradeHistoryAccountData.byteSize;
-  }
 
   /**
    * Creates a {@link TradeHistoryAccountData} instance from the provided args.
@@ -77,6 +47,38 @@ export class TradeHistoryAccountData {
    */
   static deserialize(buf: Buffer, offset = 0): [TradeHistoryAccountData, number] {
     return tradeHistoryAccountDataStruct.deserialize(buf, offset);
+  }
+
+  /**
+   * Returns the byteSize of a {@link Buffer} holding the serialized data of
+   * {@link TradeHistoryAccountData}
+   */
+  static get byteSize() {
+    return tradeHistoryAccountDataStruct.byteSize;
+  }
+
+  /**
+   * Fetches the minimum balance needed to exempt an account holding
+   * {@link TradeHistoryAccountData} data from rent
+   *
+   * @param connection used to retrieve the rent exemption information
+   */
+  static async getMinimumBalanceForRentExemption(
+    connection: web3.Connection,
+    commitment?: web3.Commitment,
+  ): Promise<number> {
+    return connection.getMinimumBalanceForRentExemption(
+      TradeHistoryAccountData.byteSize,
+      commitment,
+    );
+  }
+
+  /**
+   * Determines if the provided {@link Buffer} has the correct byte size to
+   * hold {@link TradeHistoryAccountData} data.
+   */
+  static hasCorrectByteSize(buf: Buffer, offset = 0) {
+    return buf.byteLength - offset === TradeHistoryAccountData.byteSize;
   }
 
   /**
@@ -110,7 +112,7 @@ const tradeHistoryAccountDataStruct = new beet.BeetStruct<
   }
 >(
   [
-    ['accountDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['market', beetSolana.publicKey],
     ['wallet', beetSolana.publicKey],
     ['alreadyBought', beet.u64],

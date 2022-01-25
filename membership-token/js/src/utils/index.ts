@@ -25,9 +25,3 @@ export const findTradeHistoryAddress = (wallet: PublicKey, market: PublicKey) =>
     new PublicKey(PROGRAM_ID),
   );
 };
-
-export const checkByteSizes = (value: string, length: number): string => {
-  const bytesLength = Buffer.from(value, 'utf8').byteLength;
-
-  return bytesLength < length ? value + ' '.repeat(length - bytesLength) : value;
-};

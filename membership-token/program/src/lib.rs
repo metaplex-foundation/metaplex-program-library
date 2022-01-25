@@ -144,6 +144,10 @@ pub mod membership_token {
 
         // Check, that `Market` is started
         if market.start_date > clock.unix_timestamp as u64 {
+            msg!("market.end_date = {:?}", market.end_date);
+            msg!("market.start_date = {}", market.start_date);
+            msg!("unix_timestamp = {}", clock.unix_timestamp);
+            msg!("pieces_in_one_wallet = {:?}", market.pieces_in_one_wallet);
             return Err(ErrorCode::MarketIsNotStarted.into());
         }
 
