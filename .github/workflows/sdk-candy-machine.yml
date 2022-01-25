@@ -23,7 +23,7 @@ jobs:
           core:
             - 'core/**'
           package:
-            - 'nft-candy-machine/**'
+            - 'candy-machine/**'
   build-lint-and-test-auction:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
@@ -34,4 +34,4 @@ jobs:
       - uses: ./.github/actions/yarn-install-and-verify
         with: 
           cache_id: sdk-candy-machine
-          working_dir: ./nft-candy-machine/js
+          working_dir: ./candy-machine/js
