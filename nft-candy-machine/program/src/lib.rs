@@ -116,7 +116,8 @@ pub mod nft_candy_machine_v2 {
                     msg!(
                         "Comparing token expire time {} and go_live_date {}",
                         expire_time,
-                        val);
+                        val
+                    );
                     if (expire_time - EXPIRE_OFFSET) < val {
                         if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
                             // when dealing with whitelist, the expire_time can be
@@ -660,7 +661,7 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
 pub struct InitializeCandyMachine<'info> {
-    #[account(zero, constraint= candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= get_space_for_candy(data)?)]
+    #[account(zero, rent_exempt = skip, constraint = candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= get_space_for_candy(data)?)]
     candy_machine: UncheckedAccount<'info>,
     wallet: UncheckedAccount<'info>,
     authority: UncheckedAccount<'info>,
