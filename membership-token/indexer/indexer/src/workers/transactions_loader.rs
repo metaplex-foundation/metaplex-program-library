@@ -80,24 +80,18 @@ pub async fn run(
             continue;
         }
 
-        let result: Option<(i32, Option<String>)>;
         let signature: Option<String>;
 
         {
             let db = guarded_db.lock();
 
-            result = match db.get_signature_from_queue() {
-                Ok(result) => Some(result),
+            signature = match db.get_signature_from_queue() {
+                Ok(result) => {
+                    db.delete_signature_from_queue(result.0);
+                    result.1
+                }
                 _ => None,
             };
-
-            if result.is_some() {
-                let signature_record = result.unwrap();
-                db.delete_signature_from_queue(signature_record.0);
-                signature = Some(signature_record.1.unwrap());
-            } else {
-                signature = None;
-            }
         }
 
         if signature.is_some() {

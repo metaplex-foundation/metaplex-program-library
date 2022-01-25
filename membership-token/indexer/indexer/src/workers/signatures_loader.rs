@@ -3,9 +3,13 @@ use indexer_core::{
     solana_rpc_client::{self, SolanaRpcClient},
 };
 
+use serde::{Deserialize, Serialize};
 use solana_sdk::{pubkey::Pubkey, signature::Signature};
 use std::str::FromStr;
 use tokio::{
+    fs,
+    fs::File,
+    io::{self, AsyncWriteExt},
     sync::{
         broadcast::{Receiver, Sender},
         mpsc,
@@ -52,6 +56,13 @@ struct SignaturesLoaderRegistry {
     db: Option<Db>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+struct SavedState {
+    newest_transaction: Option<Signature>,
+    before: Option<Signature>,
+    until: Option<Signature>,
+}
+
 pub async fn run(
     id: u8,
     mut stop_rx: Receiver<u8>,
@@ -67,9 +78,7 @@ pub async fn run(
         db: None,
     };
 
-    let mut newest_transaction: Option<Signature> = None;
-    let mut before: Option<Signature> = None;
-    let until: Option<Signature> = None;
+    let mut saved_state = load_state().await;
 
     loop {
         if let Ok(command) = rx.try_recv() {
@@ -92,14 +101,15 @@ pub async fn run(
             .rpc_client
             .as_ref()
             .unwrap()
-            .load_signatures_batch(before, until);
+            .load_signatures_batch(saved_state.before, saved_state.until);
 
-        if newest_transaction.is_none() {
-            newest_transaction =
+        if saved_state.newest_transaction.is_none() {
+            saved_state.newest_transaction =
                 Some(Signature::from_str(&signatures.get(0).unwrap().signature).unwrap());
         }
 
-        before = Some(Signature::from_str(&signatures.iter().last().unwrap().signature).unwrap());
+        saved_state.before =
+            Some(Signature::from_str(&signatures.iter().last().unwrap().signature).unwrap());
 
         if registry.db.is_some() {
             registry
@@ -110,6 +120,8 @@ pub async fn run(
                 .unwrap();
         }
     }
+
+    save_state(&saved_state).await.unwrap();
 
     println!("SignaturesLoader{}::stop()", id);
 }
@@ -142,4 +154,23 @@ async fn start(url: String, registry: &mut SignaturesLoaderRegistry, tx: &Sender
         registry.db = Some(Db::default());
         tx.send(Message::Started).unwrap();
     }
+}
+
+async fn load_state() -> SavedState {
+    match fs::read_to_string("./stored_state.dat").await {
+        Ok(stored_state) => serde_json::from_str(&stored_state).unwrap(),
+        _ => SavedState {
+            newest_transaction: None,
+            before: None,
+            until: None,
+        },
+    }
+}
+
+async fn save_state(state: &SavedState) -> io::Result<()> {
+    let mut stored_state = File::create("./stored_state.dat").await?;
+    stored_state
+        .write(serde_json::to_string(state).unwrap().as_bytes())
+        .await?;
+    Ok(())
 }

@@ -11,6 +11,8 @@ solana-client = "1.8.5"
 solana-sdk = "1.8.5"
 solana-transaction-status = "1.8.5"
 parking_lot = "0.11.2"
+serde = "1.0.135"
+serde_json = "*"
 
 [dependencies.indexer-core]
 package = "mpl_membership_token_indexer_core"
