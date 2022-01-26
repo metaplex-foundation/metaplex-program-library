@@ -531,6 +531,7 @@ pub fn transfer_chunk_slow_proof<F>(
     use crate::transfer_proof::TransferProof;
     use curve25519_dalek::scalar::Scalar;
     use curve25519_dalek_onchain::instruction as dalek;
+    use curve25519_dalek_onchain::{window::LookupTable, edwards::ProjectiveNielsPoint};
     use curve25519_dalek_onchain::scalar::Scalar as OScalar;
 
     let equality_proof = equality_proof::EqualityProof::from_bytes(
@@ -599,7 +600,7 @@ pub fn transfer_chunk_slow_proof<F>(
         + 3 * 32 * 4                 // 3 proof groups
         + 32 * 12                    // decompression space
         + 32 * scalars.len()         // scalars
-        + 32 * 4 * 8 * points.len()  // point lookup tables
+        + LookupTable::<ProjectiveNielsPoint>::TABLE_SIZE * points.len()  // point lookup tables
         ;
 
     let mut ret = vec![];
@@ -646,35 +647,56 @@ pub fn transfer_chunk_slow_proof<F>(
         signers: vec![*payer],
     });
 
-    let instructions_per_tx = 32;
-    let num_cranks = equality_proof::DSL_INSTRUCTION_COUNT;
+    let crank = dalek::crank_compute(
+        *instruction_buffer,
+        *input_buffer,
+        *compute_buffer,
+    );
+
     let mut current = 0;
     let mut crank_transactions = 0;
-    while current < num_cranks {
-        let mut instructions = vec![];
-        for j in 0..instructions_per_tx {
-            if current >= num_cranks {
-                break;
-            }
-            instructions.push(
-                if crank_transactions == j {
-                    dalek::noop()
-                } else {
-                    current += 1;
-                    dalek::crank_compute(
-                        *instruction_buffer,
-                        *input_buffer,
-                        *compute_buffer,
-                    )
-                },
-            );
-        }
+
+    let mut add_crank_batch = |count| {
+        let mut instructions = vec![
+            solana_sdk::compute_budget::ComputeBudgetInstruction::request_units(1_000_000),
+            dalek::noop(crank_transactions),
+        ];
+        instructions.extend_from_slice(&vec![crank.clone(); count]);
+        current += count;
         ret.push(InstructionsAndSignerPubkeys{
             instructions,
             signers: vec![*payer],
         });
         crank_transactions += 1;
+    };
+
+    // 11 proof inputs, 8 ops for each
+    // each input takes ~450k compute to decompress + build table
+    // pack the first 10 in pairs
+    for _g in 0..5 {
+        add_crank_batch(8 * 2);
     }
+    // group the last with the scalar (11) / result identity (3) copies
+    add_crank_batch(8 + 11 + 3);
+
+    // then we have 3 groups of 64 multiplication cranks. the first 2 groups have 3 points each
+    // which is ~85k compute so we can pack ~11. the last group has 5 points with ~120k compute so
+    // ~8 per
+
+    for _g in 0..2 {
+        // total 64 cranks per this group
+        for _f in 0..5 {
+            add_crank_batch(11);
+        }
+        add_crank_batch(9);
+    }
+
+    for _g in 0..8 {
+        add_crank_batch(8);
+    }
+
+    assert_eq!(current, equality_proof::DSL_INSTRUCTION_COUNT);
+    assert_eq!(crank_transactions, 26);
 
     Ok(ret)
 }
