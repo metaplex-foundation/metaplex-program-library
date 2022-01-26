@@ -266,6 +266,35 @@ impl Metadata {
         Ok(context.banks_client.process_transaction(tx).await?)
     }
 
+    pub async fn set_and_verify_collection(
+        &self,
+        context: &mut ProgramTestContext,
+        collection: Pubkey,
+        collection_authority: &Keypair,
+        nft_update_authority: Pubkey,
+        collection_mint: Pubkey,
+        collection_master_edition_account: Pubkey,
+        collection_authority_record: Option<Pubkey>,
+    ) -> transport::Result<()> {
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::set_and_verify_collection(
+                id(),
+                self.pubkey,
+                collection_authority.pubkey(),
+                context.payer.pubkey().clone(),
+                nft_update_authority,
+                collection_mint,
+                collection,
+                collection_master_edition_account,
+                collection_authority_record,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &collection_authority],
+            context.last_blockhash,
+        );
+        Ok(context.banks_client.process_transaction(tx).await?)
+    }
+
     pub async fn unverify_collection(
         &self,
         context: &mut ProgramTestContext,

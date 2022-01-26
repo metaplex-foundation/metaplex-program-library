@@ -317,6 +317,9 @@ pub enum MetadataInstruction {
     ApproveCollectionAuthority,
     ///See [revoke_collection_authority] for Doc
     RevokeCollectionAuthority,
+
+    ///See [set_and_verify_collection] for Doc
+    SetAndVerifyCollection,
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1021,6 +1024,56 @@ pub fn revoke_collection_authority(
             AccountMeta::new_readonly(mint, false),
         ],
         data: MetadataInstruction::RevokeCollectionAuthority
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+//# Set And Verify Collection
+///
+///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] with collection and [verify_collection] on the NFT/Collection in one instruiction
+///
+/// ### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[signer]` Collection Update authority
+///   2. `[signer]` payer
+///   3. `[] Update Authority of Collection NFT and NFT
+///   3. `[]` Mint of the Collection
+///   4. `[]` Metadata Account of the Collection
+///   5. `[]` MasterEdition2 Account of the Collection Token
+#[allow(clippy::too_many_arguments)]
+pub fn set_and_verify_collection(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    collection_authority: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    collection_mint: Pubkey,
+    collection: Pubkey,
+    collection_master_edition_account: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(collection_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(update_authority, false),
+        AccountMeta::new_readonly(collection_mint, false),
+        AccountMeta::new_readonly(collection, false),
+        AccountMeta::new_readonly(collection_master_edition_account, false),
+    ];
+
+    if collection_authority_record.is_some() {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record.unwrap(),
+            false,
+        ));
+    }
+    Instruction {
+        program_id,
+        accounts: accounts,
+        data: MetadataInstruction::SetAndVerifyCollection
             .try_to_vec()
             .unwrap(),
     }

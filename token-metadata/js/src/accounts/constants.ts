@@ -19,3 +19,4 @@ export enum TokenStandard {
   Fungible = 2, // A token with simple metadata
   NonFungibleEdition = 3, // This is a limited edition
 }
+

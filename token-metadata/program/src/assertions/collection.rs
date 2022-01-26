@@ -74,6 +74,14 @@ pub fn assert_collection_verify_is_valid(
             return Err(MetadataError::CollectionNotFound.into());
         }
     }
+    assert_master_edition(collection_data, edition_account_info)?;
+    Ok(())
+}
+
+pub fn assert_master_edition(
+    collection_data: &Metadata,
+    edition_account_info: &AccountInfo,
+) -> Result<(), ProgramError> {
     let edition = MasterEditionV2::from_account_info(edition_account_info)
         .map_err(|_err: ProgramError| MetadataError::CollectionMustBeAUniqueMasterEdition)?;
     if collection_data.token_standard != Some(TokenStandard::NonFungible)

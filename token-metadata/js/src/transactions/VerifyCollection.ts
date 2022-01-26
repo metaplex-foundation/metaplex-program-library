@@ -9,6 +9,7 @@ export class VerifyCollectionArgs extends Borsh.Data {
 
 type VerifyCollectionParams = {
   metadata: PublicKey;
+  collectionUseAuthorityRecord?: PublicKey;
   collectionAuthority: PublicKey;
   collectionMint: PublicKey;
   collectionMetadata: PublicKey;
@@ -25,44 +26,52 @@ export class VerifyCollection extends Transaction {
       collectionMint,
       collectionMetadata,
       collectionMasterEdition,
+      collectionUseAuthorityRecord,
     } = params;
 
     const data = VerifyCollectionArgs.serialize();
-
+    const accounts = [
+      {
+        pubkey: metadata,
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: collectionAuthority,
+        isSigner: true,
+        isWritable: true,
+      },
+      {
+        pubkey: feePayer,
+        isSigner: true,
+        isWritable: true,
+      },
+      {
+        pubkey: collectionMint,
+        isSigner: false,
+        isWritable: false,
+      },
+      {
+        pubkey: collectionMetadata,
+        isSigner: false,
+        isWritable: false,
+      },
+      {
+        pubkey: collectionMasterEdition,
+        isSigner: false,
+        isWritable: false,
+      },
+    ];
+    if (collectionUseAuthorityRecord) {
+      accounts.push({
+        pubkey: collectionUseAuthorityRecord,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
     this.add(
       new TransactionInstruction({
-        keys: [
-          {
-            pubkey: metadata,
-            isSigner: false,
-            isWritable: true,
-          },
-          {
-            pubkey: collectionAuthority,
-            isSigner: true,
-            isWritable: true,
-          },
-          {
-            pubkey: feePayer,
-            isSigner: true,
-            isWritable: true,
-          },
-          {
-            pubkey: collectionMint,
-            isSigner: false,
-            isWritable: false,
-          },
-          {
-            pubkey: collectionMetadata,
-            isSigner: false,
-            isWritable: false,
-          },
-          {
-            pubkey: collectionMasterEdition,
-            isSigner: false,
-            isWritable: false,
-          },
-        ],
+        keys: accounts,
         programId: MetadataProgram.PUBKEY,
         data,
       }),
