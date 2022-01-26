@@ -49,6 +49,15 @@ branch. Therefore please ensure to be on and up to date `master` branch before r
 **don't ever publish from another branch** but only from the main one with only PR approved changes
 merged.
 
+### Rust Crates
+
+| Package        | Link                                                         | Version                                                      |
+| -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Candy Machine  | [mpl-candy-machine](https://crates.io/crates/mpl-candy-machine) | [![Crate](https://img.shields.io/crates/v/mpl-candy-machine)](https://crates.io/crates/mpl-candy-machine) |
+| Token Metadata | [mpl-token-metadata](https://crates.io/crates/mpl-token-metadata) | [![Crate](https://img.shields.io/crates/v/mpl-token-metadata)](https://crates.io/crates/mpl-token-metadata)                                                             |
+| Token Vault    | [mpl-token-vault](https://crates.io/crates/mpl-token-vault)  |  [![Crate](https://img.shields.io/crates/v/mpl-token-vault)](https://crates.io/crates/mpl-token-vault)                                                            |
+
+
 ## Reporting security issues
 
 To report a security issue, please follow the guidance on the [SECURITY](.github/SECURITY.md) page.
