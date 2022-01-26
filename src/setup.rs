@@ -39,12 +39,12 @@ pub fn sugar_setup(
     };
 
     let keypair = match keypair_opt {
-        Some(keypair_path) => read_keypair_file(&*shellexpand::tilde(&keypair_path))
-            .expect("Failed to read keypair file."),
+        Some(keypair_path) => {
+            read_keypair_file(&keypair_path).expect("Failed to read keypair file.")
+        }
         None => match sol_config_option {
             Some(ref sol_config) => {
-                read_keypair_file(&*shellexpand::tilde(&sol_config.keypair_path))
-                    .expect("Failed to read keypair file.")
+                read_keypair_file(&sol_config.keypair_path).expect("Failed to read keypair file.")
             }
             None => read_keypair_file(&*shellexpand::tilde("~/.config/solana/id.json"))
                 .expect("Failed to read keypair file."),
