@@ -409,7 +409,7 @@ async fn process_transfer(
                 &recipient_pubkey,
                 &mint,
             ).0,
-        )?.as_slice().try_into()?
+        )?.as_slice()[stealth::state::EncryptionKeyBuffer::get_packed_len()-32..].try_into()?
     ).try_into()?;
 
     let transfer_buffer_key = stealth::instruction::get_transfer_buffer_address(
