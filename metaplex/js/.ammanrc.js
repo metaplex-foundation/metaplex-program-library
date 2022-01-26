@@ -1,14 +1,9 @@
 // @ts-check
 'use strict';
-const { tmpdir } = require('os');
 const path = require('path');
 const { LOCALHOST, tmpLedgerDir } = require('@metaplex-foundation/amman');
 
-const isLocal = process.env.LOCAL_MPL === '1';
-
-const localDeployDir = isLocal ?
-  path.resolve(process.cwd(), '../..', 'target', 'deploy') :
-  path.join(tmpdir(), 'test', 'rust', 'target', 'deploy');
+const localDeployDir = path.resolve(process.cwd(), '../..', 'target', 'deploy');
 
 const programIds = {
   metadata: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
