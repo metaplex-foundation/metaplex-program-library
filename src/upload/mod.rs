@@ -340,6 +340,7 @@ fn upload_config_lines(
             .progress_chars("##-"),
     );
 
+    println!("Config lines: {:?}", config_lines.len());
     info!(logger, "Uploading config lines chunks...");
     config_lines
         .par_iter()
@@ -353,7 +354,7 @@ fn upload_config_lines(
             {
                 let mut i = index.lock().unwrap();
                 temp_index = *i;
-                // debug!(logger, "Writing index: {}", temp_index);
+                debug!(logger, "Writing index: {}", temp_index);
                 *i += chunk.len() as u32;
             }
 

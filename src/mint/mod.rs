@@ -9,7 +9,7 @@ use anchor_client::{
 };
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
-use metaplex_token_metadata::ID as TOKEN_METADATA_ID;
+use mpl_token_metadata::ID as TOKEN_METADATA_ID;
 use rand::rngs::OsRng;
 use slog::*;
 use spl_associated_token_account::{
