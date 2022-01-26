@@ -145,8 +145,6 @@ test('buy: successful purchase with native SOL', async (t) => {
     defaultSendOptions,
   );
 
-  logDebug('--------', startDate);
-
   logDebug('buy-sol:: created market', market.publicKey.toBase58());
   addLabel('create:market', market.publicKey.toBase58());
   assertConfirmedTransaction(t, marketRes.txConfirmed);
