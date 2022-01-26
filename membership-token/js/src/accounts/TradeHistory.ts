@@ -24,6 +24,14 @@ export class TradeHistoryAccountData implements TradeHistoryAccountDataArgs {
   ) {}
 
   /**
+   * Returns the byteSize of a {@link Buffer} holding the serialized data of
+   * {@link TradeHistoryAccountData}
+   */
+  static get byteSize() {
+    return tradeHistoryAccountDataStruct.byteSize;
+  }
+
+  /**
    * Creates a {@link TradeHistoryAccountData} instance from the provided args.
    */
   static fromArgs(args: TradeHistoryAccountDataArgs) {
@@ -47,14 +55,6 @@ export class TradeHistoryAccountData implements TradeHistoryAccountDataArgs {
    */
   static deserialize(buf: Buffer, offset = 0): [TradeHistoryAccountData, number] {
     return tradeHistoryAccountDataStruct.deserialize(buf, offset);
-  }
-
-  /**
-   * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link TradeHistoryAccountData}
-   */
-  static get byteSize() {
-    return tradeHistoryAccountDataStruct.byteSize;
   }
 
   /**
