@@ -32,22 +32,22 @@ pub async fn fund_bundlr_address(
 
     let recent_blockhash = program.rpc().get_latest_blockhash()?;
 
-    let tx = Transaction::new_signed_with_payer(
-        &[ix],
-        Some(&payer.pubkey()),
-        &[payer],
-        recent_blockhash,
-    );
+    let payer_pubkey = payer.pubkey();
 
-    thread::sleep(Duration::from_millis(1000));
+    let tx =
+        Transaction::new_signed_with_payer(&[ix], Some(&payer_pubkey), &[payer], recent_blockhash);
 
-    println!("Funding bundlr with {amount} lamports");
+    println!("Funding address: {payer_pubkey} with {amount} lamports.");
     let sig = program
         .rpc()
         .send_and_confirm_transaction_with_spinner_and_commitment(
             &tx,
             CommitmentConfig::confirmed(),
         )?;
+
+    println!("Signature: {sig}");
+
+    thread::sleep(Duration::from_millis(5000));
 
     let mut map = HashMap::new();
     map.insert("tx_id", sig.to_string());
@@ -62,6 +62,7 @@ pub async fn fund_bundlr_address(
 }
 
 pub async fn get_bundlr_balance(http_client: &HttpClient, address: &str) -> Result<u64> {
+    println!("Getting balance for address: {address}");
     let response = http_client
         .get(format!(
             "https://node1.bundlr.network/account/balance/solana/?address={address}"

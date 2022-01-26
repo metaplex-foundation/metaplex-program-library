@@ -126,12 +126,12 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
         Cache::new()
     };
 
+    let mut items = HashMap::new();
+
     for (key, value) in asset_pairs {
-        cache
-            .items
-            .0
-            .insert(key.to_string(), value.into_cache_item());
+        items.insert(key.to_string(), value.into_cache_item());
     }
+    cache.items.0 = items;
 
     cache.write_to_file(cache_file_path)?;
 
