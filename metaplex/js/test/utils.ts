@@ -4,7 +4,7 @@ import { tmpdir } from 'os';
 import { readFileSync } from 'fs';
 import { LOCALHOST } from '@metaplex-foundation/amman';
 
-export const NETWORK = LOCALHOST;
+export const connectionURL = LOCALHOST;
 
 // Devnet fee payer
 export const FEE_PAYER = Keypair.fromSecretKey(
