@@ -9,6 +9,7 @@ pub struct NewSignature<'a> {
     pub memo: &'a str,
     pub block_time: i32,
     pub confirmation_status: &'a str,
+    pub loading_status: i32,
 }
 
 #[derive(Queryable)]
@@ -20,6 +21,7 @@ pub struct Signature {
     pub memo: String,
     pub block_time: i32,
     pub confirmation_status: String,
+    pub loading_status: i32,
 }
 
 #[derive(Insertable)]

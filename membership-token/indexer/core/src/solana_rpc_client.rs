@@ -8,7 +8,7 @@ use solana_client::{
 use solana_sdk::{commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Signature};
 use solana_transaction_status::{EncodedConfirmedTransaction, UiTransactionEncoding};
 
-const TRANSACTIONS_BATCH_LEN: usize = 100;
+pub const TRANSACTIONS_BATCH_LEN: usize = 100;
 
 pub struct SolanaRpcClientConfig {
     pub url: String,

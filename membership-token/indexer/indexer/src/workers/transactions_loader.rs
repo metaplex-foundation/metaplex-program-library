@@ -73,7 +73,7 @@ pub async fn run(
             break;
         }
 
-        sleep(Duration::from_millis(100)).await;
+        sleep(Duration::from_millis(200)).await;
 
         // Skip all following instructions and do nothing if this actor was not started
         if TransactionsLoaderState::Started != registry.state {
@@ -81,16 +81,14 @@ pub async fn run(
         }
 
         let signature: Option<String>;
+        let record_id: Option<i32>;
 
         {
             let db = guarded_db.lock();
 
-            signature = match db.get_signature_from_queue() {
-                Ok(result) => {
-                    db.delete_signature_from_queue(result.0);
-                    result.1
-                }
-                _ => None,
+            (record_id, signature) = match db.get_signature_from_queue() {
+                Ok(result) => (Some(result.0), result.1),
+                _ => (None, None),
             };
         }
 
@@ -101,6 +99,7 @@ pub async fn run(
                 .as_ref()
                 .unwrap()
                 .load_trqansaction_info(&signature);
+            // ToDo: add error handling
 
             if let Ok(encoded_transaction) = transaction_info {
                 if registry.db.is_some() {
@@ -110,6 +109,12 @@ pub async fn run(
                         .unwrap()
                         .store_transaction(&signature, encoded_transaction)
                         .unwrap();
+
+                    registry
+                        .db
+                        .as_ref()
+                        .unwrap()
+                        .mark_signature_as_loaded(record_id.unwrap());
                 }
                 println!("{} -- {}", channel_id, signature);
             }
@@ -140,7 +145,7 @@ async fn start(url: String, registry: &mut TransactionsLoaderRegistry, tx: &Send
     } else {
         let solana_rpc_client_config = solana_rpc_client::SolanaRpcClientConfig {
             url,
-            program_address: Pubkey::from_str("p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98")
+            program_address: Pubkey::from_str("packFeFNZzMfD9aVWL7QbGz1WcU7R9zpf6pvNsw2BLu")
                 .unwrap(),
         };
         registry.rpc_client = Some(SolanaRpcClient::new_with_config(solana_rpc_client_config));

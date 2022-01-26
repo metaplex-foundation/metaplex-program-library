@@ -35,6 +35,7 @@ impl Db {
                 confirmation_status: &format_or_empty(
                     transaction_status.confirmation_status.as_ref(),
                 ),
+                loading_status: 0_i32, // In queue
             };
 
             diesel::insert_into(signatures)
@@ -46,13 +47,24 @@ impl Db {
     }
 
     pub fn get_signature_from_queue(&self) -> Result<(i32, Option<String>), diesel::result::Error> {
-        signatures
+        let result = signatures
+            .filter(loading_status.eq(0))
             .select((signatures::columns::id, signatures::columns::signature))
-            .first::<(i32, Option<String>)>(&self.connection)
+            .first::<(i32, Option<String>)>(&self.connection);
+
+        if result.is_ok() {
+            diesel::update(signatures.find(result.as_ref().unwrap().0))
+                .set(loading_status.eq(1))
+                .execute(&self.connection)
+                .unwrap();
+        }
+
+        result
     }
 
-    pub fn delete_signature_from_queue(&self, record_id: i32) {
-        diesel::delete(signatures.filter(signatures::columns::id.eq(record_id)))
+    pub fn mark_signature_as_loaded(&self, record_id: i32) {
+        diesel::update(signatures.find(record_id))
+            .set(loading_status.eq(2))
             .execute(&self.connection)
             .unwrap();
     }

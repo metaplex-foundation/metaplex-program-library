@@ -40,7 +40,7 @@ pub async fn run(mut stop_rx: Receiver<u8>, _stop_fb_tx: mpsc::Sender<()>) {
         if let Ok(_message) = dispatcher_sgnloader_connection.rx.try_recv() {}
         if let Ok(_message) = dispatcher_trnsloaders_connection.rx.try_recv() {}
 
-        sleep(Duration::from_millis(100)).await;
+        sleep(Duration::from_millis(200)).await;
 
         if stop_rx.try_recv().is_ok() {
             break;
