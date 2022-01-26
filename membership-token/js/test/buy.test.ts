@@ -6,6 +6,7 @@ import {
   defaultSendOptions,
   PayerTransactionHandler,
 } from '@metaplex-foundation/amman';
+import { NATIVE_MINT } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
 
@@ -108,7 +109,7 @@ test('buy: successful purchase with native SOL', async (t) => {
   addLabel('create:selling-resource', sellingResource.publicKey.toBase58());
   assertConfirmedTransaction(t, initSellingResourceRes.txConfirmed);
 
-  const treasuryMint = new PublicKey('11111111111111111111111111111111');
+  const treasuryMint = new PublicKey(NATIVE_MINT);
 
   const [treasuryOwner, treasuryOwnerBump] = await findTresuryOwnerAddress(
     treasuryMint,

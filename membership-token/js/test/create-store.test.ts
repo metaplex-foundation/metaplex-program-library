@@ -10,7 +10,8 @@ import {
 
 import { addLabel } from './utils';
 
-import { createStoreTransaction } from './transactions/create-store';
+import { createStoreTransaction } from './transactions';
+import { createCreateStoreInstruction } from '../src/instructions';
 
 killStuckProcess();
 
@@ -35,4 +36,26 @@ test('create-store: success', async (t) => {
   logDebug(createStoreRes.txSummary.logMessages.join('\n'));
 
   assertConfirmedTransaction(t, createStoreRes.txConfirmed);
+});
+
+test('create-store: short name and description', async (t) => {
+  const payer = Keypair.generate();
+  const store = Keypair.generate();
+  addLabel('create:payer', payer);
+
+  const connection = new Connection(connectionURL, 'confirmed');
+  await airdrop(connection, payer.publicKey, 2);
+
+  t.doesNotThrow(() =>
+    createCreateStoreInstruction(
+      {
+        store: store.publicKey,
+        admin: payer.publicKey,
+      },
+      {
+        name: 'Short name',
+        description: 'Short description',
+      },
+    ),
+  );
 });
