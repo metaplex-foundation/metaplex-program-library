@@ -456,33 +456,76 @@ async fn process_transfer(
             |len| rpc_client.get_minimum_balance_for_rent_exemption(len).unwrap(),
         )?;
 
-        for (i, tx) in txs.iter().enumerate() {
+        let signers_to_kps = |signers: &[Pubkey]| {
+            signers
+                .into_iter()
+                .map(|pk| -> Option<&dyn Signer> {
+                    if *pk == payer.pubkey() {
+                        Some(payer)
+                    } else if *pk == instruction_buffer.pubkey() {
+                        Some(&instruction_buffer)
+                    } else if *pk == input_buffer.pubkey() {
+                        Some(&input_buffer)
+                    } else if *pk == compute_buffer.pubkey() {
+                        Some(&compute_buffer)
+                    } else {
+                        None // shouldn't happen...
+                    }
+                })
+                .collect::<Option<Vec<_>>>()
+                .unwrap()
+        };
+
+        // first setup serially
+        let setup_count = 2;
+        for (i, tx) in txs[..setup_count].iter().enumerate() {
             send(
                 rpc_client,
-                &format!("Building transfer chunk slow proof: {} of {}", i, txs.len()),
+                &format!("Setting up crank: {} of {}", i + 1, setup_count),
                 tx.instructions.as_slice(),
-                tx.signers
-                    .as_slice()
-                    .into_iter()
-                    .map(|pk| -> Option<&dyn Signer> {
-                        if *pk == payer.pubkey() {
-                            Some(payer)
-                        } else if *pk == instruction_buffer.pubkey() {
-                            Some(&instruction_buffer)
-                        } else if *pk == input_buffer.pubkey() {
-                            Some(&input_buffer)
-                        } else if *pk == compute_buffer.pubkey() {
-                            Some(&compute_buffer)
-                        } else {
-                            None // shouldn't happen...
-                        }
-                    })
-                    .collect::<Option<Vec<_>>>()
-                    .unwrap()
-                    .as_slice()
-                    ,
+                &signers_to_kps(&tx.signers),
             )?;
         }
+
+        let recent_blockhash = rpc_client
+            .get_latest_blockhash()
+            .map_err(|err| format!("error: unable to get recent blockhash: {}", err))?;
+
+        let mut signatures = vec![];
+        for (i, tx) in txs[setup_count..].iter().enumerate() {
+            let instructions = &tx.instructions;
+            let signers = &signers_to_kps(&tx.signers);
+            let mut transaction =
+                Transaction::new_unsigned(Message::new(instructions, Some(&signers[0].pubkey())));
+
+            transaction
+                .try_sign(&signers.to_vec(), recent_blockhash)
+                .map_err(|err| format!("error: failed to sign transaction: {}", err))?;
+
+            let signature = rpc_client
+                .send_transaction(&transaction)
+                .map_err(|err| format!("error: send transaction: {}", err))?;
+            println!("Signature {}: {}", i + 1, signature);
+
+            signatures.push(signature);
+        }
+
+        loop {
+            let statuses = rpc_client.get_signature_statuses(&signatures)?.value;
+            let finalized = statuses.iter().filter(|s| {
+                if let Some(status) = s {
+                    return status.confirmation_status == Some(
+                        solana_transaction_status::TransactionConfirmationStatus::Finalized
+                    );
+                }
+                return false;
+            }).count();
+            println!("Finalized: {} of {}", finalized, signatures.len());
+            if finalized == signatures.len() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(500));
+        };
 
         let transfer_ix = stealth::instruction::transfer_chunk_slow(
             payer.pubkey(),

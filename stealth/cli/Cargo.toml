@@ -28,6 +28,7 @@ solana-client = "1.9.4"
 solana-logger = "1.9.4"
 solana-remote-wallet = "1.9.4"
 solana-sdk = "1.9.4"
+solana-transaction-status = "1.9.4"
 spl-associated-token-account = { version = "1.0.3", features = [ "no-entrypoint" ] }
 spl-token = { version = "3.1.1", features = [ "no-entrypoint" ] }
 tokio = { version = "1", features = ["full"] }
