@@ -9,8 +9,6 @@ import {
 } from '@metaplex-foundation/amman';
 
 import { addLabel } from './utils';
-import { createCreateStoreInstruction } from '../src/mpl-membership-token';
-import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../src/consts';
 
 import { createStoreTransaction } from './transactions/create-store';
 

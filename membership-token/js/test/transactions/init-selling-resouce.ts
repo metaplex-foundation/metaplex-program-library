@@ -2,7 +2,7 @@ import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { bignum } from '@metaplex-foundation/beet';
 
 import { createInitSellingResourceInstruction } from '../../src/mpl-membership-token';
-import { createAndSignTransaction } from '../utils';
+import { createAndSignTransaction, sleep } from '../utils';
 
 export const createInitSellingResourceTransaction = async ({
   payer,

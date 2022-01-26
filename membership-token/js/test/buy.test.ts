@@ -22,12 +22,8 @@ import {
   createInitSellingResourceTransaction,
 } from './transactions';
 import { mintNFT } from './actions/mint-nft';
-import { addLabel, connectionURL, logDebug } from './utils';
+import { addLabel, connectionURL, logDebug, sleep } from './utils';
 import { mintTokenToAccount } from './actions/mint-token-to-account';
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve: any) => setTimeout(resolve, ms));
-}
 
 test('buy: successful purchase with native SOL', async (t) => {
   const payer = Keypair.generate();
