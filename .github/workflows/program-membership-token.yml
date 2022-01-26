@@ -12,7 +12,26 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      package: ${{ steps.filter.outputs.package }}
+    steps:
+      - uses: actions/checkout@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+            package:
+              - 'membership-token/**'
   build-and-test-membership-token:
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-membership-token
