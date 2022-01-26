@@ -54,7 +54,6 @@
     "esbuild": "^0.14.14",
     "esbuild-runner": "^2.2.1",
     "eslint": "^8.3.0",
-    "node-stream-zip": "^1.15.0",
     "rimraf": "^3.0.2",
     "tape": "^5.4.1"
   }
