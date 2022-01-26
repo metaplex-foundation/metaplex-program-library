@@ -48,6 +48,28 @@ pub enum Commands {
         cache: String,
     },
 
+    UploadAssets {
+        /// Assets directory to upload, defaults to "assets"
+        #[clap(default_value = "assets")]
+        assets_dir: String,
+
+        /// Path to the config file, defaults to "config.json"
+        #[clap(short, long, default_value = "config.json")]
+        config: String,
+
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = "cache.json")]
+        cache: String,
+    },
+
     /// Withdraw funds from candy machine account closing it.
     Withdraw {
         /// Address of candy machine to withdraw funds from.

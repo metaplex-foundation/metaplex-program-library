@@ -27,8 +27,11 @@ pub enum ValidateError {
     #[error("Seller fee basis points must be between 0 and 10,000.")]
     InvalidSellerFeeBasisPoints,
 
-    #[error("Missing animation_url field")]
+    #[error("Missing animation url field")]
     MissingAnimationUrl,
+
+    #[error("Missing external url field")]
+    MissingExternalUrl,
 
     #[error("Missing collection field")]
     MissingCollection,

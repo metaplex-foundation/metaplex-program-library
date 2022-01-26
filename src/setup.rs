@@ -1,5 +1,10 @@
-use anchor_client::solana_sdk::signature::{read_keypair_file, Keypair};
-use anchor_client::{solana_sdk::commitment_config::CommitmentConfig, Client, Cluster};
+use anchor_client::{
+    solana_sdk::{
+        commitment_config::CommitmentConfig,
+        signature::{keypair::Keypair, read_keypair_file},
+    },
+    Client, Cluster,
+};
 use anyhow::Result;
 use slog::*;
 

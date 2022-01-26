@@ -87,15 +87,21 @@ fn to_option_pubkey<'de, D>(deserializer: D) -> Result<Option<Pubkey>, D::Error>
 where
     D: Deserializer<'de>,
 {
-    println!("before string");
     let s: String = match Deserialize::deserialize(deserializer) {
         Ok(s) => s,
         Err(_) => return Ok(None),
     };
 
-    println!("after string, before pubkey");
     let pubkey = Pubkey::from_str(&s).map_err(serde::de::Error::custom)?;
     Ok(Some(pubkey))
+}
+
+fn discount_price_to_lamports(discount_price: Option<f64>) -> Option<u64> {
+    if let Some(discount_price) = discount_price {
+        Some((discount_price * LAMPORTS_PER_SOL as f64) as u64)
+    } else {
+        None
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -146,7 +152,8 @@ pub struct WhitelistMintSettings {
     #[serde(deserialize_with = "to_pubkey")]
     mint: Pubkey,
     presale: bool,
-    discount_price: Option<u64>,
+    #[serde(rename = "discountPrice")]
+    discount_price: Option<f64>,
 }
 
 impl WhitelistMintSettings {
@@ -155,7 +162,7 @@ impl WhitelistMintSettings {
             mode: self.mode.into_candy_format(),
             mint: self.mint,
             presale: self.presale,
-            discount_price: self.discount_price,
+            discount_price: discount_price_to_lamports(self.discount_price),
         }
     }
 }

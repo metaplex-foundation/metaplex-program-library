@@ -29,7 +29,7 @@ pub fn check_url(url: &String) -> Result<(), ValidateError> {
     Ok(())
 }
 
-pub fn check_seller_fee_basis_points(seller_fee_basis_points: u32) -> Result<(), ValidateError> {
+pub fn check_seller_fee_basis_points(seller_fee_basis_points: u16) -> Result<(), ValidateError> {
     if seller_fee_basis_points > 10000 {
         return Err(ValidateError::InvalidCreatorShare);
     }
