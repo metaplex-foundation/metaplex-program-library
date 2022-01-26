@@ -1,4 +1,3 @@
-#![allow(unused)]
 use anchor_client::{
     solana_sdk::{
         instruction::Instruction,
@@ -10,12 +9,8 @@ use anchor_client::{
 };
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
-use metaplex_token_metadata::{
-    instruction::{create_master_edition, create_metadata_accounts},
-    ID as TOKEN_METADATA_ID,
-};
+use metaplex_token_metadata::ID as TOKEN_METADATA_ID;
 use rand::rngs::OsRng;
-use rayon::prelude::*;
 use slog::*;
 use spl_associated_token_account::{
     create_associated_token_account, get_associated_token_address,
@@ -25,25 +20,16 @@ use spl_token::{
     instruction::{initialize_mint, mint_to},
     ID as TOKEN_PROGRAM_ID,
 };
-use std::{
-    collections::HashMap,
-    env,
-    fs::File,
-    io::Write,
-    path::Path,
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
+use std::{fs::File, path::Path, str::FromStr};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{CandyMachineData, WhitelistMintMode, ID as CANDY_MACHINE_PROGRAM_ID};
+use mpl_candy_machine::{CandyMachine, WhitelistMintMode, ID as CANDY_MACHINE_PROGRAM_ID};
 
+use crate::cache::Cache;
 use crate::candy_machine::*;
-use crate::config::*;
 use crate::constants::*;
 use crate::setup::*;
-use crate::upload::data::*;
 
 const MINT_LAYOUT: u64 = 82;
 
@@ -57,7 +43,7 @@ pub fn process_mint_one(mint_args: MintOneArgs) -> Result<()> {
     let sugar_config = sugar_setup(mint_args.logger, mint_args.keypair, mint_args.rpc_url)?;
 
     let cache: Cache = if Path::new("cache.json").exists() {
-        let mut file = File::open("cache.json")?;
+        let file = File::open("cache.json")?;
         serde_json::from_reader(file)?
     } else {
         error!(sugar_config.logger, "cache.json does not exist");
@@ -68,7 +54,7 @@ pub fn process_mint_one(mint_args: MintOneArgs) -> Result<()> {
 
     let candy_machine_id = match Pubkey::from_str(&cache.program.candy_machine) {
         Ok(candy_machine_id) => candy_machine_id,
-        Err(e) => {
+        Err(_) => {
             error!(
                 sugar_config.logger,
                 "Failed to parse candy_machine_id: {}", &cache.program.candy_machine
@@ -77,7 +63,7 @@ pub fn process_mint_one(mint_args: MintOneArgs) -> Result<()> {
         }
     };
 
-    let candy_machine_data = get_candy_machine_data(&sugar_config, &candy_machine_id)?;
+    let candy_machine_state = get_candy_machine_state(&sugar_config, &candy_machine_id)?;
 
     info!(
         sugar_config.logger,
@@ -91,7 +77,7 @@ pub fn process_mint_one(mint_args: MintOneArgs) -> Result<()> {
         sugar_config.logger,
         client,
         candy_machine_id,
-        candy_machine_data,
+        candy_machine_state,
     )?;
 
     Ok(())
@@ -101,7 +87,7 @@ pub fn mint_one(
     logger: Logger,
     client: Client,
     candy_machine_id: Pubkey,
-    candy_machine_data: CandyMachineData,
+    candy_machine_state: CandyMachine,
 ) -> Result<()> {
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
@@ -109,6 +95,9 @@ pub fn mint_one(
 
     let program = client.program(pid);
     let payer = program.payer();
+    let wallet = candy_machine_state.wallet;
+
+    let candy_machine_data = candy_machine_state.data;
 
     let mint = Keypair::new();
     let metaplex_program_id = Pubkey::from_str(METAPLEX_PROGRAM_ID)?;
@@ -153,6 +142,12 @@ pub fn mint_one(
         let whitelist_token = get_ata_for_mint(&mint_settings.mint, &payer);
 
         println!("Whitelist token {:?}", whitelist_token);
+
+        additional_accounts.push(AccountMeta {
+            pubkey: whitelist_token,
+            is_signer: false,
+            is_writable: true,
+        });
 
         if mint_settings.mode == WhitelistMintMode::BurnEveryTime {
             let whitelist_burn_authority = Keypair::generate(&mut OsRng);
@@ -219,7 +214,7 @@ pub fn mint_one(
             candy_machine: candy_machine_id,
             candy_machine_creator: candy_machine_creator_pda,
             payer,
-            wallet: payer,
+            wallet,
             metadata: metadata_pda,
             mint: mint.pubkey(),
             mint_authority: payer,
@@ -260,7 +255,7 @@ pub fn mint_one(
     Ok(())
 }
 
-fn get_network_token(gatekeeper: &Pubkey, payer: &Pubkey) -> Result<Pubkey> {
+fn _get_network_token(gatekeeper: &Pubkey, payer: &Pubkey) -> Result<Pubkey> {
     let civic = Pubkey::from_str(CIVIC)?;
     let seeds = &[
         &payer.to_bytes(),
@@ -273,7 +268,7 @@ fn get_network_token(gatekeeper: &Pubkey, payer: &Pubkey) -> Result<Pubkey> {
     Ok(pda)
 }
 
-fn get_network_expire(gatekeeper: &Pubkey) -> Result<Pubkey> {
+fn _get_network_expire(gatekeeper: &Pubkey) -> Result<Pubkey> {
     let civic = Pubkey::from_str(CIVIC)?;
     let seeds = &[&gatekeeper.to_bytes(), "expire".as_bytes()];
     let (pda, _bump) = Pubkey::find_program_address(seeds, &civic);

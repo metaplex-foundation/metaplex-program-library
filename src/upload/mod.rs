@@ -21,6 +21,7 @@ use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 use mpl_candy_machine::{CandyMachineData, ConfigLine, Creator as CandyCreator};
 
+use crate::cache::*;
 use crate::candy_machine::{uuid_from_pubkey, ConfigStatus};
 use crate::config::{data::*, parser::get_config_data};
 use crate::constants::*;
@@ -189,9 +190,9 @@ fn create_candy_machine_data(
     let data = CandyMachineData {
         uuid,
         price: price_as_lamports(config.price),
-        symbol: String::default(),
-        seller_fee_basis_points: u16::default(),
-        max_supply: u64::default(),
+        symbol: metadata.symbol,
+        seller_fee_basis_points: metadata.seller_fee_basis_points,
+        max_supply: config.number,
         is_mutable: config.is_mutable,
         retain_authority: config.retain_authority,
         go_live_date,

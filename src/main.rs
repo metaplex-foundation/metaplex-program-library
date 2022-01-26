@@ -11,11 +11,13 @@ use std::{fs::File, str::FromStr};
 
 use mpl_candy_machine::CandyMachineData;
 
+use sugar::cache::Cache;
 use sugar::candy_machine::{get_candy_machine_state, print_candy_machine_state};
 use sugar::cli::{Cli, Commands};
 use sugar::mint::{process_mint_one, MintOneArgs};
 use sugar::setup::sugar_setup;
-use sugar::upload::{process_upload, Cache, UploadArgs};
+use sugar::upload::{process_upload, UploadArgs};
+use sugar::upload_assets::{process_upload_assets, UploadAssetsArgs};
 use sugar::validate::{process_validate, ValidateArgs};
 use sugar::withdraw::{process_withdraw, WithdrawArgs};
 
@@ -56,7 +58,8 @@ fn setup_logging() -> Logger {
     slog::Logger::root(drain, o!())
 }
 
-fn main() -> Result<()> {
+#[tokio::main(worker_threads = 4)]
+async fn main() -> Result<()> {
     let logger = setup_logging();
     // info!(logger, "Lend me some sugar, I am your neighbor.");
 
@@ -84,6 +87,23 @@ fn main() -> Result<()> {
             rpc_url,
             cache,
         })?,
+        Commands::UploadAssets {
+            assets_dir,
+            config,
+            keypair,
+            rpc_url,
+            cache,
+        } => {
+            process_upload_assets(UploadAssetsArgs {
+                logger,
+                assets_dir,
+                config,
+                keypair,
+                rpc_url,
+                cache,
+            })
+            .await?
+        }
         Commands::Test => process_test_command(logger),
         Commands::Validate { assets_dir, strict } => process_validate(ValidateArgs {
             logger,

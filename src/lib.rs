@@ -1,5 +1,7 @@
+pub mod cache;
 pub mod candy_machine;
 pub mod cli;
+pub mod common;
 pub mod config;
 pub mod constants;
 pub mod data;
@@ -7,5 +9,6 @@ pub mod mint;
 pub mod parse;
 pub mod setup;
 pub mod upload;
+pub mod upload_assets;
 pub mod validate;
 pub mod withdraw;
