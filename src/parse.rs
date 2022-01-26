@@ -1,10 +1,7 @@
-#![allow(unused)]
-use anchor_client::solana_sdk::signature::{read_keypair_file, Keypair};
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::{env, fs::File, path::Path};
 
 use crate::config::data::*;
-use crate::setup::setup_client;
 
 pub fn parse_solana_config() -> Option<SolanaConfig> {
     let home = if cfg!(unix) {
@@ -30,4 +27,11 @@ pub fn parse_solana_config() -> Option<SolanaConfig> {
         Err(_) => return None,
     };
     serde_yaml::from_reader(&conf_file).ok()
+}
+
+pub fn path_to_string(path: &Path) -> Result<String> {
+    match path.to_str() {
+        Some(s) => Ok(s.to_string()),
+        None => Err(anyhow!("Couldn't convert path to string.")),
+    }
 }

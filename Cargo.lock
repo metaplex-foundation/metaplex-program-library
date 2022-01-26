@@ -749,7 +749,6 @@ checksum = "a4a45a46ab1f2412e53d3a0ade76ffad2025804294569aae387231a0cd6e0899"
 [[package]]
 name = "bundlr-sdk"
 version = "0.1.0"
-source = "git+https://github.com/Bundlr-Network/rust-sdk#f839ad2b6ef4d1d79e0dfc6d9cbfc9e40adf0714"
 dependencies = [
  "actix-files",
  "anyhow",
@@ -776,6 +775,7 @@ dependencies = [
  "serde 1.0.136",
  "serde_json 1.0.78",
  "sha2 0.10.1",
+ "thiserror",
  "tokio",
  "tokio-util",
 ]

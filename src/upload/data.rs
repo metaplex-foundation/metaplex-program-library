@@ -1,12 +1,6 @@
-use anchor_client::solana_sdk::pubkey::Pubkey;
-use anyhow::Result;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use slog::Logger;
-use std::{collections::HashMap, fs::File, io::Write, path::Path};
-
-use mpl_candy_machine::ConfigLine;
-
-use crate::candy_machine::uuid_from_pubkey;
+use std::collections::HashMap;
 
 pub struct UploadArgs {
     pub logger: Logger,
