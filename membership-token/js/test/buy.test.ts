@@ -1,13 +1,13 @@
 import BN from 'bn.js';
 import test from 'tape';
 import {
+  Actions,
   airdrop,
   assertConfirmedTransaction,
   defaultSendOptions,
   PayerTransactionHandler,
 } from '@metaplex-foundation/amman';
-import { NATIVE_MINT } from '@solana/spl-token';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Connection, Keypair, Transaction } from '@solana/web3.js';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
 
 import {
@@ -23,8 +23,10 @@ import {
   createInitSellingResourceTransaction,
 } from './transactions';
 import { mintNFT } from './actions/mint-nft';
-import { addLabel, connectionURL, logDebug, sleep } from './utils';
 import { mintTokenToAccount } from './actions/mint-token-to-account';
+import { addLabel, connectionURL, killStuckProcess, logDebug, sleep } from './utils';
+
+killStuckProcess();
 
 test('buy: successful purchase with native SOL', async (t) => {
   const payer = Keypair.generate();
@@ -109,14 +111,30 @@ test('buy: successful purchase with native SOL', async (t) => {
   addLabel('create:selling-resource', sellingResource.publicKey.toBase58());
   assertConfirmedTransaction(t, initSellingResourceRes.txConfirmed);
 
-  const treasuryMint = new PublicKey(NATIVE_MINT);
+  const { mint: treasuryMint, tokenAccount: userTokenAcc } = await mintNFT({
+    transactionHandler,
+    payer: payer.publicKey,
+    connection,
+  });
 
   const [treasuryOwner, treasuryOwnerBump] = await findTresuryOwnerAddress(
-    treasuryMint,
+    treasuryMint.publicKey,
     sellingResource.publicKey,
   );
 
-  addLabel('get:market-treasury-owner', treasuryOwner);
+  const { tokenAccount: treasuryHolder, createTokenTx: createTreasuryTx } =
+    await createTokenAccount({
+      payer: payer.publicKey,
+      connection,
+      mint: treasuryMint.publicKey,
+      owner: treasuryOwner,
+    });
+
+  await transactionHandler.sendAndConfirmTransaction(
+    createTreasuryTx,
+    [treasuryHolder],
+    defaultSendOptions,
+  );
 
   const startDate = Math.round(Date.now() / 1000);
 
@@ -126,8 +144,8 @@ test('buy: successful purchase with native SOL', async (t) => {
     store,
     sellingResourceOwner: payer,
     sellingResource: sellingResource.publicKey,
-    mint: treasuryMint,
-    treasuryHolder: treasuryOwner,
+    mint: treasuryMint.publicKey,
+    treasuryHolder: treasuryHolder.publicKey,
     owner: treasuryOwner,
     treasuryOwnerBump,
     name: 'Market Name',
@@ -170,13 +188,13 @@ test('buy: successful purchase with native SOL', async (t) => {
   const { tx: buyTx } = await createBuyTransaction({
     connection,
     buyer: payer.publicKey,
-    userTokenAccount: payer.publicKey,
+    userTokenAccount: userTokenAcc.publicKey,
     resourceMintMetadata,
     resourceMintEditionMarker,
     resourceMintMasterEdition,
     sellingResource: sellingResource.publicKey,
     market: market.publicKey,
-    marketTreasuryHolder: treasuryOwner,
+    marketTreasuryHolder: treasuryHolder.publicKey,
     vaultOwner,
     tradeHistory,
     tradeHistoryBump,
