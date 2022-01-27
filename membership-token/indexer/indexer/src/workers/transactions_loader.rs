@@ -86,9 +86,12 @@ pub async fn run(
         {
             let db = guarded_db.lock();
 
-            (record_id, signature) = match db.get_signature_from_queue() {
-                Ok(result) => (Some(result.0), result.1),
-                _ => (None, None),
+            if let Ok(result) = db.get_signature_from_queue() {
+                record_id = Some(result.0);
+                signature = result.1;
+            } else {
+                record_id = None;
+                signature = None;
             };
         }
 
