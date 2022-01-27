@@ -80,6 +80,8 @@ pub async fn run(
 
     let mut saved_state = load_state().await;
 
+    // let pooling_threshold = 1;
+
     loop {
         if let Ok(command) = rx.try_recv() {
             process_command(command, &mut registry, &tx).await;
@@ -103,7 +105,7 @@ pub async fn run(
             .unwrap()
             .load_signatures_batch(saved_state.before, saved_state.until);
 
-        if saved_state.newest_transaction.is_none() && signatures.len() > 1 {
+        if saved_state.newest_transaction.is_none() && signatures.len() > 0 {
             saved_state.newest_transaction =
                 Some(Signature::from_str(&signatures.get(0).unwrap().signature).unwrap());
         }
