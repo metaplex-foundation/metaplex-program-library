@@ -224,206 +224,6 @@
       ]
     },
     {
-      "name": "closeMarket",
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "suspendMarket",
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "changeMarket",
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "newName",
-          "type": {
-            "option": "string"
-          }
-        },
-        {
-          "name": "newDescription",
-          "type": {
-            "option": "string"
-          }
-        },
-        {
-          "name": "mutable",
-          "type": {
-            "option": "bool"
-          }
-        },
-        {
-          "name": "newPrice",
-          "type": {
-            "option": "u64"
-          }
-        },
-        {
-          "name": "newPiecesInOneWallet",
-          "type": {
-            "option": "u64"
-          }
-        }
-      ]
-    },
-    {
-      "name": "resumeMarket",
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "withdraw",
-      "accounts": [
-        {
-          "name": "market",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "sellingResource",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "treasuryHolder",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "treasuryMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "destination",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "funder",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "payoutTicket",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "clock",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "treasuryOwnerBump",
-          "type": "u8"
-        },
-        {
-          "name": "payoutTicketBump",
-          "type": "u8"
-        }
-      ]
-    },
-    {
       "name": "createMarket",
       "accounts": [
         {
@@ -565,9 +365,7 @@
           },
           {
             "name": "state",
-            "type": {
-              "defined": "SellingResourceState"
-            }
+            "type": "u8"
           }
         ]
       }
@@ -635,9 +433,7 @@
           },
           {
             "name": "state",
-            "type": {
-              "defined": "MarketState"
-            }
+            "type": "u8"
           }
         ]
       }
@@ -697,9 +493,6 @@
           },
           {
             "name": "Created"
-          },
-          {
-            "name": "Suspended"
           },
           {
             "name": "Active"
@@ -801,46 +594,6 @@
       "code": 6017,
       "name": "SupplyIsGtThanMaxSupply",
       "msg": "Supply is gt than max supply"
-    },
-    {
-      "code": 6018,
-      "name": "MarketDurationIsNotUnlimited",
-      "msg": "Market duration is not unlimited"
-    },
-    {
-      "code": 6019,
-      "name": "MarketIsSuspended",
-      "msg": "Market is suspended"
-    },
-    {
-      "code": 6020,
-      "name": "MarketIsImmutable",
-      "msg": "Market is immutable"
-    },
-    {
-      "code": 6021,
-      "name": "MarketInInvalidState",
-      "msg": "Market in invalid state"
-    },
-    {
-      "code": 6022,
-      "name": "PriceIsZero",
-      "msg": "Price is zero"
-    },
-    {
-      "code": 6023,
-      "name": "FunderIsInvalid",
-      "msg": "Funder is invalid"
-    },
-    {
-      "code": 6024,
-      "name": "PayoutTicketExists",
-      "msg": "Payout ticket exists"
-    },
-    {
-      "code": 6025,
-      "name": "InvalidFunderDestination",
-      "msg": "Funder provide invalid destination"
     }
   ],
   "metadata": {
