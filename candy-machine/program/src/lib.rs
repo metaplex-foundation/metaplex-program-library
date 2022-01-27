@@ -107,6 +107,7 @@ pub mod nft_candy_machine_v2 {
                     gateway_token_info,
                     &payer.key(),
                     &gatekeeper.gatekeeper_network,
+                    None,
                 )?;
             }
             // verifies that the gatway token was not created before the candy

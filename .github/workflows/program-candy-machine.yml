@@ -28,7 +28,7 @@ jobs:
           core:
             - 'core/**'
           package:
-            - 'nft-candy-machine/**'
+            - 'candy-machine/**'
   build-and-test-candy-machine:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
@@ -64,7 +64,7 @@ jobs:
       # Run test
       - name: test-candy-machine
         id: run_test
-        working-directory: ./nft-candy-machine/program
+        working-directory: ./candy-machine/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version

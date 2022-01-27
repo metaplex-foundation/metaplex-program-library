@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/metaplex-program-library",
-  "packageManager": "yarn@3.1.1",
+  "packageManager": "yarn@3.2.0-rc.12",
   "version": "0.0.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
   "scripts": {
@@ -22,7 +22,7 @@
     "metaplex/js",
     "auction-house/js",
     "gumdrop/js",
-    "nft-candy-machine/js",
+    "candy-machine/js",
     "membership-token/js"
   ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",

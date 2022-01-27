@@ -1,7 +1,7 @@
 // @ts-check
 'use strict';
 
-const PROGRAM_NAME = 'nft-candy-machine-v2';
+const PROGRAM_NAME = 'mpl-candy-machine';
 
 const path = require('path');
 const generatedIdlDir = path.join(__dirname, '..', 'idl');

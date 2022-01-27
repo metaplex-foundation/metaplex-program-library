@@ -1,8 +1,6 @@
 import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-
-import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../consts';
+import * as beet from '@metaplex-foundation/beet';
 
 /**
  * Arguments used to create {@link StoreAccountData}
@@ -18,39 +16,12 @@ const storeAccountDiscriminator = [130, 48, 247, 244, 182, 191, 30, 26];
  * Holds the data for the {@link StoreAccount} and provides de/serialization
  * functionality for that data
  */
-export class StoreAccountData {
+export class StoreAccountData implements StoreAccountDataArgs {
   private constructor(
     readonly admin: web3.PublicKey,
     readonly name: string,
     readonly description: string,
   ) {}
-
-  /**
-   * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link StoreAccountData}
-   */
-  static get byteSize() {
-    return storeAccountDataStruct.byteSize;
-  }
-
-  /**
-   * Fetches the minimum balance needed to exempt an account holding
-   * {@link StoreAccountData} data from rent
-   */
-  static async getMinimumBalanceForRentExemption(
-    connection: web3.Connection,
-    commitment?: web3.Commitment,
-  ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(StoreAccountData.byteSize, commitment);
-  }
-
-  /**
-   * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link StoreAccountData} data.
-   */
-  static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === StoreAccountData.byteSize;
-  }
 
   /**
    * Creates a {@link StoreAccountData} instance from the provided args.
@@ -79,6 +50,40 @@ export class StoreAccountData {
   }
 
   /**
+   * Returns the byteSize of a {@link Buffer} holding the serialized data of
+   * {@link StoreAccountData} for the provided args.
+   *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
+   */
+  static byteSize(args: StoreAccountDataArgs) {
+    const instance = StoreAccountData.fromArgs(args);
+    return storeAccountDataStruct.toFixedFromValue({
+      accountDiscriminator: storeAccountDiscriminator,
+      ...instance,
+    }).byteSize;
+  }
+
+  /**
+   * Fetches the minimum balance needed to exempt an account holding
+   * {@link StoreAccountData} data from rent
+   *
+   * @param args need to be provided since the byte size for this account
+   * depends on them
+   * @param connection used to retrieve the rent exemption information
+   */
+  static async getMinimumBalanceForRentExemption(
+    args: StoreAccountDataArgs,
+    connection: web3.Connection,
+    commitment?: web3.Commitment,
+  ): Promise<number> {
+    return connection.getMinimumBalanceForRentExemption(
+      StoreAccountData.byteSize(args),
+      commitment,
+    );
+  }
+
+  /**
    * Serializes the {@link StoreAccountData} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
@@ -102,17 +107,17 @@ export class StoreAccountData {
   }
 }
 
-const storeAccountDataStruct = new beet.BeetStruct<
+const storeAccountDataStruct = new beet.FixableBeetStruct<
   StoreAccountData,
   StoreAccountDataArgs & {
     accountDiscriminator: number[];
   }
 >(
   [
-    ['accountDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['admin', beetSolana.publicKey],
-    ['name', beet.fixedSizeUtf8String(NAME_MAX_LEN)],
-    ['description', beet.fixedSizeUtf8String(DESCRIPTION_MAX_LEN)],
+    ['name', beet.utf8String],
+    ['description', beet.utf8String],
   ],
   StoreAccountData.fromArgs,
   'StoreAccountData',

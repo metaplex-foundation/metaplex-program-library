@@ -9,10 +9,9 @@ import {
 } from '@metaplex-foundation/amman';
 
 import { addLabel } from './utils';
-import { createCreateStoreInstruction } from '../src/mpl-membership-token';
-import { DESCRIPTION_MAX_LEN, NAME_MAX_LEN } from '../src/consts';
 
-import { createStoreTransaction } from './transactions/create-store';
+import { createStoreTransaction } from './transactions';
+import { createCreateStoreInstruction } from '../src/instructions';
 
 killStuckProcess();
 
@@ -39,7 +38,7 @@ test('create-store: success', async (t) => {
   assertConfirmedTransaction(t, createStoreRes.txConfirmed);
 });
 
-test('create-store: name length is longer the specification value', async (t) => {
+test('create-store: short name and description', async (t) => {
   const payer = Keypair.generate();
   const store = Keypair.generate();
   addLabel('create:payer', payer);
@@ -47,37 +46,15 @@ test('create-store: name length is longer the specification value', async (t) =>
   const connection = new Connection(connectionURL, 'confirmed');
   await airdrop(connection, payer.publicKey, 2);
 
-  t.throws(() =>
+  t.doesNotThrow(() =>
     createCreateStoreInstruction(
       {
         store: store.publicKey,
         admin: payer.publicKey,
       },
       {
-        name: 'n'.repeat(NAME_MAX_LEN + 1),
-        description: 'd'.repeat(DESCRIPTION_MAX_LEN - 3),
-      },
-    ),
-  );
-});
-
-test('create-store: description length is longer the specification value', async (t) => {
-  const payer = Keypair.generate();
-  const store = Keypair.generate();
-  addLabel('create:payer', payer);
-
-  const connection = new Connection(connectionURL, 'confirmed');
-  await airdrop(connection, payer.publicKey, 2);
-
-  t.throws(() =>
-    createCreateStoreInstruction(
-      {
-        store: store.publicKey,
-        admin: payer.publicKey,
-      },
-      {
-        name: 'n'.repeat(NAME_MAX_LEN - 2),
-        description: 'd'.repeat(DESCRIPTION_MAX_LEN + 1),
+        name: 'Short name',
+        description: 'Short description',
       },
     ),
   );
