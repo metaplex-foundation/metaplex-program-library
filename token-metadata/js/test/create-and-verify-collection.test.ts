@@ -1,6 +1,6 @@
 import test from 'tape';
 
-import { DataV2, VerifyCollection } from '../src/mpl-token-metadata';
+import { DataV2, MetadataProgram, VerifyCollection } from '../src/mpl-token-metadata';
 import {
   killStuckProcess,
   getMetadataData,
@@ -12,7 +12,7 @@ import {
   logDebug,
 } from './utils';
 import { airdrop, PayerTransactionHandler, TransactionHandler } from '@metaplex-foundation/amman';
-import { Connection, Keypair } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { createMasterEdition } from './actions';
 import { Collection } from '../src/accounts';
 import { SetAndVerifyCollectionCollection } from 'src/transactions';
@@ -142,6 +142,72 @@ test('set-and-verify-collection', async (t) => {
       collectionMint: collectionNft.mint.publicKey,
       collectionMetadata: collectionNft.metadata,
       collectionMasterEdition: collectionNft.masterEditionPubkey,
+    },
+  );
+  const txDetails = await transactionHandler.sendAndConfirmTransaction(
+    collectionVerifyCollectionTransaction,
+    [payer],
+    { skipPreflight: true },
+  );
+  logDebug(txDetails.txSummary.logMessages.join('\n'));
+  const updatedMetadataAfterVerification = await getMetadataData(
+    connection,
+    collectionMemberNft.metadata,
+  );
+
+  t.ok(updatedMetadataAfterVerification.collection, 'collection should be not null');
+
+  t.ok(updatedMetadataAfterVerification.collection.verified, 'collection should be verified');
+});
+
+test('set-and-verify-collection', async (t) => {
+  const payer = Keypair.generate();
+  const connection = new Connection(connectionURL, 'confirmed');
+  const transactionHandler = new PayerTransactionHandler(connection, payer);
+
+  await airdrop(connection, payer.publicKey, 2);
+
+  const collectionNft = await createCollection(connection, transactionHandler, payer);
+
+  const initMetadataData = new DataV2({
+    uri: URI,
+    name: NAME,
+    symbol: SYMBOL,
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
+    creators: null,
+    collection: null,
+    uses: null,
+  });
+  const collectionMemberNft = await createMasterEdition(
+    connection,
+    transactionHandler,
+    payer,
+    initMetadataData,
+    0,
+  );
+
+  const updatedMetadataBeforeVerification = await getMetadataData(
+    connection,
+    collectionMemberNft.metadata,
+  );
+
+  t.not(updatedMetadataBeforeVerification.collection, 'collection should be null');
+  const delegatedAuthority = Keypair.generate();
+  const dARecord = MetadataProgram.find_collection_authority_account(
+    collectionMemberNft.mint.publicKey,
+    delegatedAuthority.publicKey,
+  );
+
+  const collectionVerifyCollectionTransaction = new SetAndVerifyCollectionCollection(
+    { feePayer: payer.publicKey },
+    {
+      metadata: collectionMemberNft.metadata,
+      collectionAuthority: payer.publicKey,
+      updateAuthority: payer.publicKey,
+      collectionMint: collectionNft.mint.publicKey,
+      collectionMetadata: collectionNft.metadata,
+      collectionMasterEdition: collectionNft.masterEditionPubkey,
+      collectionUseAuthorityRecord: dARecord[0],
     },
   );
   const txDetails = await transactionHandler.sendAndConfirmTransaction(

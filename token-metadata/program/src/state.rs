@@ -167,6 +167,7 @@ pub enum TokenStandard {
 pub struct UseAuthorityRecord {
     pub key: Key, //1
     pub allowed_uses: u64, //8
+    pub bump: u8
 }
 
 impl UseAuthorityRecord {
@@ -182,7 +183,8 @@ impl UseAuthorityRecord {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct CollectionAuthorityRecord {
-    pub key: Key //1
+    pub key: Key,//1
+    pub bump: u8 //1
 }
 
 impl CollectionAuthorityRecord {

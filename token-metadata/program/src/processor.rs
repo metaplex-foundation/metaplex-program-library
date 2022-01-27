@@ -40,7 +40,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 use spl_token::{
-    instruction::{approve, revoke},
+    instruction::{approve, close_account, revoke},
     state::{Account, Mint},
 };
 
@@ -864,6 +864,7 @@ pub fn process_approve_use_authority(
     let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
     record.key = Key::UseAuthorityRecord;
     record.allowed_uses = number_of_uses;
+    record.bump = bump_seed;
     record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
     Ok(())
 }
@@ -920,14 +921,14 @@ pub fn process_revoke_use_authority(
             ],
         )?;
     }
-    let lamports = use_authority_record_info.lamports();
-    **use_authority_record_info.lamports.borrow_mut() = 0;
-    **owner_info.lamports.borrow_mut() = owner_info
-        .lamports()
-        .checked_add(lamports)
-        .ok_or(MetadataError::NumericalOverflowError)?;
-    let mut data = use_authority_record_info.try_borrow_mut_data()?;
-    data[0] = 0;
+    // SPL TOKEN Program now 0s the data and moves the lamports when closing an account
+    spl_token::instruction::close_account(
+        &spl_token::ID,
+        use_authority_record_info.key,
+        owner_info.key,
+        &crate::ID,
+        &[],
+    )?;
 
     Ok(())
 }
@@ -1089,6 +1090,7 @@ pub fn process_approve_collection_authority(
 
     let mut record = CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
     record.key = Key::CollectionAuthorityRecord;
+    record.bump = collection_authority_bump_seed[0];
     record.serialize(&mut *collection_authority_record.data.borrow_mut())?;
     Ok(())
 }
@@ -1123,11 +1125,14 @@ pub fn process_revoke_collection_authority(
         &mint_info.key,
         Some(collection_authority_record),
     )?;
-    let lamports = **collection_authority_record.lamports.borrow();
-    **collection_authority_record.lamports.borrow_mut() = 0;
-    **update_authority.lamports.borrow_mut() = lamports;
-    let mut data = collection_authority_record.try_borrow_mut_data()?;
-    data[0] = 0;
+    // SPL TOKEN Program now 0s the data and moves the lamports when closing an account
+    spl_token::instruction::close_account(
+        &spl_token::ID,
+        collection_authority_record.key,
+        update_authority.key,
+        &crate::ID,
+        &[],
+    )?;
     Ok(())
 }
 
