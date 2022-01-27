@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-membership-token",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MPL Membership Token JavaScript API.",
   "main": "dist/src/mpl-membership-token.js",
   "types": "dist/src/mpl-membership-token.d.ts",
