@@ -104,6 +104,7 @@ mod revoke_use_authority {
             .get_account(record)
             .await
             .expect("account not found");
+        println!("{:?}", accountafter);
         assert_eq!(accountafter.is_none(), true);
     }
 }

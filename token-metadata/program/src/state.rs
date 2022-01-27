@@ -177,6 +177,12 @@ impl UseAuthorityRecord {
 
         Ok(ua)
     }
+
+    pub fn from_bytes(b: &[u8]) -> Result<UseAuthorityRecord, ProgramError> {
+        let ua: UseAuthorityRecord = try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+
+        Ok(ua)
+    }
 }
 
 
@@ -193,6 +199,12 @@ impl CollectionAuthorityRecord {
             try_from_slice_checked(&a.data.borrow_mut(), Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
 
         Ok(ua)
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
+        let ca: CollectionAuthorityRecord = try_from_slice_checked(b, Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
+
+        Ok(ca)
     }
 }
 

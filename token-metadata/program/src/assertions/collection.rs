@@ -3,7 +3,7 @@ use solana_program::{account_info::AccountInfo, program_error::ProgramError, pub
 use crate::{
     error::MetadataError,
     pda::find_collection_authority_account,
-    state::{Collection, MasterEditionV2, Metadata, TokenStandard},
+    state::{Collection, CollectionAuthorityRecord, MasterEditionV2, Metadata, TokenStandard},
 };
 
 pub fn assert_collection_update_is_valid(
@@ -21,12 +21,12 @@ pub fn assert_is_collection_delegated_authority(
     authority_record: &AccountInfo,
     collection_authority: &Pubkey,
     mint: &Pubkey,
-) -> Result<(), ProgramError> {
-    let (pda, _) = find_collection_authority_account(mint, collection_authority);
+) -> Result<u8, ProgramError> {
+    let (pda, bump) = find_collection_authority_account(mint, collection_authority);
     if pda != *authority_record.key {
         return Err(MetadataError::DerivedKeyInvalid.into());
     }
-    Ok(())
+    Ok(bump)
 }
 
 pub fn assert_has_collection_authority(
@@ -36,16 +36,16 @@ pub fn assert_has_collection_authority(
     delegate_collection_authority_record: Option<&AccountInfo>,
 ) -> Result<(), ProgramError> {
     if delegate_collection_authority_record.is_some() {
-        assert_is_collection_delegated_authority(
+        let bump = assert_is_collection_delegated_authority(
             delegate_collection_authority_record.unwrap(),
             collection_authority_info.key,
             mint,
         )?;
-        if delegate_collection_authority_record
+        let data = delegate_collection_authority_record
             .unwrap()
-            .try_data_is_empty()?
-            || delegate_collection_authority_record.unwrap().data.borrow()[0] == 0
-        {
+            .try_borrow_data()?;
+        let record_data = CollectionAuthorityRecord::from_bytes(&data)?;
+        if data.len() == 0 || record_data.bump != bump {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }
     } else {
