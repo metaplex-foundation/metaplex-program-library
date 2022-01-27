@@ -54,7 +54,7 @@ export const createMarketTransaction = async ({
     {
       name,
       description,
-      treasyryOwnerBump: treasuryOwnerBump,
+      treasuryOwnerBump,
       mutable,
       price,
       piecesInOneWallet,

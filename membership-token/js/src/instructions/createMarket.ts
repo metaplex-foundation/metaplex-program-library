@@ -4,7 +4,7 @@ import * as beet from '@metaplex-foundation/beet';
 import { PROGRAM_ID } from '../consts';
 
 export type CreateMarketInstructionArgs = {
-  treasyryOwnerBump: number;
+  treasuryOwnerBump: number;
   name: string;
   description: string;
   mutable: boolean;
@@ -20,7 +20,7 @@ const createMarketStruct = new beet.FixableBeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['treasyryOwnerBump', beet.u8],
+    ['treasuryOwnerBump', beet.u8],
     ['name', beet.utf8String],
     ['description', beet.utf8String],
     ['mutable', beet.bool],

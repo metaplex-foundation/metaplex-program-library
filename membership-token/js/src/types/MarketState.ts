@@ -2,7 +2,6 @@ import * as beet from '@metaplex-foundation/beet';
 export enum MarketState {
   Uninitialized,
   Created,
-  Suspended,
   Active,
   Ended,
 }
