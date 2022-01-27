@@ -311,8 +311,17 @@ mod buy {
         setup_context!(context, mpl_membership_token, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
-        let (selling_resource_keypair, selling_resource_owner_keypair, vault) =
-            setup_selling_resource(&mut context, &admin_wallet, &store_keypair).await;
+        let (selling_resource_keypair, selling_resource_owner_keypair, _vault) =
+            setup_selling_resource(
+                &mut context,
+                &admin_wallet,
+                &store_keypair,
+                100,
+                None,
+                true,
+                false,
+            )
+            .await;
 
         airdrop(
             &mut context,
@@ -415,7 +424,7 @@ mod buy {
         )
         .await;
 
-        let payer_keypair = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
+        let _payer_keypair = Keypair::from_bytes(&context.payer.to_bytes()).unwrap();
         mint_to(
             &mut context,
             &new_mint_keypair.pubkey(),
