@@ -317,6 +317,11 @@ pub enum MetadataInstruction {
     ApproveCollectionAuthority,
     ///See [revoke_collection_authority] for Doc
     RevokeCollectionAuthority,
+
+    ///See [freeze_delegated_account] for Doc
+    FreezeDelegatedAccount,
+    ///See [thaw_delegated_account] for Doc
+    ThawDelegatedAccount,
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1021,6 +1026,70 @@ pub fn revoke_collection_authority(
             AccountMeta::new_readonly(mint, false),
         ],
         data: MetadataInstruction::RevokeCollectionAuthority
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+///# Freeze delegated account
+///
+///Allow freezing of an NFT if this user is the delegate of the NFT
+///
+///### Accounts:
+///   0. `[signer]` Delegate
+///   1. `[writable]` Token account to freeze
+///   2. `[]` Edition
+///   3. `[]` Token mint
+#[allow(clippy::too_many_arguments)]
+pub fn freeze_delegated_account(
+    program_id: Pubkey,
+    delegate: Pubkey,
+    token_account: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(delegate, true),
+            AccountMeta::new(token_account, false),
+            AccountMeta::new_readonly(edition, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: MetadataInstruction::FreezeDelegatedAccount
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+///# Thaw delegated account
+///
+///Allow thawing of an NFT if this user is the delegate of the NFT
+///
+///### Accounts:
+///   0. `[signer]` Delegate
+///   1. `[writable]` Token account to thaw
+///   2. `[]` Edition
+///   3. `[]` Token mint
+#[allow(clippy::too_many_arguments)]
+pub fn thaw_delegated_account(
+    program_id: Pubkey,
+    delegate: Pubkey,
+    token_account: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(delegate, true),
+            AccountMeta::new(token_account, false),
+            AccountMeta::new_readonly(edition, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: MetadataInstruction::ThawDelegatedAccount
             .try_to_vec()
             .unwrap(),
     }
