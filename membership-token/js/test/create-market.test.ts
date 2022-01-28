@@ -10,12 +10,14 @@ import {
 
 import { findTresuryOwnerAddress, findVaultOwnerAddress } from '../src/utils';
 
+import {
+  createMarketTransaction,
+  createTokenAccount,
+  createInitSellingResourceTransaction,
+  createStoreTransaction,
+} from './transactions';
 import { addLabel, logDebug } from './utils';
-import { createStoreTransaction } from './transactions/create-store';
 import { mintNFT } from './actions/mint-nft';
-import { createInitSellingResourceTransaction } from './transactions/init-selling-resouce';
-import { createTokenAccount } from './transactions/create-token-account';
-import { createMarketTransaction } from './transactions/create-market';
 
 killStuckProcess();
 
@@ -117,15 +119,15 @@ test('create-market: success', async (t) => {
   });
 
   logDebug('-- Market  -------------------------------');
-  logDebug(`Market tresuryMint:   ${treasuryMint.publicKey.toBase58()}`);
+  logDebug(`Market treasuryMint:   ${treasuryMint.publicKey.toBase58()}`);
 
-  const [treasuryOwner, treasyryOwnerBump] = await findTresuryOwnerAddress(
+  const [treasuryOwner, treasuryOwnerBump] = await findTresuryOwnerAddress(
     treasuryMint.publicKey,
     sellingResource.publicKey,
   );
 
-  logDebug(`Market tresuryOwner:       ${treasuryOwner.toBase58()}`);
-  logDebug(`Market tresyryOwnerBump:   ${treasyryOwnerBump}`);
+  logDebug(`Market treasuryOwner:       ${treasuryOwner.toBase58()}`);
+  logDebug(`Market treasuryOwnerBump:   ${treasuryOwnerBump}`);
 
   const { tokenAccount: treasuryHolder, createTokenTx: createTreasuryTx } =
     await createTokenAccount({
@@ -135,14 +137,14 @@ test('create-market: success', async (t) => {
       owner: treasuryOwner,
     });
 
-  logDebug(`Market tresuryHolder:   ${treasuryHolder.publicKey.toBase58()}`);
-  const createTresuryRes = await transactionHandler.sendAndConfirmTransaction(
+  logDebug(`Market treasuryHolder:   ${treasuryHolder.publicKey.toBase58()}`);
+  const createTreasuryRes = await transactionHandler.sendAndConfirmTransaction(
     createTreasuryTx,
     [treasuryHolder],
     defaultSendOptions,
   );
-  addLabel('create:tresury', treasuryHolder);
-  assertConfirmedTransaction(t, createTresuryRes.txConfirmed);
+  addLabel('create:treasury', treasuryHolder);
+  assertConfirmedTransaction(t, createTreasuryRes.txConfirmed);
   const startDate = Math.round(Date.now() / 1000) + 5;
 
   const endDate = startDate + 5 * 20;
@@ -163,7 +165,7 @@ test('create-market: success', async (t) => {
     mint: treasuryMint.publicKey,
     treasuryHolder: treasuryHolder.publicKey,
     owner: treasuryOwner,
-    treasyryOwnerBump,
+    treasuryOwnerBump,
     name: marketName,
     description: marketDescription,
     mutable,

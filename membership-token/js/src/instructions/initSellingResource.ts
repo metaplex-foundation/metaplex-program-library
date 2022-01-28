@@ -1,7 +1,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+
 import { PROGRAM_ID } from '../consts';
 
 export type InitSellingResourceInstructionArgs = {
@@ -9,13 +9,13 @@ export type InitSellingResourceInstructionArgs = {
   vaultOwnerBump: number;
   maxSupply: beet.COption<beet.bignum>;
 };
-const initSellingResourceStruct = new beet.BeetArgsStruct<
+const initSellingResourceStruct = new beet.FixableBeetArgsStruct<
   InitSellingResourceInstructionArgs & {
     instructionDiscriminator: number[];
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['masterEditionBump', beet.u8],
     ['vaultOwnerBump', beet.u8],
     ['maxSupply', beet.coption(beet.u64)],
