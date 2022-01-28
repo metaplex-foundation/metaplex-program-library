@@ -105,7 +105,7 @@ impl Metadata {
         collection: Option<Collection>,
         uses: Option<Uses>,
     ) -> transport::Result<()> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+        create_mint(context, &self.mint, &context.payer.pubkey(), Some(&context.payer.pubkey())).await?;
         create_token_account(
             context,
             &self.token,
