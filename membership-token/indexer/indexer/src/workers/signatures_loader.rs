@@ -105,7 +105,7 @@ pub async fn run(
             .unwrap()
             .load_signatures_batch(saved_state.before, saved_state.until);
 
-        if saved_state.newest_transaction.is_none() && signatures.len() > 0 {
+        if saved_state.newest_transaction.is_none() && !signatures.is_empty() {
             saved_state.newest_transaction =
                 Some(Signature::from_str(&signatures.get(0).unwrap().signature).unwrap());
         }
