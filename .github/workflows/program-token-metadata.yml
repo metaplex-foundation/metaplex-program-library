@@ -29,6 +29,8 @@ jobs:
             - 'core/**'
           package:
             - 'token-metadata/**'
+  token-metadata-security-scan:
+
   build-and-test-token-metadata:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}

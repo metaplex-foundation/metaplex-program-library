@@ -9,7 +9,7 @@ export class VerifyCollectionArgs extends Borsh.Data {
 
 type VerifyCollectionParams = {
   metadata: PublicKey;
-  collectionUseAuthorityRecord?: PublicKey;
+  collectionAuthorityRecord?: PublicKey;
   collectionAuthority: PublicKey;
   collectionMint: PublicKey;
   collectionMetadata: PublicKey;
@@ -26,7 +26,7 @@ export class VerifyCollection extends Transaction {
       collectionMint,
       collectionMetadata,
       collectionMasterEdition,
-      collectionUseAuthorityRecord,
+      collectionAuthorityRecord,
     } = params;
 
     const data = VerifyCollectionArgs.serialize();
@@ -62,9 +62,9 @@ export class VerifyCollection extends Transaction {
         isWritable: false,
       },
     ];
-    if (collectionUseAuthorityRecord) {
+    if (collectionAuthorityRecord) {
       accounts.push({
-        pubkey: collectionUseAuthorityRecord,
+        pubkey: collectionAuthorityRecord,
         isSigner: false,
         isWritable: false,
       });

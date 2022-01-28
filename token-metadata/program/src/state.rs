@@ -203,7 +203,6 @@ impl CollectionAuthorityRecord {
 
     pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
         let ca: CollectionAuthorityRecord = try_from_slice_checked(b, Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
-
         Ok(ca)
     }
 }

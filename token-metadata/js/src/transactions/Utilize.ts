@@ -1,6 +1,12 @@
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, TransactionCtorFields, TransactionInstruction } from '@solana/web3.js';
+import {
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  TransactionCtorFields,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { MetadataProgram } from '../MetadataProgram';
 
 export class UtilizeArgs extends Borsh.Data {
@@ -27,8 +33,7 @@ type UtilizeParams = {
 export class Utilize extends Transaction {
   constructor(options: TransactionCtorFields, params: UtilizeParams) {
     super(options);
-    const { feePayer } = options;
-    const { metadata, useAuthority, numberOfUses, burner , tokenAccount} = params;
+    const { metadata, useAuthority, numberOfUses, burner, tokenAccount } = params;
 
     const data = UtilizeArgs.serialize({ numberOfUses });
     const accounts = [

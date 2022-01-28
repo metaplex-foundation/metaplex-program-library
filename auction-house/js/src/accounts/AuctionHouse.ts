@@ -3,7 +3,8 @@ import { AccountInfo, Commitment, Connection, PublicKey } from '@solana/web3.js'
 import { AuctionHouseAccountData, AuctionHouseAccountDataArgs } from '../generated/accounts';
 
 export class AuctionHouseAccount {
-  constructor(readonly pubkey: PublicKey, readonly data: AuctionHouseAccountData) {}
+  static hasCorrectByteSize = AuctionHouseAccountData.hasCorrectByteSize;
+  static byteSize = AuctionHouseAccountData.byteSize;
 
   static fromAccountInfo(pubkey: PublicKey, info: AccountInfo<Buffer>) {
     assert(
@@ -20,15 +21,14 @@ export class AuctionHouseAccount {
     return new AuctionHouseAccount(pubkey, data);
   }
 
-  static hasCorrectByteSize = AuctionHouseAccountData.hasCorrectByteSize;
-  static byteSize = AuctionHouseAccountData.byteSize;
-
   static async getMinimumBalanceForRentExemption(
     connection: Connection,
     commitment?: Commitment,
   ): Promise<number> {
     return AuctionHouseAccountData.getMinimumBalanceForRentExemption(connection, commitment);
   }
+
+  constructor(readonly pubkey: PublicKey, readonly data: AuctionHouseAccountData) {}
 
   pretty() {
     return {

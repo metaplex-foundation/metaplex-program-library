@@ -1,4 +1,4 @@
-use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, msg, program_error::ProgramError, pubkey::Pubkey};
 
 use crate::{
     error::MetadataError,
@@ -44,8 +44,12 @@ pub fn assert_has_collection_authority(
         let data = delegate_collection_authority_record
             .unwrap()
             .try_borrow_data()?;
-        let record_data = CollectionAuthorityRecord::from_bytes(&data)?;
-        if data.len() == 0 || record_data.bump != bump {
+
+        if data.len() == 0 {
+            return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
+        }
+        let bump_match = CollectionAuthorityRecord::from_bytes(&data)?;
+        if bump_match.bump != bump {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }
     } else {

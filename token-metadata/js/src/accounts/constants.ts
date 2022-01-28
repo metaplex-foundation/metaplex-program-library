@@ -15,8 +15,7 @@ export enum UseMethod {
 
 export enum TokenStandard {
   NonFungible = 0, // This is a master edition
-  FungibleAsset = 1, // A token with metadata that can also have attrributes
+  FungibleAsset = 1, // A token with metadata that can also have attributes
   Fungible = 2, // A token with simple metadata
   NonFungibleEdition = 3, // This is a limited edition
 }
-

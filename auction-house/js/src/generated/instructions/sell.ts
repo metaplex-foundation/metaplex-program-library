@@ -1,7 +1,6 @@
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type SellInstructionArgs = {
   tradeStateBump: number;
@@ -16,7 +15,7 @@ const sellStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['tradeStateBump', beet.u8],
     ['freeTradeStateBump', beet.u8],
     ['programAsSignerBump', beet.u8],
@@ -39,6 +38,12 @@ export type SellInstructionAccounts = {
 
 const sellInstructionDiscriminator = [51, 230, 133, 164, 1, 127, 131, 173];
 
+/**
+ * Creates a _Sell_ instruction.
+ *
+ * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ */
 export function createSellInstruction(
   accounts: SellInstructionAccounts,
   args: SellInstructionArgs,

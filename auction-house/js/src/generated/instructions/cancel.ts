@@ -1,7 +1,6 @@
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type CancelInstructionArgs = {
   buyerPrice: beet.bignum;
@@ -13,7 +12,7 @@ const cancelStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
   ],
@@ -31,6 +30,12 @@ export type CancelInstructionAccounts = {
 
 const cancelInstructionDiscriminator = [232, 219, 223, 41, 219, 236, 220, 190];
 
+/**
+ * Creates a _Cancel_ instruction.
+ *
+ * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ */
 export function createCancelInstruction(
   accounts: CancelInstructionAccounts,
   args: CancelInstructionArgs,

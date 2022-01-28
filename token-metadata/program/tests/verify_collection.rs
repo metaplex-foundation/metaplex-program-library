@@ -946,6 +946,9 @@ mod verify_collection {
             .await
             .unwrap();
 
+        let account = context.banks_client.get_account(record).await.unwrap().unwrap();
+        assert_eq!(account.data.len(), 0);
+
         let err = test_metadata
             .verify_collection(
                 &mut context,

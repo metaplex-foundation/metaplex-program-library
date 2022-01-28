@@ -14,7 +14,7 @@ type SetAndVerifyCollectionParams = {
   updateAuthority: PublicKey;
   collectionMetadata: PublicKey;
   collectionMasterEdition: PublicKey;
-  collectionUseAuthorityRecord?: PublicKey;
+  collectionAuthorityRecord?: PublicKey;
 };
 
 export class SetAndVerifyCollectionCollection extends Transaction {
@@ -28,7 +28,7 @@ export class SetAndVerifyCollectionCollection extends Transaction {
       updateAuthority,
       collectionMetadata,
       collectionMasterEdition,
-      collectionUseAuthorityRecord,
+      collectionAuthorityRecord,
     } = params;
 
     const data = SetAndVerifyCollectionArgs.serialize();
@@ -69,9 +69,9 @@ export class SetAndVerifyCollectionCollection extends Transaction {
         isWritable: false,
       },
     ];
-    if (collectionUseAuthorityRecord) {
+    if (collectionAuthorityRecord) {
       accounts.push({
-        pubkey: collectionUseAuthorityRecord,
+        pubkey: collectionAuthorityRecord,
         isSigner: false,
         isWritable: false,
       });

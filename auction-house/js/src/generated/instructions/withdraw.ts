@@ -1,7 +1,6 @@
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type WithdrawInstructionArgs = {
   escrowPaymentBump: number;
@@ -13,7 +12,7 @@ const withdrawStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['escrowPaymentBump', beet.u8],
     ['amount', beet.u64],
   ],
@@ -31,6 +30,12 @@ export type WithdrawInstructionAccounts = {
 
 const withdrawInstructionDiscriminator = [183, 18, 70, 156, 148, 109, 161, 34];
 
+/**
+ * Creates a _Withdraw_ instruction.
+ *
+ * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ */
 export function createWithdrawInstruction(
   accounts: WithdrawInstructionAccounts,
   args: WithdrawInstructionArgs,
