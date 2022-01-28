@@ -99,7 +99,7 @@ pub fn mint_one(
 
     let candy_machine_data = candy_machine_state.data;
 
-    let mint = Keypair::new();
+    let nft_mint = Keypair::new();
     let metaplex_program_id = Pubkey::from_str(METAPLEX_PROGRAM_ID)?;
 
     // Allocate memory for the account
@@ -110,38 +110,46 @@ pub fn mint_one(
     // Create mint account
     let create_mint_account_ix = system_instruction::create_account(
         &payer,
-        &mint.pubkey(),
+        &nft_mint.pubkey(),
         min_rent,
         MINT_LAYOUT,
         &TOKEN_PROGRAM_ID,
     );
 
     // Initalize mint ix
-    let init_mint_ix = initialize_mint(&TOKEN_PROGRAM_ID, &mint.pubkey(), &payer, Some(&payer), 0)?;
+    let init_mint_ix = initialize_mint(
+        &TOKEN_PROGRAM_ID,
+        &nft_mint.pubkey(),
+        &payer,
+        Some(&payer),
+        0,
+    )?;
 
     // Derive associated token account
-    let assoc = get_associated_token_address(&payer, &mint.pubkey());
+    let assoc = get_associated_token_address(&payer, &nft_mint.pubkey());
 
     // Create associated account instruction
-    let create_assoc_account_ix = create_associated_token_account(&payer, &payer, &mint.pubkey());
+    let create_assoc_account_ix =
+        create_associated_token_account(&payer, &payer, &nft_mint.pubkey());
 
     // Mint to instruction
-    let mint_to_ix = mint_to(&TOKEN_PROGRAM_ID, &mint.pubkey(), &assoc, &payer, &[], 1)?;
-
-    // Check gatekeeper
-    // if let Some(gatekeeper) = candy_machine_data.gateeker {
-
-    // }
+    let mint_to_ix = mint_to(
+        &TOKEN_PROGRAM_ID,
+        &nft_mint.pubkey(),
+        &assoc,
+        &payer,
+        &[],
+        1,
+    )?;
 
     let mut additional_instructions: Vec<Instruction> = Vec::new();
+    let mut cleanup_instructions: Vec<Instruction> = Vec::new();
     let mut additional_accounts: Vec<AccountMeta> = Vec::new();
     let mut additional_signers: Vec<Keypair> = Vec::new();
 
     // Check whitelist mint settings
-    if let Some(mint_settings) = candy_machine_data.whitelist_mint_settings {
-        let whitelist_token = get_ata_for_mint(&mint_settings.mint, &payer);
-
-        println!("Whitelist token {:?}", whitelist_token);
+    if let Some(wl_mint_settings) = candy_machine_data.whitelist_mint_settings {
+        let whitelist_token = get_ata_for_mint(&wl_mint_settings.mint, &payer);
 
         additional_accounts.push(AccountMeta {
             pubkey: whitelist_token,
@@ -149,15 +157,19 @@ pub fn mint_one(
             is_writable: true,
         });
 
-        if mint_settings.mode == WhitelistMintMode::BurnEveryTime {
+        if wl_mint_settings.mode == WhitelistMintMode::BurnEveryTime {
             let whitelist_burn_authority = Keypair::generate(&mut OsRng);
 
-            println!(
-                "whitelist burn auth: {:?}",
-                &whitelist_burn_authority.pubkey()
-            );
-
-            println!("whitelist mint: {:?}", &mint_settings.mint);
+            additional_accounts.push(AccountMeta {
+                pubkey: wl_mint_settings.mint,
+                is_signer: false,
+                is_writable: true,
+            });
+            additional_accounts.push(AccountMeta {
+                pubkey: whitelist_burn_authority.pubkey().clone(),
+                is_signer: true,
+                is_writable: false,
+            });
 
             let ata_exists = !program.rpc().get_account_data(&whitelist_token)?.is_empty();
 
@@ -177,29 +189,18 @@ pub fn mint_one(
                     &[],
                 )?;
 
-                additional_accounts.push(AccountMeta {
-                    pubkey: mint.pubkey(),
-                    is_signer: false,
-                    is_writable: true,
-                });
-                additional_accounts.push(AccountMeta {
-                    pubkey: whitelist_burn_authority.pubkey(),
-                    is_signer: true,
-                    is_writable: false,
-                });
-
                 additional_instructions.push(approve_ix);
-                additional_instructions.push(revoke_ix);
-
-                additional_signers.push(whitelist_burn_authority);
+                cleanup_instructions.push(revoke_ix);
             }
+
+            additional_signers.push(whitelist_burn_authority);
         }
     }
 
     // Check token mint
 
-    let metadata_pda = get_metadata_pda(&mint.pubkey())?;
-    let master_edition_pda = get_master_edition_pda(&mint.pubkey())?;
+    let metadata_pda = get_metadata_pda(&nft_mint.pubkey())?;
+    let master_edition_pda = get_master_edition_pda(&nft_mint.pubkey())?;
     let (candy_machine_creator_pda, creator_bump) =
         get_candy_machine_creator_pda(&candy_machine_id)?;
 
@@ -209,14 +210,14 @@ pub fn mint_one(
         .instruction(init_mint_ix)
         .instruction(create_assoc_account_ix)
         .instruction(mint_to_ix)
-        .signer(&mint)
+        .signer(&nft_mint)
         .accounts(nft_accounts::MintNFT {
             candy_machine: candy_machine_id,
             candy_machine_creator: candy_machine_creator_pda,
             payer,
             wallet,
             metadata: metadata_pda,
-            mint: mint.pubkey(),
+            mint: nft_mint.pubkey(),
             mint_authority: payer,
             update_authority: payer,
             master_edition: master_edition_pda,
@@ -251,7 +252,19 @@ pub fn mint_one(
 
     let sig = builder.send()?;
 
+    // Cleanup instructions, such as revoke token burn authority, require a separate transaction.
+    let mut builder = program.request();
+
+    if !cleanup_instructions.is_empty() {
+        for instruction in cleanup_instructions {
+            builder = builder.instruction(instruction);
+        }
+    }
+
+    let sig2 = builder.send()?;
+
     info!(logger, "Minted! TxId: {}", sig);
+    info!(logger, "Cleanup TxId: {}", sig2);
     Ok(())
 }
 
