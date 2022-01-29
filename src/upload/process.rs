@@ -69,7 +69,7 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         }
     };
 
-    info!(logger, "cache loaded: {cache:?}");
+    let config_data = get_config_data(&upload_args.config)?;
 
     let candy_machine_address = &cache.program.candy_machine;
 
@@ -82,9 +82,8 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         let candy_pubkey = candy_keypair.pubkey();
 
         let uuid = uuid_from_pubkey(&candy_pubkey);
-        let config_data = get_config_data(&upload_args.config)?;
         let metadata = get_metadata_from_first_json(&upload_args.assets_dir)?;
-        let candy_data = create_candy_machine_data(config_data, uuid, metadata)?;
+        let candy_data = create_candy_machine_data(&config_data, uuid, metadata)?;
 
         let sig = initialize_candy_machine(&sugar_config, &candy_keypair, candy_data)?;
         info!(logger, "Candy machine initialized with sig: {}", sig);
@@ -114,19 +113,15 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
     };
 
     info!(logger, "Uploading config lines...");
-    let config_lines = generate_config_lines(&cache.items);
-    info!(logger, "config lines: {config_lines:?}");
+    let num_items = config_data.number;
+    let config_lines = generate_config_lines(num_items, &cache.items);
     let config_statuses = upload_config_lines(&sugar_config, config_lines, candy_pubkey)?;
-    info!(logger, "config statuses: {config_statuses:?}");
     for status in config_statuses {
         let index: String = status.index.to_string();
         let mut item = cache.items.0.get_mut(&index).unwrap();
         item.on_chain = status.on_chain;
     }
 
-    for item in &cache.items.0 {
-        info!(logger, "item: {item:?}");
-    }
     cache.write_to_file(cache_file_path)?;
 
     Ok(())
@@ -140,31 +135,31 @@ fn get_metadata_from_first_json(assets_dir: &String) -> Result<Metadata> {
 }
 
 fn create_candy_machine_data(
-    config: ConfigData,
+    config: &ConfigData,
     uuid: String,
     metadata: Metadata,
 ) -> Result<CandyMachineData> {
     let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
 
-    let end_settings = if let Some(settings) = config.end_settings {
+    let end_settings = if let Some(settings) = &config.end_settings {
         Some(settings.into_candy_format())
     } else {
         None
     };
 
-    let whitelist_mint_settings = if let Some(settings) = config.whitelist_mint_settings {
+    let whitelist_mint_settings = if let Some(settings) = &config.whitelist_mint_settings {
         Some(settings.into_candy_format())
     } else {
         None
     };
 
-    let hidden_settings = if let Some(settings) = config.hidden_settings {
+    let hidden_settings = if let Some(settings) = &config.hidden_settings {
         Some(settings.into_candy_format())
     } else {
         None
     };
 
-    let gatekeeper = if let Some(gatekeeper) = config.gatekeeper {
+    let gatekeeper = if let Some(gatekeeper) = &config.gatekeeper {
         Some(gatekeeper.into_candy_format())
     } else {
         None
@@ -239,16 +234,24 @@ fn _read_arloader_manifest(path: &String) -> Result<ArloaderManifest> {
     Ok(arloader_manifest)
 }
 
-fn generate_config_lines(cache_items: &CacheItems) -> Vec<(u32, ConfigLine)> {
-    let mut config_lines: Vec<(u32, ConfigLine)> = Vec::new();
+fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u32, ConfigLine)>> {
+    let mut config_lines: Vec<Vec<(u32, ConfigLine)>> = Vec::new();
+
+    // Populate with empty chunks
+    for _ in 0..num_items {
+        config_lines.push(Vec::new());
+    }
 
     for (key, value) in &cache_items.0 {
         let config_line = value.into_config_line();
 
-        let key = key.parse::<u32>().unwrap();
+        let key = key.parse::<usize>().unwrap();
+
+        let chunk_index = key / CONFIG_CHUNK_SIZE;
 
         if config_line.is_some() {
-            config_lines.push((key, config_line.unwrap()));
+            let chunk = config_lines.get_mut(chunk_index).unwrap();
+            chunk.push((key as u32, config_line.unwrap()));
         }
     }
 
@@ -315,7 +318,7 @@ fn initialize_candy_machine(
 
 fn upload_config_lines(
     sugar_config: &SugarConfig,
-    config_lines: Vec<(u32, ConfigLine)>,
+    config_lines: Vec<Vec<(u32, ConfigLine)>>,
     candy_pubkey: Pubkey,
 ) -> Result<Vec<ConfigStatus>> {
     let payer = Arc::new(&sugar_config.keypair);
@@ -331,19 +334,24 @@ fn upload_config_lines(
     );
 
     println!("Config lines: {:?}", config_lines.len());
-    info!(logger, "Uploading config lines chunks...");
+    info!(logger, "Uploading config lines in chunks...");
     config_lines
         .par_iter()
-        .chunks(CONFIG_CHUNK_SIZE)
+        // .chunks(CONFIG_CHUNK_SIZE)
         .progress()
         .for_each(|chunk| {
+            // Skip empty chunks
+            if chunk.len() == 0 {
+                return;
+            }
+
             let statuses = statuses.clone();
 
             let payer = Arc::clone(&payer);
 
             match add_config_lines(sugar_config, &candy_pubkey, payer, &chunk) {
                 Ok(_) => {
-                    for (index, _) in &chunk {
+                    for (index, _) in chunk {
                         let _statuses = statuses.lock().unwrap().push(ConfigStatus {
                             index: *index as u32,
                             on_chain: true,
@@ -352,7 +360,7 @@ fn upload_config_lines(
                 }
                 Err(e) => {
                     println!("{}", e);
-                    for (index, _) in &chunk {
+                    for (index, _) in chunk {
                         let _statuses = statuses.lock().unwrap().push(ConfigStatus {
                             index: *index as u32,
                             on_chain: false,
@@ -375,7 +383,7 @@ fn add_config_lines(
     sugar_config: &SugarConfig,
     candy_pubkey: &Pubkey,
     payer: Arc<&Keypair>,
-    config_slices: &Vec<&(u32, ConfigLine)>,
+    chunk: &Vec<(u32, ConfigLine)>,
 ) -> Result<()> {
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
@@ -389,14 +397,19 @@ fn add_config_lines(
     let mut config_lines: Vec<ConfigLine> = Vec::new();
 
     // First index
-    let index = config_slices[0].0;
+    let index = chunk[0].0;
+    // let (index, config_line) = config_pair;
 
-    for (_, line) in config_slices {
+    for (_, line) in chunk {
         config_lines.push(ConfigLine {
             name: line.name.clone(),
             uri: line.uri.clone(),
         });
     }
+    // config_lines.push(ConfigLine {
+    //     name: config_line.name.clone(),
+    //     uri: config_line.uri.clone(),
+    // });
 
     let _sig = program
         .request()

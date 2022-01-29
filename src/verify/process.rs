@@ -85,7 +85,9 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         on_chain_items.push(OnChainItem { name, uri });
     }
 
-    println!("{on_chain_items:?}");
+    for item in on_chain_items {
+        println!("{item:?}");
+    }
 
     Ok(())
 }
