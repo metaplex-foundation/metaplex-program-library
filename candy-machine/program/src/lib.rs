@@ -718,7 +718,7 @@ pub struct MintNFT<'info> {
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
     clock: Sysvar<'info, Clock>,
-    #[account(address = sysvar::recent_blockhashes::id())]
+    #[account(address = sysvar::recent_blockhashes::ID)]
     recent_blockhashes: UncheckedAccount<'info>,
     #[account(address = sysvar::instructions::id())]
     instruction_sysvar_account: UncheckedAccount<'info>,
