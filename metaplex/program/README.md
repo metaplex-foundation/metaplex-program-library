@@ -13,10 +13,10 @@ document are available at:
 ## Source
 
 The Metaplex Program's source is available on
-[github](https://github.com/metaplex-foundation/metaplex)
+[github](https://github.com/metaplex-foundation/metaplex-program-library)
 
 There is also an example Rust client located at
-[github](https://github.com/metaplex-foundation/metaplex/tree/master/token_vault/test/src/main.rs)
+[github](https://github.com/metaplex-foundation/metaplex-program-library/blob/master/token-vault/test/src/main.rs)
 that can be perused for learning and built if desired with `cargo build`. It allows testing out a variety of scenarios.
 
 ## Interface
