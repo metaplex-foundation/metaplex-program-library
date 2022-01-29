@@ -1,9 +1,9 @@
-use mpl_token_metadata::state::{
+pub use mpl_token_metadata::state::{
     MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
 
 pub const METAPLEX_PROGRAM_ID: &'static str = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
-
+pub const CANDY_MACHINE_V2: &'static str = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ";
 pub const CIVIC: &'static str = "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs";
 
 pub const CONFIG_ARRAY_START: usize = 8 + // key
@@ -36,5 +36,7 @@ pub const CONFIG_ARRAY_START: usize = 8 + // key
 ;
 
 pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
-
 pub const CONFIG_CHUNK_SIZE: usize = 10;
+pub const CONFIG_NAME_OFFSET: usize = 2;
+pub const CONFIG_URI_OFFSET: usize = 40;
+pub const STRING_LEN_SIZE: usize = 4;
