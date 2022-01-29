@@ -239,14 +239,16 @@ fn _read_arloader_manifest(path: &String) -> Result<ArloaderManifest> {
     Ok(arloader_manifest)
 }
 
-fn generate_config_lines(cache_items: &CacheItems) -> Vec<ConfigLine> {
-    let mut config_lines: Vec<ConfigLine> = Vec::new();
+fn generate_config_lines(cache_items: &CacheItems) -> Vec<(u32, ConfigLine)> {
+    let mut config_lines: Vec<(u32, ConfigLine)> = Vec::new();
 
-    for (_, value) in &cache_items.0 {
+    for (key, value) in &cache_items.0 {
         let config_line = value.into_config_line();
 
+        let key = key.parse::<u32>().unwrap();
+
         if config_line.is_some() {
-            config_lines.push(config_line.unwrap());
+            config_lines.push((key, config_line.unwrap()));
         }
     }
 
@@ -313,11 +315,9 @@ fn initialize_candy_machine(
 
 fn upload_config_lines(
     sugar_config: &SugarConfig,
-    config_lines: Vec<ConfigLine>,
+    config_lines: Vec<(u32, ConfigLine)>,
     candy_pubkey: Pubkey,
 ) -> Result<Vec<ConfigStatus>> {
-    // let index: Arc<Mutex<u32>> = Arc::new(Mutex::new(0));
-
     let payer = Arc::new(&sugar_config.keypair);
     let logger = &sugar_config.logger;
 
@@ -334,7 +334,6 @@ fn upload_config_lines(
     info!(logger, "Uploading config lines chunks...");
     config_lines
         .par_iter()
-        .enumerate()
         .chunks(CONFIG_CHUNK_SIZE)
         .progress()
         .for_each(|chunk| {
@@ -376,7 +375,7 @@ fn add_config_lines(
     sugar_config: &SugarConfig,
     candy_pubkey: &Pubkey,
     payer: Arc<&Keypair>,
-    config_slices: &Vec<(usize, &ConfigLine)>,
+    config_slices: &Vec<&(u32, ConfigLine)>,
 ) -> Result<()> {
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
@@ -390,7 +389,7 @@ fn add_config_lines(
     let mut config_lines: Vec<ConfigLine> = Vec::new();
 
     // First index
-    let index = config_slices[0].0 as u32;
+    let index = config_slices[0].0;
 
     for (_, line) in config_slices {
         config_lines.push(ConfigLine {
@@ -399,7 +398,7 @@ fn add_config_lines(
         });
     }
 
-    let sig = program
+    let _sig = program
         .request()
         .accounts(nft_accounts::AddConfigLines {
             candy_machine: *candy_pubkey,
@@ -411,7 +410,6 @@ fn add_config_lines(
         })
         .signer(*payer)
         .send()?;
-    debug!(sugar_config.logger, "add_config_line sig: {sig}");
 
     Ok(())
 }
