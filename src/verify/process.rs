@@ -26,8 +26,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     let cache_file_path = Path::new(&args.cache);
 
     if !cache_file_path.exists() {
-        let cache_file_string = path_to_string(&cache_file_path)?;
-        return Err(CacheError::CacheFileNotFound(cache_file_string).into());
+        return Err(CacheError::CacheFileNotFound(args.cache.clone()).into());
     }
 
     info!(sugar_config.logger, "Cache exists, loading...");
@@ -42,7 +41,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         }
     };
 
-    let cache: Cache = match serde_json::from_reader(file) {
+    let mut cache: Cache = match serde_json::from_reader(file) {
         Ok(cache) => cache,
         Err(err) => {
             error!(sugar_config.logger, "Failed to parse cache file: {}", err);
@@ -64,8 +63,10 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     };
 
     // let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
-    let num_items = cache.items.0.len();
-    let mut on_chain_items: Vec<OnChainItem> = Vec::new();
+    let num_items = cache.items.0.len().clone();
+    let cache_items = &mut cache.items.0;
+
+    let mut invalid_items: Vec<CacheItem> = Vec::new();
 
     for i in 0..num_items {
         let name_start =
@@ -82,12 +83,29 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             .trim_matches(char::from(0))
             .to_string();
 
-        on_chain_items.push(OnChainItem { name, uri });
+        let on_chain_item = OnChainItem { name, uri };
+        let cache_item = cache_items.get_mut(&i.to_string()).unwrap();
+
+        if !items_match(&cache_item, &on_chain_item) {
+            cache_item.on_chain = false;
+            invalid_items.push(cache_item.clone());
+        }
     }
 
-    for item in on_chain_items {
-        println!("{item:?}");
+    if invalid_items.len() > 0 {
+        println!("Invalid items found: ");
+        for item in invalid_items {
+            println!("{:?}", item);
+        }
+        println!("Cache updated. Rerun `upload`.");
+    } else {
+        println!("All items checked out. You're good to go!");
     }
 
+    cache.write_to_file(cache_file_path)?;
     Ok(())
+}
+
+fn items_match(cache_item: &CacheItem, on_chain_item: &OnChainItem) -> bool {
+    cache_item.name == on_chain_item.name && cache_item.link == on_chain_item.uri
 }
