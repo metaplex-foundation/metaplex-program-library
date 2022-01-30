@@ -9,7 +9,6 @@ use rand::rngs::OsRng;
 use rayon::prelude::*;
 use slog::*;
 use std::{
-    collections::HashMap,
     fs::File,
     path::Path,
     str::FromStr,
@@ -22,11 +21,11 @@ use mpl_candy_machine::{CandyMachineData, ConfigLine, Creator as CandyCreator};
 
 use crate::cache::*;
 use crate::candy_machine::{uuid_from_pubkey, ConfigStatus};
+use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
-use crate::constants::*;
 use crate::parse::path_to_string;
 use crate::setup::{setup_client, sugar_setup};
-use crate::upload::{data::*, errors::*};
+use crate::upload::data::*;
 use crate::validate::format::Metadata;
 
 pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
@@ -34,21 +33,22 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         match sugar_setup(upload_args.logger, upload_args.keypair, upload_args.rpc_url) {
             Ok(sugar_config) => sugar_config,
             Err(err) => {
-                return Err(UploadError::SugarSetupError(err.to_string()).into());
+                return Err(SetupError::SugarSetupError(err.to_string()).into());
             }
         };
 
     let cache_file_path = Path::new(&upload_args.cache);
+    let logger = &sugar_config.logger;
 
     if !cache_file_path.exists() {
         // error!(
         //     sugar_config.logger,
         //     "No cache file found at cache path: {cache_file_path:?}. Manually create one or run `sugar upload-assets`.");
         let cache_file_string = path_to_string(&cache_file_path)?;
-        return Err(UploadError::CacheFileNotFound(cache_file_string).into());
+        return Err(CacheError::CacheFileNotFound(cache_file_string).into());
     }
 
-    info!(sugar_config.logger, "Cache exists, loading...");
+    info!(logger, "Cache exists, loading...");
     let file = match File::open(cache_file_path) {
         Ok(file) => file,
         Err(err) => {
@@ -56,7 +56,7 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
             let cache_file_string = path_to_string(&cache_file_path)?;
 
             return Err(
-                UploadError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into(),
+                CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into(),
             );
         }
     };
@@ -64,33 +64,31 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
     let mut cache: Cache = match serde_json::from_reader(file) {
         Ok(cache) => cache,
         Err(err) => {
-            error!(sugar_config.logger, "Failed to parse cache file: {}", err);
-            return Err(UploadError::CacheFileWrongFormat(err.to_string()).into());
+            error!(logger, "Failed to parse cache file: {}", err);
+            return Err(CacheError::CacheFileWrongFormat(err.to_string()).into());
         }
     };
+
+    let config_data = get_config_data(&upload_args.config)?;
 
     let candy_machine_address = &cache.program.candy_machine;
 
     let candy_pubkey = if candy_machine_address.is_empty() {
         info!(
-            sugar_config.logger,
+            logger,
             "Candy machine address is empty, creating new candy machine..."
         );
         let candy_keypair = Keypair::generate(&mut OsRng);
         let candy_pubkey = candy_keypair.pubkey();
 
         let uuid = uuid_from_pubkey(&candy_pubkey);
-        let config_data = get_config_data(&upload_args.config)?;
         let metadata = get_metadata_from_first_json(&upload_args.assets_dir)?;
-        let candy_data = create_candy_machine_data(config_data, uuid, metadata)?;
+        let candy_data = create_candy_machine_data(&config_data, uuid, metadata)?;
 
         let sig = initialize_candy_machine(&sugar_config, &candy_keypair, candy_data)?;
-        debug!(
-            sugar_config.logger,
-            "Candy machine initialized with sig: {}", sig
-        );
+        info!(logger, "Candy machine initialized with sig: {}", sig);
         info!(
-            sugar_config.logger,
+            logger,
             "Candy machine created with address: {}",
             &candy_pubkey.to_string()
         );
@@ -103,10 +101,10 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
             Ok(pubkey) => pubkey,
             Err(_err) => {
                 error!(
-                    sugar_config.logger,
+                    logger,
                     "Invalid candy machine address in cache file: {}!", candy_machine_address
                 );
-                return Err(UploadError::InvalidCandyMachineAddress(
+                return Err(CacheError::InvalidCandyMachineAddress(
                     candy_machine_address.to_string(),
                 )
                 .into());
@@ -114,17 +112,16 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         }
     };
 
-    info!(sugar_config.logger, "Uploading config lines...");
-    let config_lines = generate_config_lines(&cache.items);
+    info!(logger, "Uploading config lines...");
+    let num_items = config_data.number;
+    let config_lines = generate_config_lines(num_items, &cache.items);
     let config_statuses = upload_config_lines(&sugar_config, config_lines, candy_pubkey)?;
-
     for status in config_statuses {
         let index: String = status.index.to_string();
         let mut item = cache.items.0.get_mut(&index).unwrap();
         item.on_chain = status.on_chain;
     }
 
-    // Update cache with config statuses and cm data
     cache.write_to_file(cache_file_path)?;
 
     Ok(())
@@ -138,31 +135,31 @@ fn get_metadata_from_first_json(assets_dir: &String) -> Result<Metadata> {
 }
 
 fn create_candy_machine_data(
-    config: ConfigData,
+    config: &ConfigData,
     uuid: String,
     metadata: Metadata,
 ) -> Result<CandyMachineData> {
     let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
 
-    let end_settings = if let Some(settings) = config.end_settings {
+    let end_settings = if let Some(settings) = &config.end_settings {
         Some(settings.into_candy_format())
     } else {
         None
     };
 
-    let whitelist_mint_settings = if let Some(settings) = config.whitelist_mint_settings {
+    let whitelist_mint_settings = if let Some(settings) = &config.whitelist_mint_settings {
         Some(settings.into_candy_format())
     } else {
         None
     };
 
-    let hidden_settings = if let Some(settings) = config.hidden_settings {
+    let hidden_settings = if let Some(settings) = &config.hidden_settings {
         Some(settings.into_candy_format())
     } else {
         None
     };
 
-    let gatekeeper = if let Some(gatekeeper) = config.gatekeeper {
+    let gatekeeper = if let Some(gatekeeper) = &config.gatekeeper {
         Some(gatekeeper.into_candy_format())
     } else {
         None
@@ -198,7 +195,7 @@ fn populate_cache_with_links(
     cache: &mut Cache,
     arloader_manifest: &ArloaderManifest,
 ) -> Result<()> {
-    let mut cache_items: CacheItems = CacheItems(HashMap::new());
+    let mut cache_items: CacheItems = CacheItems(IndexMap::new());
 
     for (key, value) in &arloader_manifest.0 {
         let name = key
@@ -237,14 +234,24 @@ fn _read_arloader_manifest(path: &String) -> Result<ArloaderManifest> {
     Ok(arloader_manifest)
 }
 
-fn generate_config_lines(cache_items: &CacheItems) -> Vec<ConfigLine> {
-    let mut config_lines: Vec<ConfigLine> = Vec::new();
+fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u32, ConfigLine)>> {
+    let mut config_lines: Vec<Vec<(u32, ConfigLine)>> = Vec::new();
 
-    for (_, value) in &cache_items.0 {
+    // Populate with empty chunks
+    for _ in 0..num_items {
+        config_lines.push(Vec::new());
+    }
+
+    for (key, value) in &cache_items.0 {
         let config_line = value.into_config_line();
 
+        let key = key.parse::<usize>().unwrap();
+
+        let chunk_index = key / CONFIG_CHUNK_SIZE;
+
         if config_line.is_some() {
-            config_lines.push(config_line.unwrap());
+            let chunk = config_lines.get_mut(chunk_index).unwrap();
+            chunk.push((key as u32, config_line.unwrap()));
         }
     }
 
@@ -311,11 +318,9 @@ fn initialize_candy_machine(
 
 fn upload_config_lines(
     sugar_config: &SugarConfig,
-    config_lines: Vec<ConfigLine>,
+    config_lines: Vec<Vec<(u32, ConfigLine)>>,
     candy_pubkey: Pubkey,
 ) -> Result<Vec<ConfigStatus>> {
-    let index: Arc<Mutex<u32>> = Arc::new(Mutex::new(0));
-
     let payer = Arc::new(&sugar_config.keypair);
     let logger = &sugar_config.logger;
 
@@ -329,41 +334,35 @@ fn upload_config_lines(
     );
 
     println!("Config lines: {:?}", config_lines.len());
-    info!(logger, "Uploading config lines chunks...");
+    info!(logger, "Uploading config lines in chunks...");
     config_lines
         .par_iter()
-        .chunks(CONFIG_CHUNK_SIZE)
+        // .chunks(CONFIG_CHUNK_SIZE)
         .progress()
         .for_each(|chunk| {
-            let index = index.clone();
-            let statuses = statuses.clone();
+            // Skip empty chunks
+            if chunk.len() == 0 {
+                return;
+            }
 
-            let temp_index = {
-                let mut i = index.lock().unwrap();
-                let temp_index = *i;
-                debug!(logger, "Writing index: {}", temp_index);
-                *i += chunk.len() as u32;
-                temp_index
-            };
+            let statuses = statuses.clone();
 
             let payer = Arc::clone(&payer);
 
-            let chunk_len = chunk.len();
-
-            match add_config_lines(sugar_config, &candy_pubkey, payer, temp_index, chunk) {
+            match add_config_lines(sugar_config, &candy_pubkey, payer, &chunk) {
                 Ok(_) => {
-                    for index in temp_index..(temp_index + chunk_len as u32) {
+                    for (index, _) in chunk {
                         let _statuses = statuses.lock().unwrap().push(ConfigStatus {
-                            index,
+                            index: *index as u32,
                             on_chain: true,
                         });
                     }
                 }
                 Err(e) => {
                     println!("{}", e);
-                    for index in temp_index..(temp_index + chunk_len as u32 as u32) {
+                    for (index, _) in chunk {
                         let _statuses = statuses.lock().unwrap().push(ConfigStatus {
-                            index,
+                            index: *index as u32,
                             on_chain: false,
                         });
                     }
@@ -384,9 +383,7 @@ fn add_config_lines(
     sugar_config: &SugarConfig,
     candy_pubkey: &Pubkey,
     payer: Arc<&Keypair>,
-    index: u32,
-    // config_slices: &[ConfigLine],
-    config_slices: Vec<&ConfigLine>,
+    chunk: &Vec<(u32, ConfigLine)>,
 ) -> Result<()> {
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
@@ -399,14 +396,22 @@ fn add_config_lines(
     // ConfigLine does not implement Clone, so we have to do this.
     let mut config_lines: Vec<ConfigLine> = Vec::new();
 
-    for line in config_slices {
+    // First index
+    let index = chunk[0].0;
+    // let (index, config_line) = config_pair;
+
+    for (_, line) in chunk {
         config_lines.push(ConfigLine {
             name: line.name.clone(),
             uri: line.uri.clone(),
         });
     }
+    // config_lines.push(ConfigLine {
+    //     name: config_line.name.clone(),
+    //     uri: config_line.uri.clone(),
+    // });
 
-    let sig = program
+    let _sig = program
         .request()
         .accounts(nft_accounts::AddConfigLines {
             candy_machine: *candy_pubkey,
@@ -418,7 +423,6 @@ fn add_config_lines(
         })
         .signer(*payer)
         .send()?;
-    debug!(sugar_config.logger, "add_config_line sig: {sig}");
 
     Ok(())
 }

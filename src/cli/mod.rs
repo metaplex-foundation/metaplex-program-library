@@ -97,4 +97,19 @@ pub enum Commands {
         #[clap(long)]
         strict: bool,
     },
+
+    /// Verify uploaded data
+    Verify {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = "cache.json")]
+        cache: String,
+    },
 }

@@ -19,6 +19,7 @@ use sugar::setup::sugar_setup;
 use sugar::upload::{process_upload, UploadArgs};
 use sugar::upload_assets::{process_upload_assets, UploadAssetsArgs};
 use sugar::validate::{process_validate, ValidateArgs};
+use sugar::verify::{process_verify, VerifyArgs};
 use sugar::withdraw::{process_withdraw, WithdrawArgs};
 
 pub fn default_candy_data() -> CandyMachineData {
@@ -61,7 +62,7 @@ fn setup_logging() -> Logger {
 #[tokio::main(worker_threads = 4)]
 async fn main() -> Result<()> {
     let logger = setup_logging();
-    // info!(logger, "Lend me some sugar, I am your neighbor.");
+    info!(logger, "Lend me some sugar, I am your neighbor.");
 
     let cli = Cli::parse();
 
@@ -119,6 +120,16 @@ async fn main() -> Result<()> {
             candy_machine,
             keypair,
             rpc_url,
+        })?,
+        Commands::Verify {
+            keypair,
+            rpc_url,
+            cache,
+        } => process_verify(VerifyArgs {
+            logger,
+            keypair,
+            rpc_url,
+            cache,
         })?,
     }
 

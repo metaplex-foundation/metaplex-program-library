@@ -4,7 +4,6 @@ use std::{fs::File, sync::Arc};
 
 use crate::cache::Cache;
 use crate::common::*;
-use crate::setup::*;
 use crate::upload_assets::*;
 
 pub struct UploadAssetsArgs {
@@ -126,7 +125,7 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
         Cache::new()
     };
 
-    let mut items = HashMap::new();
+    let mut items = IndexMap::new();
 
     for (key, value) in asset_pairs {
         items.insert(key.to_string(), value.into_cache_item());

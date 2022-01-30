@@ -2029,6 +2029,7 @@ checksum = "282a6247722caba404c065016bbfa522806e51714c34f5dfc3e4a3a46fcb4223"
 dependencies = [
  "autocfg",
  "hashbrown",
+ "serde 1.0.136",
 ]
 
 [[package]]
@@ -4411,6 +4412,7 @@ dependencies = [
  "clap 3.0.13",
  "futures",
  "glob",
+ "indexmap",
  "indicatif",
  "mpl-candy-machine",
  "mpl-token-metadata",

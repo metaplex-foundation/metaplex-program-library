@@ -1,11 +1,12 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs, io::Write, path::Path};
+use std::{fs, io::Write, path::Path};
 
 use mpl_candy_machine::ConfigLine;
 
 use crate::candy_machine::uuid_from_pubkey;
+use crate::common::*;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cache {
@@ -60,11 +61,11 @@ impl CacheProgram {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct CacheItems(pub HashMap<String, CacheItem>);
+pub struct CacheItems(pub IndexMap<String, CacheItem>);
 
 impl CacheItems {
     pub fn new() -> Self {
-        CacheItems(HashMap::new())
+        CacheItems(IndexMap::new())
     }
 }
 
