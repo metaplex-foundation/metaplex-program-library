@@ -801,6 +801,15 @@ fn process_transfer_chunk_slow(
         buffer_idx += 32;
     }
 
+    // check identity
+    use curve25519_dalek_onchain::traits::Identity;
+    let expected_bytes = curve25519_dalek_onchain::edwards::EdwardsPoint::identity().to_bytes();
+    let found_bytes = &input_buffer_data[buffer_idx..buffer_idx+128];
+    if *found_bytes != expected_bytes {
+        msg!("Mismatched proof statement identity");
+        return Err(ProgramError::InvalidArgument);
+    }
+
     solana_program::log::sol_log_compute_units();
 
     // check that multiplication results are correct
