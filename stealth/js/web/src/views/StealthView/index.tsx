@@ -17,6 +17,7 @@ import {
   Connection,
   Keypair,
   PublicKey,
+  SignatureStatus,
   Transaction,
   TransactionInstruction,
   TransactionSignature,
@@ -51,6 +52,7 @@ import {
 } from "../../contexts/WasmContext";
 import {
   notify,
+  sleep,
   useLocalStorageState,
 } from '../../utils/common';
 import {
@@ -558,21 +560,28 @@ const WaitingOverlay = (props: {
         />
         <Step
           className={'white-description'}
-          title="Validating transfer encryption"
+          title="Sending transfer encryption"
           description=
             {step === 3 && <Progress percent={substep} />}
           icon={setIconForStep(step, 3)}
         />
         <Step
           className={'white-description'}
-          title="Finalizing transfer"
+          title="Confirming transfer encryption"
+          description=
+            {step === 4 && <Progress percent={substep} />}
           icon={setIconForStep(step, 4)}
+        />
+        <Step
+          className={'white-description'}
+          title="Finalizing transfer"
+          icon={setIconForStep(step, 5)}
         />
         <Step
           className={'white-description'}
           title="Waiting for Final Confirmation"
           description="This will take a few seconds."
-          icon={setIconForStep(step, 5)}
+          icon={setIconForStep(step, 6)}
         />
       </Steps>
     </MetaplexModal>
@@ -616,7 +625,7 @@ export const StealthView = (
   const [recipientPubkeyStr, setRecipientPubkey]
     = useLocalStorageState('recipientPubkey', '');
   const [instructionBuffer, setInstructionBuffer]
-    = useLocalStorageState('instructionBuffer', '4huNP6jLbA9FGwHhMbjYQFP57ZmH1y4xa3ipAJ7mERNM');
+    = useLocalStorageState('instructionBuffer', '4X5dmqKWQojDNAqgV3JToRa5uCDFwijSMWj8zHDXpQ9g');
   const [inputBuffer, setInputBuffer]
     = useLocalStorageState('inputBuffer', '');
   const [computeBuffer, setComputeBuffer]
@@ -845,6 +854,8 @@ export const StealthView = (
       ));
     }
 
+  // 'skip' step 4 of confirming...
+
     transferTxns.push({
       transaction: buildTransaction(
         walletKey,
@@ -858,15 +869,42 @@ export const StealthView = (
         [],
         recentBlockhash
       ),
-      progress: { step: 4 },
+      progress: { step: 5 },
     });
 
     console.log('Singing transactions...');
     let lastProgress: TransferProgress = { step: 1 };
+    let crankTransactions = 0;
+    let setupCrankTransactions = 2;
+    let pendingCrankSignatures: Array<string> = [];
     setTransferProgress(lastProgress);
     const signedTxns = await wallet.signAllTransactions(transferTxns.map(t => t.transaction));
     for (let i = 0; i < signedTxns.length; ++i) {
       const curProgress = transferTxns[i].progress;
+
+      // bespoke crank handling
+      if (curProgress.step === 5 && pendingCrankSignatures.length > 0) {
+        while (true) {
+          const statuses = await connection.getSignatureStatuses(pendingCrankSignatures);
+          console.log('Waiting on confirmations for', pendingCrankSignatures, statuses);
+          const confirmedSigs = statuses.value.filter((v: null | SignatureStatus) => {
+            if (v === null) return false;
+            return v.confirmationStatus === "confirmed";
+          }).length;
+
+          setTransferProgress({
+            step: 4,
+            substep: Math.floor((confirmedSigs + setupCrankTransactions) * 100 / crankTransactions),
+          });
+
+          if (confirmedSigs === pendingCrankSignatures.length) {
+            break;
+          }
+          await sleep(1000);
+        }
+        pendingCrankSignatures = [];
+      }
+
       if (curProgress.step != lastProgress.step
           || curProgress.substep != lastProgress.substep) {
         lastProgress = curProgress;
@@ -880,15 +918,25 @@ export const StealthView = (
         },
       );
 
+      // bespoke crank handling
+      if (curProgress.step === 3) {
+        crankTransactions += 1;
+        if (crankTransactions > setupCrankTransactions) {
+          console.log('Deferring wait for', resultTxid);
+          pendingCrankSignatures.push(resultTxid);
+          continue;
+        }
+      }
+
       console.log('Waiting on confirmations for', resultTxid);
 
       let confirmed;
       if (i < signedTxns.length - 1) {
         confirmed = await connection.confirmTransaction(resultTxid, 'confirmed');
       } else {
-        lastProgress = { step: 6 };
-        setTransferProgress(lastProgress);
+        setTransferProgress({ step: 6 });
         confirmed = await connection.confirmTransaction(resultTxid, 'finalized');
+        setTransferProgress({ step: 7 });
       }
 
       console.log(confirmed);
@@ -983,10 +1031,11 @@ export const StealthView = (
     </React.Fragment>
   );
 
+  if (publicImageManifest === null) {
+    return null;
+  }
+
   if (privateImageManifest === null) {
-    if (publicImageManifest === null) {
-      return null;
-    }
     return publicPreviewC();
   }
 
