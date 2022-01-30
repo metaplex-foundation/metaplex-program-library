@@ -862,7 +862,7 @@ dependencies = [
 [[package]]
 name = "curve25519-dalek-onchain"
 version = "0.0.1"
-source = "git+https://github.com/lwus/curve25519-dalek-onchain#d1b6e08fa1fdf56eac5d9f1b56b882950099171b"
+source = "git+https://github.com/lwus/curve25519-dalek-onchain#93c50c7a7d715a970633aedde8924d72b3e578fc"
 dependencies = [
  "borsh 0.9.1",
  "bytemuck",
