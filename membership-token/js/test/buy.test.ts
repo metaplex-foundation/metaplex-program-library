@@ -1,13 +1,12 @@
 import BN from 'bn.js';
 import test from 'tape';
 import {
-  Actions,
   airdrop,
   assertConfirmedTransaction,
   defaultSendOptions,
   PayerTransactionHandler,
 } from '@metaplex-foundation/amman';
-import { Connection, Keypair, Transaction } from '@solana/web3.js';
+import { Connection, Keypair } from '@solana/web3.js';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
 
 import {
