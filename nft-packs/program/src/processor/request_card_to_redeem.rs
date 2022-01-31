@@ -86,18 +86,7 @@ pub fn request_card_for_redeem(
         edition_mint_account.key.as_ref(),
     ];
     let bump_seed = assert_derivation(program_id, proving_process_account, proving_process_seeds)?;
-
-    let mut proving_process = get_proving_process_data(
-        program_id,
-        proving_process_account,
-        user_wallet_account,
-        &user_token_account,
-        edition_mint_account,
-        pack_set_account.key,
-        proving_process_seeds,
-        bump_seed,
-        rent,
-    )?;
+    let voucher = PackVoucher::unpack(&voucher_account.data.borrow_mut())?;
 
     assert_derivation(
         program_id,
@@ -109,7 +98,6 @@ pub fn request_card_for_redeem(
         ],
     )?;
 
-    let voucher = PackVoucher::unpack(&voucher_account.data.borrow_mut())?;
     assert_account_key(pack_set_account, &voucher.pack_set)?;
 
     assert_derivation(
@@ -144,6 +132,18 @@ pub fn request_card_for_redeem(
             }
         }
     }
+
+    let mut proving_process = get_proving_process_data(
+        program_id,
+        proving_process_account,
+        user_wallet_account,
+        &user_token_account,
+        edition_mint_account,
+        pack_set_account.key,
+        proving_process_seeds,
+        bump_seed,
+        rent,
+    )?;
 
     assert_account_key(pack_set_account, &proving_process.pack_set)?;
     assert_account_key(edition_mint_account, &proving_process.voucher_mint)?;
