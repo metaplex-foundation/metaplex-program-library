@@ -18,8 +18,8 @@ export class Collection extends Borsh.Data<Args> {
 }
 
 type CollectionAuthorityRecordArgs = { bump: number };
-export class UseAuthorityRecord extends Borsh.Data<CollectionAuthorityRecordArgs> {
-  static readonly SCHEMA = UseAuthorityRecord.struct([
+export class CollctionAuthorityRecord extends Borsh.Data<CollectionAuthorityRecordArgs> {
+  static readonly SCHEMA = CollctionAuthorityRecord.struct([
     ['key', 'u8'],
     ['bump', 'u8'],
   ]);
