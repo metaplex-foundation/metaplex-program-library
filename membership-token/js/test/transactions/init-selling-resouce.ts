@@ -52,7 +52,6 @@ export const createInitSellingResourceTransaction = async ({
 
   const initSellingResourceTx = await createAndSignTransaction(instruction, connection, payer, [
     sellingResource,
-    vault,
   ]);
 
   return {

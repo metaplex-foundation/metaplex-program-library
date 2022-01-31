@@ -4,6 +4,7 @@ import { clusterApiUrl } from '@solana/web3.js';
 import { LOCALHOST } from '@metaplex-foundation/amman';
 
 export * from './address-labels';
+export { sleep } from './sleep';
 export { createAndSignTransaction } from './createAndSignTx';
 
 export const logError = debug('mpl:tm-test:error');

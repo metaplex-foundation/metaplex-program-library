@@ -130,7 +130,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     {
       pubkey: vault,
       isWritable: true,
-      isSigner: true,
+      isSigner: false,
     },
     {
       pubkey: owner,
