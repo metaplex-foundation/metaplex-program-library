@@ -11,9 +11,7 @@ use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 use rand::rngs::OsRng;
 use slog::*;
-use spl_associated_token_account::{
-    create_associated_token_account, get_associated_token_address
-};
+use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
     instruction::{initialize_mint, mint_to},
     ID as TOKEN_PROGRAM_ID,
@@ -27,8 +25,8 @@ use mpl_candy_machine::{CandyMachine, WhitelistMintMode, ID as CANDY_MACHINE_PRO
 use crate::cache::Cache;
 use crate::candy_machine::*;
 use crate::constants::*;
-use crate::setup::*;
 use crate::mint::pdas::*;
+use crate::setup::*;
 
 const MINT_LAYOUT: u64 = 82;
 
@@ -197,18 +195,21 @@ pub fn mint_one(
     }
 
     if let Some(token_mint) = candy_machine_state.token_mint {
-        let transfer_authority =Keypair::generate(&mut OsRng);
-
+        let transfer_authority = Keypair::generate(&mut OsRng);
 
         let user_paying_account_address = get_ata_for_mint(&token_mint, &payer);
 
         additional_accounts.push(AccountMeta {
             pubkey: user_paying_account_address.clone(),
             is_signer: false,
-            is_writable:true
+            is_writable: true,
         });
 
-        additional_accounts.push(AccountMeta {pubkey: transfer_authority.pubkey(), is_signer: true, is_writable: false});
+        additional_accounts.push(AccountMeta {
+            pubkey: transfer_authority.pubkey(),
+            is_signer: true,
+            is_writable: false,
+        });
 
         let ata_exists = !program.rpc().get_account_data(&token_mint)?.is_empty();
 
@@ -219,7 +220,7 @@ pub fn mint_one(
                 &transfer_authority.pubkey(),
                 &payer,
                 &[],
-                candy_machine_data.price
+                candy_machine_data.price,
             )?;
             let revoke_ix = spl_token::instruction::revoke(
                 &TOKEN_PROGRAM_ID,
@@ -232,14 +233,13 @@ pub fn mint_one(
             cleanup_instructions.push(revoke_ix);
         }
 
-
         additional_signers.push(transfer_authority);
     }
 
-    let metadata_pda = get_metadata_pda(&nft_mint.pubkey())?;
-    let master_edition_pda = get_master_edition_pda(&nft_mint.pubkey())?;
+    let metadata_pda = get_metadata_pda(&nft_mint.pubkey());
+    let master_edition_pda = get_master_edition_pda(&nft_mint.pubkey());
     let (candy_machine_creator_pda, creator_bump) =
-        get_candy_machine_creator_pda(&candy_machine_id)?;
+        get_candy_machine_creator_pda(&candy_machine_id);
 
     let mut builder = program
         .request()

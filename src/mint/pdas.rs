@@ -1,16 +1,9 @@
-use anchor_client::solana_sdk::{
-    pubkey::Pubkey,
-};
-use anyhow::Result;
+use anchor_client::solana_sdk::pubkey::Pubkey;
 
+use mpl_candy_machine::ID as CANDY_MACHINE_PROGRAM_ID;
 use mpl_token_metadata::ID as TOKEN_METADATA_ID;
-use mpl_candy_machine::{ ID as CANDY_MACHINE_PROGRAM_ID};
-use spl_associated_token_account::{
-    ID as ASSOCIATED_TOKEN_PROGRAM_ID,
-};
-use spl_token::{
-    ID as TOKEN_PROGRAM_ID,
-};
+use spl_associated_token_account::ID as ASSOCIATED_TOKEN_PROGRAM_ID;
+use spl_token::ID as TOKEN_PROGRAM_ID;
 
 pub fn get_ata_for_mint(mint: &Pubkey, buyer: &Pubkey) -> Pubkey {
     let seeds: &[&[u8]] = &[
@@ -22,7 +15,7 @@ pub fn get_ata_for_mint(mint: &Pubkey, buyer: &Pubkey) -> Pubkey {
     pda
 }
 
-pub fn get_metadata_pda(mint: &Pubkey) -> Result<Pubkey> {
+pub fn get_metadata_pda(mint: &Pubkey) -> Pubkey {
     // Derive metadata account
     let metadata_seeds = &[
         "metadata".as_bytes(),
@@ -31,10 +24,10 @@ pub fn get_metadata_pda(mint: &Pubkey) -> Result<Pubkey> {
     ];
     let (pda, _bump) = Pubkey::find_program_address(metadata_seeds, &TOKEN_METADATA_ID);
 
-    Ok(pda)
+    pda
 }
 
-pub fn get_master_edition_pda(mint: &Pubkey) -> Result<Pubkey> {
+pub fn get_master_edition_pda(mint: &Pubkey) -> Pubkey {
     // Derive Master Edition account
     let master_edition_seeds = &[
         "metadata".as_bytes(),
@@ -44,15 +37,12 @@ pub fn get_master_edition_pda(mint: &Pubkey) -> Result<Pubkey> {
     ];
     let (pda, _bump) = Pubkey::find_program_address(master_edition_seeds, &TOKEN_METADATA_ID);
 
-    Ok(pda)
+    pda
 }
 
-pub fn get_candy_machine_creator_pda(candy_machine_id: &Pubkey) -> Result<(Pubkey, u8)> {
+pub fn get_candy_machine_creator_pda(candy_machine_id: &Pubkey) -> (Pubkey, u8) {
     // Derive metadata account
     let creator_seeds = &["candy_machine".as_bytes(), &candy_machine_id.as_ref()];
 
-    Ok(Pubkey::find_program_address(
-        creator_seeds,
-        &CANDY_MACHINE_PROGRAM_ID,
-    ))
+    Pubkey::find_program_address(creator_seeds, &CANDY_MACHINE_PROGRAM_ID)
 }
