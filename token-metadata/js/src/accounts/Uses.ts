@@ -1,5 +1,5 @@
 import { Borsh } from '@metaplex-foundation/mpl-core';
-import {MetadataKey, UseMethod} from '.';
+import { MetadataKey, UseMethod } from '.';
 
 type UsesArgs = { useMethod: UseMethod; total: number; remaining: number };
 export class Uses extends Borsh.Data<UsesArgs> {
@@ -20,7 +20,7 @@ export class Uses extends Borsh.Data<UsesArgs> {
   }
 }
 
-type UseAuthorityRecordArgs = {key: MetadataKey; allowedUses: number; bump: number; };
+type UseAuthorityRecordArgs = { allowedUses: number; bump: number };
 export class UseAuthorityRecord extends Borsh.Data<UseAuthorityRecordArgs> {
   static readonly SCHEMA = UseAuthorityRecord.struct([
     ['key', 'u8'],
@@ -33,7 +33,7 @@ export class UseAuthorityRecord extends Borsh.Data<UseAuthorityRecordArgs> {
 
   constructor(args: UseAuthorityRecordArgs) {
     super(args);
-    this.key = args.key;
+    this.key = MetadataKey.UseAuthorityRecord;
     this.allowedUses = args.allowedUses;
     this.bump = args.bump;
   }

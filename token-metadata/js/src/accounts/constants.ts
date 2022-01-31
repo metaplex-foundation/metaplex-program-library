@@ -6,7 +6,7 @@ export enum MetadataKey {
   MasterEditionV2 = 6,
   EditionMarker = 7,
   UseAuthorityRecord = 8,
-  CollectionAuthorityRecord = 9
+  CollectionAuthorityRecord = 9,
 }
 
 export enum UseMethod {

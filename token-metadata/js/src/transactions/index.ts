@@ -8,7 +8,7 @@ export * from './UpdateMetadataV2';
 export * from './CreateMetadataV2';
 export * from './CreateMasterEditionV3';
 export * from './VerifyCollection';
-export * from './UnVerifyCollection';
+export * from './UnverifyCollection';
 export * from './SignMetadata';
 export * from './SetAndVerifyCollection';
 export * from './ApproveUseAuthority';
