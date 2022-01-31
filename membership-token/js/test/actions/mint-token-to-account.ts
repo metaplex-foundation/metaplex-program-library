@@ -21,14 +21,13 @@ export const mintTokenToAccount = async ({
 
   tx.add(createMintTx);
 
-  const { tokenAccount: associatedTokenAccount, createTokenTx: createAtaTx } =
-    await createTokenAccount({
-      payer,
-      mint: mint.publicKey,
-      connection,
-    });
+  const { tokenAccount: associatedTokenAccount, createTokenTx } = await createTokenAccount({
+    payer,
+    mint: mint.publicKey,
+    connection,
+  });
 
-  tx.add(createAtaTx);
+  tx.add(createTokenTx);
 
   tx.add(
     Token.createMintToInstruction(
