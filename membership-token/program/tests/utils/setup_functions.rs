@@ -5,17 +5,19 @@ use super::helpers::{
     mint_to,
 };
 use anchor_lang::{InstructionData, ToAccountMetas};
-use chrono::NaiveDate;
 use mpl_membership_token::{
     accounts as mpl_membership_token_accounts, instruction as mpl_membership_token_instruction,
     utils::{find_treasury_owner_address, find_vault_owner_address},
 };
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
-    instruction::Instruction, signature::Keypair, signer::Signer, system_program, sysvar,
+    instruction::Instruction,
+    signature::Keypair,
+    signer::Signer,
+    system_program,
+    sysvar::{self, clock::Clock},
     transaction::Transaction,
 };
-use std::time::SystemTime;
 
 /// Seup Program Test Context
 #[macro_export]
@@ -240,11 +242,13 @@ pub async fn setup_market(
     )
     .await;
 
-    let start_date = std::time::SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
+    let start_date = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
         .unwrap()
-        .as_secs()
-        + 5;
+        .unix_timestamp
+        + 1;
 
     let name = "Marktname".to_string();
     let description = "Marktbeschreibung".to_string();
@@ -271,7 +275,7 @@ pub async fn setup_market(
         mutable,
         price,
         pieces_in_one_wallet,
-        start_date,
+        start_date: start_date as u64,
         end_date: None,
     }
     .data();

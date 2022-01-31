@@ -2,15 +2,11 @@ mod utils;
 
 #[cfg(feature = "test-bpf")]
 mod create_market {
-    use std::time::SystemTime;
-
     use crate::utils::{
         helpers::{create_mint, create_token_account},
         setup_functions::{setup_market, setup_selling_resource, setup_store},
     };
     use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-    use solana_program_test::*;
-
     use mpl_membership_token::{
         accounts as mpl_membership_token_accounts, instruction as mpl_membership_token_instruction,
         state::{Market, MarketState},
@@ -18,9 +14,10 @@ mod create_market {
             find_treasury_owner_address, puffed_out_string, DESCRIPTION_MAX_LEN, NAME_MAX_LEN,
         },
     };
+    use solana_program_test::*;
     use solana_sdk::{
         instruction::Instruction, signature::Keypair, signer::Signer, system_program,
-        transaction::Transaction, transport::TransportError,
+        sysvar::clock::Clock, transaction::Transaction, transport::TransportError,
     };
 
     use crate::setup_context;
@@ -66,11 +63,13 @@ mod create_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .as_secs()
-            + 5;
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -97,7 +96,7 @@ mod create_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -237,11 +236,13 @@ mod create_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .as_secs()
-            + 5;
+            .unix_timestamp
+            + 1;
 
         // name is longer than allowed
         let name = String::from("123456789_123456789_123456789_123456789_1");
@@ -269,7 +270,7 @@ mod create_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -341,11 +342,13 @@ mod create_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .as_secs()
-            + 5;
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         // description is longer than allowed
@@ -375,7 +378,7 @@ mod create_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -448,11 +451,13 @@ mod create_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .as_secs()
-            + 5;
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -480,7 +485,7 @@ mod create_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -542,11 +547,13 @@ mod create_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .as_secs()
-            - 3600;
+            .unix_timestamp
+            - 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -574,7 +581,7 @@ mod create_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -640,11 +647,13 @@ mod create_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .as_secs()
-            + 5;
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -672,7 +681,7 @@ mod create_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -731,11 +740,13 @@ mod create_market {
 
         let treasury_holder_keypair = Keypair::new();
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .as_secs()
-            + 5;
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -763,7 +774,7 @@ mod create_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -836,13 +847,15 @@ mod create_market {
         )
         .await;
 
-        let start_date = std::time::SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .as_secs()
-            + 3600;
+            .unix_timestamp
+            + 1;
 
-        let end_date = start_date - 60;
+        let end_date = start_date - 2;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -870,8 +883,8 @@ mod create_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
-            end_date: Some(end_date),
+            start_date: start_date as u64,
+            end_date: Some(end_date as u64),
         }
         .data();
 

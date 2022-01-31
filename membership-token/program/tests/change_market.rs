@@ -5,7 +5,7 @@ mod change_market {
     use crate::{
         setup_context,
         utils::{
-            helpers::{create_mint, create_token_account, wait},
+            helpers::{create_mint, create_token_account},
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
@@ -69,9 +69,13 @@ mod change_market {
         )
         .await;
 
-        let start_date = chrono::Utc::now()
-            .checked_add_signed(chrono::Duration::seconds(5))
-            .unwrap();
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -99,7 +103,7 @@ mod change_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date: start_date.timestamp() as u64,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -123,7 +127,8 @@ mod change_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, chrono::Duration::seconds(6)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // SuspendMarket
         let accounts = mpl_membership_token_accounts::SuspendMarket {
@@ -244,9 +249,13 @@ mod change_market {
         )
         .await;
 
-        let start_date = chrono::Utc::now()
-            .checked_add_signed(chrono::Duration::seconds(5))
-            .unwrap();
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -274,7 +283,7 @@ mod change_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date: start_date.timestamp() as u64,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -298,7 +307,8 @@ mod change_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, chrono::Duration::seconds(6)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // SuspendMarket
         let accounts = mpl_membership_token_accounts::SuspendMarket {
@@ -440,12 +450,15 @@ mod change_market {
         )
         .await;
 
-        let start_date = chrono::Utc::now()
-            .checked_add_signed(chrono::Duration::seconds(5))
-            .unwrap();
-        let end_date = start_date
-            .checked_add_signed(chrono::Duration::seconds(5))
-            .unwrap();
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
+
+        let end_date = start_date + 2;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -473,8 +486,8 @@ mod change_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date: start_date.timestamp() as u64,
-            end_date: Some(end_date.timestamp() as u64),
+            start_date: start_date as u64,
+            end_date: Some(end_date as u64),
         }
         .data();
 
@@ -500,7 +513,8 @@ mod change_market {
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
 
-        wait(&mut context, chrono::Duration::seconds(6)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // SuspendMarket
         let accounts = mpl_membership_token_accounts::SuspendMarket {
@@ -530,7 +544,8 @@ mod change_market {
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
 
-        wait(&mut context, chrono::Duration::seconds(3)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // ChangeMarket
         let accounts = mpl_membership_token_accounts::ChangeMarket {

@@ -5,12 +5,11 @@ mod buy {
     use crate::{
         setup_context,
         utils::{
-            helpers::{airdrop, create_mint, create_token_account, mint_to, wait},
+            helpers::{airdrop, create_mint, create_token_account, mint_to},
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
     use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-    use chrono::{Duration, Utc};
     use mpl_membership_token::{
         accounts as mpl_membership_token_accounts, instruction as mpl_membership_token_instruction,
         state::{SellingResource, TradeHistory},
@@ -74,7 +73,13 @@ mod buy {
         )
         .await;
 
-        let start_date = Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -102,7 +107,7 @@ mod buy {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -126,7 +131,8 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, Duration::seconds(2)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // Buy setup
         let selling_resource_data = context
@@ -337,7 +343,13 @@ mod buy {
         let (treasury_owner, treasyry_owner_bump) =
             find_treasury_owner_address(&treasury_mint, &selling_resource_keypair.pubkey());
 
-        let start_date = Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -365,7 +377,7 @@ mod buy {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -389,7 +401,8 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, Duration::seconds(2)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // Buy setup
         let selling_resource_data = context
@@ -603,10 +616,13 @@ mod buy {
         )
         .await;
 
-        let start_date = Utc::now()
-            .checked_add_signed(Duration::hours(1))
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .timestamp() as u64;
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -634,7 +650,7 @@ mod buy {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -870,11 +886,15 @@ mod buy {
         )
         .await;
 
-        let start_date = Utc::now().timestamp() as u64;
-        let end_date = Utc::now()
-            .checked_add_signed(Duration::seconds(2))
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
             .unwrap()
-            .timestamp() as u64;
+            .unix_timestamp
+            + 1;
+
+        let end_date = start_date + 2;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -902,8 +922,8 @@ mod buy {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
-            end_date: Some(end_date),
+            start_date: start_date as u64,
+            end_date: Some(end_date as u64),
         }
         .data();
 
@@ -926,7 +946,8 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, Duration::seconds(3)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 3000).unwrap();
 
         // Buy setup
         let selling_resource_data = context
@@ -1140,7 +1161,13 @@ mod buy {
         )
         .await;
 
-        let start_date = Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -1168,7 +1195,7 @@ mod buy {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -1192,7 +1219,8 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, Duration::seconds(3)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // Buy setup
         let selling_resource_data = context
@@ -1431,7 +1459,13 @@ mod buy {
         )
         .await;
 
-        let start_date = Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -1459,7 +1493,7 @@ mod buy {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -1483,7 +1517,8 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, chrono::Duration::seconds(1)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // Buy setup
         let selling_resource_data = context
@@ -1722,7 +1757,13 @@ mod buy {
         )
         .await;
 
-        let start_date = Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -1750,7 +1791,7 @@ mod buy {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -1774,7 +1815,8 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, Duration::seconds(2)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // Buy setup
         let selling_resource_data = context
@@ -2000,7 +2042,13 @@ mod buy {
         )
         .await;
 
-        let start_date = Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -2028,7 +2076,7 @@ mod buy {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -2052,7 +2100,8 @@ mod buy {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, Duration::seconds(2)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // Buy setup
         let selling_resource_data = context

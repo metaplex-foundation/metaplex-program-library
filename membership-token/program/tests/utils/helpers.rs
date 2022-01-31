@@ -1,15 +1,13 @@
 #![allow(unused)]
 
-use std::convert::TryFrom;
-
 use anchor_client::solana_sdk::{
     pubkey::Pubkey,
     signer::{keypair::Keypair, Signer},
 };
-use chrono::{Duration, Utc};
 use solana_program::{clock::Clock, system_instruction};
 use solana_program_test::*;
 use solana_sdk::{program_pack::Pack, transaction::Transaction};
+use std::convert::TryFrom;
 
 pub async fn mint_to(
     context: &mut ProgramTestContext,
@@ -192,29 +190,6 @@ pub async fn create_token_metadata(
     context.banks_client.process_transaction(tx).await.unwrap();
 
     metadata
-}
-
-pub async fn wait(context: &mut ProgramTestContext, duration: Duration) {
-    let start_time = context
-        .banks_client
-        .get_sysvar::<Clock>()
-        .await
-        .unwrap()
-        .unix_timestamp;
-
-    let end_time = chrono::NaiveDateTime::from_timestamp(start_time, 0)
-        .checked_add_signed(duration)
-        .unwrap()
-        .timestamp();
-
-    loop {
-        let last_clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
-        if last_clock.unix_timestamp >= end_time {
-            break;
-        }
-
-        context.warp_to_slot(last_clock.slot + 100);
-    }
 }
 
 pub async fn airdrop(context: &mut ProgramTestContext, receiver: &Pubkey, amount: u64) {

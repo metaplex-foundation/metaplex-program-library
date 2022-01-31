@@ -5,12 +5,11 @@ mod claim_resource {
     use crate::{
         setup_context,
         utils::{
-            helpers::{airdrop, create_mint, create_token_account, mint_to, wait},
+            helpers::{airdrop, create_mint, create_token_account, mint_to},
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
     use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-    use chrono::{Duration, Utc};
     use mpl_membership_token::{
         accounts as mpl_membership_token_accounts, instruction as mpl_membership_token_instruction,
         state::SellingResource,
@@ -75,7 +74,13 @@ mod claim_resource {
         )
         .await;
 
-        let start_date = Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -103,7 +108,7 @@ mod claim_resource {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -127,7 +132,8 @@ mod claim_resource {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, Duration::seconds(2)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // Buy setup
         let selling_resource_data = context
@@ -462,7 +468,13 @@ mod claim_resource {
         )
         .await;
 
-        let start_date = Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -490,7 +502,7 @@ mod claim_resource {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -514,7 +526,8 @@ mod claim_resource {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, Duration::seconds(2)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // Buy setup
         let selling_resource_data = context

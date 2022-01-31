@@ -5,7 +5,7 @@ mod close_market {
     use crate::{
         setup_context,
         utils::{
-            helpers::{create_mint, create_token_account, wait},
+            helpers::{create_mint, create_token_account},
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
@@ -17,8 +17,13 @@ mod close_market {
     };
     use solana_program_test::*;
     use solana_sdk::{
-        instruction::Instruction, signature::Keypair, signer::Signer, system_program, sysvar,
-        transaction::Transaction, transport::TransportError,
+        instruction::Instruction,
+        signature::Keypair,
+        signer::Signer,
+        system_program,
+        sysvar::{self, clock::Clock},
+        transaction::Transaction,
+        transport::TransportError,
     };
 
     #[tokio::test]
@@ -62,7 +67,13 @@ mod close_market {
         )
         .await;
 
-        let start_date = chrono::Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -90,7 +101,7 @@ mod close_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
+            start_date: start_date as u64,
             end_date: None,
         }
         .data();
@@ -114,7 +125,8 @@ mod close_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, chrono::Duration::seconds(1)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // CloseMarket
         let accounts = mpl_membership_token_accounts::CloseMarket {
@@ -193,7 +205,13 @@ mod close_market {
         )
         .await;
 
-        let start_date = chrono::Utc::now().timestamp() as u64;
+        let start_date = context
+            .banks_client
+            .get_sysvar::<Clock>()
+            .await
+            .unwrap()
+            .unix_timestamp
+            + 1;
 
         let name = "Marktname".to_string();
         let description = "Marktbeschreibung".to_string();
@@ -221,8 +239,8 @@ mod close_market {
             mutable,
             price,
             pieces_in_one_wallet,
-            start_date,
-            end_date: Some(start_date + 86400),
+            start_date: start_date as u64,
+            end_date: Some((start_date + 2) as u64),
         }
         .data();
 
@@ -245,7 +263,8 @@ mod close_market {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        wait(&mut context, chrono::Duration::seconds(1)).await;
+        let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
+        context.warp_to_slot(clock.slot + 1500).unwrap();
 
         // CloseMarket
         let accounts = mpl_membership_token_accounts::CloseMarket {
