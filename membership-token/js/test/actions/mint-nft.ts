@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
   Actions,
   defaultSendOptions,
@@ -17,11 +17,10 @@ import { strict as assert } from 'assert';
 
 import { createTokenAccount } from '../transactions/create-token-account';
 import { createMetadata } from './create-metadata';
-import { addLabel } from '../../test/utils';
 
 type MintNFTParams = {
   transactionHandler: TransactionHandler;
-  payer: PublicKey;
+  payer: Keypair;
   connection: Connection;
 };
 
@@ -31,36 +30,36 @@ const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
 
 export async function mintNFT({ transactionHandler, payer, connection }: MintNFTParams) {
-  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer);
+  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
     defaultSendOptions,
   );
-  addLabel('create:mint', mint);
   assertConfirmedTransaction(assert, mintRes.txConfirmed);
 
   const { tokenAccount, createTokenTx } = await createTokenAccount({
-    payer,
+    payer: payer.publicKey,
     mint: mint.publicKey,
     connection,
   });
+
   createTokenTx.add(
     Token.createMintToInstruction(
       new PublicKey(TOKEN_PROGRAM_ID),
       mint.publicKey,
       tokenAccount.publicKey,
-      payer,
+      payer.publicKey,
       [],
       1,
     ),
   );
+
   const associatedTokenAccountRes = await transactionHandler.sendAndConfirmTransaction(
     createTokenTx,
     [tokenAccount],
     defaultSendOptions,
   );
-  addLabel('create:associated-token-account', mint);
   assertConfirmedTransaction(assert, associatedTokenAccountRes.txConfirmed);
 
   const initMetadataData = new MetadataDataData({
@@ -71,13 +70,12 @@ export async function mintNFT({ transactionHandler, payer, connection }: MintNFT
     creators: null,
   });
 
-  const { createTxDetails, metadata } = await createMetadata({
+  const { createTxDetails } = await createMetadata({
     transactionHandler,
-    publicKey: payer,
+    publicKey: payer.publicKey,
     editionMint: mint.publicKey,
     metadataData: initMetadataData,
   });
-  addLabel('create:metadata', metadata);
   assertConfirmedTransaction(assert, createTxDetails.txConfirmed);
 
   const metadataPDA = await Metadata.getPDA(mint.publicKey);
@@ -92,20 +90,19 @@ export async function mintNFT({ transactionHandler, payer, connection }: MintNFT
   );
 
   const masterEditionTx = new CreateMasterEdition(
-    { feePayer: payer },
+    { feePayer: payer.publicKey },
     {
       edition,
       metadata: metadataPDA,
-      updateAuthority: payer,
+      updateAuthority: payer.publicKey,
       mint: mint.publicKey,
-      mintAuthority: payer,
+      mintAuthority: payer.publicKey,
     },
   );
 
   const masterEditionRes = await transactionHandler.sendAndConfirmTransaction(masterEditionTx, [], {
     skipPreflight: false,
   });
-  addLabel('create:master-edition', edition);
   assertConfirmedTransaction(assert, masterEditionRes.txConfirmed);
 
   return { tokenAccount, edition, editionBump, mint };
