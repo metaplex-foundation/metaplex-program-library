@@ -512,16 +512,16 @@ async fn process_transfer(
 
         loop {
             let statuses = rpc_client.get_signature_statuses(&signatures)?.value;
-            let finalized = statuses.iter().filter(|s| {
+            let confirmed = statuses.iter().filter(|s| {
                 if let Some(status) = s {
                     return status.confirmation_status == Some(
-                        solana_transaction_status::TransactionConfirmationStatus::Finalized
+                        solana_transaction_status::TransactionConfirmationStatus::Confirmed
                     );
                 }
                 return false;
             }).count();
-            println!("Finalized: {} of {}", finalized, signatures.len());
-            if finalized == signatures.len() {
+            println!("Confirmed: {} of {}", confirmed, signatures.len());
+            if confirmed == signatures.len() {
                 break;
             }
             std::thread::sleep(std::time::Duration::from_millis(500));

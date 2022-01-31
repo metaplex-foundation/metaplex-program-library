@@ -683,6 +683,9 @@ pub fn transfer_chunk_slow_proof<F>(
     // which is ~85k compute so we can pack ~11. the last group has 5 points with ~120k compute so
     // ~8 per
 
+    // could probably group these into 1 multi-scalar mul of 6 inputs which saves ~2 transactions
+    // (~130k compute so ~7 / tx. Though we could probably batch the copies with the first
+    // iteration so save ~3 txs)
     for _g in 0..2 {
         // total 64 cranks per this group
         for _f in 0..5 {
