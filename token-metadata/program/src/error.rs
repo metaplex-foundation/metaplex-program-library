@@ -352,6 +352,12 @@ pub enum MetadataError {
 
     #[error("This Collection Authoritty Record Does Not Exist.")]
     CollectionAuthorityDoesNotExist,
+
+    #[error("This Use Authority Record is invalid.")]
+    InvalidUseAuthorityRecord,
+
+    #[error("This Collection Authority Record is invalid.")]
+    InvalidCollectionAuthorityRecord,
 }
 
 impl PrintProgramError for MetadataError {

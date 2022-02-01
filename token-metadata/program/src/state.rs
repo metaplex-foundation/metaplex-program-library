@@ -167,6 +167,7 @@ pub enum TokenStandard {
 pub struct UseAuthorityRecord {
     pub key: Key, //1
     pub allowed_uses: u64, //8
+    pub bump: u8
 }
 
 impl UseAuthorityRecord {
@@ -176,13 +177,20 @@ impl UseAuthorityRecord {
 
         Ok(ua)
     }
+
+    pub fn from_bytes(b: &[u8]) -> Result<UseAuthorityRecord, ProgramError> {
+        let ua: UseAuthorityRecord = try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+
+        Ok(ua)
+    }
 }
 
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct CollectionAuthorityRecord {
-    pub key: Key //1
+    pub key: Key, //1
+    pub bump: u8 //1
 }
 
 impl CollectionAuthorityRecord {
@@ -191,6 +199,11 @@ impl CollectionAuthorityRecord {
             try_from_slice_checked(&a.data.borrow_mut(), Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
 
         Ok(ua)
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
+        let ca: CollectionAuthorityRecord = try_from_slice_checked(b, Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
+        Ok(ca)
     }
 }
 

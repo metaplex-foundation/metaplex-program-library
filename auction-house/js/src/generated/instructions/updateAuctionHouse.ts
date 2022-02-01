@@ -1,20 +1,19 @@
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type UpdateAuctionHouseInstructionArgs = {
   sellerFeeBasisPoints: beet.COption<number>;
   requiresSignOff: beet.COption<boolean>;
   canChangeSalePrice: beet.COption<boolean>;
 };
-const updateAuctionHouseStruct = new beet.BeetArgsStruct<
+const updateAuctionHouseStruct = new beet.FixableBeetArgsStruct<
   UpdateAuctionHouseInstructionArgs & {
     instructionDiscriminator: number[];
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['sellerFeeBasisPoints', beet.coption(beet.u16)],
     ['requiresSignOff', beet.coption(beet.bool)],
     ['canChangeSalePrice', beet.coption(beet.bool)],
@@ -34,6 +33,12 @@ export type UpdateAuctionHouseInstructionAccounts = {
 
 const updateAuctionHouseInstructionDiscriminator = [84, 215, 2, 172, 241, 0, 245, 219];
 
+/**
+ * Creates a _UpdateAuctionHouse_ instruction.
+ *
+ * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ */
 export function createUpdateAuctionHouseInstruction(
   accounts: UpdateAuctionHouseInstructionAccounts,
   args: UpdateAuctionHouseInstructionArgs,

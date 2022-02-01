@@ -1,5 +1,5 @@
-import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type WithdrawFromFeeInstructionArgs = {
   amount: beet.bignum;
@@ -10,7 +10,7 @@ const withdrawFromFeeStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['amount', beet.u64],
   ],
   'WithdrawFromFeeInstructionArgs',
@@ -24,6 +24,12 @@ export type WithdrawFromFeeInstructionAccounts = {
 
 const withdrawFromFeeInstructionDiscriminator = [179, 208, 190, 154, 32, 179, 19, 59];
 
+/**
+ * Creates a _WithdrawFromFee_ instruction.
+ *
+ * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ */
 export function createWithdrawFromFeeInstruction(
   accounts: WithdrawFromFeeInstructionAccounts,
   args: WithdrawFromFeeInstructionArgs,

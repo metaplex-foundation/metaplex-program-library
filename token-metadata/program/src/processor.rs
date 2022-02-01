@@ -12,10 +12,13 @@ use crate::{
     error::MetadataError,
     instruction::MetadataInstruction,
     state::{
-        CollectionAuthorityRecord, DataV2, Key, MasterEditionV1, MasterEditionV2, Metadata,
-        TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
+        Collection, CollectionAuthorityRecord, DataV2, Key, MasterEditionV1, MasterEditionV2,
+        Metadata, TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
         COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN, PREFIX, USER,
         USE_AUTHORITY_RECORD_SIZE,
+    },
+    solana_program::{
+        program_memory::{ sol_memset},
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_derivation, assert_initialized,
@@ -43,6 +46,7 @@ use spl_token::{
     instruction::{approve, revoke},
     state::{Account, Mint},
 };
+use spl_token::instruction::close_account;
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
@@ -160,6 +164,10 @@ pub fn process_instruction<'a>(
         MetadataInstruction::VerifyCollection => {
             msg!("Instruction: Verify Collection");
             verify_collection(program_id, accounts)
+        }
+        MetadataInstruction::SetAndVerifyCollection => {
+            msg!("Instruction: Set and Verify Collection");
+            set_and_verify_collection(program_id, accounts)
         }
         MetadataInstruction::UnverifyCollection => {
             msg!("Instruction: Unverify Collection");
@@ -282,7 +290,7 @@ pub fn process_update_metadata_accounts_v2(
 
     puff_out_data_fields(&mut metadata);
 
-    metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+    metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
     Ok(())
 }
 pub fn process_update_primary_sale_happened_via_token(
@@ -318,7 +326,7 @@ pub fn process_update_primary_sale_happened_via_token(
     }
 
     metadata.primary_sale_happened = true;
-    metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+    metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -349,7 +357,7 @@ pub fn process_sign_metadata(program_id: &Pubkey, accounts: &[AccountInfo]) -> P
     } else {
         return Err(MetadataError::NoCreatorsPresentOnMetadata.into());
     }
-    metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
+    metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -428,11 +436,11 @@ pub fn process_create_master_edition(
     edition.key = Key::MasterEditionV2;
     edition.supply = 0;
     edition.max_supply = max_supply;
-    edition.serialize(&mut *edition_account_info.data.borrow_mut())?;
+    edition.serialize(&mut *edition_account_info.try_borrow_mut_data()?)?;
     if metadata_account_info.is_writable {
         let mut metadata_mut = Metadata::from_account_info(metadata_account_info)?;
         metadata_mut.token_standard = Some(TokenStandard::NonFungible);
-        metadata_mut.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+        metadata_mut.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
     }
 
     // While you can't mint any more of your master record, you can
@@ -531,7 +539,7 @@ pub fn process_convert_master_edition_v1_to_v2(
         supply: master_edition.supply,
         max_supply: master_edition.max_supply,
     }
-    .serialize(&mut *master_edition_info.data.borrow_mut())?;
+    .serialize(&mut *master_edition_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -675,7 +683,7 @@ pub fn process_puff_metadata_account(
     let (_, edition_bump_seed) = Pubkey::find_program_address(edition_seeds, program_id);
     metadata.edition_nonce = Some(edition_bump_seed);
 
-    metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+    metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
     Ok(())
 }
 
@@ -704,6 +712,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         collection_mint,
         edition_account_info,
     )?;
+
     if using_delegated_collection_authority {
         let collection_authority_record = next_account_info(account_info_iter)?;
         assert_has_collection_authority(
@@ -722,8 +731,8 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     }
     if let Some(collection) = &mut metadata.collection {
         collection.verified = true;
+        metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     }
-    metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
     Ok(())
 }
 
@@ -769,7 +778,7 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     if let Some(collection) = &mut metadata.collection {
         collection.verified = false;
     }
-    metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
+    metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     Ok(())
 }
 
@@ -860,7 +869,8 @@ pub fn process_approve_use_authority(
     let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
     record.key = Key::UseAuthorityRecord;
     record.allowed_uses = number_of_uses;
-    record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
+    record.bump = bump_seed;
+    record.serialize(&mut *use_authority_record_info.try_borrow_mut_data()?)?;
     Ok(())
 }
 
@@ -917,14 +927,12 @@ pub fn process_revoke_use_authority(
         )?;
     }
     let lamports = use_authority_record_info.lamports();
-    **use_authority_record_info.lamports.borrow_mut() = 0;
-    **owner_info.lamports.borrow_mut() = owner_info
+    **use_authority_record_info.try_borrow_mut_lamports()? = 0;
+    **owner_info.try_borrow_mut_lamports()? = owner_info
         .lamports()
         .checked_add(lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
-    let mut data = use_authority_record_info.try_borrow_mut_data()?;
-    data[0] = 0;
-
+    sol_memset(*use_authority_record_info.try_borrow_mut_data()?, 0, USE_AUTHORITY_RECORD_SIZE);
     Ok(())
 }
 
@@ -991,9 +999,9 @@ pub fn process_utilize(
             .allowed_uses
             .checked_sub(number_of_uses)
             .ok_or(MetadataError::NotEnoughUses)?;
-        record.serialize(&mut *use_authority_record_info.data.borrow_mut())?;
+        record.serialize(&mut *use_authority_record_info.try_borrow_mut_data()?)?;
     }
-    metadata.serialize(&mut *metadata_info.data.borrow_mut())?;
+    metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     if remaining_uses <= 0 && must_burn {
         if approved_authority_is_using {
             let burn_path = &[PREFIX.as_bytes(), program_id.as_ref(), BURN.as_bytes()];
@@ -1085,7 +1093,8 @@ pub fn process_approve_collection_authority(
 
     let mut record = CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
     record.key = Key::CollectionAuthorityRecord;
-    record.serialize(&mut *collection_authority_record.data.borrow_mut())?;
+    record.bump = collection_authority_bump_seed[0];
+    record.serialize(&mut *collection_authority_record.try_borrow_mut_data()?)?;
     Ok(())
 }
 
@@ -1119,10 +1128,69 @@ pub fn process_revoke_collection_authority(
         &mint_info.key,
         Some(collection_authority_record),
     )?;
-    let lamports = **collection_authority_record.lamports.borrow();
-    **collection_authority_record.lamports.borrow_mut() = 0;
-    **update_authority.lamports.borrow_mut() = lamports;
-    let mut data = collection_authority_record.try_borrow_mut_data()?;
-    data[0] = 0;
+    let lamports = collection_authority_record.lamports();
+    **collection_authority_record.try_borrow_mut_lamports()? = 0;
+    **update_authority.try_borrow_mut_lamports()? = update_authority
+        .lamports()
+        .checked_add(lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+    sol_memset(*collection_authority_record.try_borrow_mut_data()?, 0, USE_AUTHORITY_RECORD_SIZE);
+
+    Ok(())
+}
+
+pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let metadata_info = next_account_info(account_info_iter)?;
+    let collection_authority_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let update_authority = next_account_info(account_info_iter)?;
+    let collection_mint = next_account_info(account_info_iter)?;
+    let collection_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
+    let using_delegated_collection_authority = accounts.len() == 8;
+    assert_signer(collection_authority_info)?;
+    assert_signer(payer_info)?;
+
+    assert_owned_by(metadata_info, program_id)?;
+    assert_owned_by(collection_info, program_id)?;
+    assert_owned_by(collection_mint, &spl_token::id())?;
+    assert_owned_by(edition_account_info, program_id)?;
+
+    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let collection_data = Metadata::from_account_info(collection_info)?;
+    if metadata.update_authority != *update_authority.key
+        || metadata.update_authority != collection_data.update_authority
+    {
+        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    }
+
+    if using_delegated_collection_authority {
+        let collection_authority_record = next_account_info(account_info_iter)?;
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            Some(collection_authority_record),
+        )?;
+    } else {
+        assert_has_collection_authority(
+            collection_authority_info,
+            &collection_data,
+            collection_mint.key,
+            None,
+        )?;
+    }
+    metadata.collection = Some(Collection {
+        key: *collection_mint.key,
+        verified: true,
+    });
+    assert_collection_verify_is_valid(
+        &metadata,
+        &collection_data,
+        collection_mint,
+        edition_account_info,
+    )?;
+    metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     Ok(())
 }

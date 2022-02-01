@@ -2,7 +2,7 @@ use solana_program::{account_info::AccountInfo, program_error::ProgramError, pub
 
 use crate::{
     error::MetadataError,
-    state::{UseMethod, Uses, PREFIX, USER},
+    state::{UseAuthorityRecord, UseMethod, Uses, PREFIX, USER},
     utils::assert_derivation,
 };
 
@@ -42,16 +42,8 @@ pub fn process_use_authority_validation(
     mint_info: &AccountInfo,
     must_be_empty: bool,
 ) -> Result<u8, ProgramError> {
-    let record_info_empty = use_authority_record_info.try_data_is_empty()?;
-    if must_be_empty {
-        if !record_info_empty {
-            return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
-        }
-    } else {
-        if record_info_empty || use_authority_record_info.data.borrow()[0] == 0 {
-            return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
-        }
-    }
+    let data = use_authority_record_info.try_borrow_data()?;
+    let record_info_empty = data.len() == 0;
     let use_authority_seeds = [
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -59,6 +51,20 @@ pub fn process_use_authority_validation(
         USER.as_bytes(),
         &user_info.key.as_ref(),
     ];
-
-    assert_derivation(&program_id, use_authority_record_info, &use_authority_seeds)
+    let derivation =
+        assert_derivation(&program_id, use_authority_record_info, &use_authority_seeds)?;
+    if must_be_empty {
+        if !record_info_empty {
+            return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
+        }
+    } else {
+        if record_info_empty {
+            return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
+        }
+        let record_data = UseAuthorityRecord::from_bytes(&data)?;
+        if derivation != record_data.bump {
+            return Err(MetadataError::InvalidUseAuthorityRecord.into());
+        }
+    }
+    Ok(derivation)
 }

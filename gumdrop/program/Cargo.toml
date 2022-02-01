@@ -21,4 +21,4 @@ anchor-lang = "0.19.0"
 anchor-spl = "0.19.0"
 solana-program = "1.7.11"
 spl-associated-token-account = { version = "1.0.3", features = [ "no-entrypoint" ] }
-mpl-token-metadata = { path = "../../token-metadata/program", features = [ "no-entrypoint" ]}
+mpl-token-metadata = { version="1.1.0", features = [ "no-entrypoint" ] }

@@ -1,5 +1,5 @@
-import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type UpdateEntangledPairInstructionArgs = {
   price: beet.bignum;
@@ -11,7 +11,7 @@ const updateEntangledPairStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['price', beet.u64],
     ['paysEveryTime', beet.bool],
   ],

@@ -1,7 +1,6 @@
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type CreateAuctionHouseInstructionArgs = {
   bump: number;
@@ -17,7 +16,7 @@ const createAuctionHouseStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['bump', beet.u8],
     ['feePayerBump', beet.u8],
     ['treasuryBump', beet.u8],
@@ -41,6 +40,12 @@ export type CreateAuctionHouseInstructionAccounts = {
 
 const createAuctionHouseInstructionDiscriminator = [221, 66, 242, 159, 249, 206, 134, 241];
 
+/**
+ * Creates a _CreateAuctionHouse_ instruction.
+ *
+ * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ */
 export function createCreateAuctionHouseInstruction(
   accounts: CreateAuctionHouseInstructionAccounts,
   args: CreateAuctionHouseInstructionArgs,

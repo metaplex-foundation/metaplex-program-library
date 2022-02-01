@@ -2,34 +2,36 @@ import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solana/web3.js';
 import { MetadataProgram } from '../MetadataProgram';
 
-export class VerifyCollectionArgs extends Borsh.Data {
-  static readonly SCHEMA = new Map([...VerifyCollectionArgs.struct([['instruction', 'u8']])]);
-  instruction = 18;
+export class SetAndVerifyCollectionArgs extends Borsh.Data {
+  static readonly SCHEMA = new Map([...SetAndVerifyCollectionArgs.struct([['instruction', 'u8']])]);
+  instruction = 25;
 }
 
-type VerifyCollectionParams = {
+type SetAndVerifyCollectionParams = {
   metadata: PublicKey;
-  collectionAuthorityRecord?: PublicKey;
   collectionAuthority: PublicKey;
   collectionMint: PublicKey;
+  updateAuthority: PublicKey;
   collectionMetadata: PublicKey;
   collectionMasterEdition: PublicKey;
+  collectionAuthorityRecord?: PublicKey;
 };
 
-export class VerifyCollection extends Transaction {
-  constructor(options: TransactionCtorFields, params: VerifyCollectionParams) {
+export class SetAndVerifyCollectionCollection extends Transaction {
+  constructor(options: TransactionCtorFields, params: SetAndVerifyCollectionParams) {
     super(options);
     const { feePayer } = options;
     const {
       metadata,
       collectionAuthority,
       collectionMint,
+      updateAuthority,
       collectionMetadata,
       collectionMasterEdition,
       collectionAuthorityRecord,
     } = params;
 
-    const data = VerifyCollectionArgs.serialize();
+    const data = SetAndVerifyCollectionArgs.serialize();
     const accounts = [
       {
         pubkey: metadata,
@@ -45,6 +47,11 @@ export class VerifyCollection extends Transaction {
         pubkey: feePayer,
         isSigner: true,
         isWritable: true,
+      },
+      {
+        pubkey: updateAuthority,
+        isSigner: false,
+        isWritable: false,
       },
       {
         pubkey: collectionMint,

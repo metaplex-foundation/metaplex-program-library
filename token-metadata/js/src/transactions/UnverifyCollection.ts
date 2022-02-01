@@ -2,12 +2,12 @@ import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { PublicKey, TransactionCtorFields, TransactionInstruction } from '@solana/web3.js';
 import { MetadataProgram } from '../MetadataProgram';
 
-export class VerifyCollectionArgs extends Borsh.Data {
-  static readonly SCHEMA = new Map([...VerifyCollectionArgs.struct([['instruction', 'u8']])]);
-  instruction = 18;
+export class UnVerifyCollectionArgs extends Borsh.Data {
+  static readonly SCHEMA = new Map([...UnVerifyCollectionArgs.struct([['instruction', 'u8']])]);
+  instruction = 22;
 }
 
-type VerifyCollectionParams = {
+type UnVerifyCollectionParams = {
   metadata: PublicKey;
   collectionAuthorityRecord?: PublicKey;
   collectionAuthority: PublicKey;
@@ -16,8 +16,8 @@ type VerifyCollectionParams = {
   collectionMasterEdition: PublicKey;
 };
 
-export class VerifyCollection extends Transaction {
-  constructor(options: TransactionCtorFields, params: VerifyCollectionParams) {
+export class UnVerifyCollection extends Transaction {
+  constructor(options: TransactionCtorFields, params: UnVerifyCollectionParams) {
     super(options);
     const { feePayer } = options;
     const {
@@ -29,7 +29,7 @@ export class VerifyCollection extends Transaction {
       collectionAuthorityRecord,
     } = params;
 
-    const data = VerifyCollectionArgs.serialize();
+    const data = UnVerifyCollectionArgs.serialize();
     const accounts = [
       {
         pubkey: metadata,

@@ -5,11 +5,12 @@ const PROGRAM_NAME = 'auction_house';
 const PROGRAM_ID = 'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk';
 
 const path = require('path');
+const programDir = path.join(__dirname, '..', '..', 'program');
 const generatedIdlDir = path.join(__dirname, '..', 'idl');
 const generatedSDKDir = path.join(__dirname, '..', 'src', 'generated');
-const programDir = path.join(__dirname, '..', '..', 'program');
 const { spawn } = require('child_process');
-const { SolanaIdlToApi } = require('@metaplex-foundation/solana-idl-to-api');
+// NOTE: Solita has to be yarn linked at the moment until it is published and installed here
+const { Solita } = require('@metaplex-foundation/solita');
 const { writeFile } = require('fs/promises');
 
 const anchor = spawn('anchor', ['build', '--idl', generatedIdlDir], { cwd: programDir })
@@ -40,7 +41,7 @@ async function generateTypeScriptSDK() {
     idl.metadata = { ...idl.metadata, address: PROGRAM_ID };
     await writeFile(generatedIdlPath, JSON.stringify(idl, null, 2));
   }
-  const gen = new SolanaIdlToApi(idl, { formatCode: true });
+  const gen = new Solita(idl, { formatCode: true });
   await gen.renderAndWriteTo(generatedSDKDir);
 
   console.error('Success!');
