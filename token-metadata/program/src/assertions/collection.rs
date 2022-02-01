@@ -1,4 +1,4 @@
-use solana_program::{account_info::AccountInfo, msg, program_error::ProgramError, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
 
 use crate::{
     error::MetadataError,
@@ -35,16 +35,15 @@ pub fn assert_has_collection_authority(
     mint: &Pubkey,
     delegate_collection_authority_record: Option<&AccountInfo>,
 ) -> Result<(), ProgramError> {
-    if delegate_collection_authority_record.is_some() {
+
+    if let Some(collection_authority_record) = delegate_collection_authority_record {
         let bump = assert_is_collection_delegated_authority(
-            delegate_collection_authority_record.unwrap(),
+            collection_authority_record,
             collection_authority_info.key,
             mint,
         )?;
-        let data = delegate_collection_authority_record
-            .unwrap()
+        let data = collection_authority_record
             .try_borrow_data()?;
-
         if data.len() == 0 {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }

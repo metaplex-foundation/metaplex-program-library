@@ -304,20 +304,16 @@ pub enum MetadataInstruction {
     VerifyCollection,
     ///See [utilize] for Doc
     Utilize(UtilizeArgs),
-
     ///See [approve_use_authority] for Doc
     ApproveUseAuthority(ApproveUseAuthorityArgs),
     ///See [revoke_use_authority] for Doc
     RevokeUseAuthority,
-
-    ///See [revoke_use_authority] for Doc
+    ///See [unverify_collection] for Doc
     UnverifyCollection,
-
     ///See [approve_collection_authority] for Doc
     ApproveCollectionAuthority,
     ///See [revoke_collection_authority] for Doc
     RevokeCollectionAuthority,
-
     ///See [set_and_verify_collection] for Doc
     SetAndVerifyCollection,
 }
@@ -957,7 +953,7 @@ pub fn revoke_use_authority(
 
 ///# Approve Collection Authority
 ///
-///Approve another account to verify nfts beloging to a collection, [verify_collection] on the collection NFT
+///Approve another account to verify NFTs belonging to a collection, [verify_collection] on the collection NFT
 ///
 ///### Accounts:
 ///   0. `[writable]` Collection Authority Record PDA
@@ -1031,7 +1027,7 @@ pub fn revoke_collection_authority(
 
 //# Set And Verify Collection
 ///
-///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] with collection and [verify_collection] on the NFT/Collection in one instruiction
+///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] with collection and [verify_collection] on the NFT/Collection in one instruction
 ///
 /// ### Accounts:
 ///

@@ -1,4 +1,3 @@
-use std::borrow::BorrowMut;
 use crate::{
     assertions::{
         collection::{
@@ -44,9 +43,10 @@ use solana_program::{
     pubkey::Pubkey,
 };
 use spl_token::{
-    instruction::{approve, close_account, revoke},
+    instruction::{approve, revoke},
     state::{Account, Mint},
 };
+use spl_token::instruction::close_account;
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
@@ -788,7 +788,7 @@ pub fn process_approve_use_authority(
     number_of_uses: u64,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
-    let mut use_authority_record_info = next_account_info(account_info_iter)?;
+    let use_authority_record_info = next_account_info(account_info_iter)?;
     let owner_info = next_account_info(account_info_iter)?;
     let payer = next_account_info(account_info_iter)?;
     let user_info = next_account_info(account_info_iter)?;

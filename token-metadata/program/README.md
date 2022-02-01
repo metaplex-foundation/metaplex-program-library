@@ -10,6 +10,15 @@ document are available at:
 - https://docs.solana.com/apps
 - https://docs.solana.com/terminology
 
+## Testing
+```sh
+cargo test-bpf --bpf-out-dir ../../target/deploy/
+```
+## Building
+```sh
+cargo build-bpf --bpf-out-dir ../../target/deploy/
+```
+
 ## Source
 
 The Token Metadata Program's source is available on

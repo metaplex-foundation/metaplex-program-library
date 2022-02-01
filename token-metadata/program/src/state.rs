@@ -189,7 +189,7 @@ impl UseAuthorityRecord {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct CollectionAuthorityRecord {
-    pub key: Key,//1
+    pub key: Key, //1
     pub bump: u8 //1
 }
 
