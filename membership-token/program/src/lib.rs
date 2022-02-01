@@ -210,6 +210,10 @@ pub mod membership_token {
             }
         }
 
+        if market.state != MarketState::Active {
+            market.state = MarketState::Active;
+        }
+
         // Buy new edition
         let is_native = market.treasury_mint == System::id();
 
@@ -674,7 +678,7 @@ pub mod membership_token {
         let market = &mut ctx.accounts.market;
         let store = &ctx.accounts.store;
         let selling_resource_owner = &ctx.accounts.selling_resource_owner;
-        let selling_resource = &ctx.accounts.selling_resource;
+        let selling_resource = &mut ctx.accounts.selling_resource;
         let mint = ctx.accounts.mint.to_account_info();
         let treasury_holder = ctx.accounts.treasury_holder.to_account_info();
         let owner = &ctx.accounts.owner;
@@ -746,6 +750,7 @@ pub mod membership_token {
         market.start_date = start_date;
         market.end_date = end_date;
         market.state = MarketState::Created;
+        selling_resource.state = SellingResourceState::InUse;
 
         Ok(())
     }
@@ -862,7 +867,7 @@ pub struct CreateStore<'info> {
 #[derive(Accounts)]
 #[instruction(trade_history_bump:u8, vault_owner_bump: u8)]
 pub struct Buy<'info> {
-    #[account(has_one=treasury_holder)]
+    #[account(mut, has_one=treasury_holder)]
     market: Account<'info, Market>,
     #[account(mut)]
     selling_resource: Box<Account<'info, SellingResource>>,
