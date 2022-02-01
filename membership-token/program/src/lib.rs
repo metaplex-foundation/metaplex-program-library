@@ -289,6 +289,7 @@ pub mod membership_token {
                 return Err(ErrorCode::SupplyIsGtThanMaxSupply.into());
             } else if selling_resource.supply == max_supply {
                 selling_resource.state = SellingResourceState::Exhausted;
+                market.state = MarketState::Ended;
             }
         }
 
