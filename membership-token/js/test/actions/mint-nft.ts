@@ -11,6 +11,7 @@ import {
   MasterEdition,
   Metadata,
   CreateMasterEdition,
+  Creator,
 } from '@metaplex-foundation/mpl-token-metadata';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { strict as assert } from 'assert';
@@ -22,6 +23,7 @@ type MintNFTParams = {
   transactionHandler: TransactionHandler;
   payer: Keypair;
   connection: Connection;
+  creators?: Creator[];
 };
 
 const URI = 'https://arweave.net/Rmg4pcIv-0FQ7M7X838p2r592Q4NU63Fj7o7XsvBHEE';
@@ -29,7 +31,12 @@ const NAME = 'test';
 const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
 
-export async function mintNFT({ transactionHandler, payer, connection }: MintNFTParams) {
+export async function mintNFT({
+  transactionHandler,
+  payer,
+  connection,
+  creators = null,
+}: MintNFTParams) {
   const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
@@ -67,7 +74,7 @@ export async function mintNFT({ transactionHandler, payer, connection }: MintNFT
     name: NAME,
     symbol: SYMBOL,
     sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
-    creators: null,
+    creators,
   });
 
   const { createTxDetails } = await createMetadata({
@@ -105,5 +112,5 @@ export async function mintNFT({ transactionHandler, payer, connection }: MintNFT
   });
   assertConfirmedTransaction(assert, masterEditionRes.txConfirmed);
 
-  return { tokenAccount, edition, editionBump, mint };
+  return { tokenAccount, edition, editionBump, mint, metadata: metadataPDA };
 }

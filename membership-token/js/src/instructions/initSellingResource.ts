@@ -29,6 +29,7 @@ export type InitSellingResourceInstructionAccounts = {
   sellingResourceOwner: web3.PublicKey;
   resourceMint: web3.PublicKey;
   masterEdition: web3.PublicKey;
+  metadata: web3.PublicKey;
   vault: web3.PublicKey;
   owner: web3.PublicKey;
   resourceToken: web3.PublicKey;
@@ -53,6 +54,7 @@ export function createInitSellingResourceInstruction(
     sellingResourceOwner,
     resourceMint,
     masterEdition,
+    metadata,
     vault,
     owner,
     resourceToken,
@@ -90,6 +92,11 @@ export function createInitSellingResourceInstruction(
     },
     {
       pubkey: masterEdition,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: metadata,
       isWritable: false,
       isSigner: false,
     },
