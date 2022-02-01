@@ -38,7 +38,7 @@
         {
           "name": "vault",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "owner",
@@ -174,7 +174,7 @@
         {
           "name": "vault",
           "isMut": true,
-          "isSigner": true
+          "isSigner": false
         },
         {
           "name": "owner",

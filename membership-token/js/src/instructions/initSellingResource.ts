@@ -96,7 +96,7 @@ export function createInitSellingResourceInstruction(
     {
       pubkey: vault,
       isWritable: true,
-      isSigner: true,
+      isSigner: false,
     },
     {
       pubkey: owner,

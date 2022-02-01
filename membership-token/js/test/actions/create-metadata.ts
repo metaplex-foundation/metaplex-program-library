@@ -6,10 +6,6 @@ import {
   MetadataDataData,
 } from '@metaplex-foundation/mpl-token-metadata';
 
-// -----------------
-// Create Metadata
-// -----------------
-// src/actions/createMetadata.ts
 type CreateMetadataParams = {
   transactionHandler: TransactionHandler;
   publicKey: PublicKey;
