@@ -14,7 +14,9 @@ pub const HOLDER_PREFIX: &str = "holder";
 pub const HISTORY_PREFIX: &str = "history";
 pub const VAULT_OWNER_PREFIX: &str = "mt_vault";
 pub const PAYOUT_TICKET_PREFIX: &str = "payout_ticket";
+pub const SECONDARY_METADATA_CREATORS_PREFIX: &str = "secondary_creators";
 pub const FLAG_ACCOUNT_SIZE: usize = 1; // Size for flag account to indicate something
+pub const MAX_SECONDARY_CREATORS_LEN: usize = 5; // Total allowed creators in `SecondaryMetadataCreators`
 
 /// Runtime derivation check
 pub fn assert_derivation(
@@ -44,7 +46,7 @@ pub fn find_treasury_owner_address(
     )
 }
 
-/// Return `vault_owner` Pubkey and bump seed.
+/// Return `vault_owner` `Pubkey` and bump seed.
 pub fn find_vault_owner_address(resource_mint: &Pubkey, store: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
@@ -56,7 +58,7 @@ pub fn find_vault_owner_address(resource_mint: &Pubkey, store: &Pubkey) -> (Pubk
     )
 }
 
-/// Return `TradeHistory` Pubkey and bump seed.
+/// Return `TradeHistory` `Pubkey` and bump seed.
 pub fn find_trade_history_address(wallet: &Pubkey, market: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[HISTORY_PREFIX.as_bytes(), wallet.as_ref(), market.as_ref()],
@@ -64,13 +66,24 @@ pub fn find_trade_history_address(wallet: &Pubkey, market: &Pubkey) -> (Pubkey, 
     )
 }
 
-/// Return payout ticket Pubkey and bump seed.
+/// Return payout ticket `Pubkey` and bump seed.
 pub fn find_payout_ticket_address(market: &Pubkey, funder: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
             PAYOUT_TICKET_PREFIX.as_bytes(),
             market.as_ref(),
             funder.as_ref(),
+        ],
+        &id(),
+    )
+}
+
+/// Return `SecondaryMetadataCreators` `Pubkey` and bump seed.
+pub fn find_secondary_metadata_creators(metadata: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            SECONDARY_METADATA_CREATORS_PREFIX.as_bytes(),
+            metadata.as_ref(),
         ],
         &id(),
     )
@@ -190,6 +203,36 @@ pub fn mpl_update_primary_sale_happened_via_token<'a>(
     invoke_signed(
         &tx,
         &[metadata.clone(), owner.clone(), token.clone()],
+        &[&signers_seeds],
+    )?;
+
+    Ok(())
+}
+
+/// Wrapper of `update_metadata_accounts_v2` instruction from `mpl_token_metadata` program
+#[inline(always)]
+pub fn mpl_update_metadata_accounts_v2<'a>(
+    metadata: &AccountInfo<'a>,
+    update_authority: &AccountInfo<'a>,
+    new_update_authority: Option<Pubkey>,
+    data: Option<mpl_token_metadata::state::DataV2>,
+    primary_sale_happened: Option<bool>,
+    is_mutable: Option<bool>,
+    signers_seeds: &[&[u8]],
+) -> ProgramResult {
+    let tx = mpl_token_metadata::instruction::update_metadata_accounts_v2(
+        mpl_token_metadata::id(),
+        metadata.key(),
+        update_authority.key(),
+        new_update_authority,
+        data,
+        primary_sale_happened,
+        is_mutable,
+    );
+
+    invoke_signed(
+        &tx,
+        &[metadata.clone(), update_authority.clone()],
         &[&signers_seeds],
     )?;
 

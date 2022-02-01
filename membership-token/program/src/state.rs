@@ -1,6 +1,6 @@
 //! Module provide program defined state
 
-use crate::utils::{DESCRIPTION_DEFAULT_SIZE, NAME_DEFAULT_SIZE};
+use crate::utils::{DESCRIPTION_DEFAULT_SIZE, MAX_SECONDARY_CREATORS_LEN, NAME_DEFAULT_SIZE};
 use anchor_lang::prelude::*;
 
 #[account]
@@ -94,4 +94,13 @@ pub struct TradeHistory {
 
 impl TradeHistory {
     pub const LEN: usize = 8 + 32 + 32 + 8;
+}
+
+#[account]
+pub struct SecondaryMetadataCreators {
+    pub creators: Vec<mpl_token_metadata::state::Creator>,
+}
+
+impl SecondaryMetadataCreators {
+    pub const LEN: usize = 8 + ((32 + 1 + 1) * MAX_SECONDARY_CREATORS_LEN + 1);
 }

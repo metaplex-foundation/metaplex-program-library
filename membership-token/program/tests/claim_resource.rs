@@ -385,6 +385,9 @@ mod claim_resource {
         )
         .await;
 
+        let (secondary_metadata_creators, _secondary_metadata_creators_bump) =
+            mpl_membership_token::utils::find_secondary_metadata_creators(&metadata);
+
         let accounts = mpl_membership_token_accounts::ClaimResource {
             market: market_keypair.pubkey(),
             treasury_holder: treasury_holder_keypair.pubkey(),
@@ -392,6 +395,7 @@ mod claim_resource {
             selling_resource_owner: selling_resource_owner_keypair.pubkey(),
             vault: vault.pubkey(),
             metadata,
+            secondary_metadata_creators,
             owner,
             destination: claim_token.pubkey(),
             clock: sysvar::clock::id(),
@@ -729,6 +733,9 @@ mod claim_resource {
         )
         .await;
 
+        let (secondary_metadata_creators, _secondary_metadata_creators_bump) =
+            mpl_membership_token::utils::find_secondary_metadata_creators(&metadata);
+
         let accounts = mpl_membership_token_accounts::ClaimResource {
             market: market_keypair.pubkey(),
             treasury_holder: treasury_holder_keypair.pubkey(),
@@ -736,6 +743,7 @@ mod claim_resource {
             selling_resource_owner: selling_resource_owner_keypair.pubkey(),
             vault: vault.pubkey(),
             metadata,
+            secondary_metadata_creators,
             owner,
             destination: claim_token.pubkey(),
             clock: sysvar::clock::id(),

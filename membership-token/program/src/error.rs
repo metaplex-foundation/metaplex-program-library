@@ -94,4 +94,16 @@ pub enum ErrorCode {
     // 6029
     #[msg("User wallet must match user token account")]
     UserWalletMustMatchUserTokenAccount,
+    // 6030
+    #[msg("Metadata should be mutable")]
+    MetadataShouldBeMutable,
+    // 6031
+    #[msg("Primary sale is not allowed")]
+    PrimarySaleIsNotAllowed,
+    // 6032
+    #[msg("Creators is gt than allowed")]
+    CreatorsIsGtThanAvailable,
+    // 6033
+    #[msg("Creators is empty")]
+    CreatorsIsEmpty,
 }
