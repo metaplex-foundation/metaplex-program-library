@@ -320,6 +320,222 @@ createErrorFromCodeLookup.set(0x1781, () => new SupplyIsGtThanMaxSupplyError());
 createErrorFromNameLookup.set('SupplyIsGtThanMaxSupply', () => new SupplyIsGtThanMaxSupplyError());
 
 /**
+ * MarketDurationIsNotUnlimited: 'Market duration is not unlimited'
+ */
+export class MarketDurationIsNotUnlimitedError extends Error {
+  readonly code: number = 0x1782;
+  readonly name: string = 'MarketDurationIsNotUnlimited';
+  constructor() {
+    super('Market duration is not unlimited');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MarketDurationIsNotUnlimitedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1782, () => new MarketDurationIsNotUnlimitedError());
+createErrorFromNameLookup.set(
+  'MarketDurationIsNotUnlimited',
+  () => new MarketDurationIsNotUnlimitedError(),
+);
+
+/**
+ * MarketIsSuspended: 'Market is suspended'
+ */
+export class MarketIsSuspendedError extends Error {
+  readonly code: number = 0x1783;
+  readonly name: string = 'MarketIsSuspended';
+  constructor() {
+    super('Market is suspended');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MarketIsSuspendedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1783, () => new MarketIsSuspendedError());
+createErrorFromNameLookup.set('MarketIsSuspended', () => new MarketIsSuspendedError());
+
+/**
+ * MarketIsImmutable: 'Market is immutable'
+ */
+export class MarketIsImmutableError extends Error {
+  readonly code: number = 0x1784;
+  readonly name: string = 'MarketIsImmutable';
+  constructor() {
+    super('Market is immutable');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MarketIsImmutableError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1784, () => new MarketIsImmutableError());
+createErrorFromNameLookup.set('MarketIsImmutable', () => new MarketIsImmutableError());
+
+/**
+ * MarketInInvalidState: 'Market in invalid state'
+ */
+export class MarketInInvalidStateError extends Error {
+  readonly code: number = 0x1785;
+  readonly name: string = 'MarketInInvalidState';
+  constructor() {
+    super('Market in invalid state');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MarketInInvalidStateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1785, () => new MarketInInvalidStateError());
+createErrorFromNameLookup.set('MarketInInvalidState', () => new MarketInInvalidStateError());
+
+/**
+ * PriceIsZero: 'Price is zero'
+ */
+export class PriceIsZeroError extends Error {
+  readonly code: number = 0x1786;
+  readonly name: string = 'PriceIsZero';
+  constructor() {
+    super('Price is zero');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PriceIsZeroError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1786, () => new PriceIsZeroError());
+createErrorFromNameLookup.set('PriceIsZero', () => new PriceIsZeroError());
+
+/**
+ * FunderIsInvalid: 'Funder is invalid'
+ */
+export class FunderIsInvalidError extends Error {
+  readonly code: number = 0x1787;
+  readonly name: string = 'FunderIsInvalid';
+  constructor() {
+    super('Funder is invalid');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FunderIsInvalidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1787, () => new FunderIsInvalidError());
+createErrorFromNameLookup.set('FunderIsInvalid', () => new FunderIsInvalidError());
+
+/**
+ * PayoutTicketExists: 'Payout ticket exists'
+ */
+export class PayoutTicketExistsError extends Error {
+  readonly code: number = 0x1788;
+  readonly name: string = 'PayoutTicketExists';
+  constructor() {
+    super('Payout ticket exists');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PayoutTicketExistsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1788, () => new PayoutTicketExistsError());
+createErrorFromNameLookup.set('PayoutTicketExists', () => new PayoutTicketExistsError());
+
+/**
+ * InvalidFunderDestination: 'Funder provide invalid destination'
+ */
+export class InvalidFunderDestinationError extends Error {
+  readonly code: number = 0x1789;
+  readonly name: string = 'InvalidFunderDestination';
+  constructor() {
+    super('Funder provide invalid destination');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidFunderDestinationError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new InvalidFunderDestinationError());
+createErrorFromNameLookup.set(
+  'InvalidFunderDestination',
+  () => new InvalidFunderDestinationError(),
+);
+
+/**
+ * TreasuryIsNotEmpty: 'Treasury is not empty'
+ */
+export class TreasuryIsNotEmptyError extends Error {
+  readonly code: number = 0x178a;
+  readonly name: string = 'TreasuryIsNotEmpty';
+  constructor() {
+    super('Treasury is not empty');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TreasuryIsNotEmptyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178a, () => new TreasuryIsNotEmptyError());
+createErrorFromNameLookup.set('TreasuryIsNotEmpty', () => new TreasuryIsNotEmptyError());
+
+/**
+ * SellingResourceInInvalidState: 'Selling resource in invalid state'
+ */
+export class SellingResourceInInvalidStateError extends Error {
+  readonly code: number = 0x178b;
+  readonly name: string = 'SellingResourceInInvalidState';
+  constructor() {
+    super('Selling resource in invalid state');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SellingResourceInInvalidStateError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178b, () => new SellingResourceInInvalidStateError());
+createErrorFromNameLookup.set(
+  'SellingResourceInInvalidState',
+  () => new SellingResourceInInvalidStateError(),
+);
+
+/**
+ * MetadataCreatorsIsEmpty: 'Metadata creators is empty'
+ */
+export class MetadataCreatorsIsEmptyError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'MetadataCreatorsIsEmpty';
+  constructor() {
+    super('Metadata creators is empty');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataCreatorsIsEmptyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new MetadataCreatorsIsEmptyError());
+createErrorFromNameLookup.set('MetadataCreatorsIsEmpty', () => new MetadataCreatorsIsEmptyError());
+
+/**
+ * UserWalletMustMatchUserTokenAccount: 'User wallet must match user token account'
+ */
+export class UserWalletMustMatchUserTokenAccountError extends Error {
+  readonly code: number = 0x178d;
+  readonly name: string = 'UserWalletMustMatchUserTokenAccount';
+  constructor() {
+    super('User wallet must match user token account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UserWalletMustMatchUserTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178d, () => new UserWalletMustMatchUserTokenAccountError());
+createErrorFromNameLookup.set(
+  'UserWalletMustMatchUserTokenAccount',
+  () => new UserWalletMustMatchUserTokenAccountError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  */
 export function errorFromCode(code: number): MaybeErrorWithCode {

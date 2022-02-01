@@ -25,17 +25,10 @@ export class TradeHistoryAccountData implements TradeHistoryAccountDataArgs {
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link TradeHistoryAccountData} for the provided args.
-   *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
+   * {@link TradeHistoryAccountData}
    */
-  static byteSize(args: TradeHistoryAccountDataArgs) {
-    const instance = TradeHistoryAccountData.fromArgs(args);
-    return tradeHistoryAccountDataStruct.toFixedFromValue({
-      accountDiscriminator: tradeHistoryAccountDiscriminator,
-      ...instance,
-    }).byteSize;
+  static get byteSize() {
+    return tradeHistoryAccountDataStruct.byteSize;
   }
 
   /**
@@ -68,19 +61,24 @@ export class TradeHistoryAccountData implements TradeHistoryAccountDataArgs {
    * Fetches the minimum balance needed to exempt an account holding
    * {@link TradeHistoryAccountData} data from rent
    *
-   * @param args need to be provided since the byte size for this account
-   * depends on them
    * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
-    args: TradeHistoryAccountDataArgs,
     connection: web3.Connection,
     commitment?: web3.Commitment,
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
-      TradeHistoryAccountData.byteSize(args),
+      TradeHistoryAccountData.byteSize,
       commitment,
     );
+  }
+
+  /**
+   * Determines if the provided {@link Buffer} has the correct byte size to
+   * hold {@link TradeHistoryAccountData} data.
+   */
+  static hasCorrectByteSize(buf: Buffer, offset = 0) {
+    return buf.byteLength - offset === TradeHistoryAccountData.byteSize;
   }
 
   /**
@@ -107,7 +105,7 @@ export class TradeHistoryAccountData implements TradeHistoryAccountDataArgs {
   }
 }
 
-const tradeHistoryAccountDataStruct = new beet.FixableBeetStruct<
+const tradeHistoryAccountDataStruct = new beet.BeetStruct<
   TradeHistoryAccountData,
   TradeHistoryAccountDataArgs & {
     accountDiscriminator: number[];

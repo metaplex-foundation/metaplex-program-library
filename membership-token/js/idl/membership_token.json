@@ -36,6 +36,11 @@
           "isSigner": false
         },
         {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "vault",
           "isMut": true,
           "isSigner": false
@@ -499,6 +504,9 @@
             "name": "Created"
           },
           {
+            "name": "Suspended"
+          },
+          {
             "name": "Active"
           },
           {
@@ -598,6 +606,66 @@
       "code": 6017,
       "name": "SupplyIsGtThanMaxSupply",
       "msg": "Supply is gt than max supply"
+    },
+    {
+      "code": 6018,
+      "name": "MarketDurationIsNotUnlimited",
+      "msg": "Market duration is not unlimited"
+    },
+    {
+      "code": 6019,
+      "name": "MarketIsSuspended",
+      "msg": "Market is suspended"
+    },
+    {
+      "code": 6020,
+      "name": "MarketIsImmutable",
+      "msg": "Market is immutable"
+    },
+    {
+      "code": 6021,
+      "name": "MarketInInvalidState",
+      "msg": "Market in invalid state"
+    },
+    {
+      "code": 6022,
+      "name": "PriceIsZero",
+      "msg": "Price is zero"
+    },
+    {
+      "code": 6023,
+      "name": "FunderIsInvalid",
+      "msg": "Funder is invalid"
+    },
+    {
+      "code": 6024,
+      "name": "PayoutTicketExists",
+      "msg": "Payout ticket exists"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidFunderDestination",
+      "msg": "Funder provide invalid destination"
+    },
+    {
+      "code": 6026,
+      "name": "TreasuryIsNotEmpty",
+      "msg": "Treasury is not empty"
+    },
+    {
+      "code": 6027,
+      "name": "SellingResourceInInvalidState",
+      "msg": "Selling resource in invalid state"
+    },
+    {
+      "code": 6028,
+      "name": "MetadataCreatorsIsEmpty",
+      "msg": "Metadata creators is empty"
+    },
+    {
+      "code": 6029,
+      "name": "UserWalletMustMatchUserTokenAccount",
+      "msg": "User wallet must match user token account"
     }
   ],
   "metadata": {
