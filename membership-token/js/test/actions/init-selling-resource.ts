@@ -12,6 +12,7 @@ import { createAndSignTransaction, logDebug } from '../utils';
 import { createTokenAccount } from '../transactions/create-token-account';
 import { mintNFT } from './mint-nft';
 import { createInitSellingResourceInstruction } from '../../src/instructions';
+import { Creator } from '@metaplex-foundation/mpl-token-metadata';
 
 type InitSellingResourceParams = {
   test: test.Test;
@@ -36,15 +37,23 @@ export const initSellingResource = async ({
   vaultOwnerBump: number;
   resourceMint: Keypair;
 }> => {
+  const creator = new Creator({
+    address: payer.publicKey.toBase58(),
+    share: 100,
+    verified: true,
+  });
+
   const {
     edition: masterEdition,
     editionBump: masterEditionBump,
     tokenAccount: resourceToken,
     mint: resourceMint,
+    metadata,
   } = await mintNFT({
     transactionHandler,
     payer,
     connection,
+    creators: [creator],
   });
 
   const [vaultOwner, vaultOwnerBump] = await findVaultOwnerAddress(resourceMint.publicKey, store);
@@ -69,6 +78,7 @@ export const initSellingResource = async ({
       admin: payer.publicKey,
       sellingResource: sellingResource.publicKey,
       sellingResourceOwner: payer.publicKey,
+      metadata,
       masterEdition,
       resourceMint: resourceMint.publicKey,
       resourceToken: resourceToken.publicKey,
