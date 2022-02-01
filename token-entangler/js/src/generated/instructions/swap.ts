@@ -1,11 +1,10 @@
+import * as splToken from '@solana/spl-token';
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
-import * as splToken from '@solana/spl-token';
-
 const swapStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[];
-}>([['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)]], 'SwapInstructionArgs');
+}>([['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]], 'SwapInstructionArgs');
 export type SwapInstructionAccounts = {
   treasuryMint: web3.PublicKey;
   payer: web3.PublicKey;
