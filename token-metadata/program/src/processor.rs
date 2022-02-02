@@ -1,3 +1,4 @@
+use std::ops::Deref;
 use crate::{
     assertions::{
         collection::{
@@ -47,6 +48,7 @@ use spl_token::{
     state::{Account, Mint},
 };
 use spl_token::instruction::close_account;
+use crate::assertions::uses::{assert_use_authority_derivation, assert_valid_bump};
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
@@ -816,16 +818,13 @@ pub fn process_approve_use_authority(
         mint_info,
         token_account_info,
     )?;
-
-    let bump_seed = process_use_authority_validation(
+    let metadata_uses = metadata.uses.unwrap();
+    let bump_seed = assert_use_authority_derivation(
         program_id,
         use_authority_record_info,
         user_info,
         mint_info,
-        true,
     )?;
-
-    let metadata_uses = metadata.uses.unwrap();
     let use_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -834,7 +833,10 @@ pub fn process_approve_use_authority(
         &user_info.key.as_ref(),
         &[bump_seed],
     ];
-
+    process_use_authority_validation(
+        use_authority_record_info.data_len(),
+        true,
+    )?;
     create_or_allocate_account_raw(
         *program_id,
         use_authority_record_info,
@@ -866,11 +868,12 @@ pub fn process_approve_use_authority(
             ],
         )?;
     }
-    let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+    let mutable_data = &mut *use_authority_record_info.try_borrow_mut_data()?;
+    let mut record = UseAuthorityRecord::from_bytes(*mutable_data)?;
     record.key = Key::UseAuthorityRecord;
     record.allowed_uses = number_of_uses;
     record.bump = bump_seed;
-    record.serialize(&mut *use_authority_record_info.try_borrow_mut_data()?)?;
+    record.serialize(mutable_data)?;
     Ok(())
 }
 
@@ -902,12 +905,25 @@ pub fn process_revoke_use_authority(
         mint_info,
         token_account_info,
     )?;
+    let data = &mut use_authority_record_info.try_borrow_mut_data()?;
     process_use_authority_validation(
+        data.len(),
+        false,
+    )?;
+    assert_owned_by(use_authority_record_info, program_id)?;
+    let canonical_bump = assert_use_authority_derivation(
         program_id,
         use_authority_record_info,
         user_info,
         mint_info,
-        false,
+    )?;
+    let mut record = UseAuthorityRecord::from_bytes(data)?;
+    if record.bump_empty() {
+        record.bump = canonical_bump;
+    }
+    assert_valid_bump(
+        canonical_bump,
+        &record
     )?;
     let metadata_uses = metadata.uses.unwrap();
     if metadata_uses.use_method == UseMethod::Burn {
@@ -932,7 +948,7 @@ pub fn process_revoke_use_authority(
         .lamports()
         .checked_add(lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
-    sol_memset(*use_authority_record_info.try_borrow_mut_data()?, 0, USE_AUTHORITY_RECORD_SIZE);
+    sol_memset(data, 0, USE_AUTHORITY_RECORD_SIZE);
     Ok(())
 }
 
@@ -959,7 +975,6 @@ pub fn process_utilize(
     if *token_program_account_info.key != spl_token::id() {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
-
     assert_signer(&user_info)?;
     assert_currently_holding(
         program_id,
@@ -986,20 +1001,32 @@ pub fn process_utilize(
     });
     if approved_authority_is_using {
         let use_authority_record_info = next_account_info(account_info_iter)?;
+        let data = &mut *use_authority_record_info.try_borrow_mut_data()?;
         process_use_authority_validation(
+            data.len(),
+            false,
+        )?;
+        assert_owned_by(use_authority_record_info, program_id)?;
+        let canonical_bump= assert_use_authority_derivation(
             program_id,
             use_authority_record_info,
             user_info,
             mint_info,
-            false,
         )?;
-        assert_owned_by(use_authority_record_info, program_id)?;
-        let mut record = UseAuthorityRecord::from_account_info(use_authority_record_info)?;
+        let mut record = UseAuthorityRecord::from_bytes(data)?;
+        // Migrates old UARs to having the bump stored
+        if record.bump_empty() {
+            record.bump = canonical_bump;
+        }
+        assert_valid_bump(
+            canonical_bump,
+            &record
+        )?;
         record.allowed_uses = record
             .allowed_uses
             .checked_sub(number_of_uses)
             .ok_or(MetadataError::NotEnoughUses)?;
-        record.serialize(&mut *use_authority_record_info.try_borrow_mut_data()?)?;
+        record.serialize(data)?;
     }
     metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     if remaining_uses <= 0 && must_burn {

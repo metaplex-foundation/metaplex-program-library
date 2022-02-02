@@ -35,15 +35,22 @@ pub fn assert_valid_use(
     };
 }
 
-pub fn process_use_authority_validation(
+pub fn assert_valid_bump(
+    canonical_bump: u8,
+    use_authority_record: &UseAuthorityRecord,
+) -> Result<(), ProgramError> {
+    if canonical_bump != use_authority_record.bump {
+        return Err(MetadataError::InvalidUseAuthorityRecord.into());
+    }
+    Ok(())
+}
+
+pub fn assert_use_authority_derivation(
     program_id: &Pubkey,
     use_authority_record_info: &AccountInfo,
     user_info: &AccountInfo,
     mint_info: &AccountInfo,
-    must_be_empty: bool,
-) -> Result<u8, ProgramError> {
-    let data = use_authority_record_info.try_borrow_data()?;
-    let record_info_empty = data.len() == 0;
+) -> Result<u8, ProgramError>{
     let use_authority_seeds = [
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -51,8 +58,14 @@ pub fn process_use_authority_validation(
         USER.as_bytes(),
         &user_info.key.as_ref(),
     ];
-    let derivation =
-        assert_derivation(&program_id, use_authority_record_info, &use_authority_seeds)?;
+    assert_derivation(&program_id, use_authority_record_info, &use_authority_seeds)
+}
+
+pub fn process_use_authority_validation(
+    data_len: usize,
+    must_be_empty: bool,
+) -> Result<(), ProgramError> {
+    let record_info_empty = data_len == 0;
     if must_be_empty {
         if !record_info_empty {
             return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
@@ -61,10 +74,6 @@ pub fn process_use_authority_validation(
         if record_info_empty {
             return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
         }
-        let record_data = UseAuthorityRecord::from_bytes(&data)?;
-        if derivation != record_data.bump {
-            return Err(MetadataError::InvalidUseAuthorityRecord.into());
-        }
     }
-    Ok(derivation)
+    Ok(())
 }

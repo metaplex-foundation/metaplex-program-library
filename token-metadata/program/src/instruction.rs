@@ -811,7 +811,6 @@ pub fn unverify_collection(
 ///   7. `[]` System program
 ///   8. `[]` Rent info
 ///   9. Optional `[writable]` Use Authority Record PDA If present the program Assumes a delegated use authority
-
 #[allow(clippy::too_many_arguments)]
 pub fn utilize(
     program_id: Pubkey,
@@ -1068,7 +1067,7 @@ pub fn set_and_verify_collection(
     }
     Instruction {
         program_id,
-        accounts: accounts,
+        accounts,
         data: MetadataInstruction::SetAndVerifyCollection
             .try_to_vec()
             .unwrap(),
