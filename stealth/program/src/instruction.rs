@@ -73,9 +73,10 @@ pub enum StealthInstruction {
     ///   2. `[]` The SPL Metadata account. Must be mutable
     ///   3. `[signer]` The update authority for the SPL Metadata
     ///   4. `[writeable]` Stealth PDA
-    ///   5. `[]` Metadata program
+    ///   5. `[]` Token program for OversightMethod::Freeze else Metadata program
     ///   6. `[]` System program
     ///   7. `[]` Rent sysvar
+    ///   8. `[]` Only for OversightMethod::Freeze. The owning SPL Token account
     ///
     /// Data expected by this instruction:
     ///   ConfigureMetadataData
@@ -117,6 +118,13 @@ pub enum StealthInstruction {
     ///   1. `[]` Stealth PDA
     ///   2. `[writable]` Transfer buffer program account
     ///   3. `[]` System program
+    ///
+    /// And then if OversightMethod::Freeze, the following are required (otherwise optional)
+    ///
+    ///   4. `[]` The stealth mint account.
+    ///   5. `[writable]` The source account.
+    ///   6. `[writable]` The destination account.
+    ///   7. `[]` Token program
     ///
     FiniTransfer,
 
