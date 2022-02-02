@@ -48,7 +48,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
     let candy_machine = Pubkey::from_str(&args.candy_machine)?;
 
     
-
+    do_withdraw(logger, program, candy_machine, payer)?;
     Ok(())
 }
 
