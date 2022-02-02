@@ -773,8 +773,19 @@ export const StealthView = (
     const inputBufferKeypair = validateKeypair(inputBuffer, 'input');
     const computeBufferKeypair = validateKeypair(computeBuffer, 'compute');
 
-    console.log('inputBufferKeypair', bs58.encode(inputBufferKeypair.secretKey));
-    console.log('computeBufferKeypair', bs58.encode(computeBufferKeypair.secretKey));
+    const inputBufferKeypairStr = bs58.encode(inputBufferKeypair.secretKey);
+    const computeBufferKeypairStr = bs58.encode(computeBufferKeypair.secretKey);
+
+    console.log('inputBufferKeypair', inputBufferKeypairStr);
+    console.log('computeBufferKeypair', computeBufferKeypairStr);
+
+    if (inputBufferKeypairStr != inputBuffer) {
+      setInputBuffer(inputBufferKeypairStr);
+    }
+
+    if (computeBufferKeypairStr != computeBuffer) {
+      setComputeBuffer(computeBufferKeypairStr);
+    }
 
     const recipientPubkey = new PublicKey(recipientPubkeyStr);
     if (recipientPubkey.equals(wallet.publicKey)) {
