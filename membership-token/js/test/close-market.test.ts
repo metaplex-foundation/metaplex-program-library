@@ -1,19 +1,18 @@
 import test from 'tape';
-import { killStuckProcess, logDebug, sleep } from './utils';
-
 import {
   mintNFT,
   createStore,
   createPrerequisites,
   initSellingResource,
   createMarket,
-  closeMarket,
 } from './actions';
 import {
   assertConfirmedTransaction,
   assertError,
   defaultSendOptions,
 } from '@metaplex-foundation/amman';
+import { killStuckProcess, logDebug, sleep } from './utils';
+import { closeMarket } from './transactions';
 
 killStuckProcess();
 
