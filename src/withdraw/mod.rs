@@ -47,20 +47,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
     let (logger, program, payer) =setup_withdraw(args.logger, args.keypair, args.rpc_url)?;
     let candy_machine = Pubkey::from_str(&args.candy_machine)?;
 
-    info!(
-        logger,
-        "Withdrawing funds from candy machine {}", &candy_machine
-    );
-    let sig = program
-        .request()
-        .accounts(nft_accounts::WithdrawFunds {
-            candy_machine,
-            authority: payer,
-        })
-        .args(nft_instruction::WithdrawFunds {})
-        .send()?;
-
-    info!(logger, "Transaction submitted with id of: {}", sig);
+    
 
     Ok(())
 }
@@ -87,23 +74,10 @@ pub fn process_withdraw_all(args: WithdrawAllArgs) -> Result<()> {
         },
         with_context: None,
     };
-    // info!(
-    //     setup.logger,
-    //     "Withdrawing funds from all candy machines for key {}", &setup.payer
-    // );
-    // let sig = program
-    //     .request()
-    //     .accounts(nft_accounts::WithdrawFunds {
-    //         candy_machine,
-    //         authority: payer,
-    //     })
-    //     .args(nft_instruction::WithdrawFunds {})
-    //     .send()?;
-
-    // info!(setup.logger, "Transaction submitted with id of: {}", sig);
 
     let accounts = program.rpc().get_program_accounts_with_config(&program.id(), config)?;
     println!("{:?}", accounts);
+    accounts.iter().for_each(|account| {let (candy_machine, _account) = account; do_withdraw(logger, program, *candy_machine, payer); } );
 
     Ok(())
 }
@@ -111,8 +85,8 @@ pub fn process_withdraw_all(args: WithdrawAllArgs) -> Result<()> {
 fn setup_withdraw (logger:Logger, keypair:Option<String>, rpc_url:Option<String>)->Result<(Logger, Program, Pubkey)>{
     let sugar_config = sugar_setup(logger, keypair, rpc_url)?;
 
-    let logger = sugar_config.logger;
     let client = setup_client(&sugar_config)?;
+    let logger = sugar_config.logger;
 
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
@@ -123,4 +97,23 @@ fn setup_withdraw (logger:Logger, keypair:Option<String>, rpc_url:Option<String>
     Ok((logger,
         program,
         payer))
+}
+
+fn do_withdraw(logger:Logger, program: Program, candy_machine: Pubkey, payer:Pubkey) -> Result<()>{
+    info!(
+        logger,
+        "Withdrawing funds from candy machine {}", &candy_machine
+    );
+    let sig = program
+        .request()
+        .accounts(nft_accounts::WithdrawFunds {
+            candy_machine,
+            authority: payer,
+        })
+        .args(nft_instruction::WithdrawFunds {})
+        .send()?;
+
+    info!(logger, "Transaction submitted with id of: {}", sig);
+
+    Ok(())
 }

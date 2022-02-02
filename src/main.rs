@@ -122,7 +122,6 @@ async fn main() -> Result<()> {
             rpc_url,
         })?,
         Commands::WithdrawAll {
-            candy_machine,
             keypair,
             rpc_url,
         } => process_withdraw_all(WithdrawAllArgs {
