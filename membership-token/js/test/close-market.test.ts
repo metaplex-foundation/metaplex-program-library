@@ -1,5 +1,5 @@
 import test from 'tape';
-import { killStuckProcess, sleep } from './utils';
+import { killStuckProcess, logDebug, sleep } from './utils';
 
 import {
   mintNFT,
@@ -8,8 +8,12 @@ import {
   initSellingResource,
   createMarket,
   closeMarket,
-  closeMarketLimitedDuration,
 } from './actions';
+import {
+  assertConfirmedTransaction,
+  assertError,
+  defaultSendOptions,
+} from '@metaplex-foundation/amman';
 
 killStuckProcess();
 
@@ -66,14 +70,21 @@ test('close-market: success', async (t) => {
 
   await sleep(3000);
 
-  console.log('Payer: ', payer.publicKey.toBase58());
-  await closeMarket({
-    test: t,
+  const marketTx = await closeMarket({
     transactionHandler,
     payer,
     connection,
     market,
   });
+
+  const MarketRes = await transactionHandler.sendAndConfirmTransaction(
+    marketTx,
+    [payer],
+    defaultSendOptions,
+  );
+
+  logDebug(`market: ${market.publicKey}`);
+  assertConfirmedTransaction(t, MarketRes.txConfirmed);
 });
 
 test('close-market: fail, market has the specific endDate', async (t) => {
@@ -129,11 +140,20 @@ test('close-market: fail, market has the specific endDate', async (t) => {
 
   await sleep(3000);
 
-  await closeMarketLimitedDuration({
-    test: t,
+  const marketTx = await closeMarket({
     transactionHandler,
     payer,
     connection,
     market,
   });
+
+  logDebug(`market: ${market.publicKey}`);
+
+  try {
+    await transactionHandler.sendAndConfirmTransaction(marketTx, [payer], defaultSendOptions);
+
+    t.fail('expected transaction to fail due to limited market duration ');
+  } catch (error) {
+    assertError(t, error, [/0x1782/i]);
+  }
 });
