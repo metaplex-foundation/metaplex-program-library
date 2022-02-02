@@ -331,8 +331,36 @@ pub fn init_transfer(
     )
 }
 
+/// fini transfer with wrapped SPL token transfer
 #[cfg(not(target_arch = "bpf"))]
 pub fn fini_transfer(
+    payer: Pubkey,
+    mint: Pubkey,
+    transfer_buffer: Pubkey,
+    source: Pubkey,
+    destination: Pubkey,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(payer, true),
+        AccountMeta::new(get_stealth_address(&mint).0, false),
+        AccountMeta::new(transfer_buffer, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new(mint, false),
+        AccountMeta::new(source, false),
+        AccountMeta::new(destination, false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+    ];
+
+    encode_instruction(
+        accounts,
+        StealthInstruction::FiniTransfer,
+        &(),
+    )
+}
+
+/// fini transfer with separate SPL token transfer. used when OversightMethod != Freeze
+#[cfg(not(target_arch = "bpf"))]
+pub fn fini_transfer_raw(
     payer: Pubkey,
     mint: Pubkey,
     transfer_buffer: Pubkey,

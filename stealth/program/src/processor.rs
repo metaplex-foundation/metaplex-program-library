@@ -124,6 +124,7 @@ fn reassign_royalties<'info>(
     metadata_update_authority_info: &AccountInfo<'info>,
     metadata: &mpl_token_metadata::state::Metadata,
     signer_seeds: &[&[&[u8]]],
+    _account_info_iter: &mut std::slice::Iter<AccountInfo<'info>>,
 ) -> ProgramResult {
     if *metadata_program_info.key != mpl_token_metadata::ID {
         msg!("Mismatched metadata program");
@@ -166,6 +167,115 @@ fn reassign_royalties<'info>(
             stealth_info.clone(),
         ],
         signer_seeds,
+    )?;
+
+    Ok(())
+}
+
+fn reassign_mint_and_freeze<'info>(
+    token_program_info: &AccountInfo<'info>,
+    stealth_info: &AccountInfo<'info>,
+    mint_info: &AccountInfo<'info>,
+    mint_authority_info: &AccountInfo<'info>,
+    metadata: &mpl_token_metadata::state::Metadata,
+    signer_seeds: &[&[&[u8]]],
+    account_info_iter: &mut std::slice::Iter<AccountInfo<'info>>,
+) -> ProgramResult {
+    if *token_program_info.key != spl_token::ID {
+        msg!("Mismatched token program");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if metadata.mint != *mint_info.key {
+        msg!("Mismatched mint");
+        return Err(StealthError::InvalidMintInfo.into());
+    }
+
+    let mint = spl_token::state::Mint::unpack_from_slice(&mint_info.try_borrow_data()?)?;
+
+    if mint.decimals != 0 {
+        msg!("Decimals not zero");
+        return Err(StealthError::InvalidMintInfo.into());
+    }
+
+    if mint.supply != 1 {
+        msg!("Supply is not 1");
+        return Err(StealthError::InvalidMintInfo.into());
+    }
+
+    if solana_program::program_option::COption::Some(metadata.update_authority) != mint.mint_authority {
+        msg!("Mint authority and metadata authority are different");
+        return Err(StealthError::InvalidUpdateAuthority.into());
+    }
+
+    // reassign mint and freeze auth
+    let accounts = &[
+        mint_authority_info.clone(),
+        mint_info.clone(),
+        token_program_info.clone(),
+        stealth_info.clone(),
+    ];
+    invoke(
+        &spl_token::instruction::set_authority(
+            token_program_info.key,
+            mint_info.key,
+            Some(stealth_info.key),
+            spl_token::instruction::AuthorityType::MintTokens,
+            mint_authority_info.key,
+            &[],
+        ).unwrap(),
+        accounts,
+    )?;
+
+    // currently freeze authority cannot be re-enabled but if it's changed in token program
+    // later...
+    invoke(
+        &spl_token::instruction::set_authority(
+            token_program_info.key,
+            mint_info.key,
+            Some(&stealth_info.key),
+            spl_token::instruction::AuthorityType::FreezeAccount,
+            mint_authority_info.key,
+            &[],
+        ).unwrap(),
+        accounts,
+    )?;
+
+    let token_account_info = next_account_info(account_info_iter)?;
+    let token_account = spl_token::state::Account::unpack_from_slice(
+        &token_account_info.try_borrow_data()?)?;
+
+    if token_account.mint != *mint_info.key {
+        msg!("Mismatched token account mint");
+        return Err(StealthError::InvalidTokenAccountInfo.into());
+    }
+
+    // equals old mint auth
+    if token_account.owner != *mint_authority_info.key {
+        msg!("Mismatched token account owner");
+        return Err(StealthError::InvalidTokenAccountInfo.into());
+    }
+
+    if token_account.amount != 1 {
+        msg!("Mismatched token account amount");
+        return Err(StealthError::InvalidTokenAccountInfo.into());
+    }
+
+    invoke_signed(
+        &spl_token::instruction::freeze_account(
+            token_program_info.key,
+            token_account_info.key,
+            mint_info.key,
+            mint_authority_info.key,
+            &[],
+        ).unwrap(),
+        &[
+            token_program_info.clone(),
+            token_account_info.clone(),
+            mint_info.clone(),
+            mint_authority_info.clone(),
+        ],
+        signer_seeds
     )?;
 
     Ok(())
@@ -279,6 +389,7 @@ fn process_configure_metadata(
     stealth.encrypted_cipher_key = data.encrypted_cipher_key;
     stealth.uri = data.uri;
     stealth.method = data.method;
+    stealth.bump_seed = stealth_bump_seed;
 
     drop(stealth);
 
@@ -291,6 +402,18 @@ fn process_configure_metadata(
                 metadata_update_authority_info,
                 &metadata,
                 signer_seeds,
+                account_info_iter,
+            )
+        }
+        OversightMethod::Freeze => {
+            reassign_mint_and_freeze(
+                oversight_program_info,
+                stealth_info,
+                mint_info,
+                metadata_update_authority_info,
+                &metadata,
+                signer_seeds,
+                account_info_iter,
             )
         }
         OversightMethod::None => {
@@ -509,14 +632,101 @@ fn process_fini_transfer(
     stealth.elgamal_pk = transfer_buffer.elgamal_pk;
     stealth.encrypted_cipher_key = transfer_buffer.encrypted_cipher_key;
 
+    let stealth_bump_seed = stealth.bump_seed;
+    let stealth_method = stealth.method;
+    drop(stealth);
 
-    // close the transfer buffer
-    let starting_lamports = authority_info.lamports();
-    **authority_info.lamports.borrow_mut() = starting_lamports
-        .checked_add(transfer_buffer_info.lamports())
-        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
+    let close_transfer_buffer = || -> ProgramResult {
+        let starting_lamports = authority_info.lamports();
+        **authority_info.lamports.borrow_mut() = starting_lamports
+            .checked_add(transfer_buffer_info.lamports())
+            .ok_or::<ProgramError>(StealthError::Overflow.into())?;
 
-    **transfer_buffer_info.lamports.borrow_mut() = 0;
+        **transfer_buffer_info.lamports.borrow_mut() = 0;
+        Ok(())
+    };
+
+    if account_info_iter.clone().count() == 0 {
+        // no wrapped transfer
+        if stealth_method == OversightMethod::Freeze {
+            msg!("Must use fini_transfer with token accounts with freeze oversight");
+            return Err(ProgramError::InvalidArgument);
+        }
+        close_transfer_buffer()?;
+        return Ok(());
+    }
+
+
+    let mint_info = next_account_info(account_info_iter)?;
+    let source_info = next_account_info(account_info_iter)?;
+    let destination_info = next_account_info(account_info_iter)?;
+    let token_program_info = next_account_info(account_info_iter)?;
+
+    let mint_info_key = mint_info.key;
+    let signer_seeds : &[&[&[u8]]] = &[
+        &[
+            PREFIX.as_bytes(),
+            mint_info_key.as_ref(),
+            &[stealth_bump_seed],
+        ],
+    ];
+
+    if stealth_method == OversightMethod::Freeze {
+        invoke_signed(
+            &spl_token::instruction::thaw_account(
+                token_program_info.key,
+                source_info.key,
+                mint_info.key,
+                stealth_info.key,
+                &[],
+            ).unwrap(),
+            &[
+                token_program_info.clone(),
+                source_info.clone(),
+                mint_info.clone(),
+                stealth_info.clone(),
+            ],
+            signer_seeds
+        )?;
+    }
+
+    invoke(
+        &spl_token::instruction::transfer(
+            token_program_info.key,
+            source_info.key,
+            destination_info.key,
+            authority_info.key,
+            &[],
+            1,
+        ).unwrap(),
+        &[
+            token_program_info.clone(),
+            source_info.clone(),
+            destination_info.clone(),
+            authority_info.clone(),
+        ],
+    )?;
+
+    if stealth_method == OversightMethod::Freeze {
+        invoke_signed(
+            &spl_token::instruction::freeze_account(
+                token_program_info.key,
+                destination_info.key,
+                mint_info.key,
+                stealth_info.key,
+                &[],
+            ).unwrap(),
+            &[
+                token_program_info.clone(),
+                destination_info.clone(),
+                mint_info.clone(),
+                stealth_info.clone(),
+            ],
+            signer_seeds
+        )?;
+    }
+
+    close_transfer_buffer()?;
 
     Ok(())
 }

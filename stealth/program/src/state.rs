@@ -78,6 +78,8 @@ pub struct StealthAccount {
 
     pub method: OversightMethod,
 
+    pub bump_seed: u8,
+
     pub padding: [u8; 128],
 }
 impl PodAccountInfo<'_, '_> for StealthAccount {}
@@ -118,5 +120,7 @@ pub struct EncryptionKeyBuffer {
 
     /// ElGamal encryption key associated with owner:mint
     pub elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
+
+    pub padding: [u8; 64],
 }
 impl PodAccountInfo<'_, '_> for EncryptionKeyBuffer {}

@@ -34,6 +34,12 @@ pub enum StealthError {
 
     #[error("Invalid Elgamal Pubkey PDA")]
     InvalidElgamalPubkeyPDA,
+
+    #[error("Invalid Mint Info")]
+    InvalidMintInfo,
+
+    #[error("Invalid Token Account Info")]
+    InvalidTokenAccountInfo,
 }
 
 impl PrintProgramError for StealthError {

@@ -126,7 +126,7 @@ async fn nft_setup_transaction(
 }
 
 #[tokio::test]
-async fn test_transfer() {
+async fn test_transfer_wrapped() {
     let mut pc = ProgramTest::default();
 
     pc.prefer_bpf(true);
@@ -222,30 +222,24 @@ async fn test_transfer() {
             ),
 
             // finish and transfer
-            stealth::instruction::fini_transfer(
-                payer.pubkey(),
-                mint.pubkey(),
-                transfer_buffer_key,
-            ),
             spl_associated_token_account::create_associated_token_account(
                 &payer.pubkey(), // funding
                 &dest.pubkey(), // wallet to create for
                 &mint.pubkey(),
             ),
-            spl_token::instruction::transfer(
-                &spl_token::id(),
-                &spl_associated_token_account::get_associated_token_address(
+            stealth::instruction::fini_transfer(
+                payer.pubkey(),
+                mint.pubkey(),
+                transfer_buffer_key,
+                spl_associated_token_account::get_associated_token_address(
                     &payer.pubkey(),
                     &mint.pubkey(),
                 ),
-                &spl_associated_token_account::get_associated_token_address(
+                spl_associated_token_account::get_associated_token_address(
                     &dest.pubkey(),
                     &mint.pubkey(),
                 ),
-                &payer.pubkey(),
-                &[],
-                1,
-            ).unwrap(),
+            ),
         ],
         Some(&payer.pubkey()),
         &[&payer, &dest],
@@ -428,7 +422,7 @@ async fn test_transfer_buyer_init() {
             ),
 
             // finish
-            stealth::instruction::fini_transfer(
+            stealth::instruction::fini_transfer_raw(
                 payer.pubkey(),
                 mint.pubkey(),
                 transfer_buffer_key,
