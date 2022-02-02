@@ -20,7 +20,7 @@ use sugar::upload::{process_upload, UploadArgs};
 use sugar::upload_assets::{process_upload_assets, UploadAssetsArgs};
 use sugar::validate::{process_validate, ValidateArgs};
 use sugar::verify::{process_verify, VerifyArgs};
-use sugar::withdraw::{process_withdraw, WithdrawArgs};
+use sugar::withdraw::{process_withdraw,process_withdraw_all, WithdrawArgs,WithdrawAllArgs};
 
 pub fn default_candy_data() -> CandyMachineData {
     CandyMachineData {
@@ -118,6 +118,15 @@ async fn main() -> Result<()> {
         } => process_withdraw(WithdrawArgs {
             logger,
             candy_machine,
+            keypair,
+            rpc_url,
+        })?,
+        Commands::WithdrawAll {
+            candy_machine,
+            keypair,
+            rpc_url,
+        } => process_withdraw_all(WithdrawAllArgs {
+            logger,
             keypair,
             rpc_url,
         })?,
