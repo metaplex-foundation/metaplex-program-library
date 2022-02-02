@@ -117,6 +117,60 @@ fn scale_creator_shares(
     Some(new_creators)
 }
 
+fn reassign_royalties<'info>(
+    metadata_program_info: &AccountInfo<'info>,
+    stealth_info: &AccountInfo<'info>,
+    metadata_info: &AccountInfo<'info>,
+    metadata_update_authority_info: &AccountInfo<'info>,
+    metadata: &mpl_token_metadata::state::Metadata,
+    signer_seeds: &[&[&[u8]]],
+) -> ProgramResult {
+    if *metadata_program_info.key != mpl_token_metadata::ID {
+        msg!("Mismatched metadata program");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    // make the PDA a 'creator' so that it receives a portion of the fees and bump seller fees to
+    // 100%
+    let new_creators = scale_creator_shares(&stealth_info.key, &metadata)
+        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
+    invoke(
+        &mpl_token_metadata::instruction::update_metadata_accounts(
+            *metadata_program_info.key,
+            *metadata_info.key,
+            *metadata_update_authority_info.key,
+            None, // new update auth
+            Some(mpl_token_metadata::state::Data {
+                seller_fee_basis_points: 10000,
+                creators: Some(new_creators),
+                ..metadata.data.clone()
+            }),
+            None, // primary sale happened
+        ),
+        &[
+            metadata_program_info.clone(),
+            metadata_info.clone(),
+            metadata_update_authority_info.clone(),
+        ],
+    )?;
+
+    invoke_signed(
+        &mpl_token_metadata::instruction::sign_metadata(
+            *metadata_program_info.key,
+            *metadata_info.key,
+            *stealth_info.key,
+        ),
+        &[
+            metadata_program_info.clone(),
+            metadata_info.clone(),
+            stealth_info.clone(),
+        ],
+        signer_seeds,
+    )?;
+
+    Ok(())
+}
+
 fn process_configure_metadata(
     accounts: &[AccountInfo],
     data: &ConfigureMetadataData
@@ -127,7 +181,7 @@ fn process_configure_metadata(
     let metadata_info = next_account_info(account_info_iter)?;
     let metadata_update_authority_info = next_account_info(account_info_iter)?;
     let stealth_info = next_account_info(account_info_iter)?;
-    let metadata_program_info = next_account_info(account_info_iter)?;
+    let oversight_program_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
     let rent_sysvar_info = next_account_info(account_info_iter)?;
 
@@ -142,11 +196,6 @@ fn process_configure_metadata(
     }
     validate_account_owner(mint_info, &spl_token::ID)?;
     validate_account_owner(metadata_info, &mpl_token_metadata::ID)?;
-
-    if *metadata_program_info.key != mpl_token_metadata::ID {
-        msg!("Mismatched metadata program");
-        return Err(ProgramError::InvalidArgument);
-    }
 
     // check metadata matches mint
     let metadata_seeds = &[
@@ -193,50 +242,14 @@ fn process_configure_metadata(
         return Err(StealthError::InvalidStealthKey.into());
     }
 
-
-    // make the PDA a 'creator' so that it receives a portion of the fees and bump seller fees to
-    // 100%
-    let new_creators = scale_creator_shares(&stealth_key, &metadata)
-        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
-    invoke(
-        &mpl_token_metadata::instruction::update_metadata_accounts(
-            *metadata_program_info.key,
-            *metadata_info.key,
-            *metadata_update_authority_info.key,
-            None, // new update auth
-            Some(mpl_token_metadata::state::Data {
-                seller_fee_basis_points: 10000,
-                creators: Some(new_creators),
-                ..metadata.data
-            }),
-            None, // primary sale happened
-        ),
+    let mint_info_key = mint_info.key;
+    let signer_seeds : &[&[&[u8]]] = &[
         &[
-            metadata_program_info.clone(),
-            metadata_info.clone(),
-            metadata_update_authority_info.clone(),
+            PREFIX.as_bytes(),
+            mint_info_key.as_ref(),
+            &[stealth_bump_seed],
         ],
-    )?;
-
-    invoke_signed(
-        &mpl_token_metadata::instruction::sign_metadata(
-            *metadata_program_info.key,
-            *metadata_info.key,
-            *stealth_info.key,
-        ),
-        &[
-            metadata_program_info.clone(),
-            metadata_info.clone(),
-            stealth_info.clone(),
-        ],
-        &[
-            &[
-                PREFIX.as_bytes(),
-                mint_info.key.as_ref(),
-                &[stealth_bump_seed],
-            ],
-        ],
-    )?;
+    ];
 
     // create and initialize PDA
     let rent = &Rent::from_account_info(rent_sysvar_info)?;
@@ -253,13 +266,7 @@ fn process_configure_metadata(
             stealth_info.clone(),
             system_program_info.clone(),
         ],
-        &[
-            &[
-                PREFIX.as_bytes(),
-                mint_info.key.as_ref(),
-                &[stealth_bump_seed],
-            ],
-        ],
+        signer_seeds,
     )?;
 
     let mut stealth = StealthAccount::from_account_info(
@@ -271,6 +278,29 @@ fn process_configure_metadata(
     stealth.elgamal_pk = data.elgamal_pk;
     stealth.encrypted_cipher_key = data.encrypted_cipher_key;
     stealth.uri = data.uri;
+    stealth.method = data.method;
+
+    drop(stealth);
+
+    match data.method {
+        OversightMethod::Royalties => {
+            reassign_royalties(
+                oversight_program_info,
+                stealth_info,
+                metadata_info,
+                metadata_update_authority_info,
+                &metadata,
+                signer_seeds,
+            )
+        }
+        OversightMethod::None => {
+            Ok(())
+        }
+        _ => {
+            msg!("Invalid OversightMethod");
+            Err(ProgramError::InvalidArgument)
+        }
+    }?;
 
     Ok(())
 }
@@ -343,7 +373,7 @@ fn process_init_transfer(
     }
 
     // deserialize to verify it exists...
-    let _stealth = StealthAccount::from_account_info(
+    let stealth = StealthAccount::from_account_info(
         &stealth_info, &ID, Key::StealthAccountV1)?;
 
     // check that elgamal PDAs match
@@ -411,21 +441,26 @@ fn process_init_transfer(
     transfer_buffer.wallet_pk = *recipient_info.key;
     transfer_buffer.elgamal_pk = recipient_elgamal_pk;
 
-    let minimum_rent = rent.minimum_balance(
-        StealthAccount::get_packed_len()).max(1);
-    let paid_amount =
-        stealth_info.lamports()
-        .checked_sub(minimum_rent)
-        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
-    if paid_amount != 0 {
-        // transfer the seller's fee portion to the transfer buffer (which can be claimed by them)
-        // TODO: expiration so buyer can reclaim if this doesn't happen
-        let starting_lamports = transfer_buffer_info.lamports();
-        **transfer_buffer_info.lamports.borrow_mut() = starting_lamports
-            .checked_add(paid_amount)
-            .ok_or::<ProgramError>(StealthError::Overflow.into())?;
+    match stealth.method {
+        OversightMethod::Royalties => {
+            let minimum_rent = rent.minimum_balance(
+                StealthAccount::get_packed_len()).max(1);
+            let paid_amount =
+                stealth_info.lamports()
+                .checked_sub(minimum_rent)
+                .ok_or::<ProgramError>(StealthError::Overflow.into())?;
+            if paid_amount != 0 {
+                // transfer the seller's fee portion to the transfer buffer (which can be claimed by them)
+                // TODO: expiration so buyer can reclaim if this doesn't happen
+                let starting_lamports = transfer_buffer_info.lamports();
+                **transfer_buffer_info.lamports.borrow_mut() = starting_lamports
+                    .checked_add(paid_amount)
+                    .ok_or::<ProgramError>(StealthError::Overflow.into())?;
 
-        **stealth_info.lamports.borrow_mut() = minimum_rent;
+                **stealth_info.lamports.borrow_mut() = minimum_rent;
+            }
+        }
+        _ => {}
     }
 
     Ok(())

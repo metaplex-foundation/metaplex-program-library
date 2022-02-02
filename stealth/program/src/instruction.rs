@@ -43,6 +43,8 @@ pub struct ConfigureMetadataData {
 
     /// The URI of the encrypted asset
     pub uri: crate::state::URI,
+
+    pub method: crate::state::OversightMethod,
 }
 
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -292,6 +294,7 @@ pub fn configure_metadata(
     data.elgamal_pk = elgamal_pk;
     data.encrypted_cipher_key = *encrypted_cipher_key;
     data.uri.0[..uri.len()].copy_from_slice(uri);
+    data.method = crate::state::OversightMethod::Royalties;
 
     encode_instruction(
         accounts,

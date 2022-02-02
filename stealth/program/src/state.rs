@@ -31,9 +31,20 @@ pub enum Key {
     EncryptionKeyBufferV1,
 }
 
+#[derive(Clone, Copy, PartialEq, FromPrimitive, ToPrimitive)]
+#[repr(u8)]
+pub enum OversightMethod {
+    Uninitialized,
+    None,
+    Royalties,
+    Freeze,
+}
+
 // wcgw
 unsafe impl Zeroable for Key {}
-unsafe impl Pod for Key {}
+unsafe impl Zeroable for OversightMethod {}
+unsafe impl Pod      for Key {}
+unsafe impl Pod      for OversightMethod {}
 
 #[derive(Clone, Copy)]
 #[repr(C)]
@@ -64,6 +75,10 @@ pub struct StealthAccount {
 
     /// URI of encrypted asset
     pub uri: URI,
+
+    pub method: OversightMethod,
+
+    pub padding: [u8; 128],
 }
 impl PodAccountInfo<'_, '_> for StealthAccount {}
 
@@ -85,6 +100,8 @@ pub struct CipherKeyTransferBuffer {
 
     /// 192-bit AES cipher key encrypted with elgamal_pk
     pub encrypted_cipher_key: zk_token_elgamal::pod::ElGamalCiphertext,
+
+    pub padding: [u8; 128],
 }
 impl PodAccountInfo<'_, '_> for CipherKeyTransferBuffer {}
 
