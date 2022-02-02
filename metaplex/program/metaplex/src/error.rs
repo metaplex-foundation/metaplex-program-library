@@ -49,6 +49,10 @@ pub enum MetaplexError {
     #[error("Vault's authority does not match the expected ['metaplex', auction_key]")]
     VaultAuthorityMismatch,
 
+    /// Vault's authority does not match the expected pda with seed ['metaplex', fraction_manager]
+    #[error("Vault's authority does not match the expected ['metaplex', fraction_manager]")]
+    FractionVaultAuthorityMismatch,
+
     /// Auction's authority does not match the expected pda with seed ['metaplex', auction_key]
     #[error(
         "Auction's authority does not match the expected pda with seed ['metaplex', auction_key]"
@@ -91,6 +95,10 @@ pub enum MetaplexError {
     #[error("The token metadata program given does not match the token metadata program on this auction manager!")]
     AuctionManagerTokenMetadataProgramMismatch,
 
+    /// The token metadata program given does not match the token metadata program on this fraction manager!
+    #[error("The token metadata program given does not match the token metadata program on this fraction manager!")]
+    FractionManagerTokenMetadataProgramMismatch,
+
     /// The mint is owned by a different token program than the one used by this auction manager!
     #[error(
         "The mint is owned by a different token program than the one used by this auction manager!"
@@ -118,6 +126,10 @@ pub enum MetaplexError {
     /// Only combined vaults may be used in auction managers!
     #[error("Only combined vaults may be used in auction managers!")]
     VaultNotCombined,
+
+    /// Only active vaults may be used in fraction managers!
+    #[error("Only active vaults may be used in fraction managers!")]
+    VaultNotActive,
 
     /// Cannot auction off an empty vault!
     #[error("Cannot auction off an empty vault!")]
@@ -151,6 +163,10 @@ pub enum MetaplexError {
     #[error("Not enough tokens to supply winners!")]
     NotEnoughTokensToSupplyWinners,
 
+    /// Not enough tokens to supply the vault buyer!
+    #[error("Not enough tokens to supply the vault buyer!")]
+    NotEnoughTokensToSupplyVaultBuyer,
+
     /// The auction manager must own the payoff account!
     #[error("The auction manager must own the payoff account!")]
     AuctionManagerMustOwnPayoffAccount,
@@ -178,6 +194,10 @@ pub enum MetaplexError {
     /// Auction has not ended yet!
     #[error("Auction has not ended yet!")]
     AuctionHasNotEnded,
+
+    /// The original authority lookup does not match the expected PDA of ['metaplex', vault key, metadata key]
+    #[error("The original authority lookup does not match the expected PDA of ['metaplex', vault key, metadata key]")]
+    FractionOriginalAuthorityLookupKeyMismatch,
 
     /// The original authority lookup does not match the expected PDA of ['metaplex', auction key, metadata key]
     #[error("The original authority lookup does not match the expected PDA of ['metaplex', auction key, metadata key]")]
@@ -235,9 +255,25 @@ pub enum MetaplexError {
     )]
     AuctionAcceptPaymentMintMismatch,
 
+    /// The accept payment account for this fraction manager must match the fraction manager's token mint!
+    #[error(
+        "The accept payment account for this fraction manager must match the fraction manager's token mint!"
+    )]
+    FractionManagerAcceptPaymentMintMismatch,
+
+    /// The token mint for this fraction manager must match the external price account's token price mint!
+    #[error(
+        "The token mint for this fraction manager must match the external price account's token price mint!"
+    )]
+    FractionManagerPriceAccountMintMismatch,
+
     /// The accept payment owner must be the auction manager!
     #[error("The accept payment owner must be the auction manager!")]
     AcceptPaymentOwnerMismatch,
+
+    /// The accept payment owner must be the fraction manager!
+    #[error("The accept payment owner must be the fraction manager!")]
+    FractionAcceptPaymentOwnerMismatch,
 
     /// The accept payment given does not match the accept payment account on the auction manager!
     #[error("The accept payment given does not match the accept payment account on the auction manager!")]
@@ -278,6 +314,10 @@ pub enum MetaplexError {
     /// Store given does not match store on auction manager!
     #[error("Store given does not match store on auction manager!")]
     AuctionManagerStoreMismatch,
+
+    /// Store given does not match store on auction manager!
+    #[error("Store given does not match store on auction manager!")]
+    FractionManagerStoreMismatch,
 
     /// Supplied an invalid creator index to empty payment account
     #[error("Supplied an invalid creator index to empty payment account")]
@@ -355,6 +395,10 @@ pub enum MetaplexError {
     #[error("Token metadata program does not match")]
     AuctionManagerTokenMetadataMismatch,
 
+    /// Token metadata program does not match
+    #[error("Token metadata program does not match")]
+    FractionManagerTokenMetadataMismatch,
+
     /// This safety deposit box has already been validated
     #[error("This safety deposit box has already been validated")]
     AlreadyValidated,
@@ -362,6 +406,10 @@ pub enum MetaplexError {
     /// Auction must be created
     #[error("Auction must be created")]
     AuctionMustBeCreated,
+
+    /// Vault must be in active state
+    #[error("Vault must be active")]
+    VaultMustBeActive,
 
     /// Accept payment delegate should be none
     #[error("Accept payment delegate should be none")]
@@ -430,6 +478,10 @@ pub enum MetaplexError {
     /// Not allowed to use Master Edition V1 printing with Auction Manager v2
     #[error("Not allowed to use Master Edition V1 printing with Auction Manager v2")]
     PrintingV1NotAllowedWithAuctionManagerV2,
+
+    /// Not allowed to use Master Edition V1 printing with Fraction Manager v1
+    #[error("Not allowed to use Master Edition V1 printing with Fraction Manager v1")]
+    PrintingV1NotAllowedWithFractionManagerV1,
 
     /// Invalid system
     #[error("Invalid system program")]

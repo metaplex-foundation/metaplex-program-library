@@ -1,24 +1,26 @@
-use super::validate_safety_deposit_box_v2::{
-    assert_common_checks, assert_supply_logic_check, CommonCheckArgs, SupplyLogicCheckArgs,
-};
-use crate::{
-    deprecated_state::{
-        AuctionManagerV1, ParticipationStateV1, SafetyDepositValidationTicket,
-        MAX_VALIDATION_TICKET_SIZE,
+use {
+    super::validate_safety_deposit_box_v2::{
+        assert_common_checks, assert_supply_logic_check, CommonCheckArgs, SupplyLogicCheckArgs,
     },
-    error::MetaplexError,
-    state::{AuctionManagerStatus, Key, Store, WinningConfigType, PREFIX},
-    utils::{assert_derivation, assert_initialized, create_or_allocate_account_raw},
+    crate::{
+        deprecated_state::{
+            AuctionManagerV1, ParticipationStateV1, SafetyDepositValidationTicket,
+            MAX_VALIDATION_TICKET_SIZE,
+        },
+        error::MetaplexError,
+        state::{AuctionManagerStatus, Key, Store, WinningConfigType, PREFIX},
+        utils::{assert_derivation, assert_initialized, create_or_allocate_account_raw},
+    },
+    borsh::BorshSerialize,
+    metaplex_token_metadata::state::Metadata,
+    metaplex_token_vault::state::{SafetyDepositBox, Vault},
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        pubkey::Pubkey,
+    },
+    spl_token::state::Account,
 };
-use borsh::BorshSerialize;
-use mpl_token_metadata::state::Metadata;
-use mpl_token_vault::state::{SafetyDepositBox, Vault};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    pubkey::Pubkey,
-};
-use spl_token::state::Account;
 pub fn make_safety_deposit_validation<'a>(
     program_id: &Pubkey,
     auction_manager_info: &AccountInfo<'a>,

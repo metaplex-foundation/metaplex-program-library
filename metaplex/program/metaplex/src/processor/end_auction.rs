@@ -1,32 +1,39 @@
-use crate::{
-    error::MetaplexError,
-    state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
-    utils::{assert_authority_correct, assert_owned_by},
-};
-use mpl_auction::{
-    instruction::{start_auction_instruction, StartAuctionArgs},
-    processor::AuctionData,
-};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    program::invoke_signed,
-    pubkey::Pubkey,
+use {
+    crate::{
+        error::MetaplexError,
+        instruction::EndAuctionArgs as MetaplexEndAuctionArgs,
+        state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
+        utils::{assert_authority_correct, assert_owned_by},
+    },
+    metaplex_auction::{
+        instruction::{end_auction_instruction, EndAuctionArgs},
+        processor::{AuctionData, AuctionDataExtended, BidState},
+    },
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        program::invoke_signed,
+        pubkey::Pubkey,
+    },
 };
 
-pub fn issue_start_auction<'a>(
+pub fn issue_end_auction<'a>(
     auction_program: AccountInfo<'a>,
     authority: AccountInfo<'a>,
     auction: AccountInfo<'a>,
     clock: AccountInfo<'a>,
     vault: Pubkey,
+    reveal: Option<(u64, u64)>,
     signer_seeds: &[&[u8]],
 ) -> ProgramResult {
     invoke_signed(
-        &start_auction_instruction(
+        &end_auction_instruction(
             *auction_program.key,
             *authority.key,
-            StartAuctionArgs { resource: vault },
+            EndAuctionArgs {
+                resource: vault,
+                reveal,
+            },
         ),
         &[auction_program, authority, auction, clock],
         &[&signer_seeds],
@@ -35,10 +42,15 @@ pub fn issue_start_auction<'a>(
     Ok(())
 }
 
-pub fn process_start_auction(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn process_end_auction(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: MetaplexEndAuctionArgs,
+) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
-    let auction_manager_info = next_account_info(account_info_iter)?;
+    let mut auction_manager_info = next_account_info(account_info_iter)?;
     let auction_info = next_account_info(account_info_iter)?;
+    let auction_data_extended_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
     let store_info = next_account_info(account_info_iter)?;
     let auction_program_info = next_account_info(account_info_iter)?;
@@ -46,6 +58,7 @@ pub fn process_start_auction(program_id: &Pubkey, accounts: &[AccountInfo]) -> P
 
     let mut auction_manager = get_auction_manager(auction_manager_info)?;
     let auction = AuctionData::from_account_info(auction_info)?;
+    let auction_data_extended = AuctionDataExtended::from_account_info(auction_data_extended_info)?;
     let store = Store::from_account_info(store_info)?;
 
     if auction.authority != *auction_manager_info.key {
@@ -69,27 +82,39 @@ pub fn process_start_auction(program_id: &Pubkey, accounts: &[AccountInfo]) -> P
         return Err(MetaplexError::AuctionManagerAuctionProgramMismatch.into());
     }
 
-    if auction_manager.status() != AuctionManagerStatus::Validated {
-        return Err(MetaplexError::AuctionManagerMustBeValidated.into());
+    if auction_manager.status() == AuctionManagerStatus::Finished {
+        return Err(MetaplexError::AuctionManagerInFishedState.into());
     }
 
     let auction_key = auction_manager.auction();
-    let seeds = &[PREFIX.as_bytes(), auction_key.as_ref()];
+    let seeds = &[PREFIX.as_bytes(), &auction_key.as_ref()];
     let (_, bump_seed) = Pubkey::find_program_address(seeds, &program_id);
-    let authority_seeds = &[PREFIX.as_bytes(), auction_key.as_ref(), &[bump_seed]];
+    let authority_seeds = &[PREFIX.as_bytes(), &auction_key.as_ref(), &[bump_seed]];
 
-    issue_start_auction(
+    issue_end_auction(
         auction_program_info.clone(),
         auction_manager_info.clone(),
         auction_info.clone(),
         clock_info.clone(),
         auction_manager.vault(),
+        args.reveal,
         authority_seeds,
     )?;
 
-    auction_manager.set_status(AuctionManagerStatus::Running);
+    if auction_data_extended.instant_sale_price.is_some() {
+        match auction.bid_state {
+            BidState::EnglishAuction { .. } => {
+                auction_manager.set_status(AuctionManagerStatus::Disbursing);
+            }
+            BidState::OpenEdition { .. } => {
+                auction_manager.set_status(AuctionManagerStatus::Finished);
+            }
+        }
+    } else {
+        auction_manager.set_status(AuctionManagerStatus::Disbursing);
+    }
 
-    auction_manager.save(auction_manager_info)?;
+    auction_manager.save(&mut auction_manager_info)?;
 
     Ok(())
 }

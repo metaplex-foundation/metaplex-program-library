@@ -1,4 +1,4 @@
-//! A Metaplex Store program for the Solana blockchain.
+//! A Token Fraction program for the Solana blockchain.
 
 pub mod deprecated_state;
 pub mod entrypoint;

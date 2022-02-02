@@ -1,3 +1,5 @@
+use crate::processor::set_store::process_set_store_v2;
+
 use {
     crate::instruction::MetaplexInstruction,
     borsh::BorshDeserialize,
@@ -10,17 +12,19 @@ use {
     empty_payment_account::process_empty_payment_account,
     end_auction::process_end_auction,
     init_auction_manager_v2::process_init_auction_manager_v2,
+    init_fraction_manager::process_init_fraction_manager,
     redeem_bid::process_redeem_bid,
     redeem_full_rights_transfer_bid::process_full_rights_transfer_bid,
     redeem_participation_bid::process_redeem_participation_bid,
     redeem_printing_v2_bid::process_redeem_printing_v2_bid,
     redeem_unused_winning_config_items_as_auctioneer::process_redeem_unused_winning_config_items_as_auctioneer,
     set_auction_cache::process_set_auction_cache,
-    set_store::{process_set_store, process_set_store_v2},
+    set_store::process_set_store,
     set_store_index::process_set_store_index,
     set_whitelisted_creator::process_set_whitelisted_creator,
     solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey},
     start_auction::process_start_auction,
+    validate_fraction_safety_deposit_box::process_validate_fraction_safety_deposit_box,
     validate_safety_deposit_box_v2::process_validate_safety_deposit_box_v2,
     withdraw_master_edition::process_withdraw_master_edition,
 };
@@ -34,6 +38,7 @@ pub mod deprecated_validate_safety_deposit_box_v1;
 pub mod empty_payment_account;
 pub mod end_auction;
 pub mod init_auction_manager_v2;
+pub mod init_fraction_manager;
 pub mod redeem_bid;
 pub mod redeem_full_rights_transfer_bid;
 pub mod redeem_participation_bid;
@@ -44,6 +49,7 @@ pub mod set_store;
 pub mod set_store_index;
 pub mod set_whitelisted_creator;
 pub mod start_auction;
+pub mod validate_fraction_safety_deposit_box;
 pub mod validate_safety_deposit_box_v2;
 pub mod withdraw_master_edition;
 
@@ -145,9 +151,21 @@ pub fn process_instruction<'a>(
                 args.max_ranges,
             )
         }
+        MetaplexInstruction::InitFractionManager(args) => {
+            msg!("Instruction: Init Fraction Manager");
+            process_init_fraction_manager(program_id, accounts, args.orderbook_market_pool_size)
+        }
         MetaplexInstruction::ValidateSafetyDepositBoxV2(safety_deposit_config) => {
             msg!("Instruction: Validate Safety Deposit Box V2");
             process_validate_safety_deposit_box_v2(program_id, accounts, safety_deposit_config)
+        }
+        MetaplexInstruction::ValidateFractionSafetyDepositBox(safety_deposit_config) => {
+            msg!("Instruction: Validate Fraction Safety Deposit Box V1");
+            process_validate_fraction_safety_deposit_box(
+                program_id,
+                accounts,
+                safety_deposit_config,
+            )
         }
         MetaplexInstruction::RedeemParticipationBidV3(args) => {
             msg!("Instruction: Redeem Participation Bid V3");

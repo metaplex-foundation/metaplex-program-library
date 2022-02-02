@@ -1,18 +1,20 @@
-use crate::{
-    error::MetaplexError,
-    state::{CommonWinningIndexChecks, CommonWinningIndexReturn, WinningConfigType, PREFIX},
-    utils::{
-        assert_owned_by, common_redeem_checks, common_redeem_finish, transfer_metadata_ownership,
-        transfer_safety_deposit_box_items, CommonRedeemCheckArgs, CommonRedeemFinishArgs,
-        CommonRedeemReturn,
+use {
+    crate::{
+        error::MetaplexError,
+        state::{CommonWinningIndexChecks, CommonWinningIndexReturn, WinningConfigType, PREFIX},
+        utils::{
+            assert_owned_by, common_redeem_checks, common_redeem_finish,
+            transfer_metadata_ownership, transfer_safety_deposit_box_items, CommonRedeemCheckArgs,
+            CommonRedeemFinishArgs, CommonRedeemReturn,
+        },
     },
-};
-use mpl_token_metadata::state::Metadata;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    msg,
-    pubkey::Pubkey,
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        msg,
+        pubkey::Pubkey,
+    },
+    metaplex_token_metadata::state::Metadata,
 };
 pub fn process_full_rights_transfer_bid<'a>(
     program_id: &'a Pubkey,

@@ -1,12 +1,14 @@
+use solana_program::msg;
+
 use {
     crate::{
         deprecated_state::AuctionManagerV1, error::MetaplexError, utils::try_from_slice_checked,
     },
     arrayref::{array_mut_ref, array_ref, mut_array_refs},
     borsh::{BorshDeserialize, BorshSerialize},
-    mpl_auction::processor::AuctionData,
-    mpl_token_metadata::state::Metadata,
-    mpl_token_vault::state::SafetyDepositBox,
+    metaplex_auction::processor::AuctionData,
+    metaplex_token_metadata::state::Metadata,
+    metaplex_token_vault::state::SafetyDepositBox,
     solana_program::{
         account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
         pubkey::Pubkey,
@@ -48,6 +50,19 @@ pub const MAX_AUCTION_MANAGER_V2_SIZE: usize = 1 + //key
 1 + //status
 8 + // winning configs validated
 200; // padding
+
+// TODO might have to change padding and make sure this represents all data for struct and fractionmanagerstate
+pub const MAX_FRACTION_MANAGER_SIZE: usize = 1 + //key
+32 + // store
+32 + // authority
+32 + // vault
+32 + // token_mint
+32 + // accept_payment
+1 + // has participation
+1 + //status
+8 + // winning configs validated
+8 + // token_pools_active
+200; // padding
 pub const MAX_STORE_SIZE: usize = 2 + // Store Version Key 
 32 + // Auction Program Key
 32 + // Token Vault Program Key
@@ -77,6 +92,14 @@ pub const BASE_SAFETY_CONFIG_SIZE: usize = 1 +// Key
  8 + // collected to accept payment
  20; // padding
 
+// TODO - Might need amending
+pub const FRACTION_BASE_SAFETY_CONFIG_SIZE: usize = 1 +// Key
+ 32 + // fraction manager lookup
+ 8 + // order
+ 1 + // fraction winning config type
+ 9 + // fixed price + option of it
+ 20; // padding
+
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq, Debug, Copy)]
 pub enum Key {
@@ -96,6 +119,8 @@ pub enum Key {
     StoreIndexerV1,
     AuctionCacheV1,
     StoreConfigV1,
+    FractionManagerV1,
+    FractionSafetyDepositConfigV1,
 }
 
 pub struct CommonWinningIndexChecks<'a> {
@@ -125,6 +150,106 @@ pub struct PrintingV2CalculationCheckReturn {
     pub expected_redemptions: u64,
     pub winning_config_type: WinningConfigType,
     pub winning_config_item_index: Option<usize>,
+}
+
+pub trait FractionManager {
+    fn key(&self) -> Key;
+    fn store(&self) -> Pubkey;
+    fn authority(&self) -> Pubkey;
+    fn vault(&self) -> Pubkey;
+    fn accept_payment(&self) -> Pubkey;
+    fn status(&self) -> FractionManagerStatus;
+    fn set_status(&mut self, status: FractionManagerStatus);
+    fn configs_validated(&self) -> u64;
+    fn set_configs_validated(&mut self, new_configs_validated: u64);
+    fn save(&self, account: &AccountInfo) -> ProgramResult;
+    fn fast_save(
+        &self,
+        account: &AccountInfo,
+        winning_config_index: usize,
+        winning_config_item_index: usize,
+    );
+    // TODO - check if need this
+    // fn common_winning_index_checks(
+    //     &self,
+    //     args: CommonWinningIndexChecks,
+    // ) -> Result<CommonWinningIndexReturn, ProgramError>;
+
+    // fn printing_v2_calculation_checks(
+    //     &self,
+    //     args: PrintingV2CalculationChecks,
+    // ) -> Result<PrintingV2CalculationCheckReturn, ProgramError>;
+
+    // fn get_participation_config(
+    //     &self,
+    //     safety_deposit_config_info: &AccountInfo,
+    // ) -> Result<ParticipationConfigV2, ProgramError>;
+
+    // fn add_to_collected_payment(
+    //     &mut self,
+    //     safety_deposit_config_info: &AccountInfo,
+    //     price: u64,
+    // ) -> ProgramResult;
+
+    // fn assert_legacy_printing_token_match(&self, account: &AccountInfo) -> ProgramResult;
+
+    // fn assert_is_valid_master_edition_v2_safety_deposit(
+    //     &self,
+    //     safety_deposit_box_order: u64,
+    //     safety_deposit_config_info: Option<&AccountInfo>,
+    // ) -> ProgramResult;
+
+    // fn mark_bid_as_claimed(&mut self, winner_index: usize) -> ProgramResult;
+
+    // fn assert_all_bids_claimed(&self, auction: &AuctionData) -> ProgramResult;
+
+    // fn get_number_of_unique_token_types_for_this_winner(
+    //     &self,
+    //     winner_index: usize,
+    //     auction_token_tracker_info: Option<&AccountInfo>,
+    // ) -> Result<u128, ProgramError>;
+
+    // fn get_collected_to_accept_payment(
+    //     &self,
+    //     safety_deposit_config_info: Option<&AccountInfo>,
+    // ) -> Result<u128, ProgramError>;
+
+    // fn get_primary_sale_happened(
+    //     &self,
+    //     metadata: &Metadata,
+    //     winning_config_index: Option<u8>,
+    //     winning_config_item_index: Option<u8>,
+    // ) -> Result<bool, ProgramError>;
+
+    // fn assert_winning_config_safety_deposit_validity(
+    //     &self,
+    //     safety_deposit: &SafetyDepositBox,
+    //     winning_config_index: Option<u8>,
+    //     winning_config_item_index: Option<u8>,
+    // ) -> ProgramResult;
+}
+
+pub fn get_auction_manager(account: &AccountInfo) -> Result<Box<dyn AuctionManager>, ProgramError> {
+    let version = account.data.borrow()[0];
+
+    // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
+    match version {
+        7 => return Ok(Box::new(AuctionManagerV1::from_account_info(account)?)),
+        10 => return Ok(Box::new(AuctionManagerV2::from_account_info(account)?)),
+        _ => return Err(MetaplexError::DataTypeMismatch.into()),
+    };
+}
+
+pub fn get_fraction_manager(
+    account: &AccountInfo,
+) -> Result<Box<dyn FractionManager>, ProgramError> {
+    let version = account.data.borrow()[0];
+
+    // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
+    match version {
+        16 => return Ok(Box::new(FractionManagerV1::from_account_info(account)?)),
+        _ => return Err(MetaplexError::DataTypeMismatch.into()),
+    };
 }
 
 pub trait AuctionManager {
@@ -209,16 +334,52 @@ pub trait AuctionManager {
     ) -> ProgramResult;
 }
 
-pub fn get_auction_manager(account: &AccountInfo) -> Result<Box<dyn AuctionManager>, ProgramError> {
-    let version = account.data.borrow()[0];
-
-    // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
-    match version {
-        7 => return Ok(Box::new(AuctionManagerV1::from_account_info(account)?)),
-        10 => return Ok(Box::new(AuctionManagerV2::from_account_info(account)?)),
-        _ => return Err(MetaplexError::DataTypeMismatch.into()),
-    };
+#[repr(C)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, PartialEq, Copy)]
+pub enum AuctionManagerStatus {
+    Initialized,
+    Validated,
+    Running,
+    Disbursing,
+    Finished,
 }
+
+#[repr(C)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, PartialEq, Copy)]
+pub enum FractionManagerStatus {
+    Initialized,
+    Validated,
+    Active,
+    Redeemable,
+    Combined,
+}
+
+#[repr(C)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
+pub struct AuctionManagerStateV2 {
+    pub status: AuctionManagerStatus,
+    /// When all configs are validated the auction is started and auction manager moves to Running
+    pub safety_config_items_validated: u64,
+    /// how many bids have been pushed to accept payment
+    pub bids_pushed_to_accept_payment: u64,
+
+    pub has_participation: bool,
+}
+
+// TODO Ensure this tracks all fraction manager state
+#[repr(C)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
+pub struct FractionManagerState {
+    pub status: FractionManagerStatus,
+    /// When all configs are validated fraction manager moves to Running
+    pub safety_config_items_validated: u64,
+    /// how many token pools have been made for various reasons
+    /// Token pools are made for use in AMMs, liquidty staking, etc.
+    pub token_pools_active: u64,
+
+    pub has_participation: bool,
+}
+
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub struct AuctionManagerV2 {
@@ -235,6 +396,104 @@ pub struct AuctionManagerV2 {
     pub accept_payment: Pubkey,
 
     pub state: AuctionManagerStateV2,
+}
+
+#[repr(C)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
+pub struct FractionManagerV1 {
+    pub key: Key,
+
+    pub store: Pubkey,
+
+    pub authority: Pubkey,
+
+    pub vault: Pubkey,
+
+    pub token_mint: Pubkey,
+
+    pub accept_payment: Pubkey,
+
+    pub state: FractionManagerState,
+}
+
+impl FractionManager for FractionManagerV1 {
+    fn key(&self) -> Key {
+        self.key
+    }
+
+    fn store(&self) -> Pubkey {
+        self.store
+    }
+
+    fn authority(&self) -> Pubkey {
+        self.authority
+    }
+
+    fn vault(&self) -> Pubkey {
+        self.vault
+    }
+
+    // TODO
+    // I think I can just create a function which accepts payment to the one made by the vault for fractions
+    fn accept_payment(&self) -> Pubkey {
+        self.accept_payment
+    }
+
+    fn status(&self) -> FractionManagerStatus {
+        self.state.status
+    }
+
+    fn set_status(&mut self, status: FractionManagerStatus) {
+        self.state.status = status
+    }
+
+    fn configs_validated(&self) -> u64 {
+        self.state.safety_config_items_validated
+    }
+
+    fn set_configs_validated(&mut self, new_configs_validated: u64) {
+        self.state.safety_config_items_validated = new_configs_validated
+    }
+
+    fn fast_save(
+        &self,
+        account: &AccountInfo,
+        _winning_config_index: usize,
+        _winning_config_item_index: usize,
+    ) {
+        let mut data = account.data.borrow_mut();
+        data[161] = self.state.status as u8;
+    }
+
+    fn save(&self, account: &AccountInfo) -> ProgramResult {
+        self.serialize(&mut *account.data.borrow_mut())?;
+        Ok(())
+    }
+
+    // TODO - for when i include participation
+    // fn get_participation_config(
+    //     &self,
+    //     safety_deposit_config_info: &AccountInfo,
+    // ) -> Result<ParticipationConfigV2, ProgramError> {
+    //     let safety_config = SafetyDepositConfig::from_account_info(safety_deposit_config_info)?;
+    //     if let Some(p_config) = safety_config.participation_config {
+    //         Ok(p_config)
+    //     } else {
+    //         return Err(MetaplexError::NotEligibleForParticipation.into());
+    //     }
+    // }
+}
+
+impl FractionManagerV1 {
+    pub fn from_account_info(a: &AccountInfo) -> Result<FractionManagerV1, ProgramError> {
+        let fm: FractionManagerV1 = try_from_slice_checked(
+            &a.data.borrow_mut(),
+            Key::FractionManagerV1,
+            MAX_FRACTION_MANAGER_SIZE,
+        )?;
+
+        Ok(fm)
+    }
 }
 
 impl AuctionManager for AuctionManagerV2 {
@@ -541,17 +800,17 @@ impl AuctionManagerV2 {
     }
 }
 
-#[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
-pub struct AuctionManagerStateV2 {
-    pub status: AuctionManagerStatus,
-    /// When all configs are validated the auction is started and auction manager moves to Running
-    pub safety_config_items_validated: u64,
-    /// how many bids have been pushed to accept payment
-    pub bids_pushed_to_accept_payment: u64,
+// #[repr(C)]
+// #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
+// pub struct AuctionManagerStateV2 {
+//     pub status: AuctionManagerStatus,
+//     /// When all configs are validated the auction is started and auction manager moves to Running
+//     pub safety_config_items_validated: u64,
+//     /// how many bids have been pushed to accept payment
+//     pub bids_pushed_to_accept_payment: u64,
 
-    pub has_participation: bool,
-}
+//     pub has_participation: bool,
+// }
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq, Debug)]
@@ -629,14 +888,38 @@ pub enum WinningConfigType {
 }
 
 #[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, PartialEq, Copy)]
-pub enum AuctionManagerStatus {
-    Initialized,
-    Validated,
-    Running,
-    Disbursing,
-    Finished,
+#[derive(Clone, PartialEq, BorshSerialize, BorshDeserialize, Copy, Debug)]
+pub enum FractionWinningConfigType {
+    // TODO - FIX NOTES
+    /// You may be selling your one-of-a-kind NFT for the first time, but not it's accompanying Metadata,
+    /// of which you would like to retain ownership. You get 100% of the payment the first sale, then
+    /// royalties forever after.
+    ///
+    /// You may be re-selling something like a Limited/Open Edition print from another auction,
+    /// a master edition record token by itself (Without accompanying metadata/printing ownership), etc.
+    /// This means artists will get royalty fees according to the top level royalty % on the metadata
+    /// split according to their percentages of contribution.
+    ///
+    /// No metadata ownership is transferred in this instruction, which means while you may be transferring
+    /// the token for a limited/open edition away, you would still be (nominally) the owner of the limited edition
+    /// metadata, though it confers no rights or privileges of any kind.
+    FractionToken,
+    /// Means you are fractionalising the master edition record and it's metadata ownership as well as the
+    /// token itself. The other person will be able to mint authorization tokens and make changes to the
+    /// artwork (once combined and redeemable by the new owner).
+    FractionMasterEditionV2,
 }
+
+// TODO - what to do here?
+// #[repr(C)]
+// #[derive(Clone, BorshSerialize, BorshDeserialize, Debug, PartialEq, Copy)]
+// pub enum FractionManagerStatus {
+//     Initialized,
+//     Validated,
+//     Active,
+//     Redeemable,
+//     Combined,
+// }
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Copy)]
@@ -846,11 +1129,24 @@ pub struct SafetyDepositConfig {
     pub participation_state: Option<ParticipationStateV2>,
 }
 
+#[repr(C)]
+#[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
+pub struct FractionSafetyDepositConfig {
+    pub key: Key,
+    /// reverse lookup
+    pub fraction_manager: Pubkey,
+    // only 255 safety deposits on vault right now but soon this will likely expand.
+    /// safety deposit order
+    pub order: u64,
+    pub fraction_winning_config_type: FractionWinningConfigType,
+}
+
 pub struct AmountCumulativeReturn {
     pub amount: u64,
     pub cumulative_amount: u64,
     pub total_amount: u64,
 }
+// Data config for safety deposit boxes
 const ORDER_POSITION: usize = 33;
 const AUCTION_MANAGER_POSITION: usize = 1;
 const WINNING_CONFIG_POSITION: usize = 41;
@@ -858,6 +1154,11 @@ const AMOUNT_POSITION: usize = 42;
 const LENGTH_POSITION: usize = 43;
 const AMOUNT_RANGE_SIZE_POSITION: usize = 44;
 const AMOUNT_RANGE_FIRST_EL_POSITION: usize = 48;
+
+// Data config for fraction safety deposit boxes
+const FRACTION_ORDER_POSITION: usize = 33;
+const FRACTION_MANAGER_POSITION: usize = 1;
+const FRACTION_WINNING_CONFIG_POSITION: usize = 41;
 
 fn get_number_from_data(data: &Ref<&mut [u8]>, data_type: TupleNumericType, offset: usize) -> u64 {
     return match data_type {
@@ -1262,6 +1563,76 @@ impl SafetyDepositConfig {
     }
 }
 
+impl FractionSafetyDepositConfig {
+    /// Size of account with padding included
+    pub fn created_size(&self) -> usize {
+        return FRACTION_BASE_SAFETY_CONFIG_SIZE;
+    }
+
+    pub fn get_order(a: &AccountInfo) -> u64 {
+        let data = a.data.borrow();
+        return u64::from_le_bytes(*array_ref![data, FRACTION_ORDER_POSITION, 8]);
+    }
+
+    pub fn get_fraction_manager(a: &AccountInfo) -> Pubkey {
+        let data = a.data.borrow();
+        return Pubkey::new_from_array(*array_ref![data, FRACTION_MANAGER_POSITION, 32]);
+    }
+
+    pub fn get_fraction_winning_config_type(
+        a: &AccountInfo,
+    ) -> Result<FractionWinningConfigType, ProgramError> {
+        let data = &a.data.borrow();
+        // TODO - Add other options here, and to the actual winnignconfigtype!
+        Ok(match data[FRACTION_WINNING_CONFIG_POSITION] {
+            0 => FractionWinningConfigType::FractionToken,
+            1 => FractionWinningConfigType::FractionMasterEditionV2,
+
+            _ => return Err(ProgramError::InvalidAccountData),
+        })
+    }
+
+    pub fn from_account_info(a: &AccountInfo) -> Result<FractionSafetyDepositConfig, ProgramError> {
+        let data = &mut a.data.borrow();
+        if a.data_len() < FRACTION_BASE_SAFETY_CONFIG_SIZE {
+            return Err(MetaplexError::DataTypeMismatch.into());
+        }
+
+        if data[0] != Key::FractionSafetyDepositConfigV1 as u8 {
+            return Err(MetaplexError::DataTypeMismatch.into());
+        }
+
+        let fraction_manager = FractionSafetyDepositConfig::get_fraction_manager(a);
+
+        let order = FractionSafetyDepositConfig::get_order(a);
+
+        let fraction_winning_config_type =
+            FractionSafetyDepositConfig::get_fraction_winning_config_type(a)?;
+
+        Ok(FractionSafetyDepositConfig {
+            key: Key::FractionSafetyDepositConfigV1,
+            fraction_manager,
+            order,
+            fraction_winning_config_type,
+        })
+    }
+
+    pub fn create(&self, a: &AccountInfo, auction_manager_key: &Pubkey) -> ProgramResult {
+        let mut data = a.data.borrow_mut();
+
+        data[0] = Key::SafetyDepositConfigV1 as u8;
+        // for whatever reason, copy_from_slice doesnt do jack here.
+        let as_bytes = auction_manager_key.as_ref();
+        for n in 0..32 {
+            data[n + 1] = as_bytes[n];
+        }
+        *array_mut_ref![data, FRACTION_ORDER_POSITION, 8] = self.order.to_le_bytes();
+        data[FRACTION_WINNING_CONFIG_POSITION] = self.fraction_winning_config_type as u8;
+
+        Ok(())
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Debug, BorshSerialize, BorshDeserialize)]
 pub struct AuctionWinnerTokenTypeTracker {
@@ -1272,6 +1643,7 @@ pub struct AuctionWinnerTokenTypeTracker {
     pub amount_ranges: Vec<AmountRange>,
 }
 
+// NOTE THIS LITERALLY JUST TRACKS THE WINNERS OF EACH AUCTION AND HOW MANY PEOPLE GET HOW MANY EDITIONS OF THINGS
 impl AuctionWinnerTokenTypeTracker {
     pub fn created_size(&self, range_size: u64) -> usize {
         return BASE_TRACKER_SIZE

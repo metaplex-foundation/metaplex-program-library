@@ -1,38 +1,41 @@
-use crate::{
-    error::MetaplexError,
-    state::{
-        get_auction_manager, AuctionManager, AuctionManagerStatus, BidRedemptionTicket, Key,
-        OriginalAuthorityLookup, Store, WhitelistedCreator, PREFIX,
+use {
+    crate::{
+        error::MetaplexError,
+        state::{
+            get_auction_manager, AuctionManager, AuctionManagerStatus, BidRedemptionTicket, Key,
+            OriginalAuthorityLookup, Store, WhitelistedCreator, PREFIX, FractionManager,
+        },
     },
-};
-use arrayref::array_ref;
-use borsh::BorshDeserialize;
-use mpl_auction::{
-    instruction::end_auction_instruction,
-    processor::{
-        end_auction::EndAuctionArgs, AuctionData, AuctionDataExtended, AuctionState, BidderMetadata,
+    arrayref::array_ref,
+    borsh::BorshDeserialize,
+    metaplex_auction::{
+        instruction::end_auction_instruction,
+        processor::{
+            end_auction::EndAuctionArgs, AuctionData, AuctionDataExtended, AuctionState,
+            BidderMetadata,
+        },
     },
+    metaplex_token_metadata::{
+        instruction::update_metadata_accounts,
+        state::{Metadata, EDITION},
+    },
+    metaplex_token_vault::{instruction::create_withdraw_tokens_instruction, state::Vault},
+    solana_program::{
+        account_info::AccountInfo,
+        borsh::try_from_slice_unchecked,
+        entrypoint::ProgramResult,
+        log::sol_log_compute_units,
+        msg,
+        program::{invoke, invoke_signed},
+        program_error::ProgramError,
+        program_pack::{IsInitialized, Pack},
+        pubkey::Pubkey,
+        system_instruction,
+        sysvar::{rent::Rent, Sysvar},
+    },
+    spl_token::instruction::{set_authority, AuthorityType},
+    std::{convert::TryInto, str::FromStr},
 };
-use mpl_token_metadata::{
-    instruction::update_metadata_accounts,
-    state::{Metadata, EDITION},
-};
-use mpl_token_vault::{instruction::create_withdraw_tokens_instruction, state::Vault};
-use solana_program::{
-    account_info::AccountInfo,
-    borsh::try_from_slice_unchecked,
-    entrypoint::ProgramResult,
-    log::sol_log_compute_units,
-    msg,
-    program::{invoke, invoke_signed},
-    program_error::ProgramError,
-    program_pack::{IsInitialized, Pack},
-    pubkey::Pubkey,
-    system_instruction,
-    sysvar::{rent::Rent, Sysvar},
-};
-use spl_token::instruction::{set_authority, AuthorityType};
-use std::{convert::TryInto, str::FromStr};
 
 /// Cheap method to just grab amount from token account, instead of deserializing entire thing
 pub fn get_amount_from_token_account(
@@ -98,7 +101,7 @@ pub fn assert_store_safety_vault_manager_match(
         &token_vault_program,
         safety_deposit_info,
         &[
-            mpl_token_vault::state::PREFIX.as_bytes(),
+            metaplex_token_vault::state::PREFIX.as_bytes(),
             vault_info.key.as_ref(),
             token_mint_key.as_ref(),
         ],
@@ -142,6 +145,58 @@ pub fn assert_at_least_one_creator_matches_or_store_public_and_all_verified(
                     PREFIX.as_bytes(),
                     program_id.as_ref(),
                     auction_manager.store().as_ref(),
+                    creator.address.as_ref(),
+                ],
+                program_id,
+            );
+
+            if key == *whitelisted_creator_info.key {
+                found = true;
+            }
+
+            if !creator.verified {
+                return Err(MetaplexError::CreatorHasNotVerifiedMetadata.into());
+            }
+        }
+
+        if found {
+            return Ok(());
+        }
+    }
+    Err(MetaplexError::InvalidWhitelistedCreator.into())
+}
+
+pub fn assert_at_least_one_fraction_creator_matches_or_store_public_and_all_verified(
+    program_id: &Pubkey,
+    fraction_manager: &dyn FractionManager,
+    metadata: &Metadata,
+    whitelisted_creator_info: &AccountInfo,
+    store_info: &AccountInfo,
+) -> ProgramResult {
+    let store = Store::from_account_info(store_info)?;
+    if store.public {
+        return Ok(());
+    }
+    if let Some(creators) = &metadata.data.creators {
+        // does it exist? It better!
+        let existing_whitelist_creator: WhitelistedCreator =
+            match WhitelistedCreator::from_account_info(whitelisted_creator_info) {
+                Ok(val) => val,
+                Err(_) => return Err(MetaplexError::InvalidWhitelistedCreator.into()),
+            };
+
+        if !existing_whitelist_creator.activated {
+            return Err(MetaplexError::WhitelistedCreatorInactive.into());
+        }
+
+        let mut found = false;
+        for creator in creators {
+            // Now find at least one creator that can make this pda in the list
+            let (key, _) = Pubkey::find_program_address(
+                &[
+                    PREFIX.as_bytes(),
+                    program_id.as_ref(),
+                    fraction_manager.store().as_ref(),
                     creator.address.as_ref(),
                 ],
                 program_id,
@@ -564,7 +619,7 @@ pub fn common_redeem_checks(
             &auction_program,
             bidder_metadata_info,
             &[
-                mpl_auction::PREFIX.as_bytes(),
+                metaplex_auction::PREFIX.as_bytes(),
                 auction_program.as_ref(),
                 auction_info.key.as_ref(),
                 bidder_info.key.as_ref(),
@@ -851,7 +906,7 @@ pub fn assert_edition_valid(
     edition_account_info: &AccountInfo,
 ) -> ProgramResult {
     let edition_seeds = &[
-        mpl_token_metadata::state::PREFIX.as_bytes(),
+        metaplex_token_metadata::state::PREFIX.as_bytes(),
         program_id.as_ref(),
         &mint.as_ref(),
         EDITION.as_bytes(),

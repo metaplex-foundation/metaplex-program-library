@@ -1,19 +1,21 @@
-use crate::{
-    error::MetaplexError,
-    state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
-    utils::{assert_derivation, assert_owned_by},
-};
-use mpl_auction::{
-    instruction::claim_bid_instruction,
-    processor::{
-        claim_bid::ClaimBidArgs, AuctionData, AuctionDataExtended, AuctionState, BidderPot,
+use {
+    crate::{
+        error::MetaplexError,
+        state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
+        utils::{assert_derivation, assert_owned_by},
     },
-};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    program::invoke_signed,
-    pubkey::Pubkey,
+    metaplex_auction::{
+        instruction::claim_bid_instruction,
+        processor::{
+            claim_bid::ClaimBidArgs, AuctionData, AuctionDataExtended, AuctionState, BidderPot,
+        },
+    },
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        program::invoke_signed,
+        pubkey::Pubkey,
+    },
 };
 
 #[allow(clippy::too_many_arguments)]
