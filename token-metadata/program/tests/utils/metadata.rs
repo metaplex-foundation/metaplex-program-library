@@ -102,10 +102,11 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
+        freeze_authority: Option<&Pubkey>,
         collection: Option<Collection>,
         uses: Option<Uses>,
     ) -> transport::Result<()> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), Some(&context.payer.pubkey())).await?;
+        create_mint(context, &self.mint, &context.payer.pubkey(), freeze_authority).await?;
         create_token_account(
             context,
             &self.token,

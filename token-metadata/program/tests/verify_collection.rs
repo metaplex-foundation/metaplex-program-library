@@ -41,6 +41,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -73,6 +74,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -254,6 +256,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -281,6 +284,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -328,6 +332,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -355,6 +360,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -402,6 +408,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -425,6 +432,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -473,6 +481,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -501,6 +510,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -546,6 +556,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -578,6 +589,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -645,6 +657,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -667,6 +680,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -860,6 +874,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -887,6 +902,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
