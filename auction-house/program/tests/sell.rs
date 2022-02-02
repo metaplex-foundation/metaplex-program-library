@@ -22,7 +22,6 @@ use utils::setup_functions::*;
 async fn sell_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
-
     let (ah, ahkey) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
@@ -109,5 +108,5 @@ async fn sell_success() {
         .await
         .expect("Error Getting Trade State")
         .expect("Trade State Empty");
-    assert!(sts.data.len() == 1);
+    assert_eq!(sts.data.len(), 1);
 }
