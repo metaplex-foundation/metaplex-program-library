@@ -30,6 +30,7 @@ async fn nft_setup_transaction(
     rent: &solana_sdk::sysvar::rent::Rent,
     elgamal_kp: &ElGamalKeypair,
     cipher_key: &CipherKey,
+    freeze: bool,
 ) -> Result<Transaction, Box<dyn std::error::Error>> {
     let (public_metadata_key, _public_metadata_bump) = Pubkey::find_program_address(
         &[
@@ -50,8 +51,8 @@ async fn nft_setup_transaction(
         &mpl_token_metadata::id(),
     );
 
-    Ok(Transaction::new_signed_with_payer(
-        &[
+    let payer_pubkey = payer.pubkey();
+    let mut instructions = vec![
             system_instruction::create_account(
                 &payer.pubkey(),
                 &mint.pubkey(),
@@ -63,7 +64,7 @@ async fn nft_setup_transaction(
                 &spl_token::id(),
                 &mint.pubkey(),
                 &payer.pubkey(), // mint auth
-                None, // freeze auth
+                if freeze { Some(&payer_pubkey) } else { None }, // freeze auth
                 0,
             )?,
             spl_associated_token_account::create_associated_token_account(
@@ -101,6 +102,10 @@ async fn nft_setup_transaction(
                 true, // update_auth_is_signer
                 true, // is_mutable
             ),
+        ];
+
+    if !freeze {
+        instructions.push(
             mpl_token_metadata::instruction::create_master_edition(
                 mpl_token_metadata::id(),
                 public_edition_key,
@@ -111,14 +116,24 @@ async fn nft_setup_transaction(
                 payer.pubkey(), // payer
                 None, // limited edition supply
             ),
+        );
+    }
+
+
+    instructions.push(
             stealth::instruction::configure_metadata(
                 payer.pubkey(),
                 mint.pubkey(),
                 elgamal_kp.public.into(),
                 &elgamal_kp.public.encrypt(*cipher_key).into(),
                 &[],
+                if freeze { stealth::state::OversightMethod::Freeze }
+                    else { stealth::state::OversightMethod::Royalties },
             ),
-        ],
+    );
+
+    Ok(Transaction::new_signed_with_payer(
+        &instructions,
         Some(&payer.pubkey()),
         &[payer, mint],
         *recent_blockhash,
@@ -126,7 +141,7 @@ async fn nft_setup_transaction(
 }
 
 #[tokio::test]
-async fn test_transfer_wrapped() {
+async fn test_transfer_freeze() {
     let mut pc = ProgramTest::default();
 
     pc.prefer_bpf(true);
@@ -162,6 +177,7 @@ async fn test_transfer_wrapped() {
         &rent,
         &elgamal_kp,
         &cipher_key,
+        true,
     ).await.unwrap();
 
     banks_client.process_transaction(nft_setup).await.unwrap();
@@ -303,6 +319,7 @@ async fn test_transfer_buyer_init() {
         &rent,
         &elgamal_kp,
         &cipher_key,
+        false,
     ).await.unwrap();
 
     banks_client.process_transaction(nft_setup).await.unwrap();

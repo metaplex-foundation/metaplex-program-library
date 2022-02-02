@@ -278,23 +278,36 @@ pub fn configure_metadata(
     elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
     encrypted_cipher_key: &zk_token_elgamal::pod::ElGamalCiphertext,
     uri: &[u8],
+    method: crate::state::OversightMethod,
 ) -> Instruction {
-    let accounts = vec![
+    let oversight_program = if method == crate::state::OversightMethod::Freeze {
+        spl_token::id()
+    } else {
+        mpl_token_metadata::id()
+    };
+    let mut accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(mint, false),
         AccountMeta::new(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
         AccountMeta::new(get_stealth_address(&mint).0, false),
-        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
+        AccountMeta::new_readonly(oversight_program, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
+
+    accounts.push(
+        AccountMeta::new(
+            spl_associated_token_account::get_associated_token_address(&payer, &mint),
+            false,
+        ),
+    );
 
     let mut data = ConfigureMetadataData::zeroed();
     data.elgamal_pk = elgamal_pk;
     data.encrypted_cipher_key = *encrypted_cipher_key;
     data.uri.0[..uri.len()].copy_from_slice(uri);
-    data.method = crate::state::OversightMethod::Royalties;
+    data.method = method;
 
     encode_instruction(
         accounts,

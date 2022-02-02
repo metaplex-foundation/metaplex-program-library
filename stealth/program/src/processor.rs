@@ -266,14 +266,14 @@ fn reassign_mint_and_freeze<'info>(
             token_program_info.key,
             token_account_info.key,
             mint_info.key,
-            mint_authority_info.key,
+            stealth_info.key,
             &[],
         ).unwrap(),
         &[
             token_program_info.clone(),
             token_account_info.clone(),
             mint_info.clone(),
-            mint_authority_info.clone(),
+            stealth_info.clone(),
         ],
         signer_seeds
     )?;
