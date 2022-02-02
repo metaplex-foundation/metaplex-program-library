@@ -192,6 +192,7 @@ fn process_configure(
         elgamal_pk.into(),
         &encrypted_cipher_key,
         asset_url.as_bytes(),
+        stealth::state::OversightMethod::Freeze,
     );
 
     send(
@@ -579,18 +580,12 @@ async fn process_transfer(
 
     instructions.extend_from_slice(
         &[
-            spl_token::instruction::transfer(
-                &spl_token::id(),
-                &payer_ata,
-                &recipient_ata,
-                &payer.pubkey(),
-                &[],
-                1,
-            )?,
             stealth::instruction::fini_transfer(
                 payer.pubkey(),
                 mint,
                 transfer_buffer_key,
+                payer_ata,
+                recipient_ata,
             ),
         ],
     );

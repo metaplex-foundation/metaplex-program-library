@@ -287,7 +287,7 @@ pub fn configure_metadata(
     };
     let mut accounts = vec![
         AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new(mint, false),
         AccountMeta::new(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
         AccountMeta::new(get_stealth_address(&mint).0, false),
@@ -358,7 +358,7 @@ pub fn fini_transfer(
         AccountMeta::new(get_stealth_address(&mint).0, false),
         AccountMeta::new(transfer_buffer, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new(mint, false),
+        AccountMeta::new_readonly(mint, false),
         AccountMeta::new(source, false),
         AccountMeta::new(destination, false),
         AccountMeta::new_readonly(spl_token::id(), false),
