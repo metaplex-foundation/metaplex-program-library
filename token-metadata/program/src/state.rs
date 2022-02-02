@@ -207,10 +207,6 @@ impl CollectionAuthorityRecord {
         let ca: CollectionAuthorityRecord = try_from_slice_checked(b, Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
         Ok(ca)
     }
-
-    pub fn bump_empty(&self) -> bool {
-        return self.bump == 0 && self.key != Key::CollectionAuthorityRecord;
-    }
 }
 
 #[repr(C)]
