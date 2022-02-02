@@ -4,7 +4,7 @@ use {
         state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
         utils::{assert_derivation, assert_owned_by},
     },
-    metaplex_auction::{
+    mpl_auction::{
         instruction::claim_bid_instruction,
         processor::{
             claim_bid::ClaimBidArgs, AuctionData, AuctionDataExtended, AuctionState, BidderPot,

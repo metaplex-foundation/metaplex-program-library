@@ -7,8 +7,8 @@ use {
             end_auction,
         },
     },
-    metaplex_auction::processor::AuctionData,
-    metaplex_token_vault::{instruction::create_set_authority_instruction, state::Vault},
+    mpl_auction::processor::AuctionData,
+    mpl_token_vault::{instruction::create_set_authority_instruction, state::Vault},
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,

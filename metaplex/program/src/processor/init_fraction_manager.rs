@@ -9,7 +9,7 @@ use {
         },
     },
     borsh::BorshSerialize,
-    metaplex_token_vault::state::{ExternalPriceAccount, Vault, VaultState},
+    mpl_token_vault::state::{ExternalPriceAccount, Vault, VaultState},
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,

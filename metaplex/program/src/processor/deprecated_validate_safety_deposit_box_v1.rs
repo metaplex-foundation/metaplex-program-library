@@ -12,8 +12,8 @@ use {
         utils::{assert_derivation, assert_initialized, create_or_allocate_account_raw},
     },
     borsh::BorshSerialize,
-    metaplex_token_metadata::state::Metadata,
-    metaplex_token_vault::state::{SafetyDepositBox, Vault},
+    mpl_token_metadata::state::Metadata,
+    mpl_token_vault::state::{SafetyDepositBox, Vault},
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,

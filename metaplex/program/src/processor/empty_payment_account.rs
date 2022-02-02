@@ -15,9 +15,9 @@ use {
         },
     },
     borsh::BorshSerialize,
-    metaplex_auction::processor::AuctionData,
-    metaplex_token_metadata::state::{MasterEditionV1, Metadata},
-    metaplex_token_vault::state::SafetyDepositBox,
+    mpl_auction::processor::AuctionData,
+    mpl_token_metadata::state::{MasterEditionV1, Metadata},
+    mpl_token_vault::state::SafetyDepositBox,
     solana_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
@@ -334,7 +334,7 @@ pub fn process_empty_payment_account(
     // assert that the metadata sent up is the metadata in the safety deposit
     if metadata.mint != safety_deposit.token_mint {
         if master_edition_info.data.borrow()[0]
-            == metaplex_token_metadata::state::Key::MasterEditionV1 as u8
+            == mpl_token_metadata::state::Key::MasterEditionV1 as u8
         {
             // Could be a limited edition, in which case printing tokens or auth tokens were offered, not the original.
             let master_edition: MasterEditionV1 =

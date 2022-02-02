@@ -1,5 +1,3 @@
-use crate::processor::set_store::process_set_store_v2;
-
 use {
     crate::instruction::MetaplexInstruction,
     borsh::BorshDeserialize,
@@ -19,7 +17,7 @@ use {
     redeem_printing_v2_bid::process_redeem_printing_v2_bid,
     redeem_unused_winning_config_items_as_auctioneer::process_redeem_unused_winning_config_items_as_auctioneer,
     set_auction_cache::process_set_auction_cache,
-    set_store::process_set_store,
+    set_store::{process_set_store, process_set_store_v2},
     set_store_index::process_set_store_index,
     set_whitelisted_creator::process_set_whitelisted_creator,
     solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey},

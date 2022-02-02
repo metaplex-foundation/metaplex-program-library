@@ -1,41 +1,38 @@
-use {
-    crate::{
-        error::MetaplexError,
-        state::{
-            get_auction_manager, AuctionManager, AuctionManagerStatus, BidRedemptionTicket, Key,
-            OriginalAuthorityLookup, Store, WhitelistedCreator, PREFIX, FractionManager,
-        },
+use crate::{
+    error::MetaplexError,
+    state::{
+        get_auction_manager, AuctionManager, AuctionManagerStatus, BidRedemptionTicket,
+        FractionManager, Key, OriginalAuthorityLookup, Store, WhitelistedCreator, PREFIX,
     },
-    arrayref::array_ref,
-    borsh::BorshDeserialize,
-    metaplex_auction::{
-        instruction::end_auction_instruction,
-        processor::{
-            end_auction::EndAuctionArgs, AuctionData, AuctionDataExtended, AuctionState,
-            BidderMetadata,
-        },
-    },
-    metaplex_token_metadata::{
-        instruction::update_metadata_accounts,
-        state::{Metadata, EDITION},
-    },
-    metaplex_token_vault::{instruction::create_withdraw_tokens_instruction, state::Vault},
-    solana_program::{
-        account_info::AccountInfo,
-        borsh::try_from_slice_unchecked,
-        entrypoint::ProgramResult,
-        log::sol_log_compute_units,
-        msg,
-        program::{invoke, invoke_signed},
-        program_error::ProgramError,
-        program_pack::{IsInitialized, Pack},
-        pubkey::Pubkey,
-        system_instruction,
-        sysvar::{rent::Rent, Sysvar},
-    },
-    spl_token::instruction::{set_authority, AuthorityType},
-    std::{convert::TryInto, str::FromStr},
 };
+use arrayref::array_ref;
+use borsh::BorshDeserialize;
+use mpl_auction::{
+    instruction::end_auction_instruction,
+    processor::{
+        end_auction::EndAuctionArgs, AuctionData, AuctionDataExtended, AuctionState, BidderMetadata,
+    },
+};
+use mpl_token_metadata::{
+    instruction::update_metadata_accounts,
+    state::{Metadata, EDITION},
+};
+use mpl_token_vault::{instruction::create_withdraw_tokens_instruction, state::Vault};
+use solana_program::{
+    account_info::AccountInfo,
+    borsh::try_from_slice_unchecked,
+    entrypoint::ProgramResult,
+    log::sol_log_compute_units,
+    msg,
+    program::{invoke, invoke_signed},
+    program_error::ProgramError,
+    program_pack::{IsInitialized, Pack},
+    pubkey::Pubkey,
+    system_instruction,
+    sysvar::{rent::Rent, Sysvar},
+};
+use spl_token::instruction::{set_authority, AuthorityType};
+use std::{convert::TryInto, str::FromStr};
 
 /// Cheap method to just grab amount from token account, instead of deserializing entire thing
 pub fn get_amount_from_token_account(
@@ -101,7 +98,7 @@ pub fn assert_store_safety_vault_manager_match(
         &token_vault_program,
         safety_deposit_info,
         &[
-            metaplex_token_vault::state::PREFIX.as_bytes(),
+            mpl_token_vault::state::PREFIX.as_bytes(),
             vault_info.key.as_ref(),
             token_mint_key.as_ref(),
         ],
@@ -619,7 +616,7 @@ pub fn common_redeem_checks(
             &auction_program,
             bidder_metadata_info,
             &[
-                metaplex_auction::PREFIX.as_bytes(),
+                mpl_auction::PREFIX.as_bytes(),
                 auction_program.as_ref(),
                 auction_info.key.as_ref(),
                 bidder_info.key.as_ref(),
@@ -906,7 +903,7 @@ pub fn assert_edition_valid(
     edition_account_info: &AccountInfo,
 ) -> ProgramResult {
     let edition_seeds = &[
-        metaplex_token_metadata::state::PREFIX.as_bytes(),
+        mpl_token_metadata::state::PREFIX.as_bytes(),
         program_id.as_ref(),
         &mint.as_ref(),
         EDITION.as_bytes(),

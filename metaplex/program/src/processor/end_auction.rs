@@ -5,7 +5,7 @@ use {
         state::{get_auction_manager, AuctionManagerStatus, Store, PREFIX},
         utils::{assert_authority_correct, assert_owned_by},
     },
-    metaplex_auction::{
+    mpl_auction::{
         instruction::{end_auction_instruction, EndAuctionArgs},
         processor::{AuctionData, AuctionDataExtended, BidState},
     },
