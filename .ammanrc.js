@@ -22,7 +22,7 @@ const programs = {
   metaplex: { programId: programIds.mpl, deployPath: localDeployPath('mpl_metaplex') },
   membershipToken: {
     programId: programIds.membershipToken,
-    deployPath: localDeployPath('mpl_membership_token'),
+    deployPath: localDeployPath('mpl_fixed_price_sale'),
   },
 };
 

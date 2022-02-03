@@ -1,6 +1,0 @@
-{
-  "entryPoints": ["src/mpl-membership-token.ts"],
-  "excludeInternal": true,
-  "excludePrivate": true,
-  "out": "./docs"
-}

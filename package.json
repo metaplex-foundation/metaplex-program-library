@@ -23,7 +23,7 @@
     "auction-house/js",
     "gumdrop/js",
     "candy-machine/js",
-    "membership-token/js"
+    "fixed-price-sale/js"
   ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
   "author": "Metaplex Maintainers <contact@metaplex.com>",

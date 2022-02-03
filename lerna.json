@@ -7,7 +7,7 @@
     "token-metadata/js",
     "metaplex/js",
     "auction-house/js",
-    "membership-token/js"
+    "fixed-price-sale/js"
   ],
   "useWorkspaces": true,
   "version": "independent",
