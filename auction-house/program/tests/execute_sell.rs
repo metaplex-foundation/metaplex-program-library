@@ -18,7 +18,6 @@ use solana_program::{system_program, sysvar};
 
 use solana_program::program_pack::Pack;
 
-use solana_sdk::account::ReadableAccount;
 use solana_sdk::signature::Keypair;
 use solana_sdk::transaction::Transaction;
 use spl_associated_token_account::get_associated_token_address;
@@ -47,7 +46,7 @@ async fn execute_sale_success() {
         )
         .await
         .unwrap();
-    let (sell_acc, sell_tx) = sell(&mut context,&ahkey, &ah,&test_metadata, 100_000_000);
+    let (sell_acc, sell_tx) = sell(&mut context,&ahkey, &ah, &test_metadata, 100_000_000);
     context.banks_client.process_transaction(sell_tx).await.unwrap();
     let buyer = Keypair::new();
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000).await.unwrap();

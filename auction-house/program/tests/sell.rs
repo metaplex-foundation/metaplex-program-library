@@ -1,7 +1,5 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
-use anchor_lang::{InstructionData};
-
 
 use mpl_testing_utils::solana::{airdrop};
 use mpl_testing_utils::utils::Metadata;
