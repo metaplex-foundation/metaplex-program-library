@@ -74,7 +74,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
   const keys: web3.AccountMeta[] = [
     {
       pubkey: market,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
