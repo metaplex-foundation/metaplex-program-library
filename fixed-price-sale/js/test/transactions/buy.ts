@@ -3,7 +3,7 @@ import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 
 import { createBuyInstruction } from '../../src/instructions';
 
-interface BuyMembershipTokenParams {
+interface BuyParams {
   connection: Connection;
   buyer: PublicKey;
   userTokenAccount: PublicKey;
@@ -41,7 +41,7 @@ export const createBuyTransaction = async ({
   newMint,
   newMintEdition,
   newMintMetadata,
-}: BuyMembershipTokenParams) => {
+}: BuyParams) => {
   const instruction = await createBuyInstruction(
     {
       // buyer wallet

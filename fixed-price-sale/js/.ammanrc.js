@@ -4,6 +4,6 @@ const base = require('../../.ammanrc.js');
 
 const validator = {
   ...base.validator,
-  programs: [base.programs.metadata, base.programs.membershipToken],
+  programs: [base.programs.metadata, base.programs.fixedPriceSaleToken],
 };
 module.exports = { validator };
