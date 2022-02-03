@@ -1008,43 +1008,78 @@ pub mod auction_house {
         Ok(())
     }
 
-    pub fn document_sale<'info>(
-        ctx: Context<'_, '_, '_, 'info, DocumentSale<'info>>,
+    pub fn print_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrintReceipt<'info>>,
         trade_state_bump: u8,
-        _sale_receipt_bump: u8,
-        buyer_price: u64,
+        receipt_bump: u8,
+        price: u64,
         token_size: u64,
     ) -> ProgramResult {
-        let seller_trade_state = &ctx.accounts.seller_trade_state;
-        let sale_receipt = &mut ctx.accounts.sale_receipt;
+        let trade_state = &ctx.accounts.trade_state;
+        let receipt = &mut ctx.accounts.receipt;
         let auction_house = &ctx.accounts.auction_house;
         let token_account = &ctx.accounts.token_account;
-        let seller = &ctx.accounts.seller;
+        let bookkeeper = &ctx.accounts.bookkeeper;
+        let wallet = &ctx.accounts.wallet;
 
-        sale_receipt.seller_trade_state = sale_receipt.seller_trade_state;
-        sale_receipt.auction_house = auction_house.key();
-        sale_receipt.token_account = token_account.key();
-        sale_receipt.seller = seller.key();
-        sale_receipt.buyer_price = buyer_price;
-        sale_receipt.token_size = token_size;
+        receipt.trade_state = trade_state.key();
+        receipt.auction_house = auction_house.key();
+        receipt.token_account = token_account.key();
+        receipt.bookkeeper = bookkeeper.key();
+        receipt.wallet = wallet.key();
+        receipt.price = price;
+        receipt.token_size = token_size;
+        receipt.bump = receipt_bump;
+        receipt.trade_state_bump = trade_state_bump;
 
         let ts_seeds = [
             PREFIX.as_bytes(),
-            sale_receipt.seller.as_ref(),
-            sale_receipt.auction_house.as_ref(),
-            sale_receipt.token_account.as_ref(),
+            receipt.wallet.as_ref(),
+            receipt.auction_house.as_ref(),
+            receipt.token_account.as_ref(),
             auction_house.treasury_mint.as_ref(),
             token_account.mint.as_ref(),
-            &buyer_price.to_le_bytes(),
-            &token_size.to_le_bytes(),
-            &[trade_state_bump],
+            &receipt.price.to_le_bytes(),
+            &receipt.token_size.to_le_bytes(),
         ];
 
         assert_derivation(
             &id(),
-            &seller_trade_state.to_account_info(),
+            &trade_state.to_account_info(),
             &ts_seeds,
         )?;
+
+        Ok(())
+    }
+
+    pub fn burn_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, BurnReceipt<'info>>,
+    ) -> ProgramResult {
+        let trade_state = &ctx.accounts.trade_state;
+        let receipt = &ctx.accounts.receipt;
+        let auction_house = &ctx.accounts.auction_house;
+        let token_account = &ctx.accounts.token_account;
+
+        let ts_seeds = [
+            PREFIX.as_bytes(),
+            receipt.wallet.as_ref(),
+            receipt.auction_house.as_ref(),
+            receipt.token_account.as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_account.mint.as_ref(),
+            &receipt.price.to_le_bytes(),
+            &receipt.token_size.to_le_bytes(),
+        ];
+
+        assert_derivation(
+            &id(),
+            &trade_state.to_account_info(),
+            &ts_seeds,
+        )?;
+
+        if !trade_state.data_is_empty() {
+            return Err(ErrorCode::TradeStateIsNotEmpty.into());
+        }
 
         Ok(())
     }
@@ -1136,44 +1171,34 @@ pub struct SellV2<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, sale_receipt_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct DocumentSale<'info> {
-    seller: UncheckedAccount<'info>,
+#[instruction(trade_state_bump: u8, receipt_bump: u8, price: u64, token_size: u64)]
+pub struct PrintReceipt<'info> {
+    wallet: UncheckedAccount<'info>,
     token_account: Account<'info, TokenAccount>,
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
     auction_house: Account<'info, AuctionHouse>,
-    #[account(seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
-    seller_trade_state: UncheckedAccount<'info>,
-    #[account(init, seeds=[SALE_RECEIPT_PREFIX.as_bytes(), seller_trade_state.key().as_ref()], bump=sale_receipt_bump, payer=user, space=SALE_RECEIPT_SIZE)]
-    sale_receipt: Account<'info, SaleReceipt>,
-    user: Signer<'info>,
-    token_program: Program<'info, Token>,
+    #[account(seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
+    trade_state: UncheckedAccount<'info>,
+    #[account(init, seeds=[RECEIPT_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt_bump, payer=bookkeeper, space=RECEIPT_SIZE)]
+    receipt: Account<'info, Receipt>,
+    #[account(mut)]
+    bookkeeper: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct Buy<'info> {
-    wallet: Signer<'info>,
-    #[account(mut)]
-    payment_account: UncheckedAccount<'info>,
-    transfer_authority: UncheckedAccount<'info>,
-    treasury_mint: Account<'info, Mint>,
+pub struct BurnReceipt<'info> {
     token_account: Account<'info, TokenAccount>,
-    metadata: UncheckedAccount<'info>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
-    escrow_payment_account: UncheckedAccount<'info>,
-    authority: UncheckedAccount<'info>,
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
     auction_house: Account<'info, AuctionHouse>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
-    buyer_trade_state: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
+    #[account(seeds=[PREFIX.as_bytes(), receipt.wallet.key().as_ref(), receipt.auction_house.key().as_ref(), receipt.token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &receipt.price.to_le_bytes(), &receipt.token_size.to_le_bytes()], bump=receipt.trade_state_bump)]
+    trade_state: UncheckedAccount<'info>,
+    #[account(mut, seeds=[RECEIPT_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt.bump, close=bookkeeper, has_one=bookkeeper)]
+    receipt: Account<'info, Receipt>,
+    #[account(mut)]
+    bookkeeper: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
 }
 
 #[derive(Accounts)]
@@ -1378,22 +1403,29 @@ pub struct AuctionHouse {
 
 pub const TRADE_STATE_SIZE: usize = 1;
 
-pub const SALE_RECEIPT_SIZE: usize = 8 + //key
-32 + // sale_trade_state
-32 + //auction_house
-32 + //seller
-32 + //token_account
-8 + // buyer_price
-8; // token_size
+pub const RECEIPT_SIZE: usize = 8 + //key
+32 + // trade_state
+32 + // bookkeeper
+32 + // auction_house
+32 + // wallet
+32 + // token_account
+8 + // price
+8 + // token_size
+1 + // bump
+1; // trade_state_bump 
+
 
 #[account]
-pub struct SaleReceipt {
-    pub seller_trade_state: Pubkey,
+pub struct Receipt {
+    pub trade_state: Pubkey,
+    pub bookkeeper: Pubkey,
     pub auction_house: Pubkey,
-    pub seller: Pubkey,
+    pub wallet: Pubkey,
     pub token_account: Pubkey,
-    pub buyer_price: u64,
+    pub price: u64,
     pub token_size: u64,
+    pub bump: u8,
+    pub trade_state_bump: u8,
 }
 
 #[error]
@@ -1446,4 +1478,8 @@ pub enum ErrorCode {
     NoValidSignerPresent,
     #[msg("BP must be less than or equal to 10000")]
     InvalidBasisPoints,
+    #[msg("The trade state account does not exist")]
+    TradeStateDoesntExist,
+    #[msg("The trade state is not empty")]
+    TradeStateIsNotEmpty,
 }
