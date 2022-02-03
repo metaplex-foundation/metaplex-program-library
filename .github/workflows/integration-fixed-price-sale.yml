@@ -1,4 +1,4 @@
-name: Integration Membership Token
+name: Integration Fixed Price Sale
 
 on:
   push:
