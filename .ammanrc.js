@@ -9,7 +9,7 @@ const programIds = {
   vault: 'vau1zxA2LbssAUEF7Gpw91zMM1LvXrvpzJtmZ58rPsn',
   auction: 'auctxRXPeJoc4817jDhf4HbjnhEcr1cCXenosMhK5R8',
   metaplex: 'p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98',
-  membershipToken: 'EHE2kYEETZbRfhQoNtknbnqrrpKEojbohSagkGdiJ6wm',
+  membershipToken: 'SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo',
 };
 
 function localDeployPath(programName) {

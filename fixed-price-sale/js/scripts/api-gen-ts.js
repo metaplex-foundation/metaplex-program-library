@@ -2,7 +2,7 @@
 'use strict';
 
 const PROGRAM_NAME = 'fixed_price_sale';
-const PROGRAM_ID = 'EHE2kYEETZbRfhQoNtknbnqrrpKEojbohSagkGdiJ6wm'; // ToDo: change
+const PROGRAM_ID = 'SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'; // ToDo: change
 
 const path = require('path');
 const generatedIdlDir = path.join(__dirname, '..', 'idl');

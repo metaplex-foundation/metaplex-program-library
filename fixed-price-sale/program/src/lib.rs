@@ -26,7 +26,7 @@ use anchor_spl::{
     token::{self, accessor, Mint, Token, TokenAccount},
 };
 
-declare_id!("EHE2kYEETZbRfhQoNtknbnqrrpKEojbohSagkGdiJ6wm");
+declare_id!("SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo");
 
 #[program]
 pub mod fixed_price_sale {
