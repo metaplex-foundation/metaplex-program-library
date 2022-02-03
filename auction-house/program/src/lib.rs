@@ -965,6 +965,47 @@ pub mod auction_house {
         Ok(())
     }
 
+    pub fn document_sale<'info>(
+        ctx: Context<'_, '_, '_, 'info, DocumentSale<'info>>,
+        trade_state_bump: u8,
+        _sale_receipt_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> ProgramResult {
+        let seller_trade_state = &ctx.accounts.seller_trade_state;
+        let sale_receipt = &mut ctx.accounts.sale_receipt;
+        let auction_house = &ctx.accounts.auction_house;
+        let token_account = &ctx.accounts.token_account;
+        let seller = &ctx.accounts.seller;
+
+        sale_receipt.seller_trade_state = sale_receipt.seller_trade_state;
+        sale_receipt.auction_house = auction_house.key();
+        sale_receipt.token_account = token_account.key();
+        sale_receipt.seller = seller.key();
+        sale_receipt.buyer_price = buyer_price;
+        sale_receipt.token_size = token_size;
+
+        let ts_seeds = [
+            PREFIX.as_bytes(),
+            sale_receipt.seller.as_ref(),
+            sale_receipt.auction_house.as_ref(),
+            sale_receipt.token_account.as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_account.mint.as_ref(),
+            &buyer_price.to_le_bytes(),
+            &token_size.to_le_bytes(),
+            &[trade_state_bump],
+        ];
+
+        assert_derivation(
+            &id(),
+            &seller_trade_state.to_account_info(),
+            &ts_seeds,
+        )?;
+
+        Ok(())
+    }
+
     pub fn buy<'info>(
         ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
         trade_state_bump: u8,
@@ -1159,6 +1200,23 @@ pub struct SellV2<'info> {
     system_program: Program<'info, System>,
     #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
     program_as_signer: UncheckedAccount<'info>,
+    rent: Sysvar<'info, Rent>,
+}
+
+#[derive(Accounts)]
+#[instruction(trade_state_bump: u8, sale_receipt_bump: u8, buyer_price: u64, token_size: u64)]
+pub struct DocumentSale<'info> {
+    seller: UncheckedAccount<'info>,
+    token_account: Account<'info, TokenAccount>,
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
+    auction_house: Account<'info, AuctionHouse>,
+    #[account(seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
+    seller_trade_state: UncheckedAccount<'info>,
+    #[account(init, seeds=[SALE_RECEIPT_PREFIX.as_bytes(), seller_trade_state.key().as_ref()], bump=sale_receipt_bump, payer=user, space=SALE_RECEIPT_SIZE)]
+    sale_receipt: Account<'info, SaleReceipt>,
+    user: Signer<'info>,
+    token_program: Program<'info, Token>,
+    system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
 }
 
@@ -1387,6 +1445,24 @@ pub struct AuctionHouse {
 }
 
 pub const TRADE_STATE_SIZE: usize = 1;
+
+pub const SALE_RECEIPT_SIZE: usize = 8 + //key
+32 + // sale_trade_state
+32 + //auction_house
+32 + //seller
+32 + //token_account
+8 + // buyer_price
+8; // token_size
+
+#[account]
+pub struct SaleReceipt {
+    pub seller_trade_state: Pubkey,
+    pub auction_house: Pubkey,
+    pub seller: Pubkey,
+    pub token_account: Pubkey,
+    pub buyer_price: u64,
+    pub token_size: u64,
+}
 
 #[error]
 pub enum ErrorCode {
