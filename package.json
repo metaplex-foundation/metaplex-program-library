@@ -30,6 +30,7 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "@metaplex-foundation/solita": "0.0.2",
     "@project-serum/anchor": "^0.19.0",
     "@project-serum/common": "^0.0.1-beta.3",
     "@types/mocha": "^9.0.0",

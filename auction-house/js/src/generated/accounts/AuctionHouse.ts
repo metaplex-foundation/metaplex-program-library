@@ -1,6 +1,6 @@
 import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import * as beet from '@metaplex-foundation/beet';
 
 /**
  * Arguments used to create {@link AuctionHouseAccountData}
@@ -26,7 +26,7 @@ const auctionHouseAccountDiscriminator = [40, 108, 215, 107, 213, 85, 245, 48];
  * Holds the data for the {@link AuctionHouseAccount} and provides de/serialization
  * functionality for that data
  */
-export class AuctionHouseAccountData {
+export class AuctionHouseAccountData implements AuctionHouseAccountDataArgs {
   private constructor(
     readonly auctionHouseFeeAccount: web3.PublicKey,
     readonly auctionHouseTreasury: web3.PublicKey,
@@ -105,6 +105,8 @@ export class AuctionHouseAccountData {
   /**
    * Fetches the minimum balance needed to exempt an account holding
    * {@link AuctionHouseAccountData} data from rent
+   *
+   * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
     connection: web3.Connection,
@@ -154,7 +156,7 @@ const auctionHouseAccountDataStruct = new beet.BeetStruct<
   }
 >(
   [
-    ['accountDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['auctionHouseFeeAccount', beetSolana.publicKey],
     ['auctionHouseTreasury', beetSolana.publicKey],
     ['treasuryWithdrawalDestination', beetSolana.publicKey],

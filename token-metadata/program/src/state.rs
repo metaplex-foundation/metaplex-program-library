@@ -71,7 +71,7 @@ pub const MAX_EDITION_MARKER_SIZE: usize = 32;
 
 pub const EDITION_MARKER_BIT_SIZE: u64 = 248;
 
-pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //10 byte padding
+pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
@@ -167,14 +167,23 @@ pub enum TokenStandard {
 pub struct UseAuthorityRecord {
     pub key: Key, //1
     pub allowed_uses: u64, //8
+    pub bump: u8
 }
 
 impl UseAuthorityRecord {
     pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
         let ua: UseAuthorityRecord =
             try_from_slice_checked(&a.data.borrow_mut(), Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
-
         Ok(ua)
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Result<UseAuthorityRecord, ProgramError> {
+        let ua: UseAuthorityRecord = try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+        Ok(ua)
+    }
+
+    pub fn bump_empty(&self) -> bool {
+       return self.bump == 0 && self.key == Key::UseAuthorityRecord;
     }
 }
 
@@ -182,7 +191,8 @@ impl UseAuthorityRecord {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct CollectionAuthorityRecord {
-    pub key: Key //1
+    pub key: Key, //1
+    pub bump: u8 //1
 }
 
 impl CollectionAuthorityRecord {
@@ -191,6 +201,11 @@ impl CollectionAuthorityRecord {
             try_from_slice_checked(&a.data.borrow_mut(), Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
 
         Ok(ua)
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
+        let ca: CollectionAuthorityRecord = try_from_slice_checked(b, Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
+        Ok(ca)
     }
 }
 

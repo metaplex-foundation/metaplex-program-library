@@ -1,7 +1,6 @@
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type DepositInstructionArgs = {
   escrowPaymentBump: number;
@@ -13,7 +12,7 @@ const depositStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['escrowPaymentBump', beet.u8],
     ['amount', beet.u64],
   ],
@@ -32,6 +31,12 @@ export type DepositInstructionAccounts = {
 
 const depositInstructionDiscriminator = [242, 35, 198, 137, 82, 225, 242, 182];
 
+/**
+ * Creates a _Deposit_ instruction.
+ *
+ * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ */
 export function createDepositInstruction(
   accounts: DepositInstructionAccounts,
   args: DepositInstructionArgs,

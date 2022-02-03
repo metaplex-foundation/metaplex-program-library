@@ -1,7 +1,6 @@
-import * as web3 from '@solana/web3.js';
-import * as beet from '@metaplex-foundation/beet';
-
 import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 export type WithdrawFromTreasuryInstructionArgs = {
   amount: beet.bignum;
@@ -12,7 +11,7 @@ const withdrawFromTreasuryStruct = new beet.BeetArgsStruct<
   }
 >(
   [
-    ['instructionDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['amount', beet.u64],
   ],
   'WithdrawFromTreasuryInstructionArgs',
@@ -27,6 +26,12 @@ export type WithdrawFromTreasuryInstructionAccounts = {
 
 const withdrawFromTreasuryInstructionDiscriminator = [0, 164, 86, 76, 56, 72, 12, 170];
 
+/**
+ * Creates a _WithdrawFromTreasury_ instruction.
+ *
+ * @param accounts that will be accessed while the instruction is processed
+ * @param args to provide as instruction data to the program
+ */
 export function createWithdrawFromTreasuryInstruction(
   accounts: WithdrawFromTreasuryInstructionAccounts,
   args: WithdrawFromTreasuryInstructionArgs,
