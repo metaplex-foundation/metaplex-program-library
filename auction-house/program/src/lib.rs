@@ -559,7 +559,7 @@ pub mod auction_house {
     }
 
     pub fn execute_sale<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+        ctx: Context<'_, '_, '_, 'info,   ExecuteSale<'info>>,
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
@@ -645,7 +645,6 @@ pub mod auction_house {
             &seller.key(),
             &token_account_mint,
         )?;
-
         assert_derivation(
             &mpl_token_metadata::id(),
             &metadata.to_account_info(),

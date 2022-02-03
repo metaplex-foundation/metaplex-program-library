@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, env, io};
+use std::{io};
 
 use anchor_client::solana_sdk::{
     pubkey::Pubkey,
@@ -6,19 +6,16 @@ use anchor_client::solana_sdk::{
     system_program, sysvar,
 };
 use anchor_lang::*;
-
-use mpl_auction_house::{
-    pda::{
-        self, find_auction_house_address, find_auction_house_fee_account_address,
-        find_auction_house_treasury_address, find_program_as_signer_address,
-        find_trade_state_address,
-    },
-    AuctionHouse,
-};
+use mpl_auction_house::{pda::{
+    find_auction_house_address, find_auction_house_fee_account_address,
+    find_auction_house_treasury_address, find_program_as_signer_address,
+    find_trade_state_address,
+}, AuctionHouse};
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
 use solana_sdk::{instruction::Instruction, transaction::Transaction, transport::TransportError};
 use spl_associated_token_account::get_associated_token_address;
+use mpl_auction_house::pda::find_escrow_payment_address;
 
 pub fn auction_house_program_test<'a>() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
@@ -90,13 +87,128 @@ pub async fn create_auction_house(
         .map(|_| auction_house_key.clone())
 }
 
-pub async fn sell(
+pub fn deposit(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    buyer: &Keypair,
+    sale_price: u64,
+)-> (mpl_auction_house::accounts::Deposit, Transaction) {
+    let seller_token_account =
+        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let (_buyer_trade_state, _sts_bump) = find_trade_state_address(
+        &buyer.pubkey(),
+        &ahkey,
+        &seller_token_account,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        1,
+    );
+    let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
+    let accounts = mpl_auction_house::accounts::Deposit {
+        wallet: buyer.pubkey(),
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        token_program: spl_token::id(),
+        treasury_mint: ah.treasury_mint,
+        payment_account: buyer.pubkey(),
+        transfer_authority: buyer.pubkey(),
+        system_program: solana_program::system_program::id(),
+        rent: sysvar::rent::id(),
+        escrow_payment_account: escrow
+    };
+    let account_metas = accounts.to_account_metas(None);
+
+    let data = mpl_auction_house::instruction::Deposit {
+        amount: sale_price,
+        escrow_payment_bump: escrow_bump,
+    }.data();
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data,
+        accounts: account_metas,
+    };
+
+    (accounts,Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&buyer.pubkey()),
+        &[buyer],
+        context.last_blockhash,
+    ))
+}
+
+pub fn buy(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    buyer: &Keypair,
+    sale_price: u64,
+)-> (mpl_auction_house::accounts::Buy, Transaction) {
+    let seller_token_account =
+        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let (buyer_trade_state, sts_bump) = find_trade_state_address(
+        &buyer.pubkey(),
+        &ahkey,
+        &seller_token_account,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        1,
+    );
+    let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
+
+    let accounts = mpl_auction_house::accounts::Buy {
+        wallet: buyer.pubkey(),
+        token_account: seller_token_account,
+        metadata: test_metadata.pubkey,
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        buyer_trade_state,
+        token_program: spl_token::id(),
+        treasury_mint: ah.treasury_mint,
+        payment_account: buyer.pubkey(),
+        transfer_authority: buyer.pubkey(),
+        system_program: solana_program::system_program::id(),
+        rent: sysvar::rent::id(),
+        escrow_payment_account: escrow
+    };
+    let account_metas = accounts.to_account_metas(None);
+
+    let buy_ix = mpl_auction_house::instruction::Buy {
+        trade_state_bump: sts_bump,
+        escrow_payment_bump: escrow_bump,
+        token_size: 1,
+        buyer_price: sale_price,
+    };
+    let data = buy_ix.data();
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data,
+        accounts: account_metas,
+    };
+
+    (accounts, Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&buyer.pubkey()),
+        &[buyer],
+        context.last_blockhash,
+    ))
+}
+
+pub fn sell(
     context: &mut ProgramTestContext,
     ahkey: &Pubkey,
     ah: &AuctionHouse,
     test_metadata: &Metadata,
     sale_price: u64,
-) -> Result<(Pubkey, Pubkey), TransportError> {
+) -> (mpl_auction_house::accounts::Sell,Transaction) {
     let token =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
     let (seller_trade_state, sts_bump) = find_trade_state_address(
@@ -132,8 +244,8 @@ pub async fn sell(
         system_program: solana_program::system_program::id(),
         program_as_signer: pas,
         rent: sysvar::rent::id(),
-    }
-    .to_account_metas(None);
+    };
+    let account_metas = accounts.to_account_metas(None);
 
     let data = mpl_auction_house::instruction::Sell {
         trade_state_bump: sts_bump,
@@ -147,23 +259,20 @@ pub async fn sell(
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data,
-        accounts,
+        accounts: account_metas,
     };
 
-    let tx = Transaction::new_signed_with_payer(
+    (accounts, Transaction::new_signed_with_payer(
         &[instruction],
         Some(&test_metadata.token.pubkey()),
         &[&test_metadata.token],
         context.last_blockhash,
-    );
-
-    context.banks_client.process_transaction(tx).await.unwrap();
-    Ok((seller_trade_state, free_seller_trade_state))
+    ))
 }
 
 pub async fn existing_auction_house_test_context(
     context: &mut ProgramTestContext,
-) -> Result<(AuctionHouse, Pubkey), TransportError> {
+) -> Result<(AuctionHouse, Pubkey, Keypair), TransportError> {
     let twd_key = context.payer.pubkey().clone();
     let fwd_key = context.payer.pubkey().clone();
     let t_mint_key = spl_token::native_mint::id();
@@ -207,5 +316,5 @@ pub async fn existing_auction_house_test_context(
 
     let auction_house_data = AuctionHouse::try_deserialize(&mut auction_house_acc.data.as_ref())
         .map_err(|e| TransportError::IoError(io::Error::new(io::ErrorKind::InvalidData, e)))?;
-    return Ok((auction_house_data, auction_house_address));
+    return Ok((auction_house_data, auction_house_address,authority));
 }
