@@ -16,3 +16,5 @@ export * from './RevokeUseAuthority';
 export * from './ApproveCollectionAuthority';
 export * from './RevokeCollectionAuthority';
 export * from './Utilize';
+export * from './FreezeDelegatedAccount';
+export * from './ThawDelegatedAccount';
