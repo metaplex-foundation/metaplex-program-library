@@ -350,7 +350,7 @@ pub enum MetadataError {
     #[error("This Collection Authority Record Already Exists.")]
     CollectionAuthorityRecordAlreadyExists,
 
-    #[error("This Collection Authoritty Record Does Not Exist.")]
+    #[error("This Collection Authority Record Does Not Exist.")]
     CollectionAuthorityDoesNotExist,
 
     #[error("This Use Authority Record is invalid.")]
@@ -358,6 +358,11 @@ pub enum MetadataError {
 
     #[error("This Collection Authority Record is invalid.")]
     InvalidCollectionAuthorityRecord,
+    
+    #[error("Metadata does not match the freeze authority on the mint")]
+    InvalidFreezeAuthority,
+    #[error("All tokens in this account have not been delegated to this user.")]
+    InvalidDelegate,
 }
 
 impl PrintProgramError for MetadataError {

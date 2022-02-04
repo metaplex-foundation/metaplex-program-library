@@ -57,6 +57,7 @@ mod bump_seed_migration {
                 10,
                 false,
                 None,
+                None,
                 uses.to_owned(),
             )
             .await

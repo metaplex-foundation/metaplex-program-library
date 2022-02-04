@@ -27,10 +27,13 @@ use {
     spl_token::state::Mint,
     std::{cell::RefMut, ops::Deref, str::FromStr},
 };
+use solana_program::sysvar::SysvarId;
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
+// here just in case solana removes the var
+const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
 pub mod nft_candy_machine_v2 {
 
@@ -47,8 +50,17 @@ pub mod nft_candy_machine_v2 {
         let wallet = &ctx.accounts.wallet;
         let payer = &ctx.accounts.payer;
         let token_program = &ctx.accounts.token_program;
-        let recent_blockhashes = &ctx.accounts.recent_blockhashes;
+        //Account name the same for IDL compatability
+        let recent_slothashes = &ctx.accounts.recent_blockhashes;
         let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
+        if recent_slothashes.key().to_string() == BLOCK_HASHES {
+            msg!("recent_blockhashes is deprecated and will break soon");
+        }
+        if recent_slothashes.key() != sysvar::slot_hashes::SlotHashes::id()
+            && recent_slothashes.key().to_string() != BLOCK_HASHES
+        {
+            return Err(ErrorCode::IncorrectSlotHashesPubkey.into());
+        }
         let mut price = candy_machine.data.price;
         if let Some(es) = &candy_machine.data.end_settings {
             match es.end_setting_type {
@@ -255,8 +267,8 @@ pub mod nft_candy_machine_v2 {
                 ],
             )?;
         }
-        let data = recent_blockhashes.data.borrow();
-        let most_recent = array_ref![data, 8, 8];
+        let data = recent_slothashes.data.borrow();
+        let most_recent = array_ref![data, 4, 8];
 
         let index = u64::from_le_bytes(*most_recent);
         let modded: usize = index
@@ -454,19 +466,15 @@ pub mod nft_candy_machine_v2 {
         let account = candy_machine.to_account_info();
         let current_count = get_config_count(&account.data.borrow_mut())?;
         let mut data = account.data.borrow_mut();
-
         let mut fixed_config_lines = vec![];
-
         // No risk overflow because you literally cant store this many in an account
         // going beyond u32 only happens with the hidden store candies, which dont use this.
         if index > (candy_machine.data.items_available as u32) - 1 {
             return Err(ErrorCode::IndexGreaterThanLength.into());
         }
-
         if candy_machine.data.hidden_settings.is_some() {
             return Err(ErrorCode::HiddenSettingsConfigsDoNotHaveConfigLines.into());
         }
-
         for line in &config_lines {
             let mut array_of_zeroes = vec![];
             while array_of_zeroes.len() < MAX_NAME_LENGTH - line.name.len() {
@@ -718,7 +726,7 @@ pub struct MintNFT<'info> {
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
     clock: Sysvar<'info, Clock>,
-    #[account(address = sysvar::recent_blockhashes::ID)]
+    // Leaving the name the same for IDL backward compatability
     recent_blockhashes: UncheckedAccount<'info>,
     #[account(address = sysvar::instructions::id())]
     instruction_sysvar_account: UncheckedAccount<'info>,
@@ -1085,4 +1093,6 @@ pub enum ErrorCode {
     SuspiciousTransaction,
     #[msg("Cannot Switch to Hidden Settings after items available is greater than 0")]
     CannotSwitchToHiddenSettings,
+    #[msg("Incorrect SlotHashes PubKey")]
+    IncorrectSlotHashesPubkey,
 }
