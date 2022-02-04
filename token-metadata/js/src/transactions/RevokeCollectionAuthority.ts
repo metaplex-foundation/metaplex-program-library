@@ -26,7 +26,6 @@ type RevokeCollectionAuthorityParams = {
 export class RevokeCollectionAuthority extends Transaction {
   constructor(options: TransactionCtorFields, params: RevokeCollectionAuthorityParams) {
     super(options);
-    const { feePayer } = options;
     const { metadata, collectionAuthorityRecord, newCollectionAuthority, updateAuthority, mint } =
       params;
 
@@ -46,11 +45,6 @@ export class RevokeCollectionAuthority extends Transaction {
         pubkey: updateAuthority,
         isSigner: true,
         isWritable: false,
-      },
-      {
-        pubkey: feePayer,
-        isSigner: true,
-        isWritable: true,
       },
       {
         pubkey: metadata,
