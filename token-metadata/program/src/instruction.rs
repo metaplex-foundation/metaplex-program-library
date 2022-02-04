@@ -1074,6 +1074,8 @@ pub fn set_and_verify_collection(
         program_id,
         accounts,
         data: MetadataInstruction::SetAndVerifyCollection
+            .try_to_vec()
+            .unwrap(),
     }
 }
 
