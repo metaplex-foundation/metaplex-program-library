@@ -1143,3 +1143,45 @@ pub fn assert_currently_holding(
     }
     Ok(())
 }
+
+pub fn assert_freeze_authority_matches_mint(
+    freeze_authority: &COption<Pubkey>,
+    freeze_authority_info: &AccountInfo,
+) -> ProgramResult {
+    match freeze_authority {
+        COption::None => {
+            return Err(MetadataError::InvalidFreezeAuthority.into());
+        }
+        COption::Some(key) => {
+            if freeze_authority_info.key != key {
+                return Err(MetadataError::InvalidFreezeAuthority.into());
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn assert_delegated_tokens(
+    delegate: &AccountInfo,
+    mint_info: &AccountInfo,
+    token_account_info: &AccountInfo,
+) -> ProgramResult {
+    assert_owned_by(mint_info, &spl_token::id())?;
+
+    let token_account: Account = assert_initialized(token_account_info)?;
+
+    assert_owned_by(token_account_info, &spl_token::id())?;
+
+    if token_account.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if token_account.amount < 1 {
+        return Err(MetadataError::NotEnoughTokens.into());
+    }
+
+    if token_account.delegate == COption::None || token_account.delegated_amount != token_account.amount || token_account.delegate.unwrap() != *delegate.key {
+        return Err(MetadataError::InvalidDelegate.into());
+    }
+    Ok(())
+}
