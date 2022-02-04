@@ -110,12 +110,21 @@ type CacheId = &'static str;
 /// A timestamp for an auction cache
 struct Time(i64);
 
+/// Helper for storing the two optional above/below arguments for a
+/// SetStoreIndex instruction
+enum Positional {
+    Zero,
+    One(CacheId),
+    Two(CacheId, CacheId),
+}
+
+use Positional::{One, Two, Zero};
+
 /// Simplification of a `SetStoreArgs` instruction for the test bed below
 struct SetStoreIndex {
     offset: usize,
-    cache: &'static str,
-    above: Option<&'static str>,
-    below: Option<&'static str>,
+    cache: CacheId,
+    pos: Positional,
 }
 
 /// Test bed for `set_store_index` tests.
@@ -147,6 +156,7 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
     test.add_account(store_key, store_acct);
 
     let mut cache_dict = HashMap::new();
+    let mut cache_time = HashMap::new();
     let mut auction_caches = vec![];
 
     for ((id, Time(timestamp)), index) in caches
@@ -159,7 +169,7 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
             store: store_key,
             timestamp,
             metadata: vec![],
-            auction: stub_key,
+            auction: Pubkey::new_unique(),
             vault: stub_key,
             auction_manager: stub_key,
         });
@@ -167,6 +177,13 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
         assert!(
             cache_dict.insert(id, key).is_none(),
             "Duplicate cache ID {:?} given",
+            id
+        );
+
+        assert!(
+            cache_time.insert(key, timestamp).is_none(),
+            "Duplicate cache pubkey {:?} given by {:?}",
+            key,
             id
         );
 
@@ -189,13 +206,7 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
     let payer = ctx.payer;
     let mut instructions = vec![];
 
-    for SetStoreIndex {
-        offset,
-        cache,
-        above,
-        below,
-    } in args
-    {
+    for SetStoreIndex { offset, cache, pos } in args {
         let mut accounts = vec![
             AccountMeta::new(index_key, false),
             AccountMeta::new_readonly(payer.pubkey(), true),
@@ -205,8 +216,15 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
             AccountMeta::new_readonly(stub_key, false),
         ];
 
-        accounts.extend(above.map(|a| AccountMeta::new_readonly(cache_dict[a], false)));
-        accounts.extend(below.map(|b| AccountMeta::new_readonly(cache_dict[b], false)));
+        match pos {
+            Zero => (),
+            One(a) => accounts.push(AccountMeta::new_readonly(cache_dict[a], false)),
+            Two(a, b) => accounts.extend(
+                vec![a, b]
+                    .into_iter()
+                    .map(|a| AccountMeta::new_readonly(cache_dict[a], false)),
+            ),
+        }
 
         for (i, account) in accounts.iter().enumerate() {
             if account.pubkey == stub_key || account.pubkey == payer.pubkey() {
@@ -267,12 +285,20 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
     let expected_caches = expected_caches.into_iter();
     assert_eq!(expected_caches.len(), actual_index.auction_caches.len());
 
+    let mut last_time = None;
+
     expected_caches
         .map(|c| cache_dict[c])
         .zip(actual_index.auction_caches.into_iter())
         .enumerate()
         .for_each(|(i, (expected, actual))| {
-            assert_eq!(expected, actual, "Cache mismatch at index {}", i)
+            assert_eq!(expected, actual, "Cache mismatch at index {}", i);
+
+            let time = cache_time[&actual];
+            if let Some(ref t) = last_time {
+                assert!(*t > time, "Cache at index {} out-of-order", i);
+            }
+            last_time = Some(time);
         });
 }
 
@@ -298,10 +324,244 @@ mod set_store_index {
             Some(SetStoreIndex {
                 offset: 0,
                 cache: "cache",
-                above: None,
-                below: None,
+                pos: Zero,
             }),
             Some("cache"),
+        )
+        .await;
+    }
+
+    /// Assert that prepending to a single-element index works
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    async fn test_prepend_one() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            Some(("cache", Time(1))),
+            Some(("before", Time(2))),
+            Some(SetStoreIndex {
+                offset: 0,
+                cache: "before",
+                pos: One("cache"),
+            }),
+            vec!["before", "cache"],
+        )
+        .await;
+    }
+
+    /// Assert that appending to a single-element index works
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    async fn test_append_one() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            Some(("cache", Time(2))),
+            Some(("after", Time(1))),
+            Some(SetStoreIndex {
+                offset: 1,
+                cache: "after",
+                pos: One("cache"),
+            }),
+            vec!["cache", "after"],
+        )
+        .await;
+    }
+
+    /// Assert that prepending to a multi-element index works
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    async fn test_prepend_many() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            vec![
+                ("cache0", Time(3)),
+                ("cache1", Time(2)),
+                ("cache2", Time(1)),
+            ],
+            Some(("before", Time(4))),
+            Some(SetStoreIndex {
+                offset: 0,
+                cache: "before",
+                pos: One("cache0"),
+            }),
+            vec!["before", "cache0", "cache1", "cache2"],
+        )
+        .await;
+    }
+
+    /// Assert that appending to a multi-element index works
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    async fn test_append_many() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            vec![
+                ("cache0", Time(4)),
+                ("cache1", Time(3)),
+                ("cache2", Time(2)),
+            ],
+            Some(("after", Time(1))),
+            Some(SetStoreIndex {
+                offset: 3,
+                cache: "after",
+                pos: One("cache2"),
+            }),
+            vec!["cache0", "cache1", "cache2", "after"],
+        )
+        .await;
+    }
+
+    /// Assert that inserting into the middle of a multi-element index works
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    async fn test_insert_many_middle() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            vec![
+                ("cache0", Time(4)),
+                ("cache1", Time(2)),
+                ("cache2", Time(1)),
+            ],
+            Some(("middle", Time(3))),
+            Some(SetStoreIndex {
+                offset: 1,
+                cache: "middle",
+                pos: Two("cache1", "cache0"),
+            }),
+            vec!["cache0", "middle", "cache1", "cache2"],
+        )
+        .await;
+    }
+
+    /// Assert that inserting into the second-to-last element of a
+    /// multi-element index works
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    async fn test_insert_many_last() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            vec![
+                ("cache0", Time(4)),
+                ("cache1", Time(3)),
+                ("cache2", Time(1)),
+            ],
+            Some(("middle", Time(2))),
+            Some(SetStoreIndex {
+                offset: 2,
+                cache: "middle",
+                pos: Two("cache2", "cache1"),
+            }),
+            vec!["cache0", "cache1", "middle", "cache2"],
+        )
+        .await;
+    }
+
+    /// Assert that prepending to an index out of order does not work
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    #[should_panic]
+    async fn test_prepend_bad_order() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            Some(("cache", Time(2))),
+            Some(("before", Time(1))),
+            Some(SetStoreIndex {
+                offset: 0,
+                cache: "before",
+                pos: One("cache"),
+            }),
+            vec!["before", "cache"],
+        )
+        .await;
+    }
+
+    /// Assert that appending to an index out of order does not work
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    #[should_panic]
+    async fn test_append_bad_order() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            Some(("cache", Time(1))),
+            Some(("after", Time(2))),
+            Some(SetStoreIndex {
+                offset: 1,
+                cache: "after",
+                pos: One("cache"),
+            }),
+            vec!["cache", "after"],
+        )
+        .await;
+    }
+
+    /// Assert that inserting into an index out of order does not work
+    ///
+    /// Case 1: The element is out of order with the cache below
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    #[should_panic]
+    async fn test_insert_bad_order_1() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            vec![("cache0", Time(4)), ("cache1", Time(2))],
+            Some(("middle", Time(5))),
+            Some(SetStoreIndex {
+                offset: 1,
+                cache: "middle",
+                pos: Two("cache1", "cache0"),
+            }),
+            vec!["cache0", "middle", "cache1"],
+        )
+        .await;
+    }
+
+    /// Assert that inserting into an index out of order does not work
+    ///
+    /// Case 2: The element is out of order with the cache above
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    #[should_panic]
+    async fn test_insert_bad_order_2() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            vec![("cache0", Time(4)), ("cache1", Time(2))],
+            Some(("middle", Time(1))),
+            Some(SetStoreIndex {
+                offset: 1,
+                cache: "middle",
+                pos: Two("cache1", "cache0"),
+            }),
+            vec!["cache0", "middle", "cache1"],
+        )
+        .await;
+    }
+
+    /// Assert that appending to an index with an invalid offset does not work
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    #[should_panic]
+    async fn test_append_bad_offset() {
+        let store = Pubkey::new_unique();
+
+        test_set_index(
+            store,
+            Some(("cache", Time(1))),
+            Some(("after", Time(2))),
+            Some(SetStoreIndex {
+                offset: 2,
+                cache: "after",
+                pos: One("cache"),
+            }),
+            vec!["cache", "after"],
         )
         .await;
     }
