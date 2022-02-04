@@ -19,11 +19,14 @@ use solana_program::{
 use solana_program_test::*;
 use solana_sdk::{
     account::Account,
+    bs58,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
     signer::Signer,
     transaction::Transaction,
 };
+
+fn program_test() -> ProgramTest { ProgramTest::new("mpl_metaplex", id(), None) }
 
 /// Pretty-print a Metaplex program error
 fn pretty_err(e: ProgramError) -> String {
@@ -143,7 +146,7 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
     expected_caches: impl IntoIterator<IntoIter = E>,
 ) {
     let stub_key = Pubkey::new(&[0; 32]);
-    let mut test = ProgramTest::new("mpl_metaplex", id(), None);
+    let mut test = program_test();
 
     let (store_key, store_acct) = make_store(store_owner, Store {
         key: Key::StoreV1,
@@ -565,4 +568,141 @@ mod set_store_index {
         )
         .await;
     }
+
+    /// Real-world regression based on a support ticket from plants.holaplex.com
+    ///
+    /// Data sourced from:
+    /// [https://solscan.io/tx/2Rpq8vUAGnXB8ap1vtPxuZFPgos2uU42tnowWbKtZKretB7jhoTzZZs9d9H4K8ReXN9QHizMzB2wnEEod4J6rEJ1]
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    async fn plants_regression() {
+        let mut test = program_test();
+
+        let index_key: Pubkey = "HzH7QdJxS9aTPaXPxkwQGJsvghByUW6acYpAA4L1Rbxy"
+            .parse()
+            .unwrap();
+
+        let cache_key_str = "AgVXRii4cDtHZbBfak4NsD3UZ3cqADKJhhigsbj3XJrM";
+        let cache_key: Pubkey = cache_key_str.parse().unwrap();
+
+        let store_key: Pubkey = "5AQungikG9naFPgy4mxgiTtmoPJFnTrGHH4WG5zq9xxo"
+            .parse()
+            .unwrap();
+
+        let before_key_str = "664tyNHbcZkSWngBjyMTjy6aKg8oWEB3ejWGo25uPbYQ";
+        let before_key: Pubkey = before_key_str.parse().unwrap();
+
+        for (key, account) in vec![
+            (index_key, Account {
+                lamports: 23476080,
+                data: bs58::decode(INDEX_DATA).into_vec().unwrap(),
+                owner: id(),
+                executable: false,
+                rent_epoch: 275,
+            }),
+            (cache_key, Account {
+                lamports: 4099440,
+                data: bs58::decode(CACHE_DATA).into_vec().unwrap(),
+                owner: id(),
+                executable: false,
+                rent_epoch: 275,
+            }),
+            (store_key, Account {
+                lamports: 2491680,
+                data: bs58::decode(STORE_DATA).into_vec().unwrap(),
+                owner: id(),
+                executable: false,
+                rent_epoch: 276,
+            }),
+            (before_key, Account {
+                lamports: 4099440,
+                data: bs58::decode(BEFORE_DATA).into_vec().unwrap(),
+                owner: id(),
+                executable: false,
+                rent_epoch: 275,
+            }),
+        ] {
+            test.add_account(key, account);
+        }
+
+        let mut ctx = test.start_with_context().await;
+        let payer = ctx.payer;
+
+        let tx = Transaction::new_signed_with_payer(
+            &[Instruction {
+                program_id: id(),
+                // SetStoreIndex { page: 0, offset: 9 }
+                data: bs58::decode("CSrP7BiYLvK3y9umnM43CdD").into_vec().unwrap(),
+                accounts: vec![
+                    AccountMeta::new(index_key, false),
+                    AccountMeta::new_readonly(payer.pubkey(), true),
+                    AccountMeta::new_readonly(cache_key, false),
+                    AccountMeta::new_readonly(store_key, false),
+                    AccountMeta::new_readonly(
+                        "11111111111111111111111111111111".parse().unwrap(),
+                        false,
+                    ),
+                    AccountMeta::new_readonly(
+                        "SysvarRent111111111111111111111111111111111"
+                            .parse()
+                            .unwrap(),
+                        false,
+                    ),
+                    // Positional 1 (should be below based on usage)
+                    AccountMeta::new_readonly(before_key, false),
+                    // Positional 2 not present since this is an append invocation
+                ],
+            }],
+            Some(&payer.pubkey()),
+            &[&payer],
+            ctx.last_blockhash,
+        );
+
+        ctx.banks_client.process_transaction(tx).await.unwrap();
+
+        let mut actual_index = ctx
+            .banks_client
+            .get_account(index_key)
+            .await
+            .unwrap()
+            .expect("Missing store index after instructions");
+
+        let actual_index = StoreIndexer::from_account_info(&AccountInfo::new(
+            &index_key,
+            false,
+            false,
+            &mut 1_000_000_000,
+            &mut actual_index.data,
+            &actual_index.owner,
+            actual_index.executable,
+            actual_index.rent_epoch,
+        ))
+        .map_err(pretty_err)
+        .unwrap();
+
+        assert_eq!(
+            actual_index.auction_caches,
+            vec![
+                "FL6GBK8ipeFX1XBAjqcvfrW7wUmZByZGkhJwaARvPtCT",
+                "CBZP6GvX8uW3QPhyppjTtxUtTTrmEfKa2nxVdqUKmEen",
+                "EDWV64cFRYXtLjraV3d7SGPqGodmVsKjhvpixDVk3A9T",
+                "5rLPpyFvovE874GXaw49BHJsY7TRHfkjNdMT5hRGJvud",
+                "34w5G61TktYKkENUGGuscQBs7E9TKpTi65GezLcotCBb",
+                "HdfucffuzeRooGfvcdPUPQRGfAU4fmJGg9GCVU76C7iT",
+                "9cmiuP3CDnJBS3CBCAk4x7nizT7FBxCYBB13eQvH5iL6",
+                "H8h7399TH9jdfGTE1jX54NEUVSaanoCQU1WidnKdd9zs",
+                before_key_str,
+                cache_key_str,
+            ]
+            .into_iter()
+            .map(|s| s.parse().unwrap())
+            .collect::<Vec<Pubkey>>()
+        );
+    }
+
+    //// base58 data for `plants_regression` ////
+
+    const INDEX_DATA: &'static str = include_str!("fixtures/plants_regression/index_data.b58");
+    const CACHE_DATA: &'static str = include_str!("fixtures/plants_regression/cache_data.b58");
+    const STORE_DATA: &'static str = include_str!("fixtures/plants_regression/store_data.b58");
+    const BEFORE_DATA: &'static str = include_str!("fixtures/plants_regression/before_data.b58");
 }
