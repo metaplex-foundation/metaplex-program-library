@@ -1245,7 +1245,6 @@ pub fn process_freeze_delegated_account(
         return Err(MetadataError::InvalidTokenProgram.into());
     }
 
-
     // assert that edition pda is the freeze authority of this mint 
     let mint: Mint = assert_initialized(mint_info)?;
     assert_owned_by(edition_info, program_id)?;
