@@ -9,7 +9,7 @@ const programIds = {
   vault: 'vau1zxA2LbssAUEF7Gpw91zMM1LvXrvpzJtmZ58rPsn',
   auction: 'auctxRXPeJoc4817jDhf4HbjnhEcr1cCXenosMhK5R8',
   metaplex: 'p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98',
-  membershipToken: 'EHE2kYEETZbRfhQoNtknbnqrrpKEojbohSagkGdiJ6wm',
+  fixedPriceSaleToken: 'SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo',
 };
 
 function localDeployPath(programName) {
@@ -20,9 +20,9 @@ const programs = {
   vault: { programId: programIds.vault, deployPath: localDeployPath('mpl_token_vault') },
   auction: { programId: programIds.auction, deployPath: localDeployPath('mpl_auction') },
   metaplex: { programId: programIds.mpl, deployPath: localDeployPath('mpl_metaplex') },
-  membershipToken: {
-    programId: programIds.membershipToken,
-    deployPath: localDeployPath('mpl_membership_token'),
+  fixedPriceSaleToken: {
+    programId: programIds.fixedPriceSaleToken,
+    deployPath: localDeployPath('mpl_fixed_price_sale'),
   },
 };
 

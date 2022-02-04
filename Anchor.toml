@@ -21,8 +21,8 @@ address = "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd"
 program = "target/deploy/mpl_token_entangler.so"
 
 [[test.genesis]]
-address = "EHE2kYEETZbRfhQoNtknbnqrrpKEojbohSagkGdiJ6wm"
-program = "target/deploy/mpl_membership_token.so"
+address = "SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo"
+program = "target/deploy/mpl_fixed_price_sale.so"
 
 [[test.genesis]]
 address = "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
@@ -33,5 +33,5 @@ members = [
   "token-entangler/program",
   "token-metadata/program",
   "auction-house/program",
-  "membership-token/program",
+  "fixed-price-sale/program",
 ]
