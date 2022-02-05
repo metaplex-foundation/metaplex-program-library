@@ -242,6 +242,12 @@ export class Metadata extends Account<MetadataData> {
     }
   }
 
+  static async findByMint(connection: Connection, mint: AnyPublicKey) {
+    const pda = await this.getPDA(mint);
+
+    return this.load(connection, pda);
+  }
+
   static async findByOwner(connection: Connection, owner: AnyPublicKey) {
     const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
     const accountMap = new Map(accounts.map(({ data }) => [data.mint.toString(), data]));
@@ -266,6 +272,15 @@ export class Metadata extends Account<MetadataData> {
         accountsWithAmount.map(({ mint }) => Metadata.findMany(connection, { mint })),
       )
     ).flat();
+  }
+
+  static async findByOwnerV3(connection: Connection, owner: AnyPublicKey) {
+    const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
+    const accountsWithAmount = accounts
+      .map(({ data }) => data)
+      .filter(({ amount }) => amount?.toNumber() > 0);
+
+    return Promise.all(accountsWithAmount.map(({ mint }) => Metadata.findByMint(connection, mint)));
   }
 
   static async findDataByOwner(
