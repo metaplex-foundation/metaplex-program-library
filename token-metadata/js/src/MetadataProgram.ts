@@ -9,9 +9,9 @@ export class MetadataProgram extends Program {
   static readonly BURN = 'burn';
   static readonly PUBKEY = new PublicKey(config.programs.metadata);
 
-  static async find_edition_account(
+  static async findEditionAccount(
     mint: PublicKey,
-    edition_number: string,
+    editionNumber: string,
   ): Promise<[PublicKey, number]> {
     return PublicKey.findProgramAddress(
       [
@@ -19,12 +19,12 @@ export class MetadataProgram extends Program {
         MetadataProgram.PUBKEY.toBuffer(),
         mint.toBuffer(),
         Buffer.from(MetadataProgram.EDITION, 'utf8'),
-        Buffer.from(edition_number, 'utf8'),
+        Buffer.from(editionNumber, 'utf8'),
       ],
       MetadataProgram.PUBKEY,
     );
   }
-  static async find_master_edition_account(mint: PublicKey): Promise<[PublicKey, number]> {
+  static async findMasterEditionAccount(mint: PublicKey): Promise<[PublicKey, number]> {
     return PublicKey.findProgramAddress(
       [
         Buffer.from(MetadataProgram.PREFIX, 'utf8'),
@@ -36,7 +36,7 @@ export class MetadataProgram extends Program {
     );
   }
 
-  static async find_metadata_account(mint: PublicKey): Promise<[PublicKey, number]> {
+  static async findMetadataAccount(mint: PublicKey): Promise<[PublicKey, number]> {
     return PublicKey.findProgramAddress(
       [
         Buffer.from(MetadataProgram.PREFIX, 'utf8'),
@@ -47,7 +47,7 @@ export class MetadataProgram extends Program {
     );
   }
 
-  static async find_use_authority_account(
+  static async findUseAuthorityAccount(
     mint: PublicKey,
     authority: PublicKey,
   ): Promise<[PublicKey, number]> {
@@ -63,7 +63,7 @@ export class MetadataProgram extends Program {
     );
   }
 
-  static async find_collection_authority_account(
+  static async findCollectionAuthorityAccount(
     mint: PublicKey,
     authority: PublicKey,
   ): Promise<[PublicKey, number]> {
@@ -79,7 +79,7 @@ export class MetadataProgram extends Program {
     );
   }
 
-  static async find_program_as_burner_account(): Promise<[PublicKey, number]> {
+  static async findProgramAsBurnerAccount(): Promise<[PublicKey, number]> {
     return PublicKey.findProgramAddress(
       [
         Buffer.from(MetadataProgram.PREFIX, 'utf8'),
