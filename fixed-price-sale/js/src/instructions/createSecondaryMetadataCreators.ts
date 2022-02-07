@@ -1,5 +1,6 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { PROGRAM_ID } from '..';
 import { CreatorAccountData, creatorAccountDataStruct } from '../accounts/Creator';
 
 export type CreateSecondaryMetadataCreatorsInstructionArgs = {
@@ -69,7 +70,7 @@ export function createCreateSecondaryMetadataCreatorsInstruction(
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),
+    programId: new web3.PublicKey(PROGRAM_ID),
     keys,
     data,
   });
