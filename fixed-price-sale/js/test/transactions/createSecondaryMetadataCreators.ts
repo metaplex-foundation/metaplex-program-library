@@ -3,11 +3,9 @@ import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 
 import { createAndSignTransaction } from '../utils';
-import {
-  findSecondaryMetadataCreatorsAddress,
-  createCreateSecondaryMetadataCreatorsInstruction,
-  CreatorAccountData,
-} from '../../src';
+import { findSecondaryMetadataCreatorsAddress, CreatorAccountData } from '../../src';
+
+import { createCreateSecondaryMetadataCreatorsInstruction } from '../../src/instructions/createSecondaryMetadataCreators';
 
 type CreateSecondaryMetadataCreatorsParams = {
   test: test.Test;
