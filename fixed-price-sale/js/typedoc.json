@@ -1,0 +1,6 @@
+{
+  "entryPoints": ["src/mpl-fixed-price-sale.ts"],
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "out": "./docs"
+}

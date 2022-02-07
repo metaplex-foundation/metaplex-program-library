@@ -7,12 +7,14 @@ members=[
   "token-entangler/program",
   "token-vault/program",
   "token-vault/test",
-  "token-metadata/program",
-  "token-metadata/test",
   "nft-packs/program",
-  "nft-candy-machine/program",
+  "fixed-price-sale/program",
   "stealth/program",
   "stealth/cli",
   "stealth/js/native",
 ]
-exclude = []
+exclude = [
+  "fixed-price-sale/cli",
+  "token-metadata",
+  "candy-machine/program"
+]

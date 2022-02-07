@@ -128,7 +128,11 @@ pub async fn mint_tokens(
 }
 
 pub async fn get_token_balance(banks_client: &mut BanksClient, token: &Pubkey) -> u64 {
-    let token_account = banks_client.get_account(*token).await.unwrap().unwrap();
+    let account = banks_client.get_account(*token).await.unwrap();
+    if account.is_none() {
+        return 0;
+    }
+    let token_account = account.unwrap();
     let account_info: spl_token::state::Account =
         spl_token::state::Account::unpack_from_slice(token_account.data.as_slice()).unwrap();
     account_info.amount
@@ -260,7 +264,7 @@ pub async fn place_bid(
     program_id: &Pubkey,
     payer: &Keypair,
     bidder: &Keypair,
-    bidder_spl_account: &Keypair,
+    bidder_spl_account: &Pubkey,
     transfer_authority: &Keypair,
     resource: &Pubkey,
     mint: &Pubkey,
@@ -271,7 +275,7 @@ pub async fn place_bid(
             *program_id,
             bidder.pubkey(),             // Wallet used to identify bidder
             bidder.pubkey(), // SPL token account (source) using same account here for ease of testing
-            bidder_spl_account.pubkey(), // SPL Token Account (Destination)
+            *bidder_spl_account, // SPL Token Account (Destination)
             *mint,           // Token Mint
             transfer_authority.pubkey(), // Approved to Move Tokens
             payer.pubkey(),  // Pays for Transactions
@@ -295,7 +299,7 @@ pub async fn cancel_bid(
     program_id: &Pubkey,
     payer: &Keypair,
     bidder: &Keypair,
-    bidder_spl_account: &Keypair,
+    bidder_spl_account: &Pubkey,
     resource: &Pubkey,
     mint: &Pubkey,
 ) -> Result<(), TransportError> {
@@ -304,7 +308,7 @@ pub async fn cancel_bid(
             *program_id,
             bidder.pubkey(),
             bidder.pubkey(),
-            bidder_spl_account.pubkey(),
+            *bidder_spl_account,
             *mint,
             CancelBidArgs {
                 resource: *resource,
@@ -352,7 +356,7 @@ pub async fn claim_bid(
     payer: &Keypair,
     authority: &Keypair,
     bidder: &Keypair,
-    bidder_spl_account: &Keypair,
+    bidder_spl_account: &Pubkey,
     seller: &Pubkey,
     resource: &Pubkey,
     mint: &Pubkey,
@@ -363,7 +367,7 @@ pub async fn claim_bid(
             *seller,
             authority.pubkey(),
             bidder.pubkey(),
-            bidder_spl_account.pubkey(),
+            *bidder_spl_account,
             *mint,
             None,
             ClaimBidArgs {

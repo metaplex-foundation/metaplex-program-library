@@ -12,7 +12,12 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "test": "echo mpl-metaplex tests coming up ...",
+    "pretest": "yarn build",
+    "test:build": "esr ./test/setup/build.ts",
+    "amman:start": "DEBUG=\"amman*\" amman validator",
+    "amman:stop": "pkill solana-test-validator",
+    "test:all": "yarn test:build && yarn amman:start && yarn test",
+    "test": "tape ./dist/test/*.test.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
@@ -45,7 +50,11 @@
     "@solana/web3.js": "^1.31.0"
   },
   "devDependencies": {
+    "@metaplex-foundation/amman": "^0.0.9",
+    "esbuild": "^0.14.14",
+    "esbuild-runner": "^2.2.1",
     "eslint": "^8.3.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "tape": "^5.4.1"
   }
 }

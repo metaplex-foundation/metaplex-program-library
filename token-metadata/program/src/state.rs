@@ -16,6 +16,8 @@ pub const USER: &str = "user";
 
 pub const BURN: &str = "burn";
 
+pub const COLLECTION_AUTHORITY: &str = "collection_authority";
+
 pub const MAX_NAME_LENGTH: usize = 32;
 
 pub const MAX_SYMBOL_LENGTH: usize = 10;
@@ -69,7 +71,10 @@ pub const MAX_EDITION_MARKER_SIZE: usize = 32;
 
 pub const EDITION_MARKER_BIT_SIZE: u64 = 248;
 
-pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; // Double Padding
+pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
+
+pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
+
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
@@ -82,7 +87,8 @@ pub enum Key {
     ReservationListV2,
     MasterEditionV2,
     EditionMarker,
-    UseAuthorityRecord
+    UseAuthorityRecord,
+    CollectionAuthorityRecord
 }
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -159,16 +165,47 @@ pub enum TokenStandard {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct UseAuthorityRecord {
+    pub key: Key, //1
     pub allowed_uses: u64, //8
-    pub key: Key //1
+    pub bump: u8
 }
 
 impl UseAuthorityRecord {
     pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
         let ua: UseAuthorityRecord =
             try_from_slice_checked(&a.data.borrow_mut(), Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+        Ok(ua)
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Result<UseAuthorityRecord, ProgramError> {
+        let ua: UseAuthorityRecord = try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+        Ok(ua)
+    }
+
+    pub fn bump_empty(&self) -> bool {
+       return self.bump == 0 && self.key == Key::UseAuthorityRecord;
+    }
+}
+
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct CollectionAuthorityRecord {
+    pub key: Key, //1
+    pub bump: u8 //1
+}
+
+impl CollectionAuthorityRecord {
+    pub fn from_account_info(a: &AccountInfo) -> Result<CollectionAuthorityRecord, ProgramError> {
+        let ua: CollectionAuthorityRecord =
+            try_from_slice_checked(&a.data.borrow_mut(), Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
 
         Ok(ua)
+    }
+
+    pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
+        let ca: CollectionAuthorityRecord = try_from_slice_checked(b, Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
+        Ok(ca)
     }
 }
 

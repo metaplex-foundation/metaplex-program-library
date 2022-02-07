@@ -304,13 +304,23 @@ pub enum MetadataInstruction {
     VerifyCollection,
     ///See [utilize] for Doc
     Utilize(UtilizeArgs),
-
     ///See [approve_use_authority] for Doc
     ApproveUseAuthority(ApproveUseAuthorityArgs),
     ///See [revoke_use_authority] for Doc
     RevokeUseAuthority,
-
+    ///See [unverify_collection] for Doc
     UnverifyCollection,
+    ///See [approve_collection_authority] for Doc
+    ApproveCollectionAuthority,
+    ///See [revoke_collection_authority] for Doc
+    RevokeCollectionAuthority,
+    ///See [set_and_verify_collection] for Doc
+    SetAndVerifyCollection,
+
+    ///See [freeze_delegated_account] for Doc
+    FreezeDelegatedAccount,
+    ///See [thaw_delegated_account] for Doc
+    ThawDelegatedAccount,
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -719,18 +729,72 @@ pub fn verify_collection(
     collection_mint: Pubkey,
     collection: Pubkey,
     collection_master_edition_account: Pubkey,
+    collection_authority_record: Option<Pubkey>,
 ) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(collection_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(collection_mint, false),
+        AccountMeta::new_readonly(collection, false),
+        AccountMeta::new_readonly(collection_master_edition_account, false),
+    ];
+
+    if collection_authority_record.is_some() {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record.unwrap(),
+            false,
+        ));
+    }
     Instruction {
         program_id,
-        accounts: vec![
-            AccountMeta::new(metadata, false),
-            AccountMeta::new(collection_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new_readonly(collection_mint, false),
-            AccountMeta::new_readonly(collection, false),
-            AccountMeta::new_readonly(collection_master_edition_account, false),
-        ],
+        accounts: accounts,
         data: MetadataInstruction::VerifyCollection.try_to_vec().unwrap(),
+    }
+}
+
+/// # Unverify Collection
+///
+/// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection
+///
+/// ### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[signer]` Collection Authority
+///   2. `[signer]` payer
+///   3. `[]` Mint of the Collection
+///   4. `[]` Metadata Account of the Collection
+///   5. `[]` MasterEdition2 Account of the Collection Token
+#[allow(clippy::too_many_arguments)]
+pub fn unverify_collection(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    collection_authority: Pubkey,
+    collection_mint: Pubkey,
+    collection: Pubkey,
+    collection_master_edition_account: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(collection_authority, true),
+        AccountMeta::new_readonly(collection_mint, false),
+        AccountMeta::new_readonly(collection, false),
+        AccountMeta::new_readonly(collection_master_edition_account, false),
+    ];
+
+    if collection_authority_record.is_some() {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record.unwrap(),
+            false,
+        ));
+    }
+    Instruction {
+        program_id,
+        accounts: accounts,
+        data: MetadataInstruction::UnverifyCollection
+            .try_to_vec()
+            .unwrap(),
     }
 }
 
@@ -752,7 +816,6 @@ pub fn verify_collection(
 ///   7. `[]` System program
 ///   8. `[]` Rent info
 ///   9. Optional `[writable]` Use Authority Record PDA If present the program Assumes a delegated use authority
-
 #[allow(clippy::too_many_arguments)]
 pub fn utilize(
     program_id: Pubkey,
@@ -761,7 +824,6 @@ pub fn utilize(
     mint: Pubkey,
     use_authority_record_pda: Option<Pubkey>,
     use_authority: Pubkey,
-    payer: Pubkey,
     owner: Pubkey,
     burner: Option<Pubkey>,
     number_of_uses: u64,
@@ -771,7 +833,6 @@ pub fn utilize(
         AccountMeta::new(token_account, false),
         AccountMeta::new(mint, false),
         AccountMeta::new(use_authority, true),
-        AccountMeta::new(payer, true),
         AccountMeta::new_readonly(owner, false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
@@ -835,7 +896,7 @@ pub fn approve_use_authority(
             AccountMeta::new(owner, true),
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(user, false),
-            AccountMeta::new_readonly(owner_token_account, false),
+            AccountMeta::new(owner_token_account, false),
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
             AccountMeta::new_readonly(burner, false),
@@ -871,7 +932,6 @@ pub fn revoke_use_authority(
     use_authority_record: Pubkey,
     user: Pubkey,
     owner: Pubkey,
-    payer: Pubkey,
     owner_token_account: Pubkey,
     metadata: Pubkey,
     mint: Pubkey,
@@ -881,16 +941,203 @@ pub fn revoke_use_authority(
         accounts: vec![
             AccountMeta::new(use_authority_record, false),
             AccountMeta::new(owner, true),
-            AccountMeta::new(payer, true),
             AccountMeta::new_readonly(user, false),
-            AccountMeta::new_readonly(owner_token_account, false),
-            AccountMeta::new_readonly(metadata, false),
+            AccountMeta::new(owner_token_account, false),
             AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::RevokeUseAuthority
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+///# Approve Collection Authority
+///
+///Approve another account to verify NFTs belonging to a collection, [verify_collection] on the collection NFT
+///
+///### Accounts:
+///   0. `[writable]` Collection Authority Record PDA
+///   1. `[signer]` Update Authority of Collection NFT
+///   2. `[signer]` Payer
+///   3. `[]` A Collection Authority
+///   4. `[]` Collection Metadata account
+///   5. `[]` Mint of Collection Metadata
+///   6. `[]` Token program
+///   7. `[]` System program
+///   8. `[]` Rent info
+#[allow(clippy::too_many_arguments)]
+pub fn approve_collection_authority(
+    program_id: Pubkey,
+    collection_authority_record: Pubkey,
+    new_collection_authority: Pubkey,
+    update_authority: Pubkey,
+    payer: Pubkey,
+    metadata: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(collection_authority_record, false),
+            AccountMeta::new_readonly(new_collection_authority, false),
+            AccountMeta::new(update_authority, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(metadata, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: MetadataInstruction::ApproveCollectionAuthority
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+//# Revoke Collection Authority
+///
+///Revoke account to call [verify_collection] on this NFT
+///
+///### Accounts:
+///
+///   0. `[writable]` Use Authority Record PDA
+///   1. `[writable]` Owned Token Account Of Mint
+///   2. `[]` Metadata account
+///   3. `[]` Mint of Metadata
+#[allow(clippy::too_many_arguments)]
+pub fn revoke_collection_authority(
+    program_id: Pubkey,
+    collection_authority_record: Pubkey,
+    update_authority: Pubkey,
+    metadata: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(collection_authority_record, false),
+            AccountMeta::new(update_authority, true),
+            AccountMeta::new_readonly(metadata, false),
+            AccountMeta::new_readonly(mint, false),
+        ],
+        data: MetadataInstruction::RevokeCollectionAuthority
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+//# Set And Verify Collection
+///
+///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] with collection and [verify_collection] on the NFT/Collection in one instruction
+///
+/// ### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[signer]` Collection Update authority
+///   2. `[signer]` payer
+///   3. `[] Update Authority of Collection NFT and NFT
+///   3. `[]` Mint of the Collection
+///   4. `[]` Metadata Account of the Collection
+///   5. `[]` MasterEdition2 Account of the Collection Token
+#[allow(clippy::too_many_arguments)]
+pub fn set_and_verify_collection(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    collection_authority: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    collection_mint: Pubkey,
+    collection: Pubkey,
+    collection_master_edition_account: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(collection_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(update_authority, false),
+        AccountMeta::new_readonly(collection_mint, false),
+        AccountMeta::new_readonly(collection, false),
+        AccountMeta::new_readonly(collection_master_edition_account, false),
+    ];
+
+    if collection_authority_record.is_some() {
+        accounts.push(AccountMeta::new_readonly(
+            collection_authority_record.unwrap(),
+            false,
+        ));
+    }
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::SetAndVerifyCollection
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+///# Freeze delegated account
+///
+///Allow freezing of an NFT if this user is the delegate of the NFT
+///
+///### Accounts:
+///   0. `[signer]` Delegate
+///   1. `[writable]` Token account to freeze
+///   2. `[]` Edition
+///   3. `[]` Token mint
+#[allow(clippy::too_many_arguments)]
+pub fn freeze_delegated_account(
+    program_id: Pubkey,
+    delegate: Pubkey,
+    token_account: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(delegate, true),
+            AccountMeta::new(token_account, false),
+            AccountMeta::new_readonly(edition, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: MetadataInstruction::FreezeDelegatedAccount
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+///# Thaw delegated account
+///
+///Allow thawing of an NFT if this user is the delegate of the NFT
+///
+///### Accounts:
+///   0. `[signer]` Delegate
+///   1. `[writable]` Token account to thaw
+///   2. `[]` Edition
+///   3. `[]` Token mint
+#[allow(clippy::too_many_arguments)]
+pub fn thaw_delegated_account(
+    program_id: Pubkey,
+    delegate: Pubkey,
+    token_account: Pubkey,
+    edition: Pubkey,
+    mint: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(delegate, true),
+            AccountMeta::new(token_account, false),
+            AccountMeta::new_readonly(edition, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ],
+        data: MetadataInstruction::ThawDelegatedAccount
             .try_to_vec()
             .unwrap(),
     }

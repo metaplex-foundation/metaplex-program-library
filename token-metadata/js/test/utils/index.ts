@@ -1,8 +1,11 @@
-import { clusterApiUrl } from '@solana/web3.js';
+import { clusterApiUrl, Connection, Keypair } from '@solana/web3.js';
 import { inspect } from 'util';
 import debug from 'debug';
 import test from 'tape';
-import { LOCALHOST } from '@metaplex-foundation/amman';
+import { LOCALHOST, TransactionHandler } from '@metaplex-foundation/amman';
+import { DataV2 } from '../../src/accounts';
+import { NAME, SELLER_FEE_BASIS_POINTS, SYMBOL, URI } from './metadata';
+import { createMasterEdition } from '../actions';
 
 export * from './address-labels';
 export * from './metadata';
@@ -30,4 +33,21 @@ export function killStuckProcess() {
   // solana web socket keeps process alive for longer than necessary which we
   // "fix" here
   test.onFinish(() => process.exit(0));
+}
+
+export async function createCollection(
+  connection: Connection,
+  transactionHandler: TransactionHandler,
+  payer: Keypair,
+) {
+  const initMetadataData = new DataV2({
+    uri: URI,
+    name: NAME,
+    symbol: SYMBOL,
+    sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
+    creators: null,
+    collection: null,
+    uses: null,
+  });
+  return await createMasterEdition(connection, transactionHandler, payer, initMetadataData, 0);
 }

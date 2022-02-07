@@ -5,7 +5,7 @@ use crate::{
         get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, Metadata,
         TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
         MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
-        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX, USER,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -964,6 +964,17 @@ pub fn puffed_out_string(s: &String, size: usize) -> String {
     s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
+/// Pads the string to the desired size with `0u8`s.
+/// NOTE: it is assumed that the string's size is never larger than the given size.
+pub fn zero_account(s: &String, size: usize) -> String {
+    let mut array_of_zeroes = vec![];
+    let puff_amount = size - s.len();
+    while array_of_zeroes.len() < puff_amount {
+        array_of_zeroes.push(0u8);
+    }
+    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
+}
+
 pub struct MintNewEditionFromMasterEditionViaTokenLogicArgs<'a> {
     pub new_metadata_account_info: &'a AccountInfo<'a>,
     pub new_edition_account_info: &'a AccountInfo<'a>,
@@ -1129,6 +1140,48 @@ pub fn assert_currently_holding(
 
     if token_account.mint != metadata.mint {
         return Err(MetadataError::MintMismatch.into());
+    }
+    Ok(())
+}
+
+pub fn assert_freeze_authority_matches_mint(
+    freeze_authority: &COption<Pubkey>,
+    freeze_authority_info: &AccountInfo,
+) -> ProgramResult {
+    match freeze_authority {
+        COption::None => {
+            return Err(MetadataError::InvalidFreezeAuthority.into());
+        }
+        COption::Some(key) => {
+            if freeze_authority_info.key != key {
+                return Err(MetadataError::InvalidFreezeAuthority.into());
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn assert_delegated_tokens(
+    delegate: &AccountInfo,
+    mint_info: &AccountInfo,
+    token_account_info: &AccountInfo,
+) -> ProgramResult {
+    assert_owned_by(mint_info, &spl_token::id())?;
+
+    let token_account: Account = assert_initialized(token_account_info)?;
+
+    assert_owned_by(token_account_info, &spl_token::id())?;
+
+    if token_account.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if token_account.amount < 1 {
+        return Err(MetadataError::NotEnoughTokens.into());
+    }
+
+    if token_account.delegate == COption::None || token_account.delegated_amount != token_account.amount || token_account.delegate.unwrap() != *delegate.key {
+        return Err(MetadataError::InvalidDelegate.into());
     }
     Ok(())
 }

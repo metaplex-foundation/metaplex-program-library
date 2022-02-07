@@ -13,7 +13,7 @@ pub use metadata::Metadata;
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
-    signer::keypair::Keypair, system_instruction, transaction::Transaction, transport,
+    signer::keypair::Keypair, system_instruction, transaction::Transaction, transport::{self, TransportError},
 };
 use spl_token::state::Mint;
 pub use vault::Vault;
@@ -34,6 +34,26 @@ pub async fn get_account(context: &mut ProgramTestContext, pubkey: &Pubkey) -> A
 pub async fn get_mint(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Mint {
     let account = get_account(context, pubkey).await;
     Mint::unpack(&account.data).unwrap()
+}
+
+pub async fn airdrop(
+    context: &mut ProgramTestContext,
+    receiver: &Pubkey,
+    amount: u64,
+) -> Result<(), TransportError> {
+    let tx = Transaction::new_signed_with_payer(
+        &[system_instruction::transfer(
+            &context.payer.pubkey(),
+            receiver,
+            amount,
+        )],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await.unwrap();
+    Ok(())
 }
 
 pub async fn mint_tokens(
