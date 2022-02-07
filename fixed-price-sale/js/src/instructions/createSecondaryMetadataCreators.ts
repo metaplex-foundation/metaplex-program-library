@@ -1,6 +1,7 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { PROGRAM_ID } from '..';
+
+import { PROGRAM_ID } from '../consts';
 import { CreatorAccountData, creatorAccountDataStruct } from '../accounts/Creator';
 
 export type CreateSecondaryMetadataCreatorsInstructionArgs = {
