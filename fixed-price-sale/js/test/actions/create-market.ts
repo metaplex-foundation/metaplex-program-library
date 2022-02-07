@@ -32,7 +32,12 @@ export const createMarket = async ({
   sellingResource,
   treasuryMint,
   params,
-}: CreateMarketParams): Promise<{ market: Keypair; treasuryHolder: Keypair }> => {
+}: CreateMarketParams): Promise<{
+  market: Keypair;
+  treasuryHolder: Keypair;
+  treasuryOwnerBump: number;
+  treasuryOwner: PublicKey;
+}> => {
   const [treasuryOwner, treasuryOwnerBump] = await findTresuryOwnerAddress(
     treasuryMint,
     sellingResource,
@@ -90,5 +95,5 @@ export const createMarket = async ({
   logDebug(`market: ${market.publicKey}`);
   assertConfirmedTransaction(test, marketRes.txConfirmed);
 
-  return { market, treasuryHolder };
+  return { market, treasuryHolder, treasuryOwnerBump, treasuryOwner };
 };
