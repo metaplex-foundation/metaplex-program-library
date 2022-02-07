@@ -1,4 +1,4 @@
 export { createBuyTransaction } from './buy';
-export { createTokenAccount } from './create-token-account';
-export { closeMarket } from './close-market';
+export { createTokenAccount } from './createTokenAccount';
+export { closeMarket } from './closeMarket';
 export { createWithdrawTransaction } from './withdraw';
