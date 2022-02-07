@@ -2,7 +2,7 @@ import test from 'tape';
 import { killStuckProcess } from './utils';
 
 import { mintNFT, createStore, createPrerequisites, initSellingResource } from './actions';
-import { createMarket } from './actions/create-market';
+import { createMarket } from './actions/createMarket';
 
 killStuckProcess();
 
