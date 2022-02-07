@@ -1,30 +1,30 @@
-use std::ops::Deref;
 use crate::{
     assertions::{
         collection::{
             assert_collection_update_is_valid, assert_collection_verify_is_valid,
             assert_has_collection_authority,
         },
-        uses::process_use_authority_validation,
+        uses::{
+            assert_use_authority_derivation, assert_valid_bump, process_use_authority_validation,
+        },
     },
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
     },
     error::MetadataError,
     instruction::MetadataInstruction,
+    solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, DataV2, Key, MasterEditionV1, MasterEditionV2,
         Metadata, TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
-        COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN, PREFIX, USER,
-        USE_AUTHORITY_RECORD_SIZE, EDITION_MARKER_BIT_SIZE
-    },
-    solana_program::{
-        program_memory::{ sol_memset},
+        COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, EDITION_MARKER_BIT_SIZE, MAX_MASTER_EDITION_LEN,
+        PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
-        assert_currently_holding, assert_data_valid, assert_derivation, assert_initialized,
-        assert_mint_authority_matches_mint, assert_owned_by, assert_signer, assert_delegated_tokens,
-        assert_token_program_matches_package, assert_update_authority_is_correct, assert_freeze_authority_matches_mint,
+        assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
+        assert_freeze_authority_matches_mint, assert_initialized,
+        assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
+        assert_token_program_matches_package, assert_update_authority_is_correct,
         create_or_allocate_account_raw, get_owner_from_token_account,
         process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
@@ -44,11 +44,9 @@ use solana_program::{
     pubkey::Pubkey,
 };
 use spl_token::{
-    instruction::{approve, revoke, freeze_account, thaw_account},
+    instruction::{approve, close_account, freeze_account, revoke, thaw_account},
     state::{Account, Mint},
 };
-use spl_token::instruction::close_account;
-use crate::assertions::uses::{assert_use_authority_derivation, assert_valid_bump};
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
@@ -144,6 +142,7 @@ pub fn process_instruction<'a>(
                 program_id,
                 accounts,
                 args.edition,
+                args.uri,
                 false,
             )
         }
@@ -157,6 +156,7 @@ pub fn process_instruction<'a>(
                 program_id,
                 accounts,
                 args.edition,
+                args.uri,
             )
         }
         MetadataInstruction::PuffMetadata => {
@@ -470,6 +470,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     edition: u64,
+    uri: Option<String>,
     ignore_owner_signer: bool,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
@@ -508,6 +509,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
             rent_info,
         },
         edition,
+        uri,
         ignore_owner_signer,
     )
 }
@@ -558,6 +560,7 @@ pub fn process_mint_new_edition_from_master_edition_via_vault_proxy<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     edition: u64,
+    uri: Option<String>,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
@@ -666,7 +669,9 @@ pub fn process_mint_new_edition_from_master_edition_via_vault_proxy<'a>(
         rent_info,
     };
 
-    process_mint_new_edition_from_master_edition_via_token_logic(program_id, args, edition, true)
+    process_mint_new_edition_from_master_edition_via_token_logic(
+        program_id, args, edition, uri, true,
+    )
 }
 
 /// Puff out the variable length fields to a fixed length on a metadata
@@ -841,10 +846,7 @@ pub fn process_approve_use_authority(
         &user_info.key.as_ref(),
         &[bump_seed],
     ];
-    process_use_authority_validation(
-        use_authority_record_info.data_len(),
-        true,
-    )?;
+    process_use_authority_validation(use_authority_record_info.data_len(), true)?;
     create_or_allocate_account_raw(
         *program_id,
         use_authority_record_info,
@@ -914,10 +916,7 @@ pub fn process_revoke_use_authority(
         token_account_info,
     )?;
     let data = &mut use_authority_record_info.try_borrow_mut_data()?;
-    process_use_authority_validation(
-        data.len(),
-        false,
-    )?;
+    process_use_authority_validation(data.len(), false)?;
     assert_owned_by(use_authority_record_info, program_id)?;
     let canonical_bump = assert_use_authority_derivation(
         program_id,
@@ -929,10 +928,7 @@ pub fn process_revoke_use_authority(
     if record.bump_empty() {
         record.bump = canonical_bump;
     }
-    assert_valid_bump(
-        canonical_bump,
-        &record
-    )?;
+    assert_valid_bump(canonical_bump, &record)?;
     let metadata_uses = metadata.uses.unwrap();
     if metadata_uses.use_method == UseMethod::Burn {
         invoke(
@@ -1010,12 +1006,9 @@ pub fn process_utilize(
     if approved_authority_is_using {
         let use_authority_record_info = next_account_info(account_info_iter)?;
         let data = &mut *use_authority_record_info.try_borrow_mut_data()?;
-        process_use_authority_validation(
-            data.len(),
-            false,
-        )?;
+        process_use_authority_validation(data.len(), false)?;
         assert_owned_by(use_authority_record_info, program_id)?;
-        let canonical_bump= assert_use_authority_derivation(
+        let canonical_bump = assert_use_authority_derivation(
             program_id,
             use_authority_record_info,
             user_info,
@@ -1026,10 +1019,7 @@ pub fn process_utilize(
         if record.bump_empty() {
             record.bump = canonical_bump;
         }
-        assert_valid_bump(
-            canonical_bump,
-            &record
-        )?;
+        assert_valid_bump(canonical_bump, &record)?;
         record.allowed_uses = record
             .allowed_uses
             .checked_sub(number_of_uses)
@@ -1169,7 +1159,11 @@ pub fn process_revoke_collection_authority(
         .lamports()
         .checked_add(lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
-    sol_memset(*collection_authority_record.try_borrow_mut_data()?, 0, USE_AUTHORITY_RECORD_SIZE);
+    sol_memset(
+        *collection_authority_record.try_borrow_mut_data()?,
+        0,
+        USE_AUTHORITY_RECORD_SIZE,
+    );
 
     Ok(())
 }
@@ -1245,19 +1239,14 @@ pub fn process_freeze_delegated_account(
         return Err(MetadataError::InvalidTokenProgram.into());
     }
 
-    // assert that edition pda is the freeze authority of this mint 
+    // assert that edition pda is the freeze authority of this mint
     let mint: Mint = assert_initialized(mint_info)?;
     assert_owned_by(edition_info, program_id)?;
     assert_freeze_authority_matches_mint(&mint.freeze_authority, edition_info)?;
 
     // assert delegate is signer and delegated tokens
     assert_signer(&delegate_info)?;
-    assert_delegated_tokens(
-        delegate_info,
-        mint_info,
-        token_account_info,
-    )?;
-
+    assert_delegated_tokens(delegate_info, mint_info, token_account_info)?;
 
     let edition_info_path = Vec::from([
         PREFIX.as_bytes(),
@@ -1305,19 +1294,15 @@ pub fn process_thaw_delegated_account(
         return Err(MetadataError::InvalidTokenProgram.into());
     }
 
-    // assert that edition pda is the freeze authority of this mint 
+    // assert that edition pda is the freeze authority of this mint
     let mint: Mint = assert_initialized(mint_info)?;
     assert_owned_by(edition_info, program_id)?;
     assert_freeze_authority_matches_mint(&mint.freeze_authority, edition_info)?;
-   
+
     // assert delegate is signer and delegated tokens
     assert_signer(&delegate_info)?;
-    assert_delegated_tokens(
-        delegate_info,
-        mint_info,
-        token_account_info,
-    )?;
-    
+    assert_delegated_tokens(delegate_info, mint_info, token_account_info)?;
+
     let edition_info_path = Vec::from([
         PREFIX.as_bytes(),
         program_id.as_ref(),

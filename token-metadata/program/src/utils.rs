@@ -547,6 +547,7 @@ pub fn mint_limited_edition<'a>(
     // Only present with MasterEditionV2 calls, if present, means
     // directing to a specific version, otherwise just pull off the top
     edition_override: Option<u64>,
+    uri: Option<String>,
 ) -> ProgramResult {
     let me_supply = get_supply_off_master_edition(master_edition_account_info)?;
     let mint_authority = get_mint_authority(mint_info)?;
@@ -584,40 +585,7 @@ pub fn mint_limited_edition<'a>(
     if mint_supply != 1 {
         return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
     }
-    let master_data = master_metadata.data;
-    // bundle data into v2
-    let data_v2 = DataV2 {
-        name: master_data.name,
-        symbol: master_data.symbol,
-        uri: master_data.uri,
-        seller_fee_basis_points: master_data.seller_fee_basis_points,
-        creators: master_data.creators,
-        collection: master_metadata.collection,
-        uses: master_metadata.uses.map(|u| Uses {
-            use_method: u.use_method,
-            remaining: u.total, // reset remaining uses per edition for extra fun
-            total: u.total,
-        }),
-    };
-    // create the metadata the normal way...
 
-    process_create_metadata_accounts_logic(
-        &program_id,
-        CreateMetadataAccountsLogicArgs {
-            metadata_account_info: new_metadata_account_info,
-            mint_info,
-            mint_authority_info,
-            payer_account_info,
-            update_authority_info,
-            system_account_info,
-            rent_info,
-        },
-        data_v2,
-        true,
-        false,
-        true,
-        true,
-    )?;
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -652,6 +620,57 @@ pub fn mint_limited_edition<'a>(
         me_supply,
     )?
     .to_le_bytes();
+
+    // bundle data into v2
+    // name gets edition number appended if new uri - truncated to keep length < MAX_NAME_LENGTH if necessary
+    let master_data = master_metadata.data;
+    let (name, uri) = if let Some(uri) = uri {
+        if uri.len() > MAX_URI_LENGTH {
+            return Err(MetadataError::UriTooLong.into());
+        } else {
+            let edition_str = u64::from_le_bytes(*edition).to_string();
+            let mut name = master_data.name.clone().replace(" ", "");
+            name.truncate(MAX_NAME_LENGTH - edition_str.len() - 2);
+            name.push_str(" #");
+            name.push_str(&edition_str);
+            (name, uri)
+        }
+    } else {
+        (master_data.name, master_data.uri)
+    };
+
+    let data_v2 = DataV2 {
+        name,
+        symbol: master_data.symbol,
+        uri,
+        seller_fee_basis_points: master_data.seller_fee_basis_points,
+        creators: master_data.creators,
+        collection: master_metadata.collection,
+        uses: master_metadata.uses.map(|u| Uses {
+            use_method: u.use_method,
+            remaining: u.total, // reset remaining uses per edition for extra fun
+            total: u.total,
+        }),
+    };
+    // create the metadata the normal way...
+
+    process_create_metadata_accounts_logic(
+        &program_id,
+        CreateMetadataAccountsLogicArgs {
+            metadata_account_info: new_metadata_account_info,
+            mint_info,
+            mint_authority_info,
+            payer_account_info,
+            update_authority_info,
+            system_account_info,
+            rent_info,
+        },
+        data_v2,
+        true,
+        false,
+        true,
+        true,
+    )?;
 
     // Now make sure this mint can never be used by anybody else.
     transfer_mint_authority(
@@ -896,6 +915,7 @@ pub fn process_create_metadata_accounts_logic(
 
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
     let compatible_data = data.to_v1();
+
     assert_data_valid(
         &compatible_data,
         &update_authority_key,
@@ -904,7 +924,6 @@ pub fn process_create_metadata_accounts_logic(
         update_authority_info.is_signer,
         false,
     )?;
-
     let mint_decimals = get_mint_decimals(mint_info)?;
 
     metadata.mint = *mint_info.key;
@@ -996,6 +1015,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     program_id: &'a Pubkey,
     accounts: MintNewEditionFromMasterEditionViaTokenLogicArgs<'a>,
     edition: u64,
+    uri: Option<String>,
     ignore_owner_signer: bool,
 ) -> ProgramResult {
     let MintNewEditionFromMasterEditionViaTokenLogicArgs {
@@ -1108,6 +1128,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         rent_info,
         None,
         Some(edition),
+        uri,
     )?;
     Ok(())
 }
@@ -1180,7 +1201,10 @@ pub fn assert_delegated_tokens(
         return Err(MetadataError::NotEnoughTokens.into());
     }
 
-    if token_account.delegate == COption::None || token_account.delegated_amount != token_account.amount || token_account.delegate.unwrap() != *delegate.key {
+    if token_account.delegate == COption::None
+        || token_account.delegated_amount != token_account.amount
+        || token_account.delegate.unwrap() != *delegate.key
+    {
         return Err(MetadataError::InvalidDelegate.into());
     }
     Ok(())

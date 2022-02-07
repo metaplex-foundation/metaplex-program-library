@@ -26,12 +26,18 @@ pub struct EditionMarker {
     pub metadata_pubkey: Pubkey,
     pub pubkey: Pubkey,
     pub edition: u64,
+    pub uri: Option<String>,
     pub token: Keypair,
     pub metadata_token_pubkey: Pubkey,
 }
 
 impl EditionMarker {
-    pub fn new(metadata: &Metadata, master_edition: &MasterEditionV2, edition: u64) -> Self {
+    pub fn new(
+        metadata: &Metadata,
+        master_edition: &MasterEditionV2,
+        edition: u64,
+        uri: Option<String>,
+    ) -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
         let metadata_mint_pubkey = metadata.mint.pubkey();
@@ -64,6 +70,7 @@ impl EditionMarker {
         EditionMarker {
             pubkey,
             edition,
+            uri,
             mint,
             metadata_mint_pubkey,
             metadata_pubkey: metadata.pubkey,
@@ -139,6 +146,7 @@ impl EditionMarker {
                     spl_token::id(),
                     mpl_token_vault::id(),
                     self.edition,
+                    self.uri.clone(),
                 ),
             ],
             Some(&context.payer.pubkey()),
@@ -183,6 +191,7 @@ impl EditionMarker {
                 self.metadata_pubkey,
                 self.metadata_mint_pubkey,
                 self.edition,
+                None,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer, &context.payer],
@@ -235,6 +244,7 @@ impl EditionMarker {
             data: MetadataInstruction::MintNewEditionFromMasterEditionViaToken(
                 MintNewEditionFromMasterEditionViaTokenArgs {
                     edition: self.edition,
+                    uri: self.uri.clone(),
                 },
             )
             .try_to_vec()

@@ -14,6 +14,8 @@ use utils::*;
 
 // NOTE: these tests depend on the token-vault program having been compiled
 // via (cd ../../token-vault/program/ && cargo build-bpf)
+// If you are running these tests from inside the token-metadata directory, use
+// cargo build-bpf --manifest-path ../token-vault/program/Cargo.toml --bpf-out-dir target/deploy
 mod mint_new_edition_from_master_edition_via_token {
     use super::*;
     #[tokio::test]
@@ -21,7 +23,12 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         let test_master_edition = MasterEditionV2::new(&test_metadata);
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
+        let test_edition_marker = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            1,
+            Some("edition_uri".to_string()),
+        );
 
         test_metadata
             .create(
@@ -54,7 +61,12 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         let test_master_edition = MasterEditionV2::new(&test_metadata);
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
+        let test_edition_marker = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            1,
+            Some("edition_uri".to_string()),
+        );
 
         test_metadata
             .create(
@@ -86,7 +98,12 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         let test_master_edition = MasterEditionV2::new(&test_metadata);
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
+        let test_edition_marker = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            1,
+            Some("edition_uri".to_string()),
+        );
         let fake_mint = Keypair::new();
         let fake_account = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
@@ -148,6 +165,7 @@ mod mint_new_edition_from_master_edition_via_token {
                 test_edition_marker.metadata_pubkey,
                 test_edition_marker.metadata_mint_pubkey,
                 test_edition_marker.edition,
+                test_edition_marker.uri,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer, &context.payer, &context.payer],
@@ -168,8 +186,18 @@ mod mint_new_edition_from_master_edition_via_token {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
         let test_master_edition = MasterEditionV2::new(&test_metadata);
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
-        let test_edition_marker1 = EditionMarker::new(&test_metadata, &test_master_edition, 1);
+        let test_edition_marker = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            1,
+            Some("edition_uri".to_string()),
+        );
+        let test_edition_marker1 = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            1,
+            Some("edition_uri1".to_string()),
+        );
 
         test_metadata
             .create(

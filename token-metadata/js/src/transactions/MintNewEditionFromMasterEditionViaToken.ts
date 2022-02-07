@@ -10,14 +10,16 @@ import {
 import BN from 'bn.js';
 import { MetadataProgram } from '../MetadataProgram';
 
-export class MintNewEditionFromMasterEditionViaTokenArgs extends Borsh.Data<{ edition: BN }> {
+export class MintNewEditionFromMasterEditionViaTokenArgs extends Borsh.Data<{ edition: BN, uri: String | null }> {
   static readonly SCHEMA = MintNewEditionFromMasterEditionViaTokenArgs.struct([
     ['instruction', 'u8'],
     ['edition', 'u64'],
+    ['uri', { kind: 'option', type: String }],
   ]);
 
   instruction = 11;
   edition: BN;
+  uri: String | null
 }
 
 type MintNewEditionFromMasterEditionViaTokenParams = {
@@ -32,6 +34,7 @@ type MintNewEditionFromMasterEditionViaTokenParams = {
   tokenOwner: PublicKey;
   tokenAccount: PublicKey;
   editionValue: BN;
+  uriValue: String | null;
 };
 
 export class MintNewEditionFromMasterEditionViaToken extends Transaction {
@@ -53,10 +56,11 @@ export class MintNewEditionFromMasterEditionViaToken extends Transaction {
       tokenOwner,
       tokenAccount,
       editionValue,
+      uriValue
     } = params;
 
     const data = MintNewEditionFromMasterEditionViaTokenArgs.serialize({
-      edition: editionValue,
+      edition: editionValue, uri: uriValue
     });
 
     this.add(

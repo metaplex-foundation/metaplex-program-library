@@ -59,6 +59,7 @@ pub struct CreateMasterEditionArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct MintNewEditionFromMasterEditionViaTokenArgs {
     pub edition: u64,
+    pub uri: Option<String>,
 }
 
 #[repr(C)]
@@ -580,6 +581,7 @@ pub fn mint_new_edition_from_master_edition_via_token(
     metadata: Pubkey,
     metadata_mint: Pubkey,
     edition: u64,
+    uri: Option<String>,
 ) -> Instruction {
     let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
     let as_string = edition_number.to_string();
@@ -615,7 +617,7 @@ pub fn mint_new_edition_from_master_edition_via_token(
         program_id,
         accounts,
         data: MetadataInstruction::MintNewEditionFromMasterEditionViaToken(
-            MintNewEditionFromMasterEditionViaTokenArgs { edition },
+            MintNewEditionFromMasterEditionViaTokenArgs { edition, uri },
         )
         .try_to_vec()
         .unwrap(),
@@ -676,6 +678,7 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
     token_program: Pubkey,
     token_vault_program_info: Pubkey,
     edition: u64,
+    uri: Option<String>,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(new_metadata, false),
@@ -701,7 +704,7 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
         program_id,
         accounts,
         data: MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(
-            MintNewEditionFromMasterEditionViaTokenArgs { edition },
+            MintNewEditionFromMasterEditionViaTokenArgs { edition, uri },
         )
         .try_to_vec()
         .unwrap(),

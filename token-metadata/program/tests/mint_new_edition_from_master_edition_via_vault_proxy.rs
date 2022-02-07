@@ -28,7 +28,12 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_external_price = ExternalPrice::new();
         let test_vault = Vault::new();
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 10);
+        let test_edition_marker = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            10,
+            Some("edition_uri".to_string()),
+        );
 
         test_metadata
             .create(
@@ -97,7 +102,12 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_external_price = ExternalPrice::new();
         let test_vault = Vault::new();
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 10);
+        let test_edition_marker = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            10,
+            Some("edition_uri".to_string()),
+        );
         let fake_store = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
 
@@ -175,6 +185,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                     spl_token::id(),
                     mpl_token_vault::id(),
                     test_edition_marker.edition,
+                    test_edition_marker.uri,
                 ),
             ],
             Some(&context.payer.pubkey()),
@@ -201,7 +212,12 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
         let test_master_edition = MasterEditionV2::new(&test_metadata);
         let test_external_price = ExternalPrice::new();
         let test_vault = Vault::new();
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 10);
+        let test_edition_marker = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            10,
+            Some("edition_uri".to_string()),
+        );
         let fake_vault_authority = Keypair::new();
 
         test_metadata
@@ -270,6 +286,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                     spl_token::id(),
                     mpl_token_vault::id(),
                     test_edition_marker.edition,
+                    test_edition_marker.uri,
                 ),
             ],
             Some(&context.payer.pubkey()),
@@ -300,7 +317,12 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
         let test_external_price = ExternalPrice::new();
         let test_vault = Vault::new();
 
-        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 10);
+        let test_edition_marker = EditionMarker::new(
+            &test_metadata,
+            &test_master_edition,
+            10,
+            Some("edition_uri".to_string()),
+        );
 
         // TEST VAULT
         test_metadata
@@ -391,6 +413,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                     spl_token::id(),
                     mpl_token_vault::id(),
                     test_edition_marker.edition,
+                    test_edition_marker.uri,
                 ),
             ],
             Some(&context.payer.pubkey()),
