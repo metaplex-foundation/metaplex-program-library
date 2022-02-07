@@ -36,6 +36,7 @@ export const initSellingResource = async ({
   vaultOwner: PublicKey;
   vaultOwnerBump: number;
   resourceMint: Keypair;
+  metadata: PublicKey;
 }> => {
   const creator = new Creator({
     address: payer.publicKey.toBase58(),
@@ -114,5 +115,6 @@ export const initSellingResource = async ({
     vaultOwner,
     vaultOwnerBump,
     resourceMint,
+    metadata,
   };
 };

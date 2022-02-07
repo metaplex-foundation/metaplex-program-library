@@ -5,11 +5,15 @@ import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token
 
 import { findTradeHistoryAddress } from '../src/utils';
 import { createBuyTransaction } from './transactions';
-import { mintNFT } from './actions/mintNft';
-import { mintTokenToAccount } from './actions/mintTokenToAccount';
+import {
+  createPrerequisites,
+  createStore,
+  initSellingResource,
+  createMarket,
+  mintNFT,
+  mintTokenToAccount,
+} from './actions';
 import { killStuckProcess, logDebug, sleep } from './utils';
-import { createPrerequisites, createStore, initSellingResource } from './actions';
-import { createMarket } from './actions/createMarket';
 
 killStuckProcess();
 
