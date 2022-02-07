@@ -34,6 +34,8 @@ slog = { version = "2.7.0", features = ["max_level_trace", "release_max_level_de
 slog-async = "2.7.0"
 slog-json = "2.4.0"
 slog-term = "2.8.0"
+solana-account-decoder = "1.8.0"
+solana-client = "1.8.1"
 spl-associated-token-account = "1.0.3"
 spl-token = "3.2.0"
 structopt = "0.3.25"

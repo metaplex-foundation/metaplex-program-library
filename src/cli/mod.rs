@@ -84,6 +84,17 @@ pub enum Commands {
         rpc_url: Option<String>,
     },
 
+        /// Withdraw funds from candy machine account closing it.
+    WithdrawAll {
+            /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+         #[clap(short, long)]
+        keypair: Option<String>,
+    
+            /// RPC Url
+            #[clap(short, long)]
+            rpc_url: Option<String>,
+        },
+
     /// Test command
     Test,
 

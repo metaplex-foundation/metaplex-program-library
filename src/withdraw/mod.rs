@@ -1,8 +1,23 @@
-use anchor_client::solana_sdk::pubkey::Pubkey;
+pub use anchor_client::{
+    solana_sdk::{
+        commitment_config::{CommitmentConfig, CommitmentLevel},
+        pubkey::Pubkey,
+        signature::{Keypair, Signature, Signer},
+        system_instruction, system_program, sysvar,
+        transaction::Transaction,
+    },
+    Client, Program,
+};
 use anyhow::Result;
 use slog::*;
-use std::str::FromStr;
-
+use std::{str::FromStr,rc::Rc};
+use solana_client::{
+    rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
+    rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
+};
+use solana_account_decoder::{
+    UiAccountEncoding,
+};
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 
@@ -15,10 +30,60 @@ pub struct WithdrawArgs {
     pub rpc_url: Option<String>,
 }
 
-pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
-    let sugar_config = sugar_setup(args.logger, args.keypair, args.rpc_url)?;
+pub struct WithdrawAllArgs {
+    pub logger: Logger,
+    pub keypair: Option<String>,
+    pub rpc_url: Option<String>,
+}
 
-    let logger = &sugar_config.logger;
+pub struct WithdrawSetupConfig {
+    pub logger: Logger,
+    pub program: Program,
+    pub payer: Pubkey,
+}
+
+
+pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
+    let (program, payer) =setup_withdraw(args.logger, args.keypair, args.rpc_url)?;
+    let candy_machine = Pubkey::from_str(&args.candy_machine)?;
+
+    let _program = Rc::new(program);
+    do_withdraw( Rc::clone(&_program), candy_machine, payer)?;
+    Ok(())
+}
+
+
+pub fn process_withdraw_all(args: WithdrawAllArgs) -> Result<()> {
+ 
+    let ( program, payer) =setup_withdraw(args.logger, args.keypair, args.rpc_url)?;
+
+    let config = RpcProgramAccountsConfig {
+        filters: Some(vec![RpcFilterType::Memcmp(Memcmp {
+            offset: 8, // key
+            bytes: MemcmpEncodedBytes::Base58(payer.to_string()),
+            encoding: None,
+        })]),
+        account_config: RpcAccountInfoConfig {
+            encoding: Some(UiAccountEncoding::Base64),
+            data_slice: None,
+            commitment: Some(CommitmentConfig {
+                commitment: CommitmentLevel::Confirmed,
+            }),
+        },
+        with_context: None,
+    };
+
+    let program = Rc::new(program);
+    let accounts = program.rpc().get_program_accounts_with_config(&program.id(), config)?;
+    println!("{:?}", accounts);
+    accounts.iter().for_each(|account| {let (candy_machine, _account) = account;  do_withdraw( program.clone(), *candy_machine, payer); } );
+
+    Ok(())
+}
+
+fn setup_withdraw(logger:Logger, keypair:Option<String>, rpc_url:Option<String>) -> Result<(Program, Pubkey)>{
+    let sugar_config = sugar_setup(logger, keypair, rpc_url)?;
+
     let client = setup_client(&sugar_config)?;
 
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
@@ -26,12 +91,15 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
         .expect("Failed to parse PID");
     let program = client.program(pid);
     let payer = program.payer();
-    let candy_machine = Pubkey::from_str(&args.candy_machine)?;
 
-    info!(
-        logger,
-        "Withdrawing funds from candy machine {}", &candy_machine
-    );
+    Ok((
+        program,
+        payer))
+}
+
+fn do_withdraw( program: Rc<Program>, candy_machine: Pubkey, payer:Pubkey) -> Result<()>{
+    println!("Withdrawing funds from candy machine {}", &candy_machine);
+
     let sig = program
         .request()
         .accounts(nft_accounts::WithdrawFunds {
@@ -41,7 +109,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
         .args(nft_instruction::WithdrawFunds {})
         .send()?;
 
-    info!(logger, "Transaction submitted with id of: {}", sig);
+    println!("Transaction submitted with id of: {}", sig);
 
     Ok(())
 }
