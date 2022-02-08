@@ -325,15 +325,13 @@ fn upload_config_lines(
     debug!("Num of config lines: {:?}", config_lines.len());
     info!("Uploading config lines in chunks...");
     config_lines
+        .into_iter()
+        // Skip empty chunks
+        .filter(|chunk| chunk.len() > 0)
+        .collect::<Vec<Vec<(u32, ConfigLine)>>>()
         .par_iter()
-        // .chunks(CONFIG_CHUNK_SIZE)
         .progress()
         .for_each(|chunk| {
-            // Skip empty chunks
-            if chunk.len() == 0 {
-                return;
-            }
-
             let statuses = statuses.clone();
 
             let payer = Arc::clone(&payer);
