@@ -10,7 +10,7 @@ use mpl_metaplex::{
     instruction::{MetaplexInstruction, SetStoreIndexArgs},
     state::{
         AuctionCache, Key, Store, StoreIndexer, CACHE, INDEX, MAX_AUCTION_CACHE_SIZE,
-        MAX_STORE_INDEXER_SIZE, MAX_STORE_SIZE, PREFIX,
+        MAX_INDEXED_ELEMENTS, MAX_STORE_INDEXER_SIZE, MAX_STORE_SIZE, PREFIX,
     },
 };
 use solana_program::{
@@ -26,7 +26,9 @@ use solana_sdk::{
     transaction::Transaction,
 };
 
-fn program_test() -> ProgramTest { ProgramTest::new("mpl_metaplex", id(), None) }
+fn program_test() -> ProgramTest {
+    ProgramTest::new("mpl_metaplex", id(), None)
+}
 
 /// Pretty-print a Metaplex program error
 fn pretty_err(e: ProgramError) -> String {
@@ -49,13 +51,16 @@ fn make_pda(seeds: &[&[u8]], acct: impl BorshSerialize, alloc_len: usize) -> (Pu
     // Borrow as a slice to impose a fixed allocation length
     acct.serialize(&mut data.as_mut_slice()).unwrap();
 
-    (Pubkey::find_program_address(seeds, &id()).0, Account {
-        lamports: 1_000_000_000,
-        data,
-        owner: id(),
-        executable: false,
-        rent_epoch: 0,
-    })
+    (
+        Pubkey::find_program_address(seeds, &id()).0,
+        Account {
+            lamports: 1_000_000_000,
+            data,
+            owner: id(),
+            executable: false,
+            rent_epoch: 0,
+        },
+    )
 }
 
 /// Derive and serialize a `Store` into an account
@@ -107,15 +112,12 @@ fn make_index(index: StoreIndexer) -> (Pubkey, Account) {
     )
 }
 
-/// A string, used here to quickly identify auction caches
-type CacheId = &'static str;
-
 /// A timestamp for an auction cache
 struct Time(i64);
 
 /// Helper for storing the two optional above/below arguments for a
 /// SetStoreIndex instruction
-enum Positional {
+enum Positional<CacheId> {
     Zero,
     One(CacheId),
     Two(CacheId, CacheId),
@@ -124,10 +126,10 @@ enum Positional {
 use Positional::{One, Two, Zero};
 
 /// Simplification of a `SetStoreArgs` instruction for the test bed below
-struct SetStoreIndex {
+struct SetStoreIndex<CacheId> {
     offset: usize,
     cache: CacheId,
-    pos: Positional,
+    pos: Positional<CacheId>,
 }
 
 /// Test bed for `set_store_index` tests.
@@ -138,24 +140,30 @@ struct SetStoreIndex {
 /// `SetStoreIndex` instructions to be processed, after which point the
 /// modified store index will be compared against the list of keys in
 /// `expected caches`.
-async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
+async fn test_set_index<
+    CacheId: std::fmt::Debug + Copy + Eq + std::hash::Hash,
+    E: ExactSizeIterator<Item = CacheId>,
+>(
     store_owner: Pubkey,
     caches: impl IntoIterator<Item = (CacheId, Time)>,
     extra_caches: impl IntoIterator<Item = (CacheId, Time)>,
-    args: impl IntoIterator<Item = SetStoreIndex>,
+    args: impl IntoIterator<Item = SetStoreIndex<CacheId>>,
     expected_caches: impl IntoIterator<IntoIter = E>,
 ) {
     let stub_key = Pubkey::new(&[0; 32]);
     let mut test = program_test();
 
-    let (store_key, store_acct) = make_store(store_owner, Store {
-        key: Key::StoreV1,
-        public: false,
-        auction_program: stub_key,
-        token_vault_program: stub_key,
-        token_metadata_program: stub_key,
-        token_program: stub_key,
-    });
+    let (store_key, store_acct) = make_store(
+        store_owner,
+        Store {
+            key: Key::StoreV1,
+            public: false,
+            auction_program: stub_key,
+            token_vault_program: stub_key,
+            token_metadata_program: stub_key,
+            token_program: stub_key,
+        },
+    );
     test.add_account(store_key, store_acct);
 
     let mut cache_dict = HashMap::new();
@@ -213,7 +221,7 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
         let mut accounts = vec![
             AccountMeta::new(index_key, false),
             AccountMeta::new_readonly(payer.pubkey(), true),
-            AccountMeta::new_readonly(cache_dict[cache], false),
+            AccountMeta::new_readonly(cache_dict[&cache], false),
             AccountMeta::new_readonly(store_key, false),
             AccountMeta::new_readonly(stub_key, false),
             AccountMeta::new_readonly(stub_key, false),
@@ -221,11 +229,11 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
 
         match pos {
             Zero => (),
-            One(a) => accounts.push(AccountMeta::new_readonly(cache_dict[a], false)),
+            One(a) => accounts.push(AccountMeta::new_readonly(cache_dict[&a], false)),
             Two(a, b) => accounts.extend(
                 vec![a, b]
                     .into_iter()
-                    .map(|a| AccountMeta::new_readonly(cache_dict[a], false)),
+                    .map(|a| AccountMeta::new_readonly(cache_dict[&a], false)),
             ),
         }
 
@@ -291,7 +299,7 @@ async fn test_set_index<E: ExactSizeIterator<Item = CacheId>>(
     let mut last_time = None;
 
     expected_caches
-        .map(|c| cache_dict[c])
+        .map(|c| cache_dict[&c])
         .zip(actual_index.auction_caches.into_iter())
         .enumerate()
         .for_each(|(i, (expected, actual))| {
@@ -312,7 +320,7 @@ mod set_store_index {
     #[cfg_attr(feature = "test-bpf", tokio::test)]
     async fn test_nop() {
         let store = Pubkey::new_unique();
-        test_set_index(store, None, None, None, None).await;
+        test_set_index(store, None::<((), Time)>, None, None, None).await;
     }
 
     /// Assert that the initial insertion into an index works
@@ -465,6 +473,42 @@ mod set_store_index {
         .await;
     }
 
+    /// Assert that inserting more than `MAX_INDEXED_ELEMENTS` trims the end of
+    /// the resulting page
+    #[cfg_attr(feature = "test-bpf", tokio::test)]
+    async fn test_overflow_max_elements() {
+        let store = Pubkey::new_unique();
+
+        let idcs = 0..MAX_INDEXED_ELEMENTS;
+        let offset = 30;
+        let cache = |i: usize| (i, Time(i64::MAX - i as i64));
+
+        let caches = idcs
+            .clone()
+            .into_iter()
+            .map(|i| i + (i >= offset) as usize)
+            .map(cache);
+        let expected_caches = idcs.into_iter();
+
+        // Assert that we insert into the middle, and that the resulting index
+        // should not contain more elements
+        assert!(offset < MAX_INDEXED_ELEMENTS);
+        assert!(caches.len() == expected_caches.len());
+
+        test_set_index(
+            store,
+            caches,
+            Some(cache(30)),
+            Some(SetStoreIndex {
+                offset,
+                cache: 30,
+                pos: Two(31, 29),
+            }),
+            expected_caches,
+        )
+        .await;
+    }
+
     /// Assert that prepending to an index out of order does not work
     #[cfg_attr(feature = "test-bpf", tokio::test)]
     #[should_panic]
@@ -592,34 +636,46 @@ mod set_store_index {
         let before_key: Pubkey = before_key_str.parse().unwrap();
 
         for (key, account) in vec![
-            (index_key, Account {
-                lamports: 23476080,
-                data: bs58::decode(INDEX_DATA).into_vec().unwrap(),
-                owner: id(),
-                executable: false,
-                rent_epoch: 275,
-            }),
-            (cache_key, Account {
-                lamports: 4099440,
-                data: bs58::decode(CACHE_DATA).into_vec().unwrap(),
-                owner: id(),
-                executable: false,
-                rent_epoch: 275,
-            }),
-            (store_key, Account {
-                lamports: 2491680,
-                data: bs58::decode(STORE_DATA).into_vec().unwrap(),
-                owner: id(),
-                executable: false,
-                rent_epoch: 276,
-            }),
-            (before_key, Account {
-                lamports: 4099440,
-                data: bs58::decode(BEFORE_DATA).into_vec().unwrap(),
-                owner: id(),
-                executable: false,
-                rent_epoch: 275,
-            }),
+            (
+                index_key,
+                Account {
+                    lamports: 23476080,
+                    data: bs58::decode(INDEX_DATA).into_vec().unwrap(),
+                    owner: id(),
+                    executable: false,
+                    rent_epoch: 275,
+                },
+            ),
+            (
+                cache_key,
+                Account {
+                    lamports: 4099440,
+                    data: bs58::decode(CACHE_DATA).into_vec().unwrap(),
+                    owner: id(),
+                    executable: false,
+                    rent_epoch: 275,
+                },
+            ),
+            (
+                store_key,
+                Account {
+                    lamports: 2491680,
+                    data: bs58::decode(STORE_DATA).into_vec().unwrap(),
+                    owner: id(),
+                    executable: false,
+                    rent_epoch: 276,
+                },
+            ),
+            (
+                before_key,
+                Account {
+                    lamports: 4099440,
+                    data: bs58::decode(BEFORE_DATA).into_vec().unwrap(),
+                    owner: id(),
+                    executable: false,
+                    rent_epoch: 275,
+                },
+            ),
         ] {
             test.add_account(key, account);
         }
