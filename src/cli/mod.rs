@@ -4,7 +4,7 @@ use clap::{AppSettings, Parser, Subcommand};
 #[clap(author, version, about)]
 #[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
 pub struct Cli {
-    /// Global options
+    /// Log level: trace, debug, info, warn, error, off
     #[clap(short, long, global = true)]
     pub log_level: Option<String>,
 
@@ -23,6 +23,10 @@ pub enum Commands {
         /// RPC Url
         #[clap(short, long)]
         rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = "cache.json")]
+        cache: String,
     },
 
     /// Upload assets to storage and then insert items into candy machine config
@@ -88,16 +92,16 @@ pub enum Commands {
         rpc_url: Option<String>,
     },
 
-        /// Withdraw funds from candy machine account closing it.
+    /// Withdraw funds from candy machine account closing it.
     WithdrawAll {
-            /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
-         #[clap(short, long)]
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
         keypair: Option<String>,
-    
-            /// RPC Url
-            #[clap(short, long)]
-            rpc_url: Option<String>,
-        },
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+    },
 
     /// Test command
     Test,

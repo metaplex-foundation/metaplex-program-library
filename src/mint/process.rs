@@ -15,13 +15,13 @@ use spl_token::{
     instruction::{initialize_mint, mint_to},
     ID as TOKEN_PROGRAM_ID,
 };
-use std::{fs::File, path::Path, str::FromStr};
+use std::str::FromStr;
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 use mpl_candy_machine::{CandyMachine, WhitelistMintMode, ID as CANDY_MACHINE_PROGRAM_ID};
 
-use crate::cache::Cache;
+use crate::cache::load_cache;
 use crate::candy_machine::*;
 use crate::common::*;
 use crate::mint::pdas::*;
@@ -29,19 +29,12 @@ use crate::mint::pdas::*;
 pub struct MintOneArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
+    pub cache: String,
 }
 
 pub fn process_mint_one(args: MintOneArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-
-    let cache: Cache = if Path::new("cache.json").exists() {
-        let file = File::open("cache.json")?;
-        serde_json::from_reader(file)?
-    } else {
-        error!("cache.json does not exist");
-        std::process::exit(1);
-    };
-
+    let cache = load_cache(&args.cache)?;
     let client = setup_client(&sugar_config)?;
 
     let candy_machine_id = match Pubkey::from_str(&cache.program.candy_machine) {

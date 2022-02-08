@@ -77,9 +77,15 @@ async fn main() -> Result<()> {
     tracing::info!("Lend me some sugar, I am your neighbor.");
 
     match cli.command {
-        Commands::MintOne { keypair, rpc_url } => {
-            process_mint_one(MintOneArgs { keypair, rpc_url })?
-        }
+        Commands::MintOne {
+            keypair,
+            rpc_url,
+            cache,
+        } => process_mint_one(MintOneArgs {
+            keypair,
+            rpc_url,
+            cache,
+        })?,
         Commands::Upload {
             assets_dir,
             arloader_manifest,

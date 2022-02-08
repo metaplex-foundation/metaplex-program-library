@@ -22,51 +22,20 @@ use crate::cache::*;
 use crate::candy_machine::{uuid_from_pubkey, ConfigStatus};
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
-use crate::parse::path_to_string;
 use crate::setup::{setup_client, sugar_setup};
 use crate::upload::data::*;
 use crate::validate::format::Metadata;
 
-pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
-    let sugar_config = match sugar_setup(upload_args.keypair, upload_args.rpc_url) {
+pub fn process_upload(args: UploadArgs) -> Result<()> {
+    let sugar_config = match sugar_setup(args.keypair, args.rpc_url) {
         Ok(sugar_config) => sugar_config,
         Err(err) => {
             return Err(SetupError::SugarSetupError(err.to_string()).into());
         }
     };
 
-    let cache_file_path = Path::new(&upload_args.cache);
-
-    if !cache_file_path.exists() {
-        error!(
-            "No cache file found at cache path: {cache_file_path:?}. Manually create one or run `sugar upload-assets`.");
-        let cache_file_string = path_to_string(&cache_file_path)?;
-        return Err(CacheError::CacheFileNotFound(cache_file_string).into());
-    }
-
-    info!("Cache exists, loading...");
-    let file = match File::open(cache_file_path) {
-        Ok(file) => file,
-        Err(err) => {
-            // error!(sugar_config.logger, "Failed to open cache file: {}", err);
-            let cache_file_string = path_to_string(&cache_file_path)?;
-
-            return Err(
-                CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into(),
-            );
-        }
-    };
-
-    let mut cache: Cache = match serde_json::from_reader(file) {
-        Ok(cache) => cache,
-        Err(err) => {
-            error!("Failed to parse cache file: {}", err);
-            return Err(CacheError::CacheFileWrongFormat(err.to_string()).into());
-        }
-    };
-
-    let config_data = get_config_data(&upload_args.config)?;
-
+    let mut cache = load_cache(&args.cache)?;
+    let config_data = get_config_data(&args.config)?;
     let candy_machine_address = &cache.program.candy_machine;
 
     let candy_pubkey = if candy_machine_address.is_empty() {
@@ -75,7 +44,7 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         let candy_pubkey = candy_keypair.pubkey();
 
         let uuid = uuid_from_pubkey(&candy_pubkey);
-        let metadata = get_metadata_from_first_json(&upload_args.assets_dir)?;
+        let metadata = get_metadata_from_first_json(&args.assets_dir)?;
         let candy_data = create_candy_machine_data(&config_data, uuid, metadata)?;
 
         let sig = initialize_candy_machine(&sugar_config, &candy_keypair, candy_data)?;
@@ -86,7 +55,7 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         );
 
         cache.program = CacheProgram::new_from_cm(&candy_pubkey);
-        cache.write_to_file(cache_file_path)?;
+        cache.write_to_file(&args.cache)?;
         candy_pubkey
     } else {
         match Pubkey::from_str(candy_machine_address) {
@@ -114,7 +83,7 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         item.on_chain = status.on_chain;
     }
 
-    cache.write_to_file(cache_file_path)?;
+    cache.write_to_file(&args.cache)?;
 
     Ok(())
 }
