@@ -27,9 +27,9 @@ impl Cache {
         }
     }
 
-    pub fn write_to_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
-        // let mut f = OpenOptions::new().write(true).create(true).open(path)?;
+    pub fn write_to_file<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let mut f = fs::File::create(path)?;
+        self.items.0.sort_keys();
         let c = serde_json::to_string(&self)?;
         f.write_all(c.as_bytes())?;
 
