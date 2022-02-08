@@ -9,14 +9,6 @@ pub use anchor_client::{
     Client, Program,
 };
 use anyhow::Result;
-use std::{str::FromStr,rc::Rc};
-use solana_client::{
-    rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
-    rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
-};
-use solana_account_decoder::{
-    UiAccountEncoding,
-};
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 use solana_account_decoder::UiAccountEncoding;
@@ -88,10 +80,8 @@ pub fn process_withdraw_all(args: WithdrawAllArgs) -> Result<()> {
     Ok(())
 }
 
-
 fn setup_withdraw(keypair: Option<String>, rpc_url: Option<String>) -> Result<(Program, Pubkey)> {
     let sugar_config = sugar_setup(keypair, rpc_url)?;
-
 
     let client = setup_client(&sugar_config)?;
 
