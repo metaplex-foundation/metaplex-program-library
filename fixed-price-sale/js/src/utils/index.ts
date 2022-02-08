@@ -1,4 +1,6 @@
-import { PublicKey } from '@solana/web3.js';
+import { TokenAccount } from '@metaplex-foundation/mpl-core';
+import { Edition, MasterEdition, Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { Connection, PublicKey } from '@solana/web3.js';
 import { PROGRAM_ID } from '../consts';
 
 const VAULT_OWNER_PREFIX = 'mt_vault';
@@ -32,4 +34,13 @@ export const findPayoutTicketAddress = (funder: PublicKey, market: PublicKey) =>
     [Buffer.from(PAYOUT_TICKET_PREFIX), funder.toBuffer(), market.toBuffer()],
     new PublicKey(PROGRAM_ID),
   );
+};
+
+export const validateMembershipToken = async (
+  connection: Connection,
+  me: MasterEdition,
+  ta: TokenAccount,
+) => {
+  const edition = (await Metadata.getEdition(connection, ta.data.mint)) as Edition;
+  return edition.data.parent === me.pubkey.toString();
 };
