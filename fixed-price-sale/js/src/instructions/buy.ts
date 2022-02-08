@@ -143,7 +143,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
       isSigner: false,
     },
     {
-      pubkey: clock,
+      pubkey: clock, // ToDo: replace with SYSVAR_CLOCK_PUBKEY
       isWritable: false,
       isSigner: false,
     },

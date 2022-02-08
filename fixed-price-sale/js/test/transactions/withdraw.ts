@@ -44,7 +44,6 @@ export const createWithdrawTransaction = async ({
       funder: payer.publicKey,
       payer: payer.publicKey,
       payoutTicket: payoutTicket,
-      clock: SYSVAR_CLOCK_PUBKEY,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
     },
     {

@@ -30,7 +30,6 @@ export type WithdrawInstructionAccounts = {
   funder: web3.PublicKey;
   payer: web3.PublicKey;
   payoutTicket: web3.PublicKey;
-  clock: web3.PublicKey;
   associatedTokenProgram: web3.PublicKey;
 };
 
@@ -57,7 +56,6 @@ export function createWithdrawInstruction(
     funder,
     payer,
     payoutTicket,
-    clock,
     associatedTokenProgram,
   } = accounts;
 
@@ -122,7 +120,7 @@ export function createWithdrawInstruction(
       isSigner: false,
     },
     {
-      pubkey: clock,
+      pubkey: web3.SYSVAR_CLOCK_PUBKEY,
       isWritable: false,
       isSigner: false,
     },

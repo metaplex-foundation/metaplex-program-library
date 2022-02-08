@@ -12,7 +12,6 @@ const closeMarketStruct = new beet.BeetArgsStruct<{
 export type CloseMarketInstructionAccounts = {
   market: web3.PublicKey;
   owner: web3.PublicKey;
-  clock: web3.PublicKey;
 };
 
 const closeMarketInstructionDiscriminator = [88, 154, 248, 186, 48, 14, 123, 244];
@@ -23,7 +22,7 @@ const closeMarketInstructionDiscriminator = [88, 154, 248, 186, 48, 14, 123, 244
  * @param accounts that will be accessed while the instruction is processed
  */
 export function createCloseMarketInstruction(accounts: CloseMarketInstructionAccounts) {
-  const { market, owner, clock } = accounts;
+  const { market, owner } = accounts;
 
   const [data] = closeMarketStruct.serialize({
     instructionDiscriminator: closeMarketInstructionDiscriminator,
@@ -40,7 +39,7 @@ export function createCloseMarketInstruction(accounts: CloseMarketInstructionAcc
       isSigner: true,
     },
     {
-      pubkey: clock,
+      pubkey: web3.SYSVAR_CLOCK_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
