@@ -73,10 +73,15 @@ pub enum StealthInstruction {
     ///   2. `[]` The SPL Metadata account. Must be mutable
     ///   3. `[signer]` The update authority for the SPL Metadata
     ///   4. `[writeable]` Stealth PDA
-    ///   5. `[]` Token program for OversightMethod::Freeze else Metadata program
+    ///   5. `[]` Metadata program
     ///   6. `[]` System program
     ///   7. `[]` Rent sysvar
-    ///   8. `[]` Only for OversightMethod::Freeze. The owning SPL Token account
+    ///
+    /// And then if OversightMethod::Freeze, the following are required
+    ///
+    ///   8. `[]` Token program
+    ///   9. `[]` The owning SPL Token account
+    ///   10. `[]` Edition PDA
     ///
     /// Data expected by this instruction:
     ///   ConfigureMetadataData
@@ -118,13 +123,12 @@ pub enum StealthInstruction {
     ///   1. `[]` Stealth PDA
     ///   2. `[writable]` Transfer buffer program account
     ///   3. `[]` System program
-    ///
-    /// And then if OversightMethod::Freeze, the following are required (otherwise optional)
-    ///
     ///   4. `[]` The stealth mint account.
     ///   5. `[writable]` The source account.
     ///   6. `[writable]` The destination account.
     ///   7. `[]` Token program
+    ///   8. `[]` Metadata program
+    ///   9. `[]` Edition PDA
     ///
     FiniTransfer,
 
@@ -288,28 +292,38 @@ pub fn configure_metadata(
     uri: &[u8],
     method: crate::state::OversightMethod,
 ) -> Instruction {
-    let oversight_program = if method == crate::state::OversightMethod::Freeze {
-        spl_token::id()
-    } else {
-        mpl_token_metadata::id()
-    };
     let mut accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new(mint, false),
         AccountMeta::new(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
         AccountMeta::new(get_stealth_address(&mint).0, false),
-        AccountMeta::new_readonly(oversight_program, false),
+        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
-    accounts.push(
-        AccountMeta::new(
-            spl_associated_token_account::get_associated_token_address(&payer, &mint),
-            false,
-        ),
-    );
+    if method == crate::state::OversightMethod::Freeze {
+        accounts.extend_from_slice(&[
+            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new(
+                spl_associated_token_account::get_associated_token_address(&payer, &mint),
+                false,
+            ),
+            AccountMeta::new_readonly(
+                Pubkey::find_program_address(
+                    &[
+                        mpl_token_metadata::state::PREFIX.as_bytes(),
+                        mpl_token_metadata::id().as_ref(),
+                        mint.as_ref(),
+                        mpl_token_metadata::state::EDITION.as_bytes(),
+                    ],
+                    &mpl_token_metadata::id(),
+                ).0,
+                false,
+            ),
+        ]);
+    }
 
     let mut data = ConfigureMetadataData::zeroed();
     data.elgamal_pk = elgamal_pk;
@@ -370,6 +384,19 @@ pub fn fini_transfer(
         AccountMeta::new(source, false),
         AccountMeta::new(destination, false),
         AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
+        AccountMeta::new_readonly(
+            Pubkey::find_program_address(
+                &[
+                    mpl_token_metadata::state::PREFIX.as_bytes(),
+                    mpl_token_metadata::id().as_ref(),
+                    mint.as_ref(),
+                    mpl_token_metadata::state::EDITION.as_bytes(),
+                ],
+                &mpl_token_metadata::id(),
+            ).0,
+            false,
+        ),
     ];
 
     encode_instruction(

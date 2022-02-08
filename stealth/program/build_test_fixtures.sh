@@ -20,5 +20,5 @@ FIXTURES_DIR="tests/fixtures"
 rm -r "$FIXTURES_DIR"
 mkdir "$FIXTURES_DIR"
 
-cp ../../target/deploy/mpl_token_metadata.so "$FIXTURES_DIR"
+cp ../../token-metadata/target/deploy/mpl_token_metadata.so "$FIXTURES_DIR"
 cp ../../target/deploy/stealth.so "$FIXTURES_DIR"

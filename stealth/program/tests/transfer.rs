@@ -52,7 +52,7 @@ async fn nft_setup_transaction(
     );
 
     let payer_pubkey = payer.pubkey();
-    let mut instructions = vec![
+    let instructions = vec![
             system_instruction::create_account(
                 &payer.pubkey(),
                 &mint.pubkey(),
@@ -83,6 +83,17 @@ async fn nft_setup_transaction(
                 &[],
                 1
             )?,
+            spl_token::instruction::approve(
+                &spl_token::id(),
+                &spl_associated_token_account::get_associated_token_address(
+                    &payer.pubkey(),
+                    &mint.pubkey(),
+                ),
+                &get_stealth_address(&mint.pubkey()).0, // delegate
+                &payer.pubkey(), // owner
+                &[],
+                1,
+            )?,
             mpl_token_metadata::instruction::create_metadata_accounts(
                 mpl_token_metadata::id(),
                 public_metadata_key,
@@ -102,10 +113,6 @@ async fn nft_setup_transaction(
                 true, // update_auth_is_signer
                 true, // is_mutable
             ),
-        ];
-
-    if !freeze {
-        instructions.push(
             mpl_token_metadata::instruction::create_master_edition(
                 mpl_token_metadata::id(),
                 public_edition_key,
@@ -116,11 +123,6 @@ async fn nft_setup_transaction(
                 payer.pubkey(), // payer
                 None, // limited edition supply
             ),
-        );
-    }
-
-
-    instructions.push(
             stealth::instruction::configure_metadata(
                 payer.pubkey(),
                 mint.pubkey(),
@@ -130,7 +132,7 @@ async fn nft_setup_transaction(
                 if freeze { stealth::state::OversightMethod::Freeze }
                     else { stealth::state::OversightMethod::Royalties },
             ),
-    );
+        ];
 
     Ok(Transaction::new_signed_with_payer(
         &instructions,
@@ -211,6 +213,22 @@ async fn test_transfer_freeze() {
                 &mint.pubkey(),
                 dest_elgamal_kp.public.into(),
             ),
+            spl_associated_token_account::create_associated_token_account(
+                &dest.pubkey(), // funding
+                &dest.pubkey(), // wallet to create for
+                &mint.pubkey(),
+            ),
+            spl_token::instruction::approve(
+                &spl_token::id(),
+                &spl_associated_token_account::get_associated_token_address(
+                    &dest.pubkey(),
+                    &mint.pubkey(),
+                ),
+                &get_stealth_address(&mint.pubkey()).0, // delegate
+                &dest.pubkey(), // owner
+                &[],
+                1,
+            ).unwrap(),
             stealth::instruction::publish_elgamal_pubkey(
                 &payer.pubkey(),
                 &mint.pubkey(),
@@ -238,11 +256,6 @@ async fn test_transfer_freeze() {
             ),
 
             // finish and transfer
-            spl_associated_token_account::create_associated_token_account(
-                &payer.pubkey(), // funding
-                &dest.pubkey(), // wallet to create for
-                &mint.pubkey(),
-            ),
             stealth::instruction::fini_transfer(
                 payer.pubkey(),
                 mint.pubkey(),
