@@ -52,7 +52,7 @@ test('close-market: success', async (t) => {
     startDate,
     endDate: null,
     mutable: true,
-    price: 0.001,
+    price: 1,
     piecesInOneWallet: 1,
   };
 
@@ -86,7 +86,7 @@ test('close-market: success', async (t) => {
   assertConfirmedTransaction(t, MarketRes.txConfirmed);
 });
 
-test('close-market: fail, market has the specific endDate', async (t) => {
+test('close-market: should fail when the market has the specific endDate', async (t) => {
   const { payer, connection, transactionHandler } = await createPrerequisites();
 
   const store = await createStore({
@@ -122,7 +122,7 @@ test('close-market: fail, market has the specific endDate', async (t) => {
     startDate,
     endDate: startDate + 4000,
     mutable: true,
-    price: 0.001,
+    price: 1,
     piecesInOneWallet: 1,
   };
 
@@ -150,9 +150,8 @@ test('close-market: fail, market has the specific endDate', async (t) => {
 
   try {
     await transactionHandler.sendAndConfirmTransaction(marketTx, [payer], defaultSendOptions);
-
-    t.fail('expected transaction to fail due to limited market duration ');
   } catch (error) {
+    logDebug('expected transaction to fail due to limited market duration ');
     assertError(t, error, [/0x1782/i]);
   }
 });

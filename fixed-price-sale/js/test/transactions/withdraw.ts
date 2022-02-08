@@ -1,5 +1,5 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, Transaction } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { createAndSignTransaction } from '../utils';
 import { createWithdrawInstruction } from '../../src/instructions';
 

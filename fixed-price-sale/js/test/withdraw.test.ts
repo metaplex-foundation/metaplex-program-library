@@ -4,7 +4,7 @@ import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/sp
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
-import { closeMarket, createBuyTransaction } from './transactions';
+import { closeMarket, createBuyTransaction, createWithdrawTransaction } from './transactions';
 import { killStuckProcess, logDebug, sleep } from './utils';
 import {
   createPrerequisites,
@@ -14,7 +14,6 @@ import {
   mintNFT,
   mintTokenToAccount,
 } from './actions';
-import { createWithdrawTransaction } from './transactions';
 
 killStuckProcess();
 
@@ -53,10 +52,9 @@ test('withdraw: success', async (t) => {
     name: 'Market',
     description: '',
     startDate,
-    // endDate: startDate + 5 * 20,
     endDate: null,
     mutable: true,
-    price: 0.001,
+    price: 1,
     piecesInOneWallet: 1,
   };
 

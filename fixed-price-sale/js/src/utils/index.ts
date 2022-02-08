@@ -7,6 +7,7 @@ const VAULT_OWNER_PREFIX = 'mt_vault';
 const HISTORY_PREFIX = 'history';
 const PAYOUT_TICKET_PREFIX = 'payout_ticket';
 const HOLDER_PREFIX = 'holder';
+const SECONDARY_METADATA_CREATORS_PREFIX = 'secondary_creators';
 
 export const findVaultOwnerAddress = (mint: PublicKey, store: PublicKey) => {
   return PublicKey.findProgramAddress(
@@ -43,4 +44,11 @@ export const validateMembershipToken = async (
 ) => {
   const edition = (await Metadata.getEdition(connection, ta.data.mint)) as Edition;
   return edition.data.parent === me.pubkey.toString();
+};
+
+export const findSecondaryMetadataCreators = (metadata: PublicKey) => {
+  return PublicKey.findProgramAddress(
+    [Buffer.from(SECONDARY_METADATA_CREATORS_PREFIX), metadata.toBuffer()],
+    new PublicKey(PROGRAM_ID),
+  );
 };
