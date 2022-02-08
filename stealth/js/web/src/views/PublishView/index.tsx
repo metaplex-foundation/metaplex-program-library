@@ -15,6 +15,7 @@ import {
   TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
+import { Token } from '@solana/spl-token';
 import { useWallet } from '@solana/wallet-adapter-react';
 import * as bs58 from 'bs58';
 
@@ -41,8 +42,11 @@ import {
 } from '../../utils/common';
 import {
   getElgamalPubkeyAddress,
+  getStealth,
   parseAddress,
   STEALTH_PROGRAM_ID,
+  SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
 } from '../../utils/ids';
 import {
   decodeEncryptionKeyBuffer,
@@ -72,8 +76,16 @@ const publish = async (
 
   const elgamalKeypair = elgamalKeypairRes.Ok;
 
+  const [walletATAKey, ] = await PublicKey.findProgramAddress(
+    [
+      wallet.publicKey.toBuffer(),
+      TOKEN_PROGRAM_ID.toBuffer(),
+      mintKey.toBuffer(),
+    ],
+    SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+  );
+
   const instructions = [
-    // InitTransfer
     new TransactionInstruction({
       programId: STEALTH_PROGRAM_ID,
       keys: [
@@ -110,6 +122,30 @@ const publish = async (
     }),
   ];
 
+  if (await connection.getAccountInfo(walletATAKey) === null) {
+    instructions.push(
+      Token.createAssociatedTokenAccountInstruction(
+        SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        mintKey,
+        walletATAKey,
+        wallet.publicKey,
+        wallet.publicKey,
+      ),
+    );
+  }
+
+  instructions.push(
+    Token.createApproveInstruction(
+      TOKEN_PROGRAM_ID,
+      walletATAKey,
+      await getStealth(mintKey),
+      wallet.publicKey,
+      [],
+      1,
+    ),
+  );
+
   const result = await sendTransactionWithRetry(
     connection,
     wallet,
@@ -143,7 +179,6 @@ const close = async (
   mintKey: PublicKey,
 ) => {
   const instructions = [
-    // InitTransfer
     new TransactionInstruction({
       programId: STEALTH_PROGRAM_ID,
       keys: [

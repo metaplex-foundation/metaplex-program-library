@@ -24,7 +24,6 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
-import { Token } from '@solana/spl-token';
 import * as CryptoJS from 'crypto-js';
 import * as bs58 from 'bs58';
 import * as BN from 'bn.js';
@@ -76,6 +75,7 @@ import {
   STEALTH_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  TOKEN_METADATA_PROGRAM_ID,
 } from '../../utils/ids';
 
 async function getCipherKey(
@@ -248,17 +248,18 @@ const finiTransferIxs = async (
   const instructions : Array<TransactionInstruction> = [];
 
   if (await connection.getAccountInfo(destATAKey) === null) {
-    instructions.push(
-      Token.createAssociatedTokenAccountInstruction(
-        SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        mintKey,
-        destATAKey,
-        destKey,
-        walletKey,
-      ),
-    );
+    throw new Error(`No dest token account found. Need delegate approval for freeze`);
   }
+
+  const [masterEditionKey, ] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from("metadata"),
+      TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+      mintKey.toBuffer(),
+      Buffer.from("edition"),
+    ],
+    TOKEN_METADATA_PROGRAM_ID
+  );
 
   instructions.push(
     new TransactionInstruction({
@@ -301,6 +302,16 @@ const finiTransferIxs = async (
         },
         {
           pubkey: TOKEN_PROGRAM_ID,
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: TOKEN_METADATA_PROGRAM_ID,
+          isSigner: false,
+          isWritable: false,
+        },
+        {
+          pubkey: masterEditionKey,
           isSigner: false,
           isWritable: false,
         },

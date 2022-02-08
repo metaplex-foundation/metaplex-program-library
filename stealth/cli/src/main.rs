@@ -557,7 +557,6 @@ async fn process_transfer(
     }
 
     use spl_associated_token_account::{
-        create_associated_token_account,
         get_associated_token_address,
     };
     let payer_ata = get_associated_token_address(&payer.pubkey(), &mint);
@@ -569,13 +568,8 @@ async fn process_transfer(
     let mut instructions = vec![];
 
     if rpc_client.get_account_data(&recipient_ata).is_err() {
-        instructions.push(
-            create_associated_token_account(
-                &payer.pubkey(),
-                &recipient_pubkey,
-                &mint,
-            ),
-        );
+        eprintln!("error: no dest token account found. need delegate approval for freeze");
+        exit(1);
     }
 
     instructions.extend_from_slice(
@@ -629,16 +623,44 @@ fn process_publish_elgamal_pubkey(
     );
 
     let elgamal_pk = ElGamalKeypair::new(payer, &mint)?.public;
+    let mut instructions = vec![
+        stealth::instruction::publish_elgamal_pubkey(
+            &payer.pubkey(),
+            &mint,
+            elgamal_pk.into(),
+        ),
+    ];
+
+    use spl_associated_token_account::{
+        create_associated_token_account,
+        get_associated_token_address,
+    };
+    let payer_ata = get_associated_token_address(&payer.pubkey(), &mint);
+    if rpc_client.get_account_data(&payer_ata).is_err() {
+        instructions.push(
+            create_associated_token_account(
+                &payer.pubkey(),
+                &payer.pubkey(),
+                &mint,
+            ),
+        );
+    }
+
+    instructions.push(
+        spl_token::instruction::approve(
+            &spl_token::id(),
+            &payer_ata,
+            &stealth::instruction::get_stealth_address(&mint).0,
+            &payer.pubkey(),
+            &[],
+            1,
+        )?,
+    );
+
     send(
         rpc_client,
         &format!("Publishing pubkey {}", elgamal_pk),
-        &[
-            stealth::instruction::publish_elgamal_pubkey(
-                &payer.pubkey(),
-                &mint,
-                elgamal_pk.into(),
-            ),
-        ],
+        &instructions,
         &[payer],
     )?;
 
