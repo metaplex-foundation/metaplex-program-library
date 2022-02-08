@@ -13,7 +13,6 @@ use anyhow::Result;
 use chrono::naive::serde::ts_milliseconds::deserialize;
 use rand::rngs::OsRng;
 use rayon::prelude::*;
-use slog::*;
 use std::{
     collections::HashMap,
     fs::File,

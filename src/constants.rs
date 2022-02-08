@@ -40,3 +40,5 @@ pub const CONFIG_CHUNK_SIZE: usize = 10;
 pub const CONFIG_NAME_OFFSET: usize = 2;
 pub const CONFIG_URI_OFFSET: usize = 40;
 pub const STRING_LEN_SIZE: usize = 4;
+
+pub const MINT_LAYOUT: u64 = 82;

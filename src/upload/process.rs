@@ -7,7 +7,6 @@ use anyhow::Result;
 use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
 use rand::rngs::OsRng;
 use rayon::prelude::*;
-use slog::*;
 use std::{
     fs::File,
     path::Path,
@@ -29,26 +28,23 @@ use crate::upload::data::*;
 use crate::validate::format::Metadata;
 
 pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
-    let sugar_config =
-        match sugar_setup(upload_args.logger, upload_args.keypair, upload_args.rpc_url) {
-            Ok(sugar_config) => sugar_config,
-            Err(err) => {
-                return Err(SetupError::SugarSetupError(err.to_string()).into());
-            }
-        };
+    let sugar_config = match sugar_setup(upload_args.keypair, upload_args.rpc_url) {
+        Ok(sugar_config) => sugar_config,
+        Err(err) => {
+            return Err(SetupError::SugarSetupError(err.to_string()).into());
+        }
+    };
 
     let cache_file_path = Path::new(&upload_args.cache);
-    let logger = &sugar_config.logger;
 
     if !cache_file_path.exists() {
-        // error!(
-        //     sugar_config.logger,
-        //     "No cache file found at cache path: {cache_file_path:?}. Manually create one or run `sugar upload-assets`.");
+        error!(
+            "No cache file found at cache path: {cache_file_path:?}. Manually create one or run `sugar upload-assets`.");
         let cache_file_string = path_to_string(&cache_file_path)?;
         return Err(CacheError::CacheFileNotFound(cache_file_string).into());
     }
 
-    info!(logger, "Cache exists, loading...");
+    info!("Cache exists, loading...");
     let file = match File::open(cache_file_path) {
         Ok(file) => file,
         Err(err) => {
@@ -64,7 +60,7 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
     let mut cache: Cache = match serde_json::from_reader(file) {
         Ok(cache) => cache,
         Err(err) => {
-            error!(logger, "Failed to parse cache file: {}", err);
+            error!("Failed to parse cache file: {}", err);
             return Err(CacheError::CacheFileWrongFormat(err.to_string()).into());
         }
     };
@@ -74,10 +70,7 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
     let candy_machine_address = &cache.program.candy_machine;
 
     let candy_pubkey = if candy_machine_address.is_empty() {
-        info!(
-            logger,
-            "Candy machine address is empty, creating new candy machine..."
-        );
+        info!("Candy machine address is empty, creating new candy machine...");
         let candy_keypair = Keypair::generate(&mut OsRng);
         let candy_pubkey = candy_keypair.pubkey();
 
@@ -86,9 +79,8 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         let candy_data = create_candy_machine_data(&config_data, uuid, metadata)?;
 
         let sig = initialize_candy_machine(&sugar_config, &candy_keypair, candy_data)?;
-        info!(logger, "Candy machine initialized with sig: {}", sig);
+        info!("Candy machine initialized with sig: {}", sig);
         info!(
-            logger,
             "Candy machine created with address: {}",
             &candy_pubkey.to_string()
         );
@@ -101,8 +93,8 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
             Ok(pubkey) => pubkey,
             Err(_err) => {
                 error!(
-                    logger,
-                    "Invalid candy machine address in cache file: {}!", candy_machine_address
+                    "Invalid candy machine address in cache file: {}!",
+                    candy_machine_address
                 );
                 return Err(CacheError::InvalidCandyMachineAddress(
                     candy_machine_address.to_string(),
@@ -112,7 +104,7 @@ pub fn process_upload(upload_args: UploadArgs) -> Result<()> {
         }
     };
 
-    info!(logger, "Uploading config lines...");
+    info!("Uploading config lines...");
     let num_items = config_data.number;
     let config_lines = generate_config_lines(num_items, &cache.items);
     let config_statuses = upload_config_lines(&sugar_config, config_lines, candy_pubkey)?;
@@ -263,7 +255,6 @@ fn initialize_candy_machine(
     candy_account: &Keypair,
     candy_machine_data: CandyMachineData,
 ) -> Result<Signature> {
-    let logger = &sugar_config.logger;
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
         .expect("Failed to parse PID");
@@ -281,7 +272,6 @@ fn initialize_candy_machine(
         + 2 * (items_available as usize / 8 + 1);
 
     info!(
-        logger,
         "Initializing candy machine with account size of: {} and address of: {}",
         candy_account_size,
         candy_account.pubkey().to_string()
@@ -322,7 +312,6 @@ fn upload_config_lines(
     candy_pubkey: Pubkey,
 ) -> Result<Vec<ConfigStatus>> {
     let payer = Arc::new(&sugar_config.keypair);
-    let logger = &sugar_config.logger;
 
     let statuses: Arc<Mutex<Vec<ConfigStatus>>> = Arc::new(Mutex::new(Vec::new()));
 
@@ -333,8 +322,8 @@ fn upload_config_lines(
             .progress_chars("##-"),
     );
 
-    println!("Config lines: {:?}", config_lines.len());
-    info!(logger, "Uploading config lines in chunks...");
+    debug!("Num of config lines: {:?}", config_lines.len());
+    info!("Uploading config lines in chunks...");
     config_lines
         .par_iter()
         // .chunks(CONFIG_CHUNK_SIZE)
@@ -398,7 +387,6 @@ fn add_config_lines(
 
     // First index
     let index = chunk[0].0;
-    // let (index, config_line) = config_pair;
 
     for (_, line) in chunk {
         config_lines.push(ConfigLine {
@@ -406,10 +394,6 @@ fn add_config_lines(
             uri: line.uri.clone(),
         });
     }
-    // config_lines.push(ConfigLine {
-    //     name: config_line.name.clone(),
-    //     uri: config_line.uri.clone(),
-    // });
 
     let _sig = program
         .request()

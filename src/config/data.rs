@@ -2,7 +2,6 @@ use anchor_client::solana_sdk::signature::Keypair;
 use anchor_client::solana_sdk::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 use anyhow::Result;
 use serde::{Deserialize, Deserializer, Serialize};
-use slog::Logger;
 use std::str::FromStr;
 
 use mpl_candy_machine::{
@@ -12,7 +11,6 @@ use mpl_candy_machine::{
     WhitelistMintSettings as CandyWhitelistMintSettings,
 };
 pub struct SugarConfig {
-    pub logger: Logger,
     pub keypair: Keypair,
     pub rpc_url: String,
 }

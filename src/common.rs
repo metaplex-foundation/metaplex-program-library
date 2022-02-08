@@ -15,13 +15,13 @@ pub use indexmap::IndexMap;
 pub use reqwest::{Client as HttpClient, Response};
 pub use serde::Deserialize;
 pub use serde_json::{json, Value};
-pub use slog::{debug, error, info, warn, Logger};
 pub use std::{
     collections::HashMap,
     fs::File,
     path::{Path, PathBuf},
     str::FromStr,
 };
+pub use tracing::{debug, error, info, warn};
 
 pub use mpl_candy_machine::accounts as nft_accounts;
 pub use mpl_candy_machine::instruction as nft_instruction;

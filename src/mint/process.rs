@@ -10,7 +10,6 @@ use anchor_client::{
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 use rand::rngs::OsRng;
-use slog::*;
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
     instruction::{initialize_mint, mint_to},
@@ -24,26 +23,22 @@ use mpl_candy_machine::{CandyMachine, WhitelistMintMode, ID as CANDY_MACHINE_PRO
 
 use crate::cache::Cache;
 use crate::candy_machine::*;
-use crate::constants::*;
+use crate::common::*;
 use crate::mint::pdas::*;
-use crate::setup::*;
-
-const MINT_LAYOUT: u64 = 82;
 
 pub struct MintOneArgs {
-    pub logger: Logger,
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
 }
 
-pub fn process_mint_one(mint_args: MintOneArgs) -> Result<()> {
-    let sugar_config = sugar_setup(mint_args.logger, mint_args.keypair, mint_args.rpc_url)?;
+pub fn process_mint_one(args: MintOneArgs) -> Result<()> {
+    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
 
     let cache: Cache = if Path::new("cache.json").exists() {
         let file = File::open("cache.json")?;
         serde_json::from_reader(file)?
     } else {
-        error!(sugar_config.logger, "cache.json does not exist");
+        error!("cache.json does not exist");
         std::process::exit(1);
     };
 
@@ -53,8 +48,8 @@ pub fn process_mint_one(mint_args: MintOneArgs) -> Result<()> {
         Ok(candy_machine_id) => candy_machine_id,
         Err(_) => {
             error!(
-                sugar_config.logger,
-                "Failed to parse candy_machine_id: {}", &cache.program.candy_machine
+                "Failed to parse candy_machine_id: {}",
+                &cache.program.candy_machine
             );
             std::process::exit(1);
         }
@@ -62,26 +57,14 @@ pub fn process_mint_one(mint_args: MintOneArgs) -> Result<()> {
 
     let candy_machine_state = get_candy_machine_state(&sugar_config, &candy_machine_id)?;
 
-    info!(
-        sugar_config.logger,
-        "Minting NFT from candy machine: {}", &candy_machine_id
-    );
-    info!(
-        sugar_config.logger,
-        "Candy machine program id: {:?}", CANDY_MACHINE_PROGRAM_ID
-    );
-    mint_one(
-        sugar_config.logger,
-        client,
-        candy_machine_id,
-        candy_machine_state,
-    )?;
+    info!("Minting NFT from candy machine: {}", &candy_machine_id);
+    info!("Candy machine program id: {:?}", CANDY_MACHINE_PROGRAM_ID);
+    mint_one(client, candy_machine_id, candy_machine_state)?;
 
     Ok(())
 }
 
 pub fn mint_one(
-    logger: Logger,
     client: Client,
     candy_machine_id: Pubkey,
     candy_machine_state: CandyMachine,
@@ -300,7 +283,7 @@ pub fn mint_one(
 
     let sig2 = builder.send()?;
 
-    info!(logger, "Minted! TxId: {}", sig);
-    info!(logger, "Cleanup TxId: {}", sig2);
+    info!("Minted! TxId: {}", sig);
+    info!("Cleanup TxId: {}", sig2);
     Ok(())
 }

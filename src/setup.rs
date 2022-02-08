@@ -6,7 +6,6 @@ use anchor_client::{
     Client, Cluster,
 };
 use anyhow::Result;
-use slog::*;
 
 use crate::config::data::SugarConfig;
 use crate::parse::*;
@@ -24,7 +23,6 @@ pub fn setup_client(sugar_config: &SugarConfig) -> Result<Client> {
 }
 
 pub fn sugar_setup(
-    logger: Logger,
     keypair_opt: Option<String>,
     rpc_url_opt: Option<String>,
 ) -> Result<SugarConfig> {
@@ -51,9 +49,5 @@ pub fn sugar_setup(
         },
     };
 
-    Ok(SugarConfig {
-        logger,
-        rpc_url,
-        keypair,
-    })
+    Ok(SugarConfig { rpc_url, keypair })
 }

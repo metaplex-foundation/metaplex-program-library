@@ -1,7 +1,6 @@
 use anyhow::Result;
 use glob::glob;
 use rayon::prelude::*;
-use slog::*;
 use std::{
     fs::File,
     path::Path,
@@ -12,23 +11,21 @@ pub mod errors;
 pub mod format;
 pub mod parser;
 
+use crate::common::*;
 use errors::{DeserializeError, FileOpenError, ValidateError};
 use format::Metadata;
 
 pub struct ValidateArgs {
-    pub logger: Logger,
     pub assets_dir: String,
     pub strict: bool,
 }
 
 pub fn process_validate(args: ValidateArgs) -> Result<()> {
-    let logger = args.logger;
-
     let assets_dir = Path::new(&args.assets_dir);
 
     // Missing or empty assets directory
     if !assets_dir.exists() || assets_dir.read_dir()?.next().is_none() {
-        info!(logger, "Assets directory is empty.");
+        info!("Assets directory is empty.");
         return Err(ValidateError::MissingOrEmptyAssetsDirectory.into());
     }
 
@@ -49,7 +46,7 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
         let f = match File::open(path) {
             Ok(f) => f,
             Err(error) => {
-                error!(logger, "{}: {}", path.display(), error);
+                error!("{}: {}", path.display(), error);
                 file_open_errors
                     .lock()
                     .unwrap()
@@ -61,7 +58,7 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
         let metadata = match serde_json::from_reader::<File, Metadata>(f) {
             Ok(metadata) => metadata,
             Err(error) => {
-                error!(logger, "{}: {}", path.display(), error);
+                error!("{}: {}", path.display(), error);
                 deserialize_errors
                     .lock()
                     .unwrap()
@@ -74,7 +71,7 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
             match metadata.validate_strict() {
                 Ok(()) => {}
                 Err(e) => {
-                    error!(logger, "{}: {}", path.display(), e);
+                    error!("{}: {}", path.display(), e);
                     validate_errors.lock().unwrap().push(e);
                 }
             }
@@ -82,13 +79,13 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
             match metadata.validate() {
                 Ok(()) => {}
                 Err(e) => {
-                    error!(logger, "{}: {}", path.display(), e);
+                    error!("{}: {}", path.display(), e);
                     validate_errors.lock().unwrap().push(e);
                 }
             }
         }
     });
 
-    info!(logger, "Validate complete, your metadata files look good.");
+    info!("Validate complete, your metadata files look good.");
     Ok(())
 }

@@ -4,6 +4,10 @@ use clap::{AppSettings, Parser, Subcommand};
 #[clap(author, version, about)]
 #[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
 pub struct Cli {
+    /// Global options
+    #[clap(short, long, global = true)]
+    pub log_level: Option<String>,
+
     #[clap(subcommand)]
     pub command: Commands,
 }

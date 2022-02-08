@@ -1,9 +1,7 @@
 use serde::Deserialize;
-use slog::Logger;
 use std::collections::HashMap;
 
 pub struct UploadArgs {
-    pub logger: Logger,
     pub assets_dir: String,
     pub arloader_manifest: String,
     pub config: String,

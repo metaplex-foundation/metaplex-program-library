@@ -3,7 +3,6 @@ use crate::common::*;
 use crate::verify::VerifyError;
 
 pub struct VerifyArgs {
-    pub logger: Logger,
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
     pub cache: String,
@@ -16,7 +15,7 @@ pub struct OnChainItem {
 }
 
 pub fn process_verify(args: VerifyArgs) -> Result<()> {
-    let sugar_config = match sugar_setup(args.logger, args.keypair, args.rpc_url) {
+    let sugar_config = match sugar_setup(args.keypair, args.rpc_url) {
         Ok(sugar_config) => sugar_config,
         Err(err) => {
             return Err(SetupError::SugarSetupError(err.to_string()).into());
@@ -29,7 +28,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         return Err(CacheError::CacheFileNotFound(args.cache.clone()).into());
     }
 
-    info!(sugar_config.logger, "Cache exists, loading...");
+    info!("Cache exists, loading...");
     let file = match File::open(cache_file_path) {
         Ok(file) => file,
         Err(err) => {
@@ -44,7 +43,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     let mut cache: Cache = match serde_json::from_reader(file) {
         Ok(cache) => cache,
         Err(err) => {
-            error!(sugar_config.logger, "Failed to parse cache file: {}", err);
+            error!("Failed to parse cache file: {}", err);
             return Err(CacheError::CacheFileWrongFormat(err.to_string()).into());
         }
     };

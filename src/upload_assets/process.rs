@@ -7,7 +7,6 @@ use crate::common::*;
 use crate::upload_assets::*;
 
 pub struct UploadAssetsArgs {
-    pub logger: Logger,
     pub assets_dir: String,
     pub config: String,
     pub keypair: Option<String>,
@@ -16,7 +15,7 @@ pub struct UploadAssetsArgs {
 }
 
 pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
-    let sugar_config = sugar_setup(args.logger, args.keypair, args.rpc_url)?;
+    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let http_client = reqwest::Client::new();
     let client = setup_client(&sugar_config)?;
 

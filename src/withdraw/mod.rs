@@ -9,7 +9,6 @@ pub use anchor_client::{
     Client, Program,
 };
 use anyhow::Result;
-use slog::*;
 use std::{str::FromStr,rc::Rc};
 use solana_client::{
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
@@ -20,42 +19,42 @@ use solana_account_decoder::{
 };
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
+use solana_account_decoder::UiAccountEncoding;
+use solana_client::{
+    rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
+    rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
+};
+use std::{rc::Rc, str::FromStr};
 
 use crate::setup::{setup_client, sugar_setup};
 
 pub struct WithdrawArgs {
-    pub logger: Logger,
     pub candy_machine: String,
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
 }
 
 pub struct WithdrawAllArgs {
-    pub logger: Logger,
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
 }
 
 pub struct WithdrawSetupConfig {
-    pub logger: Logger,
     pub program: Program,
     pub payer: Pubkey,
 }
 
-
 pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
-    let (program, payer) =setup_withdraw(args.logger, args.keypair, args.rpc_url)?;
+    let (program, payer) = setup_withdraw(args.keypair, args.rpc_url)?;
     let candy_machine = Pubkey::from_str(&args.candy_machine)?;
 
     let _program = Rc::new(program);
-    do_withdraw( Rc::clone(&_program), candy_machine, payer)?;
+    do_withdraw(Rc::clone(&_program), candy_machine, payer)?;
     Ok(())
 }
 
-
 pub fn process_withdraw_all(args: WithdrawAllArgs) -> Result<()> {
- 
-    let ( program, payer) =setup_withdraw(args.logger, args.keypair, args.rpc_url)?;
+    let (program, payer) = setup_withdraw(args.keypair, args.rpc_url)?;
 
     let config = RpcProgramAccountsConfig {
         filters: Some(vec![RpcFilterType::Memcmp(Memcmp {
@@ -74,15 +73,25 @@ pub fn process_withdraw_all(args: WithdrawAllArgs) -> Result<()> {
     };
 
     let program = Rc::new(program);
-    let accounts = program.rpc().get_program_accounts_with_config(&program.id(), config)?;
+    let accounts = program
+        .rpc()
+        .get_program_accounts_with_config(&program.id(), config)?;
     println!("{:?}", accounts);
-    accounts.iter().for_each(|account| {let (candy_machine, _account) = account;  do_withdraw( program.clone(), *candy_machine, payer); } );
+    accounts.iter().for_each(|account| {
+        let (candy_machine, _account) = account;
+        match do_withdraw(program.clone(), *candy_machine, payer) {
+            Ok(_) => (),
+            Err(e) => println!("{:?}", e),
+        }
+    });
 
     Ok(())
 }
 
-fn setup_withdraw(logger:Logger, keypair:Option<String>, rpc_url:Option<String>) -> Result<(Program, Pubkey)>{
-    let sugar_config = sugar_setup(logger, keypair, rpc_url)?;
+
+fn setup_withdraw(keypair: Option<String>, rpc_url: Option<String>) -> Result<(Program, Pubkey)> {
+    let sugar_config = sugar_setup(keypair, rpc_url)?;
+
 
     let client = setup_client(&sugar_config)?;
 
@@ -92,12 +101,10 @@ fn setup_withdraw(logger:Logger, keypair:Option<String>, rpc_url:Option<String>)
     let program = client.program(pid);
     let payer = program.payer();
 
-    Ok((
-        program,
-        payer))
+    Ok((program, payer))
 }
 
-fn do_withdraw( program: Rc<Program>, candy_machine: Pubkey, payer:Pubkey) -> Result<()>{
+fn do_withdraw(program: Rc<Program>, candy_machine: Pubkey, payer: Pubkey) -> Result<()> {
     println!("Withdrawing funds from candy machine {}", &candy_machine);
 
     let sig = program
