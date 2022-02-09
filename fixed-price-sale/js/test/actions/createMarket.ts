@@ -9,7 +9,7 @@ import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { createTokenAccount } from '../transactions';
 import { createAndSignTransaction, logDebug } from '../utils';
 
-import { findTresuryOwnerAddress } from '../../src/utils';
+import { findTreasuryOwnerAddress } from '../../src/utils';
 import { createCreateMarketInstruction, CreateMarketInstructionArgs } from '../../src/instructions';
 
 type CreateMarketParams = {
@@ -38,7 +38,7 @@ export const createMarket = async ({
   treasuryOwnerBump: number;
   treasuryOwner: PublicKey;
 }> => {
-  const [treasuryOwner, treasuryOwnerBump] = await findTresuryOwnerAddress(
+  const [treasuryOwner, treasuryOwnerBump] = await findTreasuryOwnerAddress(
     treasuryMint,
     sellingResource,
   );

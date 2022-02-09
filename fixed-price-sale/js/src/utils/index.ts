@@ -16,7 +16,7 @@ export const findVaultOwnerAddress = (mint: PublicKey, store: PublicKey) => {
   );
 };
 
-export const findTresuryOwnerAddress = (treasuryMint: PublicKey, sellingResource: PublicKey) => {
+export const findTreasuryOwnerAddress = (treasuryMint: PublicKey, sellingResource: PublicKey) => {
   return PublicKey.findProgramAddress(
     [Buffer.from(HOLDER_PREFIX), treasuryMint.toBuffer(), sellingResource.toBuffer()],
     new PublicKey(PROGRAM_ID),
