@@ -229,6 +229,12 @@ test('claim resource: success', async (t) => {
   );
 
   assertConfirmedTransaction(t, claimResourceRes.txConfirmed);
+
+  const token = new Token(connection, resourceMint.publicKey, TOKEN_PROGRAM_ID, payer);
+  const createdToken = await token.getAccountInfo(claimToken.publicKey);
+
+  t.assert(createdToken.mint.toBase58() === resourceMint.publicKey.toBase58());
+  t.assert(createdToken.owner.toBase58() === payer.publicKey.toBase58());
 });
 
 test('claim resource:  should fail due to the treasury not empty', async (t) => {
