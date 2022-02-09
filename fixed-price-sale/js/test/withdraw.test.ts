@@ -176,4 +176,7 @@ test('withdraw: success', async (t) => {
   );
 
   assertConfirmedTransaction(t, withdrawRes.txConfirmed);
+
+  const payoutTicketData = await connection.getAccountInfo(payoutTicket);
+  t.assert(payoutTicketData.owner);
 });

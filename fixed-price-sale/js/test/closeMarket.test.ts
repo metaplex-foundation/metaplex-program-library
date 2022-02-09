@@ -13,6 +13,7 @@ import {
 } from '@metaplex-foundation/amman';
 import { killStuckProcess, logDebug, sleep } from './utils';
 import { closeMarket } from './transactions';
+import { MarketAccountData } from '../src';
 
 killStuckProcess();
 
@@ -84,6 +85,11 @@ test('close-market: success', async (t) => {
 
   logDebug(`market: ${market.publicKey}`);
   assertConfirmedTransaction(t, MarketRes.txConfirmed);
+
+  const marketAccount = await connection.getAccountInfo(market.publicKey);
+  const [marketData] = MarketAccountData.deserialize(marketAccount.data);
+
+  t.assert('Ended' === marketData.state.toString());
 });
 
 test('close-market: should fail when the market has the specific endDate', async (t) => {
