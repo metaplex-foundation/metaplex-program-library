@@ -103,6 +103,7 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -249,6 +250,7 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -262,6 +264,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )

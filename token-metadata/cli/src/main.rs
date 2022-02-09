@@ -1,3 +1,4 @@
+
 use solana_client::rpc_request::TokenAccountsFilter;
 
 use {
@@ -68,7 +69,7 @@ fn puff_unpuffed_metadata(_app_matches: &ArgMatches, payer: Keypair, client: Rpc
         instructions.push(puff_metadata_account(mpl_token_metadata::id(), pubkey));
         if instructions.len() >= 20 {
             let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-            let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+            let recent_blockhash = client.get_latest_blockhash().unwrap();
 
             transaction.sign(&[&payer], recent_blockhash);
             match client.send_and_confirm_transaction(&transaction) {
@@ -89,7 +90,7 @@ fn puff_unpuffed_metadata(_app_matches: &ArgMatches, payer: Keypair, client: Rpc
 
     if instructions.len() > 0 {
         let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-        let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+        let recent_blockhash = client.get_latest_blockhash().unwrap();
         transaction.sign(&[&payer], recent_blockhash);
         client.send_and_confirm_transaction(&transaction).unwrap();
     }
@@ -138,7 +139,7 @@ fn mint_coins(app_matches: &ArgMatches, payer: Keypair, client: RpcClient) {
         .unwrap(),
     );
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -357,7 +358,7 @@ fn mint_edition_via_token_call(
     ));
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -458,7 +459,7 @@ fn master_edition_call(
     ));
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -516,7 +517,7 @@ fn update_metadata_account_call(
     )];
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
     let signers = vec![&update_authority];
 
     transaction.sign(&signers, recent_blockhash);
@@ -598,7 +599,7 @@ fn create_metadata_account_call(
     instructions.push(new_metadata_instruction);
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
     let mut signers = vec![&payer];
     if create_new_mint {
         signers.push(&new_mint);

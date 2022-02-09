@@ -41,6 +41,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -73,6 +74,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -140,6 +142,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None
             )
             .await
             .unwrap();
@@ -161,6 +164,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None
             )
             .await
             .unwrap();
@@ -193,6 +197,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -254,6 +259,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -281,6 +287,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -328,6 +335,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -355,6 +363,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -402,6 +411,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -425,6 +435,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -473,6 +484,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -501,6 +513,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -546,6 +559,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -578,6 +592,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -645,6 +660,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -667,6 +683,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
@@ -760,6 +777,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None
             )
             .await
             .unwrap();
@@ -774,7 +792,7 @@ mod verify_collection {
         let uri = "uri".to_string();
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(&mut context, name, symbol, uri, None, 10, false, None, None)
+            .create_v2(&mut context, name, symbol, uri, None, 10, false, None, None, None)
             .await
             .unwrap();
 
@@ -860,6 +878,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -887,6 +906,7 @@ mod verify_collection {
                 None,
                 10,
                 false,
+                None,
                 Some(Collection {
                     key: test_collection.mint.pubkey(),
                     verified: false,
