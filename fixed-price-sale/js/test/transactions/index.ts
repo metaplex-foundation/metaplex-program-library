@@ -1,2 +1,3 @@
 export { createBuyTransaction } from './buy';
-export { createTokenAccount } from './create-token-account';
+export { createTokenAccount } from './createTokenAccount';
+export { createSecondaryMetadataCreators } from './createSecondaryMetadataCreators';

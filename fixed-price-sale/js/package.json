@@ -2,8 +2,8 @@
   "name": "@metaplex-foundation/mpl-fixed-price-sale",
   "version": "0.3.0",
   "description": "MPL Fixed Price Sale JavaScript API.",
-  "main": "dist/src/mpl-fixed-price-sale.js",
-  "types": "dist/src/mpl-fixed-price-sale.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
     "postversion": "git add package.json && git commit -m \"chore: update $npm_package_name to v$npm_package_version\" && git tag $npm_package_name@$npm_package_version",
     "postpublish": "git push origin && git push origin --tags",
