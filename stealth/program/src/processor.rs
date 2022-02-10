@@ -4,7 +4,7 @@ use crate::{
     state::*,
     error::*,
     pod::*,
-    transfer_proof::{Verifiable, TransferProof},
+    transfer_proof::{Verifiable, TransferData, TransferProof},
     equality_proof::*,
     transcript::TranscriptProtocol,
     zk_token_elgamal,
@@ -55,14 +55,16 @@ pub fn process_instruction(
             msg!("TransferChunk!");
             process_transfer_chunk(
                 accounts,
-                decode_instruction_data::<TransferChunkData>(input)?
+                &decode_instruction_data::<TransferChunkData>(input)?.transfer,
+                verify_syscall,
             )
         }
         StealthInstruction::TransferChunkSlow => {
             msg!("TransferChunkSlow!");
-            process_transfer_chunk_slow(
+            process_transfer_chunk(
                 accounts,
-                decode_instruction_data::<TransferChunkSlowData>(input)?
+                &decode_instruction_data::<TransferChunkSlowData>(input)?.transfer,
+                verify_dsl_crank,
             )
         }
         StealthInstruction::PublishElgamalPubkey => {
@@ -705,15 +707,19 @@ fn process_fini_transfer(
     Ok(())
 }
 
-fn process_transfer_chunk(
-    accounts: &[AccountInfo],
-    data: &TransferChunkData,
+fn process_transfer_chunk<'info>(
+    accounts: &[AccountInfo<'info>],
+    transfer: &TransferData,
+    do_verify: fn (
+        &TransferData,
+        &Pubkey,
+        &mut std::slice::Iter<AccountInfo<'info>>
+    ) -> ProgramResult,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let authority_info = next_account_info(account_info_iter)?;
     let stealth_info = next_account_info(account_info_iter)?;
     let transfer_buffer_info = next_account_info(account_info_iter)?;
-    let _system_program_info = next_account_info(account_info_iter)?;
 
     if !authority_info.is_signer {
         return Err(ProgramError::InvalidArgument);
@@ -743,7 +749,6 @@ fn process_transfer_chunk(
         return Err(ProgramError::InvalidArgument);
     }
 
-    let transfer = &data.transfer;
     if transfer.transfer_public_keys.src_pubkey != stealth.elgamal_pk {
         msg!("Source elgamal pubkey mismatch");
         return Err(ProgramError::InvalidArgument);
@@ -762,9 +767,7 @@ fn process_transfer_chunk(
 
     // actually verify the proof...
     // TODO: syscalls when available
-    if transfer.verify().is_err() {
-        return Err(StealthError::ProofVerificationError.into());
-    }
+    do_verify(&transfer, authority_info.key, account_info_iter)?;
 
     transfer_buffer.updated = true.into();
     transfer_buffer.encrypted_cipher_key = transfer.dst_cipher_key_chunk_ct;
@@ -773,67 +776,26 @@ fn process_transfer_chunk(
     Ok(())
 }
 
-fn process_transfer_chunk_slow(
-    accounts: &[AccountInfo],
-    data: &TransferChunkSlowData,
+// syscall not actually available. this will only work in custom / test environments
+fn verify_syscall<'info>(
+    transfer: &TransferData,
+    _authority: &Pubkey,
+    _account_info_iter: &mut std::slice::Iter<AccountInfo<'info>>,
 ) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-    let authority_info = next_account_info(account_info_iter)?;
-    let stealth_info = next_account_info(account_info_iter)?;
-    let transfer_buffer_info = next_account_info(account_info_iter)?;
+    transfer.verify().map_err(
+        |_| StealthError::ProofVerificationError.into())
+}
+
+fn verify_dsl_crank<'info>(
+    transfer: &TransferData,
+    authority: &Pubkey,
+    account_info_iter: &mut std::slice::Iter<AccountInfo<'info>>,
+) -> ProgramResult {
     let instruction_buffer_info = next_account_info(account_info_iter)?;
     let input_buffer_info = next_account_info(account_info_iter)?;
     let compute_buffer_info = next_account_info(account_info_iter)?;
-    let _system_program_info = next_account_info(account_info_iter)?;
 
-    if !authority_info.is_signer {
-        return Err(ProgramError::InvalidArgument);
-    }
-
-    // check that transfer buffer matches passed in arguments and that we have authority to do
-    // the transfer
-    //
-    // TODO: should we have a nother check for nft ownership here?
-    let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
-        &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?.into_mut();
-
-    let stealth = StealthAccount::from_account_info(
-        &stealth_info, &ID, Key::StealthAccountV1)?;
-
-    validate_transfer_buffer(
-        &transfer_buffer,
-        &stealth,
-        authority_info.key,
-        stealth_info.key,
-    )?;
-
-    // check that this proof has matching pubkey fields and that we haven't already processed this
-    // chunk
-    if bool::from(&transfer_buffer.updated) {
-        msg!("Chunk already updated");
-        return Err(ProgramError::InvalidArgument);
-    }
-
-    let transfer = &data.transfer;
-    if transfer.transfer_public_keys.src_pubkey != stealth.elgamal_pk {
-        msg!("Source elgamal pubkey mismatch");
-        return Err(ProgramError::InvalidArgument);
-    }
-
-    if transfer.src_cipher_key_chunk_ct != stealth.encrypted_cipher_key {
-        msg!("Source cipher text mismatch");
-        return Err(ProgramError::InvalidArgument);
-    }
-
-    if transfer.transfer_public_keys.dst_pubkey != transfer_buffer.elgamal_pk {
-        msg!("Destination elgamal pubkey mismatch");
-        return Err(ProgramError::InvalidArgument);
-    }
-
-
-
-
-    msg!("Verifying comopute inputs...");
+    msg!("Verifying compute inputs...");
     use curve25519_dalek_onchain::instruction as dalek;
     use std::borrow::Borrow;
     use borsh::BorshDeserialize;
@@ -852,7 +814,11 @@ fn process_transfer_chunk_slow(
         msg!("Header size seems too small");
         return Err(ProgramError::InvalidArgument);
     }
-    if compute_buffer_header.authority != *authority_info.key {
+    if compute_buffer_header.key != dalek::Key::ComputeBufferV1 {
+        msg!("Invalid compute buffer type");
+        return Err(ProgramError::InvalidArgument);
+    }
+    if compute_buffer_header.authority != *authority {
         msg!("Invalid compute buffer authority");
         return Err(ProgramError::InvalidArgument);
     }
@@ -1046,10 +1012,6 @@ fn process_transfer_chunk_slow(
         }
         buffer_idx += 128;
     }
-
-    transfer_buffer.updated = true.into();
-    transfer_buffer.encrypted_cipher_key = transfer.dst_cipher_key_chunk_ct;
-
 
     Ok(())
 }
