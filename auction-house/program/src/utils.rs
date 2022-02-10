@@ -1,4 +1,4 @@
-use crate::{AuctionHouse, ErrorCode};
+use crate::{AuctionHouse, ErrorCode, PREFIX};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -12,15 +12,15 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use arrayref::array_ref;
 use mpl_token_metadata::state::Metadata;
 use spl_associated_token_account::get_associated_token_address;
-use spl_token::{instruction::initialize_account2, state::Account};
+use spl_token::{instruction::initialize_account2, state::Account as SplAccount};
 use std::{convert::TryInto, slice::Iter};
 pub fn assert_is_ata(
     ata: &AccountInfo,
     wallet: &Pubkey,
     mint: &Pubkey,
-) -> Result<Account, ProgramError> {
+) -> Result<SplAccount, ProgramError> {
     assert_owned_by(ata, &spl_token::id())?;
-    let ata_account: Account = assert_initialized(ata)?;
+    let ata_account: SplAccount = assert_initialized(ata)?;
     assert_keys_equal(ata_account.owner, *wallet)?;
     assert_keys_equal(get_associated_token_address(wallet, mint), *ata.key)?;
     Ok(ata_account)
@@ -121,7 +121,7 @@ pub fn assert_valid_delegation(
     mint: &anchor_lang::Account<Mint>,
     paysize: u64,
 ) -> ProgramResult {
-    match Account::unpack(&src_account.data.borrow()) {
+    match SplAccount::unpack(&src_account.data.borrow()) {
         Ok(token_account) => {
             // Ensure that the delegated amount is exactly equal to the maker_size
             msg!(
@@ -489,4 +489,66 @@ pub fn assert_derivation(
         return Err(ErrorCode::DerivedKeyInvalid.into());
     }
     Ok(bump)
+}
+
+pub fn trade_state_seeds(
+    public_buy: bool,
+    wallet: &Pubkey,
+    auction_house: &Pubkey,
+    treasury_mint: &Pubkey,
+    mint: &Pubkey,
+    buyer_price: u64,
+    token_size: u64,
+    token_holder: Option<&Pubkey>,
+) -> Result<&[u8], ProgramError> {
+    if !public_buy && token_holder.is_none() {
+        return Err(ErrorCode::DerivedKeyInvalid.into());
+    }
+    let mut seeds = vec![
+        PREFIX.as_bytes(),
+        &wallet.clone().to_bytes(),
+        &auction_house.clone().to_bytes(),
+    ];
+    if public_buy {
+        seeds.push(&token_holder.unwrap().clone().to_bytes());
+    }
+    seeds.append(&mut vec![
+        &treasury_mint.clone().to_bytes(),
+        &mint.clone().to_bytes(),
+        &buyer_price.to_le_bytes(),
+        &token_size.to_le_bytes()
+    ]);
+    Ok(seeds)
+}
+
+pub fn assert_valid_trade_state(
+    public_buy: bool,
+    wallet: &Pubkey,
+    auction_house: &Account<AuctionHouse>,
+    buyer_price: u64,
+    token_size: u64,
+    trade_state: &AccountInfo,
+    mint: &Pubkey,
+    token_holder: Option<&Pubkey>,
+    ts_bump: u8
+) -> Result<u8, ProgramError> {
+    let ah_pubkey = &auction_house.key();
+    let ts_seeds = trade_state_seeds(public_buy,
+                                     &wallet,
+                                     ah_pubkey,
+                                     &auction_house.treasury_mint,
+                                     &mint,
+                                     buyer_price,
+                                     token_size,
+                                     token_holder
+    )?;
+    let canonical_bump = assert_derivation(
+        &crate::id(),
+        trade_state,
+        ts_seeds.as_slice()
+    )?;
+    if ts_bump != canonical_bump {
+        return Err(ErrorCode::DerivedKeyInvalid.into());
+    }
+    Ok(ts_bump)
 }
