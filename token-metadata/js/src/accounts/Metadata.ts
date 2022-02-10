@@ -242,10 +242,10 @@ export class Metadata extends Account<MetadataData> {
     }
   }
 
-  static async findByMint(connection: Connection, mint: AnyPublicKey) {
-    const pda = await this.getPDA(mint);
+  static async findByMint(connection: Connection, mint: AnyPublicKey): Promise<Metadata> {
+    const pda = await Metadata.getPDA(mint);
 
-    return this.load(connection, pda);
+    return Metadata.load(connection, pda);
   }
 
   static async findByOwner(connection: Connection, owner: AnyPublicKey) {
