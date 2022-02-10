@@ -24,9 +24,13 @@ use solana_program::{
     program_option::COption,
     program_pack::Pack,
     pubkey::Pubkey,
-    sysvar::{rent::Rent, Sysvar},
+    sysvar::{
+        rent::Rent,
+        Sysvar,
+    },
 };
 use spl_token::state::Account;
+use arrayref::array_ref;
 
 /// Process RequestCardForRedeem instruction
 pub fn request_card_for_redeem(
@@ -43,7 +47,7 @@ pub fn request_card_for_redeem(
     let voucher_account = next_account_info(account_info_iter)?;
     let proving_process_account = next_account_info(account_info_iter)?;
     let user_wallet_account = next_account_info(account_info_iter)?;
-    let randomness_oracle_account = next_account_info(account_info_iter)?;
+    let recent_slothashes_info = next_account_info(account_info_iter)?;
     let clock_info = next_account_info(account_info_iter)?;
     let clock = Clock::from_account_info(clock_info)?;
     let rent_info = next_account_info(account_info_iter)?;
@@ -77,7 +81,6 @@ pub fn request_card_for_redeem(
 
     let pack_set = PackSet::unpack(&pack_set_account.data.borrow())?;
     assert_account_key(store_account, &pack_set.store)?;
-    assert_account_key(randomness_oracle_account, &pack_set.random_oracle)?;
 
     let proving_process_seeds = &[
         ProvingProcess::PREFIX.as_bytes(),
@@ -166,8 +169,12 @@ pub fn request_card_for_redeem(
         return Err(NFTPacksError::UserRedeemedAllCards.into());
     }
 
-    let random_value =
-        get_random_oracle_value(randomness_oracle_account, &proving_process, &clock)?;
+    // get slot hash 
+    let data = recent_slothashes_info.data.borrow();
+    let most_recent_slothash = array_ref![data, 8, 8];
+
+    // get random value 
+    let random_value = get_random_value(most_recent_slothash, &proving_process, &clock)?;
     let weight_sum = if pack_set.distribution_type == PackDistributionType::MaxSupply {
         pack_set.total_editions
     } else {

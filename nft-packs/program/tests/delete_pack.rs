@@ -39,9 +39,6 @@ async fn setup() -> (
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -56,7 +53,6 @@ async fn setup() -> (
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();
