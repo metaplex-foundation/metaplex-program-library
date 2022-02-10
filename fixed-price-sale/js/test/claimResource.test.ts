@@ -9,7 +9,7 @@ import {
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import {
   findPayoutTicketAddress,
-  findSecondaryMetadataCreators,
+  findSecondaryMetadataCreatorsAddress,
   findTradeHistoryAddress,
 } from '../src/utils';
 import {
@@ -204,7 +204,7 @@ test('claim resource: success', async (t) => {
     defaultSendOptions,
   );
 
-  const [secondaryMetadataCreators] = await findSecondaryMetadataCreators(metadata);
+  const [secondaryMetadataCreators] = await findSecondaryMetadataCreatorsAddress(metadata);
 
   assertConfirmedTransaction(t, claimTokenRes.txConfirmed);
 
@@ -373,7 +373,7 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     defaultSendOptions,
   );
 
-  const [secondaryMetadataCreators] = await findSecondaryMetadataCreators(metadata);
+  const [secondaryMetadataCreators] = await findSecondaryMetadataCreatorsAddress(metadata);
 
   assertConfirmedTransaction(t, claimTokenRes.txConfirmed);
 

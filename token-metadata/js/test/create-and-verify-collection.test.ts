@@ -182,7 +182,7 @@ test('Delegated Authority', (t) => {
     t.false(updatedMetadataBeforeVerification.collection.verified, 'collection cant be verified');
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
-    const dARecord = await MetadataProgram.find_collection_authority_account(
+    const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
       collectionNft.mint.publicKey,
       delegatedAuthority.publicKey,
     );
@@ -243,7 +243,7 @@ test('Delegated Authority', (t) => {
     t.notOk(updatedMetadataBeforeVerification.collection, 'collection should be null');
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
-    const dARecord = await MetadataProgram.find_collection_authority_account(
+    const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
       collectionNft.mint.publicKey,
       delegatedAuthority.publicKey,
     );
@@ -306,7 +306,7 @@ test('Delegated Authority', (t) => {
     t.false(updatedMetadataBeforeVerification.collection.verified, 'collection cant be verified');
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
-    const dARecord = await MetadataProgram.find_collection_authority_account(
+    const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
       collectionNft.mint.publicKey,
       delegatedAuthority.publicKey,
     );
@@ -386,7 +386,7 @@ test('Delegated Authority', (t) => {
     t.not(updatedMetadataBeforeVerification.collection, 'collection should be null');
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
-    const dARecord = await MetadataProgram.find_collection_authority_account(
+    const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
       collectionNft.mint.publicKey,
       delegatedAuthority.publicKey,
     );

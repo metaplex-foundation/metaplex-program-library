@@ -9,3 +9,4 @@ export * from './SetStoreV2';
 export * from './SetWhitelistedCreator';
 export * from './StartAuction';
 export * from './RedeemParticipationBidV3';
+export * from './ValidateSafetyDepositBoxV2';
