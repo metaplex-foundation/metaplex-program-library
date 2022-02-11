@@ -30,7 +30,6 @@ async fn nft_setup_transaction(
     rent: &solana_sdk::sysvar::rent::Rent,
     elgamal_kp: &ElGamalKeypair,
     cipher_key: &CipherKey,
-    freeze: bool,
 ) -> Result<Transaction, Box<dyn std::error::Error>> {
     let (public_metadata_key, _public_metadata_bump) = Pubkey::find_program_address(
         &[
@@ -129,8 +128,6 @@ async fn nft_setup_transaction(
                 elgamal_kp.public.into(),
                 &elgamal_kp.public.encrypt(*cipher_key).into(),
                 &[],
-                if freeze { stealth::state::OversightMethod::Freeze }
-                    else { stealth::state::OversightMethod::None },
             ),
         ];
 
@@ -179,7 +176,6 @@ async fn test_transfer_freeze() {
         &rent,
         &elgamal_kp,
         &cipher_key,
-        true,
     ).await.unwrap();
 
     banks_client.process_transaction(nft_setup).await.unwrap();
@@ -260,15 +256,21 @@ async fn test_transfer_freeze() {
                 payer.pubkey(),
                 mint.pubkey(),
                 transfer_buffer_key,
-                spl_associated_token_account::get_associated_token_address(
+            ),
+            spl_token::instruction::transfer(
+                &spl_token::id(),
+                &spl_associated_token_account::get_associated_token_address(
                     &payer.pubkey(),
                     &mint.pubkey(),
                 ),
-                spl_associated_token_account::get_associated_token_address(
+                &spl_associated_token_account::get_associated_token_address(
                     &dest.pubkey(),
                     &mint.pubkey(),
                 ),
-            ),
+                &payer.pubkey(),
+                &[],
+                1,
+            ).unwrap(),
         ],
         Some(&payer.pubkey()),
         &[&payer, &dest],

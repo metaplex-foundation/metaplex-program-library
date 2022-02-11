@@ -43,8 +43,6 @@ pub struct ConfigureMetadataData {
 
     /// The URI of the encrypted asset
     pub uri: crate::state::URI,
-
-    pub method: crate::state::OversightMethod,
 }
 
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -77,12 +75,6 @@ pub enum StealthInstruction {
     ///   6. `[]` System program
     ///   7. `[]` Rent sysvar
     ///
-    /// And then if OversightMethod::Freeze, the following are required
-    ///
-    ///   8. `[]` Token program
-    ///   9. `[]` The owning SPL Token account
-    ///   10. `[]` Edition PDA
-    ///
     /// Data expected by this instruction:
     ///   ConfigureMetadataData
     ///
@@ -114,12 +106,6 @@ pub enum StealthInstruction {
     ///   1. `[]` Stealth PDA
     ///   2. `[writable]` Transfer buffer program account
     ///   3. `[]` System program
-    ///   4. `[]` The stealth mint account.
-    ///   5. `[writable]` The source account.
-    ///   6. `[writable]` The destination account.
-    ///   7. `[]` Token program
-    ///   8. `[]` Metadata program
-    ///   9. `[]` Edition PDA
     ///
     FiniTransfer,
 
@@ -281,46 +267,21 @@ pub fn configure_metadata(
     elgamal_pk: zk_token_elgamal::pod::ElGamalPubkey,
     encrypted_cipher_key: &zk_token_elgamal::pod::ElGamalCiphertext,
     uri: &[u8],
-    method: crate::state::OversightMethod,
 ) -> Instruction {
-    let mut accounts = vec![
+    let accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new(mint, false),
         AccountMeta::new(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
         AccountMeta::new(get_stealth_address(&mint).0, false),
-        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
-
-    if method == crate::state::OversightMethod::Freeze {
-        accounts.extend_from_slice(&[
-            AccountMeta::new_readonly(spl_token::id(), false),
-            AccountMeta::new(
-                spl_associated_token_account::get_associated_token_address(&payer, &mint),
-                false,
-            ),
-            AccountMeta::new_readonly(
-                Pubkey::find_program_address(
-                    &[
-                        mpl_token_metadata::state::PREFIX.as_bytes(),
-                        mpl_token_metadata::id().as_ref(),
-                        mint.as_ref(),
-                        mpl_token_metadata::state::EDITION.as_bytes(),
-                    ],
-                    &mpl_token_metadata::id(),
-                ).0,
-                false,
-            ),
-        ]);
-    }
 
     let mut data = ConfigureMetadataData::zeroed();
     data.elgamal_pk = elgamal_pk;
     data.encrypted_cipher_key = *encrypted_cipher_key;
     data.uri.0[..uri.len()].copy_from_slice(uri);
-    data.method = method;
 
     encode_instruction(
         accounts,
@@ -357,49 +318,8 @@ pub fn init_transfer(
     )
 }
 
-/// fini transfer with wrapped SPL token transfer
 #[cfg(not(target_arch = "bpf"))]
 pub fn fini_transfer(
-    payer: Pubkey,
-    mint: Pubkey,
-    transfer_buffer: Pubkey,
-    source: Pubkey,
-    destination: Pubkey,
-) -> Instruction {
-    let accounts = vec![
-        AccountMeta::new(payer, true),
-        AccountMeta::new(get_stealth_address(&mint).0, false),
-        AccountMeta::new(transfer_buffer, false),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(mint, false),
-        AccountMeta::new(source, false),
-        AccountMeta::new(destination, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
-        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
-        AccountMeta::new_readonly(
-            Pubkey::find_program_address(
-                &[
-                    mpl_token_metadata::state::PREFIX.as_bytes(),
-                    mpl_token_metadata::id().as_ref(),
-                    mint.as_ref(),
-                    mpl_token_metadata::state::EDITION.as_bytes(),
-                ],
-                &mpl_token_metadata::id(),
-            ).0,
-            false,
-        ),
-    ];
-
-    encode_instruction(
-        accounts,
-        StealthInstruction::FiniTransfer,
-        &(),
-    )
-}
-
-/// fini transfer with separate SPL token transfer. used when OversightMethod != Freeze
-#[cfg(not(target_arch = "bpf"))]
-pub fn fini_transfer_raw(
     payer: Pubkey,
     mint: Pubkey,
     transfer_buffer: Pubkey,

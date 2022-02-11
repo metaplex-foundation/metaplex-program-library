@@ -16,7 +16,6 @@ use solana_program::{
     entrypoint::ProgramResult,
     msg,
     program_pack::Pack,
-    program::{invoke, invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
 };
@@ -80,77 +79,6 @@ pub fn process_instruction(
     }
 }
 
-fn reassign_mint_and_freeze<'info>(
-    metadata_program_info: &AccountInfo<'info>,
-    stealth_info: &AccountInfo<'info>,
-    mint_info: &AccountInfo<'info>,
-    metadata_update_authority_info: &AccountInfo<'info>,
-    metadata: &mpl_token_metadata::state::Metadata,
-    signer_seeds: &[&[&[u8]]],
-    account_info_iter: &mut std::slice::Iter<AccountInfo<'info>>,
-) -> ProgramResult {
-    let token_program_info = next_account_info(account_info_iter)?;
-    let token_account_info = next_account_info(account_info_iter)?;
-    let master_edition_info = next_account_info(account_info_iter)?;
-
-    if *token_program_info.key != spl_token::ID {
-        msg!("Mismatched token program");
-        return Err(ProgramError::InvalidArgument);
-    }
-    if *metadata_program_info.key != mpl_token_metadata::ID {
-        msg!("Mismatched metadata program");
-        return Err(ProgramError::InvalidArgument);
-    }
-
-    validate_account_owner(token_account_info, &spl_token::ID)?;
-    validate_account_owner(master_edition_info, &mpl_token_metadata::ID)?;
-
-    if metadata.mint != *mint_info.key {
-        msg!("Mismatched mint");
-        return Err(StealthError::InvalidMintInfo.into());
-    }
-
-    let token_account = spl_token::state::Account::unpack_from_slice(
-        &token_account_info.try_borrow_data()?)?;
-
-    if token_account.mint != *mint_info.key {
-        msg!("Mismatched token account mint");
-        return Err(StealthError::InvalidTokenAccountInfo.into());
-    }
-
-    // equals master edition
-    if token_account.owner != *metadata_update_authority_info.key {
-        msg!("Mismatched token account owner");
-        return Err(StealthError::InvalidTokenAccountInfo.into());
-    }
-
-    if token_account.amount != 1 {
-        msg!("Mismatched token account amount");
-        return Err(StealthError::InvalidTokenAccountInfo.into());
-    }
-
-    invoke_signed(
-        &mpl_token_metadata::instruction::freeze_delegated_account(
-            *metadata_program_info.key,
-            *stealth_info.key,
-            *token_account_info.key,
-            *master_edition_info.key,
-            *mint_info.key,
-        ),
-        &[
-            metadata_program_info.clone(),
-            stealth_info.clone(),
-            token_account_info.clone(),
-            master_edition_info.clone(),
-            mint_info.clone(),
-            token_program_info.clone(),
-        ],
-        signer_seeds
-    )?;
-
-    Ok(())
-}
-
 fn process_configure_metadata(
     accounts: &[AccountInfo],
     data: &ConfigureMetadataData
@@ -161,7 +89,6 @@ fn process_configure_metadata(
     let metadata_info = next_account_info(account_info_iter)?;
     let metadata_update_authority_info = next_account_info(account_info_iter)?;
     let stealth_info = next_account_info(account_info_iter)?;
-    let oversight_program_info = next_account_info(account_info_iter)?;
     let system_program_info = next_account_info(account_info_iter)?;
     let rent_sysvar_info = next_account_info(account_info_iter)?;
 
@@ -249,31 +176,9 @@ fn process_configure_metadata(
     stealth.elgamal_pk = data.elgamal_pk;
     stealth.encrypted_cipher_key = data.encrypted_cipher_key;
     stealth.uri = data.uri;
-    stealth.method = data.method;
     stealth.bump_seed = stealth_bump_seed;
 
     drop(stealth);
-
-    match data.method {
-        OversightMethod::Freeze => {
-            reassign_mint_and_freeze(
-                oversight_program_info,
-                stealth_info,
-                mint_info,
-                metadata_update_authority_info,
-                &metadata,
-                &[signer_seeds],
-                account_info_iter,
-            )
-        }
-        OversightMethod::None => {
-            Ok(())
-        }
-        _ => {
-            msg!("Invalid OversightMethod");
-            Err(ProgramError::InvalidArgument)
-        }
-    }?;
 
     Ok(())
 }
@@ -449,10 +354,6 @@ fn process_fini_transfer(
     stealth.elgamal_pk = transfer_buffer.elgamal_pk;
     stealth.encrypted_cipher_key = transfer_buffer.encrypted_cipher_key;
 
-    let stealth_bump_seed = stealth.bump_seed;
-    let stealth_method = stealth.method;
-    drop(stealth);
-
     let close_transfer_buffer = || -> ProgramResult {
         let starting_lamports = authority_info.lamports();
         **authority_info.lamports.borrow_mut() = starting_lamports
@@ -462,118 +363,6 @@ fn process_fini_transfer(
         **transfer_buffer_info.lamports.borrow_mut() = 0;
         Ok(())
     };
-
-    if account_info_iter.clone().count() == 0 {
-        // no wrapped transfer
-        if stealth_method == OversightMethod::Freeze {
-            msg!("Must use fini_transfer with token accounts with freeze oversight");
-            return Err(ProgramError::InvalidArgument);
-        }
-        close_transfer_buffer()?;
-        return Ok(());
-    }
-
-
-    let mint_info = next_account_info(account_info_iter)?;
-    let source_info = next_account_info(account_info_iter)?;
-    let destination_info = next_account_info(account_info_iter)?;
-    let token_program_info = next_account_info(account_info_iter)?;
-    let metadata_program_info = next_account_info(account_info_iter)?;
-    let master_edition_info = next_account_info(account_info_iter)?;
-
-    if *token_program_info.key != spl_token::ID {
-        msg!("Mismatched token program");
-        return Err(ProgramError::InvalidArgument);
-    }
-    if *metadata_program_info.key != mpl_token_metadata::ID {
-        msg!("Mismatched metadata program");
-        return Err(ProgramError::InvalidArgument);
-    }
-
-    validate_account_owner(mint_info, &spl_token::ID)?;
-    validate_account_owner(source_info, &spl_token::ID)?;
-    validate_account_owner(destination_info, &spl_token::ID)?;
-    validate_account_owner(master_edition_info, &mpl_token_metadata::ID)?;
-
-    let destination_account = spl_token::state::Account::unpack_from_slice(
-        &destination_info.try_borrow_data()?)?;
-
-    if transfer_buffer.wallet_pk != destination_account.owner {
-        // NB: rational for not checking in case of oversight method != freeze...
-        // seller can always share out of band... so the case we're protecting against is when the
-        // seller doesnt share correctly... if no oversight method then we can transfer the nft
-        // around regardless of this program and some out-of-band measurement should check...
-        msg!("Mismatched transfer destination and transfer buffer destination pubkey");
-        return Err(ProgramError::InvalidArgument);
-    }
-
-    let mint_info_key = mint_info.key;
-    let signer_seeds : &[&[&[u8]]] = &[
-        &[
-            PREFIX.as_bytes(),
-            mint_info_key.as_ref(),
-            &[stealth_bump_seed],
-        ],
-    ];
-
-    if stealth_method == OversightMethod::Freeze {
-        invoke_signed(
-            &mpl_token_metadata::instruction::thaw_delegated_account(
-                *metadata_program_info.key,
-                *stealth_info.key,
-                *source_info.key,
-                *master_edition_info.key,
-                *mint_info.key,
-            ),
-            &[
-                metadata_program_info.clone(),
-                stealth_info.clone(),
-                source_info.clone(),
-                master_edition_info.clone(),
-                mint_info.clone(),
-                token_program_info.clone(),
-            ],
-            signer_seeds
-        )?;
-    }
-
-    invoke(
-        &spl_token::instruction::transfer(
-            token_program_info.key,
-            source_info.key,
-            destination_info.key,
-            authority_info.key,
-            &[],
-            1,
-        ).unwrap(),
-        &[
-            token_program_info.clone(),
-            source_info.clone(),
-            destination_info.clone(),
-            authority_info.clone(),
-        ],
-    )?;
-
-    if stealth_method == OversightMethod::Freeze {
-        invoke_signed(
-            &mpl_token_metadata::instruction::freeze_delegated_account(
-                *metadata_program_info.key,
-                *stealth_info.key,
-                *destination_info.key,
-                *master_edition_info.key,
-                *mint_info.key,
-            ),
-            &[
-                metadata_program_info.clone(),
-                stealth_info.clone(),
-                destination_info.clone(),
-                master_edition_info.clone(),
-                mint_info.clone(),
-                token_program_info.clone(),
-            ],
-            signer_seeds
-        )?;
-    }
 
     close_transfer_buffer()?;
 
