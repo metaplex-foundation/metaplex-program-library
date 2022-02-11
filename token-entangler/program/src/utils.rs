@@ -339,7 +339,7 @@ pub fn assert_derivation(
     Ok(bump)
 }
 
-/// cheap method to just get supply off a mint without unpacking whole object
+/// cheap method to just get supply of a mint without unpacking whole object
 pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> {
     // In token program, 36, 8, 1, 1 is the layout, where the first 8 is supply u64.
     // so we start at 36.
