@@ -149,6 +149,10 @@ fn ensure_buffers_closed(
         }
     }
 
+    if instructions.len() == 0 {
+        return Ok(());
+    }
+
     send(
         rpc_client,
         &format!("Closing input and compute buffers"),
@@ -403,14 +407,14 @@ async fn process_transfer(
         bs58::decode(&params.recipient_pubkey).into_vec()?.as_slice()
     );
 
-    let recipient_elgamal = stealth::zk_token_elgamal::pod::ElGamalPubkey(
+    let recipient_elgamal: stealth::encryption::elgamal::ElGamalPubkey = stealth::state::EncryptionKeyBuffer::from_bytes(
         rpc_client.get_account_data(
             &stealth::instruction::get_elgamal_pubkey_address(
                 &recipient_pubkey,
                 &mint,
             ).0,
-        )?.as_slice()[stealth::state::EncryptionKeyBuffer::get_packed_len()-32..].try_into()?
-    ).try_into()?;
+        )?.as_slice()
+    ).unwrap().elgamal_pk.try_into()?;
 
     let transfer_buffer_key = stealth::instruction::get_transfer_buffer_address(
         &recipient_pubkey, &mint).0;
