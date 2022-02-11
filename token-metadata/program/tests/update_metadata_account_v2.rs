@@ -585,7 +585,7 @@ mod update_metadata_account_v2 {
     }
 
     #[tokio::test]
-    async fn fail_can_change_seller_fee_basis_points_after_sold() {
+    async fn fail_cannot_change_seller_fee_basis_points_after_sold() {
       let mut context = program_test().start_with_context().await;
       let test_metadata = Metadata::new();
       let address = context.payer.pubkey();
