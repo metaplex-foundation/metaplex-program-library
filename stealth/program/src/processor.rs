@@ -19,8 +19,6 @@ use solana_program::{
     program::{invoke, invoke_signed},
     program_error::ProgramError,
     pubkey::Pubkey,
-    rent::Rent,
-    sysvar::Sysvar,
 };
 
 use std::convert::TryInto;
@@ -80,97 +78,6 @@ pub fn process_instruction(
             )
         }
     }
-}
-
-// TODO: Result instead of assuming overflow
-fn scale_creator_shares(
-    stealth_key: &Pubkey,
-    metadata: &mpl_token_metadata::state::Metadata,
-) -> Option<Vec<mpl_token_metadata::state::Creator>> {
-    let mut new_creators = vec![];
-    if let Some(creators) = &metadata.data.creators {
-        let current_seller_bp = u64::from(metadata.data.seller_fee_basis_points);
-        let mut remaining_share: u8 = 100;
-        for creator in creators {
-            let current_creator_bp = current_seller_bp
-                .checked_mul(u64::from(creator.share))?
-                .checked_div(100)?;
-            let next_creator_share: u8 = match current_creator_bp.checked_div(100)?.try_into() {
-                Ok(v) => v,
-                Err(_) => {
-                    msg!("Internal error: share recalculation failed");
-                    return None;
-                }
-            };
-            remaining_share = remaining_share
-                .checked_sub(next_creator_share)?;
-            new_creators.push(mpl_token_metadata::state::Creator {
-                share: next_creator_share,
-                ..*creator
-            });
-        }
-        new_creators.push(mpl_token_metadata::state::Creator {
-            address: *stealth_key,
-            verified: false,
-            share: remaining_share,
-        });
-    }
-    Some(new_creators)
-}
-
-fn reassign_royalties<'info>(
-    metadata_program_info: &AccountInfo<'info>,
-    stealth_info: &AccountInfo<'info>,
-    metadata_info: &AccountInfo<'info>,
-    metadata_update_authority_info: &AccountInfo<'info>,
-    metadata: &mpl_token_metadata::state::Metadata,
-    signer_seeds: &[&[&[u8]]],
-    _account_info_iter: &mut std::slice::Iter<AccountInfo<'info>>,
-) -> ProgramResult {
-    if *metadata_program_info.key != mpl_token_metadata::ID {
-        msg!("Mismatched metadata program");
-        return Err(ProgramError::InvalidArgument);
-    }
-
-    // make the PDA a 'creator' so that it receives a portion of the fees and bump seller fees to
-    // 100%
-    let new_creators = scale_creator_shares(&stealth_info.key, &metadata)
-        .ok_or::<ProgramError>(StealthError::Overflow.into())?;
-    invoke(
-        &mpl_token_metadata::instruction::update_metadata_accounts(
-            *metadata_program_info.key,
-            *metadata_info.key,
-            *metadata_update_authority_info.key,
-            None, // new update auth
-            Some(mpl_token_metadata::state::Data {
-                seller_fee_basis_points: 10000,
-                creators: Some(new_creators),
-                ..metadata.data.clone()
-            }),
-            None, // primary sale happened
-        ),
-        &[
-            metadata_program_info.clone(),
-            metadata_info.clone(),
-            metadata_update_authority_info.clone(),
-        ],
-    )?;
-
-    invoke_signed(
-        &mpl_token_metadata::instruction::sign_metadata(
-            *metadata_program_info.key,
-            *metadata_info.key,
-            *stealth_info.key,
-        ),
-        &[
-            metadata_program_info.clone(),
-            metadata_info.clone(),
-            stealth_info.clone(),
-        ],
-        signer_seeds,
-    )?;
-
-    Ok(())
 }
 
 fn reassign_mint_and_freeze<'info>(
@@ -348,17 +255,6 @@ fn process_configure_metadata(
     drop(stealth);
 
     match data.method {
-        OversightMethod::Royalties => {
-            reassign_royalties(
-                oversight_program_info,
-                stealth_info,
-                metadata_info,
-                metadata_update_authority_info,
-                &metadata,
-                &[signer_seeds],
-                account_info_iter,
-            )
-        }
         OversightMethod::Freeze => {
             reassign_mint_and_freeze(
                 oversight_program_info,
@@ -450,7 +346,7 @@ fn process_init_transfer(
     }
 
     // deserialize to verify it exists...
-    let stealth = StealthAccount::from_account_info(
+    let _stealth = StealthAccount::from_account_info(
         &stealth_info, &ID, Key::StealthAccountV1)?;
 
     // check that elgamal PDAs match
@@ -509,29 +405,6 @@ fn process_init_transfer(
     transfer_buffer.stealth_key = *stealth_info.key;
     transfer_buffer.wallet_pk = *recipient_info.key;
     transfer_buffer.elgamal_pk = recipient_elgamal_pk;
-
-    match stealth.method {
-        OversightMethod::Royalties => {
-            let rent = &Rent::from_account_info(rent_sysvar_info)?;
-            let minimum_rent = rent.minimum_balance(
-                StealthAccount::get_packed_len()).max(1);
-            let paid_amount =
-                stealth_info.lamports()
-                .checked_sub(minimum_rent)
-                .ok_or::<ProgramError>(StealthError::Overflow.into())?;
-            if paid_amount != 0 {
-                // transfer the seller's fee portion to the transfer buffer (which can be claimed by them)
-                // TODO: expiration so buyer can reclaim if this doesn't happen
-                let starting_lamports = transfer_buffer_info.lamports();
-                **transfer_buffer_info.lamports.borrow_mut() = starting_lamports
-                    .checked_add(paid_amount)
-                    .ok_or::<ProgramError>(StealthError::Overflow.into())?;
-
-                **stealth_info.lamports.borrow_mut() = minimum_rent;
-            }
-        }
-        _ => {}
-    }
 
     Ok(())
 }

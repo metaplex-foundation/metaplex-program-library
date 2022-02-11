@@ -64,7 +64,7 @@ async fn nft_setup_transaction(
                 &spl_token::id(),
                 &mint.pubkey(),
                 &payer.pubkey(), // mint auth
-                if freeze { Some(&payer_pubkey) } else { None }, // freeze auth
+                Some(&payer_pubkey), // freeze auth
                 0,
             )?,
             spl_associated_token_account::create_associated_token_account(
@@ -130,7 +130,7 @@ async fn nft_setup_transaction(
                 &elgamal_kp.public.encrypt(*cipher_key).into(),
                 &[],
                 if freeze { stealth::state::OversightMethod::Freeze }
-                    else { stealth::state::OversightMethod::Royalties },
+                    else { stealth::state::OversightMethod::None },
             ),
         ];
 
@@ -402,7 +402,7 @@ async fn test_transfer_buyer_init() {
             // buyer side transfer
             system_instruction::transfer(
                 &dest.pubkey(),
-                &stealth_key,
+                &transfer_buffer_key,
                 LAMPORTS_PER_SOL,
             ),
 
@@ -431,8 +431,8 @@ async fn test_transfer_buyer_init() {
     let start_transfer_lamports = banks_client.get_account(
         transfer_buffer_key).await.unwrap().unwrap().lamports;
 
-    // at least price + min balance...
-    assert!(start_transfer_lamports > LAMPORTS_PER_SOL);
+    // at least price...
+    assert!(start_transfer_lamports >= LAMPORTS_PER_SOL);
 
     let reencrypt = Transaction::new_signed_with_payer(
         &[

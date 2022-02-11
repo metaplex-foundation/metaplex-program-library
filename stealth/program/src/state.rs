@@ -36,7 +36,6 @@ pub enum Key {
 pub enum OversightMethod {
     Uninitialized,
     None,
-    Royalties,
     Freeze,
 }
 
