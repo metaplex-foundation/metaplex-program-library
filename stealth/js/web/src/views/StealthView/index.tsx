@@ -900,15 +900,20 @@ export const StealthView = (
           console.log('Waiting on confirmations for', pendingCrankSignatures, statuses);
           const confirmedSigs = statuses.value.filter((v: null | SignatureStatus) => {
             if (v === null) return false;
-            return v.confirmationStatus === "confirmed";
-          }).length;
+            return v.confirmationStatus === "confirmed" || v.confirmationStatus === "finalized";
+          });
+
+          const errIdx = confirmedSigs.findIndex((v : SignatureStatus) => !!v.err);
+          if (errIdx !== -1) {
+            throw new Error(`Transfer failed on ${pendingCrankSignatures[errIdx]}. See console logs`);
+          }
 
           setTransferProgress({
             step: 4,
-            substep: Math.floor((confirmedSigs + setupCrankTransactions) * 100 / crankTransactions),
+            substep: Math.floor((confirmedSigs.length + setupCrankTransactions) * 100 / crankTransactions),
           });
 
-          if (confirmedSigs === pendingCrankSignatures.length) {
+          if (confirmedSigs.length === pendingCrankSignatures.length) {
             break;
           }
           await sleep(1000);
@@ -952,7 +957,7 @@ export const StealthView = (
 
       console.log(confirmed);
       if (confirmed.value.err) {
-        throw new Error('Crank failed. See console logs');
+        throw new Error(`Transfer failed on ${resultTxid}. See console logs`);
       }
     }
   };
