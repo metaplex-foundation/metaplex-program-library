@@ -10,7 +10,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "amman:start": "DEBUG=\"amman*\" amman validator",
-    "amman:stop": "pkill solana-test-validator",
+    "amman:stop": "pkill -f solana-test-validator",
     "test": "DEBUG=\"mpl:tm-test:*\" tape ./dist/test/*.test.js",
     "test:local": "yarn build && yarn test",
     "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
