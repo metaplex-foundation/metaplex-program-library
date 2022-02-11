@@ -261,6 +261,17 @@ const finiTransferIxs = async (
   }
 
   instructions.push(
+    Token.createTransferInstruction(
+      TOKEN_PROGRAM_ID,
+      walletATAKey,
+      destATAKey,
+      walletKey,
+      [],
+      1,
+    ),
+  );
+
+  instructions.push(
     new TransactionInstruction({
       programId: STEALTH_PROGRAM_ID,
       keys: [
@@ -281,26 +292,6 @@ const finiTransferIxs = async (
         },
         {
           pubkey: SystemProgram.programId,
-          isSigner: false,
-          isWritable: false,
-        },
-        {
-          pubkey: mintKey,
-          isSigner: false,
-          isWritable: false,
-        },
-        {
-          pubkey: walletATAKey,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: destATAKey,
-          isSigner: false,
-          isWritable: true,
-        },
-        {
-          pubkey: TOKEN_PROGRAM_ID,
           isSigner: false,
           isWritable: false,
         },

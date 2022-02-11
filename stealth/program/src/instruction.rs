@@ -270,7 +270,7 @@ pub fn configure_metadata(
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(payer, true),
-        AccountMeta::new(mint, false),
+        AccountMeta::new_readonly(mint, false),
         AccountMeta::new(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
         AccountMeta::new(get_stealth_address(&mint).0, false),
