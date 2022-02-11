@@ -13,12 +13,12 @@ import { findTradeHistoryAddress, validateMembershipToken } from '../src/utils';
 import { createBuyTransaction } from './transactions';
 import { killStuckProcess, logDebug, sleep } from './utils';
 import {
-  mintNFT,
-  mintTokenToAccount,
-  createMarket,
   createPrerequisites,
   createStore,
   initSellingResource,
+  mintTokenToAccount,
+  mintNFT,
+  createMarket,
 } from './actions';
 
 killStuckProcess();

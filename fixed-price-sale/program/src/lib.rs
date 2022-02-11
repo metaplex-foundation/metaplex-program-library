@@ -786,8 +786,21 @@ pub mod fixed_price_sale {
             }
         }
 
+        let is_native = market.treasury_mint == System::id();
+
+        let treasury_holder_amount = if is_native {
+            treasury_holder.lamports()
+        } else {
+            let token_account = spl_token::state::Account::unpack(&treasury_holder.data.borrow())?;
+            if token_account.owner != market.treasury_owner.key() {
+                return Err(ErrorCode::DerivedKeyInvalid.into());
+            }
+
+            token_account.amount
+        };
+
         // Check, that treasury balance is zero
-        if treasury_holder.amount != 0 {
+        if treasury_holder_amount != 0 {
             return Err(ErrorCode::TreasuryIsNotEmpty.into());
         }
 
@@ -1046,7 +1059,7 @@ pub struct Withdraw<'info> {
 pub struct ClaimResource<'info> {
     #[account(has_one=selling_resource, has_one=treasury_holder)]
     market: Account<'info, Market>,
-    treasury_holder: Box<Account<'info, TokenAccount>>,
+    treasury_holder: UncheckedAccount<'info>,
     #[account(has_one=vault, constraint = selling_resource.owner == selling_resource_owner.key())]
     selling_resource: Account<'info, SellingResource>,
     selling_resource_owner: Signer<'info>,
