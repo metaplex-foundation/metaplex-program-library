@@ -20,8 +20,7 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
-    system_instruction,
-    sysvar::{Sysvar},
+    sysvar::Sysvar,
 };
 
 use std::convert::TryInto;
@@ -196,6 +195,9 @@ fn reassign_mint_and_freeze<'info>(
         return Err(ProgramError::InvalidArgument);
     }
 
+    validate_account_owner(token_account_info, &spl_token::ID)?;
+    validate_account_owner(master_edition_info, &mpl_token_metadata::ID)?;
+
     if metadata.mint != *mint_info.key {
         msg!("Mismatched mint");
         return Err(StealthError::InvalidMintInfo.into());
@@ -314,29 +316,20 @@ fn process_configure_metadata(
     }
 
     let mint_info_key = mint_info.key;
-    let signer_seeds : &[&[&[u8]]] = &[
-        &[
-            PREFIX.as_bytes(),
-            mint_info_key.as_ref(),
-            &[stealth_bump_seed],
-        ],
+    let signer_seeds : &[&[u8]] = &[
+        PREFIX.as_bytes(),
+        mint_info_key.as_ref(),
+        &[stealth_bump_seed],
     ];
 
     // create and initialize PDA
-    let rent = &Rent::from_account_info(rent_sysvar_info)?;
-    invoke_signed(
-        &system_instruction::create_account(
-            payer_info.key,
-            stealth_info.key,
-            rent.minimum_balance(StealthAccount::get_packed_len()).max(1),
-            StealthAccount::get_packed_len() as u64,
-            &ID,
-        ),
-        &[
-            payer_info.clone(),
-            stealth_info.clone(),
-            system_program_info.clone(),
-        ],
+    mpl_token_metadata::utils::create_or_allocate_account_raw(
+        ID,
+        stealth_info,
+        rent_sysvar_info,
+        system_program_info,
+        payer_info,
+        StealthAccount::get_packed_len(),
         signer_seeds,
     )?;
 
@@ -362,7 +355,7 @@ fn process_configure_metadata(
                 metadata_info,
                 metadata_update_authority_info,
                 &metadata,
-                signer_seeds,
+                &[signer_seeds],
                 account_info_iter,
             )
         }
@@ -373,7 +366,7 @@ fn process_configure_metadata(
                 mint_info,
                 metadata_update_authority_info,
                 &metadata,
-                signer_seeds,
+                &[signer_seeds],
                 account_info_iter,
             )
         }
@@ -492,27 +485,19 @@ fn process_init_transfer(
         return Err(ProgramError::InvalidArgument);
     }
 
-    let rent = &Rent::from_account_info(rent_sysvar_info)?;
-    invoke_signed(
-        &system_instruction::create_account(
-            payer_info.key,
-            transfer_buffer_info.key,
-            rent.minimum_balance(CipherKeyTransferBuffer::get_packed_len()).max(1),
-            CipherKeyTransferBuffer::get_packed_len() as u64,
-            &ID,
-        ),
+    // TODO: lift?
+    mpl_token_metadata::utils::create_or_allocate_account_raw(
+        ID,
+        transfer_buffer_info,
+        rent_sysvar_info,
+        system_program_info,
+        payer_info,
+        CipherKeyTransferBuffer::get_packed_len(),
         &[
-            payer_info.clone(),
-            transfer_buffer_info.clone(),
-            system_program_info.clone(),
-        ],
-        &[
-            &[
-                TRANSFER.as_bytes(),
-                recipient_info.key.as_ref(),
-                mint_info.key.as_ref(),
-                &[transfer_buffer_bump_seed],
-            ],
+            TRANSFER.as_bytes(),
+            recipient_info.key.as_ref(),
+            mint_info.key.as_ref(),
+            &[transfer_buffer_bump_seed],
         ],
     )?;
 
@@ -527,6 +512,7 @@ fn process_init_transfer(
 
     match stealth.method {
         OversightMethod::Royalties => {
+            let rent = &Rent::from_account_info(rent_sysvar_info)?;
             let minimum_rent = rent.minimum_balance(
                 StealthAccount::get_packed_len()).max(1);
             let paid_amount =
@@ -631,6 +617,23 @@ fn process_fini_transfer(
     }
     if *metadata_program_info.key != mpl_token_metadata::ID {
         msg!("Mismatched metadata program");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    validate_account_owner(mint_info, &spl_token::ID)?;
+    validate_account_owner(source_info, &spl_token::ID)?;
+    validate_account_owner(destination_info, &spl_token::ID)?;
+    validate_account_owner(master_edition_info, &mpl_token_metadata::ID)?;
+
+    let destination_account = spl_token::state::Account::unpack_from_slice(
+        &destination_info.try_borrow_data()?)?;
+
+    if transfer_buffer.wallet_pk != destination_account.owner {
+        // NB: rational for not checking in case of oversight method != freeze...
+        // seller can always share out of band... so the case we're protecting against is when the
+        // seller doesnt share correctly... if no oversight method then we can transfer the nft
+        // around regardless of this program and some out-of-band measurement should check...
+        msg!("Mismatched transfer destination and transfer buffer destination pubkey");
         return Err(ProgramError::InvalidArgument);
     }
 
@@ -1047,28 +1050,18 @@ fn process_publish_elgamal_pubkey(
     }
 
     // create and initialize PDA
-    let rent = &Rent::from_account_info(rent_sysvar_info)?;
-    let space = EncryptionKeyBuffer::get_packed_len();
-    invoke_signed(
-        &system_instruction::create_account(
-            wallet_info.key,
-            elgamal_pubkey_info.key,
-            rent.minimum_balance(space).max(1),
-            space as u64,
-            &ID,
-        ),
+    mpl_token_metadata::utils::create_or_allocate_account_raw(
+        ID,
+        elgamal_pubkey_info,
+        rent_sysvar_info,
+        system_program_info,
+        wallet_info,
+        EncryptionKeyBuffer::get_packed_len(),
         &[
-            wallet_info.clone(),
-            elgamal_pubkey_info.clone(),
-            system_program_info.clone(),
-        ],
-        &[
-            &[
-                PREFIX.as_bytes(),
-                wallet_info.key.as_ref(),
-                mint_info.key.as_ref(),
-                &[elgamal_pubkey_bump_seed],
-            ],
+            PREFIX.as_bytes(),
+            wallet_info.key.as_ref(),
+            mint_info.key.as_ref(),
+            &[elgamal_pubkey_bump_seed],
         ],
     )?;
 
