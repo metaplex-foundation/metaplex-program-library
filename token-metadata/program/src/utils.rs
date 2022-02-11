@@ -37,6 +37,8 @@ pub fn assert_data_valid(
     update_authority_is_signer: bool,
     is_updating: bool,
 ) -> ProgramResult {
+    let primary_sale_happened = existing_metadata.primary_sale_happened;
+
     if data.name.len() > MAX_NAME_LENGTH {
         return Err(MetadataError::NameTooLong.into());
     }
@@ -53,6 +55,10 @@ pub fn assert_data_valid(
         return Err(MetadataError::InvalidBasisPoints.into());
     }
 
+    if data.seller_fee_basis_points != existing_metadata.data.seller_fee_basis_points && primary_sale_happened {
+      return Err(MetadataError::NotAllowedToChangeSellerFeeBasisPoints.into());
+    }
+
     if data.creators.is_some() {
         if let Some(creators) = &data.creators {
             if creators.len() > MAX_CREATOR_LIMIT {
@@ -64,6 +70,8 @@ pub fn assert_data_valid(
             } else {
                 let mut found = false;
                 let mut total: u8 = 0;
+
+
                 for i in 0..creators.len() {
                     let creator = &creators[i];
                     for j in (i + 1)..creators.len() {
@@ -119,6 +127,27 @@ pub fn assert_data_valid(
                     }
                 }
 
+                if let Some(existing_creators) = &existing_metadata.data.creators {
+                  for existing_creator in existing_creators {
+                    match creators
+                      .iter()
+                      .find(|c| c.address == existing_creator.address) {
+                      Some(creator) => {
+                        let fewer_shares = existing_creator.share > creator.share;
+ 
+                        if existing_creator.verified && fewer_shares && primary_sale_happened {
+                          return Err(MetadataError::CannotAdjustVerifiedCreator.into())
+                        }
+                      }
+                      None => {
+                        if existing_creator.verified && primary_sale_happened {
+                          return Err(MetadataError::CannotRemoveVerifiedCreator.into())
+                        }
+                      }
+                    }
+                  }
+                }
+
                 if !found && !allow_direct_creator_writes && !is_updating {
                     return Err(MetadataError::MustBeOneOfCreators.into());
                 }
@@ -127,6 +156,14 @@ pub fn assert_data_valid(
                 }
             }
         }
+    } else {
+      if let Some(existing_creators) = &existing_metadata.data.creators {
+        let first_verified_creator = existing_creators.into_iter().find(|creator| creator.verified);
+
+        if first_verified_creator.is_some() && primary_sale_happened {
+          return Err(MetadataError::CannotWipeVerifiedCreators.into());
+        }
+      }
     }
 
     Ok(())
