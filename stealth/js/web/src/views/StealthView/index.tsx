@@ -625,7 +625,7 @@ export const StealthView = (
   const [recipientPubkeyStr, setRecipientPubkey]
     = useLocalStorageState('recipientPubkey', '');
   const [instructionBuffer, setInstructionBuffer]
-    = useLocalStorageState('instructionBuffer', '4X5dmqKWQojDNAqgV3JToRa5uCDFwijSMWj8zHDXpQ9g');
+    = useLocalStorageState('instructionBuffer', 'CRsu6QG2uqHmfowRaPTFfXTX3T4gMH4Fk9QgHjCek8Ky');
   const [inputBuffer, setInputBuffer]
     = useLocalStorageState('inputBuffer', '');
   const [computeBuffer, setComputeBuffer]

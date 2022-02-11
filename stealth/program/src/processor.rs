@@ -137,12 +137,8 @@ fn process_configure_metadata(
 
 
     // check that Stealth matches mint
-    let stealth_seeds = &[
-        PREFIX.as_bytes(),
-        mint_info.key.as_ref(),
-    ];
     let (stealth_key, stealth_bump_seed) =
-        Pubkey::find_program_address(stealth_seeds, &ID);
+        get_stealth_address(mint_info.key);
 
     if stealth_key != *stealth_info.key {
         msg!("Invalid stealth key");
@@ -236,8 +232,6 @@ fn process_init_transfer(
         return Err(ProgramError::InvalidArgument);
     }
 
-    // TODO: this is a bit fucky since the nft token transfer should really happen at the same time
-    // as the stealth transfer...
     if token_account.amount != 1 {
         msg!("Invalid amount");
         return Err(ProgramError::InvalidArgument);
@@ -315,7 +309,6 @@ fn process_init_transfer(
     Ok(())
 }
 
-// TODO: this should be cheap and should be bundled with the actual NFT transfer
 fn process_fini_transfer(
     accounts: &[AccountInfo],
 ) -> ProgramResult {
@@ -390,7 +383,7 @@ fn process_transfer_chunk<'info>(
     // check that transfer buffer matches passed in arguments and that we have authority to do
     // the transfer
     //
-    // TODO: should we have a nother check for nft ownership here?
+    // TODO: should we have another check for nft ownership here?
     let mut transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?.into_mut();
 
@@ -605,7 +598,6 @@ fn verify_dsl_crank<'info>(
 
     msg!("Getting challenge scalars");
     let challenge_c = transcript.challenge_scalar(b"c");
-    // TODO: do we need to fetch 'w'? should be deterministically after...
 
     solana_program::log::sol_log_compute_units();
 

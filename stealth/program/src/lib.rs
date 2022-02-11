@@ -15,4 +15,4 @@ pub mod encryption;
 pub mod transcript;
 pub mod zk_token_elgamal;
 
-solana_program::declare_id!("8SyzzxuZnMryDgLz6tWH3ubcEVikaVP3upq6cJce9jrL");
+solana_program::declare_id!("privzjrXhtea8kKt3uE94X34AHaiLj2Vbwd51y3aUSi");

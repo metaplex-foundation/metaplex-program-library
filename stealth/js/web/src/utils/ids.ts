@@ -18,11 +18,11 @@ export const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
 );
 
 export const STEALTH_PROGRAM_ID = new PublicKey(
-  '8SyzzxuZnMryDgLz6tWH3ubcEVikaVP3upq6cJce9jrL',
+  'privzjrXhtea8kKt3uE94X34AHaiLj2Vbwd51y3aUSi',
 );
 
 export const CURVE_DALEK_ONCHAIN_PROGRAM_ID = new PublicKey(
-  '5wsqk1gtzFewn4Rx3w9uyYBYUPZJPr2uLTNJ7BGFav5g',
+  'curveSS6UodDcBHTgerBXQxzW43kctcPe1dwT7yWaox',
 );
 
 export async function getMetadata(
