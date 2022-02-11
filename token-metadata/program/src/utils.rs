@@ -55,6 +55,10 @@ pub fn assert_data_valid(
         return Err(MetadataError::InvalidBasisPoints.into());
     }
 
+    if data.seller_fee_basis_points != existing_metadata.data.seller_fee_basis_points && primary_sale_happened {
+      return Err(MetadataError::NotAllowedToChangeSellerFeeBasisPoints.into());
+    }
+
     if data.creators.is_some() {
         if let Some(creators) = &data.creators {
             if creators.len() > MAX_CREATOR_LIMIT {
