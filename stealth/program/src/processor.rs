@@ -278,23 +278,25 @@ fn process_configure_metadata(
     Ok(())
 }
 
-// TODO: since creating filling the transfer buffer (even just sending the instruction and if they
-// fail somehow or are snooped by someone along the way) fully allows the dest keypair to decrypt
-// so it needs to be some handshake process i think...
+// since filling the transfer buffer (even just sending the instruction and if they fail somehow or
+// are snooped by someone along the way) fully allows the dest keypair to decrypt, we need to have
+// some kind of timeout based transaction fulfillment
 //
-// can this be a separate program?
+// some external marketplace program creates an escrow environment (bids only, no instant buy,
+// though there certainly can be some kind of timeout crank available)
 //
+// - buyer places bid, locking funds into some escrow account
+// - until bid is accepted, buyer can cancel and reclaim funds
 // - bid is marked accepted by the seller
-//     - seller commits some portion to escrow (10%?)
-//     - bid funds are locked for period X
+//     - seller commits some (configurable) collateral to escrow
+//     - bid funds are locked for X slots
 // - before X elapses, the seller does the full transfer and the program releases all funds to the
-//   seller once fini is accepted + nft has been transferred
-// - after X, buyer can show key has not yet been transfered and claim their funds back along with
-//   the seller escrow
+//   seller once fini is accepted + nft has been transferred. fini should be called through a CPI
+//   that also distributes royalties from the escrowed funds
+// - otherwise after X elapses, buyer can close the escrow account and claim seller collateral
 //
-// i think this means that only 1 sale can happen at a time? which does seem correct since their is
-// only 1 and this 'atomic' operation is kind of split
-
+// - potentially marketplace offers centralised handling of the encrypted key so that seller
+//   doesn't need to manually handle bids (mimicking a buy-now functionality)
 fn process_init_transfer(
     accounts: &[AccountInfo],
 ) -> ProgramResult {
@@ -381,7 +383,6 @@ fn process_init_transfer(
         return Err(ProgramError::InvalidArgument);
     }
 
-    // TODO: lift?
     mpl_token_metadata::utils::create_or_allocate_account_raw(
         ID,
         transfer_buffer_info,
@@ -425,8 +426,6 @@ fn process_fini_transfer(
 
     // check that transfer buffer matches passed in arguments and that we have authority to do
     // the transfer
-    //
-    // TODO: should we have a nother check for nft ownership here?
     let transfer_buffer = CipherKeyTransferBuffer::from_account_info(
         &transfer_buffer_info, &ID, Key::CipherKeyTransferBufferV1)?;
 
@@ -445,9 +444,7 @@ fn process_fini_transfer(
         return Err(ProgramError::InvalidArgument);
     }
 
-
     // write the new cipher text over
-
     stealth.wallet_pk = transfer_buffer.wallet_pk;
     stealth.elgamal_pk = transfer_buffer.elgamal_pk;
     stealth.encrypted_cipher_key = transfer_buffer.encrypted_cipher_key;
