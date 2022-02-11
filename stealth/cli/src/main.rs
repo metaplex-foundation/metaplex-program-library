@@ -367,7 +367,7 @@ async fn parallel_decrypt_cipher_key(
 struct TransferParams {
     mint: String,
     recipient_pubkey: String,
-    instruction_buffer: Option<String>,
+    instruction_buffer: String,
     input_buffer: Option<String>,
     compute_buffer: Option<String>,
 }
@@ -394,11 +394,18 @@ async fn process_transfer(
     let stealth_account = stealth::state::StealthAccount::from_bytes(
         &stealth_data).unwrap();
 
-    let instruction_buffer = specified_or_new(params.instruction_buffer.clone());
+    let instruction_buffer = Pubkey::new(
+        bs58::decode(&params.instruction_buffer).into_vec()?.as_slice()
+    );
+
+    if rpc_client.get_account_data(&instruction_buffer).is_err() {
+        eprintln!("error: instruction buffer not populated");
+        exit(1);
+    }
+
     let input_buffer = specified_or_new(params.input_buffer.clone());
     let compute_buffer = specified_or_new(params.compute_buffer.clone());
 
-    println!("Instruction buffer keypair: {}", instruction_buffer.to_base58_string());
     println!("Input buffer keypair: {}", input_buffer.to_base58_string());
     println!("Compute buffer keypair: {}", compute_buffer.to_base58_string());
 
@@ -427,12 +434,6 @@ async fn process_transfer(
         &recipient_pubkey,
     )?;
 
-    ensure_create_instruction_buffer(
-        rpc_client,
-        payer,
-        &instruction_buffer,
-    )?;
-
     // if previous run failed and we respecified...
     ensure_buffers_closed(
         rpc_client,
@@ -453,7 +454,7 @@ async fn process_transfer(
 
         let txs = stealth::instruction::transfer_chunk_slow_proof(
             &payer.pubkey(),
-            &instruction_buffer.pubkey(),
+            &instruction_buffer,
             &input_buffer.pubkey(),
             &compute_buffer.pubkey(),
             &transfer,
@@ -466,8 +467,6 @@ async fn process_transfer(
                 .map(|pk| -> Option<&dyn Signer> {
                     if *pk == payer.pubkey() {
                         Some(payer)
-                    } else if *pk == instruction_buffer.pubkey() {
-                        Some(&instruction_buffer)
                     } else if *pk == input_buffer.pubkey() {
                         Some(&input_buffer)
                     } else if *pk == compute_buffer.pubkey() {
@@ -535,7 +534,7 @@ async fn process_transfer(
             payer.pubkey(),
             mint,
             transfer_buffer_key,
-            instruction_buffer.pubkey(),
+            instruction_buffer,
             input_buffer.pubkey(),
             compute_buffer.pubkey(),
             stealth::instruction::TransferChunkSlowData {
@@ -684,10 +683,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let instruction_buffer_param =
         Arg::with_name("instruction_buffer")
             .long("instruction_buffer")
-            .value_name("KEYPAIR_STRING")
+            .value_name("PUBKEY_STRING")
             .takes_value(true)
             .global(true)
-            .help("Instruction buffer keypair to use (or create)");
+            .help("Instruction buffer pubkey to use");
     let input_buffer_param =
         Arg::with_name("input_buffer")
             .long("input_buffer")
@@ -859,6 +858,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .global(true)
             )
         )
+        .subcommand(
+            SubCommand::with_name("create_instruction_buffer")
+            .about("Initialize a new instruction buffer with the stealth verification DSL")
+            .arg(
+                Arg::with_name("instruction_buffer")
+                    .long("instruction_buffer")
+                    .value_name("KEYPAIR_STRING")
+                    .takes_value(true)
+                    .global(true)
+                    .help("Input buffer keypair to use (or create)")
+            )
+        )
         .get_matches();
 
     let mut wallet_manager: Option<Arc<RemoteWalletManager>> = None;
@@ -954,7 +965,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &TransferParams {
                     mint: sub_m.value_of("mint").unwrap().to_string(),
                     recipient_pubkey: sub_m.value_of("recipient_pubkey").unwrap().to_string(),
-                    instruction_buffer: sub_m.value_of("instruction_buffer").map(|s| s.into()),
+                    instruction_buffer: sub_m.value_of("instruction_buffer").unwrap().to_string(),
                     input_buffer: sub_m.value_of("input_buffer").map(|s| s.into()),
                     compute_buffer: sub_m.value_of("compute_buffer").map(|s| s.into()),
                 },
@@ -997,6 +1008,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 &ElGamalPubkeyParams {
                     mint: sub_m.value_of("mint").unwrap().to_string(),
                 },
+            ).unwrap_or_else(|err| {
+                eprintln!("error: {}", err);
+                exit(1);
+            });
+        }
+        ("create_instruction_buffer", Some(sub_m)) => {
+            let instruction_buffer = specified_or_new(sub_m.value_of("instruction_buffer").map(|s| s.into()));
+            ensure_create_instruction_buffer(
+                &rpc_client,
+                config.default_signer.as_ref(),
+                &instruction_buffer,
             ).unwrap_or_else(|err| {
                 eprintln!("error: {}", err);
                 exit(1);
