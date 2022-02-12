@@ -357,3 +357,347 @@ async fn test_successful_escrow() {
         Ok(cipher_key),
     );
 }
+
+#[tokio::test]
+async fn test_close_before_accept() {
+    let mut pc = ProgramTest::default();
+
+    pc.prefer_bpf(true);
+
+    pc.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    pc.add_program("stealth", stealth::id(), None);
+    pc.add_program("stealth_escrow", stealth_escrow::id(), None);
+
+    pc.set_compute_max_units(20_000_000);
+
+    let (mut banks_client, payer, recent_blockhash) = pc.start().await;
+    let rent = banks_client.get_rent().await;
+    let rent = rent.unwrap();
+
+    let mint = Keypair::from_base58_string("47WBGggARowPAzDVdCMCGxTVhNBqXhxgyDcFFyGrVx3VqUyPU7UZTz9umQifQA8yXxKNX8sKGujtDKu7kKX1rLB8");
+
+    let elgamal_kp = ElGamalKeypair::new(&payer, &mint.pubkey()).unwrap();
+    let cipher_key = CipherKey::random(&mut OsRng);
+
+    println!("mint {:?}", mint);
+
+    // smoke test
+    assert_eq!(
+        elgamal_kp.public.encrypt(cipher_key).decrypt(&elgamal_kp.secret),
+        Ok(cipher_key),
+    );
+
+    let (nft_setup, public_metadata_key) = nft_setup_transaction(
+        &payer,
+        &mint,
+        &recent_blockhash,
+        &rent,
+        &elgamal_kp,
+        &cipher_key,
+    ).await.unwrap();
+
+    banks_client.process_transaction(nft_setup).await.unwrap();
+
+    // data landed...
+    let stealth_key = get_stealth_address(&mint.pubkey()).0;
+    let stealth_account = banks_client.get_account(stealth_key).await.unwrap().unwrap();
+    let stealth = StealthAccount::from_bytes(stealth_account.data.as_slice()).unwrap();
+    assert_eq!(
+        stealth.encrypted_cipher_key.try_into().and_then(
+            |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)),
+        Ok(cipher_key),
+    );
+
+    let seller = &payer;
+    let buyer = Keypair::new();
+
+    // seed buyer and initialize mint
+    banks_client.process_transaction(
+        Transaction::new_signed_with_payer(
+            &[
+                system_instruction::transfer(
+                    &seller.pubkey(),
+                    &buyer.pubkey(),
+                    11 * LAMPORTS_PER_SOL,
+                ),
+            ],
+            Some(&seller.pubkey()),
+            &[seller],
+            recent_blockhash,
+        ),
+    ).await.unwrap();
+
+    let (escrow_key, _escrow_bump) = Pubkey::find_program_address(
+        &[
+            b"BidEscrow",
+            buyer.pubkey().as_ref(),
+            mint.pubkey().as_ref(),
+        ],
+        &stealth_escrow::ID,
+    );
+
+    // buyer makes a bid of 10 SOL
+    banks_client.process_transaction(
+        Transaction::new_signed_with_payer(
+            &[
+                system_instruction::transfer(
+                    &buyer.pubkey(),
+                    &escrow_key,
+                    10 * LAMPORTS_PER_SOL,
+                ),
+                Instruction {
+                    program_id: stealth_escrow::id(),
+                    data: stealth_escrow::instruction::InitEscrow {
+                        collateral: LAMPORTS_PER_SOL,
+                        slots: 1000,
+                    }.data(),
+                    accounts: stealth_escrow::accounts::InitEscrow {
+                        bidder: buyer.pubkey(),
+                        mint: mint.pubkey(),
+                        escrow: escrow_key,
+                        system_program: system_program::id(),
+                    }.to_account_metas(None),
+                },
+            ],
+            Some(&buyer.pubkey()),
+            &[&buyer],
+            recent_blockhash,
+        ),
+    ).await.unwrap();
+
+    let pre_close_lamports = banks_client.get_balance(
+        buyer.pubkey()).await.unwrap();
+
+    assert!(pre_close_lamports < LAMPORTS_PER_SOL);
+
+    // closes
+    banks_client.process_transaction(
+        Transaction::new_signed_with_payer(
+            &[
+                Instruction {
+                    program_id: stealth_escrow::id(),
+                    data: stealth_escrow::instruction::CloseEscrow {}.data(),
+                    accounts: stealth_escrow::accounts::CloseEscrow {
+                        bidder: buyer.pubkey(),
+                        mint: mint.pubkey(),
+                        escrow: escrow_key,
+                        system_program: system_program::id(),
+                    }.to_account_metas(None),
+                },
+            ],
+            Some(&buyer.pubkey()),
+            &[&buyer],
+            recent_blockhash,
+        ),
+    ).await.unwrap();
+
+    let post_close_lamports = banks_client.get_balance(
+        buyer.pubkey()).await.unwrap();
+
+    assert!(post_close_lamports > 10 * LAMPORTS_PER_SOL);
+}
+
+#[tokio::test]
+async fn test_close_after_accept() {
+    let mut pc = ProgramTest::default();
+
+    pc.prefer_bpf(true);
+
+    pc.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    pc.add_program("stealth", stealth::id(), None);
+    pc.add_program("stealth_escrow", stealth_escrow::id(), None);
+
+    pc.set_compute_max_units(20_000_000);
+
+    let mut ptc = pc.start_with_context().await;
+    let rent = ptc.banks_client.get_rent().await;
+    let rent = rent.unwrap();
+
+    let mint = Keypair::from_base58_string("47WBGggARowPAzDVdCMCGxTVhNBqXhxgyDcFFyGrVx3VqUyPU7UZTz9umQifQA8yXxKNX8sKGujtDKu7kKX1rLB8");
+
+    let elgamal_kp = ElGamalKeypair::new(&ptc.payer, &mint.pubkey()).unwrap();
+    let cipher_key = CipherKey::random(&mut OsRng);
+
+    println!("mint {:?}", mint);
+
+    // smoke test
+    assert_eq!(
+        elgamal_kp.public.encrypt(cipher_key).decrypt(&elgamal_kp.secret),
+        Ok(cipher_key),
+    );
+
+    let (nft_setup, public_metadata_key) = nft_setup_transaction(
+        &ptc.payer,
+        &mint,
+        &ptc.last_blockhash,
+        &rent,
+        &elgamal_kp,
+        &cipher_key,
+    ).await.unwrap();
+
+    ptc.banks_client.process_transaction(nft_setup).await.unwrap();
+
+    // data landed...
+    let stealth_key = get_stealth_address(&mint.pubkey()).0;
+    let stealth_account = ptc.banks_client.get_account(stealth_key).await.unwrap().unwrap();
+    let stealth = StealthAccount::from_bytes(stealth_account.data.as_slice()).unwrap();
+    assert_eq!(
+        stealth.encrypted_cipher_key.try_into().and_then(
+            |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)),
+        Ok(cipher_key),
+    );
+
+    let seller = &ptc.payer;
+    let buyer = Keypair::new();
+
+    // seed buyer and initialize mint
+    ptc.banks_client.process_transaction(
+        Transaction::new_signed_with_payer(
+            &[
+                system_instruction::transfer(
+                    &seller.pubkey(),
+                    &buyer.pubkey(),
+                    11 * LAMPORTS_PER_SOL,
+                ),
+            ],
+            Some(&seller.pubkey()),
+            &[seller],
+            ptc.last_blockhash,
+        ),
+    ).await.unwrap();
+
+    let (escrow_key, _escrow_bump) = Pubkey::find_program_address(
+        &[
+            b"BidEscrow",
+            buyer.pubkey().as_ref(),
+            mint.pubkey().as_ref(),
+        ],
+        &stealth_escrow::ID,
+    );
+
+    let buyer_elgamal_kp = ElGamalKeypair::new(&buyer, &mint.pubkey()).unwrap();
+
+    // buyer makes a bid of 10 SOL
+    ptc.banks_client.process_transaction(
+        Transaction::new_signed_with_payer(
+            &[
+                system_instruction::transfer(
+                    &buyer.pubkey(),
+                    &escrow_key,
+                    10 * LAMPORTS_PER_SOL,
+                ),
+                Instruction {
+                    program_id: stealth_escrow::id(),
+                    data: stealth_escrow::instruction::InitEscrow {
+                        collateral: LAMPORTS_PER_SOL,
+                        slots: 1000,
+                    }.data(),
+                    accounts: stealth_escrow::accounts::InitEscrow {
+                        bidder: buyer.pubkey(),
+                        mint: mint.pubkey(),
+                        escrow: escrow_key,
+                        system_program: system_program::id(),
+                    }.to_account_metas(None),
+                },
+                stealth::instruction::publish_elgamal_pubkey(
+                    &buyer.pubkey(),
+                    &mint.pubkey(),
+                    buyer_elgamal_kp.public.into(),
+                ),
+            ],
+            Some(&buyer.pubkey()),
+            &[&buyer],
+            ptc.last_blockhash,
+        ),
+    ).await.unwrap();
+
+    let pre_close_lamports = ptc.banks_client.get_balance(
+        buyer.pubkey()).await.unwrap();
+
+    assert!(pre_close_lamports < LAMPORTS_PER_SOL);
+
+    // seller accepts
+    ptc.banks_client.process_transaction(
+        Transaction::new_signed_with_payer(
+            &[
+                stealth_escrow::accept_escrow(
+                    buyer.pubkey(),
+                    mint.pubkey(),
+                    escrow_key,
+                    seller.pubkey(),
+                ),
+            ],
+            Some(&seller.pubkey()),
+            &[seller],
+            ptc.last_blockhash,
+        ),
+    ).await.unwrap();
+
+    let mut close_escrow_accounts = stealth_escrow::accounts::CloseEscrow {
+        bidder: buyer.pubkey(),
+        mint: mint.pubkey(),
+        escrow: escrow_key,
+        system_program: system_program::id(),
+    }.to_account_metas(None);
+
+    close_escrow_accounts.extend_from_slice(
+        &[
+            AccountMeta::new(
+                spl_associated_token_account::get_associated_token_address(
+                    &escrow_key, &mint.pubkey()),
+                false,
+            ),
+            AccountMeta::new(
+                spl_associated_token_account::get_associated_token_address(
+                    &seller.pubkey(), &mint.pubkey()),
+                false,
+            ),
+            AccountMeta::new_readonly(spl_token::id(), false),
+        ]
+    );
+
+    // close attempt should fail
+    let immediate_close_result = ptc.banks_client.process_transaction(
+        Transaction::new_signed_with_payer(
+            &[
+                Instruction {
+                    program_id: stealth_escrow::id(),
+                    data: stealth_escrow::instruction::CloseEscrow {}.data(),
+                    accounts: close_escrow_accounts.clone(),
+                },
+            ],
+            Some(&buyer.pubkey()),
+            &[&buyer],
+            ptc.last_blockhash,
+        ),
+    ).await;
+
+    assert!(immediate_close_result.is_err());
+
+
+    // seller didn't complete within time
+    let current_slot = ptc.banks_client.get_root_slot().await.unwrap();
+    ptc.warp_to_slot(current_slot + 1000).unwrap();
+
+    // buyer is able to close now
+    ptc.banks_client.process_transaction(
+        Transaction::new_signed_with_payer(
+            &[
+                Instruction {
+                    program_id: stealth_escrow::id(),
+                    data: stealth_escrow::instruction::CloseEscrow {}.data(),
+                    accounts: close_escrow_accounts,
+                },
+            ],
+            Some(&buyer.pubkey()),
+            &[&buyer],
+            ptc.last_blockhash,
+        ),
+    ).await.unwrap();
+
+    let post_close_lamports = ptc.banks_client.get_balance(
+        buyer.pubkey()).await.unwrap();
+
+    // buyer also got seller collateral
+    assert!(post_close_lamports > 11 * LAMPORTS_PER_SOL);
+}
