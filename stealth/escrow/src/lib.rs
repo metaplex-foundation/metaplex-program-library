@@ -367,15 +367,19 @@ pub struct AcceptEscrow<'info> {
     /*
      * seller accept accounts
      */
-    pub acceptor: AccountInfo<'info>,
+    #[account(mut)]
+    pub acceptor: Signer<'info>,
 
     // checked during spl_token::transfer to `escrow_token_account`
+    #[account(mut)]
     pub acceptor_token_account: AccountInfo<'info>,
     // ATA created with mint `mint`
+    #[account(mut)]
     pub escrow_token_account: AccountInfo<'info>,
 
     // checked by stealth_program
     pub stealth: AccountInfo<'info>,
+    #[account(mut)]
     pub transfer_buffer: AccountInfo<'info>,
 
     /*
@@ -415,17 +419,21 @@ pub struct CompleteEscrow<'info> {
     pub escrow: Account<'info, BidEscrow>,
 
     // checked during spl_token::transfer from `escrow_token_account`
+    #[account(mut)]
     pub bidder_token_account: AccountInfo<'info>,
 
     /*
      * seller accept accounts
      */
-    pub acceptor: AccountInfo<'info>,
+    pub acceptor: Signer<'info>,
 
+    #[account(mut)]
     pub escrow_token_account: AccountInfo<'info>,
 
     // checked by stealth_program
+    #[account(mut)]
     pub stealth: AccountInfo<'info>,
+    #[account(mut)]
     pub transfer_buffer: AccountInfo<'info>,
 
 

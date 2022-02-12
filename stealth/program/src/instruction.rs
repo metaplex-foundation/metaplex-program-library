@@ -300,7 +300,7 @@ pub fn init_transfer(
             spl_associated_token_account::get_associated_token_address(payer, mint),
             false,
         ),
-        AccountMeta::new(get_stealth_address(mint).0, false),
+        AccountMeta::new_readonly(get_stealth_address(mint).0, false),
         AccountMeta::new_readonly(*recipient, false),
         AccountMeta::new_readonly(get_elgamal_pubkey_address(recipient, mint).0, false),
         AccountMeta::new(get_transfer_buffer_address(recipient, mint).0, false),
