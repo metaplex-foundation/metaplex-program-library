@@ -25,6 +25,15 @@ pub mod stealth_escrow {
 
         escrow.bidder = ctx.accounts.bidder.key();
         escrow.mint = ctx.accounts.mint.key();
+        // TODO: would be nice to dedup with anchor find
+        escrow.bump_seed = Pubkey::find_program_address(
+            &[
+                b"BidEscrow".as_ref(),
+                escrow.bidder.as_ref(),
+                escrow.mint.as_ref(),
+            ],
+            &ID,
+        ).1;
         escrow.collateral = collateral;
         // TODO: max?
         escrow.slots = slots;
@@ -53,13 +62,12 @@ pub mod stealth_escrow {
             let acceptor_token_account = next_account_info(remaining_accounts)?;
             let token_program = next_account_info(remaining_accounts)?;
 
-            let bidder_key = ctx.accounts.bidder.key();
-            let mint_key = ctx.accounts.mint.key();
             let escrow_signer_seeds: &[&[&[u8]]] = &[
                 &[
                     b"BidEscrow".as_ref(),
-                    bidder_key.as_ref(),
-                    mint_key.as_ref(),
+                    escrow.bidder.as_ref(),
+                    escrow.mint.as_ref(),
+                    &[escrow.bump_seed],
                 ],
             ];
 
@@ -199,13 +207,13 @@ pub mod stealth_escrow {
         )?;
 
 
-        let bidder_key = ctx.accounts.bidder.key();
-        let mint_key = ctx.accounts.mint.key();
+        let escrow = &ctx.accounts.escrow;
         let escrow_signer_seeds: &[&[&[u8]]] = &[
             &[
                 b"BidEscrow".as_ref(),
-                bidder_key.as_ref(),
-                mint_key.as_ref(),
+                escrow.bidder.as_ref(),
+                escrow.mint.as_ref(),
+                &[escrow.bump_seed],
             ],
         ];
 
@@ -311,6 +319,7 @@ pub struct InitEscrow<'info> {
         space = 8       // discriminant
             + 32        // bidder pubkey
             + 32        // mint pubkey
+            + 1         // bump_seed u8
             + 8         // collateral u64
             + 8         // slots u64
             + 1 + 8,    // accept_slot option<u64>
@@ -467,6 +476,7 @@ pub struct BidEscrow {
     // encoded in PDA. stored for lookup
     pub bidder: Pubkey,
     pub mint: Pubkey,
+    pub bump_seed: u8,
 
     // lamports seller is asked to put up when accepting
     pub collateral: u64,
