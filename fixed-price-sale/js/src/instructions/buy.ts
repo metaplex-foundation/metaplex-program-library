@@ -35,7 +35,6 @@ export type BuyInstructionAccounts = {
   vault: web3.PublicKey;
   owner: web3.PublicKey;
   masterEditionMetadata: web3.PublicKey;
-  clock: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
 };
 
@@ -63,7 +62,6 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     vault,
     owner,
     masterEditionMetadata,
-    clock,
     tokenMetadataProgram,
   } = accounts;
 
@@ -143,7 +141,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
       isSigner: false,
     },
     {
-      pubkey: clock,
+      pubkey: web3.SYSVAR_CLOCK_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
