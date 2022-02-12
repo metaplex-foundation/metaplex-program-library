@@ -10,6 +10,18 @@ use solana_program::{
 };
 use std::convert::TryInto;
 
+#[cfg(not(target_arch = "bpf"))]
+use {
+    anchor_lang::{
+        InstructionData,
+        ToAccountMetas,
+    },
+    solana_sdk::{
+        instruction::Instruction,
+        system_program,
+    },
+};
+
 declare_id!("BNJ3tosyYaVoShvznwM5cSvCDf91WDtt3957UegPQvko");
 
 #[program]
@@ -106,6 +118,7 @@ pub mod stealth_escrow {
 
         // init transfer before escrowing NFT
         invoke(
+            // TODO: skip PDA lookups
             &stealth::instruction::init_transfer(
                 &ctx.accounts.acceptor.key(),
                 &ctx.accounts.mint.key(),
@@ -192,6 +205,7 @@ pub mod stealth_escrow {
 
         // finalize secret transfer
         invoke(
+            // TODO: skip PDA lookups
             &stealth::instruction::fini_transfer(
                 ctx.accounts.acceptor.key(),
                 ctx.accounts.mint.key(),
@@ -487,4 +501,46 @@ pub struct BidEscrow {
     pub slots: u64,
 
     pub accept_slot: Option<u64>,
+}
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn accept_escrow(
+    bidder: Pubkey,
+    mint: Pubkey,
+    escrow: Pubkey, // could be calculated from bidder + mint
+    acceptor: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id: id(),
+        data: instruction::AcceptEscrow {}.data(),
+        accounts: accounts::AcceptEscrow {
+            bidder,
+            mint,
+            escrow,
+            bidder_elgamal_info:
+                stealth::instruction::get_elgamal_pubkey_address(
+                    &bidder, &mint).0,
+            acceptor,
+            acceptor_token_account:
+                spl_associated_token_account::get_associated_token_address(
+                    &acceptor,
+                    &mint,
+                ),
+            escrow_token_account:
+                spl_associated_token_account::get_associated_token_address(
+                    &escrow,
+                    &mint,
+                ),
+            stealth:
+                stealth::instruction::get_stealth_address(&mint).0,
+            transfer_buffer:
+                stealth::instruction::get_transfer_buffer_address(
+                    &bidder, &mint).0,
+            system_program: system_program::id(),
+            token_program: spl_token::id(),
+            associated_token_program: spl_associated_token_account::id(),
+            stealth_program: stealth::id(),
+            rent: solana_sdk::sysvar::rent::id(),
+        }.to_account_metas(None),
+    }
 }

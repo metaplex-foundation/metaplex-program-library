@@ -24,7 +24,7 @@ mpl-token-metadata = { path = "../../token-metadata/program", features = ["no-en
 solana-program = "1.9.4"
 stealth = { path = "../program", features = ["no-entrypoint"] }
 
-[dev-dependencies]
+[target.'cfg(not(target_arch = "bpf"))'.dependencies]
 rand_core = "0.6.3"
 solana-program-test = "1.9.4"
 solana-sdk = "1.9.4"
