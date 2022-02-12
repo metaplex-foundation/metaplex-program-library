@@ -1,23 +1,23 @@
 import BN from 'bn.js';
 import test from 'tape';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
-
-import { findTradeHistoryAddress } from '../src/utils';
-import { createBuyTransaction } from './transactions';
+import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
+import { closeMarket, createBuyTransaction, createWithdrawTransaction } from './transactions';
 import { killStuckProcess, logDebug, sleep } from './utils';
 import {
   createPrerequisites,
   createStore,
   initSellingResource,
-  mintNFT,
   createMarket,
+  mintNFT,
   mintTokenToAccount,
 } from './actions';
 
 killStuckProcess();
 
-test('buy: successful purchase for newly minted treasury mint', async (t) => {
+test('withdraw: success', async (t) => {
   const { payer, connection, transactionHandler } = await createPrerequisites();
 
   const store = await createStore({
@@ -47,18 +47,18 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     connection,
   });
 
-  const startDate = Math.round(Date.now() / 1000);
+  const startDate = Math.round(Date.now() / 1000) + 1;
   const params = {
     name: 'Market',
     description: '',
     startDate,
-    endDate: startDate + 5 * 20,
+    endDate: null,
     mutable: true,
-    price: 0.001,
+    price: 1,
     piecesInOneWallet: 1,
   };
 
-  const { market, treasuryHolder } = await createMarket({
+  const { market, treasuryHolder, treasuryOwnerBump, treasuryOwner } = await createMarket({
     test: t,
     transactionHandler,
     payer,
@@ -68,6 +68,8 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     treasuryMint: treasuryMint.publicKey,
     params,
   });
+
+  await sleep(3000);
 
   const [tradeHistory, tradeHistoryBump] = await findTradeHistoryAddress(
     payer.publicKey,
@@ -119,4 +121,62 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
 
   logDebug('buy:: successful purchase');
   assertConfirmedTransaction(t, buyRes.txConfirmed);
+
+  await sleep(3000);
+
+  const marketTx = await closeMarket({
+    transactionHandler,
+    payer,
+    connection,
+    market,
+  });
+
+  const marketRes = await transactionHandler.sendAndConfirmTransaction(
+    marketTx,
+    [payer],
+    defaultSendOptions,
+  );
+
+  logDebug(`market: ${market.publicKey}`);
+  assertConfirmedTransaction(t, marketRes.txConfirmed);
+
+  const [payoutTicket, payoutTicketBump] = await findPayoutTicketAddress(
+    market.publicKey,
+    payer.publicKey,
+  );
+
+  const destination = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    treasuryMint.publicKey,
+    payer.publicKey,
+  );
+
+  const metadata = await Metadata.getPDA(resourceMint.publicKey);
+
+  const withdrawTx = await createWithdrawTransaction({
+    connection,
+    payer,
+    market: market.publicKey,
+    sellingResource: sellingResource.publicKey,
+    metadata,
+    treasuryHolder: treasuryHolder.publicKey,
+    treasuryMint: treasuryMint.publicKey,
+    destination,
+    payoutTicket,
+    payoutTicketBump,
+    treasuryOwnerBump,
+    treasuryOwner,
+  });
+
+  const withdrawRes = await transactionHandler.sendAndConfirmTransaction(
+    withdrawTx,
+    [payer],
+    defaultSendOptions,
+  );
+
+  assertConfirmedTransaction(t, withdrawRes.txConfirmed);
+
+  const payoutTicketData = await connection.getAccountInfo(payoutTicket);
+  t.assert(payoutTicketData.owner);
 });

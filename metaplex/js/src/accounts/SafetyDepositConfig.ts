@@ -1,14 +1,13 @@
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-import bs58 from 'bs58';
 import {
   AnyPublicKey,
   StringPublicKey,
   Account,
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
-  getBNFromData,
   TupleNumericType,
+  Borsh,
 } from '@metaplex-foundation/mpl-core';
 import { MetaplexKey, MetaplexProgram } from '../MetaplexProgram';
 import { Buffer } from 'buffer';
@@ -51,23 +50,50 @@ export enum NonWinningConstraint {
   GivenForBidPrice = 2,
 }
 
-export interface AmountRange {
+export interface AmountRangeArgs {
   amount: BN;
   length: BN;
 }
 
-export interface ParticipationConfigV2 {
+export class AmountRange extends Borsh.Data<AmountRangeArgs> {
+  static readonly SCHEMA = this.struct([
+    ['amount', 'u64'],
+    ['length', 'u64'],
+  ]);
+
+  amount: BN;
+  length: BN;
+}
+
+export interface ParticipationConfigV2Args {
   winnerConstraint: WinningConstraint;
   nonWinningConstraint: NonWinningConstraint;
   fixedPrice: BN | null;
 }
 
-export interface ParticipationStateV2 {
+export class ParticipationConfigV2 extends Borsh.Data<ParticipationConfigV2Args> {
+  static readonly SCHEMA = this.struct([
+    ['winnerConstraint', 'u8'],
+    ['nonWinningConstraint', 'u8'],
+    ['fixedPrice', { kind: 'option', type: 'u64' }],
+  ]);
+
+  winnerConstraint: WinningConstraint;
+  nonWinningConstraint: NonWinningConstraint;
+  fixedPrice: BN | null;
+}
+
+export interface ParticipationStateV2Args {
   collectedToAcceptPayment: BN;
 }
 
-export interface SafetyDepositConfigData {
-  key: MetaplexKey;
+export class ParticipationStateV2 extends Borsh.Data<ParticipationStateV2Args> {
+  static readonly SCHEMA = this.struct([['collectedToAcceptPayment', 'u64']]);
+
+  collectedToAcceptPayment: BN;
+}
+
+export interface SafetyDepositConfigDataArgs {
   auctionManager: StringPublicKey;
   order: BN;
   winningConfigType: WinningConfigType;
@@ -76,6 +102,40 @@ export interface SafetyDepositConfigData {
   amountRanges: AmountRange[];
   participationConfig: ParticipationConfigV2 | null;
   participationState: ParticipationStateV2 | null;
+}
+
+export class SafetyDepositConfigData extends Borsh.Data<SafetyDepositConfigDataArgs> {
+  static readonly SCHEMA = new Map([
+    ...ParticipationConfigV2.SCHEMA,
+    ...ParticipationStateV2.SCHEMA,
+    ...AmountRange.SCHEMA,
+    ...this.struct([
+      ['key', 'u8'],
+      ['auctionManager', 'pubkeyAsString'],
+      ['order', 'u64'],
+      ['winningConfigType', 'u8'],
+      ['amountType', 'u8'],
+      ['lengthType', 'u8'],
+      ['amountRanges', [AmountRange]],
+      ['participationConfig', { kind: 'option', type: ParticipationConfigV2 }],
+      ['participationState', { kind: 'option', type: ParticipationStateV2 }],
+    ]),
+  ]);
+
+  key: MetaplexKey = MetaplexKey.SafetyDepositConfigV1;
+  auctionManager: StringPublicKey;
+  order: BN;
+  winningConfigType: WinningConfigType;
+  amountType: TupleNumericType;
+  lengthType: TupleNumericType;
+  amountRanges: AmountRange[];
+  participationConfig: ParticipationConfigV2 | null;
+  participationState: ParticipationStateV2 | null;
+
+  constructor(args: SafetyDepositConfigDataArgs) {
+    super(args);
+    this.key = MetaplexKey.SafetyDepositConfigV1;
+  }
 }
 
 export class SafetyDepositConfig extends Account<SafetyDepositConfigData> {
@@ -90,7 +150,7 @@ export class SafetyDepositConfig extends Account<SafetyDepositConfigData> {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }
 
-    this.data = deserialize(this.info.data);
+    this.data = SafetyDepositConfigData.deserialize(this.info.data);
   }
 
   static isCompatible(data: Buffer) {
@@ -106,65 +166,3 @@ export class SafetyDepositConfig extends Account<SafetyDepositConfigData> {
     ]);
   }
 }
-
-const deserialize = (buffer: Buffer) => {
-  const data: SafetyDepositConfigData = {
-    key: MetaplexKey.SafetyDepositConfigV1,
-    auctionManager: bs58.encode(buffer.slice(1, 33)),
-    order: new BN(buffer.slice(33, 41), 'le'),
-    winningConfigType: buffer[41],
-    amountType: buffer[42],
-    lengthType: buffer[43],
-    amountRanges: [],
-    participationConfig: null,
-    participationState: null,
-  };
-
-  const lengthOfArray = new BN(buffer.slice(44, 48), 'le');
-  let offset = 48;
-
-  for (let i = 0; i < lengthOfArray.toNumber(); i++) {
-    const amount = getBNFromData(buffer, offset, data.amountType);
-    offset += data.amountType;
-    const length = getBNFromData(buffer, offset, data.lengthType);
-    offset += data.lengthType;
-    data.amountRanges.push({ amount, length });
-  }
-
-  if (buffer[offset] == 0) {
-    offset += 1;
-    data.participationConfig = null;
-  } else {
-    // pick up participation config manually
-    const winnerConstraint = buffer[offset + 1];
-    const nonWinningConstraint = buffer[offset + 2];
-    let fixedPrice: BN | null = null;
-    offset += 3;
-
-    if (buffer[offset] == 1) {
-      fixedPrice = new BN(buffer.slice(offset + 1, offset + 9), 'le');
-      offset += 9;
-    } else {
-      offset += 1;
-    }
-    data.participationConfig = {
-      winnerConstraint,
-      nonWinningConstraint,
-      fixedPrice,
-    };
-  }
-
-  if (buffer[offset] == 0) {
-    offset += 1;
-    data.participationState = null;
-  } else {
-    // pick up participation state manually
-    const collectedToAcceptPayment = new BN(buffer.slice(offset + 1, offset + 9), 'le');
-    offset += 9;
-    data.participationState = {
-      collectedToAcceptPayment,
-    };
-  }
-
-  return data;
-};

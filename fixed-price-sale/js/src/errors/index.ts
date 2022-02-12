@@ -536,6 +536,77 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * MetadataShouldBeMutable: 'Metadata should be mutable'
+ */
+export class MetadataShouldBeMutableError extends Error {
+  readonly code: number = 0x178e;
+  readonly name: string = 'MetadataShouldBeMutable';
+  constructor() {
+    super('Metadata should be mutable');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataShouldBeMutableError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178e, () => new MetadataShouldBeMutableError());
+createErrorFromNameLookup.set('MetadataShouldBeMutable', () => new MetadataShouldBeMutableError());
+
+/**
+ * PrimarySaleIsNotAllowed: 'Primary sale is not allowed'
+ */
+export class PrimarySaleIsNotAllowedError extends Error {
+  readonly code: number = 0x178f;
+  readonly name: string = 'PrimarySaleIsNotAllowed';
+  constructor() {
+    super('Primary sale is not allowed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PrimarySaleIsNotAllowedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178f, () => new PrimarySaleIsNotAllowedError());
+createErrorFromNameLookup.set('PrimarySaleIsNotAllowed', () => new PrimarySaleIsNotAllowedError());
+
+/**
+ * CreatorsIsGtThanAvailable: 'Creators is gt than allowed'
+ */
+export class CreatorsIsGtThanAvailableError extends Error {
+  readonly code: number = 0x1790;
+  readonly name: string = 'CreatorsIsGtThanAvailable';
+  constructor() {
+    super('Creators is gt than allowed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreatorsIsGtThanAvailableError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1790, () => new CreatorsIsGtThanAvailableError());
+createErrorFromNameLookup.set(
+  'CreatorsIsGtThanAvailable',
+  () => new CreatorsIsGtThanAvailableError(),
+);
+
+/**
+ * CreatorsIsEmpty: 'Creators is empty'
+ */
+export class CreatorsIsEmptyError extends Error {
+  readonly code: number = 0x1791;
+  readonly name: string = 'CreatorsIsEmpty';
+  constructor() {
+    super('Creators is empty');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreatorsIsEmptyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1791, () => new CreatorsIsEmptyError());
+createErrorFromNameLookup.set('CreatorsIsEmpty', () => new CreatorsIsEmptyError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  */
 export function errorFromCode(code: number): MaybeErrorWithCode {

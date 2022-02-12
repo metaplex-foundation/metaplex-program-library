@@ -4,7 +4,7 @@ mod utils;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    state::{Collection, DataV2, Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{Creator, Collection, DataV2, Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
@@ -235,6 +235,421 @@ mod update_metadata_account_v2 {
     }
 
     #[tokio::test]
+    async fn fail_cannot_adjust_creators_unless_unverified_after_sold() {
+      let mut context = program_test().start_with_context().await;
+      let test_metadata = Metadata::new();
+      let address = context.payer.pubkey();
+
+        test_metadata
+          .create_v2(
+              &mut context,
+              "Test".to_string(),
+              "TST".to_string(),
+              "uri".to_string(),
+              Some(vec![
+                Creator {
+                  address,
+                  verified: true,
+                  share: 100,
+                },
+              ]),
+              10,
+              true,
+              None,
+              None,
+              None,
+          )
+          .await
+          .unwrap();
+
+        test_metadata
+          .update_primary_sale_happened_via_token(&mut context)
+          .await
+          .unwrap();
+
+      let tx = Transaction::new_signed_with_payer(
+          &[instruction::update_metadata_accounts_v2(
+              id(),
+              test_metadata.pubkey,
+              context.payer.pubkey(),
+              None,
+              Some(DataV2 {
+                name: "Test".to_string(),
+                symbol: "TST".to_string(),
+                uri: "uri".to_string(),
+                seller_fee_basis_points: 10,
+                creators: Some(vec![
+                  Creator {
+                    address,
+                    verified: true,
+                    share: 50,
+                  },
+                ]),
+                collection: None,
+                uses: None,
+              }),
+              None,
+              None,
+          )],
+          Some(&context.payer.pubkey()),
+          &[&context.payer],
+          context.last_blockhash,
+      );
+
+      let result = context
+                    .banks_client
+                    .process_transaction(tx)
+                    .await
+                    .unwrap_err();
+
+      assert_custom_error!(result, MetadataError::CannotAdjustVerifiedCreator);
+    }
+
+
+    #[tokio::test]
+    async fn fail_cannot_remove_verfied_creators_after_sold() {
+      let mut context = program_test().start_with_context().await;
+      let test_metadata = Metadata::new();
+      let address = context.payer.pubkey();
+      let other_address = Keypair::new();
+
+        test_metadata
+          .create_v2(
+              &mut context,
+              "Test".to_string(),
+              "TST".to_string(),
+              "uri".to_string(),
+              Some(vec![
+                Creator {
+                  address,
+                  verified: true,
+                  share: 100,
+                },
+              ]),
+              10,
+              true,
+              None,
+              None,
+              None,
+          )
+          .await
+          .unwrap();
+
+      test_metadata
+        .update_primary_sale_happened_via_token(&mut context)
+        .await
+        .unwrap();
+
+      let tx = Transaction::new_signed_with_payer(
+          &[instruction::update_metadata_accounts_v2(
+              id(),
+              test_metadata.pubkey,
+              context.payer.pubkey(),
+              None,
+              Some(DataV2 {
+                name: "Test".to_string(),
+                symbol: "TST".to_string(),
+                uri: "uri".to_string(),
+                seller_fee_basis_points: 10,
+                creators: Some(vec![
+                  Creator {
+                    address: other_address.pubkey(),
+                    verified: false,
+                    share: 100,
+                  },
+                ]),
+                collection: None,
+                uses: None,
+              }),
+              None,
+              None,
+          )],
+          Some(&context.payer.pubkey()),
+          &[&context.payer],
+          context.last_blockhash,
+      );
+
+      let result = context
+                    .banks_client
+                    .process_transaction(tx)
+                    .await
+                    .unwrap_err();
+
+      assert_custom_error!(result, MetadataError::CannotRemoveVerifiedCreator);
+    }
+
+    #[tokio::test]
+    async fn success_update_unverified_creators_after_sale() {
+      let mut context = program_test().start_with_context().await;
+      let test_metadata = Metadata::new();
+      let address = context.payer.pubkey();
+      let other_keypair = Keypair::new();
+      let other_address = other_keypair.pubkey();
+
+        test_metadata
+          .create_v2(
+              &mut context,
+              "Test".to_string(),
+              "TST".to_string(),
+              "uri".to_string(),
+              Some(vec![
+                Creator {
+                  address: address,
+                  verified: true,
+                  share: 50,
+                },
+                Creator {
+                  address: other_address,
+                  verified: false,
+                  share: 50,
+                },
+              ]),
+              10,
+              true,
+              None,
+              None,
+              None,
+          )
+          .await
+          .unwrap();
+
+        test_metadata
+          .update_primary_sale_happened_via_token(&mut context)
+          .await
+          .unwrap();
+
+      let tx = Transaction::new_signed_with_payer(
+          &[instruction::update_metadata_accounts_v2(
+              id(),
+              test_metadata.pubkey,
+              context.payer.pubkey(),
+              None,
+              Some(DataV2 {
+                name: "Test".to_string(),
+                symbol: "TST".to_string(),
+                uri: "uri".to_string(),
+                seller_fee_basis_points: 10,
+                creators: Some(vec![
+                  Creator {
+                    address: address,
+                    verified: true,
+                    share: 100,
+                  },
+                ]),
+                collection: None,
+                uses: None,
+              }),
+              None,
+              None,
+          )],
+          Some(&context.payer.pubkey()),
+          &[&context.payer],
+          context.last_blockhash,
+      );
+
+      context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap();
+    }
+
+    #[tokio::test]
+    async fn success_update_creators_when_unsold() {
+      let mut context = program_test().start_with_context().await;
+      let test_metadata = Metadata::new();
+      let address = context.payer.pubkey();
+      let other_address = Keypair::new();
+
+        test_metadata
+          .create_v2(
+              &mut context,
+              "Test".to_string(),
+              "TST".to_string(),
+              "uri".to_string(),
+              Some(vec![
+                Creator {
+                  address,
+                  verified: true,
+                  share: 100,
+                },
+              ]),
+              10,
+              true,
+              None,
+              None,
+              None,
+          )
+          .await
+          .unwrap();
+
+      let tx = Transaction::new_signed_with_payer(
+          &[instruction::update_metadata_accounts_v2(
+              id(),
+              test_metadata.pubkey,
+              context.payer.pubkey(),
+              None,
+              Some(DataV2 {
+                name: "Test".to_string(),
+                symbol: "TST".to_string(),
+                uri: "uri".to_string(),
+                seller_fee_basis_points: 10,
+                creators: Some(vec![
+                  Creator {
+                    address: other_address.pubkey(),
+                    verified: false,
+                    share: 100,
+                  },
+                ]),
+                collection: None,
+                uses: None,
+              }),
+              None,
+              None,
+          )],
+          Some(&context.payer.pubkey()),
+          &[&context.payer],
+          context.last_blockhash,
+      );
+
+      context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap();
+    }
+
+    #[tokio::test]
+    async fn fail_cannot_clear_creators_after_sold() {
+      let mut context = program_test().start_with_context().await;
+      let test_metadata = Metadata::new();
+      let address = context.payer.pubkey();
+
+        test_metadata
+          .create_v2(
+              &mut context,
+              "Test".to_string(),
+              "TST".to_string(),
+              "uri".to_string(),
+              Some(vec![
+                Creator {
+                  address,
+                  verified: true,
+                  share: 100,
+                },
+              ]),
+              10,
+              true,
+              None,
+              None,
+              None,
+          )
+          .await
+          .unwrap();
+
+        test_metadata
+          .update_primary_sale_happened_via_token(&mut context)
+          .await
+          .unwrap();
+
+      let tx = Transaction::new_signed_with_payer(
+          &[instruction::update_metadata_accounts_v2(
+              id(),
+              test_metadata.pubkey,
+              context.payer.pubkey(),
+              None,
+              Some(DataV2 {
+                name: "Test".to_string(),
+                symbol: "TST".to_string(),
+                uri: "uri".to_string(),
+                seller_fee_basis_points: 10,
+                creators: None,
+                collection: None,
+                uses: None,
+              }),
+              None,
+              None,
+          )],
+          Some(&context.payer.pubkey()),
+          &[&context.payer],
+          context.last_blockhash,
+      );
+
+      let result = context
+                    .banks_client
+                    .process_transaction(tx)
+                    .await
+                    .unwrap_err();
+
+      assert_custom_error!(result, MetadataError::CannotWipeVerifiedCreators);
+    }
+
+    #[tokio::test]
+    async fn fail_cannot_change_seller_fee_basis_points_after_sold() {
+      let mut context = program_test().start_with_context().await;
+      let test_metadata = Metadata::new();
+      let address = context.payer.pubkey();
+
+        test_metadata
+          .create_v2(
+              &mut context,
+              "Test".to_string(),
+              "TST".to_string(),
+              "uri".to_string(),
+              Some(vec![
+                Creator {
+                  address,
+                  verified: true,
+                  share: 100,
+                },
+              ]),
+              10,
+              true,
+              None,
+              None,
+              None,
+          )
+          .await
+          .unwrap();
+
+        test_metadata
+          .update_primary_sale_happened_via_token(&mut context)
+          .await
+          .unwrap();
+
+      let tx = Transaction::new_signed_with_payer(
+          &[instruction::update_metadata_accounts_v2(
+              id(),
+              test_metadata.pubkey,
+              context.payer.pubkey(),
+              None,
+              Some(DataV2 {
+                name: "Test".to_string(),
+                symbol: "TST".to_string(),
+                uri: "uri".to_string(),
+                seller_fee_basis_points: 100,
+                creators: None,
+                collection: None,
+                uses: None,
+              }),
+              None,
+              None,
+          )],
+          Some(&context.payer.pubkey()),
+          &[&context.payer],
+          context.last_blockhash,
+      );
+
+      let result = context
+                    .banks_client
+                    .process_transaction(tx)
+                    .await
+                    .unwrap_err();
+
+      assert_custom_error!(result, MetadataError::NotAllowedToChangeSellerFeeBasisPoints);
+    }
+
+    #[tokio::test]
     async fn fail_cannot_verify_collection() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
@@ -313,4 +728,4 @@ mod update_metadata_account_v2 {
             MetadataError::CollectionCannotBeVerifiedInThisInstruction
         );
     }
-}
+} 

@@ -87,7 +87,6 @@ pub enum NFTPacksInstruction {
     /// - write                          pack_set
     /// - signer                         authority
     /// - read                           store
-    /// - read                           random_oracle
     /// - read                           Rent account
     /// - read                           Clock account
     /// - read                           whitelisted_creator. Optional key
@@ -180,7 +179,7 @@ pub enum NFTPacksInstruction {
 
     /// ClaimPack
     ///
-    /// Call this instruction with ProvingProcess and PackCard accounts and program among with random oracle will transfer
+    /// Call this instruction with ProvingProcess and PackCard accounts and program will transfer
     /// MasterEdition to user account or return empty response depends successfully or not user open pack with specific MasterEdition.
     ///
     /// Accounts:
@@ -198,7 +197,6 @@ pub enum NFTPacksInstruction {
     /// - read              metadata_mint_acc
     /// - read              edition_acc
     /// - read              rent program
-    /// - read              randomness oracle account
     /// - read              mpl_token_metadata program
     /// - read              spl_token program
     /// - read              system program
@@ -283,7 +281,7 @@ pub enum NFTPacksInstruction {
     /// - read                     pack_voucher
     /// - read, write              proving_process (PDA, ['proving', pack, user_wallet])
     /// - signer                   user_wallet
-    /// - read                     randomness_oracle
+    /// - read                     recent_slothashes
     /// - read                     clock
     /// - read                     rent
     /// - read                     system_program
@@ -320,7 +318,6 @@ pub fn init_pack(
     pack_set: &Pubkey,
     authority: &Pubkey,
     store: &Pubkey,
-    random_oracle: &Pubkey,
     whitelisted_creator: &Pubkey,
     args: InitPackSetArgs,
 ) -> Instruction {
@@ -328,7 +325,6 @@ pub fn init_pack(
         AccountMeta::new(*pack_set, false),
         AccountMeta::new_readonly(*authority, true),
         AccountMeta::new_readonly(*store, false),
-        AccountMeta::new_readonly(*random_oracle, false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(*whitelisted_creator, false),
@@ -461,7 +457,6 @@ pub fn claim_pack(
     new_mint_authority: &Pubkey,
     metadata: &Pubkey,
     metadata_mint: &Pubkey,
-    randomness_oracle: &Pubkey,
     index: u32,
 ) -> Instruction {
     let (proving_process, _) =
@@ -500,7 +495,6 @@ pub fn claim_pack(
         AccountMeta::new(*metadata_mint, false),
         AccountMeta::new(edition_mark_pda, false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
-        AccountMeta::new_readonly(*randomness_oracle, false),
         AccountMeta::new_readonly(mpl_token_metadata::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(system_program::id(), false),
@@ -623,7 +617,6 @@ pub fn request_card_for_redeem(
     edition_mint: &Pubkey,
     user_wallet: &Pubkey,
     user_token_acc: &Option<Pubkey>,
-    random_oracle: &Pubkey,
     index: u32,
 ) -> Instruction {
     let (proving_process, _) =
@@ -642,7 +635,7 @@ pub fn request_card_for_redeem(
         AccountMeta::new_readonly(pack_voucher, false),
         AccountMeta::new(proving_process, false),
         AccountMeta::new(*user_wallet, true),
-        AccountMeta::new_readonly(*random_oracle, false),
+        AccountMeta::new_readonly(sysvar::slot_hashes::id(), false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
