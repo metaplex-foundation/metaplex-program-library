@@ -4272,8 +4272,15 @@ dependencies = [
  "anchor-lang 0.21.0",
  "anchor-spl 0.21.0",
  "mpl-token-metadata 1.2.3",
+ "rand_core 0.6.3",
  "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-associated-token-account",
+ "spl-token",
  "stealth",
+ "tarpc",
+ "time",
 ]
 
 [[package]]

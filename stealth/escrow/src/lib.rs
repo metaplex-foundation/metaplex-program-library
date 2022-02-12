@@ -13,7 +13,7 @@ use std::convert::TryInto;
 declare_id!("BNJ3tosyYaVoShvznwM5cSvCDf91WDtt3957UegPQvko");
 
 #[program]
-pub mod stealth_escorw {
+pub mod stealth_escrow {
     use super::*;
 
     pub fn init_escrow(
