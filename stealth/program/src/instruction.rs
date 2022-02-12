@@ -5,10 +5,12 @@ use {
     },
     bytemuck::{Pod, Zeroable},
     num_derive::{FromPrimitive, ToPrimitive},
-    num_traits::{FromPrimitive},
+    num_traits::{FromPrimitive, ToPrimitive},
     solana_program::{
+        instruction::{AccountMeta, Instruction},
         program_error::ProgramError,
         pubkey::Pubkey,
+        sysvar,
     },
     crate::{
         zk_token_elgamal,
@@ -18,10 +20,7 @@ use {
 #[cfg(not(target_arch = "bpf"))]
 use {
     crate::equality_proof,
-    num_traits::{ToPrimitive},
     solana_program::{
-        instruction::{AccountMeta, Instruction},
-        sysvar,
         system_instruction,
     },
     solana_sdk::signer::Signer,
@@ -245,7 +244,6 @@ pub fn get_transfer_buffer_address(
     )
 }
 
-#[cfg(not(target_arch = "bpf"))]
 pub fn encode_instruction<T: Pod>(
     accounts: Vec<AccountMeta>,
     instruction_type: StealthInstruction,
@@ -290,7 +288,6 @@ pub fn configure_metadata(
     )
 }
 
-#[cfg(not(target_arch = "bpf"))]
 pub fn init_transfer(
     payer: &Pubkey,
     mint: &Pubkey,
@@ -318,7 +315,6 @@ pub fn init_transfer(
     )
 }
 
-#[cfg(not(target_arch = "bpf"))]
 pub fn fini_transfer(
     payer: Pubkey,
     mint: Pubkey,

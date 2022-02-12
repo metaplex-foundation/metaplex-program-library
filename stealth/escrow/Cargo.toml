@@ -1,0 +1,25 @@
+[package]
+name = "stealth-escrow"
+version = "0.0.1"
+description = "Timeout based escrow for stealth NFTs"
+authors = [
+    "Lawrence Wu <larry.wu@solana.com>",
+]
+keywords = ["solana"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[features]
+no-entrypoint = []
+no-idl = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.21.0"
+anchor-spl = "0.21.0"
+mpl-token-metadata = { path = "../../token-metadata/program", features = ["no-entrypoint"] }
+solana-program = "1.9.4"
+stealth = { path = "../program", features = ["no-entrypoint"] }
