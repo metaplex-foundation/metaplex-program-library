@@ -491,7 +491,7 @@ pub fn assert_derivation(
     Ok(bump)
 }
 
-pub fn trade_state_seeds(
+pub fn trade_state_seeds<'a>(
     public_buy: bool,
     wallet: &Pubkey,
     auction_house: &Pubkey,
@@ -500,28 +500,37 @@ pub fn trade_state_seeds(
     buyer_price: u64,
     token_size: u64,
     token_holder: Option<&Pubkey>,
-) -> Result<&[u8], ProgramError> {
+) -> Result<Vec<&'a [u8]>, ProgramError> {
     if !public_buy && token_holder.is_none() {
         return Err(ErrorCode::DerivedKeyInvalid.into());
     }
+    let mint_bytes = mint.to_bytes();
+    let treasury_mint_bytes = treasury_mint.to_bytes();
+    let buyer_price_bytes = buyer_price.to_le_bytes();
+    let token_size_bytes = token_size.to_le_bytes();
+    let wallet_bytes = wallet.to_bytes();
+    let auction_house_key_bytes = auction_house.to_bytes();
     let mut seeds = vec![
-        PREFIX.as_bytes(),
-        &wallet.clone().to_bytes(),
-        &auction_house.clone().to_bytes(),
+        *PREFIX.as_bytes(),
+        wallet_bytes,
+        auction_house_key_bytes,
     ];
-    if public_buy {
-        seeds.push(&token_holder.unwrap().clone().to_bytes());
+    if !public_buy {
+        let token_holder_bytes = token_holder.unwrap().to_bytes();
+        seeds.push(token_holder_bytes);
     }
-    seeds.append(&mut vec![
-        &treasury_mint.clone().to_bytes(),
-        &mint.clone().to_bytes(),
-        &buyer_price.to_le_bytes(),
-        &token_size.to_le_bytes()
-    ]);
+
+    let seeds_sam: Vec<[u8]> = vec![
+        treasury_mint_bytes,
+        mint_bytes,
+        buyer_price_bytes,
+        token_size_bytes
+    ];
+    seeds.extend(seeds_sam);
     Ok(seeds)
 }
 
-pub fn assert_valid_trade_state(
+pub fn assert_valid_trade_state<'a>(
     public_buy: bool,
     wallet: &Pubkey,
     auction_house: &Account<AuctionHouse>,
@@ -533,14 +542,15 @@ pub fn assert_valid_trade_state(
     ts_bump: u8
 ) -> Result<u8, ProgramError> {
     let ah_pubkey = &auction_house.key();
-    let ts_seeds = trade_state_seeds(public_buy,
-                                     &wallet,
-                                     ah_pubkey,
-                                     &auction_house.treasury_mint,
-                                     &mint,
-                                     buyer_price,
-                                     token_size,
-                                     token_holder
+    let ts_seeds = trade_state_seeds(
+        public_buy,
+     &wallet,
+     ah_pubkey,
+     &auction_house.treasury_mint,
+     &mint,
+     buyer_price,
+     token_size,
+     token_holder
     )?;
     let canonical_bump = assert_derivation(
         &crate::id(),
