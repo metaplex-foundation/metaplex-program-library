@@ -161,6 +161,8 @@ pub fn buy(
         1,
     );
     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
+    println!("ts {:?}", buyer_trade_state);
+    println!("escrow_payment_account {:?}", escrow);
 
     let accounts = mpl_auction_house::accounts::Buy {
         wallet: buyer.pubkey(),
@@ -184,7 +186,7 @@ pub fn buy(
         trade_state_bump: sts_bump,
         escrow_payment_bump: escrow_bump,
         token_size: 1,
-        buyer_price: sale_price,
+        buyer_price: sale_price
     };
     let data = buy_ix.data();
 

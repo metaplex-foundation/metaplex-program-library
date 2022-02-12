@@ -6,7 +6,7 @@ export type WithdrawFromFeeInstructionArgs = {
 };
 const withdrawFromFeeStruct = new beet.BeetArgsStruct<
   WithdrawFromFeeInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -15,6 +15,9 @@ const withdrawFromFeeStruct = new beet.BeetArgsStruct<
   ],
   'WithdrawFromFeeInstructionArgs',
 );
+/**
+ * Accounts required by the _withdrawFromFee_ instruction
+ */
 export type WithdrawFromFeeInstructionAccounts = {
   authority: web3.PublicKey;
   feeWithdrawalDestination: web3.PublicKey;

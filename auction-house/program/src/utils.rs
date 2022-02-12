@@ -1,4 +1,4 @@
-use crate::{AuctionHouse, ErrorCode, PREFIX};
+use crate::{AuctionHouse, ErrorCode, PREFIX, TRADE_STATE_SIZE};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -490,75 +490,55 @@ pub fn assert_derivation(
     }
     Ok(bump)
 }
-
-pub fn trade_state_seeds<'a>(
-    public_buy: bool,
-    wallet: &Pubkey,
-    auction_house: &Pubkey,
-    treasury_mint: &Pubkey,
-    mint: &Pubkey,
-    buyer_price: u64,
-    token_size: u64,
-    token_holder: Option<&Pubkey>,
-) -> Result<Vec<&'a [u8]>, ProgramError> {
-    if !public_buy && token_holder.is_none() {
-        return Err(ErrorCode::DerivedKeyInvalid.into());
-    }
-    let mint_bytes = mint.to_bytes();
-    let treasury_mint_bytes = treasury_mint.to_bytes();
-    let buyer_price_bytes = buyer_price.to_le_bytes();
-    let token_size_bytes = token_size.to_le_bytes();
-    let wallet_bytes = wallet.to_bytes();
-    let auction_house_key_bytes = auction_house.to_bytes();
-    let mut seeds = vec![
-        *PREFIX.as_bytes(),
-        wallet_bytes,
-        auction_house_key_bytes,
-    ];
-    if !public_buy {
-        let token_holder_bytes = token_holder.unwrap().to_bytes();
-        seeds.push(token_holder_bytes);
-    }
-
-    let seeds_sam: Vec<[u8]> = vec![
-        treasury_mint_bytes,
-        mint_bytes,
-        buyer_price_bytes,
-        token_size_bytes
-    ];
-    seeds.extend(seeds_sam);
-    Ok(seeds)
-}
-
 pub fn assert_valid_trade_state<'a>(
-    public_buy: bool,
     wallet: &Pubkey,
     auction_house: &Account<AuctionHouse>,
     buyer_price: u64,
     token_size: u64,
     trade_state: &AccountInfo,
     mint: &Pubkey,
-    token_holder: Option<&Pubkey>,
+    token_holder: &Pubkey,
     ts_bump: u8
 ) -> Result<u8, ProgramError> {
     let ah_pubkey = &auction_house.key();
-    let ts_seeds = trade_state_seeds(
-        public_buy,
-     &wallet,
-     ah_pubkey,
-     &auction_house.treasury_mint,
-     &mint,
-     buyer_price,
-     token_size,
-     token_holder
-    )?;
+    let mint_bytes =  mint.to_bytes();
+    let treasury_mint_bytes = auction_house.treasury_mint.to_bytes();
+    let buyer_price_bytes = buyer_price.to_le_bytes();
+    let token_size_bytes = token_size.to_le_bytes();
+    let wallet_bytes = wallet.to_bytes();
+    let auction_house_key_bytes = ah_pubkey.to_bytes();
+    let pfix = PREFIX.as_bytes();
+    let token_holder_bytes = token_holder.to_bytes();
     let canonical_bump = assert_derivation(
         &crate::id(),
         trade_state,
-        ts_seeds.as_slice()
-    )?;
-    if ts_bump != canonical_bump {
-        return Err(ErrorCode::DerivedKeyInvalid.into());
+        &[
+            pfix,
+            &wallet_bytes,
+            &auction_house_key_bytes,
+            &token_holder_bytes,
+            &treasury_mint_bytes,
+            &mint_bytes,
+            &buyer_price_bytes,
+            &token_size_bytes
+        ]
+    );
+    let canonical_public_bump = assert_derivation(
+        &crate::id(),
+        trade_state,
+        &[
+            pfix,
+            &wallet_bytes,
+            &auction_house_key_bytes,
+            &treasury_mint_bytes,
+            &mint_bytes,
+            &buyer_price_bytes,
+            &token_size_bytes
+        ]
+    );
+    match (canonical_public_bump, canonical_bump) {
+        (Ok(public), Err(_)) if public == ts_bump => Ok(public),
+        (Err(_), Ok(bump)) if bump == ts_bump => Ok(bump),
+        _ => Err(ErrorCode::DerivedKeyInvalid.into()),
     }
-    Ok(ts_bump)
 }

@@ -35,7 +35,8 @@ async fn buy_success() {
         .await
         .unwrap();
     let buyer = Keypair::new();
-    airdrop(&mut context, &buyer.pubkey(), 10_000_000_000).await.unwrap();
+    airdrop(&mut context, &buyer.pubkey(), 10_000_000_000_000).await.unwrap();
+    context.warp_to_slot(10).unwrap();
     let (acc, buy_tx) = buy(&mut context, &ahkey, &ah, &test_metadata, &buyer, 1);
     context.banks_client.process_transaction(buy_tx).await.unwrap();
     let sts = context

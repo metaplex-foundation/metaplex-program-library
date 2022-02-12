@@ -70,8 +70,8 @@ async fn cancel_listing() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::Cancel {
-            _buyer_price: 10,
-            _token_size: 1,
+            buyer_price: 10,
+            token_size: 1,
         }
             .data(),
         accounts,
@@ -143,8 +143,8 @@ async fn cancel_bid() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::Cancel {
-            _buyer_price: 10,
-            _token_size: 1,
+            buyer_price: 10,
+            token_size: 1
         }
             .data(),
         accounts,

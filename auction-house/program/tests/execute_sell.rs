@@ -98,7 +98,7 @@ async fn execute_sale_success() {
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
             token_size: 1,
-            buyer_price: 100_000_000
+            buyer_price: 100_000_000,
         }
             .data(),
         accounts,

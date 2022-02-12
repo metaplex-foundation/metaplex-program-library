@@ -11,7 +11,7 @@ export type SellInstructionArgs = {
 };
 const sellStruct = new beet.BeetArgsStruct<
   SellInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -24,6 +24,9 @@ const sellStruct = new beet.BeetArgsStruct<
   ],
   'SellInstructionArgs',
 );
+/**
+ * Accounts required by the _sell_ instruction
+ */
 export type SellInstructionAccounts = {
   wallet: web3.PublicKey;
   tokenAccount: web3.PublicKey;

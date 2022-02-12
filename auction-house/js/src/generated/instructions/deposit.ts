@@ -8,7 +8,7 @@ export type DepositInstructionArgs = {
 };
 const depositStruct = new beet.BeetArgsStruct<
   DepositInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -18,6 +18,9 @@ const depositStruct = new beet.BeetArgsStruct<
   ],
   'DepositInstructionArgs',
 );
+/**
+ * Accounts required by the _deposit_ instruction
+ */
 export type DepositInstructionAccounts = {
   wallet: web3.PublicKey;
   paymentAccount: web3.PublicKey;
