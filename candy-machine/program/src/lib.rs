@@ -20,8 +20,11 @@ use {
     anchor_spl::token::Token,
     arrayref::array_ref,
     mpl_token_metadata::{
+        assertions::collection::assert_master_edition,
+        error::MetadataError,
         instruction::{
-            create_master_edition_v3, create_metadata_accounts_v2, update_metadata_accounts_v2,
+            approve_collection_authority, create_master_edition_v3, create_metadata_accounts_v2,
+            set_and_verify_collection, update_metadata_accounts_v2,
         },
         state::{
             Metadata, MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
@@ -40,15 +43,8 @@ const PREFIX: &str = "candy_machine";
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
 pub mod nft_candy_machine_v2 {
-    use mpl_token_metadata::{
-        assertions::collection::assert_master_edition,
-        error::MetadataError,
-        instruction::{approve_collection_authority, set_and_verify_collection},
-    };
-
     use super::*;
 
-    /// Deprecated as of 3.1.0. Use mint_nft_v2 instead
     pub fn mint_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
         creator_bump: u8,
@@ -696,7 +692,6 @@ pub mod nft_candy_machine_v2 {
 
     pub fn set_collection(ctx: Context<SetCollection>, data: CollectionData) -> ProgramResult {
         if let Some(_mint_pubkey) = data.collection_mint {
-            // let mint: Mint = assert_initialized(&ctx.accounts.mint.to_account_info())?;
             let mint = ctx.accounts.mint.to_account_info();
             let metadata: Metadata =
                 Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
@@ -708,33 +703,32 @@ pub mod nft_candy_machine_v2 {
             }
             let edition = ctx.accounts.edition.to_account_info();
             assert_master_edition(&metadata, &edition)?;
+            let approve_collection_infos = vec![
+                ctx.accounts.collection_authority_record.to_account_info(),
+                ctx.accounts.collection_pda.to_account_info(),
+                ctx.accounts.authority.to_account_info(),
+                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.metadata.to_account_info(),
+                mint.clone(),
+                ctx.accounts.system_program.to_account_info(),
+                ctx.accounts.rent.to_account_info(),
+            ];
+
+            invoke(
+                &approve_collection_authority(
+                    *ctx.accounts.token_metadata_program.key,
+                    *ctx.accounts.collection_authority_record.to_account_info().key,
+                    *ctx.accounts.collection_pda.to_account_info().key,
+                    *ctx.accounts.authority.key,
+                    *ctx.accounts.payer.key,
+                    *ctx.accounts.metadata.key,
+                    *mint.key,
+                ),
+                approve_collection_infos.as_slice(),
+            )?;
         }
 
         ctx.accounts.collection_pda.mint = data.collection_mint;
-        // let approve_collection_infos = vec![
-        //             collection_authority_record.to_account_info(),
-        //             collection_pda_account.to_account_info(),
-        //             ctx.accounts.update_authority.to_account_info(),
-        //             ctx.accounts.payer.to_account_info(),
-        //             collection_metadata.to_account_info(),
-        //             collection_mint.to_account_info(),
-        //             ctx.accounts.system_program.to_account_info(),
-        //             ctx.accounts.rent.to_account_info(),
-        //         ];
-
-        //         invoke_signed(
-        //             &approve_collection_authority(
-        //                 *ctx.accounts.token_metadata_program.key,
-        //                 *collection_authority_record.key,
-        //                 *collection_pda_account.key,
-        //                 *ctx.accounts.update_authority.key,
-        //                 *ctx.accounts.payer.key,
-        //                 *collection_metadata.key,
-        //                 *collection_mint.key
-        //             ),
-        //             approve_collection_infos.as_slice(),
-        //             &[&seeds],
-        //         )?;
         Ok(())
     }
 
@@ -823,9 +817,13 @@ pub struct SetCollection<'info> {
     collection_pda: Account<'info, CollectionPDA>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
+    rent: Sysvar<'info, Rent>,
+    // // Dont need to be checked because CPI
     metadata: UncheckedAccount<'info>,
     mint: UncheckedAccount<'info>,
     edition: UncheckedAccount<'info>,
+    collection_authority_record: UncheckedAccount<'info>,
+    token_metadata_program: UncheckedAccount<'info>,
 }
 
 /// Add multiple config lines to the candy machine.
