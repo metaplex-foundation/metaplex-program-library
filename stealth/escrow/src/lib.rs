@@ -64,14 +64,14 @@ pub mod stealth_escrow {
                 .checked_add(escrow.slots)
                 .ok_or(ProgramError::InvalidArgument)?;
             let clock = Clock::get()?;
-            if unlocked_slot < clock.slot {
+            if clock.slot < unlocked_slot {
                 return Err(ProgramError::InvalidArgument);
             }
 
             // return the NFT
             let remaining_accounts = &mut ctx.remaining_accounts.iter();
-            let escrow_token_account = next_account_info(remaining_accounts)?;
-            let acceptor_token_account = next_account_info(remaining_accounts)?;
+            let escrow_token_account_info = next_account_info(remaining_accounts)?;
+            let acceptor_token_account_info = next_account_info(remaining_accounts)?;
             let token_program = next_account_info(remaining_accounts)?;
 
             let escrow_signer_seeds: &[&[&[u8]]] = &[
@@ -83,12 +83,19 @@ pub mod stealth_escrow {
                 ],
             ];
 
+            use solana_program::program_pack::Pack;
+            let accept_token_account = spl_token::state::Account::unpack_from_slice(
+                &acceptor_token_account_info.try_borrow_data()?)?;
+            if accept_token_account.owner != escrow.acceptor {
+                return Err(ProgramError::InvalidArgument);
+            }
+
             token::transfer(
                 CpiContext::new_with_signer(
                     token_program.clone(),
                     token::Transfer {
-                        from: escrow_token_account.clone(),
-                        to: acceptor_token_account.clone(),
+                        from: escrow_token_account_info.clone(),
+                        to: acceptor_token_account_info.clone(),
                         authority: ctx.accounts.escrow.to_account_info(),
                     },
                     escrow_signer_seeds,
@@ -100,7 +107,7 @@ pub mod stealth_escrow {
                 CpiContext::new_with_signer(
                     token_program.clone(),
                     token::CloseAccount {
-                        account: escrow_token_account.clone(),
+                        account: escrow_token_account_info.clone(),
                         destination: ctx.accounts.bidder.to_account_info(),
                         authority: ctx.accounts.escrow.to_account_info(),
                     },
@@ -177,6 +184,7 @@ pub mod stealth_escrow {
             .checked_add(escrow.slots)
             .ok_or(ProgramError::InvalidArgument)?;
         escrow.accept_slot = Some(clock.slot);
+        escrow.acceptor = ctx.accounts.acceptor.key();
 
         let escrow_collateral = escrow.collateral;
         drop(escrow);
@@ -336,7 +344,9 @@ pub struct InitEscrow<'info> {
             + 1         // bump_seed u8
             + 8         // collateral u64
             + 8         // slots u64
-            + 1 + 8,    // accept_slot option<u64>
+            + 1 + 8     // accept_slot option<u64>
+            + 32        // acceptor pubkey
+            ,
     )]
     pub escrow: Account<'info, BidEscrow>,
 
@@ -501,6 +511,7 @@ pub struct BidEscrow {
     pub slots: u64,
 
     pub accept_slot: Option<u64>,
+    pub acceptor: Pubkey,
 }
 
 #[cfg(not(target_arch = "bpf"))]
