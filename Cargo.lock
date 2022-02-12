@@ -2051,6 +2051,7 @@ dependencies = [
 name = "mpl-nft-packs"
 version = "0.1.0"
 dependencies = [
+ "arrayref",
  "borsh 0.9.2",
  "mpl-metaplex",
  "mpl-token-metadata",
@@ -2059,7 +2060,6 @@ dependencies = [
  "num-traits",
  "num_enum",
  "rand 0.8.4",
- "randomness-oracle-program",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -2661,15 +2661,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "16abd0c1b639e9eb4d7c50c0b8100b0d0f849be2349829c740fe8e6eb4816429"
 dependencies = [
  "rand_core 0.5.1",
-]
-
-[[package]]
-name = "randomness-oracle-program"
-version = "0.1.0"
-source = "git+https://github.com/metaplex/randomness-oracle#df99a38c90abad233412a920397497c34a809ebf"
-dependencies = [
- "borsh 0.9.2",
- "solana-program",
 ]
 
 [[package]]

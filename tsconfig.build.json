@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "target": "es6",
+    "target": "ES5",
     "declaration": true,
     "removeComments": true,
     "moduleResolution": "node",
     "sourceMap": true,
     "downlevelIteration": true,
-    "esModuleInterop": true,
+    "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "skipLibCheck": true,

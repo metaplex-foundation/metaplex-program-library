@@ -30,8 +30,10 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
       description: 'Description',
     },
   });
+  console.log("🚀 ~ file: buy.test.ts ~ line 33 ~ test ~ store", store.publicKey.toBase58())
 
   const { sellingResource, vault, vaultOwner, vaultOwnerBump, resourceMint } =
+  
     await initSellingResource({
       test: t,
       transactionHandler,
@@ -41,11 +43,19 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
       maxSupply: 100,
     });
 
+  console.log("🚀 ~ file: buy.test.ts ~ line 36 ~ test ~ resourceMint", resourceMint.publicKey.toBase58())
+  console.log("🚀 ~ file: buy.test.ts ~ line 36 ~ test ~ vaultOwnerBump", vaultOwnerBump)
+  console.log("🚀 ~ file: buy.test.ts ~ line 36 ~ test ~ vaultOwner", vaultOwner.toBase58())
+  console.log("🚀 ~ file: buy.test.ts ~ line 36 ~ test ~ vault", vault.publicKey.toBase58())
+  console.log("🚀 ~ file: buy.test.ts ~ line 36 ~ test ~ sellingResource", sellingResource.publicKey.toBase58())
+
   const { mint: treasuryMint, tokenAccount: userTokenAcc } = await mintNFT({
     transactionHandler,
     payer,
     connection,
   });
+  console.log("🚀 ~ file: buy.test.ts ~ line 51 ~ test ~ treasuryMint", treasuryMint.publicKey.toBase58())
+  console.log("🚀 ~ file: buy.test.ts ~ line 56 ~ test ~ userTokenAcc", userTokenAcc.publicKey.toBase58())
 
   const startDate = Math.round(Date.now() / 1000);
   const params = {
@@ -68,26 +78,37 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     treasuryMint: treasuryMint.publicKey,
     params,
   });
+  console.log("🚀 ~ file: buy.test.ts ~ line 72 ~ test ~ treasuryHolder", treasuryHolder.publicKey.toBase58())
+  console.log("🚀 ~ file: buy.test.ts ~ line 72 ~ test ~ market", market.publicKey.toBase58())
 
   const [tradeHistory, tradeHistoryBump] = await findTradeHistoryAddress(
     payer.publicKey,
     market.publicKey,
   );
+  console.log("🚀 ~ file: buy.test.ts ~ line 85 ~ test ~ tradeHistoryBump", tradeHistoryBump)
+  console.log("🚀 ~ file: buy.test.ts ~ line 88 ~ test ~ tradeHistory", tradeHistory.toBase58())
 
   const { mint: newMint } = await mintTokenToAccount({
     connection,
     payer: payer.publicKey,
     transactionHandler,
   });
+  console.log("🚀 ~ file: buy.test.ts ~ line 92 ~ test ~ newMint", newMint.publicKey.toBase58())
+
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
   const newMintEdition = await Edition.getPDA(newMint.publicKey);
+  console.log("🚀 ~ file: buy.test.ts ~ line 101 ~ test ~ newMintEdition", newMintEdition.toBase58())
   const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
+  console.log("🚀 ~ file: buy.test.ts ~ line 103 ~ test ~ newMintMetadata", newMintMetadata.toBase58())
 
   const resourceMintMasterEdition = await Edition.getPDA(resourceMint.publicKey);
+  console.log("🚀 ~ file: buy.test.ts ~ line 106 ~ test ~ resourceMintMasterEdition", resourceMintMasterEdition.toBase58())
   const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
+  console.log("🚀 ~ file: buy.test.ts ~ line 108 ~ test ~ resourceMintMetadata", resourceMintMetadata.toBase58())
   const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  console.log("🚀 ~ file: buy.test.ts ~ line 109 ~ test ~ resourceMintEditionMarker", resourceMintEditionMarker.toBase58())
 
   await sleep(1000);
 
@@ -110,12 +131,17 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     newMintEdition,
     newMintMetadata,
   });
+  console.log("🚀 ~ file: buy.test.ts ~ line 116 ~ test ~ buyTx", buyTx)
+
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
     buyTx,
     [payer],
     defaultSendOptions,
   );
+  console.log("🚀 ~ file: buy.test.ts ~ line 142 ~ test ~ buyRes", buyRes.txSignature)
+
+  console.log("End to End complete for buy method")
 
   logDebug('buy:: successful purchase');
   assertConfirmedTransaction(t, buyRes.txConfirmed);

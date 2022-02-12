@@ -61,3 +61,25 @@ merged.
 ## Reporting security issues
 
 To report a security issue, please follow the guidance on the [SECURITY](.github/SECURITY.md) page.
+
+
+### Steps to follow:
+- solana config set --url localhost
+- fork metaplex-program-library
+- change anchor.toml with your wallet address location
+- anchor build
+- mv all files from /home/imentus/Documents/im-client/mpl-fork/metaplex-program-library/token-metadata/target/deploy/* to /home/imentus/Documents/im-client/mpl-fork/metaplex-program-library/target/deploy/*
+- cd fixed-price-sale/js
+- npm i
+- npm run amman:start (// This command creates localhost validator and also deploys all the programs with same program id )  ==> It creates test-ledger folder
+- To close a local validator: sudo kill -9 $(sudo lsof -t -i:9900) (//npm run amman:stop doesn't work as of now)
+- /home/imentus/Documents/im-client/mpl-fork/metaplex-program-library/tsconfig.build.json ==> "esModuleInterop": false
+- /home/imentus/Documents/im-client/mpl-fork/metaplex-program-library/fixed-price-sale/js/tsconfig.json ==> add in compilerOptions-> "esModuleInterop": false
+- edit node_modules => export = BN ==> export default BN
+- edit node_modules => export = tape ==> export default tape
+- Copy pasted node_modules inside js folder
+- npm i "@metaplex-foundation/mpl-core": "^0.0.2",
+- added "target": "es5" in tsconfig.build.json
+- tsc test/buy.test.ts 
+
+
