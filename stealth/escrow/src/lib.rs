@@ -33,8 +33,8 @@ pub mod stealth_escorw {
         Ok(())
     }
 
-    pub fn close_escrow(
-        ctx: Context<CloseEscrow>,
+    pub fn close_escrow<'info>(
+        ctx: Context<'_, '_, '_, 'info, CloseEscrow<'info>>,
     ) -> ProgramResult {
         let escrow = &ctx.accounts.escrow;
 
@@ -46,6 +46,47 @@ pub mod stealth_escorw {
             if unlocked_slot < clock.slot {
                 return Err(ProgramError::InvalidArgument);
             }
+
+            // return the NFT
+            let remaining_accounts = &mut ctx.remaining_accounts.iter();
+            let escrow_token_account = next_account_info(remaining_accounts)?;
+            let acceptor_token_account = next_account_info(remaining_accounts)?;
+            let token_program = next_account_info(remaining_accounts)?;
+
+            let bidder_key = ctx.accounts.bidder.key();
+            let mint_key = ctx.accounts.mint.key();
+            let escrow_signer_seeds: &[&[&[u8]]] = &[
+                &[
+                    b"BidEscrow".as_ref(),
+                    bidder_key.as_ref(),
+                    mint_key.as_ref(),
+                ],
+            ];
+
+            token::transfer(
+                CpiContext::new_with_signer(
+                    token_program.clone(),
+                    token::Transfer {
+                        from: escrow_token_account.clone(),
+                        to: acceptor_token_account.clone(),
+                        authority: ctx.accounts.escrow.to_account_info(),
+                    },
+                    escrow_signer_seeds,
+                ),
+                1,
+            )?;
+
+            token::close_account(
+                CpiContext::new_with_signer(
+                    token_program.clone(),
+                    token::CloseAccount {
+                        account: escrow_token_account.clone(),
+                        destination: ctx.accounts.bidder.to_account_info(),
+                        authority: ctx.accounts.escrow.to_account_info(),
+                    },
+                    escrow_signer_seeds,
+                ),
+            )?;
         }
 
         Ok(())
