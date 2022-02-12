@@ -307,7 +307,13 @@ pub struct InitEscrow<'info> {
             mint.key().as_ref(),
         ],
         bump,
-        payer = bidder
+        payer = bidder,
+        space = 8       // discriminant
+            + 32        // bidder pubkey
+            + 32        // mint pubkey
+            + 8         // collateral u64
+            + 8         // slots u64
+            + 1 + 8,    // accept_slot option<u64>
     )]
     pub escrow: Account<'info, BidEscrow>,
 
