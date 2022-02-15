@@ -32,9 +32,6 @@ async fn setup() -> (
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -49,7 +46,6 @@ async fn setup() -> (
                 redeem_start_date: None,
                 redeem_end_date: None,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();

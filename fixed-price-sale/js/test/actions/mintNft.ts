@@ -16,8 +16,8 @@ import {
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { strict as assert } from 'assert';
 
-import { createTokenAccount } from '../transactions/create-token-account';
-import { createMetadata } from './create-metadata';
+import { createTokenAccount } from '../transactions/createTokenAccount';
+import { createMetadata } from './createMetadata';
 
 type MintNFTParams = {
   transactionHandler: TransactionHandler;

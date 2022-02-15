@@ -18,3 +18,4 @@ export * from './RevokeCollectionAuthority';
 export * from './Utilize';
 export * from './FreezeDelegatedAccount';
 export * from './ThawDelegatedAccount';
+export * from './RemoveCreatorVerification';

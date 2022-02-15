@@ -1,4 +1,4 @@
-import { Connection, PublicKey, Transaction, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 
 import { createBuyInstruction } from '../../src/instructions';
@@ -72,8 +72,6 @@ export const createBuyTransaction = async ({
       newMetadata: newMintMetadata,
       // newly generated mint edition PDA
       newEdition: newMintEdition,
-      // solana system account
-      clock: SYSVAR_CLOCK_PUBKEY,
       // metaplex token metadata program address
       tokenMetadataProgram: MetadataProgram.PUBKEY,
     },

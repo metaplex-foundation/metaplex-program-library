@@ -363,6 +363,18 @@ pub enum MetadataError {
     InvalidFreezeAuthority,
     #[error("All tokens in this account have not been delegated to this user.")]
     InvalidDelegate,
+
+    #[error("Creator can not be adjusted once they are verified.")]
+    CannotAdjustVerifiedCreator,
+
+    #[error("Verified creators cannot be removed.")]
+    CannotRemoveVerifiedCreator,
+
+    #[error("Can not wipe verified creators.")]
+    CannotWipeVerifiedCreators,
+
+    #[error("Not allowed to change seller fee basis points.")]
+    NotAllowedToChangeSellerFeeBasisPoints
 }
 
 impl PrintProgramError for MetadataError {

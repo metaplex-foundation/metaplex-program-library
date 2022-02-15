@@ -36,10 +36,10 @@ export class AuctionManagerStateV2 extends Borsh.Data<{
     ['hasParticipation', 'u8'],
   ]);
 
-  status: AuctionManagerStatus = AuctionManagerStatus.Initialized;
-  safetyConfigItemsValidated: BN = new BN(0);
-  bidsPushedToAcceptPayment: BN = new BN(0);
-  hasParticipation = false;
+  status: AuctionManagerStatus;
+  safetyConfigItemsValidated: BN;
+  bidsPushedToAcceptPayment: BN;
+  hasParticipation;
 }
 
 type Args = {
