@@ -1026,6 +1026,7 @@ pub fn approve_collection_authority(
 pub fn revoke_collection_authority(
     program_id: Pubkey,
     collection_authority_record: Pubkey,
+    delegate_authority: Pubkey,
     update_authority: Pubkey,
     metadata: Pubkey,
     mint: Pubkey,
@@ -1034,6 +1035,7 @@ pub fn revoke_collection_authority(
         program_id,
         accounts: vec![
             AccountMeta::new(collection_authority_record, false),
+            AccountMeta::new_readonly(delegate_authority, false),
             AccountMeta::new(update_authority, true),
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
