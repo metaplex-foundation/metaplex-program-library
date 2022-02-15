@@ -1,7 +1,7 @@
+pub mod bid;
 pub mod constants;
 pub mod pda;
 pub mod utils;
-pub mod bid;
 use crate::bid::*;
 use crate::{constants::*, utils::*};
 use anchor_lang::{
@@ -500,7 +500,7 @@ pub mod auction_house {
     pub fn cancel<'info>(
         ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
         buyer_price: u64,
-        token_size: u64
+        token_size: u64,
     ) -> ProgramResult {
         let wallet = &ctx.accounts.wallet;
         let token_account = &ctx.accounts.token_account;
@@ -519,7 +519,7 @@ pub mod auction_house {
             trade_state,
             &token_account.mint.key(),
             &token_account.key(),
-            ts_bump
+            ts_bump,
         )?;
         assert_keys_equal(token_mint.key(), token_account.mint)?;
 
@@ -571,12 +571,12 @@ pub mod auction_house {
     }
 
     pub fn execute_sale<'info>(
-        ctx: Context<'_, '_, '_, 'info,   ExecuteSale<'info>>,
+        ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
         buyer_price: u64,
-        token_size: u64
+        token_size: u64,
     ) -> ProgramResult {
         let buyer = &ctx.accounts.buyer;
         let seller = &ctx.accounts.seller;
@@ -638,7 +638,7 @@ pub mod auction_house {
             buyer_trade_state,
             &token_mint.key(),
             &token_account.key(),
-            ts_bump
+            ts_bump,
         )?;
         if buyer_ts_data.len() == 0 || seller_trade_state.data_is_empty() {
             return Err(ErrorCode::BothPartiesNeedToAgreeToSale.into());
@@ -993,7 +993,7 @@ pub mod auction_house {
         trade_state_bump: u8,
         escrow_payment_bump: u8,
         buyer_price: u64,
-        token_size: u64
+        token_size: u64,
     ) -> ProgramResult {
         private_bid(
             ctx,
@@ -1009,7 +1009,7 @@ pub mod auction_house {
         trade_state_bump: u8,
         escrow_payment_bump: u8,
         buyer_price: u64,
-        token_size: u64
+        token_size: u64,
     ) -> ProgramResult {
         public_bid(
             ctx,
@@ -1020,8 +1020,6 @@ pub mod auction_house {
         )
     }
 }
-
-
 
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]

@@ -498,10 +498,10 @@ pub fn assert_valid_trade_state<'a>(
     trade_state: &AccountInfo,
     mint: &Pubkey,
     token_holder: &Pubkey,
-    ts_bump: u8
+    ts_bump: u8,
 ) -> Result<u8, ProgramError> {
     let ah_pubkey = &auction_house.key();
-    let mint_bytes =  mint.to_bytes();
+    let mint_bytes = mint.to_bytes();
     let treasury_mint_bytes = auction_house.treasury_mint.to_bytes();
     let buyer_price_bytes = buyer_price.to_le_bytes();
     let token_size_bytes = token_size.to_le_bytes();
@@ -520,8 +520,8 @@ pub fn assert_valid_trade_state<'a>(
             &treasury_mint_bytes,
             &mint_bytes,
             &buyer_price_bytes,
-            &token_size_bytes
-        ]
+            &token_size_bytes,
+        ],
     );
     let canonical_public_bump = assert_derivation(
         &crate::id(),
@@ -533,8 +533,8 @@ pub fn assert_valid_trade_state<'a>(
             &treasury_mint_bytes,
             &mint_bytes,
             &buyer_price_bytes,
-            &token_size_bytes
-        ]
+            &token_size_bytes,
+        ],
     );
     match (canonical_public_bump, canonical_bump) {
         (Ok(public), Err(_)) if public == ts_bump => Ok(public),

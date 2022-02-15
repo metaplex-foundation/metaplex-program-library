@@ -1,16 +1,13 @@
 use anchor_lang::{
-    AnchorDeserialize,
-    AnchorSerialize,
-    prelude::*, solana_program::{
-        program::invoke,
-        system_instruction,
-    },
+    prelude::*,
+    solana_program::{program::invoke, system_instruction},
+    AnchorDeserialize, AnchorSerialize,
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
-use crate::{AuctionHouse, ErrorCode, TRADE_STATE_SIZE};
 use crate::constants::*;
 use crate::utils::*;
+use crate::{AuctionHouse, ErrorCode, TRADE_STATE_SIZE};
 
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
@@ -90,11 +87,13 @@ pub struct Buy<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
-pub fn private_bid<'info>(ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
-                          trade_state_bump: u8,
-                          escrow_payment_bump: u8,
-                          buyer_price: u64,
-                          token_size: u64) -> ProgramResult {
+pub fn private_bid<'info>(
+    ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
+    trade_state_bump: u8,
+    escrow_payment_bump: u8,
+    buyer_price: u64,
+    token_size: u64,
+) -> ProgramResult {
     bid_logic(
         &ctx.accounts.wallet,
         &ctx.accounts.payment_account,
@@ -117,7 +116,6 @@ pub fn private_bid<'info>(ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
         false,
     )
 }
-
 
 pub fn bid_logic<'info>(
     wallet: &Signer<'info>,
