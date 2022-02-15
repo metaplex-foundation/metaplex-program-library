@@ -989,6 +989,7 @@ pub mod auction_house {
         receipt.token_size = token_size;
         receipt.bump = receipt_bump;
         receipt.trade_state_bump = trade_state_bump;
+        receipt.metadata_mint = token_account.mint;
 
         let ts_seeds = [
             PREFIX.as_bytes(),
@@ -996,7 +997,7 @@ pub mod auction_house {
             receipt.auction_house.as_ref(),
             receipt.token_account.as_ref(),
             auction_house.treasury_mint.as_ref(),
-            token_account.mint.as_ref(),
+            receipt.metadata_mint.as_ref(),
             &receipt.price.to_le_bytes(),
             &receipt.token_size.to_le_bytes(),
         ];
@@ -1502,6 +1503,7 @@ pub const RECEIPT_SIZE: usize = 8 + //key
 32 + // auction_house
 32 + // wallet
 32 + // token_account
+32 + // metadata_mint
 8 + // price
 8 + // token_size
 1 + // bump
@@ -1515,6 +1517,7 @@ pub struct Receipt {
     pub auction_house: Pubkey,
     pub wallet: Pubkey,
     pub token_account: Pubkey,
+    pub metadata_mint: Pubkey,
     pub price: u64,
     pub token_size: u64,
     pub bump: u8,
