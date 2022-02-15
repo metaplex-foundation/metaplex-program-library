@@ -83,6 +83,8 @@ async fn print_receipt_success() {
     let receipt = Receipt::try_deserialize(&mut receipt_account.data.as_ref()).unwrap();
 
     assert_eq!(receipt.bookkeeper, test_metadata.token.pubkey());
+    assert_eq!(receipt.token_account, test_metadata.token.pubkey());
+    assert_eq!(receipt.metadata_mint, test_metadata.mint.pubkey());
     assert_eq!(receipt.trade_state, sell_acc.seller_trade_state);
     assert_eq!(receipt.token_account, sell_acc.token_account);
     assert_eq!(receipt.auction_house, sell_acc.auction_house);
