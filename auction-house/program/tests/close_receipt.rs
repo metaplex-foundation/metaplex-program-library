@@ -1,9 +1,9 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
-use mpl_auction_house::{pda::find_trade_state_address, Receipt};
+use anchor_lang::AccountDeserialize;
+use mpl_auction_house::{pda::find_trade_state_address, Purchase, Receipt};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
-use anchor_lang::AccountDeserialize;
 use solana_program_test::*;
 use solana_sdk::{
     signature::Keypair, signer::Signer, transaction::TransactionError, transport::TransportError,
@@ -90,7 +90,7 @@ async fn success_close_receipt() {
         .await
         .unwrap();
 
-    let (_execute_sall_acc, execute_sale_tx) = execute_sale(
+    let (execute_sale_acc, execute_sale_tx) = execute_sale_with_receipt(
         &mut context,
         &ahkey,
         &ah,
@@ -126,11 +126,24 @@ async fn success_close_receipt() {
         .expect("error getting receipt")
         .expect("no data for receipt");
 
-    let receipt_closed = Receipt::try_deserialize(&mut receipt_closed_account.data.as_ref()).unwrap();
+    let receipt_closed =
+        Receipt::try_deserialize(&mut receipt_closed_account.data.as_ref()).unwrap();
 
+    let purchase_receipt_account = context
+        .banks_client
+        .get_account(execute_sale_acc.purchase_receipt)
+        .await
+        .expect("error getting purchase receipt")
+        .expect("no purchase receipt data");
+
+    let purchase_receipt =
+        Purchase::try_deserialize(&mut purchase_receipt_account.data.as_ref()).unwrap();
 
     assert_eq!(receipt_closed.closed, true);
-
+    assert_eq!(purchase_receipt.price, price);
+    assert_eq!(purchase_receipt.buyer, buyer.pubkey());
+    assert_eq!(purchase_receipt.seller, test_metadata.token.pubkey());
+    assert_eq!(purchase_receipt.auction_house, ahkey);
     ()
 }
 

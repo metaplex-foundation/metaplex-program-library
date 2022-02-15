@@ -11,6 +11,8 @@ use mpl_auction_house::{
         find_auction_house_address, find_auction_house_fee_account_address,
         find_auction_house_treasury_address, find_escrow_payment_address,
         find_program_as_signer_address, find_receipt_address, find_trade_state_address,
+        find_purchase_receipt_address
+
     },
     AuctionHouse,
 };
@@ -282,7 +284,7 @@ pub fn sell(
     )
 }
 
-pub fn execute_sale(
+pub fn execute_sale_with_receipt(
     context: &mut ProgramTestContext,
     ahkey: &Pubkey,
     ah: &AuctionHouse,
@@ -295,7 +297,7 @@ pub fn execute_sale(
     buyer_trade_state: &Pubkey,
     token_size: u64,
     buyer_price: u64,
-) -> (mpl_auction_house::accounts::ExecuteSale, Transaction) {
+) -> (mpl_auction_house::accounts::ExecuteSaleWithReceipt, Transaction) {
     let buyer_token_account = get_associated_token_address(&buyer, &test_metadata.mint.pubkey());
 
     let (program_as_signer, pas_bump) = find_program_as_signer_address();
@@ -310,8 +312,11 @@ pub fn execute_sale(
         token_size,
     );
     let (escrow_payment_account, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer);
-
-    let accounts = mpl_auction_house::accounts::ExecuteSale {
+    let (purchase_receipt, purchase_receipt_bump) = find_purchase_receipt_address(
+      seller_trade_state,
+      buyer_trade_state,
+    );
+    let accounts = mpl_auction_house::accounts::ExecuteSaleWithReceipt {
         buyer: *buyer,
         seller: *seller,
         auction_house: *ahkey,
@@ -330,6 +335,7 @@ pub fn execute_sale(
         auction_house_treasury: ah.auction_house_treasury,
         program_as_signer: program_as_signer,
         token_program: spl_token::id(),
+        purchase_receipt: purchase_receipt,
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
@@ -339,10 +345,11 @@ pub fn execute_sale(
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecuteSaleWithReceipt {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
+            purchase_receipt_bump,
             token_size,
             buyer_price,
         }
