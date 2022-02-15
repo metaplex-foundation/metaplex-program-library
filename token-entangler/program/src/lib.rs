@@ -134,6 +134,115 @@ pub mod token_entangler {
         Ok(())
     }
 
+    pub fn create_entangled_pair_v2<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreateEntangledPairV2<'info>>,
+        bump: u8,
+        _reverse_bump: u8,
+        token_a_escrow_bump: u8,
+        token_b_escrow_bump: u8,
+        price: u64,
+        pays_every_time: bool,
+    ) -> ProgramResult {
+        let treasury_mint = &ctx.accounts.treasury_mint;
+        let payer = &ctx.accounts.payer;
+        let transfer_authority = &ctx.accounts.transfer_authority;
+        let authority = &ctx.accounts.authority;
+        let mint_a = &ctx.accounts.mint_a;
+        let metadata_a = &ctx.accounts.metadata_a;
+        let mint_b = &ctx.accounts.mint_b;
+        let metadata_b = &ctx.accounts.metadata_b;
+        let token_a_escrow = &ctx.accounts.token_a_escrow;
+        let token_b_escrow = &ctx.accounts.token_b_escrow;
+        let token_b = &ctx.accounts.token_b;
+        let entangled_pair = &mut ctx.accounts.entangled_pair;
+        let reverse_entangled_pair = &ctx.accounts.reverse_entangled_pair;
+        let token_program = &ctx.accounts.token_program;
+        let system_program = &ctx.accounts.system_program;
+        let rent = &ctx.accounts.rent;
+
+        if !reverse_entangled_pair.data_is_empty() {
+            return Err(ErrorCode::EntangledPairExists.into());
+        }
+
+        entangled_pair.bump = bump;
+        entangled_pair.token_a_escrow_bump = token_a_escrow_bump;
+        entangled_pair.token_b_escrow_bump = token_b_escrow_bump;
+        entangled_pair.price = price;
+        entangled_pair.pays_every_time = pays_every_time;
+        entangled_pair.authority = authority.key();
+        entangled_pair.mint_b = mint_b.key();
+        entangled_pair.token_a_escrow = token_a_escrow.key();
+        entangled_pair.token_b_escrow = token_b_escrow.key();
+        entangled_pair.treasury_mint = treasury_mint.key();
+        entangled_pair.mint_a = mint_a.key();
+
+        assert_metadata_valid(metadata_a, None, &mint_a.key())?;
+        assert_metadata_valid(metadata_b, None, &mint_b.key())?;
+
+        assert_is_ata(&token_b.to_account_info(), &payer.key(), &mint_b.key())?;
+
+        let mint_a_key = mint_a.key();
+        let mint_b_key = mint_b.key();
+        let token_a_escrow_seeds = [
+            PREFIX.as_bytes(),
+            &mint_a_key.as_ref(),
+            &mint_b_key.as_ref(),
+            ESCROW.as_bytes(),
+            A_NAME.as_bytes(),
+            &[token_a_escrow_bump],
+        ];
+        let token_b_escrow_seeds = [
+            PREFIX.as_bytes(),
+            &mint_a_key.as_ref(),
+            &mint_b_key.as_ref(),
+            ESCROW.as_bytes(),
+            B_NAME.as_bytes(),
+            &[token_b_escrow_bump],
+        ];
+
+        create_program_token_account_if_not_present(
+            token_a_escrow,
+            system_program,
+            &payer,
+            token_program,
+            mint_a,
+            &entangled_pair.to_account_info(),
+            rent,
+            &token_a_escrow_seeds,
+            &[],
+        )?;
+
+        create_program_token_account_if_not_present(
+            token_b_escrow,
+            system_program,
+            &payer,
+            token_program,
+            mint_b,
+            &entangled_pair.to_account_info(),
+            rent,
+            &token_b_escrow_seeds,
+            &[],
+        )?;
+
+        invoke(
+            &spl_token::instruction::transfer(
+                token_program.key,
+                &token_b.key(),
+                &token_b_escrow.key(),
+                &transfer_authority.key(),
+                &[],
+                1,
+            )?,
+            &[
+                token_b.to_account_info(),
+                token_b_escrow.to_account_info(),
+                token_program.to_account_info(),
+                transfer_authority.to_account_info(),
+            ],
+        )?;
+        Ok(())
+    }
+
     pub fn update_entangled_pair<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateEntangledPair<'info>>,
         price: u64,
@@ -305,6 +414,36 @@ pub struct CreateEntangledPair<'info> {
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
 }
+
+#[derive(Accounts)]
+#[instruction(bump: u8, reverse_bump: u8, token_a_escrow_bump: u8, token_b_escrow_bump: u8)]
+pub struct CreateEntangledPairV2<'info> {
+    /// Set to unchecked to avoid stack size limits
+    treasury_mint: UncheckedAccount<'info>,
+    payer: Signer<'info>,
+    transfer_authority: Signer<'info>,
+    authority: UncheckedAccount<'info>,
+    /// Set to unchecked to avoid stack size limits
+    mint_a: UncheckedAccount<'info>,
+    metadata_a: UncheckedAccount<'info>,
+    /// Set to unchecked to avoid stack size limits
+    mint_b: UncheckedAccount<'info>,
+    metadata_b: UncheckedAccount<'info>,
+    #[account(mut)]
+    token_b: Account<'info, TokenAccount>,
+    #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), A_NAME.as_bytes()], bump=token_a_escrow_bump)]
+    token_a_escrow: UncheckedAccount<'info>,
+    #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), B_NAME.as_bytes()], bump=token_b_escrow_bump)]
+    token_b_escrow: UncheckedAccount<'info>,
+    #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump=bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
+    entangled_pair: Account<'info, EntangledPair>,
+    #[account(mut, seeds=[PREFIX.as_bytes(), mint_b.key().as_ref(), mint_a.key().as_ref()], bump=reverse_bump)]
+    reverse_entangled_pair: UncheckedAccount<'info>,
+    token_program: Program<'info, Token>,
+    system_program: Program<'info, System>,
+    rent: Sysvar<'info, Rent>,
+}
+
 
 #[derive(Accounts)]
 pub struct UpdateEntangledPair<'info> {
