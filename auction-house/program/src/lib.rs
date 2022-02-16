@@ -22,6 +22,7 @@ anchor_lang::declare_id!("hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk");
 
 #[program]
 pub mod auction_house {
+    use solana_program::program_memory::sol_memset;
     use super::*;
     pub fn withdraw_from_fee<'info>(
         ctx: Context<'_, '_, '_, 'info, WithdrawFromFee<'info>>,
@@ -566,6 +567,11 @@ pub mod auction_house {
             .lamports()
             .checked_add(curr_lamp)
             .ok_or(ErrorCode::NumericalOverflow)?;
+        sol_memset(
+            *trade_state.try_borrow_mut_data()?,
+            0,
+            TRADE_STATE_SIZE,
+        );
         Ok(())
     }
     #[inline(never)]
@@ -627,7 +633,8 @@ pub mod auction_house {
             msg!("No delegate detected on token account.");
             return Err(ErrorCode::BothPartiesNeedToAgreeToSale.into());
         }
-        let buyer_ts_data = buyer_trade_state.try_borrow_data()?;
+        let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
+        let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
         let ts_bump = buyer_ts_data[0];
         assert_valid_trade_state(
             &buyer.key(),
@@ -639,7 +646,7 @@ pub mod auction_house {
             &token_account.key(),
             ts_bump,
         )?;
-        if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_trade_state.data_is_empty() {
+        if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
             return Err(ErrorCode::BothPartiesNeedToAgreeToSale.into());
         }
 
@@ -844,6 +851,11 @@ pub mod auction_house {
 
         let curr_seller_lamp = seller_trade_state.lamports();
         **seller_trade_state.lamports.borrow_mut() = 0;
+        sol_memset(
+            &mut *seller_ts_data,
+            0,
+            TRADE_STATE_SIZE,
+        );
 
         **fee_payer.lamports.borrow_mut() = fee_payer
             .lamports()
@@ -852,7 +864,11 @@ pub mod auction_house {
 
         let curr_buyer_lamp = buyer_trade_state.lamports();
         **buyer_trade_state.lamports.borrow_mut() = 0;
-
+        sol_memset(
+            &mut *buyer_ts_data,
+            0,
+            TRADE_STATE_SIZE,
+        );
         **fee_payer.lamports.borrow_mut() = fee_payer
             .lamports()
             .checked_add(curr_buyer_lamp)
@@ -866,6 +882,11 @@ pub mod auction_house {
                 .lamports()
                 .checked_add(curr_buyer_lamp)
                 .ok_or(ErrorCode::NumericalOverflow)?;
+            sol_memset(
+                *free_trade_state.try_borrow_mut_data()?,
+                0,
+                TRADE_STATE_SIZE,
+            );
         }
         Ok(())
     }
