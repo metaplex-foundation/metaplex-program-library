@@ -1983,7 +1983,7 @@ version = "0.0.1"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "mpl-testing-utils",
+ "mpl-testing-utils 0.0.1",
  "num-derive",
  "num-traits",
  "solana-program",
@@ -1995,14 +1995,14 @@ dependencies = [
 
 [[package]]
 name = "mpl-auction-house"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [
  "anchor-client",
  "anchor-lang 0.19.0",
  "anchor-spl 0.19.0",
  "arrayref",
  "env_logger",
- "mpl-testing-utils",
+ "mpl-testing-utils 0.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "mpl-token-metadata",
  "serde_json",
  "shellexpand",
@@ -2075,7 +2075,30 @@ dependencies = [
  "anchor-client",
  "borsh 0.9.3",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "num",
+ "num-derive",
+ "num-traits",
+ "rand 0.7.3",
+ "serde_json",
+ "shellexpand",
+ "solana-program",
+ "solana-program-test",
+ "solana-sdk",
+ "spl-associated-token-account",
+ "spl-token",
+]
+
+[[package]]
+name = "mpl-testing-utils"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e35abf1bf9570b0340da5c9d5c25afda987f50be7ad04a83c3fd64a810a0cfdb"
+dependencies = [
+ "anchor-client",
+ "borsh 0.9.3",
+ "mpl-token-metadata",
+ "mpl-token-vault 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num",
  "num-derive",
  "num-traits",
