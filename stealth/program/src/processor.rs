@@ -598,6 +598,7 @@ fn verify_dsl_crank<'info>(
 
     msg!("Getting challenge scalars");
     let challenge_c = transcript.challenge_scalar(b"c");
+    let challenge_w = transcript.challenge_scalar(b"w");
 
     solana_program::log::sol_log_compute_units();
 
@@ -616,9 +617,9 @@ fn verify_dsl_crank<'info>(
          &neg_challenge_c,
          &neg_one,
 
-         &equality_proof.rh_2,
-         &neg_challenge_c,
-         &neg_one,
+         &(&challenge_w * &equality_proof.rh_2),
+         &(&challenge_w * &neg_challenge_c),
+         &(&challenge_w * &neg_one),
 
          &challenge_c,
          &neg_challenge_c,
@@ -655,7 +656,7 @@ fn verify_dsl_crank<'info>(
     use curve25519_dalek::traits::IsIdentity;
     let mut buffer_idx = dalek::HEADER_SIZE;
     msg!("Verifying multiscalar mul results");
-    for _i in 0..3 {
+    for _i in 0..2 {
         let mul_result = curve25519_dalek::edwards::EdwardsPoint::from_bytes(
             &compute_buffer_data[buffer_idx..buffer_idx+128]
         );

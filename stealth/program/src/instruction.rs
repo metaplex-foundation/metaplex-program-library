@@ -554,6 +554,7 @@ pub fn transfer_chunk_slow_proof<F>(
     )?;
 
     let challenge_c = transcript.challenge_scalar(b"c");
+    let challenge_w = transcript.challenge_scalar(b"w");
 
     // the equality_proof points are normal 'Scalar' but the DSL crank expects it's version of the
     // type
@@ -562,9 +563,9 @@ pub fn transfer_chunk_slow_proof<F>(
          -challenge_c,
          -Scalar::one(),
 
-         equality_proof.rh_2,
-         -challenge_c,
-         -Scalar::one(),
+         &challenge_w * &equality_proof.rh_2,
+         -challenge_w * challenge_c,
+         -challenge_w * Scalar::one(),
 
          challenge_c,
          -challenge_c,
@@ -662,22 +663,17 @@ pub fn transfer_chunk_slow_proof<F>(
     for _g in 0..5 {
         add_crank_batch(8 * 2);
     }
-    // group the last with the scalar (11) / result identity (3) copies
-    add_crank_batch(8 + 11 + 3);
+    // group the last with the scalar (11) / result identity (2) copies / first scalar mul
+    add_crank_batch(8 + 11 + 2 + 1);
 
-    // then we have 3 groups of 64 multiplication cranks. the first 2 groups have 3 points each
-    // which is ~85k compute so we can pack ~11. the last group has 5 points with ~120k compute so
-    // ~8 per
-
-    // could probably group these into 1 multi-scalar mul of 6 inputs which saves ~2 transactions
-    // (~130k compute so ~7 / tx. Though we could probably batch the copies with the first
-    // iteration so save ~3 txs)
-    for _g in 0..2 {
+    // then we have 2 groups of 64 multiplication cranks. the first group is 2 sets of 3 points each
+    // which is ~130 compute so we can pack ~7 * 9 + 1 from previous. the last group has 5 points
+    // with ~120k compute so ~8 per
+    for _g in 0..1 {
         // total 64 cranks per this group
-        for _f in 0..5 {
-            add_crank_batch(11);
+        for _f in 0..9 {
+            add_crank_batch(7);
         }
-        add_crank_batch(9);
     }
 
     for _g in 0..8 {
@@ -685,7 +681,7 @@ pub fn transfer_chunk_slow_proof<F>(
     }
 
     assert_eq!(current, equality_proof::DSL_INSTRUCTION_COUNT);
-    assert_eq!(crank_transactions, 26);
+    assert_eq!(crank_transactions, 23);
 
     Ok(ret)
 }
