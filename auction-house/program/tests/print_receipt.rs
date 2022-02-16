@@ -84,11 +84,11 @@ async fn print_receipt_success() {
 
     assert_eq!(receipt.bookkeeper, test_metadata.token.pubkey());
     assert_eq!(receipt.token_account, test_metadata.token.pubkey());
-    assert_eq!(receipt.metadata_mint, test_metadata.mint.pubkey());
     assert_eq!(receipt.trade_state, sell_acc.seller_trade_state);
     assert_eq!(receipt.token_account, sell_acc.token_account);
     assert_eq!(receipt.auction_house, sell_acc.auction_house);
     assert_eq!(receipt.wallet, sell_acc.wallet);
+    assert_eq!(receipt.closed, false);
     assert_eq!(receipt.price, 100_000_000);
     assert_eq!(receipt.token_size, 1);
     ()
