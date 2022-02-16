@@ -952,16 +952,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/beet-solana@npm:0.0.0":
-  version: 0.0.0
-  resolution: "@metaplex-foundation/beet-solana@npm:0.0.0"
-  dependencies:
-    "@metaplex-foundation/beet": "*"
-    "@solana/web3.js": ^1.31.0
-  checksum: 84340fccba5708c032b06c986cd9e662252ea7b7e09a81a81dd62ad7e0986b7a9bb76d463e9c5bc487fee4c8e6a25f7aaea21c8478db9c07c8dfd6d1d7be8d7b
-  languageName: node
-  linkType: hard
-
 "@metaplex-foundation/beet-solana@npm:0.0.6, @metaplex-foundation/beet-solana@npm:^0.0.6":
   version: 0.0.6
   resolution: "@metaplex-foundation/beet-solana@npm:0.0.6"
@@ -990,19 +980,6 @@ __metadata:
     bn.js: ^5.2.0
     debug: ^4.3.3
   checksum: fdb5c44ce29c8a5ad01235a826707ecf3ab99b0c140027b6c3fa45891eec9fb1aaf1bb9d2be391a9db4f097ea321be67c0a54b1c646e03ac55907b3584fa95ba
-  languageName: node
-  linkType: hard
-
-"@metaplex-foundation/beet@npm:0.0.0":
-  version: 0.0.0
-  resolution: "@metaplex-foundation/beet@npm:0.0.0"
-  dependencies:
-    ansicolors: ^0.3.2
-    bn.js: ^5.2.0
-    bs58: ^4.0.1
-    debug: ^4.3.3
-    text-encoding-utf-8: ^1.0.2
-  checksum: 6fb1bfc180d66dd83c61f2e2fa6447e61c5cfc175e42b3e1e50c0e57b878f701515e805543f7aef1a25a457489dbf5e52312cd6efe14de6d083757f7db350a11
   languageName: node
   linkType: hard
 
@@ -1058,8 +1035,8 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": 0.0.7
     "@metaplex-foundation/beet-solana": 0.0.6
-    "@metaplex-foundation/mpl-core": 0.0.2
-    "@solana/web3.js": ^1.31.0
+    "@metaplex-foundation/mpl-core": 0.0.4
+    "@solana/web3.js": ^1.33.0
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
     prettier: ^2.5.1
@@ -1085,26 +1062,37 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-candy-machine@workspace:candy-machine/js"
   dependencies:
-    "@metaplex-foundation/beet": 0.0.0
-    "@metaplex-foundation/beet-solana": 0.0.0
-    "@solana/web3.js": ^1.31.0
+    "@metaplex-foundation/beet": 0.0.7
+    "@metaplex-foundation/beet-solana": 0.0.6
+    "@metaplex-foundation/mpl-core": 0.0.4
+    "@solana/web3.js": ^1.33.0
     eslint: ^8.3.0
     prettier: ^2.5.1
     rimraf: ^3.0.2
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/mpl-core@0.0.2, @metaplex-foundation/mpl-core@^0.0.2, @metaplex-foundation/mpl-core@workspace:core/js":
+"@metaplex-foundation/mpl-core@0.0.4, @metaplex-foundation/mpl-core@workspace:core/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
   dependencies:
-    "@solana/web3.js": ^1.31.0
+    "@solana/web3.js": ^1.33.0
     "@types/bs58": ^4.0.1
     bs58: ^4.0.1
     eslint: ^8.3.0
     rimraf: ^3.0.2
   languageName: unknown
   linkType: soft
+
+"@metaplex-foundation/mpl-core@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@metaplex-foundation/mpl-core@npm:0.0.2"
+  dependencies:
+    "@solana/web3.js": ^1.31.0
+    bs58: ^4.0.1
+  checksum: f74ad09538dbd8b567c349724310ed3ca1e3c9d7e65992ea32077294b09791cd246ab2ac0c29c0a8ed00aaccb6858dbb0fffc55e7e788da7c418f2ed094a1d9a
+  languageName: node
+  linkType: hard
 
 "@metaplex-foundation/mpl-fixed-price-sale@workspace:fixed-price-sale/js":
   version: 0.0.0-use.local
@@ -1642,6 +1630,28 @@ __metadata:
     superstruct: ^0.14.2
     tweetnacl: ^1.0.0
   checksum: 193820a9fc4ddb5bc99e1bb1341d420f8b030992feeb47fd0aa6fa4dc42866c6df6f378b43f1157d81b83eb3a3f7ca5cc2eda11cb1cf5402377d35bf7cd7c65c
+  languageName: node
+  linkType: hard
+
+"@solana/web3.js@npm:^1.33.0":
+  version: 1.34.0
+  resolution: "@solana/web3.js@npm:1.34.0"
+  dependencies:
+    "@babel/runtime": ^7.12.5
+    "@ethersproject/sha2": ^5.5.0
+    "@solana/buffer-layout": ^3.0.0
+    bn.js: ^5.0.0
+    borsh: ^0.4.0
+    bs58: ^4.0.1
+    buffer: 6.0.1
+    cross-fetch: ^3.1.4
+    jayson: ^3.4.4
+    js-sha3: ^0.8.0
+    rpc-websockets: ^7.4.2
+    secp256k1: ^4.0.2
+    superstruct: ^0.14.2
+    tweetnacl: ^1.0.0
+  checksum: b0dce23c4de13e72e16d58e374dab025bf03d8c9b1180edcf56b93e730ea3fb190acbeea97558446586905e5a811d20ef7841979692864f195f69034a6428b57
   languageName: node
   linkType: hard
 
