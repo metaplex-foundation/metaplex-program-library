@@ -1,8 +1,9 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
-use mpl_auction_house::pda::find_trade_state_address;
+use mpl_auction_house::{pda::find_trade_state_address, Receipt};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
+use anchor_lang::AccountDeserialize;
 use solana_program_test::*;
 use solana_sdk::{
     signature::Keypair, signer::Signer, transaction::TransactionError, transport::TransportError,
@@ -12,7 +13,7 @@ use std::assert_eq;
 use utils::setup_functions::*;
 
 #[tokio::test]
-async fn success_burn_receipt() {
+async fn success_close_receipt() {
     let mut context = auction_house_program_test().start_with_context().await;
     let price = 100_000_000;
 
@@ -118,19 +119,23 @@ async fn success_burn_receipt() {
         .await
         .unwrap();
 
-    let receipt_closed = context
+    let receipt_closed_account = context
         .banks_client
         .get_account(receipt_acc.receipt)
         .await
-        .expect("error getting receipt");
+        .expect("error getting receipt")
+        .expect("no data for receipt");
 
-    assert_eq!(receipt_closed, None);
+    let receipt_closed = Receipt::try_deserialize(&mut receipt_closed_account.data.as_ref()).unwrap();
+
+
+    assert_eq!(receipt_closed.closed, true);
 
     ()
 }
 
 #[tokio::test]
-async fn fail_no_burning_active_trade_state_receipts() {
+async fn fail_no_closing_active_trade_state_receipts() {
     let mut context = auction_house_program_test().start_with_context().await;
     let price = 100_000_000;
     let (ah, ahkey, _authority) = existing_auction_house_test_context(&mut context)

@@ -989,7 +989,7 @@ pub mod auction_house {
         receipt.token_size = token_size;
         receipt.bump = receipt_bump;
         receipt.trade_state_bump = trade_state_bump;
-        receipt.metadata_mint = token_account.mint;
+        receipt.closed = false;
 
         let ts_seeds = [
             PREFIX.as_bytes(),
@@ -997,7 +997,7 @@ pub mod auction_house {
             receipt.auction_house.as_ref(),
             receipt.token_account.as_ref(),
             auction_house.treasury_mint.as_ref(),
-            receipt.metadata_mint.as_ref(),
+            token_account.mint.as_ref(),
             &receipt.price.to_le_bytes(),
             &receipt.token_size.to_le_bytes(),
         ];
@@ -1011,11 +1011,11 @@ pub mod auction_house {
         Ok(())
     }
 
-    pub fn burn_receipt<'info>(
-        ctx: Context<'_, '_, '_, 'info, BurnReceipt<'info>>,
+    pub fn close_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, CloseReceipt<'info>>,
     ) -> ProgramResult {
         let trade_state = &ctx.accounts.trade_state;
-        let receipt = &ctx.accounts.receipt;
+        let receipt = &mut ctx.accounts.receipt;
         let auction_house = &ctx.accounts.auction_house;
         let token_account = &ctx.accounts.token_account;
 
@@ -1039,6 +1039,12 @@ pub mod auction_house {
         if !trade_state.data_is_empty() {
             return Err(ErrorCode::TradeStateIsNotEmpty.into());
         }
+
+        if receipt.to_account_info().data_is_empty() {
+          return Err(ErrorCode::ReceiptIsEmpty.into());
+        }
+
+        receipt.closed = true;
 
         Ok(())
     }
@@ -1258,16 +1264,14 @@ pub struct PrintReceipt<'info> {
 }
 
 #[derive(Accounts)]
-pub struct BurnReceipt<'info> {
+pub struct CloseReceipt<'info> {
     token_account: Account<'info, TokenAccount>,
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
     auction_house: Account<'info, AuctionHouse>,
     #[account(seeds=[PREFIX.as_bytes(), receipt.wallet.key().as_ref(), receipt.auction_house.key().as_ref(), receipt.token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &receipt.price.to_le_bytes(), &receipt.token_size.to_le_bytes()], bump=receipt.trade_state_bump)]
     trade_state: UncheckedAccount<'info>,
-    #[account(mut, seeds=[RECEIPT_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt.bump, close=bookkeeper, has_one=bookkeeper)]
+    #[account(mut, seeds=[RECEIPT_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt.bump)]
     receipt: Account<'info, Receipt>,
-    #[account(mut)]
-    bookkeeper: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
 }
 
@@ -1503,9 +1507,9 @@ pub const RECEIPT_SIZE: usize = 8 + //key
 32 + // auction_house
 32 + // wallet
 32 + // token_account
-32 + // metadata_mint
 8 + // price
 8 + // token_size
+1 + // closed
 1 + // bump
 1; // trade_state_bump 
 
@@ -1517,9 +1521,9 @@ pub struct Receipt {
     pub auction_house: Pubkey,
     pub wallet: Pubkey,
     pub token_account: Pubkey,
-    pub metadata_mint: Pubkey,
     pub price: u64,
     pub token_size: u64,
+    pub closed: bool,
     pub bump: u8,
     pub trade_state_bump: u8,
 }
@@ -1578,4 +1582,6 @@ pub enum ErrorCode {
     TradeStateDoesntExist,
     #[msg("The trade state is not empty")]
     TradeStateIsNotEmpty,
+    #[msg("The receipt is empty")]
+    ReceiptIsEmpty,
 }

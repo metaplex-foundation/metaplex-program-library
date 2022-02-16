@@ -415,7 +415,7 @@ pub fn burn_receipt(
     ah: &AuctionHouse,
     test_metadata: &Metadata,
     price: u64,
-) -> (mpl_auction_house::accounts::BurnReceipt, Transaction) {
+) -> (mpl_auction_house::accounts::CloseReceipt, Transaction) {
     let token =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
     let (trade_state, ts_bump) = find_trade_state_address(
@@ -430,18 +430,17 @@ pub fn burn_receipt(
     let (receipt, _receipt_bump) = find_receipt_address(&trade_state);
     let (_pas, _pas_bump) = find_program_as_signer_address();
 
-    let accounts = mpl_auction_house::accounts::BurnReceipt {
+    let accounts = mpl_auction_house::accounts::CloseReceipt {
         token_account: token,
         auction_house: *ahkey,
         trade_state,
         receipt,
-        bookkeeper: test_metadata.token.pubkey(),
         system_program: solana_program::system_program::id(),
     };
 
     let account_metas = accounts.to_account_metas(None);
 
-    let data = mpl_auction_house::instruction::BurnReceipt {}.data();
+    let data = mpl_auction_house::instruction::CloseReceipt {}.data();
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
