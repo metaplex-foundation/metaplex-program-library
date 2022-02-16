@@ -34,7 +34,6 @@ async fn setup() -> (
     let uri = String::from("some link to storage");
     let description = String::from("Pack description");
 
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(

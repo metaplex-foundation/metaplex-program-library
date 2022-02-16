@@ -1,8 +1,6 @@
 //! Program utils
 
-use crate::{
-    state::{ProvingProcess, MAX_LAG_SLOTS},
-};
+use crate::state::ProvingProcess;
 use borsh::BorshSerialize;
 use solana_program::{
     account_info::AccountInfo,
@@ -254,7 +252,7 @@ pub fn get_random_value(
 ) -> Result<u16, ProgramError> {
     // Hash slot, current timestamp and value from last slothash and proving process data and receive new random u16
     let mut hasher = DefaultHasher::new();
-    
+
     // recent slothash
     hasher.write(recent_slothash);
     // slot

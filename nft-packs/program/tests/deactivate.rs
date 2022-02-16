@@ -6,7 +6,7 @@ use mpl_nft_packs::{
     state::{PackDistributionType, PackSetState},
 };
 use num_traits::FromPrimitive;
-use solana_program::{instruction::InstructionError, system_instruction, clock::Clock};
+use solana_program::{clock::Clock, instruction::InstructionError, system_instruction};
 use solana_program_test::*;
 use solana_sdk::{
     signature::Keypair,
