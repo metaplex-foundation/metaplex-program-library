@@ -34,6 +34,8 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
         }
     };
 
+    let client = Arc::new(setup_client(&sugar_config)?);
+
     let mut cache = load_cache(&args.cache)?;
     let config_data = get_config_data(&args.config)?;
     let candy_machine_address = &cache.program.candy_machine;
@@ -47,7 +49,7 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
         let metadata = get_metadata_from_first_json(&args.assets_dir)?;
         let candy_data = create_candy_machine_data(&config_data, uuid, metadata)?;
 
-        let sig = initialize_candy_machine(&sugar_config, &candy_keypair, candy_data)?;
+        let sig = initialize_candy_machine(&candy_keypair, candy_data, client.clone())?;
         info!("Candy machine initialized with sig: {}", sig);
         info!(
             "Candy machine created with address: {}",
@@ -76,7 +78,8 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
     info!("Uploading config lines...");
     let num_items = config_data.number;
     let config_lines = generate_config_lines(num_items, &cache.items);
-    let config_statuses = upload_config_lines(&sugar_config, config_lines, candy_pubkey)?;
+    let config_statuses =
+        upload_config_lines(&sugar_config, config_lines, candy_pubkey, client.clone())?;
     for status in config_statuses {
         let index: String = status.index.to_string();
         let mut item = cache.items.0.get_mut(&index).unwrap();
@@ -220,15 +223,13 @@ fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u
 }
 
 fn initialize_candy_machine(
-    sugar_config: &SugarConfig,
     candy_account: &Keypair,
     candy_machine_data: CandyMachineData,
+    client: Arc<Client>,
 ) -> Result<Signature> {
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
         .expect("Failed to parse PID");
-
-    let client = setup_client(sugar_config)?;
 
     let program = client.program(pid);
     let payer = program.payer();
@@ -279,6 +280,7 @@ fn upload_config_lines(
     sugar_config: &SugarConfig,
     config_lines: Vec<Vec<(u32, ConfigLine)>>,
     candy_pubkey: Pubkey,
+    client: Arc<Client>,
 ) -> Result<Vec<ConfigStatus>> {
     let payer = Arc::new(&sugar_config.keypair);
 
@@ -305,7 +307,7 @@ fn upload_config_lines(
 
             let payer = Arc::clone(&payer);
 
-            match add_config_lines(sugar_config, &candy_pubkey, payer, &chunk) {
+            match add_config_lines(client.clone(), &candy_pubkey, payer, &chunk) {
                 Ok(_) => {
                     for (index, _) in chunk {
                         let _statuses = statuses.lock().unwrap().push(ConfigStatus {
@@ -336,7 +338,7 @@ fn upload_config_lines(
 }
 
 fn add_config_lines(
-    sugar_config: &SugarConfig,
+    client: Arc<Client>,
     candy_pubkey: &Pubkey,
     payer: Arc<&Keypair>,
     chunk: &Vec<(u32, ConfigLine)>,
@@ -344,8 +346,6 @@ fn add_config_lines(
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
         .expect("Failed to parse PID");
-
-    let client = setup_client(sugar_config)?;
 
     let program = client.program(pid);
 
