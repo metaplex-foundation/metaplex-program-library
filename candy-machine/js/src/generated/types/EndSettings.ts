@@ -4,9 +4,9 @@ export type EndSettings = {
   endSettingType: definedTypes.EndSettingType;
   number: beet.bignum;
 };
-export const endSettingsStruct = new beet.BeetArgsStruct<EndSettings>(
+export const endSettingsBeet = new beet.BeetArgsStruct<EndSettings>(
   [
-    ['endSettingType', definedTypes.endSettingTypeStruct],
+    ['endSettingType', definedTypes.endSettingTypeBeet],
     ['number', beet.u64],
   ],
   'EndSettings',

@@ -1011,7 +1011,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/metaplex-program-library@workspace:."
   dependencies:
-    "@metaplex-foundation/solita": 0.0.2
+    "@metaplex-foundation/solita": 0.0.4
     "@project-serum/anchor": ^0.19.0
     "@project-serum/common": ^0.0.1-beta.3
     "@types/mocha": ^9.0.0
@@ -1218,7 +1218,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/solita@npm:0.0.2, @metaplex-foundation/solita@npm:^0.0.2":
+"@metaplex-foundation/solita@npm:0.0.4":
+  version: 0.0.4
+  resolution: "@metaplex-foundation/solita@npm:0.0.4"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.0.6
+    "@metaplex-foundation/beet-solana": ^0.0.6
+    "@solana/web3.js": ^1.31.0
+    camelcase: ^6.2.1
+    debug: ^4.3.3
+    js-sha256: ^0.9.0
+    prettier: ^2.5.1
+    snake-case: ^3.0.4
+    spok: ^1.4.3
+  checksum: 6be6cd32f0cac60178e5deb28f3bf17761864a102881ee0f4c0534197963ffbaecb480e4d4537750ea72bb60e884a2ab940e56fb2a7a15939d12eaec8daf4f81
+  languageName: node
+  linkType: hard
+
+"@metaplex-foundation/solita@npm:^0.0.2":
   version: 0.0.2
   resolution: "@metaplex-foundation/solita@npm:0.0.2"
   dependencies:

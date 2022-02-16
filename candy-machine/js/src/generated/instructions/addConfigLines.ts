@@ -14,7 +14,7 @@ const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['index', beet.u32],
-    ['configLines', beet.array(definedTypes.configLineStruct)],
+    ['configLines', beet.array(definedTypes.configLineBeet)],
   ],
   'AddConfigLinesInstructionArgs',
 );

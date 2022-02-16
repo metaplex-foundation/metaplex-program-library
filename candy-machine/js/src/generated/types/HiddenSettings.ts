@@ -4,7 +4,7 @@ export type HiddenSettings = {
   uri: string;
   hash: number[] /* size: 32 */;
 };
-export const hiddenSettingsStruct = new beet.FixableBeetArgsStruct<HiddenSettings>(
+export const hiddenSettingsBeet = new beet.FixableBeetArgsStruct<HiddenSettings>(
   [
     ['name', beet.utf8String],
     ['uri', beet.utf8String],

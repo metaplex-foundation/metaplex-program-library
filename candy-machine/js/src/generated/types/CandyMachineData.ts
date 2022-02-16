@@ -16,7 +16,7 @@ export type CandyMachineData = {
   itemsAvailable: beet.bignum;
   gatekeeper: beet.COption<definedTypes.GatekeeperConfig>;
 };
-export const candyMachineDataStruct = new beet.FixableBeetArgsStruct<CandyMachineData>(
+export const candyMachineDataBeet = new beet.FixableBeetArgsStruct<CandyMachineData>(
   [
     ['uuid', beet.utf8String],
     ['price', beet.u64],
@@ -26,12 +26,12 @@ export const candyMachineDataStruct = new beet.FixableBeetArgsStruct<CandyMachin
     ['isMutable', beet.bool],
     ['retainAuthority', beet.bool],
     ['goLiveDate', beet.coption(beet.i64)],
-    ['endSettings', beet.coption(definedTypes.endSettingsStruct)],
-    ['creators', beet.array(definedTypes.creatorStruct)],
-    ['hiddenSettings', beet.coption(definedTypes.hiddenSettingsStruct)],
-    ['whitelistMintSettings', beet.coption(definedTypes.whitelistMintSettingsStruct)],
+    ['endSettings', beet.coption(definedTypes.endSettingsBeet)],
+    ['creators', beet.array(definedTypes.creatorBeet)],
+    ['hiddenSettings', beet.coption(definedTypes.hiddenSettingsBeet)],
+    ['whitelistMintSettings', beet.coption(definedTypes.whitelistMintSettingsBeet)],
     ['itemsAvailable', beet.u64],
-    ['gatekeeper', beet.coption(definedTypes.gatekeeperConfigStruct)],
+    ['gatekeeper', beet.coption(definedTypes.gatekeeperConfigBeet)],
   ],
   'CandyMachineData',
 );

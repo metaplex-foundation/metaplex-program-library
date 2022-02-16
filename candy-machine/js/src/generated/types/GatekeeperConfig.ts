@@ -5,7 +5,7 @@ export type GatekeeperConfig = {
   gatekeeperNetwork: web3.PublicKey;
   expireOnUse: boolean;
 };
-export const gatekeeperConfigStruct = new beet.BeetArgsStruct<GatekeeperConfig>(
+export const gatekeeperConfigBeet = new beet.BeetArgsStruct<GatekeeperConfig>(
   [
     ['gatekeeperNetwork', beetSolana.publicKey],
     ['expireOnUse', beet.bool],

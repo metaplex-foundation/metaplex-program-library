@@ -3,7 +3,7 @@ export enum EndSettingType {
   Date,
   Amount,
 }
-export const endSettingTypeEnum = beet.fixedScalarEnum(EndSettingType) as beet.FixedSizeBeet<
+export const endSettingTypeBeet = beet.fixedScalarEnum(EndSettingType) as beet.FixedSizeBeet<
   EndSettingType,
   EndSettingType
 >;

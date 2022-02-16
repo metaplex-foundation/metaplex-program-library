@@ -7,7 +7,7 @@ export type WithdrawFromTreasuryInstructionArgs = {
 };
 const withdrawFromTreasuryStruct = new beet.BeetArgsStruct<
   WithdrawFromTreasuryInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -16,6 +16,9 @@ const withdrawFromTreasuryStruct = new beet.BeetArgsStruct<
   ],
   'WithdrawFromTreasuryInstructionArgs',
 );
+/**
+ * Accounts required by the _withdrawFromTreasury_ instruction
+ */
 export type WithdrawFromTreasuryInstructionAccounts = {
   treasuryMint: web3.PublicKey;
   authority: web3.PublicKey;

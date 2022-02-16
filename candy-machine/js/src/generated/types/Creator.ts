@@ -6,7 +6,7 @@ export type Creator = {
   verified: boolean;
   share: number;
 };
-export const creatorStruct = new beet.BeetArgsStruct<Creator>(
+export const creatorBeet = new beet.BeetArgsStruct<Creator>(
   [
     ['address', beetSolana.publicKey],
     ['verified', beet.bool],

@@ -1,3 +1,4 @@
+export * from './../accounts';
 export * from './CandyMachineData';
 export * from './ConfigLine';
 export * from './Creator';

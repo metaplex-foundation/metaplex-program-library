@@ -12,7 +12,7 @@ const updateCandyMachineStruct = new beet.FixableBeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['data', definedTypes.candyMachineDataStruct],
+    ['data', definedTypes.candyMachineDataBeet],
   ],
   'UpdateCandyMachineInstructionArgs',
 );

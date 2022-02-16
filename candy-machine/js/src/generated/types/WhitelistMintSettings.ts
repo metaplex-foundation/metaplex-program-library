@@ -8,9 +8,9 @@ export type WhitelistMintSettings = {
   presale: boolean;
   discountPrice: beet.COption<beet.bignum>;
 };
-export const whitelistMintSettingsStruct = new beet.FixableBeetArgsStruct<WhitelistMintSettings>(
+export const whitelistMintSettingsBeet = new beet.FixableBeetArgsStruct<WhitelistMintSettings>(
   [
-    ['mode', definedTypes.whitelistMintModeStruct],
+    ['mode', definedTypes.whitelistMintModeBeet],
     ['mint', beetSolana.publicKey],
     ['presale', beet.bool],
     ['discountPrice', beet.coption(beet.u64)],

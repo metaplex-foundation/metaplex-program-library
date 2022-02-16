@@ -8,7 +8,7 @@ export type CancelInstructionArgs = {
 };
 const cancelStruct = new beet.BeetArgsStruct<
   CancelInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -18,6 +18,9 @@ const cancelStruct = new beet.BeetArgsStruct<
   ],
   'CancelInstructionArgs',
 );
+/**
+ * Accounts required by the _cancel_ instruction
+ */
 export type CancelInstructionAccounts = {
   wallet: web3.PublicKey;
   tokenAccount: web3.PublicKey;

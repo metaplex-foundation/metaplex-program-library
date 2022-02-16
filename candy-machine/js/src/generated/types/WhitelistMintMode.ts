@@ -3,7 +3,7 @@ export enum WhitelistMintMode {
   BurnEveryTime,
   NeverBurn,
 }
-export const whitelistMintModeEnum = beet.fixedScalarEnum(WhitelistMintMode) as beet.FixedSizeBeet<
+export const whitelistMintModeBeet = beet.fixedScalarEnum(WhitelistMintMode) as beet.FixedSizeBeet<
   WhitelistMintMode,
   WhitelistMintMode
 >;
