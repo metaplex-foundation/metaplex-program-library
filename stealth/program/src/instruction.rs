@@ -581,7 +581,7 @@ pub fn transfer_chunk_slow_proof<F>(
 
     assert_eq!(points.len(), scalars.len());
 
-    let input_buffer_len = dalek::HEADER_SIZE + points.len() * 32 * 2 + 128;
+    let input_buffer_len = dalek::HEADER_SIZE + points.len() * 32 * 3 + 128;
 
     let compute_buffer_len =
         dalek::HEADER_SIZE
@@ -631,7 +631,7 @@ pub fn transfer_chunk_slow_proof<F>(
             *payer,
             &points,
             scalars.as_slice(),
-        ),
+        ).ok_or("Invalid ristretto input points")?,
         signers: vec![*payer],
     });
 
@@ -661,11 +661,9 @@ pub fn transfer_chunk_slow_proof<F>(
     // 11 proof inputs, 8 ops for each
     // each input takes ~450k compute to decompress + build table
     // pack the first 10 in pairs
-    for _g in 0..5 {
-        add_crank_batch(8 * 2);
-    }
+    add_crank_batch(7 * 3);
     // group the last with the scalar (11) / result identity (1) copies
-    add_crank_batch(8 + 11 + 1);
+    add_crank_batch(4 * 3 + 11 + 1);
 
     // then we have 64 multiplication cranks each is ~200k compute so we can pack ~5 * 12 + 4
     for _f in 0..12 {
@@ -674,7 +672,7 @@ pub fn transfer_chunk_slow_proof<F>(
     add_crank_batch(4);
 
     assert_eq!(current, equality_proof::DSL_INSTRUCTION_COUNT);
-    assert_eq!(crank_transactions, 19);
+    assert_eq!(crank_transactions, 15);
 
     Ok(ret)
 }

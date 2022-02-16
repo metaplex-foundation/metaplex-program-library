@@ -575,6 +575,8 @@ fn verify_dsl_crank<'info>(
             return Err(StealthError::ProofVerificationError.into());
         }
         buffer_idx += 32;
+        // skip the witness. the dsl crank should fail if the witness is wrong
+        buffer_idx += 32;
     }
 
     solana_program::log::sol_log_compute_units();
