@@ -9,8 +9,7 @@ use num_traits::FromPrimitive;
 use solana_program::{clock::Clock, instruction::InstructionError};
 use solana_program_test::*;
 use solana_sdk::{
-    signature::Signer, signer::keypair::Keypair, transaction::TransactionError,
-    transport::TransportError,
+    signer::keypair::Keypair, transaction::TransactionError, transport::TransportError,
 };
 use utils::*;
 
