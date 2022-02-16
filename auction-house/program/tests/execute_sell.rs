@@ -8,6 +8,7 @@ use mpl_testing_utils::utils::Metadata;
 use solana_program_test::*;
 use solana_sdk::signer::Signer;
 
+use anchor_spl::token::TokenAccount;
 use std::assert_eq;
 
 use solana_program::instruction::Instruction;
@@ -62,6 +63,7 @@ async fn execute_sale_success() {
         &ahkey,
         &ah,
         &test_metadata,
+        &test_metadata.token.pubkey(),
         &buyer,
         100_000_000,
     );
@@ -166,4 +168,195 @@ async fn execute_sale_success() {
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert_eq!(seller_before.lamports < seller_after.lamports, true);
     assert_eq!(buyer_token_after.amount, 1);
+}
+
+#[tokio::test]
+async fn execute_public_sale_success() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+    let price = 100_000_000;
+    let fee_minus: u64 = price - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
+    // Create Listing
+    let (sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, price);
+    context
+        .banks_client
+        .process_transaction(sell_tx)
+        .await
+        .unwrap();
+    // Create Long Lasting Bid
+    let public_bidder = Keypair::new();
+    airdrop(&mut context, &public_bidder.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+
+    let (public_bid_acc, public_bid_tx) = public_buy(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &test_metadata.token.pubkey(),
+        &public_bidder,
+        price,
+    );
+    context
+        .banks_client
+        .process_transaction(public_bid_tx)
+        .await
+        .unwrap();
+    // Create first regular private bid
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    let (bid_acc, buy_tx) = buy(&mut context, &ahkey, &ah, &test_metadata, &test_metadata.token.pubkey(), &buyer, price);
+    context
+        .banks_client
+        .process_transaction(buy_tx)
+        .await
+        .unwrap();
+    let buyer_token_account =
+        get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
+    let (es_acc, first_sale_tx) = execute_sale(
+        &mut context,
+        &ahkey,
+        &ah,
+        &authority,
+        &test_metadata,
+        &buyer.pubkey(),
+        &test_metadata.token.pubkey(),
+        &sell_acc.token_account,
+        &sell_acc.seller_trade_state,
+        &bid_acc.buyer_trade_state,
+        1,
+        price,
+    );
+    airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
+        .await
+        .unwrap();
+    let seller_before = context
+        .banks_client
+        .get_account(test_metadata.token.pubkey())
+        .await
+        .unwrap()
+        .unwrap();
+    let buyer_token_before = &context
+        .banks_client
+        .get_account(buyer_token_account)
+        .await
+        .unwrap();
+    assert_eq!(buyer_token_before.is_none(), true);
+    context
+        .banks_client
+        .process_transaction(first_sale_tx)
+        .await
+        .unwrap();
+    let seller_after = context
+        .banks_client
+        .get_account(test_metadata.token.pubkey())
+        .await
+        .unwrap()
+        .unwrap();
+    let buyer_token_after = Account::unpack_from_slice(
+        &context
+            .banks_client
+            .get_account(buyer_token_account)
+            .await
+            .unwrap()
+            .unwrap()
+            .data
+            .as_slice(),
+    )
+    .unwrap();
+
+    assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
+    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert_eq!(buyer_token_after.amount, 1);
+    let new_seller = buyer;
+    let public_bidder_token_account =
+        get_associated_token_address(&public_bidder.pubkey(), &test_metadata.mint.pubkey());
+    let new_seller_before = context
+        .banks_client
+        .get_account(new_seller.pubkey())
+        .await
+        .unwrap()
+        .unwrap();
+    let public_bidder_token_before = &context
+        .banks_client
+        .get_account(public_bidder_token_account)
+        .await
+        .unwrap();
+    assert_eq!(public_bidder_token_before.is_none(), true);
+    let (second_sell_acc, second_sell_tx) = sell_mint(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata.mint.pubkey(),
+        &new_seller,
+        price,
+    );
+    context
+        .banks_client
+        .process_transaction(second_sell_tx)
+        .await
+        .unwrap();
+
+    let (public_sale_acc, public_sale_tx) = execute_sale(
+        &mut context,
+        &ahkey,
+        &ah,
+        &authority,
+        &test_metadata,
+        &public_bidder.pubkey(),
+        &new_seller.pubkey(),
+        &second_sell_acc.token_account,
+        &second_sell_acc.seller_trade_state,
+        &public_bid_acc.buyer_trade_state,
+        1,
+        price.to_owned(),
+    );
+
+    context
+        .banks_client
+        .process_transaction(public_sale_tx)
+        .await
+        .unwrap();
+
+    let new_seller_after = context
+        .banks_client
+        .get_account(new_seller.pubkey())
+        .await
+        .unwrap()
+        .unwrap();
+    let public_bidder_token_after = Account::unpack_from_slice(
+        &context
+            .banks_client
+            .get_account(public_bidder_token_account)
+            .await
+            .unwrap()
+            .unwrap()
+            .data
+            .as_slice(),
+    )
+    .unwrap();
+    assert_eq!(new_seller_before.lamports < new_seller_after.lamports, true);
+    assert_eq!(public_bidder_token_after.amount, 1);
 }

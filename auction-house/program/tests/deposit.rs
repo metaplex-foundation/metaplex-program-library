@@ -53,5 +53,5 @@ async fn deposit_success() {
         .await
         .expect("Error Getting Escrow")
         .expect("Trade State Escrow");
-    assert_eq!(escrow.lamports, 10000);
+    assert_eq!(escrow.lamports, 1000000000);
 }

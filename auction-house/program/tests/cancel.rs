@@ -115,7 +115,7 @@ async fn cancel_bid() {
     airdrop(&mut context, &buyer.pubkey(), 2000000000)
         .await
         .unwrap();
-    let (acc, buy_tx) = buy(&mut context, &ahkey, &ah, &test_metadata, &buyer, price);
+    let (acc, buy_tx) = buy(&mut context, &ahkey, &ah, &test_metadata, &test_metadata.token.pubkey(), &buyer, price);
 
     context
         .banks_client

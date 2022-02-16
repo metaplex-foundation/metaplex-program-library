@@ -639,7 +639,7 @@ pub mod auction_house {
             &token_account.key(),
             ts_bump,
         )?;
-        if buyer_ts_data.len() == 0 || seller_trade_state.data_is_empty() {
+        if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_trade_state.data_is_empty() {
             return Err(ErrorCode::BothPartiesNeedToAgreeToSale.into());
         }
 

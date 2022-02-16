@@ -54,6 +54,7 @@ async fn buy_success() {
         &ahkey,
         &ah,
         &test_metadata,
+        &test_metadata.token.pubkey(),
         &buyer,
         1000000000,
     );
