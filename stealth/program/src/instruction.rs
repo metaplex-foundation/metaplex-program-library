@@ -555,6 +555,7 @@ pub fn transfer_chunk_slow_proof<F>(
 
     let challenge_c = transcript.challenge_scalar(b"c");
     let challenge_w = transcript.challenge_scalar(b"w");
+    let challenge_ww = challenge_w  * challenge_w;
 
     // the equality_proof points are normal 'Scalar' but the DSL crank expects it's version of the
     // type
@@ -567,11 +568,11 @@ pub fn transfer_chunk_slow_proof<F>(
          -challenge_w * challenge_c,
          -challenge_w * Scalar::one(),
 
-         challenge_c,
-         -challenge_c,
-         equality_proof.sh_1,
-         -equality_proof.rh_2,
-         -Scalar::one(),
+         challenge_ww * challenge_c,
+         -challenge_ww * challenge_c,
+         challenge_ww * equality_proof.sh_1,
+         -challenge_ww * equality_proof.rh_2,
+         -challenge_ww * Scalar::one(),
     ]
         .iter()
         .map(|s| OScalar::from_canonical_bytes(s.bytes))
@@ -663,25 +664,17 @@ pub fn transfer_chunk_slow_proof<F>(
     for _g in 0..5 {
         add_crank_batch(8 * 2);
     }
-    // group the last with the scalar (11) / result identity (2) copies / first scalar mul
-    add_crank_batch(8 + 11 + 2 + 1);
+    // group the last with the scalar (11) / result identity (1) copies
+    add_crank_batch(8 + 11 + 1);
 
-    // then we have 2 groups of 64 multiplication cranks. the first group is 2 sets of 3 points each
-    // which is ~130 compute so we can pack ~7 * 9 + 1 from previous. the last group has 5 points
-    // with ~120k compute so ~8 per
-    for _g in 0..1 {
-        // total 64 cranks per this group
-        for _f in 0..9 {
-            add_crank_batch(7);
-        }
+    // then we have 64 multiplication cranks each is ~200k compute so we can pack ~5 * 12 + 4
+    for _f in 0..12 {
+        add_crank_batch(5);
     }
-
-    for _g in 0..8 {
-        add_crank_batch(8);
-    }
+    add_crank_batch(4);
 
     assert_eq!(current, equality_proof::DSL_INSTRUCTION_COUNT);
-    assert_eq!(crank_transactions, 23);
+    assert_eq!(crank_transactions, 19);
 
     Ok(ret)
 }

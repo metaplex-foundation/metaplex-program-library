@@ -599,6 +599,7 @@ fn verify_dsl_crank<'info>(
     msg!("Getting challenge scalars");
     let challenge_c = transcript.challenge_scalar(b"c");
     let challenge_w = transcript.challenge_scalar(b"w");
+    let challenge_ww = challenge_w  * challenge_w;
 
     solana_program::log::sol_log_compute_units();
 
@@ -621,11 +622,11 @@ fn verify_dsl_crank<'info>(
          &(&challenge_w * &neg_challenge_c),
          &(&challenge_w * &neg_one),
 
-         &challenge_c,
-         &neg_challenge_c,
-         &equality_proof.sh_1,
-         &neg_rh_2,
-         &neg_one,
+         &(&challenge_ww * challenge_c),
+         &(&challenge_ww * neg_challenge_c),
+         &(&challenge_ww * equality_proof.sh_1),
+         &(&challenge_ww * neg_rh_2),
+         &(&challenge_ww * neg_one),
     ];
 
     solana_program::log::sol_log_compute_units();
@@ -634,7 +635,10 @@ fn verify_dsl_crank<'info>(
     for i in 0..expected_scalars.len() {
         let mut scalar_buffer = [0; 32];
         scalar_buffer.copy_from_slice(&input_buffer_data[buffer_idx..buffer_idx+32]);
-        if scalar_buffer != expected_scalars[i].bytes {
+        let packed = curve25519_dalek_onchain::scalar::Scalar{
+            bytes: expected_scalars[i].bytes
+        }.to_packed_radix_16();
+        if scalar_buffer != packed {
             msg!("Mismatched proof statement scalars");
             return Err(StealthError::ProofVerificationError.into());
         }
@@ -656,7 +660,7 @@ fn verify_dsl_crank<'info>(
     use curve25519_dalek::traits::IsIdentity;
     let mut buffer_idx = dalek::HEADER_SIZE;
     msg!("Verifying multiscalar mul results");
-    for _i in 0..2 {
+    for _i in 0..1 {
         let mul_result = curve25519_dalek::edwards::EdwardsPoint::from_bytes(
             &compute_buffer_data[buffer_idx..buffer_idx+128]
         );
