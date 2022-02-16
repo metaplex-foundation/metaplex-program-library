@@ -516,17 +516,16 @@ pub mod auction_house {
             auction_house,
             buyer_price,
             token_size,
-            trade_state,
+            &trade_state.to_account_info(),
             &token_account.mint.key(),
             &token_account.key(),
             ts_bump,
         )?;
         assert_keys_equal(token_mint.key(), token_account.mint)?;
-
         if !wallet.to_account_info().is_signer && !authority.to_account_info().is_signer {
             return Err(ErrorCode::NoValidSignerPresent.into());
         }
-
+        msg!("kdjhkfjhd");
         let auction_house_key = auction_house.key();
         let seeds = [
             PREFIX.as_bytes(),
@@ -569,7 +568,7 @@ pub mod auction_house {
             .ok_or(ErrorCode::NumericalOverflow)?;
         Ok(())
     }
-
+    #[inline(never)]
     pub fn execute_sale<'info>(
         ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
         escrow_payment_bump: u8,
@@ -1066,7 +1065,7 @@ pub struct ExecuteSale<'info> {
     buyer_receipt_token_account: UncheckedAccount<'info>,
     authority: UncheckedAccount<'info>,
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    auction_house: Box<Account<'info, AuctionHouse>>,
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]

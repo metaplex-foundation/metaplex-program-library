@@ -9,6 +9,7 @@ use solana_sdk::signature::Keypair;
 use solana_sdk::signature::Signer;
 use solana_sdk::{instruction::Instruction, transaction::Transaction};
 
+use mpl_auction_house::ErrorCode;
 use spl_associated_token_account::get_associated_token_address;
 use spl_token;
 
@@ -92,13 +93,9 @@ async fn cancel_bid() {
         .await
         .unwrap();
     let test_metadata = Metadata::new();
-    airdrop(
-        &mut context,
-        &test_metadata.token.pubkey(),
-        10_000_000_000_000,
-    )
-    .await
-    .unwrap();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+        .await
+        .unwrap();
     test_metadata
         .create(
             &mut context,
@@ -114,22 +111,21 @@ async fn cancel_bid() {
     context.warp_to_slot(100).unwrap();
     let buyer = Keypair::new();
     // Derive Auction House Key
-    airdrop(&mut context, &buyer.pubkey(), 10_000_000_000_000)
+    let price = 1000000000;
+    airdrop(&mut context, &buyer.pubkey(), 2000000000)
         .await
         .unwrap();
-    let (acc, buy_tx) = buy(&mut context, &ahkey, &ah, &test_metadata, &buyer, 10);
+    let (acc, buy_tx) = buy(&mut context, &ahkey, &ah, &test_metadata, &buyer, price);
 
     context
         .banks_client
         .process_transaction(buy_tx)
         .await
         .unwrap();
-    let token =
-        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
     let accounts = mpl_auction_house::accounts::Cancel {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
-        token_account: token,
+        token_account: acc.token_account,
         authority: ah.authority,
         trade_state: acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -140,7 +136,7 @@ async fn cancel_bid() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::Cancel {
-            buyer_price: 10,
+            buyer_price: price,
             token_size: 1,
         }
         .data(),

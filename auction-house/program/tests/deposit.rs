@@ -15,7 +15,7 @@ async fn deposit_success() {
         .await
         .unwrap();
     let test_metadata = Metadata::new();
-    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
         .await
         .unwrap();
     test_metadata
@@ -31,20 +31,27 @@ async fn deposit_success() {
         .await
         .unwrap();
     let buyer = Keypair::new();
-    airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
+    airdrop(&mut context, &buyer.pubkey(), 2000000000)
         .await
         .unwrap();
-    let (acc, deposit_tx) = deposit(&mut context, &ahkey, &ah, &test_metadata, &buyer, 1);
+    let (acc, deposit_tx) = deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        1000000000,
+    );
     context
         .banks_client
         .process_transaction(deposit_tx)
         .await
         .unwrap();
-    let sts = context
+    let escrow = context
         .banks_client
         .get_account(acc.escrow_payment_account)
         .await
-        .expect("Error Getting Trade State")
-        .expect("Trade State Empty");
-    assert_eq!(sts.lamports, 1);
+        .expect("Error Getting Escrow")
+        .expect("Trade State Escrow");
+    assert_eq!(escrow.lamports, 10000);
 }

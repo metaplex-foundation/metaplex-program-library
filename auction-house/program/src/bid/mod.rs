@@ -4,6 +4,7 @@ use anchor_lang::{
     AnchorDeserialize, AnchorSerialize,
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
+use solana_program::program_memory::sol_memset;
 
 use crate::constants::*;
 use crate::utils::*;
@@ -41,20 +42,20 @@ pub fn public_bid(
     token_size: u64,
 ) -> ProgramResult {
     bid_logic(
-        &ctx.accounts.wallet,
-        &ctx.accounts.payment_account,
-        &ctx.accounts.transfer_authority,
-        &ctx.accounts.treasury_mint,
-        &ctx.accounts.token_account,
-        &ctx.accounts.metadata,
-        &ctx.accounts.escrow_payment_account,
-        &ctx.accounts.authority,
-        &ctx.accounts.auction_house,
-        &ctx.accounts.auction_house_fee_account,
-        &mut ctx.accounts.buyer_trade_state,
-        &ctx.accounts.token_program,
-        &ctx.accounts.system_program,
-        &ctx.accounts.rent,
+        ctx.accounts.wallet.to_owned(),
+        ctx.accounts.payment_account.to_owned(),
+        ctx.accounts.transfer_authority.to_owned(),
+        ctx.accounts.treasury_mint.to_owned(),
+        ctx.accounts.token_account.to_owned(),
+        ctx.accounts.metadata.to_owned(),
+        ctx.accounts.escrow_payment_account.to_owned(),
+        ctx.accounts.authority.to_owned(),
+        ctx.accounts.auction_house.to_owned(),
+        ctx.accounts.auction_house_fee_account.to_owned(),
+        ctx.accounts.buyer_trade_state.to_owned(),
+        ctx.accounts.token_program.to_owned(),
+        ctx.accounts.system_program.to_owned(),
+        ctx.accounts.rent.to_owned(),
         trade_state_bump,
         escrow_payment_bump,
         buyer_price,
@@ -69,6 +70,7 @@ pub struct Buy<'info> {
     wallet: Signer<'info>,
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
+    #[account(mut)]
     transfer_authority: UncheckedAccount<'info>,
     treasury_mint: Account<'info, Mint>,
     token_account: Account<'info, TokenAccount>,
@@ -95,20 +97,20 @@ pub fn private_bid<'info>(
     token_size: u64,
 ) -> ProgramResult {
     bid_logic(
-        &ctx.accounts.wallet,
-        &ctx.accounts.payment_account,
-        &ctx.accounts.transfer_authority,
-        &ctx.accounts.treasury_mint,
-        &ctx.accounts.token_account,
-        &ctx.accounts.metadata,
-        &ctx.accounts.escrow_payment_account,
-        &ctx.accounts.authority,
-        &ctx.accounts.auction_house,
-        &ctx.accounts.auction_house_fee_account,
-        &mut ctx.accounts.buyer_trade_state,
-        &ctx.accounts.token_program,
-        &ctx.accounts.system_program,
-        &ctx.accounts.rent,
+        ctx.accounts.wallet.to_owned(),
+        ctx.accounts.payment_account.to_owned(),
+        ctx.accounts.transfer_authority.to_owned(),
+        ctx.accounts.treasury_mint.to_owned(),
+        ctx.accounts.token_account.to_owned(),
+        ctx.accounts.metadata.to_owned(),
+        ctx.accounts.escrow_payment_account.to_owned(),
+        ctx.accounts.authority.to_owned(),
+        ctx.accounts.auction_house.to_owned(),
+        ctx.accounts.auction_house_fee_account.to_owned(),
+        ctx.accounts.buyer_trade_state.to_owned(),
+        ctx.accounts.token_program.to_owned(),
+        ctx.accounts.system_program.to_owned(),
+        ctx.accounts.rent.to_owned(),
         trade_state_bump,
         escrow_payment_bump,
         buyer_price,
@@ -118,20 +120,20 @@ pub fn private_bid<'info>(
 }
 
 pub fn bid_logic<'info>(
-    wallet: &Signer<'info>,
-    payment_account: &UncheckedAccount<'info>,
-    transfer_authority: &UncheckedAccount<'info>,
-    treasury_mint: &Account<'info, Mint>,
-    token_account: &Account<'info, TokenAccount>,
-    metadata: &UncheckedAccount<'info>,
-    escrow_payment_account: &UncheckedAccount<'info>,
-    authority: &UncheckedAccount<'info>,
-    auction_house: &Account<'info, AuctionHouse>,
-    auction_house_fee_account: &UncheckedAccount<'info>,
-    buyer_trade_state: &UncheckedAccount<'info>,
-    token_program: &Program<'info, Token>,
-    system_program: &Program<'info, System>,
-    rent: &Sysvar<'info, Rent>,
+    wallet: Signer<'info>,
+    payment_account: UncheckedAccount<'info>,
+    transfer_authority: UncheckedAccount<'info>,
+    treasury_mint: Account<'info, Mint>,
+    token_account: Account<'info, TokenAccount>,
+    metadata: UncheckedAccount<'info>,
+    escrow_payment_account: UncheckedAccount<'info>,
+    authority: UncheckedAccount<'info>,
+    auction_house: Account<'info, AuctionHouse>,
+    auction_house_fee_account: UncheckedAccount<'info>,
+    buyer_trade_state: UncheckedAccount<'info>,
+    token_program: Program<'info, Token>,
+    system_program: Program<'info, System>,
+    rent: Sysvar<'info, Rent>,
     trade_state_bump: u8,
     escrow_payment_bump: u8,
     buyer_price: u64,
@@ -148,7 +150,6 @@ pub fn bid_logic<'info>(
         &token_account.key(),
         trade_state_bump,
     )?;
-
     let auction_house_key = auction_house.key();
     let seeds = [
         PREFIX.as_bytes(),
@@ -156,7 +157,6 @@ pub fn bid_logic<'info>(
         FEE_PAYER.as_bytes(),
         &[auction_house.fee_payer_bump],
     ];
-
     let (fee_payer, fee_seeds) = get_fee_payer(
         &authority,
         &auction_house,
@@ -187,7 +187,6 @@ pub fn bid_logic<'info>(
         fee_seeds,
         is_native,
     )?;
-
     if is_native {
         assert_keys_equal(wallet.key(), payment_account.key())?;
 
@@ -234,25 +233,13 @@ pub fn bid_logic<'info>(
             )?;
         }
     }
-
     assert_metadata_valid(&metadata, &token_account)?;
 
     let ts_info = buyer_trade_state.to_account_info();
     if ts_info.data_is_empty() {
-        msg!("hello 2");
         let wallet_key = wallet.key();
         let token_account_key = token_account.key();
         if public {
-            let ts_seeds = [
-                PREFIX.as_bytes(),
-                wallet_key.as_ref(),
-                auction_house_key.as_ref(),
-                auction_house.treasury_mint.as_ref(),
-                token_account.mint.as_ref(),
-                &buyer_price.to_le_bytes(),
-                &token_size.to_le_bytes(),
-                &[trade_state_bump],
-            ];
             create_or_allocate_account_raw(
                 crate::id(),
                 &ts_info,
@@ -261,20 +248,18 @@ pub fn bid_logic<'info>(
                 &fee_payer,
                 TRADE_STATE_SIZE,
                 fee_seeds,
-                &ts_seeds,
+                &[
+                    PREFIX.as_bytes(),
+                    wallet_key.as_ref(),
+                    auction_house_key.as_ref(),
+                    auction_house.treasury_mint.as_ref(),
+                    token_account.mint.as_ref(),
+                    &buyer_price.to_le_bytes(),
+                    &token_size.to_le_bytes(),
+                    &[trade_state_bump],
+                ],
             )?;
         } else {
-            let ts_seeds = [
-                PREFIX.as_bytes(),
-                wallet_key.as_ref(),
-                auction_house_key.as_ref(),
-                token_account_key.as_ref(),
-                auction_house.treasury_mint.as_ref(),
-                token_account.mint.as_ref(),
-                &buyer_price.to_le_bytes(),
-                &token_size.to_le_bytes(),
-                &[trade_state_bump],
-            ];
             create_or_allocate_account_raw(
                 crate::id(),
                 &ts_info,
@@ -283,12 +268,25 @@ pub fn bid_logic<'info>(
                 &fee_payer,
                 TRADE_STATE_SIZE,
                 fee_seeds,
-                &ts_seeds,
+                &[
+                    PREFIX.as_bytes(),
+                    wallet_key.as_ref(),
+                    auction_house_key.as_ref(),
+                    token_account_key.as_ref(),
+                    auction_house.treasury_mint.as_ref(),
+                    token_account.mint.as_ref(),
+                    &buyer_price.to_le_bytes(),
+                    &token_size.to_le_bytes(),
+                    &[trade_state_bump],
+                ],
             )?;
         }
+        sol_memset(
+            *ts_info.try_borrow_mut_data()?,
+            trade_state_bump,
+            TRADE_STATE_SIZE,
+        );
     }
-    let data = &mut ts_info.data.borrow_mut();
-    data[0] = trade_state_bump;
-
+    // Allow The same bid to be sent with no issues
     Ok(())
 }

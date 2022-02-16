@@ -16,7 +16,8 @@ async fn buy_success() {
         .await
         .unwrap();
     let test_metadata = Metadata::new();
-    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
+
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
         .await
         .unwrap();
     test_metadata
@@ -32,10 +33,30 @@ async fn buy_success() {
         .await
         .unwrap();
     let buyer = Keypair::new();
-    airdrop(&mut context, &buyer.pubkey(), 10_000_000_000_000)
+    airdrop(&mut context, &buyer.pubkey(), 10000000000)
         .await
         .unwrap();
-    let (acc, buy_tx) = buy(&mut context, &ahkey, &ah, &test_metadata, &buyer, 1);
+    let (_, deposit_tx) = deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        1000000000,
+    );
+    context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap();
+    let (acc, buy_tx) = buy(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        1000000000,
+    );
     context
         .banks_client
         .process_transaction(buy_tx)

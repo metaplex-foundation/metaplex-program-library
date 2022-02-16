@@ -1994,27 +1994,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-auction-house"
-version = "1.0.0"
-dependencies = [
- "anchor-client",
- "anchor-lang 0.19.0",
- "anchor-spl 0.19.0",
- "arrayref",
- "env_logger",
- "mpl-testing-utils",
- "mpl-token-metadata",
- "serde_json",
- "shellexpand",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "mpl-fixed-price-sale"
 version = "0.1.0"
 dependencies = [
