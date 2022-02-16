@@ -694,7 +694,7 @@
         },
         {
           "name": "transferAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

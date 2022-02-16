@@ -2,14 +2,14 @@ import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 
-export type BuyInstructionArgs = {
+export type PublicBuyInstructionArgs = {
   tradeStateBump: number;
   escrowPaymentBump: number;
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
 };
-const buyStruct = new beet.BeetArgsStruct<
-  BuyInstructionArgs & {
+const publicBuyStruct = new beet.BeetArgsStruct<
+  PublicBuyInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
@@ -20,12 +20,12 @@ const buyStruct = new beet.BeetArgsStruct<
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
   ],
-  'BuyInstructionArgs',
+  'PublicBuyInstructionArgs',
 );
 /**
- * Accounts required by the _buy_ instruction
+ * Accounts required by the _publicBuy_ instruction
  */
-export type BuyInstructionAccounts = {
+export type PublicBuyInstructionAccounts = {
   wallet: web3.PublicKey;
   paymentAccount: web3.PublicKey;
   transferAuthority: web3.PublicKey;
@@ -39,15 +39,18 @@ export type BuyInstructionAccounts = {
   buyerTradeState: web3.PublicKey;
 };
 
-const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];
+const publicBuyInstructionDiscriminator = [169, 84, 218, 35, 42, 206, 16, 171];
 
 /**
- * Creates a _Buy_ instruction.
+ * Creates a _PublicBuy_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  */
-export function createBuyInstruction(accounts: BuyInstructionAccounts, args: BuyInstructionArgs) {
+export function createPublicBuyInstruction(
+  accounts: PublicBuyInstructionAccounts,
+  args: PublicBuyInstructionArgs,
+) {
   const {
     wallet,
     paymentAccount,
@@ -62,8 +65,8 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     buyerTradeState,
   } = accounts;
 
-  const [data] = buyStruct.serialize({
-    instructionDiscriminator: buyInstructionDiscriminator,
+  const [data] = publicBuyStruct.serialize({
+    instructionDiscriminator: publicBuyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -79,7 +82,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     },
     {
       pubkey: transferAuthority,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {
