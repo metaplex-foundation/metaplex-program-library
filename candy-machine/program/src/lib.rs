@@ -717,7 +717,10 @@ pub mod nft_candy_machine_v2 {
             invoke(
                 &approve_collection_authority(
                     *ctx.accounts.token_metadata_program.key,
-                    *ctx.accounts.collection_authority_record.to_account_info().key,
+                    *ctx.accounts
+                        .collection_authority_record
+                        .to_account_info()
+                        .key,
                     *ctx.accounts.collection_pda.to_account_info().key,
                     *ctx.accounts.authority.key,
                     *ctx.accounts.payer.key,
@@ -806,9 +809,9 @@ pub struct InitializeCandyMachine<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
-/// Create a new candy machine with the collections PDA.
+/// Set the collection PDA for the candy machine
 #[derive(Accounts)]
-#[instruction(data: CandyMachineData)]
+#[instruction(data: CollectionData)]
 pub struct SetCollection<'info> {
     #[account(has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
