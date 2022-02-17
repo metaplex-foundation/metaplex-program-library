@@ -7,10 +7,11 @@ use crate::{
 };
 
 pub fn assert_collection_update_is_valid(
+    edition: bool,
     _existing: &Option<Collection>,
     incoming: &Option<Collection>,
 ) -> Result<(), ProgramError> {
-    if incoming.is_some() && incoming.as_ref().unwrap().verified == true {
+    if incoming.is_some() && incoming.as_ref().unwrap().verified == true && !edition {
         // Never allow a collection to be verified outside of verify_collection instruction
         return Err(MetadataError::CollectionCannotBeVerifiedInThisInstruction.into());
     }

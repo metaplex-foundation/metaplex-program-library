@@ -15,6 +15,7 @@ use utils::*;
 // NOTE: these tests depend on the token-vault program having been compiled
 // via (cd ../../token-vault/program/ && cargo build-bpf)
 mod mint_new_edition_from_master_edition_via_token {
+    use mpl_token_metadata::state::Collection;
     use super::*;
     #[tokio::test]
     async fn success() {
@@ -41,6 +42,77 @@ mod mint_new_edition_from_master_edition_via_token {
             .await
             .unwrap();
 
+        test_edition_marker.create(&mut context).await.unwrap();
+
+        let edition_marker = test_edition_marker.get_data(&mut context).await;
+
+        assert_eq!(edition_marker.ledger[0], 64);
+        assert_eq!(edition_marker.key, Key::EditionMarker);
+    }
+
+    #[tokio::test]
+    async fn success_v2() {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        let test_master_edition = MasterEditionV2::new(&test_metadata);
+        let test_collection = Metadata::new();
+        test_collection
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+        collection_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                Some(Collection {
+                    key: test_collection.mint.pubkey(),
+                    verified: false,
+                }),
+                None
+            )
+            .await
+            .unwrap();
+
+        test_master_edition
+            .create(&mut context, Some(10))
+            .await
+            .unwrap();
+        let kpbytes = &context.payer;
+        let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+        test_metadata
+            .verify_collection(
+                &mut context,
+                test_collection.pubkey,
+                &kp,
+                test_collection.mint.pubkey(),
+                collection_master_edition_account.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 1);
         test_edition_marker.create(&mut context).await.unwrap();
 
         let edition_marker = test_edition_marker.get_data(&mut context).await;
