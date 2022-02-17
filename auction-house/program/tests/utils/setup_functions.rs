@@ -6,12 +6,12 @@ use anchor_client::solana_sdk::{
     system_program, sysvar,
 };
 use anchor_lang::*;
-use mpl_auction_house::pda::{find_escrow_payment_address, find_public_bid_trade_state_address};
 use mpl_auction_house::{
     pda::{
         find_auction_house_address, find_auction_house_fee_account_address,
         find_auction_house_treasury_address, find_program_as_signer_address,
-        find_trade_state_address, find_receipt_address
+        find_trade_state_address, find_escrow_payment_address,
+        find_public_bid_trade_state_address, find_public_bid_receipt_address
     },
     AuctionHouse,
 };
@@ -501,31 +501,31 @@ pub fn sell(
     )
 }
 
-pub fn print_receipt(
+pub fn print_public_bid_receipt(
     context: &mut ProgramTestContext,
+    buyer: &Keypair,
     ahkey: &Pubkey,
     token_account: &Pubkey,
     trade_state: &Pubkey,
     trade_state_bump: u8,
-    seller: &Keypair,
     price: u64,
-) -> (mpl_auction_house::accounts::PrintReceipt, Transaction) {
-    let (receipt, receipt_bump) = find_receipt_address(trade_state);
-    let seller_pubkey = seller.pubkey();
+) -> (mpl_auction_house::accounts::PrintPublicBidReceipt, Transaction) {
+    let (receipt, receipt_bump) = find_public_bid_receipt_address(trade_state);
+    let buyer_pubkey = buyer.pubkey();
 
-    let accounts = mpl_auction_house::accounts::PrintReceipt {
-        wallet: seller_pubkey,
+    let accounts = mpl_auction_house::accounts::PrintPublicBidReceipt {
+        wallet: buyer_pubkey,
         token_account: *token_account,
         auction_house: *ahkey,
         trade_state: *trade_state,
         receipt,
-        bookkeeper: seller_pubkey,
+        bookkeeper: buyer_pubkey,
         system_program: solana_program::system_program::id(),
         rent: sysvar::rent::id(),
     };
     let account_metas = accounts.to_account_metas(None);
 
-    let data = mpl_auction_house::instruction::PrintReceipt {
+    let data = mpl_auction_house::instruction::PrintPublicBidReceipt {
         trade_state_bump: trade_state_bump,
         receipt_bump: receipt_bump,
         token_size: 1,
@@ -543,36 +543,33 @@ pub fn print_receipt(
         accounts,
         Transaction::new_signed_with_payer(
             &[instruction],
-            Some(&seller.pubkey()),
-            &[seller],
+            Some(&buyer.pubkey()),
+            &[buyer],
             context.last_blockhash,
         ),
     )
 }
 
-pub fn burn_receipt(
+pub fn close_public_bid_receipt(
     context: &mut ProgramTestContext,
+    buyer: &Keypair,
     ahkey: &Pubkey,
     ah: &AuctionHouse,
-    test_metadata: &Metadata,
+    metadata: &Metadata,
     price: u64,
-) -> (mpl_auction_house::accounts::CloseReceipt, Transaction) {
-    let token =
-        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let (trade_state, ts_bump) = find_trade_state_address(
-        &test_metadata.token.pubkey(),
+) -> (mpl_auction_house::accounts::ClosePublicBidReceipt, Transaction) {
+    let buyer_key = buyer.pubkey();
+    let (trade_state, ts_bump) = find_public_bid_trade_state_address(
+        &buyer_key,
         &ahkey,
-        &token,
         &ah.treasury_mint,
-        &test_metadata.mint.pubkey(),
+        &metadata.mint.pubkey(),
         price,
         1,
     );
-    let (receipt, _receipt_bump) = find_receipt_address(&trade_state);
-    let (_pas, _pas_bump) = find_program_as_signer_address();
+    let (receipt, _receipt_bump) = find_public_bid_receipt_address(&trade_state);
 
-    let accounts = mpl_auction_house::accounts::CloseReceipt {
-        token_account: token,
+    let accounts = mpl_auction_house::accounts::ClosePublicBidReceipt {
         auction_house: *ahkey,
         trade_state,
         receipt,
@@ -581,7 +578,7 @@ pub fn burn_receipt(
 
     let account_metas = accounts.to_account_metas(None);
 
-    let data = mpl_auction_house::instruction::CloseReceipt {}.data();
+    let data = mpl_auction_house::instruction::ClosePublicBidReceipt {}.data();
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
@@ -593,8 +590,8 @@ pub fn burn_receipt(
         accounts,
         Transaction::new_signed_with_payer(
             &[instruction],
-            Some(&test_metadata.token.pubkey()),
-            &[&test_metadata.token],
+            Some(&buyer_key),
+            &[buyer],
             context.last_blockhash,
         ),
     )
