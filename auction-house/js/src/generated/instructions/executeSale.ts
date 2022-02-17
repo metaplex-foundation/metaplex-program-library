@@ -11,7 +11,7 @@ export type ExecuteSaleInstructionArgs = {
 };
 const executeSaleStruct = new beet.BeetArgsStruct<
   ExecuteSaleInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -24,6 +24,9 @@ const executeSaleStruct = new beet.BeetArgsStruct<
   ],
   'ExecuteSaleInstructionArgs',
 );
+/**
+ * Accounts required by the _executeSale_ instruction
+ */
 export type ExecuteSaleInstructionAccounts = {
   buyer: web3.PublicKey;
   seller: web3.PublicKey;

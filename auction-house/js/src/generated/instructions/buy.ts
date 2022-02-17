@@ -10,7 +10,7 @@ export type BuyInstructionArgs = {
 };
 const buyStruct = new beet.BeetArgsStruct<
   BuyInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -22,6 +22,9 @@ const buyStruct = new beet.BeetArgsStruct<
   ],
   'BuyInstructionArgs',
 );
+/**
+ * Accounts required by the _buy_ instruction
+ */
 export type BuyInstructionAccounts = {
   wallet: web3.PublicKey;
   paymentAccount: web3.PublicKey;
@@ -76,7 +79,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     },
     {
       pubkey: transferAuthority,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

@@ -2,61 +2,71 @@ import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 
-export type DepositInstructionArgs = {
+export type PublicBuyInstructionArgs = {
+  tradeStateBump: number;
   escrowPaymentBump: number;
-  amount: beet.bignum;
+  buyerPrice: beet.bignum;
+  tokenSize: beet.bignum;
 };
-const depositStruct = new beet.BeetArgsStruct<
-  DepositInstructionArgs & {
+const publicBuyStruct = new beet.BeetArgsStruct<
+  PublicBuyInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['tradeStateBump', beet.u8],
     ['escrowPaymentBump', beet.u8],
-    ['amount', beet.u64],
+    ['buyerPrice', beet.u64],
+    ['tokenSize', beet.u64],
   ],
-  'DepositInstructionArgs',
+  'PublicBuyInstructionArgs',
 );
 /**
- * Accounts required by the _deposit_ instruction
+ * Accounts required by the _publicBuy_ instruction
  */
-export type DepositInstructionAccounts = {
+export type PublicBuyInstructionAccounts = {
   wallet: web3.PublicKey;
   paymentAccount: web3.PublicKey;
   transferAuthority: web3.PublicKey;
-  escrowPaymentAccount: web3.PublicKey;
   treasuryMint: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  metadata: web3.PublicKey;
+  escrowPaymentAccount: web3.PublicKey;
   authority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
+  buyerTradeState: web3.PublicKey;
 };
 
-const depositInstructionDiscriminator = [242, 35, 198, 137, 82, 225, 242, 182];
+const publicBuyInstructionDiscriminator = [169, 84, 218, 35, 42, 206, 16, 171];
 
 /**
- * Creates a _Deposit_ instruction.
+ * Creates a _PublicBuy_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  */
-export function createDepositInstruction(
-  accounts: DepositInstructionAccounts,
-  args: DepositInstructionArgs,
+export function createPublicBuyInstruction(
+  accounts: PublicBuyInstructionAccounts,
+  args: PublicBuyInstructionArgs,
 ) {
   const {
     wallet,
     paymentAccount,
     transferAuthority,
-    escrowPaymentAccount,
     treasuryMint,
+    tokenAccount,
+    metadata,
+    escrowPaymentAccount,
     authority,
     auctionHouse,
     auctionHouseFeeAccount,
+    buyerTradeState,
   } = accounts;
 
-  const [data] = depositStruct.serialize({
-    instructionDiscriminator: depositInstructionDiscriminator,
+  const [data] = publicBuyStruct.serialize({
+    instructionDiscriminator: publicBuyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -76,13 +86,23 @@ export function createDepositInstruction(
       isSigner: false,
     },
     {
-      pubkey: escrowPaymentAccount,
-      isWritable: true,
+      pubkey: treasuryMint,
+      isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: treasuryMint,
+      pubkey: tokenAccount,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: metadata,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: escrowPaymentAccount,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -97,6 +117,11 @@ export function createDepositInstruction(
     },
     {
       pubkey: auctionHouseFeeAccount,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: buyerTradeState,
       isWritable: true,
       isSigner: false,
     },
