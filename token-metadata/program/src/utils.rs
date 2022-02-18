@@ -52,7 +52,6 @@ pub fn assert_data_valid(
     if data.seller_fee_basis_points > 10000 {
         return Err(MetadataError::InvalidBasisPoints.into());
     }
-
     if data.creators.is_some() {
         if let Some(creators) = &data.creators {
             if creators.len() > MAX_CREATOR_LIMIT {
@@ -128,7 +127,6 @@ pub fn assert_data_valid(
             }
         }
     }
-
     Ok(())
 }
 
@@ -914,7 +912,7 @@ pub fn process_create_metadata_accounts_logic(
     metadata.update_authority = update_authority_key;
     assert_valid_use(&data.uses, &None)?;
     metadata.uses = data.uses;
-    assert_collection_update_is_valid(&None, &data.collection)?;
+    assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
     if add_token_standard {
         let token_standard = if is_edition {
@@ -928,7 +926,6 @@ pub fn process_create_metadata_accounts_logic(
     } else {
         metadata.token_standard = None;
     }
-
     puff_out_data_fields(&mut metadata);
 
     let edition_seeds = &[

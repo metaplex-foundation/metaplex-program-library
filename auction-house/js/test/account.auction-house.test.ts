@@ -1,5 +1,5 @@
 import { AccountInfo, Keypair, PublicKey } from '@solana/web3.js';
-import { AuctionHouseAccount } from 'src/accounts/AuctionHouse';
+import { AuctionHouseAccountData } from 'src/generated/accounts';
 import { AuctionHouseAccountDataArgs } from 'src/generated/accounts';
 import test from 'tape';
 import spok from 'spok';
@@ -10,7 +10,6 @@ function quickKeypair(): [PublicKey, Uint8Array] {
 }
 
 test('account auction-house: round trip serilization', async (t) => {
-  const [accountPubkey] = quickKeypair();
   const [creator] = quickKeypair();
   const [auctionHouseTreasury] = quickKeypair();
   const [treasuryWithdrawalDestination] = quickKeypair();
@@ -33,8 +32,8 @@ test('account auction-house: round trip serilization', async (t) => {
     canChangeSalePrice: true,
   };
 
-  const expected = AuctionHouseAccount.fromAccountArgs(accountPubkey, args);
-  const [data] = expected.data.serialize();
+  const expected = AuctionHouseAccountData.fromArgs(args);
+  const [data] = expected.serialize();
 
   const info: AccountInfo<Buffer> = {
     executable: false,
@@ -43,6 +42,6 @@ test('account auction-house: round trip serilization', async (t) => {
     lamports: 1000,
   };
 
-  const actual = AuctionHouseAccount.fromAccountInfo(accountPubkey, info);
+  const actual = AuctionHouseAccountData.fromAccountInfo(info)[0];
   spok(t, actual, expected);
 });

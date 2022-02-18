@@ -123,7 +123,7 @@
       "accounts": [
         {
           "name": "market",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -229,6 +229,211 @@
       ]
     },
     {
+      "name": "closeMarket",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "suspendMarket",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "changeMarket",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "newName",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "newDescription",
+          "type": {
+            "option": "string"
+          }
+        },
+        {
+          "name": "mutable",
+          "type": {
+            "option": "bool"
+          }
+        },
+        {
+          "name": "newPrice",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "newPiecesInOneWallet",
+          "type": {
+            "option": "u64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "resumeMarket",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "withdraw",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sellingResource",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryHolder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "funder",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "payoutTicket",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "treasuryOwnerBump",
+          "type": "u8"
+        },
+        {
+          "name": "payoutTicketBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "createMarket",
       "accounts": [
         {
@@ -307,6 +512,121 @@
           "name": "endDate",
           "type": {
             "option": "u64"
+          }
+        }
+      ]
+    },
+    {
+      "name": "claimResource",
+      "accounts": [
+        {
+          "name": "market",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryHolder",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sellingResource",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "sellingResourceOwner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "secondaryMetadataCreators",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "destination",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "vaultOwnerBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "createSecondaryMetadataCreators",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "secondaryMetadataCreators",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "secondaryMetadataCreatorsBump",
+          "type": "u8"
+        },
+        {
+          "name": "creators",
+          "type": {
+            "vec": {
+              "defined": "mpl_token_metadata::state::Creator"
+            }
           }
         }
       ]
@@ -463,6 +783,22 @@
           {
             "name": "alreadyBought",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SecondaryMetadataCreators",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creators",
+            "type": {
+              "vec": {
+                "defined": "mpl_token_metadata::state::Creator"
+              }
+            }
           }
         ]
       }
@@ -666,6 +1002,26 @@
       "code": 6029,
       "name": "UserWalletMustMatchUserTokenAccount",
       "msg": "User wallet must match user token account"
+    },
+    {
+      "code": 6030,
+      "name": "MetadataShouldBeMutable",
+      "msg": "Metadata should be mutable"
+    },
+    {
+      "code": 6031,
+      "name": "PrimarySaleIsNotAllowed",
+      "msg": "Primary sale is not allowed"
+    },
+    {
+      "code": 6032,
+      "name": "CreatorsIsGtThanAvailable",
+      "msg": "Creators is gt than allowed"
+    },
+    {
+      "code": 6033,
+      "name": "CreatorsIsEmpty",
+      "msg": "Creators is empty"
     }
   ],
   "metadata": {

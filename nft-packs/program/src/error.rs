@@ -100,10 +100,6 @@ pub enum NFTPacksError {
     #[error("Voucher should have supply greater then 0")]
     WrongVoucherSupply,
 
-    /// Random oracle updated long time ago
-    #[error("Random oracle updated long time ago")]
-    RandomOracleOutOfDate,
-
     /// Card ran out of editions
     #[error("Card ran out of editions")]
     CardDoesntHaveEditions,

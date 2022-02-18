@@ -9,7 +9,7 @@ export type UpdateAuctionHouseInstructionArgs = {
 };
 const updateAuctionHouseStruct = new beet.FixableBeetArgsStruct<
   UpdateAuctionHouseInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -20,6 +20,9 @@ const updateAuctionHouseStruct = new beet.FixableBeetArgsStruct<
   ],
   'UpdateAuctionHouseInstructionArgs',
 );
+/**
+ * Accounts required by the _updateAuctionHouse_ instruction
+ */
 export type UpdateAuctionHouseInstructionAccounts = {
   treasuryMint: web3.PublicKey;
   payer: web3.PublicKey;
