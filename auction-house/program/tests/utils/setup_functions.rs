@@ -555,6 +555,7 @@ pub fn execute_sale_with_receipt(
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
+        clock: sysvar::clock::id(),
     };
 
     let account_metas = accounts.to_account_metas(None);

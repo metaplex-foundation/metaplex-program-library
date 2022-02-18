@@ -602,6 +602,7 @@ pub mod auction_house {
         let program_as_signer = &ctx.accounts.program_as_signer;
         let rent = &ctx.accounts.rent;
         let purchase_receipt = &ctx.accounts.purchase_receipt;
+        let clock = &ctx.accounts.clock;
 
         let auction_house_key = auction_house.key();
         let auction_house_seeds = [
@@ -645,7 +646,6 @@ pub mod auction_house {
             )?;
         }
 
-
         let purchase = Purchase {
             buyer: buyer.key(),
             seller: seller.key(),
@@ -654,8 +654,7 @@ pub mod auction_house {
             bump: purchase_receipt_bump,
             price: buyer_price,
             token_size,
-            activated_at: None,
-            closed_at: None,
+            created_at: Some(clock.unix_timestamp),
         };
 
         purchase.try_serialize(&mut *purchase_receipt_info.data.borrow_mut())?;
@@ -663,7 +662,7 @@ pub mod auction_house {
         let mut accounts = ExecuteSale {
             buyer: buyer.clone(),
             seller: seller.clone(),
-            auction_house: Box::new(auction_house.clone()),
+            auction_house: auction_house.clone(),
             token_account: token_account.clone(),
             token_mint: token_mint.clone(),
             treasury_mint: treasury_mint.clone(),
@@ -1450,12 +1449,12 @@ pub struct ExecuteSaleWithReceipt<'info> {
     buyer_receipt_token_account: UncheckedAccount<'info>,
     authority: UncheckedAccount<'info>,
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    auction_house: Box<Account<'info, AuctionHouse>>,
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
     auction_house_treasury: UncheckedAccount<'info>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), buyer.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=buyer_trade_state.to_account_info().data.borrow()[0])]
+    #[account(mut)]
     buyer_trade_state: UncheckedAccount<'info>,
     #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=seller_trade_state.to_account_info().data.borrow()[0])]
     seller_trade_state: UncheckedAccount<'info>,
@@ -1469,6 +1468,7 @@ pub struct ExecuteSaleWithReceipt<'info> {
     rent: Sysvar<'info, Rent>,
     #[account(mut, seeds=[PURCHASE_RECEIPT_PREFIX.as_bytes(), seller_trade_state.key().as_ref(), buyer_trade_state.key().as_ref()], bump=purchase_receipt_bump)]
     purchase_receipt: UncheckedAccount<'info>,
+    clock: Sysvar<'info, Clock>,
 }
 
 #[derive(Accounts)]
@@ -1684,7 +1684,7 @@ pub const PUBLIC_BID_SIZE: usize = 8 + //key
 1 + // bump
 1 + // trade_state_bump
 1 + 8 + // activated_at
-1 + 8; // closed_at;
+1 + 8; // closed_at
 
 #[account]
 pub struct PublicBid {
@@ -1737,8 +1737,7 @@ pub const PURCHASE_SIZE: usize = 8 + //key
 8 + // token_size
 8 + // price
 1 + // bump
-1 + 8 + // activated_at
-1 + 8; // closed_at
+1 + 8; // created_at
 
 #[account]
 pub struct Purchase {
@@ -1749,8 +1748,7 @@ pub struct Purchase {
     pub token_size: u64,
     pub price: u64,
     pub bump: u8,
-    pub activated_at: Option<i64>,
-    pub closed_at: Option<i64>,
+    pub created_at: Option<i64>,
 }
 
 #[error]
