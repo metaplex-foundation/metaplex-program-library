@@ -130,6 +130,13 @@ pub fn place_bid<'r, 'b: 'r>(
     msg!("+ Processing PlaceBid");
     let accounts = parse_accounts(program_id, accounts)?;
 
+    let auction_path = [
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        &args.resource.to_bytes(),
+    ];
+    assert_derivation(program_id, accounts.auction, &auction_path)?;
+
     // Load the auction and verify this bid is valid.
     let mut auction = AuctionData::from_account_info(accounts.auction)?;
 
