@@ -43,6 +43,8 @@ const PREFIX: &str = "candy_machine";
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
 pub mod nft_candy_machine_v2 {
+    use mpl_token_metadata::instruction::revoke_collection_authority;
+
     use super::*;
 
     pub fn mint_nft<'info>(
@@ -690,21 +692,24 @@ pub mod nft_candy_machine_v2 {
         Ok(())
     }
 
-    pub fn set_collection(ctx: Context<SetCollection>, data: CollectionData) -> ProgramResult {
-        if let Some(_mint_pubkey) = data.collection_mint {
-            let mint = ctx.accounts.mint.to_account_info();
-            let metadata: Metadata =
-                Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-            if &metadata.update_authority != ctx.accounts.authority.to_account_info().key {
-                return Err(ErrorCode::IncorrectCollectionAuthority.into());
-            };
-            if &metadata.mint != mint.key {
-                return Err(MetadataError::MintMismatch.into());
-            }
-            let edition = ctx.accounts.edition.to_account_info();
+    pub fn set_collection(ctx: Context<SetCollection>, creator_bump: u8) -> ProgramResult {
+        let mint = ctx.accounts.mint.to_account_info();
+        let metadata: Metadata =
+            Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
+        if &metadata.update_authority != ctx.accounts.authority.to_account_info().key {
+            return Err(ErrorCode::IncorrectCollectionAuthority.into());
+        };
+        if &metadata.mint != mint.key {
+            return Err(MetadataError::MintMismatch.into());
+        }
+
+        let edition = ctx.accounts.edition.to_account_info();
+        let authority_record = ctx.accounts.collection_authority_record.to_account_info();
+
+        if authority_record.data_is_empty() {
             assert_master_edition(&metadata, &edition)?;
             let approve_collection_infos = vec![
-                ctx.accounts.collection_authority_record.to_account_info(),
+                authority_record.clone(),
                 ctx.accounts.collection_pda.to_account_info(),
                 ctx.accounts.authority.to_account_info(),
                 ctx.accounts.payer.to_account_info(),
@@ -713,14 +718,10 @@ pub mod nft_candy_machine_v2 {
                 ctx.accounts.system_program.to_account_info(),
                 ctx.accounts.rent.to_account_info(),
             ];
-
             invoke(
                 &approve_collection_authority(
                     *ctx.accounts.token_metadata_program.key,
-                    *ctx.accounts
-                        .collection_authority_record
-                        .to_account_info()
-                        .key,
+                    *authority_record.key,
                     *ctx.accounts.collection_pda.to_account_info().key,
                     *ctx.accounts.authority.key,
                     *ctx.accounts.payer.key,
@@ -730,8 +731,8 @@ pub mod nft_candy_machine_v2 {
                 approve_collection_infos.as_slice(),
             )?;
         }
+        ctx.accounts.collection_pda.mint = Some(*mint.key);
 
-        ctx.accounts.collection_pda.mint = data.collection_mint;
         Ok(())
     }
 
@@ -811,21 +812,22 @@ pub struct InitializeCandyMachine<'info> {
 
 /// Set the collection PDA for the candy machine
 #[derive(Accounts)]
-#[instruction(data: CollectionData)]
+#[instruction(collection_bump: u8)]
 pub struct SetCollection<'info> {
     #[account(has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
-    #[account(init_if_needed, payer = payer, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
+    #[account(init, payer = payer, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump=collection_bump)]
     collection_pda: Account<'info, CollectionPDA>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
-    // // Dont need to be checked because CPI
+    // Dont need to be checked because CPI
     metadata: UncheckedAccount<'info>,
     mint: UncheckedAccount<'info>,
     edition: UncheckedAccount<'info>,
     collection_authority_record: UncheckedAccount<'info>,
+    #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
 }
 
@@ -974,12 +976,6 @@ pub struct CandyMachineData {
     pub items_available: u64,
     /// If [`Some`] requires gateway tokens on mint
     pub gatekeeper: Option<GatekeeperConfig>,
-}
-
-/// Candy machine settings data.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
-pub struct CollectionData {
-    pub collection_mint: Option<Pubkey>,
 }
 
 /// Configurations options for the gatekeeper.
