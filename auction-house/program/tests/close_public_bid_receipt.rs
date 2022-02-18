@@ -1,12 +1,14 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 use anchor_lang::AccountDeserialize;
+use claim::assert_some;
 use mpl_auction_house::{pda::find_public_bid_trade_state_address, PublicBid};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
 use solana_sdk::{
-    signature::Keypair, signer::Signer, transaction::TransactionError, transport::TransportError,
+    signature::Keypair, signer::Signer, sysvar::clock::Clock, transaction::TransactionError,
+    transport::TransportError,
 };
 use spl_associated_token_account::get_associated_token_address;
 use std::assert_eq;
@@ -135,8 +137,15 @@ async fn success_close_public_bid_receipt_after_sale() {
         .expect("no data for receipt");
 
     let bid = PublicBid::try_deserialize(&mut receipt_closed_account.data.as_ref()).unwrap();
+    let timestamp = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
+        .unwrap()
+        .unix_timestamp;
 
-    assert_eq!(bid.active, false);
+    assert_eq!(bid.closed_at, Some(timestamp));
+    assert_some!(bid.activated_at);
 
     ()
 }

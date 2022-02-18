@@ -1,13 +1,14 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 use anchor_lang::AccountDeserialize;
-
+use claim::assert_none;
 use mpl_auction_house::{pda::find_trade_state_address, Listing};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
 use solana_sdk::{
-    signature::Keypair, signer::Signer, transaction::TransactionError, transport::TransportError,
+    signature::Keypair, signer::Signer, sysvar::clock::Clock, transaction::TransactionError,
+    transport::TransportError,
 };
 use spl_associated_token_account::get_associated_token_address;
 
@@ -87,13 +88,20 @@ async fn print_listing_receipt_success() {
         .expect("no receipt data");
 
     let listing = Listing::try_deserialize(&mut receipt_account.data.as_ref()).unwrap();
+    let timestamp = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
+        .unwrap()
+        .unix_timestamp;
 
     assert_eq!(listing.bookkeeper, owner_key);
     assert_eq!(listing.token_mint, test_metadata.mint.pubkey());
     assert_eq!(listing.trade_state, sell_acc.seller_trade_state);
     assert_eq!(listing.auction_house, sell_acc.auction_house);
     assert_eq!(listing.seller, sell_acc.wallet);
-    assert_eq!(listing.active, true);
+    assert_eq!(listing.activated_at, Some(timestamp));
+    assert_none!(listing.closed_at);
     assert_eq!(listing.price, 100_000_000);
     assert_eq!(listing.token_size, 1);
     ()
