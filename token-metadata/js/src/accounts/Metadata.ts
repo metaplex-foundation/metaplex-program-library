@@ -242,6 +242,12 @@ export class Metadata extends Account<MetadataData> {
     }
   }
 
+  static async findByMint(connection: Connection, mint: AnyPublicKey): Promise<Metadata> {
+    const pda = await Metadata.getPDA(mint);
+
+    return Metadata.load(connection, pda);
+  }
+
   static async findByOwner(connection: Connection, owner: AnyPublicKey) {
     const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
     const accountMap = new Map(accounts.map(({ data }) => [data.mint.toString(), data]));
@@ -268,10 +274,16 @@ export class Metadata extends Account<MetadataData> {
     ).flat();
   }
 
-  static async findDataByOwner(
+  static async findByOwnerV3(connection: Connection, owner: AnyPublicKey): Promise<Metadata[]> {
+    const tokenInfo = await Metadata.findInfoByOwner(connection, owner);
+
+    return Array.from(tokenInfo.entries()).map(([pubkey, info]) => new Metadata(pubkey, info));
+  }
+
+  static async findInfoByOwner(
     connection: Connection,
     owner: AnyPublicKey,
-  ): Promise<MetadataData[]> {
+  ): Promise<Map<AnyPublicKey, AccountInfo<Buffer>>> {
     const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
 
     const metadataPdaLookups = accounts.reduce((memo, { data }) => {
@@ -282,7 +294,16 @@ export class Metadata extends Account<MetadataData> {
     }, []);
 
     const metadataAddresses = await Promise.all(metadataPdaLookups);
-    const tokenInfo = await Account.getInfos(connection, metadataAddresses);
+
+    return Account.getInfos(connection, metadataAddresses);
+  }
+
+  static async findDataByOwner(
+    connection: Connection,
+    owner: AnyPublicKey,
+  ): Promise<MetadataData[]> {
+    const tokenInfo = await Metadata.findInfoByOwner(connection, owner);
+
     return Array.from(tokenInfo.values()).map((m) => MetadataData.deserialize(m.data));
   }
 

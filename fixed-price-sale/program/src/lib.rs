@@ -25,6 +25,7 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address, AssociatedToken},
     token::{self, accessor, Mint, Token, TokenAccount},
 };
+use mpl_token_metadata::utils::get_supply_off_master_edition;
 
 declare_id!("SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo");
 
@@ -178,7 +179,10 @@ pub mod fixed_price_sale {
         let system_program = &ctx.accounts.system_program;
 
         let metadata_mint = selling_resource.resource.clone();
-        let edition = selling_resource.supply;
+        // do supply +1 to increase master edition supply
+        let edition = get_supply_off_master_edition(&master_edition.to_account_info())?
+            .checked_add(1)
+            .ok_or(ErrorCode::MathOverflow)?;
 
         // Check, that `Market` is not in `Suspended` state
         if market.state == MarketState::Suspended {
@@ -786,8 +790,21 @@ pub mod fixed_price_sale {
             }
         }
 
+        let is_native = market.treasury_mint == System::id();
+
+        let treasury_holder_amount = if is_native {
+            treasury_holder.lamports()
+        } else {
+            let token_account = spl_token::state::Account::unpack(&treasury_holder.data.borrow())?;
+            if token_account.owner != market.treasury_owner.key() {
+                return Err(ErrorCode::DerivedKeyInvalid.into());
+            }
+
+            token_account.amount
+        };
+
         // Check, that treasury balance is zero
-        if treasury_holder.amount != 0 {
+        if treasury_holder_amount != 0 {
             return Err(ErrorCode::TreasuryIsNotEmpty.into());
         }
 
@@ -1046,7 +1063,7 @@ pub struct Withdraw<'info> {
 pub struct ClaimResource<'info> {
     #[account(has_one=selling_resource, has_one=treasury_holder)]
     market: Account<'info, Market>,
-    treasury_holder: Box<Account<'info, TokenAccount>>,
+    treasury_holder: UncheckedAccount<'info>,
     #[account(has_one=vault, constraint = selling_resource.owner == selling_resource_owner.key())]
     selling_resource: Account<'info, SellingResource>,
     selling_resource_owner: Signer<'info>,

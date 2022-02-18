@@ -748,7 +748,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-machine"
-version = "2.0.1"
+version = "3.0.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

@@ -19,7 +19,7 @@ spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
 mpl-metaplex = { path = "../../metaplex/program", features = ["no-entrypoint"] }
 mpl-token-metadata = { version="1.1.0", features = [ "no-entrypoint" ] }
 mpl-token-vault = { path = "../../token-vault/program", features = [ "no-entrypoint" ] }
-randomness-oracle-program = { git = "https://github.com/metaplex/randomness-oracle", features = [ "no-entrypoint" ] }
+arrayref = "0.3.6"
 
 [dev-dependencies]
 solana-program-test = "1.8.5"

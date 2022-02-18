@@ -1,29 +1,29 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 use anchor_lang::AccountDeserialize;
-
-use mpl_auction_house::{pda::find_trade_state_address, Receipt};
+use claim::assert_none;
+use mpl_auction_house::{pda::find_trade_state_address, Listing};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
-use solana_sdk::{signer::Signer, transaction::TransactionError, transport::TransportError};
+use solana_sdk::{
+    signature::Keypair, signer::Signer, sysvar::clock::Clock, transaction::TransactionError,
+    transport::TransportError,
+};
 use spl_associated_token_account::get_associated_token_address;
 
 use std::assert_eq;
 use utils::setup_functions::*;
 
 #[tokio::test]
-async fn print_receipt_success() {
+async fn print_listing_receipt_success() {
     let mut context = auction_house_program_test().start_with_context().await;
 
     let (ah, ahkey, _authority) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
+    let price = 100_000_000;
     let test_metadata = Metadata::new();
-
-    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
-        .await
-        .unwrap();
 
     test_metadata
         .create(
@@ -38,33 +38,40 @@ async fn print_receipt_success() {
         .await
         .unwrap();
 
-    let (sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 100_000_000);
+    let owner = &test_metadata.token;
+    let owner_key = owner.pubkey();
+
+    airdrop(&mut context, &owner_key, 10_000_000_000)
+        .await
+        .unwrap();
+
+    let (sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, price);
     context
         .banks_client
         .process_transaction(sell_tx)
         .await
         .unwrap();
 
-    let token =
-        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let owner_token_account =
+        get_associated_token_address(&owner_key, &test_metadata.mint.pubkey());
     let (trade_state, ts_bump) = find_trade_state_address(
-        &test_metadata.token.pubkey(),
+        &owner_key,
         &ahkey,
-        &token,
+        &owner_token_account,
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
-        100_000_000,
+        price,
         1,
     );
 
-    let (receipt_acc, receipt_tx) = print_receipt(
+    let (receipt_acc, receipt_tx) = print_listing_receipt(
         &mut context,
+        &owner,
         &ahkey,
-        &token,
+        &owner_token_account,
         &trade_state,
         ts_bump,
-        &test_metadata.token,
-        100_000_000,
+        price,
     );
 
     context
@@ -80,31 +87,33 @@ async fn print_receipt_success() {
         .expect("error getting receipt")
         .expect("no receipt data");
 
-    let receipt = Receipt::try_deserialize(&mut receipt_account.data.as_ref()).unwrap();
+    let listing = Listing::try_deserialize(&mut receipt_account.data.as_ref()).unwrap();
+    let timestamp = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
+        .unwrap()
+        .unix_timestamp;
 
-    assert_eq!(receipt.bookkeeper, test_metadata.token.pubkey());
-    assert_eq!(receipt.token_account, test_metadata.token.pubkey());
-    assert_eq!(receipt.trade_state, sell_acc.seller_trade_state);
-    assert_eq!(receipt.token_account, sell_acc.token_account);
-    assert_eq!(receipt.auction_house, sell_acc.auction_house);
-    assert_eq!(receipt.wallet, sell_acc.wallet);
-    assert_eq!(receipt.closed, false);
-    assert_eq!(receipt.price, 100_000_000);
-    assert_eq!(receipt.token_size, 1);
+    assert_eq!(listing.bookkeeper, owner_key);
+    assert_eq!(listing.token_mint, test_metadata.mint.pubkey());
+    assert_eq!(listing.trade_state, sell_acc.seller_trade_state);
+    assert_eq!(listing.auction_house, sell_acc.auction_house);
+    assert_eq!(listing.seller, sell_acc.wallet);
+    assert_eq!(listing.activated_at, Some(timestamp));
+    assert_none!(listing.closed_at);
+    assert_eq!(listing.price, 100_000_000);
+    assert_eq!(listing.token_size, 1);
     ()
 }
 
 #[tokio::test]
-async fn failure_print_receipt_trade_state_mismatch() {
+async fn failure_print_listing_receipt_trade_state_mismatch() {
     let mut context = auction_house_program_test().start_with_context().await;
     let (ah, ahkey, _authority) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
     let test_metadata = Metadata::new();
-
-    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
-        .await
-        .unwrap();
 
     test_metadata
         .create(
@@ -119,32 +128,39 @@ async fn failure_print_receipt_trade_state_mismatch() {
         .await
         .unwrap();
 
-    let (_sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 100_000_000);
+    let price = 100_000_000;
+    let owner = &test_metadata.token;
+    let owner_key = owner.pubkey();
+
+    airdrop(&mut context, &owner_key, 10_000_000_000)
+        .await
+        .unwrap();
+
+    let (sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, price);
     context
         .banks_client
         .process_transaction(sell_tx)
         .await
         .unwrap();
 
-    let token =
-        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let token = get_associated_token_address(&owner_key, &test_metadata.mint.pubkey());
     let (trade_state, ts_bump) = find_trade_state_address(
-        &test_metadata.token.pubkey(),
+        &owner_key,
         &ahkey,
         &token,
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
-        100_000_000,
+        price,
         1,
     );
 
-    let (_receipt_acc, receipt_tx) = print_receipt(
+    let (_receipt_acc, receipt_tx) = print_listing_receipt(
         &mut context,
+        &owner,
         &ahkey,
         &token,
         &trade_state,
         ts_bump,
-        &test_metadata.token,
         1,
     );
 

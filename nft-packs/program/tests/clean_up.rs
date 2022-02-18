@@ -61,9 +61,6 @@ async fn success_clean_up_change() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -78,7 +75,6 @@ async fn success_clean_up_change() {
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();
@@ -151,8 +147,6 @@ async fn success_clean_up_change() {
     test_pack_set.activate(&mut context).await.unwrap();
     test_pack_set.clean_up(&mut context).await.unwrap();
 
-    test_randomness_oracle.update(&mut context).await.unwrap();
-
     test_pack_set
         .request_card_for_redeem(
             &mut context,
@@ -161,7 +155,6 @@ async fn success_clean_up_change() {
             &voucher_edition.mint.pubkey(),
             &edition_authority,
             &Some(voucher_edition.token.pubkey()),
-            &test_randomness_oracle.keypair.pubkey(),
             1,
         )
         .await
@@ -208,9 +201,6 @@ async fn success_clean_up_sort() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -225,7 +215,6 @@ async fn success_clean_up_sort() {
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();

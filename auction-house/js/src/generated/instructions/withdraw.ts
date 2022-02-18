@@ -8,7 +8,7 @@ export type WithdrawInstructionArgs = {
 };
 const withdrawStruct = new beet.BeetArgsStruct<
   WithdrawInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -18,6 +18,9 @@ const withdrawStruct = new beet.BeetArgsStruct<
   ],
   'WithdrawInstructionArgs',
 );
+/**
+ * Accounts required by the _withdraw_ instruction
+ */
 export type WithdrawInstructionAccounts = {
   wallet: web3.PublicKey;
   receiptAccount: web3.PublicKey;

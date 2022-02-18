@@ -52,7 +52,6 @@ pub fn assert_data_valid(
     if data.seller_fee_basis_points > 10000 {
         return Err(MetadataError::InvalidBasisPoints.into());
     }
-
     if data.creators.is_some() {
         if let Some(creators) = &data.creators {
             if creators.len() > MAX_CREATOR_LIMIT {
@@ -128,7 +127,6 @@ pub fn assert_data_valid(
             }
         }
     }
-
     Ok(())
 }
 

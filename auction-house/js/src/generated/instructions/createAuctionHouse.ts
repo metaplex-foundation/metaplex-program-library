@@ -12,7 +12,7 @@ export type CreateAuctionHouseInstructionArgs = {
 };
 const createAuctionHouseStruct = new beet.BeetArgsStruct<
   CreateAuctionHouseInstructionArgs & {
-    instructionDiscriminator: number[];
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -26,6 +26,9 @@ const createAuctionHouseStruct = new beet.BeetArgsStruct<
   ],
   'CreateAuctionHouseInstructionArgs',
 );
+/**
+ * Accounts required by the _createAuctionHouse_ instruction
+ */
 export type CreateAuctionHouseInstructionAccounts = {
   treasuryMint: web3.PublicKey;
   payer: web3.PublicKey;

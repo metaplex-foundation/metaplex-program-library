@@ -9,8 +9,8 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { findVaultOwnerAddress } from '../../src/utils';
 
 import { createAndSignTransaction, logDebug } from '../utils';
-import { createTokenAccount } from '../transactions/create-token-account';
-import { mintNFT } from './mint-nft';
+import { createTokenAccount } from '../transactions/createTokenAccount';
+import { mintNFT } from './mintNft';
 import { createInitSellingResourceInstruction } from '../../src/instructions';
 import { Creator } from '@metaplex-foundation/mpl-token-metadata';
 
@@ -36,6 +36,7 @@ export const initSellingResource = async ({
   vaultOwner: PublicKey;
   vaultOwnerBump: number;
   resourceMint: Keypair;
+  metadata: PublicKey;
 }> => {
   const creator = new Creator({
     address: payer.publicKey.toBase58(),
@@ -114,5 +115,6 @@ export const initSellingResource = async ({
     vaultOwner,
     vaultOwnerBump,
     resourceMint,
+    metadata,
   };
 };

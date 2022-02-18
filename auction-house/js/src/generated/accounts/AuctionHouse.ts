@@ -152,7 +152,7 @@ export class AuctionHouseAccountData implements AuctionHouseAccountDataArgs {
 const auctionHouseAccountDataStruct = new beet.BeetStruct<
   AuctionHouseAccountData,
   AuctionHouseAccountDataArgs & {
-    accountDiscriminator: number[];
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
