@@ -96,13 +96,26 @@ pub fn find_public_bid_trade_state_address(
     )
 }
 
-/// Return receipt `Pubkey` address and bump seed.
+/// Return public bid receipt `Pubkey` address and bump seed.
 pub fn find_public_bid_receipt_address(
   trade_state: &Pubkey,
 ) -> (Pubkey, u8) {
   Pubkey::find_program_address(
       &[
           PUBLIC_BID_PREFIX.as_bytes(),
+          trade_state.as_ref(),
+      ],
+      &id(),
+  )
+}
+
+/// Return liting receipt `Pubkey` address and bump seed.
+pub fn find_listing_receipt_address(
+  trade_state: &Pubkey,
+) -> (Pubkey, u8) {
+  Pubkey::find_program_address(
+      &[
+          LISTING_PREFIX.as_bytes(),
           trade_state.as_ref(),
       ],
       &id(),
