@@ -3,7 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 import * as errors from './generated/errors';
 import * as instructions from './generated/instructions';
 import * as accounts from './generated/accounts';
-import BN from 'bn.js';
+import * as anchor from '@project-serum/anchor';
 
 export class AuctionHouseProgram extends Program {
   static readonly PREFIX = 'auction_house';
@@ -34,8 +34,8 @@ export class AuctionHouseProgram extends Program {
     tokenAccount: PublicKey,
     treasuryMint: PublicKey,
     tokenMint: PublicKey,
-    tokenSize: BN,
-    buyPrice: BN,
+    tokenSize: anchor.BN,
+    buyPrice: anchor.BN,
   ): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
       [
@@ -57,12 +57,26 @@ export class AuctionHouseProgram extends Program {
   static async getAuctionHouseProgramAsSigner (): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
       [
-        Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'),
-        Buffer.from(AuctionHouseProgram.SIGNER, 'utf8'),
+        Buffer.from(AuctionHouseProgram.PREFIX,),
+        Buffer.from(AuctionHouseProgram.SIGNER,),
       ],
       AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
     );
   }
+
+
+  static async getAuctionHouseTreasuryAcct(
+    auctionHouse: PublicKey,
+  ): Promise<[PublicKey, number]> {
+    return await PublicKey.findProgramAddress(
+      [
+        Buffer.from(AuctionHouseProgram.PREFIX),
+        auctionHouse.toBuffer(),
+        Buffer.from(AuctionHouseProgram.TREASURY),
+      ],
+      AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
+    );
+  };
 
   static async getMetadata (mint: PublicKey): Promise<PublicKey> {
     return (
