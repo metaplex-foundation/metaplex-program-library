@@ -100,7 +100,7 @@ fn ensure_create_instruction_buffer(
     instruction_buffer: &dyn Signer,
 ) -> Result<(), Box<dyn std::error::Error>> {
     use curve25519_dalek_onchain::instruction as dalek;
-    let dsl = dalek::transer_proof_instructions(vec![3, 3, 5]);
+    let dsl = dalek::transfer_proof_instructions(vec![11]);
     assert!(
         dsl == stealth::equality_proof::DSL_INSTRUCTION_BYTES,
         "DSL does not match!",
