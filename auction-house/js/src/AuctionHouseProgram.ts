@@ -1,9 +1,9 @@
 import { config, Program } from '@metaplex-foundation/mpl-core';
 import { PublicKey } from '@solana/web3.js';
-import * as anchor from '@project-serum/anchor';
 import * as errors from './generated/errors';
 import * as instructions from './generated/instructions';
 import * as accounts from './generated/accounts';
+import BN from 'bn.js';
 
 
 export class AuctionHouseProgram extends Program {
@@ -23,10 +23,10 @@ export class AuctionHouseProgram extends Program {
   static readonly TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',);
 
   static async getMetadata (
-    mint: anchor.web3.PublicKey,
-  ): Promise<anchor.web3.PublicKey> {
+    mint: PublicKey,
+  ): Promise<PublicKey> {
     return (
-      await anchor.web3.PublicKey.findProgramAddress(
+      await PublicKey.findProgramAddress(
         [
           Buffer.from('metadata'),
           AuctionHouseProgram.TOKEN_METADATA_PROGRAM_ID.toBuffer(),
@@ -38,15 +38,15 @@ export class AuctionHouseProgram extends Program {
   };
 
   static async getAuctionHouseTradeState(
-    auctionHouse: anchor.web3.PublicKey,
-    wallet: anchor.web3.PublicKey,
-    tokenAccount: anchor.web3.PublicKey,
-    treasuryMint: anchor.web3.PublicKey,
-    tokenMint: anchor.web3.PublicKey,
-    tokenSize: anchor.BN,
-    buyPrice: anchor.BN,
+    auctionHouse: PublicKey,
+    wallet: PublicKey,
+    tokenAccount: PublicKey,
+    treasuryMint: PublicKey,
+    tokenMint: PublicKey,
+    tokenSize: BN,
+    buyPrice: BN,
   ): Promise<[PublicKey, number]> {
-    return await anchor.web3.PublicKey.findProgramAddress(
+    return await PublicKey.findProgramAddress(
       [
         Buffer.from(AuctionHouseProgram.PREFIX),
         wallet.toBuffer(),
@@ -62,10 +62,10 @@ export class AuctionHouseProgram extends Program {
   };
 
   static async getAtaForMint (
-    mint: anchor.web3.PublicKey,
-    buyer: anchor.web3.PublicKey,
-  ): Promise<[anchor.web3.PublicKey, number]> {
-    return await anchor.web3.PublicKey.findProgramAddress(
+    mint: PublicKey,
+    buyer: PublicKey,
+  ): Promise<[PublicKey, number]> {
+    return await PublicKey.findProgramAddress(
       [buyer.toBuffer(), AuctionHouseProgram.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
       AuctionHouseProgram.SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
     );
@@ -74,8 +74,8 @@ export class AuctionHouseProgram extends Program {
   static async getAuctionHouseProgramAsSigner(
     auctionHouse: PublicKey,
   ): Promise<[PublicKey, number]> {
-  return await anchor.web3.PublicKey.findProgramAddress(
-    [Buffer.from(auctionHouse.toString()), Buffer.from('signer')],
+  return await PublicKey.findProgramAddress(
+    [Buffer.from(AuctionHouseProgram.PREFIX), Buffer.from(AuctionHouseProgram.SIGNER)],
     AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
   );
 };
