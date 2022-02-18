@@ -5,7 +5,6 @@ import * as instructions from './generated/instructions';
 import * as accounts from './generated/accounts';
 import BN from 'bn.js';
 
-
 export class AuctionHouseProgram extends Program {
   static readonly PREFIX = 'auction_house';
   static readonly FEE_PAYER = 'fee_payer';
@@ -16,28 +15,20 @@ export class AuctionHouseProgram extends Program {
   static readonly instructions = instructions;
   static readonly errors = errors;
   static readonly accounts = accounts;
-  
-  static readonly TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',);
-  static readonly SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',);
-  static readonly AUCTION_HOUSE_PROGRAM_ID = new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',);
-  static readonly TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',);
 
-  static async getMetadata (
-    mint: PublicKey,
-  ): Promise<PublicKey> {
-    return (
-      await PublicKey.findProgramAddress(
-        [
-          Buffer.from('metadata'),
-          AuctionHouseProgram.TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-          mint.toBuffer(),
-        ],
-        AuctionHouseProgram.TOKEN_METADATA_PROGRAM_ID,
-      )
-    )[0];
-  };
+  static readonly TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+  static readonly SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
+    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+  );
+  static readonly AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
+    'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
+  );
+  static readonly TOKEN_METADATA_PROGRAM_ID = new PublicKey(
+    'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+  );
 
-  static async getAuctionHouseTradeState(
+  // https://github.com/metaplex-foundation/metaplex/blob/master/js/packages/cli/src/helpers/accounts.ts#L504
+  static async getAuctionHouseTradeState (
     auctionHouse: PublicKey,
     wallet: PublicKey,
     tokenAccount: PublicKey,
@@ -59,29 +50,41 @@ export class AuctionHouseProgram extends Program {
       ],
       AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
     );
-  };
+  }
 
-  static async getAtaForMint (
-    mint: PublicKey,
-    buyer: PublicKey,
-  ): Promise<[PublicKey, number]> {
+  // https://github.com/metaplex-foundation/metaplex/blob/master/js/packages/cli/src/helpers/accounts.ts#L459
+  // ERROR IS "TypeError: Cannot read properties of undefined (reading 'toString')"
+  static async getAuctionHouseProgramAsSigner (): Promise<[PublicKey, number]> {
+    return await PublicKey.findProgramAddress(
+      [
+        Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'),
+        Buffer.from(AuctionHouseProgram.SIGNER, 'utf8'),
+      ],
+      AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
+    );
+  }
+
+  static async getMetadata (mint: PublicKey): Promise<PublicKey> {
+    return (
+      await PublicKey.findProgramAddress(
+        [
+          Buffer.from('metadata'),
+          AuctionHouseProgram.TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+          mint.toBuffer(),
+        ],
+        AuctionHouseProgram.TOKEN_METADATA_PROGRAM_ID,
+      )
+    )[0];
+  }
+
+  static async getAtaForMint (mint: PublicKey, buyer: PublicKey): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
       [buyer.toBuffer(), AuctionHouseProgram.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
       AuctionHouseProgram.SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
     );
-  };
+  }
 
-  static async getAuctionHouseProgramAsSigner(
-    auctionHouse: PublicKey,
-  ): Promise<[PublicKey, number]> {
-  return await PublicKey.findProgramAddress(
-    [Buffer.from(AuctionHouseProgram.PREFIX), Buffer.from(AuctionHouseProgram.SIGNER)],
-    AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
-  );
-};
-
-
-  static async findEscrowPaymentAccount(
+  static async findEscrowPaymentAccount (
     auctionHouse: PublicKey,
     wallet: PublicKey,
   ): Promise<[PublicKey, number]> {
@@ -91,7 +94,7 @@ export class AuctionHouseProgram extends Program {
     );
   }
 
-  static async findTradeStateAccount(
+  static async findTradeStateAccount (
     wallet: PublicKey,
     auctionHouse: PublicKey,
     tokenAccount: PublicKey,
