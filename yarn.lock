@@ -1030,11 +1030,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metaplex-foundation/beet@npm:^0.0.8":
+  version: 0.0.8
+  resolution: "@metaplex-foundation/beet@npm:0.0.8"
+  dependencies:
+    ansicolors: ^0.3.2
+    bn.js: ^5.2.0
+    debug: ^4.3.3
+  checksum: 0dc0816abed44248e9df2988974710049e915775fbced52b8b4ce431e76b98db703233d567af528d894a07b0ff42776bf3cb79ef056f4a40d922a5661b406352
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/metaplex-program-library@workspace:.":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/metaplex-program-library@workspace:."
   dependencies:
-    "@metaplex-foundation/solita": 0.0.2
+    "@metaplex-foundation/solita": 0.1.0
     "@project-serum/anchor": ^0.19.0
     "@project-serum/common": ^0.0.1-beta.3
     "@types/mocha": ^9.0.0
@@ -1230,7 +1241,24 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/solita@npm:0.0.2, @metaplex-foundation/solita@npm:^0.0.2":
+"@metaplex-foundation/solita@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@metaplex-foundation/solita@npm:0.1.0"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.0.8
+    "@metaplex-foundation/beet-solana": ^0.0.6
+    "@solana/web3.js": ^1.35.0
+    camelcase: ^6.2.1
+    debug: ^4.3.3
+    js-sha256: ^0.9.0
+    prettier: ^2.5.1
+    snake-case: ^3.0.4
+    spok: ^1.4.3
+  checksum: 0d8f52c8754400d28d0d44d8ba90b886e7706fa2a1c550c1644fefadf11a74eae9feecf942b377a89285f342a28061d82c30e852be877abfe3444be6ee60a09a
+  languageName: node
+  linkType: hard
+
+"@metaplex-foundation/solita@npm:^0.0.2":
   version: 0.0.2
   resolution: "@metaplex-foundation/solita@npm:0.0.2"
   dependencies:
@@ -1642,6 +1670,28 @@ __metadata:
     superstruct: ^0.14.2
     tweetnacl: ^1.0.0
   checksum: 193820a9fc4ddb5bc99e1bb1341d420f8b030992feeb47fd0aa6fa4dc42866c6df6f378b43f1157d81b83eb3a3f7ca5cc2eda11cb1cf5402377d35bf7cd7c65c
+  languageName: node
+  linkType: hard
+
+"@solana/web3.js@npm:^1.35.0":
+  version: 1.35.0
+  resolution: "@solana/web3.js@npm:1.35.0"
+  dependencies:
+    "@babel/runtime": ^7.12.5
+    "@ethersproject/sha2": ^5.5.0
+    "@solana/buffer-layout": ^3.0.0
+    bn.js: ^5.0.0
+    borsh: ^0.4.0
+    bs58: ^4.0.1
+    buffer: 6.0.1
+    cross-fetch: ^3.1.4
+    jayson: ^3.4.4
+    js-sha3: ^0.8.0
+    rpc-websockets: ^7.4.2
+    secp256k1: ^4.0.2
+    superstruct: ^0.14.2
+    tweetnacl: ^1.0.0
+  checksum: 0be9f649816ab839375bf958ce520fd81a5ba10fa49eb4abe0dff60d13792eba5b48d96e7a2472ce28afc5dcb1fd7ce348f918bc1add9654993f5ae31dcad4e1
   languageName: node
   linkType: hard
 
