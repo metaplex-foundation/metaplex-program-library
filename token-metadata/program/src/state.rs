@@ -1,5 +1,6 @@
 use crate::{error::MetadataError, utils::try_from_slice_checked};
 use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankAccount;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
@@ -163,7 +164,7 @@ pub enum TokenStandard {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct UseAuthorityRecord {
     pub key: Key, //1
     pub allowed_uses: u64, //8
@@ -189,7 +190,7 @@ impl UseAuthorityRecord {
 
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct CollectionAuthorityRecord {
     pub key: Key, //1
     pub bump: u8 //1
@@ -217,7 +218,7 @@ pub struct Collection {
 }
 
 #[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
 pub struct Metadata {
     pub key: Key,
     pub update_authority: Pubkey,
@@ -266,7 +267,7 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
 }
 
 #[repr(C)]
-#[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct MasterEditionV2 {
     pub key: Key,
 
@@ -311,7 +312,7 @@ impl MasterEditionV2 {
 }
 
 #[repr(C)]
-#[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct MasterEditionV1 {
     pub key: Key,
 
@@ -371,7 +372,7 @@ impl MasterEditionV1 {
 }
 
 #[repr(C)]
-#[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 /// All Editions should never have a supply greater than 1.
 /// To enforce this, a transfer mint authority instruction will happen when
 /// a normal token is turned into an Edition, and in order for a Metadata update authority
@@ -438,7 +439,7 @@ pub fn get_reservation_list(
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct ReservationListV2 {
     pub key: Key,
     /// Present for reverse lookups
@@ -568,7 +569,7 @@ pub struct Reservation {
 
 // Legacy Reservation List with u8s
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct ReservationListV1 {
     pub key: Key,
     /// Present for reverse lookups
@@ -668,7 +669,7 @@ pub struct ReservationV1 {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct EditionMarker {
     pub key: Key,
     pub ledger: [u8; 31],
