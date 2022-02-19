@@ -3,6 +3,7 @@ use crate::{
     state::{Collection, Creator, Data, DataV2, Uses, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankInstruction;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
@@ -74,72 +75,68 @@ pub struct UtilizeArgs {
 }
 
 /// Instructions supported by the Metadata program.
-#[derive(BorshSerialize, BorshDeserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 pub enum MetadataInstruction {
     /// Create Metadata object.
-    ///   0. `[writable]`  Metadata key (pda of ['metadata', program id, mint id])
-    ///   1. `[]` Mint of token asset
-    ///   2. `[signer]` Mint authority
-    ///   3. `[signer]` payer
-    ///   4. `[]` update authority info
-    ///   5. `[]` System program
-    ///   6. `[]` Rent info
+    #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(1, name="mint", desc="Mint of token asset")]
+    #[account(2, signer, name="mint_authority", desc="Mint authority")]
+    #[account(3, signer, name="payer", desc="payer")]
+    #[account(4, name="update_authority", desc="update authority info")]
+    #[account(5, name="system_account", desc="System program")]
+    #[account(6, name="rent", desc="Rent info")]
     CreateMetadataAccount(CreateMetadataAccountArgs),
 
     /// Update a Metadata
-    ///   0. `[writable]` Metadata account
-    ///   1. `[signer]` Update authority key
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, name="update_authority", desc="Update authority key")]
     UpdateMetadataAccount(UpdateMetadataAccountArgs),
 
     /// Register a Metadata as a Master Edition V1, which means Editions can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
     /// token exists, and will throw an error if less than one token exists in this primary mint.
-    ///   0. `[writable]` Unallocated edition V1 account with address as pda of ['metadata', program id, mint, 'edition']
-    ///   1. `[writable]` Metadata mint
-    ///   2. `[writable]` Printing mint - A mint you control that can mint tokens that can be exchanged for limited editions of your
-    ///       master edition via the MintNewEditionFromMasterEditionViaToken endpoint
-    ///   3. `[writable]` One time authorization printing mint - A mint you control that prints tokens that gives the bearer permission to mint any
-    ///                  number of tokens from the printing mint one time via an endpoint with the token-metadata program for your metadata. Also burns the token.
-    ///   4. `[signer]` Current Update authority key
-    ///   5. `[signer]`   Printing mint authority - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY.
-    ///   6. `[signer]` Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
-    ///   7. `[]` Metadata account
-    ///   8. `[signer]` payer
-    ///   9. `[]` Token program
-    ///   10. `[]` System program
-    ///   11. `[]` Rent info
-    ///   13. `[signer]`   One time authorization printing mint authority - must be provided if using max supply. THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY.
+    #[account(0, writable, name="edition", desc="Unallocated edition V1 account with address as pda of ['metadata', program id, mint, 'edition']")]
+    #[account(1, writable, name="mint", desc="Metadata mint")]
+    #[account(2, writable, name="printing_mint", desc="Printing mint - A mint you control that can mint tokens that can be exchanged for limited editions of your master edition via the MintNewEditionFromMasterEditionViaToken endpoint")]
+    #[account(3, writable, name="one_time_printing_authorization_mint", desc="One time authorization printing mint - A mint you control that prints tokens that gives the bearer permission to mint any number of tokens from the printing mint one time via an endpoint with the token-metadata program for your metadata. Also burns the token.")]
+    #[account(4, signer, name="update_authority", desc="Current Update authority key")]
+    #[account(5, signer, name="printing_mint_authority", desc="Printing mint authority - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY.")]
+    #[account(6, signer, name="mint_authority", desc="Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY")]
+    #[account(7, name="metadata", desc="Metadata account")]
+    #[account(8, signer, name="payer", desc="payer")]
+    #[account(9, name="token_program", desc="Token program")]
+    #[account(10, name="system_account", desc="System program")]
+    #[account(11, name="rent", desc="Rent info")]
+    #[account(12, signer, name="one_time_printing_authorization_mint_authority", desc="One time authorization printing mint authority - must be provided if using max supply. THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY.")]
     DeprecatedCreateMasterEdition(CreateMasterEditionArgs),
 
     /// Given an authority token minted by the Printing mint of a master edition, and a brand new non-metadata-ed mint with one token
     /// make a new Metadata + Edition that is a child of the master edition denoted by this authority token.
-    ///   0. `[writable]` New Metadata key (pda of ['metadata', program id, mint id])
-    ///   1. `[writable]` New Edition V1 (pda of ['metadata', program id, mint id, 'edition'])
-    ///   2. `[writable]` Master Record Edition V1 (pda of ['metadata', program id, master metadata mint id, 'edition'])
-    ///   3. `[writable]` Mint of new token - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
-    ///   4. `[signer]` Mint authority of new mint
-    ///   5. `[writable]` Printing Mint of master record edition
-    ///   6. `[writable]` Token account containing Printing mint token to be transferred
-    ///   7. `[writable]` Edition pda to mark creation - will be checked for pre-existence. (pda of ['metadata', program id, master mint id, edition_number])
-    ///   8. `[signer]` Burn authority for this token
-    ///   9. `[signer]` payer
-    ///   10. `[]` update authority info for new metadata account
-    ///   11. `[]` Master record metadata account
-    ///   12. `[]` Token program
-    ///   13. `[]` System program
-    ///   14. `[]` Rent info
-    ///   15. `[optional/writable]` Reservation List - If present, and you are on this list, you can get
-    ///        an edition number given by your position on the list.
+    #[account(0, writable, name="metadata", desc="New Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(1, writable, name="edition", desc="New Edition V1 (pda of ['metadata', program id, mint id, 'edition'])")]
+    #[account(2, writable, name="master_edition", desc="Master Record Edition V1 (pda of ['metadata', program id, master metadata mint id, 'edition'])")]
+    #[account(3, writable, name="mint", desc="Mint of new token - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY")]
+    #[account(4, signer, name="mint_authority", desc="Mint authority of new mint")]
+    #[account(5, writable, name="printing_mint", desc="Printing Mint of master record edition")]
+    #[account(6, writable, name="master_token_account", desc="Token account containing Printing mint token to be transferred")]
+    #[account(7, writable, name="edition_marker", desc="Edition pda to mark creation - will be checked for pre-existence. (pda of ['metadata', program id, master mint id, edition_number])")]
+    #[account(8, signer, name="burn_authority", desc="Burn authority for this token")]
+    #[account(9, signer, name="payer", desc="payer")]
+    #[account(10, name="master_update_authority", desc="update authority info for new metadata account")]
+    #[account(11, name="master_metadata", desc="Master record metadata account")]
+    #[account(12, name="token_program", desc="Token program")]
+    #[account(13, name="system_account", desc="System program")]
+    #[account(14, name="rent", desc="Rent info")]
+    #[account(15, writable, name="reservation_list", desc="(Optional) Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list.")]
     DeprecatedMintNewEditionFromMasterEditionViaPrintingToken,
 
     /// Allows updating the primary sale boolean on Metadata solely through owning an account
     /// containing a token from the metadata's mint and being a signer on this transaction.
     /// A sort of limited authority for limited update capability that is required for things like
     /// Metaplex to work without needing full authority passing.
-    ///
-    ///   0. `[writable]` Metadata key (pda of ['metadata', program id, mint id])
-    ///   1. `[signer]` Owner on the token account
-    ///   2. `[]` Account containing tokens from the metadata's mint
+    #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(1, signer, name="owner", desc="Owner on the token account")]
+    #[account(2, name="token", desc="Account containing tokens from the metadata's mint")]
     UpdatePrimarySaleHappenedViaToken,
 
     /// Reserve up to 200 editions in sequence for up to 200 addresses in an existing reservation PDA, which can then be used later by
@@ -154,68 +151,63 @@ pub enum MetadataInstruction {
     /// NOTE: If you have more than 20 addresses in a reservation list, this may be called multiple times to build up the list,
     /// otherwise, it simply wont fit in one transaction. Only provide a total_reservation argument on the first call, which will
     /// allocate the edition space, and in follow up calls this will specifically be unnecessary (and indeed will error.)
-    ///
-    ///   0. `[writable]` Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])
-    ///   1. `[writable]` PDA for ReservationList of ['metadata', program id, master edition key, 'reservation', resource-key]
-    ///   2. `[signer]` The resource you tied the reservation list too
+    #[account(0, writable, name="master_edition", desc="Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])")]
+    #[account(1, writable, name="reservation_list", desc="PDA for ReservationList of ['metadata', program id, master edition key, 'reservation', resource-key]")]
+    #[account(2, signer, name="resource", desc="The resource you tied the reservation list too")]
     DeprecatedSetReservationList(SetReservationListArgs),
 
     /// Create an empty reservation list for a resource who can come back later as a signer and fill the reservation list
     /// with reservations to ensure that people who come to get editions get the number they expect. See SetReservationList for more.
-    ///
-    ///   0. `[writable]` PDA for ReservationList of ['metadata', program id, master edition key, 'reservation', resource-key]
-    ///   1. `[signer]` Payer
-    ///   2. `[signer]` Update authority
-    ///   3. `[]` Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])
-    ///   4. `[]` A resource you wish to tie the reservation list to. This is so your later visitors who come to
-    ///       redeem can derive your reservation list PDA with something they can easily get at. You choose what this should be.
-    ///   5. `[]` Metadata key (pda of ['metadata', program id, mint id])
-    ///   6. `[]` System program
-    ///   7. `[]` Rent info
+    #[account(0, writable, name="reservation_list", desc="PDA for ReservationList of ['metadata', program id, master edition key, 'reservation', resource-key]")]
+    #[account(1, signer, name="payer", desc="Payer")]
+    #[account(2, signer, name="update_authority", desc="Update authority")]
+    #[account(3, name="master_edition", desc=" Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])")]
+    #[account(4, name="resource", desc="A resource you wish to tie the reservation list to. This is so your later visitors who come to redeem can derive your reservation list PDA with something they can easily get at. You choose what this should be.")]
+    #[account(5, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(6, name="system_account", desc="System program")]
+    #[account(7, name="rent", desc="Rent info")]
     DeprecatedCreateReservationList,
 
     /// Sign a piece of metadata that has you as an unverified creator so that it is now verified.
-    ///   0. `[writable]` Metadata (pda of ['metadata', program id, mint id])
-    ///   1. `[signer]` Creator
+    #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(1, signer, name="creator", desc="Creator")]
     SignMetadata,
 
     /// Using a one time authorization token from a master edition v1, print any number of printing tokens from the printing_mint
     /// one time, burning the one time authorization token.
-    ///
-    ///   0. `[writable]` Destination account
-    ///   1. `[writable]` Token account containing one time authorization token
-    ///   2. `[writable]` One time authorization mint
-    ///   3. `[writable]` Printing mint
-    ///   4. `[signer]` Burn authority
-    ///   5. `[]` Metadata key (pda of ['metadata', program id, mint id])
-    ///   6. `[]` Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])
-    ///   7. `[]` Token program
-    ///   8. `[]` Rent
+    #[account(0, writable, name="destination", desc="Destination account")]
+    #[account(1, writable, name="token", desc="Token account containing one time authorization token")]
+    #[account(2, writable, name="one_time_printing_authorization_mint", desc="One time authorization mint")]
+    #[account(3, writable, name="printing_mint", desc="Printing mint")]
+    #[account(4, signer, name="burn_authority", desc="Burn authority")]
+    #[account(5, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(6, name="master_edition", desc="Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])")]
+    #[account(7, name="token_program", desc="Token program")]
+    #[account(8, name="rent", desc="Rent")]
     DeprecatedMintPrintingTokensViaToken(MintPrintingTokensViaTokenArgs),
 
     /// Using your update authority, mint printing tokens for your master edition.
-    ///
-    ///   0. `[writable]` Destination account
-    ///   1. `[writable]` Printing mint
-    ///   2. `[signer]` Update authority
-    ///   3. `[]` Metadata key (pda of ['metadata', program id, mint id])
-    ///   4. `[]` Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])
-    ///   5. `[]` Token program
-    ///   6. `[]` Rent
+    #[account(0, writable, name="destination", desc="Destination account")]
+    #[account(1, writable, name="printing_mint", desc="Printing mint")]
+    #[account(2, signer, name="update_authority", desc="Update authority")]
+    #[account(3, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(4, name="master_edition", desc="Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])")]
+    #[account(5, name="token_program", desc="Token program")]
+    #[account(6, name="rent", desc="Rent")]
     DeprecatedMintPrintingTokens(MintPrintingTokensViaTokenArgs),
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
     /// token exists, and will throw an error if less than one token exists in this primary mint.
-    ///   0. `[writable]` Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']
-    ///   1. `[writable]` Metadata mint
-    ///   2. `[signer]` Update authority
-    ///   3. `[signer]` Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
-    ///   4. `[signer]` payer
-    ///   5. `[]` Metadata account
-    ///   6. `[]` Token program
-    ///   7. `[]` System program
-    ///   8. `[]` Rent info
+    #[account(0, writable, name="edition", desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
+    #[account(1, writable, name="mint", desc="Metadata mint")]
+    #[account(2, signer, name="update_authority", desc="Update authority")]
+    #[account(3, signer, name="mint_authority", desc="Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY")]
+    #[account(4, signer, name="payer", desc="payer")]
+    #[account(5, name="metadata", desc="Metadata account")]
+    #[account(6, name="token_program", desc="Token program")]
+    #[account(7, name="system_account", desc="System program")]
+    #[account(8, name="rent", desc="Rent info")]
     CreateMasterEdition(CreateMasterEditionArgs),
 
     /// Given a token account containing the master edition token to prove authority, and a brand new non-metadata-ed mint with one token
