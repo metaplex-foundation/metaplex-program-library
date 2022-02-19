@@ -8,8 +8,8 @@ import {
   StringPublicKey,
   TokenAccount,
 } from '@metaplex-foundation/mpl-core';
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
-import BN from 'bn.js';
 import bs58 from 'bs58';
 import { Buffer } from 'buffer';
 import { MetadataProgram } from '../MetadataProgram';
@@ -284,13 +284,15 @@ export class Metadata extends Account<MetadataData> {
     connection: Connection,
     owner: AnyPublicKey,
   ): Promise<Map<AnyPublicKey, AccountInfo<Buffer>>> {
-    const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
+    const accounts = await connection.getParsedTokenAccountsByOwner(owner, {
+      programId: TOKEN_PROGRAM_ID,
+    });
 
-    const metadataPdaLookups = accounts.reduce((memo, { data }) => {
-      // Only include tokens where amount equal to 1.
-      // Note: This is not the same as mint supply.
-      // NFTs by definition have supply of 1, but an account balance > 1 implies a mint supply > 1.
-      return data.amount?.eq(new BN(1)) ? [...memo, Metadata.getPDA(data.mint)] : memo;
+    const metadataPdaLookups = accounts.value.reduce((memo: Promise<PublicKey>[], { account }) => {
+      const info = account.data.parsed.info;
+      return info.tokenAmount.decimals === 0 && info.tokenAmount.uiAmount === 1
+        ? [...memo, Metadata.getPDA(info.mint)]
+        : memo;
     }, []);
 
     const metadataAddresses = await Promise.all(metadataPdaLookups);
