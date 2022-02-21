@@ -3,8 +3,9 @@ import { PublicKey } from '@solana/web3.js';
 import * as errors from './generated/errors';
 import * as instructions from './generated/instructions';
 import * as accounts from './generated/accounts';
+import * as beet from '@metaplex-foundation/beet';
 import * as anchor from '@project-serum/anchor';
-
+import BN from 'bn.js';
 export class AuctionHouseProgram extends Program {
   static readonly PREFIX = 'auction_house';
   static readonly FEE_PAYER = 'fee_payer';
@@ -34,9 +35,10 @@ export class AuctionHouseProgram extends Program {
     tokenAccount: PublicKey,
     treasuryMint: PublicKey,
     tokenMint: PublicKey,
-    tokenSize: anchor.BN,
-    buyPrice: anchor.BN,
+    tokenSize: number,
+    buyPrice: number,
   ): Promise<[PublicKey, number]> {
+
     return await PublicKey.findProgramAddress(
       [
         Buffer.from(AuctionHouseProgram.PREFIX),
@@ -45,8 +47,8 @@ export class AuctionHouseProgram extends Program {
         tokenAccount.toBuffer(),
         treasuryMint.toBuffer(),
         tokenMint.toBuffer(),
-        buyPrice.toBuffer('le', 8),
-        tokenSize.toBuffer('le', 8),
+        Buffer.from(buyPrice.toString()),
+        Buffer.from(tokenSize.toString())
       ],
       AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
     );
