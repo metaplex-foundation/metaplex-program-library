@@ -45,7 +45,6 @@ const ApproveUseAuthorityStruct = new beet.BeetArgsStruct<
  * @property [] metadata Metadata account
  * @property [] mint Mint of Metadata
  * @property [] burner Program As Signer (Burner)
- * @property [] systemAccount System program
  * @category Instructions
  * @category ApproveUseAuthority
  * @category generated
@@ -59,7 +58,6 @@ export type ApproveUseAuthorityInstructionAccounts = {
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
   burner: web3.PublicKey;
-  systemAccount: web3.PublicKey;
 };
 
 const approveUseAuthorityInstructionDiscriminator = 20;
@@ -78,17 +76,8 @@ export function createApproveUseAuthorityInstruction(
   accounts: ApproveUseAuthorityInstructionAccounts,
   args: ApproveUseAuthorityInstructionArgs,
 ) {
-  const {
-    useAuthorityRecord,
-    owner,
-    payer,
-    user,
-    ownerTokenAccount,
-    metadata,
-    mint,
-    burner,
-    systemAccount,
-  } = accounts;
+  const { useAuthorityRecord, owner, payer, user, ownerTokenAccount, metadata, mint, burner } =
+    accounts;
 
   const [data] = ApproveUseAuthorityStruct.serialize({
     instructionDiscriminator: approveUseAuthorityInstructionDiscriminator,
@@ -141,7 +130,7 @@ export function createApproveUseAuthorityInstruction(
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

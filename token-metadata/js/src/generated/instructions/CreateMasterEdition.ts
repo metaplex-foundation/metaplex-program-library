@@ -43,7 +43,6 @@ const CreateMasterEditionStruct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] mintAuthority Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
  * @property [**signer**] payer payer
  * @property [] metadata Metadata account
- * @property [] systemAccount System program
  * @category Instructions
  * @category CreateMasterEdition
  * @category generated
@@ -55,7 +54,6 @@ export type CreateMasterEditionInstructionAccounts = {
   mintAuthority: web3.PublicKey;
   payer: web3.PublicKey;
   metadata: web3.PublicKey;
-  systemAccount: web3.PublicKey;
 };
 
 const createMasterEditionInstructionDiscriminator = 10;
@@ -74,8 +72,7 @@ export function createCreateMasterEditionInstruction(
   accounts: CreateMasterEditionInstructionAccounts,
   args: CreateMasterEditionInstructionArgs,
 ) {
-  const { edition, mint, updateAuthority, mintAuthority, payer, metadata, systemAccount } =
-    accounts;
+  const { edition, mint, updateAuthority, mintAuthority, payer, metadata } = accounts;
 
   const [data] = CreateMasterEditionStruct.serialize({
     instructionDiscriminator: createMasterEditionInstructionDiscriminator,
@@ -118,7 +115,7 @@ export function createCreateMasterEditionInstruction(
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

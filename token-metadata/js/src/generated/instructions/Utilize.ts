@@ -42,8 +42,6 @@ const UtilizeStruct = new beet.BeetArgsStruct<
  * @property [_writable_] mint Mint of the Metadata
  * @property [**signer**] useAuthority A Use Authority / Can be the current Owner of the NFT
  * @property [] owner Owner
- * @property [] associatedTokenProgram Associated Token program
- * @property [] systemAccount System program
  * @property [_writable_] useAuthorityRecord (Optional) Use Authority Record PDA If present the program Assumes a delegated use authority
  * @property [] burner (Optional) Program As Signer (Burner)
  * @category Instructions
@@ -56,8 +54,6 @@ export type UtilizeInstructionAccounts = {
   mint: web3.PublicKey;
   useAuthority: web3.PublicKey;
   owner: web3.PublicKey;
-  associatedTokenProgram: web3.PublicKey;
-  systemAccount: web3.PublicKey;
   useAuthorityRecord: web3.PublicKey;
   burner: web3.PublicKey;
 };
@@ -78,17 +74,8 @@ export function createUtilizeInstruction(
   accounts: UtilizeInstructionAccounts,
   args: UtilizeInstructionArgs,
 ) {
-  const {
-    metadata,
-    tokenAccount,
-    mint,
-    useAuthority,
-    owner,
-    associatedTokenProgram,
-    systemAccount,
-    useAuthorityRecord,
-    burner,
-  } = accounts;
+  const { metadata, tokenAccount, mint, useAuthority, owner, useAuthorityRecord, burner } =
+    accounts;
 
   const [data] = UtilizeStruct.serialize({
     instructionDiscriminator: utilizeInstructionDiscriminator,
@@ -126,12 +113,12 @@ export function createUtilizeInstruction(
       isSigner: false,
     },
     {
-      pubkey: associatedTokenProgram,
+      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

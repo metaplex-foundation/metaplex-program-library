@@ -35,7 +35,6 @@ const DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenStruct = new beet
  * @property [**signer**] payer payer
  * @property [] masterUpdateAuthority update authority info for new metadata account
  * @property [] masterMetadata Master record metadata account
- * @property [] systemAccount System program
  * @property [_writable_] reservationList (Optional) Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list.
  * @category Instructions
  * @category DeprecatedMintNewEditionFromMasterEditionViaPrintingToken
@@ -54,7 +53,6 @@ export type DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstruction
   payer: web3.PublicKey;
   masterUpdateAuthority: web3.PublicKey;
   masterMetadata: web3.PublicKey;
-  systemAccount: web3.PublicKey;
   reservationList: web3.PublicKey;
 };
 
@@ -85,7 +83,6 @@ export function createDeprecatedMintNewEditionFromMasterEditionViaPrintingTokenI
     payer,
     masterUpdateAuthority,
     masterMetadata,
-    systemAccount,
     reservationList,
   } = accounts;
 
@@ -160,7 +157,7 @@ export function createDeprecatedMintNewEditionFromMasterEditionViaPrintingTokenI
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

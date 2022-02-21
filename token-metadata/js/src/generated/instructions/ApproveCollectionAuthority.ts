@@ -25,7 +25,6 @@ const ApproveCollectionAuthorityStruct = new beet.BeetArgsStruct<{
  * @property [**signer**] payer Payer
  * @property [] metadata Collection Metadata account
  * @property [] mint Mint of Collection Metadata
- * @property [] systemAccount System program
  * @category Instructions
  * @category ApproveCollectionAuthority
  * @category generated
@@ -37,7 +36,6 @@ export type ApproveCollectionAuthorityInstructionAccounts = {
   payer: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
-  systemAccount: web3.PublicKey;
 };
 
 const approveCollectionAuthorityInstructionDiscriminator = 23;
@@ -61,7 +59,6 @@ export function createApproveCollectionAuthorityInstruction(
     payer,
     metadata,
     mint,
-    systemAccount,
   } = accounts;
 
   const [data] = ApproveCollectionAuthorityStruct.serialize({
@@ -99,7 +96,7 @@ export function createApproveCollectionAuthorityInstruction(
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

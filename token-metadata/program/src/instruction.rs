@@ -83,7 +83,7 @@ pub enum MetadataInstruction {
     #[account(2, signer, name="mint_authority", desc="Mint authority")]
     #[account(3, signer, name="payer", desc="payer")]
     #[account(4, name="update_authority", desc="update authority info")]
-    #[account(5, name="system_account", desc="System program")]
+    #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
     CreateMetadataAccount(CreateMetadataAccountArgs),
 
@@ -105,7 +105,7 @@ pub enum MetadataInstruction {
     #[account(7, name="metadata", desc="Metadata account")]
     #[account(8, signer, name="payer", desc="payer")]
     #[account(9, name="token_program", desc="Token program")]
-    #[account(10, name="system_account", desc="System program")]
+    #[account(10, name="system_program", desc="System program")]
     #[account(11, name="rent", desc="Rent info")]
     #[account(12, signer, name="one_time_printing_authorization_mint_authority", desc="One time authorization printing mint authority - must be provided if using max supply. THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY.")]
     DeprecatedCreateMasterEdition(CreateMasterEditionArgs),
@@ -125,7 +125,7 @@ pub enum MetadataInstruction {
     #[account(10, name="master_update_authority", desc="update authority info for new metadata account")]
     #[account(11, name="master_metadata", desc="Master record metadata account")]
     #[account(12, name="token_program", desc="Token program")]
-    #[account(13, name="system_account", desc="System program")]
+    #[account(13, name="system_program", desc="System program")]
     #[account(14, name="rent", desc="Rent info")]
     #[account(15, writable, name="reservation_list", desc="(Optional) Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list.")]
     DeprecatedMintNewEditionFromMasterEditionViaPrintingToken,
@@ -164,7 +164,7 @@ pub enum MetadataInstruction {
     #[account(3, name="master_edition", desc=" Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])")]
     #[account(4, name="resource", desc="A resource you wish to tie the reservation list to. This is so your later visitors who come to redeem can derive your reservation list PDA with something they can easily get at. You choose what this should be.")]
     #[account(5, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
-    #[account(6, name="system_account", desc="System program")]
+    #[account(6, name="system_program", desc="System program")]
     #[account(7, name="rent", desc="Rent info")]
     DeprecatedCreateReservationList,
 
@@ -206,7 +206,7 @@ pub enum MetadataInstruction {
     #[account(4, signer, name="payer", desc="payer")]
     #[account(5, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
-    #[account(7, name="system_account", desc="System program")]
+    #[account(7, name="system_program", desc="System program")]
     #[account(8, name="rent", desc="Rent info")]
     CreateMasterEdition(CreateMasterEditionArgs),
 
@@ -224,7 +224,7 @@ pub enum MetadataInstruction {
     #[account(9, name="new_metadata_update_authority", desc="Update authority info for new metadata")]
     #[account(10, name="metadata", desc="Master record metadata account")]
     #[account(11, name="token_program", desc="Token program")]
-    #[account(12, name="system_account", desc="System program")]
+    #[account(12, name="system_program", desc="System program")]
     #[account(13, name="rent", desc="Rent info")]
     MintNewEditionFromMasterEditionViaToken(MintNewEditionFromMasterEditionViaTokenArgs),
 
@@ -252,7 +252,7 @@ pub enum MetadataInstruction {
     #[account(12, name="metadata", desc="Master record metadata account")]
     #[account(13, name="token_program", desc="Token program")]
     #[account(14, name="token_vault_program", desc="Token vault program")]
-    #[account(15, name="system_account", desc="System program")]
+    #[account(15, name="system_program", desc="System program")]
     #[account(16, name="rent", desc="Rent info")]
     MintNewEditionFromMasterEditionViaVaultProxy(MintNewEditionFromMasterEditionViaTokenArgs),
 
@@ -272,7 +272,7 @@ pub enum MetadataInstruction {
     #[account(2, signer, name="mint_authority", desc="Mint authority")]
     #[account(3, signer, name="payer", desc="payer")]
     #[account(4, name="update_authority", desc="update authority info")]
-    #[account(5, name="system_account", desc="System program")]
+    #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
     CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
 
@@ -286,7 +286,7 @@ pub enum MetadataInstruction {
     #[account(4, signer, name="payer", desc="payer")]
     #[account(5, writable, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
-    #[account(7, name="system_account", desc="System program")]
+    #[account(7, name="system_program", desc="System program")]
     #[account(8, name="rent", desc="Rent info")]
     CreateMasterEditionV3(CreateMasterEditionArgs),
 
@@ -307,8 +307,8 @@ pub enum MetadataInstruction {
     #[account(3, signer, name="use_authority", desc="A Use Authority / Can be the current Owner of the NFT")]
     #[account(4, name="owner", desc="Owner")]
     #[account(5, name="token_program", desc="Token program")]
-    #[account(6, name="associated_token_program", desc="Associated Token program")]
-    #[account(7, name="system_account", desc="System program")]
+    #[account(6, name="ata_program", desc="Associated Token program")]
+    #[account(7, name="system_program", desc="System program")]
     #[account(8, name="rent", desc="Rent info")]
     #[account(9, writable, name="use_authority_record", desc="(Optional) Use Authority Record PDA If present the program Assumes a delegated use authority")]
     #[account(10, name="burner", desc="(Optional) Program As Signer (Burner)")]
@@ -324,7 +324,7 @@ pub enum MetadataInstruction {
     #[account(6, name="mint", desc="Mint of Metadata")]
     #[account(7, name="burner", desc="Program As Signer (Burner)")]
     #[account(8, name="token_program", desc="Token program")]
-    #[account(9, name="system_account", desc="System program")]
+    #[account(9, name="system_program", desc="System program")]
     #[account(10, name="rent", desc="Rent info")]
     ApproveUseAuthority(ApproveUseAuthorityArgs),
 
@@ -336,7 +336,7 @@ pub enum MetadataInstruction {
     #[account(4, name="mint", desc="Mint of Metadata")]
     #[account(5, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
-    #[account(7, name="system_account", desc="System program")]
+    #[account(7, name="system_program", desc="System program")]
     #[account(8, name="rent", desc="Rent info")]
     RevokeUseAuthority,
 
@@ -356,7 +356,7 @@ pub enum MetadataInstruction {
     #[account(3, signer, name="payer", desc="Payer")]
     #[account(4, name="metadata", desc="Collection Metadata account")]
     #[account(5, name="mint", desc="Mint of Collection Metadata")]
-    #[account(6, name="system_account", desc="System program")]
+    #[account(6, name="system_program", desc="System program")]
     #[account(7, name="rent", desc="Rent info")]
     ApproveCollectionAuthority,
 

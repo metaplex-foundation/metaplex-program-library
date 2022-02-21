@@ -54,7 +54,6 @@ const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStru
  * @property [] newMetadataUpdateAuthority Update authority info for new metadata
  * @property [] metadata Master record metadata account
  * @property [] tokenVaultProgram Token vault program
- * @property [] systemAccount System program
  * @category Instructions
  * @category MintNewEditionFromMasterEditionViaVaultProxy
  * @category generated
@@ -74,7 +73,6 @@ export type MintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts = {
   newMetadataUpdateAuthority: web3.PublicKey;
   metadata: web3.PublicKey;
   tokenVaultProgram: web3.PublicKey;
-  systemAccount: web3.PublicKey;
 };
 
 const mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator = 13;
@@ -108,7 +106,6 @@ export function createMintNewEditionFromMasterEditionViaVaultProxyInstruction(
     newMetadataUpdateAuthority,
     metadata,
     tokenVaultProgram,
-    systemAccount,
   } = accounts;
 
   const [data] = MintNewEditionFromMasterEditionViaVaultProxyStruct.serialize({
@@ -192,7 +189,7 @@ export function createMintNewEditionFromMasterEditionViaVaultProxyInstruction(
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

@@ -25,7 +25,6 @@ const DeprecatedCreateReservationListStruct = new beet.BeetArgsStruct<{
  * @property [] masterEdition  Master Edition V1 key (pda of ['metadata', program id, mint id, 'edition'])
  * @property [] resource A resource you wish to tie the reservation list to. This is so your later visitors who come to redeem can derive your reservation list PDA with something they can easily get at. You choose what this should be.
  * @property [] metadata Metadata key (pda of ['metadata', program id, mint id])
- * @property [] systemAccount System program
  * @category Instructions
  * @category DeprecatedCreateReservationList
  * @category generated
@@ -37,7 +36,6 @@ export type DeprecatedCreateReservationListInstructionAccounts = {
   masterEdition: web3.PublicKey;
   resource: web3.PublicKey;
   metadata: web3.PublicKey;
-  systemAccount: web3.PublicKey;
 };
 
 const deprecatedCreateReservationListInstructionDiscriminator = 6;
@@ -54,15 +52,7 @@ const deprecatedCreateReservationListInstructionDiscriminator = 6;
 export function createDeprecatedCreateReservationListInstruction(
   accounts: DeprecatedCreateReservationListInstructionAccounts,
 ) {
-  const {
-    reservationList,
-    payer,
-    updateAuthority,
-    masterEdition,
-    resource,
-    metadata,
-    systemAccount,
-  } = accounts;
+  const { reservationList, payer, updateAuthority, masterEdition, resource, metadata } = accounts;
 
   const [data] = DeprecatedCreateReservationListStruct.serialize({
     instructionDiscriminator: deprecatedCreateReservationListInstructionDiscriminator,
@@ -99,7 +89,7 @@ export function createDeprecatedCreateReservationListInstruction(
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

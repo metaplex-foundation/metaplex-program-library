@@ -46,7 +46,6 @@ const DeprecatedCreateMasterEditionStruct = new beet.FixableBeetArgsStruct<
  * @property [**signer**] mintAuthority Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
  * @property [] metadata Metadata account
  * @property [**signer**] payer payer
- * @property [] systemAccount System program
  * @property [**signer**] oneTimePrintingAuthorizationMintAuthority One time authorization printing mint authority - must be provided if using max supply. THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY.
  * @category Instructions
  * @category DeprecatedCreateMasterEdition
@@ -62,7 +61,6 @@ export type DeprecatedCreateMasterEditionInstructionAccounts = {
   mintAuthority: web3.PublicKey;
   metadata: web3.PublicKey;
   payer: web3.PublicKey;
-  systemAccount: web3.PublicKey;
   oneTimePrintingAuthorizationMintAuthority: web3.PublicKey;
 };
 
@@ -92,7 +90,6 @@ export function createDeprecatedCreateMasterEditionInstruction(
     mintAuthority,
     metadata,
     payer,
-    systemAccount,
     oneTimePrintingAuthorizationMintAuthority,
   } = accounts;
 
@@ -152,7 +149,7 @@ export function createDeprecatedCreateMasterEditionInstruction(
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

@@ -41,7 +41,6 @@ const CreateMetadataAccountStruct = new beet.BeetArgsStruct<
  * @property [**signer**] mintAuthority Mint authority
  * @property [**signer**] payer payer
  * @property [] updateAuthority update authority info
- * @property [] systemAccount System program
  * @category Instructions
  * @category CreateMetadataAccount
  * @category generated
@@ -52,7 +51,6 @@ export type CreateMetadataAccountInstructionAccounts = {
   mintAuthority: web3.PublicKey;
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
-  systemAccount: web3.PublicKey;
 };
 
 const createMetadataAccountInstructionDiscriminator = 0;
@@ -71,7 +69,7 @@ export function createCreateMetadataAccountInstruction(
   accounts: CreateMetadataAccountInstructionAccounts,
   args: CreateMetadataAccountInstructionArgs,
 ) {
-  const { metadata, mint, mintAuthority, payer, updateAuthority, systemAccount } = accounts;
+  const { metadata, mint, mintAuthority, payer, updateAuthority } = accounts;
 
   const [data] = CreateMetadataAccountStruct.serialize({
     instructionDiscriminator: createMetadataAccountInstructionDiscriminator,
@@ -104,7 +102,7 @@ export function createCreateMetadataAccountInstruction(
       isSigner: false,
     },
     {
-      pubkey: systemAccount,
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

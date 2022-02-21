@@ -36,7 +36,7 @@
           "desc": "update authority info"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -154,7 +154,7 @@
           "desc": "Token program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -267,7 +267,7 @@
           "desc": "Token program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -394,7 +394,7 @@
           "desc": "Metadata key (pda of ['metadata', program id, mint id])"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -610,7 +610,7 @@
           "desc": "Token program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -711,7 +711,7 @@
           "desc": "Token program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -858,7 +858,7 @@
           "desc": "Token vault program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -962,7 +962,7 @@
           "desc": "update authority info"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -1033,7 +1033,7 @@
           "desc": "Token program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -1144,13 +1144,13 @@
           "desc": "Token program"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "ataProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "Associated Token program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -1245,7 +1245,7 @@
           "desc": "Token program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -1316,7 +1316,7 @@
           "desc": "Token program"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
@@ -1420,7 +1420,7 @@
           "desc": "Mint of Collection Metadata"
         },
         {
-          "name": "systemAccount",
+          "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
           "desc": "System program"
