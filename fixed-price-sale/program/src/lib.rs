@@ -1,25 +1,24 @@
 pub mod error;
 pub mod state;
 pub mod utils;
+pub mod processor;
 
 use crate::{
     error::ErrorCode,
     state::{
-        Market, MarketState, SecondaryMetadataCreators, SellingResource, SellingResourceState,
+        Market, SecondaryMetadataCreators, SellingResource,
         Store, TradeHistory,
     },
     utils::*,
 };
 use anchor_lang::{
     prelude::*,
-    solana_program::{program::invoke, program_pack::Pack, system_instruction},
     AnchorDeserialize, AnchorSerialize, System,
 };
 use anchor_spl::{
-    associated_token::{self, get_associated_token_address, AssociatedToken},
-    token::{self, accessor, Mint, Token, TokenAccount},
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
 };
-use mpl_token_metadata::utils::get_supply_off_master_edition;
 
 declare_id!("SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo");
 
@@ -29,100 +28,11 @@ pub mod fixed_price_sale {
 
     pub fn init_selling_resource<'info>(
         ctx: Context<'_, '_, '_, 'info, InitSellingResource<'info>>,
-        _master_edition_bump: u8,
-        _vault_owner_bump: u8,
+        master_edition_bump: u8,
+        vault_owner_bump: u8,
         max_supply: Option<u64>,
     ) -> ProgramResult {
-        let store = &ctx.accounts.store;
-        let admin = &ctx.accounts.admin;
-        let selling_resource = &mut ctx.accounts.selling_resource;
-        let selling_resource_owner = &ctx.accounts.selling_resource_owner;
-        let resource_mint = &ctx.accounts.resource_mint;
-        let master_edition_info = &ctx.accounts.master_edition.to_account_info();
-        let metadata = &ctx.accounts.metadata;
-        let vault = &ctx.accounts.vault;
-        let owner = &ctx.accounts.owner;
-        let resource_token = &ctx.accounts.resource_token;
-        let token_program = &ctx.accounts.token_program;
-
-        // Check `MasterEdition` derivation
-        assert_derivation(
-            &mpl_token_metadata::id(),
-            master_edition_info,
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                resource_mint.key().as_ref(),
-                mpl_token_metadata::state::EDITION.as_bytes(),
-            ],
-        )?;
-
-        // Check, that provided metadata is correct
-        assert_derivation(
-            &mpl_token_metadata::id(),
-            metadata,
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                resource_mint.key().as_ref(),
-            ],
-        )?;
-
-        let metadata =
-            mpl_token_metadata::state::Metadata::from_account_info(&metadata.to_account_info())?;
-
-        // Check, that at least one creator exists in primary sale
-        if !metadata.primary_sale_happened {
-            if let Some(creators) = metadata.data.creators {
-                if creators.len() == 0 {
-                    return Err(ErrorCode::MetadataCreatorsIsEmpty.into());
-                }
-            } else {
-                return Err(ErrorCode::MetadataCreatorsIsEmpty.into());
-            }
-        }
-
-        let master_edition =
-            mpl_token_metadata::state::MasterEditionV2::from_account_info(master_edition_info)?;
-
-        let mut actual_max_supply = max_supply;
-
-        // Ensure, that provided `max_supply` is under `MasterEditionV2::max_supply` bounds
-        if let Some(me_max_supply) = master_edition.max_supply {
-            let x = if let Some(max_supply) = max_supply {
-                let available_supply = me_max_supply - master_edition.supply;
-                if max_supply > available_supply {
-                    return Err(ErrorCode::SupplyIsGtThanAvailable.into());
-                } else {
-                    max_supply
-                }
-            } else {
-                return Err(ErrorCode::SupplyIsNotProvided.into());
-            };
-
-            actual_max_supply = Some(x);
-        }
-
-        // Transfer `MasterEdition` ownership
-        let cpi_program = token_program.to_account_info();
-        let cpi_accounts = token::Transfer {
-            from: resource_token.to_account_info(),
-            to: vault.to_account_info(),
-            authority: admin.to_account_info(),
-        };
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        token::transfer(cpi_ctx, 1)?;
-
-        selling_resource.store = store.key();
-        selling_resource.owner = selling_resource_owner.key();
-        selling_resource.resource = resource_mint.key();
-        selling_resource.vault = vault.key();
-        selling_resource.vault_owner = owner.key();
-        selling_resource.supply = 0;
-        selling_resource.max_supply = actual_max_supply;
-        selling_resource.state = SellingResourceState::Created;
-
-        Ok(())
+        ctx.accounts.process(master_edition_bump, vault_owner_bump, max_supply)
     }
 
     pub fn create_store<'info>(
@@ -130,22 +40,7 @@ pub mod fixed_price_sale {
         name: String,
         description: String,
     ) -> ProgramResult {
-        let admin = &ctx.accounts.admin;
-        let store = &mut ctx.accounts.store;
-
-        if name.len() > NAME_MAX_LEN {
-            return Err(ErrorCode::NameIsTooLong.into());
-        }
-
-        if description.len() > DESCRIPTION_MAX_LEN {
-            return Err(ErrorCode::DescriptionIsTooLong.into());
-        }
-
-        store.admin = admin.key();
-        store.name = puffed_out_string(name, NAME_MAX_LEN);
-        store.description = puffed_out_string(description, DESCRIPTION_MAX_LEN);
-
-        Ok(())
+        ctx.accounts.process(name, description)
     }
 
     pub fn buy<'info>(
@@ -153,205 +48,19 @@ pub mod fixed_price_sale {
         _trade_history_bump: u8,
         vault_owner_bump: u8,
     ) -> ProgramResult {
-        let market = &mut ctx.accounts.market;
-        let selling_resource = &mut ctx.accounts.selling_resource;
-        let user_token_account = &mut ctx.accounts.user_token_account;
-        let user_wallet = &mut ctx.accounts.user_wallet;
-        let trade_history = &mut ctx.accounts.trade_history;
-        let treasury_holder = &mut ctx.accounts.treasury_holder;
-        let new_metadata = &mut ctx.accounts.new_metadata;
-        let new_edition = &mut ctx.accounts.new_edition;
-        let master_edition = &mut ctx.accounts.master_edition;
-        let new_mint = &mut ctx.accounts.new_mint;
-        let edition_marker_info = &mut ctx.accounts.edition_marker.to_account_info();
-        let vault = &mut ctx.accounts.vault;
-        let owner = &mut ctx.accounts.owner;
-        let master_edition_metadata = &mut ctx.accounts.master_edition_metadata;
-        let clock = &ctx.accounts.clock;
-        let rent = &ctx.accounts.rent;
-        let token_program = &ctx.accounts.token_program;
-        let system_program = &ctx.accounts.system_program;
-
-        let metadata_mint = selling_resource.resource.clone();
-        // do supply +1 to increase master edition supply
-        let edition = get_supply_off_master_edition(&master_edition.to_account_info())?
-            .checked_add(1)
-            .ok_or(ErrorCode::MathOverflow)?;
-
-        // Check, that `Market` is not in `Suspended` state
-        if market.state == MarketState::Suspended {
-            return Err(ErrorCode::MarketIsSuspended.into());
-        }
-
-        // Check, that `Market` is started
-        if market.start_date > clock.unix_timestamp as u64 {
-            return Err(ErrorCode::MarketIsNotStarted.into());
-        }
-
-        // Check, that `Market` is ended
-        if let Some(end_date) = market.end_date {
-            if clock.unix_timestamp as u64 > end_date {
-                return Err(ErrorCode::MarketIsEnded.into());
-            }
-        } else if market.state == MarketState::Ended {
-            return Err(ErrorCode::MarketIsEnded.into());
-        }
-
-        if trade_history.market != market.key() {
-            trade_history.market = market.key();
-        }
-
-        if trade_history.wallet != user_wallet.key() {
-            trade_history.wallet = user_wallet.key();
-        }
-
-        // Check, that user not reach buy limit
-        if let Some(pieces_in_one_wallet) = market.pieces_in_one_wallet {
-            if trade_history.already_bought == pieces_in_one_wallet {
-                return Err(ErrorCode::UserReachBuyLimit.into());
-            }
-        }
-
-        if market.state != MarketState::Active {
-            market.state = MarketState::Active;
-        }
-
-        // Buy new edition
-        let is_native = market.treasury_mint == System::id();
-
-        if !is_native {
-            let cpi_program = token_program.to_account_info();
-            let cpi_accounts = token::Transfer {
-                from: user_token_account.to_account_info(),
-                to: treasury_holder.to_account_info(),
-                authority: user_wallet.to_account_info(),
-            };
-            let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-            token::transfer(cpi_ctx, market.price)?;
-        } else {
-            if user_token_account.key() != user_wallet.key() {
-                return Err(ErrorCode::UserWalletMustMatchUserTokenAccount.into());
-            }
-
-            invoke(
-                // for native SOL transfer user_wallet key == user_token_account key
-                &system_instruction::transfer(
-                    &user_token_account.key(),
-                    &treasury_holder.key(),
-                    market.price,
-                ),
-                &[
-                    user_token_account.to_account_info(),
-                    treasury_holder.to_account_info(),
-                ],
-            )?;
-        }
-
-        market.funds_collected = market.funds_collected.checked_add(market.price).ok_or(ErrorCode::MathOverflow)?;
-
-        mpl_mint_new_edition_from_master_edition_via_token(
-            &new_metadata.to_account_info(),
-            &new_edition.to_account_info(),
-            &new_mint.to_account_info(),
-            &user_wallet.to_account_info(),
-            &user_wallet.to_account_info(),
-            &owner.to_account_info(),
-            &vault.to_account_info(),
-            &master_edition_metadata.to_account_info(),
-            &master_edition.to_account_info(),
-            &metadata_mint,
-            &edition_marker_info,
-            &token_program.to_account_info(),
-            &system_program.to_account_info(),
-            &rent.to_account_info(),
-            edition,
-            &[
-                VAULT_OWNER_PREFIX.as_bytes(),
-                selling_resource.resource.as_ref(),
-                selling_resource.store.as_ref(),
-                &[vault_owner_bump],
-            ],
-        )?;
-
-        trade_history.already_bought = trade_history
-            .already_bought
-            .checked_add(1)
-            .ok_or(ErrorCode::MathOverflow)?;
-
-        selling_resource.supply = selling_resource
-            .supply
-            .checked_add(1)
-            .ok_or(ErrorCode::MathOverflow)?;
-
-        // Check, that `SellingResource::max_supply` is not overflowed by `supply`
-        if let Some(max_supply) = selling_resource.max_supply {
-            if selling_resource.supply > max_supply {
-                return Err(ErrorCode::SupplyIsGtThanMaxSupply.into());
-            } else if selling_resource.supply == max_supply {
-                selling_resource.state = SellingResourceState::Exhausted;
-                market.state = MarketState::Ended;
-            }
-        }
-
-        Ok(())
+        ctx.accounts.process(_trade_history_bump, vault_owner_bump)
     }
 
     pub fn close_market<'info>(
         ctx: Context<'_, '_, '_, 'info, CloseMarket<'info>>,
     ) -> ProgramResult {
-        let market = &mut ctx.accounts.market;
-        let clock = &ctx.accounts.clock;
-
-        // Check, that `Market` is with unlimited duration
-        if market.end_date.is_some() {
-            return Err(ErrorCode::MarketDurationIsNotUnlimited.into());
-        }
-
-        // Check, that `Market` is started
-        if market.start_date > clock.unix_timestamp as u64 {
-            return Err(ErrorCode::MarketIsNotStarted.into());
-        }
-
-        market.state = MarketState::Ended;
-
-        Ok(())
+        ctx.accounts.process()
     }
 
     pub fn suspend_market<'info>(
         ctx: Context<'_, '_, '_, 'info, SuspendMarket<'info>>,
     ) -> ProgramResult {
-        let market = &mut ctx.accounts.market;
-        let clock = &ctx.accounts.clock;
-
-        // Check, that `Market` is in `Active` state
-        if market.state == MarketState::Ended {
-            return Err(ErrorCode::MarketIsEnded.into());
-        }
-
-        if let Some(end_date) = market.end_date {
-            if clock.unix_timestamp as u64 > end_date {
-                return Err(ErrorCode::MarketIsEnded.into());
-            }
-        }
-
-        // Check, that `Market` is started
-        if market.start_date > clock.unix_timestamp as u64 {
-            return Err(ErrorCode::MarketIsNotStarted.into());
-        }
-
-        // Check, that `Market` is mutable
-        if !market.mutable {
-            return Err(ErrorCode::MarketIsImmutable.into());
-        }
-
-        // Check, that `Market` is not in `Suspended` state
-        if market.state == MarketState::Suspended {
-            return Err(ErrorCode::MarketIsSuspended.into());
-        }
-
-        market.state = MarketState::Suspended;
-
-        Ok(())
+        ctx.accounts.process()
     }
 
     pub fn change_market<'info>(
@@ -362,87 +71,13 @@ pub mod fixed_price_sale {
         new_price: Option<u64>,
         new_pieces_in_one_wallet: Option<u64>,
     ) -> ProgramResult {
-        let market = &mut ctx.accounts.market;
-        let clock = &ctx.accounts.clock;
-
-        // Check, that `Market` is in `Suspended` state
-        if market.state != MarketState::Suspended {
-            return Err(ErrorCode::MarketInInvalidState.into());
-        }
-
-        // Check, that `Market` is not in `Ended` state
-        if let Some(end_date) = market.end_date {
-            if clock.unix_timestamp as u64 > end_date {
-                return Err(ErrorCode::MarketIsEnded.into());
-            }
-        }
-
-        // Check, that `Market` is mutable
-        if !market.mutable {
-            return Err(ErrorCode::MarketIsImmutable.into());
-        }
-
-        if let Some(new_name) = new_name {
-            if new_name.len() > NAME_MAX_LEN {
-                return Err(ErrorCode::NameIsTooLong.into());
-            }
-
-            market.name = puffed_out_string(new_name, NAME_MAX_LEN);
-        }
-
-        if let Some(new_description) = new_description {
-            if new_description.len() > DESCRIPTION_MAX_LEN {
-                return Err(ErrorCode::DescriptionIsTooLong.into());
-            }
-
-            market.description = puffed_out_string(new_description, DESCRIPTION_MAX_LEN);
-        }
-
-        if let Some(mutable) = mutable {
-            market.mutable = mutable;
-        }
-
-        if let Some(new_price) = new_price {
-            if new_price == 0 {
-                return Err(ErrorCode::PriceIsZero.into());
-            }
-
-            market.price = new_price;
-        }
-
-        // Check is required, because we can overwrite existing value
-        if let Some(new_pieces_in_one_wallet) = new_pieces_in_one_wallet {
-            market.pieces_in_one_wallet = Some(new_pieces_in_one_wallet);
-        }
-
-        Ok(())
+        ctx.accounts.process(new_name, new_description, mutable, new_price, new_pieces_in_one_wallet)
     }
 
     pub fn resume_market<'info>(
         ctx: Context<'_, '_, '_, 'info, ResumeMarket<'info>>,
     ) -> ProgramResult {
-        let market = &mut ctx.accounts.market;
-        let clock = &ctx.accounts.clock;
-
-        // Check, that `Market` is not in `Ended` state
-        if market.state == MarketState::Ended {
-            return Err(ErrorCode::MarketIsEnded.into());
-        }
-
-        if let Some(end_date) = market.end_date {
-            if clock.unix_timestamp as u64 > end_date {
-                return Err(ErrorCode::MarketIsEnded.into());
-            }
-        }
-
-        // Check, that `Market` is in `Suspended` state
-        if market.state != MarketState::Suspended {
-            return Err(ErrorCode::MarketInInvalidState.into());
-        }
-
-        market.state = MarketState::Active;
-
-        Ok(())
+        ctx.accounts.process()
     }
 
     pub fn withdraw<'info>(
@@ -450,175 +85,7 @@ pub mod fixed_price_sale {
         treasury_owner_bump: u8,
         payout_ticket_bump: u8,
     ) -> ProgramResult {
-        let market = &ctx.accounts.market;
-        let token_program = &ctx.accounts.token_program;
-        let associated_token_program = &ctx.accounts.associated_token_program;
-        let system_program = &ctx.accounts.system_program;
-        let treasury_holder = Box::new(&ctx.accounts.treasury_holder);
-        let treasury_mint = Box::new(&ctx.accounts.treasury_mint);
-        let treasury_owner = &ctx.accounts.owner;
-        let destination = &ctx.accounts.destination;
-        let selling_resource = &ctx.accounts.selling_resource;
-        let funder = &ctx.accounts.funder;
-        let payer = &ctx.accounts.payer;
-        let payout_ticket = &ctx.accounts.payout_ticket;
-        let rent = &ctx.accounts.rent;
-        let clock = &ctx.accounts.clock;
-        let metadata = &ctx.accounts.metadata.to_account_info();
-
-        let selling_resource_key = selling_resource.key().clone();
-        let treasury_mint_key = market.treasury_mint.clone();
-        let funder_key = funder.key();
-
-        // Check, that `Market` is `Ended`
-        if let Some(end_date) = market.end_date {
-            if clock.unix_timestamp as u64 <= end_date {
-                return Err(ErrorCode::MarketInInvalidState.into());
-            }
-        } else {
-            if market.state != MarketState::Ended {
-                return Err(ErrorCode::MarketInInvalidState.into());
-            }
-        }
-
-        // Check, that provided metadata is correct
-        assert_derivation(
-            &mpl_token_metadata::id(),
-            metadata,
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                selling_resource.resource.as_ref(),
-            ],
-        )?;
-
-        // Check, that funder is `Creator` or `Market` owner
-        let metadata = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
-
-        // `Some` mean funder is `Creator`
-        // `None` mean funder is `Market` owner
-        let funder_creator = if let Some(creators) = metadata.data.creators {
-            let funder_creator = creators.iter().find(|&c| c.address == funder_key).cloned();
-            if funder_creator.is_none() && funder_key != market.owner {
-                return Err(ErrorCode::FunderIsInvalid.into());
-            }
-
-            funder_creator
-        } else if funder_key != market.owner {
-            return Err(ErrorCode::FunderIsInvalid.into());
-        } else {
-            None
-        };
-
-        // Check, that user can withdraw funds(first time)
-        if payout_ticket.lamports() > 0 && !payout_ticket.data_is_empty() {
-            return Err(ErrorCode::PayoutTicketExists.into());
-        }
-
-        let is_native = market.treasury_mint == System::id();
-
-        let amount = if metadata.primary_sale_happened {
-            if funder_creator.is_some() && funder_key == market.owner {
-                // if funder is NFT creator and market owner at the same time
-                // he will receive both shares
-                let funder_creator = funder_creator.as_ref().unwrap();
-
-                let funder_as_creator_share = calculate_secondary_shares_for_creator(market.funds_collected, metadata.data.seller_fee_basis_points as u64, funder_creator.share as u64)?;
-
-                let funder_as_market_owner_share = calculate_secondary_shares_for_market_owner(market.funds_collected, metadata.data.seller_fee_basis_points as u64)?;
-
-                funder_as_creator_share.checked_add(funder_as_market_owner_share).ok_or(ErrorCode::MathOverflow)?
-            } else if let Some(funder_creator) = &funder_creator {
-                calculate_secondary_shares_for_creator(market.funds_collected, metadata.data.seller_fee_basis_points as u64, funder_creator.share as u64)?
-            } else {
-                calculate_secondary_shares_for_market_owner(market.funds_collected, metadata.data.seller_fee_basis_points as u64)?
-            }
-        } else {
-            if let Some(funder_creator) = funder_creator {
-                calculate_primary_shares_for_creator(market.funds_collected, funder_creator.share as u64)?
-            } else {
-                return Err(ErrorCode::MarketOwnerDoesntHaveShares.into());
-            }
-        };
-
-        // Transfer royalties
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            HOLDER_PREFIX.as_bytes(),
-            treasury_mint_key.as_ref(),
-            selling_resource_key.as_ref(),
-            &[treasury_owner_bump],
-        ]];
-
-        if is_native {
-            if funder_key != destination.key() {
-                return Err(ErrorCode::InvalidFunderDestination.into());
-            }
-
-            sys_transfer(
-                &treasury_holder.to_account_info(),
-                &destination.to_account_info(),
-                amount,
-                signer_seeds[0],
-            )?;
-        } else {
-            if *treasury_mint.owner != spl_token::id() {
-                return Err(ProgramError::InvalidArgument);
-            }
-
-            if *treasury_holder.owner != spl_token::id() {
-                return Err(ProgramError::InvalidArgument);
-            }
-
-            let associated_token_account =
-                get_associated_token_address(&funder_key, &market.treasury_mint);
-
-            // Check, that provided destination is associated token account
-            if associated_token_account != destination.key() {
-                return Err(ErrorCode::InvalidFunderDestination.into());
-            }
-
-            // Check, that provided destination is exists
-            if destination.lamports() == 0 && destination.data_is_empty() {
-                let cpi_program = associated_token_program.to_account_info();
-                let cpi_accounts = associated_token::Create {
-                    payer: payer.to_account_info(),
-                    associated_token: destination.to_account_info(),
-                    authority: funder.to_account_info(),
-                    mint: treasury_mint.to_account_info(),
-                    rent: rent.to_account_info(),
-                    token_program: token_program.to_account_info(),
-                    system_program: system_program.to_account_info(),
-                };
-                let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-                associated_token::create(cpi_ctx)?;
-            }
-
-            let cpi_program = token_program.to_account_info();
-            let cpi_accounts = token::Transfer {
-                from: treasury_holder.to_account_info(),
-                to: destination.to_account_info(),
-                authority: treasury_owner.to_account_info(),
-            };
-            let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
-            token::transfer(cpi_ctx, amount)?;
-        }
-
-        // Create ticket account to prevent twice withdrawal
-        sys_create_account(
-            &payer.to_account_info(),
-            &payout_ticket.to_account_info(),
-            rent.minimum_balance(FLAG_ACCOUNT_SIZE),
-            FLAG_ACCOUNT_SIZE,
-            &id(),
-            &[
-                PAYOUT_TICKET_PREFIX.as_bytes(),
-                market.key().as_ref(),
-                funder_key.as_ref(),
-                &[payout_ticket_bump],
-            ],
-        )?;
-
-        Ok(())
+        ctx.accounts.process(treasury_owner_bump, payout_ticket_bump)
     }
 
     pub fn create_market<'info>(
@@ -632,206 +99,14 @@ pub mod fixed_price_sale {
         start_date: u64,
         end_date: Option<u64>,
     ) -> ProgramResult {
-        let market = &mut ctx.accounts.market;
-        let store = &ctx.accounts.store;
-        let selling_resource_owner = &ctx.accounts.selling_resource_owner;
-        let selling_resource = &mut ctx.accounts.selling_resource;
-        let mint = ctx.accounts.mint.to_account_info();
-        let treasury_holder = ctx.accounts.treasury_holder.to_account_info();
-        let owner = &ctx.accounts.owner;
-
-        if name.len() > NAME_MAX_LEN {
-            return Err(ErrorCode::NameIsTooLong.into());
-        }
-
-        if description.len() > DESCRIPTION_MAX_LEN {
-            return Err(ErrorCode::DescriptionIsTooLong.into());
-        }
-
-        // Pieces in one wallet cannot be greater than Max Supply value
-        if pieces_in_one_wallet.is_some()
-            && selling_resource.max_supply.is_some()
-            && pieces_in_one_wallet.unwrap() > selling_resource.max_supply.unwrap()
-        {
-            return Err(ErrorCode::PiecesInOneWalletIsTooMuch.into());
-        }
-
-        // start_date cannot be in the past
-        if start_date < Clock::get().unwrap().unix_timestamp as u64 {
-            return Err(ErrorCode::StartDateIsInPast.into());
-        }
-
-        // end_date should not be greater than start_date
-        if end_date.is_some() && start_date > end_date.unwrap() {
-            return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
-        }
-
-        let is_native = mint.key() == System::id();
-
-        if !is_native {
-            if mint.owner != &anchor_spl::token::ID
-                || treasury_holder.owner != &anchor_spl::token::ID
-            {
-                return Err(ProgramError::IllegalOwner);
-            }
-
-            if accessor::mint(&treasury_holder)? != *mint.key {
-                return Err(ProgramError::InvalidAccountData);
-            }
-
-            if accessor::authority(&treasury_holder)? != owner.key() {
-                return Err(ProgramError::InvalidAccountData);
-            }
-        } else {
-            // for native SOL we use PDA as a treasury holder
-            // because of security reasons(only program can spend this SOL)
-            if treasury_holder.key != owner.key {
-                return Err(ProgramError::InvalidAccountData);
-            }
-        }
-
-        // Check selling resource ownership
-        assert_keys_equal(selling_resource.owner, selling_resource_owner.key())?;
-
-        market.store = store.key();
-        market.selling_resource = selling_resource.key();
-        market.treasury_mint = mint.key();
-        market.treasury_holder = treasury_holder.key();
-        market.treasury_owner = owner.key();
-        market.owner = selling_resource_owner.key();
-        market.name = puffed_out_string(name, NAME_MAX_LEN);
-        market.description = puffed_out_string(description, DESCRIPTION_MAX_LEN);
-        market.mutable = mutable;
-        market.price = price;
-        market.pieces_in_one_wallet = pieces_in_one_wallet;
-        market.start_date = start_date;
-        market.end_date = end_date;
-        market.state = MarketState::Created;
-        selling_resource.state = SellingResourceState::InUse;
-
-        Ok(())
+        ctx.accounts.process(_treasury_owner_bump, name, description, mutable, price, pieces_in_one_wallet, start_date, end_date)
     }
 
     pub fn claim_resource<'info>(
         ctx: Context<'_, '_, '_, 'info, ClaimResource<'info>>,
         vault_owner_bump: u8,
     ) -> ProgramResult {
-        let market = &ctx.accounts.market;
-        let selling_resource = &ctx.accounts.selling_resource;
-        let vault = &ctx.accounts.vault;
-        let metadata = &ctx.accounts.metadata;
-        let vault_owner = &ctx.accounts.owner;
-        let secondary_metadata_creators = &ctx.accounts.secondary_metadata_creators;
-        let destination = &ctx.accounts.destination;
-        let clock = &ctx.accounts.clock;
-        let treasury_holder = &ctx.accounts.treasury_holder;
-        let token_program = &ctx.accounts.token_program;
-
-        // Check, that `Market` is `Ended`
-        if let Some(end_date) = market.end_date {
-            if clock.unix_timestamp as u64 <= end_date {
-                return Err(ErrorCode::MarketInInvalidState.into());
-            }
-        } else {
-            if market.state != MarketState::Ended {
-                return Err(ErrorCode::MarketInInvalidState.into());
-            }
-        }
-
-        let is_native = market.treasury_mint == System::id();
-
-        let treasury_holder_amount = if is_native {
-            treasury_holder.lamports()
-        } else {
-            let token_account = spl_token::state::Account::unpack(&treasury_holder.data.borrow())?;
-            if token_account.owner != market.treasury_owner.key() {
-                return Err(ErrorCode::DerivedKeyInvalid.into());
-            }
-
-            token_account.amount
-        };
-
-        // Check, that treasury balance is zero
-        if treasury_holder_amount != 0 {
-            return Err(ErrorCode::TreasuryIsNotEmpty.into());
-        }
-
-        // Check, that provided metadata is correct
-        assert_derivation(
-            &mpl_token_metadata::id(),
-            metadata,
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                selling_resource.resource.as_ref(),
-            ],
-        )?;
-
-        let signer_seeds: &[&[&[u8]]] = &[&[
-            VAULT_OWNER_PREFIX.as_bytes(),
-            selling_resource.resource.as_ref(),
-            selling_resource.store.as_ref(),
-            &[vault_owner_bump],
-        ]];
-
-        // Update primary sale flag
-        let metadata_state = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
-        if !metadata_state.primary_sale_happened {
-            mpl_update_primary_sale_happened_via_token(
-                &metadata.to_account_info(),
-                &vault_owner.to_account_info(),
-                &vault.to_account_info(),
-                signer_seeds[0],
-            )?;
-        }
-
-        if !secondary_metadata_creators.data_is_empty()
-            && secondary_metadata_creators.lamports() > 0
-        {
-            // Check, that provided `SecondaryMetadataCreators` is correct
-            assert_derivation(
-                &id(),
-                secondary_metadata_creators,
-                &[
-                    SECONDARY_METADATA_CREATORS_PREFIX.as_bytes(),
-                    metadata.key.as_ref(),
-                ],
-            )?;
-
-            let secondary_metadata_creators = SecondaryMetadataCreators::try_deserialize(
-                &mut secondary_metadata_creators.data.borrow().as_ref(),
-            )?;
-
-            mpl_update_metadata_accounts_v2(
-                metadata,
-                vault_owner,
-                None,
-                Some(mpl_token_metadata::state::DataV2 {
-                    collection: metadata_state.collection,
-                    creators: Some(secondary_metadata_creators.creators),
-                    name: metadata_state.data.name,
-                    seller_fee_basis_points: metadata_state.data.seller_fee_basis_points,
-                    symbol: metadata_state.data.symbol,
-                    uri: metadata_state.data.uri,
-                    uses: metadata_state.uses,
-                }),
-                None,
-                Some(false),
-                signer_seeds[0],
-            )?;
-        }
-
-        // Transfer token(ownership)
-        let cpi_program = token_program.to_account_info();
-        let cpi_accounts = token::Transfer {
-            from: vault.to_account_info(),
-            to: destination.to_account_info(),
-            authority: vault_owner.to_account_info(),
-        };
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
-        token::transfer(cpi_ctx, 1)?;
-
-        Ok(())
+        ctx.accounts.process(vault_owner_bump)
     }
 
     pub fn create_secondary_metadata_creators<'info>(
@@ -839,32 +114,7 @@ pub mod fixed_price_sale {
         _secondary_metadata_creators_bump: u8,
         creators: Vec<mpl_token_metadata::state::Creator>,
     ) -> ProgramResult {
-        let metadata = &ctx.accounts.metadata;
-        let admin = &ctx.accounts.admin;
-        let secondary_metadata_creators = &mut ctx.accounts.secondary_metadata_creators;
-        let metadata_state = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
-
-        if creators.len() > MAX_SECONDARY_CREATORS_LEN {
-            return Err(ErrorCode::CreatorsIsGtThanAvailable.into());
-        }
-
-        if creators.is_empty() {
-            return Err(ErrorCode::CreatorsIsEmpty.into());
-        }
-
-        if !metadata_state.is_mutable {
-            return Err(ErrorCode::MetadataShouldBeMutable.into());
-        }
-
-        if metadata_state.primary_sale_happened {
-            return Err(ErrorCode::PrimarySaleIsNotAllowed.into());
-        }
-
-        assert_keys_equal(metadata_state.update_authority, *admin.key)?;
-
-        secondary_metadata_creators.creators = creators;
-
-        Ok(())
+        ctx.accounts.process(_secondary_metadata_creators_bump, creators)
     }
 }
 
@@ -989,6 +239,30 @@ pub struct Withdraw<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(vault_owner_bump: u8)]
+pub struct ClaimResource<'info> {
+    #[account(has_one=selling_resource, has_one=treasury_holder)]
+    market: Account<'info, Market>,
+    treasury_holder: UncheckedAccount<'info>,
+    #[account(has_one=vault, constraint = selling_resource.owner == selling_resource_owner.key())]
+    selling_resource: Account<'info, SellingResource>,
+    selling_resource_owner: Signer<'info>,
+    #[account(mut, has_one=owner)]
+    vault: Box<Account<'info, TokenAccount>>,
+    #[account(mut, owner=mpl_token_metadata::id())]
+    metadata: UncheckedAccount<'info>,
+    #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.key().as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
+    owner: UncheckedAccount<'info>,
+    secondary_metadata_creators: UncheckedAccount<'info>,
+    #[account(mut)]
+    destination: Box<Account<'info, TokenAccount>>,
+    clock: Sysvar<'info, Clock>,
+    token_program: Program<'info, Token>,
+    token_metadata_program: UncheckedAccount<'info>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction()]
 pub struct CloseMarket<'info> {
     #[account(mut, has_one=owner)]
@@ -1022,30 +296,6 @@ pub struct ChangeMarket<'info> {
     market: Account<'info, Market>,
     owner: Signer<'info>,
     clock: Sysvar<'info, Clock>,
-}
-
-#[derive(Accounts)]
-#[instruction(vault_owner_bump: u8)]
-pub struct ClaimResource<'info> {
-    #[account(has_one=selling_resource, has_one=treasury_holder)]
-    market: Account<'info, Market>,
-    treasury_holder: UncheckedAccount<'info>,
-    #[account(has_one=vault, constraint = selling_resource.owner == selling_resource_owner.key())]
-    selling_resource: Account<'info, SellingResource>,
-    selling_resource_owner: Signer<'info>,
-    #[account(mut, has_one=owner)]
-    vault: Box<Account<'info, TokenAccount>>,
-    #[account(mut, owner=mpl_token_metadata::id())]
-    metadata: UncheckedAccount<'info>,
-    #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.key().as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
-    owner: UncheckedAccount<'info>,
-    secondary_metadata_creators: UncheckedAccount<'info>,
-    #[account(mut)]
-    destination: Box<Account<'info, TokenAccount>>,
-    clock: Sysvar<'info, Clock>,
-    token_program: Program<'info, Token>,
-    token_metadata_program: UncheckedAccount<'info>,
-    system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]

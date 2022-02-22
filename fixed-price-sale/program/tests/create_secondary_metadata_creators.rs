@@ -37,7 +37,7 @@ mod create_secondary_metadata_creators {
         )
         .await;
 
-        let (vault_owner, _vault_owner_bump) =
+        let (vault_owner, vault_owner_bump) =
             mpl_fixed_price_sale::utils::find_vault_owner_address(
                 &resource_mint.pubkey(),
                 &store_keypair.pubkey(),
@@ -143,7 +143,7 @@ mod create_secondary_metadata_creators {
         )
         .await;
 
-        let (vault_owner, _vault_owner_bump) =
+        let (vault_owner, vault_owner_bump) =
             mpl_fixed_price_sale::utils::find_vault_owner_address(
                 &resource_mint.pubkey(),
                 &store_keypair.pubkey(),
@@ -272,7 +272,7 @@ mod create_secondary_metadata_creators {
         )
         .await;
 
-        let (vault_owner, _vault_owner_bump) =
+        let (vault_owner, vault_owner_bump) =
             mpl_fixed_price_sale::utils::find_vault_owner_address(
                 &resource_mint.pubkey(),
                 &store_keypair.pubkey(),
@@ -370,7 +370,7 @@ mod create_secondary_metadata_creators {
         )
         .await;
 
-        let (vault_owner, _vault_owner_bump) =
+        let (vault_owner, vault_owner_bump) =
             mpl_fixed_price_sale::utils::find_vault_owner_address(
                 &resource_mint.pubkey(),
                 &store_keypair.pubkey(),
