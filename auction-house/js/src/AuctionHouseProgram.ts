@@ -49,7 +49,7 @@ export class AuctionHouseProgram extends Program {
 
   static async findAuctionHouseProgramAsSignerAddress(): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
-      [Buffer.from(AuctionHouseProgram.PREFIX,), Buffer.from(AuctionHouseProgram.SIGNER)],
+      [Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'), Buffer.from(AuctionHouseProgram.SIGNER, 'utf8')],
       AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
     );
   }
@@ -59,9 +59,9 @@ export class AuctionHouseProgram extends Program {
   ): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
       [
-        Buffer.from(AuctionHouseProgram.PREFIX),
+        Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'),
         auctionHouse.toBuffer(),
-        Buffer.from(AuctionHouseProgram.TREASURY),
+        Buffer.from(AuctionHouseProgram.TREASURY, 'utf8'),
       ],
       AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
     );
@@ -126,9 +126,9 @@ export class AuctionHouseProgram extends Program {
   static async findAuctionHouseFeeAddress(auctionHouse: PublicKey) {
     return PublicKey.findProgramAddress(
       [
-        Buffer.from(AuctionHouseProgram.PREFIX),
+        Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'),
         auctionHouse.toBuffer(),
-        Buffer.from(AuctionHouseProgram.FEE_PAYER),
+        Buffer.from(AuctionHouseProgram.FEE_PAYER, 'utf8'),
       ],
       AuctionHouseProgram.PUBKEY,
     );
