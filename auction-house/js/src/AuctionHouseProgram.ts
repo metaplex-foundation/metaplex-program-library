@@ -22,10 +22,10 @@ export class AuctionHouseProgram extends Program {
 
   static async findAssociatedTokenAccountAddress(
     mint: PublicKey,
-    buyer: PublicKey,
+    wallet: PublicKey,
   ): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
-      [buyer.toBuffer(), AuctionHouseProgram.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+      [wallet.toBuffer(), AuctionHouseProgram.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
       AuctionHouseProgram.SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
     );
   }
