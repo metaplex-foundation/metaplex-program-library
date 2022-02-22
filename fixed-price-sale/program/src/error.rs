@@ -106,4 +106,7 @@ pub enum ErrorCode {
     // 6033
     #[msg("Creators is empty")]
     CreatorsIsEmpty,
+    // 6034
+    #[msg("Market owner doesn't receive shares at primary sale")]
+    MarketOwnerDoesntHaveShares,
 }

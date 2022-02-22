@@ -64,6 +64,8 @@ pub struct Market {
     pub start_date: u64,
     pub end_date: Option<u64>,
     pub state: MarketState,
+    // need this field to calculate royalties at withdraw
+    pub funds_collected: u64,
 }
 
 impl Market {
@@ -81,7 +83,8 @@ impl Market {
         + 9
         + 8
         + 9
-        + 1;
+        + 1
+        + 8;
 }
 
 #[account]

@@ -269,7 +269,7 @@ pub async fn setup_market(
     .to_account_metas(None);
 
     let data = mpl_fixed_price_sale_instruction::CreateMarket {
-        _treasyry_owner_bump: treasyry_owner_bump,
+        _treasury_owner_bump: treasyry_owner_bump,
         name: name.to_owned(),
         description: description.to_owned(),
         mutable,

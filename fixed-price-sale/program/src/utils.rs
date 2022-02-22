@@ -253,3 +253,35 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
         Ok(())
     }
 }
+
+pub fn calculate_primary_shares_for_creator(total_amount: u64, shares: u64) -> Result<u64, ProgramError> {
+    Ok(total_amount
+        .checked_mul(shares)
+        .ok_or(ErrorCode::MathOverflow)?
+        .checked_div(100)
+        .ok_or(ErrorCode::MathOverflow)?)
+}
+
+pub fn calculate_secondary_shares_for_creator(total_amount: u64, seller_fee_basis_points: u64, shares: u64) -> Result<u64, ProgramError> {
+    Ok((total_amount
+        .checked_mul(seller_fee_basis_points)
+        .ok_or(ErrorCode::MathOverflow)?
+        .checked_div(10000)
+        .ok_or(ErrorCode::MathOverflow)?)
+    .checked_mul(shares)
+    .ok_or(ErrorCode::MathOverflow)?
+    .checked_div(100)
+    .ok_or(ErrorCode::MathOverflow)?)
+}
+
+pub fn calculate_secondary_shares_for_market_owner(total_amount: u64, seller_fee_basis_points: u64) -> Result<u64, ProgramError> {
+    Ok(total_amount
+        .checked_sub(
+            total_amount
+                .checked_mul(seller_fee_basis_points)
+                .ok_or(ErrorCode::MathOverflow)?
+                .checked_div(10000)
+                .ok_or(ErrorCode::MathOverflow)?,
+        )
+        .ok_or(ErrorCode::MathOverflow)?)
+}

@@ -103,7 +103,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -455,7 +455,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -725,7 +725,7 @@ mod withdraw {
             .unwrap()
             .unwrap();
 
-        assert_eq!(destination_acc.lamports(), 9997714880);
+        assert_eq!(destination_acc.lamports(), 9997659200);
     }
 
     #[tokio::test]
@@ -805,7 +805,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -1162,7 +1162,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -1518,7 +1518,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,

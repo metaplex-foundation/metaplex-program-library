@@ -8,13 +8,7 @@ use crate::{
         Market, MarketState, SecondaryMetadataCreators, SellingResource, SellingResourceState,
         Store, TradeHistory,
     },
-    utils::{
-        assert_derivation, assert_keys_equal, mpl_mint_new_edition_from_master_edition_via_token,
-        mpl_update_metadata_accounts_v2, mpl_update_primary_sale_happened_via_token,
-        puffed_out_string, sys_create_account, sys_transfer, DESCRIPTION_MAX_LEN,
-        FLAG_ACCOUNT_SIZE, HISTORY_PREFIX, HOLDER_PREFIX, MAX_SECONDARY_CREATORS_LEN, NAME_MAX_LEN,
-        PAYOUT_TICKET_PREFIX, SECONDARY_METADATA_CREATORS_PREFIX, VAULT_OWNER_PREFIX,
-    },
+    utils::*,
 };
 use anchor_lang::{
     prelude::*,
@@ -252,6 +246,8 @@ pub mod fixed_price_sale {
                 ],
             )?;
         }
+
+        market.funds_collected = market.funds_collected.checked_add(market.price).ok_or(ErrorCode::MathOverflow)?;
 
         mpl_mint_new_edition_from_master_edition_via_token(
             &new_metadata.to_account_info(),
@@ -521,75 +517,27 @@ pub mod fixed_price_sale {
 
         let is_native = market.treasury_mint == System::id();
 
-        // Calculate amount
-        let total_amount = if is_native {
-            treasury_holder.lamports()
-        } else {
-            let token_account = spl_token::state::Account::unpack(&treasury_holder.data.borrow())?;
-            if token_account.owner != treasury_owner.key() {
-                return Err(ErrorCode::DerivedKeyInvalid.into());
-            }
-
-            token_account.amount
-        };
         let amount = if metadata.primary_sale_happened {
-            if let Some(funder_creator) = funder_creator {
-                let share_bp = (funder_creator.share as u64)
-                    .checked_mul(100)
-                    .ok_or(ErrorCode::MathOverflow)?;
-                total_amount
-                    .checked_mul(share_bp)
-                    .ok_or(ErrorCode::MathOverflow)?
-                    .checked_div(10000)
-                    .ok_or(ErrorCode::MathOverflow)?
-            } else {
-                0
-            }
-        } else {
             if funder_creator.is_some() && funder_key == market.owner {
+                // if funder is NFT creator and market owner at the same time
+                // he will receive both shares
                 let funder_creator = funder_creator.as_ref().unwrap();
 
-                let x = (total_amount
-                    .checked_mul(metadata.data.seller_fee_basis_points as u64)
-                    .ok_or(ErrorCode::MathOverflow)?
-                    .checked_div(10000)
-                    .ok_or(ErrorCode::MathOverflow)?)
-                .checked_mul(funder_creator.share as u64)
-                .ok_or(ErrorCode::MathOverflow)?
-                .checked_div(100)
-                .ok_or(ErrorCode::MathOverflow)?;
+                let funder_as_creator_share = calculate_secondary_shares_for_creator(market.funds_collected, metadata.data.seller_fee_basis_points as u64, funder_creator.share as u64)?;
 
-                let y = total_amount
-                    .checked_sub(
-                        total_amount
-                            .checked_mul(metadata.data.seller_fee_basis_points as u64)
-                            .ok_or(ErrorCode::MathOverflow)?
-                            .checked_div(10000)
-                            .ok_or(ErrorCode::MathOverflow)?,
-                    )
-                    .ok_or(ErrorCode::MathOverflow)?;
+                let funder_as_market_owner_share = calculate_secondary_shares_for_market_owner(market.funds_collected, metadata.data.seller_fee_basis_points as u64)?;
 
-                x.checked_add(y).ok_or(ErrorCode::MathOverflow)?
+                funder_as_creator_share.checked_add(funder_as_market_owner_share).ok_or(ErrorCode::MathOverflow)?
             } else if let Some(funder_creator) = &funder_creator {
-                (total_amount
-                    .checked_mul(metadata.data.seller_fee_basis_points as u64)
-                    .ok_or(ErrorCode::MathOverflow)?
-                    .checked_div(10000)
-                    .ok_or(ErrorCode::MathOverflow)?)
-                .checked_mul(funder_creator.share as u64)
-                .ok_or(ErrorCode::MathOverflow)?
-                .checked_div(100)
-                .ok_or(ErrorCode::MathOverflow)?
+                calculate_secondary_shares_for_creator(market.funds_collected, metadata.data.seller_fee_basis_points as u64, funder_creator.share as u64)?
             } else {
-                total_amount
-                    .checked_sub(
-                        total_amount
-                            .checked_mul(metadata.data.seller_fee_basis_points as u64)
-                            .ok_or(ErrorCode::MathOverflow)?
-                            .checked_div(10000)
-                            .ok_or(ErrorCode::MathOverflow)?,
-                    )
-                    .ok_or(ErrorCode::MathOverflow)?
+                calculate_secondary_shares_for_market_owner(market.funds_collected, metadata.data.seller_fee_basis_points as u64)?
+            }
+        } else {
+            if let Some(funder_creator) = funder_creator {
+                calculate_primary_shares_for_creator(market.funds_collected, funder_creator.share as u64)?
+            } else {
+                return Err(ErrorCode::MarketOwnerDoesntHaveShares.into());
             }
         };
 
@@ -675,7 +623,7 @@ pub mod fixed_price_sale {
 
     pub fn create_market<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateMarket<'info>>,
-        _treasyry_owner_bump: u8,
+        _treasury_owner_bump: u8,
         name: String,
         description: String,
         mutable: bool,
@@ -921,6 +869,16 @@ pub mod fixed_price_sale {
 }
 
 #[derive(Accounts)]
+#[instruction(name: String, description: String)]
+pub struct CreateStore<'info> {
+    #[account(mut)]
+    admin: Signer<'info>,
+    #[account(init, space=Store::LEN, payer=admin)]
+    store: Box<Account<'info, Store>>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction(master_edition_bump:u8, vault_owner_bump: u8, max_supply: Option<u64>)]
 pub struct InitSellingResource<'info> {
     #[account(has_one=admin)]
@@ -947,12 +905,20 @@ pub struct InitSellingResource<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(name: String, description: String)]
-pub struct CreateStore<'info> {
-    #[account(mut)]
-    admin: Signer<'info>,
-    #[account(init, space=Store::LEN, payer=admin)]
+#[instruction(treasury_owner_bump: u8, name: String, description: String, mutable: bool, price: u64, pieces_in_one_wallet: Option<u64>, start_date: u64, end_date: Option<u64>)]
+pub struct CreateMarket<'info> {
+    #[account(init, space=Market::LEN, payer=selling_resource_owner)]
+    market: Box<Account<'info, Market>>,
     store: Box<Account<'info, Store>>,
+    #[account(mut)]
+    selling_resource_owner: Signer<'info>,
+    #[account(mut, has_one=store)]
+    selling_resource: Box<Account<'info, SellingResource>>,
+    mint: UncheckedAccount<'info>,
+    #[account(mut)]
+    treasury_holder: UncheckedAccount<'info>,
+    #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasury_owner_bump)]
+    owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
 }
 
@@ -997,6 +963,32 @@ pub struct Buy<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(treasury_owner_bump: u8, payout_ticket_bump: u8)]
+pub struct Withdraw<'info> {
+    #[account(has_one=treasury_holder, has_one=selling_resource, has_one=treasury_mint)]
+    market: Box<Account<'info, Market>>,
+    selling_resource: Box<Account<'info, SellingResource>>,
+    #[account(owner=mpl_token_metadata::id())]
+    metadata: UncheckedAccount<'info>,
+    #[account(mut)]
+    treasury_holder: UncheckedAccount<'info>,
+    treasury_mint: UncheckedAccount<'info>,
+    #[account(seeds=[HOLDER_PREFIX.as_bytes(), market.treasury_mint.as_ref(), market.selling_resource.as_ref()], bump=treasury_owner_bump)]
+    owner: UncheckedAccount<'info>,
+    #[account(mut)]
+    destination: UncheckedAccount<'info>,
+    funder: UncheckedAccount<'info>,
+    payer: Signer<'info>,
+    #[account(mut, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump=payout_ticket_bump)]
+    payout_ticket: UncheckedAccount<'info>,
+    rent: Sysvar<'info, Rent>,
+    clock: Sysvar<'info, Clock>,
+    token_program: Program<'info, Token>,
+    associated_token_program: Program<'info, AssociatedToken>,
+    system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 #[instruction()]
 pub struct CloseMarket<'info> {
     #[account(mut, has_one=owner)]
@@ -1033,32 +1025,6 @@ pub struct ChangeMarket<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(treasury_owner_bump: u8, payout_ticket_bump: u8)]
-pub struct Withdraw<'info> {
-    #[account(has_one=treasury_holder, has_one=selling_resource, has_one=treasury_mint)]
-    market: Box<Account<'info, Market>>,
-    selling_resource: Box<Account<'info, SellingResource>>,
-    #[account(owner=mpl_token_metadata::id())]
-    metadata: UncheckedAccount<'info>,
-    #[account(mut)]
-    treasury_holder: UncheckedAccount<'info>,
-    treasury_mint: UncheckedAccount<'info>,
-    #[account(seeds=[HOLDER_PREFIX.as_bytes(), market.treasury_mint.as_ref(), market.selling_resource.as_ref()], bump=treasury_owner_bump)]
-    owner: UncheckedAccount<'info>,
-    #[account(mut)]
-    destination: UncheckedAccount<'info>,
-    funder: UncheckedAccount<'info>,
-    payer: Signer<'info>,
-    #[account(mut, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump=payout_ticket_bump)]
-    payout_ticket: UncheckedAccount<'info>,
-    rent: Sysvar<'info, Rent>,
-    clock: Sysvar<'info, Clock>,
-    token_program: Program<'info, Token>,
-    associated_token_program: Program<'info, AssociatedToken>,
-    system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
 #[instruction(vault_owner_bump: u8)]
 pub struct ClaimResource<'info> {
     #[account(has_one=selling_resource, has_one=treasury_holder)]
@@ -1079,24 +1045,6 @@ pub struct ClaimResource<'info> {
     clock: Sysvar<'info, Clock>,
     token_program: Program<'info, Token>,
     token_metadata_program: UncheckedAccount<'info>,
-    system_program: Program<'info, System>,
-}
-
-#[derive(Accounts)]
-#[instruction(treasury_owner_bump: u8, name: String, description: String, mutable: bool, price: u64, pieces_in_one_wallet: Option<u64>, start_date: u64, end_date: Option<u64>)]
-pub struct CreateMarket<'info> {
-    #[account(init, space=Market::LEN, payer=selling_resource_owner)]
-    market: Box<Account<'info, Market>>,
-    store: Box<Account<'info, Store>>,
-    #[account(mut)]
-    selling_resource_owner: Signer<'info>,
-    #[account(mut, has_one=store)]
-    selling_resource: Box<Account<'info, SellingResource>>,
-    mint: UncheckedAccount<'info>,
-    #[account(mut)]
-    treasury_holder: UncheckedAccount<'info>,
-    #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasury_owner_bump)]
-    owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
 }
 
