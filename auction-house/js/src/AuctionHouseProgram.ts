@@ -19,9 +19,6 @@ export class AuctionHouseProgram extends Program {
   static readonly SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
     'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
   );
-  static readonly AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
-    'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
-  );
 
   static async findAssociatedTokenAccountAddress(
     mint: PublicKey,
@@ -49,8 +46,11 @@ export class AuctionHouseProgram extends Program {
 
   static async findAuctionHouseProgramAsSignerAddress(): Promise<[PublicKey, number]> {
     return await PublicKey.findProgramAddress(
-      [Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'), Buffer.from(AuctionHouseProgram.SIGNER, 'utf8')],
-      AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
+      [
+        Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'),
+        Buffer.from(AuctionHouseProgram.SIGNER, 'utf8'),
+      ],
+      AuctionHouseProgram.PUBKEY,
     );
   }
 
@@ -63,7 +63,7 @@ export class AuctionHouseProgram extends Program {
         auctionHouse.toBuffer(),
         Buffer.from(AuctionHouseProgram.TREASURY, 'utf8'),
       ],
-      AuctionHouseProgram.AUCTION_HOUSE_PROGRAM_ID,
+      AuctionHouseProgram.PUBKEY,
     );
   };
 
