@@ -101,6 +101,28 @@ export class AuctionHouseProgram extends Program {
     );
   }
 
+  static async findPublicBidTradeStateAddress(
+    wallet: PublicKey,
+    auctionHouse: PublicKey,
+    treasuryMint: PublicKey,
+    tokenMint: PublicKey,
+    price: string,
+    tokenSize: string,
+  ): Promise<[PublicKey, number]> {
+    return PublicKey.findProgramAddress(
+      [
+        Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'),
+        wallet.toBuffer(),
+        auctionHouse.toBuffer(),
+        treasuryMint.toBuffer(),
+        tokenMint.toBuffer(),
+        Buffer.from(price, 'utf8'),
+        Buffer.from(tokenSize, 'utf8'),
+      ],
+      AuctionHouseProgram.PUBKEY,
+    );
+  }
+
   static async findAuctionHouseFeeAddress(auctionHouse: PublicKey) {
     return PublicKey.findProgramAddress(
       [
