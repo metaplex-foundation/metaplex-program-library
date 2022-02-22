@@ -75,23 +75,16 @@ export class Account<T = unknown> {
     pubkeys: AnyPublicKey[],
     commitment: Commitment,
   ) {
-    const args = connection._buildArgs([pubkeys.map((k) => k.toString())], commitment, 'base64');
-    const unsafeRes = await (connection as ConnnectionWithRpcRequest)._rpcRequest(
-      'getMultipleAccounts',
-      args,
+    const infos = await connection.getMultipleAccountsInfo(
+      pubkeys.map((k) => new PublicKey(k)),
+      {
+        commitment,
+        encoding: 'base64',
+      },
     );
-    if (unsafeRes.error) {
-      throw new Error('failed to get info about accounts ' + unsafeRes.error.message);
-    }
-    if (!unsafeRes.result.value) return;
-    const infos = (unsafeRes.result.value as AccountInfo<string[]>[])
-      .filter(Boolean)
-      .map((info) => ({
-        ...info,
-        data: Buffer.from(info.data[0], 'base64'),
-      })) as AccountInfo<Buffer>[];
+
     return infos.reduce((acc, info, index) => {
-      acc.set(pubkeys[index], info);
+      acc.set(pubkeys[index], info as AccountInfo<Buffer>);
       return acc;
     }, new Map<AnyPublicKey, AccountInfo<Buffer>>());
   }
