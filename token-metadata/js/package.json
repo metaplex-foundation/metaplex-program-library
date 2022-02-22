@@ -47,6 +47,7 @@
   },
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.0.3",
+    "@metaplex-foundation/solita": "0.1.0",
     "@solana/spl-token": "0.1.8",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",

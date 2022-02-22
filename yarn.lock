@@ -1045,7 +1045,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/metaplex-program-library@workspace:."
   dependencies:
-    "@metaplex-foundation/solita": 0.1.0
     "@project-serum/anchor": ^0.19.0
     "@project-serum/common": ^0.0.1-beta.3
     "@types/mocha": ^9.0.0
@@ -1215,6 +1214,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/amman": ^0.0.3
     "@metaplex-foundation/mpl-core": ^0.0.2
+    "@metaplex-foundation/solita": 0.1.0
     "@solana/spl-token": 0.1.8
     "@solana/web3.js": ^1.31.0
     "@types/debug": ^4.1.7
