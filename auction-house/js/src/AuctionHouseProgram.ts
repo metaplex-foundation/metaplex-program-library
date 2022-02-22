@@ -15,9 +15,23 @@ export class AuctionHouseProgram extends Program {
   static readonly errors = errors;
   static readonly accounts = accounts;
 
+  static readonly TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+  static readonly SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID = new PublicKey(
+    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+  );
   static readonly AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
     'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
   );
+
+  static async findAssociatedTokenAccountAddress(
+    mint: PublicKey,
+    buyer: PublicKey,
+  ): Promise<[PublicKey, number]> {
+    return await PublicKey.findProgramAddress(
+      [buyer.toBuffer(), AuctionHouseProgram.TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+      AuctionHouseProgram.SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+    );
+  }
 
   static async findAuctionHouseAddress(
     creator: PublicKey,
