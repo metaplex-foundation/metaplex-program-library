@@ -1058,7 +1058,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": 0.0.7
     "@metaplex-foundation/beet-solana": 0.0.6
-    "@metaplex-foundation/mpl-core": 0.0.2
+    "@metaplex-foundation/mpl-core": 0.0.3
     "@solana/web3.js": ^1.31.0
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
@@ -1066,6 +1066,7 @@ __metadata:
     rimraf: ^3.0.2
     spok: ^1.4.3
     tape: ^5.3.2
+    typescript: ^4.5.5
   languageName: unknown
   linkType: soft
 
@@ -1094,7 +1095,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/mpl-core@0.0.2, @metaplex-foundation/mpl-core@^0.0.2, @metaplex-foundation/mpl-core@workspace:core/js":
+"@metaplex-foundation/mpl-core@^0.0.2, @metaplex-foundation/mpl-core@workspace:core/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
   dependencies:
@@ -1105,6 +1106,16 @@ __metadata:
     rimraf: ^3.0.2
   languageName: unknown
   linkType: soft
+
+"@metaplex-foundation/mpl-core@npm:0.0.3":
+  version: 0.0.3
+  resolution: "@metaplex-foundation/mpl-core@npm:0.0.3"
+  dependencies:
+    "@solana/web3.js": ^1.31.0
+    bs58: ^4.0.1
+  checksum: ed6f5e0d9bfa9a5e6de481fcb02a796ccf3a1763473baf7175a6806fd956d5a9b95fa35f190dcb2a76812124287a4003a096e7c55b78d89ab501feac693bf7bf
+  languageName: node
+  linkType: hard
 
 "@metaplex-foundation/mpl-fixed-price-sale@workspace:fixed-price-sale/js":
   version: 0.0.0-use.local
@@ -8016,7 +8027,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.5.2":
+"typescript@npm:^4.5.2, typescript@npm:^4.5.5":
   version: 4.5.5
   resolution: "typescript@npm:4.5.5"
   bin:
@@ -8026,7 +8037,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.5.2#~builtin<compat/typescript>":
+"typescript@patch:typescript@^4.5.2#~builtin<compat/typescript>, typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>":
   version: 4.5.5
   resolution: "typescript@patch:typescript@npm%3A4.5.5#~builtin<compat/typescript>::version=4.5.5&hash=142761"
   bin:
