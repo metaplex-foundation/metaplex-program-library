@@ -28,9 +28,16 @@ type RevokeCollectionAuthorityParams = {
 export class RevokeCollectionAuthority extends Transaction {
   constructor(options: TransactionCtorFields, params: RevokeCollectionAuthorityParams) {
     super(options);
-    const { metadata, collectionAuthorityRecord, delegateAuthority ,newCollectionAuthority, updateAuthority, mint } = params;
+    const {
+      metadata,
+      collectionAuthorityRecord,
+      delegateAuthority,
+      newCollectionAuthority,
+      updateAuthority,
+      mint,
+    } = params;
     const delegatedAuth = delegateAuthority || newCollectionAuthority;
-    if(!delegateAuthority && !newCollectionAuthority) {
+    if (!delegatedAuth) {
       throw new Error('Must provide either a delegateAuthority');
     }
     const data = RevokeCollectionAuthorityArgs.serialize();
