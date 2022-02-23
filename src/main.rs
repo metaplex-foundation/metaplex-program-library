@@ -77,7 +77,7 @@ async fn main() -> Result<()> {
     tracing::info!("Lend me some sugar, I am your neighbor.");
 
     match cli.command {
-        Commands::MintOne {
+        Commands::Mint {
             keypair,
             rpc_url,
             cache,

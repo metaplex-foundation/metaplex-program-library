@@ -15,7 +15,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Mint one NFT from candy machine
-    MintOne {
+    Mint {
         /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
         #[clap(short, long)]
         keypair: Option<String>,
