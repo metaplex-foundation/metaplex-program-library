@@ -72,3 +72,26 @@ pub fn find_trade_state_address(
         &id(),
     )
 }
+
+/// Return trade state `Pubkey` address and bump seed.
+pub fn find_public_bid_trade_state_address(
+    wallet: &Pubkey,
+    auction_house: &Pubkey,
+    treasury_mint: &Pubkey,
+    token_mint: &Pubkey,
+    price: u64,
+    token_size: u64,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PREFIX.as_bytes(),
+            wallet.as_ref(),
+            auction_house.as_ref(),
+            treasury_mint.as_ref(),
+            token_mint.as_ref(),
+            &price.to_le_bytes(),
+            &token_size.to_le_bytes(),
+        ],
+        &id(),
+    )
+}

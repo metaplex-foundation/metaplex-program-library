@@ -67,8 +67,23 @@ pub mod token_entangler {
         entangled_pair.treasury_mint = treasury_mint.key();
         entangled_pair.mint_a = mint_a.key();
 
-        assert_metadata_valid(metadata_a, Some(&edition_a), &mint_a.key())?;
-        assert_metadata_valid(metadata_b, Some(&edition_b), &mint_b.key())?;
+        let edition_option_a = if edition_a.data_len() > 0 {
+            Some(edition_a)
+        } else {
+            None
+        };
+
+        let edition_option_b = if edition_b.data_len() > 0 {
+            Some(edition_b)
+        } else {
+            None
+        };
+
+        require!(get_mint_supply(mint_a)? == 1, ErrorCode::MustHaveSupplyOne);
+        require!(get_mint_supply(mint_b)? == 1, ErrorCode::MustHaveSupplyOne);
+
+        assert_metadata_valid(metadata_a, edition_option_a, &mint_a.key())?;
+        assert_metadata_valid(metadata_b, edition_option_b, &mint_b.key())?;
 
         assert_is_ata(&token_b.to_account_info(), &payer.key(), &mint_b.key())?;
 
@@ -292,13 +307,13 @@ pub struct CreateEntangledPair<'info> {
     metadata_b: UncheckedAccount<'info>,
     edition_b: UncheckedAccount<'info>,
     #[account(mut)]
-    token_b: Account<'info, TokenAccount>,
+    token_b: Box<Account<'info, TokenAccount>>,
     #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), A_NAME.as_bytes()], bump=token_a_escrow_bump)]
     token_a_escrow: UncheckedAccount<'info>,
     #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), B_NAME.as_bytes()], bump=token_b_escrow_bump)]
     token_b_escrow: UncheckedAccount<'info>,
     #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump=bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
-    entangled_pair: Account<'info, EntangledPair>,
+    entangled_pair: Box<Account<'info, EntangledPair>>,
     #[account(mut, seeds=[PREFIX.as_bytes(), mint_b.key().as_ref(), mint_a.key().as_ref()], bump=reverse_bump)]
     reverse_entangled_pair: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
@@ -402,4 +417,6 @@ pub enum ErrorCode {
     InvalidMint,
     #[msg("This pair already exists as it's reverse")]
     EntangledPairExists,
+    #[msg("Must have supply one!")]
+    MustHaveSupplyOne,
 }

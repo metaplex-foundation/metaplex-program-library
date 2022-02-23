@@ -275,7 +275,7 @@ pub fn process_update_metadata_accounts_v2(
                 true,
             )?;
             metadata.data = compatible_data;
-            assert_collection_update_is_valid(&metadata.collection, &data.collection)?;
+            assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
             metadata.collection = data.collection;
         } else {
             return Err(MetadataError::DataIsImmutable.into());

@@ -25,6 +25,7 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address, AssociatedToken},
     token::{self, accessor, Mint, Token, TokenAccount},
 };
+use mpl_token_metadata::utils::get_supply_off_master_edition;
 
 declare_id!("SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo");
 
@@ -178,7 +179,10 @@ pub mod fixed_price_sale {
         let system_program = &ctx.accounts.system_program;
 
         let metadata_mint = selling_resource.resource.clone();
-        let edition = selling_resource.supply;
+        // do supply +1 to increase master edition supply
+        let edition = get_supply_off_master_edition(&master_edition.to_account_info())?
+            .checked_add(1)
+            .ok_or(ErrorCode::MathOverflow)?;
 
         // Check, that `Market` is not in `Suspended` state
         if market.state == MarketState::Suspended {

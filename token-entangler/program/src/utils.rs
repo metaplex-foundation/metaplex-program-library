@@ -8,6 +8,7 @@ use anchor_lang::{
     },
 };
 use anchor_spl::token::Token;
+use arrayref::array_ref;
 use mpl_token_metadata::state::Metadata;
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account};
@@ -336,4 +337,14 @@ pub fn assert_derivation(
         return Err(ErrorCode::DerivedKeyInvalid.into());
     }
     Ok(bump)
+}
+
+/// cheap method to just get supply of a mint without unpacking whole object
+pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> {
+    // In token program, 36, 8, 1, 1 is the layout, where the first 8 is supply u64.
+    // so we start at 36.
+    let data = account_info.try_borrow_data().unwrap();
+    let bytes = array_ref![data, 36, 8];
+
+    Ok(u64::from_le_bytes(*bytes))
 }
