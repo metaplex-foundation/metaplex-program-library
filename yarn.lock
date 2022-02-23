@@ -1014,6 +1014,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": ^0.0.8
     "@metaplex-foundation/beet-solana": ^0.0.6
+    "@metaplex-foundation/mpl-core": ^0.0.4
     "@solana/web3.js": ^1.35.1
     eslint: ^8.3.0
     prettier: ^2.5.1
@@ -1021,7 +1022,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/mpl-core@0.0.4, @metaplex-foundation/mpl-core@workspace:core/js":
+"@metaplex-foundation/mpl-core@0.0.4, @metaplex-foundation/mpl-core@^0.0.4, @metaplex-foundation/mpl-core@workspace:core/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
   dependencies:
