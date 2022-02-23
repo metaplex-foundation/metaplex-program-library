@@ -1,7 +1,7 @@
 // @ts-check
 'use strict';
 
-const PROGRAM_NAME = 'mpl_candy_machine';
+const PROGRAM_NAME = 'candy_machine';
 const PROGRAM_ID = 'cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ';
 
 const path = require('path');
