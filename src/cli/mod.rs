@@ -27,6 +27,10 @@ pub enum Commands {
         /// Path to the cache file, defaults to "cache.json"
         #[clap(long, default_value = "cache.json")]
         cache: String,
+
+        /// Amount of NFTs to be minted in bulk
+        #[clap(short, long)]
+        number: Option<u64>,
     },
 
     /// Upload assets to storage and then insert items into candy machine config

@@ -15,7 +15,7 @@ use spl_token::{
     instruction::{initialize_mint, mint_to},
     ID as TOKEN_PROGRAM_ID,
 };
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
@@ -26,16 +26,17 @@ use crate::candy_machine::*;
 use crate::common::*;
 use crate::mint::pdas::*;
 
-pub struct MintOneArgs {
+pub struct MintArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
     pub cache: String,
+    pub number: Option<u64>,
 }
 
-pub fn process_mint_one(args: MintOneArgs) -> Result<()> {
+pub fn process_mint(args: MintArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let cache = load_cache(&args.cache)?;
-    let client = setup_client(&sugar_config)?;
+    let client = Arc::new(setup_client(&sugar_config)?);
 
     let candy_machine_id = match Pubkey::from_str(&cache.program.candy_machine) {
         Ok(candy_machine_id) => candy_machine_id,
@@ -48,19 +49,39 @@ pub fn process_mint_one(args: MintOneArgs) -> Result<()> {
         }
     };
 
-    let candy_machine_state = get_candy_machine_state(&sugar_config, &candy_machine_id)?;
+    let candy_machine_state = Arc::new(get_candy_machine_state(&sugar_config, &candy_machine_id)?);
+
+    let number = match args.number {
+        Some(number) => number,
+        None => 1,
+    };
 
     info!("Minting NFT from candy machine: {}", &candy_machine_id);
     info!("Candy machine program id: {:?}", CANDY_MACHINE_PROGRAM_ID);
-    mint_one(client, candy_machine_id, candy_machine_state)?;
+
+    if number == 1 {
+        mint(
+            Arc::clone(&client),
+            candy_machine_id,
+            Arc::clone(&candy_machine_state),
+        )?;
+    } else {
+        for _n in 1..=number {
+            mint(
+                Arc::clone(&client),
+                candy_machine_id,
+                Arc::clone(&candy_machine_state),
+            )?;
+        }
+    }
 
     Ok(())
 }
 
-pub fn mint_one(
-    client: Client,
+pub fn mint(
+    client: Arc<Client>,
     candy_machine_id: Pubkey,
-    candy_machine_state: CandyMachine,
+    candy_machine_state: Arc<CandyMachine>,
 ) -> Result<()> {
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
@@ -70,7 +91,7 @@ pub fn mint_one(
     let payer = program.payer();
     let wallet = candy_machine_state.wallet;
 
-    let candy_machine_data = candy_machine_state.data;
+    let candy_machine_data = &candy_machine_state.data;
 
     let nft_mint = Keypair::new();
     let metaplex_program_id = Pubkey::from_str(METAPLEX_PROGRAM_ID)?;
@@ -121,7 +142,7 @@ pub fn mint_one(
     let mut additional_signers: Vec<Keypair> = Vec::new();
 
     // Check whitelist mint settings
-    if let Some(wl_mint_settings) = candy_machine_data.whitelist_mint_settings {
+    if let Some(wl_mint_settings) = &candy_machine_data.whitelist_mint_settings {
         let whitelist_token = get_ata_for_mint(&wl_mint_settings.mint, &payer);
 
         additional_accounts.push(AccountMeta {
