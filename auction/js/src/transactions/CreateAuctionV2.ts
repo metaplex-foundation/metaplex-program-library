@@ -17,7 +17,7 @@ type Args = CreateAuctionArgsType & {
 };
 
 export class CreateAuctionV2Args extends Borsh.Data<Args> {
-  static readonly SCHEMA = new Map([
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...WinnerLimit.SCHEMA,
     ...PriceFloor.SCHEMA,
     ...CreateAuctionV2Args.struct([
@@ -38,34 +38,34 @@ export class CreateAuctionV2Args extends Borsh.Data<Args> {
 
   instruction = 7;
   /// How many winners are allowed for this auction. See AuctionData.
-  winners: WinnerLimit;
+  winners!: WinnerLimit;
   /// End time is the cut-off point that the auction is forced to end by. See AuctionData.
-  endAuctionAt: BN | null;
+  endAuctionAt?: BN;
   /// Gap time is how much time after the previous bid where the auction ends. See AuctionData.
-  auctionGap: BN | null;
+  auctionGap?: BN;
   /// Token mint for the SPL token used for bidding.
-  tokenMint: StringPublicKey;
+  tokenMint!: StringPublicKey;
   /// Authority
-  authority: StringPublicKey;
+  authority!: StringPublicKey;
   /// The resource being auctioned. See AuctionData.
-  resource: StringPublicKey;
+  resource!: StringPublicKey;
   /// Set a price floor.
-  priceFloor: PriceFloor;
+  priceFloor!: PriceFloor;
   /// Add a tick size increment
-  tickSize: BN | null;
+  tickSize?: BN;
   /// Add a minimum percentage increase each bid must meet.
-  gapTickSizePercentage: number | null;
+  gapTickSizePercentage?: number;
   /// Add a instant sale price.
-  instantSalePrice: BN | null;
+  instantSalePrice?: BN;
   /// Auction name
-  name: number[] | null;
+  name?: number[];
 }
 
 type CreateAuctionV2Params = {
   auction: PublicKey;
   auctionExtended: PublicKey;
   creator: PublicKey;
-  args: CreateAuctionV2Args;
+  args: Args;
 };
 
 export class CreateAuctionV2 extends Transaction {

@@ -18,7 +18,7 @@ type Args = {
   name: number[] | null;
 };
 export class AuctionDataExtended extends Borsh.Data<Args> {
-  static readonly SCHEMA = AuctionDataExtended.struct([
+  static readonly SCHEMA: Map<any, any> = AuctionDataExtended.struct([
     ['totalUncancelledBids', 'u64'],
     ['tickSize', { kind: 'option', type: 'u64' }],
     ['gapTickSizePercentage', { kind: 'option', type: 'u8' }],
@@ -26,11 +26,11 @@ export class AuctionDataExtended extends Borsh.Data<Args> {
     ['name', { kind: 'option', type: [32] }],
   ]);
 
-  totalUncancelledBids: BN;
-  tickSize: BN | null;
-  gapTickSizePercentage: number | null;
-  instantSalePrice: BN | null;
-  name: number[] | null;
+  totalUncancelledBids!: BN;
+  tickSize?: BN;
+  gapTickSizePercentage?: number;
+  instantSalePrice?: BN;
+  name?: number[];
 }
 
 export class AuctionExtended extends Account<AuctionDataExtended> {

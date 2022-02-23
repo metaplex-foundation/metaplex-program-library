@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert';
 import { Borsh, Transaction, StringPublicKey } from '@metaplex-foundation/mpl-core';
 import {
   PublicKey,
@@ -12,15 +13,15 @@ import BN from 'bn.js';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 export class PlaceBidArgs extends Borsh.Data<{ resource: StringPublicKey; amount: BN }> {
-  static readonly SCHEMA = PlaceBidArgs.struct([
+  static readonly SCHEMA: Map<any, any> = PlaceBidArgs.struct([
     ['instruction', 'u8'],
     ['amount', 'u64'],
     ['resource', 'pubkeyAsString'],
   ]);
 
   instruction = 6;
-  resource: StringPublicKey;
-  amount: BN;
+  resource!: StringPublicKey;
+  amount!: BN;
 }
 
 type PlaceBidParams = {
@@ -41,6 +42,7 @@ export class PlaceBid extends Transaction {
   constructor(options: TransactionCtorFields, params: PlaceBidParams) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'feePayer expected');
     const {
       auction,
       auctionExtended,

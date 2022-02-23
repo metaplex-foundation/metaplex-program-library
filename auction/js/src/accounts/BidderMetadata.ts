@@ -19,7 +19,7 @@ type Args = {
   cancelled: boolean;
 };
 export class BidderMetadataData extends Borsh.Data<Args> {
-  static readonly SCHEMA = BidderMetadataData.struct([
+  static readonly SCHEMA: Map<any, any> = BidderMetadataData.struct([
     ['bidderPubkey', 'pubkeyAsString'],
     ['auctionPubkey', 'pubkeyAsString'],
     ['lastBid', 'u64'],
@@ -28,16 +28,16 @@ export class BidderMetadataData extends Borsh.Data<Args> {
   ]);
 
   // Relationship with the bidder who's metadata this covers.
-  bidderPubkey: StringPublicKey;
+  bidderPubkey!: StringPublicKey;
   // Relationship with the auction this bid was placed on.
-  auctionPubkey: StringPublicKey;
+  auctionPubkey!: StringPublicKey;
   // Amount that the user bid.
-  lastBid: BN;
+  lastBid!: BN;
   // Tracks the last time this user bid.
-  lastBidTimestamp: BN;
+  lastBidTimestamp!: BN;
   // Whether the last bid the user made was cancelled. This should also be enough to know if the
   // user is a winner, as if cancelled it implies previous bids were also cancelled.
-  cancelled: boolean;
+  cancelled!: boolean;
 }
 
 export class BidderMetadata extends Account<BidderMetadataData> {

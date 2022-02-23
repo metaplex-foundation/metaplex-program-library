@@ -17,7 +17,7 @@ type Args = {
   emptied: boolean;
 };
 export class BidderPotData extends Borsh.Data<Args> {
-  static readonly SCHEMA = BidderPotData.struct([
+  static readonly SCHEMA: Map<any, any> = BidderPotData.struct([
     ['bidderPot', 'pubkeyAsString'],
     ['bidderAct', 'pubkeyAsString'],
     ['auctionAct', 'pubkeyAsString'],
@@ -25,13 +25,13 @@ export class BidderPotData extends Borsh.Data<Args> {
   ]);
 
   /// Points at actual pot that is a token account
-  bidderPot: StringPublicKey;
+  bidderPot!: StringPublicKey;
   /// Originating bidder account
-  bidderAct: StringPublicKey;
+  bidderAct!: StringPublicKey;
   /// Auction account
-  auctionAct: StringPublicKey;
+  auctionAct!: StringPublicKey;
   /// emptied or not
-  emptied: boolean;
+  emptied!: boolean;
 }
 
 export class BidderPot extends Account<BidderPotData> {

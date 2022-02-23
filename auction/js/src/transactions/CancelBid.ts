@@ -11,13 +11,13 @@ import {
 import { AuctionProgram } from '../AuctionProgram';
 
 export class CancelBidArgs extends Borsh.Data<{ resource: StringPublicKey }> {
-  static readonly SCHEMA = CancelBidArgs.struct([
+  static readonly SCHEMA: Map<any, any> = CancelBidArgs.struct([
     ['instruction', 'u8'],
     ['resource', 'pubkeyAsString'],
   ]);
 
   instruction = 0;
-  resource: StringPublicKey;
+  resource!: StringPublicKey;
 }
 
 type CancelBidParams = {
