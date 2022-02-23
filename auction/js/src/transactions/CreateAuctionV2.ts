@@ -20,7 +20,7 @@ export class CreateAuctionV2Args extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
     ...WinnerLimit.SCHEMA,
     ...PriceFloor.SCHEMA,
-    ...this.struct([
+    ...CreateAuctionV2Args.struct([
       ['instruction', 'u8'],
       ['winners', WinnerLimit],
       ['endAuctionAt', { kind: 'option', type: 'u64' }],
