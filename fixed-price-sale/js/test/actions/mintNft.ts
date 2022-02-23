@@ -1,6 +1,5 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
-  Actions,
   defaultSendOptions,
   TransactionHandler,
   assertConfirmedTransaction,
@@ -18,6 +17,7 @@ import { strict as assert } from 'assert';
 
 import { createTokenAccount } from '../transactions/createTokenAccount';
 import { createMetadata } from './createMetadata';
+import { CreateMint } from './createMintAccount';
 
 type MintNFTParams = {
   transactionHandler: TransactionHandler;
@@ -37,7 +37,7 @@ export async function mintNFT({
   connection,
   creators = null,
 }: MintNFTParams) {
-  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
