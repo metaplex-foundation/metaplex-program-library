@@ -21,7 +21,8 @@
     "allowSyntheticDefaultImports": true,
     "incremental": false,
     "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "useUnknownInCatchVariables": false
   },
   "include": ["./src"],
   "exclude": ["node_modules", "dist", "build", "lib"]
