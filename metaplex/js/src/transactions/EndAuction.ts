@@ -11,7 +11,7 @@ import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class EndAuctionArgs extends Borsh.Data<{ reveal: BN[] | null }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = EndAuctionArgs.struct([
     ['instruction', 'u8'],
     ['reveal', { kind: 'option', type: [BN, BN] }],
   ]);

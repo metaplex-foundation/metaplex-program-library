@@ -12,7 +12,7 @@ import { VaultProgram, ParamsWithStore } from '@metaplex-foundation/mpl-token-va
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class RedeemBidArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  static readonly SCHEMA = RedeemBidArgs.struct([['instruction', 'u8']]);
 
   instruction = 2;
 }
@@ -26,7 +26,7 @@ export class RedeemUnusedWinningConfigItemsAsAuctioneerArgs extends Borsh.Data<{
   winningConfigItemIndex: number;
   proxyCall: ProxyCallAddress;
 }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = RedeemUnusedWinningConfigItemsAsAuctioneerArgs.struct([
     ['instruction', 'u8'],
     ['winningConfigItemIndex', 'u8'],
     ['proxyCall', 'u8'],

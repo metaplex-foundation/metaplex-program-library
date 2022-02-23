@@ -13,7 +13,7 @@ import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetStoreV2Args extends Borsh.Data<{ public: boolean; settingsUri: string | null }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = SetStoreV2Args.struct([
     ['instruction', 'u8'],
     ['public', 'u8'],
     ['settingsUri', { kind: 'option', type: 'string' }],

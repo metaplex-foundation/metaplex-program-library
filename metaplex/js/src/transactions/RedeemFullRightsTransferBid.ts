@@ -13,7 +13,7 @@ import { MetaplexProgram } from '../MetaplexProgram';
 import { ProxyCallAddress, RedeemUnusedWinningConfigItemsAsAuctioneerArgs } from './RedeemBid';
 
 export class RedeemFullRightsTransferBidArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  static readonly SCHEMA = RedeemFullRightsTransferBidArgs.struct([['instruction', 'u8']]);
 
   instruction = 3;
 }

@@ -21,7 +21,7 @@ type Args = {
   tokenProgram: StringPublicKey;
 };
 export class StoreData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = StoreData.struct([
     ['key', 'u8'],
     ['public', 'u8'],
     ['auctionProgram', 'pubkeyAsString'],

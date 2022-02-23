@@ -56,7 +56,7 @@ export interface AmountRangeArgs {
 }
 
 export class AmountRange extends Borsh.Data<AmountRangeArgs> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = AmountRange.struct([
     ['amount', 'u64'],
     ['length', 'u64'],
   ]);
@@ -72,7 +72,7 @@ export interface ParticipationConfigV2Args {
 }
 
 export class ParticipationConfigV2 extends Borsh.Data<ParticipationConfigV2Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = ParticipationConfigV2.struct([
     ['winnerConstraint', 'u8'],
     ['nonWinningConstraint', 'u8'],
     ['fixedPrice', { kind: 'option', type: 'u64' }],
@@ -88,7 +88,7 @@ export interface ParticipationStateV2Args {
 }
 
 export class ParticipationStateV2 extends Borsh.Data<ParticipationStateV2Args> {
-  static readonly SCHEMA = this.struct([['collectedToAcceptPayment', 'u64']]);
+  static readonly SCHEMA = ParticipationStateV2.struct([['collectedToAcceptPayment', 'u64']]);
 
   collectedToAcceptPayment: BN;
 }
@@ -109,7 +109,7 @@ export class SafetyDepositConfigData extends Borsh.Data<SafetyDepositConfigDataA
     ...ParticipationConfigV2.SCHEMA,
     ...ParticipationStateV2.SCHEMA,
     ...AmountRange.SCHEMA,
-    ...this.struct([
+    ...SafetyDepositConfigData.struct([
       ['key', 'u8'],
       ['auctionManager', 'pubkeyAsString'],
       ['order', 'u64'],

@@ -15,7 +15,7 @@ export class InitAuctionManagerV2Args extends Borsh.Data<{
   lengthType: TupleNumericType;
   maxRanges: BN;
 }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = InitAuctionManagerV2Args.struct([
     ['instruction', 'u8'],
     ['amountType', 'u8'],
     ['lengthType', 'u8'],

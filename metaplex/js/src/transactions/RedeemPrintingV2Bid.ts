@@ -13,7 +13,7 @@ import BN from 'bn.js';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class RedeemPrintingV2BidArgs extends Borsh.Data<{ editionOffset: BN; winIndex: BN }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = RedeemPrintingV2BidArgs.struct([
     ['instruction', 'u8'],
     ['editionOffset', 'u64'],
     ['winIndex', 'u64'],

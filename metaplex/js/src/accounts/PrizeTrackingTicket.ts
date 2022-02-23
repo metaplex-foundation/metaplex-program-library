@@ -17,7 +17,7 @@ type Args = {
   redemptions: BN;
 };
 export class PrizeTrackingTicketData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = PrizeTrackingTicketData.struct([
     ['key', 'u8'],
     ['metadata', 'pubkeyAsString'],
     ['supplySnapshot', 'u64'],

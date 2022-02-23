@@ -14,7 +14,7 @@ import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetStoreArgs extends Borsh.Data<{ public: boolean }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = SetStoreArgs.struct([
     ['instruction', 'u8'],
     ['public', 'u8'],
   ]);

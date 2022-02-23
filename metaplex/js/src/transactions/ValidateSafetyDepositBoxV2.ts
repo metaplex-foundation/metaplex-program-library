@@ -16,7 +16,7 @@ export class ValidateSafetyDepositBoxV2Args extends Borsh.Data<{
 }> {
   static readonly SCHEMA = new Map([
     ...SafetyDepositConfigData.SCHEMA,
-    ...this.struct([
+    ...ValidateSafetyDepositBoxV2Args.struct([
       ['instruction', 'u8'],
       ['safetyDepositConfig', SafetyDepositConfigData],
     ]),

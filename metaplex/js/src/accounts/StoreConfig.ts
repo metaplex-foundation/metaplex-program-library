@@ -13,7 +13,7 @@ type Args = {
   settingsUri: string;
 };
 export class StoreConfigData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = StoreConfigData.struct([
     ['key', 'u8'],
     ['settingsUri', { kind: 'option', type: 'string' }],
   ]);

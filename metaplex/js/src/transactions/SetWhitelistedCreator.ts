@@ -10,7 +10,7 @@ import {
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetWhitelistedCreatorArgs extends Borsh.Data<{ activated: boolean }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = SetWhitelistedCreatorArgs.struct([
     ['instruction', 'u8'],
     ['activated', 'u8'],
   ]);

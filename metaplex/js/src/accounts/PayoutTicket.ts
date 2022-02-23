@@ -14,7 +14,7 @@ import { Buffer } from 'buffer';
 
 type Args = { recipient: StringPublicKey; amountPaid: BN };
 export class PayoutTicketData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = PayoutTicketData.struct([
     ['key', 'u8'],
     ['recipient', 'pubkeyAsString'],
     ['amountPaid', 'u64'],

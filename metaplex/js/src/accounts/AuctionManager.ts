@@ -29,7 +29,7 @@ export class AuctionManagerStateV2 extends Borsh.Data<{
   bidsPushedToAcceptPayment: BN;
   hasParticipation: boolean;
 }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = AuctionManagerStateV2.struct([
     ['status', 'u8'],
     ['safetyConfigItemsValidated', 'u64'],
     ['bidsPushedToAcceptPayment', 'u64'],
@@ -39,7 +39,7 @@ export class AuctionManagerStateV2 extends Borsh.Data<{
   status: AuctionManagerStatus;
   safetyConfigItemsValidated: BN;
   bidsPushedToAcceptPayment: BN;
-  hasParticipation;
+  hasParticipation: boolean;
 }
 
 type Args = {
@@ -53,7 +53,7 @@ type Args = {
 export class AuctionManagerV2Data extends Borsh.Data<Args> {
   static readonly SCHEMA = new Map([
     ...AuctionManagerStateV2.SCHEMA,
-    ...this.struct([
+    ...AuctionManagerV2Data.struct([
       ['key', 'u8'],
       ['store', 'pubkeyAsString'],
       ['authority', 'pubkeyAsString'],

@@ -12,7 +12,7 @@ import { AccountInfo, PublicKey } from '@solana/web3.js';
 
 type Args = { address: string; activated: boolean };
 export class WhitelistedCreatorData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = WhitelistedCreatorData.struct([
     ['key', 'u8'],
     ['address', 'pubkeyAsString'],
     ['activated', 'u8'],
