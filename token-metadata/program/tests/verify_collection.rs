@@ -949,6 +949,7 @@ mod verify_collection {
             mpl_token_metadata::id(),
             record,
             new_collection_authority.pubkey(),
+            context.payer.pubkey(),
             test_metadata.pubkey,
             test_metadata.mint.pubkey(),
         );

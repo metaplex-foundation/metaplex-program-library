@@ -17,7 +17,9 @@ export class RevokeCollectionAuthorityArgs extends Borsh.Data {
 
 type RevokeCollectionAuthorityParams = {
   collectionAuthorityRecord: PublicKey;
-  newCollectionAuthority: PublicKey;
+  // @deprecated use delegateAuthority
+  newCollectionAuthority?: PublicKey;
+  delegateAuthority?: PublicKey;
   updateAuthority: PublicKey;
   metadata: PublicKey;
   mint: PublicKey;
@@ -26,9 +28,11 @@ type RevokeCollectionAuthorityParams = {
 export class RevokeCollectionAuthority extends Transaction {
   constructor(options: TransactionCtorFields, params: RevokeCollectionAuthorityParams) {
     super(options);
-    const { metadata, collectionAuthorityRecord, newCollectionAuthority, updateAuthority, mint } =
-      params;
-
+    const { metadata, collectionAuthorityRecord, delegateAuthority ,newCollectionAuthority, updateAuthority, mint } = params;
+    const delegatedAuth = delegateAuthority || newCollectionAuthority;
+    if(!delegateAuthority && !newCollectionAuthority) {
+      throw new Error('Must provide either a delegateAuthority');
+    }
     const data = RevokeCollectionAuthorityArgs.serialize();
     const accounts = [
       {
@@ -37,7 +41,7 @@ export class RevokeCollectionAuthority extends Transaction {
         isWritable: true,
       },
       {
-        pubkey: newCollectionAuthority,
+        pubkey: delegatedAuth,
         isSigner: false,
         isWritable: false,
       },

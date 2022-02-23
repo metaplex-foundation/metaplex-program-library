@@ -1018,8 +1018,9 @@ pub fn approve_collection_authority(
 ///
 ///### Accounts:
 ///
-///   0. `[writable]` Use Authority Record PDA
-///   1. `[writable]` Owned Token Account Of Mint
+///   0. `[writable]` Collection Authority Record PDA
+///   1. `[writable]` The Authority that was delegated to
+///   2. `[signer]` The Original Update Authority
 ///   2. `[]` Metadata account
 ///   3. `[]` Mint of Metadata
 #[allow(clippy::too_many_arguments)]
