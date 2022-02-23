@@ -15,7 +15,6 @@ import {
   airdrop,
   assertConfirmedTransaction,
   assertTransactionSummary,
-  Actions,
   PayerTransactionHandler,
   defaultSendOptions,
 } from '@metaplex-foundation/amman';
@@ -24,7 +23,7 @@ import BN from 'bn.js';
 
 import { logDebug } from './utils';
 import { addLabel, isKeyOf } from './utils/address-labels';
-import { createMetadata, createMetadataV2 } from './actions';
+import { createMetadata, createMetadataV2, CreateMint } from './actions';
 
 killStuckProcess();
 
@@ -42,7 +41,7 @@ test('create-metadata-account: success', async (t) => {
 
   await airdrop(connection, payer.publicKey, 2);
 
-  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
@@ -118,7 +117,7 @@ test('create-metadata-account-v2: success', async (t) => {
 
   await airdrop(connection, payer.publicKey, 2);
 
-  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
