@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-core",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "MPL Core Tooling.",
   "main": "dist/src/mpl-core.js",
   "types": "dist/src/mpl-core.d.ts",

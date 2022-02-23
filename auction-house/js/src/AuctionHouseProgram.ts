@@ -32,7 +32,7 @@ export class AuctionHouseProgram extends Program {
 
   static async findAuctionHouseAddress(
     creator: PublicKey,
-    treasuryMint: PublicKey
+    treasuryMint: PublicKey,
   ): Promise<[PublicKey, number]> {
     return PublicKey.findProgramAddress(
       [
@@ -65,7 +65,7 @@ export class AuctionHouseProgram extends Program {
       ],
       AuctionHouseProgram.PUBKEY,
     );
-  };
+  }
 
   static async findEscrowPaymentAccountAddress(
     auctionHouse: PublicKey,
