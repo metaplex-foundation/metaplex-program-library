@@ -9,7 +9,6 @@ function quickKeypair(): [PublicKey, Uint8Array] {
 }
 
 test('account auction-house: round trip serilization', async (t) => {
-  const [accountPubkey] = quickKeypair();
   const [creator] = quickKeypair();
   const [auctionHouseTreasury] = quickKeypair();
   const [treasuryWithdrawalDestination] = quickKeypair();

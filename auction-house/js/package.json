@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-auction-house",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MPL Auction House JavaScript API.",
   "main": "dist/src/mpl-auction-house.js",
   "types": "dist/src/mpl-auction-house.d.ts",
@@ -13,7 +13,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "build:watch": "rimraf dist && tsc -p tsconfig.json --watch",
-    "test": "echo mpl-auction-house tests coming up ...",
+    "test": "esr ./test/*.test.ts",
     "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
@@ -39,7 +39,7 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@metaplex-foundation/beet": "0.0.7",
+    "@metaplex-foundation/beet": "0.0.8",
     "@metaplex-foundation/beet-solana": "0.0.6",
     "@metaplex-foundation/mpl-core": "0.0.4",
     "@solana/web3.js": "^1.33.0"

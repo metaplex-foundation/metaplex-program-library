@@ -11,125 +11,101 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category ExecuteSale
+ * @category PublicBuy
  * @category generated
  */
-export type ExecuteSaleInstructionArgs = {
+export type PublicBuyInstructionArgs = {
+  tradeStateBump: number;
   escrowPaymentBump: number;
-  freeTradeStateBump: number;
-  programAsSignerBump: number;
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
 };
 /**
  * @category Instructions
- * @category ExecuteSale
+ * @category PublicBuy
  * @category generated
  */
-const executeSaleStruct = new beet.BeetArgsStruct<
-  ExecuteSaleInstructionArgs & {
+const publicBuyStruct = new beet.BeetArgsStruct<
+  PublicBuyInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['tradeStateBump', beet.u8],
     ['escrowPaymentBump', beet.u8],
-    ['freeTradeStateBump', beet.u8],
-    ['programAsSignerBump', beet.u8],
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
   ],
-  'ExecuteSaleInstructionArgs',
+  'PublicBuyInstructionArgs',
 );
 /**
- * Accounts required by the _executeSale_ instruction
+ * Accounts required by the _publicBuy_ instruction
  * @category Instructions
- * @category ExecuteSale
+ * @category PublicBuy
  * @category generated
  */
-export type ExecuteSaleInstructionAccounts = {
-  buyer: web3.PublicKey;
-  seller: web3.PublicKey;
-  tokenAccount: web3.PublicKey;
-  tokenMint: web3.PublicKey;
-  metadata: web3.PublicKey;
+export type PublicBuyInstructionAccounts = {
+  wallet: web3.PublicKey;
+  paymentAccount: web3.PublicKey;
+  transferAuthority: web3.PublicKey;
   treasuryMint: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  metadata: web3.PublicKey;
   escrowPaymentAccount: web3.PublicKey;
-  sellerPaymentReceiptAccount: web3.PublicKey;
-  buyerReceiptTokenAccount: web3.PublicKey;
   authority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
-  auctionHouseTreasury: web3.PublicKey;
   buyerTradeState: web3.PublicKey;
-  sellerTradeState: web3.PublicKey;
-  freeTradeState: web3.PublicKey;
-  programAsSigner: web3.PublicKey;
 };
 
-const executeSaleInstructionDiscriminator = [37, 74, 217, 157, 79, 49, 35, 6];
+const publicBuyInstructionDiscriminator = [169, 84, 218, 35, 42, 206, 16, 171];
 
 /**
- * Creates a _ExecuteSale_ instruction.
+ * Creates a _PublicBuy_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category ExecuteSale
+ * @category PublicBuy
  * @category generated
  */
-export function createExecuteSaleInstruction(
-  accounts: ExecuteSaleInstructionAccounts,
-  args: ExecuteSaleInstructionArgs,
+export function createPublicBuyInstruction(
+  accounts: PublicBuyInstructionAccounts,
+  args: PublicBuyInstructionArgs,
 ) {
   const {
-    buyer,
-    seller,
-    tokenAccount,
-    tokenMint,
-    metadata,
+    wallet,
+    paymentAccount,
+    transferAuthority,
     treasuryMint,
+    tokenAccount,
+    metadata,
     escrowPaymentAccount,
-    sellerPaymentReceiptAccount,
-    buyerReceiptTokenAccount,
     authority,
     auctionHouse,
     auctionHouseFeeAccount,
-    auctionHouseTreasury,
     buyerTradeState,
-    sellerTradeState,
-    freeTradeState,
-    programAsSigner,
   } = accounts;
 
-  const [data] = executeSaleStruct.serialize({
-    instructionDiscriminator: executeSaleInstructionDiscriminator,
+  const [data] = publicBuyStruct.serialize({
+    instructionDiscriminator: publicBuyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: buyer,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: seller,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: tokenAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: tokenMint,
+      pubkey: wallet,
       isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: paymentAccount,
+      isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: transferAuthority,
       isWritable: false,
       isSigner: false,
     },
@@ -139,17 +115,17 @@ export function createExecuteSaleInstruction(
       isSigner: false,
     },
     {
+      pubkey: tokenAccount,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: metadata,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: escrowPaymentAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: sellerPaymentReceiptAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: buyerReceiptTokenAccount,
       isWritable: true,
       isSigner: false,
     },
@@ -169,22 +145,7 @@ export function createExecuteSaleInstruction(
       isSigner: false,
     },
     {
-      pubkey: auctionHouseTreasury,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
       pubkey: buyerTradeState,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: sellerTradeState,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
-      pubkey: freeTradeState,
       isWritable: true,
       isSigner: false,
     },
@@ -195,16 +156,6 @@ export function createExecuteSaleInstruction(
     },
     {
       pubkey: web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: programAsSigner,
       isWritable: false,
       isSigner: false,
     },

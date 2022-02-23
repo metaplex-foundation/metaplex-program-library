@@ -3,6 +3,7 @@ export * from './cancel';
 export * from './createAuctionHouse';
 export * from './deposit';
 export * from './executeSale';
+export * from './publicBuy';
 export * from './sell';
 export * from './updateAuctionHouse';
 export * from './withdraw';
