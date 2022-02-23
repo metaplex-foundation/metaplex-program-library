@@ -43,7 +43,6 @@ pub fn init_pack(
 
     let mut pack_set = PackSet::unpack_unchecked(&pack_set_account.data.borrow_mut())?;
 
-
     if pack_set.is_initialized() {
         return Err(ProgramError::AccountAlreadyInitialized);
     }

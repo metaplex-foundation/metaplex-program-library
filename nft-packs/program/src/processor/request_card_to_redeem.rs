@@ -11,6 +11,7 @@ use crate::{
     },
     utils::*,
 };
+use arrayref::array_ref;
 use mpl_metaplex::state::Store;
 use mpl_token_metadata::{
     state::{Edition, EDITION, PREFIX as EDITION_PREFIX},
@@ -24,13 +25,9 @@ use solana_program::{
     program_option::COption,
     program_pack::Pack,
     pubkey::Pubkey,
-    sysvar::{
-        rent::Rent,
-        Sysvar,
-    },
+    sysvar::{rent::Rent, slot_hashes, Sysvar},
 };
 use spl_token::state::Account;
-use arrayref::array_ref;
 
 /// Process RequestCardForRedeem instruction
 pub fn request_card_for_redeem(
@@ -65,6 +62,8 @@ pub fn request_card_for_redeem(
     }
     assert_owned_by(voucher_account, program_id)?;
     assert_owned_by(pack_config_account, program_id)?;
+
+    assert_account_key(recent_slothashes_info, &slot_hashes::id())?;
 
     let (pack_config_pubkey, _) =
         find_pack_config_program_address(program_id, pack_set_account.key);
@@ -169,11 +168,11 @@ pub fn request_card_for_redeem(
         return Err(NFTPacksError::UserRedeemedAllCards.into());
     }
 
-    // get slot hash 
+    // get slot hash
     let data = recent_slothashes_info.data.borrow();
     let most_recent_slothash = array_ref![data, 8, 8];
 
-    // get random value 
+    // get random value
     let random_value = get_random_value(most_recent_slothash, &proving_process, &clock)?;
     let weight_sum = if pack_set.distribution_type == PackDistributionType::MaxSupply {
         pack_set.total_editions

@@ -1,4 +1,4 @@
-use crate::{AuctionHouse, ErrorCode};
+use crate::{AuctionHouse, ErrorCode, PREFIX, TRADE_STATE_SIZE};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -12,15 +12,15 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use arrayref::array_ref;
 use mpl_token_metadata::state::Metadata;
 use spl_associated_token_account::get_associated_token_address;
-use spl_token::{instruction::initialize_account2, state::Account};
+use spl_token::{instruction::initialize_account2, state::Account as SplAccount};
 use std::{convert::TryInto, slice::Iter};
 pub fn assert_is_ata(
     ata: &AccountInfo,
     wallet: &Pubkey,
     mint: &Pubkey,
-) -> Result<Account, ProgramError> {
+) -> Result<SplAccount, ProgramError> {
     assert_owned_by(ata, &spl_token::id())?;
-    let ata_account: Account = assert_initialized(ata)?;
+    let ata_account: SplAccount = assert_initialized(ata)?;
     assert_keys_equal(ata_account.owner, *wallet)?;
     assert_keys_equal(get_associated_token_address(wallet, mint), *ata.key)?;
     Ok(ata_account)
@@ -70,7 +70,7 @@ pub fn make_ata<'a>(
 
 pub fn assert_metadata_valid<'a>(
     metadata: &UncheckedAccount,
-    token_account: &anchor_lang::Account<'a, TokenAccount>,
+    token_account: &anchor_lang::prelude::Account<'a, TokenAccount>,
 ) -> ProgramResult {
     assert_derivation(
         &mpl_token_metadata::id(),
@@ -90,7 +90,7 @@ pub fn assert_metadata_valid<'a>(
 
 pub fn get_fee_payer<'a, 'b>(
     authority: &UncheckedAccount,
-    auction_house: &anchor_lang::Account<AuctionHouse>,
+    auction_house: &anchor_lang::prelude::Account<AuctionHouse>,
     wallet: AccountInfo<'a>,
     auction_house_fee_account: AccountInfo<'a>,
     auction_house_seeds: &'b [&'b [u8]],
@@ -118,10 +118,10 @@ pub fn assert_valid_delegation(
     src_wallet: &AccountInfo,
     dst_wallet: &AccountInfo,
     transfer_authority: &AccountInfo,
-    mint: &anchor_lang::Account<Mint>,
+    mint: &anchor_lang::prelude::Account<Mint>,
     paysize: u64,
 ) -> ProgramResult {
-    match Account::unpack(&src_account.data.borrow()) {
+    match SplAccount::unpack(&src_account.data.borrow()) {
         Ok(token_account) => {
             // Ensure that the delegated amount is exactly equal to the maker_size
             msg!(
@@ -189,7 +189,7 @@ pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> ProgramResult {
 
 #[allow(clippy::too_many_arguments)]
 pub fn pay_auction_house_fees<'a>(
-    auction_house: &anchor_lang::Account<'a, AuctionHouse>,
+    auction_house: &anchor_lang::prelude::Account<'a, AuctionHouse>,
     auction_house_treasury: &AccountInfo<'a>,
     escrow_payment_account: &AccountInfo<'a>,
     token_program: &AccountInfo<'a>,
@@ -245,7 +245,7 @@ pub fn create_program_token_account_if_not_present<'a>(
     system_program: &Program<'a, System>,
     fee_payer: &AccountInfo<'a>,
     token_program: &Program<'a, Token>,
-    treasury_mint: &anchor_lang::Account<'a, Mint>,
+    treasury_mint: &anchor_lang::prelude::Account<'a, Mint>,
     owner: &AccountInfo<'a>,
     rent: &Sysvar<'a, Rent>,
     signer_seeds: &[&[u8]],
@@ -489,4 +489,62 @@ pub fn assert_derivation(
         return Err(ErrorCode::DerivedKeyInvalid.into());
     }
     Ok(bump)
+}
+pub fn assert_valid_trade_state<'a>(
+    wallet: &Pubkey,
+    auction_house: &Account<AuctionHouse>,
+    buyer_price: u64,
+    token_size: u64,
+    trade_state: &AccountInfo,
+    mint: &Pubkey,
+    token_holder: &Pubkey,
+    ts_bump: u8,
+) -> Result<u8, ProgramError> {
+    let ah_pubkey = &auction_house.key();
+    let mint_bytes = mint.as_ref();
+    let treasury_mint_bytes = auction_house.treasury_mint.as_ref();
+    let buyer_price_bytes = buyer_price.to_le_bytes();
+    let token_size_bytes = token_size.to_le_bytes();
+    let wallet_bytes = wallet.as_ref();
+    let auction_house_key_bytes = ah_pubkey.as_ref();
+    let pfix = PREFIX.as_bytes();
+    let token_holder_bytes = token_holder.as_ref();
+    let canonical_bump = assert_derivation(
+        &crate::id(),
+        trade_state,
+        &[
+            pfix,
+            wallet_bytes,
+            auction_house_key_bytes,
+            token_holder_bytes,
+            treasury_mint_bytes,
+            mint_bytes,
+            &buyer_price_bytes,
+            &token_size_bytes,
+        ],
+    );
+    let canonical_public_bump = assert_derivation(
+        &crate::id(),
+        trade_state,
+        &[
+            pfix,
+            wallet_bytes,
+            auction_house_key_bytes,
+            treasury_mint_bytes,
+            mint_bytes,
+            &buyer_price_bytes,
+            &token_size_bytes,
+        ],
+    );
+    msg!(
+        "{:?}, {:?}, {:?}",
+        canonical_public_bump,
+        canonical_bump,
+        ts_bump
+    );
+    match (canonical_public_bump, canonical_bump) {
+        (Ok(public), Err(_)) if public == ts_bump => Ok(public),
+        (Err(_), Ok(bump)) if bump == ts_bump => Ok(bump),
+        _ => Err(ErrorCode::DerivedKeyInvalid.into()),
+    }
 }

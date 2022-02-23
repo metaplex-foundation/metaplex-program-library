@@ -1,7 +1,7 @@
 [workspace]
 members=[
   "auction/program",
-  "auction-house/program",
+
   "gumdrop/program",
   "metaplex/program",
   "token-entangler/program",
@@ -13,5 +13,6 @@ members=[
 exclude = [
   "fixed-price-sale/cli",
   "token-metadata",
+  "auction-house/program",
   "candy-machine/program"
 ]
