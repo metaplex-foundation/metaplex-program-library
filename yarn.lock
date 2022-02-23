@@ -992,7 +992,7 @@ __metadata:
     prettier: ^2.5.1
     rimraf: ^3.0.2
     spok: ^1.4.3
-    tape: ^5.3.2
+    tape: ^5.5.2
   languageName: unknown
   linkType: soft
 
@@ -1061,7 +1061,7 @@ __metadata:
     prettier: ^2.5.1
     rimraf: ^3.0.2
     supports-color: ^9.2.1
-    tape: ^5.3.2
+    tape: ^5.5.2
   languageName: unknown
   linkType: soft
 
@@ -1077,7 +1077,7 @@ __metadata:
     eslint: ^8.3.0
     rimraf: ^3.0.2
     spok: ^1.4.3
-    tape: ^5.3.2
+    tape: ^5.5.2
   languageName: unknown
   linkType: soft
 
@@ -1096,7 +1096,7 @@ __metadata:
     esbuild-runner: ^2.2.1
     eslint: ^8.3.0
     rimraf: ^3.0.2
-    tape: ^5.4.1
+    tape: ^5.5.2
   languageName: unknown
   linkType: soft
 
@@ -1111,7 +1111,7 @@ __metadata:
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
     rimraf: ^3.0.2
-    tape: ^5.3.2
+    tape: ^5.5.2
   languageName: unknown
   linkType: soft
 
@@ -1152,7 +1152,7 @@ __metadata:
     rimraf: ^3.0.2
     spok: ^1.4.2
     supports-color: ^9.2.1
-    tape: ^5.3.2
+    tape: ^5.5.2
   languageName: unknown
   linkType: soft
 
@@ -7256,7 +7256,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tape@npm:^5.3.2, tape@npm:^5.4.1":
+"tape@npm:^5.5.2":
   version: 5.5.2
   resolution: "tape@npm:5.5.2"
   dependencies:

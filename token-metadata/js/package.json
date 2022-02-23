@@ -15,7 +15,7 @@
     "pretest": "yarn build",
     "amman:start": "DEBUG=\"*\" amman validator",
     "amman:stop": "pkill solana-test-validator",
-    "test": "tape ./dist/test/*.test.js",
+    "test": "tape ./dist/test/*.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
@@ -54,6 +54,6 @@
     "rimraf": "^3.0.2",
     "spok": "^1.4.2",
     "supports-color": "^9.2.1",
-    "tape": "^5.3.2"
+    "tape": "^5.5.2"
   }
 }
