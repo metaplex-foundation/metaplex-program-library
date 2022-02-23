@@ -1,18 +1,18 @@
-use crate::{CreateSecondaryMetadataCreators, utils::*, error::ErrorCode,};
+use crate::{error::ErrorCode, utils::*, SavePrimaryMetadataCreators};
 use anchor_lang::prelude::*;
 
-impl<'info> CreateSecondaryMetadataCreators<'info> {
+impl<'info> SavePrimaryMetadataCreators<'info> {
     pub fn process(
         &mut self,
-        _secondary_metadata_creators_bump: u8,
+        primary_metadata_creators_bump: u8,
         creators: Vec<mpl_token_metadata::state::Creator>,
     ) -> ProgramResult {
         let metadata = &self.metadata;
         let admin = &self.admin;
-        let secondary_metadata_creators = &mut self.secondary_metadata_creators;
+        let secondary_metadata_creators = &mut self.primary_metadata_creators;
         let metadata_state = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
 
-        if creators.len() > MAX_SECONDARY_CREATORS_LEN {
+        if creators.len() > MAX_PRIMARY_CREATORS_LEN {
             return Err(ErrorCode::CreatorsIsGtThanAvailable.into());
         }
 

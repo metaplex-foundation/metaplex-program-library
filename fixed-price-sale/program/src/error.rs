@@ -109,4 +109,7 @@ pub enum ErrorCode {
     // 6034
     #[msg("Market owner doesn't receive shares at primary sale")]
     MarketOwnerDoesntHaveShares,
+    // 6034
+    #[msg("PrimaryMetadataCreatorsNotProvided")]
+    PrimaryMetadataCreatorsNotProvided,
 }

@@ -1,21 +1,20 @@
-use crate::{ClaimResource, utils::*, error::ErrorCode, state::{MarketState, SecondaryMetadataCreators}, id};
-use anchor_lang::{
-    prelude::*,
-    solana_program::program_pack::Pack, System,
+use crate::{
+    error::ErrorCode,
+    id,
+    state::{MarketState, PrimaryMetadataCreators},
+    utils::*,
+    ClaimResource,
 };
+use anchor_lang::{prelude::*, solana_program::program_pack::Pack, System};
 use anchor_spl::token;
 
 impl<'info> ClaimResource<'info> {
-    pub fn process(
-        &mut self,
-        vault_owner_bump: u8,
-    ) -> ProgramResult {
+    pub fn process(&mut self, vault_owner_bump: u8) -> ProgramResult {
         let market = &self.market;
         let selling_resource = &self.selling_resource;
         let vault = &self.vault;
         let metadata = &self.metadata;
         let vault_owner = &self.owner;
-        let secondary_metadata_creators = &self.secondary_metadata_creators;
         let destination = &self.destination;
         let clock = &self.clock;
         let treasury_holder = &self.treasury_holder;
@@ -75,42 +74,6 @@ impl<'info> ClaimResource<'info> {
                 &metadata.to_account_info(),
                 &vault_owner.to_account_info(),
                 &vault.to_account_info(),
-                signer_seeds[0],
-            )?;
-        }
-
-        if !secondary_metadata_creators.data_is_empty()
-            && secondary_metadata_creators.lamports() > 0
-        {
-            // Check, that provided `SecondaryMetadataCreators` is correct
-            assert_derivation(
-                &id(),
-                secondary_metadata_creators,
-                &[
-                    SECONDARY_METADATA_CREATORS_PREFIX.as_bytes(),
-                    metadata.key.as_ref(),
-                ],
-            )?;
-
-            let secondary_metadata_creators = SecondaryMetadataCreators::try_deserialize(
-                &mut secondary_metadata_creators.data.borrow().as_ref(),
-            )?;
-
-            mpl_update_metadata_accounts_v2(
-                metadata,
-                vault_owner,
-                None,
-                Some(mpl_token_metadata::state::DataV2 {
-                    collection: metadata_state.collection,
-                    creators: Some(secondary_metadata_creators.creators),
-                    name: metadata_state.data.name,
-                    seller_fee_basis_points: metadata_state.data.seller_fee_basis_points,
-                    symbol: metadata_state.data.symbol,
-                    uri: metadata_state.data.uri,
-                    uses: metadata_state.uses,
-                }),
-                None,
-                Some(false),
                 signer_seeds[0],
             )?;
         }

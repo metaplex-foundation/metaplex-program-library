@@ -1,32 +1,34 @@
-use crate::{Buy, utils::*, error::ErrorCode, state::{MarketState, SellingResourceState}};
+use crate::{
+    error::ErrorCode,
+    state::{MarketState, SellingResourceState},
+    utils::*,
+    Buy,
+};
 use anchor_lang::prelude::*;
-use mpl_token_metadata::utils::get_supply_off_master_edition;
 use anchor_lang::{
-    System,
     solana_program::{program::invoke, system_instruction},
+    System,
 };
 use anchor_spl::token;
+use mpl_token_metadata::utils::get_supply_off_master_edition;
 
 impl<'info> Buy<'info> {
-    pub fn process(
-        &mut self,
-        _trade_history_bump: u8,
-        vault_owner_bump: u8,
-    ) -> ProgramResult {
+    pub fn process(&mut self, _trade_history_bump: u8, vault_owner_bump: u8) -> ProgramResult {
         let market = &mut self.market;
         let selling_resource = &mut self.selling_resource;
-        let user_token_account = &mut self.user_token_account;
+        let user_token_account = Box::new(&self.user_token_account);
         let user_wallet = &mut self.user_wallet;
         let trade_history = &mut self.trade_history;
-        let treasury_holder = &mut self.treasury_holder;
-        let new_metadata = &mut self.new_metadata;
-        let new_edition = &mut self.new_edition;
-        let master_edition = &mut self.master_edition;
+        let treasury_holder = Box::new(&self.treasury_holder);
+        let new_metadata = Box::new(&self.new_metadata);
+        let new_edition = Box::new(&self.new_edition);
+        let master_edition = Box::new(&self.master_edition);
         let new_mint = &mut self.new_mint;
         let edition_marker_info = &mut self.edition_marker.to_account_info();
         let vault = &mut self.vault;
-        let owner = &mut self.owner;
-        let master_edition_metadata = &mut self.master_edition_metadata;
+        let owner = Box::new(&self.owner);
+        let new_token_account = &self.new_token_account;
+        let master_edition_metadata = Box::new(&self.master_edition_metadata);
         let clock = &self.clock;
         let rent = &self.rent;
         let token_program = &self.token_program;
@@ -107,7 +109,10 @@ impl<'info> Buy<'info> {
             )?;
         }
 
-        market.funds_collected = market.funds_collected.checked_add(market.price).ok_or(ErrorCode::MathOverflow)?;
+        market.funds_collected = market
+            .funds_collected
+            .checked_add(market.price)
+            .ok_or(ErrorCode::MathOverflow)?;
 
         mpl_mint_new_edition_from_master_edition_via_token(
             &new_metadata.to_account_info(),
@@ -131,6 +136,13 @@ impl<'info> Buy<'info> {
                 selling_resource.store.as_ref(),
                 &[vault_owner_bump],
             ],
+        )?;
+
+        mpl_update_primary_sale_happened_via_token(
+            &new_metadata.to_account_info(),
+            &user_wallet.to_account_info(),
+            &new_token_account.to_account_info(),
+            &[],
         )?;
 
         trade_history.already_bought = trade_history

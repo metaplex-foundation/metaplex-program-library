@@ -1,5 +1,11 @@
-use crate::{Withdraw, utils::*, error::ErrorCode, state::{MarketState}, id};
-use anchor_lang::prelude::*;
+use crate::{
+    error::ErrorCode,
+    id,
+    state::{MarketState, PrimaryMetadataCreators},
+    utils::*,
+    Withdraw,
+};
+use anchor_lang::{prelude::*, solana_program::borsh::try_from_slice_unchecked};
 use anchor_spl::{
     associated_token::{self, get_associated_token_address},
     token,
@@ -10,6 +16,7 @@ impl<'info> Withdraw<'info> {
         &mut self,
         treasury_owner_bump: u8,
         payout_ticket_bump: u8,
+        remaining_accounts: &[AccountInfo<'info>],
     ) -> ProgramResult {
         let market = &self.market;
         let token_program = &self.token_program;
@@ -53,12 +60,26 @@ impl<'info> Withdraw<'info> {
             ],
         )?;
 
-        // Check, that funder is `Creator` or `Market` owner
+        // Obtain right creators according to sale type
         let metadata = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
+        let actual_creators = if !metadata.primary_sale_happened {
+            if remaining_accounts.len() == 0 {
+                return Err(ErrorCode::PrimaryMetadataCreatorsNotProvided.into());
+            }
 
+            let primary_metadata_creators_data = remaining_accounts[0].data.borrow()[8..].to_vec();
+            let primary_metadata_creators = try_from_slice_unchecked::<PrimaryMetadataCreators>(
+                &primary_metadata_creators_data,
+            )?;
+            Box::new(Some(primary_metadata_creators.creators))
+        } else {
+            Box::new(metadata.data.creators)
+        };
+
+        // Check, that funder is `Creator` or `Market` owner
         // `Some` mean funder is `Creator`
         // `None` mean funder is `Market` owner
-        let funder_creator = if let Some(creators) = metadata.data.creators {
+        let funder_creator = if let Some(creators) = *actual_creators {
             let funder_creator = creators.iter().find(|&c| c.address == funder_key).cloned();
             if funder_creator.is_none() && funder_key != market.owner {
                 return Err(ErrorCode::FunderIsInvalid.into());
@@ -84,19 +105,38 @@ impl<'info> Withdraw<'info> {
                 // he will receive both shares
                 let funder_creator = funder_creator.as_ref().unwrap();
 
-                let funder_as_creator_share = calculate_secondary_shares_for_creator(market.funds_collected, metadata.data.seller_fee_basis_points as u64, funder_creator.share as u64)?;
+                let funder_as_creator_share = calculate_secondary_shares_for_creator(
+                    market.funds_collected,
+                    metadata.data.seller_fee_basis_points as u64,
+                    funder_creator.share as u64,
+                )?;
 
-                let funder_as_market_owner_share = calculate_secondary_shares_for_market_owner(market.funds_collected, metadata.data.seller_fee_basis_points as u64)?;
+                let funder_as_market_owner_share = calculate_secondary_shares_for_market_owner(
+                    market.funds_collected,
+                    metadata.data.seller_fee_basis_points as u64,
+                )?;
 
-                funder_as_creator_share.checked_add(funder_as_market_owner_share).ok_or(ErrorCode::MathOverflow)?
+                funder_as_creator_share
+                    .checked_add(funder_as_market_owner_share)
+                    .ok_or(ErrorCode::MathOverflow)?
             } else if let Some(funder_creator) = &funder_creator {
-                calculate_secondary_shares_for_creator(market.funds_collected, metadata.data.seller_fee_basis_points as u64, funder_creator.share as u64)?
+                calculate_secondary_shares_for_creator(
+                    market.funds_collected,
+                    metadata.data.seller_fee_basis_points as u64,
+                    funder_creator.share as u64,
+                )?
             } else {
-                calculate_secondary_shares_for_market_owner(market.funds_collected, metadata.data.seller_fee_basis_points as u64)?
+                calculate_secondary_shares_for_market_owner(
+                    market.funds_collected,
+                    metadata.data.seller_fee_basis_points as u64,
+                )?
             }
         } else {
             if let Some(funder_creator) = funder_creator {
-                calculate_primary_shares_for_creator(market.funds_collected, funder_creator.share as u64)?
+                calculate_primary_shares_for_creator(
+                    market.funds_collected,
+                    funder_creator.share as u64,
+                )?
             } else {
                 return Err(ErrorCode::MarketOwnerDoesntHaveShares.into());
             }

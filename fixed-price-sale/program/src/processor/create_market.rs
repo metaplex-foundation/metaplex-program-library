@@ -1,4 +1,9 @@
-use crate::{CreateMarket, utils::*, error::ErrorCode, state::{MarketState, SellingResourceState}};
+use crate::{
+    error::ErrorCode,
+    state::{MarketState, SellingResourceState},
+    utils::*,
+    CreateMarket,
+};
 use anchor_lang::prelude::*;
 use anchor_spl::token::accessor;
 

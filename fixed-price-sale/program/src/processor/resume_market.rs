@@ -1,10 +1,8 @@
-use crate::{ResumeMarket, error::ErrorCode, state::MarketState};
+use crate::{error::ErrorCode, state::MarketState, ResumeMarket};
 use anchor_lang::prelude::*;
 
 impl<'info> ResumeMarket<'info> {
-    pub fn process(
-        &mut self,
-    ) -> ProgramResult {
+    pub fn process(&mut self) -> ProgramResult {
         let market = &mut self.market;
         let clock = &self.clock;
 

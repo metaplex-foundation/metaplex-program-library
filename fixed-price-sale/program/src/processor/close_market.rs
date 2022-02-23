@@ -1,10 +1,8 @@
-use crate::{CloseMarket, error::ErrorCode, state::MarketState};
+use crate::{error::ErrorCode, state::MarketState, CloseMarket};
 use anchor_lang::prelude::*;
 
 impl<'info> CloseMarket<'info> {
-    pub fn process(
-        &mut self,
-    ) -> ProgramResult {
+    pub fn process(&mut self) -> ProgramResult {
         let market = &mut self.market;
         let clock = &self.clock;
 

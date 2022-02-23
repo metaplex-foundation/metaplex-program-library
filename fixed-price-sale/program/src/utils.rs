@@ -14,9 +14,9 @@ pub const HOLDER_PREFIX: &str = "holder";
 pub const HISTORY_PREFIX: &str = "history";
 pub const VAULT_OWNER_PREFIX: &str = "mt_vault";
 pub const PAYOUT_TICKET_PREFIX: &str = "payout_ticket";
-pub const SECONDARY_METADATA_CREATORS_PREFIX: &str = "secondary_creators";
+pub const PRIMARY_METADATA_CREATORS_PREFIX: &str = "primary_creators";
 pub const FLAG_ACCOUNT_SIZE: usize = 1; // Size for flag account to indicate something
-pub const MAX_SECONDARY_CREATORS_LEN: usize = 5; // Total allowed creators in `SecondaryMetadataCreators`
+pub const MAX_PRIMARY_CREATORS_LEN: usize = 5; // Total allowed creators in `PrimaryMetadataCreators`
 
 /// Runtime derivation check
 pub fn assert_derivation(
@@ -78,11 +78,11 @@ pub fn find_payout_ticket_address(market: &Pubkey, funder: &Pubkey) -> (Pubkey, 
     )
 }
 
-/// Return `SecondaryMetadataCreators` `Pubkey` and bump seed.
-pub fn find_secondary_metadata_creators(metadata: &Pubkey) -> (Pubkey, u8) {
+/// Return `PrimaryMetadataCreators` `Pubkey` and bump seed.
+pub fn find_primary_metadata_creators(metadata: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
         &[
-            SECONDARY_METADATA_CREATORS_PREFIX.as_bytes(),
+            PRIMARY_METADATA_CREATORS_PREFIX.as_bytes(),
             metadata.as_ref(),
         ],
         &id(),
@@ -254,7 +254,10 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
     }
 }
 
-pub fn calculate_primary_shares_for_creator(total_amount: u64, shares: u64) -> Result<u64, ProgramError> {
+pub fn calculate_primary_shares_for_creator(
+    total_amount: u64,
+    shares: u64,
+) -> Result<u64, ProgramError> {
     Ok(total_amount
         .checked_mul(shares)
         .ok_or(ErrorCode::MathOverflow)?
@@ -262,7 +265,11 @@ pub fn calculate_primary_shares_for_creator(total_amount: u64, shares: u64) -> R
         .ok_or(ErrorCode::MathOverflow)?)
 }
 
-pub fn calculate_secondary_shares_for_creator(total_amount: u64, seller_fee_basis_points: u64, shares: u64) -> Result<u64, ProgramError> {
+pub fn calculate_secondary_shares_for_creator(
+    total_amount: u64,
+    seller_fee_basis_points: u64,
+    shares: u64,
+) -> Result<u64, ProgramError> {
     Ok((total_amount
         .checked_mul(seller_fee_basis_points)
         .ok_or(ErrorCode::MathOverflow)?
@@ -274,7 +281,10 @@ pub fn calculate_secondary_shares_for_creator(total_amount: u64, seller_fee_basi
     .ok_or(ErrorCode::MathOverflow)?)
 }
 
-pub fn calculate_secondary_shares_for_market_owner(total_amount: u64, seller_fee_basis_points: u64) -> Result<u64, ProgramError> {
+pub fn calculate_secondary_shares_for_market_owner(
+    total_amount: u64,
+    seller_fee_basis_points: u64,
+) -> Result<u64, ProgramError> {
     Ok(total_amount
         .checked_sub(
             total_amount

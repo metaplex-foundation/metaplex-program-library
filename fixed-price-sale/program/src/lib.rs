@@ -1,20 +1,14 @@
 pub mod error;
+pub mod processor;
 pub mod state;
 pub mod utils;
-pub mod processor;
 
 use crate::{
     error::ErrorCode,
-    state::{
-        Market, SecondaryMetadataCreators, SellingResource,
-        Store, TradeHistory,
-    },
+    state::{Market, PrimaryMetadataCreators, SellingResource, Store, TradeHistory},
     utils::*,
 };
-use anchor_lang::{
-    prelude::*,
-    AnchorDeserialize, AnchorSerialize, System,
-};
+use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize, System};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
@@ -32,7 +26,8 @@ pub mod fixed_price_sale {
         vault_owner_bump: u8,
         max_supply: Option<u64>,
     ) -> ProgramResult {
-        ctx.accounts.process(master_edition_bump, vault_owner_bump, max_supply)
+        ctx.accounts
+            .process(master_edition_bump, vault_owner_bump, max_supply)
     }
 
     pub fn create_store<'info>(
@@ -71,7 +66,13 @@ pub mod fixed_price_sale {
         new_price: Option<u64>,
         new_pieces_in_one_wallet: Option<u64>,
     ) -> ProgramResult {
-        ctx.accounts.process(new_name, new_description, mutable, new_price, new_pieces_in_one_wallet)
+        ctx.accounts.process(
+            new_name,
+            new_description,
+            mutable,
+            new_price,
+            new_pieces_in_one_wallet,
+        )
     }
 
     pub fn resume_market<'info>(
@@ -85,7 +86,11 @@ pub mod fixed_price_sale {
         treasury_owner_bump: u8,
         payout_ticket_bump: u8,
     ) -> ProgramResult {
-        ctx.accounts.process(treasury_owner_bump, payout_ticket_bump)
+        ctx.accounts.process(
+            treasury_owner_bump,
+            payout_ticket_bump,
+            ctx.remaining_accounts,
+        )
     }
 
     pub fn create_market<'info>(
@@ -99,7 +104,16 @@ pub mod fixed_price_sale {
         start_date: u64,
         end_date: Option<u64>,
     ) -> ProgramResult {
-        ctx.accounts.process(_treasury_owner_bump, name, description, mutable, price, pieces_in_one_wallet, start_date, end_date)
+        ctx.accounts.process(
+            _treasury_owner_bump,
+            name,
+            description,
+            mutable,
+            price,
+            pieces_in_one_wallet,
+            start_date,
+            end_date,
+        )
     }
 
     pub fn claim_resource<'info>(
@@ -109,12 +123,13 @@ pub mod fixed_price_sale {
         ctx.accounts.process(vault_owner_bump)
     }
 
-    pub fn create_secondary_metadata_creators<'info>(
-        ctx: Context<'_, '_, '_, 'info, CreateSecondaryMetadataCreators<'info>>,
-        _secondary_metadata_creators_bump: u8,
+    pub fn save_primary_metadata_creators<'info>(
+        ctx: Context<'_, '_, '_, 'info, SavePrimaryMetadataCreators<'info>>,
+        primary_metadata_creators_bump: u8,
         creators: Vec<mpl_token_metadata::state::Creator>,
     ) -> ProgramResult {
-        ctx.accounts.process(_secondary_metadata_creators_bump, creators)
+        ctx.accounts
+            .process(primary_metadata_creators_bump, creators)
     }
 }
 
@@ -176,14 +191,14 @@ pub struct CreateMarket<'info> {
 #[instruction(trade_history_bump:u8, vault_owner_bump: u8)]
 pub struct Buy<'info> {
     #[account(mut, has_one=treasury_holder)]
-    market: Account<'info, Market>,
+    market: Box<Account<'info, Market>>,
     #[account(mut)]
     selling_resource: Box<Account<'info, SellingResource>>,
     #[account(mut)]
     user_token_account: UncheckedAccount<'info>,
     user_wallet: Signer<'info>,
     #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump=trade_history_bump, payer=user_wallet)]
-    trade_history: Account<'info, TradeHistory>,
+    trade_history: Box<Account<'info, TradeHistory>>,
     #[account(mut)]
     treasury_holder: UncheckedAccount<'info>,
     // Will be created by `mpl_token_metadata`
@@ -203,7 +218,9 @@ pub struct Buy<'info> {
     vault: Box<Account<'info, TokenAccount>>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
     owner: UncheckedAccount<'info>,
-    #[account(owner=mpl_token_metadata::id())]
+    #[account(mut, constraint = new_token_account.owner == user_wallet.key())]
+    new_token_account: Box<Account<'info, TokenAccount>>,
+    #[account(mut, owner=mpl_token_metadata::id())]
     master_edition_metadata: UncheckedAccount<'info>,
     clock: Sysvar<'info, Clock>,
     rent: Sysvar<'info, Rent>,
@@ -253,7 +270,6 @@ pub struct ClaimResource<'info> {
     metadata: UncheckedAccount<'info>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.key().as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
     owner: UncheckedAccount<'info>,
-    secondary_metadata_creators: UncheckedAccount<'info>,
     #[account(mut)]
     destination: Box<Account<'info, TokenAccount>>,
     clock: Sysvar<'info, Clock>,
@@ -299,13 +315,13 @@ pub struct ChangeMarket<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(secondary_metadata_creators_bump: u8, creators: Vec<mpl_token_metadata::state::Creator>)]
-pub struct CreateSecondaryMetadataCreators<'info> {
+#[instruction(primary_metadata_creators_bump: u8, creators: Vec<mpl_token_metadata::state::Creator>)]
+pub struct SavePrimaryMetadataCreators<'info> {
     #[account(mut)]
     admin: Signer<'info>,
     #[account(mut, owner=mpl_token_metadata::id())]
     metadata: UncheckedAccount<'info>,
-    #[account(init, space=SecondaryMetadataCreators::LEN, payer=admin, seeds=[SECONDARY_METADATA_CREATORS_PREFIX.as_bytes(), metadata.key.as_ref()], bump = secondary_metadata_creators_bump)]
-    secondary_metadata_creators: Box<Account<'info, SecondaryMetadataCreators>>,
+    #[account(init, space=PrimaryMetadataCreators::LEN, payer=admin, seeds=[PRIMARY_METADATA_CREATORS_PREFIX.as_bytes(), metadata.key.as_ref()], bump = primary_metadata_creators_bump)]
+    primary_metadata_creators: Box<Account<'info, PrimaryMetadataCreators>>,
     system_program: Program<'info, System>,
 }

@@ -1,4 +1,4 @@
-use crate::{ChangeMarket, utils::*, error::ErrorCode, state::MarketState};
+use crate::{error::ErrorCode, state::MarketState, utils::*, ChangeMarket};
 use anchor_lang::prelude::*;
 
 impl<'info> ChangeMarket<'info> {
