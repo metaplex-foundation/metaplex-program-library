@@ -1,6 +1,6 @@
 {
   "version": "3.0.0",
-  "name": "mpl_candy_machine",
+  "name": "candy_machine",
   "instructions": [
     {
       "name": "mintNft",
