@@ -404,10 +404,12 @@ pub mod nft_candy_machine_v2 {
         )?;
 
         if &ctx.remaining_accounts.len() > &(remaining_accounts_counter + 1) {
+            msg!("Collection account provided. Deserializing now!");
             remaining_accounts_counter += 1;
             let collection_pda_account = &ctx.remaining_accounts[remaining_accounts_counter];
             let collection_pda: CollectionPDA =
                 AnchorDeserialize::try_from_slice(&collection_pda_account.data.borrow())?;
+            msg!("Collection PDA Deserialized");
             remaining_accounts_counter += 1;
             let collection_mint = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
@@ -726,13 +728,20 @@ pub mod nft_candy_machine_v2 {
                     *ctx.accounts.authority.key,
                     *ctx.accounts.payer.key,
                     *ctx.accounts.metadata.key,
-                    *mint.key,
+                    mint.key.clone(),
                 ),
                 approve_collection_infos.as_slice(),
             )?;
+            msg!(
+                "Successfully approved collection authority. Now setting PDA mint to {}.",
+                mint.key
+            );
+            ctx.accounts.collection_pda.mint = *mint.key;
         }
-        ctx.accounts.collection_pda.mint = *mint.key;
+        Ok(())
+    }
 
+    pub fn initialize_collection_pda(_ctx: Context<InitializeCollectionPDA>) -> ProgramResult {
         Ok(())
     }
 
@@ -865,6 +874,18 @@ pub struct SetCollection<'info> {
     collection_authority_record: UncheckedAccount<'info>,
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
+}
+
+/// Set the collection PDA for the candy machine
+#[derive(Accounts)]
+pub struct InitializeCollectionPDA<'info> {
+    #[account(has_one = authority)]
+    candy_machine: Account<'info, CandyMachine>,
+    authority: Signer<'info>,
+    #[account(init, payer=payer, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
+    collection_pda: Account<'info, CollectionPDA>,
+    payer: Signer<'info>,
+    system_program: Program<'info, System>,
 }
 
 /// Set the collection PDA for the candy machine
