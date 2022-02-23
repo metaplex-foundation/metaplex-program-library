@@ -2,7 +2,7 @@
 mod utils;
 use anchor_lang::AccountDeserialize;
 use claim::assert_some;
-use mpl_auction_house::{pda::find_public_bid_trade_state_address, PublicBid};
+use mpl_auction_house::{pda::find_public_bid_trade_state_address, PublicBid, Purchase};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
@@ -99,7 +99,7 @@ async fn success_close_public_bid_receipt_after_sale() {
         .await
         .unwrap();
 
-    let (_execute_sall_acc, execute_sale_tx) = execute_sale(
+    let (execute_sale_acc, execute_sale_tx) = execute_sale_with_receipt(
         &mut context,
         &ahkey,
         &ah,
@@ -144,9 +144,20 @@ async fn success_close_public_bid_receipt_after_sale() {
         .unwrap()
         .unix_timestamp;
 
+    let purchase_account = context
+        .banks_client
+        .get_account(execute_sale_acc.purchase_receipt)
+        .await
+        .expect("error getting receipt")
+        .expect("no data for receipt");
+
+    let purchase = Purchase::try_deserialize(&mut purchase_account.data.as_ref()).unwrap();
+
     assert_eq!(bid.closed_at, Some(timestamp));
     assert_some!(bid.activated_at);
-
+    assert_eq!(purchase.created_at, Some(timestamp));
+    assert_eq!(purchase.buyer, buyer_key);
+    assert_eq!(purchase.seller, test_metadata.token.pubkey());
     ()
 }
 

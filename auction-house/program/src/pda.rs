@@ -121,3 +121,18 @@ pub fn find_listing_receipt_address(
       &id(),
   )
 }
+
+/// Return purchase_receipt `Pubkey` address and bump seed.
+pub fn find_purchase_receipt_address(
+  seller_trade_state: &Pubkey,
+  buyer_trade_state: &Pubkey,
+) -> (Pubkey, u8) {
+  Pubkey::find_program_address(
+      &[
+          PURCHASE_RECEIPT_PREFIX.as_bytes(),
+          seller_trade_state.as_ref(),
+          buyer_trade_state.as_ref(),
+          ],
+        &id(),
+  )
+}         
