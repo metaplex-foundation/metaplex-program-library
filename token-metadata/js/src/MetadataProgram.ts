@@ -1,4 +1,4 @@
-    import { PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { Program, config } from '@metaplex-foundation/mpl-core';
 
 export class MetadataProgram extends Program {
