@@ -75,11 +75,11 @@ test('create-metadata-account: success', async (t) => {
   });
   const metadataAccount = await connection.getAccountInfo(metadata);
   logDebug({
-    metadataAccountOwner: metadataAccount.owner.toBase58(),
-    metadataAccountDataBytes: metadataAccount.data.byteLength,
+    metadataAccountOwner: metadataAccount?.owner.toBase58(),
+    metadataAccountDataBytes: metadataAccount?.data.byteLength,
   });
 
-  const metadataData = MetadataData.deserialize(metadataAccount.data);
+  const metadataData = MetadataData.deserialize(metadataAccount!.data);
   spok(t, metadataData, {
     $topic: 'metadataData',
     key: MetadataKey.MetadataV1,
@@ -97,13 +97,13 @@ test('create-metadata-account: success', async (t) => {
 
   const mintAccount = await connection.getAccountInfo(mint.publicKey);
   logDebug({
-    mintAccountOwner: mintAccount.owner.toBase58(),
-    mintAccountDataBytes: mintAccount.data.byteLength,
+    mintAccountOwner: mintAccount?.owner.toBase58(),
+    mintAccountDataBytes: mintAccount?.data.byteLength,
   });
 
-  t.ok(Edition.isCompatible(mintAccount.data), 'mint account data is mint edition');
+  t.ok(Edition.isCompatible(mintAccount!.data), 'mint account data is mint edition');
 
-  const editionData = EditionData.deserialize(mintAccount.data);
+  const editionData = EditionData.deserialize(mintAccount!.data);
   const edition: BN = editionData.edition;
   t.ok(edition.toNumber() > 0, 'greater zero edition number');
 });
@@ -153,11 +153,11 @@ test('create-metadata-account-v2: success', async (t) => {
   });
   const metadataAccount = await connection.getAccountInfo(metadata);
   logDebug({
-    metadataAccountOwner: metadataAccount.owner.toBase58(),
-    metadataAccountDataBytes: metadataAccount.data.byteLength,
+    metadataAccountOwner: metadataAccount?.owner.toBase58(),
+    metadataAccountDataBytes: metadataAccount?.data.byteLength,
   });
 
-  const metadataData = MetadataData.deserialize(metadataAccount.data);
+  const metadataData = MetadataData.deserialize(metadataAccount!.data);
   spok(t, metadataData, {
     $topic: 'metadataData',
     key: MetadataKey.MetadataV1,
