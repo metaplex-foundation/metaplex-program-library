@@ -24,7 +24,7 @@ use {
         error::MetadataError,
         instruction::{
             approve_collection_authority, create_master_edition_v3, create_metadata_accounts_v2,
-            set_and_verify_collection, update_metadata_accounts_v2,
+            revoke_collection_authority, set_and_verify_collection, update_metadata_accounts_v2,
         },
         state::{
             Metadata, MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
@@ -43,8 +43,6 @@ const PREFIX: &str = "candy_machine";
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
 pub mod nft_candy_machine_v2 {
-    use mpl_token_metadata::instruction::revoke_collection_authority;
-
     use super::*;
 
     pub fn mint_nft<'info>(
@@ -410,56 +408,53 @@ pub mod nft_candy_machine_v2 {
             let collection_pda_account = &ctx.remaining_accounts[remaining_accounts_counter];
             let collection_pda: CollectionPDA =
                 AnchorDeserialize::try_from_slice(&collection_pda_account.data.borrow())?;
-            if let Some(mint_pubkey) = collection_pda.mint {
-                remaining_accounts_counter += 1;
-                let collection_mint = &ctx.remaining_accounts[remaining_accounts_counter];
-                remaining_accounts_counter += 1;
-                let collection_metadata = &ctx.remaining_accounts[remaining_accounts_counter];
-                remaining_accounts_counter += 1;
-                let collection_master_edition_account =
-                    &ctx.remaining_accounts[remaining_accounts_counter];
-                remaining_accounts_counter += 1;
-                let collection_authority_record =
-                    &ctx.remaining_accounts[remaining_accounts_counter];
-                let seeds = [
-                    b"collection".as_ref(),
-                    candy_machine.to_account_info().key.as_ref(),
-                ];
-                if collection_pda_account.key
-                    != &Pubkey::find_program_address(&seeds, &nft_candy_machine_v2::id()).0
-                {
-                    return Err(ErrorCode::MismatchedCollectionPDA.into());
-                }
-                if &mint_pubkey != collection_mint.to_account_info().key {
-                    return Err(ErrorCode::MismatchedCollectionMint.into());
-                }
-
-                let set_collection_infos = vec![
-                    ctx.accounts.metadata.to_account_info(),
-                    ctx.accounts.update_authority.to_account_info(),
-                    ctx.accounts.payer.to_account_info(),
-                    ctx.accounts.update_authority.to_account_info(),
-                    collection_mint.to_account_info(),
-                    collection_metadata.to_account_info(),
-                    collection_master_edition_account.to_account_info(),
-                    collection_authority_record.to_account_info(),
-                ];
-                invoke_signed(
-                    &set_and_verify_collection(
-                        *ctx.accounts.token_metadata_program.key,
-                        *ctx.accounts.metadata.key,
-                        *collection_pda_account.key,
-                        *ctx.accounts.payer.key,
-                        *ctx.accounts.update_authority.key,
-                        *collection_mint.key,
-                        *collection_metadata.key,
-                        *collection_master_edition_account.key,
-                        Some(*collection_authority_record.key),
-                    ),
-                    set_collection_infos.as_slice(),
-                    &[&seeds],
-                )?;
+            remaining_accounts_counter += 1;
+            let collection_mint = &ctx.remaining_accounts[remaining_accounts_counter];
+            remaining_accounts_counter += 1;
+            let collection_metadata = &ctx.remaining_accounts[remaining_accounts_counter];
+            remaining_accounts_counter += 1;
+            let collection_master_edition_account =
+                &ctx.remaining_accounts[remaining_accounts_counter];
+            remaining_accounts_counter += 1;
+            let collection_authority_record = &ctx.remaining_accounts[remaining_accounts_counter];
+            let seeds = [
+                b"collection".as_ref(),
+                candy_machine.to_account_info().key.as_ref(),
+            ];
+            if collection_pda_account.key
+                != &Pubkey::find_program_address(&seeds, &nft_candy_machine_v2::id()).0
+            {
+                return Err(ErrorCode::MismatchedCollectionPDA.into());
             }
+            if &collection_pda.mint != collection_mint.to_account_info().key {
+                return Err(ErrorCode::MismatchedCollectionMint.into());
+            }
+
+            let set_collection_infos = vec![
+                ctx.accounts.metadata.to_account_info(),
+                ctx.accounts.update_authority.to_account_info(),
+                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.update_authority.to_account_info(),
+                collection_mint.to_account_info(),
+                collection_metadata.to_account_info(),
+                collection_master_edition_account.to_account_info(),
+                collection_authority_record.to_account_info(),
+            ];
+            invoke_signed(
+                &set_and_verify_collection(
+                    *ctx.accounts.token_metadata_program.key,
+                    *ctx.accounts.metadata.key,
+                    *collection_pda_account.key,
+                    *ctx.accounts.payer.key,
+                    *ctx.accounts.update_authority.key,
+                    *collection_mint.key,
+                    *collection_metadata.key,
+                    *collection_master_edition_account.key,
+                    Some(*collection_authority_record.key),
+                ),
+                set_collection_infos.as_slice(),
+                &[&seeds],
+            )?;
         }
 
         msg!("Before instr check");
@@ -692,7 +687,7 @@ pub mod nft_candy_machine_v2 {
         Ok(())
     }
 
-    pub fn set_collection(ctx: Context<SetCollection>, creator_bump: u8) -> ProgramResult {
+    pub fn set_collection(ctx: Context<SetCollection>) -> ProgramResult {
         let mint = ctx.accounts.mint.to_account_info();
         let metadata: Metadata =
             Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
@@ -718,6 +713,11 @@ pub mod nft_candy_machine_v2 {
                 ctx.accounts.system_program.to_account_info(),
                 ctx.accounts.rent.to_account_info(),
             ];
+            msg!(
+                "About to approve collection authority for {} with new authority {}.",
+                ctx.accounts.metadata.key,
+                ctx.accounts.collection_pda.to_account_info().key
+            );
             invoke(
                 &approve_collection_authority(
                     *ctx.accounts.token_metadata_program.key,
@@ -731,8 +731,44 @@ pub mod nft_candy_machine_v2 {
                 approve_collection_infos.as_slice(),
             )?;
         }
-        ctx.accounts.collection_pda.mint = Some(*mint.key);
+        ctx.accounts.collection_pda.mint = *mint.key;
 
+        Ok(())
+    }
+
+    pub fn remove_collection(ctx: Context<RemoveCollection>) -> ProgramResult {
+        let mint = ctx.accounts.mint.to_account_info();
+        let metadata: Metadata =
+            Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
+        if &metadata.update_authority != ctx.accounts.authority.to_account_info().key {
+            return Err(ErrorCode::IncorrectCollectionAuthority.into());
+        };
+        if &metadata.mint != mint.key {
+            return Err(MetadataError::MintMismatch.into());
+        }
+
+        let authority_record = ctx.accounts.collection_authority_record.to_account_info();
+
+        let revoke_collection_infos = vec![
+            authority_record.clone(),
+            ctx.accounts.authority.to_account_info(), // Fix this I think?
+            ctx.accounts.metadata.to_account_info(),
+            mint.clone(),
+        ];
+        msg!(
+            "About to revoke collection authority for {}.",
+            ctx.accounts.metadata.key
+        );
+        invoke(
+            &revoke_collection_authority(
+                *ctx.accounts.token_metadata_program.key,
+                *authority_record.key,
+                *ctx.accounts.authority.key,
+                *ctx.accounts.metadata.key,
+                *mint.key,
+            ),
+            revoke_collection_infos.as_slice(),
+        )?;
         Ok(())
     }
 
@@ -812,12 +848,11 @@ pub struct InitializeCandyMachine<'info> {
 
 /// Set the collection PDA for the candy machine
 #[derive(Accounts)]
-#[instruction(collection_bump: u8)]
 pub struct SetCollection<'info> {
     #[account(has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
-    #[account(init, payer = payer, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump=collection_bump)]
+    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
     collection_pda: Account<'info, CollectionPDA>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
@@ -826,6 +861,24 @@ pub struct SetCollection<'info> {
     metadata: UncheckedAccount<'info>,
     mint: UncheckedAccount<'info>,
     edition: UncheckedAccount<'info>,
+    #[account(mut)]
+    collection_authority_record: UncheckedAccount<'info>,
+    #[account(address = mpl_token_metadata::id())]
+    token_metadata_program: UncheckedAccount<'info>,
+}
+
+/// Set the collection PDA for the candy machine
+#[derive(Accounts)]
+pub struct RemoveCollection<'info> {
+    #[account(has_one = authority)]
+    candy_machine: Account<'info, CandyMachine>,
+    authority: Signer<'info>,
+    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close=authority)]
+    collection_pda: Account<'info, CollectionPDA>,
+    // Dont need to be checked because CPI
+    metadata: UncheckedAccount<'info>,
+    mint: UncheckedAccount<'info>,
+    #[account(mut)]
     collection_authority_record: UncheckedAccount<'info>,
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
@@ -936,7 +989,7 @@ pub struct CandyMachine {
 #[account]
 #[derive(Default)]
 pub struct CollectionPDA {
-    pub mint: Option<Pubkey>,
+    pub mint: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -1117,7 +1170,6 @@ pub fn get_good_index(
             }
         }
     }
-
     Ok((index_to_use, found))
 }
 
