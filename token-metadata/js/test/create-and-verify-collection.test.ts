@@ -15,11 +15,10 @@ import {
   connectionURL,
   SELLER_FEE_BASIS_POINTS,
   logDebug,
-  createCollection,
 } from './utils';
 import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair } from '@solana/web3.js';
-import { createMasterEdition } from './actions';
+import { createCollection, createMasterEdition } from './actions';
 import { Collection } from '../src/accounts';
 import { SetAndVerifyCollectionCollection } from '../src/transactions';
 
@@ -72,11 +71,9 @@ test('verify-collection', async (t) => {
       collectionMasterEdition: collectionNft.masterEditionPubkey,
     },
   );
-  await transactionHandler.sendAndConfirmTransaction(
-    collectionVerifyCollectionTransaction,
-    [payer],
-    { skipPreflight: true },
-  );
+  await transactionHandler.sendAndConfirmTransaction(collectionVerifyCollectionTransaction, [
+    payer,
+  ]);
   const updatedMetadataAfterVerification = await getMetadataData(
     connection,
     collectionMemberNft.metadata,

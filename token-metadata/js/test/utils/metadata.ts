@@ -19,7 +19,7 @@ export async function initMetadata() {
   const payer = Keypair.generate();
   addLabel('payer', payer);
 
-  const connection = new Connection(connectionURL, 'singleGossip');
+  const connection = new Connection(connectionURL, 'confirmed');
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
   await airdrop(connection, payer.publicKey, 2);
