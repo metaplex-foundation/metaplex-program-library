@@ -35,7 +35,7 @@ const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
-pub mod nft_candy_machine_v2 {
+pub mod candy_machine {
 
     use super::*;
 
@@ -412,7 +412,7 @@ pub mod nft_candy_machine_v2 {
             current += (num_accounts as usize) * (1 + 32);
             let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
 
-            if program_id != nft_candy_machine_v2::id()
+            if program_id != candy_machine::id()
                 && program_id != spl_token::id()
                 && program_id != anchor_lang::solana_program::system_program::ID
                 && program_id != associated_token
