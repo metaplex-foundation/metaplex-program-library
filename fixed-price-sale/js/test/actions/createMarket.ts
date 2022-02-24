@@ -9,7 +9,7 @@ import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { createTokenAccount } from '../transactions';
 import { createAndSignTransaction, logDebug } from '../utils';
 
-import { findTresuryOwnerAddress } from '../../src/utils';
+import { findTreasuryOwnerAddress } from '../../src/utils';
 import { createCreateMarketInstruction, CreateMarketInstructionArgs } from '../../src/instructions';
 
 type CreateMarketParams = {
@@ -32,8 +32,13 @@ export const createMarket = async ({
   sellingResource,
   treasuryMint,
   params,
-}: CreateMarketParams): Promise<{ market: Keypair; treasuryHolder: Keypair }> => {
-  const [treasuryOwner, treasuryOwnerBump] = await findTresuryOwnerAddress(
+}: CreateMarketParams): Promise<{
+  market: Keypair;
+  treasuryHolder: Keypair;
+  treasuryOwnerBump: number;
+  treasuryOwner: PublicKey;
+}> => {
+  const [treasuryOwner, treasuryOwnerBump] = await findTreasuryOwnerAddress(
     treasuryMint,
     sellingResource,
   );
@@ -90,5 +95,5 @@ export const createMarket = async ({
   logDebug(`market: ${market.publicKey}`);
   assertConfirmedTransaction(test, marketRes.txConfirmed);
 
-  return { market, treasuryHolder };
+  return { market, treasuryHolder, treasuryOwnerBump, treasuryOwner };
 };

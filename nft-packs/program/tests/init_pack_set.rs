@@ -9,8 +9,7 @@ use num_traits::FromPrimitive;
 use solana_program::{clock::Clock, instruction::InstructionError};
 use solana_program_test::*;
 use solana_sdk::{
-    signature::Signer, signer::keypair::Keypair, transaction::TransactionError,
-    transport::TransportError,
+    signer::keypair::Keypair, transaction::TransactionError, transport::TransportError,
 };
 use utils::*;
 
@@ -32,9 +31,6 @@ async fn success() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -49,7 +45,6 @@ async fn success() {
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();
@@ -86,9 +81,6 @@ async fn fail() {
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     let result = test_pack_set
         .init(
@@ -103,7 +95,6 @@ async fn fail() {
                 redeem_start_date,
                 redeem_end_date: redeem_start_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await;
 

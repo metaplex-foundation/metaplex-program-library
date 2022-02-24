@@ -321,6 +321,8 @@ pub enum MetadataInstruction {
     FreezeDelegatedAccount,
     ///See [thaw_delegated_account] for Doc
     ThawDelegatedAccount,
+    ///See [remove_creator_verification] for Doc
+    RemoveCreatorVerification
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -632,6 +634,19 @@ pub fn sign_metadata(program_id: Pubkey, metadata: Pubkey, creator: Pubkey) -> I
             AccountMeta::new_readonly(creator, true),
         ],
         data: MetadataInstruction::SignMetadata.try_to_vec().unwrap(),
+    }
+}
+
+/// Remove Creator Verificaton
+#[allow(clippy::too_many_arguments)]
+pub fn remove_creator_verification(program_id: Pubkey, metadata: Pubkey, creator: Pubkey) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata, false),
+            AccountMeta::new_readonly(creator, true),
+        ],
+        data: MetadataInstruction::RemoveCreatorVerification.try_to_vec().unwrap(),
     }
 }
 
@@ -1003,14 +1018,16 @@ pub fn approve_collection_authority(
 ///
 ///### Accounts:
 ///
-///   0. `[writable]` Use Authority Record PDA
-///   1. `[writable]` Owned Token Account Of Mint
+///   0. `[writable]` Collection Authority Record PDA
+///   1. `[writable]` The Authority that was delegated to
+///   2. `[signer]` The Original Update Authority
 ///   2. `[]` Metadata account
 ///   3. `[]` Mint of Metadata
 #[allow(clippy::too_many_arguments)]
 pub fn revoke_collection_authority(
     program_id: Pubkey,
     collection_authority_record: Pubkey,
+    delegate_authority: Pubkey,
     update_authority: Pubkey,
     metadata: Pubkey,
     mint: Pubkey,
@@ -1019,6 +1036,7 @@ pub fn revoke_collection_authority(
         program_id,
         accounts: vec![
             AccountMeta::new(collection_authority_record, false),
+            AccountMeta::new_readonly(delegate_authority, false),
             AccountMeta::new(update_authority, true),
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),

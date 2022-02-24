@@ -11,11 +11,15 @@ import { TokenAccount } from '@metaplex-foundation/mpl-core';
 
 import { findTradeHistoryAddress, validateMembershipToken } from '../src/utils';
 import { createBuyTransaction } from './transactions';
-import { mintNFT } from './actions/mint-nft';
-import { mintTokenToAccount } from './actions/mint-token-to-account';
 import { killStuckProcess, logDebug, sleep } from './utils';
-import { createPrerequisites, createStore, initSellingResource } from './actions';
-import { createMarket } from './actions/create-market';
+import {
+  createPrerequisites,
+  createStore,
+  initSellingResource,
+  mintTokenToAccount,
+  mintNFT,
+  createMarket,
+} from './actions';
 
 killStuckProcess();
 
