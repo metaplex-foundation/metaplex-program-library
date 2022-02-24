@@ -18,7 +18,7 @@ impl<'info> CreateMarket<'info> {
         pieces_in_one_wallet: Option<u64>,
         start_date: u64,
         end_date: Option<u64>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let market = &mut self.market;
         let store = &self.store;
         let selling_resource_owner = &self.selling_resource_owner;
@@ -59,21 +59,21 @@ impl<'info> CreateMarket<'info> {
             if mint.owner != &anchor_spl::token::ID
                 || treasury_holder.owner != &anchor_spl::token::ID
             {
-                return Err(ProgramError::IllegalOwner);
+                return Err(ProgramError::IllegalOwner.into());
             }
 
             if accessor::mint(&treasury_holder)? != *mint.key {
-                return Err(ProgramError::InvalidAccountData);
+                return Err(ProgramError::InvalidAccountData.into());
             }
 
             if accessor::authority(&treasury_holder)? != owner.key() {
-                return Err(ProgramError::InvalidAccountData);
+                return Err(ProgramError::InvalidAccountData.into());
             }
         } else {
             // for native SOL we use PDA as a treasury holder
             // because of security reasons(only program can spend this SOL)
             if treasury_holder.key != owner.key {
-                return Err(ProgramError::InvalidAccountData);
+                return Err(ProgramError::InvalidAccountData.into());
             }
         }
 

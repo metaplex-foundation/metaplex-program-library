@@ -9,7 +9,7 @@ use anchor_lang::{prelude::*, solana_program::program_pack::Pack, System};
 use anchor_spl::token;
 
 impl<'info> ClaimResource<'info> {
-    pub fn process(&mut self, vault_owner_bump: u8) -> ProgramResult {
+    pub fn process(&mut self, vault_owner_bump: u8) -> Result<()> {
         let market = &self.market;
         let selling_resource = &self.selling_resource;
         let vault = &self.vault;
@@ -37,7 +37,7 @@ impl<'info> ClaimResource<'info> {
             treasury_holder.lamports()
         } else {
             let token_account = spl_token::state::Account::unpack(&treasury_holder.data.borrow())?;
-            if token_account.owner != market.treasury_owner.key() {
+            if token_account.owner != market.treasury_owner {
                 return Err(ErrorCode::DerivedKeyInvalid.into());
             }
 

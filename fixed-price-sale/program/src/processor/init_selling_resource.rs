@@ -8,7 +8,7 @@ impl<'info> InitSellingResource<'info> {
         _master_edition_bump: u8,
         _vault_owner_bump: u8,
         max_supply: Option<u64>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let store = &self.store;
         let admin = &self.admin;
         let selling_resource = &mut self.selling_resource;

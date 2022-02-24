@@ -2,7 +2,7 @@
 
 use anchor_lang::prelude::*;
 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     // 6000
     #[msg("No valid signer present")]

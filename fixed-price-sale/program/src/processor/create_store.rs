@@ -1,17 +1,8 @@
-// use crate::{CreateStore, utils::*, error::ErrorCode,};
-// use anchor_lang::prelude::*;
-
-// impl<'info> CreateStore<'info> {
-//     pub fn process(
-//         &mut self,
-//     ) -> ProgramResult {}
-// }
-
 use crate::{error::ErrorCode, utils::*, CreateStore};
 use anchor_lang::prelude::*;
 
 impl<'info> CreateStore<'info> {
-    pub fn process(&mut self, name: String, description: String) -> ProgramResult {
+    pub fn process(&mut self, name: String, description: String) -> Result<()> {
         let admin = &self.admin;
         let store = &mut self.store;
 

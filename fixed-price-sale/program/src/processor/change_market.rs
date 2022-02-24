@@ -9,7 +9,7 @@ impl<'info> ChangeMarket<'info> {
         mutable: Option<bool>,
         new_price: Option<u64>,
         new_pieces_in_one_wallet: Option<u64>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let market = &mut self.market;
         let clock = &self.clock;
 

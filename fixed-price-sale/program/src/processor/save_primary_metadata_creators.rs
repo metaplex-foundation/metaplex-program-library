@@ -6,7 +6,7 @@ impl<'info> SavePrimaryMetadataCreators<'info> {
         &mut self,
         primary_metadata_creators_bump: u8,
         creators: Vec<mpl_token_metadata::state::Creator>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let metadata = &self.metadata;
         let admin = &self.admin;
         let secondary_metadata_creators = &mut self.primary_metadata_creators;

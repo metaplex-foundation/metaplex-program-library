@@ -23,7 +23,7 @@ pub fn assert_derivation(
     program_id: &Pubkey,
     account: &AccountInfo,
     path: &[&[u8]],
-) -> Result<u8, ProgramError> {
+) -> Result<u8> {
     let (key, bump) = Pubkey::find_program_address(path, program_id);
     if key != *account.key {
         return Err(ErrorCode::DerivedKeyInvalid.into());
@@ -98,7 +98,7 @@ pub fn sys_create_account<'a>(
     space: usize,
     owner: &Pubkey,
     signer_seeds: &[&[u8]],
-) -> ProgramResult {
+) -> Result<()> {
     invoke_signed(
         &system_instruction::create_account(from.key, to.key, lamports, space as u64, owner),
         &[from.clone(), to.clone()],
@@ -115,7 +115,7 @@ pub fn sys_transfer<'a>(
     to: &AccountInfo<'a>,
     lamports: u64,
     signer_seeds: &[&[u8]],
-) -> ProgramResult {
+) -> Result<()> {
     invoke_signed(
         &system_instruction::transfer(from.key, to.key, lamports),
         &[from.clone(), to.clone()],
@@ -144,7 +144,7 @@ pub fn mpl_mint_new_edition_from_master_edition_via_token<'a>(
     rent: &AccountInfo<'a>,
     edition: u64,
     signers_seeds: &[&[u8]],
-) -> ProgramResult {
+) -> Result<()> {
     let tx = mpl_token_metadata::instruction::mint_new_edition_from_master_edition_via_token(
         mpl_token_metadata::id(),
         *new_metadata.key,
@@ -192,7 +192,7 @@ pub fn mpl_update_primary_sale_happened_via_token<'a>(
     owner: &AccountInfo<'a>,
     token: &AccountInfo<'a>,
     signers_seeds: &[&[u8]],
-) -> ProgramResult {
+) -> Result<()> {
     let tx = mpl_token_metadata::instruction::update_primary_sale_happened_via_token(
         mpl_token_metadata::id(),
         metadata.key(),
@@ -219,7 +219,7 @@ pub fn mpl_update_metadata_accounts_v2<'a>(
     primary_sale_happened: Option<bool>,
     is_mutable: Option<bool>,
     signers_seeds: &[&[u8]],
-) -> ProgramResult {
+) -> Result<()> {
     let tx = mpl_token_metadata::instruction::update_metadata_accounts_v2(
         mpl_token_metadata::id(),
         metadata.key(),
@@ -246,7 +246,7 @@ pub fn puffed_out_string(s: String, size: usize) -> String {
 }
 
 /// Two keys equivalence check
-pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
+pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     if key1 != key2 {
         Err(ErrorCode::PublicKeyMismatch.into())
     } else {
@@ -257,7 +257,7 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
 pub fn calculate_primary_shares_for_creator(
     total_amount: u64,
     shares: u64,
-) -> Result<u64, ProgramError> {
+) -> Result<u64> {
     Ok(total_amount
         .checked_mul(shares)
         .ok_or(ErrorCode::MathOverflow)?
@@ -269,7 +269,7 @@ pub fn calculate_secondary_shares_for_creator(
     total_amount: u64,
     seller_fee_basis_points: u64,
     shares: u64,
-) -> Result<u64, ProgramError> {
+) -> Result<u64> {
     Ok((total_amount
         .checked_mul(seller_fee_basis_points)
         .ok_or(ErrorCode::MathOverflow)?
@@ -284,7 +284,7 @@ pub fn calculate_secondary_shares_for_creator(
 pub fn calculate_secondary_shares_for_market_owner(
     total_amount: u64,
     seller_fee_basis_points: u64,
-) -> Result<u64, ProgramError> {
+) -> Result<u64> {
     Ok(total_amount
         .checked_sub(
             total_amount

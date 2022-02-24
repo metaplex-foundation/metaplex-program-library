@@ -13,7 +13,7 @@ use anchor_spl::token;
 use mpl_token_metadata::utils::get_supply_off_master_edition;
 
 impl<'info> Buy<'info> {
-    pub fn process(&mut self, _trade_history_bump: u8, vault_owner_bump: u8) -> ProgramResult {
+    pub fn process(&mut self, _trade_history_bump: u8, vault_owner_bump: u8) -> Result<()> {
         let market = &mut self.market;
         let selling_resource = &mut self.selling_resource;
         let user_token_account = Box::new(&self.user_token_account);

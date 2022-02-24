@@ -25,7 +25,7 @@ pub mod fixed_price_sale {
         master_edition_bump: u8,
         vault_owner_bump: u8,
         max_supply: Option<u64>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts
             .process(master_edition_bump, vault_owner_bump, max_supply)
     }
@@ -34,7 +34,7 @@ pub mod fixed_price_sale {
         ctx: Context<'_, '_, '_, 'info, CreateStore<'info>>,
         name: String,
         description: String,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process(name, description)
     }
 
@@ -42,19 +42,19 @@ pub mod fixed_price_sale {
         ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
         _trade_history_bump: u8,
         vault_owner_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process(_trade_history_bump, vault_owner_bump)
     }
 
     pub fn close_market<'info>(
         ctx: Context<'_, '_, '_, 'info, CloseMarket<'info>>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process()
     }
 
     pub fn suspend_market<'info>(
         ctx: Context<'_, '_, '_, 'info, SuspendMarket<'info>>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process()
     }
 
@@ -65,7 +65,7 @@ pub mod fixed_price_sale {
         mutable: Option<bool>,
         new_price: Option<u64>,
         new_pieces_in_one_wallet: Option<u64>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process(
             new_name,
             new_description,
@@ -77,7 +77,7 @@ pub mod fixed_price_sale {
 
     pub fn resume_market<'info>(
         ctx: Context<'_, '_, '_, 'info, ResumeMarket<'info>>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process()
     }
 
@@ -85,7 +85,7 @@ pub mod fixed_price_sale {
         ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
         treasury_owner_bump: u8,
         payout_ticket_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process(
             treasury_owner_bump,
             payout_ticket_bump,
@@ -103,7 +103,7 @@ pub mod fixed_price_sale {
         pieces_in_one_wallet: Option<u64>,
         start_date: u64,
         end_date: Option<u64>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process(
             _treasury_owner_bump,
             name,
@@ -119,7 +119,7 @@ pub mod fixed_price_sale {
     pub fn claim_resource<'info>(
         ctx: Context<'_, '_, '_, 'info, ClaimResource<'info>>,
         vault_owner_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts.process(vault_owner_bump)
     }
 
@@ -127,7 +127,7 @@ pub mod fixed_price_sale {
         ctx: Context<'_, '_, '_, 'info, SavePrimaryMetadataCreators<'info>>,
         primary_metadata_creators_bump: u8,
         creators: Vec<mpl_token_metadata::state::Creator>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         ctx.accounts
             .process(primary_metadata_creators_bump, creators)
     }
@@ -188,7 +188,7 @@ pub struct CreateMarket<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(trade_history_bump:u8, vault_owner_bump: u8)]
+#[instruction(trade_history:u8, vault_owner_bump: u8)]
 pub struct Buy<'info> {
     #[account(mut, has_one=treasury_holder)]
     market: Box<Account<'info, Market>>,
@@ -196,8 +196,9 @@ pub struct Buy<'info> {
     selling_resource: Box<Account<'info, SellingResource>>,
     #[account(mut)]
     user_token_account: UncheckedAccount<'info>,
+    #[account(mut)]
     user_wallet: Signer<'info>,
-    #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump=trade_history_bump, payer=user_wallet)]
+    #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump, payer=user_wallet)]
     trade_history: Box<Account<'info, TradeHistory>>,
     #[account(mut)]
     treasury_holder: UncheckedAccount<'info>,
@@ -268,7 +269,7 @@ pub struct ClaimResource<'info> {
     vault: Box<Account<'info, TokenAccount>>,
     #[account(mut, owner=mpl_token_metadata::id())]
     metadata: UncheckedAccount<'info>,
-    #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.key().as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
+    #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
     owner: UncheckedAccount<'info>,
     #[account(mut)]
     destination: Box<Account<'info, TokenAccount>>,
@@ -315,13 +316,13 @@ pub struct ChangeMarket<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(primary_metadata_creators_bump: u8, creators: Vec<mpl_token_metadata::state::Creator>)]
+#[instruction(primary_metadata_creators: u8, creators: Vec<mpl_token_metadata::state::Creator>)]
 pub struct SavePrimaryMetadataCreators<'info> {
     #[account(mut)]
     admin: Signer<'info>,
     #[account(mut, owner=mpl_token_metadata::id())]
     metadata: UncheckedAccount<'info>,
-    #[account(init, space=PrimaryMetadataCreators::LEN, payer=admin, seeds=[PRIMARY_METADATA_CREATORS_PREFIX.as_bytes(), metadata.key.as_ref()], bump = primary_metadata_creators_bump)]
+    #[account(init, space=PrimaryMetadataCreators::LEN, payer=admin, seeds=[PRIMARY_METADATA_CREATORS_PREFIX.as_bytes(), metadata.key.as_ref()], bump)]
     primary_metadata_creators: Box<Account<'info, PrimaryMetadataCreators>>,
     system_program: Program<'info, System>,
 }

@@ -17,7 +17,7 @@ impl<'info> Withdraw<'info> {
         treasury_owner_bump: u8,
         payout_ticket_bump: u8,
         remaining_accounts: &[AccountInfo<'info>],
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let market = &self.market;
         let token_program = &self.token_program;
         let associated_token_program = &self.associated_token_program;
@@ -163,11 +163,11 @@ impl<'info> Withdraw<'info> {
             )?;
         } else {
             if *treasury_mint.owner != spl_token::id() {
-                return Err(ProgramError::InvalidArgument);
+                return Err(ProgramError::InvalidArgument.into());
             }
 
             if *treasury_holder.owner != spl_token::id() {
-                return Err(ProgramError::InvalidArgument);
+                return Err(ProgramError::InvalidArgument.into());
             }
 
             let associated_token_account =
