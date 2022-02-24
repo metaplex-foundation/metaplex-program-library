@@ -1,5 +1,6 @@
 mod utils;
 
+#[cfg(feature = "test-bpf")]
 mod withdraw {
     use crate::{
         setup_context,
