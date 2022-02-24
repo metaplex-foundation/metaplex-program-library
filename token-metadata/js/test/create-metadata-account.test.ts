@@ -15,11 +15,10 @@ import {
   airdrop,
   assertConfirmedTransaction,
   assertTransactionSummary,
-  Actions,
   PayerTransactionHandler,
   defaultSendOptions,
 } from '@metaplex-foundation/amman';
-
+import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
 import BN from 'bn.js';
 
 import { logDebug } from './utils';
@@ -41,16 +40,16 @@ test('create-metadata-account: success', async (t) => {
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
   await airdrop(connection, payer.publicKey, 2);
-
-  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
-  const mintRes = await transactionHandler.sendAndConfirmTransaction(
-    createMintTx,
-    [mint],
-    defaultSendOptions,
+  const mint = await Token.createMint(
+      connection,
+      payer,
+      payer.publicKey,
+      null,
+      6,
+      TOKEN_PROGRAM_ID
   );
-  addLabel('create:mint', mint);
 
-  assertConfirmedTransaction(t, mintRes.txConfirmed);
+  addLabel('create:mint', mint.publicKey);
 
   const initMetadataData = new MetadataDataData({
     uri: URI,
@@ -80,12 +79,12 @@ test('create-metadata-account: success', async (t) => {
     metadataAccountDataBytes: metadataAccount.data.byteLength,
   });
 
-  const metadataData = MetadataData.deserialize(metadataAccount.data);
+  const metadataData = MetadataData.deserialize(<Buffer>metadataAccount.data);
   spok(t, metadataData, {
     $topic: 'metadataData',
     key: MetadataKey.MetadataV1,
     updateAuthority: isKeyOf(payer),
-    mint: isKeyOf(mint),
+    mint: isKeyOf(mint.publicKey),
     data: {
       name: NAME,
       symbol: SYMBOL,
@@ -104,7 +103,7 @@ test('create-metadata-account: success', async (t) => {
 
   t.ok(Edition.isCompatible(mintAccount.data), 'mint account data is mint edition');
 
-  const editionData = EditionData.deserialize(mintAccount.data);
+  const editionData = EditionData.deserialize(<Buffer>mintAccount.data);
   const edition: BN = editionData.edition;
   t.ok(edition.toNumber() > 0, 'greater zero edition number');
 });
@@ -118,15 +117,15 @@ test('create-metadata-account-v2: success', async (t) => {
 
   await airdrop(connection, payer.publicKey, 2);
 
-  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
-  const mintRes = await transactionHandler.sendAndConfirmTransaction(
-    createMintTx,
-    [mint],
-    defaultSendOptions,
+  const mint = await Token.createMint(
+      connection,
+      payer,
+      payer.publicKey,
+      null,
+      6,
+      TOKEN_PROGRAM_ID
   );
-  addLabel('create:mint', mint);
-
-  assertConfirmedTransaction(t, mintRes.txConfirmed);
+  addLabel('create:mint', mint.publicKey);
 
   const initMetadataData = new DataV2({
     uri: URI,
@@ -158,12 +157,12 @@ test('create-metadata-account-v2: success', async (t) => {
     metadataAccountDataBytes: metadataAccount.data.byteLength,
   });
 
-  const metadataData = MetadataData.deserialize(metadataAccount.data);
+  const metadataData = MetadataData.deserialize(<Buffer>metadataAccount.data);
   spok(t, metadataData, {
     $topic: 'metadataData',
     key: MetadataKey.MetadataV1,
     updateAuthority: isKeyOf(payer),
-    mint: isKeyOf(mint),
+    mint: isKeyOf(mint.publicKey),
     data: {
       name: NAME,
       symbol: SYMBOL,
