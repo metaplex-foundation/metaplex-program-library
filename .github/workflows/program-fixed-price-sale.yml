@@ -66,5 +66,13 @@ jobs:
         working-directory: ./fixed-price-sale/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test buy
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test change_market
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test claim_resource
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test close_market
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test create_store
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test init_selling_resource
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test resume_market
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test save_primary_metadata_creators
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test suspend_market
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test withdraw
