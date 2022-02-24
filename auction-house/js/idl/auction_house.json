@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.2",
   "name": "auction_house",
   "instructions": [
     {
@@ -694,7 +694,7 @@
         },
         {
           "name": "transferAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
