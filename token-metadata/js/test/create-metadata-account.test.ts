@@ -13,12 +13,10 @@ import {
 import { connectionURL, killStuckProcess } from './utils';
 import {
   airdrop,
-  assertConfirmedTransaction,
   assertTransactionSummary,
   PayerTransactionHandler,
-  defaultSendOptions,
 } from '@metaplex-foundation/amman';
-import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import BN from 'bn.js';
 
 import { logDebug } from './utils';
@@ -41,12 +39,12 @@ test('create-metadata-account: success', async (t) => {
 
   await airdrop(connection, payer.publicKey, 2);
   const mint = await Token.createMint(
-      connection,
-      payer,
-      payer.publicKey,
-      null,
-      6,
-      TOKEN_PROGRAM_ID
+    connection,
+    payer,
+    payer.publicKey,
+    null,
+    6,
+    TOKEN_PROGRAM_ID,
   );
 
   addLabel('create:mint', mint.publicKey);
@@ -118,12 +116,12 @@ test('create-metadata-account-v2: success', async (t) => {
   await airdrop(connection, payer.publicKey, 2);
 
   const mint = await Token.createMint(
-      connection,
-      payer,
-      payer.publicKey,
-      null,
-      6,
-      TOKEN_PROGRAM_ID
+    connection,
+    payer,
+    payer.publicKey,
+    null,
+    6,
+    TOKEN_PROGRAM_ID,
   );
   addLabel('create:mint', mint.publicKey);
 

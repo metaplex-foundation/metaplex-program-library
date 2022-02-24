@@ -1,11 +1,6 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { addLabel, logDebug } from '../utils';
-import {
-  assertConfirmedTransaction,
-  defaultSendOptions,
-  TransactionHandler,
-} from '@metaplex-foundation/amman';
-import { strict as assert } from 'assert';
+import { defaultSendOptions, TransactionHandler } from '@metaplex-foundation/amman';
 import {
   CreateMetadata,
   CreateMasterEditionV3,
@@ -17,7 +12,7 @@ import {
 } from '../../src/mpl-token-metadata';
 import BN from 'bn.js';
 import * as spl from '@solana/spl-token';
-import {Token, TOKEN_PROGRAM_ID} from "@solana/spl-token";
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 // -----------------
 // Create Metadata
 // -----------------
@@ -102,15 +97,14 @@ export async function mintAndCreateMetadata(
   args: ConstructorParameters<typeof MetadataDataData>[0],
 ) {
   const mint = await Token.createMint(
-      connection,
-      payer,
-      payer.publicKey,
-      null,
-      6,
-      TOKEN_PROGRAM_ID
+    connection,
+    payer,
+    payer.publicKey,
+    null,
+    6,
+    TOKEN_PROGRAM_ID,
   );
   addLabel('mint', mint.publicKey);
-
 
   const initMetadataData = new MetadataDataData(args);
 
