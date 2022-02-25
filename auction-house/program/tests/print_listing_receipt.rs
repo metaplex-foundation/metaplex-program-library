@@ -2,16 +2,15 @@
 mod utils;
 use anchor_lang::AccountDeserialize;
 use claim::assert_none;
-use mpl_auction_house::{pda::find_trade_state_address, Listing};
+use mpl_auction_house::{pda::find_trade_state_address, receipt::Listing};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
 use solana_sdk::{
-    signature::Keypair, signer::Signer, sysvar::clock::Clock, transaction::TransactionError,
+    signer::Signer, sysvar::clock::Clock, transaction::TransactionError,
     transport::TransportError,
 };
 use spl_associated_token_account::get_associated_token_address;
-
 use std::assert_eq;
 use utils::setup_functions::*;
 
@@ -136,7 +135,7 @@ async fn failure_print_listing_receipt_trade_state_mismatch() {
         .await
         .unwrap();
 
-    let (sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, price);
+    let (_sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, price);
     context
         .banks_client
         .process_transaction(sell_tx)

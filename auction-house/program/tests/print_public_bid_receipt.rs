@@ -3,7 +3,7 @@ mod utils;
 use anchor_lang::AccountDeserialize;
 
 use claim::assert_none;
-use mpl_auction_house::{pda::find_public_bid_trade_state_address, PublicBid};
+use mpl_auction_house::{pda::find_public_bid_trade_state_address, receipt::PublicBid};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
@@ -146,7 +146,7 @@ async fn failure_print_public_bid_receipt_trade_state_mismatch() {
     let owner = &test_metadata.token;
     let owner_key = owner.pubkey();
 
-    let (buy_acc, buy_tx) = public_buy(
+    let (_buy_acc, buy_tx) = public_buy(
         &mut context,
         &ahkey,
         &ah,

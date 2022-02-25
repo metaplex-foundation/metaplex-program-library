@@ -2,7 +2,7 @@
 mod utils;
 use anchor_lang::AccountDeserialize;
 use claim::assert_some;
-use mpl_auction_house::{pda::find_public_bid_trade_state_address, PublicBid, Purchase};
+use mpl_auction_house::{pda::find_public_bid_trade_state_address, receipt::{PublicBid, Purchase}};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;

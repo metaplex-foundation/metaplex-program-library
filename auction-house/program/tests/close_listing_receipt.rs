@@ -3,8 +3,8 @@ mod utils;
 use anchor_lang::AccountDeserialize;
 use claim::assert_some;
 use mpl_auction_house::{
-    pda::{find_public_bid_trade_state_address, find_trade_state_address},
-    Listing,
+    pda::find_trade_state_address,
+    receipt::Listing
 };
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
@@ -90,15 +90,6 @@ async fn success_close_listing_receipt_after_sale() {
         .await
         .unwrap();
 
-    let (trade_state, ts_bump) = find_public_bid_trade_state_address(
-        &buyer_key,
-        &ahkey,
-        &ah.treasury_mint,
-        &test_metadata.mint.pubkey(),
-        price,
-        1,
-    );
-
     let (buy_acc, buy_tx) = public_buy(
         &mut context,
         &ahkey,
@@ -180,7 +171,7 @@ async fn fail_no_closing_listing_receipts_when_trade_state_is_available() {
     let buyer = Keypair::new();
     let buyer_key = buyer.pubkey();
 
-    let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
+    let (ah, ahkey, _authority) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
     let test_metadata = Metadata::new();
@@ -208,7 +199,7 @@ async fn fail_no_closing_listing_receipts_when_trade_state_is_available() {
     let owner = &test_metadata.token;
     let owner_key = owner.pubkey();
 
-    let (sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, price);
+    let (_sell_acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, price);
     context
         .banks_client
         .process_transaction(sell_tx)
@@ -242,7 +233,7 @@ async fn fail_no_closing_listing_receipts_when_trade_state_is_available() {
         .await
         .unwrap();
 
-    let (receipt_acc, receipt_tx) = close_listing_receipt(
+    let (_receipt_acc, receipt_tx) = close_listing_receipt(
         &mut context,
         &test_metadata.token,
         &token,

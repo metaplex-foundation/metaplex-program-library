@@ -8,7 +8,6 @@ use mpl_testing_utils::utils::Metadata;
 use solana_program_test::*;
 use solana_sdk::signer::Signer;
 
-use anchor_spl::token::TokenAccount;
 use std::assert_eq;
 
 use solana_program::instruction::Instruction;
