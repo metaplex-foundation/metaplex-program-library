@@ -1201,6 +1201,16 @@ pub mod auction_house {
     ) -> ProgramResult {
       receipt::close_public_bid_receipt(ctx)
     }
+
+    pub fn print_purchase_receipt<'info>(
+      ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
+      receipt_bump: u8,
+    ) -> ProgramResult {
+      receipt::print_purchase_receipt(
+        ctx,
+        receipt_bump,
+      )
+    }
 }
 
 #[derive(Accounts)]

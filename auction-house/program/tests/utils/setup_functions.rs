@@ -513,7 +513,8 @@ pub fn execute_sale_with_receipt(
     buyer_trade_state: &Pubkey,
     token_size: u64,
     buyer_price: u64,
-) -> (mpl_auction_house::accounts::ExecuteSaleWithReceipt, Transaction) {
+) -> ((mpl_auction_house::accounts::ExecuteSale, mpl_auction_house::accounts::PrintPurchaseReceipt), Transaction) {
+    let program_id = mpl_auction_house::id();
     let buyer_token_account = get_associated_token_address(&buyer, &test_metadata.mint.pubkey());
 
     let (program_as_signer, pas_bump) = find_program_as_signer_address();
@@ -532,7 +533,7 @@ pub fn execute_sale_with_receipt(
       seller_trade_state,
       buyer_trade_state,
     );
-    let accounts = mpl_auction_house::accounts::ExecuteSaleWithReceipt {
+    let execute_sale_accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: *buyer,
         seller: *seller,
         auction_house: *ahkey,
@@ -551,37 +552,53 @@ pub fn execute_sale_with_receipt(
         auction_house_treasury: ah.auction_house_treasury,
         program_as_signer: program_as_signer,
         token_program: spl_token::id(),
-        purchase_receipt: purchase_receipt,
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        clock: sysvar::clock::id(),
     };
 
-    let account_metas = accounts.to_account_metas(None);
+    let execute_sale_account_metas = execute_sale_accounts.to_account_metas(None);
 
-    let instruction = Instruction {
-        program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSaleWithReceipt {
+    let execute_sale_instruction = Instruction {
+        program_id,
+        data: mpl_auction_house::instruction::ExecuteSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
-            purchase_receipt_bump,
             token_size,
             buyer_price,
         }
         .data(),
-        accounts: account_metas,
+        accounts: execute_sale_account_metas,
+    };
+
+    let print_purchase_receipt_accounts = mpl_auction_house::accounts::PrintPurchaseReceipt {
+      receipt: purchase_receipt,
+      seller_trade_state: *seller_trade_state,
+      buyer_trade_state: *buyer_trade_state,
+      bookkeeper: authority.pubkey(),
+      system_program: system_program::id(),
+      rent: sysvar::rent::id(),
+      clock: sysvar::clock::id(),
+      instruction: sysvar::instructions::id(),
+  };
+
+    let print_purchase_receipt_instruction = Instruction {
+      program_id,
+      data: mpl_auction_house::instruction::PrintPurchaseReceipt {
+        receipt_bump: purchase_receipt_bump,
+      }.data(),
+      accounts: print_purchase_receipt_accounts.to_account_metas(None),
     };
 
     let tx = Transaction::new_signed_with_payer(
-        &[instruction],
+        &[execute_sale_instruction, print_purchase_receipt_instruction],
         Some(&authority.pubkey()),
         &[authority],
         context.last_blockhash,
     );
 
-    (accounts, tx)
+    ((execute_sale_accounts, print_purchase_receipt_accounts), tx)
 }
 
 pub fn print_public_bid_receipt(

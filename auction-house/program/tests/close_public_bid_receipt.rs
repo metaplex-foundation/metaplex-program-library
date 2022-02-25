@@ -99,7 +99,7 @@ async fn success_close_public_bid_receipt_after_sale() {
         .await
         .unwrap();
 
-    let (execute_sale_acc, execute_sale_tx) = execute_sale_with_receipt(
+    let ((execute_sale_acc, print_purchase_receipt_acc), execute_sale_tx) = execute_sale_with_receipt(
         &mut context,
         &ahkey,
         &ah,
@@ -146,7 +146,7 @@ async fn success_close_public_bid_receipt_after_sale() {
 
     let purchase_account = context
         .banks_client
-        .get_account(execute_sale_acc.purchase_receipt)
+        .get_account(print_purchase_receipt_acc.receipt)
         .await
         .expect("error getting receipt")
         .expect("no data for receipt");

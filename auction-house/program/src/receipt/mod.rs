@@ -1,6 +1,5 @@
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 use anchor_spl::token::TokenAccount;
-
 use crate::{constants::*, id, utils::*, AuctionHouse, ErrorCode};
 
 pub const PUBLIC_BID_RECEIPT_SIZE: usize = 8 + //key
@@ -327,4 +326,30 @@ pub fn close_public_bid_receipt<'info>(
     }
 
     Ok(())
+}
+
+
+#[derive(Accounts)]
+#[instruction(receipt_bump: u8)]
+pub struct PrintPurchaseReceipt<'info> {
+    #[account(init, seeds=[PURCHASE_RECEIPT_PREFIX.as_bytes(), seller_trade_state.key().as_ref(), buyer_trade_state.key().as_ref()], bump=receipt_bump, payer=bookkeeper, space=PURCHASE_RECEIPT_SIZE)]
+    receipt: Account<'info, PurchaseReceipt>,
+    seller_trade_state: UncheckedAccount<'info>,
+    buyer_trade_state: UncheckedAccount<'info>,
+    #[account(mut)]
+    bookkeeper: Signer<'info>,
+    system_program: Program<'info, System>,
+    rent: Sysvar<'info, Rent>,
+    clock: Sysvar<'info, Clock>,
+    instruction: UncheckedAccount<'info>,
+}
+
+pub fn print_purchase_receipt<'info>(
+  ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
+  receipt_bump: u8,
+) -> ProgramResult {
+
+let prev_instruction_data = solana_program::sysvar::instructions::get_instruction_relative(-1, &ctx.accounts.instruction)?;
+
+  Ok(())
 }
