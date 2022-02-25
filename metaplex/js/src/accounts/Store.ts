@@ -21,21 +21,21 @@ type Args = {
   tokenProgram: StringPublicKey;
 };
 export class StoreData extends Borsh.Data<Args> {
-  static readonly SCHEMA = StoreData.struct([
+  static readonly SCHEMA: Map<any, any> = StoreData.struct([
     ['key', 'u8'],
     ['public', 'u8'],
     ['auctionProgram', 'pubkeyAsString'],
     ['tokenVaultProgram', 'pubkeyAsString'],
-    ['tokenMetadataProgram', 'pubkeyAsString'],
+    ['tokenMetadataProgram', 'pubkeyAsString!'],
     ['tokenProgram', 'pubkeyAsString'],
   ]);
 
   key: MetaplexKey = MetaplexKey.StoreV1;
   public = true;
-  auctionProgram: StringPublicKey;
-  tokenVaultProgram: StringPublicKey;
-  tokenMetadataProgram: StringPublicKey;
-  tokenProgram: StringPublicKey;
+  auctionProgram!: StringPublicKey;
+  tokenVaultProgram!: StringPublicKey;
+  tokenMetadataProgram!: StringPublicKey;
+  tokenProgram!: StringPublicKey;
 
   constructor(args: Args) {
     super(args);

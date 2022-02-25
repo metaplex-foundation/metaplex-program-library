@@ -10,7 +10,7 @@ import { MetaplexProgram } from '../MetaplexProgram';
 import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
 
 export class StartAuctionArgs extends Borsh.Data {
-  static readonly SCHEMA = StartAuctionArgs.struct([['instruction', 'u8']]);
+  static readonly SCHEMA: Map<any, any> = StartAuctionArgs.struct([['instruction', 'u8']]);
 
   instruction = 5;
 }

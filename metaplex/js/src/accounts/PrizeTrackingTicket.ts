@@ -17,7 +17,7 @@ type Args = {
   redemptions: BN;
 };
 export class PrizeTrackingTicketData extends Borsh.Data<Args> {
-  static readonly SCHEMA = PrizeTrackingTicketData.struct([
+  static readonly SCHEMA: Map<any, any> = PrizeTrackingTicketData.struct([
     ['key', 'u8'],
     ['metadata', 'pubkeyAsString'],
     ['supplySnapshot', 'u64'],
@@ -26,10 +26,10 @@ export class PrizeTrackingTicketData extends Borsh.Data<Args> {
   ]);
 
   key: MetaplexKey = MetaplexKey.PrizeTrackingTicketV1;
-  metadata: string;
-  supplySnapshot: BN;
-  expectedRedemptions: BN;
-  redemptions: BN;
+  metadata!: string;
+  supplySnapshot!: BN;
+  expectedRedemptions!: BN;
+  redemptions!: BN;
 
   constructor(args: Args) {
     super(args);

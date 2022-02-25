@@ -56,13 +56,13 @@ export interface AmountRangeArgs {
 }
 
 export class AmountRange extends Borsh.Data<AmountRangeArgs> {
-  static readonly SCHEMA = AmountRange.struct([
+  static readonly SCHEMA: Map<any, any> = AmountRange.struct([
     ['amount', 'u64'],
     ['length', 'u64'],
   ]);
 
-  amount: BN;
-  length: BN;
+  amount!: BN;
+  length!: BN;
 }
 
 export interface ParticipationConfigV2Args {
@@ -72,15 +72,15 @@ export interface ParticipationConfigV2Args {
 }
 
 export class ParticipationConfigV2 extends Borsh.Data<ParticipationConfigV2Args> {
-  static readonly SCHEMA = ParticipationConfigV2.struct([
+  static readonly SCHEMA: Map<any, any> = ParticipationConfigV2.struct([
     ['winnerConstraint', 'u8'],
     ['nonWinningConstraint', 'u8'],
     ['fixedPrice', { kind: 'option', type: 'u64' }],
   ]);
 
-  winnerConstraint: WinningConstraint;
-  nonWinningConstraint: NonWinningConstraint;
-  fixedPrice: BN | null;
+  winnerConstraint!: WinningConstraint;
+  nonWinningConstraint!: NonWinningConstraint;
+  fixedPrice!: BN | null;
 }
 
 export interface ParticipationStateV2Args {
@@ -88,9 +88,11 @@ export interface ParticipationStateV2Args {
 }
 
 export class ParticipationStateV2 extends Borsh.Data<ParticipationStateV2Args> {
-  static readonly SCHEMA = ParticipationStateV2.struct([['collectedToAcceptPayment', 'u64']]);
+  static readonly SCHEMA: Map<any, any> = ParticipationStateV2.struct([
+    ['collectedToAcceptPayment', 'u64'],
+  ]);
 
-  collectedToAcceptPayment: BN;
+  collectedToAcceptPayment!: BN;
 }
 
 export interface SafetyDepositConfigDataArgs {
@@ -105,7 +107,7 @@ export interface SafetyDepositConfigDataArgs {
 }
 
 export class SafetyDepositConfigData extends Borsh.Data<SafetyDepositConfigDataArgs> {
-  static readonly SCHEMA = new Map([
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...ParticipationConfigV2.SCHEMA,
     ...ParticipationStateV2.SCHEMA,
     ...AmountRange.SCHEMA,
@@ -123,14 +125,14 @@ export class SafetyDepositConfigData extends Borsh.Data<SafetyDepositConfigDataA
   ]);
 
   key: MetaplexKey = MetaplexKey.SafetyDepositConfigV1;
-  auctionManager: StringPublicKey;
-  order: BN;
-  winningConfigType: WinningConfigType;
-  amountType: TupleNumericType;
-  lengthType: TupleNumericType;
-  amountRanges: AmountRange[];
-  participationConfig: ParticipationConfigV2 | null;
-  participationState: ParticipationStateV2 | null;
+  auctionManager!: StringPublicKey;
+  order!: BN;
+  winningConfigType!: WinningConfigType;
+  amountType!: TupleNumericType;
+  lengthType!: TupleNumericType;
+  amountRanges!: AmountRange[];
+  participationConfig!: ParticipationConfigV2 | null;
+  participationState!: ParticipationStateV2 | null;
 
   constructor(args: SafetyDepositConfigDataArgs) {
     super(args);

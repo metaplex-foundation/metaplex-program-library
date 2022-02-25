@@ -11,7 +11,7 @@ import {
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class ClaimBidArgs extends Borsh.Data {
-  static readonly SCHEMA = ClaimBidArgs.struct([['instruction', 'u8']]);
+  static readonly SCHEMA: Map<any, any> = ClaimBidArgs.struct([['instruction', 'u8']]);
 
   instruction = 6;
 }

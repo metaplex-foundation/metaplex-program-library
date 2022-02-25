@@ -11,13 +11,13 @@ import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class EndAuctionArgs extends Borsh.Data<{ reveal: BN[] | null }> {
-  static readonly SCHEMA = EndAuctionArgs.struct([
+  static readonly SCHEMA: Map<any, any> = EndAuctionArgs.struct([
     ['instruction', 'u8'],
     ['reveal', { kind: 'option', type: [BN, BN] }],
   ]);
 
   instruction = 20;
-  reveal: BN[] | null;
+  reveal?: BN[];
 }
 
 type EndAuctionParams = {

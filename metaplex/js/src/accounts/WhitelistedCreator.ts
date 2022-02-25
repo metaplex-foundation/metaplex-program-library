@@ -12,14 +12,14 @@ import { AccountInfo, PublicKey } from '@solana/web3.js';
 
 type Args = { address: string; activated: boolean };
 export class WhitelistedCreatorData extends Borsh.Data<Args> {
-  static readonly SCHEMA = WhitelistedCreatorData.struct([
+  static readonly SCHEMA: Map<any, any> = WhitelistedCreatorData.struct([
     ['key', 'u8'],
     ['address', 'pubkeyAsString'],
     ['activated', 'u8'],
   ]);
 
   key: MetaplexKey = MetaplexKey.WhitelistedCreatorV1;
-  address: StringPublicKey;
+  address!: StringPublicKey;
   activated = true;
 
   // Populated from name service

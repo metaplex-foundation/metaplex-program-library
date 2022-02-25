@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
@@ -14,13 +15,13 @@ import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetStoreArgs extends Borsh.Data<{ public: boolean }> {
-  static readonly SCHEMA = SetStoreArgs.struct([
+  static readonly SCHEMA: Map<any, any> = SetStoreArgs.struct([
     ['instruction', 'u8'],
     ['public', 'u8'],
   ]);
 
   instruction = 8;
-  public: boolean;
+  public!: boolean;
 }
 
 type SetStoreParams = {
@@ -32,6 +33,8 @@ export class SetStore extends Transaction {
   constructor(options: TransactionCtorFields, params: ParamsWithStore<SetStoreParams>) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer');
+
     const { admin, store, isPublic } = params;
 
     const data = SetStoreArgs.serialize({ public: isPublic });

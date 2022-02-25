@@ -10,9 +10,10 @@ import {
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { VaultProgram, ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
 import { MetaplexProgram } from '../MetaplexProgram';
+import { strict as assert } from 'assert';
 
 export class RedeemBidArgs extends Borsh.Data {
-  static readonly SCHEMA = RedeemBidArgs.struct([['instruction', 'u8']]);
+  static readonly SCHEMA: Map<any, any> = RedeemBidArgs.struct([['instruction', 'u8']]);
 
   instruction = 2;
 }
@@ -26,15 +27,15 @@ export class RedeemUnusedWinningConfigItemsAsAuctioneerArgs extends Borsh.Data<{
   winningConfigItemIndex: number;
   proxyCall: ProxyCallAddress;
 }> {
-  static readonly SCHEMA = RedeemUnusedWinningConfigItemsAsAuctioneerArgs.struct([
+  static readonly SCHEMA: Map<any, any> = RedeemUnusedWinningConfigItemsAsAuctioneerArgs.struct([
     ['instruction', 'u8'],
     ['winningConfigItemIndex', 'u8'],
     ['proxyCall', 'u8'],
   ]);
 
   instruction = 12;
-  winningConfigItemIndex: number;
-  proxyCall: ProxyCallAddress;
+  winningConfigItemIndex!: number;
+  proxyCall!: ProxyCallAddress;
 }
 
 type RedeemBidParams = {
@@ -64,6 +65,8 @@ export class RedeemBid extends Transaction {
   constructor(options: TransactionCtorFields, params: ParamsWithStore<RedeemBidParams>) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer account');
+
     const {
       store,
       vault,

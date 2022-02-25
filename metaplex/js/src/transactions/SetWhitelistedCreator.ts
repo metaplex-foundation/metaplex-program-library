@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
 import {
@@ -10,13 +11,13 @@ import {
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetWhitelistedCreatorArgs extends Borsh.Data<{ activated: boolean }> {
-  static readonly SCHEMA = SetWhitelistedCreatorArgs.struct([
+  static readonly SCHEMA: Map<any, any> = SetWhitelistedCreatorArgs.struct([
     ['instruction', 'u8'],
     ['activated', 'u8'],
   ]);
 
   instruction = 9;
-  activated: boolean;
+  activated!: boolean;
 }
 
 type SetWhitelistedCreatorParams = {
@@ -33,6 +34,8 @@ export class SetWhitelistedCreator extends Transaction {
   ) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer');
+
     const { admin, whitelistedCreatorPDA, store, creator, activated } = params;
 
     const data = SetWhitelistedCreatorArgs.serialize({ activated });

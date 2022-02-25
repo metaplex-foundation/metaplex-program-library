@@ -14,15 +14,15 @@ import { Buffer } from 'buffer';
 
 type Args = { recipient: StringPublicKey; amountPaid: BN };
 export class PayoutTicketData extends Borsh.Data<Args> {
-  static readonly SCHEMA = PayoutTicketData.struct([
+  static readonly SCHEMA: Map<any, any> = PayoutTicketData.struct([
     ['key', 'u8'],
     ['recipient', 'pubkeyAsString'],
     ['amountPaid', 'u64'],
   ]);
 
   key: MetaplexKey;
-  recipient: StringPublicKey;
-  amountPaid: BN;
+  recipient!: StringPublicKey;
+  amountPaid!: BN;
 
   constructor(args: Args) {
     super(args);

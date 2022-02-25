@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { ParamsWithStore, VaultProgram } from '@metaplex-foundation/mpl-token-vault';
@@ -13,13 +14,13 @@ import BN from 'bn.js';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class RedeemParticipationBidV3Args extends Borsh.Data<{ winIndex: BN | null }> {
-  static readonly SCHEMA = RedeemParticipationBidV3Args.struct([
+  static readonly SCHEMA: Map<any, any> = RedeemParticipationBidV3Args.struct([
     ['instruction', 'u8'],
     ['winIndex', { kind: 'option', type: 'u64' }],
   ]);
 
   instruction = 19;
-  winIndex: BN | null;
+  winIndex?: BN;
 }
 
 type RedeemParticipationBidV3Params = {
@@ -54,6 +55,8 @@ export class RedeemParticipationBidV3 extends Transaction {
   ) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer');
+
     const {
       store,
       vault,

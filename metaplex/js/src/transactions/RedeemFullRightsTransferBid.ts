@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
@@ -13,7 +14,9 @@ import { MetaplexProgram } from '../MetaplexProgram';
 import { ProxyCallAddress, RedeemUnusedWinningConfigItemsAsAuctioneerArgs } from './RedeemBid';
 
 export class RedeemFullRightsTransferBidArgs extends Borsh.Data {
-  static readonly SCHEMA = RedeemFullRightsTransferBidArgs.struct([['instruction', 'u8']]);
+  static readonly SCHEMA: Map<any, any> = RedeemFullRightsTransferBidArgs.struct([
+    ['instruction', 'u8'],
+  ]);
 
   instruction = 3;
 }
@@ -44,6 +47,8 @@ export class RedeemFullRightsTransferBid extends Transaction {
   ) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer account');
+
     const {
       store,
       vault,

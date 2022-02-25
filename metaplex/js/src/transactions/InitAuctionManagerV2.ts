@@ -9,13 +9,14 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { MetaplexProgram } from '../MetaplexProgram';
+import { strict as assert } from 'assert';
 
 export class InitAuctionManagerV2Args extends Borsh.Data<{
   amountType: TupleNumericType;
   lengthType: TupleNumericType;
   maxRanges: BN;
 }> {
-  static readonly SCHEMA = InitAuctionManagerV2Args.struct([
+  static readonly SCHEMA: Map<any, any> = InitAuctionManagerV2Args.struct([
     ['instruction', 'u8'],
     ['amountType', 'u8'],
     ['lengthType', 'u8'],
@@ -44,6 +45,7 @@ export class InitAuctionManagerV2 extends Transaction {
   constructor(options: TransactionCtorFields, params: ParamsWithStore<InitAuctionManagerV2Params>) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer account');
     const {
       store,
       vault,

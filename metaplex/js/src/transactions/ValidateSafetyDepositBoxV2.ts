@@ -1,3 +1,4 @@
+import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
@@ -14,7 +15,7 @@ import { SafetyDepositConfigData } from '../mpl-metaplex';
 export class ValidateSafetyDepositBoxV2Args extends Borsh.Data<{
   safetyDepositConfig: SafetyDepositConfigData;
 }> {
-  static readonly SCHEMA = new Map([
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...SafetyDepositConfigData.SCHEMA,
     ...ValidateSafetyDepositBoxV2Args.struct([
       ['instruction', 'u8'],
@@ -22,7 +23,7 @@ export class ValidateSafetyDepositBoxV2Args extends Borsh.Data<{
     ]),
   ]);
   instruction = 18;
-  safetyDepositConfig: SafetyDepositConfigData;
+  safetyDepositConfig!: SafetyDepositConfigData;
 }
 
 type ValidateSafetyDepositBoxV2Params = {
@@ -50,6 +51,8 @@ export class ValidateSafetyDepositBoxV2 extends Transaction {
   ) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer');
+
     const {
       store,
       vault,

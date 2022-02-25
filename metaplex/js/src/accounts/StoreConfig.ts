@@ -13,13 +13,13 @@ type Args = {
   settingsUri: string;
 };
 export class StoreConfigData extends Borsh.Data<Args> {
-  static readonly SCHEMA = StoreConfigData.struct([
+  static readonly SCHEMA: Map<any, any> = StoreConfigData.struct([
     ['key', 'u8'],
     ['settingsUri', { kind: 'option', type: 'string' }],
   ]);
 
   key: MetaplexKey = MetaplexKey.StoreConfigV1;
-  settingsUri: string;
+  settingsUri!: string;
 
   constructor(args: Args) {
     super(args);
