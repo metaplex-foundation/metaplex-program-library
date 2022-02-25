@@ -922,26 +922,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-<<<<<<< HEAD
-"@metaplex-foundation/amman@npm:^0.1.0":
-=======
-"@metaplex-foundation/amman@npm:^0.0.9":
-  version: 0.0.9
-  resolution: "@metaplex-foundation/amman@npm:0.0.9"
-  dependencies:
-    "@solana/spl-token": ^0.1.8
-    "@solana/web3.js": ^1.31.0
-    debug: ^4.3.3
-    wait-on: ^6.0.0
-    yargs: ^17.3.0
-  bin:
-    amman: dist/cli/amman.js
-  checksum: ac3258256072401be90a688c4e291dc0dc0a76a59637861115274b3885182365d362ab7316674036de01440ad94793d0d28c196f331f9f93c9f2c172adbe9be5
-  languageName: node
-  linkType: hard
-
-"@metaplex-foundation/amman@npm:^0.1.0 ":
->>>>>>> master
+"@metaplex-foundation/amman@npm:^0.1.0, @metaplex-foundation/amman@npm:^0.1.0 ":
   version: 0.1.0
   resolution: "@metaplex-foundation/amman@npm:0.1.0"
   dependencies:
@@ -1161,11 +1142,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-token-metadata@workspace:token-metadata/js"
   dependencies:
-<<<<<<< HEAD
-    "@metaplex-foundation/amman": ^0.1.0
-=======
     "@metaplex-foundation/amman": "^0.1.0 "
->>>>>>> master
     "@metaplex-foundation/mpl-core": ^0.0.2
     "@solana/spl-token": ^0.1.8
     "@solana/web3.js": ^1.35.1
@@ -1524,27 +1501,15 @@ __metadata:
   linkType: hard
 
 "@solana/spl-token-registry@npm:^0.2.2405":
-<<<<<<< HEAD
-  version: 0.2.2480
-  resolution: "@solana/spl-token-registry@npm:0.2.2480"
+  version: 0.2.2517
+  resolution: "@solana/spl-token-registry@npm:0.2.2517"
   dependencies:
     cross-fetch: 3.0.6
-  checksum: cb4e4e5c1f2368c8cd84fbdd83135b1231afbefa01f0c580d5132fff85e2455967c317b05185eff58c506616b8ebe5d468935df107d2ab71197f984a85069e3e
+  checksum: 75104a0f1ece6669afbf99b65bb04127758c21cacf76f8060c625300c0467b936b6650cfdecc3243a451664a9c98c508a92cbea1ebeea2dbb652f3688c720b05
   languageName: node
   linkType: hard
 
 "@solana/spl-token@npm:^0.1.8":
-=======
-  version: 0.2.2481
-  resolution: "@solana/spl-token-registry@npm:0.2.2481"
-  dependencies:
-    cross-fetch: 3.0.6
-  checksum: 0f197684d80e34a9bc1c941b28e2c8d58ad68b566dee25bbbd4c893daddf7d8f71548db00d706424a0f5c9e9637b78f4df9acebba20bcfaf2920f12c4091b6a6
-  languageName: node
-  linkType: hard
-
-"@solana/spl-token@npm:0.1.8, @solana/spl-token@npm:^0.1.6, @solana/spl-token@npm:^0.1.8":
->>>>>>> master
   version: 0.1.8
   resolution: "@solana/spl-token@npm:0.1.8"
   dependencies:
