@@ -4,7 +4,7 @@ use anchor_lang::AccountDeserialize;
 use claim::assert_some;
 use mpl_auction_house::{
     pda::find_trade_state_address,
-    receipt::Listing
+    receipt::ListingReceipt
 };
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
@@ -150,7 +150,7 @@ async fn success_close_listing_receipt_after_sale() {
         .expect("error getting receipt")
         .expect("no data for receipt");
 
-    let listing = Listing::try_deserialize(&mut receipt_closed_account.data.as_ref()).unwrap();
+    let listing = ListingReceipt::try_deserialize(&mut receipt_closed_account.data.as_ref()).unwrap();
     let timestamp = context
         .banks_client
         .get_sysvar::<Clock>()

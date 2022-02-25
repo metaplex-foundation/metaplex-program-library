@@ -3,7 +3,7 @@ use anchor_spl::token::TokenAccount;
 
 use crate::{constants::*, id, utils::*, AuctionHouse, ErrorCode};
 
-pub const PUBLIC_BID_SIZE: usize = 8 + //key
+pub const PUBLIC_BID_RECEIPT_SIZE: usize = 8 + //key
 32 + // trade_state
 32 + // bookkeeper
 32 + // auction_house
@@ -17,7 +17,7 @@ pub const PUBLIC_BID_SIZE: usize = 8 + //key
 1 + 8; // closed_at
 
 #[account]
-pub struct PublicBid {
+pub struct PublicBidReceipt {
     pub trade_state: Pubkey,
     pub bookkeeper: Pubkey,
     pub auction_house: Pubkey,
@@ -31,7 +31,7 @@ pub struct PublicBid {
     pub closed_at: Option<i64>,
 }
 
-pub const LISTING_SIZE: usize = 8 + //key
+pub const LISTING_RECEIPT_SIZE: usize = 8 + //key
 32 + // trade_state
 32 + // bookkeeper
 32 + // auction_house
@@ -45,7 +45,7 @@ pub const LISTING_SIZE: usize = 8 + //key
 1 + 8; // closed_at;
 
 #[account]
-pub struct Listing {
+pub struct ListingReceipt {
     pub trade_state: Pubkey,
     pub bookkeeper: Pubkey,
     pub auction_house: Pubkey,
@@ -59,7 +59,7 @@ pub struct Listing {
     pub closed_at: Option<i64>,
 }
 
-pub const PURCHASE_SIZE: usize = 8 + //key
+pub const PURCHASE_RECEIPT_SIZE: usize = 8 + //key
 32 + // buyer
 32 + // seller
 32 + // auction_house
@@ -70,7 +70,7 @@ pub const PURCHASE_SIZE: usize = 8 + //key
 1 + 8; // created_at
 
 #[account]
-pub struct Purchase {
+pub struct PurchaseReceipt {
     pub buyer: Pubkey,
     pub seller: Pubkey,
     pub auction_house: Pubkey,
@@ -90,8 +90,8 @@ pub struct PrintListingReceipt<'info> {
     auction_house: Account<'info, AuctionHouse>,
     #[account(seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
     trade_state: UncheckedAccount<'info>,
-    #[account(init, seeds=[LISTING_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt_bump, payer=bookkeeper, space=LISTING_SIZE)]
-    receipt: Account<'info, Listing>,
+    #[account(init, seeds=[LISTING_RECEIPT_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt_bump, payer=bookkeeper, space=LISTING_RECEIPT_SIZE)]
+    receipt: Account<'info, ListingReceipt>,
     #[account(mut)]
     bookkeeper: Signer<'info>,
     system_program: Program<'info, System>,
@@ -164,8 +164,8 @@ pub struct CloseListingReceipt<'info> {
     auction_house: Account<'info, AuctionHouse>,
     #[account(seeds=[PREFIX.as_bytes(), receipt.seller.key().as_ref(), receipt.auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), receipt.token_mint.as_ref(), &receipt.price.to_le_bytes(), &receipt.token_size.to_le_bytes()], bump=receipt.trade_state_bump)]
     trade_state: UncheckedAccount<'info>,
-    #[account(mut, seeds=[LISTING_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt.bump)]
-    receipt: Account<'info, Listing>,
+    #[account(mut, seeds=[LISTING_RECEIPT_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt.bump)]
+    receipt: Account<'info, ListingReceipt>,
     system_program: Program<'info, System>,
     clock: Sysvar<'info, Clock>,
 }
@@ -224,8 +224,8 @@ pub struct PrintPublicBidReceipt<'info> {
     auction_house: Account<'info, AuctionHouse>,
     #[account(seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
     trade_state: UncheckedAccount<'info>,
-    #[account(init, seeds=[PUBLIC_BID_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt_bump, payer=bookkeeper, space=PUBLIC_BID_SIZE)]
-    receipt: Account<'info, PublicBid>,
+    #[account(init, seeds=[PUBLIC_BID_RECEIPT_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt_bump, payer=bookkeeper, space=PUBLIC_BID_RECEIPT_SIZE)]
+    receipt: Account<'info, PublicBidReceipt>,
     #[account(mut)]
     bookkeeper: Signer<'info>,
     system_program: Program<'info, System>,
@@ -288,8 +288,8 @@ pub struct ClosePublicBidReceipt<'info> {
     auction_house: Account<'info, AuctionHouse>,
     #[account(seeds=[PREFIX.as_bytes(), receipt.wallet.key().as_ref(), receipt.auction_house.key().as_ref(), auction_house.treasury_mint.as_ref(), receipt.token_mint.as_ref(), &receipt.price.to_le_bytes(), &receipt.token_size.to_le_bytes()], bump=receipt.trade_state_bump)]
     trade_state: UncheckedAccount<'info>,
-    #[account(mut, seeds=[PUBLIC_BID_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt.bump)]
-    receipt: Account<'info, PublicBid>,
+    #[account(mut, seeds=[PUBLIC_BID_RECEIPT_PREFIX.as_bytes(), trade_state.key().as_ref()], bump=receipt.bump)]
+    receipt: Account<'info, PublicBidReceipt>,
     system_program: Program<'info, System>,
     clock: Sysvar<'info, Clock>,
 }

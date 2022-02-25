@@ -102,7 +102,7 @@ pub fn find_public_bid_receipt_address(
 ) -> (Pubkey, u8) {
   Pubkey::find_program_address(
       &[
-          PUBLIC_BID_PREFIX.as_bytes(),
+          PUBLIC_BID_RECEIPT_PREFIX.as_bytes(),
           trade_state.as_ref(),
       ],
       &id(),
@@ -115,7 +115,7 @@ pub fn find_listing_receipt_address(
 ) -> (Pubkey, u8) {
   Pubkey::find_program_address(
       &[
-          LISTING_PREFIX.as_bytes(),
+          LISTING_RECEIPT_PREFIX.as_bytes(),
           trade_state.as_ref(),
       ],
       &id(),

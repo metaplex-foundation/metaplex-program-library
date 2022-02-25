@@ -641,13 +641,13 @@ pub mod auction_house {
                 &rent.to_account_info(),
                 &system_program,
                 &fee_payer,
-                PURCHASE_SIZE,
+                PURCHASE_RECEIPT_SIZE,
                 fee_payer_seeds,
                 &purchase_receipt_seeds,
             )?;
         }
 
-        let purchase = Purchase {
+        let purchase = PurchaseReceipt {
             buyer: buyer.key(),
             seller: seller.key(),
             auction_house: auction_house.key(),

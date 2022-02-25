@@ -3,7 +3,7 @@ mod utils;
 use anchor_lang::AccountDeserialize;
 
 use claim::assert_none;
-use mpl_auction_house::{pda::find_public_bid_trade_state_address, receipt::PublicBid};
+use mpl_auction_house::{pda::find_public_bid_trade_state_address, receipt::PublicBidReceipt};
 use mpl_testing_utils::{assert_error, solana::airdrop, utils::Metadata};
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
@@ -96,7 +96,7 @@ async fn print_public_bid_receipt_success() {
         .expect("error getting receipt")
         .expect("no receipt data");
 
-    let bid = PublicBid::try_deserialize(&mut receipt_account.data.as_ref()).unwrap();
+    let bid = PublicBidReceipt::try_deserialize(&mut receipt_account.data.as_ref()).unwrap();
     let timestamp = context
         .banks_client
         .get_sysvar::<Clock>()
