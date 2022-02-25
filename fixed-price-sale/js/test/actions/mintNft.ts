@@ -35,7 +35,7 @@ export async function mintNFT({
   transactionHandler,
   payer,
   connection,
-  creators = null,
+  creators = [],
 }: MintNFTParams) {
   const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(

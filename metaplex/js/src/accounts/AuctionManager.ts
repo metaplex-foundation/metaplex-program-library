@@ -29,17 +29,17 @@ export class AuctionManagerStateV2 extends Borsh.Data<{
   bidsPushedToAcceptPayment: BN;
   hasParticipation: boolean;
 }> {
-  static readonly SCHEMA = AuctionManagerStateV2.struct([
+  static readonly SCHEMA: Map<any, any> = AuctionManagerStateV2.struct([
     ['status', 'u8'],
     ['safetyConfigItemsValidated', 'u64'],
     ['bidsPushedToAcceptPayment', 'u64'],
     ['hasParticipation', 'u8'],
   ]);
 
-  status: AuctionManagerStatus;
-  safetyConfigItemsValidated: BN;
-  bidsPushedToAcceptPayment: BN;
-  hasParticipation: boolean;
+  status!: AuctionManagerStatus;
+  safetyConfigItemsValidated!: BN;
+  bidsPushedToAcceptPayment!: BN;
+  hasParticipation!: boolean;
 }
 
 type Args = {
@@ -51,7 +51,7 @@ type Args = {
   state: AuctionManagerStateV2;
 };
 export class AuctionManagerV2Data extends Borsh.Data<Args> {
-  static readonly SCHEMA = new Map([
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...AuctionManagerStateV2.SCHEMA,
     ...AuctionManagerV2Data.struct([
       ['key', 'u8'],
@@ -65,12 +65,12 @@ export class AuctionManagerV2Data extends Borsh.Data<Args> {
   ]);
 
   key: MetaplexKey;
-  store: StringPublicKey;
-  authority: StringPublicKey;
-  auction: StringPublicKey;
-  vault: StringPublicKey;
-  acceptPayment: StringPublicKey;
-  state: AuctionManagerStateV2;
+  store!: StringPublicKey;
+  authority!: StringPublicKey;
+  auction!: StringPublicKey;
+  vault!: StringPublicKey;
+  acceptPayment!: StringPublicKey;
+  state!: AuctionManagerStateV2;
 
   constructor(args: Args) {
     super(args);
@@ -118,31 +118,37 @@ export class AuctionManager extends Account<AuctionManagerV2Data> {
     connection: Connection,
     filters: { store?: AnyPublicKey; authority?: AnyPublicKey } = {},
   ) {
+    const memcmpFilters = [
+      // Filter for AuctionManagerV2 by key
+      {
+        memcmp: {
+          offset: 0,
+          bytes: bs58.encode(Buffer.from([MetaplexKey.AuctionManagerV2])),
+        },
+      },
+    ];
+    if (filters.store != null) {
+      // Filter for assigned to store
+      memcmpFilters.push({
+        memcmp: {
+          offset: 1,
+          bytes: new PublicKey(filters.store).toBase58(),
+        },
+      });
+    }
+    if (filters.authority != null) {
+      // Filter for assigned to authority
+      memcmpFilters.push({
+        memcmp: {
+          offset: 33,
+          bytes: new PublicKey(filters.authority).toBase58(),
+        },
+      });
+    }
+
     return (
       await MetaplexProgram.getProgramAccounts(connection, {
-        filters: [
-          // Filter for AuctionManagerV2 by key
-          {
-            memcmp: {
-              offset: 0,
-              bytes: bs58.encode(Buffer.from([MetaplexKey.AuctionManagerV2])),
-            },
-          },
-          // Filter for assigned to store
-          filters.store && {
-            memcmp: {
-              offset: 1,
-              bytes: new PublicKey(filters.store).toBase58(),
-            },
-          },
-          // Filter for assigned to authority
-          filters.authority && {
-            memcmp: {
-              offset: 33,
-              bytes: new PublicKey(filters.authority).toBase58(),
-            },
-          },
-        ].filter(Boolean),
+        filters: memcmpFilters,
       })
     ).map((account) => AuctionManager.from(account));
   }
