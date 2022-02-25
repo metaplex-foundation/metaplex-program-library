@@ -46,7 +46,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/amman": "^0.1.0",
+    "@metaplex-foundation/amman": "^0.1.0 ",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
