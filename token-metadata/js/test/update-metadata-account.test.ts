@@ -124,7 +124,7 @@ test('update-metadata-account: update symbol too long', async (t) => {
   try {
     await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
     t.fail('expected transaction to fail');
-  } catch (err: any) {
+  } catch (err) {
     assertError(t, err, [/custom program error/i, /Symbol too long/i]);
   }
 });

@@ -51,6 +51,7 @@ export async function getMetadataData(
   return MetadataData.deserialize(metadataAccount.data);
 }
 
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 export async function assertMetadataDataUnchanged(
   t: test.Test,
   initial: MetadataData,
@@ -104,3 +105,4 @@ export async function assertMetadataDataDataUnchanged(
 
   spok(t, x, y);
 }
+/* eslint-enable @typescript-eslint/ban-ts-comment */
