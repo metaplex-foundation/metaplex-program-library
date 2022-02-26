@@ -24,15 +24,16 @@ jobs:
       id: filter
       with:
         filters: |
-          code:
+          core:
             - 'core/**'
+          package:
             - 'metaplex/**'
   build-and-integration-test-metaplex:
     runs-on: ubuntu-latest
     env:
       cache_id: program-metaplex 
     needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
