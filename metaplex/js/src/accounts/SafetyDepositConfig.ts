@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
@@ -56,6 +63,7 @@ export interface AmountRangeArgs {
 }
 
 export class AmountRange extends Borsh.Data<AmountRangeArgs> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = AmountRange.struct([
     ['amount', 'u64'],
     ['length', 'u64'],
@@ -72,6 +80,7 @@ export interface ParticipationConfigV2Args {
 }
 
 export class ParticipationConfigV2 extends Borsh.Data<ParticipationConfigV2Args> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = ParticipationConfigV2.struct([
     ['winnerConstraint', 'u8'],
     ['nonWinningConstraint', 'u8'],
@@ -88,6 +97,7 @@ export interface ParticipationStateV2Args {
 }
 
 export class ParticipationStateV2 extends Borsh.Data<ParticipationStateV2Args> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = ParticipationStateV2.struct([
     ['collectedToAcceptPayment', 'u64'],
   ]);
@@ -107,6 +117,7 @@ export interface SafetyDepositConfigDataArgs {
 }
 
 export class SafetyDepositConfigData extends Borsh.Data<SafetyDepositConfigDataArgs> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = new Map([
     ...ParticipationConfigV2.SCHEMA,
     ...ParticipationStateV2.SCHEMA,

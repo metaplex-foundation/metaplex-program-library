@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import { strict as assert } from 'assert';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
@@ -14,6 +21,7 @@ import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetStoreV2Args extends Borsh.Data<{ public: boolean; settingsUri: string | null }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = SetStoreV2Args.struct([
     ['instruction', 'u8'],
     ['public', 'u8'],
