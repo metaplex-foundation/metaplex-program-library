@@ -31,12 +31,7 @@ const NAME = 'test';
 const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
 
-export async function mintNFT({
-  transactionHandler,
-  payer,
-  connection,
-  creators = [],
-}: MintNFTParams) {
+export async function mintNFT({ transactionHandler, payer, connection, creators }: MintNFTParams) {
   const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
@@ -74,7 +69,7 @@ export async function mintNFT({
     name: NAME,
     symbol: SYMBOL,
     sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
-    creators,
+    creators: creators ?? null,
   });
 
   const { createTxDetails } = await createMetadata({
