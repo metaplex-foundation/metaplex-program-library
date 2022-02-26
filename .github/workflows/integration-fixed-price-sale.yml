@@ -28,7 +28,7 @@ jobs:
           core:
             - 'core/**'
           package:
-              - 'fixed-price-sale/**'
+            - 'fixed-price-sale/**'
   build-and-integration-test-fixed-price-sale:
     runs-on: ubuntu-latest
     env:
