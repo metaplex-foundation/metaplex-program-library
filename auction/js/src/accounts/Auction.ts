@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import {
   Account,
   Borsh,
@@ -31,6 +38,7 @@ export enum PriceFloorType {
 
 type BidArgs = { key: StringPublicKey; amount: BN };
 export class Bid extends Borsh.Data<BidArgs> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = Bid.struct([
     ['key', 'pubkeyAsString'],
     ['amount', 'u64'],
@@ -42,6 +50,7 @@ export class Bid extends Borsh.Data<BidArgs> {
 
 type BidStateArgs = { type: BidStateType; bids: Bid[]; max: BN };
 export class BidState extends Borsh.Data<BidStateArgs> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = new Map([
     ...Bid.SCHEMA,
     ...BidState.struct([
@@ -90,6 +99,7 @@ export class BidState extends Borsh.Data<BidStateArgs> {
 
 type PriceFloorArgs = { type: PriceFloorType; hash?: Uint8Array; minPrice?: BN };
 export class PriceFloor extends Borsh.Data {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = PriceFloor.struct([
     ['type', 'u8'],
     ['hash', [32]],
@@ -128,6 +138,7 @@ type Args = {
   totalUncancelledBids: BN;
 };
 export class AuctionData extends Borsh.Data<Args> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = new Map([
     ...BidState.SCHEMA,
     ...PriceFloor.SCHEMA,

@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import {
   Account,
   Borsh,
@@ -17,6 +24,7 @@ type Args = {
   emptied: boolean;
 };
 export class BidderPotData extends Borsh.Data<Args> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = BidderPotData.struct([
     ['bidderPot', 'pubkeyAsString'],
     ['bidderAct', 'pubkeyAsString'],

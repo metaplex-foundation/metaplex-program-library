@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import { Borsh, Transaction, StringPublicKey } from '@metaplex-foundation/mpl-core';
 import {
   PublicKey,
@@ -21,6 +28,7 @@ type WinnerLimitArgs = {
 };
 
 export class WinnerLimit extends Borsh.Data<WinnerLimitArgs> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = WinnerLimit.struct([
     ['type', 'u8'],
     ['usize', 'u64'],
@@ -43,6 +51,7 @@ export type Args = {
 };
 
 export class CreateAuctionArgs extends Borsh.Data<Args> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static readonly SCHEMA: Map<any, any> = new Map([
     ...WinnerLimit.SCHEMA,
     ...PriceFloor.SCHEMA,
