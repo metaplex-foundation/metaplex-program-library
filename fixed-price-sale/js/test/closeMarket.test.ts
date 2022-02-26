@@ -89,7 +89,7 @@ test.skip('close-market: success', async (t) => {
   assertConfirmedTransaction(t, MarketRes.txConfirmed);
 
   const marketAccount = await connection.getAccountInfo(market.publicKey);
-  const [marketData] = MarketAccountData.deserialize(marketAccount!.data);
+  const [marketData] = MarketAccountData.deserialize(marketAccount?.data as Buffer);
 
   t.assert('Ended' === marketData.state.toString());
 });
