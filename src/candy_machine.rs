@@ -1,32 +1,8 @@
-#![allow(unused)]
-use anchor_client::{
-    solana_sdk::{
-        borsh::try_from_slice_unchecked,
-        pubkey::Pubkey,
-        signature::{Keypair, Signer},
-        system_instruction, system_program, sysvar,
-    },
-    Client,
-};
+use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_lang::AccountDeserialize;
 use anyhow::Result;
-use chrono::naive::serde::ts_milliseconds::deserialize;
-use rand::rngs::OsRng;
-use rayon::prelude::*;
-use std::{
-    collections::HashMap,
-    fs::File,
-    io::Write,
-    path::Path,
-    sync::{Arc, Mutex},
-};
 
-use mpl_candy_machine::accounts as nft_accounts;
-use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{
-    CandyMachine, CandyMachineData, ConfigLine, Creator as CandyCreator, WhitelistMintMode,
-    WhitelistMintSettings,
-};
+use mpl_candy_machine::{CandyMachine, CandyMachineData, WhitelistMintMode, WhitelistMintSettings};
 
 use crate::config::data::SugarConfig;
 use crate::setup::setup_client;
@@ -47,7 +23,7 @@ pub fn get_candy_machine_state(
         .expect("Failed to parse PID");
 
     let program = client.program(pid);
-    let mut data = program.rpc().get_account_data(candy_machine_id)?;
+    let data = program.rpc().get_account_data(candy_machine_id)?;
     let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
     Ok(candy_machine)
 }
@@ -62,7 +38,7 @@ pub fn get_candy_machine_data(
         .expect("Failed to parse PID");
 
     let program = client.program(pid);
-    let mut data = program.rpc().get_account_data(candy_machine_id)?;
+    let data = program.rpc().get_account_data(candy_machine_id)?;
     let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
     Ok(candy_machine.data)
 }
