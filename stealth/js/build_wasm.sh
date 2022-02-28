@@ -19,9 +19,3 @@ sed -i '' 's/async function init/async function wasm_init/g' "$GLUE_FILE"
 sed -i '' 's/export default init/export default wasm_init/g' "$GLUE_FILE"
 # this one is a bit dubious
 sed -i '' 's/init.__wbindgen_wasm_module/wasm_init.__wbindgen_wasm_module/g' "$GLUE_FILE"
-
-cd ..
-
-WEB_UTILS_DIR="web/src/utils/stealth"
-rm -r $WEB_UTILS_DIR || true
-mv native/pkg $WEB_UTILS_DIR
