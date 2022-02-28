@@ -1,7 +1,6 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
-use mpl_testing_utils::solana::airdrop;
-use mpl_testing_utils::utils::Metadata;
+use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
 use std::assert_eq;

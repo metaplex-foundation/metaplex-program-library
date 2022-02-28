@@ -1,9 +1,9 @@
 pub mod bid;
-pub mod receipt;
 pub mod constants;
 pub mod pda;
+pub mod receipt;
 pub mod utils;
-use crate::{bid::*, constants::*, utils::*, receipt::*};
+use crate::{bid::*, constants::*, receipt::*, utils::*};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -572,132 +572,6 @@ pub mod auction_house {
         Ok(())
     }
 
-    pub fn execute_sale_with_receipt<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecuteSaleWithReceipt<'info>>,
-        purchase_receipt_bump: u8,
-        escrow_payment_bump: u8,
-        _free_trade_state_bump: u8,
-        program_as_signer_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> ProgramResult {
-        let buyer = &ctx.accounts.buyer;
-        let seller = &ctx.accounts.seller;
-        let token_account = &ctx.accounts.token_account;
-        let token_mint = &ctx.accounts.token_mint;
-        let metadata = &ctx.accounts.metadata;
-        let treasury_mint = &ctx.accounts.treasury_mint;
-        let seller_payment_receipt_account = &ctx.accounts.seller_payment_receipt_account;
-        let buyer_receipt_token_account = &ctx.accounts.buyer_receipt_token_account;
-        let escrow_payment_account = &ctx.accounts.escrow_payment_account;
-        let authority = &ctx.accounts.authority;
-        let auction_house = &ctx.accounts.auction_house;
-        let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-        let auction_house_treasury = &ctx.accounts.auction_house_treasury;
-        let buyer_trade_state = &ctx.accounts.buyer_trade_state;
-        let seller_trade_state = &ctx.accounts.seller_trade_state;
-        let free_trade_state = &ctx.accounts.free_trade_state;
-        let token_program = &ctx.accounts.token_program;
-        let system_program = &ctx.accounts.system_program;
-        let ata_program = &ctx.accounts.ata_program;
-        let program_as_signer = &ctx.accounts.program_as_signer;
-        let rent = &ctx.accounts.rent;
-        let purchase_receipt = &ctx.accounts.purchase_receipt;
-        let clock = &ctx.accounts.clock;
-
-        let auction_house_key = auction_house.key();
-        let auction_house_seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            FEE_PAYER.as_bytes(),
-            &[auction_house.fee_payer_bump],
-        ];
-
-        let wallet_to_use = if buyer.is_signer { buyer } else { seller };
-
-        let (fee_payer, fee_payer_seeds) = get_fee_payer(
-            authority,
-            auction_house,
-            wallet_to_use.to_account_info(),
-            auction_house_fee_account.to_account_info(),
-            &auction_house_seeds,
-        )?;
-
-        let purchase_receipt_info = purchase_receipt.to_account_info();
-        let seller_trade_state_key = seller_trade_state.key();
-        let buyer_trade_state_key = buyer_trade_state.key();
-
-        if purchase_receipt_info.data_is_empty() {
-            let purchase_receipt_seeds = [
-                PURCHASE_RECEIPT_PREFIX.as_bytes(),
-                seller_trade_state_key.as_ref(),
-                buyer_trade_state_key.as_ref(),
-                &[purchase_receipt_bump],
-            ];
-
-            create_or_allocate_account_raw(
-                *ctx.program_id,
-                &purchase_receipt_info,
-                &rent.to_account_info(),
-                &system_program,
-                &fee_payer,
-                PURCHASE_RECEIPT_SIZE,
-                fee_payer_seeds,
-                &purchase_receipt_seeds,
-            )?;
-        }
-
-        let purchase = PurchaseReceipt {
-            buyer: buyer.key(),
-            seller: seller.key(),
-            auction_house: auction_house.key(),
-            token_mint: token_mint.key(),
-            bump: purchase_receipt_bump,
-            price: buyer_price,
-            token_size,
-            created_at: Some(clock.unix_timestamp),
-        };
-
-        purchase.try_serialize(&mut *purchase_receipt_info.data.borrow_mut())?;
-
-        let mut accounts = ExecuteSale {
-            buyer: buyer.clone(),
-            seller: seller.clone(),
-            auction_house: auction_house.clone(),
-            token_account: token_account.clone(),
-            token_mint: token_mint.clone(),
-            treasury_mint: treasury_mint.clone(),
-            metadata: metadata.clone(),
-            authority: authority.clone(),
-            seller_trade_state: seller_trade_state.clone(),
-            buyer_trade_state: buyer_trade_state.clone(),
-            free_trade_state: free_trade_state.clone(),
-            seller_payment_receipt_account: seller_payment_receipt_account.clone(),
-            buyer_receipt_token_account: buyer_receipt_token_account.clone(),
-            escrow_payment_account: escrow_payment_account.clone(),
-            auction_house_fee_account: auction_house_fee_account.clone(),
-            auction_house_treasury: auction_house_treasury.clone(),
-            program_as_signer: program_as_signer.clone(),
-            token_program: token_program.clone(),
-            system_program: system_program.clone(),
-            ata_program: ata_program.clone(),
-            rent: rent.clone(),
-        };
-
-        let context = Context::new(ctx.program_id, &mut accounts, ctx.remaining_accounts);
-
-        execute_sale(
-            context,
-            escrow_payment_bump,
-            _free_trade_state_bump,
-            program_as_signer_bump,
-            buyer_price,
-            token_size,
-        )?;
-
-        Ok(())
-    }
-
     #[inline(never)]
     pub fn execute_sale<'info>(
         ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
@@ -1156,60 +1030,37 @@ pub mod auction_house {
         )
     }
 
-
     pub fn print_listing_receipt<'info>(
-      ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
-      trade_state_bump: u8,
-      receipt_bump: u8,
-      price: u64,
-      token_size: u64,
+        ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
+        receipt_bump: u8,
     ) -> ProgramResult {
-      receipt::print_listing_receipt(
-        ctx,
-        trade_state_bump,
-        receipt_bump,
-        price,
-        token_size,
-      )
+        receipt::print_listing_receipt(ctx, receipt_bump)
     }
 
-    pub fn close_listing_receipt<'info>(
-      ctx: Context<'_, '_, '_, 'info, CloseListingReceipt<'info>>,
+    pub fn cancel_listing_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, CancelListingReceipt<'info>>,
     ) -> ProgramResult {
-      receipt::close_listing_receipt(ctx)
+        receipt::cancel_listing_receipt(ctx)
     }
 
-
-    pub fn print_public_bid_receipt<'info>(
-      ctx: Context<'_, '_, '_, 'info, PrintPublicBidReceipt<'info>>,
-      trade_state_bump: u8,
-      receipt_bump: u8,
-      price: u64,
-      token_size: u64,
+    pub fn print_bid_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrintBidReceipt<'info>>,
+        receipt_bump: u8,
     ) -> ProgramResult {
-      receipt::print_public_bid_receipt(
-        ctx,
-        trade_state_bump,
-        receipt_bump,
-        price,
-        token_size,
-      )
+        receipt::print_bid_receipt(ctx, receipt_bump)
     }
 
-    pub fn close_public_bid_receipt<'info>(
-      ctx: Context<'_, '_, '_, 'info, ClosePublicBidReceipt<'info>>,
+    pub fn cancel_bid_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, CancelBidReceipt<'info>>,
     ) -> ProgramResult {
-      receipt::close_public_bid_receipt(ctx)
+        receipt::cancel_bid_receipt(ctx)
     }
 
     pub fn print_purchase_receipt<'info>(
-      ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
-      receipt_bump: u8,
+        ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
+        purchase_receipt_bump: u8,
     ) -> ProgramResult {
-      receipt::print_purchase_receipt(
-        ctx,
-        receipt_bump,
-      )
+        receipt::print_purchase_receipt(ctx, purchase_receipt_bump)
     }
 }
 
@@ -1234,50 +1085,6 @@ pub struct Sell<'info> {
     #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
     program_as_signer: UncheckedAccount<'info>,
     rent: Sysvar<'info, Rent>,
-}
-
-#[derive(Accounts)]
-#[instruction(purchase_receipt_bump: u8, escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct ExecuteSaleWithReceipt<'info> {
-    #[account(mut)]
-    buyer: UncheckedAccount<'info>,
-    #[account(mut)]
-    seller: UncheckedAccount<'info>,
-    // cannot mark these as real Accounts or else we blow stack size limit
-    #[account(mut)]
-    token_account: UncheckedAccount<'info>,
-    token_mint: UncheckedAccount<'info>,
-    metadata: UncheckedAccount<'info>,
-    // cannot mark these as real Accounts or else we blow stack size limit
-    treasury_mint: UncheckedAccount<'info>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
-    escrow_payment_account: UncheckedAccount<'info>,
-    #[account(mut)]
-    seller_payment_receipt_account: UncheckedAccount<'info>,
-    #[account(mut)]
-    buyer_receipt_token_account: UncheckedAccount<'info>,
-    authority: UncheckedAccount<'info>,
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
-    auction_house: Box<Account<'info, AuctionHouse>>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
-    auction_house_treasury: UncheckedAccount<'info>,
-    #[account(mut)]
-    buyer_trade_state: UncheckedAccount<'info>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=seller_trade_state.to_account_info().data.borrow()[0])]
-    seller_trade_state: UncheckedAccount<'info>,
-    #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
-    free_trade_state: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
-    system_program: Program<'info, System>,
-    ata_program: Program<'info, AssociatedToken>,
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
-    program_as_signer: UncheckedAccount<'info>,
-    rent: Sysvar<'info, Rent>,
-    #[account(mut, seeds=[PURCHASE_RECEIPT_PREFIX.as_bytes(), seller_trade_state.key().as_ref(), buyer_trade_state.key().as_ref()], bump=purchase_receipt_bump)]
-    purchase_receipt: UncheckedAccount<'info>,
-    clock: Sysvar<'info, Clock>,
 }
 
 #[derive(Accounts)]
@@ -1538,4 +1345,6 @@ pub enum ErrorCode {
     TradeStateIsNotEmpty,
     #[msg("The receipt is empty")]
     ReceiptIsEmpty,
+    #[msg("The instruction does not match")]
+    InstructionMismatch,
 }
