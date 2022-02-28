@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import {
   Account,
   Borsh,
@@ -31,18 +38,20 @@ export enum PriceFloorType {
 
 type BidArgs = { key: StringPublicKey; amount: BN };
 export class Bid extends Borsh.Data<BidArgs> {
-  static readonly SCHEMA = Bid.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = Bid.struct([
     ['key', 'pubkeyAsString'],
     ['amount', 'u64'],
   ]);
 
-  key: StringPublicKey;
-  amount: BN;
+  key?: StringPublicKey;
+  amount?: BN;
 }
 
 type BidStateArgs = { type: BidStateType; bids: Bid[]; max: BN };
 export class BidState extends Borsh.Data<BidStateArgs> {
-  static readonly SCHEMA = new Map([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...Bid.SCHEMA,
     ...BidState.struct([
       ['type', 'u8'],
@@ -51,27 +60,25 @@ export class BidState extends Borsh.Data<BidStateArgs> {
     ]),
   ]);
 
-  type: BidStateType;
-  bids: Bid[];
-  max: BN;
+  type!: BidStateType;
+  bids!: Bid[];
+  max!: BN;
 
-  getWinnerAt(winnerIndex: number): StringPublicKey | null {
+  getWinnerAt(winnerIndex: number): StringPublicKey | undefined {
     const convertedIndex = this.bids.length - winnerIndex - 1;
 
     if (convertedIndex >= 0 && convertedIndex < this.bids.length) {
       return this.bids[convertedIndex].key;
-    } else {
-      return null;
     }
   }
 
-  getAmountAt(winnerIndex: number): BN | null {
+  getAmountAt(winnerIndex: number): BN | undefined {
     const convertedIndex = this.bids.length - winnerIndex - 1;
 
     if (convertedIndex >= 0 && convertedIndex < this.bids.length) {
       return this.bids[convertedIndex].amount;
     } else {
-      return null;
+      return undefined;
     }
   }
 
@@ -92,7 +99,8 @@ export class BidState extends Borsh.Data<BidStateArgs> {
 
 type PriceFloorArgs = { type: PriceFloorType; hash?: Uint8Array; minPrice?: BN };
 export class PriceFloor extends Borsh.Data {
-  static readonly SCHEMA = PriceFloor.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = PriceFloor.struct([
     ['type', 'u8'],
     ['hash', [32]],
   ]);
@@ -130,7 +138,8 @@ type Args = {
   totalUncancelledBids: BN;
 };
 export class AuctionData extends Borsh.Data<Args> {
-  static readonly SCHEMA = new Map([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...BidState.SCHEMA,
     ...PriceFloor.SCHEMA,
     ...AuctionData.struct([
@@ -147,23 +156,23 @@ export class AuctionData extends Borsh.Data<Args> {
   ]);
 
   /// Pubkey of the authority with permission to modify this auction.
-  authority: StringPublicKey;
+  authority!: StringPublicKey;
   /// Token mint for the SPL token being used to bid
-  tokenMint: StringPublicKey;
+  tokenMint!: StringPublicKey;
   /// The time the last bid was placed, used to keep track of auction timing.
-  lastBid: BN | null;
+  lastBid?: BN;
   /// Slot time the auction was officially ended by.
-  endedAt: BN | null;
+  endedAt?: BN;
   /// End time is the cut-off point that the auction is forced to end by.
-  endAuctionAt: BN | null;
+  endAuctionAt?: BN;
   /// Gap time is the amount of time in slots after the previous bid at which the auction ends.
-  auctionGap: BN | null;
+  auctionGap?: BN;
   /// Minimum price for any bid to meet.
-  priceFloor: PriceFloor;
+  priceFloor!: PriceFloor;
   /// The state the auction is in, whether it has started or ended.
-  state: AuctionState;
+  state!: AuctionState;
   /// Auction Bids, each user may have one bid open at a time.
-  bidState: BidState;
+  bidState!: BidState;
   /// Used for precalculation on the front end, not a backend key
   bidRedemptionKey?: StringPublicKey;
 }
@@ -192,15 +201,18 @@ export class Auction extends Account<AuctionData> {
   static async findMany(connection: Connection, filters: { authority?: AnyPublicKey } = {}) {
     return (
       await AuctionProgram.getProgramAccounts(connection, {
-        filters: [
-          // Filter for assigned to authority
-          filters.authority && {
-            memcmp: {
-              offset: 0,
-              bytes: new PublicKey(filters.authority).toBase58(),
-            },
-          },
-        ].filter(Boolean),
+        filters:
+          filters.authority != null
+            ? [
+                // Filter for assigned to authority
+                {
+                  memcmp: {
+                    offset: 0,
+                    bytes: new PublicKey(filters.authority).toBase58(),
+                  },
+                },
+              ]
+            : [],
       })
     )
       .map((account) => {

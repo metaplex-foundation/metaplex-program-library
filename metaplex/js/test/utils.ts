@@ -116,7 +116,7 @@ export async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function getUserKeypairFromFile(keypairPath) {
+export function getUserKeypairFromFile(keypairPath: string) {
   const arr = readFileSync(path.resolve(keypairPath), {
     encoding: 'utf-8',
   });
