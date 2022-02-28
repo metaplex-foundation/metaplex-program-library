@@ -93,30 +93,30 @@ impl CacheItem {
 pub fn load_cache(cache_file_path: &String) -> Result<Cache> {
     let cache_file_path = Path::new(cache_file_path);
     if !cache_file_path.exists() {
-        error!(
-            "No cache file found at cache path: {cache_file_path:?}. Manually create one or run `sugar upload-assets`.");
         let cache_file_string = path_to_string(&cache_file_path)?;
-        return Err(CacheError::CacheFileNotFound(cache_file_string).into());
+        let error = CacheError::CacheFileNotFound(cache_file_string).into();
+        error!("{:?}", error);
+        return Err(error);
     }
 
     info!("Cache exists, loading...");
     let file = match File::open(cache_file_path) {
         Ok(file) => file,
         Err(err) => {
-            error!("Failed to open cache file: {}", err);
             let cache_file_string = path_to_string(&cache_file_path)?;
-
-            return Err(
-                CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into(),
-            );
+            let error =
+                CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into();
+            error!("{:?}", error);
+            return Err(error);
         }
     };
 
     let cache: Cache = match serde_json::from_reader(file) {
         Ok(cache) => cache,
         Err(err) => {
-            error!("Failed to parse cache file: {}", err);
-            return Err(CacheError::CacheFileWrongFormat(err.to_string()).into());
+            let error = CacheError::CacheFileWrongFormat(err.to_string()).into();
+            error!("{:?}", error);
+            return Err(error);
         }
     };
 

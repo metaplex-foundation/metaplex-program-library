@@ -41,11 +41,12 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
     let candy_machine_id = match Pubkey::from_str(&cache.program.candy_machine) {
         Ok(candy_machine_id) => candy_machine_id,
         Err(_) => {
-            error!(
-                "Failed to parse candy_machine_id: {}",
-                &cache.program.candy_machine
+            let error = anyhow!(
+                "Failed to parse candy machine id: {}",
+                cache.program.candy_machine
             );
-            std::process::exit(1);
+            error!("{:?}", error);
+            return Err(error);
         }
     };
 

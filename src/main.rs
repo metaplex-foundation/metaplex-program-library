@@ -36,7 +36,7 @@ fn setup_logging(level: Option<EnvFilter>) -> Result<()> {
     let env_filter = if let Some(filter) = level {
         filter
     } else {
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"))
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("off"))
     };
 
     let formatting_layer = BunyanFormattingLayer::new("sugar".into(), file);

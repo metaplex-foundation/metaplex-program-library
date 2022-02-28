@@ -6,6 +6,7 @@ use anchor_client::{
     Client, Cluster,
 };
 use anyhow::Result;
+use tracing::error;
 
 use crate::config::data::SugarConfig;
 use crate::parse::*;
@@ -28,6 +29,8 @@ pub fn sugar_setup(
 ) -> Result<SugarConfig> {
     let sol_config_option = parse_solana_config();
 
+    let default_key_path = "~/.config/solana/id.json";
+
     let rpc_url = match rpc_url_opt {
         Some(rpc_url) => rpc_url,
         None => match sol_config_option {
@@ -37,15 +40,32 @@ pub fn sugar_setup(
     };
 
     let keypair = match keypair_opt {
-        Some(keypair_path) => {
-            read_keypair_file(&keypair_path).expect("Failed to read keypair file.")
-        }
-        None => match sol_config_option {
-            Some(ref sol_config) => {
-                read_keypair_file(&sol_config.keypair_path).expect("Failed to read keypair file.")
+        Some(keypair_path) => match read_keypair_file(&keypair_path) {
+            Ok(keypair) => keypair,
+            Err(e) => {
+                error!("Failed to read keypair file: {}", e);
+                std::process::exit(1);
             }
-            None => read_keypair_file(&*shellexpand::tilde("~/.config/solana/id.json"))
-                .expect("Failed to read keypair file."),
+        },
+
+        None => match sol_config_option {
+            Some(ref sol_config) => match read_keypair_file(&sol_config.keypair_path) {
+                Ok(keypair) => keypair,
+                Err(e) => {
+                    error!(
+                        "Failed to read keypair file: {}, {}",
+                        &sol_config.keypair_path, e
+                    );
+                    std::process::exit(1);
+                }
+            },
+            None => match read_keypair_file(&*shellexpand::tilde(default_key_path)) {
+                Ok(keypair) => keypair,
+                Err(e) => {
+                    error!("Failed to read keypair file: {}, {}", default_key_path, e);
+                    std::process::exit(1);
+                }
+            },
         },
     };
 
