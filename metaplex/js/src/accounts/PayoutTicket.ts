@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
@@ -14,15 +21,16 @@ import { Buffer } from 'buffer';
 
 type Args = { recipient: StringPublicKey; amountPaid: BN };
 export class PayoutTicketData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = PayoutTicketData.struct([
     ['key', 'u8'],
     ['recipient', 'pubkeyAsString'],
     ['amountPaid', 'u64'],
   ]);
 
   key: MetaplexKey;
-  recipient: StringPublicKey;
-  amountPaid: BN;
+  recipient!: StringPublicKey;
+  amountPaid!: BN;
 
   constructor(args: Args) {
     super(args);

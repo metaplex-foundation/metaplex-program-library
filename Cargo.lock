@@ -2054,7 +2054,7 @@ dependencies = [
  "anchor-client",
  "borsh 0.9.3",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "num",
  "num-derive",
  "num-traits",

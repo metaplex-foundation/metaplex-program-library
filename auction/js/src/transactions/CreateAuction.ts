@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import { Borsh, Transaction, StringPublicKey } from '@metaplex-foundation/mpl-core';
 import {
   PublicKey,
@@ -21,13 +28,14 @@ type WinnerLimitArgs = {
 };
 
 export class WinnerLimit extends Borsh.Data<WinnerLimitArgs> {
-  static readonly SCHEMA = WinnerLimit.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = WinnerLimit.struct([
     ['type', 'u8'],
     ['usize', 'u64'],
   ]);
 
-  type: WinnerLimitType;
-  usize: BN;
+  type!: WinnerLimitType;
+  usize!: BN;
 }
 
 export type Args = {
@@ -43,7 +51,8 @@ export type Args = {
 };
 
 export class CreateAuctionArgs extends Borsh.Data<Args> {
-  static readonly SCHEMA = new Map([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...WinnerLimit.SCHEMA,
     ...PriceFloor.SCHEMA,
     ...CreateAuctionArgs.struct([
@@ -62,30 +71,30 @@ export class CreateAuctionArgs extends Borsh.Data<Args> {
 
   instruction = 1;
   /// How many winners are allowed for this auction. See AuctionData.
-  winners: WinnerLimit;
+  winners!: WinnerLimit;
   /// End time is the cut-off point that the auction is forced to end by. See AuctionData.
-  endAuctionAt: BN | null;
+  endAuctionAt?: BN;
   /// Gap time is how much time after the previous bid where the auction ends. See AuctionData.
-  auctionGap: BN | null;
+  auctionGap?: BN;
   /// Token mint for the SPL token used for bidding.
-  tokenMint: StringPublicKey;
-  /// Authority
-  authority: StringPublicKey;
+  tokenMint!: StringPublicKey;
+  /// Authority!
+  authority!: StringPublicKey;
   /// The resource being auctioned. See AuctionData.
-  resource: StringPublicKey;
+  resource!: StringPublicKey;
   /// Set a price floor.
-  priceFloor: PriceFloor;
+  priceFloor!: PriceFloor;
   /// Add a tick size increment
-  tickSize: BN | null;
+  tickSize?: BN;
   /// Add a minimum percentage increase each bid must meet.
-  gapTickSizePercentage: number | null;
+  gapTickSizePercentage?: number;
 }
 
 type CreateAuctionParams = {
   auction: PublicKey;
   auctionExtended: PublicKey;
   creator: PublicKey;
-  args: CreateAuctionArgs;
+  args: Args;
 };
 
 export class CreateAuction extends Transaction {

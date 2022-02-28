@@ -275,7 +275,7 @@ pub fn process_update_metadata_accounts_v2(
                 true,
             )?;
             metadata.data = compatible_data;
-            assert_collection_update_is_valid(&metadata.collection, &data.collection)?;
+            assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
             metadata.collection = data.collection;
         } else {
             return Err(MetadataError::DataIsImmutable.into());
@@ -1174,7 +1174,7 @@ pub fn process_revoke_collection_authority(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let collection_authority_record = next_account_info(account_info_iter)?;
-    let new_collection_authority = next_account_info(account_info_iter)?;
+    let delegate_authority = next_account_info(account_info_iter)?;
     let update_authority = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
@@ -1193,7 +1193,7 @@ pub fn process_revoke_collection_authority(
         return Err(MetadataError::CollectionAuthorityDoesNotExist.into());
     }
     assert_has_collection_authority(
-        new_collection_authority,
+        delegate_authority,
         &metadata,
         &mint_info.key,
         Some(collection_authority_record),
