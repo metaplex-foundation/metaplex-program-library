@@ -8,7 +8,6 @@ pub use anchor_client::{
     },
     Client, Program,
 };
-use anyhow::Result;
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 use solana_account_decoder::UiAccountEncoding;
@@ -18,6 +17,7 @@ use solana_client::{
 };
 use std::{rc::Rc, str::FromStr};
 
+use crate::common::*;
 use crate::setup::{setup_client, sugar_setup};
 
 pub struct WithdrawArgs {
@@ -38,10 +38,17 @@ pub struct WithdrawSetupConfig {
 
 pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
     let (program, payer) = setup_withdraw(args.keypair, args.rpc_url)?;
-    let candy_machine = Pubkey::from_str(&args.candy_machine)?;
+    let candy_machine = match Pubkey::from_str(&args.candy_machine) {
+        Ok(candy_machine) => candy_machine,
+        Err(_) => {
+            let error = anyhow!("Failed to parse candy machine id: {}", args.candy_machine);
+            error!("{:?}", error);
+            return Err(error);
+        }
+    };
 
-    let _program = Rc::new(program);
-    do_withdraw(Rc::clone(&_program), candy_machine, payer)?;
+    let program = Rc::new(program);
+    do_withdraw(Rc::clone(&program), candy_machine, payer)?;
     Ok(())
 }
 
