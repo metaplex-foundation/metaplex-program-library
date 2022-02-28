@@ -373,8 +373,8 @@ pub fn execute_sale(
     let (escrow_payment_account, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer);
     let (purchase_receipt, purchase_receipt_bump) =
         find_purchase_receipt_address(seller_trade_state, buyer_trade_state);
-    let (listing_receipt, listing_receipt_bump) = find_listing_receipt_address(seller_trade_state);
-    let (bid_receipt, public_bid_receipt_bump) = find_bid_receipt_address(buyer_trade_state);
+    let (listing_receipt, _listing_receipt_bump) = find_listing_receipt_address(seller_trade_state);
+    let (bid_receipt, _public_bid_receipt_bump) = find_bid_receipt_address(buyer_trade_state);
     let execute_sale_accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: *buyer,
         seller: *seller,

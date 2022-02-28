@@ -20,7 +20,7 @@ pub const BID_RECEIPT_SIZE: usize = 8 + //key
 8 + // token_size
 1 + // bump
 1 + // trade_state_bump
-8 + // activated_at
+8 + // created_at
 1 + 8; // canceled_at
 
 #[account]
@@ -36,7 +36,7 @@ pub struct BidReceipt {
     pub token_size: u64,
     pub bump: u8,
     pub trade_state_bump: u8,
-    pub activated_at: i64,
+    pub created_at: i64,
     pub canceled_at: Option<i64>,
 }
 
@@ -51,7 +51,7 @@ pub const LISTING_RECEIPT_SIZE: usize = 8 + //key
 8 + // token_size
 1 + // bump
 1 + // trade_state_bump
-8 + // activated_at
+8 + // created_at
 1 + 8; // canceled_at;
 
 #[account]
@@ -66,7 +66,7 @@ pub struct ListingReceipt {
     pub token_size: u64,
     pub bump: u8,
     pub trade_state_bump: u8,
-    pub activated_at: i64,
+    pub created_at: i64,
     pub canceled_at: Option<i64>,
 }
 
@@ -74,7 +74,7 @@ pub const PURCHASE_RECEIPT_SIZE: usize = 8 + //key
 32 + // buyer
 32 + // seller
 32 + // auction_house
-32 + // token_mint
+32 + // metadata
 8 + // token_size
 8 + // price
 1 + // bump
@@ -85,7 +85,7 @@ pub struct PurchaseReceipt {
     pub buyer: Pubkey,
     pub seller: Pubkey,
     pub auction_house: Pubkey,
-    pub token_mint: Pubkey,
+    pub metadata: Pubkey,
     pub token_size: u64,
     pub price: u64,
     pub bump: u8,
@@ -166,7 +166,7 @@ pub fn print_listing_receipt<'info>(
         token_size: sell_data.token_size,
         bump: receipt_bump,
         trade_state_bump: sell_data.trade_state_bump,
-        activated_at: clock.unix_timestamp,
+        created_at: clock.unix_timestamp,
         canceled_at: None,
     };
 
@@ -306,7 +306,7 @@ pub fn print_bid_receipt<'info>(
         token_size: buy_data.token_size,
         bump: receipt_bump,
         trade_state_bump: buy_data.trade_state_bump,
-        activated_at: clock.unix_timestamp,
+        created_at: clock.unix_timestamp,
         canceled_at: None,
     };
 
@@ -412,7 +412,7 @@ pub fn print_purchase_receipt<'info>(
 
     let buyer = &prev_instruction_accounts[0];
     let seller = &prev_instruction_accounts[1];
-    let token_mint = &prev_instruction_accounts[3];
+    let metadata = &prev_instruction_accounts[4];
     let auction_house = &prev_instruction_accounts[10];
     let buyer_trade_state = &prev_instruction_accounts[13];
     let seller_trade_state = &prev_instruction_accounts[14];
@@ -468,7 +468,7 @@ pub fn print_purchase_receipt<'info>(
         buyer: buyer.pubkey,
         seller: seller.pubkey,
         auction_house: auction_house.pubkey,
-        token_mint: token_mint.pubkey,
+        metadata: metadata.pubkey,
         bump: purchase_receipt_bump,
         price: execute_sale_data.buyer_price,
         token_size: execute_sale_data.token_size,
@@ -482,7 +482,6 @@ pub fn print_purchase_receipt<'info>(
 
     let mut listing_receipt = ListingReceipt::try_deserialize(&mut listing_receipt_data_slice)?;
 
-    listing_receipt.canceled_at = Some(timestamp);
     listing_receipt.purchase_receipt = Some(purchase_receipt_account.key());
 
     let mut data = listing_receipt_data;
@@ -496,7 +495,6 @@ pub fn print_purchase_receipt<'info>(
 
     let mut bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_slice)?;
 
-    bid_receipt.canceled_at = Some(timestamp);
     bid_receipt.purchase_receipt = Some(purchase_receipt_account.key());
 
     let mut data = bid_receipt_data;

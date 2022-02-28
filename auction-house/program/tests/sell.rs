@@ -68,7 +68,7 @@ async fn sell_success() {
     assert_eq!(listing_receipt.auction_house, acc.auction_house);
     assert_eq!(listing_receipt.metadata, acc.metadata);
     assert_eq!(listing_receipt.seller, acc.wallet);
-    assert_eq!(listing_receipt.activated_at, timestamp);
+    assert_eq!(listing_receipt.created_at, timestamp);
     assert_eq!(listing_receipt.purchase_receipt, None);
     assert_eq!(listing_receipt.canceled_at, None);
     assert_eq!(listing_receipt.bookkeeper, *owner_pubkey);

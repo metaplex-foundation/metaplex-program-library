@@ -14,7 +14,7 @@ use solana_program::program_pack::Pack;
 
 use mpl_auction_house::{
     pda::{find_escrow_payment_address, find_program_as_signer_address, find_trade_state_address},
-    receipt::PurchaseReceipt,
+    receipt::{PurchaseReceipt, BidReceipt, ListingReceipt},
 };
 use solana_sdk::{signature::Keypair, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
@@ -239,7 +239,7 @@ async fn execute_public_sale_success() {
         .unwrap();
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
-    let ((es_acc, _), first_sale_tx) = execute_sale(
+    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = execute_sale(
         &mut context,
         &ahkey,
         &ah,
@@ -376,4 +376,36 @@ async fn execute_public_sale_success() {
 
     assert_eq!(purchase_receipt.buyer, public_bidder.pubkey());
     assert_eq!(purchase_receipt.seller, new_seller.pubkey());
+    assert_eq!(purchase_receipt.price, price);
+    assert_eq!(purchase_receipt.metadata, public_sale_acc.metadata);
+    assert_eq!(purchase_receipt.auction_house, public_sale_acc.auction_house);
+
+    let bid_receipt_account = context
+        .banks_client
+        .get_account(purchase_receipt_acc.bid_receipt)
+        .await
+        .expect("no bid receipt")
+        .expect("bid receipt empty");
+
+    let bid_receipt =
+        BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
+
+    assert_eq!(bid_receipt.purchase_receipt, Some(purchase_receipt_acc.purchase_receipt));
+    assert_eq!(bid_receipt.canceled_at, None);
+    assert_eq!(bid_receipt.token_account, None);
+
+    let listing_receipt_account = context
+        .banks_client
+        .get_account(purchase_receipt_acc.listing_receipt)
+        .await
+        .expect("no listing receipt")
+        .expect("listing receipt empty");
+
+    let listing_receipt =
+        ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
+
+    assert_eq!(listing_receipt.purchase_receipt, Some(purchase_receipt_acc.purchase_receipt));
+    assert_eq!(listing_receipt.canceled_at, None);
+
+    ()
 }
