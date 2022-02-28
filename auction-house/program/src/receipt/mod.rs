@@ -78,7 +78,7 @@ pub const PURCHASE_RECEIPT_SIZE: usize = 8 + //key
 8 + // token_size
 8 + // price
 1 + // bump
-1 + 8; // created_at
+8; // created_at
 
 #[account]
 pub struct PurchaseReceipt {
@@ -89,7 +89,7 @@ pub struct PurchaseReceipt {
     pub token_size: u64,
     pub price: u64,
     pub bump: u8,
-    pub created_at: Option<i64>,
+    pub created_at: i64,
 }
 
 #[derive(Accounts)]
@@ -472,7 +472,7 @@ pub fn print_purchase_receipt<'info>(
         bump: purchase_receipt_bump,
         price: execute_sale_data.buyer_price,
         token_size: execute_sale_data.token_size,
-        created_at: Some(timestamp),
+        created_at: timestamp,
     };
 
     purchase.try_serialize(&mut *purchase_receipt_account.try_borrow_mut_data()?)?;

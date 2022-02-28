@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use anchor_lang::{context, AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_lang::{prelude::*, context, AccountDeserialize, InstructionData, ToAccountMetas};
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
 use solana_sdk::signer::Signer;
@@ -364,6 +364,13 @@ async fn execute_public_sale_success() {
     assert_eq!(new_seller_before.lamports < new_seller_after.lamports, true);
     assert_eq!(public_bidder_token_after.amount, 1);
 
+    let timestamp = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
+        .unwrap()
+        .unix_timestamp;
+
     let purchase_receipt_account = context
         .banks_client
         .get_account(purchase_receipt_acc.purchase_receipt)
@@ -377,6 +384,7 @@ async fn execute_public_sale_success() {
     assert_eq!(purchase_receipt.buyer, public_bidder.pubkey());
     assert_eq!(purchase_receipt.seller, new_seller.pubkey());
     assert_eq!(purchase_receipt.price, price);
+    assert_eq!(purchase_receipt.created_at, timestamp);
     assert_eq!(purchase_receipt.metadata, public_sale_acc.metadata);
     assert_eq!(purchase_receipt.auction_house, public_sale_acc.auction_house);
 
