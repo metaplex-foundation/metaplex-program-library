@@ -71,6 +71,7 @@ pub struct ListingReceipt {
 }
 
 pub const PURCHASE_RECEIPT_SIZE: usize = 8 + //key
+32 + // bookkeeper
 32 + // buyer
 32 + // seller
 32 + // auction_house
@@ -82,6 +83,7 @@ pub const PURCHASE_RECEIPT_SIZE: usize = 8 + //key
 
 #[account]
 pub struct PurchaseReceipt {
+    pub bookkeeper: Pubkey,
     pub buyer: Pubkey,
     pub seller: Pubkey,
     pub auction_house: Pubkey,
@@ -392,7 +394,7 @@ pub fn print_purchase_receipt<'info>(
     let listing_receipt_account = &ctx.accounts.listing_receipt;
     let bid_receipt_account = &ctx.accounts.bid_receipt;
     let instruction_account = &ctx.accounts.instruction;
-    let bookeeper = &ctx.accounts.bookkeeper;
+    let bookkeeper = &ctx.accounts.bookkeeper;
     let rent = &ctx.accounts.rent;
     let system_program = &ctx.accounts.system_program;
     let clock = Clock::get()?;
@@ -457,7 +459,7 @@ pub fn print_purchase_receipt<'info>(
             &purchase_receipt_info,
             &rent.to_account_info(),
             &system_program,
-            &bookeeper,
+            &bookkeeper,
             PURCHASE_RECEIPT_SIZE,
             &[],
             &purchase_receipt_seeds,
@@ -469,6 +471,7 @@ pub fn print_purchase_receipt<'info>(
         seller: seller.pubkey,
         auction_house: auction_house.pubkey,
         metadata: metadata.pubkey,
+        bookkeeper: bookkeeper.key(),
         bump: purchase_receipt_bump,
         price: execute_sale_data.buyer_price,
         token_size: execute_sale_data.token_size,

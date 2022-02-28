@@ -383,6 +383,7 @@ async fn execute_public_sale_success() {
 
     assert_eq!(purchase_receipt.buyer, public_bidder.pubkey());
     assert_eq!(purchase_receipt.seller, new_seller.pubkey());
+    assert_eq!(purchase_receipt.bookkeeper, authority.pubkey());
     assert_eq!(purchase_receipt.price, price);
     assert_eq!(purchase_receipt.created_at, timestamp);
     assert_eq!(purchase_receipt.metadata, public_sale_acc.metadata);
