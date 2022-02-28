@@ -16,7 +16,8 @@ jobs:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
-      code: ${{ steps.filter.outputs.code }}
+      core: ${{ steps.filter.outputs.core }}
+      package: ${{ steps.filter.outputs.package }}
     steps:
     - uses: actions/checkout@v2
     # For pull requests it's not necessary to checkout the code
@@ -24,15 +25,16 @@ jobs:
       id: filter
       with:
         filters: |
-          code:
+          core:
             - 'core/**'
+          package:
             - 'token-metadata/**'
   build-and-integration-test-token-metadata:
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-metadata 
     needs: changes
-    if: ${{ needs.changes.outputs.code == 'true' }}
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2

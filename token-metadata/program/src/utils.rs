@@ -912,7 +912,7 @@ pub fn process_create_metadata_accounts_logic(
     metadata.update_authority = update_authority_key;
     assert_valid_use(&data.uses, &None)?;
     metadata.uses = data.uses;
-    assert_collection_update_is_valid(&None, &data.collection)?;
+    assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
     if add_token_standard {
         let token_standard = if is_edition {
@@ -926,7 +926,6 @@ pub fn process_create_metadata_accounts_logic(
     } else {
         metadata.token_standard = None;
     }
-
     puff_out_data_fields(&mut metadata);
 
     let edition_seeds = &[

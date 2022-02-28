@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-token-metadata",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "MPL Token Metadata JavaScript API.",
   "main": "dist/src/mpl-token-metadata.js",
   "types": "dist/src/mpl-token-metadata.d.ts",
@@ -15,7 +15,7 @@
     "pretest": "yarn build",
     "amman:start": "DEBUG=\"*\" amman validator",
     "amman:stop": "pkill solana-test-validator",
-    "test": "esr ./test/*.test.ts",
+    "test": "tape ./dist/test/*.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
@@ -42,19 +42,17 @@
   "dependencies": {
     "@metaplex-foundation/mpl-core": "^0.0.2",
     "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.31.0"
+    "@solana/web3.js": "^1.35.1",
+    "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/amman": "^0.0.3",
-    "@solana/spl-token": "0.1.8",
+    "@metaplex-foundation/amman": "^0.1.0 ",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
-    "debug": "^4.3.3",
-    "esbuild-runner": "2.2.1",
     "eslint": "^8.3.0",
     "rimraf": "^3.0.2",
     "spok": "^1.4.2",
     "supports-color": "^9.2.1",
-    "tape": "^5.3.2"
+    "tape": "^5.5.2"
   }
 }

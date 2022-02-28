@@ -9,7 +9,7 @@ export class UpdateExternalPriceAccountArgs extends Borsh.Data<{
 }> {
   static readonly SCHEMA = new Map([
     ...ExternalPriceAccountData.SCHEMA,
-    ...this.struct([
+    ...UpdateExternalPriceAccountArgs.struct([
       ['instruction', 'u8'],
       ['externalPriceAccount', ExternalPriceAccountData],
     ]),

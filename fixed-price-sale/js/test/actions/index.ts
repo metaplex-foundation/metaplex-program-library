@@ -1,4 +1,5 @@
 export * from './createMetadata';
+export * from './createMintAccount';
 export * from './createPrerequisites';
 export * from './createStore';
 export * from './mintNft';

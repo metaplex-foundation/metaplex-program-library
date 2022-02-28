@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import {
   AnyPublicKey,
   StringPublicKey,
@@ -21,21 +28,22 @@ type Args = {
   tokenProgram: StringPublicKey;
 };
 export class StoreData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = StoreData.struct([
     ['key', 'u8'],
     ['public', 'u8'],
     ['auctionProgram', 'pubkeyAsString'],
     ['tokenVaultProgram', 'pubkeyAsString'],
-    ['tokenMetadataProgram', 'pubkeyAsString'],
+    ['tokenMetadataProgram', 'pubkeyAsString!'],
     ['tokenProgram', 'pubkeyAsString'],
   ]);
 
   key: MetaplexKey = MetaplexKey.StoreV1;
   public = true;
-  auctionProgram: StringPublicKey;
-  tokenVaultProgram: StringPublicKey;
-  tokenMetadataProgram: StringPublicKey;
-  tokenProgram: StringPublicKey;
+  auctionProgram!: StringPublicKey;
+  tokenVaultProgram!: StringPublicKey;
+  tokenMetadataProgram!: StringPublicKey;
+  tokenProgram!: StringPublicKey;
 
   constructor(args: Args) {
     super(args);
