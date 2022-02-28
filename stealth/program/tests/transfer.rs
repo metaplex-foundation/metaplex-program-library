@@ -457,12 +457,19 @@ async fn test_transfer_crank() {
     ).unwrap();
 
     use stealth::instruction::InstructionsAndSignerPubkeys;
-    for InstructionsAndSignerPubkeys { instructions, signers } in txs {
+    for (i, InstructionsAndSignerPubkeys { instructions, signers }) in txs.iter().enumerate() {
         let tx = Transaction::new_signed_with_payer(
             &instructions,
             Some(&payer.pubkey()),
             &signers_to_kps(&signers),
             recent_blockhash,
+        );
+        assert!(
+            tx.message.serialize().len() + tx.signatures.len() * 64 <= 1232,
+            "Crank exceeded tx {} len: {} byte message, {} signatures",
+            i,
+            tx.message.serialize().len(),
+            tx.signatures.len(),
         );
         banks_client.process_transaction(tx).await.unwrap();
     }
