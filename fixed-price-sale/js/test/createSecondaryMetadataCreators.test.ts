@@ -84,7 +84,7 @@ test('create-secondary-metadata-creators: empty creators', async (t) => {
     maxSupply: 100,
   });
 
-  const creators = [];
+  const creators: CreatorAccountData[] = [];
 
   const { createSecondaryMetadataCreatorsTx } = await createSecondaryMetadataCreators({
     test: t,

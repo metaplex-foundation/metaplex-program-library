@@ -1,7 +1,8 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Actions, defaultSendOptions, TransactionHandler } from '@metaplex-foundation/amman';
+import { defaultSendOptions, TransactionHandler } from '@metaplex-foundation/amman';
 
+import { CreateMint } from './createMintAccount';
 import { createTokenAccount } from '../transactions';
 
 interface MintTokenToAccountParams {
@@ -17,7 +18,7 @@ export const mintTokenToAccount = async ({
 }: MintTokenToAccountParams) => {
   const tx = new Transaction();
 
-  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer);
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer);
 
   tx.add(createMintTx);
 

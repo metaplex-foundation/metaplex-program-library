@@ -1,17 +1,28 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "target": "es6",
+    "baseUrl": ".",
+    "target": "ES2018",
+    "module": "commonjs",
+    "sourceMap": true,
     "declaration": true,
+    "declarationMap": false,
     "removeComments": true,
     "moduleResolution": "node",
-    "sourceMap": true,
+    "noEmit": false,
+    "preserveWatchOutput": true,
+    "emitDeclarationOnly": false,
+    "importHelpers": false,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noFallthroughCasesInSwitch": true,
     "downlevelIteration": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
+    "incremental": false,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "module": "commonjs"
+    "useUnknownInCatchVariables": false
   },
   "include": ["./src"],
   "exclude": ["node_modules", "dist", "build", "lib"]

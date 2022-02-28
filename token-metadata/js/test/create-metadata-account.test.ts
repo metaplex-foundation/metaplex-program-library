@@ -13,15 +13,17 @@ import {
 import { connectionURL, killStuckProcess } from './utils';
 import {
   airdrop,
+  assertConfirmedTransaction,
   assertTransactionSummary,
   PayerTransactionHandler,
+  defaultSendOptions,
 } from '@metaplex-foundation/amman';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+
 import BN from 'bn.js';
 
 import { logDebug } from './utils';
 import { addLabel, isKeyOf } from './utils/address-labels';
-import { createMetadata, createMetadataV2 } from './actions';
+import { createMetadata, createMetadataV2, CreateMint } from './actions';
 
 killStuckProcess();
 
@@ -38,16 +40,16 @@ test('create-metadata-account: success', async (t) => {
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
   await airdrop(connection, payer.publicKey, 2);
-  const mint = await Token.createMint(
-    connection,
-    payer,
-    payer.publicKey,
-    null,
-    6,
-    TOKEN_PROGRAM_ID,
-  );
 
-  addLabel('create:mint', mint.publicKey);
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
+  const mintRes = await transactionHandler.sendAndConfirmTransaction(
+    createMintTx,
+    [mint],
+    defaultSendOptions,
+  );
+  addLabel('create:mint', mint);
+
+  assertConfirmedTransaction(t, mintRes.txConfirmed);
 
   const initMetadataData = new MetadataDataData({
     uri: URI,
@@ -73,16 +75,16 @@ test('create-metadata-account: success', async (t) => {
   });
   const metadataAccount = await connection.getAccountInfo(metadata);
   logDebug({
-    metadataAccountOwner: metadataAccount.owner.toBase58(),
-    metadataAccountDataBytes: metadataAccount.data.byteLength,
+    metadataAccountOwner: metadataAccount?.owner.toBase58(),
+    metadataAccountDataBytes: metadataAccount?.data.byteLength,
   });
 
-  const metadataData = MetadataData.deserialize(<Buffer>metadataAccount.data);
+  const metadataData = MetadataData.deserialize(metadataAccount?.data);
   spok(t, metadataData, {
     $topic: 'metadataData',
     key: MetadataKey.MetadataV1,
     updateAuthority: isKeyOf(payer),
-    mint: isKeyOf(mint.publicKey),
+    mint: isKeyOf(mint),
     data: {
       name: NAME,
       symbol: SYMBOL,
@@ -95,13 +97,13 @@ test('create-metadata-account: success', async (t) => {
 
   const mintAccount = await connection.getAccountInfo(mint.publicKey);
   logDebug({
-    mintAccountOwner: mintAccount.owner.toBase58(),
-    mintAccountDataBytes: mintAccount.data.byteLength,
+    mintAccountOwner: mintAccount?.owner.toBase58(),
+    mintAccountDataBytes: mintAccount?.data.byteLength,
   });
 
-  t.ok(Edition.isCompatible(mintAccount.data), 'mint account data is mint edition');
+  t.ok(Edition.isCompatible(mintAccount?.data), 'mint account data is mint edition');
 
-  const editionData = EditionData.deserialize(<Buffer>mintAccount.data);
+  const editionData = EditionData.deserialize(mintAccount?.data);
   const edition: BN = editionData.edition;
   t.ok(edition.toNumber() > 0, 'greater zero edition number');
 });
@@ -115,15 +117,15 @@ test('create-metadata-account-v2: success', async (t) => {
 
   await airdrop(connection, payer.publicKey, 2);
 
-  const mint = await Token.createMint(
-    connection,
-    payer,
-    payer.publicKey,
-    null,
-    6,
-    TOKEN_PROGRAM_ID,
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
+  const mintRes = await transactionHandler.sendAndConfirmTransaction(
+    createMintTx,
+    [mint],
+    defaultSendOptions,
   );
-  addLabel('create:mint', mint.publicKey);
+  addLabel('create:mint', mint);
+
+  assertConfirmedTransaction(t, mintRes.txConfirmed);
 
   const initMetadataData = new DataV2({
     uri: URI,
@@ -151,16 +153,16 @@ test('create-metadata-account-v2: success', async (t) => {
   });
   const metadataAccount = await connection.getAccountInfo(metadata);
   logDebug({
-    metadataAccountOwner: metadataAccount.owner.toBase58(),
-    metadataAccountDataBytes: metadataAccount.data.byteLength,
+    metadataAccountOwner: metadataAccount?.owner.toBase58(),
+    metadataAccountDataBytes: metadataAccount?.data.byteLength,
   });
 
-  const metadataData = MetadataData.deserialize(<Buffer>metadataAccount.data);
+  const metadataData = MetadataData.deserialize(metadataAccount?.data);
   spok(t, metadataData, {
     $topic: 'metadataData',
     key: MetadataKey.MetadataV1,
     updateAuthority: isKeyOf(payer),
-    mint: isKeyOf(mint.publicKey),
+    mint: isKeyOf(mint),
     data: {
       name: NAME,
       symbol: SYMBOL,

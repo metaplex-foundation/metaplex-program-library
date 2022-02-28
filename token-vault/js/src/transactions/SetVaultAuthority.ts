@@ -4,7 +4,7 @@ import { VaultInstructions } from '../VaultProgram';
 import { VaultProgram } from '../VaultProgram';
 
 export class SetVaultAuthorityArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  static readonly SCHEMA = SetVaultAuthorityArgs.struct([['instruction', 'u8']]);
 
   instruction = VaultInstructions.SetVaultAuthority;
 }

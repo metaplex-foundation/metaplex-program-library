@@ -15,13 +15,12 @@ import {
   connectionURL,
   SELLER_FEE_BASIS_POINTS,
   logDebug,
-  createCollection,
 } from './utils';
 import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair } from '@solana/web3.js';
-import { createMasterEdition } from './actions';
+import { createCollection, createMasterEdition } from './actions';
 import { Collection } from '../src/accounts';
-import { SetAndVerifyCollectionCollection } from 'src/transactions';
+import { SetAndVerifyCollectionCollection } from '../src/transactions';
 
 killStuckProcess();
 // -----------------
@@ -59,7 +58,7 @@ test('verify-collection', async (t) => {
   );
   t.ok(updatedMetadataBeforeVerification.collection, 'collection should be not null');
   t.not(
-    updatedMetadataBeforeVerification.collection.verified,
+    updatedMetadataBeforeVerification.collection?.verified,
     'collection should be not be verified',
   );
   const collectionVerifyCollectionTransaction = new VerifyCollection(
@@ -72,17 +71,15 @@ test('verify-collection', async (t) => {
       collectionMasterEdition: collectionNft.masterEditionPubkey,
     },
   );
-  await transactionHandler.sendAndConfirmTransaction(
-    collectionVerifyCollectionTransaction,
-    [payer],
-    { skipPreflight: true },
-  );
+  await transactionHandler.sendAndConfirmTransaction(collectionVerifyCollectionTransaction, [
+    payer,
+  ]);
   const updatedMetadataAfterVerification = await getMetadataData(
     connection,
     collectionMemberNft.metadata,
   );
   t.ok(updatedMetadataAfterVerification.collection, 'collection should be not null');
-  t.ok(updatedMetadataAfterVerification.collection.verified, 'collection should be verified');
+  t.ok(updatedMetadataAfterVerification.collection?.verified, 'collection should be verified');
 });
 
 // -----------------
@@ -145,7 +142,7 @@ test('set-and-verify-collection', async (t) => {
 
   t.ok(updatedMetadataAfterVerification.collection, 'collection should be not null');
 
-  t.ok(updatedMetadataAfterVerification.collection.verified, 'collection should be verified');
+  t.ok(updatedMetadataAfterVerification.collection?.verified, 'collection should be verified');
 });
 test('Delegated Authority', (t) => {
   t.test('Fail: Verify Collection', async (t) => {
@@ -179,7 +176,7 @@ test('Delegated Authority', (t) => {
     );
 
     t.ok(updatedMetadataBeforeVerification.collection, 'collection should be null');
-    t.false(updatedMetadataBeforeVerification.collection.verified, 'collection cant be verified');
+    t.false(updatedMetadataBeforeVerification.collection?.verified, 'collection cant be verified');
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
@@ -303,7 +300,7 @@ test('Delegated Authority', (t) => {
     );
 
     t.ok(updatedMetadataBeforeVerification.collection, 'collection should not be null');
-    t.false(updatedMetadataBeforeVerification.collection.verified, 'collection cant be verified');
+    t.false(updatedMetadataBeforeVerification.collection?.verified, 'collection cant be verified');
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
@@ -349,7 +346,7 @@ test('Delegated Authority', (t) => {
       collectionMemberNft.metadata,
     );
     t.ok(updatedMetadataAfterVerification.collection, 'collection should not be null');
-    t.true(updatedMetadataAfterVerification.collection.verified, 'collection is verified');
+    t.true(updatedMetadataAfterVerification.collection?.verified, 'collection is verified');
   });
 
   t.test('Success: Set and Verify Collection', async (t) => {
@@ -431,6 +428,6 @@ test('Delegated Authority', (t) => {
       collectionMemberNft.metadata,
     );
     t.ok(updatedMetadataAfterVerification.collection, 'collection should not be null');
-    t.true(updatedMetadataAfterVerification.collection.verified, 'collection is verified');
+    t.true(updatedMetadataAfterVerification.collection?.verified, 'collection is verified');
   });
 });

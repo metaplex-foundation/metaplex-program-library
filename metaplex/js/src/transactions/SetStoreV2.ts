@@ -1,3 +1,11 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
+import { strict as assert } from 'assert';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
@@ -13,15 +21,16 @@ import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class SetStoreV2Args extends Borsh.Data<{ public: boolean; settingsUri: string | null }> {
-  static readonly SCHEMA = this.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = SetStoreV2Args.struct([
     ['instruction', 'u8'],
     ['public', 'u8'],
     ['settingsUri', { kind: 'option', type: 'string' }],
   ]);
 
   instruction = 23;
-  public: boolean;
-  settingsUri: string | null;
+  public!: boolean;
+  settingsUri!: string | null;
 }
 
 type SetStoreV2Params = {
@@ -35,6 +44,8 @@ export class SetStoreV2 extends Transaction {
   constructor(options: TransactionCtorFields, params: ParamsWithStore<SetStoreV2Params>) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer');
+
     const { admin, store, config, isPublic, settingsUri } = params;
 
     const data = SetStoreV2Args.serialize({ public: isPublic, settingsUri });
