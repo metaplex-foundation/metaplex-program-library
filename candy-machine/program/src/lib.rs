@@ -34,8 +34,7 @@ use {
     spl_token::state::Mint,
     std::{cell::RefMut, ops::Deref, str::FromStr},
 };
-// anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
-anchor_lang::declare_id!("GdjsqG2jVHjKdwgXXnpWXzWnSVkomQJrWUBz4cZuGpNa");
+anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
@@ -44,7 +43,10 @@ const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
 pub mod candy_machine {
     use super::*;
+    use mpl_token_metadata::utils::{assert_derivation, create_or_allocate_account_raw};
+    use solana_program::borsh::try_from_slice_unchecked;
 
+    #[inline(never)]
     pub fn mint_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
         creator_bump: u8,
@@ -72,7 +74,7 @@ pub mod candy_machine {
             match es.end_setting_type {
                 EndSettingType::Date => {
                     if clock.unix_timestamp > es.number as i64 {
-                        if *ctx.accounts.payer.key != candy_machine.authority {
+                        if ctx.accounts.payer.key() != candy_machine.authority {
                             return Err(ErrorCode::CandyMachineNotLive.into());
                         }
                     }
@@ -180,7 +182,7 @@ pub mod candy_machine {
                                 &ctx.remaining_accounts[remaining_accounts_counter];
                             remaining_accounts_counter += 1;
 
-                            assert_keys_equal(*whitelist_token_mint.key, ws.mint)?;
+                            assert_keys_equal(whitelist_token_mint.key(), ws.mint)?;
 
                             spl_token_burn(TokenBurnParams {
                                 mint: whitelist_token_mint.clone(),
@@ -194,14 +196,15 @@ pub mod candy_machine {
 
                         match candy_machine.data.go_live_date {
                             None => {
-                                if *ctx.accounts.payer.key != candy_machine.authority && !ws.presale
+                                if ctx.accounts.payer.key() != candy_machine.authority
+                                    && !ws.presale
                                 {
                                     return Err(ErrorCode::CandyMachineNotLive.into());
                                 }
                             }
                             Some(val) => {
                                 if clock.unix_timestamp < val
-                                    && *ctx.accounts.payer.key != candy_machine.authority
+                                    && ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
                                     return Err(ErrorCode::CandyMachineNotLive.into());
@@ -265,7 +268,7 @@ pub mod candy_machine {
             }
 
             invoke(
-                &system_instruction::transfer(&ctx.accounts.payer.key, wallet.key, price),
+                &system_instruction::transfer(&ctx.accounts.payer.key(), &wallet.key(), price),
                 &[
                     ctx.accounts.payer.to_account_info(),
                     wallet.to_account_info(),
@@ -282,7 +285,11 @@ pub mod candy_machine {
             .checked_rem(candy_machine.data.items_available)
             .ok_or(ErrorCode::NumericalOverflowError)? as usize;
 
-        let config_line = get_config_line(&candy_machine, modded, candy_machine.items_redeemed)?;
+        let config_line = get_config_line(
+            &candy_machine,
+            modded,
+            candy_machine.items_redeemed
+        )?;
 
         candy_machine.items_redeemed = candy_machine
             .items_redeemed
@@ -331,16 +338,13 @@ pub mod candy_machine {
             ctx.accounts.rent.to_account_info(),
             candy_machine_creator.to_account_info(),
         ];
-        msg!("Before metadata");
-        sol_log_compute_units();
-
         invoke_signed(
             &create_metadata_accounts_v2(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.metadata.key,
-                *ctx.accounts.mint.key,
-                *ctx.accounts.mint_authority.key,
-                *ctx.accounts.payer.key,
+                ctx.accounts.token_metadata_program.key(),
+                ctx.accounts.metadata.key(),
+                ctx.accounts.mint.key(),
+                ctx.accounts.mint_authority.key(),
+                ctx.accounts.payer.key(),
                 candy_machine_creator.key(),
                 config_line.name,
                 candy_machine.data.symbol.clone(),
@@ -355,18 +359,15 @@ pub mod candy_machine {
             metadata_infos.as_slice(),
             &[&authority_seeds],
         )?;
-
-        msg!("Before master");
-        sol_log_compute_units();
         invoke_signed(
             &create_master_edition_v3(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.master_edition.key,
-                *ctx.accounts.mint.key,
+                ctx.accounts.token_metadata_program.key(),
+                ctx.accounts.master_edition.key(),
+                ctx.accounts.mint.key(),
                 candy_machine_creator.key(),
-                *ctx.accounts.mint_authority.key,
-                *ctx.accounts.metadata.key,
-                *ctx.accounts.payer.key,
+                ctx.accounts.mint_authority.key(),
+                ctx.accounts.metadata.key(),
+                ctx.accounts.payer.key(),
                 Some(candy_machine.data.max_supply),
             ),
             master_edition_infos.as_slice(),
@@ -378,13 +379,10 @@ pub mod candy_machine {
         if !candy_machine.data.retain_authority {
             new_update_authority = Some(ctx.accounts.update_authority.key());
         }
-
-        msg!("Before update");
-        sol_log_compute_units();
         invoke_signed(
             &update_metadata_accounts_v2(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.metadata.key,
+                ctx.accounts.token_metadata_program.key(),
+                ctx.accounts.metadata.key(),
                 candy_machine_creator.key(),
                 new_update_authority,
                 None,
@@ -403,15 +401,20 @@ pub mod candy_machine {
             &[&authority_seeds],
         )?;
 
-        if &ctx.remaining_accounts.len() > &(remaining_accounts_counter + 1) {
-            msg!("Collection account provided. Deserializing now!");
-            remaining_accounts_counter += 1;
+        if &ctx.remaining_accounts.len() > &(remaining_accounts_counter) {
+            if remaining_accounts_counter != 0 {
+                remaining_accounts_counter += 1;
+            }
             let collection_pda_account = &ctx.remaining_accounts[remaining_accounts_counter];
+            let collection_ref = collection_pda_account.data.borrow();
+            let mut collection_pda_data: &[u8] = &collection_ref;
             let collection_pda: CollectionPDA =
-                AnchorDeserialize::try_from_slice(&collection_pda_account.data.borrow())?;
-            msg!("Collection PDA Deserialized");
+                CollectionPDA::try_deserialize(&mut collection_pda_data)?;
             remaining_accounts_counter += 1;
             let collection_mint = &ctx.remaining_accounts[remaining_accounts_counter];
+            if &collection_pda.mint != &collection_mint.key() {
+                return Err(ErrorCode::MismatchedCollectionMint.into());
+            }
             remaining_accounts_counter += 1;
             let collection_metadata = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
@@ -419,22 +422,13 @@ pub mod candy_machine {
                 &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
             let collection_authority_record = &ctx.remaining_accounts[remaining_accounts_counter];
-            let seeds = [
-                b"collection".as_ref(),
-                candy_machine.to_account_info().key.as_ref(),
-            ];
-            if collection_pda_account.key
-                != &Pubkey::find_program_address(&seeds, &candy_machine::id()).0
-            {
-                return Err(ErrorCode::MismatchedCollectionPDA.into());
-            }
-            if &collection_pda.mint != collection_mint.to_account_info().key {
-                return Err(ErrorCode::MismatchedCollectionMint.into());
-            }
-
+            let cm_ref = candy_machine.key();
+            let seeds = [b"collection".as_ref(), cm_ref.as_ref()];
+            let bump = assert_derivation(&crate::id(), collection_pda_account, &seeds)?;
+            let signer_seeds = [b"collection".as_ref(), cm_ref.as_ref(), &[bump]];
             let set_collection_infos = vec![
                 ctx.accounts.metadata.to_account_info(),
-                ctx.accounts.update_authority.to_account_info(),
+                collection_pda_account.to_account_info(),
                 ctx.accounts.payer.to_account_info(),
                 ctx.accounts.update_authority.to_account_info(),
                 collection_mint.to_account_info(),
@@ -442,20 +436,21 @@ pub mod candy_machine {
                 collection_master_edition_account.to_account_info(),
                 collection_authority_record.to_account_info(),
             ];
+            drop(collection_ref);
             invoke_signed(
                 &set_and_verify_collection(
-                    *ctx.accounts.token_metadata_program.key,
-                    *ctx.accounts.metadata.key,
-                    *collection_pda_account.key,
-                    *ctx.accounts.payer.key,
-                    *ctx.accounts.update_authority.key,
-                    *collection_mint.key,
-                    *collection_metadata.key,
-                    *collection_master_edition_account.key,
-                    Some(*collection_authority_record.key),
+                    ctx.accounts.token_metadata_program.key(),
+                    ctx.accounts.metadata.key(),
+                    collection_pda_account.key(),
+                    ctx.accounts.payer.key(),
+                    ctx.accounts.update_authority.key(),
+                    collection_mint.key(),
+                    collection_metadata.key(),
+                    collection_master_edition_account.key(),
+                    Some(collection_authority_record.key()),
                 ),
                 set_collection_infos.as_slice(),
-                &[&seeds],
+                &[&signer_seeds],
             )?;
         }
 
@@ -630,8 +625,8 @@ pub mod candy_machine {
 
         let mut candy_machine = CandyMachine {
             data,
-            authority: *ctx.accounts.authority.key,
-            wallet: *ctx.accounts.wallet.key,
+            authority: ctx.accounts.authority.key(),
+            wallet: ctx.accounts.wallet.key(),
             token_mint: None,
             items_redeemed: 0,
         };
@@ -645,7 +640,7 @@ pub mod candy_machine {
             assert_owned_by(&token_mint_info, &spl_token::id())?;
             assert_owned_by(&ctx.accounts.wallet, &spl_token::id())?;
 
-            if token_account.mint != *token_mint_info.key {
+            if token_account.mint != token_mint_info.key() {
                 return Err(ErrorCode::MintMismatch.into());
             }
 
@@ -693,16 +688,15 @@ pub mod candy_machine {
         let mint = ctx.accounts.mint.to_account_info();
         let metadata: Metadata =
             Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-        if &metadata.update_authority != ctx.accounts.authority.to_account_info().key {
+        if &metadata.update_authority != &ctx.accounts.authority.key() {
             return Err(ErrorCode::IncorrectCollectionAuthority.into());
         };
-        if &metadata.mint != mint.key {
+        if &metadata.mint != &mint.key() {
             return Err(MetadataError::MintMismatch.into());
         }
-
         let edition = ctx.accounts.edition.to_account_info();
         let authority_record = ctx.accounts.collection_authority_record.to_account_info();
-
+        let candy_machine = &ctx.accounts.candy_machine;
         if authority_record.data_is_empty() {
             assert_master_edition(&metadata, &edition)?;
             let approve_collection_infos = vec![
@@ -717,31 +711,46 @@ pub mod candy_machine {
             ];
             msg!(
                 "About to approve collection authority for {} with new authority {}.",
-                ctx.accounts.metadata.key,
-                ctx.accounts.collection_pda.to_account_info().key
+                ctx.accounts.metadata.key(),
+                ctx.accounts.collection_pda.key
             );
             invoke(
                 &approve_collection_authority(
-                    *ctx.accounts.token_metadata_program.key,
-                    *authority_record.key,
-                    *ctx.accounts.collection_pda.to_account_info().key,
-                    *ctx.accounts.authority.key,
-                    *ctx.accounts.payer.key,
-                    *ctx.accounts.metadata.key,
+                    ctx.accounts.token_metadata_program.key(),
+                    authority_record.key(),
+                    ctx.accounts.collection_pda.to_account_info().key(),
+                    ctx.accounts.authority.key(),
+                    ctx.accounts.payer.key(),
+                    ctx.accounts.metadata.key(),
                     mint.key.clone(),
                 ),
                 approve_collection_infos.as_slice(),
             )?;
             msg!(
                 "Successfully approved collection authority. Now setting PDA mint to {}.",
-                mint.key
+                mint.key()
             );
-            ctx.accounts.collection_pda.mint = *mint.key;
+            if ctx.accounts.collection_pda.data_is_empty() {
+                create_or_allocate_account_raw(
+                    crate::id(),
+                    &ctx.accounts.collection_pda.to_account_info(),
+                    &ctx.accounts.rent.to_account_info(),
+                    &ctx.accounts.system_program.to_account_info(),
+                    &ctx.accounts.authority.to_account_info(),
+                    COLLECTION_PDA_SIZE,
+                    &[
+                        b"collection".as_ref(),
+                        &candy_machine.key().as_ref(),
+                        &[*ctx.bumps.get("collection_pda").unwrap()],
+                    ],
+                )?;
+                let mut data_ref: &mut [u8] = &mut ctx.accounts.collection_pda.try_borrow_mut_data()?;
+                let mut collection_pda_object: CollectionPDA = AnchorDeserialize::deserialize(&mut &*data_ref)?;
+                collection_pda_object.mint = mint.key();
+                collection_pda_object.candy_machine = candy_machine.key();
+                collection_pda_object.try_serialize(&mut data_ref)?;
+            }
         }
-        Ok(())
-    }
-
-    pub fn initialize_collection_pda(_ctx: Context<InitializeCollectionPDA>) -> ProgramResult {
         Ok(())
     }
 
@@ -749,10 +758,10 @@ pub mod candy_machine {
         let mint = ctx.accounts.mint.to_account_info();
         let metadata: Metadata =
             Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-        if &metadata.update_authority != ctx.accounts.authority.to_account_info().key {
+        if &metadata.update_authority != &ctx.accounts.authority.key() {
             return Err(ErrorCode::IncorrectCollectionAuthority.into());
         };
-        if &metadata.mint != mint.key {
+        if &metadata.mint != &mint.key() {
             return Err(MetadataError::MintMismatch.into());
         }
 
@@ -766,15 +775,16 @@ pub mod candy_machine {
         ];
         msg!(
             "About to revoke collection authority for {}.",
-            ctx.accounts.metadata.key
+            ctx.accounts.metadata.key()
         );
         invoke(
             &revoke_collection_authority(
-                *ctx.accounts.token_metadata_program.key,
-                *authority_record.key,
-                *ctx.accounts.authority.key,
-                *ctx.accounts.metadata.key,
-                *mint.key,
+                ctx.accounts.token_metadata_program.key(),
+                authority_record.key(),
+                ctx.accounts.collection_pda.key(),
+                ctx.accounts.authority.key(),
+                ctx.accounts.metadata.key(),
+                mint.key(),
             ),
             revoke_collection_infos.as_slice(),
         )?;
@@ -809,7 +819,7 @@ pub mod candy_machine {
         if ctx.remaining_accounts.len() > 0 {
             let seeds = [b"collection".as_ref(), pay.key.as_ref()];
             let pay = &ctx.remaining_accounts[0];
-            if pay.key != &Pubkey::find_program_address(&seeds, &nft_candy_machine_v2::id()).0 {
+            if &pay.key() != &Pubkey::find_program_address(&seeds, &candy_machine::id()).0 {
                 return Err(ErrorCode::MismatchedCollectionPDA.into());
             }
             let snapshot: u64 = pay.lamports();
@@ -862,7 +872,7 @@ pub struct SetCollection<'info> {
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
     #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
-    collection_pda: Account<'info, CollectionPDA>,
+    collection_pda: UncheckedAccount<'info>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
@@ -874,18 +884,6 @@ pub struct SetCollection<'info> {
     collection_authority_record: UncheckedAccount<'info>,
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
-}
-
-/// Set the collection PDA for the candy machine
-#[derive(Accounts)]
-pub struct InitializeCollectionPDA<'info> {
-    #[account(has_one = authority)]
-    candy_machine: Account<'info, CandyMachine>,
-    authority: Signer<'info>,
-    #[account(init, payer=payer, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
-    collection_pda: Account<'info, CollectionPDA>,
-    payer: Signer<'info>,
-    system_program: Program<'info, System>,
 }
 
 /// Set the collection PDA for the candy machine
@@ -932,7 +930,7 @@ pub struct MintNFT<'info> {
     mut,
     has_one = wallet
     )]
-    candy_machine: Account<'info, CandyMachine>,
+    candy_machine: Box<Account<'info, CandyMachine>>,
     #[account(seeds=[PREFIX.as_bytes(), candy_machine.key().as_ref()], bump=creator_bump)]
     candy_machine_creator: UncheckedAccount<'info>,
     payer: Signer<'info>,
@@ -1005,12 +1003,13 @@ pub struct CandyMachine {
     // here there is a borsh vec u32 indicating number of bytes in bitmask array.
     // here there is a number of bytes equal to ceil(max_number_of_lines/8) and it is a bit mask used to figure out when to increment borsh vec u32
 }
-
+const COLLECTION_PDA_SIZE: usize = 8 + 64;
 /// Collection PDA account
 #[account]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct CollectionPDA {
     pub mint: Pubkey,
+    pub candy_machine: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]

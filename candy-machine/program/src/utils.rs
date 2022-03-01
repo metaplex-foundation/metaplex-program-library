@@ -1,4 +1,4 @@
-use anchor_lang::prelude::{Sysvar, Signer};
+use anchor_lang::prelude::{Signer, Sysvar};
 
 use {
     crate::{CandyMachine, ErrorCode},

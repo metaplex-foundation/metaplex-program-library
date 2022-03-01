@@ -194,6 +194,108 @@
       ]
     },
     {
+      "name": "setCollection",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "removeCollection",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "updateAuthority",
       "accounts": [
         {
@@ -267,6 +369,22 @@
             "type": {
               "defined": "CandyMachineData"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CollectionPDA",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "candyMachine",
+            "type": "publicKey"
           }
         ]
       }
@@ -646,9 +764,21 @@
       "code": 6026,
       "name": "IncorrectSlotHashesPubkey",
       "msg": "Incorrect SlotHashes PubKey"
+    },
+    {
+      "code": 6027,
+      "name": "IncorrectCollectionAuthority",
+      "msg": "Incorrect collection NFT authority"
+    },
+    {
+      "code": 6028,
+      "name": "MismatchedCollectionPDA",
+      "msg": "Collection PDA address is invalid"
+    },
+    {
+      "code": 6029,
+      "name": "MismatchedCollectionMint",
+      "msg": "Provided mint account doesn't match collection PDA mint"
     }
-  ],
-  "metadata": {
-    "address": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
-  }
+  ]
 }
