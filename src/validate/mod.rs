@@ -25,7 +25,7 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
 
     // Missing or empty assets directory
     if !assets_dir.exists() || assets_dir.read_dir()?.next().is_none() {
-        info!("Assets directory is empty.");
+        info!("Assets directory is missing or empty.");
         return Err(ValidateError::MissingOrEmptyAssetsDirectory.into());
     }
 
@@ -35,7 +35,7 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
     let (paths, errors): (Vec<_>, Vec<_>) = glob(pattern)?.into_iter().partition(Result::is_ok);
 
     let paths: Vec<_> = paths.into_iter().map(Result::unwrap).collect();
-    let _path_errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
+    let path_errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
 
     let file_open_errors = Arc::new(Mutex::new(Vec::new()));
     let deserialize_errors = Arc::new(Mutex::new(Vec::new()));
@@ -86,6 +86,28 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
         }
     });
 
-    info!("Validate complete, your metadata files look good.");
+    if !path_errors.is_empty() {
+        error!("Path errors: {:?}", path_errors);
+        return Err(ValidateError::PathErrors.into());
+    }
+
+    if !file_open_errors.lock().unwrap().is_empty() {
+        error!("File open errors: {:?}", file_open_errors);
+        return Err(ValidateError::FileOpenErrors.into());
+    }
+
+    if !deserialize_errors.lock().unwrap().is_empty() {
+        error!("Deserialize errors: {:?}", deserialize_errors);
+        return Err(ValidateError::DeserializeErrors.into());
+    }
+
+    if !validate_errors.lock().unwrap().is_empty() {
+        error!("Validate errors: {:?}", validate_errors);
+        return Err(ValidateError::ValidateErrors.into());
+    }
+
+    let message = "Validate complete, your metadata files look good.";
+    info!("{message}");
+    println!("{message}");
     Ok(())
 }
