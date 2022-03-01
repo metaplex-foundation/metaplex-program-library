@@ -621,17 +621,25 @@ pub fn transfer_chunk_slow_proof<F>(
                 dalek::Key::ComputeBufferV1,
                 vec![*instruction_buffer, *input_buffer],
             ),
-        ],
+        ].into_iter().chain(
+            dalek::write_input_scalars_and_identity(
+                *input_buffer,
+                *payer,
+                scalars.as_slice(),
+            ),
+        ).collect(),
         signers: vec![*payer, *input_buffer, *compute_buffer],
     });
 
     ret.push(InstructionsAndSignerPubkeys{
-        instructions: dalek::write_input_buffer(
+        instructions: dalek::write_input_points(
             *input_buffer,
             *payer,
             &points,
-            scalars.as_slice(),
-        ).ok_or("Invalid ristretto input points")?,
+        ).ok_or("Invalid ristretto input points")?
+         .into_iter().chain(
+            dalek::finalize_buffer(*input_buffer, *payer),
+        ).collect(),
         signers: vec![*payer],
     });
 
@@ -658,11 +666,9 @@ pub fn transfer_chunk_slow_proof<F>(
         crank_transactions += 1;
     };
 
-    // 11 proof inputs, 8 ops for each
-    // each input takes ~450k compute to decompress + build table
-    // pack the first 10 in pairs
+    // 11 proof inputs, 3 inputs for each. each takes ~140k compute so do 7 and then pack the next
+    // 4 with scalar / identity copies
     add_crank_batch(7 * 3);
-    // group the last with the scalar (11) / result identity (1) copies
     add_crank_batch(4 * 3 + 11 + 1);
 
     // then we have 64 multiplication cranks each is ~200k compute so we can pack ~5 * 12 + 4

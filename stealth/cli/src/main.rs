@@ -110,8 +110,11 @@ fn ensure_create_instruction_buffer(
 
     let instruction_buffer_data = rpc_client.get_account_data(&instruction_buffer.pubkey());
     if let Ok(data) = instruction_buffer_data {
-        assert!(data.len() >= instruction_buffer_len);
+        assert_eq!(data.len(), instruction_buffer_len);
+        assert_eq!(&data[dalek::HEADER_SIZE..], &dsl);
+        println!("Instruction buffer {} already matches", instruction_buffer.pubkey());
     } else {
+        println!("Populating instruction buffer {}", instruction_buffer.pubkey());
         let txs = stealth::instruction::populate_transfer_proof_dsl(
             payer,
             instruction_buffer,
@@ -1015,6 +1018,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         ("create_instruction_buffer", Some(sub_m)) => {
             let instruction_buffer = specified_or_new(sub_m.value_of("instruction_buffer").map(|s| s.into()));
+            println!("Instruction buffer keypair: {}", instruction_buffer.to_base58_string());
             ensure_create_instruction_buffer(
                 &rpc_client,
                 config.default_signer.as_ref(),
