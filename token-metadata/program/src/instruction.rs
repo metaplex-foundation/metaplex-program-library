@@ -287,10 +287,8 @@ pub enum MetadataInstruction {
     ///   5. `[]` System program
     ///   6. `[]` Rent info
     CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
-    /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
-    /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
-    /// token exists, and will throw an error if less than one token exists in this primary mint.
-    ///   0. `[writable]` Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']
+    /// Register a Metadata as a Master Edition V3, which means Edition V3s can be minted.
+    ///   0. `[writable]` Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']
     ///   1. `[writable]` Metadata mint
     ///   2. `[signer]` Update authority
     ///   3. `[signer]` Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
