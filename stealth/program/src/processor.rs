@@ -76,6 +76,13 @@ pub fn process_instruction(
                 accounts,
             )
         }
+        StealthInstruction::UpdateMetadata => {
+            msg!("UpdateMetadata!");
+            process_update_metadata(
+                accounts,
+                decode_instruction_data::<ConfigureMetadataData>(input)?
+            )
+        }
     }
 }
 
@@ -104,35 +111,10 @@ fn process_configure_metadata(
     validate_account_owner(mint_info, &spl_token::ID)?;
     validate_account_owner(metadata_info, &mpl_token_metadata::ID)?;
 
-    // check metadata matches mint
-    let metadata_seeds = &[
-        mpl_token_metadata::state::PREFIX.as_bytes(),
-        mpl_token_metadata::ID.as_ref(),
-        mint_info.key.as_ref(),
-    ];
-    let (metadata_key, _metadata_bump_seed) =
-        Pubkey::find_program_address(metadata_seeds, &mpl_token_metadata::ID);
-
-    if metadata_key != *metadata_info.key {
-        msg!("Invalid metadata key");
-        return Err(StealthError::InvalidMetadataKey.into());
-    }
-
-
-    // check that metadata authority matches and that metadata is mutable (adding Stealth
-    // and not acting on a limited edition). TODO?
-    let metadata = mpl_token_metadata::state::Metadata::from_account_info(metadata_info)?;
-
-    let authority_pubkey = metadata.update_authority;
-
-    if authority_pubkey != *metadata_update_authority_info.key {
+    let metadata = validate_metadata(metadata_info, mint_info)?;
+    if metadata.update_authority != *metadata_update_authority_info.key {
         msg!("Invalid metadata update authority");
         return Err(StealthError::InvalidUpdateAuthority.into());
-    }
-
-    if !metadata.is_mutable {
-        msg!("Metadata is immutable");
-        return Err(StealthError::MetadataIsImmutable.into());
     }
 
 
@@ -175,6 +157,106 @@ fn process_configure_metadata(
     stealth.bump_seed = stealth_bump_seed;
 
     drop(stealth);
+
+    Ok(())
+}
+
+fn process_update_metadata(
+    accounts: &[AccountInfo],
+    data: &ConfigureMetadataData
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let payer_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let owner_info = next_account_info(account_info_iter)?;
+    let owner_token_account_info = next_account_info(account_info_iter)?;
+    let metadata_info = next_account_info(account_info_iter)?;
+    let metadata_update_authority_info = next_account_info(account_info_iter)?;
+    let stealth_info = next_account_info(account_info_iter)?;
+
+    if !payer_info.is_signer {
+        msg!("Payer is not a signer");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if !metadata_update_authority_info.is_signer {
+        msg!("Metadata update authority is not a signer");
+        return Err(ProgramError::InvalidArgument);
+    }
+    validate_account_owner(mint_info, &spl_token::ID)?;
+    validate_account_owner(owner_token_account_info, &spl_token::ID)?;
+    validate_account_owner(metadata_info, &mpl_token_metadata::ID)?;
+    validate_account_owner(stealth_info, &ID)?;
+
+    let metadata = validate_metadata(metadata_info, mint_info)?;
+    if metadata.update_authority != *metadata_update_authority_info.key {
+        msg!("Invalid metadata update authority");
+        return Err(StealthError::InvalidUpdateAuthority.into());
+    }
+
+
+    // check against owner
+    let owner_token_account = spl_token::state::Account::unpack(
+        &owner_token_account_info.data.borrow())?;
+
+    if owner_token_account.mint != *mint_info.key {
+        msg!("Mint mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if owner_token_account.owner != *owner_info.key {
+        msg!("Owner mismatch");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+    if owner_token_account.amount != 1 {
+        msg!("Invalid amount");
+        return Err(ProgramError::InvalidArgument);
+    }
+
+
+    // check that Stealth matches mint
+    let (stealth_key, _stealth_bump_seed) =
+        get_stealth_address(mint_info.key);
+
+    if stealth_key != *stealth_info.key {
+        msg!("Invalid stealth key");
+        return Err(StealthError::InvalidStealthKey.into());
+    }
+
+    let mut stealth = StealthAccount::from_account_info(
+        &stealth_info, &ID, Key::StealthAccountV1)?.into_mut();
+
+
+    // allow the update authority to reset
+    if stealth.wallet_pk != *owner_info.key {
+        let elgamal_pubkey_info = next_account_info(account_info_iter)?;
+
+        // check that PDA matches
+        let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
+            get_elgamal_pubkey_address(owner_info.key, mint_info.key);
+
+        if elgamal_pubkey_key != *elgamal_pubkey_info.key {
+            msg!("Invalid wallet elgamal PDA");
+            return Err(StealthError::InvalidElgamalPubkeyPDA.into());
+        }
+
+        let encryption_buffer = EncryptionKeyBuffer::from_account_info(
+            &elgamal_pubkey_info, &ID, Key::EncryptionKeyBufferV1)?.into_mut();
+
+        // TODO: does this need to be an equality proof or do we trust the update authority?
+        if data.elgamal_pk != encryption_buffer.elgamal_pk {
+            msg!("Not the current owners elgamal pk");
+            return Err(StealthError::InvalidElgamalPubkeyPDA.into());
+        }
+
+        stealth.wallet_pk = *owner_info.key;
+        stealth.elgamal_pk = data.elgamal_pk;
+    }
+
+
+    stealth.encrypted_cipher_key = data.encrypted_cipher_key;
+    stealth.uri = data.uri;
 
     Ok(())
 }
@@ -694,13 +776,8 @@ fn process_publish_elgamal_pubkey(
     validate_account_owner(mint_info, &spl_token::ID)?;
 
     // check that PDA matches
-    let seeds = &[
-        PREFIX.as_bytes(),
-        wallet_info.key.as_ref(),
-        mint_info.key.as_ref(),
-    ];
     let (elgamal_pubkey_key, elgamal_pubkey_bump_seed) =
-        Pubkey::find_program_address(seeds, &ID);
+        get_elgamal_pubkey_address(wallet_info.key, mint_info.key);
 
     if elgamal_pubkey_key != *elgamal_pubkey_info.key {
         msg!("Invalid wallet elgamal PDA");
@@ -750,13 +827,8 @@ fn process_close_elgamal_pubkey(
     validate_account_owner(elgamal_pubkey_info, &ID)?;
 
     // check that PDA matches
-    let seeds = &[
-        PREFIX.as_bytes(),
-        wallet_info.key.as_ref(),
-        mint_info.key.as_ref(),
-    ];
     let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
-        Pubkey::find_program_address(seeds, &ID);
+        get_elgamal_pubkey_address(wallet_info.key, mint_info.key);
 
     if elgamal_pubkey_key != *elgamal_pubkey_info.key {
         msg!("Invalid wallet elgamal PDA");
@@ -800,5 +872,33 @@ fn validate_transfer_buffer(
     }
 
     Ok(())
+}
+
+fn validate_metadata(
+    metadata_info: &AccountInfo,
+    mint_info: &AccountInfo,
+) -> Result<mpl_token_metadata::state::Metadata, ProgramError> {
+    // check metadata matches mint
+    let metadata_seeds = &[
+        mpl_token_metadata::state::PREFIX.as_bytes(),
+        mpl_token_metadata::ID.as_ref(),
+        mint_info.key.as_ref(),
+    ];
+    let (metadata_key, _metadata_bump_seed) =
+        Pubkey::find_program_address(metadata_seeds, &mpl_token_metadata::ID);
+
+    if metadata_key != *metadata_info.key {
+        msg!("Invalid metadata key");
+        return Err(StealthError::InvalidMetadataKey.into());
+    }
+
+    let metadata = mpl_token_metadata::state::Metadata::from_account_info(metadata_info)?;
+
+    if !metadata.is_mutable {
+        msg!("Metadata is immutable");
+        return Err(StealthError::MetadataIsImmutable.into());
+    }
+
+    Ok(metadata)
 }
 

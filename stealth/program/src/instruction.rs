@@ -70,7 +70,6 @@ pub enum StealthInstruction {
     ///   2. `[]` The SPL Metadata account. Must be mutable
     ///   3. `[signer]` The update authority for the SPL Metadata
     ///   4. `[writeable]` Stealth PDA
-    ///   5. `[]` Metadata program
     ///   6. `[]` System program
     ///   7. `[]` Rent sysvar
     ///
@@ -168,6 +167,33 @@ pub enum StealthInstruction {
     /// Data expected by this instruction:
     ///
     CloseElgamalPubkey,
+
+
+    /// Update metadata to a new URI. Requires metadata update authority
+    ///
+    /// Possibly updates the encrypted_cipher_key.
+    ///
+    /// Also reinitializes the elgamal_pk in case NFT ownership has changed
+    ///
+    /// Accounts expected by this instruction:
+    ///
+    ///   0. `[writeable,signer]` Payer
+    ///   1. `[]` The SPL Token mint account of the NFT
+    ///   2. `[]` The current NFT owner
+    ///   3. `[]` The current NFT owner's token account
+    ///   4. `[]` The SPL Metadata account. Must be mutable
+    ///   5. `[signer]` The update authority for the SPL Metadata
+    ///   6. `[writeable]` Stealth PDA
+    ///
+    /// If the current owner (2) does not match the wallet_pk of the stealth account, the
+    /// following counts are also required
+    ///
+    ///   7. `[]` The current NFT owners elgamal pubkey PDA
+    ///
+    /// Data expected by this instruction:
+    ///   ConfigureMetadataData
+    ///
+    UpdateMetadata,
 }
 
 pub fn decode_instruction_type(
