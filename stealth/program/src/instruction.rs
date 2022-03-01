@@ -295,7 +295,7 @@ pub fn configure_metadata(
     let accounts = vec![
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(mint, false),
-        AccountMeta::new(get_metadata_address(&mint).0, false),
+        AccountMeta::new_readonly(get_metadata_address(&mint).0, false),
         AccountMeta::new_readonly(payer, true),
         AccountMeta::new(get_stealth_address(&mint).0, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
@@ -310,6 +310,39 @@ pub fn configure_metadata(
     encode_instruction(
         accounts,
         StealthInstruction::ConfigureMetadata,
+        &data,
+    )
+}
+
+#[cfg(not(target_arch = "bpf"))]
+pub fn update_metadata(
+    payer: &Pubkey,
+    owner: &Pubkey,
+    mint: &Pubkey,
+    elgamal_pk: &zk_token_elgamal::pod::ElGamalPubkey,
+    encrypted_cipher_key: &zk_token_elgamal::pod::ElGamalCiphertext,
+    uri: &[u8],
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(*payer, true),
+        AccountMeta::new_readonly(*mint, false),
+        AccountMeta::new_readonly(*owner, false),
+        AccountMeta::new_readonly(
+            spl_associated_token_account::get_associated_token_address(owner, mint), false),
+        AccountMeta::new_readonly(get_metadata_address(mint).0, false),
+        AccountMeta::new_readonly(*payer, true),
+        AccountMeta::new(get_stealth_address(mint).0, false),
+        AccountMeta::new_readonly(get_elgamal_pubkey_address(owner, mint).0, false),
+    ];
+
+    let mut data = ConfigureMetadataData::zeroed();
+    data.elgamal_pk = *elgamal_pk;
+    data.encrypted_cipher_key = *encrypted_cipher_key;
+    data.uri.0[..uri.len()].copy_from_slice(uri);
+
+    encode_instruction(
+        accounts,
+        StealthInstruction::UpdateMetadata,
         &data,
     )
 }

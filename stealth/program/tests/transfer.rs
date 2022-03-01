@@ -519,3 +519,136 @@ async fn test_transfer_crank() {
             |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)).is_err(),
     );
 }
+
+#[tokio::test]
+async fn test_transfer_update() {
+    let mut pc = ProgramTest::default();
+
+    pc.prefer_bpf(true);
+
+    pc.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    pc.add_program("stealth", stealth::id(), None);
+
+    let (mut banks_client, payer, recent_blockhash) = pc.start().await;
+
+    let rent = banks_client.get_rent().await;
+    let rent = rent.unwrap();
+
+    let mint = Keypair::from_base58_string("47WBGggARowPAzDVdCMCGxTVhNBqXhxgyDcFFyGrVx3VqUyPU7UZTz9umQifQA8yXxKNX8sKGujtDKu7kKX1rLB8");
+
+    let elgamal_kp = ElGamalKeypair::new(&payer, &mint.pubkey()).unwrap();
+    let cipher_key = CipherKey::random(&mut OsRng);
+
+    println!("mint {:?}", mint);
+
+    // smoke test
+    assert_eq!(
+        elgamal_kp.public.encrypt(cipher_key).decrypt(&elgamal_kp.secret),
+        Ok(cipher_key),
+    );
+
+    let nft_setup = nft_setup_transaction(
+        &payer,
+        &mint,
+        &recent_blockhash,
+        &rent,
+        &elgamal_kp,
+        &cipher_key,
+    ).await.unwrap();
+
+    banks_client.process_transaction(nft_setup).await.unwrap();
+
+    // data landed...
+    let stealth_account = banks_client.get_account(
+        get_stealth_address(&mint.pubkey()).0).await.unwrap().unwrap();
+    let stealth = StealthAccount::from_bytes(
+        stealth_account.data.as_slice()).unwrap();
+    assert_eq!(
+        stealth.encrypted_cipher_key.try_into().and_then(
+            |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)),
+        Ok(cipher_key),
+    );
+
+    let dest = Keypair::new();
+    let dest_elgamal_kp = ElGamalKeypair::new(&dest, &mint.pubkey()).unwrap();
+    let transfer = Transaction::new_signed_with_payer(
+        &[
+            // seed destination and publish elgamal pk to encrypt with
+            system_instruction::transfer(
+                &payer.pubkey(),
+                &dest.pubkey(),
+                LAMPORTS_PER_SOL,
+            ),
+            stealth::instruction::publish_elgamal_pubkey(
+                &dest.pubkey(),
+                &mint.pubkey(),
+                dest_elgamal_kp.public.into(),
+            ),
+            spl_associated_token_account::create_associated_token_account(
+                &dest.pubkey(), // funding
+                &dest.pubkey(), // wallet to create for
+                &mint.pubkey(),
+            ),
+
+            // transfer directly
+            spl_token::instruction::transfer(
+                &spl_token::id(),
+                &spl_associated_token_account::get_associated_token_address(
+                    &payer.pubkey(),
+                    &mint.pubkey(),
+                ),
+                &spl_associated_token_account::get_associated_token_address(
+                    &dest.pubkey(),
+                    &mint.pubkey(),
+                ),
+                &payer.pubkey(),
+                &[],
+                1,
+            ).unwrap(),
+        ],
+        Some(&payer.pubkey()),
+        &[&payer, &dest],
+        recent_blockhash,
+    );
+
+    banks_client.process_transaction(transfer).await.unwrap();
+
+
+    // pick a new one
+    let cipher_key = CipherKey::random(&mut OsRng);
+
+    let update = Transaction::new_signed_with_payer(
+        &[
+            stealth::instruction::update_metadata(
+                &payer.pubkey(),
+                &dest.pubkey(),
+                &mint.pubkey(),
+                &dest_elgamal_kp.public.into(),
+                &dest_elgamal_kp.public.encrypt(cipher_key).into(),
+                &[],
+            ),
+        ],
+        Some(&payer.pubkey()),
+        &[&payer],
+        recent_blockhash,
+    );
+
+    banks_client.process_transaction(update).await.unwrap();
+
+    // update landed...
+    let stealth_account = banks_client.get_account(
+        get_stealth_address(&mint.pubkey()).0).await.unwrap().unwrap();
+    let stealth = StealthAccount::from_bytes(
+        stealth_account.data.as_slice()).unwrap();
+    // successfully decrypt with dest_elgamal_kp
+    assert_eq!(
+        stealth.encrypted_cipher_key.try_into().and_then(
+            |ct: ElGamalCiphertext| ct.decrypt(&dest_elgamal_kp.secret)),
+        Ok(cipher_key),
+    );
+    // and old fails to decrypt...
+    assert!(
+        stealth.encrypted_cipher_key.try_into().and_then(
+            |ct: ElGamalCiphertext| ct.decrypt(&elgamal_kp.secret)).is_err(),
+    );
+}
