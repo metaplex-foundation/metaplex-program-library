@@ -300,5 +300,6 @@ pub fn mint(
 
     info!("Minted! TxId: {}", sig);
     info!("Cleanup TxId: {}", sig2);
+    println!("Minted! TxId: {}", sig);
     Ok(())
 }

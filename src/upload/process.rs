@@ -220,9 +220,11 @@ fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u
 
         let chunk_index = key / CONFIG_CHUNK_SIZE;
 
-        if config_line.is_some() {
-            let chunk = config_lines.get_mut(chunk_index).unwrap();
-            chunk.push((key as u32, config_line.unwrap()));
+        if let Some(config_line) = config_line {
+            let chunk = config_lines
+            .get_mut(chunk_index)
+            .expect("Invalid config line index! Check that your config item number matches the number of assets you're trying to upload.");
+            chunk.push((key as u32, config_line));
         }
     }
 
