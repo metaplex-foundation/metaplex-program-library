@@ -1,14 +1,31 @@
 use crate::common::*;
+use crate::upload_assets::UploadAssetsError;
 use std::{thread, time::Duration};
 
-pub async fn get_bundlr_solana_address(http_client: &HttpClient) -> Result<String> {
-    let data = http_client
-        .get("https://node1.bundlr.network/info")
-        .send()
-        .await?
-        .json::<Value>()
-        .await?;
+pub const BUNDLR_DEVNET: &str = "https://devnet.bundlr.network";
+pub const BUNDLR_MAINNET: &str = "https://node1.bundlr.network";
 
+#[derive(Debug, Clone)]
+pub enum BundlrCluster {
+    Devnet,
+    Mainnet,
+}
+
+impl FromStr for BundlrCluster {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "devnet" => Ok(BundlrCluster::Devnet),
+            "mainnet" => Ok(BundlrCluster::Mainnet),
+            _ => Err(UploadAssetsError::InvalidBundlrCluster(s.to_string()).into()),
+        }
+    }
+}
+
+pub async fn get_bundlr_solana_address(http_client: &HttpClient, node: &str) -> Result<String> {
+    let url = format!("{}/info", node);
+    let data = http_client.get(&url).send().await?.json::<Value>().await?;
     let addresses = data.get("addresses").unwrap();
 
     let solana_address = addresses
@@ -25,13 +42,12 @@ pub async fn fund_bundlr_address(
     program: &Program,
     http_client: &HttpClient,
     bundlr_address: Pubkey,
+    node: &str,
     payer: &Keypair,
     amount: u64,
 ) -> Result<Response> {
     let ix = system_instruction::transfer(&payer.pubkey(), &bundlr_address, amount);
-
     let recent_blockhash = program.rpc().get_latest_blockhash()?;
-
     let payer_pubkey = payer.pubkey();
 
     let tx =
@@ -52,25 +68,22 @@ pub async fn fund_bundlr_address(
     let mut map = HashMap::new();
     map.insert("tx_id", sig.to_string());
 
-    let response = http_client
-        .post("https://node1.bundlr.network/account/balance/solana")
-        .json(&map)
-        .send()
-        .await?;
+    let url = format!("{}/account/balance/solana", node);
+
+    let response = http_client.post(&url).json(&map).send().await?;
 
     Ok(response)
 }
 
-pub async fn get_bundlr_balance(http_client: &HttpClient, address: &str) -> Result<u64> {
-    println!("Getting balance for address: {address}");
-    let response = http_client
-        .get(format!(
-            "https://node1.bundlr.network/account/balance/solana/?address={address}"
-        ))
-        .send()
-        .await?
-        .json::<Value>()
-        .await?;
+pub async fn get_bundlr_balance(
+    http_client: &HttpClient,
+    address: &str,
+    node: &str,
+) -> Result<u64> {
+    debug!("Getting balance for address: {address}");
+    let url = format!("{}/account/balance/solana/?address={}", node, address);
+
+    let response = http_client.get(&url).send().await?.json::<Value>().await?;
 
     println!("response: {response:?}");
     let value = response.get("balance").unwrap();

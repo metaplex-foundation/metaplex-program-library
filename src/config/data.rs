@@ -25,9 +25,7 @@ pub struct SolanaConfig {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConfigData {
     pub price: f64,
-
     pub number: u64,
-
     pub gatekeeper: Option<GatekeeperConfig>,
 
     #[serde(rename = "solTreasuryAccount")]

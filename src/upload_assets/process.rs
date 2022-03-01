@@ -4,6 +4,7 @@ use std::{fs::File, sync::Arc};
 
 use crate::cache::Cache;
 use crate::common::*;
+use crate::upload_assets::BundlrCluster;
 use crate::upload_assets::*;
 
 pub struct UploadAssetsArgs {
@@ -11,6 +12,7 @@ pub struct UploadAssetsArgs {
     pub config: String,
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
+    pub bundlr_cluster: BundlrCluster,
     pub cache: String,
 }
 
@@ -28,8 +30,13 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let keypair = bs58::encode(sugar_config.keypair.to_bytes()).into_string();
     let signer = SolanaSigner::from_base58(&keypair);
 
+    let bundlr_node = match args.bundlr_cluster {
+        BundlrCluster::Devnet => "https://devnet.bundlr.network",
+        BundlrCluster::Mainnet => "https://node1.bundlr.network",
+    };
+
     let bundlr_client = Bundlr::new(
-        "https://node1.bundlr.network".to_string(),
+        bundlr_node.to_string(),
         "solana".to_string(),
         "sol".to_string(),
         signer,
@@ -48,22 +55,23 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let media_lamports_fee = get_bundlr_fee(&http_client, total_image_size).await?;
 
     let address = sugar_config.keypair.pubkey().to_string();
-    let balance = get_bundlr_balance(&http_client, &address).await?;
+    let balance = get_bundlr_balance(&http_client, &address, bundlr_node).await?;
     println!("Bundlr balance: {}", balance);
 
-    let bundlr_address = get_bundlr_solana_address(&http_client).await?;
+    let bundlr_address = get_bundlr_solana_address(&http_client, bundlr_node).await?;
     let bundlr_pubkey = Pubkey::from_str(&bundlr_address)?;
 
     let _response = fund_bundlr_address(
         &program,
         &http_client,
         bundlr_pubkey,
+        bundlr_node,
         &sugar_config.keypair,
         media_lamports_fee,
     )
     .await?;
 
-    let balance = get_bundlr_balance(&http_client, &address).await?;
+    let balance = get_bundlr_balance(&http_client, &address, bundlr_node).await?;
 
     if !(balance > 0) {
         panic!("Failed to fund Bundlr account");
@@ -100,6 +108,7 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
         &program,
         &http_client,
         bundlr_pubkey,
+        bundlr_node,
         &sugar_config.keypair,
         metadata_lamports_fee,
     )

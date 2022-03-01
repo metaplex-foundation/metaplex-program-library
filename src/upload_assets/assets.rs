@@ -5,7 +5,6 @@ use regex::Regex;
 use serde_json;
 use std::{
     fs::{self, File, OpenOptions},
-    io::Seek,
     sync::Arc,
 };
 
@@ -212,15 +211,18 @@ pub fn get_asset_pairs(assets_dir: &String) -> Result<HashMap<usize, AssetPair>>
 
 pub fn insert_media_links(asset_pairs: &HashMap<usize, AssetPair>) -> Result<()> {
     for (_, asset_pair) in asset_pairs.iter() {
-        let mut m = OpenOptions::new()
-            .read(true)
-            .write(true)
-            .open(&asset_pair.metadata)?;
-        let mut metadata: Metadata = serde_json::from_reader(&m)?;
+        let mut metadata: Metadata = {
+            let m = OpenOptions::new().read(true).open(&asset_pair.metadata)?;
+            serde_json::from_reader(&m)?
+        };
         metadata.image = asset_pair.media_link.clone();
         metadata.properties.files[0].uri = asset_pair.media_link.clone();
-        m.rewind()?;
-        serde_json::to_writer(m, &metadata)?;
+
+        let mut m = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(&asset_pair.metadata)?;
+        serde_json::to_writer(&mut m, &metadata)?;
     }
 
     Ok(())

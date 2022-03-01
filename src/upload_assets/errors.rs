@@ -17,6 +17,9 @@ pub enum UploadAssetsError {
 
     #[error("No Bundlr balance found for address: {0}")]
     NoBundlrBalance(String),
+
+    #[error("Invalid Bundlr cluster: {0} Use 'devnet' or 'mainnet'")]
+    InvalidBundlrCluster(String),
 }
 
 pub struct DeserializeError<'a> {

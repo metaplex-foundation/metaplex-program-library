@@ -93,7 +93,14 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
 
 fn get_metadata_from_first_json(assets_dir: &String) -> Result<Metadata> {
     let f = File::open(Path::new(assets_dir).join("0.json"))?;
-    let metadata: Metadata = serde_json::from_reader(f)?;
+    let metadata: Metadata = match serde_json::from_reader(f) {
+        Ok(metadata) => metadata,
+        Err(err) => {
+            let error = anyhow!("Error parsing metadata from 0.json: {}", err);
+            error!("{:?}", error);
+            return Err(error);
+        }
+    };
 
     Ok(metadata)
 }
@@ -270,8 +277,6 @@ fn initialize_candy_machine(
             data: candy_machine_data,
         })
         .send()?;
-
-    // info!(logger, "{}", sig);
 
     Ok(sig)
 }

@@ -108,6 +108,7 @@ async fn main() -> Result<()> {
             config,
             keypair,
             rpc_url,
+            bundlr_cluster,
             cache,
         } => {
             process_upload_assets(UploadAssetsArgs {
@@ -115,6 +116,7 @@ async fn main() -> Result<()> {
                 config,
                 keypair,
                 rpc_url,
+                bundlr_cluster,
                 cache,
             })
             .await?
