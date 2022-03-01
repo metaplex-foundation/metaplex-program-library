@@ -127,13 +127,6 @@ fn process_configure_metadata(
         return Err(StealthError::InvalidStealthKey.into());
     }
 
-    let mint_info_key = mint_info.key;
-    let signer_seeds : &[&[u8]] = &[
-        PREFIX.as_bytes(),
-        mint_info_key.as_ref(),
-        &[stealth_bump_seed],
-    ];
-
     // create and initialize PDA
     mpl_token_metadata::utils::create_or_allocate_account_raw(
         ID,
@@ -142,7 +135,11 @@ fn process_configure_metadata(
         system_program_info,
         payer_info,
         StealthAccount::get_packed_len(),
-        signer_seeds,
+        &[
+            PREFIX.as_bytes(),
+            mint_info.key.as_ref(),
+            &[stealth_bump_seed],
+        ],
     )?;
 
     let mut stealth = StealthAccount::from_account_info(
@@ -155,8 +152,6 @@ fn process_configure_metadata(
     stealth.encrypted_cipher_key = data.encrypted_cipher_key;
     stealth.uri = data.uri;
     stealth.bump_seed = stealth_bump_seed;
-
-    drop(stealth);
 
     Ok(())
 }
@@ -232,20 +227,11 @@ fn process_update_metadata(
     if stealth.wallet_pk != *owner_info.key {
         let elgamal_pubkey_info = next_account_info(account_info_iter)?;
 
-        // check that PDA matches
-        let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
-            get_elgamal_pubkey_address(owner_info.key, mint_info.key);
-
-        if elgamal_pubkey_key != *elgamal_pubkey_info.key {
-            msg!("Invalid wallet elgamal PDA");
-            return Err(StealthError::InvalidElgamalPubkeyPDA.into());
-        }
-
-        let encryption_buffer = EncryptionKeyBuffer::from_account_info(
-            &elgamal_pubkey_info, &ID, Key::EncryptionKeyBufferV1)?.into_mut();
+        let owner_elgamal_pk = validate_elgamal_pk(
+            &elgamal_pubkey_info, &owner_info, &mint_info)?;
 
         // TODO: does this need to be an equality proof or do we trust the update authority?
-        if data.elgamal_pk != encryption_buffer.elgamal_pk {
+        if data.elgamal_pk != owner_elgamal_pk {
             msg!("Not the current owners elgamal pk");
             return Err(StealthError::InvalidElgamalPubkeyPDA.into());
         }
@@ -332,28 +318,8 @@ fn process_init_transfer(
     let _stealth = StealthAccount::from_account_info(
         &stealth_info, &ID, Key::StealthAccountV1)?;
 
-    // check that elgamal PDAs match
-    let get_elgamal_pk = |
-        wallet_info: &AccountInfo,
-        elgamal_info: &AccountInfo,
-    | -> Result<zk_token_elgamal::pod::ElGamalPubkey, ProgramError> {
-        let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
-            get_elgamal_pubkey_address(wallet_info.key, mint_info.key);
-
-        if elgamal_pubkey_key != *elgamal_info.key {
-            msg!("Invalid elgamal PDA");
-            return Err(StealthError::InvalidElgamalPubkeyPDA.into());
-        }
-
-        let encryption_buffer = EncryptionKeyBuffer::from_account_info(
-            &recipient_elgamal_info, &ID, Key::EncryptionKeyBufferV1)?;
-
-        Ok(encryption_buffer.elgamal_pk)
-    };
-
-    let recipient_elgamal_pk = get_elgamal_pk(
-        &recipient_info, &recipient_elgamal_info)?;
-
+    let recipient_elgamal_pk = validate_elgamal_pk(
+        &recipient_elgamal_info, &recipient_info, &mint_info)?;
 
     // check and initialize the cipher key transfer buffer
     let (transfer_buffer_key, transfer_buffer_bump_seed) =
@@ -902,3 +868,22 @@ fn validate_metadata(
     Ok(metadata)
 }
 
+// check that elgamal PDAs match
+fn validate_elgamal_pk(
+    elgamal_info: &AccountInfo,
+    wallet_info: &AccountInfo,
+    mint_info: &AccountInfo,
+) -> Result<zk_token_elgamal::pod::ElGamalPubkey, ProgramError> {
+    let (elgamal_pubkey_key, _elgamal_pubkey_bump_seed) =
+        get_elgamal_pubkey_address(wallet_info.key, mint_info.key);
+
+    if elgamal_pubkey_key != *elgamal_info.key {
+        msg!("Invalid elgamal PDA");
+        return Err(StealthError::InvalidElgamalPubkeyPDA.into());
+    }
+
+    let encryption_buffer = EncryptionKeyBuffer::from_account_info(
+        &elgamal_info, &ID, Key::EncryptionKeyBufferV1)?;
+
+    Ok(encryption_buffer.elgamal_pk)
+}
