@@ -7,4 +7,6 @@ pub enum ConfigError {
 
     #[error("Error opening the config file: {0}")]
     FileOpenError(String),
+    #[error("Invalid cluster: {0}")]
+    InvalidCluster(String),
 }

@@ -1,7 +1,5 @@
 use clap::{AppSettings, Parser, Subcommand};
 
-use crate::upload_assets::BundlrCluster;
-
 #[derive(Parser)]
 #[clap(author, version, about)]
 #[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
@@ -78,10 +76,6 @@ pub enum Commands {
         /// RPC Url
         #[clap(short, long)]
         rpc_url: Option<String>,
-
-        /// Bundlr cluster to use, must match RPC url cluster
-        #[clap(short, long)]
-        bundlr_cluster: BundlrCluster,
 
         /// Path to the cache file, defaults to "cache.json"
         #[clap(long, default_value = "cache.json")]

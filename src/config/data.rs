@@ -10,6 +10,9 @@ use mpl_candy_machine::{
     WhitelistMintMode as CandyWhitelistMintMode,
     WhitelistMintSettings as CandyWhitelistMintSettings,
 };
+
+use crate::config::errors::*;
+
 pub struct SugarConfig {
     pub keypair: Keypair,
     pub rpc_url: String,
@@ -208,10 +211,10 @@ impl HiddenSettings {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub enum UploadMethod {
     Metaplex,
-    Bundlr,
+    Bundlr(Cluster),
     Arloader,
 }
 
@@ -221,9 +224,20 @@ impl FromStr for UploadMethod {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "metaplex" => Ok(UploadMethod::Metaplex),
-            "bundlr" => Ok(UploadMethod::Bundlr),
+            "bundlr:devnet" => Ok(UploadMethod::Bundlr(Cluster::Devnet)),
+            "bundlr:mainnet" => Ok(UploadMethod::Bundlr(Cluster::Mainnet)),
             "arloader" => Ok(UploadMethod::Arloader),
             _ => Err(format!("Unknown storage: {}", s)),
+        }
+    }
+}
+
+impl ToString for UploadMethod {
+    fn to_string(&self) -> String {
+        match self {
+            UploadMethod::Metaplex => "metaplex".to_string(),
+            UploadMethod::Bundlr(cluster) => format!("bundlr:{}", cluster.to_string()),
+            UploadMethod::Arloader => "arloader".to_string(),
         }
     }
 }
@@ -235,5 +249,35 @@ impl<'de> Deserialize<'de> for UploadMethod {
     {
         let s: String = Deserialize::deserialize(deserializer)?;
         FromStr::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+pub const BUNDLR_DEVNET: &str = "https://devnet.bundlr.network";
+pub const BUNDLR_MAINNET: &str = "https://node1.bundlr.network";
+
+#[derive(Debug, Clone, Serialize)]
+pub enum Cluster {
+    Devnet,
+    Mainnet,
+}
+
+impl FromStr for Cluster {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "devnet" => Ok(Cluster::Devnet),
+            "mainnet" => Ok(Cluster::Mainnet),
+            _ => Err(ConfigError::InvalidCluster(s.to_string()).into()),
+        }
+    }
+}
+
+impl ToString for Cluster {
+    fn to_string(&self) -> String {
+        match self {
+            Cluster::Devnet => "devnet".to_string(),
+            Cluster::Mainnet => "mainnet".to_string(),
+        }
     }
 }

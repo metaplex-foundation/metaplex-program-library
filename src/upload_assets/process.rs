@@ -4,7 +4,7 @@ use std::{fs::File, sync::Arc};
 
 use crate::cache::Cache;
 use crate::common::*;
-use crate::upload_assets::BundlrCluster;
+use crate::config::{get_config_data, Cluster, UploadMethod};
 use crate::upload_assets::*;
 
 pub struct UploadAssetsArgs {
@@ -12,7 +12,6 @@ pub struct UploadAssetsArgs {
     pub config: String,
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
-    pub bundlr_cluster: BundlrCluster,
     pub cache: String,
 }
 
@@ -30,9 +29,19 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let keypair = bs58::encode(sugar_config.keypair.to_bytes()).into_string();
     let signer = SolanaSigner::from_base58(&keypair);
 
-    let bundlr_node = match args.bundlr_cluster {
-        BundlrCluster::Devnet => "https://devnet.bundlr.network",
-        BundlrCluster::Mainnet => "https://node1.bundlr.network",
+    let config_data = get_config_data(&args.config)?;
+
+    let bundlr_node = match config_data.upload_method {
+        UploadMethod::Bundlr(cluster) => match cluster {
+            Cluster::Devnet => "https://devnet.bundlr.network",
+            Cluster::Mainnet => "https://node1.bundlr.network",
+        },
+        _ => {
+            return Err(anyhow!(format!(
+                "Upload method '{}' currently unsupported!",
+                &config_data.upload_method.to_string()
+            )))
+        }
     };
 
     let bundlr_client = Bundlr::new(
@@ -85,11 +94,9 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let metadata_extension_glob = &format!("*.json");
 
     let mut asset_pairs = get_asset_pairs(&args.assets_dir)?;
-
     println!("retrieved asset pairs");
 
     let upload_media_args = UploadDataArgs {
-        // keypair: sugar_config.keypair,
         bundlr_client: bundlr_client.clone(),
         assets_dir: Path::new(&args.assets_dir),
         extension_glob: media_extension_glob,
@@ -98,7 +105,6 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     };
     upload_data(upload_media_args, &mut asset_pairs).await?;
 
-    println!("{:?}", asset_pairs);
     insert_media_links(&asset_pairs)?;
 
     let total_metadata_size = get_data_size(Path::new(&args.assets_dir), "json")?;

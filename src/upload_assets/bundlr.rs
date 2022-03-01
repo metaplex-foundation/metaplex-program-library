@@ -1,27 +1,5 @@
 use crate::common::*;
-use crate::upload_assets::UploadAssetsError;
 use std::{thread, time::Duration};
-
-pub const BUNDLR_DEVNET: &str = "https://devnet.bundlr.network";
-pub const BUNDLR_MAINNET: &str = "https://node1.bundlr.network";
-
-#[derive(Debug, Clone)]
-pub enum BundlrCluster {
-    Devnet,
-    Mainnet,
-}
-
-impl FromStr for BundlrCluster {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self> {
-        match s {
-            "devnet" => Ok(BundlrCluster::Devnet),
-            "mainnet" => Ok(BundlrCluster::Mainnet),
-            _ => Err(UploadAssetsError::InvalidBundlrCluster(s.to_string()).into()),
-        }
-    }
-}
 
 pub async fn get_bundlr_solana_address(http_client: &HttpClient, node: &str) -> Result<String> {
     let url = format!("{}/info", node);
