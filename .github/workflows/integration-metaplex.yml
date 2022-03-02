@@ -1,4 +1,4 @@
-name: Integration Fixed Price Sale
+name: Integration Metaplex
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.5
+  SOLANA_VERSION: 1.8.5
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -19,20 +19,20 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
     steps:
-      - uses: actions/checkout@v2
-      # For pull requests it's not necessary to checkout the code
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
+    - uses: actions/checkout@v2
+    # For pull requests it's not necessary to checkout the code
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
           core:
             - 'core/**'
           package:
-            - 'fixed-price-sale/**'
-  build-and-integration-test-fixed-price-sale:
+            - 'metaplex/**'
+  build-and-integration-test-metaplex:
     runs-on: ubuntu-latest
     env:
-      cache_id: program-fixed-price-sale
+      cache_id: program-metaplex 
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     steps:
@@ -40,10 +40,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
-        with:
+        with: 
           solana_version: ${{ env.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
-        with:
+        with: 
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       # Restore Cache from previous build/test
@@ -55,26 +55,29 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ./rust/target
-          key:
-            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
-            env.RUSTC_HASH }}
+          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
 
       # Build Rust Programs
-      - uses: ./.github/actions/build-fixed-price-sale
       - uses: ./.github/actions/build-token-metadata
+      - uses: ./.github/actions/build-token-vault
+      - uses: ./.github/actions/build-auction
+      - uses: ./.github/actions/build-metaplex
 
       # Install JS SDK deps
       - uses: ./.github/actions/yarn-install-and-build
-        with:
-          cache_id: sdk-fixed-price-sale
-          working_dir: ./fixed-price-sale/js
+        with: 
+          cache_id: sdk-metaplex
+          working_dir: ./metaplex/js
+          build_token_metadata: true
+          build_token_vault: true
+          build_auction: true
 
       # Run integration test
       - name: start-local-test-validator
-        working-directory: ./fixed-price-sale/js
+        working-directory: ./metaplex/js
         run: DEBUG=amman* yarn amman:start
 
-      - name: integration-test-fixed-price-sale-program
+      - name: integration-test-metaplex-program
         id: run_integration_test
-        working-directory: ./fixed-price-sale/js
-        run: DEBUG=mpl* yarn test
+        working-directory: ./metaplex/js
+        run: DEBUG=mpl* yarn test 

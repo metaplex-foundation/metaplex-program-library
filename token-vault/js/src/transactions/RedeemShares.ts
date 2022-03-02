@@ -10,7 +10,7 @@ import { VaultInstructions } from '../VaultProgram';
 import { VaultProgram } from '../VaultProgram';
 
 export class RedeemSharesArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  static readonly SCHEMA = RedeemSharesArgs.struct([['instruction', 'u8']]);
 
   instruction = VaultInstructions.RedeemShares;
 }

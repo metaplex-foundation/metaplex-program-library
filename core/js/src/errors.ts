@@ -29,7 +29,7 @@ export const ERROR_DEPRECATED_ACCOUNT_DATA: () => MetaplexError = () => {
 };
 
 export const ERROR_ACCOUNT_NOT_FOUND: (pubkey: AnyPublicKey) => MetaplexError = (
-  pubkey: string,
+  pubkey: AnyPublicKey,
 ) => {
   return new MetaplexError(ErrorCode.ERROR_ACCOUNT_NOT_FOUND, `Unable to find account: ${pubkey}`);
 };

@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import {
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
@@ -13,13 +20,14 @@ type Args = {
   settingsUri: string;
 };
 export class StoreConfigData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = StoreConfigData.struct([
     ['key', 'u8'],
     ['settingsUri', { kind: 'option', type: 'string' }],
   ]);
 
   key: MetaplexKey = MetaplexKey.StoreConfigV1;
-  settingsUri: string;
+  settingsUri!: string;
 
   constructor(args: Args) {
     super(args);

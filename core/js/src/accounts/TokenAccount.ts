@@ -18,7 +18,7 @@ export class TokenAccount extends Account<TokenAccountInfo> {
       throw ERROR_INVALID_OWNER();
     }
 
-    if (!TokenAccount.isCompatible(this.info.data)) {
+    if (this.info == null || !TokenAccount.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }
 

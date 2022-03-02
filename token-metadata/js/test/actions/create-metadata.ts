@@ -1,7 +1,6 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { addLabel, logDebug } from '../utils';
 import {
-  Actions,
   assertConfirmedTransaction,
   defaultSendOptions,
   TransactionHandler,
@@ -18,6 +17,7 @@ import {
 } from '../../src/mpl-token-metadata';
 import BN from 'bn.js';
 import * as spl from '@solana/spl-token';
+import { CreateMint } from './create-mint-account';
 // -----------------
 // Create Metadata
 // -----------------
@@ -101,8 +101,7 @@ export async function mintAndCreateMetadata(
   payer: Keypair,
   args: ConstructorParameters<typeof MetadataDataData>[0],
 ) {
-  const { createMintAccount } = new Actions(connection);
-  const { mint, createMintTx } = await createMintAccount(payer.publicKey);
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
