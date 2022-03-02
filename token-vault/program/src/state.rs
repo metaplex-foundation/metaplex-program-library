@@ -57,6 +57,11 @@ pub struct Vault {
     /// Once combination happens, we copy price per share to vault so that if something nefarious happens
     /// to external price account, like price change, we still have the math 'saved' for use in our calcs
     pub locked_price_per_share: u64,
+
+    /// The [MAX_VAULT_SIZE] indicates an extra byte for a field which is actually no longer
+    /// present. Therefore we include a place holder here in order to have the struct size match
+    /// the indicated size.
+    _extra_byte: u8,
 }
 
 impl Vault {
