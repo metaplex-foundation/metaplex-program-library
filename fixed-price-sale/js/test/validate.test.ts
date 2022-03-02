@@ -115,6 +115,7 @@ test('validate: successful purchase and validation', async (t) => {
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
+    newTokenAccount: newMintAta.publicKey,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
@@ -232,6 +233,7 @@ test('validate: successful purchase and failed validation', async (t) => {
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
+    newTokenAccount: newMintAta.publicKey,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(

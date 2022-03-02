@@ -11,7 +11,6 @@ interface ClaimResourceParams {
   sellingResource: PublicKey;
   vault: PublicKey;
   metadata: PublicKey;
-  secondaryMetadataCreators: PublicKey;
   destination: PublicKey;
   vaultOwnerBump: number;
   owner: PublicKey;
@@ -25,7 +24,6 @@ export const createClaimResourceTransaction = async ({
   sellingResource,
   vault,
   metadata,
-  secondaryMetadataCreators,
   destination,
   vaultOwnerBump,
   owner,
@@ -39,7 +37,6 @@ export const createClaimResourceTransaction = async ({
       vault,
       metadata,
       owner,
-      secondaryMetadataCreators,
       destination,
       tokenMetadataProgram: MetadataProgram.PUBKEY,
     },

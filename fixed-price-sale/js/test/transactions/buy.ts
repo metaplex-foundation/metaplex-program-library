@@ -21,6 +21,7 @@ interface BuyParams {
   newMint: PublicKey;
   newMintEdition: PublicKey;
   newMintMetadata: PublicKey;
+  newTokenAccount: PublicKey;
 }
 
 export const createBuyTransaction = async ({
@@ -41,6 +42,7 @@ export const createBuyTransaction = async ({
   newMint,
   newMintEdition,
   newMintMetadata,
+  newTokenAccount,
 }: BuyParams) => {
   const instruction = await createBuyInstruction(
     {
@@ -72,6 +74,7 @@ export const createBuyTransaction = async ({
       newMetadata: newMintMetadata,
       // newly generated mint edition PDA
       newEdition: newMintEdition,
+      newTokenAccount,
       // metaplex token metadata program address
       tokenMetadataProgram: MetadataProgram.PUBKEY,
     },

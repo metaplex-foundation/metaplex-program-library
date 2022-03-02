@@ -16,6 +16,7 @@ interface WithdrawParams {
   payoutTicketBump: number;
   treasuryOwnerBump: number;
   treasuryOwner: PublicKey;
+  primaryMetadataCreators: PublicKey;
 }
 
 export const createWithdrawTransaction = async ({
@@ -31,6 +32,7 @@ export const createWithdrawTransaction = async ({
   treasuryOwnerBump,
   payoutTicketBump,
   treasuryOwner,
+  primaryMetadataCreators,
 }: WithdrawParams): Promise<Transaction> => {
   const instruction = await createWithdrawInstruction(
     {
@@ -45,6 +47,7 @@ export const createWithdrawTransaction = async ({
       payer: payer.publicKey,
       payoutTicket: payoutTicket,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      primaryMetadataCreators,
     },
     {
       treasuryOwnerBump,

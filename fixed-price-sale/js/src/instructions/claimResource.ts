@@ -25,7 +25,6 @@ export type ClaimResourceInstructionAccounts = {
   vault: web3.PublicKey;
   metadata: web3.PublicKey;
   owner: web3.PublicKey;
-  secondaryMetadataCreators: web3.PublicKey;
   destination: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
 };
@@ -50,7 +49,6 @@ export function createClaimResourceInstruction(
     vault,
     metadata,
     owner,
-    secondaryMetadataCreators,
     destination,
     tokenMetadataProgram,
   } = accounts;
@@ -92,11 +90,6 @@ export function createClaimResourceInstruction(
     },
     {
       pubkey: owner,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: secondaryMetadataCreators,
       isWritable: false,
       isSigner: false,
     },

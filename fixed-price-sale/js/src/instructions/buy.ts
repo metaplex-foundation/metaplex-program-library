@@ -34,6 +34,7 @@ export type BuyInstructionAccounts = {
   editionMarker: web3.PublicKey;
   vault: web3.PublicKey;
   owner: web3.PublicKey;
+  newTokenAccount: web3.PublicKey;
   masterEditionMetadata: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
 };
@@ -61,6 +62,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     editionMarker,
     vault,
     owner,
+    newTokenAccount,
     masterEditionMetadata,
     tokenMetadataProgram,
   } = accounts;
@@ -87,7 +89,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     },
     {
       pubkey: userWallet,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
@@ -136,8 +138,13 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
       isSigner: false,
     },
     {
+      pubkey: newTokenAccount,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
       pubkey: masterEditionMetadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

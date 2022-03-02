@@ -31,15 +31,21 @@ test('withdraw: success', async (t) => {
     },
   });
 
-  const { sellingResource, vault, vaultOwner, vaultOwnerBump, resourceMint } =
-    await initSellingResource({
-      test: t,
-      transactionHandler,
-      payer,
-      connection,
-      store: store.publicKey,
-      maxSupply: 100,
-    });
+  const {
+    sellingResource,
+    vault,
+    vaultOwner,
+    vaultOwnerBump,
+    resourceMint,
+    primaryMetadataCreators,
+  } = await initSellingResource({
+    test: t,
+    transactionHandler,
+    payer,
+    connection,
+    store: store.publicKey,
+    maxSupply: 100,
+  });
 
   const { mint: treasuryMint, tokenAccount: userTokenAcc } = await mintNFT({
     transactionHandler,
@@ -76,7 +82,7 @@ test('withdraw: success', async (t) => {
     market.publicKey,
   );
 
-  const { mint: newMint } = await mintTokenToAccount({
+  const { mint: newMint, mintAta } = await mintTokenToAccount({
     connection,
     payer: payer.publicKey,
     transactionHandler,
@@ -111,6 +117,7 @@ test('withdraw: success', async (t) => {
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
+    newTokenAccount: mintAta.publicKey,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
@@ -167,6 +174,7 @@ test('withdraw: success', async (t) => {
     payoutTicketBump,
     treasuryOwnerBump,
     treasuryOwner,
+    primaryMetadataCreators,
   });
 
   const withdrawRes = await transactionHandler.sendAndConfirmTransaction(
