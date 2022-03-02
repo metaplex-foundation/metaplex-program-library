@@ -37,21 +37,6 @@ body:
     validations:
       required: true
   - type: textarea
-    id: command
-    attributes:
-      label: Command
-      description: If applicable, include the command you used. This will be automatically formatted into code, so no need for backticks.
-      render: shell
-      placeholder: |
-        ts-node ~/metaplex/js/packages/cli/src/candy-machine-v2-cli.ts upload \
-        -e devnet \
-        -k ~/.config/solana/devnet.json \
-        -cp config.json \
-        -c example \
-        ./assets
-    validations:
-      required: false
-  - type: textarea
     id: logs
     attributes:
       label: Relevant log output
