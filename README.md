@@ -51,11 +51,22 @@ merged.
 
 ### Rust Crates
 
-| Package        | Link                                                         | Version                                                      |
-| -------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Candy Machine  | [mpl-candy-machine](https://crates.io/crates/mpl-candy-machine) | [![Crate](https://img.shields.io/crates/v/mpl-candy-machine)](https://crates.io/crates/mpl-candy-machine) |
-| Token Metadata | [mpl-token-metadata](https://crates.io/crates/mpl-token-metadata) | [![Crate](https://img.shields.io/crates/v/mpl-token-metadata)](https://crates.io/crates/mpl-token-metadata)                                                             |
-| Token Vault    | [mpl-token-vault](https://crates.io/crates/mpl-token-vault)  |  [![Crate](https://img.shields.io/crates/v/mpl-token-vault)](https://crates.io/crates/mpl-token-vault)                                                            |
+|    Package     | Link                                                              | Version                                                                                                                                                                                                                                                                   |
+|:--------------:|-------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Candy Machine  | [mpl-candy-machine](https://crates.io/crates/mpl-candy-machine)   | [![Crate](https://img.shields.io/crates/v/mpl-candy-machine)](https://crates.io/crates/mpl-candy-machine)                                                                                                                                                                 |
+| Token Metadata | [mpl-token-metadata](https://crates.io/crates/mpl-token-metadata) | [![Crate](https://img.shields.io/crates/v/mpl-token-metadata)](https://crates.io/crates/mpl-token-metadata)                                                                                                                                                               |
+|  Token Vault   | [mpl-token-vault](https://crates.io/crates/mpl-token-vault)       | [![Crate](https://img.shields.io/crates/v/mpl-token-vault)](https://crates.io/crates/mpl-token-vault)                                                                                                                                                                     |
+| Auction House  | [mpl-auction-house](https://crates.io/crates/mpl-auction-house)   | [![Crate](https://img.shields.io/crates/v/mpl-auction-house)](https://crates.io/crates/mpl-auction-house)                                                                                                                                                                     |
+| Testing Utils  | [mpl-testing-utils](https://crates.io/crates/mpl-testing-utils)   | [![Crate](https://img.shields.io/crates/v/mpl-testing-utils)](https://crates.io/crates/mpl-testing-utils)                                                                                                                                                                     |
+
+### Npm Packages
+|    Package     |                                            Link                                             | Version                                                                                                  |
+|:--------------:|:-------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------|
+| Candy Machine  |  [mpl-candy-machine](https://www.npmjs.com/package/@metaplex-foundation/mpl-candy-machine)  | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine)](https://www.npmjs.com/package/@metaplex-foundation/mpl-candy-machine)   |
+| Token Metadata | [mpl-token-metadata](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata) | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata)](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata) |
+|      Core      |           [mpl-core](https://www.npmjs.com/package/@metaplex-foundation/mpl-core)           | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-core)](https://www.npmjs.com/package/@metaplex-foundation/mpl-core)       |
+| Auction House  |               [mpl-auction-house](https://www.npmjs.com/package/@metaplex-foundation/mpl-auction-house)               | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house)](https://www.npmjs.com/package/@metaplex-foundation/mpl-auction-house)   |
+
 
 
 ## Reporting security issues

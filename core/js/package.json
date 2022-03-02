@@ -37,7 +37,7 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
   "dependencies": {
-    "@solana/web3.js": "^1.33.0",
+    "@solana/web3.js": "^1.35.1",
     "bs58": "^4.0.1"
   },
   "devDependencies": {

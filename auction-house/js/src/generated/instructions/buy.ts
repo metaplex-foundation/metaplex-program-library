@@ -103,7 +103,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     },
     {
       pubkey: transferAuthority,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

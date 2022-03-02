@@ -47,14 +47,14 @@
     "@metaplex-foundation/mpl-token-metadata": "^0.0.2",
     "@metaplex-foundation/mpl-token-vault": "^0.0.2",
     "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.31.0"
+    "@solana/web3.js": "^1.35.1"
   },
   "devDependencies": {
-    "@metaplex-foundation/amman": "^0.0.9",
+    "@metaplex-foundation/amman": "^0.1.0",
     "esbuild": "^0.14.14",
     "esbuild-runner": "^2.2.1",
     "eslint": "^8.3.0",
     "rimraf": "^3.0.2",
-    "tape": "^5.4.1"
+    "tape": "^5.5.2"
   }
 }

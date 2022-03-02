@@ -17,7 +17,7 @@ export class AmountArgs extends Borsh.Data<{
   instruction: number;
   amount: BN;
 }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = AmountArgs.struct([
     ['instruction', 'u8'],
     ['amount', 'u64'],
   ]);
@@ -30,7 +30,7 @@ export class NumberOfShareArgs extends Borsh.Data<{
   instruction: number;
   numberOfShares: BN;
 }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = NumberOfShareArgs.struct([
     ['instruction', 'u8'],
     ['numberOfShares', 'u64'],
   ]);
@@ -59,7 +59,7 @@ type Args = {
   lockedPricePerShare: BN;
 };
 export class VaultData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = VaultData.struct([
     ['key', 'u8'],
     ['tokenProgram', 'pubkeyAsString'],
     ['fractionMint', 'pubkeyAsString'],

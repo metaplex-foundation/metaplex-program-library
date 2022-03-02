@@ -36,3 +36,4 @@ jobs:
           cache_id: sdk-fixed-price-sale
           working_dir: ./fixed-price-sale/js
           build_token_metadata: true
+          skip_test: true
