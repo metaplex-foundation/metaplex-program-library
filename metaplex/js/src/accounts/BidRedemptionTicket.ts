@@ -34,7 +34,7 @@ export class BidRedemptionTicket extends Account<BidRedemptionTicketV2Data> {
     } else if (BidRedemptionTicket.isBidRedemptionTicketV2(this.info.data)) {
       const data = this.info.data.toJSON().data;
 
-      const winnerIndex = data[1] !== 0 && new BN(data.slice(1, 9), 'le');
+      const winnerIndex = data[1] !== 0 ? new BN(data.slice(1, 9), 'le') : undefined;
       const offset = WINNER_INDEX_OFFSETS[+!!winnerIndex];
 
       this.data = {

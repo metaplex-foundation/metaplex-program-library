@@ -70,7 +70,6 @@ pub struct Buy<'info> {
     wallet: Signer<'info>,
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
-    #[account(mut)]
     transfer_authority: UncheckedAccount<'info>,
     treasury_mint: Account<'info, Mint>,
     token_account: Account<'info, TokenAccount>,

@@ -10,7 +10,7 @@ import { VaultInstructions } from '../VaultProgram';
 import { VaultProgram } from '../VaultProgram';
 
 export class InitVaultArgs extends Borsh.Data<{ allowFurtherShareCreation: boolean }> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = InitVaultArgs.struct([
     ['instruction', 'u8'],
     ['allowFurtherShareCreation', 'u8'],
   ]);

@@ -1,3 +1,11 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
+import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { ParamsWithStore, VaultProgram } from '@metaplex-foundation/mpl-token-vault';
@@ -13,13 +21,14 @@ import BN from 'bn.js';
 import { MetaplexProgram } from '../MetaplexProgram';
 
 export class RedeemParticipationBidV3Args extends Borsh.Data<{ winIndex: BN | null }> {
-  static readonly SCHEMA = this.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = RedeemParticipationBidV3Args.struct([
     ['instruction', 'u8'],
     ['winIndex', { kind: 'option', type: 'u64' }],
   ]);
 
   instruction = 19;
-  winIndex: BN | null;
+  winIndex?: BN;
 }
 
 type RedeemParticipationBidV3Params = {
@@ -54,6 +63,8 @@ export class RedeemParticipationBidV3 extends Transaction {
   ) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer');
+
     const {
       store,
       vault,

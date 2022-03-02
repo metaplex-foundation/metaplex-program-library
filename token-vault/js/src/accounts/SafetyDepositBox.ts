@@ -17,7 +17,7 @@ type Args = {
   order: number;
 };
 export class SafetyDepositBoxData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = SafetyDepositBoxData.struct([
     ['key', 'u8'],
     ['vault', 'pubkeyAsString'],
     ['tokenMint', 'pubkeyAsString'],

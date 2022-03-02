@@ -17,7 +17,7 @@ type Args = {
   allowedToCombine: boolean;
 };
 export class ExternalPriceAccountData extends Borsh.Data<Args> {
-  static readonly SCHEMA = this.struct([
+  static readonly SCHEMA = ExternalPriceAccountData.struct([
     ['key', 'u8'],
     ['pricePerShare', 'u64'],
     ['priceMint', 'pubkeyAsString'],

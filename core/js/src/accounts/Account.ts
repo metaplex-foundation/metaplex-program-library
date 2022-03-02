@@ -9,8 +9,8 @@ export type AccountConstructor<T> = {
 
 export class Account<T = unknown> {
   readonly pubkey: PublicKey;
-  readonly info: AccountInfo<Buffer>;
-  data: T;
+  readonly info?: AccountInfo<Buffer>;
+  data?: T;
 
   constructor(pubkey: AnyPublicKey, info?: AccountInfo<Buffer>) {
     this.pubkey = new PublicKey(pubkey);
@@ -18,7 +18,7 @@ export class Account<T = unknown> {
   }
 
   static from<T>(this: AccountConstructor<T>, account: Account<unknown>) {
-    return new this(account.pubkey, account.info);
+    return new Account<T>(account.pubkey, account.info);
   }
 
   static async load<T>(

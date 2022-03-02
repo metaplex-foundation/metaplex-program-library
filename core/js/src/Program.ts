@@ -21,7 +21,7 @@ export abstract class Program {
     configOrCommitment?: GetProgramAccountsConfig | Commitment,
   ) {
     const extra: Pick<GetProgramAccountsConfig, 'dataSlice' | 'filters'> = {};
-    let commitment: Commitment;
+    let commitment: Commitment | undefined;
     if (configOrCommitment) {
       if (typeof configOrCommitment === 'string') {
         commitment = configOrCommitment;

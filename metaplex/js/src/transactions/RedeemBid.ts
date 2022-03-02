@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
@@ -10,9 +17,11 @@ import {
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { VaultProgram, ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
 import { MetaplexProgram } from '../MetaplexProgram';
+import { strict as assert } from 'assert';
 
 export class RedeemBidArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = RedeemBidArgs.struct([['instruction', 'u8']]);
 
   instruction = 2;
 }
@@ -26,15 +35,16 @@ export class RedeemUnusedWinningConfigItemsAsAuctioneerArgs extends Borsh.Data<{
   winningConfigItemIndex: number;
   proxyCall: ProxyCallAddress;
 }> {
-  static readonly SCHEMA = this.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = RedeemUnusedWinningConfigItemsAsAuctioneerArgs.struct([
     ['instruction', 'u8'],
     ['winningConfigItemIndex', 'u8'],
     ['proxyCall', 'u8'],
   ]);
 
   instruction = 12;
-  winningConfigItemIndex: number;
-  proxyCall: ProxyCallAddress;
+  winningConfigItemIndex!: number;
+  proxyCall!: ProxyCallAddress;
 }
 
 type RedeemBidParams = {
@@ -64,6 +74,8 @@ export class RedeemBid extends Transaction {
   constructor(options: TransactionCtorFields, params: ParamsWithStore<RedeemBidParams>) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer account');
+
     const {
       store,
       vault,
