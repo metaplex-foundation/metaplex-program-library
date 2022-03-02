@@ -1,11 +1,10 @@
-use {
-    crate::state::{ExternalPriceAccount, Key},
-    borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
-        instruction::{AccountMeta, Instruction},
-        pubkey::Pubkey,
-        sysvar,
-    },
+use crate::state::{ExternalPriceAccount, Key};
+use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankInstruction;
+use solana_program::{
+    instruction::{AccountMeta, Instruction},
+    pubkey::Pubkey,
+    sysvar,
 };
 
 #[repr(C)]
@@ -33,125 +32,163 @@ pub struct MintEditionProxyArgs {
 }
 
 /// Instructions supported by the Fraction program.
-#[derive(BorshSerialize, BorshDeserialize, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
+#[rustfmt::skip]
 pub enum VaultInstruction {
     /// Initialize a token vault, starts inactivate. Add tokens in subsequent instructions, then activate.
-    ///   0. `[writable]` Initialized fractional share mint with 0 tokens in supply, authority on mint must be pda of program with seed [prefix, programid]
-    ///   1. `[writable]` Initialized redeem treasury token account with 0 tokens in supply, owner of account must be pda of program like above
-    ///   2. `[writable]` Initialized fraction treasury token account with 0 tokens in supply, owner of account must be pda of program like above
-    ///   3. `[writable]` Uninitialized vault account
-    ///   4. `[]` Authority on the vault
-    ///   5. `[]` Pricing Lookup Address
-    ///   6. `[]` Token program
-    ///   7. `[]` Rent sysvar
+    #[account(0, writable, name="fraction_mint",
+              desc="Initialized fractional share mint with 0 tokens in supply, authority on mint must be pda of program with seed [prefix, programid]")]
+    #[account(1, writable, name="redeem_treasury",
+            desc = "Initialized redeem treasury token account with 0 tokens in supply, owner of account must be pda of program like above")]
+    #[account(2, writable, name="fraction_treasury",
+            desc = "Initialized fraction treasury token account with 0 tokens in supply, owner of account must be pda of program like above")]
+    #[account(3, writable, name="vault",
+            desc = "Uninitialized vault account")]
+    #[account(4, name="authority",
+            desc = "Authority on the vault")]
+    #[account(5, name="pricing_lookup_address",
+            desc = "Pricing Lookup Address")]
+    #[account(6, name="token_program",
+            desc = "Token program")]
+    #[account(7, name="rent",
+            desc = "Rent sysvar")]
     InitVault(InitVaultArgs),
 
     /// Add a token to a inactive token vault
-    ///   0. `[writable]` Uninitialized safety deposit box account address (will be created and allocated by this endpoint)
-    ///                   Address should be pda with seed of [PREFIX, vault_address, token_mint_address]
-    ///   1. `[writable]` Initialized Token account
-    ///   2. `[writable]` Initialized Token store account with authority of this program, this will get set on the safety deposit box
-    ///   3. `[writable]` Initialized inactive fractionalized token vault
-    ///   4. `[signer]` Authority on the vault
-    ///   5. `[signer]` Payer
-    ///   6. `[signer]` Transfer Authority to move desired token amount from token account to safety deposit
-    ///   7. `[]` Token program
-    ///   8. `[]` Rent sysvar
-    ///   9. `[]` System account sysvar
+    #[account(0, writable, name="safety_deposit_account",
+            desc = "Uninitialized safety deposit box account address (will be created and allocated by this endpoint) Address should be pda with seed of [PREFIX, vault_address, token_mint_address]")]
+    #[account(1, writable, name="token_account",
+            desc = "Initialized Token account")]
+    #[account(2, writable, name="store",
+            desc = "Initialized Token store account with authority of this program, this will get set on the safety deposit box")]
+    #[account(3, writable, name="vault", desc = "Initialized inactive fractionalized token vault")]
+    #[account(4, signer, name="vault_authority", desc = "Authority on the vault")]
+    #[account(5, signer, name="payer", desc = "Payer")]
+    #[account(6, signer, name="transfer_authority",
+            desc = "Transfer Authority to move desired token amount from token account to safety deposit")]
+    #[account(7, name="token_program", desc = "Token program")]
+    #[account(8, name="rent", desc = "Rent sysvar")]
+    #[account(9, name="system_account", desc = "System account sysvar")]
     AddTokenToInactiveVault(AmountArgs),
 
     /// Activates the vault, distributing initial shares into the fraction treasury.
     /// Tokens can no longer be removed in this state until Combination.
-    ///   0. `[writable]` Initialized inactivated fractionalized token vault
-    ///   1. `[writable]` Fraction mint
-    ///   2. `[writable]` Fraction treasury
-    ///   3. `[]` Fraction mint authority for the program - seed of [PREFIX, program_id]
-    ///   4. `[signer]` Authority on the vault
-    ///   5. `[]` Token program
+    #[account(0, writable, name="vault", desc = "Initialized inactivated fractionalized token vault")]
+    #[account(1, writable, name="fraction_mint", desc = "Fraction mint")]
+    #[account(2, writable, name="fraction_treasury", desc = "Fraction treasury")]
+    #[account(3, name="fraction_mint_authority", desc = "Fraction mint authority for the program - seed of [PREFIX, program_id]")]
+    #[account(4, signer, name="vault_authority", desc = "Authority on the vault")]
+    #[account(5, name="token_program", desc = "Token program")]
     ActivateVault(NumberOfShareArgs),
 
     /// This act checks the external pricing oracle for permission to combine and the price of the circulating market cap to do so.
     /// If you can afford it, this amount is charged and placed into the redeem treasury for shareholders to redeem at a later time.
     /// The treasury then unlocks into Combine state and you can remove the tokens.
-    ///   0. `[writable]` Initialized activated token vault
-    ///   1. `[writable]` Token account containing your portion of the outstanding fraction shares
-    ///   2. `[writable]` Token account of the redeem_treasury mint type that you will pay with
-    ///   3. `[writable]` Fraction mint
-    ///   4. `[writable]` Fraction treasury account
-    ///   5. `[writable]` Redeem treasury account
-    ///   6. `[]` New authority on the vault going forward - can be same authority if you want
-    ///   7. `[signer]` Authority on the vault
-    ///   8. `[signer]` Transfer authority for the token account and outstanding fractional shares account you're transferring from
-    ///   9. `[]` PDA-based Burn authority for the fraction treasury account containing the uncirculated shares seed [PREFIX, program_id]
-    ///   10. `[]` External pricing lookup address
-    ///   11. `[]` Token program
+    #[account(0, writable, name="vault", desc = "Initialized activated token vault")]
+    #[account(1, writable, name="your_outstanding_shares",
+            desc = "Token account containing your portion of the outstanding fraction shares")]
+    #[account(2, writable, name="your_payment",
+            desc = "Token account of the redeem_treasury mint type that you will pay with")]
+    #[account(3, writable, name="fraction_mint", desc = "Fraction mint")]
+    #[account(4, writable, name="fraction_treasury", desc = "Fraction treasury account")]
+    #[account(5, writable, name="redeem_treasury", desc = "Redeem treasury account")]
+    #[account(6, name="new_vault_authority", desc = "New authority on the vault going forward - can be same authority if you want")]
+    #[account(7, signer, name="vault_authority", desc = "Authority on the vault")]
+    #[account(8, signer, name="transfer_authority",
+            desc = "Transfer authority for the token account and outstanding fractional shares account you're transferring from")]
+    #[account(9, name="fraction_burn_authority",
+            desc = "PDA-based Burn authority for the fraction treasury account containing the uncirculated shares seed [PREFIX, program_id]")]
+    #[account(10, name="external_pricing",
+            desc = "External pricing lookup address")]
+    #[account(11, name="token_program", desc = "Token program")]
     CombineVault,
 
     /// If in the combine state, shareholders can hit this endpoint to burn shares in exchange for monies from the treasury.
     /// Once fractional supply is zero and all tokens have been removed this action will take vault to Deactivated
-    ///   0. `[writable]` Initialized Token account containing your fractional shares
-    ///   1. `[writable]` Initialized Destination token account where you wish your proceeds to arrive
-    ///   2. `[writable]` Fraction mint
-    ///   3. `[writable]` Redeem treasury account
-    ///   4. `[]` PDA-based Transfer authority for the transfer of proceeds from redeem treasury to destination seed [PREFIX, program_id]
-    ///   5. `[signer]` Burn authority for the burning of your shares
-    ///   6. `[]` Combined token vault
-    ///   7. `[]` Token program
-    ///   8. `[]` Rent sysvar
+    #[account(0, writable, name="outstanding_shares",
+            desc = "Initialized Token account containing your fractional shares")]
+    #[account(1, writable, name="destination",
+            desc = "Initialized Destination token account where you wish your proceeds to arrive")]
+    #[account(2, writable, name="fraction_mint", desc = "Fraction mint")]
+    #[account(3, writable, name="redeem_treasury", desc = "Redeem treasury account")]
+    #[account(4, name="transfer_authority", desc = "PDA-based Transfer authority for the transfer of proceeds from redeem treasury to destination seed [PREFIX, program_id]")]
+    #[account(5, signer, name="burn_authority", desc = "Burn authority for the burning of your shares")]
+    #[account(6, name="vault", desc = "Combined token vault")]
+    #[account(7, name="token_program", desc = "Token program")]
+    #[account(8, name="rent", desc = "Rent sysvar")]
     RedeemShares,
 
     /// If in combine state, authority on vault can hit this to withdrawal some of a token type from a safety deposit box.
     /// Once fractional supply is zero and all tokens have been removed this action will take vault to Deactivated
-    ///   0. `[writable]` Initialized Destination account for the tokens being withdrawn
-    ///   1. `[writable]` The safety deposit box account key for the tokens
-    ///   2. `[writable]` The store key on the safety deposit box account
-    ///   3. `[writable]` The initialized combined token vault
-    ///   4. `[]` Fraction mint
-    ///   5. `[signer]` Authority of vault
-    ///   6. `[]` PDA-based Transfer authority to move the tokens from the store to the destination seed [PREFIX, program_id]
-    ///   7. `[]` Token program
-    ///   8. `[]` Rent sysvar
+    #[account(0, writable, name="destination",
+            desc = "Initialized Destination account for the tokens being withdrawn")]
+    #[account(1, writable, name="safety_deposit",
+            desc = "The safety deposit box account key for the tokens")]
+    #[account(2, writable, name="store",
+            desc = "The store key on the safety deposit box account")]
+    #[account(3, writable, name="vault",
+            desc = "The initialized combined token vault")]
+    #[account(4, name="fraction_mint",
+            desc = "Fraction mint")]
+    #[account(5, signer, name="vault_authority",
+            desc = "Authority of vault")]
+    #[account(6, name="transfer_authority",
+            desc = "PDA-based Transfer authority to move the tokens from the store to the destination seed [PREFIX, program_id]")]
+    #[account(7, name="token_program", desc = "Token program")]
+    #[account(8, name="rent", desc = "Rent sysvar")]
     WithdrawTokenFromSafetyDepositBox(AmountArgs),
 
     /// Self explanatory - mint more fractional shares if the vault is configured to allow such.
-    ///   0. `[writable]` Fraction treasury
-    ///   1. `[writable]` Fraction mint
-    ///   2. `[]` The initialized active token vault
-    ///   3. `[]` PDA-based Mint authority to mint tokens to treasury[PREFIX, program_id]
-    ///   4. `[signer]` Authority of vault
-    ///   5. `[]` Token program
+    #[account(0, writable, name="fraction_treasury",
+            desc = "Fraction treasury")]
+    #[account(1, writable, name="fraction_mint",
+            desc = "Fraction mint")]
+    #[account(2, name="vault",
+            desc = "The initialized active token vault")]
+    #[account(3, name="mint_authority",
+            desc = "PDA-based Mint authority to mint tokens to treasury[PREFIX, program_id]")]
+    #[account(4, signer, name="vault_authority",
+            desc = "Authority of vault")]
+    #[account(5, name="token_program", desc = "Token program")]
     MintFractionalShares(NumberOfShareArgs),
 
     /// Withdraws shares from the treasury to a desired account.
-    ///   0. `[writable]` Initialized Destination account for the shares being withdrawn
-    ///   1. `[writable]` Fraction treasury
-    ///   2. `[]` The initialized active token vault
-    ///   3. `[]` PDA-based Transfer authority to move tokens from treasury to your destination[PREFIX, program_id]
-    ///   3. `[signer]` Authority of vault
-    ///   4. `[]` Token program
-    ///   5. `[]` Rent sysvar
+    #[account(0, writable, name="destination",
+            desc = "Initialized Destination account for the shares being withdrawn")]
+    #[account(1, writable, name="fraction_treasury", desc = "Fraction treasury")]
+    #[account(2, name="vault", desc = "The initialized active token vault")]
+    #[account(3, name="transfer_authority",
+            desc = "PDA-based Transfer authority to move tokens from treasury to your destination[PREFIX, program_id]")]
+    #[account(4, signer, name="vault_authority", desc = "Authority of vault")]
+    #[account(5, name="token_program", desc = "Token program")]
+    #[account(6, name="rent", desc = "Rent sysvar")]
     WithdrawSharesFromTreasury(NumberOfShareArgs),
 
     /// Returns shares to the vault if you wish to remove them from circulation.
-    ///   0. `[writable]` Initialized account from which shares will be withdrawn
-    ///   1. `[writable]` Fraction treasury
-    ///   2. `[]` The initialized active token vault
-    ///   3. `[signer]` Transfer authority to move tokens from your account to treasury
-    ///   3. `[signer]` Authority of vault
-    ///   4. `[]` Token program
+    #[account(0, writable, name="source",
+            desc = "Initialized account from which shares will be withdrawn")]
+    #[account(1, writable, name="fraction_treasury",
+            desc = "Fraction treasury")]
+    #[account(2, name="vault",
+            desc = "The initialized active token vault")]
+    #[account(3, signer, name="transfer_authority",
+            desc = "Transfer authority to move tokens from your account to treasury")]
+    #[account(4, signer, name="vault_authority",
+            desc = "Authority of vault")]
+    #[account(5, name="token_program", desc = "Token program")]
     AddSharesToTreasury(NumberOfShareArgs),
 
     /// Helpful method that isn't necessary to use for main users of the app, but allows one to create/update
     /// existing external price account fields if they are signers of this account.
     /// Useful for testing purposes, and the CLI makes use of it as well so that you can verify logic.
-    ///   0. `[writable]` External price account
+    #[account(0, writable, name="external_price_account", desc = "External price account")]
     UpdateExternalPriceAccount(ExternalPriceAccount),
 
     /// Sets the authority of the vault to a new authority.
     ///
-    ///   0. `[writable]` Vault
-    ///   1. `[signer]` Vault authority
-    ///   2. `[]` New authority
+    #[account(0, writable, name="vault", desc = "Vault")]
+    #[account(1, signer, name="current_authority", desc = "Vault authority")]
+    #[account(2, name="new_authority", desc = "New authority")]
     SetAuthority,
 }
 

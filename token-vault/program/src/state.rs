@@ -1,8 +1,7 @@
-use {
-    crate::utils::try_from_slice_checked,
-    borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey},
-};
+use crate::utils::try_from_slice_checked;
+use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankAccount;
+use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
 /// prefix used for PDAs to avoid certain collision attacks (https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack)
 pub const PREFIX: &str = "vault";
 
@@ -28,7 +27,7 @@ pub enum VaultState {
 }
 
 #[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct Vault {
     pub key: Key,
     /// Store token program used
@@ -73,7 +72,7 @@ impl Vault {
 }
 
 #[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct SafetyDepositBox {
     // Please note if you change this struct, be careful as we read directly off it
     // in Metaplex to avoid serialization costs...
@@ -106,7 +105,7 @@ impl SafetyDepositBox {
 }
 
 #[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct ExternalPriceAccount {
     pub key: Key,
     pub price_per_share: u64,
