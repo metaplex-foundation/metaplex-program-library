@@ -8,7 +8,7 @@ import {
 import { CreatorAccountData } from '../src';
 import { killStuckProcess, logDebug } from './utils';
 import { createPrerequisites, createStore, initSellingResource } from './actions';
-import { createSecondaryMetadataCreators } from './transactions';
+import { createSavePrimaryMetadataCreators } from './transactions';
 
 killStuckProcess();
 
