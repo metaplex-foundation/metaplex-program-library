@@ -2105,6 +2105,7 @@ dependencies = [
  "borsh 0.9.3",
  "num-derive",
  "num-traits",
+ "shank",
  "solana-program",
  "spl-token",
  "thiserror",
@@ -2987,6 +2988,40 @@ dependencies = [
  "digest 0.9.0",
  "keccak",
  "opaque-debug",
+]
+
+[[package]]
+name = "shank"
+version = "0.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7ca46ffd371862f5eb24546958882c77b1326e22c8630a324a4df00e11b233ce"
+dependencies = [
+ "shank_macro",
+]
+
+[[package]]
+name = "shank_macro"
+version = "0.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c348d9feb9e17132ffb54f0625e1ebac575108879d036809fef86edea050dd1"
+dependencies = [
+ "proc-macro2 1.0.36",
+ "quote 1.0.15",
+ "shank_macro_impl",
+ "syn 1.0.86",
+]
+
+[[package]]
+name = "shank_macro_impl"
+version = "0.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d40b580c5b227fe9962b87649898289afaa1582470a143d43c48ac3d587ca404"
+dependencies = [
+ "anyhow",
+ "proc-macro2 1.0.36",
+ "quote 1.0.15",
+ "serde",
+ "syn 1.0.86",
 ]
 
 [[package]]
