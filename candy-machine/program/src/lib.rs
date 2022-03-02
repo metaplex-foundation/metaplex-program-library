@@ -762,7 +762,8 @@ pub mod candy_machine {
 
         let revoke_collection_infos = vec![
             authority_record.clone(),
-            ctx.accounts.authority.to_account_info(), // Fix this I think?
+            ctx.accounts.collection_pda.to_account_info(),
+            ctx.accounts.authority.to_account_info(),
             ctx.accounts.metadata.to_account_info(),
             mint.clone(),
         ];
