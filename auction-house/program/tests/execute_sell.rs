@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use anchor_lang::{prelude::*, context, AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_lang::{context, prelude::*, AccountDeserialize, InstructionData, ToAccountMetas};
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
 use solana_sdk::signer::Signer;
@@ -14,7 +14,7 @@ use solana_program::program_pack::Pack;
 
 use mpl_auction_house::{
     pda::{find_escrow_payment_address, find_program_as_signer_address, find_trade_state_address},
-    receipt::{PurchaseReceipt, BidReceipt, ListingReceipt},
+    receipt::{BidReceipt, ListingReceipt, PurchaseReceipt},
 };
 use solana_sdk::{signature::Keypair, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
@@ -387,7 +387,10 @@ async fn execute_public_sale_success() {
     assert_eq!(purchase_receipt.price, price);
     assert_eq!(purchase_receipt.created_at, timestamp);
     assert_eq!(purchase_receipt.metadata, public_sale_acc.metadata);
-    assert_eq!(purchase_receipt.auction_house, public_sale_acc.auction_house);
+    assert_eq!(
+        purchase_receipt.auction_house,
+        public_sale_acc.auction_house
+    );
 
     let bid_receipt_account = context
         .banks_client
@@ -396,10 +399,12 @@ async fn execute_public_sale_success() {
         .expect("no bid receipt")
         .expect("bid receipt empty");
 
-    let bid_receipt =
-        BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
+    let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
 
-    assert_eq!(bid_receipt.purchase_receipt, Some(purchase_receipt_acc.purchase_receipt));
+    assert_eq!(
+        bid_receipt.purchase_receipt,
+        Some(purchase_receipt_acc.purchase_receipt)
+    );
     assert_eq!(bid_receipt.canceled_at, None);
     assert_eq!(bid_receipt.token_account, None);
 
@@ -413,7 +418,10 @@ async fn execute_public_sale_success() {
     let listing_receipt =
         ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
 
-    assert_eq!(listing_receipt.purchase_receipt, Some(purchase_receipt_acc.purchase_receipt));
+    assert_eq!(
+        listing_receipt.purchase_receipt,
+        Some(purchase_receipt_acc.purchase_receipt)
+    );
     assert_eq!(listing_receipt.canceled_at, None);
 
     ()

@@ -214,18 +214,14 @@ pub fn cancel_listing_receipt<'info>(
         &[LISTING_RECEIPT_PREFIX.as_ref(), trade_state.pubkey.as_ref()],
     )?;
 
-    let receipt_data = receipt_info.try_borrow_mut_data()?;
+    let mut receipt_data = receipt_info.try_borrow_mut_data()?;
     let mut receipt_data_slice: &[u8] = &receipt_data;
 
     let mut receipt = ListingReceipt::try_deserialize(&mut receipt_data_slice)?;
 
     receipt.canceled_at = Some(clock.unix_timestamp);
 
-    let mut data = receipt_data;
-    let dst: &mut [u8] = &mut data;
-    let mut cursor = std::io::Cursor::new(dst);
-
-    receipt.try_serialize(&mut cursor)?;
+    receipt.try_serialize(&mut *receipt_data)?;
 
     Ok(())
 }
@@ -354,18 +350,14 @@ pub fn cancel_bid_receipt<'info>(
         &[BID_RECEIPT_PREFIX.as_ref(), trade_state.pubkey.as_ref()],
     )?;
 
-    let receipt_data = receipt_info.try_borrow_mut_data()?;
+    let mut receipt_data = receipt_info.try_borrow_mut_data()?;
     let mut receipt_data_slice: &[u8] = &receipt_data;
 
     let mut receipt = BidReceipt::try_deserialize(&mut receipt_data_slice)?;
 
     receipt.canceled_at = Some(clock.unix_timestamp);
 
-    let mut data = receipt_data;
-    let dst: &mut [u8] = &mut data;
-    let mut cursor = std::io::Cursor::new(dst);
-
-    receipt.try_serialize(&mut cursor)?;
+    receipt.try_serialize(&mut *receipt_data)?;
 
     Ok(())
 }
@@ -480,31 +472,23 @@ pub fn print_purchase_receipt<'info>(
 
     purchase.try_serialize(&mut *purchase_receipt_account.try_borrow_mut_data()?)?;
 
-    let listing_receipt_data = listing_receipt_info.try_borrow_mut_data()?;
+    let mut listing_receipt_data = listing_receipt_info.try_borrow_mut_data()?;
     let mut listing_receipt_data_slice: &[u8] = &listing_receipt_data;
 
     let mut listing_receipt = ListingReceipt::try_deserialize(&mut listing_receipt_data_slice)?;
 
     listing_receipt.purchase_receipt = Some(purchase_receipt_account.key());
 
-    let mut data = listing_receipt_data;
-    let dst: &mut [u8] = &mut data;
-    let mut cursor = std::io::Cursor::new(dst);
+    listing_receipt.try_serialize(&mut *listing_receipt_data)?;
 
-    listing_receipt.try_serialize(&mut cursor)?;
-
-    let bid_receipt_data = bid_receipt_account.try_borrow_mut_data()?;
+    let mut bid_receipt_data = bid_receipt_account.try_borrow_mut_data()?;
     let mut bid_receipt_slice: &[u8] = &bid_receipt_data;
 
     let mut bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_slice)?;
 
     bid_receipt.purchase_receipt = Some(purchase_receipt_account.key());
 
-    let mut data = bid_receipt_data;
-    let dst: &mut [u8] = &mut data;
-    let mut cursor = std::io::Cursor::new(dst);
-
-    bid_receipt.try_serialize(&mut cursor)?;
+    bid_receipt.try_serialize(&mut *bid_receipt_data)?;
 
     Ok(())
 }
