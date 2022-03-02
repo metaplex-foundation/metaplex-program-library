@@ -34,7 +34,7 @@ use {
     spl_token::state::Mint,
     std::{cell::RefMut, ops::Deref, str::FromStr},
 };
-anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
+anchor_lang::declare_id!("cndy3Z34yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
@@ -453,9 +453,6 @@ pub mod candy_machine {
                 &[&signer_seeds],
             )?;
         }
-
-        msg!("Before instr check");
-        sol_log_compute_units();
 
         let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
 
