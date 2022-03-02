@@ -30,12 +30,12 @@ use {
             Metadata, MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
             MAX_URI_LENGTH,
         },
+        utils::{assert_derivation, create_or_allocate_account_raw},
     },
     spl_token::state::Mint,
     std::{cell::RefMut, ops::Deref, str::FromStr},
 };
-anchor_lang::declare_id!("cndy3Z34yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
-
+anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
@@ -43,8 +43,6 @@ const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
 pub mod candy_machine {
     use super::*;
-    use mpl_token_metadata::utils::{assert_derivation, create_or_allocate_account_raw};
-    use solana_program::borsh::try_from_slice_unchecked;
 
     #[inline(never)]
     pub fn mint_nft<'info>(
@@ -285,11 +283,7 @@ pub mod candy_machine {
             .checked_rem(candy_machine.data.items_available)
             .ok_or(ErrorCode::NumericalOverflowError)? as usize;
 
-        let config_line = get_config_line(
-            &candy_machine,
-            modded,
-            candy_machine.items_redeemed
-        )?;
+        let config_line = get_config_line(&candy_machine, modded, candy_machine.items_redeemed)?;
 
         candy_machine.items_redeemed = candy_machine
             .items_redeemed
@@ -741,8 +735,10 @@ pub mod candy_machine {
                         &[*ctx.bumps.get("collection_pda").unwrap()],
                     ],
                 )?;
-                let mut data_ref: &mut [u8] = &mut ctx.accounts.collection_pda.try_borrow_mut_data()?;
-                let mut collection_pda_object: CollectionPDA = AnchorDeserialize::deserialize(&mut &*data_ref)?;
+                let mut data_ref: &mut [u8] =
+                    &mut ctx.accounts.collection_pda.try_borrow_mut_data()?;
+                let mut collection_pda_object: CollectionPDA =
+                    AnchorDeserialize::deserialize(&mut &*data_ref)?;
                 collection_pda_object.mint = mint.key();
                 collection_pda_object.candy_machine = candy_machine.key();
                 collection_pda_object.try_serialize(&mut data_ref)?;
@@ -853,9 +849,12 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
 pub struct InitializeCandyMachine<'info> {
+    /// CHECK: account constraints checked in account trait
     #[account(zero, rent_exempt = skip, constraint = candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= get_space_for_candy(data)?)]
     candy_machine: UncheckedAccount<'info>,
+    /// CHECK: wallet can be any account
     wallet: UncheckedAccount<'info>,
+    /// CHECK: authority can be any account
     authority: UncheckedAccount<'info>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
@@ -868,17 +867,23 @@ pub struct SetCollection<'info> {
     #[account(has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
+    /// CHECK: account constraints checked in account trait
     #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
     collection_pda: UncheckedAccount<'info>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
-    // Dont need to be checked because CPI
+
+    /// CHECK: types checked in CPI
     metadata: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     mint: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     edition: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     #[account(mut)]
     collection_authority_record: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
 }
@@ -891,11 +896,14 @@ pub struct RemoveCollection<'info> {
     authority: Signer<'info>,
     #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close=authority)]
     collection_pda: Account<'info, CollectionPDA>,
-    // Dont need to be checked because CPI
+    /// CHECK: types checked in CPI
     metadata: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     mint: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     #[account(mut)]
     collection_authority_record: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
 }
@@ -928,21 +936,27 @@ pub struct MintNFT<'info> {
     has_one = wallet
     )]
     candy_machine: Box<Account<'info, CandyMachine>>,
+    /// CHECK: account constraints checked in account trait
     #[account(seeds=[PREFIX.as_bytes(), candy_machine.key().as_ref()], bump=creator_bump)]
     candy_machine_creator: UncheckedAccount<'info>,
     payer: Signer<'info>,
+    /// CHECK: wallet can be any account
     #[account(mut)]
     wallet: UncheckedAccount<'info>,
     // With the following accounts we aren't using anchor macros because they are CPI'd
     // through to token-metadata which will do all the validations we need on them.
+    /// CHECK: types checked in CPI
     #[account(mut)]
     metadata: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     #[account(mut)]
     mint: UncheckedAccount<'info>,
     mint_authority: Signer<'info>,
     update_authority: Signer<'info>,
+    /// CHECK: types checked in CPI
     #[account(mut)]
     master_edition: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
@@ -950,7 +964,9 @@ pub struct MintNFT<'info> {
     rent: Sysvar<'info, Rent>,
     clock: Sysvar<'info, Clock>,
     // Leaving the name the same for IDL backward compatability
+    /// CHECK: types checked in CPI
     recent_blockhashes: UncheckedAccount<'info>,
+    /// CHECK: types checked in CPI
     #[account(address = sysvar::instructions::id())]
     instruction_sysvar_account: UncheckedAccount<'info>,
     // > Only needed if candy machine has a gatekeeper
@@ -983,6 +999,7 @@ pub struct UpdateCandyMachine<'info> {
     )]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
+    /// CHECK: wallet can be any account
     wallet: UncheckedAccount<'info>,
 }
 
