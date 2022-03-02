@@ -1,50 +1,11 @@
-name: Pull Request
-title: "[Pull Request]: "
-description: "Create a pull request for a new feature or bug fix"
-body:
-  - type: dropdown
-    id: package
-    attributes:
-      label: Which package is this bug report for?
-      options:
-        - auction-house
-        - auction
-        - candy-machine
-        - core
-        - fixed-price-sale
-        - gumdrop
-        - metaplex
-        - nft-packs
-        - token-entangler
-        - token-metadata
-        - token-vault
-    validations:
-      required: true
-  - type: markdown
-    attributes:
-      value:
-        ### Note
-        It's much easier for us to read and review a PR that is small, linted, and contains only one material enhancement. If your PR is very large and encompasing many features consider breaking it up in to a few PRs so we can digest the information in each pr with more accuracy.
- - type: textarea
-    id: description
-    attributes:
-      label: Description
-      description: Describe the pull request in as much detail as possible.
-        Tip: You can attach images or log files by clicking this area to highlight it and then dragging files into it.
-      placeholder: Describe the purpose of and changes within this Pull Request.
-    validations:
-      required: true
- - type: textarea
-    id: references
-    attributes:
-      label: References
-      description: List links to any related tasks (GitHub Issues, Pull Requests, 3rd part task managers)
-    validations:
-      required: true
- - type: textarea
-    id: testing
-    attributes:
-      label: Testing
-      description: How was this tested? If manually tested, list all steps necessary for the reviewer to confirm.
-    validations:
-      required: true
+### Note
+It's much easier for us to read and review a PR that is small, linted, and contains only one material enhancement. If your PR is very large and encompasing many features consider breaking it up in to a few PRs so we can digest the information in each pr with more accuracy.
+
+### Description
+Describe the purpose of and changes within this Pull Request.
+
+### References
+List links to any related tasks (GitHub Issues, Pull Requests, 3rd part task managers)
+
+### Testing
+How was this tested? If manually tested, list all steps necessary for the reviewer to confirm.
