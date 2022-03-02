@@ -6,7 +6,7 @@ use crate::{
     ErrorCode,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
-use solana_program::sysvar::instructions::get_instruction_relative;
+use solana_program::{sysvar::instructions::get_instruction_relative, sysvar};
 
 pub const BID_RECEIPT_SIZE: usize = 8 + //key
 32 + // trade_state
@@ -103,6 +103,7 @@ pub struct PrintListingReceipt<'info> {
     bookkeeper: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+    #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
 
@@ -182,6 +183,7 @@ pub struct CancelListingReceipt<'info> {
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
+    #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
 
@@ -235,6 +237,7 @@ pub struct PrintBidReceipt<'info> {
     bookkeeper: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+    #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
 
@@ -318,6 +321,7 @@ pub struct CancelBidReceipt<'info> {
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
+    #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
 
@@ -375,6 +379,7 @@ pub struct PrintPurchaseReceipt<'info> {
     bookkeeper: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+    #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
 
