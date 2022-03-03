@@ -25,7 +25,7 @@
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
-    "/dist"
+    "/dist/src"
   ],
   "publishConfig": {
     "access": "public",
