@@ -14,9 +14,9 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-pub fn process_deprecated_create_metadata_accounts<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
+pub fn process_deprecated_create_metadata_accounts(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
     data: Data,
     allow_direct_creator_writes: bool,
     is_mutable: bool,

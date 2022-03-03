@@ -16,9 +16,9 @@ use crate::{
     },
     utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
 };
-pub fn process_set_store_index<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
+pub fn process_set_store_index(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
     args: SetStoreIndexArgs,
 ) -> ProgramResult {
     let SetStoreIndexArgs { offset, page } = args;

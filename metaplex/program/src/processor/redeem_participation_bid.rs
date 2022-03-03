@@ -22,20 +22,20 @@ use {
     spl_token::state::Account,
 };
 
-struct LegacyAccounts<'a> {
-    pub participation_printing_holding_account_info: &'a AccountInfo<'a>,
+struct LegacyAccounts<'a, 'b> {
+    pub participation_printing_holding_account_info: &'a AccountInfo<'b>,
 }
 
-struct V2Accounts<'a> {
-    pub prize_tracking_ticket_info: &'a AccountInfo<'a>,
-    pub new_metadata_account_info: &'a AccountInfo<'a>,
-    pub new_edition_account_info: &'a AccountInfo<'a>,
-    pub master_edition_account_info: &'a AccountInfo<'a>,
-    pub mint_info: &'a AccountInfo<'a>,
-    pub edition_marker_info: &'a AccountInfo<'a>,
-    pub mint_authority_info: &'a AccountInfo<'a>,
-    pub metadata_account_info: &'a AccountInfo<'a>,
-    pub auction_extended_info: &'a AccountInfo<'a>,
+struct V2Accounts<'a, 'b> {
+    pub prize_tracking_ticket_info: &'a AccountInfo<'b>,
+    pub new_metadata_account_info: &'a AccountInfo<'b>,
+    pub new_edition_account_info: &'a AccountInfo<'b>,
+    pub master_edition_account_info: &'a AccountInfo<'b>,
+    pub mint_info: &'a AccountInfo<'b>,
+    pub edition_marker_info: &'a AccountInfo<'b>,
+    pub mint_authority_info: &'a AccountInfo<'b>,
+    pub metadata_account_info: &'a AccountInfo<'b>,
+    pub auction_extended_info: &'a AccountInfo<'b>,
 }
 
 fn legacy_validation(
@@ -62,21 +62,21 @@ fn legacy_validation(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn v2_validation<'a>(
-    program_id: &'a Pubkey,
-    auction_manager_info: &AccountInfo<'a>,
-    store_info: &AccountInfo<'a>,
-    vault_info: &AccountInfo<'a>,
-    payer_info: &AccountInfo<'a>,
-    token_program_info: &AccountInfo<'a>,
-    system_info: &AccountInfo<'a>,
-    rent_info: &AccountInfo<'a>,
-    bidder_info: &AccountInfo<'a>,
-    master_edition_account_info: &AccountInfo<'a>,
-    destination_info: &AccountInfo<'a>,
-    auction_info: &AccountInfo<'a>,
+fn v2_validation<'a, 'b>(
+    program_id: &Pubkey,
+    auction_manager_info: &AccountInfo<'b>,
+    store_info: &AccountInfo<'b>,
+    vault_info: &AccountInfo<'b>,
+    payer_info: &AccountInfo<'b>,
+    token_program_info: &AccountInfo<'b>,
+    system_info: &AccountInfo<'b>,
+    rent_info: &AccountInfo<'b>,
+    bidder_info: &AccountInfo<'b>,
+    master_edition_account_info: &AccountInfo<'b>,
+    destination_info: &AccountInfo<'b>,
+    auction_info: &AccountInfo<'b>,
     config: &ParticipationConfigV2,
-    accounts: &V2Accounts<'a>,
+    accounts: &V2Accounts<'a, 'b>,
 ) -> ProgramResult {
     let extended = AuctionDataExtended::from_account_info(accounts.auction_extended_info)?;
     let store = Store::from_account_info(store_info)?;
@@ -129,22 +129,22 @@ fn v2_validation<'a>(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn v2_transfer<'a>(
-    auction_manager_info: &AccountInfo<'a>,
-    auction_info: &AccountInfo<'a>,
-    vault_info: &AccountInfo<'a>,
-    bidder_info: &AccountInfo<'a>,
-    token_vault_program_info: &AccountInfo<'a>,
-    token_metadata_program_info: &AccountInfo<'a>,
-    token_program_info: &AccountInfo<'a>,
-    payer_info: &AccountInfo<'a>,
-    safety_deposit_info: &AccountInfo<'a>,
-    safety_deposit_token_store_info: &AccountInfo<'a>,
-    system_info: &AccountInfo<'a>,
-    rent_info: &AccountInfo<'a>,
+fn v2_transfer<'a, 'b>(
+    auction_manager_info: &AccountInfo<'b>,
+    auction_info: &AccountInfo<'b>,
+    vault_info: &AccountInfo<'b>,
+    bidder_info: &AccountInfo<'b>,
+    token_vault_program_info: &AccountInfo<'b>,
+    token_metadata_program_info: &AccountInfo<'b>,
+    token_program_info: &AccountInfo<'b>,
+    payer_info: &AccountInfo<'b>,
+    safety_deposit_info: &AccountInfo<'b>,
+    safety_deposit_token_store_info: &AccountInfo<'b>,
+    system_info: &AccountInfo<'b>,
+    rent_info: &AccountInfo<'b>,
     auction_manager_bump: u8,
     me_supply: u64,
-    accounts: &V2Accounts<'a>,
+    accounts: &V2Accounts<'a, 'b>,
 ) -> ProgramResult {
     let actual_edition = me_supply
         .checked_add(1)
@@ -232,9 +232,9 @@ fn charge_for_participation<'a>(
 
 #[allow(clippy::unnecessary_cast)]
 #[allow(clippy::absurd_extreme_comparisons)]
-pub fn process_redeem_participation_bid<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
+pub fn process_redeem_participation_bid(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
     legacy: bool,
     user_provided_win_index: Option<u64>,
 ) -> ProgramResult {

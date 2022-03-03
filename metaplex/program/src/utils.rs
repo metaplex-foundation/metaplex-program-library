@@ -386,24 +386,24 @@ pub struct CommonRedeemReturn {
     pub token_metadata_program: Pubkey,
 }
 
-pub struct CommonRedeemCheckArgs<'a> {
+pub struct CommonRedeemCheckArgs<'a, 'b, 'c> {
     pub program_id: &'a Pubkey,
-    pub auction_manager_info: &'a AccountInfo<'a>,
-    pub safety_deposit_token_store_info: &'a AccountInfo<'a>,
-    pub destination_info: &'a AccountInfo<'a>,
-    pub bid_redemption_info: &'a AccountInfo<'a>,
-    pub safety_deposit_info: &'a AccountInfo<'a>,
-    pub vault_info: &'a AccountInfo<'a>,
-    pub auction_info: &'a AccountInfo<'a>,
-    pub auction_extended_info: Option<&'a AccountInfo<'a>>,
-    pub bidder_metadata_info: &'a AccountInfo<'a>,
-    pub bidder_info: &'a AccountInfo<'a>,
-    pub token_program_info: &'a AccountInfo<'a>,
-    pub token_vault_program_info: &'a AccountInfo<'a>,
-    pub token_metadata_program_info: &'a AccountInfo<'a>,
-    pub store_info: &'a AccountInfo<'a>,
-    pub rent_info: &'a AccountInfo<'a>,
-    pub safety_deposit_config_info: Option<&'a AccountInfo<'a>>,
+    pub auction_manager_info: &'b AccountInfo<'c>,
+    pub safety_deposit_token_store_info: &'b AccountInfo<'c>,
+    pub destination_info: &'b AccountInfo<'c>,
+    pub bid_redemption_info: &'b AccountInfo<'c>,
+    pub safety_deposit_info: &'b AccountInfo<'c>,
+    pub vault_info: &'b AccountInfo<'c>,
+    pub auction_info: &'b AccountInfo<'c>,
+    pub auction_extended_info: Option<&'b AccountInfo<'c>>,
+    pub bidder_metadata_info: &'b AccountInfo<'c>,
+    pub bidder_info: &'b AccountInfo<'c>,
+    pub token_program_info: &'b AccountInfo<'c>,
+    pub token_vault_program_info: &'b AccountInfo<'c>,
+    pub token_metadata_program_info: &'b AccountInfo<'c>,
+    pub store_info: &'b AccountInfo<'c>,
+    pub rent_info: &'b AccountInfo<'c>,
+    pub safety_deposit_config_info: Option<&'b AccountInfo<'c>>,
     pub is_participation: bool,
     // If this is being called by the auctioneer to pull prizes out they overwrite the win index
     // they would normally get if they themselves bid for whatever win index they choose.
@@ -680,17 +680,17 @@ pub fn common_redeem_checks(
     })
 }
 
-pub struct CommonRedeemFinishArgs<'a> {
+pub struct CommonRedeemFinishArgs<'a, 'b, 'c> {
     pub program_id: &'a Pubkey,
     pub auction_manager: Box<dyn AuctionManager>,
-    pub auction_manager_info: &'a AccountInfo<'a>,
-    pub bidder_metadata_info: &'a AccountInfo<'a>,
-    pub rent_info: &'a AccountInfo<'a>,
-    pub system_info: &'a AccountInfo<'a>,
-    pub payer_info: &'a AccountInfo<'a>,
-    pub bid_redemption_info: &'a AccountInfo<'a>,
-    pub vault_info: &'a AccountInfo<'a>,
-    pub safety_deposit_config_info: Option<&'a AccountInfo<'a>>,
+    pub auction_manager_info: &'b AccountInfo<'c>,
+    pub bidder_metadata_info: &'b AccountInfo<'c>,
+    pub rent_info: &'b AccountInfo<'c>,
+    pub system_info: &'b AccountInfo<'c>,
+    pub payer_info: &'b AccountInfo<'c>,
+    pub bid_redemption_info: &'b AccountInfo<'c>,
+    pub vault_info: &'b AccountInfo<'c>,
+    pub safety_deposit_config_info: Option<&'b AccountInfo<'c>>,
     pub winning_index: Option<usize>,
     pub redemption_bump_seed: u8,
     pub bid_redeemed: bool,

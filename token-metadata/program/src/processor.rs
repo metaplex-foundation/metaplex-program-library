@@ -50,9 +50,9 @@ use spl_token::{
 use spl_token::instruction::close_account;
 use crate::assertions::uses::{assert_use_authority_derivation, assert_valid_bump};
 
-pub fn process_instruction<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
+pub fn process_instruction(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
     input: &[u8],
 ) -> ProgramResult {
     let instruction = MetadataInstruction::try_from_slice(input)?;
@@ -210,9 +210,9 @@ pub fn process_instruction<'a>(
     }
 }
 
-pub fn process_create_metadata_accounts_v2<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
+pub fn process_create_metadata_accounts_v2(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
     data: DataV2,
     allow_direct_creator_writes: bool,
     is_mutable: bool,
@@ -501,9 +501,9 @@ pub fn process_create_master_edition(
     Ok(())
 }
 
-pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
+pub fn process_mint_new_edition_from_master_edition_via_token(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
     edition: u64,
     ignore_owner_signer: bool,
 ) -> ProgramResult {
@@ -589,9 +589,9 @@ pub fn process_convert_master_edition_v1_to_v2(
     Ok(())
 }
 
-pub fn process_mint_new_edition_from_master_edition_via_vault_proxy<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
+pub fn process_mint_new_edition_from_master_edition_via_vault_proxy(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
     edition: u64,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();

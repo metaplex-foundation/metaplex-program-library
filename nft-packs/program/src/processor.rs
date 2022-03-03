@@ -39,9 +39,9 @@ pub mod request_card_to_redeem;
 pub struct Processor {}
 impl Processor {
     /// Processes an instruction
-    pub fn process_instruction<'a>(
+    pub fn process_instruction(
         program_id: &Pubkey,
-        accounts: &'a [AccountInfo<'a>],
+        accounts: &[AccountInfo],
         input: &[u8],
     ) -> ProgramResult {
         let instruction = NFTPacksInstruction::try_from_slice(input)?;
