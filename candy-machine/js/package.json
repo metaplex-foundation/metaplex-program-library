@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-candy-machine",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "MPL Candy Machine JavaScript API. This MPL package is for the current generation of candy machine which is 2.0.0",
   "main": "dist/src/mpl-candy-machine.js",
   "types": "dist/src/mpl-candy-machine.d.ts",
