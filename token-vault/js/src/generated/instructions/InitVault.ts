@@ -72,14 +72,8 @@ export function createInitVaultInstruction(
   accounts: InitVaultInstructionAccounts,
   args: InitVaultInstructionArgs,
 ) {
-  const {
-    fractionMint,
-    redeemTreasury,
-    fractionTreasury,
-    vault,
-    authority,
-    pricingLookupAddress,
-  } = accounts;
+  const { fractionMint, redeemTreasury, fractionTreasury, vault, authority, pricingLookupAddress } =
+    accounts;
 
   const [data] = InitVaultStruct.serialize({
     instructionDiscriminator: initVaultInstructionDiscriminator,

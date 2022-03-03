@@ -111,8 +111,8 @@ export class SafetyDepositSetup {
     },
   ) {
     const { payer, vault, associateTokenAccount = true } = args;
-    let instructions: TransactionInstruction[] = [];
-    let signers: Signer[] = [];
+    const instructions: TransactionInstruction[] = [];
+    const signers: Signer[] = [];
 
     // -----------------
     // Token Mint

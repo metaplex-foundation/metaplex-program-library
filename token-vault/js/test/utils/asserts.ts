@@ -6,11 +6,14 @@ import spok, { Specification, Specifications } from 'spok';
 import { TokenBalances } from '@metaplex-foundation/amman';
 import { addressLabels } from './address-labels';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 type Assert = {
   equal(actual: any, expected: any, msg?: string): void;
   deepEqual(actual: any, expected: any, msg?: string): void;
   ok(value: any, msg?: string): void;
 };
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 export function assertSamePubkey(t: Assert, a: PublicKey | COption<PublicKey>, b: PublicKey) {
   t.equal(a?.toBase58(), b.toBase58(), 'pubkeys are same');
 }
