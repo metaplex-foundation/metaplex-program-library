@@ -578,6 +578,72 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * IncorrectCollectionAuthority: 'Incorrect collection NFT authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectCollectionAuthorityError extends Error {
+  readonly code: number = 0x178b;
+  readonly name: string = 'IncorrectCollectionAuthority';
+  constructor() {
+    super('Incorrect collection NFT authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectCollectionAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178b, () => new IncorrectCollectionAuthorityError());
+createErrorFromNameLookup.set(
+  'IncorrectCollectionAuthority',
+  () => new IncorrectCollectionAuthorityError(),
+);
+
+/**
+ * MismatchedCollectionPDA: 'Collection PDA address is invalid'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MismatchedCollectionPDAError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'MismatchedCollectionPDA';
+  constructor() {
+    super('Collection PDA address is invalid');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MismatchedCollectionPDAError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new MismatchedCollectionPDAError());
+createErrorFromNameLookup.set('MismatchedCollectionPDA', () => new MismatchedCollectionPDAError());
+
+/**
+ * MismatchedCollectionMint: 'Provided mint account doesn't match collection PDA mint'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MismatchedCollectionMintError extends Error {
+  readonly code: number = 0x178d;
+  readonly name: string = 'MismatchedCollectionMint';
+  constructor() {
+    super("Provided mint account doesn't match collection PDA mint");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MismatchedCollectionMintError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178d, () => new MismatchedCollectionMintError());
+createErrorFromNameLookup.set(
+  'MismatchedCollectionMint',
+  () => new MismatchedCollectionMintError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
