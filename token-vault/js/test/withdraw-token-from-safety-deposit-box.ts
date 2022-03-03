@@ -24,12 +24,15 @@ import {
   addTokenToInactiveVault,
   combineVault,
   CombineVaultSetup,
+  SafetyDepositBoxVaultMismatchError,
   SafetyDepositSetup,
   setupWithdrawFromSafetyDestinationAccount,
+  StoreLessThanAmountError,
   withdrawTokenFromSafetyDepositBox,
   WithdrawTokenFromSafetyDepositBoxAccounts,
 } from '../src/mpl-token-vault';
 import spok from 'spok';
+import { cusper } from '../src/errors';
 
 killStuckProcess();
 
@@ -351,6 +354,11 @@ test('combined vault: with one safety deposit, withdraw more tokens than it cont
     await transactionHandler.sendAndConfirmTransaction(tx, signers);
   } catch (err) {
     assertError(t, err, [/Withdraw Token from Safety Deposit Box/i, /Store has less than amount/i]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(
+      cusperError instanceof StoreLessThanAmountError,
+      'cusper identifies as StoreLessThanAmountError',
+    );
   }
 
   await assertCombinedVault(t, connection, initVaultAccounts, {
@@ -457,6 +465,12 @@ test('combined vault: with no safety deposit passing one from different vault, w
       /Withdraw Token from Safety Deposit Box/i,
       /safety deposit.+does not belong to this vault/i,
     ]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(
+      cusperError instanceof SafetyDepositBoxVaultMismatchError,
+      'is SafetyDepositBoxVaultMismatch error',
+    );
+    console.log(cusperError);
   }
 
   await assertCombinedVault(t, connection, initVaultAccounts, {

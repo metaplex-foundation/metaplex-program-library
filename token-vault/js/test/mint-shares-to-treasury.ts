@@ -20,10 +20,15 @@ import {
   TokenBalances,
 } from '@metaplex-foundation/amman';
 import { mintSharesToTreasury } from '../src/instructions/mint-shares-to-treasury';
-import { MintFractionalSharesInstructionAccounts } from '../src/mpl-token-vault';
+import {
+  MintFractionalSharesInstructionAccounts,
+  VaultDoesNotAllowNewShareMintingError,
+  VaultShouldBeActiveError,
+} from '../src/mpl-token-vault';
 import spok, { Specifications } from 'spok';
 import { bignum } from '@metaplex-foundation/beet';
 import BN from 'bn.js';
+import { cusper } from '../src/errors';
 
 killStuckProcess();
 
@@ -143,6 +148,11 @@ test('mint shares: active vault which does not all further share creation, fails
       /Mint new fractional shares/i,
       /vault does not allow the minting of new shares/i,
     ]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(
+      cusperError instanceof VaultDoesNotAllowNewShareMintingError,
+      'is VaultDoesNotAllowNewShareMintingError',
+    );
   }
 });
 
@@ -183,5 +193,7 @@ test('mint shares: inactive vault, fails', async (t) => {
     await transactionHandler.sendAndConfirmTransaction(tx, signers);
   } catch (err) {
     assertError(t, err, [/Mint new fractional shares/i, /vault should be active/i]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(cusperError instanceof VaultShouldBeActiveError, 'is VaultShouldBeActiveError');
   }
 });

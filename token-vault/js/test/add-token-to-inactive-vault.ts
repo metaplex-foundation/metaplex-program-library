@@ -20,8 +20,10 @@ import {
   Key,
   SafetyDepositBox,
   SafetyDepositSetup,
+  VaultShouldBeInactiveError,
 } from '../src/mpl-token-vault';
 import spok from 'spok';
+import { cusper } from '../src/errors';
 
 killStuckProcess();
 
@@ -227,6 +229,8 @@ test('active vault: trying to add tokens fails', async (t) => {
     await transactionHandler.sendAndConfirmTransaction(tx, signers);
   } catch (err) {
     assertError(t, err, [/Add token to vault/i, /vault should be inactive/i]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(cusperError instanceof VaultShouldBeInactiveError, 'is VaultShouldBeInactiveError');
   }
 });
 

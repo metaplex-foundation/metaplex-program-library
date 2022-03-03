@@ -15,7 +15,11 @@ import {
 import { Signer, Transaction } from '@solana/web3.js';
 import { assertConfirmedTransaction, assertError, TokenBalances } from '@metaplex-foundation/amman';
 import { mintSharesToTreasury } from '../src/instructions/mint-shares-to-treasury';
-import { MintFractionalSharesInstructionAccounts } from '../src/mpl-token-vault';
+import {
+  MintFractionalSharesInstructionAccounts,
+  NotEnoughSharesError,
+  VaultShouldBeActiveError,
+} from '../src/mpl-token-vault';
 import spok, { Specifications } from 'spok';
 import { bignum } from '@metaplex-foundation/beet';
 import BN from 'bn.js';
@@ -24,6 +28,7 @@ import {
   withdrawSharesFromTreasury,
   WithdrawSharesFromTreasuryAccounts,
 } from '../src/instructions/withdraw-shares-from-treasury';
+import { cusper } from '../src/errors';
 
 killStuckProcess();
 
@@ -209,6 +214,8 @@ test('withdraw shares: inactive vault, fails', async (t) => {
     await transactionHandler.sendAndConfirmTransaction(tx, signers);
   } catch (err) {
     assertError(t, err, [/Withdraw fractional shares/i, /vault should be active/i]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(cusperError instanceof VaultShouldBeActiveError, 'is VaultShouldBeActiveError');
   }
 });
 
@@ -281,5 +288,7 @@ test('withdraw shares: active vault which minted 99 shares, withdraw 100', async
     await transactionHandler.sendAndConfirmTransaction(tx, signers);
   } catch (err) {
     assertError(t, err, [/Withdraw fractional shares/i, /not enough shares/i]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(cusperError instanceof NotEnoughSharesError, 'is NotEnoughSharesError');
   }
 });

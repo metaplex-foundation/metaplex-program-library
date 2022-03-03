@@ -20,8 +20,10 @@ import {
   activateVault,
   ActivateVaultAccounts,
   addTokenToInactiveVault,
+  InvalidAuthorityError,
   SafetyDepositSetup,
 } from '../src/mpl-token-vault';
+import { cusper } from '../src/errors';
 
 killStuckProcess();
 
@@ -136,6 +138,8 @@ test('activate vault: inactive vault with no tokens added activate providing inv
     await transactionHandler.sendAndConfirmTransaction(tx, signers);
   } catch (err) {
     assertError(t, err, [/Activate Vault/i, /Invalid program authority/i]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(cusperError instanceof InvalidAuthorityError, 'is InvalidAuthorityError');
   }
 
   await assertInactiveVault(t, connection, initVaultAccounts);

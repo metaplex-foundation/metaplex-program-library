@@ -8,6 +8,8 @@ import {
 } from '@metaplex-foundation/amman';
 import { Transaction } from '@solana/web3.js';
 import { initVault } from '../src/instructions/init-vault';
+import { AlreadyInitializedError } from '../src/generated';
+import { cusper } from '../src/errors';
 
 killStuckProcess();
 
@@ -67,6 +69,8 @@ test('init-vault: init vault twice for same account', async (t) => {
       await transactionHandler.sendAndConfirmTransaction(initVaulTx, []);
     } catch (err) {
       assertError(t, err, [/Init Vault/i, /Already initialized/i]);
+      const cusperError = cusper.errorFromProgramLogs(err.logs);
+      t.ok(cusperError instanceof AlreadyInitializedError, 'is AlreadyInitializedError');
     }
   }
 });

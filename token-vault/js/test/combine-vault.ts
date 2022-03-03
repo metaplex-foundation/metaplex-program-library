@@ -16,6 +16,7 @@ import {
   CombineVaultSetup,
   MintFractionalSharesInstructionAccounts,
   mintSharesToTreasury,
+  VaultShouldBeActiveError,
 } from '../src/mpl-token-vault';
 import {
   assertConfirmedTransaction,
@@ -23,6 +24,7 @@ import {
   assertTransactionSummary,
   TokenBalances,
 } from '@metaplex-foundation/amman';
+import { cusper } from '../src/errors';
 
 killStuckProcess();
 
@@ -244,6 +246,8 @@ test('combine-vault: attempt to combine inactive vault, fails', async (t) => {
     ]);
   } catch (err) {
     assertError(t, err, [/Combine Vault/i, /Vault should be active/i]);
+    const cusperError = cusper.errorFromProgramLogs(err.logs);
+    t.ok(cusperError instanceof VaultShouldBeActiveError, 'is VaultShouldBeActiveError');
   }
   await assertInactiveVault(t, connection, initVaultAccounts);
 });
@@ -321,6 +325,8 @@ test('combine-vault: attempt to combine vault twice, fails', async (t) => {
       ]);
     } catch (err) {
       assertError(t, err, [/Combine Vault/i, /Vault should be active/i]);
+      const cusperError = cusper.errorFromProgramLogs(err.logs);
+      t.ok(cusperError instanceof VaultShouldBeActiveError, 'is VaultShouldBeActiveError');
     }
 
     await assertCombinedVault(t, connection, initVaultAccounts);

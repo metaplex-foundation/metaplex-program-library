@@ -46,17 +46,17 @@ test('set authority: inactive vault', async (t) => {
     t.comment('+++ With unfunded new authority');
     try {
       await transactionHandler.sendAndConfirmTransaction(tx, [vaultAuthorityPair]);
-    } catch (err: any) {
+    } catch (err) {
       assertError(t, err, [
         /Set Authority/i,
         /Invalid program authority/i,
         // TODO(thlorenz): this message in the program should be improved as it doesn't indicate funding issue
         /disallowing new authority .+ does not exist/i,
       ]);
-      await assertInactiveVault(t, connection, initVaultAccounts, {
-        allowFurtherShareCreation: true,
-      });
     }
+    await assertInactiveVault(t, connection, initVaultAccounts, {
+      allowFurtherShareCreation: true,
+    });
   }
   {
     t.comment('+++ With funded new authority');
