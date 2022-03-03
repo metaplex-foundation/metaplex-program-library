@@ -516,6 +516,86 @@ createErrorFromCodeLookup.set(0x1787, () => new InvalidBasisPointsError());
 createErrorFromNameLookup.set('InvalidBasisPoints', () => new InvalidBasisPointsError());
 
 /**
+ * TradeStateDoesntExist: 'The trade state account does not exist'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TradeStateDoesntExistError extends Error {
+  readonly code: number = 0x1788;
+  readonly name: string = 'TradeStateDoesntExist';
+  constructor() {
+    super('The trade state account does not exist');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TradeStateDoesntExistError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1788, () => new TradeStateDoesntExistError());
+createErrorFromNameLookup.set('TradeStateDoesntExist', () => new TradeStateDoesntExistError());
+
+/**
+ * TradeStateIsNotEmpty: 'The trade state is not empty'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TradeStateIsNotEmptyError extends Error {
+  readonly code: number = 0x1789;
+  readonly name: string = 'TradeStateIsNotEmpty';
+  constructor() {
+    super('The trade state is not empty');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TradeStateIsNotEmptyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new TradeStateIsNotEmptyError());
+createErrorFromNameLookup.set('TradeStateIsNotEmpty', () => new TradeStateIsNotEmptyError());
+
+/**
+ * ReceiptIsEmpty: 'The receipt is empty'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ReceiptIsEmptyError extends Error {
+  readonly code: number = 0x178a;
+  readonly name: string = 'ReceiptIsEmpty';
+  constructor() {
+    super('The receipt is empty');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ReceiptIsEmptyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178a, () => new ReceiptIsEmptyError());
+createErrorFromNameLookup.set('ReceiptIsEmpty', () => new ReceiptIsEmptyError());
+
+/**
+ * InstructionMismatch: 'The instruction does not match'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InstructionMismatchError extends Error {
+  readonly code: number = 0x178b;
+  readonly name: string = 'InstructionMismatch';
+  constructor() {
+    super('The instruction does not match');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InstructionMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178b, () => new InstructionMismatchError());
+createErrorFromNameLookup.set('InstructionMismatch', () => new InstructionMismatchError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
