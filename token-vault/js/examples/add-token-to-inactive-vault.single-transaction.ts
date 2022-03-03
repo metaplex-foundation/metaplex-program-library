@@ -53,10 +53,8 @@ export async function addTokenToVault(
   vaultAuthorityPair: Keypair,
   vault: PublicKey,
   addressLabels: AddressLabels,
+  tokenAmount = 2,
 ) {
-  // We want to mint two tokens and transfer them to the store which will be managed by the vault
-  const TOKEN_AMOUNT = 2;
-
   // -----------------
   // 1. We setup the safety deposit box which will create a token account for us and
   //    mint two tokens to it.
@@ -64,7 +62,7 @@ export async function addTokenToVault(
   const safetyDepositSetup = await SafetyDepositSetup.create(connection, {
     payer: payerPair.publicKey,
     vault,
-    mintAmount: TOKEN_AMOUNT,
+    mintAmount: tokenAmount,
   });
   addressLabels.addLabels(safetyDepositSetup);
 
@@ -107,6 +105,8 @@ export async function addTokenToVault(
   assert(vaultAccountInfo != null);
   const [vaultAccount] = Vault.fromAccountInfo(vaultAccountInfo);
   console.log({ vaultWithAddedToken: vaultAccount.pretty() });
+
+  return safetyDepositSetup;
 }
 
 if (module === require.main) {

@@ -470,7 +470,6 @@ test('combined vault: with no safety deposit passing one from different vault, w
       cusperError instanceof SafetyDepositBoxVaultMismatchError,
       'is SafetyDepositBoxVaultMismatch error',
     );
-    console.log(cusperError);
   }
 
   await assertCombinedVault(t, connection, initVaultAccounts, {

@@ -27,7 +27,7 @@ import {
 } from '../src/mpl-token-vault';
 
 // Using wrapped SOL mint here, you may choose to use another
-const priceMint = QUOTE_MINT;
+export const priceMint = QUOTE_MINT;
 
 // Could be devnet/mainnet, depending on your use case
 const host = LOCALHOST;
@@ -73,6 +73,7 @@ export async function initVault(
   await vaultSetup.createFractionTreasury(payer.publicKey);
   await vaultSetup.createRedeemnTreasury(payer.publicKey);
   await vaultSetup.createVault(payer.publicKey);
+  vaultSetup.assertComplete();
 
   const createAndSetupAccountsTx = new Transaction()
     .add(...createExternalAccountIxs)
@@ -103,13 +104,13 @@ export async function initVault(
 
   addressLabels.addLabels(initVaultAccounts);
 
-  return initVaultAccounts;
+  return { ...initVaultAccounts, externalPriceAccount };
 }
 
 if (module === require.main) {
   main()
     .then(() => process.exit(0))
-    .catch((err: any) => {
+    .catch((err) => {
       console.error(err);
       process.exit(1);
     });
