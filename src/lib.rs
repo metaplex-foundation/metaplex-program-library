@@ -9,6 +9,7 @@ pub mod errors;
 pub mod mint;
 pub mod parse;
 pub mod setup;
+pub mod update;
 pub mod upload;
 pub mod upload_assets;
 pub mod validate;

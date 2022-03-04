@@ -33,6 +33,28 @@ pub enum Commands {
         number: Option<u64>,
     },
 
+    Update {
+        /// Path to the config file, defaults to "config.json"
+        #[clap(short, long, default_value = "config.json")]
+        config: String,
+
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = "cache.json")]
+        cache: String,
+
+        /// Pubkey for the new authority
+        #[clap(short, long)]
+        new_authority: Option<String>,
+    },
+
     /// Upload assets to storage and then insert items into candy machine config
     Upload {
         /// Assets directory to upload, defaults to "assets"

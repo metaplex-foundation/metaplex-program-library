@@ -15,6 +15,7 @@ use sugar::candy_machine::{get_candy_machine_state, print_candy_machine_state};
 use sugar::cli::{Cli, Commands};
 use sugar::mint::{process_mint, MintArgs};
 use sugar::setup::sugar_setup;
+use sugar::update::{process_update, UpdateArgs};
 use sugar::upload::{process_upload, UploadArgs};
 use sugar::upload_assets::{process_upload_assets, UploadAssetsArgs};
 use sugar::validate::{process_validate, ValidateArgs};
@@ -87,6 +88,19 @@ async fn main() -> Result<()> {
             rpc_url,
             cache,
             number,
+        })?,
+        Commands::Update {
+            config,
+            keypair,
+            rpc_url,
+            cache,
+            new_authority,
+        } => process_update(UpdateArgs {
+            config,
+            keypair,
+            rpc_url,
+            cache,
+            new_authority,
         })?,
         Commands::Upload {
             assets_dir,
