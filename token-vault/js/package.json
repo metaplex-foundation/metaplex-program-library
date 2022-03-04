@@ -53,10 +53,12 @@
     "@metaplex-foundation/mpl-core": "^0.0.2",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.35.1",
+    "debug": "^4.3.3",
     "utility-types": "^3.10.0"
   },
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.1.0",
+    "@types/debug": "^4.1.7",
     "bn.js": "^5.2.0",
     "eslint": "^8.3.0",
     "rimraf": "^3.0.2",

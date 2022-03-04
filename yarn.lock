@@ -1175,7 +1175,9 @@ __metadata:
     "@metaplex-foundation/mpl-core": ^0.0.2
     "@solana/spl-token": ^0.1.8
     "@solana/web3.js": ^1.35.1
+    "@types/debug": ^4.1.7
     bn.js: ^5.2.0
+    debug: ^4.3.3
     eslint: ^8.3.0
     rimraf: ^3.0.2
     spok: ^1.4.3
