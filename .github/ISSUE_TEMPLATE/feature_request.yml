@@ -34,8 +34,8 @@ body:
     attributes:
       label: Standard Change?
       options:
-        - No
-        - Yes
+        - "No"
+        - "Yes"
       description: Does this feature change the Metaplex token standard in a fundamental way?
     validations:
       required: true
