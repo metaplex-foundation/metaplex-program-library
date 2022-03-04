@@ -5,6 +5,7 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
+import { usesBeet } from '../types/Uses';
 import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 export type DataV2 = {
@@ -29,7 +30,7 @@ export const dataV2Beet = new beet.FixableBeetArgsStruct<DataV2>(
     ['sellerFeeBasisPoints', beet.u16],
     ['creators', beet.coption(beet.array(definedTypes.creatorBeet))],
     ['collection', beet.coption(definedTypes.collectionBeet)],
-    ['uses', beet.coption(definedTypes.usesBeet)],
+    ['uses', beet.coption(usesBeet)],
   ],
   'DataV2',
 );
