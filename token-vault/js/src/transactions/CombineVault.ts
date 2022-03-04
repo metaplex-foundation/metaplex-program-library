@@ -5,7 +5,7 @@ import { VaultInstructions } from '../VaultProgram';
 import { VaultProgram } from '../VaultProgram';
 
 export class CombineVaultArgs extends Borsh.Data {
-  static readonly SCHEMA = this.struct([['instruction', 'u8']]);
+  static readonly SCHEMA = CombineVaultArgs.struct([['instruction', 'u8']]);
 
   instruction = VaultInstructions.CombineVault;
 }

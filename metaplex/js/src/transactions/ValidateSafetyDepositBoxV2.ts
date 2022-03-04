@@ -1,3 +1,11 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
+import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
@@ -14,15 +22,16 @@ import { SafetyDepositConfigData } from '../mpl-metaplex';
 export class ValidateSafetyDepositBoxV2Args extends Borsh.Data<{
   safetyDepositConfig: SafetyDepositConfigData;
 }> {
-  static readonly SCHEMA = new Map([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...SafetyDepositConfigData.SCHEMA,
-    ...this.struct([
+    ...ValidateSafetyDepositBoxV2Args.struct([
       ['instruction', 'u8'],
       ['safetyDepositConfig', SafetyDepositConfigData],
     ]),
   ]);
   instruction = 18;
-  safetyDepositConfig: SafetyDepositConfigData;
+  safetyDepositConfig!: SafetyDepositConfigData;
 }
 
 type ValidateSafetyDepositBoxV2Params = {
@@ -50,6 +59,8 @@ export class ValidateSafetyDepositBoxV2 extends Transaction {
   ) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer');
+
     const {
       store,
       vault,

@@ -1,9 +1,9 @@
 pub mod bid;
 pub mod constants;
 pub mod pda;
+pub mod receipt;
 pub mod utils;
-use crate::bid::*;
-use crate::{constants::*, utils::*};
+use crate::{bid::*, constants::*, receipt::*, utils::*};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -22,8 +22,9 @@ anchor_lang::declare_id!("hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk");
 
 #[program]
 pub mod auction_house {
-    use solana_program::program_memory::sol_memset;
+
     use super::*;
+    use solana_program::program_memory::sol_memset;
     pub fn withdraw_from_fee<'info>(
         ctx: Context<'_, '_, '_, 'info, WithdrawFromFee<'info>>,
         amount: u64,
@@ -526,7 +527,7 @@ pub mod auction_house {
         if !wallet.to_account_info().is_signer && !authority.to_account_info().is_signer {
             return Err(ErrorCode::NoValidSignerPresent.into());
         }
-        msg!("kdjhkfjhd");
+
         let auction_house_key = auction_house.key();
         let seeds = [
             PREFIX.as_bytes(),
@@ -567,13 +568,10 @@ pub mod auction_house {
             .lamports()
             .checked_add(curr_lamp)
             .ok_or(ErrorCode::NumericalOverflow)?;
-        sol_memset(
-            *trade_state.try_borrow_mut_data()?,
-            0,
-            TRADE_STATE_SIZE,
-        );
+        sol_memset(*trade_state.try_borrow_mut_data()?, 0, TRADE_STATE_SIZE);
         Ok(())
     }
+
     #[inline(never)]
     pub fn execute_sale<'info>(
         ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
@@ -851,11 +849,7 @@ pub mod auction_house {
 
         let curr_seller_lamp = seller_trade_state.lamports();
         **seller_trade_state.lamports.borrow_mut() = 0;
-        sol_memset(
-            &mut *seller_ts_data,
-            0,
-            TRADE_STATE_SIZE,
-        );
+        sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
 
         **fee_payer.lamports.borrow_mut() = fee_payer
             .lamports()
@@ -864,11 +858,7 @@ pub mod auction_house {
 
         let curr_buyer_lamp = buyer_trade_state.lamports();
         **buyer_trade_state.lamports.borrow_mut() = 0;
-        sol_memset(
-            &mut *buyer_ts_data,
-            0,
-            TRADE_STATE_SIZE,
-        );
+        sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
         **fee_payer.lamports.borrow_mut() = fee_payer
             .lamports()
             .checked_add(curr_buyer_lamp)
@@ -1038,6 +1028,39 @@ pub mod auction_house {
             buyer_price,
             token_size,
         )
+    }
+
+    pub fn print_listing_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
+        receipt_bump: u8,
+    ) -> ProgramResult {
+        receipt::print_listing_receipt(ctx, receipt_bump)
+    }
+
+    pub fn cancel_listing_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, CancelListingReceipt<'info>>,
+    ) -> ProgramResult {
+        receipt::cancel_listing_receipt(ctx)
+    }
+
+    pub fn print_bid_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrintBidReceipt<'info>>,
+        receipt_bump: u8,
+    ) -> ProgramResult {
+        receipt::print_bid_receipt(ctx, receipt_bump)
+    }
+
+    pub fn cancel_bid_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, CancelBidReceipt<'info>>,
+    ) -> ProgramResult {
+        receipt::cancel_bid_receipt(ctx)
+    }
+
+    pub fn print_purchase_receipt<'info>(
+        ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
+        purchase_receipt_bump: u8,
+    ) -> ProgramResult {
+        receipt::print_purchase_receipt(ctx, purchase_receipt_bump)
     }
 }
 
@@ -1231,7 +1254,7 @@ pub struct WithdrawFromFee<'info> {
     system_program: Program<'info, System>,
 }
 
-pub const AUCTION_HOUSE_SIZE: usize = 8 + //key
+pub const AUCTION_HOUSE_SIZE: usize = 8 + // key
 32 + //fee payer
 32 + //treasury
 32 + //treasury_withdrawal_destination
@@ -1316,4 +1339,12 @@ pub enum ErrorCode {
     NoValidSignerPresent,
     #[msg("BP must be less than or equal to 10000")]
     InvalidBasisPoints,
+    #[msg("The trade state account does not exist")]
+    TradeStateDoesntExist,
+    #[msg("The trade state is not empty")]
+    TradeStateIsNotEmpty,
+    #[msg("The receipt is empty")]
+    ReceiptIsEmpty,
+    #[msg("The instruction does not match")]
+    InstructionMismatch,
 }

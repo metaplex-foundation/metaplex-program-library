@@ -38,3 +38,4 @@ jobs:
           build_auction: true
           build_token_vault: true
           build_token_metadata: true
+          skip_test: true

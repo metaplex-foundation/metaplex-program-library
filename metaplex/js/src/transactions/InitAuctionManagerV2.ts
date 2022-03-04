@@ -1,3 +1,10 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
 import { Borsh, TupleNumericType, Transaction } from '@metaplex-foundation/mpl-core';
 import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
 import {
@@ -9,13 +16,15 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { MetaplexProgram } from '../MetaplexProgram';
+import { strict as assert } from 'assert';
 
 export class InitAuctionManagerV2Args extends Borsh.Data<{
   amountType: TupleNumericType;
   lengthType: TupleNumericType;
   maxRanges: BN;
 }> {
-  static readonly SCHEMA = this.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = InitAuctionManagerV2Args.struct([
     ['instruction', 'u8'],
     ['amountType', 'u8'],
     ['lengthType', 'u8'],
@@ -44,6 +53,7 @@ export class InitAuctionManagerV2 extends Transaction {
   constructor(options: TransactionCtorFields, params: ParamsWithStore<InitAuctionManagerV2Params>) {
     super(options);
     const { feePayer } = options;
+    assert(feePayer != null, 'need to provide feePayer account');
     const {
       store,
       vault,
