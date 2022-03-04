@@ -22,7 +22,7 @@ export type CreateMetadataAccountInstructionArgs = {
  * @category CreateMetadataAccount
  * @category generated
  */
-const CreateMetadataAccountStruct = new beet.BeetArgsStruct<
+const CreateMetadataAccountStruct = new beet.FixableBeetArgsStruct<
   CreateMetadataAccountInstructionArgs & {
     instructionDiscriminator: number;
   }

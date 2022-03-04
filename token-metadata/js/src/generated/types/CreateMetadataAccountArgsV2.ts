@@ -16,10 +16,11 @@ export type CreateMetadataAccountArgsV2 = {
  * @category userTypes
  * @category generated
  */
-export const createMetadataAccountArgsV2Beet = new beet.BeetArgsStruct<CreateMetadataAccountArgsV2>(
-  [
-    ['data', definedTypes.dataV2Beet],
-    ['isMutable', beet.bool],
-  ],
-  'CreateMetadataAccountArgsV2',
-);
+export const createMetadataAccountArgsV2Beet =
+  new beet.FixableBeetArgsStruct<CreateMetadataAccountArgsV2>(
+    [
+      ['data', definedTypes.dataV2Beet],
+      ['isMutable', beet.bool],
+    ],
+    'CreateMetadataAccountArgsV2',
+  );
