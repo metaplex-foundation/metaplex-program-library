@@ -1,6 +1,6 @@
 import test from 'tape';
 
-import { MetadataDataData, UpdateMetadata } from '../src/mpl-token-metadata';
+import { MetadataDataData, UpdateMetadata } from '../src/deprecated';
 import {
   killStuckProcess,
   initMetadata,

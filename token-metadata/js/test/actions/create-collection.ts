@@ -1,6 +1,6 @@
 import { Connection, Keypair } from '@solana/web3.js';
 import { TransactionHandler } from '@metaplex-foundation/amman';
-import { DataV2 } from '../../src/accounts';
+import { DataV2 } from '../../src/deprecated';
 import { NAME, SELLER_FEE_BASIS_POINTS, SYMBOL, URI } from '../utils';
 import { createMasterEdition } from './create-metadata';
 

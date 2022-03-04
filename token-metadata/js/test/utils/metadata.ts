@@ -3,7 +3,7 @@ import spok from 'spok';
 
 import { strict as assert } from 'assert';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { MetadataData, MetadataDataData } from '../../src/mpl-token-metadata';
+import { MetadataData, MetadataDataData } from '../../src/deprecated';
 import { connectionURL } from './';
 import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 

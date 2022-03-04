@@ -2,10 +2,12 @@ import test from 'tape';
 
 import {
   ApproveCollectionAuthority,
+  Collection,
   DataV2,
   MetadataProgram,
   VerifyCollection,
-} from '../src/mpl-token-metadata';
+  SetAndVerifyCollectionCollection,
+} from '../src/deprecated';
 import {
   killStuckProcess,
   getMetadataData,
@@ -19,8 +21,6 @@ import {
 import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair } from '@solana/web3.js';
 import { createCollection, createMasterEdition } from './actions';
-import { Collection } from '../src/accounts';
-import { SetAndVerifyCollectionCollection } from '../src/transactions';
 
 killStuckProcess();
 // -----------------

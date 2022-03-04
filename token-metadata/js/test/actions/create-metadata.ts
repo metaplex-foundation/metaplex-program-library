@@ -14,7 +14,7 @@ import {
   MasterEdition,
   Metadata,
   MetadataDataData,
-} from '../../src/mpl-token-metadata';
+} from '../../src/deprecated';
 import BN from 'bn.js';
 import * as spl from '@solana/spl-token';
 import { CreateMint } from './create-mint-account';

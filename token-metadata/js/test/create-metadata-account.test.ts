@@ -9,7 +9,7 @@ import {
   MetadataDataData,
   MetadataKey,
   TokenStandard,
-} from '../src/mpl-token-metadata';
+} from '../src/deprecated';
 import { connectionURL, killStuckProcess } from './utils';
 import {
   airdrop,
