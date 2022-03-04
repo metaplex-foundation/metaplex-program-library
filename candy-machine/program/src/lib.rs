@@ -246,6 +246,7 @@ pub mod candy_machine {
             let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
             let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
+            remaining_accounts_counter += 1;
             let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
             if token_account.amount < price {
@@ -396,9 +397,6 @@ pub mod candy_machine {
         )?;
 
         if &ctx.remaining_accounts.len() > &(remaining_accounts_counter) {
-            if remaining_accounts_counter != 0 {
-                remaining_accounts_counter += 1;
-            }
             let collection_pda_account = &ctx.remaining_accounts[remaining_accounts_counter];
             let collection_ref = collection_pda_account.data.borrow();
             let mut collection_pda_data: &[u8] = &collection_ref;
