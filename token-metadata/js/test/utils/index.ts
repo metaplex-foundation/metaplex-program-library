@@ -1,7 +1,7 @@
 import { inspect } from 'util';
 import test from 'tape';
 
-export * from './address-labels';
+export * from './amman';
 export * from './consts';
 export * from './log';
 export * from './metadata';

@@ -17,8 +17,9 @@ import {
   connectionURL,
   SELLER_FEE_BASIS_POINTS,
   logDebug,
+  amman,
 } from './utils';
-import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair } from '@solana/web3.js';
 import { createCollection, createMasterEdition } from './actions';
 
@@ -31,7 +32,7 @@ test('verify-collection', async (t) => {
   const connection = new Connection(connectionURL, 'confirmed');
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-  await airdrop(connection, payer.publicKey, 2);
+  await amman.airdrop(connection, payer.publicKey, 2);
 
   const collectionNft = await createCollection(connection, transactionHandler, payer);
 
@@ -51,7 +52,8 @@ test('verify-collection', async (t) => {
     initMetadataData,
     0,
   );
-  console.log('collectionMemberNft', collectionMemberNft.metadata.toBase58());
+  amman.addr.addLabels(collectionMemberNft);
+
   const updatedMetadataBeforeVerification = await getMetadataData(
     connection,
     collectionMemberNft.metadata,
@@ -71,9 +73,11 @@ test('verify-collection', async (t) => {
       collectionMasterEdition: collectionNft.masterEditionPubkey,
     },
   );
-  await transactionHandler.sendAndConfirmTransaction(collectionVerifyCollectionTransaction, [
-    payer,
-  ]);
+  await transactionHandler.sendAndConfirmTransaction(
+    collectionVerifyCollectionTransaction,
+    [payer],
+    'Verify Collection',
+  );
   const updatedMetadataAfterVerification = await getMetadataData(
     connection,
     collectionMemberNft.metadata,
@@ -90,7 +94,7 @@ test('set-and-verify-collection', async (t) => {
   const connection = new Connection(connectionURL, 'confirmed');
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-  await airdrop(connection, payer.publicKey, 2);
+  await amman.airdrop(connection, payer.publicKey, 2);
 
   const collectionNft = await createCollection(connection, transactionHandler, payer);
 
@@ -133,6 +137,7 @@ test('set-and-verify-collection', async (t) => {
     collectionVerifyCollectionTransaction,
     [payer],
     { skipPreflight: true },
+    'Verify Collection',
   );
   logDebug(txDetails.txSummary.logMessages.join('\n'));
   const updatedMetadataAfterVerification = await getMetadataData(
@@ -150,7 +155,7 @@ test('Delegated Authority', (t) => {
     const connection = new Connection(connectionURL, 'confirmed');
     const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-    await airdrop(connection, payer.publicKey, 2);
+    await amman.airdrop(connection, payer.publicKey, 2);
     const collectionNft = await createCollection(connection, transactionHandler, payer);
 
     const initMetadataData = new DataV2({
@@ -178,7 +183,7 @@ test('Delegated Authority', (t) => {
     t.ok(updatedMetadataBeforeVerification.collection, 'collection should be null');
     t.false(updatedMetadataBeforeVerification.collection?.verified, 'collection cant be verified');
     const delegatedAuthority = Keypair.generate();
-    await airdrop(connection, delegatedAuthority.publicKey, 2);
+    await amman.airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
       collectionNft.mint.publicKey,
       delegatedAuthority.publicKey,
@@ -198,6 +203,7 @@ test('Delegated Authority', (t) => {
       collectionVerifyCollectionTransaction,
       [delegatedAuthority],
       { skipPreflight: true },
+      'Verify Collection',
     );
     logDebug(txDetails.txSummary.logMessages.join('\n'));
     t.deepEqual(
@@ -211,7 +217,7 @@ test('Delegated Authority', (t) => {
     const connection = new Connection(connectionURL, 'confirmed');
     const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-    await airdrop(connection, payer.publicKey, 2);
+    await amman.airdrop(connection, payer.publicKey, 2);
 
     const collectionNft = await createCollection(connection, transactionHandler, payer);
 
@@ -239,7 +245,7 @@ test('Delegated Authority', (t) => {
 
     t.notOk(updatedMetadataBeforeVerification.collection, 'collection should be null');
     const delegatedAuthority = Keypair.generate();
-    await airdrop(connection, delegatedAuthority.publicKey, 2);
+    await amman.airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
       collectionNft.mint.publicKey,
       delegatedAuthority.publicKey,
@@ -261,6 +267,7 @@ test('Delegated Authority', (t) => {
       collectionVerifyCollectionTransaction,
       [delegatedAuthority],
       { skipPreflight: true },
+      'Verify Collection',
     );
     logDebug(txDetails.txSummary.logMessages.join('\n'));
     t.deepEqual(
@@ -274,7 +281,7 @@ test('Delegated Authority', (t) => {
     const connection = new Connection(connectionURL, 'confirmed');
     const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-    await airdrop(connection, payer.publicKey, 2);
+    await amman.airdrop(connection, payer.publicKey, 2);
     const collectionNft = await createCollection(connection, transactionHandler, payer);
 
     const initMetadataData = new DataV2({
@@ -302,7 +309,7 @@ test('Delegated Authority', (t) => {
     t.ok(updatedMetadataBeforeVerification.collection, 'collection should not be null');
     t.false(updatedMetadataBeforeVerification.collection?.verified, 'collection cant be verified');
     const delegatedAuthority = Keypair.generate();
-    await airdrop(connection, delegatedAuthority.publicKey, 2);
+    await amman.airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
       collectionNft.mint.publicKey,
       delegatedAuthority.publicKey,
@@ -322,6 +329,7 @@ test('Delegated Authority', (t) => {
       approveTransaction,
       [payer],
       { skipPreflight: true },
+      'Approve Collection Auth',
     );
     logDebug(approveTxnDetails.txSummary.logMessages.join('\n'));
     const collectionVerifyCollectionTransaction = new VerifyCollection(
@@ -339,6 +347,7 @@ test('Delegated Authority', (t) => {
       collectionVerifyCollectionTransaction,
       [delegatedAuthority],
       { skipPreflight: true },
+      'Verify Collection',
     );
     logDebug(txDetails.txSummary.logMessages.join('\n'));
     const updatedMetadataAfterVerification = await getMetadataData(
@@ -354,7 +363,7 @@ test('Delegated Authority', (t) => {
     const connection = new Connection(connectionURL, 'confirmed');
     const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-    await airdrop(connection, payer.publicKey, 2);
+    await amman.airdrop(connection, payer.publicKey, 2);
 
     const collectionNft = await createCollection(connection, transactionHandler, payer);
 
@@ -382,7 +391,7 @@ test('Delegated Authority', (t) => {
 
     t.not(updatedMetadataBeforeVerification.collection, 'collection should be null');
     const delegatedAuthority = Keypair.generate();
-    await airdrop(connection, delegatedAuthority.publicKey, 2);
+    await amman.airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
       collectionNft.mint.publicKey,
       delegatedAuthority.publicKey,
@@ -403,6 +412,7 @@ test('Delegated Authority', (t) => {
       approveTransaction,
       [payer],
       { skipPreflight: true },
+      'Approve Collection Auth',
     );
     logDebug(approveTxnDetails.txSummary.logMessages.join('\n'));
 
@@ -422,6 +432,7 @@ test('Delegated Authority', (t) => {
       collectionVerifyCollectionTransaction,
       [delegatedAuthority],
       { skipPreflight: true },
+      'Verify Collection',
     );
     const updatedMetadataAfterVerification = await getMetadataData(
       connection,

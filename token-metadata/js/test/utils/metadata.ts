@@ -4,10 +4,10 @@ import spok from 'spok';
 import { strict as assert } from 'assert';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { MetadataData, MetadataDataData } from '../../src/deprecated';
-import { connectionURL } from './';
-import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
+import { connectionURL } from './consts';
+import { amman } from './amman';
+import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 
-import { addLabel } from './address-labels';
 import { mintAndCreateMetadata } from '../actions';
 
 export const URI = 'uri';
@@ -17,12 +17,12 @@ export const SELLER_FEE_BASIS_POINTS = 10;
 
 export async function initMetadata() {
   const payer = Keypair.generate();
-  addLabel('payer', payer);
+  amman.addr.addLabel('payer', payer);
 
   const connection = new Connection(connectionURL, 'confirmed');
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-  await airdrop(connection, payer.publicKey, 2);
+  await amman.airdrop(connection, payer.publicKey, 2);
 
   const initMetadataData = new MetadataDataData({
     uri: URI,

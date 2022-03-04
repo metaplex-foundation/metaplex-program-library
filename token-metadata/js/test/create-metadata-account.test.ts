@@ -12,17 +12,14 @@ import {
 } from '../src/deprecated';
 import { connectionURL, killStuckProcess } from './utils';
 import {
-  airdrop,
   assertConfirmedTransaction,
   assertTransactionSummary,
   PayerTransactionHandler,
-  defaultSendOptions,
 } from '@metaplex-foundation/amman';
 
 import BN from 'bn.js';
 
-import { logDebug } from './utils';
-import { addLabel, isKeyOf } from './utils/address-labels';
+import { amman, logDebug } from './utils';
 import { createMetadata, createMetadataV2, CreateMint } from './actions';
 
 killStuckProcess();
@@ -34,20 +31,20 @@ const SELLER_FEE_BASIS_POINTS = 10;
 
 test('create-metadata-account: success', async (t) => {
   const payer = Keypair.generate();
-  addLabel('create:payer', payer);
+  amman.addr.addLabel('create:payer', payer);
 
   const connection = new Connection(connectionURL, 'confirmed');
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-  await airdrop(connection, payer.publicKey, 2);
+  await amman.airdrop(connection, payer.publicKey, 2);
 
   const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
-    defaultSendOptions,
+    'Create Mint',
   );
-  addLabel('create:mint', mint);
+  amman.addr.addLabel('create:mint', mint);
 
   assertConfirmedTransaction(t, mintRes.txConfirmed);
 
@@ -66,7 +63,7 @@ test('create-metadata-account: success', async (t) => {
     metadataData: initMetadataData,
   });
 
-  addLabel('create:metadata', metadata);
+  amman.addr.addLabel('create:metadata', metadata);
   logDebug(createTxDetails.txSummary.logMessages.join('\n'));
 
   assertTransactionSummary(t, createTxDetails.txSummary, {
@@ -83,8 +80,8 @@ test('create-metadata-account: success', async (t) => {
   spok(t, metadataData, {
     $topic: 'metadataData',
     key: MetadataKey.MetadataV1,
-    updateAuthority: isKeyOf(payer),
-    mint: isKeyOf(mint),
+    updateAuthority: amman.addr.isKeyOf(payer),
+    mint: amman.addr.isKeyOf(mint),
     data: {
       name: NAME,
       symbol: SYMBOL,
@@ -110,20 +107,20 @@ test('create-metadata-account: success', async (t) => {
 
 test('create-metadata-account-v2: success', async (t) => {
   const payer = Keypair.generate();
-  addLabel('create:payer', payer);
+  amman.addr.addLabel('create:payer', payer);
 
   const connection = new Connection(connectionURL, 'confirmed');
   const transactionHandler = new PayerTransactionHandler(connection, payer);
 
-  await airdrop(connection, payer.publicKey, 2);
+  await amman.airdrop(connection, payer.publicKey, 2);
 
   const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
-    defaultSendOptions,
+    'Create Mint',
   );
-  addLabel('create:mint', mint);
+  amman.addr.addLabel('create:mint', mint);
 
   assertConfirmedTransaction(t, mintRes.txConfirmed);
 
@@ -144,7 +141,7 @@ test('create-metadata-account-v2: success', async (t) => {
     updateAuthority: payer.publicKey,
   });
 
-  addLabel('create:metadata', metadata);
+  amman.addr.addLabel('create:metadata', metadata);
   logDebug(createTxDetails.txSummary.logMessages.join('\n'));
 
   assertTransactionSummary(t, createTxDetails.txSummary, {
@@ -161,8 +158,8 @@ test('create-metadata-account-v2: success', async (t) => {
   spok(t, metadataData, {
     $topic: 'metadataData',
     key: MetadataKey.MetadataV1,
-    updateAuthority: isKeyOf(payer),
-    mint: isKeyOf(mint),
+    updateAuthority: amman.addr.isKeyOf(payer),
+    mint: amman.addr.isKeyOf(mint),
     data: {
       name: NAME,
       symbol: SYMBOL,

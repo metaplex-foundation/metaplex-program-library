@@ -1,10 +1,6 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { addLabel, logDebug } from '../utils';
-import {
-  assertConfirmedTransaction,
-  defaultSendOptions,
-  TransactionHandler,
-} from '@metaplex-foundation/amman';
+import { logDebug } from '../utils/log';
+import { assertConfirmedTransaction, TransactionHandler } from '@metaplex-foundation/amman';
 import { strict as assert } from 'assert';
 import {
   CreateMetadata,
@@ -18,6 +14,7 @@ import {
 import BN from 'bn.js';
 import * as spl from '@solana/spl-token';
 import { CreateMint } from './create-mint-account';
+import { amman } from '../utils/amman';
 // -----------------
 // Create Metadata
 // -----------------
@@ -57,9 +54,14 @@ export async function createMetadataV2({
     },
   );
 
-  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(createMetadataTx, [], {
-    skipPreflight: false,
-  });
+  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
+    createMetadataTx,
+    [],
+    {
+      skipPreflight: false,
+    },
+    'Create Metadata V2',
+  );
 
   return { metadata, createTxDetails };
 }
@@ -86,7 +88,7 @@ export async function createMetadata({
   const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
     createMetadataTx,
     [],
-    defaultSendOptions,
+    'CreateMetadata',
   );
 
   return { metadata, createTxDetails };
@@ -105,9 +107,9 @@ export async function mintAndCreateMetadata(
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
-    defaultSendOptions,
+    'Create Mint',
   );
-  addLabel('mint', mint);
+  amman.addr.addLabel('mint', mint);
 
   assertConfirmedTransaction(assert, mintRes.txConfirmed);
 
@@ -120,7 +122,7 @@ export async function mintAndCreateMetadata(
     metadataData: initMetadataData,
   });
 
-  addLabel('metadata', metadata);
+  amman.addr.addLabel('metadata', metadata);
   logDebug(createTxDetails.txSummary.logMessages.join('\n'));
 
   return { mint, metadata };
@@ -147,7 +149,7 @@ export async function mintAndCreateMetadataV2(
   const fromTokenAccount = await mint.getOrCreateAssociatedAccountInfo(payer.publicKey);
 
   await mint.mintTo(fromTokenAccount.address, payer.publicKey, [], 1);
-  addLabel('mint', mint.publicKey);
+  amman.addr.addLabel('mint', mint.publicKey);
   const initMetadataData = args;
   const { createTxDetails, metadata } = await createMetadataV2({
     transactionHandler,
@@ -156,7 +158,7 @@ export async function mintAndCreateMetadataV2(
     metadataData: initMetadataData,
   });
 
-  addLabel('metadata', metadata);
+  amman.addr.addLabel('metadata', metadata);
   logDebug(createTxDetails.txSummary.logMessages.join('\n'));
   return { mint, metadata };
 }
@@ -191,9 +193,14 @@ export async function createMasterEdition(
     },
   );
 
-  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(createMev3, [], {
-    skipPreflight: true,
-  });
+  const createTxDetails = await transactionHandler.sendAndConfirmTransaction(
+    createMev3,
+    [],
+    {
+      skipPreflight: true,
+    },
+    'Create MasterEdition',
+  );
 
   return { mint, metadata, masterEditionPubkey, createTxDetails };
 }

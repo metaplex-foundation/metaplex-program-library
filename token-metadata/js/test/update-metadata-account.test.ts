@@ -33,7 +33,7 @@ test('update-metadata-account: toggle primarySaleHappened', async (t) => {
       primarySaleHappened: true,
     },
   );
-  await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
+  await transactionHandler.sendAndConfirmTransaction(tx, [payer], 'Update Metadata');
 
   const updatedMetadata = await getMetadataData(connection, metadata);
   t.ok(updatedMetadata.primarySaleHappened, 'after update sale happened');
@@ -51,7 +51,7 @@ test('update-metadata-account: update with same data', async (t) => {
       updateAuthority: payer.publicKey,
     },
   );
-  await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
+  await transactionHandler.sendAndConfirmTransaction(tx, [payer], 'Update Metadata');
 
   const updatedMetadata = await getMetadataData(connection, metadata);
   assertMetadataDataUnchanged(t, initialMetadata, updatedMetadata);
@@ -68,7 +68,7 @@ test('update-metadata-account: uri', async (t) => {
       updateAuthority: payer.publicKey,
     },
   );
-  await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
+  await transactionHandler.sendAndConfirmTransaction(tx, [payer], 'Update Metadata');
 
   const updatedMetadata = await getMetadataData(connection, metadata);
   t.equal(updatedMetadata.data.uri, `${URI}-updated`, 'updates uri');
@@ -90,7 +90,7 @@ test('update-metadata-account: name and symbol', async (t) => {
       updateAuthority: payer.publicKey,
     },
   );
-  await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
+  await transactionHandler.sendAndConfirmTransaction(tx, [payer], 'Update Metadata');
 
   const updatedMetadata = await getMetadataData(connection, metadata);
   t.equal(updatedMetadata.data.name, `${NAME}-updated`, 'updates name');
@@ -122,7 +122,7 @@ test('update-metadata-account: update symbol too long', async (t) => {
     },
   );
   try {
-    await transactionHandler.sendAndConfirmTransaction(tx, [payer]);
+    await transactionHandler.sendAndConfirmTransaction(tx, [payer], 'Update Metadata');
     t.fail('expected transaction to fail');
   } catch (err) {
     assertError(t, err, [/custom program error/i, /Symbol too long/i]);
