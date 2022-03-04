@@ -2,6 +2,7 @@ use crate::{AuctionHouse, ErrorCode, PREFIX, TRADE_STATE_SIZE};
 use anchor_lang::{
     prelude::*,
     solana_program::{
+        instruction::Instruction,
         program::invoke_signed,
         program_option::COption,
         program_pack::{IsInitialized, Pack},
@@ -163,6 +164,30 @@ pub fn assert_valid_delegation(
 pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
     if key1 != key2 {
         Err(ErrorCode::PublicKeyMismatch.into())
+    } else {
+        Ok(())
+    }
+}
+
+pub enum BidType {
+    PublicSale,
+    PrivateSale,
+}
+
+pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType, ErrorCode> {
+    match sighash {
+        [169, 84, 218, 35, 42, 206, 16, 171] => Ok(BidType::PublicSale),
+        [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::PrivateSale),
+        _ => Err(ErrorCode::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_instruction_equal(
+    sighash: &[u8],
+    expected_sighash: [u8; 8],
+) -> ProgramResult {
+    if sighash != expected_sighash {
+        Err(ErrorCode::InstructionMismatch.into())
     } else {
         Ok(())
     }
@@ -490,6 +515,7 @@ pub fn assert_derivation(
     }
     Ok(bump)
 }
+
 pub fn assert_valid_trade_state<'a>(
     wallet: &Pubkey,
     auction_house: &Account<AuctionHouse>,

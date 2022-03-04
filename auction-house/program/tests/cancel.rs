@@ -1,13 +1,19 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
-use anchor_lang::{InstructionData, ToAccountMetas};
+use anchor_lang::{prelude::*, AccountDeserialize, InstructionData, ToAccountMetas};
 
-use mpl_testing_utils::solana::airdrop;
-use mpl_testing_utils::utils::Metadata;
+use anchor_client::solana_sdk::sysvar;
+use mpl_auction_house::{
+    pda::{find_bid_receipt_address, find_listing_receipt_address},
+    receipt::{BidReceipt, ListingReceipt},
+};
+use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
-use solana_sdk::signature::Keypair;
-use solana_sdk::signature::Signer;
-use solana_sdk::{instruction::Instruction, transaction::Transaction};
+use solana_sdk::{
+    instruction::Instruction,
+    signature::{Keypair, Signer},
+    transaction::Transaction,
+};
 
 use mpl_auction_house::ErrorCode;
 use spl_associated_token_account::get_associated_token_address;
@@ -47,7 +53,7 @@ async fn cancel_listing() {
         .unwrap();
     context.warp_to_slot(100).unwrap();
     // Derive Auction House Key
-    let (acc, sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 10);
+    let ((acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 10);
     context
         .banks_client
         .process_transaction(sell_tx)
@@ -75,14 +81,49 @@ async fn cancel_listing() {
         .data(),
         accounts,
     };
+
+    let (listing_receipt, _) = find_listing_receipt_address(&acc.seller_trade_state);
+
+    let accounts = mpl_auction_house::accounts::CancelListingReceipt {
+        receipt: listing_receipt,
+        system_program: solana_program::system_program::id(),
+        instruction: sysvar::instructions::id(),
+    }
+    .to_account_metas(None);
+    let cancel_listing_receipt_instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data: mpl_auction_house::instruction::CancelListingReceipt {}.data(),
+        accounts,
+    };
+
     let tx = Transaction::new_signed_with_payer(
-        &[instruction],
+        &[instruction, cancel_listing_receipt_instruction],
         Some(&test_metadata.token.pubkey()),
         &[&test_metadata.token],
         context.last_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await.unwrap();
+
+    let timestamp = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
+        .unwrap()
+        .unix_timestamp;
+
+    let listing_receipt_account = context
+        .banks_client
+        .get_account(listing_receipt)
+        .await
+        .expect("getting listing receipt")
+        .expect("empty listing receipt data");
+
+    let listing_receipt =
+        ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
+
+    assert_eq!(listing_receipt.canceled_at, Some(timestamp));
+    assert_eq!(listing_receipt.purchase_receipt, None);
 }
 
 #[tokio::test]
@@ -115,7 +156,15 @@ async fn cancel_bid() {
     airdrop(&mut context, &buyer.pubkey(), 2000000000)
         .await
         .unwrap();
-    let (acc, buy_tx) = buy(&mut context, &ahkey, &ah, &test_metadata, &test_metadata.token.pubkey(), &buyer, price);
+    let ((acc, _), buy_tx) = buy(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &test_metadata.token.pubkey(),
+        &buyer,
+        price,
+    );
 
     context
         .banks_client
@@ -142,11 +191,45 @@ async fn cancel_bid() {
         .data(),
         accounts,
     };
+
+    let (bid_receipt, _) = find_bid_receipt_address(&acc.buyer_trade_state);
+
+    let accounts = mpl_auction_house::accounts::CancelBidReceipt {
+        receipt: bid_receipt,
+        system_program: solana_program::system_program::id(),
+        instruction: sysvar::instructions::id(),
+    }
+    .to_account_metas(None);
+    let cancel_bid_receipt_instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data: mpl_auction_house::instruction::CancelBidReceipt {}.data(),
+        accounts,
+    };
+
     let tx = Transaction::new_signed_with_payer(
-        &[instruction],
+        &[instruction, cancel_bid_receipt_instruction],
         Some(&buyer.pubkey()),
         &[&buyer],
         context.last_blockhash,
     );
     context.banks_client.process_transaction(tx).await.unwrap();
+
+    let timestamp = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
+        .unwrap()
+        .unix_timestamp;
+
+    let bid_receipt_account = context
+        .banks_client
+        .get_account(bid_receipt)
+        .await
+        .expect("getting bid receipt")
+        .expect("empty bid receipt data");
+
+    let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
+
+    assert_eq!(bid_receipt.canceled_at, Some(timestamp));
+    assert_eq!(bid_receipt.purchase_receipt, None);
 }

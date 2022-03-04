@@ -1,4 +1,4 @@
-use anchor_lang::prelude::{Sysvar, Signer};
+use anchor_lang::prelude::{Signer, Sysvar};
 
 use {
     crate::{CandyMachine, ErrorCode},
@@ -54,16 +54,20 @@ pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> ProgramResult {
 ///TokenTransferParams
 pub struct TokenTransferParams<'a: 'b, 'b> {
     /// source
+    /// CHECK: account checked in CPI
     pub source: AccountInfo<'a>,
     /// destination
+    /// CHECK: account checked in CPI
     pub destination: AccountInfo<'a>,
     /// amount
     pub amount: u64,
     /// authority
+    /// CHECK: account checked in CPI
     pub authority: AccountInfo<'a>,
     /// authority_signer_seeds
     pub authority_signer_seeds: &'b [&'b [u8]],
     /// token_program
+    /// CHECK: account checked in CPI
     pub token_program: AccountInfo<'a>,
 }
 
@@ -122,16 +126,20 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
 /// TokenBurnParams
 pub struct TokenBurnParams<'a: 'b, 'b> {
     /// mint
+    /// CHECK: account checked in CPI
     pub mint: AccountInfo<'a>,
     /// source
+    /// CHECK: account checked in CPI
     pub source: AccountInfo<'a>,
     /// amount
     pub amount: u64,
     /// authority
+    /// CHECK: account checked in CPI
     pub authority: AccountInfo<'a>,
     /// authority_signer_seeds
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
     /// token_program
+    /// CHECK: account checked in CPI
     pub token_program: AccountInfo<'a>,
 }
 

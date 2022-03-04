@@ -864,6 +864,166 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "printListingReceipt",
+      "accounts": [
+        {
+          "name": "receipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bookkeeper",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instruction",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "receiptBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "cancelListingReceipt",
+      "accounts": [
+        {
+          "name": "receipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instruction",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "printBidReceipt",
+      "accounts": [
+        {
+          "name": "receipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bookkeeper",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instruction",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "receiptBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "cancelBidReceipt",
+      "accounts": [
+        {
+          "name": "receipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instruction",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "printPurchaseReceipt",
+      "accounts": [
+        {
+          "name": "purchaseReceipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "listingReceipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bidReceipt",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "bookkeeper",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instruction",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "purchaseReceiptBump",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -923,6 +1083,192 @@
           {
             "name": "canChangeSalePrice",
             "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BidReceipt",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tradeState",
+            "type": "publicKey"
+          },
+          {
+            "name": "bookkeeper",
+            "type": "publicKey"
+          },
+          {
+            "name": "auctionHouse",
+            "type": "publicKey"
+          },
+          {
+            "name": "buyer",
+            "type": "publicKey"
+          },
+          {
+            "name": "metadata",
+            "type": "publicKey"
+          },
+          {
+            "name": "tokenAccount",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "purchaseReceipt",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "tradeStateBump",
+            "type": "u8"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "canceledAt",
+            "type": {
+              "option": "i64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingReceipt",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tradeState",
+            "type": "publicKey"
+          },
+          {
+            "name": "bookkeeper",
+            "type": "publicKey"
+          },
+          {
+            "name": "auctionHouse",
+            "type": "publicKey"
+          },
+          {
+            "name": "seller",
+            "type": "publicKey"
+          },
+          {
+            "name": "metadata",
+            "type": "publicKey"
+          },
+          {
+            "name": "purchaseReceipt",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "tradeStateBump",
+            "type": "u8"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "canceledAt",
+            "type": {
+              "option": "i64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PurchaseReceipt",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bookkeeper",
+            "type": "publicKey"
+          },
+          {
+            "name": "buyer",
+            "type": "publicKey"
+          },
+          {
+            "name": "seller",
+            "type": "publicKey"
+          },
+          {
+            "name": "auctionHouse",
+            "type": "publicKey"
+          },
+          {
+            "name": "metadata",
+            "type": "publicKey"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "BidType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "PublicSale"
+          },
+          {
+            "name": "PrivateSale"
           }
         ]
       }
@@ -1048,6 +1394,26 @@
       "code": 6023,
       "name": "InvalidBasisPoints",
       "msg": "BP must be less than or equal to 10000"
+    },
+    {
+      "code": 6024,
+      "name": "TradeStateDoesntExist",
+      "msg": "The trade state account does not exist"
+    },
+    {
+      "code": 6025,
+      "name": "TradeStateIsNotEmpty",
+      "msg": "The trade state is not empty"
+    },
+    {
+      "code": 6026,
+      "name": "ReceiptIsEmpty",
+      "msg": "The receipt is empty"
+    },
+    {
+      "code": 6027,
+      "name": "InstructionMismatch",
+      "msg": "The instruction does not match"
     }
   ],
   "metadata": {
