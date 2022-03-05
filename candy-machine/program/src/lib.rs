@@ -221,6 +221,9 @@ pub mod candy_machine {
                             return Err(ErrorCode::NoWhitelistToken.into());
                         }
                         assert_valid_go_live(payer, clock, candy_machine)?;
+                        if ws.mode == WhitelistMintMode::BurnEveryTime {
+                            remaining_accounts_counter += 2;
+                        }
                     }
                 }
                 Err(_) => {
@@ -229,6 +232,9 @@ pub mod candy_machine {
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
                         return Err(ErrorCode::NoWhitelistToken.into());
+                    }
+                    if ws.mode == WhitelistMintMode::BurnEveryTime {
+                        remaining_accounts_counter += 2;
                     }
                     assert_valid_go_live(payer, clock, candy_machine)?
                 }
