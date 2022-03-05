@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -20,14 +19,4 @@ pub enum UploadAssetsError {
 
     #[error("Invalid Bundlr cluster: {0} Use 'devnet' or 'mainnet'")]
     InvalidBundlrCluster(String),
-}
-
-pub struct DeserializeError<'a> {
-    pub path: &'a PathBuf,
-    pub error: serde_json::Error,
-}
-
-pub struct FileOpenError<'a> {
-    pub path: &'a PathBuf,
-    pub error: std::io::Error,
 }

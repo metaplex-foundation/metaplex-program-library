@@ -5,7 +5,7 @@ use regex::Regex;
 use serde_json;
 use std::{
     fs::{self, File, OpenOptions},
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use crate::cache::*;
@@ -79,11 +79,10 @@ pub async fn upload_data<'a>(
     let (paths, errors): (Vec<_>, Vec<_>) = glob(pattern)?.into_iter().partition(Result::is_ok);
 
     let paths: Vec<_> = paths.into_iter().map(Result::unwrap).collect();
-    let _path_errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
+    let path_errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
 
-    // let file_open_errors = Arc::new(Mutex::new(Vec::new()));
-    // let deserialize_errors = Arc::new(Mutex::new(Vec::new()));
-    // let validate_errors = Arc::new(Mutex::new(Vec::new()));
+    let file_open_errors: Arc<Mutex<Vec<FileOpenError>>> = Arc::new(Mutex::new(Vec::new()));
+    let deserialize_errors: Arc<Mutex<Vec<DeserializeError>>> = Arc::new(Mutex::new(Vec::new()));
 
     let bundlr_client = args.bundlr_client;
     let mut handles = Vec::new();
@@ -131,6 +130,21 @@ pub async fn upload_data<'a>(
                 handles = remaining;
             }
         }
+    }
+
+    if !path_errors.is_empty() {
+        error!("Path errors: {:?}", path_errors);
+        return Err(ReadFilesError::PathErrors.into());
+    }
+
+    if !file_open_errors.lock().unwrap().is_empty() {
+        error!("File open errors: {:?}", file_open_errors);
+        return Err(ReadFilesError::FileOpenErrors.into());
+    }
+
+    if !deserialize_errors.lock().unwrap().is_empty() {
+        error!("Deserialize errors: {:?}", deserialize_errors);
+        return Err(ReadFilesError::DeserializeErrors.into());
     }
 
     for handle in handles {

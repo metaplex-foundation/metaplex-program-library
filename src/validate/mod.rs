@@ -12,7 +12,7 @@ pub mod format;
 pub mod parser;
 
 use crate::common::*;
-use errors::{DeserializeError, FileOpenError, ValidateError};
+use errors::ValidateError;
 use format::Metadata;
 
 pub struct ValidateArgs {
@@ -88,22 +88,22 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
 
     if !path_errors.is_empty() {
         error!("Path errors: {:?}", path_errors);
-        return Err(ValidateError::PathErrors.into());
+        return Err(ReadFilesError::PathErrors.into());
     }
 
     if !file_open_errors.lock().unwrap().is_empty() {
         error!("File open errors: {:?}", file_open_errors);
-        return Err(ValidateError::FileOpenErrors.into());
+        return Err(ReadFilesError::FileOpenErrors.into());
     }
 
     if !deserialize_errors.lock().unwrap().is_empty() {
         error!("Deserialize errors: {:?}", deserialize_errors);
-        return Err(ValidateError::DeserializeErrors.into());
+        return Err(ReadFilesError::DeserializeErrors.into());
     }
 
     if !validate_errors.lock().unwrap().is_empty() {
         error!("Validate errors: {:?}", validate_errors);
-        return Err(ValidateError::ValidateErrors.into());
+        return Err(ReadFilesError::ValidateErrors.into());
     }
 
     let message = "Validate complete, your metadata files look good.";
