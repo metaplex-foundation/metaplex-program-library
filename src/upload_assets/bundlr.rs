@@ -60,30 +60,15 @@ pub async fn get_bundlr_balance(
 ) -> Result<u64> {
     debug!("Getting balance for address: {address}");
     let url = format!("{}/account/balance/solana/?address={}", node, address);
-
     let response = http_client.get(&url).send().await?.json::<Value>().await?;
-
-    println!("response: {response:?}");
     let value = response.get("balance").unwrap();
-    println!("value: {value:?}");
 
-    // Bundlr API returns balance as a number if it's zero but as a string if it's not. :-(
-    let balance = if value.is_number() {
-        value.as_u64().unwrap()
-    } else {
-        value.as_str().unwrap().parse::<u64>().unwrap()
-    };
-
-    println!("balance: {balance:?}");
-
-    Ok(balance)
+    Ok(value.as_str().unwrap().parse::<u64>().unwrap())
 }
 
-pub async fn get_bundlr_fee(http_client: &HttpClient, data_size: u64) -> Result<u64> {
+pub async fn get_bundlr_fee(http_client: &HttpClient, node: &str, data_size: u64) -> Result<u64> {
     let required_amount = http_client
-        .get(format!(
-            "https://node1.bundlr.network/price/solana/{data_size}"
-        ))
+        .get(format!("{node}/price/solana/{data_size}"))
         .send()
         .await?
         .text()

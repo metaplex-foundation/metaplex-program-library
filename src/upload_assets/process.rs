@@ -4,7 +4,7 @@ use std::{fs::File, sync::Arc};
 
 use crate::cache::Cache;
 use crate::common::*;
-use crate::config::{get_config_data, Cluster, UploadMethod};
+use crate::config::{get_config_data, Cluster, UploadMethod, BUNDLR_DEVNET, BUNDLR_MAINNET};
 use crate::upload_assets::*;
 
 pub struct UploadAssetsArgs {
@@ -33,8 +33,8 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
 
     let bundlr_node = match config_data.upload_method {
         UploadMethod::Bundlr(cluster) => match cluster {
-            Cluster::Devnet => "https://devnet.bundlr.network",
-            Cluster::Mainnet => "https://node1.bundlr.network",
+            Cluster::Devnet => BUNDLR_DEVNET,
+            Cluster::Mainnet => BUNDLR_MAINNET,
         },
         _ => {
             return Err(anyhow!(format!(
@@ -55,17 +55,14 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
 
     let extension = get_media_extension(&args.assets_dir)?;
 
-    println!("Extension: {extension}");
-
     let total_image_size = get_data_size(Path::new(&args.assets_dir), &extension)?;
+    info!("Total image size: {}", total_image_size);
 
-    println!("Total image size: {}", total_image_size);
-
-    let media_lamports_fee = get_bundlr_fee(&http_client, total_image_size).await?;
+    let media_lamports_fee = get_bundlr_fee(&http_client, bundlr_node, total_image_size).await?;
 
     let address = sugar_config.keypair.pubkey().to_string();
     let balance = get_bundlr_balance(&http_client, &address, bundlr_node).await?;
-    println!("Bundlr balance: {}", balance);
+    info!("Bundlr balance: {}", balance);
 
     let bundlr_address = get_bundlr_solana_address(&http_client, bundlr_node).await?;
     let bundlr_pubkey = Pubkey::from_str(&bundlr_address)?;
@@ -83,7 +80,9 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let balance = get_bundlr_balance(&http_client, &address, bundlr_node).await?;
 
     if !(balance > 0) {
-        panic!("Failed to fund Bundlr account");
+        let error = UploadAssetsError::NoBundlrBalance(address).into();
+        error!("{error}");
+        return Err(error);
     }
 
     let sugar_tag = Tag::new("App-Name".into(), format!("Sugar {}", crate_version!()));
@@ -108,7 +107,8 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     insert_media_links(&asset_pairs)?;
 
     let total_metadata_size = get_data_size(Path::new(&args.assets_dir), "json")?;
-    let metadata_lamports_fee = get_bundlr_fee(&http_client, total_metadata_size).await?;
+    let metadata_lamports_fee =
+        get_bundlr_fee(&http_client, bundlr_node, total_metadata_size).await?;
 
     let _response = fund_bundlr_address(
         &program,

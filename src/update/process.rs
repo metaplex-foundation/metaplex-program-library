@@ -1,17 +1,10 @@
-use anchor_client::{
-    solana_sdk::{
-        pubkey::Pubkey,
-        signature::{Keypair, Signer},
-    },
-    Client,
-};
+use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 
 use std::str::FromStr;
 
 use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::ID as CANDY_MACHINE_PROGRAM_ID;
 use mpl_candy_machine::{accounts as nft_accounts, CandyMachineData};
 
 use crate::candy_machine::*;
@@ -85,7 +78,9 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
     }
 
     let sig = builder.send()?;
-    info!("Candy machine updated! TxId: {}", sig);
+    let message = format!("Candy machine updated! TxId: {sig}");
+    info!("{message}");
+    println!("{message}");
 
     if let Some(new_authority) = args.new_authority {
         let new_authority_pubkey = Pubkey::from_str(&new_authority)?;
@@ -101,7 +96,9 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
             });
 
         let sig = builder.send()?;
-        info!("Candy machine update authority updated! TxId: {}", sig);
+        let message = format!("Candy machine update authority updated! TxId: {sig}");
+        info!("{message}");
+        println!("{message}");
     }
 
     Ok(())
@@ -114,13 +111,11 @@ fn create_candy_machine_data(
     info!("{:?}", config.go_live_date);
     let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
 
-
     let end_settings = if let Some(settings) = &config.end_settings {
         Some(settings.into_candy_format())
     } else {
         None
     };
-
 
     let whitelist_mint_settings = if let Some(settings) = &config.whitelist_mint_settings {
         Some(settings.into_candy_format())
@@ -128,20 +123,17 @@ fn create_candy_machine_data(
         None
     };
 
-
     let hidden_settings = if let Some(settings) = &config.hidden_settings {
         Some(settings.into_candy_format())
     } else {
         None
     };
 
-
     let gatekeeper = if let Some(gatekeeper) = &config.gatekeeper {
         Some(gatekeeper.into_candy_format())
     } else {
         None
     };
-
 
     let data = CandyMachineData {
         uuid: candy_machine.uuid,
