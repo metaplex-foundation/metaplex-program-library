@@ -6,7 +6,6 @@ import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { MetadataData, MetadataDataData } from '../../src/deprecated';
 import { connectionURL } from './consts';
 import { amman } from './amman';
-import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 
 import { mintAndCreateMetadata } from '../actions';
 
@@ -20,7 +19,7 @@ export async function initMetadata() {
   amman.addr.addLabel('payer', payer);
 
   const connection = new Connection(connectionURL, 'confirmed');
-  const transactionHandler = new PayerTransactionHandler(connection, payer);
+  const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
   await amman.airdrop(connection, payer.publicKey, 2);
 

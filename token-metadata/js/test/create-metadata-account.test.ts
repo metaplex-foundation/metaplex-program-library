@@ -11,11 +11,7 @@ import {
   TokenStandard,
 } from '../src/deprecated';
 import { connectionURL, killStuckProcess } from './utils';
-import {
-  assertConfirmedTransaction,
-  assertTransactionSummary,
-  PayerTransactionHandler,
-} from '@metaplex-foundation/amman';
+import { assertConfirmedTransaction, assertTransactionSummary } from '@metaplex-foundation/amman';
 
 import BN from 'bn.js';
 
@@ -34,7 +30,7 @@ test('create-metadata-account: success', async (t) => {
   amman.addr.addLabel('create:payer', payer);
 
   const connection = new Connection(connectionURL, 'confirmed');
-  const transactionHandler = new PayerTransactionHandler(connection, payer);
+  const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
   await amman.airdrop(connection, payer.publicKey, 2);
 
@@ -110,7 +106,7 @@ test('create-metadata-account-v2: success', async (t) => {
   amman.addr.addLabel('create:payer', payer);
 
   const connection = new Connection(connectionURL, 'confirmed');
-  const transactionHandler = new PayerTransactionHandler(connection, payer);
+  const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
   await amman.airdrop(connection, payer.publicKey, 2);
 

@@ -2,6 +2,7 @@ import { inspect } from 'util';
 import test from 'tape';
 
 export * from './amman';
+export * from './asserts';
 export * from './consts';
 export * from './log';
 export * from './metadata';

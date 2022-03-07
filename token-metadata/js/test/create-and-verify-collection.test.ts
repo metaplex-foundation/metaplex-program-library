@@ -19,7 +19,6 @@ import {
   logDebug,
   amman,
 } from './utils';
-import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair } from '@solana/web3.js';
 import { createCollection, createMasterEdition } from './actions';
 
@@ -30,7 +29,7 @@ killStuckProcess();
 test('verify-collection', async (t) => {
   const payer = Keypair.generate();
   const connection = new Connection(connectionURL, 'confirmed');
-  const transactionHandler = new PayerTransactionHandler(connection, payer);
+  const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
   await amman.airdrop(connection, payer.publicKey, 2);
 
@@ -92,7 +91,7 @@ test('verify-collection', async (t) => {
 test('set-and-verify-collection', async (t) => {
   const payer = Keypair.generate();
   const connection = new Connection(connectionURL, 'confirmed');
-  const transactionHandler = new PayerTransactionHandler(connection, payer);
+  const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
   await amman.airdrop(connection, payer.publicKey, 2);
 
@@ -153,7 +152,7 @@ test('Delegated Authority', (t) => {
   t.test('Fail: Verify Collection', async (t) => {
     const payer = Keypair.generate();
     const connection = new Connection(connectionURL, 'confirmed');
-    const transactionHandler = new PayerTransactionHandler(connection, payer);
+    const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
     await amman.airdrop(connection, payer.publicKey, 2);
     const collectionNft = await createCollection(connection, transactionHandler, payer);
@@ -215,7 +214,7 @@ test('Delegated Authority', (t) => {
   t.test('Fail: Set and Verify Collection', async (t) => {
     const payer = Keypair.generate();
     const connection = new Connection(connectionURL, 'confirmed');
-    const transactionHandler = new PayerTransactionHandler(connection, payer);
+    const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
     await amman.airdrop(connection, payer.publicKey, 2);
 
@@ -279,7 +278,7 @@ test('Delegated Authority', (t) => {
   t.test('Success: Verify Collection', async (t) => {
     const payer = Keypair.generate();
     const connection = new Connection(connectionURL, 'confirmed');
-    const transactionHandler = new PayerTransactionHandler(connection, payer);
+    const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
     await amman.airdrop(connection, payer.publicKey, 2);
     const collectionNft = await createCollection(connection, transactionHandler, payer);
@@ -361,7 +360,7 @@ test('Delegated Authority', (t) => {
   t.test('Success: Set and Verify Collection', async (t) => {
     const payer = Keypair.generate();
     const connection = new Connection(connectionURL, 'confirmed');
-    const transactionHandler = new PayerTransactionHandler(connection, payer);
+    const transactionHandler = amman.payerTransactionHandler(connection, payer);
 
     await amman.airdrop(connection, payer.publicKey, 2);
 
