@@ -1,6 +1,6 @@
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
-import { createClaimResourceInstruction } from '../../src/instructions';
+import { createClaimResourceInstruction } from '../../src/generated/instructions';
 import { createAndSignTransaction } from '../utils';
 
 interface ClaimResourceParams {

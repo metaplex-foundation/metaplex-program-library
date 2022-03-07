@@ -1,7 +1,7 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 
-import { PROGRAM_ID } from '../consts';
+import { PROGRAM_ID } from '../../consts';
 
 const closeMarketStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[];

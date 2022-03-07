@@ -1,7 +1,7 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 
-import { createBuyInstruction } from '../../src/instructions';
+import { createBuyInstruction } from '../../src/generated/instructions';
 
 interface BuyParams {
   connection: Connection;

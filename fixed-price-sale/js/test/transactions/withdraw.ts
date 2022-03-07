@@ -1,7 +1,7 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import { createAndSignTransaction } from '../utils';
-import { createWithdrawInstruction } from '../../src/instructions';
+import { createWithdrawInstruction } from '../../src/generated/instructions';
 
 interface WithdrawParams {
   payer: Keypair;

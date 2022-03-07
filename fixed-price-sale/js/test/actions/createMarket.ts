@@ -10,7 +10,10 @@ import { createTokenAccount } from '../transactions';
 import { createAndSignTransaction, logDebug } from '../utils';
 
 import { findTreasuryOwnerAddress } from '../../src/utils';
-import { createCreateMarketInstruction, CreateMarketInstructionArgs } from '../../src/instructions';
+import {
+  createCreateMarketInstruction,
+  CreateMarketInstructionArgs,
+} from '../../src/generated/instructions';
 
 type CreateMarketParams = {
   test: test.Test;

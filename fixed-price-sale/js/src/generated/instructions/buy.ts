@@ -2,7 +2,7 @@ import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 
-import { PROGRAM_ID } from '../consts';
+import { PROGRAM_ID } from '../../consts';
 
 export type BuyInstructionArgs = {
   tradeHistoryBump: number;

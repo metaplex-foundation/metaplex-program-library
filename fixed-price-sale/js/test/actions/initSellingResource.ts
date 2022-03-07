@@ -11,7 +11,7 @@ import { findVaultOwnerAddress } from '../../src/utils';
 import { createAndSignTransaction, logDebug } from '../utils';
 import { createTokenAccount } from '../transactions/createTokenAccount';
 import { mintNFT } from './mintNft';
-import { createInitSellingResourceInstruction } from '../../src/instructions';
+import { createInitSellingResourceInstruction } from '../../src/generated/instructions';
 import { Creator } from '@metaplex-foundation/mpl-token-metadata';
 import { CreatorAccountData } from '../../src';
 import { createSavePrimaryMetadataCreators } from '../transactions';

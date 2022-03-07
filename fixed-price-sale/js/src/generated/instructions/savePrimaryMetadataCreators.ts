@@ -1,7 +1,7 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 
-import { CreatorAccountData, creatorAccountDataStruct, PROGRAM_ID } from '..';
+import { CreatorAccountData, creatorAccountDataStruct, PROGRAM_ID } from '../..';
 
 export type SavePrimaryMetadataCreatorsInstructionArgs = {
   primaryMetadataCreatorsBump: number;

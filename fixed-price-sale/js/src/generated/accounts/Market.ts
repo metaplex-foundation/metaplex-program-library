@@ -1,6 +1,6 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
-import * as definedTypes from '../types';
+import * as definedTypes from '../../types';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 
 /**
