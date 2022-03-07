@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
+import { Reservation, reservationBeet } from './Reservation';
 export type SetReservationListArgs = {
-  reservations: definedTypes.Reservation[];
+  reservations: Reservation[];
   totalReservationSpots: beet.COption<beet.bignum>;
   offset: beet.bignum;
   totalSpotOffset: beet.bignum;
@@ -20,7 +20,7 @@ export type SetReservationListArgs = {
  */
 export const setReservationListArgsBeet = new beet.FixableBeetArgsStruct<SetReservationListArgs>(
   [
-    ['reservations', beet.array(definedTypes.reservationBeet)],
+    ['reservations', beet.array(reservationBeet)],
     ['totalReservationSpots', beet.coption(beet.u64)],
     ['offset', beet.u64],
     ['totalSpotOffset', beet.u64],
