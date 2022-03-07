@@ -1,6 +1,6 @@
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
-import * as definedTypes from '../types';
+import * as definedTypes from '../../types';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 
 /**
@@ -21,6 +21,7 @@ export type MarketAccountDataArgs = {
   startDate: beet.bignum;
   endDate: beet.COption<beet.bignum>;
   state: definedTypes.MarketState;
+  fundsCollected: beet.bignum;
 };
 
 const marketAccountDiscriminator = [219, 190, 213, 55, 0, 227, 198, 154];
@@ -44,6 +45,7 @@ export class MarketAccountData implements MarketAccountDataArgs {
     readonly startDate: beet.bignum,
     readonly endDate: beet.COption<beet.bignum>,
     readonly state: definedTypes.MarketState,
+    readonly fundsCollected: beet.bignum,
   ) {}
 
   /**
@@ -65,6 +67,7 @@ export class MarketAccountData implements MarketAccountDataArgs {
       args.startDate,
       args.endDate,
       args.state,
+      args.fundsCollected,
     );
   }
 
@@ -152,6 +155,7 @@ export class MarketAccountData implements MarketAccountDataArgs {
       startDate: this.startDate,
       endDate: this.endDate,
       state: this.state,
+      fundsCollected: this.fundsCollected,
     };
   }
 }
@@ -178,6 +182,7 @@ const marketAccountDataStruct = new beet.FixableBeetStruct<
     ['startDate', beet.u64],
     ['endDate', beet.coption(beet.u64)],
     ['state', definedTypes.marketStateEnum],
+    ['fundsCollected', beet.u64],
   ],
   MarketAccountData.fromArgs,
   'MarketAccountData',

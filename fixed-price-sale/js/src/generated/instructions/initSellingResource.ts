@@ -2,7 +2,7 @@ import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as splToken from '@solana/spl-token';
 
-import { PROGRAM_ID } from '../consts';
+import { PROGRAM_ID } from '../../consts';
 
 export type InitSellingResourceInstructionArgs = {
   masterEditionBump: number;

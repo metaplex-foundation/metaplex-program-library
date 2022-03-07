@@ -2,7 +2,7 @@
 
 use anchor_lang::prelude::*;
 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     // 6000
     #[msg("No valid signer present")]
@@ -106,4 +106,10 @@ pub enum ErrorCode {
     // 6033
     #[msg("Creators is empty")]
     CreatorsIsEmpty,
+    // 6034
+    #[msg("Market owner doesn't receive shares at primary sale")]
+    MarketOwnerDoesntHaveShares,
+    // 6034
+    #[msg("PrimaryMetadataCreatorsNotProvided")]
+    PrimaryMetadataCreatorsNotProvided,
 }

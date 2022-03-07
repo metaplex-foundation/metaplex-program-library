@@ -73,8 +73,8 @@ pub fn init_selling_resource(
     .to_account_metas(None);
 
     let data = mpl_fixed_price_sale::instruction::InitSellingResource {
-        _master_edition_bump: master_edition_bump,
-        _vault_owner_bump: vault_owner_bump,
+        master_edition_bump: master_edition_bump,
+        vault_owner_bump: vault_owner_bump,
         max_supply,
     }
     .data();

@@ -1,7 +1,7 @@
 mod utils;
 
 #[cfg(feature = "test-bpf")]
-mod create_secondary_metadata_creators {
+mod save_primary_metadata_creators {
     use crate::{
         setup_context,
         utils::{
@@ -13,7 +13,7 @@ mod create_secondary_metadata_creators {
     use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
     use mpl_fixed_price_sale::{
         accounts as mpl_fixed_price_sale_accounts, instruction as mpl_fixed_price_sale_instruction,
-        state::SecondaryMetadataCreators,
+        state::PrimaryMetadataCreators,
     };
     use solana_program::instruction::Instruction;
     use solana_program_test::*;
@@ -75,19 +75,19 @@ mod create_secondary_metadata_creators {
         )
         .await;
 
-        let (secondary_metadata_creators, secondary_metadata_creators_bump) =
-            mpl_fixed_price_sale::utils::find_secondary_metadata_creators(&metadata);
+        let (primary_metadata_creators, primary_metadata_creators_bump) =
+            mpl_fixed_price_sale::utils::find_primary_metadata_creators(&metadata);
 
-        let accounts = mpl_fixed_price_sale_accounts::CreateSecondaryMetadataCreators {
+        let accounts = mpl_fixed_price_sale_accounts::SavePrimaryMetadataCreators {
             admin: admin_wallet.pubkey(),
             metadata,
-            secondary_metadata_creators,
+            primary_metadata_creators,
             system_program: system_program::id(),
         }
         .to_account_metas(None);
 
-        let data = mpl_fixed_price_sale_instruction::CreateSecondaryMetadataCreators {
-            _secondary_metadata_creators_bump: secondary_metadata_creators_bump,
+        let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
+            primary_metadata_creators_bump: primary_metadata_creators_bump,
             creators: vec![mpl_token_metadata::state::Creator {
                 address: admin_wallet.pubkey(),
                 share: 100,
@@ -111,18 +111,18 @@ mod create_secondary_metadata_creators {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let secondary_metadata_creators_acc = context
+        let primary_metadata_creators_acc = context
             .banks_client
-            .get_account(secondary_metadata_creators)
+            .get_account(primary_metadata_creators)
             .await
             .expect("account not found")
             .expect("account empty");
 
-        let secondary_metadata_creators = SecondaryMetadataCreators::try_deserialize(
-            &mut secondary_metadata_creators_acc.data.as_ref(),
+        let primary_metadata_creators = PrimaryMetadataCreators::try_deserialize(
+            &mut primary_metadata_creators_acc.data.as_ref(),
         )
         .unwrap();
-        assert!(!secondary_metadata_creators.creators.is_empty());
+        assert!(!primary_metadata_creators.creators.is_empty());
     }
 
     #[tokio::test]
@@ -181,19 +181,19 @@ mod create_secondary_metadata_creators {
         )
         .await;
 
-        let (secondary_metadata_creators, secondary_metadata_creators_bump) =
-            mpl_fixed_price_sale::utils::find_secondary_metadata_creators(&metadata);
+        let (primary_metadata_creators, primary_metadata_creators_bump) =
+            mpl_fixed_price_sale::utils::find_primary_metadata_creators(&metadata);
 
-        let accounts = mpl_fixed_price_sale_accounts::CreateSecondaryMetadataCreators {
+        let accounts = mpl_fixed_price_sale_accounts::SavePrimaryMetadataCreators {
             admin: admin_wallet.pubkey(),
             metadata,
-            secondary_metadata_creators,
+            primary_metadata_creators,
             system_program: system_program::id(),
         }
         .to_account_metas(None);
 
-        let data = mpl_fixed_price_sale_instruction::CreateSecondaryMetadataCreators {
-            _secondary_metadata_creators_bump: secondary_metadata_creators_bump,
+        let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
+            primary_metadata_creators_bump: primary_metadata_creators_bump,
             creators: vec![
                 mpl_token_metadata::state::Creator {
                     address: admin_wallet.pubkey(),
@@ -310,19 +310,19 @@ mod create_secondary_metadata_creators {
         )
         .await;
 
-        let (secondary_metadata_creators, secondary_metadata_creators_bump) =
-            mpl_fixed_price_sale::utils::find_secondary_metadata_creators(&metadata);
+        let (primary_metadata_creators, primary_metadata_creators_bump) =
+            mpl_fixed_price_sale::utils::find_primary_metadata_creators(&metadata);
 
-        let accounts = mpl_fixed_price_sale_accounts::CreateSecondaryMetadataCreators {
+        let accounts = mpl_fixed_price_sale_accounts::SavePrimaryMetadataCreators {
             admin: admin_wallet.pubkey(),
             metadata,
-            secondary_metadata_creators,
+            primary_metadata_creators,
             system_program: system_program::id(),
         }
         .to_account_metas(None);
 
-        let data = mpl_fixed_price_sale_instruction::CreateSecondaryMetadataCreators {
-            _secondary_metadata_creators_bump: secondary_metadata_creators_bump,
+        let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
+            primary_metadata_creators_bump: primary_metadata_creators_bump,
             creators: Vec::new(),
         }
         .data();
@@ -408,19 +408,19 @@ mod create_secondary_metadata_creators {
         )
         .await;
 
-        let (secondary_metadata_creators, secondary_metadata_creators_bump) =
-            mpl_fixed_price_sale::utils::find_secondary_metadata_creators(&metadata);
+        let (primary_metadata_creators, primary_metadata_creators_bump) =
+            mpl_fixed_price_sale::utils::find_primary_metadata_creators(&metadata);
 
-        let accounts = mpl_fixed_price_sale_accounts::CreateSecondaryMetadataCreators {
+        let accounts = mpl_fixed_price_sale_accounts::SavePrimaryMetadataCreators {
             admin: admin_wallet.pubkey(),
             metadata,
-            secondary_metadata_creators,
+            primary_metadata_creators,
             system_program: system_program::id(),
         }
         .to_account_metas(None);
 
-        let data = mpl_fixed_price_sale_instruction::CreateSecondaryMetadataCreators {
-            _secondary_metadata_creators_bump: secondary_metadata_creators_bump,
+        let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
+            primary_metadata_creators_bump: primary_metadata_creators_bump,
             creators: vec![mpl_token_metadata::state::Creator {
                 address: admin_wallet.pubkey(),
                 share: 10,

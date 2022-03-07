@@ -101,7 +101,7 @@ mod buy {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -256,6 +256,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -371,7 +372,7 @@ mod buy {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -511,6 +512,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -644,7 +646,7 @@ mod buy {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -796,6 +798,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -916,7 +919,7 @@ mod buy {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -1071,6 +1074,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -1189,7 +1193,7 @@ mod buy {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -1369,6 +1373,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -1487,7 +1492,7 @@ mod buy {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -1667,6 +1672,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -1785,7 +1791,7 @@ mod buy {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -1940,6 +1946,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -2070,7 +2077,7 @@ mod buy {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -2225,6 +2232,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -2338,6 +2346,7 @@ mod buy {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),

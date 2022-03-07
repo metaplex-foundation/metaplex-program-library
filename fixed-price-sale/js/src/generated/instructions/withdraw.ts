@@ -1,62 +1,68 @@
 import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { PROGRAM_ID } from '../consts';
+import { PROGRAM_ID } from '../../consts';
 
-export type ClaimResourceInstructionArgs = {
-  vaultOwnerBump: number;
+export type WithdrawInstructionArgs = {
+  treasuryOwnerBump: number;
+  payoutTicketBump: number;
 };
-const claimResourceStruct = new beet.BeetArgsStruct<
-  ClaimResourceInstructionArgs & {
+const withdrawStruct = new beet.BeetArgsStruct<
+  WithdrawInstructionArgs & {
     instructionDiscriminator: number[];
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['vaultOwnerBump', beet.u8],
+    ['treasuryOwnerBump', beet.u8],
+    ['payoutTicketBump', beet.u8],
   ],
-  'ClaimResourceInstructionArgs',
+  'WithdrawInstructionArgs',
 );
-export type ClaimResourceInstructionAccounts = {
+export type WithdrawInstructionAccounts = {
   market: web3.PublicKey;
-  treasuryHolder: web3.PublicKey;
   sellingResource: web3.PublicKey;
-  sellingResourceOwner: web3.PublicKey;
-  vault: web3.PublicKey;
   metadata: web3.PublicKey;
+  treasuryHolder: web3.PublicKey;
+  treasuryMint: web3.PublicKey;
   owner: web3.PublicKey;
-  secondaryMetadataCreators: web3.PublicKey;
   destination: web3.PublicKey;
-  tokenMetadataProgram: web3.PublicKey;
+  funder: web3.PublicKey;
+  payer: web3.PublicKey;
+  payoutTicket: web3.PublicKey;
+  associatedTokenProgram: web3.PublicKey;
+  primaryMetadataCreators?: web3.PublicKey;
 };
 
-const claimResourceInstructionDiscriminator = [0, 160, 164, 96, 237, 118, 74, 27];
+const withdrawInstructionDiscriminator = [183, 18, 70, 156, 148, 109, 161, 34];
 
 /**
- * Creates a _ClaimResource_ instruction.
+ * Creates a _Withdraw_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  */
-export function createClaimResourceInstruction(
-  accounts: ClaimResourceInstructionAccounts,
-  args: ClaimResourceInstructionArgs,
+export function createWithdrawInstruction(
+  accounts: WithdrawInstructionAccounts,
+  args: WithdrawInstructionArgs,
 ) {
   const {
     market,
-    treasuryHolder,
     sellingResource,
-    sellingResourceOwner,
-    vault,
     metadata,
+    treasuryHolder,
+    treasuryMint,
     owner,
-    secondaryMetadataCreators,
     destination,
-    tokenMetadataProgram,
+    funder,
+    payer,
+    payoutTicket,
+    associatedTokenProgram,
+    primaryMetadataCreators,
   } = accounts;
 
-  const [data] = claimResourceStruct.serialize({
-    instructionDiscriminator: claimResourceInstructionDiscriminator,
+  const [data] = withdrawStruct.serialize({
+    instructionDiscriminator: withdrawInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -66,28 +72,23 @@ export function createClaimResourceInstruction(
       isSigner: false,
     },
     {
-      pubkey: treasuryHolder,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
       pubkey: sellingResource,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: sellingResourceOwner,
+      pubkey: metadata,
       isWritable: false,
-      isSigner: true,
+      isSigner: false,
     },
     {
-      pubkey: vault,
+      pubkey: treasuryHolder,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: metadata,
-      isWritable: true,
+      pubkey: treasuryMint,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -96,13 +97,28 @@ export function createClaimResourceInstruction(
       isSigner: false,
     },
     {
-      pubkey: secondaryMetadataCreators,
+      pubkey: destination,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: funder,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: destination,
+      pubkey: payer,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: payoutTicket,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -116,7 +132,7 @@ export function createClaimResourceInstruction(
       isSigner: false,
     },
     {
-      pubkey: tokenMetadataProgram,
+      pubkey: associatedTokenProgram,
       isWritable: false,
       isSigner: false,
     },
@@ -126,6 +142,14 @@ export function createClaimResourceInstruction(
       isSigner: false,
     },
   ];
+
+  if (primaryMetadataCreators) {
+    keys.push({
+      pubkey: primaryMetadataCreators,
+      isWritable: false,
+      isSigner: false,
+    });
+  }
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey(PROGRAM_ID),
