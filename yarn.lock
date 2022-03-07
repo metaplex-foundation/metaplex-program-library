@@ -961,6 +961,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metaplex-foundation/cusper@npm:^0.0.2":
+  version: 0.0.2
+  resolution: "@metaplex-foundation/cusper@npm:0.0.2"
+  checksum: d157953baf42a2a012cdeb809c1785f29a44d80a3b5a3841c930baeb12ac6ddcf37f1a15eded4dce20d66f7bc8f23bedb87e905758df721e274bfcd816e70ba1
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/metaplex-program-library@workspace:.":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/metaplex-program-library@workspace:."
@@ -1162,11 +1169,23 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-token-vault@workspace:token-vault/js"
   dependencies:
+    "@metaplex-foundation/amman": ^0.1.0
+    "@metaplex-foundation/beet": ^0.0.8
+    "@metaplex-foundation/beet-solana": ^0.0.6
+    "@metaplex-foundation/cusper": ^0.0.2
     "@metaplex-foundation/mpl-core": ^0.0.2
     "@solana/spl-token": ^0.1.8
     "@solana/web3.js": ^1.35.1
+    "@types/debug": ^4.1.7
+    bn.js: ^5.2.0
+    debug: ^4.3.3
     eslint: ^8.3.0
     rimraf: ^3.0.2
+    spok: ^1.4.3
+    tape: ^5.5.0
+    typedoc: ^0.22.11
+    typescript: ^4.5.5
+    utility-types: ^3.10.0
   languageName: unknown
   linkType: soft
 
@@ -4886,6 +4905,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jsonc-parser@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "jsonc-parser@npm:3.0.0"
+  checksum: 1df2326f1f9688de30c70ff19c5b2a83ba3b89a1036160da79821d1361090775e9db502dc57a67c11b56e1186fc1ed70b887f25c5febf9a3ec4f91435836c99d
+  languageName: node
+  linkType: hard
+
 "jsonfile@npm:^6.0.1":
   version: 6.1.0
   resolution: "jsonfile@npm:6.1.0"
@@ -5103,6 +5129,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lunr@npm:^2.3.9":
+  version: 2.3.9
+  resolution: "lunr@npm:2.3.9"
+  checksum: 176719e24fcce7d3cf1baccce9dd5633cd8bdc1f41ebe6a180112e5ee99d80373fe2454f5d4624d437e5a8319698ca6837b9950566e15d2cae5f2a543a3db4b8
+  languageName: node
+  linkType: hard
+
 "make-dir@npm:^2.1.0":
   version: 2.1.0
   resolution: "make-dir@npm:2.1.0"
@@ -5180,6 +5213,15 @@ __metadata:
   version: 4.3.0
   resolution: "map-obj@npm:4.3.0"
   checksum: fbc554934d1a27a1910e842bc87b177b1a556609dd803747c85ece420692380827c6ae94a95cce4407c054fa0964be3bf8226f7f2cb2e9eeee432c7c1985684e
+  languageName: node
+  linkType: hard
+
+"marked@npm:^4.0.10":
+  version: 4.0.12
+  resolution: "marked@npm:4.0.12"
+  bin:
+    marked: bin/marked.js
+  checksum: 7575117f85a8986652f3ac8b8a7b95056c4c5fce01a1fc76dc4c7960412cb4c9bd9da8133487159b6b3ff84f52b543dfe9a36f826a5f358892b5ec4b6824f192
   languageName: node
   linkType: hard
 
@@ -6859,6 +6901,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"shiki@npm:^0.10.0":
+  version: 0.10.1
+  resolution: "shiki@npm:0.10.1"
+  dependencies:
+    jsonc-parser: ^3.0.0
+    vscode-oniguruma: ^1.6.1
+    vscode-textmate: 5.2.0
+  checksum: fb746f3cb3de7e545e3b10a6cb658d3938f840e4ccc9a3c90ceb7e69a8f89dbb432171faac1e9f02a03f103684dad88ee5e54b5c4964fa6b579fca6e8e26424d
+  languageName: node
+  linkType: hard
+
 "side-channel@npm:^1.0.3, side-channel@npm:^1.0.4":
   version: 1.0.4
   resolution: "side-channel@npm:1.0.4"
@@ -7258,7 +7311,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tape@npm:^5.5.2":
+"tape@npm:^5.5.0, tape@npm:^5.5.2":
   version: 5.5.2
   resolution: "tape@npm:5.5.2"
   dependencies:
@@ -7565,6 +7618,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typedoc@npm:^0.22.11":
+  version: 0.22.12
+  resolution: "typedoc@npm:0.22.12"
+  dependencies:
+    glob: ^7.2.0
+    lunr: ^2.3.9
+    marked: ^4.0.10
+    minimatch: ^3.0.4
+    shiki: ^0.10.0
+  peerDependencies:
+    typescript: 4.0.x || 4.1.x || 4.2.x || 4.3.x || 4.4.x || 4.5.x
+  bin:
+    typedoc: bin/typedoc
+  checksum: 8e04851fed6ba125dad226df121386b66a4b79035ea2650cc1f311cc8b903d89bc2e82e5641327e647b68af4fb12e06305287f5e8abe25d3790e9ad8753ab5ed
+  languageName: node
+  linkType: hard
+
 "typescript@npm:^4.5.5":
   version: 4.5.5
   resolution: "typescript@npm:4.5.5"
@@ -7694,6 +7764,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"utility-types@npm:^3.10.0":
+  version: 3.10.0
+  resolution: "utility-types@npm:3.10.0"
+  checksum: 8f274415c6196ab62883b8bd98c9d2f8829b58016e4269aaa1ebd84184ac5dda7dc2ca45800c0d5e0e0650966ba063bf9a412aaeaea6850ca4440a391283d5c8
+  languageName: node
+  linkType: hard
+
 "uuid@npm:^3.3.2":
   version: 3.4.0
   resolution: "uuid@npm:3.4.0"
@@ -7746,6 +7823,20 @@ __metadata:
     core-util-is: 1.0.2
     extsprintf: ^1.2.0
   checksum: c431df0bedf2088b227a4e051e0ff4ca54df2c114096b0c01e1cbaadb021c30a04d7dd5b41ab277bcd51246ca135bf931d4c4c796ecae7a4fef6d744ecef36ea
+  languageName: node
+  linkType: hard
+
+"vscode-oniguruma@npm:^1.6.1":
+  version: 1.6.2
+  resolution: "vscode-oniguruma@npm:1.6.2"
+  checksum: 6b754acdafd5b68242ea5938bb00a32effc16c77f471d4f0f337d879d0e8e592622998e2441f42d9a7ff799c1593f31c11f26ca8d9bf9917e3ca881d3c1f3e19
+  languageName: node
+  linkType: hard
+
+"vscode-textmate@npm:5.2.0":
+  version: 5.2.0
+  resolution: "vscode-textmate@npm:5.2.0"
+  checksum: 5449b42d451080f6f3649b66948f4b5ee4643c4e88cfe3558a3b31c84c78060cfdd288c4958c1690eaa5cd65d09992fa6b7c3bef9d4aa72b3651054a04624d20
   languageName: node
   linkType: hard
 

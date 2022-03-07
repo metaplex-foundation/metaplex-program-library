@@ -13,6 +13,7 @@ jobs:
     outputs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
+      workflow: ${{ steps.filter.outputs.workflow }}
     steps:
     - uses: actions/checkout@v2
     # For pull requests it's not necessary to checkout the code
@@ -24,9 +25,11 @@ jobs:
             - 'core/**'
           package:
             - 'token-vault/**'
+          workflow:
+            - '.github/workflows/sdk-token-vault.yml'
   build-lint-and-test-token-vault:
     needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -35,3 +38,4 @@ jobs:
         with: 
           cache_id: sdk-token-vault
           working_dir: ./token-vault/js
+          skip_test: true
