@@ -6,8 +6,11 @@ import {
   CreatorsMustBeAtleastOneError,
   CreatorsTooLongError,
   DuplicateCreatorAddressError,
+  InvalidUseMethodError,
   NumericalOverflowErrorError,
   ShareTotalMustBe100Error,
+  UseMethod,
+  Uses,
 } from '../src/generated';
 import {
   assertConfirmedTransaction,
@@ -44,6 +47,9 @@ const DATA_V2: DataV2 = {
   uses: null,
 };
 
+// -----------------
+// Plain
+// -----------------
 test('create-metadata-account: non-mutable without optional params', async (t) => {
   const connection = new Connection(LOCALHOST, 'confirmed');
   const [payer, payerPair] = amman.genKeypair('payer');
@@ -76,6 +82,9 @@ test('create-metadata-account: non-mutable without optional params', async (t) =
   });
 });
 
+// -----------------
+// Creators
+// -----------------
 test('create-metadata-account:with creators, Failure Cases', async (t) => {
   const connection = new Connection(LOCALHOST, 'confirmed');
   const [payer, payerPair] = amman.genKeypair('payer');
@@ -202,7 +211,7 @@ test('create-metadata-account: with creators, Success Cases', async (t) => {
   const transactionHandler = amman.payerTransactionHandler(connection, payerPair);
   await amman.airdrop(connection, payer, 1);
 
-  async function exec(
+  async function check(
     creators: Creator[],
     label: string,
   ): Promise<[ConfirmedTransactionDetails, CreateMetadataAccountSetup, DataV2]> {
@@ -221,6 +230,13 @@ test('create-metadata-account: with creators, Success Cases', async (t) => {
       { skipPreflight: true },
       `🌱 Metata with ${label}`,
     );
+    assertConfirmedTransaction(t, res.txConfirmed);
+    assertTransactionSummary(t, res.txSummary, {
+      msgRx: SUCCESS_RXS,
+    });
+    const metadataAccount = await Metadata.fromAccountAddress(connection, setup.metadata);
+    assertMetadataAccount(t, metadataAccount, setup, data);
+
     return [res, setup, data];
   }
 
@@ -229,7 +245,7 @@ test('create-metadata-account: with creators, Success Cases', async (t) => {
   {
     const label = `three unverified ${CREATOR}s 100 total shares`;
     t.comment(`++++ ${label}`);
-    const [res, setup, data] = await exec(
+    await check(
       [
         { address: creator1, share: 90, verified: false },
         { address: payer, share: 1, verified: false },
@@ -237,17 +253,11 @@ test('create-metadata-account: with creators, Success Cases', async (t) => {
       ],
       label,
     );
-    assertConfirmedTransaction(t, res.txConfirmed);
-    assertTransactionSummary(t, res.txSummary, {
-      msgRx: SUCCESS_RXS,
-    });
-    const metadataAccount = await Metadata.fromAccountAddress(connection, setup.metadata);
-    assertMetadataAccount(t, metadataAccount, setup, data);
   }
   {
     const label = `three ${CREATOR}s payer verified`;
     t.comment(`++++ ${label}`);
-    const [res, setup, data] = await exec(
+    await check(
       [
         { address: creator1, share: 90, verified: false },
         { address: payer, share: 1, verified: true },
@@ -255,11 +265,133 @@ test('create-metadata-account: with creators, Success Cases', async (t) => {
       ],
       label,
     );
+  }
+});
+
+// -----------------
+// Uses
+// -----------------
+test('create-metadata-account: with uses, Success Cases', async (t) => {
+  const connection = new Connection(LOCALHOST, 'confirmed');
+  const [payer, payerPair] = amman.genKeypair('payer');
+  const transactionHandler = amman.payerTransactionHandler(connection, payerPair);
+  await amman.airdrop(connection, payer, 1);
+
+  async function check(
+    uses: Uses,
+    label: string,
+  ): Promise<[ConfirmedTransactionDetails, CreateMetadataAccountSetup, DataV2]> {
+    const setup = await CreateMetadataAccountSetup.create(connection, {
+      payer: payer,
+    }).createMintAccount();
+    amman.addr.addLabels(setup);
+
+    const data = { ...DATA_V2, uses };
+    const createMetadataAccountIx = await createMetadataAccount(setup, data, false);
+
+    const tx = new Transaction().add(...setup.instructions).add(createMetadataAccountIx);
+    const res = await transactionHandler.sendAndConfirmTransaction(
+      tx,
+      setup.signers,
+      { skipPreflight: true },
+      `🌱 Metata with ${label}`,
+    );
     assertConfirmedTransaction(t, res.txConfirmed);
     assertTransactionSummary(t, res.txSummary, {
       msgRx: SUCCESS_RXS,
     });
     const metadataAccount = await Metadata.fromAccountAddress(connection, setup.metadata);
     assertMetadataAccount(t, metadataAccount, setup, data);
+    return [res, setup, data];
+  }
+
+  {
+    const label = 'uses mulitple 5/10';
+    t.comment(`++++ ${label}`);
+    await check({ remaining: 5, total: 10, useMethod: UseMethod.Multiple }, label);
+  }
+  {
+    const label = 'uses mulitple 10/5';
+    t.comment(`++++ ${label}`);
+    // TODO(thlorenz): This should fail!!!
+    await check({ remaining: 10, total: 5, useMethod: UseMethod.Multiple }, label);
+  }
+  {
+    const label = 'uses single 1/1';
+    t.comment(`++++ ${label}`);
+    await check({ remaining: 1, total: 1, useMethod: UseMethod.Single }, label);
+  }
+  {
+    const label = 'uses burn 0/0';
+    t.comment(`++++ ${label}`);
+    await check({ remaining: 0, total: 0, useMethod: UseMethod.Burn }, label);
+  }
+  {
+    const label = 'uses burn 5/10';
+    t.comment(`++++ ${label}`);
+    await check({ remaining: 5, total: 10, useMethod: UseMethod.Burn }, label);
+  }
+});
+
+test('create-metadata-account: with uses, Failure Cases', async (t) => {
+  const connection = new Connection(LOCALHOST, 'confirmed');
+  const [payer, payerPair] = amman.genKeypair('payer');
+  const transactionHandler = amman.payerTransactionHandler(connection, payerPair);
+  await amman.airdrop(connection, payer, 1);
+
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  async function check(uses: Uses, expectedError: Function, label: string) {
+    const setup = await CreateMetadataAccountSetup.create(connection, {
+      payer: payer,
+    }).createMintAccount();
+    amman.addr.addLabels(setup);
+
+    const data = { ...DATA_V2, uses };
+    const createMetadataAccountIx = await createMetadataAccount(setup, data, false);
+
+    const tx = new Transaction().add(...setup.instructions).add(createMetadataAccountIx);
+    const res = await transactionHandler.sendAndConfirmTransaction(
+      tx,
+      setup.signers,
+      { skipPreflight: true },
+      `🌱 Metata with ${label}`,
+    );
+    assertHasError(t, res, expectedError);
+  }
+  {
+    const label = 'uses mulitple 0/0';
+    t.comment(`++++ ${label}`);
+    await check(
+      { remaining: 0, total: 0, useMethod: UseMethod.Multiple },
+      InvalidUseMethodError,
+      label,
+    );
+  }
+  {
+    const label = 'uses single 0/1';
+    t.comment(`++++ ${label}`);
+    await check(
+      { remaining: 0, total: 1, useMethod: UseMethod.Single },
+      InvalidUseMethodError,
+      label,
+    );
+  }
+  {
+    const label = 'uses single 1/0';
+    t.comment(`++++ ${label}`);
+    await check(
+      { remaining: 1, total: 0, useMethod: UseMethod.Single },
+      InvalidUseMethodError,
+      label,
+    );
+  }
+  {
+    const label = 'uses single 1/2';
+    t.comment(`++++ ${label}`);
+    await check(
+      { remaining: 1, total: 2, useMethod: UseMethod.Single },
+      InvalidUseMethodError,
+      label,
+    );
   }
 });

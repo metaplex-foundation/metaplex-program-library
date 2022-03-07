@@ -1,16 +1,17 @@
 import { Test } from 'tape';
-import spok from 'spok';
+import spok, { Specification } from 'spok';
 import { COption } from '@metaplex-foundation/beet';
 import { PublicKey } from '@solana/web3.js';
 import { Specifications } from 'spok';
+import { bignum } from '@metaplex-foundation/beet';
 import {
   CreateMetadataAccountSetup,
-  Creator,
   DataV2,
   Key,
   Metadata,
   TokenStandard,
 } from '../../src/mpl-token-metadata';
+import BN from 'bn.js';
 import { ConfirmedTransactionDetails, MaybeErrorWithCode } from '@metaplex-foundation/amman';
 
 // TODO(thlorenz): move generic asserts into a common spok solana utils library
@@ -29,6 +30,14 @@ export function spokSamePubkey(a: PublicKey | COption<PublicKey>): Specification
 
   same.$spec = `spokSamePubkey(${a?.toBase58()})`;
   same.$description = `${a?.toBase58()} equal`;
+  return same;
+}
+
+export function spokSameBignum(a: bignum): Specification<bignum> {
+  const same = (b?: bignum) => b != null && new BN(a).eq(new BN(b));
+
+  same.$spec = `spokSameBignum(${a})`;
+  same.$description = `${a} equal`;
   return same;
 }
 
@@ -94,6 +103,15 @@ export function assertMetadataAccount(
     editionNonce: spok.number,
     tokenStandard: TokenStandard.FungibleAsset,
     collection: data.collection,
-    uses: data.uses,
   });
+  if (metadataAccount.uses == null || data.uses == null) {
+    t.deepEqual(metadataAccount.uses, data.uses, 'uses');
+  } else {
+    spok(t, metadataAccount.uses, {
+      $topic: 'metadataAccount.uses',
+      total: spokSameBignum(data.uses.total),
+      remaining: spokSameBignum(data.uses.remaining),
+      useMethod: data.uses.useMethod,
+    });
+  }
 }
