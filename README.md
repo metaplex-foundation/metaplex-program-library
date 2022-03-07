@@ -17,10 +17,6 @@ Metaplex smart contracts and SDK.
 | [Gumdrop](./gumdrop)                   | [![Program Gumdrop](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-gumdrop.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-gumdrop.yml)                                             | [![SDK Gumdrop](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml)                                                  |                                                                                                                                                                                                                                                                                     |
 | [Fixed price sale](./fixed-price-sale) | [![Program Fixed Price Sale ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-fixed-price-sale.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-fixed-price-sale.yml) | [![SDK Fixed Price Sale](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml/badge.svg)](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml) | [![Integration Fixed Price Sale](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml/badge.svg)](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml) |
 
-## Stability
-
-[Stability 1 - Experimental](https://docs.metaplex.com/stability). Direct use of this library is not
-recommended in production or mainnet environments.
 
 ## Development
 
