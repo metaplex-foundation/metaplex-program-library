@@ -85,7 +85,7 @@ export class CreateMetadataAccountSetup {
     this.mint = mint.publicKey;
     this.metadata = await pdaForMetadata(this.mint);
 
-    return mint;
+    return this.asCompleted();
   }
 
   hasMint(this: CreateMetadataAccountSetup): this is HasMint {

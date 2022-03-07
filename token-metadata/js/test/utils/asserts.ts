@@ -5,11 +5,13 @@ import { PublicKey } from '@solana/web3.js';
 import { Specifications } from 'spok';
 import {
   CreateMetadataAccountSetup,
+  Creator,
   DataV2,
   Key,
   Metadata,
   TokenStandard,
 } from '../../src/mpl-token-metadata';
+import { ConfirmedTransactionDetails, MaybeErrorWithCode } from '@metaplex-foundation/amman';
 
 // TODO(thlorenz): move generic asserts into a common spok solana utils library
 
@@ -31,6 +33,40 @@ export function spokSamePubkey(a: PublicKey | COption<PublicKey>): Specification
 }
 
 // -----------------
+// Cusper specific
+// -----------------
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function assertMatchesError<Err extends Function>(
+  t: Test,
+  err: MaybeErrorWithCode,
+  ty: Err,
+  msgRx?: RegExp,
+) {
+  if (err == null) {
+    t.fail(`Expected an error of type ${ty}`);
+    return;
+  }
+  if (err instanceof ty) {
+    t.ok(err instanceof ty, ty.name);
+  } else {
+    t.fail(`Expected error of type ${ty.name} but got ${err.name}`);
+  }
+  if (msgRx != null) {
+    t.match(err.message, msgRx);
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export function assertHasError<Err extends Function>(
+  t: Test,
+  res: ConfirmedTransactionDetails,
+  ty: Err,
+  msgRx?: RegExp,
+) {
+  return assertMatchesError(t, res.txSummary.err, ty, msgRx);
+}
+
+// -----------------
 // Token Metadata Specific
 // -----------------
 export function assertMetadataAccount(
@@ -38,8 +74,9 @@ export function assertMetadataAccount(
   metadataAccount: Metadata,
   setup: CreateMetadataAccountSetup,
   data: DataV2,
-  args: { isMutable: boolean; primarySaleHappened: boolean },
+  args: { isMutable?: boolean; primarySaleHappened?: boolean } = {},
 ) {
+  const { isMutable = false, primarySaleHappened = false } = args;
   spok(t, metadataAccount, {
     $topic: 'metadataAccount',
     key: Key.MetadataV1,
@@ -52,8 +89,8 @@ export function assertMetadataAccount(
       sellerFeeBasisPoints: data.sellerFeeBasisPoints,
       creators: data.creators,
     },
-    isMutable: args.isMutable,
-    primarySaleHappened: args.primarySaleHappened,
+    isMutable,
+    primarySaleHappened,
     editionNonce: spok.number,
     tokenStandard: TokenStandard.FungibleAsset,
     collection: data.collection,
