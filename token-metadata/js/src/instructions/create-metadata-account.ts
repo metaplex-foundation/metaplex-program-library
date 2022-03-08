@@ -15,6 +15,7 @@ import {
   DataV2,
   createCreateMetadataAccountV2Instruction,
 } from '../generated';
+import { createMintInstructions } from '../common/instructions';
 
 type HasMint = CreateMetadataAccountSetup & {
   mint: PublicKey;
@@ -83,29 +84,15 @@ export class CreateMetadataAccountSetup {
   async createMintAccount({ decimals = 0, owner = this.payer, freezeAuthority = this.payer } = {}) {
     const mint = Keypair.generate();
 
-    const mintRent = await this.connection.getMinimumBalanceForRentExemption(
-      MintLayout.span,
-      'confirmed',
-    );
+    const instructions = await createMintInstructions(this.connection, {
+      payer: this.payer,
+      mint: mint.publicKey,
+      decimals,
+      owner,
+      freezeAuthority,
+    });
 
-    this.instructions.push(
-      SystemProgram.createAccount({
-        fromPubkey: this.payer,
-        newAccountPubkey: mint.publicKey,
-        lamports: mintRent,
-        space: MintLayout.span,
-        programId: TOKEN_PROGRAM_ID,
-      }),
-    );
-    this.instructions.push(
-      Token.createInitMintInstruction(
-        TOKEN_PROGRAM_ID,
-        mint.publicKey,
-        decimals,
-        owner,
-        freezeAuthority,
-      ),
-    );
+    this.instructions.push(...instructions);
     this.signers.push(mint);
     this.mint = mint.publicKey;
     this.metadata = await pdaForMetadata(this.mint);
