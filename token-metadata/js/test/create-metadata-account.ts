@@ -105,7 +105,7 @@ test('create-metadata-account:with creators, Failure Cases', async (t) => {
       tx,
       setup.signers,
       { skipPreflight: true },
-      `🌱 Metata with ${label}`,
+      `🌱 Metadata with ${label}`,
     );
     return res;
   }
@@ -228,7 +228,7 @@ test('create-metadata-account: with creators, Success Cases', async (t) => {
       tx,
       setup.signers,
       { skipPreflight: true },
-      `🌱 Metata with ${label}`,
+      `🌱 Metadata with ${label}`,
     );
     assertConfirmedTransaction(t, res.txConfirmed);
     assertTransactionSummary(t, res.txSummary, {
@@ -294,7 +294,7 @@ test('create-metadata-account: with uses, Success Cases', async (t) => {
       tx,
       setup.signers,
       { skipPreflight: true },
-      `🌱 Metata with ${label}`,
+      `🌱 Metadata with ${label}`,
     );
     assertConfirmedTransaction(t, res.txConfirmed);
     assertTransactionSummary(t, res.txSummary, {
@@ -354,7 +354,7 @@ test('create-metadata-account: with uses, Failure Cases', async (t) => {
       tx,
       setup.signers,
       { skipPreflight: true },
-      `🌱 Metata with ${label}`,
+      `🌱 Metadata with ${label}`,
     );
     assertHasError(t, res, expectedError);
   }
