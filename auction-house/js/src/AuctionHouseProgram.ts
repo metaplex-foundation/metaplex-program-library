@@ -3,12 +3,16 @@ import { PublicKey } from '@solana/web3.js';
 import * as errors from './generated/errors';
 import * as instructions from './generated/instructions';
 import * as accounts from './generated/accounts';
+import BN from 'bn.js';
 
 export class AuctionHouseProgram extends Program {
   static readonly PREFIX = 'auction_house';
   static readonly FEE_PAYER = 'fee_payer';
   static readonly TREASURY = 'treasury';
   static readonly SIGNER = 'signer';
+  static readonly LISTINE_RECEIPT = 'listing_receipt';
+  static readonly BID_RECEIPT = 'bid_receipt';
+  static readonly PURCHASE_RECEIPT = 'purchase_receipt';
 
   static readonly PUBKEY = new PublicKey(config.programs.auctionHouse);
   static readonly instructions = instructions;
@@ -83,8 +87,8 @@ export class AuctionHouseProgram extends Program {
     tokenAccount: PublicKey,
     treasuryMint: PublicKey,
     tokenMint: PublicKey,
-    price: string,
-    tokenSize: string,
+    price: number,
+    tokenSize: number,
   ): Promise<[PublicKey, number]> {
     return PublicKey.findProgramAddress(
       [
@@ -94,8 +98,8 @@ export class AuctionHouseProgram extends Program {
         tokenAccount.toBuffer(),
         treasuryMint.toBuffer(),
         tokenMint.toBuffer(),
-        Buffer.from(price, 'utf8'),
-        Buffer.from(tokenSize, 'utf8'),
+        new BN(price).toArrayLike(Buffer, 'le', 8),
+        new BN(tokenSize).toArrayLike(Buffer, 'le', 8),
       ],
       AuctionHouseProgram.PUBKEY,
     );
@@ -106,8 +110,8 @@ export class AuctionHouseProgram extends Program {
     auctionHouse: PublicKey,
     treasuryMint: PublicKey,
     tokenMint: PublicKey,
-    price: string,
-    tokenSize: string,
+    price: number,
+    tokenSize: number,
   ): Promise<[PublicKey, number]> {
     return PublicKey.findProgramAddress(
       [
@@ -116,8 +120,8 @@ export class AuctionHouseProgram extends Program {
         auctionHouse.toBuffer(),
         treasuryMint.toBuffer(),
         tokenMint.toBuffer(),
-        Buffer.from(price, 'utf8'),
-        Buffer.from(tokenSize, 'utf8'),
+        new BN(price).toArrayLike(Buffer, 'le', 8),
+        new BN(tokenSize).toArrayLike(Buffer, 'le', 8),
       ],
       AuctionHouseProgram.PUBKEY,
     );
@@ -129,6 +133,31 @@ export class AuctionHouseProgram extends Program {
         Buffer.from(AuctionHouseProgram.PREFIX, 'utf8'),
         auctionHouse.toBuffer(),
         Buffer.from(AuctionHouseProgram.FEE_PAYER, 'utf8'),
+      ],
+      AuctionHouseProgram.PUBKEY,
+    );
+  }
+
+  static async findListingReceiptAddress(sellerTradeState: PublicKey) {
+    return PublicKey.findProgramAddress(
+      [Buffer.from(AuctionHouseProgram.LISTINE_RECEIPT, 'utf8'), sellerTradeState.toBuffer()],
+      AuctionHouseProgram.PUBKEY,
+    );
+  }
+
+  static async findBidReceiptAddress(buyerTradeState: PublicKey) {
+    return PublicKey.findProgramAddress(
+      [Buffer.from(AuctionHouseProgram.BID_RECEIPT, 'utf8'), buyerTradeState.toBuffer()],
+      AuctionHouseProgram.PUBKEY,
+    );
+  }
+
+  static async findPurchaseReceiptAddress(sellerTradeState: PublicKey, buyerTradeState: PublicKey) {
+    return PublicKey.findProgramAddress(
+      [
+        Buffer.from(AuctionHouseProgram.PURCHASE_RECEIPT, 'utf8'),
+        sellerTradeState.toBuffer(),
+        buyerTradeState.toBuffer(),
       ],
       AuctionHouseProgram.PUBKEY,
     );

@@ -1,7 +1,7 @@
 import { Connection, Keypair, Transaction } from '@solana/web3.js';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { createAndSignTransaction } from '../utils';
-import { createCloseMarketInstruction } from '../../src/instructions';
+import { createCloseMarketInstruction } from '../../src/generated/instructions';
 
 type CloseMarketParams = {
   transactionHandler: PayerTransactionHandler;

@@ -1,6 +1,6 @@
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
-import { createClaimResourceInstruction } from '../../src/instructions';
+import { createClaimResourceInstruction } from '../../src/generated/instructions';
 import { createAndSignTransaction } from '../utils';
 
 interface ClaimResourceParams {
@@ -11,7 +11,6 @@ interface ClaimResourceParams {
   sellingResource: PublicKey;
   vault: PublicKey;
   metadata: PublicKey;
-  secondaryMetadataCreators: PublicKey;
   destination: PublicKey;
   vaultOwnerBump: number;
   owner: PublicKey;
@@ -25,7 +24,6 @@ export const createClaimResourceTransaction = async ({
   sellingResource,
   vault,
   metadata,
-  secondaryMetadataCreators,
   destination,
   vaultOwnerBump,
   owner,
@@ -39,7 +37,6 @@ export const createClaimResourceTransaction = async ({
       vault,
       metadata,
       owner,
-      secondaryMetadataCreators,
       destination,
       tokenMetadataProgram: MetadataProgram.PUBKEY,
     },

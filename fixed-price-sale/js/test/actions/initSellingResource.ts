@@ -11,8 +11,10 @@ import { findVaultOwnerAddress } from '../../src/utils';
 import { createAndSignTransaction, logDebug } from '../utils';
 import { createTokenAccount } from '../transactions/createTokenAccount';
 import { mintNFT } from './mintNft';
-import { createInitSellingResourceInstruction } from '../../src/instructions';
+import { createInitSellingResourceInstruction } from '../../src/generated/instructions';
 import { Creator } from '@metaplex-foundation/mpl-token-metadata';
+import { CreatorAccountData } from '../../src';
+import { createSavePrimaryMetadataCreators } from '../transactions';
 
 type InitSellingResourceParams = {
   test: test.Test;
@@ -37,8 +39,9 @@ export const initSellingResource = async ({
   vaultOwnerBump: number;
   resourceMint: Keypair;
   metadata: PublicKey;
+  primaryMetadataCreators: PublicKey;
 }> => {
-  const creator = new Creator({
+  const secondaryCreator = new Creator({
     address: payer.publicKey.toBase58(),
     share: 100,
     verified: true,
@@ -54,7 +57,7 @@ export const initSellingResource = async ({
     transactionHandler,
     payer,
     connection,
-    creators: [creator],
+    creators: [secondaryCreator],
   });
 
   const [vaultOwner, vaultOwnerBump] = await findVaultOwnerAddress(resourceMint.publicKey, store);
@@ -93,10 +96,28 @@ export const initSellingResource = async ({
     },
   );
 
+  const primaryCreator = CreatorAccountData.fromArgs({
+    address: payer.publicKey,
+    share: 100,
+    verified: false,
+  });
+
+  const { savePrimaryMetadataCreatorsInstruction, primaryMetadataCreators } =
+    await createSavePrimaryMetadataCreators({
+      test,
+      transactionHandler,
+      payer,
+      connection,
+      metadata,
+      creators: [primaryCreator],
+    });
+
+  logDebug(`primary metadata creators ${primaryMetadataCreators}`);
+
   const initSellingResourceTx = await createAndSignTransaction(
     connection,
     payer,
-    [initSellingResourceInstruction],
+    [initSellingResourceInstruction, savePrimaryMetadataCreatorsInstruction],
     [sellingResource],
   );
 
@@ -116,5 +137,6 @@ export const initSellingResource = async ({
     vaultOwnerBump,
     resourceMint,
     metadata,
+    primaryMetadataCreators,
   };
 };

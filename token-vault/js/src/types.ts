@@ -1,3 +1,7 @@
-import { PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey, Signer, TransactionInstruction } from '@solana/web3.js';
 
-export type ParamsWithStore<P> = P & { store: PublicKey };
+export type InstructionsWithAccounts<T extends Record<string, PublicKey | Keypair>> = [
+  TransactionInstruction[],
+  Signer[],
+  T,
+];

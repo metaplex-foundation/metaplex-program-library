@@ -1,30 +1,28 @@
-use {
-    crate::{
-        error::VaultError,
-        instruction::VaultInstruction,
-        state::{
-            ExternalPriceAccount, Key, SafetyDepositBox, Vault, VaultState,
-            MAX_SAFETY_DEPOSIT_SIZE, PREFIX,
-        },
-        utils::{
-            assert_initialized, assert_owned_by, assert_rent_exempt, assert_token_matching,
-            assert_token_program_matches_package, assert_vault_authority_correct,
-            create_or_allocate_account_raw, spl_token_burn, spl_token_mint_to, spl_token_transfer,
-            TokenBurnParams, TokenMintToParams, TokenTransferParams,
-        },
+use crate::{
+    error::VaultError,
+    instruction::VaultInstruction,
+    state::{
+        ExternalPriceAccount, Key, SafetyDepositBox, Vault, VaultState, MAX_SAFETY_DEPOSIT_SIZE,
+        PREFIX,
     },
-    borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        msg,
-        program_option::COption,
-        pubkey::Pubkey,
-        rent::Rent,
-        sysvar::Sysvar,
+    utils::{
+        assert_initialized, assert_owned_by, assert_rent_exempt, assert_token_matching,
+        assert_token_program_matches_package, assert_vault_authority_correct,
+        create_or_allocate_account_raw, spl_token_burn, spl_token_mint_to, spl_token_transfer,
+        TokenBurnParams, TokenMintToParams, TokenTransferParams,
     },
-    spl_token::state::{Account, Mint},
 };
+use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    msg,
+    program_option::COption,
+    pubkey::Pubkey,
+    rent::Rent,
+    sysvar::Sysvar,
+};
+use spl_token::state::{Account, Mint};
 
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -459,8 +457,8 @@ pub fn process_withdraw_token_from_safety_deposit_box(
 
                 if fraction_mint.supply == 0 && vault.token_type_count == 0 {
                     vault.state = VaultState::Deactivated;
-                    vault.serialize(&mut *vault_info.data.borrow_mut())?;
                 }
+                vault.serialize(&mut *vault_info.data.borrow_mut())?;
             }
         }
         None => return Err(VaultError::NumericalOverflowError.into()),
