@@ -25,11 +25,26 @@ type HasMetadata = CreateMetadataAccountSetup & {
 
 type CompletedCreateMetadataAccountSetup = CreateMetadataAccountSetup & HasMint & HasMetadata;
 
+/**
+ * Used to setup accounts for the {@link createMetadataAccount} instruction.
+ *
+ * @category Instructions
+ * @category CreateMetadataAccountV2
+ */
 export class CreateMetadataAccountSetup {
   readonly instructions: TransactionInstruction[] = [];
   readonly signers: Signer[] = [];
 
+  /**
+   * The initialized mint account for which to create this metadata, provide it
+   * or use {@link createMintAccount} in order to initialized it
+   */
   mint?: PublicKey;
+  /**
+   * The metadata PDA whose seeds need to include the mint address.
+   * This is automatically set when {@link createMintAccount} is used to
+   * initialize the mint account.
+   */
   metadata?: PublicKey;
 
   private constructor(
@@ -39,14 +54,19 @@ export class CreateMetadataAccountSetup {
     readonly mintAuthority: PublicKey,
   ) {}
 
+  /**
+   * Creates a {@link CreateMetadataAccountSetup} instance
+   *
+   * @param args
+   * @param args.payer {@link CreateMetadataAccountV2InstructionAccounts} `payer`
+   * @param args.updateAuthority {@link CreateMetadataAccountV2InstructionAccounts} `updateAuthority`, defaults to {@link payer}
+   * @param args.mintAuthority {@link CreateMetadataAccountV2InstructionAccounts} `mintAuthority`, defaults to {@link payer}
+   */
   static create(
     connection: Connection,
-    {
-      payer,
-      updateAuthority,
-      mintAuthority,
-    }: { payer: PublicKey; updateAuthority?: PublicKey; mintAuthority?: PublicKey },
+    args: { payer: PublicKey; updateAuthority?: PublicKey; mintAuthority?: PublicKey },
   ) {
+    const { payer, updateAuthority, mintAuthority } = args;
     return new CreateMetadataAccountSetup(
       connection,
       payer,
@@ -55,6 +75,11 @@ export class CreateMetadataAccountSetup {
     );
   }
 
+  /**
+   * Use this to create and allocate a mint account for the token metadata.
+   * If you already have this you can just assign it to the field directly
+   * instead, making sure that you also assign the {@link metadata} PDA.
+   */
   async createMintAccount({ decimals = 0, owner = this.payer, freezeAuthority = this.payer } = {}) {
     const mint = Keypair.generate();
 
@@ -107,6 +132,17 @@ export class CreateMetadataAccountSetup {
   }
 }
 
+/**
+ * Creates a Metadata Account using the accounts provided via the
+ * {@link CreateMetadataAccountSetup} and the data inputs.
+ *
+ * @param setup which is required to have an initialized mint account
+ * @param data describing the metadata we want to initialize
+ * @param isMutable determines if the metadata can be changed afterwards
+ *
+ * @category Instructions
+ * @category CreateMetadataAccountV2
+ */
 export async function createMetadataAccount(
   setup: CompletedCreateMetadataAccountSetup,
   data: DataV2,
