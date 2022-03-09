@@ -1,5 +1,11 @@
+use std::convert::TryFrom;
 
 use solana_client::rpc_request::TokenAccountsFilter;
+use solana_remote_wallet::{
+    locator::Locator, remote_keypair::generate_remote_keypair, remote_wallet::maybe_wallet_manager,
+};
+use solana_sdk::derivation_path::DerivationPath;
+use uriparse::URIReference;
 
 use {
     clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand},
@@ -527,17 +533,50 @@ fn update_metadata_account_call(
     (metadata, metadata_key)
 }
 
+fn get_signer_path_or_ledger(path: &str) -> Box<dyn Signer> {
+    if path.starts_with("usb://") {
+        let uri_invalid_msg =
+            "Failed to parse usb:// keypair path. It must be of the form 'usb://ledger?key=0'.";
+        let uri_ref = URIReference::try_from(path).expect(uri_invalid_msg);
+        let derivation_path = DerivationPath::from_uri_key_query(&uri_ref)
+            .expect(uri_invalid_msg)
+            .unwrap_or_default();
+        let locator = Locator::new_from_uri(&uri_ref).expect(uri_invalid_msg);
+
+        let hw_wallet = maybe_wallet_manager()
+            .expect("Remote wallet found, but failed to establish protocol. Maybe the Solana app is not open.")
+            .expect("Failed to find a remote wallet, maybe Ledger is not connected or locked.");
+
+        // When using a Ledger hardware wallet, confirm the public key of the
+        // key to sign with on its display, so users can be sure that they
+        // selected the right key.
+        let confirm_public_key = true;
+
+        Box::new(
+            generate_remote_keypair(
+                locator,
+                derivation_path,
+                &hw_wallet,
+                confirm_public_key,
+                "metaplex", /* When multiple wallets are connected, used to display a hint */
+            )
+            .expect("Failed to contact remote wallet"),
+        )
+    } else {
+        Box::new(read_keypair_file(path).unwrap())
+    }
+}
+
 fn create_metadata_account_call(
     app_matches: &ArgMatches,
     payer: Keypair,
     client: RpcClient,
 ) -> (Metadata, Pubkey) {
-    let update_authority = read_keypair_file(
+    let update_authority = get_signer_path_or_ledger(
         app_matches
             .value_of("update_authority")
             .unwrap_or_else(|| app_matches.value_of("keypair").unwrap()),
-    )
-    .unwrap();
+    );
 
     let program_key = mpl_token_metadata::id();
     let token_key = Pubkey::from_str(TOKEN_PROGRAM_PUBKEY).unwrap();
@@ -600,12 +639,12 @@ fn create_metadata_account_call(
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
     let recent_blockhash = client.get_latest_blockhash().unwrap();
-    let mut signers = vec![&payer];
+    let mut signers: Vec<&dyn Signer> = vec![&payer];
     if create_new_mint {
         signers.push(&new_mint);
     }
     if update_authority.pubkey() != payer.pubkey() {
-        signers.push(&update_authority)
+        signers.push(update_authority.as_ref())
     }
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
