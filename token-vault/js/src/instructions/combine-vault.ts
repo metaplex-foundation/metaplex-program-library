@@ -2,7 +2,7 @@ import { Connection, Keypair, PublicKey, Signer, TransactionInstruction } from '
 import { createTokenAccount, getTokenRentExempt, pdaForVault } from '../common/helpers';
 import { CombineVaultInstructionAccounts, createCombineVaultInstruction } from '../generated';
 import { strict as assert } from 'assert';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createApproveInstruction } from '@solana/spl-token';
 
 export type CombineVaultAccounts = Omit<CombineVaultInstructionAccounts, 'fractionBurnAuthority'>;
 
@@ -158,20 +158,16 @@ export class CombineVaultSetup {
     this.transferAuthorityPair = transferAuthorityPair;
 
     const instructions = [
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
+      createApproveInstruction(
         this.yourOutstandingShares,
         this.transferAuthority,
         payer, // owner
-        [], // multi signers
         0,
       ),
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
+      createApproveInstruction(
         this.yourPayment,
         this.transferAuthority,
         payer, // owner
-        [], // multi signers
         0,
       ),
     ];
