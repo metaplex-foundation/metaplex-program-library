@@ -1,52 +1,71 @@
 import { BeetArgsStruct, bignum, u64, u8 } from '@metaplex-foundation/beet';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   AccountMeta,
+  Connection,
   PublicKey,
   Signer,
   SystemProgram,
-  SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
 } from '@solana/web3.js';
+import { getOrCreateAssociatedTokenAccountIntruction as getOrCreateAssociatedTokenAccountInfoIntructions } from './instructions-token';
 
 // NOTE: lots of these where pulled from the spl-token/ts folder and should
 // be used from there once we update the version of that lib
 
 /**
- * Construct an AssociatedTokenAccount instruction
+ * Allocates an account for the provided {@link mint} address.
+ * Used by setups that need to initialize a mint account.
  *
- * @param payer                    Payer of the initialization fees
- * @param associatedToken          New associated token account
- * @param owner                    Owner of the new account
- * @param mint                     Token mint account
- * @param programId                SPL Token program account
- * @param associatedTokenProgramId SPL Associated Token program account
+ * @param args
+ * @param args.payer funds transaction
+ * @param args.mint the mint address
+ * @param args.decimals number of decimals in token account amounts
+ * @param args.owner mint owner, defaults to {@link args.payer}
+ * @param args.freezeAuthority mint owner, defaults to {@link args.payer}
  *
- * @return Instruction to add to a transaction
+ * @category common
+ * @private
  */
-export function createAssociatedTokenAccountInstruction(
-  payer: PublicKey,
-  associatedToken: PublicKey,
-  owner: PublicKey,
-  mint: PublicKey,
-  programId = TOKEN_PROGRAM_ID,
-  associatedTokenProgramId = ASSOCIATED_TOKEN_PROGRAM_ID,
-): TransactionInstruction {
-  const keys = [
-    { pubkey: payer, isSigner: true, isWritable: true },
-    { pubkey: associatedToken, isSigner: false, isWritable: true },
-    { pubkey: owner, isSigner: false, isWritable: false },
-    { pubkey: mint, isSigner: false, isWritable: false },
-    { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-    { pubkey: programId, isSigner: false, isWritable: false },
-    { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+export async function createMintInstructions(
+  connection: Connection,
+  args: {
+    payer: PublicKey;
+    mint: PublicKey;
+    decimals?: number;
+    owner?: PublicKey;
+    freezeAuthority?: PublicKey;
+    associateWithOwner?: boolean;
+  },
+) {
+  const {
+    payer,
+    mint,
+    decimals = 0,
+    owner = args.payer,
+    freezeAuthority = args.payer,
+    associateWithOwner = false,
+  } = args;
+  const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span, 'confirmed');
+  const instructions = [
+    SystemProgram.createAccount({
+      fromPubkey: payer,
+      newAccountPubkey: mint,
+      lamports: mintRent,
+      space: MintLayout.span,
+      programId: TOKEN_PROGRAM_ID,
+    }),
+    Token.createInitMintInstruction(TOKEN_PROGRAM_ID, mint, decimals, owner, freezeAuthority),
   ];
-
-  return new TransactionInstruction({
-    keys,
-    programId: associatedTokenProgramId,
-    data: Buffer.alloc(0),
-  });
+  if (associateWithOwner) {
+    const { ataAddress: address, instruction: createAssociatedTokenAccountIx } =
+      await getOrCreateAssociatedTokenAccountInfoIntructions(connection, args.payer, mint, owner);
+    if (createAssociatedTokenAccountIx != null) {
+      instructions.push(createAssociatedTokenAccountIx);
+    }
+    const mintToIx = createMintToInstruction(mint, address, payer, 1);
+    instructions.push(mintToIx);
+  }
 }
 
 const MintTo = 7;
