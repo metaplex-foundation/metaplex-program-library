@@ -1,3 +1,7 @@
+//! # Metaplex Program Library: Auction House
+//! AuctionHouse is a protocol for marketplaces to implement a decentralized sales contract. It is simple, fast and very cheap. AuctionHouse is a Solana program available on Mainnet Beta and Devnet. Anyone can create an AuctionHouse and accept any SPL token they wish.
+//!
+//! Full docs can be found [here](https://docs.metaplex.com/auction-house/definition).
 pub mod bid;
 pub mod constants;
 pub mod pda;
@@ -1082,94 +1086,132 @@ pub mod auction_house {
     }
 }
 
+/// Accounts for the [`sell` handler](auction_house/fn.sell.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct Sell<'info> {
-    wallet: UncheckedAccount<'info>,
+    /// User wallet account.
+    pub wallet: UncheckedAccount<'info>,
     #[account(mut)]
-    token_account: Account<'info, TokenAccount>,
-    metadata: UncheckedAccount<'info>,
-    authority: UncheckedAccount<'info>,
+    /// SPL token account containing token for sale.
+    pub token_account: Account<'info, TokenAccount>,
+    /// Metaplex metadata account decorating SPL mint account.
+    pub metadata: UncheckedAccount<'info>,
+    /// Auction House authority account.
+    pub authority: UncheckedAccount<'info>,
+    /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Account<'info, AuctionHouse>,
+    /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
+    pub auction_house_fee_account: UncheckedAccount<'info>,
+    /// Seller trade state PDA account encoding the sell order.
     #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
-    seller_trade_state: UncheckedAccount<'info>,
+    pub seller_trade_state: UncheckedAccount<'info>,
+    /// Free seller trade state PDA account encoding a free sell order.
     #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
-    free_seller_trade_state: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
-    system_program: Program<'info, System>,
+    pub free_seller_trade_state: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
     #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
-    program_as_signer: UncheckedAccount<'info>,
-    rent: Sysvar<'info, Rent>,
+    pub program_as_signer: UncheckedAccount<'info>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
+/// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct ExecuteSale<'info> {
+    /// Buyer user wallet account.
     #[account(mut)]
-    buyer: UncheckedAccount<'info>,
+    pub buyer: UncheckedAccount<'info>,
+    /// Seller user wallet account.
     #[account(mut)]
-    seller: UncheckedAccount<'info>,
+    pub seller: UncheckedAccount<'info>,
     // cannot mark these as real Accounts or else we blow stack size limit
+    ///Token account where the SPL token is stored.
     #[account(mut)]
-    token_account: UncheckedAccount<'info>,
-    token_mint: UncheckedAccount<'info>,
-    metadata: UncheckedAccount<'info>,
+    pub token_account: UncheckedAccount<'info>,
+    /// Token mint account for the SPL token.
+    pub token_mint: UncheckedAccount<'info>,
+    /// Metaplex metadata account decorating SPL mint account.
+    pub metadata: UncheckedAccount<'info>,
     // cannot mark these as real Accounts or else we blow stack size limit
-    treasury_mint: UncheckedAccount<'info>,
+    /// Auction House treasury mint account.
+    pub treasury_mint: UncheckedAccount<'info>,
+    /// Buyer escrow payment account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
-    escrow_payment_account: UncheckedAccount<'info>,
+    pub escrow_payment_account: UncheckedAccount<'info>,
+    /// Seller SOL or SPL account to receive payment at.
     #[account(mut)]
-    seller_payment_receipt_account: UncheckedAccount<'info>,
+    pub seller_payment_receipt_account: UncheckedAccount<'info>,
+    /// Buyer SPL token account to receive purchased item at.
     #[account(mut)]
-    buyer_receipt_token_account: UncheckedAccount<'info>,
-    authority: UncheckedAccount<'info>,
+    pub buyer_receipt_token_account: UncheckedAccount<'info>,
+    /// Auction House instance authority.
+    pub authority: UncheckedAccount<'info>,
+    /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
-    auction_house: Box<Account<'info, AuctionHouse>>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
+    /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
+    pub auction_house_fee_account: UncheckedAccount<'info>,
+    /// Auction House instance treasury account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
-    auction_house_treasury: UncheckedAccount<'info>,
+    pub auction_house_treasury: UncheckedAccount<'info>,
+    /// Buyer trade state PDA account encoding the buy order.
     #[account(mut)]
-    buyer_trade_state: UncheckedAccount<'info>,
+    pub buyer_trade_state: UncheckedAccount<'info>,
+    /// Seller trade state PDA account encoding the sell order.
     #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=seller_trade_state.to_account_info().data.borrow()[0])]
-    seller_trade_state: UncheckedAccount<'info>,
+    pub seller_trade_state: UncheckedAccount<'info>,
+    /// Free seller trade state PDA account encoding a free sell order.
     #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
-    free_trade_state: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
-    system_program: Program<'info, System>,
-    ata_program: Program<'info, AssociatedToken>,
+    pub free_trade_state: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub ata_program: Program<'info, AssociatedToken>,
     #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
-    program_as_signer: UncheckedAccount<'info>,
-    rent: Sysvar<'info, Rent>,
+    pub program_as_signer: UncheckedAccount<'info>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
+/// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8)]
 pub struct Deposit<'info> {
-    wallet: Signer<'info>,
+    /// User wallet account.
+    pub wallet: Signer<'info>,
+    /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
-    payment_account: UncheckedAccount<'info>,
-    transfer_authority: UncheckedAccount<'info>,
+    pub payment_account: UncheckedAccount<'info>,
+    /// SPL token account transfer authority.
+    pub transfer_authority: UncheckedAccount<'info>,
+    /// Buyer escrow payment account PDA.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
-    escrow_payment_account: UncheckedAccount<'info>,
-    treasury_mint: Account<'info, Mint>,
-    authority: UncheckedAccount<'info>,
+    pub escrow_payment_account: UncheckedAccount<'info>,
+    /// Auction House instance treasury mint account.
+    pub treasury_mint: Account<'info, Mint>,
+    /// Auction House instance authority account.
+    pub authority: UncheckedAccount<'info>,
+    /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Account<'info, AuctionHouse>,
+    /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
-    system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
+    pub auction_house_fee_account: UncheckedAccount<'info>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
+/// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8)]
 pub struct Withdraw<'info> {
+    /// User wallet account.
     wallet: UncheckedAccount<'info>,
+    ///
     #[account(mut)]
     receipt_account: UncheckedAccount<'info>,
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
@@ -1186,39 +1228,57 @@ pub struct Withdraw<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
+/// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts)]
 #[instruction(buyer_price: u64, token_size: u64)]
 pub struct Cancel<'info> {
+    /// User wallet account.
     #[account(mut)]
     wallet: UncheckedAccount<'info>,
+    /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]
     token_account: Account<'info, TokenAccount>,
+    /// Token mint account of SPL token.
     token_mint: Account<'info, Mint>,
+    /// Auction House instance authority account.
     authority: UncheckedAccount<'info>,
+    /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
     auction_house: Account<'info, AuctionHouse>,
+    /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
+    /// Trade state PDA account representing the bid or ask to be canceled.
     #[account(mut)]
     trade_state: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
 }
 
+/// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).
 #[derive(Accounts)]
 #[instruction(bump: u8, fee_payer_bump: u8, treasury_bump: u8)]
 pub struct CreateAuctionHouse<'info> {
+    /// Treasury mint account, either native SOL mint or a SPL token mint.
     treasury_mint: Account<'info, Mint>,
+    /// Key paying SOL fees for setting up the Auction House.
     payer: Signer<'info>,
+    // Authority key for the Auction House.
     authority: UncheckedAccount<'info>,
+    /// Account that pays for fees if the marketplace executes sales.
     #[account(mut)]
     fee_withdrawal_destination: UncheckedAccount<'info>,
+    /// SOL or SPL token account to receive Auction House fees. If treasury mint is native this will be the same as the `treasury_withdrawl_destination_owner`.
     #[account(mut)]
     treasury_withdrawal_destination: UncheckedAccount<'info>,
+    /// Owner of the `treasury_withdrawal_destination` account or the same address if the `treasury_mint` is native.
     treasury_withdrawal_destination_owner: UncheckedAccount<'info>,
+    /// Auction House instance PDA account.
     #[account(init, seeds=[PREFIX.as_bytes(), authority.key().as_ref(), treasury_mint.key().as_ref()], bump=bump, space=AUCTION_HOUSE_SIZE, payer=payer)]
     auction_house: Account<'info, AuctionHouse>,
+    /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
+    /// Auction House instance treasury PDA account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=treasury_bump)]
     auction_house_treasury: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
@@ -1227,6 +1287,7 @@ pub struct CreateAuctionHouse<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
+/// Accounts for the [`update_auction_house` handler](auction_house/fn.update_auction_house.html).
 #[derive(Accounts)]
 pub struct UpdateAuctionHouse<'info> {
     treasury_mint: Account<'info, Mint>,
@@ -1246,6 +1307,7 @@ pub struct UpdateAuctionHouse<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
+/// Accounts for the [`withdraw_from_treasury` handler](auction_house/fn.withdraw_from_treasury.html).
 #[derive(Accounts)]
 pub struct WithdrawFromTreasury<'info> {
     treasury_mint: Account<'info, Mint>,
@@ -1260,6 +1322,7 @@ pub struct WithdrawFromTreasury<'info> {
     system_program: Program<'info, System>,
 }
 
+/// Accounts for the [`withdraw_from_fee` handler](auction_house/fn.withdraw_from_fee.html).
 #[derive(Accounts)]
 pub struct WithdrawFromFee<'info> {
     authority: Signer<'info>,
