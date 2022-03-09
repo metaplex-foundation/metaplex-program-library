@@ -83,6 +83,7 @@ export class CreateMetadataAccountSetup {
    */
   async createMintAccount({ decimals = 0, owner = this.payer, freezeAuthority = this.payer } = {}) {
     const mint = Keypair.generate();
+    const fromTokenAccount = await getOrCreateAssociatedAccountInstruction(this.payer.publicKey);
 
     const instructions = await createMintInstructions(this.connection, {
       payer: this.payer,

@@ -66,6 +66,7 @@ export async function createMintInstructions(
     const mintToIx = createMintToInstruction(mint, address, payer, 1);
     instructions.push(mintToIx);
   }
+  return instructions;
 }
 
 const MintTo = 7;
