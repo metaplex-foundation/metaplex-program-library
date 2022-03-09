@@ -1,7 +1,7 @@
 use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke, system_instruction},
-    AnchorDeserialize, AnchorSerialize,
+    AnchorDeserialize,
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::program_memory::sol_memset;

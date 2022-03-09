@@ -6,7 +6,7 @@ use crate::{
     ErrorCode,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
-use solana_program::{sysvar::instructions::get_instruction_relative, sysvar};
+use solana_program::{sysvar, sysvar::instructions::get_instruction_relative};
 
 pub const BID_RECEIPT_SIZE: usize = 8 + //key
 32 + // trade_state
@@ -23,6 +23,7 @@ pub const BID_RECEIPT_SIZE: usize = 8 + //key
 8 + // created_at
 1 + 8; // canceled_at
 
+/// Receipt for a bid transaction.
 #[account]
 pub struct BidReceipt {
     pub trade_state: Pubkey,
@@ -54,6 +55,7 @@ pub const LISTING_RECEIPT_SIZE: usize = 8 + //key
 8 + // created_at
 1 + 8; // canceled_at;
 
+/// Receipt for a listing transaction.
 #[account]
 pub struct ListingReceipt {
     pub trade_state: Pubkey,
@@ -81,6 +83,7 @@ pub const PURCHASE_RECEIPT_SIZE: usize = 8 + //key
 1 + // bump
 8; // created_at
 
+/// Receipt for a purchase transaction.
 #[account]
 pub struct PurchaseReceipt {
     pub bookkeeper: Pubkey,
@@ -94,6 +97,7 @@ pub struct PurchaseReceipt {
     pub created_at: i64,
 }
 
+/// Create a Listing Receipt account at a PDA.
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintListingReceipt<'info> {
@@ -107,6 +111,14 @@ pub struct PrintListingReceipt<'info> {
     instruction: UncheckedAccount<'info>,
 }
 
+/// Print Listing Receipt
+///
+/// Create a Listing Receipt account at a PDA with the seeds:
+/// "listing_receipt", <SELLER_TRADE_STATE_PUBKEY>, <BUMP_SEED>.
+///
+/// The previous instruction is checked to ensure that it is a "Listing" type to
+/// match the receipt type being created. Passing in an empty account results in the PDA
+/// being created; an existing account will be written over.
 pub fn print_listing_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
     receipt_bump: u8,

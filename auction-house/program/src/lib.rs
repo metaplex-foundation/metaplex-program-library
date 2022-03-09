@@ -25,6 +25,8 @@ pub mod auction_house {
 
     use super::*;
     use solana_program::program_memory::sol_memset;
+
+    /// Withdraw `amount` from the Auction House Fee Account to a provided destination account.
     pub fn withdraw_from_fee<'info>(
         ctx: Context<'_, '_, '_, 'info, WithdrawFromFee<'info>>,
         amount: u64,
@@ -59,6 +61,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Withdraw `amount` from the Auction House Treasury Account to a provided destination account.
     pub fn withdraw_from_treasury<'info>(
         ctx: Context<'_, '_, '_, 'info, WithdrawFromTreasury<'info>>,
         amount: u64,
@@ -122,6 +125,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Update Auction House values such as seller fee basis points, update authority, treasury account, etc.
     pub fn update_auction_house<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateAuctionHouse<'info>>,
         seller_fee_basis_points: Option<u16>,
@@ -191,6 +195,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Create a new Auction House instance.
     pub fn create_auction_house<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateAuctionHouse<'info>>,
         bump: u8,
@@ -286,6 +291,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Withdraw `amount` from the escrow payment account for your specific wallet.
     pub fn withdraw<'info>(
         ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
         escrow_payment_bump: u8,
@@ -406,6 +412,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Deposit `amount` into the escrow payment account for your specific wallet.
     pub fn deposit<'info>(
         ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
         escrow_payment_bump: u8,
@@ -499,6 +506,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
     pub fn cancel<'info>(
         ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
         buyer_price: u64,
@@ -572,6 +580,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
     #[inline(never)]
     pub fn execute_sale<'info>(
         ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
@@ -702,7 +711,7 @@ pub mod auction_house {
             &[auction_house.bump],
         ];
 
-        // with the native account, the escrow is it's own owner,
+        // with the native account, the escrow is its own owner,
         // whereas with token, it is the auction house that is owner.
         let signer_seeds_for_royalties = if is_native {
             escrow_signer_seeds
@@ -881,6 +890,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
     pub fn sell<'info>(
         ctx: Context<'_, '_, '_, 'info, Sell<'info>>,
         trade_state_bump: u8,
@@ -902,6 +912,7 @@ pub mod auction_house {
         let program_as_signer = &ctx.accounts.program_as_signer;
         let rent = &ctx.accounts.rent;
 
+        // Wallet has to be a signer but there are different kinds of errors when it's not.
         if !wallet.to_account_info().is_signer {
             if buyer_price == 0 {
                 return Err(ErrorCode::SaleRequiresSigner.into());
@@ -998,6 +1009,7 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
     pub fn buy<'info>(
         ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
         trade_state_bump: u8,
@@ -1014,6 +1026,7 @@ pub mod auction_house {
         )
     }
 
+    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
     pub fn public_buy<'info>(
         ctx: Context<'_, '_, '_, 'info, PublicBuy<'info>>,
         trade_state_bump: u8,
@@ -1030,6 +1043,7 @@ pub mod auction_house {
         )
     }
 
+    /// Create a listing receipt by creating a `listing_receipt` account.
     pub fn print_listing_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
         receipt_bump: u8,
@@ -1037,12 +1051,14 @@ pub mod auction_house {
         receipt::print_listing_receipt(ctx, receipt_bump)
     }
 
+    /// Cancel an active listing receipt by setting the `canceled_at` field to the current time.
     pub fn cancel_listing_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, CancelListingReceipt<'info>>,
     ) -> ProgramResult {
         receipt::cancel_listing_receipt(ctx)
     }
 
+    /// Create a bid receipt by creating a `bid_receipt` account.
     pub fn print_bid_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintBidReceipt<'info>>,
         receipt_bump: u8,
@@ -1050,12 +1066,14 @@ pub mod auction_house {
         receipt::print_bid_receipt(ctx, receipt_bump)
     }
 
+    /// Cancel an active bid receipt by setting the `canceled_at` field to the current time.
     pub fn cancel_bid_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, CancelBidReceipt<'info>>,
     ) -> ProgramResult {
         receipt::cancel_bid_receipt(ctx)
     }
 
+    /// Create a purchase receipt by creating a `purchase_receipt` account.
     pub fn print_purchase_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
         purchase_receipt_bump: u8,
