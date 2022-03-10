@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 import test from 'tape';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
@@ -152,12 +152,7 @@ test('withdraw: success', async (t) => {
     payer.publicKey,
   );
 
-  const destination = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    treasuryMint.publicKey,
-    payer.publicKey,
-  );
+  const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
   const metadata = await Metadata.getPDA(resourceMint.publicKey);
 

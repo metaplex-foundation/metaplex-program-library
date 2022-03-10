@@ -1,6 +1,6 @@
 import BN from 'bn.js';
 import test from 'tape';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token';
 import {
   assertConfirmedTransaction,
   assertError,
@@ -110,6 +110,7 @@ test('claim resource: success', async (t) => {
 
   await sleep(1000);
 
+  // TODO: this transaction fails with: `MarketIsNotStarted. Error Number: 6013. Error Message: Market is not started.`
   const { tx: buyTx } = await createBuyTransaction({
     connection,
     buyer: payer.publicKey,
@@ -163,12 +164,7 @@ test('claim resource: success', async (t) => {
     payer.publicKey,
   );
 
-  const destination = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    treasuryMint.publicKey,
-    payer.publicKey,
-  );
+  const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
   const metadata = await Metadata.getPDA(resourceMint.publicKey);
 
@@ -231,8 +227,7 @@ test('claim resource: success', async (t) => {
 
   assertConfirmedTransaction(t, claimResourceRes.txConfirmed);
 
-  const token = new Token(connection, resourceMint.publicKey, TOKEN_PROGRAM_ID, payer);
-  const createdToken = await token.getAccountInfo(claimToken.publicKey);
+  const createdToken = await getAccount(connection, claimToken.publicKey);
 
   t.assert(createdToken.mint.toBase58() === resourceMint.publicKey.toBase58());
   t.assert(createdToken.owner.toBase58() === payer.publicKey.toBase58());

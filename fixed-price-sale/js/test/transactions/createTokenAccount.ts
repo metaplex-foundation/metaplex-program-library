@@ -1,5 +1,9 @@
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
-import { AccountLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  AccountLayout,
+  createInitializeAccountInstruction,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 
 export const createTokenAccount = async ({
   payer,
@@ -29,12 +33,7 @@ export const createTokenAccount = async ({
   );
 
   createTokenTx.add(
-    Token.createInitAccountInstruction(
-      new PublicKey(TOKEN_PROGRAM_ID),
-      mint,
-      tokenAccount.publicKey,
-      owner ?? payer,
-    ),
+    createInitializeAccountInstruction(tokenAccount.publicKey, mint, owner ?? payer),
   );
 
   createTokenTx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;

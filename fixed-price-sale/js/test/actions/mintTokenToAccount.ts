@@ -1,5 +1,5 @@
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createMintToInstruction } from '@solana/spl-token';
 import { defaultSendOptions, TransactionHandler } from '@metaplex-foundation/amman';
 
 import { CreateMint } from './createMintAccount';
@@ -30,16 +30,7 @@ export const mintTokenToAccount = async ({
 
   tx.add(createTokenTx);
 
-  tx.add(
-    Token.createMintToInstruction(
-      new PublicKey(TOKEN_PROGRAM_ID),
-      mint.publicKey,
-      associatedTokenAccount.publicKey,
-      payer,
-      [],
-      1,
-    ),
-  );
+  tx.add(createMintToInstruction(mint.publicKey, associatedTokenAccount.publicKey, payer, 1));
 
   await transactionHandler.sendAndConfirmTransaction(
     tx,
