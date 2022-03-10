@@ -6,7 +6,10 @@ import {
 } from '@metaplex-foundation/amman';
 import { Connection, Keypair } from '@solana/web3.js';
 
-import { createCreateStoreInstruction, CreateStoreInstructionArgs } from '../../src/instructions';
+import {
+  createCreateStoreInstruction,
+  CreateStoreInstructionArgs,
+} from '../../src/generated/instructions';
 
 import { createAndSignTransaction, logDebug } from '../utils';
 

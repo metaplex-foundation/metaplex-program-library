@@ -1,6 +1,6 @@
 //! Module provide program defined state
 
-use crate::utils::{DESCRIPTION_DEFAULT_SIZE, MAX_SECONDARY_CREATORS_LEN, NAME_DEFAULT_SIZE};
+use crate::utils::{DESCRIPTION_DEFAULT_SIZE, MAX_PRIMARY_CREATORS_LEN, NAME_DEFAULT_SIZE};
 use anchor_lang::prelude::*;
 
 #[account]
@@ -64,6 +64,8 @@ pub struct Market {
     pub start_date: u64,
     pub end_date: Option<u64>,
     pub state: MarketState,
+    // need this field to calculate royalties at withdraw
+    pub funds_collected: u64,
 }
 
 impl Market {
@@ -81,7 +83,8 @@ impl Market {
         + 9
         + 8
         + 9
-        + 1;
+        + 1
+        + 8;
 }
 
 #[account]
@@ -97,10 +100,10 @@ impl TradeHistory {
 }
 
 #[account]
-pub struct SecondaryMetadataCreators {
+pub struct PrimaryMetadataCreators {
     pub creators: Vec<mpl_token_metadata::state::Creator>,
 }
 
-impl SecondaryMetadataCreators {
-    pub const LEN: usize = 8 + ((32 + 1 + 1) * MAX_SECONDARY_CREATORS_LEN + 1);
+impl PrimaryMetadataCreators {
+    pub const LEN: usize = 8 + ((32 + 1 + 1) * MAX_PRIMARY_CREATORS_LEN + 1);
 }

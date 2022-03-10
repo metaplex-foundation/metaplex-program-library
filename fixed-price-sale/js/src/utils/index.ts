@@ -7,7 +7,7 @@ const VAULT_OWNER_PREFIX = 'mt_vault';
 const HISTORY_PREFIX = 'history';
 const PAYOUT_TICKET_PREFIX = 'payout_ticket';
 const HOLDER_PREFIX = 'holder';
-const SECONDARY_METADATA_CREATORS_PREFIX = 'secondary_creators';
+const PRIMARY_METADATA_CREATORS_PREFIX = 'primary_creators';
 
 export const findVaultOwnerAddress = (
   mint: PublicKey,
@@ -46,11 +46,11 @@ export const findPayoutTicketAddress = (
   );
 };
 
-export const findSecondaryMetadataCreatorsAddress = (
+export const findPrimaryMetadataCreatorsAddress = (
   metadata: PublicKey,
 ): Promise<[PublicKey, number]> =>
   PublicKey.findProgramAddress(
-    [Buffer.from(SECONDARY_METADATA_CREATORS_PREFIX), metadata.toBuffer()],
+    [Buffer.from(PRIMARY_METADATA_CREATORS_PREFIX), metadata.toBuffer()],
     new PublicKey(PROGRAM_ID),
   );
 

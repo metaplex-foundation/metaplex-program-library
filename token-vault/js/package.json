@@ -12,7 +12,17 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "test": "echo mpl-token-vault tests coming up ...",
+    "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
+    "amman:start": "DEBUG='amman*' amman validator",
+    "amman:stop": "pkill solana-test-validator",
+    "pretest": "yarn build && yarn amman:start",
+    "test": "tape dist/test/*.js && yarn ex:all",
+    "ex:all": " yarn ex:init-vault && yarn ex:add-token-1 && yarn ex:add-token-2 && yarn ex:life-of-vault",
+    "ex:init-vault": "node dist/examples/init-vault.js",
+    "ex:add-token-1": "node dist/examples/add-token-to-inactive-vault.single-transaction.js",
+    "ex:add-token-2": "node dist/examples/add-token-to-inactive-vault.two-transactions.js",
+    "ex:life-of-vault": "node dist/examples/life-of-vault.js",
+    "posttest": "yarn build && yarn amman:stop",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
@@ -20,7 +30,7 @@
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
-    "/dist"
+    "/dist/src"
   ],
   "publishConfig": {
     "access": "public",
@@ -37,12 +47,24 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
   "dependencies": {
+    "@metaplex-foundation/beet": "^0.0.8",
+    "@metaplex-foundation/beet-solana": "^0.0.6",
+    "@metaplex-foundation/cusper": "^0.0.2",
     "@metaplex-foundation/mpl-core": "^0.0.2",
     "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.35.1"
+    "@solana/web3.js": "^1.35.1",
+    "debug": "^4.3.3",
+    "utility-types": "^3.10.0"
   },
   "devDependencies": {
+    "@metaplex-foundation/amman": "^0.1.0",
+    "@types/debug": "^4.1.7",
+    "bn.js": "^5.2.0",
     "eslint": "^8.3.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "spok": "^1.4.3",
+    "tape": "^5.5.0",
+    "typedoc": "^0.22.11",
+    "typescript": "^4.5.5"
   }
 }
