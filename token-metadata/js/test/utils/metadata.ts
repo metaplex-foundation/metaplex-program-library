@@ -9,11 +9,7 @@ import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 
 import { addLabel } from './address-labels';
 import { mintAndCreateMetadata } from '../actions';
-
-export const URI = 'uri';
-export const NAME = 'test';
-export const SYMBOL = 'sym';
-export const SELLER_FEE_BASIS_POINTS = 10;
+import { URI, NAME, SYMBOL, SELLER_FEE_BASIS_POINTS } from './consts';
 
 export async function initMetadata() {
   const payer = Keypair.generate();

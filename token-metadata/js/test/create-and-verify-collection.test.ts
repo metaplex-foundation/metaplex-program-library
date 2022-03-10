@@ -6,16 +6,8 @@ import {
   MetadataProgram,
   VerifyCollection,
 } from '../src/mpl-token-metadata';
-import {
-  killStuckProcess,
-  getMetadataData,
-  URI,
-  NAME,
-  SYMBOL,
-  connectionURL,
-  SELLER_FEE_BASIS_POINTS,
-  logDebug,
-} from './utils';
+import { killStuckProcess, getMetadataData, connectionURL, logDebug } from './utils';
+import { URI, NAME, SYMBOL, SELLER_FEE_BASIS_POINTS } from './utils/consts';
 import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair } from '@solana/web3.js';
 import { createCollection, createMasterEdition } from './actions';
