@@ -1,3 +1,4 @@
+//! Create PDAs to to track the status and results of various Auction House actions.
 use crate::{
     constants::*,
     id,
@@ -97,24 +98,22 @@ pub struct PurchaseReceipt {
     pub created_at: i64,
 }
 
-/// Create a Listing Receipt account at a PDA.
+/// Accounts for the [`print_listing_receipt` hanlder](fn.print_listing_receipt.html).
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintListingReceipt<'info> {
     #[account(mut)]
-    receipt: UncheckedAccount<'info>,
+    pub receipt: UncheckedAccount<'info>,
     #[account(mut)]
-    bookkeeper: Signer<'info>,
-    system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
+    pub bookkeeper: Signer<'info>,
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
     #[account(address = sysvar::instructions::id())]
-    instruction: UncheckedAccount<'info>,
+    pub instruction: UncheckedAccount<'info>,
 }
 
-/// Print Listing Receipt
-///
 /// Create a Listing Receipt account at a PDA with the seeds:
-/// "listing_receipt", <SELLER_TRADE_STATE_PUBKEY>, <BUMP_SEED>.
+/// "listing_receipt", <SELLER_TRADE_STATE_PUBKEY>.
 ///
 /// The previous instruction is checked to ensure that it is a "Listing" type to
 /// match the receipt type being created. Passing in an empty account results in the PDA
@@ -190,15 +189,17 @@ pub fn print_listing_receipt<'info>(
     Ok(())
 }
 
+/// Accounts for the [`cancel_listing_receipt` handler](fn.cancel_listing_receipt.html).
 #[derive(Accounts)]
 pub struct CancelListingReceipt<'info> {
     #[account(mut)]
-    receipt: UncheckedAccount<'info>,
-    system_program: Program<'info, System>,
+    pub receipt: UncheckedAccount<'info>,
+    pub system_program: Program<'info, System>,
     #[account(address = sysvar::instructions::id())]
-    instruction: UncheckedAccount<'info>,
+    pub instruction: UncheckedAccount<'info>,
 }
 
+/// Add a cancelation time to a listing receipt.
 pub fn cancel_listing_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelListingReceipt<'info>>,
 ) -> ProgramResult {
@@ -240,6 +241,7 @@ pub fn cancel_listing_receipt<'info>(
     Ok(())
 }
 
+/// Accounts for the [`print_bid_receipt` handler](fn.print_bid_receipt.html).
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintBidReceipt<'info> {
@@ -253,6 +255,12 @@ pub struct PrintBidReceipt<'info> {
     instruction: UncheckedAccount<'info>,
 }
 
+/// Create a Bid Receipt account at a PDA with the seeds:
+/// "bid_receipt", <BUYER_TRADE_STATE_PUBKEY>.
+///
+/// The previous instruction is checked to ensure that it is a "Bid" type to
+/// match the receipt type being created. Passing in an empty account results in the PDA
+/// being created; an existing account will be written over.
 pub fn print_bid_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintBidReceipt<'info>>,
     receipt_bump: u8,
@@ -328,6 +336,7 @@ pub fn print_bid_receipt<'info>(
     Ok(())
 }
 
+/// Accounts for the [`cancel_bid_receipt` handler](fn.cancel_bid_receipt.html).
 #[derive(Accounts)]
 pub struct CancelBidReceipt<'info> {
     #[account(mut)]
@@ -337,6 +346,7 @@ pub struct CancelBidReceipt<'info> {
     instruction: UncheckedAccount<'info>,
 }
 
+/// Add a canceled_at timestamp to the Bid Receipt account.
 pub fn cancel_bid_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelBidReceipt<'info>>,
 ) -> ProgramResult {
@@ -378,6 +388,7 @@ pub fn cancel_bid_receipt<'info>(
     Ok(())
 }
 
+/// Accounts for the [`print_purchase_receipt` handler](fn.print_purchase_receipt.html).
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintPurchaseReceipt<'info> {
@@ -395,6 +406,12 @@ pub struct PrintPurchaseReceipt<'info> {
     instruction: UncheckedAccount<'info>,
 }
 
+/// Create a Purchase Receipt account at a PDA with the seeds:
+/// "listing_receipt", <SELLER_TRADE_STATE_PUBKEY>, <BUYER_TRADE_STATE_PUBKEY>.
+///
+/// The previous instruction is checked to ensure that it is a "Purchase" type to
+/// match the receipt type being created. Passing in an empty account results in the PDA
+/// being created; an existing account will be written over.
 pub fn print_purchase_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
     purchase_receipt_bump: u8,
