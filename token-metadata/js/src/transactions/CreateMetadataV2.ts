@@ -35,56 +35,61 @@ export type CreateMetadataV2Params = {
 export class CreateMetadataV2 extends Transaction {
   constructor(options: TransactionCtorFields, params: CreateMetadataV2Params) {
     super(options);
-    const { feePayer } = options;
-    const { metadata, metadataData, updateAuthority, mint, mintAuthority } = params;
-
-    const data = CreateMetadataV2Args.serialize({
-      data: metadataData,
-      isMutable: true,
-    });
-
-    this.add(
-      new TransactionInstruction({
-        keys: [
-          {
-            pubkey: metadata,
-            isSigner: false,
-            isWritable: true,
-          },
-          {
-            pubkey: mint,
-            isSigner: false,
-            isWritable: false,
-          },
-          {
-            pubkey: mintAuthority,
-            isSigner: true,
-            isWritable: false,
-          },
-          {
-            pubkey: feePayer,
-            isSigner: true,
-            isWritable: false,
-          },
-          {
-            pubkey: updateAuthority,
-            isSigner: false,
-            isWritable: false,
-          },
-          {
-            pubkey: SystemProgram.programId,
-            isSigner: false,
-            isWritable: false,
-          },
-          {
-            pubkey: SYSVAR_RENT_PUBKEY,
-            isSigner: false,
-            isWritable: false,
-          },
-        ],
-        programId: MetadataProgram.PUBKEY,
-        data,
-      }),
-    );
+    this.add(createMetadataV2Instruction(options, params));
   }
+}
+
+export function createMetadataV2Instruction(
+  options: TransactionCtorFields,
+  params: CreateMetadataV2Params,
+): TransactionInstruction {
+  const { feePayer } = options;
+  const { metadata, metadataData, updateAuthority, mint, mintAuthority } = params;
+
+  const data = CreateMetadataV2Args.serialize({
+    data: metadataData,
+    isMutable: true,
+  });
+
+  return new TransactionInstruction({
+    keys: [
+      {
+        pubkey: metadata,
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: mint,
+        isSigner: false,
+        isWritable: false,
+      },
+      {
+        pubkey: mintAuthority,
+        isSigner: true,
+        isWritable: false,
+      },
+      {
+        pubkey: feePayer,
+        isSigner: true,
+        isWritable: false,
+      },
+      {
+        pubkey: updateAuthority,
+        isSigner: false,
+        isWritable: false,
+      },
+      {
+        pubkey: SystemProgram.programId,
+        isSigner: false,
+        isWritable: false,
+      },
+      {
+        pubkey: SYSVAR_RENT_PUBKEY,
+        isSigner: false,
+        isWritable: false,
+      },
+    ],
+    programId: MetadataProgram.PUBKEY,
+    data,
+  });
 }
