@@ -434,7 +434,7 @@ pub mod candy_machine {
     pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> ProgramResult {
         let ixs = &ctx.accounts.instructions;
         let previous_instruction = get_instruction_relative(-1, ixs)?;
-        if &previous_instruction.program_id != &crate::id() {
+        if &previous_instruction.program_id != &candy_machine::id() {
             msg!(
                 "Transaction had ix with program id {}",
                 &previous_instruction.program_id
@@ -467,22 +467,18 @@ pub mod candy_machine {
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
 
-        let collection_pda_account = ctx.accounts.collection_pda.to_account_info();
-        let collection_ref = collection_pda_account.data.borrow();
-        let mut collection_pda_data: &[u8] = &collection_ref;
-        let collection_pda: CollectionPDA =
-            CollectionPDA::try_deserialize(&mut collection_pda_data)?;
+        let collection_pda = &ctx.accounts.collection_pda;
         let collection_mint = ctx.accounts.collection_mint.to_account_info();
         if &collection_pda.mint != &collection_mint.key() {
             return Err(ErrorCode::MismatchedCollectionMint.into());
         }
         let cm_ref = ctx.accounts.candy_machine.key();
         let seeds = [b"collection".as_ref(), cm_ref.as_ref()];
-        let bump = assert_derivation(&crate::id(), &collection_pda_account, &seeds)?;
+        let bump = assert_derivation(&crate::id(), &collection_pda.to_account_info(), &seeds)?;
         let signer_seeds = [b"collection".as_ref(), cm_ref.as_ref(), &[bump]];
         let set_collection_infos = vec![
             ctx.accounts.metadata.to_account_info(),
-            collection_pda_account.to_account_info(),
+            collection_pda.to_account_info(),
             ctx.accounts.payer.to_account_info(),
             ctx.accounts.authority.to_account_info(),
             collection_mint.to_account_info(),
@@ -490,12 +486,11 @@ pub mod candy_machine {
             ctx.accounts.collection_master_edition.to_account_info(),
             ctx.accounts.collection_authority_record.to_account_info(),
         ];
-        drop(collection_ref);
         invoke_signed(
             &set_and_verify_collection(
                 ctx.accounts.token_metadata_program.key(),
                 ctx.accounts.metadata.key(),
-                collection_pda_account.key(),
+                collection_pda.key(),
                 ctx.accounts.payer.key(),
                 ctx.accounts.authority.key(),
                 collection_mint.key(),
