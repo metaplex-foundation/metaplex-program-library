@@ -1,13 +1,16 @@
+//! Create both private and public bids.
+//! A private bid is a bid on a specific NFT *held by a specific person*. A public bid is a bid on a specific NFT *regardless of who holds it*.
 use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke, system_instruction},
-    AnchorDeserialize, AnchorSerialize,
+    AnchorDeserialize,
 };
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::program_memory::sol_memset;
 
 use crate::{constants::*, utils::*, AuctionHouse, ErrorCode, TRADE_STATE_SIZE};
 
+/// Accounts for the [`public_bid` handler](fn.public_bid.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct PublicBuy<'info> {
@@ -32,6 +35,8 @@ pub struct PublicBuy<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
+/// Create a bid on a specific SPL token.
+/// Public bids are specific to the token itself, rather than the auction, and remain open indefinitely until either the user closes it or the requirements for the bid are met and it is matched with a counter bid and closed as a transaction.
 pub fn public_bid(
     ctx: Context<PublicBuy>,
     trade_state_bump: u8,
@@ -62,6 +67,7 @@ pub fn public_bid(
     )
 }
 
+/// Accounts for the [`private_bid` handler](fn.private_bid.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct Buy<'info> {
@@ -86,6 +92,7 @@ pub struct Buy<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
+/// Create a private bid on a specific SPL token that is *held by a specific wallet*.
 pub fn private_bid<'info>(
     ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
     trade_state_bump: u8,
@@ -116,6 +123,7 @@ pub fn private_bid<'info>(
     )
 }
 
+/// Handles the bid logic for both private and public bids.
 pub fn bid_logic<'info>(
     wallet: Signer<'info>,
     payment_account: UncheckedAccount<'info>,

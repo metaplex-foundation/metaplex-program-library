@@ -14,7 +14,7 @@ import {
 } from '@solana/web3.js';
 import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
-import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { ParamsWithStore } from './vault';
 
 export class StartAuctionArgs extends Borsh.Data {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

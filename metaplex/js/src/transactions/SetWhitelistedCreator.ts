@@ -7,7 +7,7 @@
  */
 import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
-import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { ParamsWithStore } from './vault';
 import {
   PublicKey,
   SystemProgram,
