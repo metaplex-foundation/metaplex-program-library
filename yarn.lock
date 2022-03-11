@@ -992,7 +992,6 @@ __metadata:
     eslint-plugin-prettier: ^4.0.0
     lerna: ^4.0.0
     prettier: ^2.4.1
-    typescript: ^4.5.5
   languageName: unknown
   linkType: soft
 
@@ -1012,6 +1011,7 @@ __metadata:
     rimraf: ^3.0.2
     spok: ^1.4.3
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1024,6 +1024,7 @@ __metadata:
     "@solana/web3.js": ^1.35.1
     eslint: ^8.3.0
     rimraf: ^3.0.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1038,6 +1039,7 @@ __metadata:
     eslint: ^8.3.0
     prettier: ^2.5.1
     rimraf: ^3.0.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1071,6 +1073,7 @@ __metadata:
     bs58: ^4.0.1
     eslint: ^8.3.0
     rimraf: ^3.0.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1094,6 +1097,7 @@ __metadata:
     rimraf: ^3.0.2
     supports-color: ^9.2.1
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1110,6 +1114,7 @@ __metadata:
     rimraf: ^3.0.2
     spok: ^1.4.3
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1129,6 +1134,7 @@ __metadata:
     eslint: ^8.3.0
     rimraf: ^3.0.2
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1144,6 +1150,7 @@ __metadata:
     eslint: ^8.3.0
     rimraf: ^3.0.2
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1185,6 +1192,7 @@ __metadata:
     spok: ^1.4.2
     supports-color: ^9.2.1
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1207,7 +1215,7 @@ __metadata:
     spok: ^1.4.3
     tape: ^5.5.0
     typedoc: ^0.22.11
-    typescript: ^4.5.5
+    typescript: ^4.6.2
     utility-types: ^3.10.0
   languageName: unknown
   linkType: soft
@@ -1565,11 +1573,11 @@ __metadata:
   linkType: hard
 
 "@solana/spl-token-registry@npm:^0.2.2405":
-  version: 0.2.2844
-  resolution: "@solana/spl-token-registry@npm:0.2.2844"
+  version: 0.2.2845
+  resolution: "@solana/spl-token-registry@npm:0.2.2845"
   dependencies:
     cross-fetch: 3.0.6
-  checksum: fce0e31282894df7fc5aaf5fa0550873a0a05cbab3f46eddf5b249c720cf48e0f4fd365fd84a0cfa8004c8db8f1cadaec703499c3af917e206ec155984350d60
+  checksum: c8b5fb4bcaf549166656527193918cc585a58c988b918920cdf8eec9a45f9f8e6895e850562cc634b302e7a31400d3b6038e22cae7b84a33a5e5551122bd151c
   languageName: node
   linkType: hard
 
@@ -7943,7 +7951,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.5.5":
+"typescript@npm:^4.6.2":
   version: 4.6.2
   resolution: "typescript@npm:4.6.2"
   bin:
@@ -7953,7 +7961,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>":
+"typescript@patch:typescript@^4.6.2#~builtin<compat/typescript>":
   version: 4.6.2
   resolution: "typescript@patch:typescript@npm%3A4.6.2#~builtin<compat/typescript>::version=4.6.2&hash=142761"
   bin:
