@@ -8,6 +8,7 @@ import {
   StringPublicKey,
   TokenAccount,
 } from '@metaplex-foundation/mpl-core';
+import { strict as assert } from 'assert';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
@@ -158,6 +159,7 @@ export class Metadata extends Account<MetadataData> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (!Metadata.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }
@@ -246,19 +248,6 @@ export class Metadata extends Account<MetadataData> {
     const pda = await Metadata.getPDA(mint);
 
     return Metadata.load(connection, pda);
-  }
-
-  static async findByOwner(connection: Connection, owner: AnyPublicKey) {
-    const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
-    const accountMap = new Map(accounts.map(({ data }) => [data.mint.toString(), data]));
-    // Slow method
-    const allMetadata = await Metadata.findMany(connection);
-
-    return allMetadata.filter(
-      (metadata) =>
-        accountMap.has(metadata.data.mint) &&
-        (accountMap?.get(metadata.data.mint)?.amount?.toNumber() || 0) > 0,
-    );
   }
 
   static async findByOwnerV2(connection: Connection, owner: AnyPublicKey) {

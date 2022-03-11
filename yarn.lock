@@ -41,20 +41,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/eslintrc@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@eslint/eslintrc@npm:1.2.0"
+"@eslint/eslintrc@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@eslint/eslintrc@npm:1.2.1"
   dependencies:
     ajv: ^6.12.4
     debug: ^4.3.2
     espree: ^9.3.1
     globals: ^13.9.0
-    ignore: ^4.0.6
+    ignore: ^5.2.0
     import-fresh: ^3.2.1
     js-yaml: ^4.1.0
     minimatch: ^3.0.4
     strip-json-comments: ^3.1.1
-  checksum: a5e51dcf02627363567094456d7880b46b6a14a285d7a057f083ca903bdd862483bb6314cbc9fb6fa2d2c4537d50e0d28bd5e39650840241ae4796faaec65d2e
+  checksum: 1f797b9f94d71b965992cf6c44e3bcb574643014fd1e3d4862d25056bd5568f59c488461a7e9a1c1758ca7f0def5d3cb69c3d8b38581bcf4a53af74371243797
   languageName: node
   linkType: hard
 
@@ -992,7 +992,6 @@ __metadata:
     eslint-plugin-prettier: ^4.0.0
     lerna: ^4.0.0
     prettier: ^2.4.1
-    typescript: ^4.5.5
   languageName: unknown
   linkType: soft
 
@@ -1002,7 +1001,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": ^0.0.8
     "@metaplex-foundation/beet-solana": ^0.0.6
-    "@metaplex-foundation/mpl-core": 0.0.4
+    "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/solita": ^0.1.0
     "@solana/web3.js": ^1.35.1
     "@types/tape": ^4.13.2
@@ -1012,6 +1011,7 @@ __metadata:
     rimraf: ^3.0.2
     spok: ^1.4.3
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1019,11 +1019,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-auction@workspace:auction/js"
   dependencies:
-    "@metaplex-foundation/mpl-core": ^0.0.2
+    "@metaplex-foundation/mpl-core": ^0.0.5
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
     eslint: ^8.3.0
     rimraf: ^3.0.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1033,23 +1034,12 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": ^0.0.8
     "@metaplex-foundation/beet-solana": ^0.0.6
-    "@metaplex-foundation/mpl-core": ^0.0.4
+    "@metaplex-foundation/mpl-core": ^0.0.5
     "@solana/web3.js": ^1.35.1
     eslint: ^8.3.0
     prettier: ^2.5.1
     rimraf: ^3.0.2
-  languageName: unknown
-  linkType: soft
-
-"@metaplex-foundation/mpl-core@0.0.4, @metaplex-foundation/mpl-core@^0.0.4, @metaplex-foundation/mpl-core@workspace:core/js":
-  version: 0.0.0-use.local
-  resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
-  dependencies:
-    "@solana/web3.js": ^1.35.1
-    "@types/bs58": ^4.0.1
-    bs58: ^4.0.1
-    eslint: ^8.3.0
-    rimraf: ^3.0.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1074,6 +1064,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metaplex-foundation/mpl-core@workspace:core/js":
+  version: 0.0.0-use.local
+  resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
+  dependencies:
+    "@solana/web3.js": ^1.35.1
+    "@types/bs58": ^4.0.1
+    bs58: ^4.0.1
+    eslint: ^8.3.0
+    rimraf: ^3.0.2
+    typescript: ^4.6.2
+  languageName: unknown
+  linkType: soft
+
 "@metaplex-foundation/mpl-fixed-price-sale@workspace:fixed-price-sale/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-fixed-price-sale@workspace:fixed-price-sale/js"
@@ -1094,6 +1097,7 @@ __metadata:
     rimraf: ^3.0.2
     supports-color: ^9.2.1
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1110,6 +1114,7 @@ __metadata:
     rimraf: ^3.0.2
     spok: ^1.4.3
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1119,7 +1124,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/amman": ^0.1.0
     "@metaplex-foundation/mpl-auction": ^0.0.2
-    "@metaplex-foundation/mpl-core": ^0.0.2
+    "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/mpl-token-metadata": ^0.0.2
     "@metaplex-foundation/mpl-token-vault": ^0.0.2
     "@solana/spl-token": ^0.2.0
@@ -1129,6 +1134,7 @@ __metadata:
     eslint: ^8.3.0
     rimraf: ^3.0.2
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1144,6 +1150,7 @@ __metadata:
     eslint: ^8.3.0
     rimraf: ^3.0.2
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1174,7 +1181,7 @@ __metadata:
   resolution: "@metaplex-foundation/mpl-token-metadata@workspace:token-metadata/js"
   dependencies:
     "@metaplex-foundation/amman": "^0.1.0 "
-    "@metaplex-foundation/mpl-core": ^0.0.2
+    "@metaplex-foundation/mpl-core": ^0.0.5
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/debug": ^4.1.7
@@ -1185,6 +1192,7 @@ __metadata:
     spok: ^1.4.2
     supports-color: ^9.2.1
     tape: ^5.5.2
+    typescript: ^4.6.2
   languageName: unknown
   linkType: soft
 
@@ -1196,7 +1204,7 @@ __metadata:
     "@metaplex-foundation/beet": ^0.0.8
     "@metaplex-foundation/beet-solana": ^0.0.6
     "@metaplex-foundation/cusper": ^0.0.2
-    "@metaplex-foundation/mpl-core": ^0.0.2
+    "@metaplex-foundation/mpl-core": ^0.0.5
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/debug": ^4.1.7
@@ -1207,7 +1215,7 @@ __metadata:
     spok: ^1.4.3
     tape: ^5.5.0
     typedoc: ^0.22.11
-    typescript: ^4.5.5
+    typescript: ^4.6.2
     utility-types: ^3.10.0
   languageName: unknown
   linkType: soft
@@ -1565,11 +1573,11 @@ __metadata:
   linkType: hard
 
 "@solana/spl-token-registry@npm:^0.2.2405":
-  version: 0.2.2830
-  resolution: "@solana/spl-token-registry@npm:0.2.2830"
+  version: 0.2.2849
+  resolution: "@solana/spl-token-registry@npm:0.2.2849"
   dependencies:
     cross-fetch: 3.0.6
-  checksum: f8e391b2000c7196e9b7946d286c8907eff49ce3a6c5fed1379c440286cf4b1ca95cef2d637dbe77767ada74cbd05ea95bfc1b82f26810127a95da144d263ba6
+  checksum: d07114a5ca45f474084a1a6b0e03061264e09ee3c29b9d28969e345efeac38a5b2a386cf7b99840b4b6d06a009ca110627897dce9e6afc039d75cfbc0ee6f1ac
   languageName: node
   linkType: hard
 
@@ -3615,10 +3623,10 @@ __metadata:
   linkType: hard
 
 "eslint@npm:^8.3.0":
-  version: 8.10.0
-  resolution: "eslint@npm:8.10.0"
+  version: 8.11.0
+  resolution: "eslint@npm:8.11.0"
   dependencies:
-    "@eslint/eslintrc": ^1.2.0
+    "@eslint/eslintrc": ^1.2.1
     "@humanwhocodes/config-array": ^0.9.2
     ajv: ^6.10.0
     chalk: ^4.0.0
@@ -3655,7 +3663,7 @@ __metadata:
     v8-compile-cache: ^2.0.3
   bin:
     eslint: bin/eslint.js
-  checksum: 8b31ab3de5b48b6828bf13c09c9e62ee0045fa0afa017efaa73eedcf4dc33bc204ee4c467d4677e37967d1645f73816ddef4271422e691fded352040f8f83093
+  checksum: a06a2ea37002d6c0a4f462fe31b4411185dc3da7857fafb896eb392ba95a1289cc3538056474b2f44f08012f265bede01a39d46df4ac39ebc6d7be90e2c8f9fa
   languageName: node
   linkType: hard
 
@@ -4495,13 +4503,6 @@ __metadata:
   dependencies:
     minimatch: ^3.0.4
   checksum: 9e9c5ef6c3e0ed7ef5d797991abb554dbb7e60d5fedf6cf05c7129819689eba2b462f625c6e3561e0fc79841904eb829565513eeeab1b44f4fbec4d3146b1a8d
-  languageName: node
-  linkType: hard
-
-"ignore@npm:^4.0.6":
-  version: 4.0.6
-  resolution: "ignore@npm:4.0.6"
-  checksum: 248f82e50a430906f9ee7f35e1158e3ec4c3971451dd9f99c9bc1548261b4db2b99709f60ac6c6cac9333494384176cc4cc9b07acbe42d52ac6a09cad734d800
   languageName: node
   linkType: hard
 
@@ -7943,7 +7944,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^4.5.5":
+"typescript@npm:^4.6.2":
   version: 4.6.2
   resolution: "typescript@npm:4.6.2"
   bin:
@@ -7953,7 +7954,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^4.5.5#~builtin<compat/typescript>":
+"typescript@patch:typescript@^4.6.2#~builtin<compat/typescript>":
   version: 4.6.2
   resolution: "typescript@patch:typescript@npm%3A4.6.2#~builtin<compat/typescript>::version=4.6.2&hash=142761"
   bin:

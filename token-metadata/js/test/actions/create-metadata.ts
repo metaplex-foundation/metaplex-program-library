@@ -17,6 +17,8 @@ import {
 } from '../../src/mpl-token-metadata';
 import BN from 'bn.js';
 import { CreateMint } from './create-mint-account';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore these exports actually exist but aren't setup correctly so TypeScript gets confused
 import { createMint, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token';
 // -----------------
 // Create Metadata
