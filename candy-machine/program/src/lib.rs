@@ -59,6 +59,9 @@ pub mod candy_machine {
         //Account name the same for IDL compatability
         let recent_slothashes = &ctx.accounts.recent_blockhashes;
         let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
+        if recent_slothashes.key().to_string() == BLOCK_HASHES {
+            msg!("recent_blockhashes is deprecated and will break soon");
+        }
         if recent_slothashes.key() != sysvar::slot_hashes::SlotHashes::id()
             && recent_slothashes.key().to_string() != BLOCK_HASHES
         {
