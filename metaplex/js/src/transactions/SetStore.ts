@@ -17,7 +17,7 @@ import {
 } from '@solana/web3.js';
 
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
-import { VaultProgram, ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { VaultProgram, ParamsWithStore } from './vault';
 import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 

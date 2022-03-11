@@ -8,7 +8,7 @@
 import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
-import { ParamsWithStore, VaultProgram } from '@metaplex-foundation/mpl-token-vault';
+import { ParamsWithStore, VaultProgram } from './vault';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   PublicKey,
