@@ -1,6 +1,6 @@
 pub mod utils;
 
-use solana_program::sysvar::{ SysvarId, instructions::get_instruction_relative};
+use solana_program::sysvar::{instructions::get_instruction_relative, SysvarId};
 use {
     crate::utils::{
         assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by,
