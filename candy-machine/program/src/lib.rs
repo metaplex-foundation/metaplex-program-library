@@ -1,6 +1,6 @@
 pub mod utils;
 
-use solana_program::sysvar::SysvarId;
+use solana_program::sysvar::{ SysvarId, instructions::get_instruction_relative};
 use {
     crate::utils::{
         assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by,
@@ -59,9 +59,6 @@ pub mod candy_machine {
         //Account name the same for IDL compatability
         let recent_slothashes = &ctx.accounts.recent_blockhashes;
         let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
-        if recent_slothashes.key().to_string() == BLOCK_HASHES {
-            msg!("recent_blockhashes is deprecated and will break soon");
-        }
         if recent_slothashes.key() != sysvar::slot_hashes::SlotHashes::id()
             && recent_slothashes.key().to_string() != BLOCK_HASHES
         {
@@ -132,11 +129,6 @@ pub mod candy_machine {
             // machine go_live_date (avoids pre-solving the captcha)
             match candy_machine.data.go_live_date {
                 Some(val) => {
-                    msg!(
-                        "Comparing token expire time {} and go_live_date {}",
-                        expire_time,
-                        val
-                    );
                     if (expire_time - EXPIRE_OFFSET) < val {
                         if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
                             // when dealing with whitelist, the expire_time can be
@@ -401,59 +393,6 @@ pub mod candy_machine {
             ],
             &[&authority_seeds],
         )?;
-
-        if &ctx.remaining_accounts.len() == &(remaining_accounts_counter + 6) {
-            let collection_pda_account = &ctx.remaining_accounts[remaining_accounts_counter];
-            let collection_ref = collection_pda_account.data.borrow();
-            let mut collection_pda_data: &[u8] = &collection_ref;
-            let collection_pda: CollectionPDA =
-                CollectionPDA::try_deserialize(&mut collection_pda_data)?;
-            remaining_accounts_counter += 1;
-            let collection_mint = &ctx.remaining_accounts[remaining_accounts_counter];
-            if &collection_pda.mint != &collection_mint.key() {
-                return Err(ErrorCode::MismatchedCollectionMint.into());
-            }
-            remaining_accounts_counter += 1;
-            let collection_metadata = &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
-            let collection_master_edition_account =
-                &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
-            let collection_update_authority = &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
-            let collection_authority_record = &ctx.remaining_accounts[remaining_accounts_counter];
-            let cm_ref = candy_machine.key();
-            let seeds = [b"collection".as_ref(), cm_ref.as_ref()];
-            let bump = assert_derivation(&crate::id(), collection_pda_account, &seeds)?;
-            let signer_seeds = [b"collection".as_ref(), cm_ref.as_ref(), &[bump]];
-            let set_collection_infos = vec![
-                ctx.accounts.metadata.to_account_info(),
-                collection_pda_account.to_account_info(),
-                ctx.accounts.payer.to_account_info(),
-                collection_update_authority.to_account_info(),
-                collection_mint.to_account_info(),
-                collection_metadata.to_account_info(),
-                collection_master_edition_account.to_account_info(),
-                collection_authority_record.to_account_info(),
-            ];
-            drop(collection_ref);
-            invoke_signed(
-                &set_and_verify_collection(
-                    ctx.accounts.token_metadata_program.key(),
-                    ctx.accounts.metadata.key(),
-                    collection_pda_account.key(),
-                    ctx.accounts.payer.key(),
-                    collection_update_authority.key(),
-                    collection_mint.key(),
-                    collection_metadata.key(),
-                    collection_master_edition_account.key(),
-                    Some(collection_authority_record.key()),
-                ),
-                set_collection_infos.as_slice(),
-                &[&signer_seeds],
-            )?;
-        }
-
         let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
 
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
@@ -486,6 +425,85 @@ pub mod candy_machine {
 
         msg!("At the end");
         sol_log_compute_units();
+        Ok(())
+    }
+
+    pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> ProgramResult {
+        let ixs = &ctx.accounts.instructions;
+        let previous_instruction = get_instruction_relative(-1, ixs)?;
+        if &previous_instruction.program_id != &crate::id() {
+            msg!(
+                "Transaction had ix with program id {}",
+                &previous_instruction.program_id
+            );
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+
+        if &previous_instruction.data[0..8] != [211, 57, 6, 167, 15, 219, 35, 251] {
+            msg!(
+                "Transaction had ix with data {:?}",
+                &previous_instruction.data[0..8]
+            );
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+
+        let mint_ix_accounts = previous_instruction.accounts;
+
+        let mint_ix_cm = mint_ix_accounts[0].pubkey;
+        let mint_ix_metadata = mint_ix_accounts[4].pubkey;
+        if mint_ix_cm != ctx.accounts.candy_machine.key() {
+            msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, ctx.accounts.candy_machine.key());
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+        if mint_ix_metadata != ctx.accounts.metadata.key() {
+            msg!(
+                "Metadata with pubkey {} does not match the mint ix metadata with pubkey {}",
+                mint_ix_metadata,
+                ctx.accounts.metadata.key()
+            );
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+
+        let collection_pda_account = ctx.accounts.collection_pda.to_account_info();
+        let collection_ref = collection_pda_account.data.borrow();
+        let mut collection_pda_data: &[u8] = &collection_ref;
+        let collection_pda: CollectionPDA =
+            CollectionPDA::try_deserialize(&mut collection_pda_data)?;
+        let collection_mint = ctx.accounts.collection_mint.to_account_info();
+        if &collection_pda.mint != &collection_mint.key() {
+            return Err(ErrorCode::MismatchedCollectionMint.into());
+        }
+        let cm_ref = ctx.accounts.candy_machine.key();
+        let seeds = [b"collection".as_ref(), cm_ref.as_ref()];
+        let bump = assert_derivation(&crate::id(), &collection_pda_account, &seeds)?;
+        let signer_seeds = [b"collection".as_ref(), cm_ref.as_ref(), &[bump]];
+        let set_collection_infos = vec![
+            ctx.accounts.metadata.to_account_info(),
+            collection_pda_account.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.authority.to_account_info(),
+            collection_mint.to_account_info(),
+            ctx.accounts.collection_metadata.to_account_info(),
+            ctx.accounts.collection_master_edition.to_account_info(),
+            ctx.accounts.collection_authority_record.to_account_info(),
+        ];
+        drop(collection_ref);
+        invoke_signed(
+            &set_and_verify_collection(
+                ctx.accounts.token_metadata_program.key(),
+                ctx.accounts.metadata.key(),
+                collection_pda_account.key(),
+                ctx.accounts.payer.key(),
+                ctx.accounts.authority.key(),
+                collection_mint.key(),
+                ctx.accounts.collection_metadata.key(),
+                ctx.accounts.collection_master_edition.key(),
+                Some(ctx.accounts.collection_authority_record.key()),
+            ),
+            set_collection_infos.as_slice(),
+            &[&signer_seeds],
+        )?;
+
         Ok(())
     }
 
@@ -868,6 +886,34 @@ pub struct InitializeCandyMachine<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
+/// Sets and verifies the collection during a candy machine mint
+#[derive(Accounts)]
+pub struct SetCollectionDuringMint<'info> {
+    #[account(has_one = authority)]
+    candy_machine: Account<'info, CandyMachine>,
+    /// CHECK: account checked in CPI/instruction sysvar
+    metadata: UncheckedAccount<'info>,
+    payer: Signer<'info>,
+    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
+    collection_pda: Account<'info, CollectionPDA>,
+    /// CHECK: account constraints checked in account trait
+    #[account(address = mpl_token_metadata::id())]
+    token_metadata_program: UncheckedAccount<'info>,
+    /// CHECK: account constraints checked in account trait
+    #[account(address = sysvar::instructions::id())]
+    instructions: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    collection_mint: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    collection_metadata: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    collection_master_edition: UncheckedAccount<'info>,
+    /// CHECK: authority can be any account and is checked in CPI
+    authority: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    collection_authority_record: UncheckedAccount<'info>,
+}
+
 /// Set the collection PDA for the candy machine
 #[derive(Accounts)]
 pub struct SetCollection<'info> {
@@ -973,7 +1019,7 @@ pub struct MintNFT<'info> {
     // Leaving the name the same for IDL backward compatability
     /// CHECK: account checked in CPI
     recent_blockhashes: UncheckedAccount<'info>,
-    /// CHECK: account checked in CPI
+    /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::instructions::id())]
     instruction_sysvar_account: UncheckedAccount<'info>,
     // > Only needed if candy machine has a gatekeeper
@@ -989,13 +1035,6 @@ pub struct MintNFT<'info> {
     // > Only needed if candy machine has token mint
     // token_account_info
     // transfer_authority_info
-    // > Only needed if candy machine has collection
-    // collection_pda
-    // collection_mint
-    // collection_metadata
-    // collection_master_edition_account
-    // collection_authority_record
-    // collection_update_authority
 }
 
 /// Update the candy machine state.
