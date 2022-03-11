@@ -10,7 +10,6 @@ use {
     anchor_lang::{
         prelude::*,
         solana_program::{
-            log::sol_log_compute_units,
             program::{invoke, invoke_signed},
             serialize_utils::{read_pubkey, read_u16},
             system_instruction, sysvar,
