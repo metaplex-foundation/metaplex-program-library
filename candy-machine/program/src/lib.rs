@@ -994,8 +994,8 @@ pub struct MintNFT<'info> {
     // collection_mint
     // collection_metadata
     // collection_master_edition_account
-    // collection_authority_record
     // collection_update_authority
+    // collection_authority_record
 }
 
 /// Update the candy machine state.
