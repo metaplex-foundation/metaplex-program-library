@@ -15,7 +15,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
-import { ParamsWithStore, VaultProgram } from '@metaplex-foundation/mpl-token-vault';
+import { ParamsWithStore, VaultProgram } from './vault';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';

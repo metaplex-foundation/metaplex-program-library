@@ -1,5 +1,7 @@
 import { strict as assert } from 'assert';
-import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore createInitializeMintInstruction export actually exist but isn't setup correctly so TypeScript gets confused
+import { createInitializeMintInstruction, MintLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   Connection,
   Keypair,
@@ -40,8 +42,7 @@ export class CreateMint extends Transaction {
     );
 
     this.add(
-      Token.createInitMintInstruction(
-        TOKEN_PROGRAM_ID,
+      createInitializeMintInstruction(
         newAccountPubkey,
         decimals ?? 0,
         owner ?? feePayer,

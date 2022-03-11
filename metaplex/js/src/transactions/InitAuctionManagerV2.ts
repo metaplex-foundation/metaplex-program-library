@@ -6,7 +6,7 @@
  * that would be a wasted effort and therefore we make an EXCEPTION here.
  */
 import { Borsh, TupleNumericType, Transaction } from '@metaplex-foundation/mpl-core';
-import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { ParamsWithStore } from './vault';
 import {
   PublicKey,
   SystemProgram,

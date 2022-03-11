@@ -43,6 +43,7 @@
   "devDependencies": {
     "@types/bs58": "^4.0.1",
     "eslint": "^8.3.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.2"
   }
 }

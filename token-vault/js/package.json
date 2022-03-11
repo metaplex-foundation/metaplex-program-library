@@ -50,8 +50,8 @@
     "@metaplex-foundation/beet": "^0.0.8",
     "@metaplex-foundation/beet-solana": "^0.0.6",
     "@metaplex-foundation/cusper": "^0.0.2",
-    "@metaplex-foundation/mpl-core": "^0.0.2",
-    "@solana/spl-token": "^0.1.8",
+    "@metaplex-foundation/mpl-core": "^0.0.5",
+    "@solana/spl-token": "^0.2.0",
     "@solana/web3.js": "^1.35.1",
     "debug": "^4.3.3",
     "utility-types": "^3.10.0"
@@ -65,6 +65,6 @@
     "spok": "^1.4.3",
     "tape": "^5.5.0",
     "typedoc": "^0.22.11",
-    "typescript": "^4.5.5"
+    "typescript": "^4.6.2"
   }
 }

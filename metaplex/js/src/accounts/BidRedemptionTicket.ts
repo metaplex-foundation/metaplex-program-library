@@ -1,4 +1,5 @@
 import { AccountInfo } from '@solana/web3.js';
+import { strict as assert } from 'assert';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { MetaplexKey, MetaplexProgram } from '../MetaplexProgram';
@@ -29,6 +30,7 @@ export class BidRedemptionTicket extends Account<BidRedemptionTicketV2Data> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (BidRedemptionTicket.isBidRedemptionTicketV1(this.info.data)) {
       throw ERROR_DEPRECATED_ACCOUNT_DATA();
     } else if (BidRedemptionTicket.isBidRedemptionTicketV2(this.info.data)) {

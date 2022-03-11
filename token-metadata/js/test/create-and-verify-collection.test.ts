@@ -6,16 +6,8 @@ import {
   MetadataProgram,
   VerifyCollection,
 } from '../src/mpl-token-metadata';
-import {
-  killStuckProcess,
-  getMetadataData,
-  URI,
-  NAME,
-  SYMBOL,
-  connectionURL,
-  SELLER_FEE_BASIS_POINTS,
-  logDebug,
-} from './utils';
+import { killStuckProcess, getMetadataData, connectionURL, logDebug } from './utils';
+import { URI, NAME, SYMBOL, SELLER_FEE_BASIS_POINTS } from './utils/consts';
 import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair } from '@solana/web3.js';
 import { createCollection, createMasterEdition } from './actions';
@@ -41,7 +33,7 @@ test('verify-collection', async (t) => {
     symbol: SYMBOL,
     sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
     creators: null,
-    collection: new Collection({ key: collectionNft.mint.publicKey.toBase58(), verified: false }),
+    collection: new Collection({ key: collectionNft.mint.toBase58(), verified: false }),
     uses: null,
   });
   const collectionMemberNft = await createMasterEdition(
@@ -51,7 +43,7 @@ test('verify-collection', async (t) => {
     initMetadataData,
     0,
   );
-  console.log('collectionMemberNft', collectionMemberNft.metadata.toBase58());
+  logDebug('collectionMemberNft', collectionMemberNft.metadata.toBase58());
   const updatedMetadataBeforeVerification = await getMetadataData(
     connection,
     collectionMemberNft.metadata,
@@ -66,7 +58,7 @@ test('verify-collection', async (t) => {
     {
       metadata: collectionMemberNft.metadata,
       collectionAuthority: payer.publicKey,
-      collectionMint: collectionNft.mint.publicKey,
+      collectionMint: collectionNft.mint,
       collectionMetadata: collectionNft.metadata,
       collectionMasterEdition: collectionNft.masterEditionPubkey,
     },
@@ -124,7 +116,7 @@ test('set-and-verify-collection', async (t) => {
       metadata: collectionMemberNft.metadata,
       collectionAuthority: payer.publicKey,
       updateAuthority: payer.publicKey,
-      collectionMint: collectionNft.mint.publicKey,
+      collectionMint: collectionNft.mint,
       collectionMetadata: collectionNft.metadata,
       collectionMasterEdition: collectionNft.masterEditionPubkey,
     },
@@ -159,7 +151,7 @@ test('Delegated Authority', (t) => {
       symbol: SYMBOL,
       sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
       creators: null,
-      collection: new Collection({ key: collectionNft.mint.publicKey.toBase58(), verified: false }),
+      collection: new Collection({ key: collectionNft.mint.toBase58(), verified: false }),
       uses: null,
     });
     const collectionMemberNft = await createMasterEdition(
@@ -180,7 +172,7 @@ test('Delegated Authority', (t) => {
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
-      collectionNft.mint.publicKey,
+      collectionNft.mint,
       delegatedAuthority.publicKey,
     );
     const collectionVerifyCollectionTransaction = new VerifyCollection(
@@ -188,7 +180,7 @@ test('Delegated Authority', (t) => {
       {
         metadata: collectionMemberNft.metadata,
         collectionAuthority: delegatedAuthority.publicKey,
-        collectionMint: collectionNft.mint.publicKey,
+        collectionMint: collectionNft.mint,
         collectionMetadata: collectionNft.metadata,
         collectionMasterEdition: collectionNft.masterEditionPubkey,
         collectionAuthorityRecord: dARecord[0],
@@ -241,7 +233,7 @@ test('Delegated Authority', (t) => {
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
-      collectionNft.mint.publicKey,
+      collectionNft.mint,
       delegatedAuthority.publicKey,
     );
 
@@ -251,7 +243,7 @@ test('Delegated Authority', (t) => {
         metadata: collectionMemberNft.metadata,
         collectionAuthority: delegatedAuthority.publicKey,
         updateAuthority: payer.publicKey,
-        collectionMint: collectionNft.mint.publicKey,
+        collectionMint: collectionNft.mint,
         collectionMetadata: collectionNft.metadata,
         collectionMasterEdition: collectionNft.masterEditionPubkey,
         collectionAuthorityRecord: dARecord[0],
@@ -283,7 +275,7 @@ test('Delegated Authority', (t) => {
       symbol: SYMBOL,
       sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
       creators: null,
-      collection: new Collection({ key: collectionNft.mint.publicKey.toBase58(), verified: false }),
+      collection: new Collection({ key: collectionNft.mint.toBase58(), verified: false }),
       uses: null,
     });
     const collectionMemberNft = await createMasterEdition(
@@ -304,7 +296,7 @@ test('Delegated Authority', (t) => {
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
-      collectionNft.mint.publicKey,
+      collectionNft.mint,
       delegatedAuthority.publicKey,
     );
 
@@ -315,7 +307,7 @@ test('Delegated Authority', (t) => {
         newCollectionAuthority: delegatedAuthority.publicKey,
         updateAuthority: payer.publicKey,
         metadata: collectionNft.metadata,
-        mint: collectionNft.mint.publicKey,
+        mint: collectionNft.mint,
       },
     );
     const approveTxnDetails = await transactionHandler.sendAndConfirmTransaction(
@@ -329,7 +321,7 @@ test('Delegated Authority', (t) => {
       {
         metadata: collectionMemberNft.metadata,
         collectionAuthority: delegatedAuthority.publicKey,
-        collectionMint: collectionNft.mint.publicKey,
+        collectionMint: collectionNft.mint,
         collectionMetadata: collectionNft.metadata,
         collectionMasterEdition: collectionNft.masterEditionPubkey,
         collectionAuthorityRecord: dARecord[0],
@@ -384,7 +376,7 @@ test('Delegated Authority', (t) => {
     const delegatedAuthority = Keypair.generate();
     await airdrop(connection, delegatedAuthority.publicKey, 2);
     const dARecord = await MetadataProgram.findCollectionAuthorityAccount(
-      collectionNft.mint.publicKey,
+      collectionNft.mint,
       delegatedAuthority.publicKey,
     );
 
@@ -395,7 +387,7 @@ test('Delegated Authority', (t) => {
         newCollectionAuthority: delegatedAuthority.publicKey,
         updateAuthority: payer.publicKey,
         metadata: collectionNft.metadata,
-        mint: collectionNft.mint.publicKey,
+        mint: collectionNft.mint,
       },
     );
 
@@ -412,7 +404,7 @@ test('Delegated Authority', (t) => {
         metadata: collectionMemberNft.metadata,
         collectionAuthority: delegatedAuthority.publicKey,
         updateAuthority: payer.publicKey,
-        collectionMint: collectionNft.mint.publicKey,
+        collectionMint: collectionNft.mint,
         collectionMetadata: collectionNft.metadata,
         collectionMasterEdition: collectionNft.masterEditionPubkey,
         collectionAuthorityRecord: dARecord[0],
