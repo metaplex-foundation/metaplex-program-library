@@ -283,7 +283,7 @@ pub mod candy_machine {
         }
 
         let data = recent_slothashes.data.borrow();
-        let most_recent = array_ref![data, 4, 8];
+        let most_recent = array_ref![data, 8, 8];
 
         let index = u64::from_le_bytes(*most_recent);
         let modded: usize = index
@@ -483,7 +483,6 @@ pub mod candy_machine {
         }
 
         msg!("At the end");
-        sol_log_compute_units();
         Ok(())
     }
 
