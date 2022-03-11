@@ -425,9 +425,6 @@ pub mod candy_machine {
                 return Err(ErrorCode::SuspiciousTransaction.into());
             }
         }
-
-        msg!("At the end");
-        sol_log_compute_units();
         Ok(())
     }
 
