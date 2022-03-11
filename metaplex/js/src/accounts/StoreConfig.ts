@@ -5,6 +5,7 @@
  * Given that these parts of the SDK will be re-generated with solita very soon
  * that would be a wasted effort and therefore we make an EXCEPTION here.
  */
+import { strict as assert } from 'assert';
 import {
   ERROR_INVALID_ACCOUNT_DATA,
   ERROR_INVALID_OWNER,
@@ -43,6 +44,7 @@ export class StoreConfig extends Account<StoreConfigData> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (!StoreConfig.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }

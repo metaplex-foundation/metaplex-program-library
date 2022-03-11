@@ -6,6 +6,7 @@ import {
   TupleNumericType,
   getBNFromData,
 } from '@metaplex-foundation/mpl-core';
+import { strict as assert } from 'assert';
 import { AccountInfo, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import { Buffer } from 'buffer';
@@ -27,6 +28,7 @@ export class AuctionWinnerTokenTypeTracker extends Account<AuctionWinnerTokenTyp
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (!AuctionWinnerTokenTypeTracker.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }
