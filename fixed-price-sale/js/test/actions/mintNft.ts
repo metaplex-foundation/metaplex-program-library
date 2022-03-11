@@ -12,6 +12,8 @@ import {
   CreateMasterEdition,
   Creator,
 } from '@metaplex-foundation/mpl-token-metadata';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore createMintToInstruction export actually exist but isn't setup correctly
 import { createMintToInstruction } from '@solana/spl-token';
 import { strict as assert } from 'assert';
 

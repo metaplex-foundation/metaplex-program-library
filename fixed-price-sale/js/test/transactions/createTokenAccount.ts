@@ -1,6 +1,8 @@
 import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 import {
   AccountLayout,
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore createInitializeAccountInstruction export actually exist but isn't setup correctly
   createInitializeAccountInstruction,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';

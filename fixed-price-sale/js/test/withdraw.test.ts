@@ -1,5 +1,7 @@
 import BN from 'bn.js';
 import test from 'tape';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore getAssociatedTokenAddress export actually exist but isn't setup correctly
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';

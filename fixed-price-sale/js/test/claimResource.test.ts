@@ -1,5 +1,7 @@
 import BN from 'bn.js';
 import test from 'tape';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore these exports actually exist but aren't setup correctly
 import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token';
 import {
   assertConfirmedTransaction,
