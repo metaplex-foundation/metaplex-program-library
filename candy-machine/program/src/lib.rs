@@ -454,8 +454,10 @@ pub mod candy_machine {
 
         let mint_ix_cm = mint_ix_accounts[0].pubkey;
         let mint_ix_metadata = mint_ix_accounts[4].pubkey;
-        if mint_ix_cm != ctx.accounts.candy_machine.key() {
-            msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, ctx.accounts.candy_machine.key());
+        let candy_key = ctx.accounts.candy_machine.key();
+        
+        if &mint_ix_cm != &candy_key {
+            msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, candy_key);
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
         if mint_ix_metadata != ctx.accounts.metadata.key() {
@@ -472,10 +474,9 @@ pub mod candy_machine {
         if &collection_pda.mint != &collection_mint.key() {
             return Err(ErrorCode::MismatchedCollectionMint.into());
         }
-        let cm_ref = ctx.accounts.candy_machine.key();
-        let seeds = [b"collection".as_ref(), cm_ref.as_ref()];
+        let seeds = [b"collection".as_ref(), candy_key.as_ref()];
         let bump = assert_derivation(&crate::id(), &collection_pda.to_account_info(), &seeds)?;
-        let signer_seeds = [b"collection".as_ref(), cm_ref.as_ref(), &[bump]];
+        let signer_seeds = [b"collection".as_ref(), candy_key.as_ref(), &[bump]];
         let set_collection_infos = vec![
             ctx.accounts.metadata.to_account_info(),
             collection_pda.to_account_info(),
