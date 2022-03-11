@@ -1,9 +1,12 @@
-import { bignum } from '@metaplex-foundation/beet';
 import {
   AccountLayout as TokenAccountLayout,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createApproveInstruction,
+  createAssociatedTokenAccountInstruction,
+  createInitializeAccountInstruction,
+  createInitializeMintInstruction,
+  createMintToInstruction,
+  getAssociatedTokenAddress,
   MintLayout,
-  Token,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
@@ -14,7 +17,7 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { InstructionsWithAccounts } from '../types';
+import { bignum, InstructionsWithAccounts } from '../types';
 import { VAULT_PREFIX, VAULT_PROGRAM_ID } from './consts';
 
 // -----------------
@@ -35,13 +38,11 @@ export function approveTokenTransfer({
   amount: bignum;
 }): [TransactionInstruction, Keypair] {
   const transferAuthority = Keypair.generate();
-  const createApproveIx = Token.createApproveInstruction(
-    TOKEN_PROGRAM_ID,
+  const createApproveIx = createApproveInstruction(
     sourceAccount,
     transferAuthority.publicKey,
     owner,
-    [],
-    amount,
+    amount as bigint,
   );
 
   return [createApproveIx, transferAuthority];
@@ -61,19 +62,12 @@ export async function createAssociatedTokenAccount({
   tokenOwner: PublicKey;
   payer: PublicKey;
 }): Promise<[TransactionInstruction, PublicKey]> {
-  const associatedTokenAccount = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    tokenMint,
-    tokenOwner,
-  );
-  const createATAInstruction = Token.createAssociatedTokenAccountInstruction(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    tokenMint,
+  const associatedTokenAccount = await getAssociatedTokenAddress(tokenMint, tokenOwner);
+  const createATAInstruction = createAssociatedTokenAccountInstruction(
+    payer,
     associatedTokenAccount,
     tokenOwner,
-    payer,
+    tokenMint,
   );
 
   return [createATAInstruction, associatedTokenAccount];
@@ -94,8 +88,7 @@ export function createMint(
     mintRentExempt,
   );
 
-  const initMintIx = Token.createInitMintInstruction(
-    TOKEN_PROGRAM_ID,
+  const initMintIx = createInitializeMintInstruction(
     mintAccount,
     decimals,
     mintAuthority,
@@ -134,14 +127,7 @@ export function mintTokens(
   mintAuthority: PublicKey,
   amount: bignum,
 ): TransactionInstruction {
-  return Token.createMintToInstruction(
-    TOKEN_PROGRAM_ID,
-    mint,
-    tokenAccount,
-    mintAuthority,
-    [],
-    amount,
-  );
+  return createMintToInstruction(mint, tokenAccount, mintAuthority, amount as bigint);
 }
 
 export function getTokenRentExempt(connection: Connection) {
@@ -156,12 +142,8 @@ export function createTokenAccount(
 ): InstructionsWithAccounts<{ tokenAccountPair: Keypair; tokenAccount: PublicKey }> {
   const [createAccountIx, signer, { tokenAccountPair, tokenAccount }] =
     createUninitializedTokenAccount(payer, accountRentExempt);
-  const initAccountIx = Token.createInitAccountInstruction(
-    TOKEN_PROGRAM_ID,
-    mint,
-    tokenAccount,
-    owner,
-  );
+
+  const initAccountIx = createInitializeAccountInstruction(tokenAccount, mint, owner);
 
   return [[createAccountIx, initAccountIx], [signer], { tokenAccountPair, tokenAccount }];
 }

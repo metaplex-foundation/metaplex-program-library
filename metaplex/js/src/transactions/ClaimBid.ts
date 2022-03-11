@@ -6,7 +6,7 @@
  * that would be a wasted effort and therefore we make an EXCEPTION here.
  */
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
-import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { ParamsWithStore } from './vault';
 import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {

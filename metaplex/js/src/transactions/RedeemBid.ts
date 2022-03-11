@@ -15,7 +15,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
-import { VaultProgram, ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { VaultProgram, ParamsWithStore } from './vault';
 import { MetaplexProgram } from '../MetaplexProgram';
 import { strict as assert } from 'assert';
 

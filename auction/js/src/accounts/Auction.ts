@@ -5,6 +5,7 @@
  * Given that these parts of the SDK will be re-generated with solita very soon
  * that would be a wasted effort and therefore we make an EXCEPTION here.
  */
+import { strict as assert } from 'assert';
 import {
   Account,
   Borsh,
@@ -187,6 +188,7 @@ export class Auction extends Account<AuctionData> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     this.data = AuctionData.deserialize(this.info.data);
   }
 

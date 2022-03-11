@@ -283,7 +283,7 @@ pub mod candy_machine {
         }
 
         let data = recent_slothashes.data.borrow();
-        let most_recent = array_ref![data, 4, 8];
+        let most_recent = array_ref![data, 12, 8];
 
         let index = u64::from_le_bytes(*most_recent);
         let modded: usize = index
@@ -402,7 +402,7 @@ pub mod candy_machine {
             &[&authority_seeds],
         )?;
 
-        if &ctx.remaining_accounts.len() > &(remaining_accounts_counter) {
+        if &ctx.remaining_accounts.len() == &(remaining_accounts_counter + 6) {
             let collection_pda_account = &ctx.remaining_accounts[remaining_accounts_counter];
             let collection_ref = collection_pda_account.data.borrow();
             let mut collection_pda_data: &[u8] = &collection_ref;
@@ -419,6 +419,8 @@ pub mod candy_machine {
             let collection_master_edition_account =
                 &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
+            let collection_update_authority = &ctx.remaining_accounts[remaining_accounts_counter];
+            remaining_accounts_counter += 1;
             let collection_authority_record = &ctx.remaining_accounts[remaining_accounts_counter];
             let cm_ref = candy_machine.key();
             let seeds = [b"collection".as_ref(), cm_ref.as_ref()];
@@ -428,7 +430,7 @@ pub mod candy_machine {
                 ctx.accounts.metadata.to_account_info(),
                 collection_pda_account.to_account_info(),
                 ctx.accounts.payer.to_account_info(),
-                ctx.accounts.update_authority.to_account_info(),
+                collection_update_authority.to_account_info(),
                 collection_mint.to_account_info(),
                 collection_metadata.to_account_info(),
                 collection_master_edition_account.to_account_info(),
@@ -441,7 +443,7 @@ pub mod candy_machine {
                     ctx.accounts.metadata.key(),
                     collection_pda_account.key(),
                     ctx.accounts.payer.key(),
-                    ctx.accounts.update_authority.key(),
+                    collection_update_authority.key(),
                     collection_mint.key(),
                     collection_metadata.key(),
                     collection_master_edition_account.key(),
@@ -483,7 +485,6 @@ pub mod candy_machine {
         }
 
         msg!("At the end");
-        sol_log_compute_units();
         Ok(())
     }
 
@@ -992,6 +993,7 @@ pub struct MintNFT<'info> {
     // collection_mint
     // collection_metadata
     // collection_master_edition_account
+    // collection_update_authority
     // collection_authority_record
 }
 
