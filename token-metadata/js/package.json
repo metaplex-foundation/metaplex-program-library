@@ -13,7 +13,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "pretest": "yarn build",
-    "amman:start": "DEBUG=\"*\" amman validator",
+    "amman:start": "DEBUG=\"amman:*\" amman validator",
     "amman:stop": "pkill solana-test-validator",
     "test": "tape ./dist/test/*.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
@@ -41,7 +41,7 @@
   "license": "MIT",
   "dependencies": {
     "@metaplex-foundation/mpl-core": "^0.0.2",
-    "@solana/spl-token": "^0.1.8",
+    "@solana/spl-token": "^0.2.0",
     "@solana/web3.js": "^1.35.1",
     "debug": "^4.3.3"
   },

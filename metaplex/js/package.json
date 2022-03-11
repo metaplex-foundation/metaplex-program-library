@@ -46,7 +46,7 @@
     "@metaplex-foundation/mpl-core": "^0.0.2",
     "@metaplex-foundation/mpl-token-metadata": "^0.0.2",
     "@metaplex-foundation/mpl-token-vault": "^0.0.2",
-    "@solana/spl-token": "^0.1.8",
+    "@solana/spl-token": "^0.2.0",
     "@solana/web3.js": "^1.35.1"
   },
   "devDependencies": {
