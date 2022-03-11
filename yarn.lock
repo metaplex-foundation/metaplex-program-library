@@ -1063,6 +1063,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metaplex-foundation/mpl-core@npm:^0.0.5":
+  version: 0.0.5
+  resolution: "@metaplex-foundation/mpl-core@npm:0.0.5"
+  dependencies:
+    "@solana/spl-token": ^0.1.8
+    "@solana/web3.js": ^1.35.1
+    bs58: ^4.0.1
+  checksum: 2e5913ab2f050d5e26152b872633f80069432356d576e16f0725781738a1f1eea8a84682baa00f59f8501c6ceda07e2356ab6b3c67812d4dcb73efb4e123c3e8
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/mpl-fixed-price-sale@workspace:fixed-price-sale/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-fixed-price-sale@workspace:fixed-price-sale/js"
@@ -1070,6 +1081,7 @@ __metadata:
     "@metaplex-foundation/amman": ^0.1.0
     "@metaplex-foundation/beet": ^0.0.8
     "@metaplex-foundation/beet-solana": ^0.0.6
+    "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/mpl-token-metadata": 1.1.0
     "@metaplex-foundation/solita": ^0.1.0
     "@solana/spl-token": ^0.1.8
@@ -1553,11 +1565,11 @@ __metadata:
   linkType: hard
 
 "@solana/spl-token-registry@npm:^0.2.2405":
-  version: 0.2.2829
-  resolution: "@solana/spl-token-registry@npm:0.2.2829"
+  version: 0.2.2830
+  resolution: "@solana/spl-token-registry@npm:0.2.2830"
   dependencies:
     cross-fetch: 3.0.6
-  checksum: 9ad675637504ca44c3e768f8832f16cd7eaec86753b002917bc57f98d5878562051c19313aba0dec126173036751b557f416bb6f80f90b931c9da37b51b3f76f
+  checksum: f8e391b2000c7196e9b7946d286c8907eff49ce3a6c5fed1379c440286cf4b1ca95cef2d637dbe77767ada74cbd05ea95bfc1b82f26810127a95da144d263ba6
   languageName: node
   linkType: hard
 
