@@ -112,7 +112,6 @@ test('claim resource: success', async (t) => {
 
   await sleep(1000);
 
-  // TODO: this transaction fails with: `MarketIsNotStarted. Error Number: 6013. Error Message: Market is not started.`
   const { tx: buyTx } = await createBuyTransaction({
     connection,
     buyer: payer.publicKey,
