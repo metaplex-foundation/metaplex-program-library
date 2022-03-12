@@ -12,7 +12,9 @@ import {
   CreateMasterEdition,
   Creator,
 } from '@metaplex-foundation/mpl-token-metadata';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore createMintToInstruction export actually exist but isn't setup correctly
+import { createMintToInstruction } from '@solana/spl-token';
 import { strict as assert } from 'assert';
 
 import { createTokenAccount } from '../transactions/createTokenAccount';
@@ -47,14 +49,7 @@ export async function mintNFT({ transactionHandler, payer, connection, creators 
   });
 
   createTokenTx.add(
-    Token.createMintToInstruction(
-      new PublicKey(TOKEN_PROGRAM_ID),
-      mint.publicKey,
-      tokenAccount.publicKey,
-      payer.publicKey,
-      [],
-      1,
-    ),
+    createMintToInstruction(mint.publicKey, tokenAccount.publicKey, payer.publicKey, 1),
   );
 
   const associatedTokenAccountRes = await transactionHandler.sendAndConfirmTransaction(

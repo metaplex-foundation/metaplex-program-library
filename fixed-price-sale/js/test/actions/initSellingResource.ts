@@ -104,7 +104,6 @@ export const initSellingResource = async ({
 
   const { savePrimaryMetadataCreatorsInstruction, primaryMetadataCreators } =
     await createSavePrimaryMetadataCreators({
-      test,
       transactionHandler,
       payer,
       connection,
