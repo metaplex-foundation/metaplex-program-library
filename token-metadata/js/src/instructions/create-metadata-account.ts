@@ -1,13 +1,5 @@
-import { MintLayout, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { strict as assert } from 'assert';
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  Signer,
-  SystemProgram,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Signer, TransactionInstruction } from '@solana/web3.js';
 import { pdaForMetadata } from '../common/helpers';
 import {
   CreateMetadataAccountV2InstructionArgs,
@@ -15,7 +7,10 @@ import {
   DataV2,
   createCreateMetadataAccountV2Instruction,
 } from '../generated';
-import { createMintInstructions } from '../common/instructions';
+import {
+  createMintInstructions,
+  getOrCreateAssociatedTokenAccountInstruction,
+} from '../common/instructions';
 
 type HasMint = CreateMetadataAccountSetup & {
   mint: PublicKey;
@@ -83,8 +78,6 @@ export class CreateMetadataAccountSetup {
    */
   async createMintAccount({ decimals = 0, owner = this.payer, freezeAuthority = this.payer } = {}) {
     const mint = Keypair.generate();
-    const fromTokenAccount = await getOrCreateAssociatedAccountInstruction(this.payer.publicKey);
-
     const instructions = await createMintInstructions(this.connection, {
       payer: this.payer,
       mint: mint.publicKey,
