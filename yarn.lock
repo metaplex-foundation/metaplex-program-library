@@ -32,7 +32,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.10.5, @babel/runtime@npm:^7.11.2, @babel/runtime@npm:^7.12.5":
+"@babel/runtime@npm:^7.11.2, @babel/runtime@npm:^7.12.5":
   version: 7.17.2
   resolution: "@babel/runtime@npm:7.17.2"
   dependencies:
@@ -927,7 +927,6 @@ __metadata:
   resolution: "@metaplex-foundation/amman@portal:/Volumes/d/dev/mp/metaplex/metaplex-foundation/amman::locator=%40metaplex-foundation%2Fmetaplex-program-library%40workspace%3A."
   dependencies:
     "@metaplex-foundation/cusper": ^0.0.2
-    "@solana/spl-token": ^0.1.8
     "@solana/spl-token-registry": ^0.2.2405
     "@solana/web3.js": ^1.35.0
     bn.js: ^5.2.0
@@ -1614,33 +1613,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/spl-token@npm:0.1.8, @solana/spl-token@npm:^0.1.8":
-  version: 0.1.8
-  resolution: "@solana/spl-token@npm:0.1.8"
-  dependencies:
-    "@babel/runtime": ^7.10.5
-    "@solana/web3.js": ^1.21.0
-    bn.js: ^5.1.0
-    buffer: 6.0.3
-    buffer-layout: ^1.2.0
-    dotenv: 10.0.0
-  checksum: be4971c4af9c56fd30353356d8ca404b4460eb37806499ab1257e7d77afa56f89149cfe03c41a0f8908f50e9c421c5b805502857455281e8d3088a2eae1c3297
-  languageName: node
-  linkType: hard
-
-"@solana/spl-token@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@solana/spl-token@npm:0.2.0"
+"@solana/spl-token@portal:/Users/thlorenz/dev/mp/solana/solana-labs/spl/token/js::locator=%40metaplex-foundation%2Fmetaplex-program-library%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "@solana/spl-token@portal:/Users/thlorenz/dev/mp/solana/solana-labs/spl/token/js::locator=%40metaplex-foundation%2Fmetaplex-program-library%40workspace%3A."
   dependencies:
     "@solana/buffer-layout": ^4.0.0
     "@solana/buffer-layout-utils": ^0.2.0
     "@solana/web3.js": ^1.32.0
     start-server-and-test: ^1.14.0
-  checksum: c07f32428985ae67f97ed95d31d9e5c6d9317d26fa81b5df6c6f664152c48c9ad08af32a20d8c6667c636bfc22950a261c5cf57457820cba16c488640169b2f6
   languageName: node
-  linkType: hard
+  linkType: soft
 
-"@solana/web3.js@npm:^1.17.0, @solana/web3.js@npm:^1.21.0, @solana/web3.js@npm:^1.31.0, @solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.35.0, @solana/web3.js@npm:^1.35.1":
+"@solana/web3.js@npm:^1.17.0, @solana/web3.js@npm:^1.31.0, @solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.35.0, @solana/web3.js@npm:^1.35.1":
   version: 1.36.0
   resolution: "@solana/web3.js@npm:1.36.0"
   dependencies:
@@ -2366,7 +2350,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bn.js@npm:^5.0.0, bn.js@npm:^5.1.0, bn.js@npm:^5.1.2, bn.js@npm:^5.2.0":
+"bn.js@npm:^5.0.0, bn.js@npm:^5.1.2, bn.js@npm:^5.2.0":
   version: 5.2.0
   resolution: "bn.js@npm:5.2.0"
   checksum: 6117170393200f68b35a061ecbf55d01dd989302e7b3c798a3012354fa638d124f0b2f79e63f77be5556be80322a09c40339eda6413ba7468524c0b6d4b4cb7a
@@ -2453,7 +2437,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"buffer@npm:6.0.3, buffer@npm:~6.0.3":
+"buffer@npm:~6.0.3":
   version: 6.0.3
   resolution: "buffer@npm:6.0.3"
   dependencies:
@@ -3244,13 +3228,6 @@ __metadata:
   dependencies:
     is-obj: ^2.0.0
   checksum: 0f47600a4b93e1dc37261da4e6909652c008832a5d3684b5bf9a9a0d3f4c67ea949a86dceed9b72f5733ed8e8e6383cc5958df3bbd0799ee317fd181f2ece700
-  languageName: node
-  linkType: hard
-
-"dotenv@npm:10.0.0":
-  version: 10.0.0
-  resolution: "dotenv@npm:10.0.0"
-  checksum: f412c5fe8c24fbe313d302d2500e247ba8a1946492db405a4de4d30dd0eb186a88a43f13c958c5a7de303938949c4231c56994f97d05c4bc1f22478d631b4005
   languageName: node
   linkType: hard
 
