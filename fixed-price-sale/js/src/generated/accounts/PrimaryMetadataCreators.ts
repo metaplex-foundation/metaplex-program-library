@@ -1,12 +1,11 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { CreatorAccountData, creatorAccountDataStruct } from '.';
-
+import * as definedTypes from '../../types';
 /**
  * Arguments used to create {@link PrimaryMetadataCreatorsAccountData}
  */
 export type PrimaryMetadataCreatorsAccountDataArgs = {
-  creators: CreatorAccountData[];
+  creators: definedTypes.Creator[];
 };
 
 const primaryMetadataCreatorsAccountDiscriminator = [66, 131, 48, 36, 100, 130, 177, 11];
@@ -15,7 +14,7 @@ const primaryMetadataCreatorsAccountDiscriminator = [66, 131, 48, 36, 100, 130, 
  * functionality for that data
  */
 export class PrimaryMetadataCreatorsAccountData implements PrimaryMetadataCreatorsAccountDataArgs {
-  private constructor(readonly creators: CreatorAccountData[]) {}
+  private constructor(readonly creators: definedTypes.Creator[]) {}
 
   /**
    * Creates a {@link PrimaryMetadataCreatorsAccountData} instance from the provided args.
@@ -107,7 +106,7 @@ const primaryMetadataCreatorsAccountDataStruct = new beet.FixableBeetStruct<
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['creators', beet.array(creatorAccountDataStruct)],
+    ['creators', beet.array(definedTypes.creatorBeet)],
   ],
   PrimaryMetadataCreatorsAccountData.fromArgs,
   'PrimaryMetadataCreatorsAccountData',

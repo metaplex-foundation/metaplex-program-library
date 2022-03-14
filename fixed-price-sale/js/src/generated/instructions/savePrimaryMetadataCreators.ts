@@ -1,11 +1,12 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import * as definedTypes from '../../types';
 
-import { CreatorAccountData, creatorAccountDataStruct, PROGRAM_ID } from '../..';
+import { PROGRAM_ID } from '../..';
 
 export type SavePrimaryMetadataCreatorsInstructionArgs = {
   primaryMetadataCreatorsBump: number;
-  creators: CreatorAccountData[];
+  creators: definedTypes.Creator[];
 };
 const savePrimaryMetadataCreatorsStruct = new beet.FixableBeetArgsStruct<
   SavePrimaryMetadataCreatorsInstructionArgs & {
@@ -15,7 +16,7 @@ const savePrimaryMetadataCreatorsStruct = new beet.FixableBeetArgsStruct<
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['primaryMetadataCreatorsBump', beet.u8],
-    ['creators', beet.array(creatorAccountDataStruct)],
+    ['creators', beet.array(definedTypes.creatorBeet)],
   ],
   'SavePrimaryMetadataCreatorsInstructionArgs',
 );
