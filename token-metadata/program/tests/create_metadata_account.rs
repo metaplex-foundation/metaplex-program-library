@@ -424,4 +424,141 @@ mod create_meta_accounts {
 
         pass_creators(context, creators).await;
     }
+    // -----------------
+    // Uses Failures
+    // -----------------
+    async fn fail_uses(uses: Uses) {
+        let mut context = program_test().start_with_context().await;
+        let res = Metadata::new()
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                Some(uses),
+            )
+            .await
+            .unwrap_err();
+        assert_custom_error!(res, MetadataError::InvalidUseMethod);
+    }
+
+    #[tokio::test]
+    async fn fail_uses_multiple_0_0() {
+        fail_uses(Uses {
+            use_method: UseMethod::Multiple,
+            remaining: 0,
+            total: 0,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn fail_uses_multiple_10_5() {
+        fail_uses(Uses {
+            use_method: UseMethod::Multiple,
+            remaining: 10,
+            total: 5,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn fail_uses_single_0_1() {
+        fail_uses(Uses {
+            use_method: UseMethod::Single,
+            remaining: 0,
+            total: 1,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn fail_uses_single_1_0() {
+        fail_uses(Uses {
+            use_method: UseMethod::Single,
+            remaining: 1,
+            total: 0,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn fail_uses_single_1_2() {
+        fail_uses(Uses {
+            use_method: UseMethod::Single,
+            remaining: 1,
+            total: 2,
+        })
+        .await;
+    }
+
+    // -----------------
+    // Uses Success
+    // -----------------
+    async fn pass_uses(uses: Uses) {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                Some(uses.clone()),
+            )
+            .await
+            .unwrap();
+        let metadata = test_metadata.get_data(&mut context).await;
+        assert_eq!(metadata.uses, Some(uses));
+    }
+
+    #[tokio::test]
+    async fn uses_multiple_5_10() {
+        pass_uses(Uses {
+            use_method: UseMethod::Multiple,
+            remaining: 5,
+            total: 10,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn uses_single_1_1() {
+        pass_uses(Uses {
+            use_method: UseMethod::Single,
+            remaining: 1,
+            total: 1,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn uses_burn_0_0() {
+        pass_uses(Uses {
+            use_method: UseMethod::Burn,
+            remaining: 0,
+            total: 0,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn uses_burn_5_10() {
+        pass_uses(Uses {
+            use_method: UseMethod::Burn,
+            remaining: 5,
+            total: 10,
+        })
+        .await;
+    }
 }
