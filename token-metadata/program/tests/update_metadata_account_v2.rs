@@ -4,7 +4,7 @@ mod utils;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    state::{Collection, DataV2, Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{Creator, Collection, DataV2, Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
@@ -101,6 +101,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
+                None,
                 None,
                 None,
             )
@@ -249,6 +250,7 @@ mod update_metadata_account_v2 {
                 true,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -262,6 +264,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -310,4 +313,4 @@ mod update_metadata_account_v2 {
             MetadataError::CollectionCannotBeVerifiedInThisInstruction
         );
     }
-}
+} 

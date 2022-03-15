@@ -52,7 +52,6 @@ pub fn assert_data_valid(
     if data.seller_fee_basis_points > 10000 {
         return Err(MetadataError::InvalidBasisPoints.into());
     }
-
     if data.creators.is_some() {
         if let Some(creators) = &data.creators {
             if creators.len() > MAX_CREATOR_LIMIT {
@@ -128,7 +127,6 @@ pub fn assert_data_valid(
             }
         }
     }
-
     Ok(())
 }
 
@@ -914,7 +912,7 @@ pub fn process_create_metadata_accounts_logic(
     metadata.update_authority = update_authority_key;
     assert_valid_use(&data.uses, &None)?;
     metadata.uses = data.uses;
-    assert_collection_update_is_valid(&None, &data.collection)?;
+    assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
     if add_token_standard {
         let token_standard = if is_edition {
@@ -928,7 +926,6 @@ pub fn process_create_metadata_accounts_logic(
     } else {
         metadata.token_standard = None;
     }
-
     puff_out_data_fields(&mut metadata);
 
     let edition_seeds = &[
@@ -1140,6 +1137,48 @@ pub fn assert_currently_holding(
 
     if token_account.mint != metadata.mint {
         return Err(MetadataError::MintMismatch.into());
+    }
+    Ok(())
+}
+
+pub fn assert_freeze_authority_matches_mint(
+    freeze_authority: &COption<Pubkey>,
+    freeze_authority_info: &AccountInfo,
+) -> ProgramResult {
+    match freeze_authority {
+        COption::None => {
+            return Err(MetadataError::InvalidFreezeAuthority.into());
+        }
+        COption::Some(key) => {
+            if freeze_authority_info.key != key {
+                return Err(MetadataError::InvalidFreezeAuthority.into());
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn assert_delegated_tokens(
+    delegate: &AccountInfo,
+    mint_info: &AccountInfo,
+    token_account_info: &AccountInfo,
+) -> ProgramResult {
+    assert_owned_by(mint_info, &spl_token::id())?;
+
+    let token_account: Account = assert_initialized(token_account_info)?;
+
+    assert_owned_by(token_account_info, &spl_token::id())?;
+
+    if token_account.mint != *mint_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    if token_account.amount < 1 {
+        return Err(MetadataError::NotEnoughTokens.into());
+    }
+
+    if token_account.delegate == COption::None || token_account.delegated_amount != token_account.amount || token_account.delegate.unwrap() != *delegate.key {
+        return Err(MetadataError::InvalidDelegate.into());
     }
     Ok(())
 }

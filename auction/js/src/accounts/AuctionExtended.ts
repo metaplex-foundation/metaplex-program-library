@@ -1,3 +1,11 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
+import { strict as assert } from 'assert';
 import {
   Account,
   Borsh,
@@ -18,7 +26,8 @@ type Args = {
   name: number[] | null;
 };
 export class AuctionDataExtended extends Borsh.Data<Args> {
-  static readonly SCHEMA = AuctionDataExtended.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = AuctionDataExtended.struct([
     ['totalUncancelledBids', 'u64'],
     ['tickSize', { kind: 'option', type: 'u64' }],
     ['gapTickSizePercentage', { kind: 'option', type: 'u8' }],
@@ -26,11 +35,11 @@ export class AuctionDataExtended extends Borsh.Data<Args> {
     ['name', { kind: 'option', type: [32] }],
   ]);
 
-  totalUncancelledBids: BN;
-  tickSize: BN | null;
-  gapTickSizePercentage: number | null;
-  instantSalePrice: BN | null;
-  name: number[] | null;
+  totalUncancelledBids!: BN;
+  tickSize?: BN;
+  gapTickSizePercentage?: number;
+  instantSalePrice?: BN;
+  name?: number[];
 }
 
 export class AuctionExtended extends Account<AuctionDataExtended> {
@@ -43,6 +52,7 @@ export class AuctionExtended extends Account<AuctionDataExtended> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (!AuctionExtended.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }

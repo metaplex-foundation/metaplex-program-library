@@ -1,7 +1,6 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { addLabel, logDebug } from '../utils';
 import {
-  Actions,
   assertConfirmedTransaction,
   defaultSendOptions,
   TransactionHandler,
@@ -17,7 +16,10 @@ import {
   MetadataDataData,
 } from '../../src/mpl-token-metadata';
 import BN from 'bn.js';
-import * as spl from '@solana/spl-token';
+import { CreateMint } from './create-mint-account';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore these exports actually exist but aren't setup correctly so TypeScript gets confused
+import { createMint, getOrCreateAssociatedTokenAccount, mintTo } from '@solana/spl-token';
 // -----------------
 // Create Metadata
 // -----------------
@@ -101,8 +103,7 @@ export async function mintAndCreateMetadata(
   payer: Keypair,
   args: ConstructorParameters<typeof MetadataDataData>[0],
 ) {
-  const { createMintAccount } = new Actions(connection);
-  const { mint, createMintTx } = await createMintAccount(payer.publicKey);
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
@@ -136,24 +137,21 @@ export async function mintAndCreateMetadataV2(
   payer: Keypair,
   args: DataV2,
 ) {
-  const mint = await spl.Token.createMint(
+  const mint = await createMint(connection, payer, payer.publicKey, null, 0);
+  const dstTokenAccount = await getOrCreateAssociatedTokenAccount(
     connection,
     payer,
+    mint,
     payer.publicKey,
-    null,
-    0,
-    spl.TOKEN_PROGRAM_ID,
   );
 
-  const fromTokenAccount = await mint.getOrCreateAssociatedAccountInfo(payer.publicKey);
-
-  await mint.mintTo(fromTokenAccount.address, payer.publicKey, [], 1);
-  addLabel('mint', mint.publicKey);
+  await mintTo(connection, payer, mint, dstTokenAccount.address, payer, 1);
+  addLabel('mint', mint);
   const initMetadataData = args;
   const { createTxDetails, metadata } = await createMetadataV2({
     transactionHandler,
     publicKey: payer.publicKey,
-    mint: mint.publicKey,
+    mint,
     metadataData: initMetadataData,
   });
 
@@ -179,14 +177,14 @@ export async function createMasterEdition(
     args,
   );
 
-  const masterEditionPubkey = await MasterEdition.getPDA(mint.publicKey);
+  const masterEditionPubkey = await MasterEdition.getPDA(mint);
   const createMev3 = new CreateMasterEditionV3(
     { feePayer: payer.publicKey },
     {
       edition: masterEditionPubkey,
       metadata: metadata,
       updateAuthority: payer.publicKey,
-      mint: mint.publicKey,
+      mint,
       mintAuthority: payer.publicKey,
       maxSupply: new BN(maxSupply),
     },

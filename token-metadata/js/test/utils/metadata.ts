@@ -1,6 +1,7 @@
 import test from 'tape';
 import spok from 'spok';
 
+import { strict as assert } from 'assert';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { MetadataData, MetadataDataData } from '../../src/mpl-token-metadata';
 import { connectionURL } from './';
@@ -8,11 +9,7 @@ import { airdrop, PayerTransactionHandler } from '@metaplex-foundation/amman';
 
 import { addLabel } from './address-labels';
 import { mintAndCreateMetadata } from '../actions';
-
-export const URI = 'uri';
-export const NAME = 'test';
-export const SYMBOL = 'sym';
-export const SELLER_FEE_BASIS_POINTS = 10;
+import { URI, NAME, SYMBOL, SELLER_FEE_BASIS_POINTS } from './consts';
 
 export async function initMetadata() {
   const payer = Keypair.generate();
@@ -46,9 +43,11 @@ export async function getMetadataData(
   metadata: PublicKey,
 ): Promise<MetadataData> {
   const metadataAccount = await connection.getAccountInfo(metadata);
+  assert(metadataAccount != null, 'should find metadata account');
   return MetadataData.deserialize(metadataAccount.data);
 }
 
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 export async function assertMetadataDataUnchanged(
   t: test.Test,
   initial: MetadataData,
@@ -59,18 +58,26 @@ export async function assertMetadataDataUnchanged(
   if (except != null) {
     delete x[except];
   }
+  // @ts-ignore serves simpler test assertions
   delete x.data.creators;
+  // @ts-ignore serves simpler test assertions
   delete x.tokenStandard;
+  // @ts-ignore serves simpler test assertions
   delete x.collection;
+  // @ts-ignore serves simpler test assertions
   delete x.uses;
 
   const y = { $topic: `no change except '${except}' on metadata`, ...updated };
   if (except != null) {
     delete y[except];
   }
+  // @ts-ignore serves simpler test assertions
   delete y.data.creators;
+  // @ts-ignore serves simpler test assertions
   delete y.tokenStandard;
+  // @ts-ignore serves simpler test assertions
   delete y.collection;
+  // @ts-ignore serves simpler test assertions
   delete y.uses;
 
   spok(t, x, y);
@@ -84,11 +91,14 @@ export async function assertMetadataDataDataUnchanged(
 ) {
   const x = { ...initial };
   except.forEach((f) => delete x[f]);
+  // @ts-ignore serves simpler test assertions
   delete x.creators;
 
   const y = { $topic: `no change except '${except}' on metadataData`, ...updated };
   except.forEach((f) => delete y[f]);
+  // @ts-ignore serves simpler test assertions
   delete y.creators;
 
   spok(t, x, y);
 }
+/* eslint-enable @typescript-eslint/ban-ts-comment */

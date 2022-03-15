@@ -71,6 +71,7 @@ mod create_master_edition {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -287,6 +288,7 @@ mod create_master_edition {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -334,6 +336,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )

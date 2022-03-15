@@ -8,6 +8,7 @@ import {
   StringPublicKey,
   TokenAccount,
 } from '@metaplex-foundation/mpl-core';
+import { strict as assert } from 'assert';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
@@ -158,6 +159,7 @@ export class Metadata extends Account<MetadataData> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (!Metadata.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }
@@ -242,17 +244,10 @@ export class Metadata extends Account<MetadataData> {
     }
   }
 
-  static async findByOwner(connection: Connection, owner: AnyPublicKey) {
-    const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
-    const accountMap = new Map(accounts.map(({ data }) => [data.mint.toString(), data]));
-    // Slow method
-    const allMetadata = await Metadata.findMany(connection);
+  static async findByMint(connection: Connection, mint: AnyPublicKey): Promise<Metadata> {
+    const pda = await Metadata.getPDA(mint);
 
-    return allMetadata.filter(
-      (metadata) =>
-        accountMap.has(metadata.data.mint) &&
-        (accountMap?.get(metadata.data.mint)?.amount?.toNumber() || 0) > 0,
-    );
+    return Metadata.load(connection, pda);
   }
 
   static async findByOwnerV2(connection: Connection, owner: AnyPublicKey) {
@@ -268,10 +263,16 @@ export class Metadata extends Account<MetadataData> {
     ).flat();
   }
 
-  static async findDataByOwner(
+  static async findByOwnerV3(connection: Connection, owner: AnyPublicKey): Promise<Metadata[]> {
+    const tokenInfo = await Metadata.findInfoByOwner(connection, owner);
+
+    return Array.from(tokenInfo.entries()).map(([pubkey, info]) => new Metadata(pubkey, info));
+  }
+
+  static async findInfoByOwner(
     connection: Connection,
     owner: AnyPublicKey,
-  ): Promise<MetadataData[]> {
+  ): Promise<Map<AnyPublicKey, AccountInfo<Buffer>>> {
     const accounts = await TokenAccount.getTokenAccountsByOwner(connection, owner);
 
     const metadataPdaLookups = accounts.reduce((memo, { data }) => {
@@ -282,7 +283,16 @@ export class Metadata extends Account<MetadataData> {
     }, []);
 
     const metadataAddresses = await Promise.all(metadataPdaLookups);
-    const tokenInfo = await Account.getInfos(connection, metadataAddresses);
+
+    return Account.getInfos(connection, metadataAddresses);
+  }
+
+  static async findDataByOwner(
+    connection: Connection,
+    owner: AnyPublicKey,
+  ): Promise<MetadataData[]> {
+    const tokenInfo = await Metadata.findInfoByOwner(connection, owner);
+
     return Array.from(tokenInfo.values()).map((m) => MetadataData.deserialize(m.data));
   }
 

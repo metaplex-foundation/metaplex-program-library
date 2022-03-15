@@ -72,3 +72,57 @@ pub fn find_trade_state_address(
         &id(),
     )
 }
+
+/// Return trade state `Pubkey` address and bump seed.
+pub fn find_public_bid_trade_state_address(
+    wallet: &Pubkey,
+    auction_house: &Pubkey,
+    treasury_mint: &Pubkey,
+    token_mint: &Pubkey,
+    price: u64,
+    token_size: u64,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PREFIX.as_bytes(),
+            wallet.as_ref(),
+            auction_house.as_ref(),
+            treasury_mint.as_ref(),
+            token_mint.as_ref(),
+            &price.to_le_bytes(),
+            &token_size.to_le_bytes(),
+        ],
+        &id(),
+    )
+}
+
+/// Return bid receipt `Pubkey` address and bump seed.
+pub fn find_bid_receipt_address(trade_state: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[BID_RECEIPT_PREFIX.as_bytes(), trade_state.as_ref()],
+        &id(),
+    )
+}
+
+/// Return liting receipt `Pubkey` address and bump seed.
+pub fn find_listing_receipt_address(trade_state: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[LISTING_RECEIPT_PREFIX.as_bytes(), trade_state.as_ref()],
+        &id(),
+    )
+}
+
+/// Return purchase receipt `Pubkey` address and bump seed.
+pub fn find_purchase_receipt_address(
+    seller_trade_state: &Pubkey,
+    buyer_trade_state: &Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PURCHASE_RECEIPT_PREFIX.as_bytes(),
+            seller_trade_state.as_ref(),
+            buyer_trade_state.as_ref(),
+        ],
+        &id(),
+    )
+}

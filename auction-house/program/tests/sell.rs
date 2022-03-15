@@ -1,33 +1,26 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
-use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_lang::AccountDeserialize;
 
-use mpl_auction_house::{pda::*, AuctionHouse};
-use mpl_testing_utils::solana::{airdrop, create_associated_token_account, create_mint};
-use mpl_testing_utils::utils::Metadata;
+use mpl_auction_house::receipt::ListingReceipt;
+use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
-use solana_sdk::{
-    instruction::{Instruction, InstructionError},
-    sysvar,
-    transaction::{Transaction, TransactionError},
-    transport::TransportError,
-};
-use solana_sdk::{signature::Keypair, signer::Signer};
-use spl_associated_token_account::get_associated_token_address;
-use spl_token;
-use std::assert_eq;
+use solana_sdk::{signer::Signer, sysvar::clock::Clock};
+use std::{assert_eq, assert_ne};
 use utils::setup_functions::*;
 
 #[tokio::test]
 async fn sell_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
-
-    let (ah, ahkey) = existing_auction_house_test_context(&mut context)
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
     let test_metadata = Metadata::new();
-    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000).await.unwrap();
+    let owner_pubkey = &test_metadata.token.pubkey();
+    airdrop(&mut context, owner_pubkey, 10_000_000_000)
+        .await
+        .unwrap();
     test_metadata
         .create(
             &mut context,
@@ -40,74 +33,48 @@ async fn sell_success() {
         )
         .await
         .unwrap();
-    let price = 1;
-    let size = 1;
-    let token =
-        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let (seller_trade_state, sts_bump) = find_trade_state_address(
-        &test_metadata.token.pubkey(),
-        &ahkey,
-        &token,
-        &ah.treasury_mint,
-        &test_metadata.mint.pubkey(),
-        price,
-        size,
-    );
-    let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
-        &test_metadata.token.pubkey(),
-        &ahkey,
-        &token,
-        &ah.treasury_mint,
-        &test_metadata.mint.pubkey(),
-        0,
-        size,
-    );
-    let (pas, pas_bump) = find_program_as_signer_address();
+    let ((acc, listing_receipt_acc), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 1);
 
-    let accounts = mpl_auction_house::accounts::Sell {
-        wallet: test_metadata.token.pubkey(),
-        token_account: token,
-        metadata: test_metadata.pubkey,
-        authority: ah.authority,
-        auction_house: ahkey,
-        auction_house_fee_account: ah.auction_house_fee_account,
-        seller_trade_state,
-        free_seller_trade_state,
-        token_program: spl_token::id(),
-        system_program: solana_program::system_program::id(),
-        program_as_signer: pas,
-        rent: sysvar::rent::id(),
-    }
-    .to_account_metas(None);
-
-    let data = mpl_auction_house::instruction::Sell {
-        trade_state_bump: sts_bump,
-        _free_trade_state_bump: free_sts_bump,
-        _program_as_signer_bump: pas_bump,
-        token_size: size,
-        buyer_price: price,
-    }
-    .data();
-
-    let instruction = Instruction {
-        program_id: mpl_auction_house::id(),
-        data,
-        accounts,
-    };
-
-    let tx = Transaction::new_signed_with_payer(
-        &[instruction],
-        Some(&test_metadata.token.pubkey()),
-        &[&test_metadata.token],
-        context.last_blockhash,
-    );
-
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context
+        .banks_client
+        .process_transaction(sell_tx)
+        .await
+        .unwrap();
     let sts = context
         .banks_client
-        .get_account(seller_trade_state)
+        .get_account(acc.seller_trade_state)
         .await
         .expect("Error Getting Trade State")
         .expect("Trade State Empty");
-    assert!(sts.data.len() == 1);
+    assert_eq!(sts.data.len(), 1);
+
+    let timestamp = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
+        .unwrap()
+        .unix_timestamp;
+
+    let listing_receipt_account = context
+        .banks_client
+        .get_account(listing_receipt_acc.receipt)
+        .await
+        .expect("getting listing receipt")
+        .expect("empty listing receipt data");
+
+    let listing_receipt =
+        ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
+
+    assert_eq!(listing_receipt.auction_house, acc.auction_house);
+    assert_eq!(listing_receipt.metadata, acc.metadata);
+    assert_eq!(listing_receipt.seller, acc.wallet);
+    assert_eq!(listing_receipt.created_at, timestamp);
+    assert_eq!(listing_receipt.purchase_receipt, None);
+    assert_eq!(listing_receipt.canceled_at, None);
+    assert_eq!(listing_receipt.bookkeeper, *owner_pubkey);
+    assert_eq!(listing_receipt.seller, *owner_pubkey);
+    assert_eq!(listing_receipt.price, 1);
+    assert_eq!(listing_receipt.token_size, 1);
+
+    ()
 }

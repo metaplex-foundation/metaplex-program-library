@@ -40,7 +40,6 @@ impl TestPackSet {
         &self,
         context: &mut ProgramTestContext,
         args: instruction::InitPackSetArgs,
-        randomness_oracle: &Pubkey,
     ) -> transport::Result<()> {
         create_account::<PackSet>(context, &self.keypair, &mpl_nft_packs::id()).await?;
 
@@ -57,7 +56,6 @@ impl TestPackSet {
                     &self.keypair.pubkey(),
                     &self.authority.pubkey(),
                     &self.store,
-                    randomness_oracle,
                     &self.minting_authority.pubkey(),
                     args,
                 ),
@@ -339,7 +337,6 @@ impl TestPackSet {
         edition_mint: &Pubkey,
         user_wallet: &Keypair,
         user_token_acc: &Option<Pubkey>,
-        random_oracle: &Pubkey,
         voucher_index: u32,
     ) -> transport::Result<()> {
         let tx = Transaction::new_signed_with_payer(
@@ -351,7 +348,6 @@ impl TestPackSet {
                 edition_mint,
                 &user_wallet.pubkey(),
                 user_token_acc,
-                random_oracle,
                 voucher_index,
             )],
             Some(&context.payer.pubkey()),
@@ -370,7 +366,6 @@ impl TestPackSet {
         edition_mint: &Pubkey,
         user_wallet: &Keypair,
         user_token_acc: &Option<Pubkey>,
-        random_oracle: &Pubkey,
         voucher_index: u32,
     ) -> transport::Result<()> {
         let mut ix = instruction::request_card_for_redeem(
@@ -381,7 +376,6 @@ impl TestPackSet {
             edition_mint,
             &user_wallet.pubkey(),
             user_token_acc,
-            random_oracle,
             voucher_index,
         );
 
@@ -410,7 +404,6 @@ impl TestPackSet {
         new_mint_authority: &Keypair,
         master_metadata: &Pubkey,
         master_mint: &Pubkey,
-        randomness_oracle: &Pubkey,
         index: u32,
     ) -> transport::Result<()> {
         create_mint(context, new_mint, &new_mint_authority.pubkey(), None)
@@ -469,7 +462,6 @@ impl TestPackSet {
                 &new_mint_authority.pubkey(),
                 master_metadata,
                 master_mint,
-                randomness_oracle,
                 index,
             )],
             Some(&context.payer.pubkey()),

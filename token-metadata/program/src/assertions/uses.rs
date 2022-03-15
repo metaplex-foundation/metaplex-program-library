@@ -2,7 +2,7 @@ use solana_program::{account_info::AccountInfo, program_error::ProgramError, pub
 
 use crate::{
     error::MetadataError,
-    state::{UseMethod, Uses, PREFIX, USER},
+    state::{UseAuthorityRecord, UseMethod, Uses, PREFIX, USER},
     utils::assert_derivation,
 };
 
@@ -35,23 +35,22 @@ pub fn assert_valid_use(
     };
 }
 
-pub fn process_use_authority_validation(
+pub fn assert_valid_bump(
+    canonical_bump: u8,
+    use_authority_record: &UseAuthorityRecord,
+) -> Result<(), ProgramError> {
+    if canonical_bump != use_authority_record.bump {
+        return Err(MetadataError::InvalidUseAuthorityRecord.into());
+    }
+    Ok(())
+}
+
+pub fn assert_use_authority_derivation(
     program_id: &Pubkey,
     use_authority_record_info: &AccountInfo,
     user_info: &AccountInfo,
     mint_info: &AccountInfo,
-    must_be_empty: bool,
-) -> Result<u8, ProgramError> {
-    let record_info_empty = use_authority_record_info.try_data_is_empty()?;
-    if must_be_empty {
-        if !record_info_empty {
-            return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
-        }
-    } else {
-        if record_info_empty || use_authority_record_info.data.borrow()[0] == 0 {
-            return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
-        }
-    }
+) -> Result<u8, ProgramError>{
     let use_authority_seeds = [
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -59,6 +58,22 @@ pub fn process_use_authority_validation(
         USER.as_bytes(),
         &user_info.key.as_ref(),
     ];
-
     assert_derivation(&program_id, use_authority_record_info, &use_authority_seeds)
+}
+
+pub fn process_use_authority_validation(
+    data_len: usize,
+    must_be_empty: bool,
+) -> Result<(), ProgramError> {
+    let record_info_empty = data_len == 0;
+    if must_be_empty {
+        if !record_info_empty {
+            return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
+        }
+    } else {
+        if record_info_empty {
+            return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
+        }
+    }
+    Ok(())
 }

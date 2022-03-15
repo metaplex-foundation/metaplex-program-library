@@ -32,6 +32,7 @@ mod revoke_use_authority {
                 10,
                 false,
                 None,
+                None,
                 Some(Uses {
                     use_method: UseMethod::Single,
                     total: 1,
@@ -104,6 +105,7 @@ mod revoke_use_authority {
             .get_account(record)
             .await
             .expect("account not found");
+        println!("{:?}", accountafter);
         assert_eq!(accountafter.is_none(), true);
     }
 }

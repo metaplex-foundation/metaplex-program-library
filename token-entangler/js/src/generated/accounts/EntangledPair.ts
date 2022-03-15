@@ -25,7 +25,7 @@ const entangledPairAccountDiscriminator = [133, 118, 20, 210, 1, 54, 172, 116];
  * Holds the data for the {@link EntangledPairAccount} and provides de/serialization
  * functionality for that data
  */
-export class EntangledPairAccountData {
+export class EntangledPairAccountData implements EntangledPairAccountDataArgs {
   private constructor(
     readonly treasuryMint: web3.PublicKey,
     readonly mintA: web3.PublicKey,
@@ -102,6 +102,8 @@ export class EntangledPairAccountData {
   /**
    * Fetches the minimum balance needed to exempt an account holding
    * {@link EntangledPairAccountData} data from rent
+   *
+   * @param connection used to retrieve the rent exemption information
    */
   static async getMinimumBalanceForRentExemption(
     connection: web3.Connection,
@@ -150,7 +152,7 @@ const entangledPairAccountDataStruct = new beet.BeetStruct<
   }
 >(
   [
-    ['accountDiscriminator', beet.fixedSizeArray(beet.u8, 8)],
+    ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['treasuryMint', beetSolana.publicKey],
     ['mintA', beetSolana.publicKey],
     ['mintB', beetSolana.publicKey],

@@ -1,18 +1,18 @@
 [workspace]
 members=[
   "auction/program",
-  "auction-house/program",
+
   "gumdrop/program",
   "metaplex/program",
   "token-entangler/program",
   "token-vault/program",
   "token-vault/test",
-  "token-metadata/program",
-  "token-metadata/test",
   "nft-packs/program",
-  "nft-candy-machine/program",
-  "membership-token/program"
+  "fixed-price-sale/program"
 ]
 exclude = [
-  "membership-token/cli"
+  "fixed-price-sale/cli",
+  "token-metadata",
+  "auction-house/program",
+  "candy-machine/program"
 ]

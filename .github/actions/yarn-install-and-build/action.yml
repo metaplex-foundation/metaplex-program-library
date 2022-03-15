@@ -44,33 +44,41 @@ runs:
     # token-vault and auction
 
     - name: Install and Build core
-      if: ${{ inputs.build_core }}
+      if: inputs.build_core == 'true'
       run: |
+        echo 'Install and Build core: yarn install'
         yarn install
+        echo 'Install and Build core: yarn build'
         yarn build
       working-directory: ./core/js 
       shell: bash
 
     - name: Install and Build auction
-      if: ${{ inputs.build_auction }}
+      if: inputs.build_auction == 'true'
       run: |
+        echo 'Install and Build auction: yarn install'
         yarn install
+        echo 'Install and Build auction: yarn build'
         yarn build
       working-directory: ./auction/js 
       shell: bash
 
     - name: Install and Build token-metadata
-      if: ${{ inputs.build_token_metadata }}
+      if: inputs.build_token_metadata == 'true'
       run: |
+        echo 'Install and Build token-metadata: yarn install'
         yarn install
+        echo 'Install and Build token-metadata: yarn build'
         yarn build
       working-directory: ./token-metadata/js 
       shell: bash
 
     - name: Install and Build token-vault
-      if: ${{ inputs.build_token_vault }}
+      if: inputs.build_token_vault == 'true'
       run: |
+        echo 'Install and Build token-vault: yarn install'
         yarn install
+        echo 'Install and Build token-vault: yarn build'
         yarn build
       working-directory: ./token-vault/js 
       shell: bash
