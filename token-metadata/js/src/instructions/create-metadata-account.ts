@@ -7,10 +7,7 @@ import {
   DataV2,
   createCreateMetadataAccountV2Instruction,
 } from '../generated';
-import {
-  createMintInstructions,
-  getOrCreateAssociatedTokenAccountInstruction,
-} from '../common/instructions';
+import { createMintInstructions } from '../common/instructions';
 
 type HasMint = CreateMetadataAccountSetup & {
   mint: PublicKey;

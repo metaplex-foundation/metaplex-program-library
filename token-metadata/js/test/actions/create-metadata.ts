@@ -148,7 +148,7 @@ export async function mintAndCreateMetadataV2(
   );
 
   await mintTo(connection, payer, mint, dstTokenAccount.address, payer, 1);
-  amman.addr.addLabel('mint', mint.publicKey);
+  amman.addr.addLabel('mint', mint);
   const initMetadataData = args;
   const { createTxDetails, metadata } = await createMetadataV2({
     transactionHandler,

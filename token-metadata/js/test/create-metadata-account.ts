@@ -105,7 +105,7 @@ test('create-metadata-account:with creators, Failure Cases', async (t) => {
       tx,
       setup.signers,
       { skipPreflight: true },
-      `🌱 Metadata with ${label}`,
+      `Fail: 🌱 Metadata with ${label}`,
     );
     return res;
   }
@@ -354,7 +354,7 @@ test('create-metadata-account: with uses, Failure Cases', async (t) => {
       tx,
       setup.signers,
       { skipPreflight: true },
-      `🌱 Metadata with ${label}`,
+      `Fail: 🌱 Metadata with ${label}`,
     );
     assertHasError(t, res, expectedError);
   }
