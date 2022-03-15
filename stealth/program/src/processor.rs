@@ -623,8 +623,6 @@ fn verify_dsl_crank<'info>(
             return Err(StealthError::ProofVerificationError.into());
         }
         buffer_idx += 32;
-        // skip the witness. the dsl crank should fail if the witness is wrong
-        buffer_idx += 32;
     }
 
     solana_program::log::sol_log_compute_units();
@@ -693,15 +691,6 @@ fn verify_dsl_crank<'info>(
             return Err(StealthError::ProofVerificationError.into());
         }
         buffer_idx += 32;
-    }
-
-    // check identity
-    use curve25519_dalek_onchain::traits::Identity;
-    let expected_bytes = curve25519_dalek_onchain::edwards::EdwardsPoint::identity().to_bytes();
-    let found_bytes = &input_buffer_data[buffer_idx..buffer_idx+128];
-    if *found_bytes != expected_bytes {
-        msg!("Mismatched proof statement identity");
-        return Err(ProgramError::InvalidArgument);
     }
 
     solana_program::log::sol_log_compute_units();

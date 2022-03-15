@@ -416,7 +416,7 @@ async fn test_transfer_crank() {
     // create instruction buffer
     {
     use curve25519_dalek_onchain::instruction as dalek;
-    let dsl = dalek::transfer_proof_instructions(vec![11]);
+    let dsl = dalek::transfer_proof_instructions(vec![11], false);
     assert!(
         dsl == stealth::equality_proof::DSL_INSTRUCTION_BYTES,
         "DSL does not match! {:#04X?}", dsl

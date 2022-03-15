@@ -1244,7 +1244,7 @@ dependencies = [
 [[package]]
 name = "curve25519-dalek"
 version = "3.2.0"
-source = "git+https://github.com/lwus/curve25519-dalek-onchain#db2e62bd1eeb85eb240c1116da1fbcd688ff7ba1"
+source = "git+https://github.com/lwus/curve25519-dalek-onchain#ec5af54e4de03c6ec30d2d33884a56a58b30cd18"
 dependencies = [
  "byteorder",
  "digest 0.9.0",
@@ -1257,7 +1257,7 @@ dependencies = [
 [[package]]
 name = "curve25519-dalek-onchain"
 version = "0.0.1"
-source = "git+https://github.com/lwus/curve25519-dalek-onchain#db2e62bd1eeb85eb240c1116da1fbcd688ff7ba1"
+source = "git+https://github.com/lwus/curve25519-dalek-onchain#ec5af54e4de03c6ec30d2d33884a56a58b30cd18"
 dependencies = [
  "borsh 0.9.3",
  "bytemuck",
