@@ -226,7 +226,7 @@ pub enum MetaplexInstruction {
     ///   4. `[]` Safety deposit box account
     ///   5. `[]` Vault account
     ///   6. `[]` Safety deposit config pda of ['metaplex', program id, auction manager, safety deposit]
-    ///      This account will only get used in the event this is an AuctionManagerV2    
+    ///      This account will only get used in the event this is an AuctionManagerV2
     ///   7. `[]` Auction
     ///   8. `[]` Your BidderMetadata account
     ///   9. `[signer optional/writable]` Your Bidder account - Only needs to be signer if payer does not own
@@ -553,7 +553,7 @@ pub enum MetaplexInstruction {
     ///   5. `[signer]` Payer
     ///   6. `[]` Accept payment account of same token mint as the auction for taking payment for open editions, owner should be auction manager key
     ///   7. `[]` Store that this auction manager will belong to
-    ///   8. `[]` System sysvar    
+    ///   8. `[]` System sysvar
     ///   9. `[]` Rent sysvar
     InitAuctionManagerV2(InitAuctionManagerV2Args),
 

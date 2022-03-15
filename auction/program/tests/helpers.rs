@@ -159,6 +159,7 @@ pub async fn create_auction(
     price_floor: PriceFloor,
     gap_tick_size_percentage: Option<u8>,
     tick_size: Option<u64>,
+    bid_type: Option<u8>,
 ) -> Result<(), TransportError> {
     let transaction: Transaction;
     if instant_sale_price.is_some() {
@@ -178,6 +179,7 @@ pub async fn create_auction(
                     tick_size,
                     name: Some(string_to_array(name)?),
                     instant_sale_price,
+                    bid_type,
                 },
             )],
             Some(&payer.pubkey()),

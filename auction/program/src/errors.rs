@@ -135,6 +135,30 @@ pub enum AuctionError {
     #[error("Gap tick size percentage must be between 0 and 100")]
     InvalidGapTickSizePercentage,
 
+    /// Ceiling Price is mandatory for Dutch Auction
+    #[error("Ceiling Price is mandatory for Dutch Auction")]
+    CeilingPriceMandatoryDuctchAuction,
+
+    /// Decrease rate is mandatory for Dutch Auction
+    #[error("Decrease rate is mandatory for Dutch Auction")]
+    DecreaseRateMandatoryDuctchAuction,
+
+    /// Decrease interval is mandatory for Dutch Auction
+    #[error("Decrease interval is mandatory for Dutch Auction")]
+    DecreaseIntervalMandatoryDuctchAuction,
+
+    /// Ceiling price can't be less than floor price
+    #[error("Ceiling price can't be less than floor price")]
+    CeilingPriceLessThanFloorPrice,
+
+    /// Ceiling price can't be less than 0
+    #[error("Ceiling price can't be less than 0")]
+    CeilingPriceLessThanZero,
+
+    /// Bid can't be less than the ceiling prize
+    #[error("Bid can't be less than the ceiling price")]
+    BidLessThanCeilingPrice,
+
     /// Gap tick size percentage must be between 0 and 100
     #[error("Bidder Pot Token Must be a new account")]
     BidderPotTokenAccountMustBeNew,
