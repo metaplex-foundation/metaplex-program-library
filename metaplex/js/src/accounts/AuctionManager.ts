@@ -5,6 +5,7 @@
  * Given that these parts of the SDK will be re-generated with solita very soon
  * that would be a wasted effort and therefore we make an EXCEPTION here.
  */
+import { strict as assert } from 'assert';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
@@ -95,6 +96,7 @@ export class AuctionManager extends Account<AuctionManagerV2Data> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (AuctionManager.isAuctionManagerV1(this.info.data)) {
       throw ERROR_DEPRECATED_ACCOUNT_DATA();
     } else if (AuctionManager.isAuctionManagerV2(this.info.data)) {
@@ -163,6 +165,7 @@ export class AuctionManager extends Account<AuctionManagerV2Data> {
   }
 
   async getAuction(connection: Connection) {
+    assert(this.data != null, 'account data needs to be defined');
     return Auction.load(connection, this.data.auction);
   }
 

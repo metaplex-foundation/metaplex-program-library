@@ -3,13 +3,15 @@ mod utils;
 use anchor_lang::AccountDeserialize;
 
 use mpl_auction_house::{pda::*, AuctionHouse};
-use mpl_testing_utils::assert_error;
-use mpl_testing_utils::solana::{airdrop, create_associated_token_account, create_mint};
+use mpl_testing_utils::{
+    assert_error,
+    solana::{airdrop, create_associated_token_account, create_mint},
+};
 use solana_program_test::*;
 use solana_sdk::{
-    instruction::InstructionError, transaction::TransactionError, transport::TransportError,
+    instruction::InstructionError, signature::Keypair, signer::Signer,
+    transaction::TransactionError, transport::TransportError,
 };
-use solana_sdk::{signature::Keypair, signer::Signer};
 use spl_token;
 use std::assert_eq;
 use utils::setup_functions;

@@ -1,6 +1,8 @@
 import BN from 'bn.js';
 import test from 'tape';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore getAssociatedTokenAddress export actually exist but isn't setup correctly
+import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
@@ -31,15 +33,21 @@ test('withdraw: success', async (t) => {
     },
   });
 
-  const { sellingResource, vault, vaultOwner, vaultOwnerBump, resourceMint } =
-    await initSellingResource({
-      test: t,
-      transactionHandler,
-      payer,
-      connection,
-      store: store.publicKey,
-      maxSupply: 100,
-    });
+  const {
+    sellingResource,
+    vault,
+    vaultOwner,
+    vaultOwnerBump,
+    resourceMint,
+    primaryMetadataCreators,
+  } = await initSellingResource({
+    test: t,
+    transactionHandler,
+    payer,
+    connection,
+    store: store.publicKey,
+    maxSupply: 100,
+  });
 
   const { mint: treasuryMint, tokenAccount: userTokenAcc } = await mintNFT({
     transactionHandler,
@@ -76,7 +84,7 @@ test('withdraw: success', async (t) => {
     market.publicKey,
   );
 
-  const { mint: newMint } = await mintTokenToAccount({
+  const { mint: newMint, mintAta } = await mintTokenToAccount({
     connection,
     payer: payer.publicKey,
     transactionHandler,
@@ -111,6 +119,7 @@ test('withdraw: success', async (t) => {
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
+    newTokenAccount: mintAta.publicKey,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
@@ -145,12 +154,7 @@ test('withdraw: success', async (t) => {
     payer.publicKey,
   );
 
-  const destination = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    treasuryMint.publicKey,
-    payer.publicKey,
-  );
+  const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
   const metadata = await Metadata.getPDA(resourceMint.publicKey);
 
@@ -167,6 +171,7 @@ test('withdraw: success', async (t) => {
     payoutTicketBump,
     treasuryOwnerBump,
     treasuryOwner,
+    primaryMetadataCreators,
   });
 
   const withdrawRes = await transactionHandler.sendAndConfirmTransaction(

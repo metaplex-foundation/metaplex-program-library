@@ -18,8 +18,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.21.0"
-anchor-spl = "0.21.0"
+anchor-lang = "0.22.1"
+anchor-spl = "0.22.1"
 mpl-token-metadata = { path = "../../token-metadata/program", features = ["no-entrypoint"] }
 solana-program = "1.9.4"
 spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }

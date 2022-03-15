@@ -13,7 +13,7 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { ParamsWithStore } from '@metaplex-foundation/mpl-token-vault';
+import { ParamsWithStore } from './vault';
 import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 

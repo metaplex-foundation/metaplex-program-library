@@ -1,17 +1,15 @@
 import BN from 'bn.js';
 import test from 'tape';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore these exports actually exist but aren't setup correctly
+import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token';
 import {
   assertConfirmedTransaction,
   assertError,
   defaultSendOptions,
 } from '@metaplex-foundation/amman';
 import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
-import {
-  findPayoutTicketAddress,
-  findSecondaryMetadataCreatorsAddress,
-  findTradeHistoryAddress,
-} from '../src/utils';
+import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
 import {
   createPrerequisites,
   createStore,
@@ -46,15 +44,21 @@ test('claim resource: success', async (t) => {
     },
   });
 
-  const { sellingResource, vault, vaultOwner, vaultOwnerBump, resourceMint } =
-    await initSellingResource({
-      test: t,
-      transactionHandler,
-      payer,
-      connection,
-      store: store.publicKey,
-      maxSupply: 100,
-    });
+  const {
+    sellingResource,
+    vault,
+    vaultOwner,
+    vaultOwnerBump,
+    resourceMint,
+    primaryMetadataCreators,
+  } = await initSellingResource({
+    test: t,
+    transactionHandler,
+    payer,
+    connection,
+    store: store.publicKey,
+    maxSupply: 100,
+  });
 
   const { mint: treasuryMint, tokenAccount: userTokenAcc } = await mintNFT({
     transactionHandler,
@@ -91,7 +95,7 @@ test('claim resource: success', async (t) => {
     market.publicKey,
   );
 
-  const { mint: newMint } = await mintTokenToAccount({
+  const { mint: newMint, mintAta } = await mintTokenToAccount({
     connection,
     payer: payer.publicKey,
     transactionHandler,
@@ -126,6 +130,7 @@ test('claim resource: success', async (t) => {
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
+    newTokenAccount: mintAta.publicKey,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
@@ -160,12 +165,7 @@ test('claim resource: success', async (t) => {
     payer.publicKey,
   );
 
-  const destination = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    treasuryMint.publicKey,
-    payer.publicKey,
-  );
+  const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
   const metadata = await Metadata.getPDA(resourceMint.publicKey);
 
@@ -182,6 +182,7 @@ test('claim resource: success', async (t) => {
     payoutTicketBump,
     treasuryOwnerBump,
     treasuryOwner,
+    primaryMetadataCreators,
   });
 
   const withdrawRes = await transactionHandler.sendAndConfirmTransaction(
@@ -204,8 +205,6 @@ test('claim resource: success', async (t) => {
     defaultSendOptions,
   );
 
-  const [secondaryMetadataCreators] = await findSecondaryMetadataCreatorsAddress(metadata);
-
   assertConfirmedTransaction(t, claimTokenRes.txConfirmed);
 
   const claimResourceTx = await createClaimResourceTransaction({
@@ -214,7 +213,6 @@ test('claim resource: success', async (t) => {
     market: market.publicKey,
     sellingResource: sellingResource.publicKey,
     metadata,
-    secondaryMetadataCreators,
     treasuryHolder: treasuryHolder.publicKey,
     destination: claimToken.publicKey,
     vault: vault.publicKey,
@@ -230,8 +228,7 @@ test('claim resource: success', async (t) => {
 
   assertConfirmedTransaction(t, claimResourceRes.txConfirmed);
 
-  const token = new Token(connection, resourceMint.publicKey, TOKEN_PROGRAM_ID, payer);
-  const createdToken = await token.getAccountInfo(claimToken.publicKey);
+  const createdToken = await getAccount(connection, claimToken.publicKey);
 
   t.assert(createdToken.mint.toBase58() === resourceMint.publicKey.toBase58());
   t.assert(createdToken.owner.toBase58() === payer.publicKey.toBase58());
@@ -295,7 +292,7 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     market.publicKey,
   );
 
-  const { mint: newMint } = await mintTokenToAccount({
+  const { mint: newMint, mintAta } = await mintTokenToAccount({
     connection,
     payer: payer.publicKey,
     transactionHandler,
@@ -330,6 +327,7 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
+    newTokenAccount: mintAta.publicKey,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
@@ -373,8 +371,6 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     defaultSendOptions,
   );
 
-  const [secondaryMetadataCreators] = await findSecondaryMetadataCreatorsAddress(metadata);
-
   assertConfirmedTransaction(t, claimTokenRes.txConfirmed);
 
   const claimResourceTx = await createClaimResourceTransaction({
@@ -383,7 +379,6 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     market: market.publicKey,
     sellingResource: sellingResource.publicKey,
     metadata,
-    secondaryMetadataCreators,
     treasuryHolder: treasuryHolder.publicKey,
     destination: claimToken.publicKey,
     vault: vault.publicKey,

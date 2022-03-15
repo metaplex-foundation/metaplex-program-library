@@ -1,8 +1,9 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use mpl_testing_utils::solana::airdrop;
-use mpl_testing_utils::utils::Metadata;
+use anchor_lang::AccountDeserialize;
+use mpl_auction_house::receipt::BidReceipt;
+use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
 use std::assert_eq;
@@ -49,7 +50,7 @@ async fn buy_success() {
         .process_transaction(deposit_tx)
         .await
         .unwrap();
-    let (acc, buy_tx) = buy(
+    let ((acc, print_bid_acc), buy_tx) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -63,11 +64,30 @@ async fn buy_success() {
         .process_transaction(buy_tx)
         .await
         .unwrap();
-    let sts = context
+    let bts = context
         .banks_client
         .get_account(acc.buyer_trade_state)
         .await
         .expect("Error Getting Trade State")
         .expect("Trade State Empty");
-    assert_eq!(sts.data.len(), 1);
+    assert_eq!(bts.data.len(), 1);
+
+    let bid_receipt_account = context
+        .banks_client
+        .get_account(print_bid_acc.receipt)
+        .await
+        .expect("Error Getting Public Bid Receipt")
+        .expect("Public Bid Empty");
+
+    let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
+
+    assert_eq!(bid_receipt.price, 1000000000);
+    assert_eq!(bid_receipt.auction_house, acc.auction_house);
+    assert_eq!(bid_receipt.metadata, acc.metadata);
+    assert_eq!(bid_receipt.token_account, Some(acc.token_account));
+    assert_eq!(bid_receipt.buyer, acc.wallet);
+    assert_eq!(bid_receipt.trade_state, acc.buyer_trade_state);
+    assert_eq!(bid_receipt.token_size, 1);
+    assert_eq!(bid_receipt.purchase_receipt, None);
+    assert_eq!(bid_receipt.bookkeeper, buyer.pubkey());
 }

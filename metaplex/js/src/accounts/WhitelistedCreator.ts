@@ -5,6 +5,7 @@
  * Given that these parts of the SDK will be re-generated with solita very soon
  * that would be a wasted effort and therefore we make an EXCEPTION here.
  */
+import { strict as assert } from 'assert';
 import {
   AnyPublicKey,
   StringPublicKey,
@@ -50,6 +51,7 @@ export class WhitelistedCreator extends Account<WhitelistedCreatorData> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (!WhitelistedCreator.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }

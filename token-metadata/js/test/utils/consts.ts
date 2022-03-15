@@ -10,3 +10,8 @@ export const programIds = {
 
 export const DEVNET = clusterApiUrl('devnet');
 export const connectionURL = process.env.USE_DEVNET != null ? DEVNET : LOCALHOST;
+
+export const URI = 'uri';
+export const NAME = 'test';
+export const SYMBOL = 'sym';
+export const SELLER_FEE_BASIS_POINTS = 10;
