@@ -1,3 +1,3 @@
 export * from './errors';
 export * from './generated';
-export * from './instructions';
+export * as deprecated from './deprecated';
