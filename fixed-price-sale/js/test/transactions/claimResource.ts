@@ -28,7 +28,7 @@ export const createClaimResourceTransaction = async ({
   vaultOwnerBump,
   owner,
 }: ClaimResourceParams): Promise<Transaction> => {
-  const instruction = await createClaimResourceInstruction(
+  const instruction = createClaimResourceInstruction(
     {
       market,
       treasuryHolder,
