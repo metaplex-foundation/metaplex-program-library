@@ -39,9 +39,5 @@
     "eslint-plugin-prettier": "^4.0.0",
     "lerna": "^4.0.0",
     "prettier": "^2.4.1"
-  },
-  "resolutions": {
-    "@metaplex-foundation/amman": "portal:/Volumes/d/dev/mp/metaplex/metaplex-foundation/amman",
-    "@solana/spl-token": "portal:/Users/thlorenz/dev/mp/solana/solana-labs/spl/token/js"
   }
 }
