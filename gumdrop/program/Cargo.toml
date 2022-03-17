@@ -24,3 +24,8 @@ spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 spl-associated-token-account = { version = "~1.0.3", features = [ "no-entrypoint" ] }
 metaplex-token-metadata = { git = "https://github.com/lwus/metaplex/", rev = "81f77c5c", features = [ "no-entrypoint" ] }
 nft-candy-machine = { git = "https://github.com/lwus/metaplex/", rev = "81f77c5c", features = [ "cpi" ] }
+
+[dev-dependencies]
+solana-program-test = "1.9.5"
+solana-sdk = { version = "1.9.5", default-features = false }
+tokio = "1.17.0"

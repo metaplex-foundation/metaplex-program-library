@@ -14,8 +14,8 @@ pub mod merkle_proof;
 
 declare_id!("gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a");
 
-const CLAIM_COUNT : &[u8] = b"ClaimCount";
-const CLAIM_STATUS : &[u8] = b"ClaimStatus";
+pub const CLAIM_COUNT : &[u8] = b"ClaimCount";
+pub const CLAIM_STATUS : &[u8] = b"ClaimStatus";
 
 fn verify_temporal<'a>(
     distributor     : &Account<'a, MerkleDistributor>,
