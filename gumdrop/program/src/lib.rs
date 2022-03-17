@@ -337,8 +337,8 @@ pub mod gumdrop {
     }
 
     /// Claims tokens from the [MerkleDistributor].
-    pub fn claim(
-        ctx: Context<Claim>,
+    pub fn claim<'info>(
+        ctx: Context<'_, '_, '_, 'info, Claim<'info>>,
         claim_bump: u8,
         index: u64,
         amount: u64,
@@ -367,9 +367,17 @@ pub mod gumdrop {
             distributor,
         )?;
 
+        let (freeze_accounts, data_hash_flags) = if ctx.remaining_accounts.len() == 2 {
+            let freeze_auth_info = &ctx.remaining_accounts[0];
+            let token_mint = &ctx.remaining_accounts[1];
+            (Some((freeze_auth_info, token_mint)), 0x02)
+        } else {
+            (None, 0x00)
+        };
+
         // Verify the merkle proof.
         let node = solana_program::keccak::hashv(&[
-            &[0x00],
+            &[data_hash_flags],
             &index.to_le_bytes(),
             &claimant_secret.to_bytes(),
             &mint.to_bytes(),
@@ -394,18 +402,63 @@ pub mod gumdrop {
         ];
 
         verify_temporal(distributor, &ctx.accounts.temporal, claimant_secret)?;
+
+        if ctx.accounts.to.is_frozen() {
+            if freeze_accounts.is_none() {
+                return Err(ErrorCode::MissingFreezeAuth.into());
+            }
+            let (freeze_auth_info, token_mint) = freeze_accounts.unwrap();
+            invoke_signed(
+                &spl_token::instruction::thaw_account(
+                    &ctx.accounts.token_program.key(),
+                    &ctx.accounts.to.key(),
+                    token_mint.key,
+                    freeze_auth_info.key,
+                    &[&distributor.key()],
+                )?,
+                &[
+                    ctx.accounts.token_program.to_account_info(),
+                    ctx.accounts.to.to_account_info(),
+                    token_mint.clone(),
+                    freeze_auth_info.clone(),
+                    distributor.to_account_info(),
+                ],
+                &[&seeds],
+            )?;
+        }
+
         token::transfer(
             CpiContext::new(
                 ctx.accounts.token_program.to_account_info(),
                 token::Transfer {
                     from: ctx.accounts.from.to_account_info(),
                     to: ctx.accounts.to.to_account_info(),
-                    authority: ctx.accounts.distributor.to_account_info(),
+                    authority: distributor.to_account_info(),
                 },
             )
             .with_signer(&[&seeds[..]]),
             amount,
         )?;
+
+        if let Some((freeze_auth_info, token_mint)) = freeze_accounts {
+            invoke_signed(
+                &spl_token::instruction::freeze_account(
+                    &ctx.accounts.token_program.key(),
+                    &ctx.accounts.to.key(),
+                    token_mint.key,
+                    freeze_auth_info.key,
+                    &[&distributor.key()],
+                )?,
+                &[
+                    ctx.accounts.token_program.to_account_info(),
+                    ctx.accounts.to.to_account_info(),
+                    token_mint.clone(),
+                    freeze_auth_info.clone(),
+                    distributor.to_account_info(),
+                ],
+                &[&seeds],
+            )?;
+        }
 
         emit!(ClaimedEvent {
             index,
@@ -1357,4 +1410,6 @@ pub enum ErrorCode {
     NumericalOverflow,
     #[msg("Invalid Claim Bump")]
     InvalidClaimBump,
+    #[msg("Frozen token account but no freeze authority provided")]
+    MissingFreezeAuth,
 }

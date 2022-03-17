@@ -744,6 +744,7 @@ dependencies = [
  "nft-candy-machine",
  "solana-program",
  "spl-associated-token-account",
+ "spl-token",
 ]
 
 [[package]]
