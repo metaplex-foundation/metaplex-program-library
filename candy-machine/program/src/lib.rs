@@ -36,7 +36,7 @@ use {
 };
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 const EXPIRE_OFFSET: i64 = 10 * 60;
-const PREFIX: &str = "candy_machine";
+pub const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
@@ -903,7 +903,7 @@ pub mod candy_machine {
     }
 }
 
-fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, ProgramError> {
+pub fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, ProgramError> {
     let num = if data.hidden_settings.is_some() {
         CONFIG_ARRAY_START
     } else {

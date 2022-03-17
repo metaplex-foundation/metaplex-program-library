@@ -29,3 +29,8 @@ spl-associated-token-account = { version = "1.0.3", features = [
 anchor-spl = "=0.21.0"
 solana-program = "1.9.6"
 solana-gateway = "0.1.1"
+
+[dev-dependencies]
+solana-program-test = "1.9.6"
+solana-sdk = { version = "1.9.6", default-features = false }
+tokio = "1.17.0"
