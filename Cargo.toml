@@ -2,7 +2,6 @@
 members=[
   "auction/program",
 
-  "gumdrop/program",
   "metaplex/program",
   "token-entangler/program",
   "token-vault/program",
@@ -14,5 +13,6 @@ exclude = [
   "fixed-price-sale/cli",
   "token-metadata",
   "auction-house/program",
-  "candy-machine/program"
+  "candy-machine/program",
+  "gumdrop/program"
 ]

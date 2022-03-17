@@ -17,8 +17,9 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "~0.19.0"
-anchor-spl = "~0.19.0"
-solana-program = "~1.9.5"
+anchor-lang = "0.17.0"
+anchor-spl = "0.17.0"
+solana-program = "1.7.11"
 spl-associated-token-account = { version = "~1.0.3", features = [ "no-entrypoint" ] }
-mpl-token-metadata = { version="~1.1.0", features = [ "no-entrypoint" ] }
+metaplex-token-metadata = { git = "https://github.com/lwus/metaplex/", rev = "9bbc2ad059c234b996869a94aff5f63d34539b45", features = [ "no-entrypoint" ] }
+nft-candy-machine = { git = "https://github.com/lwus/metaplex/", rev = "9bbc2ad059c234b996869a94aff5f63d34539b45", features = [ "cpi" ] }
