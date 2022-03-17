@@ -8,6 +8,8 @@ use {
     deprecated_validate_participation::process_deprecated_validate_participation,
     deprecated_validate_safety_deposit_box_v1::process_deprecated_validate_safety_deposit_box_v1,
     empty_payment_account::process_empty_payment_account,
+    empty_payment_account::process_empty_payment_account_with_store_fee,
+    // empty_payment_account_with_store_fee::process_empty_payment_account_with_store_fee,
     end_auction::process_end_auction,
     init_auction_manager_v2::process_init_auction_manager_v2,
     redeem_bid::process_redeem_bid,
@@ -32,6 +34,7 @@ pub mod deprecated_populate_participation_printing_account;
 pub mod deprecated_validate_participation;
 pub mod deprecated_validate_safety_deposit_box_v1;
 pub mod empty_payment_account;
+// pub mod empty_payment_account_with_store_fee;
 pub mod end_auction;
 pub mod init_auction_manager_v2;
 pub mod redeem_bid;
@@ -89,6 +92,10 @@ pub fn process_instruction<'a>(
         MetaplexInstruction::EmptyPaymentAccount(args) => {
             msg!("Instruction: Empty Payment Account");
             process_empty_payment_account(program_id, accounts, args)
+        }
+        MetaplexInstruction::EmptyPaymentAccountWithStoreFee(args) => {
+            msg!("Instruction: Empty Payment Account with store fee");
+            process_empty_payment_account_with_store_fee(program_id, accounts, args)
         }
         MetaplexInstruction::SetStore(args) => {
             msg!("Instruction: Set Store");
