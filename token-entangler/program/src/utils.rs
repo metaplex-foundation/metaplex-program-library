@@ -339,12 +339,59 @@ pub fn assert_derivation(
     Ok(bump)
 }
 
-/// cheap method to just get supply of a mint without unpacking whole object
-pub fn get_mint_supply(account_info: &AccountInfo) -> Result<u64, ProgramError> {
-    // In token program, 36, 8, 1, 1 is the layout, where the first 8 is supply u64.
-    // so we start at 36.
-    let data = account_info.try_borrow_data().unwrap();
-    let bytes = array_ref![data, 36, 8];
+/// cheap method to get supply and decimals of a mint without unpacking whole object
+pub fn get_mint_details(account_info: &AccountInfo) -> Result<(u64, u8), ProgramError> {
+    // In token program, 36, 8, 1, 1 is the layout, where:
+    // - the first 8 is supply u64.
+    // - the next 1 is decimals u8.
+    let data = account_info.try_borrow_data()?;
+    let supply = array_ref![data, 36, 8];
+    let decimals = array_ref![data, 44, 1];
 
-    Ok(u64::from_le_bytes(*bytes))
+    Ok((u64::from_le_bytes(*supply), u8::from_le_bytes(*decimals)))
+}
+
+#[cfg(test)]
+mod tests {
+    use anchor_lang::{
+        prelude::{AccountInfo, Pubkey},
+        solana_program::{program_option::COption, program_pack::Pack},
+    };
+    use spl_token::state::Mint;
+
+    use crate::utils::get_mint_details;
+
+    #[test]
+    fn get_mint_details_smoke_test() {
+        let mint = Mint {
+            mint_authority: COption::None,
+            supply: 1000000000,
+            decimals: 9,
+            is_initialized: true,
+            freeze_authority: COption::None,
+        };
+
+        let key = Pubkey::new_unique();
+        let mut lamports = 0;
+
+        let mut data: Vec<u8> = Vec::with_capacity(Mint::LEN);
+        data.resize(Mint::LEN, Default::default());
+        spl_token::state::Mint::pack(mint, &mut data).unwrap();
+
+        let owner = Pubkey::new_unique();
+        let account_info = AccountInfo::new(
+            &key,
+            false,
+            false,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            0,
+        );
+
+        let (supply, decimals) = get_mint_details(&account_info).unwrap();
+        assert_eq!(mint.supply, supply);
+        assert_eq!(mint.decimals, decimals);
+    }
 }

@@ -79,8 +79,11 @@ pub mod token_entangler {
             None
         };
 
-        require!(get_mint_supply(mint_a)? == 1, ErrorCode::MustHaveSupplyOne);
-        require!(get_mint_supply(mint_b)? == 1, ErrorCode::MustHaveSupplyOne);
+        let (mint_a_supply, _) = get_mint_details(mint_a)?;
+        require!(mint_a_supply == 1, ErrorCode::MustHaveSupplyOne);
+
+        let (mint_b_supply, _) = get_mint_details(mint_b)?;
+        require!(mint_b_supply == 1, ErrorCode::MustHaveSupplyOne);
 
         assert_metadata_valid(metadata_a, edition_option_a, &mint_a.key())?;
         assert_metadata_valid(metadata_b, edition_option_b, &mint_b.key())?;
