@@ -8,6 +8,7 @@ pub use anchor_client::{
     },
     Client, Program,
 };
+use indicatif::ProgressBar;
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 use solana_account_decoder::UiAccountEncoding;
@@ -15,7 +16,7 @@ use solana_client::{
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
     rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
 };
-use std::{rc::Rc, str::FromStr};
+use std::{rc::Rc, str::FromStr, thread, time::Duration};
 
 use crate::common::*;
 use crate::setup::{setup_client, sugar_setup};
@@ -75,14 +76,23 @@ pub fn process_withdraw_all(args: WithdrawAllArgs) -> Result<()> {
     let accounts = program
         .rpc()
         .get_program_accounts_with_config(&program.id(), config)?;
-    println!("{:?}", accounts);
+
+    let pb = ProgressBar::new(accounts.len() as u64);
+
     accounts.iter().for_each(|account| {
         let (candy_machine, _account) = account;
         match do_withdraw(program.clone(), *candy_machine, payer) {
-            Ok(_) => (),
-            Err(e) => println!("{:?}", e),
+            Ok(_) => {
+                pb.inc(1);
+            }
+            Err(e) => {
+                error!("Error: {}", e);
+                pb.inc(1);
+                return;
+            }
         }
     });
+    thread::sleep(Duration::from_millis(1000));
 
     Ok(())
 }
@@ -102,9 +112,7 @@ fn setup_withdraw(keypair: Option<String>, rpc_url: Option<String>) -> Result<(P
 }
 
 fn do_withdraw(program: Rc<Program>, candy_machine: Pubkey, payer: Pubkey) -> Result<()> {
-    println!("Withdrawing funds from candy machine {}", &candy_machine);
-
-    let sig = program
+    program
         .request()
         .accounts(nft_accounts::WithdrawFunds {
             candy_machine,
@@ -112,8 +120,6 @@ fn do_withdraw(program: Rc<Program>, candy_machine: Pubkey, payer: Pubkey) -> Re
         })
         .args(nft_instruction::WithdrawFunds {})
         .send()?;
-
-    println!("Transaction submitted with id of: {}", sig);
 
     Ok(())
 }

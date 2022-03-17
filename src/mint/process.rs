@@ -9,13 +9,14 @@ use anchor_client::{
 };
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
+use indicatif::ProgressBar;
 use rand::rngs::OsRng;
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
     instruction::{initialize_mint, mint_to},
     ID as TOKEN_PROGRAM_ID,
 };
-use std::{str::FromStr, sync::Arc};
+use std::{str::FromStr, sync::Arc, thread, time::Duration};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
@@ -67,13 +68,25 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
             Arc::clone(&candy_machine_state),
         )?;
     } else {
-        for _n in 1..=number {
-            mint(
+        let pb = ProgressBar::new(number);
+
+        (0..number).into_iter().for_each(|_num| {
+            match mint(
                 Arc::clone(&client),
                 candy_machine_id,
                 Arc::clone(&candy_machine_state),
-            )?;
-        }
+            ) {
+                Ok(_) => {
+                    pb.inc(1);
+                }
+                Err(e) => {
+                    error!("Error: {}", e);
+                    pb.inc(1);
+                    return;
+                }
+            }
+        });
+        thread::sleep(Duration::from_millis(1000));
     }
 
     Ok(())
@@ -300,6 +313,5 @@ pub fn mint(
 
     info!("Minted! TxId: {}", sig);
     info!("Cleanup TxId: {}", sig2);
-    println!("Minted! TxId: {}", sig);
     Ok(())
 }
