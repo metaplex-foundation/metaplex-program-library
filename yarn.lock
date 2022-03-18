@@ -950,7 +950,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/beet@npm:>0.0.5":
+"@metaplex-foundation/beet-solana@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@metaplex-foundation/beet-solana@npm:0.1.1"
+  dependencies:
+    "@metaplex-foundation/beet": ">=0.1.0"
+    "@solana/web3.js": ^1.31.0
+  checksum: 6055cb01fd68fef63b2c70522335105433268961947d4c426491dfa55fb862bb31114ca0284cd41bcd4d9558f3e77cd23e4fb9da28d208c1cd168228c5b4c7ae
+  languageName: node
+  linkType: hard
+
+"@metaplex-foundation/beet@npm:>0.0.5, @metaplex-foundation/beet@npm:>=0.1.0, @metaplex-foundation/beet@npm:^0.1.0":
   version: 0.1.0
   resolution: "@metaplex-foundation/beet@npm:0.1.0"
   dependencies:
@@ -983,6 +993,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/metaplex-program-library@workspace:."
   dependencies:
+    "@metaplex-foundation/solita": 0.1.1
     "@project-serum/anchor": ^0.19.0
     "@typescript-eslint/eslint-plugin": ^5.4.0
     "@typescript-eslint/parser": ^5.4.0
@@ -1032,8 +1043,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-candy-machine@workspace:candy-machine/js"
   dependencies:
-    "@metaplex-foundation/beet": ^0.0.8
-    "@metaplex-foundation/beet-solana": ^0.0.6
+    "@metaplex-foundation/beet": ^0.1.0
+    "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/mpl-core": ^0.0.5
     "@solana/web3.js": ^1.35.1
     eslint: ^8.3.0
@@ -1219,6 +1230,23 @@ __metadata:
     utility-types: ^3.10.0
   languageName: unknown
   linkType: soft
+
+"@metaplex-foundation/solita@npm:0.1.1":
+  version: 0.1.1
+  resolution: "@metaplex-foundation/solita@npm:0.1.1"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.1.0
+    "@metaplex-foundation/beet-solana": ^0.1.1
+    "@solana/web3.js": ^1.36.0
+    camelcase: ^6.2.1
+    debug: ^4.3.3
+    js-sha256: ^0.9.0
+    prettier: ^2.5.1
+    snake-case: ^3.0.4
+    spok: ^1.4.3
+  checksum: 5a9a550bab7a47cd21859445b672b4688f9c3e6ab5f8fa713b7ba2a229b3685cd332b1784333ce686928cb5a275f9858199f5919d70689217e3fae86f1d26b7a
+  languageName: node
+  linkType: hard
 
 "@metaplex-foundation/solita@npm:^0.1.0":
   version: 0.1.0
@@ -1607,7 +1635,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/web3.js@npm:^1.17.0, @solana/web3.js@npm:^1.21.0, @solana/web3.js@npm:^1.31.0, @solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.35.0, @solana/web3.js@npm:^1.35.1":
+"@solana/web3.js@npm:^1.17.0, @solana/web3.js@npm:^1.21.0, @solana/web3.js@npm:^1.31.0, @solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.35.0, @solana/web3.js@npm:^1.35.1, @solana/web3.js@npm:^1.36.0":
   version: 1.36.0
   resolution: "@solana/web3.js@npm:1.36.0"
   dependencies:
