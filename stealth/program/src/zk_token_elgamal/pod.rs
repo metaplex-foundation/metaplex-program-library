@@ -1,4 +1,5 @@
 pub use bytemuck::{Pod, Zeroable};
+use borsh::{BorshSerialize, BorshDeserialize};
 use std::fmt;
 
 #[derive(Clone, Copy, Pod, Zeroable, PartialEq)]
@@ -9,7 +10,7 @@ pub struct Scalar(pub [u8; 32]);
 #[repr(transparent)]
 pub struct CompressedRistretto(pub [u8; 32]);
 
-#[derive(Clone, Copy, Pod, Zeroable, PartialEq)]
+#[derive(Clone, Copy, Pod, Zeroable, PartialEq, BorshSerialize, BorshDeserialize)]
 #[repr(transparent)]
 pub struct ElGamalCiphertext(pub [u8; 64]);
 
@@ -19,7 +20,7 @@ impl fmt::Debug for ElGamalCiphertext {
     }
 }
 
-#[derive(Clone, Copy, Pod, Zeroable, PartialEq)]
+#[derive(Clone, Copy, Pod, Zeroable, PartialEq, BorshSerialize, BorshDeserialize)]
 #[repr(transparent)]
 pub struct ElGamalPubkey(pub [u8; 32]);
 

@@ -3,6 +3,7 @@ use {
         pod::{PodAccountInfo, PodBool},
         zk_token_elgamal,
     },
+    borsh::{BorshSerialize, BorshDeserialize},
     bytemuck::{Pod, Zeroable},
     num_derive::{
         FromPrimitive,
@@ -38,6 +39,29 @@ unsafe impl Pod      for Key {}
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct URI(pub [u8; MAX_URI_LENGTH]);
+
+impl BorshDeserialize for URI {
+    fn deserialize(buf: &mut &[u8]) -> borsh::maybestd::io::Result<Self> {
+        if buf.len() < MAX_URI_LENGTH {
+            return Err(borsh::maybestd::io::Error::new(
+                borsh::maybestd::io::ErrorKind::InvalidInput,
+                "Input too short for URI",
+            ));
+        }
+        let mut res = [0; MAX_URI_LENGTH];
+        res.copy_from_slice(&buf[..MAX_URI_LENGTH]);
+        *buf = &buf[MAX_URI_LENGTH..];
+        Ok(URI(res))
+    }
+}
+
+impl BorshSerialize for URI {
+    fn serialize<W: borsh::maybestd::io::Write>(
+        &self, writer: &mut W
+    ) -> borsh::maybestd::io::Result<()> {
+        writer.write_all(&self.0)
+    }
+}
 
 unsafe impl Zeroable for URI {}
 unsafe impl Pod for URI {}

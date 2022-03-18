@@ -27,12 +27,13 @@ pub fn process_instruction(
     accounts: &[AccountInfo],
     input: &[u8],
 ) -> ProgramResult {
-    match decode_instruction_type(input)? {
-        StealthInstruction::ConfigureMetadata => {
+    use borsh::BorshDeserialize;
+    match StealthInstruction::try_from_slice(input)? {
+        StealthInstruction::ConfigureMetadata(metadata) => {
             msg!("ConfigureMetadata!");
             process_configure_metadata(
                 accounts,
-                decode_instruction_data::<ConfigureMetadataData>(input)?
+                &metadata,
             )
         }
         StealthInstruction::InitTransfer => {
@@ -47,27 +48,27 @@ pub fn process_instruction(
                 accounts,
             )
         }
-        StealthInstruction::TransferChunk => {
+        StealthInstruction::TransferChunk(data) => {
             msg!("TransferChunk!");
             process_transfer_chunk(
                 accounts,
-                &decode_instruction_data::<TransferChunkData>(input)?.transfer,
+                &data.transfer,
                 verify_syscall,
             )
         }
-        StealthInstruction::TransferChunkSlow => {
+        StealthInstruction::TransferChunkSlow(data) => {
             msg!("TransferChunkSlow!");
             process_transfer_chunk(
                 accounts,
-                &decode_instruction_data::<TransferChunkSlowData>(input)?.transfer,
+                &data.transfer,
                 verify_dsl_crank,
             )
         }
-        StealthInstruction::PublishElgamalPubkey => {
+        StealthInstruction::PublishElgamalPubkey(key) => {
             msg!("PublishElgamalPubkey!");
             process_publish_elgamal_pubkey(
                 accounts,
-                decode_instruction_data::<zk_token_elgamal::pod::ElGamalPubkey>(input)?
+                &key,
             )
         }
         StealthInstruction::CloseElgamalPubkey => {
@@ -76,11 +77,11 @@ pub fn process_instruction(
                 accounts,
             )
         }
-        StealthInstruction::UpdateMetadata => {
+        StealthInstruction::UpdateMetadata(metadata) => {
             msg!("UpdateMetadata!");
             process_update_metadata(
                 accounts,
-                decode_instruction_data::<ConfigureMetadataData>(input)?
+                &metadata,
             )
         }
     }

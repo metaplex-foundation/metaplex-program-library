@@ -8,6 +8,7 @@ use {
 };
 use {
     arrayref::{array_ref, array_refs},
+    borsh::{BorshSerialize, BorshDeserialize},
     bytemuck::{Pod, Zeroable},
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -196,6 +197,32 @@ impl EqualityProof {
 #[derive(Clone, Copy)]
 #[repr(transparent)]
 pub struct PodEqualityProof(pub [u8; 160]);
+const POD_EQUALITY_PROOF_SIZE: usize = std::mem::size_of::<PodEqualityProof>();
+
+impl BorshDeserialize for PodEqualityProof {
+    fn deserialize(buf: &mut &[u8]) -> borsh::maybestd::io::Result<Self> {
+        if buf.len() < POD_EQUALITY_PROOF_SIZE {
+            return Err(borsh::maybestd::io::Error::new(
+                borsh::maybestd::io::ErrorKind::InvalidInput,
+                "Input too short for PodEqualityProof",
+            ));
+        }
+        let mut res = [0; POD_EQUALITY_PROOF_SIZE];
+        res.copy_from_slice(&buf[..POD_EQUALITY_PROOF_SIZE]);
+        *buf = &buf[POD_EQUALITY_PROOF_SIZE..];
+        Ok(PodEqualityProof(res))
+    }
+}
+
+impl BorshSerialize for PodEqualityProof {
+    fn serialize<W: borsh::maybestd::io::Write>(
+        &self, writer: &mut W
+    ) -> borsh::maybestd::io::Result<()> {
+        writer.write_all(&self.0)
+    }
+}
+
+
 // `EqualityProof` is a Pod and Zeroable.
 // Add the marker traits manually because `bytemuck` only adds them for some `u8` arrays
 unsafe impl Zeroable for PodEqualityProof {}

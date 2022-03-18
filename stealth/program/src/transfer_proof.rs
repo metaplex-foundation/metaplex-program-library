@@ -6,6 +6,7 @@ use {
     },
 };
 use {
+    borsh::{BorshSerialize, BorshDeserialize},
     bytemuck::{Pod, Zeroable},
     crate::zk_token_elgamal::pod,
     crate::equality_proof::{
@@ -36,7 +37,7 @@ pub enum Role {
     Dest,
 }
 
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, BorshSerialize, BorshDeserialize)]
 #[repr(C)]
 pub struct TransferData {
     /// The public encryption keys associated with the transfer: source, dest, and auditor
@@ -118,7 +119,7 @@ impl Verifiable for TransferData {
     }
 }
 
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, BorshSerialize, BorshDeserialize)]
 #[repr(C)]
 pub struct TransferProof {
     /// Associated equality proof
@@ -242,7 +243,7 @@ impl TransferProof {
 }
 
 /// The ElGamal public keys needed for a transfer
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, BorshSerialize, BorshDeserialize)]
 #[repr(C)]
 pub struct TransferPubkeys {
     pub src_pubkey: pod::ElGamalPubkey,     // 32 bytes

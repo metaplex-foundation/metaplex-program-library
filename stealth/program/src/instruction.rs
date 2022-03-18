@@ -3,12 +3,10 @@ use {
     crate::{
         transfer_proof::TransferData,
     },
+    borsh::{BorshSerialize, BorshDeserialize},
     bytemuck::{Pod, Zeroable},
-    num_derive::{FromPrimitive, ToPrimitive},
-    num_traits::{FromPrimitive, ToPrimitive},
     solana_program::{
         instruction::{AccountMeta, Instruction},
-        program_error::ProgramError,
         pubkey::Pubkey,
         sysvar,
     },
@@ -27,7 +25,7 @@ use {
     std::convert::TryInto,
 };
 
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, BorshSerialize, BorshDeserialize)]
 #[repr(C)]
 pub struct ConfigureMetadataData {
     /// The ElGamal public key associated with the owner public key and this NFT mint.
@@ -44,21 +42,21 @@ pub struct ConfigureMetadataData {
     pub uri: crate::state::URI,
 }
 
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, BorshSerialize, BorshDeserialize)]
 #[repr(C)]
 pub struct TransferChunkData {
     /// Transfer Data (proof statement and masking factors)
     pub transfer: TransferData,
 }
 
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, BorshSerialize, BorshDeserialize)]
 #[repr(C)]
 pub struct TransferChunkSlowData {
     /// Transfer Data (proof statement and masking factors)
     pub transfer: TransferData,
 }
 
-#[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive, ShankInstruction)]
+#[derive(Clone, Copy, BorshSerialize, BorshDeserialize, ShankInstruction)]
 #[repr(u8)]
 pub enum StealthInstruction {
     /// Configures private metadata for an NFT
@@ -76,8 +74,7 @@ pub enum StealthInstruction {
     desc = "System Program")]
     #[account(6, name="rent",
     desc = "Rent sysvar")]
-
-    ConfigureMetadata,
+    ConfigureMetadata(ConfigureMetadataData),
 
     /// Initialise transfer state for private metadata
     ///
@@ -121,7 +118,7 @@ pub enum StealthInstruction {
     /// Data expected by this instruction:
     ///   TransferChunkData
     ///
-    TransferChunk,
+    TransferChunk(TransferChunkData),
 
     /// Validate encrypted cipher key chunk through a manual DSL cranked instruction.
     ///
@@ -139,7 +136,7 @@ pub enum StealthInstruction {
     /// Data expected by this instruction:
     ///   TransferChunkSlowData
     ///
-    TransferChunkSlow,
+    TransferChunkSlow(TransferChunkSlowData),
 
     /// Write an elgamal pubkey into the associated buffer for this wallet and mint
     ///
@@ -154,7 +151,7 @@ pub enum StealthInstruction {
     /// Data expected by this instruction:
     ///   elgamal_pk: The recipients elgamal public-key
     ///
-    PublishElgamalPubkey,
+    PublishElgamalPubkey(zk_token_elgamal::pod::ElGamalPubkey),
 
     /// Close the associated elgamal pubkey buffer for this wallet and mint
     ///
@@ -194,32 +191,7 @@ pub enum StealthInstruction {
     /// Data expected by this instruction:
     ///   ConfigureMetadataData
     ///
-    UpdateMetadata,
-}
-
-pub fn decode_instruction_type(
-    input: &[u8]
-) -> Result<StealthInstruction, ProgramError> {
-    if input.is_empty() {
-        Err(ProgramError::InvalidInstructionData)
-    } else {
-        FromPrimitive::from_u8(input[0]).ok_or(ProgramError::InvalidInstructionData)
-    }
-}
-
-pub fn decode_instruction_data<T: Pod>(
-    input: &[u8]
-) -> Result<&T, ProgramError> {
-    if input.len() < 2 {
-        Err(ProgramError::InvalidInstructionData)
-    } else {
-        pod_from_bytes(&input[1..]).ok_or(ProgramError::InvalidArgument)
-    }
-}
-
-/// Convert a slice into a `Pod` (zero copy)
-pub fn pod_from_bytes<T: Pod>(bytes: &[u8]) -> Option<&T> {
-    bytemuck::try_from_bytes(bytes).ok()
+    UpdateMetadata(ConfigureMetadataData),
 }
 
 pub fn get_metadata_address(mint: &Pubkey) -> (Pubkey, u8) {
@@ -271,17 +243,14 @@ pub fn get_transfer_buffer_address(
     )
 }
 
-pub fn encode_instruction<T: Pod>(
+pub fn encode_instruction(
     accounts: Vec<AccountMeta>,
     instruction_type: StealthInstruction,
-    instruction_data: &T,
 ) -> Instruction {
-    let mut data = vec![ToPrimitive::to_u8(&instruction_type).unwrap()];
-    data.extend_from_slice(bytemuck::bytes_of(instruction_data));
     Instruction {
         program_id: crate::ID,
         accounts,
-        data,
+        data: instruction_type.try_to_vec().unwrap(),
     }
 }
 
@@ -310,8 +279,7 @@ pub fn configure_metadata(
 
     encode_instruction(
         accounts,
-        StealthInstruction::ConfigureMetadata,
-        &data,
+        StealthInstruction::ConfigureMetadata(data),
     )
 }
 
@@ -343,8 +311,7 @@ pub fn update_metadata(
 
     encode_instruction(
         accounts,
-        StealthInstruction::UpdateMetadata,
-        &data,
+        StealthInstruction::UpdateMetadata(data),
     )
 }
 
@@ -371,7 +338,6 @@ pub fn init_transfer(
     encode_instruction(
         accounts,
         StealthInstruction::InitTransfer,
-        &(),
     )
 }
 
@@ -390,7 +356,6 @@ pub fn fini_transfer(
     encode_instruction(
         accounts,
         StealthInstruction::FiniTransfer,
-        &(),
     )
 }
 
@@ -410,8 +375,7 @@ pub fn transfer_chunk(
 
     encode_instruction(
         accounts,
-        StealthInstruction::TransferChunk,
-        &data,
+        StealthInstruction::TransferChunk(data),
     )
 }
 
@@ -437,8 +401,7 @@ pub fn transfer_chunk_slow(
 
     encode_instruction(
         accounts,
-        StealthInstruction::TransferChunkSlow,
-        &data,
+        StealthInstruction::TransferChunkSlow(data),
     )
 }
 
@@ -458,8 +421,7 @@ pub fn publish_elgamal_pubkey(
 
     encode_instruction(
         accounts,
-        StealthInstruction::PublishElgamalPubkey,
-        &elgamal_pk,
+        StealthInstruction::PublishElgamalPubkey(elgamal_pk),
     )
 }
 
@@ -478,7 +440,6 @@ pub fn close_elgamal_pubkey(
     encode_instruction(
         accounts,
         StealthInstruction::CloseElgamalPubkey,
-        &(),
     )
 }
 
