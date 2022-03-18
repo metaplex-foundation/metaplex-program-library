@@ -1,3 +1,5 @@
+#![cfg(feature = "test-bpf")]
+
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_program_test::*;
 use solana_sdk::{
@@ -68,7 +70,7 @@ async fn test_token_freeze() {
 
     let mut pc = ProgramTest::default();
 
-    pc.add_program("mpl_gumdrop", mpl_gumdrop::id(), processor!(mpl_gumdrop::entry));
+    pc.add_program("mpl_gumdrop", mpl_gumdrop::id(), None);
 
     let (mut banks_client, payer, recent_blockhash) = pc.start().await;
 
