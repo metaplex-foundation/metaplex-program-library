@@ -10,17 +10,17 @@ use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
 
-use sugar::cache::Cache;
-use sugar::candy_machine::{get_candy_machine_state, print_candy_machine_state};
-use sugar::cli::{Cli, Commands};
-use sugar::mint::{process_mint, MintArgs};
-use sugar::setup::sugar_setup;
-use sugar::update::{process_update, UpdateArgs};
-use sugar::upload::{process_upload, UploadArgs};
-use sugar::upload_assets::{process_upload_assets, UploadAssetsArgs};
-use sugar::validate::{process_validate, ValidateArgs};
-use sugar::verify::{process_verify, VerifyArgs};
-use sugar::withdraw::{process_withdraw, process_withdraw_all, WithdrawAllArgs, WithdrawArgs};
+use sugar_cli::cache::Cache;
+use sugar_cli::candy_machine::{get_candy_machine_state, print_candy_machine_state};
+use sugar_cli::cli::{Cli, Commands};
+use sugar_cli::mint::{process_mint, MintArgs};
+use sugar_cli::setup::sugar_setup;
+use sugar_cli::update::{process_update, UpdateArgs};
+use sugar_cli::upload::{process_upload, UploadArgs};
+use sugar_cli::upload_assets::{process_upload_assets, UploadAssetsArgs};
+use sugar_cli::validate::{process_validate, ValidateArgs};
+use sugar_cli::verify::{process_verify, VerifyArgs};
+use sugar_cli::withdraw::{process_withdraw, process_withdraw_all, WithdrawAllArgs, WithdrawArgs};
 
 fn setup_logging(level: Option<EnvFilter>) -> Result<()> {
     // Log path; change this to be dynamic for multiple OSes.

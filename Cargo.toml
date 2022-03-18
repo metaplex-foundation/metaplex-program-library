@@ -1,9 +1,12 @@
 [package]
-name = "sugar"
+name = "sugar-cli"
 version = "0.0.1"
 edition = "2021"
+description = "Command line tool for creating and managing Metaplex Candy Machines."
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "sugar"
+path = "src/main.rs"
 
 [dependencies]
 anchor-client = "0.19.0"
