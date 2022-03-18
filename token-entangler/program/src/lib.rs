@@ -1,16 +1,14 @@
 pub mod utils;
 
-use {
-    crate::utils::*,
-    anchor_lang::{
-        prelude::*,
-        solana_program::program::{invoke, invoke_signed},
-        AnchorDeserialize, AnchorSerialize,
-    },
-    anchor_spl::{
-        associated_token::AssociatedToken,
-        token::{Token, TokenAccount},
-    },
+use crate::utils::*;
+use anchor_lang::{
+    prelude::*,
+    solana_program::program::{invoke, invoke_signed},
+    AnchorDeserialize, AnchorSerialize,
+};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Token, TokenAccount},
 };
 
 anchor_lang::declare_id!("qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd");
@@ -21,6 +19,8 @@ const A_NAME: &str = "A";
 const B_NAME: &str = "B";
 #[program]
 pub mod token_entangler {
+    use spl_token::amount_to_ui_amount;
+
     use super::*;
 
     pub fn create_entangled_pair<'info>(
@@ -79,11 +79,19 @@ pub mod token_entangler {
             None
         };
 
-        let (mint_a_supply, _) = get_mint_details(mint_a)?;
-        require!(mint_a_supply == 1, ErrorCode::MustHaveSupplyOne);
+        let (mint_a_supply, mint_a_decimals) = get_mint_details(mint_a)?;
+        let mint_a_ui_supply = amount_to_ui_amount(mint_a_supply, mint_a_decimals);
+        require!(
+            mint_a_supply == 1 || mint_a_ui_supply == 1.0,
+            ErrorCode::MustHaveSupplyOne
+        );
 
-        let (mint_b_supply, _) = get_mint_details(mint_b)?;
-        require!(mint_b_supply == 1, ErrorCode::MustHaveSupplyOne);
+        let (mint_b_supply, mint_b_decimals) = get_mint_details(mint_b)?;
+        let mint_b_ui_supply = amount_to_ui_amount(mint_b_supply, mint_b_decimals);
+        require!(
+            mint_b_supply == 1 || mint_b_ui_supply == 1.0,
+            ErrorCode::MustHaveSupplyOne
+        );
 
         assert_metadata_valid(metadata_a, edition_option_a, &mint_a.key())?;
         assert_metadata_valid(metadata_b, edition_option_b, &mint_b.key())?;

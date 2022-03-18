@@ -357,12 +357,17 @@ mod tests {
         prelude::{AccountInfo, Pubkey},
         solana_program::{program_option::COption, program_pack::Pack},
     };
-    use spl_token::state::Mint;
+    use spl_token::{state::Mint, amount_to_ui_amount};
 
     use crate::utils::get_mint_details;
 
     #[test]
     fn get_mint_details_smoke_test() {
+        let key = Pubkey::new_unique();
+        let mut lamports = 0;
+
+        let mut data: Vec<u8> = Vec::with_capacity(Mint::LEN);
+        data.resize(Mint::LEN, Default::default());
         let mint = Mint {
             mint_authority: COption::None,
             supply: 1000000000,
@@ -370,15 +375,10 @@ mod tests {
             is_initialized: true,
             freeze_authority: COption::None,
         };
-
-        let key = Pubkey::new_unique();
-        let mut lamports = 0;
-
-        let mut data: Vec<u8> = Vec::with_capacity(Mint::LEN);
-        data.resize(Mint::LEN, Default::default());
         spl_token::state::Mint::pack(mint, &mut data).unwrap();
 
         let owner = Pubkey::new_unique();
+
         let account_info = AccountInfo::new(
             &key,
             false,
