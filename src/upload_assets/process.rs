@@ -29,10 +29,13 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let keypair = bs58::encode(sugar_config.keypair.to_bytes()).into_string();
     let signer = SolanaSigner::from_base58(&keypair);
 
+    
     let config_data = get_config_data(&args.config)?;
 
+    let solana_cluster: Cluster = get_cluster(program.rpc())?;
+
     let bundlr_node = match config_data.upload_method {
-        UploadMethod::Bundlr(cluster) => match cluster {
+        UploadMethod::Bundlr => match solana_cluster {
             Cluster::Devnet => BUNDLR_DEVNET,
             Cluster::Mainnet => BUNDLR_MAINNET,
         },

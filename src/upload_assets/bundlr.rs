@@ -1,5 +1,21 @@
-use crate::common::*;
+use anchor_client::solana_sdk::hash::Hash;
+use solana_client::rpc_client::RpcClient;
+use crate::{common::*, config::Cluster};
 use std::{thread, time::Duration};
+
+pub fn get_cluster(rpc_client: RpcClient) -> Result<Cluster> {
+    let genesis_hash = rpc_client.get_genesis_hash()?;
+
+    if genesis_hash == Hash::from_str("EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG").expect("Failed to parse hard coded genesis hash") {
+        Ok(Cluster::Devnet)
+    } else if genesis_hash == Hash::from_str("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d").expect("Failed to parse hard coded genesis hash") {
+        Ok(Cluster::Mainnet)
+    } else {
+        Err(anyhow!(format!(
+            "Genesis hash '{}' doesn't match supported Solana clusters for Bundlr!", genesis_hash.to_string()
+        )))
+    }
+}
 
 pub async fn get_bundlr_solana_address(http_client: &HttpClient, node: &str) -> Result<String> {
     let url = format!("{}/info", node);

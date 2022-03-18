@@ -214,7 +214,7 @@ impl HiddenSettings {
 #[derive(Debug, Clone, Serialize)]
 pub enum UploadMethod {
     Metaplex,
-    Bundlr(Cluster),
+    Bundlr,
     Arloader,
 }
 
@@ -224,8 +224,7 @@ impl FromStr for UploadMethod {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "metaplex" => Ok(UploadMethod::Metaplex),
-            "bundlr:devnet" => Ok(UploadMethod::Bundlr(Cluster::Devnet)),
-            "bundlr:mainnet" => Ok(UploadMethod::Bundlr(Cluster::Mainnet)),
+            "bundlr" => Ok(UploadMethod::Bundlr),
             "arloader" => Ok(UploadMethod::Arloader),
             _ => Err(format!("Unknown storage: {}", s)),
         }
@@ -236,7 +235,7 @@ impl ToString for UploadMethod {
     fn to_string(&self) -> String {
         match self {
             UploadMethod::Metaplex => "metaplex".to_string(),
-            UploadMethod::Bundlr(cluster) => format!("bundlr:{}", cluster.to_string()),
+            UploadMethod::Bundlr => "bundlr".to_string(),
             UploadMethod::Arloader => "arloader".to_string(),
         }
     }
