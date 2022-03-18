@@ -18,7 +18,10 @@ async fn test_frozen_whitelist_ata() {
 
     let mut pc = ProgramTest::default();
 
-    pc.add_program("mpl_candy_machine", mpl_candy_machine::id(), processor!(mpl_candy_machine::entry));
+    // NB: if we pass the process_instruction directly, the CPIs get compiled as native arch
+    // (not-bpf) and so go to a syscall-stub that doesn't support account size changes (as of
+    // 1.9.9)
+    pc.add_program("mpl_candy_machine", mpl_candy_machine::id(), None);
     pc.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
 
     let (mut banks_client, payer, recent_blockhash) = pc.start().await;
