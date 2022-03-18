@@ -10,7 +10,7 @@ members=[
   "nft-packs/program",
   "fixed-price-sale/program",
   "stealth/program",
-  "stealth/escrow",
+  "stealth-escrow/program",
   "stealth/cli",
   "stealth/js/native",
 ]
