@@ -3,10 +3,14 @@ name = "stealth"
 version = "0.0.1"
 description = "Encrypted metadata URI and assets"
 authors = [
+    "Metaplex Developers <dev@metaplex.com>",
     "Lawrence Wu <larry.wu@solana.com>",
 ]
+repository = "https://github.com/metaplex-foundation/metaplex-program-library"
 keywords = ["solana"]
 edition = "2018"
+license = "AGPL-3.0-only"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -19,6 +23,7 @@ default = []
 
 [dependencies]
 borsh = "0.9.1"
+shank="0.0.0"
 arrayref = "0.3.6"
 base64 = "0.13"
 bincode = "1"
@@ -28,7 +33,7 @@ curve25519-dalek = { git = "https://github.com/lwus/curve25519-dalek", features 
 curve25519-dalek-onchain = { git = "https://github.com/lwus/curve25519-dalek-onchain", features = ["no-entrypoint"] }
 lazy_static = "1.4.0"
 merlin = { git = "https://github.com/lwus/merlin" }
-mpl-token-metadata = { path = "../../token-metadata/program", features = ["no-entrypoint"] }
+mpl-token-metadata = { version="1.2.5", features = ["no-entrypoint"] }
 num-derive = "0.3"
 num-traits = "0.2"
 serde = { version = "1.0", features = ["derive"] }

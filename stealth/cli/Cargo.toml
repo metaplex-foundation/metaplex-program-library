@@ -3,10 +3,14 @@ name = "stealth-cli"
 version = "0.0.1"
 description = "Encrypted metadata URI and assets"
 authors = [
+    "Metaplex Developers <dev@metaplex.com>",
     "Lawrence Wu <larry.wu@solana.com>",
 ]
+repository = "https://github.com/metaplex-foundation/metaplex-program-library"
 keywords = ["solana"]
 edition = "2018"
+license = "AGPL-3.0-only"
+readme = "README.md"
 publish = false
 
 [dependencies]

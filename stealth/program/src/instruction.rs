@@ -58,24 +58,25 @@ pub struct TransferChunkSlowData {
     pub transfer: TransferData,
 }
 
-#[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive)]
+#[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive, ShankInstruction)]
 #[repr(u8)]
 pub enum StealthInstruction {
     /// Configures private metadata for an NFT
-    ///
-    /// Accounts expected by this instruction:
-    ///
-    ///   0. `[writeable,signer]` Payer
-    ///   1. `[]` The SPL Token mint account of the NFT
-    ///   2. `[]` The SPL Metadata account. Must be mutable
-    ///   3. `[signer]` The update authority for the SPL Metadata
-    ///   4. `[writeable]` Stealth PDA
-    ///   6. `[]` System program
-    ///   7. `[]` Rent sysvar
-    ///
-    /// Data expected by this instruction:
-    ///   ConfigureMetadataData
-    ///
+    #[account(0, writable, name="payer",
+    desc="Payer")]
+    #[account(1, name="mint",
+    desc = "The SPL Token mint account of the NFT")]
+    #[account(2, signer, name="update_authority",
+    desc = "The update authority for the SPL Metadata")]
+    #[account(3, writable, name="stealth_pda",
+    desc = "Stealth PDA")]
+    #[account(4, name="authority",
+    desc = "Authority on the vault")]
+    #[account(5, name="system_program",
+    desc = "System Program")]
+    #[account(6, name="rent",
+    desc = "Rent sysvar")]
+
     ConfigureMetadata,
 
     /// Initialise transfer state for private metadata

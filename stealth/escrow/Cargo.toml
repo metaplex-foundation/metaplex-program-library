@@ -3,10 +3,14 @@ name = "stealth-escrow"
 version = "0.0.1"
 description = "Timeout based escrow for stealth NFTs"
 authors = [
+    "Metaplex Developers <dev@metaplex.com>",
     "Lawrence Wu <larry.wu@solana.com>",
 ]
+repository = "https://github.com/metaplex-foundation/metaplex-program-library"
 keywords = ["solana"]
 edition = "2018"
+license = "AGPL-3.0-only"
+readme = "README.md"
 
 [lib]
 crate-type = ["cdylib", "lib"]
