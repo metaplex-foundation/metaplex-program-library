@@ -1,3 +1,5 @@
+#![cfg(feature = "test-bpf")]
+
 use anchor_lang::{InstructionData, ToAccountMetas};
 use solana_program_test::*;
 use solana_sdk::{
