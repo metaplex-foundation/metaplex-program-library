@@ -7,8 +7,8 @@
 
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
-import * as definedTypes from '../types';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { CandyMachineData, candyMachineDataBeet } from '../types/CandyMachineData';
 
 /**
  * Arguments used to create {@link CandyMachine}
@@ -20,7 +20,7 @@ export type CandyMachineArgs = {
   wallet: web3.PublicKey;
   tokenMint: beet.COption<web3.PublicKey>;
   itemsRedeemed: beet.bignum;
-  data: definedTypes.CandyMachineData;
+  data: CandyMachineData;
 };
 
 const candyMachineDiscriminator = [51, 173, 177, 113, 25, 241, 109, 189];
@@ -37,7 +37,7 @@ export class CandyMachine implements CandyMachineArgs {
     readonly wallet: web3.PublicKey,
     readonly tokenMint: beet.COption<web3.PublicKey>,
     readonly itemsRedeemed: beet.bignum,
-    readonly data: definedTypes.CandyMachineData,
+    readonly data: CandyMachineData,
   ) {}
 
   /**
@@ -162,7 +162,7 @@ export const candyMachineBeet = new beet.FixableBeetStruct<
     ['wallet', beetSolana.publicKey],
     ['tokenMint', beet.coption(beetSolana.publicKey)],
     ['itemsRedeemed', beet.u64],
-    ['data', definedTypes.candyMachineDataBeet],
+    ['data', candyMachineDataBeet],
   ],
   CandyMachine.fromArgs,
   'CandyMachine',

@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
+import { EndSettingType, endSettingTypeBeet } from './EndSettingType';
 export type EndSettings = {
-  endSettingType: definedTypes.EndSettingType;
+  endSettingType: EndSettingType;
   number: beet.bignum;
 };
 
@@ -18,7 +18,7 @@ export type EndSettings = {
  */
 export const endSettingsBeet = new beet.BeetArgsStruct<EndSettings>(
   [
-    ['endSettingType', definedTypes.endSettingTypeBeet],
+    ['endSettingType', endSettingTypeBeet],
     ['number', beet.u64],
   ],
   'EndSettings',

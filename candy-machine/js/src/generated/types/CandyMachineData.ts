@@ -6,7 +6,11 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import * as definedTypes from '../types';
+import { EndSettings, endSettingsBeet } from './EndSettings';
+import { Creator, creatorBeet } from './Creator';
+import { HiddenSettings, hiddenSettingsBeet } from './HiddenSettings';
+import { WhitelistMintSettings, whitelistMintSettingsBeet } from './WhitelistMintSettings';
+import { GatekeeperConfig, gatekeeperConfigBeet } from './GatekeeperConfig';
 export type CandyMachineData = {
   uuid: string;
   price: beet.bignum;
@@ -16,12 +20,12 @@ export type CandyMachineData = {
   isMutable: boolean;
   retainAuthority: boolean;
   goLiveDate: beet.COption<beet.bignum>;
-  endSettings: beet.COption<definedTypes.EndSettings>;
-  creators: definedTypes.Creator[];
-  hiddenSettings: beet.COption<definedTypes.HiddenSettings>;
-  whitelistMintSettings: beet.COption<definedTypes.WhitelistMintSettings>;
+  endSettings: beet.COption<EndSettings>;
+  creators: Creator[];
+  hiddenSettings: beet.COption<HiddenSettings>;
+  whitelistMintSettings: beet.COption<WhitelistMintSettings>;
   itemsAvailable: beet.bignum;
-  gatekeeper: beet.COption<definedTypes.GatekeeperConfig>;
+  gatekeeper: beet.COption<GatekeeperConfig>;
 };
 
 /**
@@ -38,12 +42,12 @@ export const candyMachineDataBeet = new beet.FixableBeetArgsStruct<CandyMachineD
     ['isMutable', beet.bool],
     ['retainAuthority', beet.bool],
     ['goLiveDate', beet.coption(beet.i64)],
-    ['endSettings', beet.coption(definedTypes.endSettingsBeet)],
-    ['creators', beet.array(definedTypes.creatorBeet)],
-    ['hiddenSettings', beet.coption(definedTypes.hiddenSettingsBeet)],
-    ['whitelistMintSettings', beet.coption(definedTypes.whitelistMintSettingsBeet)],
+    ['endSettings', beet.coption(endSettingsBeet)],
+    ['creators', beet.array(creatorBeet)],
+    ['hiddenSettings', beet.coption(hiddenSettingsBeet)],
+    ['whitelistMintSettings', beet.coption(whitelistMintSettingsBeet)],
     ['itemsAvailable', beet.u64],
-    ['gatekeeper', beet.coption(definedTypes.gatekeeperConfigBeet)],
+    ['gatekeeper', beet.coption(gatekeeperConfigBeet)],
   ],
   'CandyMachineData',
 );
