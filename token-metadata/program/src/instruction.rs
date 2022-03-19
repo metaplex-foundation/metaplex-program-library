@@ -1169,3 +1169,26 @@ pub fn thaw_delegated_account(
             .unwrap(),
     }
 }
+
+//# Reset V2 Metadata
+///
+/// Allows the update authority of a NFT to reset the V2 data of a NFT to fix data corruption issues. It zeroes out all data after the edition_nonce field.
+///
+/// ### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[signer]` Metadata update authority
+pub fn reset_v2_metadata(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    update_authority: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata, false),
+            AccountMeta::new_readonly(update_authority, true),
+        ],
+        data: MetadataInstruction::ResetV2Metadata.try_to_vec().unwrap(),
+    }
+}

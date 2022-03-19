@@ -106,7 +106,13 @@ impl Metadata {
         collection: Option<Collection>,
         uses: Option<Uses>,
     ) -> transport::Result<()> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), freeze_authority).await?;
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            freeze_authority,
+        )
+        .await?;
         create_token_account(
             context,
             &self.token,
@@ -317,6 +323,25 @@ impl Metadata {
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer, &collection_authority],
+            context.last_blockhash,
+        );
+
+        Ok(context.banks_client.process_transaction(tx).await?)
+    }
+
+    pub async fn reset_v2_metadata(
+        &self,
+        context: &mut ProgramTestContext,
+        update_authority: Keypair,
+    ) -> transport::Result<()> {
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::reset_v2_metadata(
+                id(),
+                self.pubkey,
+                update_authority.pubkey(),
+            )],
+            Some(&update_authority.pubkey()),
+            &[&context.payer, &update_authority],
             context.last_blockhash,
         );
 
