@@ -33,11 +33,11 @@ __metadata:
   linkType: hard
 
 "@babel/runtime@npm:^7.10.5, @babel/runtime@npm:^7.11.2, @babel/runtime@npm:^7.12.5":
-  version: 7.17.2
-  resolution: "@babel/runtime@npm:7.17.2"
+  version: 7.17.7
+  resolution: "@babel/runtime@npm:7.17.7"
   dependencies:
     regenerator-runtime: ^0.13.4
-  checksum: a48702d271ecc59c09c397856407afa29ff980ab537b3da58eeee1aeaa0f545402d340a1680c9af58aec94dfdcbccfb6abb211991b74686a86d03d3f6956cacd
+  checksum: d9ec9e2c5ebbf503ac865ebd70d0216443d0fa8380bab572aa44ccf8fafde8b8b9846badfdbba3572f79075c9a196845aa3f42a435fd34ec832acd2bc1467d37
   languageName: node
   linkType: hard
 
@@ -922,7 +922,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/amman@npm:^0.1.0, @metaplex-foundation/amman@npm:^0.1.0 ":
+"@metaplex-foundation/amman@npm:^0.1.0":
   version: 0.1.0
   resolution: "@metaplex-foundation/amman@npm:0.1.0"
   dependencies:
@@ -1191,18 +1191,20 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-token-metadata@workspace:token-metadata/js"
   dependencies:
-    "@metaplex-foundation/amman": "^0.1.0 "
+    "@metaplex-foundation/beet": ^0.1.0
+    "@metaplex-foundation/beet-solana": ^0.1.1
+    "@metaplex-foundation/cusper": ^0.0.2
     "@metaplex-foundation/mpl-core": ^0.0.5
-    "@solana/spl-token": ^0.2.0
+    "@metaplex-foundation/solita": 0.1.0
+    "@solana/spl-token": 0.1.8
     "@solana/web3.js": ^1.35.1
+    "@types/bn.js": ^5.1.0
     "@types/debug": ^4.1.7
-    "@types/tape": ^4.13.2
+    bn.js: ^5.2.0
     debug: ^4.3.3
     eslint: ^8.3.0
     rimraf: ^3.0.2
-    spok: ^1.4.2
     supports-color: ^9.2.1
-    tape: ^5.5.2
     typescript: ^4.6.2
   languageName: unknown
   linkType: soft
@@ -1231,6 +1233,23 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@metaplex-foundation/solita@npm:0.1.0, @metaplex-foundation/solita@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@metaplex-foundation/solita@npm:0.1.0"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.0.8
+    "@metaplex-foundation/beet-solana": ^0.0.6
+    "@solana/web3.js": ^1.35.0
+    camelcase: ^6.2.1
+    debug: ^4.3.3
+    js-sha256: ^0.9.0
+    prettier: ^2.5.1
+    snake-case: ^3.0.4
+    spok: ^1.4.3
+  checksum: 0d8f52c8754400d28d0d44d8ba90b886e7706fa2a1c550c1644fefadf11a74eae9feecf942b377a89285f342a28061d82c30e852be877abfe3444be6ee60a09a
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/solita@npm:0.1.1":
   version: 0.1.1
   resolution: "@metaplex-foundation/solita@npm:0.1.1"
@@ -1245,23 +1264,6 @@ __metadata:
     snake-case: ^3.0.4
     spok: ^1.4.3
   checksum: 5a9a550bab7a47cd21859445b672b4688f9c3e6ab5f8fa713b7ba2a229b3685cd332b1784333ce686928cb5a275f9858199f5919d70689217e3fae86f1d26b7a
-  languageName: node
-  linkType: hard
-
-"@metaplex-foundation/solita@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@metaplex-foundation/solita@npm:0.1.0"
-  dependencies:
-    "@metaplex-foundation/beet": ^0.0.8
-    "@metaplex-foundation/beet-solana": ^0.0.6
-    "@solana/web3.js": ^1.35.0
-    camelcase: ^6.2.1
-    debug: ^4.3.3
-    js-sha256: ^0.9.0
-    prettier: ^2.5.1
-    snake-case: ^3.0.4
-    spok: ^1.4.3
-  checksum: 0d8f52c8754400d28d0d44d8ba90b886e7706fa2a1c550c1644fefadf11a74eae9feecf942b377a89285f342a28061d82c30e852be877abfe3444be6ee60a09a
   languageName: node
   linkType: hard
 
@@ -1337,7 +1339,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@npmcli/move-file@npm:^1.0.1":
+"@npmcli/move-file@npm:^1.0.1, @npmcli/move-file@npm:^1.1.2":
   version: 1.1.2
   resolution: "@npmcli/move-file@npm:1.1.2"
   dependencies:
@@ -1385,17 +1387,17 @@ __metadata:
   linkType: hard
 
 "@octokit/core@npm:^3.5.1":
-  version: 3.5.1
-  resolution: "@octokit/core@npm:3.5.1"
+  version: 3.6.0
+  resolution: "@octokit/core@npm:3.6.0"
   dependencies:
     "@octokit/auth-token": ^2.4.4
     "@octokit/graphql": ^4.5.8
-    "@octokit/request": ^5.6.0
+    "@octokit/request": ^5.6.3
     "@octokit/request-error": ^2.0.5
     "@octokit/types": ^6.0.3
     before-after-hook: ^2.2.0
     universal-user-agent: ^6.0.0
-  checksum: 67179739fc9712b201f2400f132287a2c56a18506e00900bc9d2a3f742b74f1ba69ad998e42f28f3964c0bd1d5478232c1ec7b485c97702b821fbe22b76afa90
+  checksum: f81160129037bd8555d47db60cd5381637b7e3602ad70735a7bdf8f3d250c7b7114a666bb12ef7a8746a326a5d72ed30a1b8f8a5a170007f7285c8e217bef1f0
   languageName: node
   linkType: hard
 
@@ -1478,7 +1480,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@octokit/request@npm:^5.6.0":
+"@octokit/request@npm:^5.6.0, @octokit/request@npm:^5.6.3":
   version: 5.6.3
   resolution: "@octokit/request@npm:5.6.3"
   dependencies:
@@ -1601,15 +1603,15 @@ __metadata:
   linkType: hard
 
 "@solana/spl-token-registry@npm:^0.2.2405":
-  version: 0.2.2849
-  resolution: "@solana/spl-token-registry@npm:0.2.2849"
+  version: 0.2.2911
+  resolution: "@solana/spl-token-registry@npm:0.2.2911"
   dependencies:
     cross-fetch: 3.0.6
-  checksum: d07114a5ca45f474084a1a6b0e03061264e09ee3c29b9d28969e345efeac38a5b2a386cf7b99840b4b6d06a009ca110627897dce9e6afc039d75cfbc0ee6f1ac
+  checksum: c19d33c87b94074ae901450dde0d4e88a2afd5c2627d2f9274aa07ca06051d671b9233153f3f630ff5a3359440fe91d38e5b154c77488cc8195f81b98df20f11
   languageName: node
   linkType: hard
 
-"@solana/spl-token@npm:^0.1.8":
+"@solana/spl-token@npm:0.1.8, @solana/spl-token@npm:^0.1.8":
   version: 0.1.8
   resolution: "@solana/spl-token@npm:0.1.8"
   dependencies:
@@ -1680,6 +1682,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/bn.js@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "@types/bn.js@npm:5.1.0"
+  dependencies:
+    "@types/node": "*"
+  checksum: 1dc1cbbd7a1e8bf3614752e9602f558762a901031f499f3055828b5e3e2bba16e5b88c27b3c4152ad795248fbe4086c731a5c4b0f29bb243f1875beeeabee59c
+  languageName: node
+  linkType: hard
+
 "@types/bs58@npm:^4.0.1":
   version: 4.0.1
   resolution: "@types/bs58@npm:4.0.1"
@@ -1719,16 +1730,16 @@ __metadata:
   linkType: hard
 
 "@types/json-schema@npm:^7.0.9":
-  version: 7.0.9
-  resolution: "@types/json-schema@npm:7.0.9"
-  checksum: 259d0e25f11a21ba5c708f7ea47196bd396e379fddb79c76f9f4f62c945879dc21657904914313ec2754e443c5018ea8372362f323f30e0792897fdb2098a705
+  version: 7.0.10
+  resolution: "@types/json-schema@npm:7.0.10"
+  checksum: 369f12207298e3c8931100ab86c9c60d9217ab930a8ae0b851495f4f30695d3f0eb431eedc8e8d9c69357869899ea0fe6f9d65ddde5ea70415d67ef340dfdd1f
   languageName: node
   linkType: hard
 
 "@types/lodash@npm:^4.14.159":
-  version: 4.14.179
-  resolution: "@types/lodash@npm:4.14.179"
-  checksum: 71faa0c8071732c2b7f0bd092850d3cea96fc7912055d57d819cf2ab399a64150e4190d8a4ea35a0905662ddc118be9d2abd55891d8047c085acf98608156149
+  version: 4.14.180
+  resolution: "@types/lodash@npm:4.14.180"
+  checksum: fc42ae3473695cac6e91553f832fef8eb51a31c1c0381cafa81b00dc3efe18e279786bdda77caf0b90a8340ba2ba7aa46ae6541d69870565f775d04c89128bc1
   languageName: node
   linkType: hard
 
@@ -1814,12 +1825,12 @@ __metadata:
   linkType: hard
 
 "@typescript-eslint/eslint-plugin@npm:^5.4.0":
-  version: 5.14.0
-  resolution: "@typescript-eslint/eslint-plugin@npm:5.14.0"
+  version: 5.15.0
+  resolution: "@typescript-eslint/eslint-plugin@npm:5.15.0"
   dependencies:
-    "@typescript-eslint/scope-manager": 5.14.0
-    "@typescript-eslint/type-utils": 5.14.0
-    "@typescript-eslint/utils": 5.14.0
+    "@typescript-eslint/scope-manager": 5.15.0
+    "@typescript-eslint/type-utils": 5.15.0
+    "@typescript-eslint/utils": 5.15.0
     debug: ^4.3.2
     functional-red-black-tree: ^1.0.1
     ignore: ^5.1.8
@@ -1832,42 +1843,42 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 7176b30ebc2144292b38404b28aadc7a32d24d454deb8000e0e2ae71a199b9cff7c67ed6ff723b93278091f19948fdd4ef44029aade3ee6ec6f340acc9104ec6
+  checksum: 730ec621b5d87a22ea53cb2a67cae15fd241ccec9cff1bc3bdd24622feb11ea39b186544b845c730afa22112d8922008f17d9116a06b1e2dcd975429209a0c0c
   languageName: node
   linkType: hard
 
 "@typescript-eslint/parser@npm:^5.4.0":
-  version: 5.14.0
-  resolution: "@typescript-eslint/parser@npm:5.14.0"
+  version: 5.15.0
+  resolution: "@typescript-eslint/parser@npm:5.15.0"
   dependencies:
-    "@typescript-eslint/scope-manager": 5.14.0
-    "@typescript-eslint/types": 5.14.0
-    "@typescript-eslint/typescript-estree": 5.14.0
+    "@typescript-eslint/scope-manager": 5.15.0
+    "@typescript-eslint/types": 5.15.0
+    "@typescript-eslint/typescript-estree": 5.15.0
     debug: ^4.3.2
   peerDependencies:
     eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 2ee433b070d4b46fe2c2e11596fa92f39e60459a75d0e3fafe4f7d2e2f9772847208ce208190a3af0ec6490cb46a517523ac92a82a17fe289cc03ed7e512638a
+  checksum: 6b3047236349680e3a408aedf7490d304ad14d3f3264190eb058a472caeec07f85e8f298e6e774fd91cb001c9fd65a5fa558a9906afd30744bc05d8764cec250
   languageName: node
   linkType: hard
 
-"@typescript-eslint/scope-manager@npm:5.14.0":
-  version: 5.14.0
-  resolution: "@typescript-eslint/scope-manager@npm:5.14.0"
+"@typescript-eslint/scope-manager@npm:5.15.0":
+  version: 5.15.0
+  resolution: "@typescript-eslint/scope-manager@npm:5.15.0"
   dependencies:
-    "@typescript-eslint/types": 5.14.0
-    "@typescript-eslint/visitor-keys": 5.14.0
-  checksum: 20f163877218fc1c880e014ef2f858f7f8280a5d9dfc09dce092df9b72f6c5ebf490ede8b8dcf51e55f4d62a248eb5ccd468d37756731f27c8695c2f199f2638
+    "@typescript-eslint/types": 5.15.0
+    "@typescript-eslint/visitor-keys": 5.15.0
+  checksum: 39fa688691c5cc207d44cc1f5a3ba0ecb3c34144505b32c1267df9e9368cc29373acd7e85e27d6fe84a0012417e40745887baeec6719f33b8a5ae4232d0db061
   languageName: node
   linkType: hard
 
-"@typescript-eslint/type-utils@npm:5.14.0":
-  version: 5.14.0
-  resolution: "@typescript-eslint/type-utils@npm:5.14.0"
+"@typescript-eslint/type-utils@npm:5.15.0":
+  version: 5.15.0
+  resolution: "@typescript-eslint/type-utils@npm:5.15.0"
   dependencies:
-    "@typescript-eslint/utils": 5.14.0
+    "@typescript-eslint/utils": 5.15.0
     debug: ^4.3.2
     tsutils: ^3.21.0
   peerDependencies:
@@ -1875,23 +1886,23 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: b5b71f397a87769558473b9283e65f92a1153d4de93cb9e5bf559ca6f7d8a898b4b565141bd2455c9fb6c2266aa5e39465a0337a7484a09a7fdf4bfbf191c7cf
+  checksum: ecefdec695602b04f5d403c741336c56a8aa4f5fa3cc48a202a7b3f548d4d470f44cec5632a3db819fe1ca27c9980dbd3100b8c93e4fd7e9a3fa4253c03f4c04
   languageName: node
   linkType: hard
 
-"@typescript-eslint/types@npm:5.14.0":
-  version: 5.14.0
-  resolution: "@typescript-eslint/types@npm:5.14.0"
-  checksum: 1113c0c785a449970c52459dd1c779a80ae7b34b0bae923eace43a5d27279ee47092703d2a6a120c4ee7a78f0157ce8d6e53f951696d7b6197e121aac08ccc07
+"@typescript-eslint/types@npm:5.15.0":
+  version: 5.15.0
+  resolution: "@typescript-eslint/types@npm:5.15.0"
+  checksum: 749d6eb366cb103924b51bcbe69d1c0fd6f7a00f5be4c01b3d6de3134537db956653db9958cdd8cc32f375bca818ea804f8e07697122943faff06232519529a1
   languageName: node
   linkType: hard
 
-"@typescript-eslint/typescript-estree@npm:5.14.0":
-  version: 5.14.0
-  resolution: "@typescript-eslint/typescript-estree@npm:5.14.0"
+"@typescript-eslint/typescript-estree@npm:5.15.0":
+  version: 5.15.0
+  resolution: "@typescript-eslint/typescript-estree@npm:5.15.0"
   dependencies:
-    "@typescript-eslint/types": 5.14.0
-    "@typescript-eslint/visitor-keys": 5.14.0
+    "@typescript-eslint/types": 5.15.0
+    "@typescript-eslint/visitor-keys": 5.15.0
     debug: ^4.3.2
     globby: ^11.0.4
     is-glob: ^4.0.3
@@ -1900,33 +1911,33 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 41816c4cb37538a8206c1c590e9d0d0c30eca8a972001a102bf43002b8b6e53ec1ce451a156ce037ea978d34b297c5f677de7fe7baecd355687629e177dc6809
+  checksum: 84fbb5030db5c1ac34527860725a9ea5b104fa1c49072a69306954b4b8516242427e70cb6a657ec2b822789432179a0df7a866e4618a29ee54b4285ca23556c8
   languageName: node
   linkType: hard
 
-"@typescript-eslint/utils@npm:5.14.0":
-  version: 5.14.0
-  resolution: "@typescript-eslint/utils@npm:5.14.0"
+"@typescript-eslint/utils@npm:5.15.0":
+  version: 5.15.0
+  resolution: "@typescript-eslint/utils@npm:5.15.0"
   dependencies:
     "@types/json-schema": ^7.0.9
-    "@typescript-eslint/scope-manager": 5.14.0
-    "@typescript-eslint/types": 5.14.0
-    "@typescript-eslint/typescript-estree": 5.14.0
+    "@typescript-eslint/scope-manager": 5.15.0
+    "@typescript-eslint/types": 5.15.0
+    "@typescript-eslint/typescript-estree": 5.15.0
     eslint-scope: ^5.1.1
     eslint-utils: ^3.0.0
   peerDependencies:
     eslint: ^6.0.0 || ^7.0.0 || ^8.0.0
-  checksum: c44b415e61e83f89ae7314f30e9783d813b19cd65b40993cb6dc28696f42ba3e4fa2bb31006ec67fe5414e37a02386616c87aa35e5ff8659e65a06fb3e83c95d
+  checksum: 406725b3e1282064612c9e69f346ceae5cf8e3fe4ae37295eaa1d594fb1b7ed3abd161c32b96622b00ca56e7b1120ea43b584954cd0cefad904a46d65b20960e
   languageName: node
   linkType: hard
 
-"@typescript-eslint/visitor-keys@npm:5.14.0":
-  version: 5.14.0
-  resolution: "@typescript-eslint/visitor-keys@npm:5.14.0"
+"@typescript-eslint/visitor-keys@npm:5.15.0":
+  version: 5.15.0
+  resolution: "@typescript-eslint/visitor-keys@npm:5.15.0"
   dependencies:
-    "@typescript-eslint/types": 5.14.0
+    "@typescript-eslint/types": 5.15.0
     eslint-visitor-keys: ^3.0.0
-  checksum: 3fc6038b330602b0dd2ff4070b11057a19239caa6f5bd956ee75d66f37f1b936704a98c4b1eae5da19a34d72b836a93e675080608138e50eabf72c2c901f648e
+  checksum: a3f231bf55794547680284aa23ba495efa1e52f864583fe53e1ff8b2c011db070ca48633eb8a333bfc93be0bdbb76ffa98e81bf032fd2737a5e0f0b1b81bbc22
   languageName: node
   linkType: hard
 
@@ -2435,7 +2446,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cacache@npm:^15.0.5, cacache@npm:^15.2.0, cacache@npm:^15.3.0":
+"cacache@npm:^15.0.5, cacache@npm:^15.2.0":
   version: 15.3.0
   resolution: "cacache@npm:15.3.0"
   dependencies:
@@ -2458,6 +2469,32 @@ __metadata:
     tar: ^6.0.2
     unique-filename: ^1.1.1
   checksum: a07327c27a4152c04eb0a831c63c00390d90f94d51bb80624a66f4e14a6b6360bbf02a84421267bd4d00ca73ac9773287d8d7169e8d2eafe378d2ce140579db8
+  languageName: node
+  linkType: hard
+
+"cacache@npm:^16.0.0":
+  version: 16.0.1
+  resolution: "cacache@npm:16.0.1"
+  dependencies:
+    "@npmcli/fs": ^1.0.0
+    "@npmcli/move-file": ^1.1.2
+    chownr: ^2.0.0
+    fs-minipass: ^2.1.0
+    glob: ^7.2.0
+    infer-owner: ^1.0.4
+    lru-cache: ^7.5.1
+    minipass: ^3.1.6
+    minipass-collect: ^1.0.2
+    minipass-flush: ^1.0.5
+    minipass-pipeline: ^1.2.4
+    mkdirp: ^1.0.4
+    p-map: ^4.0.0
+    promise-inflight: ^1.0.1
+    rimraf: ^3.0.2
+    ssri: ^8.0.1
+    tar: ^6.1.11
+    unique-filename: ^1.1.1
+  checksum: 7f461244a6ed30b8e34a1c8d598712035135b5489152cc6458642858ebd8075f39bf0998b768cc29e41263524632af93b41987f8debb703d9a2f29f37cc0552b
   languageName: node
   linkType: hard
 
@@ -3333,114 +3370,114 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild-android-64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-android-64@npm:0.14.25"
+"esbuild-android-64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-android-64@npm:0.14.27"
   conditions: os=android & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-android-arm64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-android-arm64@npm:0.14.25"
+"esbuild-android-arm64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-android-arm64@npm:0.14.27"
   conditions: os=android & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild-darwin-64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-darwin-64@npm:0.14.25"
+"esbuild-darwin-64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-darwin-64@npm:0.14.27"
   conditions: os=darwin & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-darwin-arm64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-darwin-arm64@npm:0.14.25"
+"esbuild-darwin-arm64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-darwin-arm64@npm:0.14.27"
   conditions: os=darwin & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild-freebsd-64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-freebsd-64@npm:0.14.25"
+"esbuild-freebsd-64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-freebsd-64@npm:0.14.27"
   conditions: os=freebsd & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-freebsd-arm64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-freebsd-arm64@npm:0.14.25"
+"esbuild-freebsd-arm64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-freebsd-arm64@npm:0.14.27"
   conditions: os=freebsd & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild-linux-32@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-linux-32@npm:0.14.25"
+"esbuild-linux-32@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-linux-32@npm:0.14.27"
   conditions: os=linux & cpu=ia32
   languageName: node
   linkType: hard
 
-"esbuild-linux-64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-linux-64@npm:0.14.25"
+"esbuild-linux-64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-linux-64@npm:0.14.27"
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-linux-arm64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-linux-arm64@npm:0.14.25"
+"esbuild-linux-arm64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-linux-arm64@npm:0.14.27"
   conditions: os=linux & cpu=arm64
   languageName: node
   linkType: hard
 
-"esbuild-linux-arm@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-linux-arm@npm:0.14.25"
+"esbuild-linux-arm@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-linux-arm@npm:0.14.27"
   conditions: os=linux & cpu=arm
   languageName: node
   linkType: hard
 
-"esbuild-linux-mips64le@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-linux-mips64le@npm:0.14.25"
+"esbuild-linux-mips64le@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-linux-mips64le@npm:0.14.27"
   conditions: os=linux & cpu=mips64el
   languageName: node
   linkType: hard
 
-"esbuild-linux-ppc64le@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-linux-ppc64le@npm:0.14.25"
+"esbuild-linux-ppc64le@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-linux-ppc64le@npm:0.14.27"
   conditions: os=linux & cpu=ppc64
   languageName: node
   linkType: hard
 
-"esbuild-linux-riscv64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-linux-riscv64@npm:0.14.25"
+"esbuild-linux-riscv64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-linux-riscv64@npm:0.14.27"
   conditions: os=linux & cpu=riscv64
   languageName: node
   linkType: hard
 
-"esbuild-linux-s390x@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-linux-s390x@npm:0.14.25"
+"esbuild-linux-s390x@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-linux-s390x@npm:0.14.27"
   conditions: os=linux & cpu=s390x
   languageName: node
   linkType: hard
 
-"esbuild-netbsd-64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-netbsd-64@npm:0.14.25"
+"esbuild-netbsd-64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-netbsd-64@npm:0.14.27"
   conditions: os=netbsd & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-openbsd-64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-openbsd-64@npm:0.14.25"
+"esbuild-openbsd-64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-openbsd-64@npm:0.14.27"
   conditions: os=openbsd & cpu=x64
   languageName: node
   linkType: hard
@@ -3459,58 +3496,58 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild-sunos-64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-sunos-64@npm:0.14.25"
+"esbuild-sunos-64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-sunos-64@npm:0.14.27"
   conditions: os=sunos & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-windows-32@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-windows-32@npm:0.14.25"
+"esbuild-windows-32@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-windows-32@npm:0.14.27"
   conditions: os=win32 & cpu=ia32
   languageName: node
   linkType: hard
 
-"esbuild-windows-64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-windows-64@npm:0.14.25"
+"esbuild-windows-64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-windows-64@npm:0.14.27"
   conditions: os=win32 & cpu=x64
   languageName: node
   linkType: hard
 
-"esbuild-windows-arm64@npm:0.14.25":
-  version: 0.14.25
-  resolution: "esbuild-windows-arm64@npm:0.14.25"
+"esbuild-windows-arm64@npm:0.14.27":
+  version: 0.14.27
+  resolution: "esbuild-windows-arm64@npm:0.14.27"
   conditions: os=win32 & cpu=arm64
   languageName: node
   linkType: hard
 
 "esbuild@npm:^0.14.14":
-  version: 0.14.25
-  resolution: "esbuild@npm:0.14.25"
+  version: 0.14.27
+  resolution: "esbuild@npm:0.14.27"
   dependencies:
-    esbuild-android-64: 0.14.25
-    esbuild-android-arm64: 0.14.25
-    esbuild-darwin-64: 0.14.25
-    esbuild-darwin-arm64: 0.14.25
-    esbuild-freebsd-64: 0.14.25
-    esbuild-freebsd-arm64: 0.14.25
-    esbuild-linux-32: 0.14.25
-    esbuild-linux-64: 0.14.25
-    esbuild-linux-arm: 0.14.25
-    esbuild-linux-arm64: 0.14.25
-    esbuild-linux-mips64le: 0.14.25
-    esbuild-linux-ppc64le: 0.14.25
-    esbuild-linux-riscv64: 0.14.25
-    esbuild-linux-s390x: 0.14.25
-    esbuild-netbsd-64: 0.14.25
-    esbuild-openbsd-64: 0.14.25
-    esbuild-sunos-64: 0.14.25
-    esbuild-windows-32: 0.14.25
-    esbuild-windows-64: 0.14.25
-    esbuild-windows-arm64: 0.14.25
+    esbuild-android-64: 0.14.27
+    esbuild-android-arm64: 0.14.27
+    esbuild-darwin-64: 0.14.27
+    esbuild-darwin-arm64: 0.14.27
+    esbuild-freebsd-64: 0.14.27
+    esbuild-freebsd-arm64: 0.14.27
+    esbuild-linux-32: 0.14.27
+    esbuild-linux-64: 0.14.27
+    esbuild-linux-arm: 0.14.27
+    esbuild-linux-arm64: 0.14.27
+    esbuild-linux-mips64le: 0.14.27
+    esbuild-linux-ppc64le: 0.14.27
+    esbuild-linux-riscv64: 0.14.27
+    esbuild-linux-s390x: 0.14.27
+    esbuild-netbsd-64: 0.14.27
+    esbuild-openbsd-64: 0.14.27
+    esbuild-sunos-64: 0.14.27
+    esbuild-windows-32: 0.14.27
+    esbuild-windows-64: 0.14.27
+    esbuild-windows-arm64: 0.14.27
   dependenciesMeta:
     esbuild-android-64:
       optional: true
@@ -3554,7 +3591,7 @@ __metadata:
       optional: true
   bin:
     esbuild: bin/esbuild
-  checksum: 076fa82293d91d4a9c5ad27f8bde01fb86dc60b60b6d12c3deb917c5c7e9235b324e27114fc6e7e1fee9c9a1796fd094eac306c3b44b77a3819929472ee29450
+  checksum: 19386ba13536ca69845989c981a44e006cf4aa79cf8186fe2af6fdb8f43f7b7ca708c443360fe18b455b4da71b473ad135bc3bc20b892485b2a27455d2287555
   languageName: node
   linkType: hard
 
@@ -4263,11 +4300,11 @@ __metadata:
   linkType: hard
 
 "globals@npm:^13.6.0, globals@npm:^13.9.0":
-  version: 13.12.1
-  resolution: "globals@npm:13.12.1"
+  version: 13.13.0
+  resolution: "globals@npm:13.13.0"
   dependencies:
     type-fest: ^0.20.2
-  checksum: cf7877629c8f2a293b0a7d09d1dcce7f2d426ec2528600c481c5b3f3d070b0a120eb2499439ac0404990fb8a5742c0165b1bf1f52603364001ddc89bea3dda24
+  checksum: c55ea8fd3afecb72567bac41605577e19e68476993dfb0ca4c49b86075af5f0ae3f0f5502525f69010f7c5ea5db6a1c540a80a4f80ebdfb2f686d87b0f05d7e9
   languageName: node
   linkType: hard
 
@@ -5347,10 +5384,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^7.4.1":
-  version: 7.4.4
-  resolution: "lru-cache@npm:7.4.4"
-  checksum: c042ac73b48c1eddd22cc061eb41c4738c2eb71818ba503f625df4b3199d789281d7a2da18a017095a1304b5808f9d91fff7a77d69e3fefecef2b460460ed6d6
+"lru-cache@npm:^7.5.1":
+  version: 7.5.1
+  resolution: "lru-cache@npm:7.5.1"
+  checksum: f6980281c6ae4e58254d68b2d7878d7abb21c366a7ee527687f4a27bcbf7576f923517285d2fbd4b6a45b5eebdc66b4c565b55a8b49d5dc1babd65a912c26367
   languageName: node
   linkType: hard
 
@@ -5381,26 +5418,26 @@ __metadata:
   linkType: hard
 
 "make-fetch-happen@npm:^10.0.3":
-  version: 10.0.5
-  resolution: "make-fetch-happen@npm:10.0.5"
+  version: 10.0.6
+  resolution: "make-fetch-happen@npm:10.0.6"
   dependencies:
     agentkeepalive: ^4.2.1
-    cacache: ^15.3.0
+    cacache: ^16.0.0
     http-cache-semantics: ^4.1.0
     http-proxy-agent: ^5.0.0
     https-proxy-agent: ^5.0.0
     is-lambda: ^1.0.1
-    lru-cache: ^7.4.1
+    lru-cache: ^7.5.1
     minipass: ^3.1.6
     minipass-collect: ^1.0.2
-    minipass-fetch: ^2.0.2
+    minipass-fetch: ^2.0.3
     minipass-flush: ^1.0.5
     minipass-pipeline: ^1.2.4
     negotiator: ^0.6.3
     promise-retry: ^2.0.1
     socks-proxy-agent: ^6.1.1
     ssri: ^8.0.1
-  checksum: 150071e41262bffafccafa764bab0e6a929a46be5abc1dfee414ffb821d052942596f3660ff84b17e4d6c44f51b2d2741f6d02a49e2dad44e06c94c3baf624fa
+  checksum: cf3e745567f114bf161e13dbde402cff916482930936c102543b5c6e5e6409921b05d38d6400c92ed0b43011b185c8f39a9f504c9a1bdb956eeeed39929451a6
   languageName: node
   linkType: hard
 
@@ -5524,19 +5561,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mime-db@npm:1.51.0":
-  version: 1.51.0
-  resolution: "mime-db@npm:1.51.0"
-  checksum: 613b1ac9d6e725cc24444600b124a7f1ce6c60b1baa654f39a3e260d0995a6dffc5693190217e271af7e2a5612dae19f2a73f3e316707d797a7391165f7ef423
+"mime-db@npm:1.52.0":
+  version: 1.52.0
+  resolution: "mime-db@npm:1.52.0"
+  checksum: 0d99a03585f8b39d68182803b12ac601d9c01abfa28ec56204fa330bc9f3d1c5e14beb049bafadb3dbdf646dfb94b87e24d4ec7b31b7279ef906a8ea9b6a513f
   languageName: node
   linkType: hard
 
 "mime-types@npm:^2.1.12, mime-types@npm:~2.1.19":
-  version: 2.1.34
-  resolution: "mime-types@npm:2.1.34"
+  version: 2.1.35
+  resolution: "mime-types@npm:2.1.35"
   dependencies:
-    mime-db: 1.51.0
-  checksum: 67013de9e9d6799bde6d669d18785b7e18bcd212e710d3e04a4727f92f67a8ad4e74aee24be28b685adb794944814bde649119b58ee3282ffdbee58f9278d9f3
+    mime-db: 1.52.0
+  checksum: 89a5b7f1def9f3af5dad6496c5ed50191ae4331cc5389d7c521c8ad28d5fdad2d06fd81baf38fed813dc4e46bb55c8145bb0ff406330818c9cf712fb2e9b3836
   languageName: node
   linkType: hard
 
@@ -5628,7 +5665,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minipass-fetch@npm:^2.0.2":
+"minipass-fetch@npm:^2.0.3":
   version: 2.0.3
   resolution: "minipass-fetch@npm:2.0.3"
   dependencies:
@@ -6576,11 +6613,11 @@ __metadata:
   linkType: hard
 
 "prettier@npm:^2.4.1, prettier@npm:^2.5.1":
-  version: 2.5.1
-  resolution: "prettier@npm:2.5.1"
+  version: 2.6.0
+  resolution: "prettier@npm:2.6.0"
   bin:
     prettier: bin-prettier.js
-  checksum: 21b9408476ea1c544b0e45d51ceb94a84789ff92095abb710942d780c862d0daebdb29972d47f6b4d0f7ebbfb0ffbf56cc2cfa3e3e9d1cca54864af185b15b66
+  checksum: 3e527ad62279676778a8404d18174d7ca2365ada4caba6eebbcdd9907d1187afd3bc6ade5b4e5f5d4549bb9fb71e45ca8930d71500017635524f8fc05bc52e93
   languageName: node
   linkType: hard
 
@@ -7396,7 +7433,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spok@npm:^1.4.2, spok@npm:^1.4.3":
+"spok@npm:^1.4.3":
   version: 1.4.3
   resolution: "spok@npm:1.4.3"
   dependencies:
@@ -7694,7 +7731,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tar@npm:^6.0.2, tar@npm:^6.1.0, tar@npm:^6.1.2":
+"tar@npm:^6.0.2, tar@npm:^6.1.0, tar@npm:^6.1.11, tar@npm:^6.1.2":
   version: 6.1.11
   resolution: "tar@npm:6.1.11"
   dependencies:

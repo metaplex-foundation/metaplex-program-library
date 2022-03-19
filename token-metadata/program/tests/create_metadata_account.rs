@@ -4,7 +4,7 @@ mod utils;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{Creator, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
@@ -17,9 +17,8 @@ use solana_sdk::{
     transport::TransportError,
 };
 use utils::*;
-use mpl_token_metadata::state::{UseMethod, Uses};
+
 mod create_meta_accounts {
-    
 
     use super::*;
     #[tokio::test]
@@ -225,5 +224,341 @@ mod create_meta_accounts {
             .unwrap_err();
 
         assert_custom_error!(result, MetadataError::InvalidMetadataKey);
+    }
+
+    // -----------------
+    // Creators Failures
+    // -----------------
+    async fn fail_creators(
+        mut context: ProgramTestContext,
+        creators: Vec<Creator>,
+    ) -> TransportError {
+        Metadata::new()
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                Some(creators),
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap_err()
+    }
+
+    #[tokio::test]
+    async fn fail_six_unverified_creators() {
+        let context = program_test().start_with_context().await;
+        let mut creators = vec![
+            Keypair::new(),
+            Keypair::new(),
+            Keypair::new(),
+            Keypair::new(),
+            Keypair::new(),
+        ]
+        .into_iter()
+        .map(|creator| Creator {
+            address: creator.pubkey(),
+            share: 1,
+            verified: false,
+        })
+        .collect::<Vec<Creator>>();
+        creators.push(Creator {
+            address: context.payer.pubkey(),
+            share: 1,
+            verified: false,
+        });
+
+        let res = fail_creators(context, creators).await;
+        assert_custom_error!(res, MetadataError::CreatorsTooLong);
+    }
+
+    #[tokio::test]
+    async fn fail_four_unverified_creators_one_duplicate() {
+        let context = program_test().start_with_context().await;
+        let (creator1, creator2) = (Keypair::new(), Keypair::new());
+        let mut creators = vec![&creator1, &creator2, &creator1]
+            .into_iter()
+            .map(|creator| Creator {
+                address: creator.pubkey(),
+                share: 1,
+                verified: false,
+            })
+            .collect::<Vec<Creator>>();
+        creators.push(Creator {
+            address: context.payer.pubkey(),
+            share: 1,
+            verified: false,
+        });
+
+        let res = fail_creators(context, creators).await;
+        assert_custom_error!(res, MetadataError::DuplicateCreatorAddress);
+    }
+
+    #[tokio::test]
+    async fn fail_empty_creators() {
+        let context = program_test().start_with_context().await;
+        let creators: Vec<Creator> = vec![];
+
+        let res = fail_creators(context, creators).await;
+        assert_custom_error!(res, MetadataError::CreatorsMustBeAtleastOne);
+    }
+
+    #[tokio::test]
+    async fn fail_three_unverified_creators_300_total_shares() {
+        let context = program_test().start_with_context().await;
+        let (creator1, creator2) = (Keypair::new(), Keypair::new());
+        let creators = vec![&creator1, &creator2, &context.payer]
+            .into_iter()
+            .map(|creator| Creator {
+                address: creator.pubkey(),
+                share: 100,
+                verified: false,
+            })
+            .collect::<Vec<Creator>>();
+
+        let res = fail_creators(context, creators).await;
+        assert_custom_error!(res, MetadataError::NumericalOverflowError);
+    }
+
+    #[tokio::test]
+    async fn fail_three_unverified_creators_102() {
+        let context = program_test().start_with_context().await;
+        let (creator1, creator2) = (Keypair::new(), Keypair::new());
+        let creators = vec![&creator1, &creator2, &context.payer]
+            .into_iter()
+            .map(|creator| Creator {
+                address: creator.pubkey(),
+                share: 34,
+                verified: false,
+            })
+            .collect::<Vec<Creator>>();
+
+        let res = fail_creators(context, creators).await;
+        assert_custom_error!(res, MetadataError::ShareTotalMustBe100);
+    }
+
+    #[tokio::test]
+    async fn fail_two_one_non_payer_verified() {
+        let context = program_test().start_with_context().await;
+        let creator1 = Keypair::new();
+        let creators = vec![&creator1, &context.payer]
+            .into_iter()
+            .map(|creator| Creator {
+                address: creator.pubkey(),
+                share: 50,
+                verified: creator.eq(&creator1),
+            })
+            .collect::<Vec<Creator>>();
+
+        let res = fail_creators(context, creators).await;
+        assert_custom_error!(res, MetadataError::CannotVerifyAnotherCreator);
+    }
+
+    // -----------------
+    // Creators Success
+    // -----------------
+    async fn pass_creators(mut context: ProgramTestContext, creators: Vec<Creator>) {
+        let test_metadata = Metadata::new();
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                Some(creators.clone()),
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let metadata = test_metadata.get_data(&mut context).await;
+        assert_eq!(metadata.data.creators, Some(creators));
+    }
+
+    #[tokio::test]
+    async fn three_unverified_creators_100_total_shares() {
+        let context = program_test().start_with_context().await;
+        let (creator1, creator2) = (Keypair::new(), Keypair::new());
+        let mut creators = vec![&creator1, &creator2]
+            .into_iter()
+            .map(|creator| Creator {
+                address: creator.pubkey(),
+                share: 49,
+                verified: false,
+            })
+            .collect::<Vec<Creator>>();
+        creators.push(Creator {
+            address: context.payer.pubkey(),
+            share: 2,
+            verified: false,
+        });
+
+        pass_creators(context, creators).await;
+    }
+
+    #[tokio::test]
+    async fn two_unverified_creators_payer_verified() {
+        let context = program_test().start_with_context().await;
+        let (creator1, creator2) = (Keypair::new(), Keypair::new());
+        let mut creators = vec![&creator1, &creator2]
+            .into_iter()
+            .map(|creator| Creator {
+                address: creator.pubkey(),
+                share: 49,
+                verified: false,
+            })
+            .collect::<Vec<Creator>>();
+        creators.push(Creator {
+            address: context.payer.pubkey(),
+            share: 2,
+            verified: true,
+        });
+
+        pass_creators(context, creators).await;
+    }
+    // -----------------
+    // Uses Failures
+    // -----------------
+    async fn fail_uses(uses: Uses) {
+        let mut context = program_test().start_with_context().await;
+        let res = Metadata::new()
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                Some(uses),
+            )
+            .await
+            .unwrap_err();
+        assert_custom_error!(res, MetadataError::InvalidUseMethod);
+    }
+
+    #[tokio::test]
+    async fn fail_uses_multiple_0_0() {
+        fail_uses(Uses {
+            use_method: UseMethod::Multiple,
+            remaining: 0,
+            total: 0,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn fail_uses_multiple_10_5() {
+        fail_uses(Uses {
+            use_method: UseMethod::Multiple,
+            remaining: 10,
+            total: 5,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn fail_uses_single_0_1() {
+        fail_uses(Uses {
+            use_method: UseMethod::Single,
+            remaining: 0,
+            total: 1,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn fail_uses_single_1_0() {
+        fail_uses(Uses {
+            use_method: UseMethod::Single,
+            remaining: 1,
+            total: 0,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn fail_uses_single_1_2() {
+        fail_uses(Uses {
+            use_method: UseMethod::Single,
+            remaining: 1,
+            total: 2,
+        })
+        .await;
+    }
+
+    // -----------------
+    // Uses Success
+    // -----------------
+    async fn pass_uses(uses: Uses) {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                Some(uses.clone()),
+            )
+            .await
+            .unwrap();
+        let metadata = test_metadata.get_data(&mut context).await;
+        assert_eq!(metadata.uses, Some(uses));
+    }
+
+    #[tokio::test]
+    async fn uses_multiple_5_10() {
+        pass_uses(Uses {
+            use_method: UseMethod::Multiple,
+            remaining: 5,
+            total: 10,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn uses_single_1_1() {
+        pass_uses(Uses {
+            use_method: UseMethod::Single,
+            remaining: 1,
+            total: 1,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn uses_burn_0_0() {
+        pass_uses(Uses {
+            use_method: UseMethod::Burn,
+            remaining: 0,
+            total: 0,
+        })
+        .await;
+    }
+
+    #[tokio::test]
+    async fn uses_burn_5_10() {
+        pass_uses(Uses {
+            use_method: UseMethod::Burn,
+            remaining: 5,
+            total: 10,
+        })
+        .await;
     }
 }
