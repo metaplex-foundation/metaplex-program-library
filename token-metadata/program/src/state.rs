@@ -218,6 +218,30 @@ pub struct Collection {
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
+pub struct MetadataV1 {
+    pub key: Key,
+    pub update_authority: Pubkey,
+    pub mint: Pubkey,
+    pub data: Data,
+    // Immutable, once flipped, all sales of this metadata are considered secondary.
+    pub primary_sale_happened: bool,
+    // Whether or not the data struct is mutable, default is not
+    pub is_mutable: bool,
+    /// nonce for easy calculation of editions, if present
+    pub edition_nonce: Option<u8>,
+}
+
+impl MetadataV1 {
+    pub fn from_account_info(a: &AccountInfo) -> Result<MetadataV1, ProgramError> {
+        let md: MetadataV1 =
+            try_from_slice_checked(&a.data.borrow_mut(), Key::MetadataV1, MAX_METADATA_LEN)?;
+
+        Ok(md)
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
 pub struct Metadata {
     pub key: Key,
     pub update_authority: Pubkey,

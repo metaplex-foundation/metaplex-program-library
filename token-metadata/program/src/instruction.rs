@@ -322,7 +322,10 @@ pub enum MetadataInstruction {
     ///See [thaw_delegated_account] for Doc
     ThawDelegatedAccount,
     ///See [remove_creator_verification] for Doc
-    RemoveCreatorVerification
+    RemoveCreatorVerification,
+
+    /// See [reset_v2_data] for Doc
+    ResetV2Metadata,
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -639,14 +642,20 @@ pub fn sign_metadata(program_id: Pubkey, metadata: Pubkey, creator: Pubkey) -> I
 
 /// Remove Creator Verificaton
 #[allow(clippy::too_many_arguments)]
-pub fn remove_creator_verification(program_id: Pubkey, metadata: Pubkey, creator: Pubkey) -> Instruction {
+pub fn remove_creator_verification(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    creator: Pubkey,
+) -> Instruction {
     Instruction {
         program_id,
         accounts: vec![
             AccountMeta::new(metadata, false),
             AccountMeta::new_readonly(creator, true),
         ],
-        data: MetadataInstruction::RemoveCreatorVerification.try_to_vec().unwrap(),
+        data: MetadataInstruction::RemoveCreatorVerification
+            .try_to_vec()
+            .unwrap(),
     }
 }
 
