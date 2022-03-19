@@ -12,7 +12,6 @@ use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
-    signer::SignerError,
     transaction::{Transaction, TransactionError},
     transport::TransportError,
 };
@@ -117,7 +116,18 @@ mod reset_v2_metadata {
         // Metadata has correct use values.
         assert_eq!(metadata.uses, uses.to_owned());
 
-        // Post metadata has new values cleared.
+        // Post metadata has new values cleared but other data is untouched.
+        assert_eq!(post_metadata.key, Key::MetadataV1);
+        assert_eq!(post_metadata.update_authority, context.payer.pubkey());
+        assert_eq!(post_metadata.mint, test_metadata.mint.pubkey());
+        assert_eq!(post_metadata.data.name, puffed_name);
+        assert_eq!(post_metadata.data.symbol, puffed_symbol);
+        assert_eq!(post_metadata.data.uri, puffed_uri);
+        assert_eq!(post_metadata.data.seller_fee_basis_points, 10);
+        assert_eq!(post_metadata.data.creators, None);
+        assert_eq!(post_metadata.primary_sale_happened, false);
+        assert_eq!(post_metadata.is_mutable, false);
+
         assert_eq!(post_metadata.token_standard, None);
         assert_eq!(post_metadata.collection, None);
         assert_eq!(post_metadata.uses, None);
@@ -314,11 +324,7 @@ mod reset_v2_metadata {
             context.last_blockhash,
         );
 
-        let err = context
-            .banks_client
-            .process_transaction(tx)
-            .await
-            .unwrap_err();
+        context.banks_client.process_transaction(tx).await.unwrap();
 
         let post_metadata = test_metadata.get_data(&mut context).await;
 
