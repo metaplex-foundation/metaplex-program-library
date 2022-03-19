@@ -6,9 +6,12 @@ use std::{thread, time::Duration};
 pub fn get_cluster(rpc_client: RpcClient) -> Result<Cluster> {
     let genesis_hash = rpc_client.get_genesis_hash()?;
 
-    if genesis_hash == Hash::from_str("EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG").expect("Failed to parse hard coded genesis hash") {
+    let devnet_hash = Hash::from_str("EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG").expect("Failed to parse hard coded genesis hash");
+    let mainnet_hash = Hash::from_str("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d").expect("Failed to parse hard coded genesis hash");
+
+    if genesis_hash == devnet_hash {
         Ok(Cluster::Devnet)
-    } else if genesis_hash == Hash::from_str("5eykt4UsFv8P8NJdTREpY1vzqKqZKvdpKuc147dw2N9d").expect("Failed to parse hard coded genesis hash") {
+    } else if genesis_hash == mainnet_hash {
         Ok(Cluster::Mainnet)
     } else {
         Err(anyhow!(format!(
