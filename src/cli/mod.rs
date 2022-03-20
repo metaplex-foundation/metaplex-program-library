@@ -1,8 +1,7 @@
-use clap::{AppSettings, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[clap(author, version, about)]
-#[clap(setting(AppSettings::SubcommandRequiredElseHelp))]
 pub struct Cli {
     /// Log level: trace, debug, info, warn, error, off
     #[clap(short, long, global = true)]

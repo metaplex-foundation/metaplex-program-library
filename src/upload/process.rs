@@ -78,8 +78,7 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
     info!("Uploading config lines...");
     let num_items = config_data.number;
     let config_lines = generate_config_lines(num_items, &cache.items);
-    let config_statuses =
-        upload_config_lines(&sugar_config, config_lines, candy_pubkey, client.clone())?;
+    let config_statuses = upload_config_lines(&sugar_config, config_lines, candy_pubkey, client)?;
     for status in config_statuses {
         let index: String = status.index.to_string();
         let mut item = cache.items.0.get_mut(&index).unwrap();
@@ -91,7 +90,7 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
     Ok(())
 }
 
-fn get_metadata_from_first_json(assets_dir: &String) -> Result<Metadata> {
+fn get_metadata_from_first_json(assets_dir: &str) -> Result<Metadata> {
     let f = File::open(Path::new(assets_dir).join("0.json"))?;
     let metadata: Metadata = match serde_json::from_reader(f) {
         Ok(metadata) => metadata,
@@ -112,29 +111,22 @@ fn create_candy_machine_data(
 ) -> Result<CandyMachineData> {
     let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
 
-    let end_settings = if let Some(settings) = &config.end_settings {
-        Some(settings.into_candy_format())
-    } else {
-        None
-    };
+    let end_settings = config.end_settings.as_ref().map(|s| s.into_candy_format());
 
-    let whitelist_mint_settings = if let Some(settings) = &config.whitelist_mint_settings {
-        Some(settings.into_candy_format())
-    } else {
-        None
-    };
+    let whitelist_mint_settings = config
+        .whitelist_mint_settings
+        .as_ref()
+        .map(|s| s.into_candy_format());
 
-    let hidden_settings = if let Some(settings) = &config.hidden_settings {
-        Some(settings.into_candy_format())
-    } else {
-        None
-    };
+    let hidden_settings = config
+        .hidden_settings
+        .as_ref()
+        .map(|s| s.into_candy_format());
 
-    let gatekeeper = if let Some(gatekeeper) = &config.gatekeeper {
-        Some(gatekeeper.into_candy_format())
-    } else {
-        None
-    };
+    let gatekeeper = config
+        .gatekeeper
+        .as_ref()
+        .map(|gatekeeper| gatekeeper.into_candy_format());
 
     let mut creators: Vec<CandyCreator> = Vec::new();
 
@@ -170,11 +162,11 @@ fn populate_cache_with_links(
 
     for (key, value) in &arloader_manifest.0 {
         let name = key
-            .split("/")
+            .split('/')
             .last()
             .expect("Invalid arloader manifest key.");
 
-        let number = name.split(".").next().unwrap().to_string();
+        let number = name.split('.').next().unwrap().to_string();
 
         let link = value
             .files
@@ -198,7 +190,7 @@ fn populate_cache_with_links(
     Ok(())
 }
 
-fn _read_arloader_manifest(path: &String) -> Result<ArloaderManifest> {
+fn _read_arloader_manifest(path: &str) -> Result<ArloaderManifest> {
     let file = File::open(path)?;
     let arloader_manifest = serde_json::from_reader(file)?;
 
@@ -305,7 +297,7 @@ fn upload_config_lines(
     config_lines
         .into_iter()
         // Skip empty chunks
-        .filter(|chunk| chunk.len() > 0)
+        .filter(|chunk| !chunk.is_empty())
         .collect::<Vec<Vec<(u32, ConfigLine)>>>()
         .par_iter()
         .progress()
@@ -314,7 +306,7 @@ fn upload_config_lines(
 
             let payer = Arc::clone(&payer);
 
-            match add_config_lines(client.clone(), &candy_pubkey, payer, &chunk) {
+            match add_config_lines(client.clone(), &candy_pubkey, &payer, chunk) {
                 Ok(_) => {
                     for (index, _) in chunk {
                         let _statuses = statuses.lock().unwrap().push(ConfigStatus {
@@ -347,8 +339,8 @@ fn upload_config_lines(
 fn add_config_lines(
     client: Arc<Client>,
     candy_pubkey: &Pubkey,
-    payer: Arc<&Keypair>,
-    chunk: &Vec<(u32, ConfigLine)>,
+    payer: &Keypair,
+    chunk: &[(u32, ConfigLine)],
 ) -> Result<()> {
     let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
         .parse()
@@ -379,7 +371,7 @@ fn add_config_lines(
             index,
             config_lines,
         })
-        .signer(*payer)
+        .signer(payer)
         .send()?;
 
     Ok(())

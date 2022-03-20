@@ -88,7 +88,6 @@ pub fn process_withdraw_all(args: WithdrawAllArgs) -> Result<()> {
             Err(e) => {
                 error!("Error: {}", e);
                 pb.inc(1);
-                return;
             }
         }
     });

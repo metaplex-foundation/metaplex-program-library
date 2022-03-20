@@ -70,11 +70,9 @@ pub async fn upload_data<'a>(
     asset_pairs: &mut HashMap<usize, AssetPair>,
 ) -> Result<()> {
     let path = args.assets_dir.join(args.extension_glob);
-    let pattern = path
-        .to_str()
-        .ok_or(UploadAssetsError::InvalidAssetsDirectory(
-            args.assets_dir.to_str().unwrap().to_string(),
-        ))?;
+    let pattern = path.to_str().ok_or_else(|| {
+        UploadAssetsError::InvalidAssetsDirectory(args.assets_dir.to_str().unwrap().to_string())
+    })?;
 
     let (paths, errors): (Vec<_>, Vec<_>) = glob(pattern)?.into_iter().partition(Result::is_ok);
 
@@ -90,7 +88,7 @@ pub async fn upload_data<'a>(
     println!("Uploading data to bundlr...");
     for path in paths {
         let file_name = path.file_name().unwrap().to_str().unwrap();
-        let asset_id = file_name.split(".").next().unwrap().to_string();
+        let asset_id = file_name.split('.').next().unwrap().to_string();
 
         let bundlr_client = bundlr_client.clone();
 
@@ -114,7 +112,7 @@ pub async fn upload_data<'a>(
                 let id = val.0.parse::<usize>()?;
                 let asset = asset_pairs
                     .get_mut(&id)
-                    .expect(&format!("Failed to get asset {val:?}"));
+                    .unwrap_or_else(|| panic!("Failed to get asset {val:?}"));
                 match args.data_type {
                     DataType::Media => {
                         asset.media_link = link;
@@ -166,7 +164,7 @@ async fn send_bundlr_tx(
     Ok((asset_id, id.to_string()))
 }
 
-pub fn get_media_extension(assets_dir: &String) -> Result<String> {
+pub fn get_media_extension(assets_dir: &str) -> Result<String> {
     let entries = fs::read_dir(assets_dir)?;
 
     let re = Regex::new(r".+\d+\.(\w+[^json|JSON])$").expect("Failed to create regex.");
@@ -182,7 +180,7 @@ pub fn get_media_extension(assets_dir: &String) -> Result<String> {
     Err(UploadAssetsError::GetExtensionError.into())
 }
 
-pub fn get_asset_pairs(assets_dir: &String) -> Result<HashMap<usize, AssetPair>> {
+pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
     println!("Get asset pairs...");
     let files = fs::read_dir(assets_dir)?;
     let num_files = files.count();
