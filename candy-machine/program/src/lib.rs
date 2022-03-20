@@ -37,6 +37,7 @@ use {
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
+const COLLECTIONS_UUID: &str = "000000";
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
@@ -425,7 +426,7 @@ pub mod candy_machine {
             }
         }
 
-        if candy_machine.data.uuid == "000000" {
+        if candy_machine.data.uuid == COLLECTIONS_UUID {
             let next_instruction = get_instruction_relative(1, &ixs)?;
             if &next_instruction.program_id != &candy_machine::id() {
                 msg!(
