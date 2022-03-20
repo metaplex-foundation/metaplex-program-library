@@ -53,10 +53,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
 
     let candy_machine_state = Arc::new(get_candy_machine_state(&sugar_config, &candy_machine_id)?);
 
-    let number = match args.number {
-        Some(number) => number,
-        None => 1,
-    };
+    let number = args.number.unwrap_or(1);
 
     info!("Minting NFT from candy machine: {}", &candy_machine_id);
     info!("Candy machine program id: {:?}", CANDY_MACHINE_PROGRAM_ID);
@@ -82,7 +79,6 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
                 Err(e) => {
                     error!("Error: {}", e);
                     pb.inc(1);
-                    return;
                 }
             }
         });
@@ -174,7 +170,7 @@ pub fn mint(
                 is_writable: true,
             });
             additional_accounts.push(AccountMeta {
-                pubkey: whitelist_burn_authority.pubkey().clone(),
+                pubkey: whitelist_burn_authority.pubkey(),
                 is_signer: true,
                 is_writable: false,
             });
@@ -211,7 +207,7 @@ pub fn mint(
         let user_paying_account_address = get_ata_for_mint(&token_mint, &payer);
 
         additional_accounts.push(AccountMeta {
-            pubkey: user_paying_account_address.clone(),
+            pubkey: user_paying_account_address,
             is_signer: false,
             is_writable: true,
         });

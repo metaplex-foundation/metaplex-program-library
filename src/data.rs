@@ -178,7 +178,7 @@ impl HiddenSettings {
         CandyHiddenSettings {
             name: self.name.clone(),
             uri: self.uri.clone(),
-            hash: self.hash.clone(),
+            hash: self.hash,
         }
     }
 }

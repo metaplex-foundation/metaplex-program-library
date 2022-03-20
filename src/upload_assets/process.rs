@@ -80,7 +80,7 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
 
     let balance = get_bundlr_balance(&http_client, &address, bundlr_node).await?;
 
-    if !(balance > 0) {
+    if balance == 0 {
         let error = UploadAssetsError::NoBundlrBalance(address).into();
         error!("{error}");
         return Err(error);
@@ -91,7 +91,7 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let metadata_tag = Tag::new("Content-Type".into(), "application/json".to_string());
 
     let media_extension_glob = &format!("*.{extension}");
-    let metadata_extension_glob = &format!("*.json");
+    let metadata_extension_glob = "*.json".to_string();
 
     let mut asset_pairs = get_asset_pairs(&args.assets_dir)?;
     println!("retrieved asset pairs");
@@ -124,7 +124,7 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let upload_metadata_args = UploadDataArgs {
         bundlr_client: bundlr_client.clone(),
         assets_dir: Path::new(&args.assets_dir),
-        extension_glob: metadata_extension_glob,
+        extension_glob: &metadata_extension_glob,
         tags: vec![sugar_tag, metadata_tag],
         data_type: DataType::Metadata,
     };

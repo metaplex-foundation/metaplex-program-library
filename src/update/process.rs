@@ -44,13 +44,12 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
     let mut remaining_accounts: Vec<AccountMeta> = Vec::new();
 
     if config_data.spl_token.is_some() {
-        match config_data.spl_token {
-            Some(token) => remaining_accounts.push(AccountMeta {
+        if let Some(token) = config_data.spl_token {
+            remaining_accounts.push(AccountMeta {
                 pubkey: token,
                 is_signer: false,
                 is_writable: false,
-            }),
-            None => (),
+            })
         }
     }
 
@@ -111,29 +110,19 @@ fn create_candy_machine_data(
     info!("{:?}", config.go_live_date);
     let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
 
-    let end_settings = if let Some(settings) = &config.end_settings {
-        Some(settings.into_candy_format())
-    } else {
-        None
-    };
+    let end_settings = &config.end_settings.as_ref().map(|s| s.into_candy_format());
 
-    let whitelist_mint_settings = if let Some(settings) = &config.whitelist_mint_settings {
-        Some(settings.into_candy_format())
-    } else {
-        None
-    };
+    let whitelist_mint_settings = &config
+        .whitelist_mint_settings
+        .as_ref()
+        .map(|s| s.into_candy_format());
 
-    let hidden_settings = if let Some(settings) = &config.hidden_settings {
-        Some(settings.into_candy_format())
-    } else {
-        None
-    };
+    let hidden_settings = &config
+        .hidden_settings
+        .as_ref()
+        .map(|s| s.into_candy_format());
 
-    let gatekeeper = if let Some(gatekeeper) = &config.gatekeeper {
-        Some(gatekeeper.into_candy_format())
-    } else {
-        None
-    };
+    let gatekeeper = config.gatekeeper.as_ref().map(|g| g.into_candy_format());
 
     let data = CandyMachineData {
         uuid: candy_machine.uuid,
@@ -144,10 +133,10 @@ fn create_candy_machine_data(
         is_mutable: config.is_mutable,
         retain_authority: config.retain_authority,
         go_live_date,
-        end_settings,
+        end_settings: end_settings.clone(),
         creators: candy_machine.creators,
-        whitelist_mint_settings,
-        hidden_settings,
+        whitelist_mint_settings: whitelist_mint_settings.clone(),
+        hidden_settings: hidden_settings.clone(),
         items_available: config.number,
         gatekeeper,
     };

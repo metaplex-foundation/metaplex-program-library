@@ -37,6 +37,12 @@ impl Cache {
     }
 }
 
+impl Default for Cache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CacheProgram {
     pub uuid: String,
@@ -54,9 +60,15 @@ impl CacheProgram {
 
     pub fn new_from_cm(candy_machine: &Pubkey) -> Self {
         CacheProgram {
-            uuid: uuid_from_pubkey(&candy_machine),
+            uuid: uuid_from_pubkey(candy_machine),
             candy_machine: candy_machine.to_string(),
         }
+    }
+}
+
+impl Default for CacheProgram {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -66,6 +78,11 @@ pub struct CacheItems(pub IndexMap<String, CacheItem>);
 impl CacheItems {
     pub fn new() -> Self {
         CacheItems(IndexMap::new())
+    }
+}
+impl Default for CacheItems {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -90,10 +107,10 @@ impl CacheItem {
     }
 }
 
-pub fn load_cache(cache_file_path: &String) -> Result<Cache> {
+pub fn load_cache(cache_file_path: &str) -> Result<Cache> {
     let cache_file_path = Path::new(cache_file_path);
     if !cache_file_path.exists() {
-        let cache_file_string = path_to_string(&cache_file_path)?;
+        let cache_file_string = path_to_string(cache_file_path)?;
         let error = CacheError::CacheFileNotFound(cache_file_string).into();
         error!("{:?}", error);
         return Err(error);
@@ -103,7 +120,7 @@ pub fn load_cache(cache_file_path: &String) -> Result<Cache> {
     let file = match File::open(cache_file_path) {
         Ok(file) => file,
         Err(err) => {
-            let cache_file_string = path_to_string(&cache_file_path)?;
+            let cache_file_string = path_to_string(cache_file_path)?;
             let error =
                 CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into();
             error!("{:?}", error);

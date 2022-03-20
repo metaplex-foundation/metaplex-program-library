@@ -32,7 +32,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     let file = match File::open(cache_file_path) {
         Ok(file) => file,
         Err(err) => {
-            let cache_file_string = path_to_string(&cache_file_path)?;
+            let cache_file_string = path_to_string(cache_file_path)?;
 
             return Err(
                 CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into(),
@@ -62,7 +62,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     };
 
     // let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
-    let num_items = cache.items.0.len().clone();
+    let num_items = cache.items.0.len();
     let cache_items = &mut cache.items.0;
 
     let mut invalid_items: Vec<CacheItem> = Vec::new();
@@ -85,13 +85,13 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         let on_chain_item = OnChainItem { name, uri };
         let cache_item = cache_items.get_mut(&i.to_string()).unwrap();
 
-        if !items_match(&cache_item, &on_chain_item) {
+        if !items_match(cache_item, &on_chain_item) {
             cache_item.on_chain = false;
             invalid_items.push(cache_item.clone());
         }
     }
 
-    if invalid_items.len() > 0 {
+    if !invalid_items.is_empty() {
         println!("Invalid items found: ");
         for item in invalid_items {
             println!("{:?}", item);

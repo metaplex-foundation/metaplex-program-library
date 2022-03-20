@@ -2,9 +2,9 @@ pub use mpl_token_metadata::state::{
     MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
 
-pub const METAPLEX_PROGRAM_ID: &'static str = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
-pub const CANDY_MACHINE_V2: &'static str = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ";
-pub const CIVIC: &'static str = "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs";
+pub const METAPLEX_PROGRAM_ID: &str = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
+pub const CANDY_MACHINE_V2: &str = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ";
+pub const CIVIC: &str = "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs";
 
 pub const CONFIG_ARRAY_START: usize = 8 + // key
 32 + // authority

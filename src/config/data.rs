@@ -96,11 +96,7 @@ where
 }
 
 fn discount_price_to_lamports(discount_price: Option<f64>) -> Option<u64> {
-    if let Some(discount_price) = discount_price {
-        Some((discount_price * LAMPORTS_PER_SOL as f64) as u64)
-    } else {
-        None
-    }
+    discount_price.map(|price| (price * LAMPORTS_PER_SOL as f64) as u64)
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -206,7 +202,7 @@ impl HiddenSettings {
         CandyHiddenSettings {
             name: self.name.clone(),
             uri: self.uri.clone(),
-            hash: self.hash.clone(),
+            hash: self.hash,
         }
     }
 }
