@@ -395,9 +395,9 @@ pub mod candy_machine {
             ],
             &[&authority_seeds],
         )?;
-        let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
+        let ixs = instruction_sysvar_account.to_account_info();
 
-        let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
+        let instruction_sysvar = ixs.data.borrow();
 
         let mut idx = 0;
         let num_instructions = read_u16(&mut idx, &instruction_sysvar)
@@ -424,6 +424,24 @@ pub mod candy_machine {
                 return Err(ErrorCode::SuspiciousTransaction.into());
             }
         }
+
+        if candy_machine.data.uuid == "000000" {
+            let next_instruction = get_instruction_relative(1, &ixs)?;
+            if &next_instruction.program_id != &candy_machine::id() {
+                msg!(
+                    "Transaction had ix with program id {}",
+                    &next_instruction.program_id
+                );
+                return Err(ErrorCode::SuspiciousTransaction.into());
+            }
+            let discriminator = &next_instruction.data[0..8];
+
+            if discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
+                msg!("Transaction had ix with data {:?}", discriminator);
+                return Err(ErrorCode::SuspiciousTransaction.into());
+            }
+        }
+
         Ok(())
     }
 
