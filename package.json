@@ -40,5 +40,8 @@
     "eslint-plugin-prettier": "^4.0.0",
     "lerna": "^4.0.0",
     "prettier": "^2.4.1"
+  },
+  "resolutions": {
+    "@metaplex-foundation/solita": "portal:/Volumes/d/dev/mp/metaplex/metaplex-foundation/solita"
   }
 }
