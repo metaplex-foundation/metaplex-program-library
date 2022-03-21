@@ -48,7 +48,7 @@ merged.
 ### Rust Crates
 
 | Package          | Link                                            | Version                                                        |
-| :--------------: | ----------------------------------------------- | :------------------------------------------------------------- |
+| :--------------- | :---------------------------------------------- | :------------------------------------------------------------- |
 | Candy Machine    | [mpl-candy-machine][mpl-candy-machine-crate]    | [![Crate][mpl-candy-machine-img]][mpl-candy-machine-crate]     |
 | Token Metadata   | [mpl-token-metadata][mpl-token-metadata-crate]  | [![Crate][mpl-token-metadata-img]][mpl-token-metadata-crate]   |
 | Token Vault      | [mpl-token-vault][mpl-token-vault-crate]        | [![Crate][mpl-token-vault-img]][mpl-token-vault-crate]         |
