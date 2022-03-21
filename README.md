@@ -47,13 +47,13 @@ merged.
 
 ### Rust Crates
 
-|    Package     | Link                                                              | Version                                                                                                                                                                                                                                                                   |
-|:--------------:|-------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Candy Machine  | [mpl-candy-machine](https://crates.io/crates/mpl-candy-machine)   | [![Crate](https://img.shields.io/crates/v/mpl-candy-machine)](https://crates.io/crates/mpl-candy-machine)                                                                                                                                                                 |
-| Token Metadata | [mpl-token-metadata](https://crates.io/crates/mpl-token-metadata) | [![Crate](https://img.shields.io/crates/v/mpl-token-metadata)](https://crates.io/crates/mpl-token-metadata)                                                                                                                                                               |
-|  Token Vault   | [mpl-token-vault](https://crates.io/crates/mpl-token-vault)       | [![Crate](https://img.shields.io/crates/v/mpl-token-vault)](https://crates.io/crates/mpl-token-vault)                                                                                                                                                                     |
-| Auction House  | [mpl-auction-house](https://crates.io/crates/mpl-auction-house)   | [![Crate](https://img.shields.io/crates/v/mpl-auction-house)](https://crates.io/crates/mpl-auction-house)                                                                                                                                                                     |
-| Testing Utils  | [mpl-testing-utils](https://crates.io/crates/mpl-testing-utils)   | [![Crate](https://img.shields.io/crates/v/mpl-testing-utils)](https://crates.io/crates/mpl-testing-utils)                                                                                                                                                                     |
+| Package          | Link                                            | Version                                                        |
+| :--------------: | ----------------------------------------------- | :------------------------------------------------------------- |
+| Candy Machine    | [mpl-candy-machine][mpl-candy-machine-crate]    | [![Crate][mpl-candy-machine-img]][mpl-candy-machine-crate]     |
+| Token Metadata   | [mpl-token-metadata][mpl-token-metadata-crate]  | [![Crate][mpl-token-metadata-img]][mpl-token-metadata-crate]   |
+| Token Vault      | [mpl-token-vault][mpl-token-vault-crate]        | [![Crate][mpl-token-vault-img]][mpl-token-vault-crate]         |
+| Auction House    | [mpl-auction-house][mpl-auction-house-crate]    | [![Crate][mpl-auction-house-img]][mpl-auction-house-crate]     |
+| Testing Utils    | [mpl-testing-utils][mpl-testing-utils-crate]    | [![Crate][mpl-testing-utils-img]][mpl-testing-utils-crate]     |
 
 ### Npm Packages
 |    Package     |                                            Link                                             | Version                                                                                                  |
@@ -116,3 +116,15 @@ To report a security issue, please follow the guidance on the [SECURITY](.github
 [i-token-vault-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-vault.yml
 [i-fixed-price-sale-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml/badge.svg
 [i-fixed-price-sale-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml
+
+<!-- Crates -->
+[mpl-candy-machine-crate]:https://crates.io/crates/mpl-candy-machine
+[mpl-token-metadata-crate]:https://crates.io/crates/mpl-token-metadata
+[mpl-token-vault-crate]:https://crates.io/crates/mpl-token-vault
+[mpl-auction-house-crate]:https://crates.io/crates/mpl-auction-house
+[mpl-testing-utils-crate]:https://crates.io/crates/mpl-testing-utils
+[mpl-candy-machine-img]:https://img.shields.io/crates/v/mpl-candy-machine
+[mpl-token-metadata-img]:https://img.shields.io/crates/v/mpl-token-metadata
+[mpl-token-vault-img]:https://img.shields.io/crates/v/mpl-token-vault
+[mpl-auction-house-img]:https://img.shields.io/crates/v/mpl-auction-house
+[mpl-testing-utils-img]:https://img.shields.io/crates/v/mpl-testing-utils
