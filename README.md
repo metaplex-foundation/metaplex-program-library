@@ -56,20 +56,25 @@ merged.
 | Testing Utils    | [mpl-testing-utils][mpl-testing-utils-crate]    | [![Crate][mpl-testing-utils-img]][mpl-testing-utils-crate]     |
 
 ### Npm Packages
-|    Package     |                                            Link                                             | Version                                                                                                  |
-|:--------------:|:-------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------|
-| Candy Machine  |  [mpl-candy-machine](https://www.npmjs.com/package/@metaplex-foundation/mpl-candy-machine)  | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine)](https://www.npmjs.com/package/@metaplex-foundation/mpl-candy-machine)   |
-| Token Metadata | [mpl-token-metadata](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata) | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata)](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata) |
-|      Core      |           [mpl-core](https://www.npmjs.com/package/@metaplex-foundation/mpl-core)           | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-core)](https://www.npmjs.com/package/@metaplex-foundation/mpl-core)       |
-| Auction House  |               [mpl-auction-house](https://www.npmjs.com/package/@metaplex-foundation/mpl-auction-house)               | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house)](https://www.npmjs.com/package/@metaplex-foundation/mpl-auction-house)   |
 
-
+| Package        | Link                                          | Version                                                    |
+| :------------- | :-------------------------------------------- | :--------------------------------------------------------- |
+| Candy Machine  | [mpl-candy-machine][mpl-candy-machine-npm]    | [![NPM][mpl-candy-machine-nimg]][mpl-candy-machine-npm]    |
+| Token Metadata | [mpl-token-metadata][mpl-token-metadata-npm]  | [![NPM][mpl-token-metadata-nimg]][mpl-token-metadata-npm]  |
+| Core           | [mpl-core][mpl-core-npm]                      | [![NPM][mpl-core-nimg]][mpl-core-npm]                      |
+| Auction House  | [mpl-auction-house][mpl-auction-house-npm]    | [![NPM][mpl-auction-house-nimg]][mpl-auction-house-npm]    |
 
 ## Reporting security issues
 
 To report a security issue, please follow the guidance on the [SECURITY](.github/SECURITY.md) page.
 
-<!-- Program Badges  -->
+<!-- ===================================== -->
+<!-- Links for badges and such shown above -->
+<!-- Please add any links you add to the   -->
+<!-- readme here instead of inlining them  -->
+<!-- ===================================== -->
+
+<!-- Program Badges -->
 [p-candy-machine-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-candy-machine.yml
 [p-candy-machine-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-candy-machine.yml/badge.svg
 [p-token-vault-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-token-vault.yml
@@ -128,3 +133,13 @@ To report a security issue, please follow the guidance on the [SECURITY](.github
 [mpl-token-vault-img]:https://img.shields.io/crates/v/mpl-token-vault
 [mpl-auction-house-img]:https://img.shields.io/crates/v/mpl-auction-house
 [mpl-testing-utils-img]:https://img.shields.io/crates/v/mpl-testing-utils
+
+<!-- NPM Packages -->
+[mpl-candy-machine-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-candy-machine
+[mpl-token-metadata-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata
+[mpl-core-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-core
+[mpl-auction-house-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-auction-house
+[mpl-candy-machine-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine
+[mpl-token-metadata-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata
+[mpl-core-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core
+[mpl-auction-house-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house
