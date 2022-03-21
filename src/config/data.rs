@@ -215,14 +215,14 @@ pub enum UploadMethod {
 }
 
 impl FromStr for UploadMethod {
-    type Err = String;
+    type Err = ConfigError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
             "metaplex" => Ok(UploadMethod::Metaplex),
             "bundlr" => Ok(UploadMethod::Bundlr),
             "arloader" => Ok(UploadMethod::Arloader),
-            _ => Err(format!("Unknown storage: {}", s)),
+            _ => Err(ConfigError::InvalidUploadMethod(s.to_string())),
         }
     }
 }
@@ -246,9 +246,6 @@ impl<'de> Deserialize<'de> for UploadMethod {
         FromStr::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
-
-pub const BUNDLR_DEVNET: &str = "https://devnet.bundlr.network";
-pub const BUNDLR_MAINNET: &str = "https://node1.bundlr.network";
 
 #[derive(Debug, Clone, Serialize)]
 pub enum Cluster {

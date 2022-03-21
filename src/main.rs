@@ -13,6 +13,7 @@ use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
 use sugar_cli::cache::Cache;
 use sugar_cli::candy_machine::{get_candy_machine_state, print_candy_machine_state};
 use sugar_cli::cli::{Cli, Commands};
+use sugar_cli::constants::DEFAULT_CACHE;
 use sugar_cli::mint::{process_mint, MintArgs};
 use sugar_cli::setup::sugar_setup;
 use sugar_cli::update::{process_update, UpdateArgs};
@@ -165,7 +166,7 @@ async fn main() -> Result<()> {
 
 fn process_test_command() {
     let sugar_config = sugar_setup(None, None).unwrap();
-    let file = File::open("cache.json").unwrap();
+    let file = File::open(DEFAULT_CACHE).unwrap();
     let cache: Cache = serde_json::from_reader(file).unwrap();
 
     let candy_machine_id = Pubkey::from_str(&cache.program.candy_machine).unwrap();

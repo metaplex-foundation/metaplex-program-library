@@ -9,18 +9,19 @@ use anchor_client::{
 };
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
-use indicatif::ProgressBar;
+use console::style;
+use indicatif::{ProgressBar, ProgressStyle};
 use rand::rngs::OsRng;
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
     instruction::{initialize_mint, mint_to},
     ID as TOKEN_PROGRAM_ID,
 };
-use std::{str::FromStr, sync::Arc, thread, time::Duration};
+use std::{str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{CandyMachine, WhitelistMintMode, ID as CANDY_MACHINE_PROGRAM_ID};
+use mpl_candy_machine::{CandyMachine, WhitelistMintMode};
 
 use crate::cache::load_cache;
 use crate::candy_machine::*;
@@ -51,39 +52,71 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
         }
     };
 
-    let candy_machine_state = Arc::new(get_candy_machine_state(&sugar_config, &candy_machine_id)?);
+    println!(
+        "{} {}Minting from candy machine",
+        style("[1/1]").bold().dim(),
+        CANDY_EMOJI
+    );
+    println!("Candy machine ID: {}", &candy_machine_id);
 
+    let candy_machine_state = Arc::new(get_candy_machine_state(&sugar_config, &candy_machine_id)?);
     let number = args.number.unwrap_or(1);
+    let available = candy_machine_state.data.items_available - candy_machine_state.items_redeemed;
+
+    if number > available || number == 0 {
+        let error = anyhow!("{} item(s) available, requested {}", available, number);
+        error!("{:?}", error);
+        return Err(error);
+    }
 
     info!("Minting NFT from candy machine: {}", &candy_machine_id);
-    info!("Candy machine program id: {:?}", CANDY_MACHINE_PROGRAM_ID);
+    info!("Candy machine program id: {:?}", CANDY_MACHINE_V2);
 
     if number == 1 {
+        let pb = ProgressBar::new_spinner();
+        pb.enable_steady_tick(120);
+        pb.set_style(
+            ProgressStyle::default_spinner()
+                .tick_strings(&[
+                    "▹▹▹▹▹",
+                    "▸▹▹▹▹",
+                    "▹▸▹▹▹",
+                    "▹▹▸▹▹",
+                    "▹▹▹▸▹",
+                    "▹▹▹▹▸",
+                    "▪▪▪▪▪",
+                ])
+                .template("{spinner:.dim} {msg}"),
+        );
+        pb.set_message(format!(
+            "{} item(s) remaining",
+            candy_machine_state.data.items_available - candy_machine_state.items_redeemed
+        ));
+
         mint(
             Arc::clone(&client),
             candy_machine_id,
             Arc::clone(&candy_machine_state),
-        )?;
+        )
+        .ok();
+
+        pb.finish_and_clear();
     } else {
         let pb = ProgressBar::new(number);
 
         (0..number).into_iter().for_each(|_num| {
-            match mint(
+            mint(
                 Arc::clone(&client),
                 candy_machine_id,
                 Arc::clone(&candy_machine_state),
-            ) {
-                Ok(_) => {
-                    pb.inc(1);
-                }
-                Err(e) => {
-                    error!("Error: {}", e);
-                    pb.inc(1);
-                }
-            }
+            )
+            .ok();
+            pb.inc(1);
         });
-        thread::sleep(Duration::from_millis(1000));
+        pb.finish();
     }
+
+    println!("\n{}", style("[Completed]").bold().dim());
 
     Ok(())
 }
@@ -93,9 +126,7 @@ pub fn mint(
     candy_machine_id: Pubkey,
     candy_machine_state: Arc<CandyMachine>,
 ) -> Result<()> {
-    let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
-        .parse()
-        .expect("Failed to parse PID");
+    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
 
     let program = client.program(pid);
     let payer = program.payer();

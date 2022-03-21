@@ -1,6 +1,7 @@
 use bundlr_sdk::{tags::Tag, Bundlr, BundlrTx, SolanaSigner};
 use futures::future::select_all;
 use glob::glob;
+use indicatif::ProgressBar;
 use regex::Regex;
 use serde_json;
 use std::{
@@ -84,16 +85,14 @@ pub async fn upload_data<'a>(
 
     let bundlr_client = args.bundlr_client;
     let mut handles = Vec::new();
+    println!("Sending data: (Ctrl+C to abort)");
+    let pb = ProgressBar::new(asset_pairs.len().try_into().unwrap());
 
-    println!("Uploading data to bundlr...");
     for path in paths {
         let file_name = path.file_name().unwrap().to_str().unwrap();
         let asset_id = file_name.split('.').next().unwrap().to_string();
 
         let bundlr_client = bundlr_client.clone();
-
-        // let file_open_errors = file_open_errors.clone();
-
         let data = fs::read(&path)?;
 
         let tx = bundlr_client.create_transaction_with_tags(data, args.tags.clone());
@@ -122,6 +121,8 @@ pub async fn upload_data<'a>(
                     }
                 }
                 handles = remaining;
+                // updates the progress bar
+                pb.inc(1);
             }
             (Err(_e), _index, remaining) => {
                 // Ignoring all errors
@@ -129,6 +130,8 @@ pub async fn upload_data<'a>(
             }
         }
     }
+
+    pb.finish_with_message("Media upload successfully");
 
     if !path_errors.is_empty() {
         error!("Path errors: {:?}", path_errors);
@@ -157,7 +160,6 @@ async fn send_bundlr_tx(
     asset_id: String,
     tx: BundlrTx,
 ) -> Result<(String, String)> {
-    println!("Sending {asset_id} to Bundlr...");
     let response = bundlr_client.send_transaction(tx).await?;
     let id = response.get("id").unwrap().as_str().unwrap();
 
@@ -181,10 +183,16 @@ pub fn get_media_extension(assets_dir: &str) -> Result<String> {
 }
 
 pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
-    println!("Get asset pairs...");
-    let files = fs::read_dir(assets_dir)?;
+    // filters out directories and hidden files
+    let files = fs::read_dir(assets_dir)?
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| {
+            !entry.file_name().to_str().unwrap().starts_with('.')
+                && entry.metadata().unwrap().is_file()
+        });
+
     let num_files = files.count();
-    println!("got {num_files} files");
+    println!("Found {num_files} files");
     let mut asset_pairs: HashMap<usize, AssetPair> = HashMap::new();
 
     // Number of files should be even.
@@ -194,15 +202,13 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
 
     let extension = get_media_extension(assets_dir)?;
 
-    println!("extension: {extension}");
+    println!("Extension: {extension}");
 
     // Iterate over asset pairs.
     for i in 0..(num_files / 2) {
         let metadata_file = PathBuf::from(assets_dir).join(format!("{i}.json"));
         let metadata_file = metadata_file.to_str().unwrap().to_string();
         let media_file = Path::new(assets_dir).join(format!("{i}.{extension}"));
-
-        println!("metadata file: {metadata_file}");
 
         let m = File::open(&metadata_file)?;
         let metadata: Metadata = serde_json::from_reader(m)?;

@@ -9,6 +9,7 @@ use anyhow::Result;
 use tracing::error;
 
 use crate::config::data::SugarConfig;
+use crate::constants::{DEFAULT_KEYPATH, DEFAULT_RPC_DEVNET};
 use crate::parse::*;
 
 pub fn setup_client(sugar_config: &SugarConfig) -> Result<Client> {
@@ -29,13 +30,11 @@ pub fn sugar_setup(
 ) -> Result<SugarConfig> {
     let sol_config_option = parse_solana_config();
 
-    let default_key_path = "~/.config/solana/id.json";
-
     let rpc_url = match rpc_url_opt {
         Some(rpc_url) => rpc_url,
         None => match sol_config_option {
             Some(ref sol_config) => sol_config.json_rpc_url.clone(),
-            None => String::from("https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/"),
+            None => String::from(DEFAULT_RPC_DEVNET),
         },
     };
 
@@ -59,10 +58,10 @@ pub fn sugar_setup(
                     std::process::exit(1);
                 }
             },
-            None => match read_keypair_file(&*shellexpand::tilde(default_key_path)) {
+            None => match read_keypair_file(&*shellexpand::tilde(DEFAULT_KEYPATH)) {
                 Ok(keypair) => keypair,
                 Err(e) => {
-                    error!("Failed to read keypair file: {}, {}", default_key_path, e);
+                    error!("Failed to read keypair file: {}, {}", DEFAULT_KEYPATH, e);
                     std::process::exit(1);
                 }
             },

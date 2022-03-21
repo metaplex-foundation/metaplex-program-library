@@ -4394,6 +4394,7 @@ dependencies = [
  "bundlr-sdk",
  "chrono",
  "clap 3.0.14",
+ "console",
  "futures",
  "glob",
  "indexmap",

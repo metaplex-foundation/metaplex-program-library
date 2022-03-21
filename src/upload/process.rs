@@ -4,7 +4,8 @@ use anchor_client::solana_sdk::{
     system_instruction, system_program, sysvar,
 };
 use anyhow::Result;
-use indicatif::{ParallelProgressIterator, ProgressBar, ProgressStyle};
+use console::style;
+use indicatif::{ParallelProgressIterator, ProgressBar};
 use rand::rngs::OsRng;
 use rayon::prelude::*;
 use std::{
@@ -41,7 +42,13 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
     let candy_machine_address = &cache.program.candy_machine;
 
     let candy_pubkey = if candy_machine_address.is_empty() {
+        println!(
+            "{} {}Creating candy machine",
+            style("[1/2]").bold().dim(),
+            CANDY_EMOJI
+        );
         info!("Candy machine address is empty, creating new candy machine...");
+
         let candy_keypair = Keypair::generate(&mut OsRng);
         let candy_pubkey = candy_keypair.pubkey();
 
@@ -60,6 +67,12 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
         cache.write_to_file(&args.cache)?;
         candy_pubkey
     } else {
+        println!(
+            "{} {}Loading candy machine",
+            style("[1/2]").bold().dim(),
+            CANDY_EMOJI
+        );
+
         match Pubkey::from_str(candy_machine_address) {
             Ok(pubkey) => pubkey,
             Err(_err) => {
@@ -75,10 +88,19 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
         }
     };
 
+    println!("Candy machine ID: {}", candy_pubkey);
     info!("Uploading config lines...");
+
+    println!(
+        "\n{} {}Uploading config lines",
+        style("[2/2]").bold().dim(),
+        PAPER_EMOJI
+    );
+
     let num_items = config_data.number;
     let config_lines = generate_config_lines(num_items, &cache.items);
     let config_statuses = upload_config_lines(&sugar_config, config_lines, candy_pubkey, client)?;
+
     for status in config_statuses {
         let index: String = status.index.to_string();
         let mut item = cache.items.0.get_mut(&index).unwrap();
@@ -86,6 +108,8 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
     }
 
     cache.write_to_file(&args.cache)?;
+
+    println!("\n{}", style("[Completed]").bold().dim());
 
     Ok(())
 }
@@ -228,9 +252,7 @@ fn initialize_candy_machine(
     candy_machine_data: CandyMachineData,
     client: Arc<Client>,
 ) -> Result<Signature> {
-    let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
-        .parse()
-        .expect("Failed to parse PID");
+    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
 
     let program = client.program(pid);
     let payer = program.payer();
@@ -282,18 +304,17 @@ fn upload_config_lines(
     client: Arc<Client>,
 ) -> Result<Vec<ConfigStatus>> {
     let payer = Arc::new(&sugar_config.keypair);
-
     let statuses: Arc<Mutex<Vec<ConfigStatus>>> = Arc::new(Mutex::new(Vec::new()));
 
-    let pb = ProgressBar::new(config_lines.len() as u64);
-    pb.set_style(
-        ProgressStyle::default_bar()
-            .template("[{percent}] {bar:40.cyan/blue}")
-            .progress_chars("##-"),
+    println!(
+        "Sending {} config line(s): (Ctrl+C to abort)",
+        config_lines.len()
     );
+    let pb = ProgressBar::new(config_lines.len() as u64);
 
     debug!("Num of config lines: {:?}", config_lines.len());
     info!("Uploading config lines in chunks...");
+
     config_lines
         .into_iter()
         // Skip empty chunks
@@ -303,7 +324,6 @@ fn upload_config_lines(
         .progress()
         .for_each(|chunk| {
             let statuses = statuses.clone();
-
             let payer = Arc::clone(&payer);
 
             match add_config_lines(client.clone(), &candy_pubkey, &payer, chunk) {
@@ -316,7 +336,7 @@ fn upload_config_lines(
                     }
                 }
                 Err(e) => {
-                    println!("{}", e);
+                    info!("{}", e);
                     for (index, _) in chunk {
                         let _statuses = statuses.lock().unwrap().push(ConfigStatus {
                             index: *index as u32,
@@ -325,7 +345,11 @@ fn upload_config_lines(
                     }
                 }
             }
+
+            pb.inc(1);
         });
+
+    pb.finish();
 
     let statuses = if let Ok(s) = Arc::try_unwrap(statuses) {
         s.into_inner().unwrap()
@@ -342,9 +366,7 @@ fn add_config_lines(
     payer: &Keypair,
     chunk: &[(u32, ConfigLine)],
 ) -> Result<()> {
-    let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
-        .parse()
-        .expect("Failed to parse PID");
+    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
 
     let program = client.program(pid);
 

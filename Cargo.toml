@@ -17,6 +17,7 @@ bs58 = "0.4.0"
 bundlr-sdk = { git = "https://github.com/Bundlr-Network/rust-sdk", features = ["solana"] }
 chrono = "0.4.19"
 clap = { version = "3.0.0", features = ["derive", "cargo"] }
+console = "0.15.0"
 futures = "0.3.19"
 glob = "0.3.0"
 indexmap = { version = "1.8.0", features = ["serde"] }
