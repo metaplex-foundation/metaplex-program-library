@@ -4,18 +4,18 @@ Metaplex smart contracts and SDK.
 
 ## Metaplex Contracts
 
-| Name                                   | Program                                                                                                                                                                                                                                            | SDK                                                                                                                                                                                                                                                         | Integration Test                                                                                                                                                                                                                                                                    |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Candy Machine](./candy-machine)       | [![Program Candy Machine ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-candy-machine.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-candy-machine.yml)                          | [![SDK Metaplex](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-candy-machine.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-candy-machine.yml)                                     |                                                                                                                                                                                                                                                                                     |
-| [Token Vault](./token-vault)           | [![Program Token Vault](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-vault.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-token-vault.yml)                                 | [![SDK Token Vault](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-vault.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-vault.yml)                                      | [![Integration Token Vault](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-vault.yml/badge.svg)](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-vault.yml)                |
-| [Token Entangler](./token-entangler)   | [![Program Token Entangler](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-entangler.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-token-entangler.yml)                     | [![SDK Token Entangler](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-entangler.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-entangler.yml)                          |                                                                                                                                                                                                                                                                                     |
-| [Token Metadata](./token-metadata)     | [![Program Token Metadata ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-metadata.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-token-metadata.yml)                       |                                                                                                                                                                                                                                                             | [![Integration Token Metadata](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-metadata.yml/badge.svg)](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-metadata.yml)       |
-| [Auction](./auction)                   | [![Program Auction ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-auction.yml)                                            | [![SDK Auction](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml)                                                  |                                                                                                                                                                                                                                                                                     |
-| [Auction House](./auction-house)       | [![Program Auction House ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction-house.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-auction-house.yml)                          | [![SDK Auction House](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction-house.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction-house.yml)                                |                                                                                                                                                                                                                                                                                     |
-| [Metaplex](./metaplex)                 | [![Program Metaplex ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-metaplex.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-metaplex.yml)                                         | [![SDK Metaplex](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml)                                               |                                                                                                                                                                                                                                                                                     |
-| [NFT-Packs](./nft-packs)               | [![Program NFT-Packs ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-nft-packs.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-nft-packs.yml)                      |                                                                                                                                                                                                                                                             |                                                                                                                                                                                                                                                                                     |
-| [Gumdrop](./gumdrop)                   | [![Program Gumdrop](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-gumdrop.yml/badge.svg)](https://github.com/metaplex/teamplex/actions/workflows/program-gumdrop.yml)                                             | [![SDK Gumdrop](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml)                                                  |                                                                                                                                                                                                                                                                                     |
-| [Fixed price sale](./fixed-price-sale) | [![Program Fixed Price Sale ](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-fixed-price-sale.yml/badge.svg)](https://github.com/metaplex/metaplex-program-library/actions/workflows/program-fixed-price-sale.yml) | [![SDK Fixed Price Sale](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml/badge.svg)](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml) | [![Integration Fixed Price Sale](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml/badge.svg)](https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml) |
+| Name                                   | Program                                                                       | SDK                                                                           | Integration Test                                                                   |
+| :------------------------------------- | :---------------------------------------------------------------------------- | :---------------------------------------------------------------------------  | :--------------------------------------------------------------------------------- |
+| [Candy Machine](./candy-machine)       | [![Program Candy Machine][p-candy-machine-svg]][p-candy-machine-yml]          | [![SDK Candy Machine][sdk-candy-machine-svg]][sdk-candy-machine-yml]          |                                                                                    |
+| [Token Vault](./token-vault)           | [![Program Token Vault][p-token-vault-svg]][p-token-vault-yml]                | [![SDK Token Vault][sdk-token-vault-svg]][sdk-token-vault-yml]                | [![Integration Token Vault][i-token-vault-svg]][i-token-vault-yml]                 |
+| [Token Entangler](./token-entangler)   | [![Program Token Entangler][p-token-entangler-svg]][p-token-entangler-yml]    | [![SDK Token Entangler][sdk-token-entangler-svg]][sdk-token-entangler-yml]    |                                                                                    |
+| [Token Metadata](./token-metadata)     | [![Program Token Metadata][p-token-metadata-svg]][p-token-metadata-yml]       | [![SDK Token Metadata][sdk-token-metadata-svg]][sdk-token-metadata-yml]       |                                                                                    |
+| [Auction](./auction)                   | [![Program Auction][p-auction-svg]][p-auction-yml]                            | [![SDK Auction][sdk-auction-svg]][sdk-auction-yml]                            |                                                                                    |
+| [Auction House](./auction-house)       | [![Program Auction House][p-auction-house-svg]][p-auction-house-yml]          | [![SDK Auction House][sdk-auction-house-svg]][sdk-auction-house-yml]          |                                                                                    |
+| [Metaplex](./metaplex)                 | [![Program Metaplex][p-metaplex-svg]][p-metaplex-yml]                         | [![SDK Metaplex][sdk-metaplex-svg]][sdk-metaplex-yml]                         |                                                                                    |
+| [NFT-Packs](./nft-packs)               | [![Program NFT-Packs][p-nft-packs-svg]][p-nft-packs-yml]                      |                                                                               |                                                                                    |
+| [Gumdrop](./gumdrop)                   | [![Program Gumdrop][p-gumdrop-svg]][p-gumdrop-yml]                            | [![SDK Gumdrop][sdk-gumdrop-svg]][sdk-gumdrop-yml]                            |                                                                                    |
+| [Fixed price sale](./fixed-price-sale) | [![Program Fixed Price Sale][p-fixed-price-sale-svg]][p-fixed-price-sale-yml] | [![SDK Fixed Price Sale][sdk-fixed-price-sale-svg]][sdk-fixed-price-sale-yml] | [![Integration Fixed Price Sale][i-fixed-price-sale-svg]][i-fixed-price-sale-yml]  |
 
 
 ## Development
@@ -47,24 +47,99 @@ merged.
 
 ### Rust Crates
 
-|    Package     | Link                                                              | Version                                                                                                                                                                                                                                                                   |
-|:--------------:|-------------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Candy Machine  | [mpl-candy-machine](https://crates.io/crates/mpl-candy-machine)   | [![Crate](https://img.shields.io/crates/v/mpl-candy-machine)](https://crates.io/crates/mpl-candy-machine)                                                                                                                                                                 |
-| Token Metadata | [mpl-token-metadata](https://crates.io/crates/mpl-token-metadata) | [![Crate](https://img.shields.io/crates/v/mpl-token-metadata)](https://crates.io/crates/mpl-token-metadata)                                                                                                                                                               |
-|  Token Vault   | [mpl-token-vault](https://crates.io/crates/mpl-token-vault)       | [![Crate](https://img.shields.io/crates/v/mpl-token-vault)](https://crates.io/crates/mpl-token-vault)                                                                                                                                                                     |
-| Auction House  | [mpl-auction-house](https://crates.io/crates/mpl-auction-house)   | [![Crate](https://img.shields.io/crates/v/mpl-auction-house)](https://crates.io/crates/mpl-auction-house)                                                                                                                                                                     |
-| Testing Utils  | [mpl-testing-utils](https://crates.io/crates/mpl-testing-utils)   | [![Crate](https://img.shields.io/crates/v/mpl-testing-utils)](https://crates.io/crates/mpl-testing-utils)                                                                                                                                                                     |
+| Package          | Link                                            | Version                                                        |
+| :--------------- | :---------------------------------------------- | :------------------------------------------------------------- |
+| Candy Machine    | [mpl-candy-machine][mpl-candy-machine-crate]    | [![Crate][mpl-candy-machine-img]][mpl-candy-machine-crate]     |
+| Token Metadata   | [mpl-token-metadata][mpl-token-metadata-crate]  | [![Crate][mpl-token-metadata-img]][mpl-token-metadata-crate]   |
+| Token Vault      | [mpl-token-vault][mpl-token-vault-crate]        | [![Crate][mpl-token-vault-img]][mpl-token-vault-crate]         |
+| Auction House    | [mpl-auction-house][mpl-auction-house-crate]    | [![Crate][mpl-auction-house-img]][mpl-auction-house-crate]     |
+| Testing Utils    | [mpl-testing-utils][mpl-testing-utils-crate]    | [![Crate][mpl-testing-utils-img]][mpl-testing-utils-crate]     |
 
 ### Npm Packages
-|    Package     |                                            Link                                             | Version                                                                                                  |
-|:--------------:|:-------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------|
-| Candy Machine  |  [mpl-candy-machine](https://www.npmjs.com/package/@metaplex-foundation/mpl-candy-machine)  | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine)](https://www.npmjs.com/package/@metaplex-foundation/mpl-candy-machine)   |
-| Token Metadata | [mpl-token-metadata](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata) | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata)](https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata) |
-|      Core      |           [mpl-core](https://www.npmjs.com/package/@metaplex-foundation/mpl-core)           | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-core)](https://www.npmjs.com/package/@metaplex-foundation/mpl-core)       |
-| Auction House  |               [mpl-auction-house](https://www.npmjs.com/package/@metaplex-foundation/mpl-auction-house)               | [![Crate](https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house)](https://www.npmjs.com/package/@metaplex-foundation/mpl-auction-house)   |
 
-
+| Package        | Link                                          | Version                                                    |
+| :------------- | :-------------------------------------------- | :--------------------------------------------------------- |
+| Candy Machine  | [mpl-candy-machine][mpl-candy-machine-npm]    | [![NPM][mpl-candy-machine-nimg]][mpl-candy-machine-npm]    |
+| Token Metadata | [mpl-token-metadata][mpl-token-metadata-npm]  | [![NPM][mpl-token-metadata-nimg]][mpl-token-metadata-npm]  |
+| Core           | [mpl-core][mpl-core-npm]                      | [![NPM][mpl-core-nimg]][mpl-core-npm]                      |
+| Auction House  | [mpl-auction-house][mpl-auction-house-npm]    | [![NPM][mpl-auction-house-nimg]][mpl-auction-house-npm]    |
 
 ## Reporting security issues
 
 To report a security issue, please follow the guidance on the [SECURITY](.github/SECURITY.md) page.
+
+<!-- ===================================== -->
+<!-- Links for badges and such shown above -->
+<!-- Please add any links you add to the   -->
+<!-- readme here instead of inlining them  -->
+<!-- ===================================== -->
+
+<!-- Program Badges -->
+[p-candy-machine-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-candy-machine.yml
+[p-candy-machine-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-candy-machine.yml/badge.svg
+[p-token-vault-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-token-vault.yml
+[p-token-vault-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-vault.yml/badge.svg
+[p-token-entangler-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-token-entangler.yml
+[p-token-entangler-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-entangler.yml/badge.svg
+[p-token-metadata-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-token-metadata.yml
+[p-token-metadata-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-token-metadata.yml/badge.svg
+[p-auction-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-auction.yml
+[p-auction-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction.yml/badge.svg
+[p-auction-house-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-auction-house.yml
+[p-auction-house-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-auction-house.yml/badge.svg
+[p-metaplex-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-metaplex.yml
+[p-metaplex-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-metaplex.yml/badge.svg
+[p-nft-packs-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-nft-packs.yml
+[p-nft-packs-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-nft-packs.yml/badge.svg
+[p-gumdrop-yml]:https://github.com/metaplex/teamplex/actions/workflows/program-gumdrop.yml
+[p-gumdrop-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-gumdrop.yml/badge.svg
+[p-fixed-price-sale-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-fixed-price-sale.yml
+[p-fixed-price-sale-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/program-fixed-price-sale.yml/badge.svg
+
+<!-- SDK Badges  -->
+[sdk-candy-machine-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-candy-machine.yml
+[sdk-candy-machine-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-candy-machine.yml/badge.svg
+[sdk-token-vault-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-vault.yml
+[sdk-token-vault-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-vault.yml/badge.svg
+[sdk-token-entangler-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-entangler.yml
+[sdk-token-entangler-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-entangler.yml/badge.svg
+[sdk-token-metadata-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-metadata.yml
+[sdk-token-metadata-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-token-metadata.yml/badge.svg
+[sdk-auction-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml
+[sdk-auction-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction.yml/badge.svg
+[sdk-auction-house-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction-house.yml
+[sdk-auction-house-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-auction-house.yml/badge.svg
+[sdk-metaplex-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml
+[sdk-metaplex-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-metaplex.yml/badge.svg
+[sdk-gumdrop-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml
+[sdk-gumdrop-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml/badge.svg
+[sdk-fixed-price-sale-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml
+[sdk-fixed-price-sale-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml/badge.svg
+
+<!-- Integration Badges -->
+[i-token-vault-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-vault.yml/badge.svg
+[i-token-vault-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-vault.yml
+[i-fixed-price-sale-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml/badge.svg
+[i-fixed-price-sale-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml
+
+<!-- Crates -->
+[mpl-candy-machine-crate]:https://crates.io/crates/mpl-candy-machine
+[mpl-token-metadata-crate]:https://crates.io/crates/mpl-token-metadata
+[mpl-token-vault-crate]:https://crates.io/crates/mpl-token-vault
+[mpl-auction-house-crate]:https://crates.io/crates/mpl-auction-house
+[mpl-testing-utils-crate]:https://crates.io/crates/mpl-testing-utils
+[mpl-candy-machine-img]:https://img.shields.io/crates/v/mpl-candy-machine
+[mpl-token-metadata-img]:https://img.shields.io/crates/v/mpl-token-metadata
+[mpl-token-vault-img]:https://img.shields.io/crates/v/mpl-token-vault
+[mpl-auction-house-img]:https://img.shields.io/crates/v/mpl-auction-house
+[mpl-testing-utils-img]:https://img.shields.io/crates/v/mpl-testing-utils
+
+<!-- NPM Packages -->
+[mpl-candy-machine-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-candy-machine
+[mpl-token-metadata-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-token-metadata
+[mpl-core-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-core
+[mpl-auction-house-npm]:https://www.npmjs.com/package/@metaplex-foundation/mpl-auction-house
+[mpl-candy-machine-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-candy-machine
+[mpl-token-metadata-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata
+[mpl-core-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core
+[mpl-auction-house-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house
