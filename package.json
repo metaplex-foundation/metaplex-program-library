@@ -30,7 +30,6 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
-    "@metaplex-foundation/solita": "0.1.1",
     "@project-serum/anchor": "^0.19.0",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
@@ -40,8 +39,5 @@
     "eslint-plugin-prettier": "^4.0.0",
     "lerna": "^4.0.0",
     "prettier": "^2.4.1"
-  },
-  "resolutions": {
-    "@metaplex-foundation/solita": "portal:/Volumes/d/dev/mp/metaplex/metaplex-foundation/solita"
   }
 }

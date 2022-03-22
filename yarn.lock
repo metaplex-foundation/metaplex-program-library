@@ -972,7 +972,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/metaplex-program-library@workspace:."
   dependencies:
-    "@metaplex-foundation/solita": 0.1.1
     "@project-serum/anchor": ^0.19.0
     "@typescript-eslint/eslint-plugin": ^5.4.0
     "@typescript-eslint/parser": ^5.4.0
@@ -992,7 +991,7 @@ __metadata:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/mpl-core": ^0.0.5
-    "@metaplex-foundation/solita": ^0.1.0
+    "@metaplex-foundation/solita": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/tape": ^4.13.2
     bn.js: ^5.2.0
@@ -1076,7 +1075,7 @@ __metadata:
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/mpl-token-metadata": 1.1.0
-    "@metaplex-foundation/solita": ^0.1.0
+    "@metaplex-foundation/solita": ^0.2.0
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/debug": ^4.1.7
@@ -1097,7 +1096,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
-    "@metaplex-foundation/solita": ^0.1.0
+    "@metaplex-foundation/solita": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
@@ -1134,7 +1133,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
-    "@metaplex-foundation/solita": ^0.1.0
+    "@metaplex-foundation/solita": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
@@ -1174,7 +1173,7 @@ __metadata:
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/cusper": ^0.0.2
     "@metaplex-foundation/mpl-core": ^0.0.5
-    "@metaplex-foundation/solita": 0.1.0
+    "@metaplex-foundation/solita": ^0.2.0
     "@solana/spl-token": 0.1.8
     "@solana/web3.js": ^1.35.1
     "@types/bn.js": ^5.1.0
@@ -1212,9 +1211,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/solita@portal:/Volumes/d/dev/mp/metaplex/metaplex-foundation/solita::locator=%40metaplex-foundation%2Fmetaplex-program-library%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@metaplex-foundation/solita@portal:/Volumes/d/dev/mp/metaplex/metaplex-foundation/solita::locator=%40metaplex-foundation%2Fmetaplex-program-library%40workspace%3A."
+"@metaplex-foundation/solita@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@metaplex-foundation/solita@npm:0.2.0"
   dependencies:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
@@ -1225,8 +1224,9 @@ __metadata:
     prettier: ^2.5.1
     snake-case: ^3.0.4
     spok: ^1.4.3
+  checksum: a84d744e1a4f2c156d7fc39877d5608c966a8ca9bae4e0f89061302edca238a748e5e0e427c1ea06f0801fa67ff7900f6b385a25c6b1aa0df351bcd998d77fd9
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
