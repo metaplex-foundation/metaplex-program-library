@@ -32,7 +32,7 @@ fn assert_destination_ownership_validity(
     metadata: &Metadata,
     destination_info: &AccountInfo,
     destination: &Account,
-    store: &Store,
+    _store: &Store,
     creator_index: Option<u8>,
 ) -> ProgramResult {
     if let Some(creators) = &metadata.data.creators {
@@ -45,12 +45,7 @@ fn assert_destination_ownership_validity(
 
                 // Let's avoid importing the entire ATA library here just to get a helper and an ID.
                 // Assert destination is, in fact, an ATA.
-                assert_is_ata(
-                    destination_info,
-                    &creator.address,
-                    &store.token_program,
-                    &destination.mint,
-                )?;
+                assert_is_ata(destination_info, &creator.address, &destination.mint)?;
             } else {
                 return Err(MetaplexError::InvalidCreatorIndex.into());
             }
