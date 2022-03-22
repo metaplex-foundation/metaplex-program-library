@@ -36,6 +36,7 @@ use {
     std::{cell::RefMut, ops::Deref, str::FromStr},
 };
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
+// 10 minutes
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
@@ -93,6 +94,8 @@ pub mod candy_machine {
             let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
 
+            // Date passed in CPI to check if the token was created before candy machine go live date.
+            // Expire offset is 10 minutes since gatekeeper expires tokens after that long
             let min_go_live_date = if let Some(val) = &candy_machine.data.go_live_date {
                 if !candy_machine
                     .data
@@ -136,6 +139,7 @@ pub mod candy_machine {
                             }
                         },
                     )?,
+                    // If none, no need to verify go live date
                     None => ::solana_gateway::Gateway::verify_and_expire_token(
                         gateway_app.clone(),
                         gateway_token_info.clone(),
@@ -160,6 +164,7 @@ pub mod candy_machine {
                             }
                         },
                     )?,
+                    // If none, no need to verify go live date
                     None => ::solana_gateway::Gateway::verify_gateway_token_account_info(
                         gateway_token_info,
                         &payer.key(),
