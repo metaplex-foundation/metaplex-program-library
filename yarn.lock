@@ -1174,7 +1174,7 @@ __metadata:
     "@metaplex-foundation/cusper": ^0.0.2
     "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/solita": ^0.2.0
-    "@solana/spl-token": 0.1.8
+    "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/bn.js": ^5.1.0
     "@types/debug": ^4.1.7
@@ -1572,7 +1572,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/spl-token@npm:0.1.8, @solana/spl-token@npm:^0.1.8":
+"@solana/spl-token@npm:^0.1.8":
   version: 0.1.8
   resolution: "@solana/spl-token@npm:0.1.8"
   dependencies:
