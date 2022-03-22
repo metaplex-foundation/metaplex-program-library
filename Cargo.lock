@@ -2260,7 +2260,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-entangler"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anchor-lang 0.20.1",
  "anchor-spl 0.20.1",
