@@ -1,6 +1,5 @@
 pub mod utils;
 
-use solana_program::sysvar::{instructions::get_instruction_relative, SysvarId};
 use {
     crate::utils::{
         assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by,
@@ -31,6 +30,8 @@ use {
         },
         utils::{assert_derivation, create_or_allocate_account_raw},
     },
+    solana_gateway::state::GatewayTokenAccess,
+    solana_program::sysvar::{instructions::get_instruction_relative, SysvarId},
     spl_token::state::Mint,
     std::{cell::RefMut, ops::Deref, str::FromStr},
 };
@@ -90,17 +91,24 @@ pub mod candy_machine {
                 return Err(ErrorCode::GatewayTokenMissing.into());
             }
             let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
-            let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
-                ::solana_gateway::state::GatewayToken,
-            >(*gateway_token_info.data.borrow())?;
-            // stores the expire_time before the verification, since the verification
-            // will update the expire_time of the token and we won't be able to
-            // calculate the creation time
-            let expire_time = gateway_token
-                .expire_time
-                .ok_or(ErrorCode::GatewayTokenExpireTimeInvalid)?
-                as i64;
             remaining_accounts_counter += 1;
+
+            let min_go_live_date = if let Some(val) = &candy_machine.data.go_live_date {
+                if !candy_machine
+                    .data
+                    .whitelist_mint_settings
+                    .as_ref()
+                    .map(|wl| wl.presale)
+                    .unwrap_or(false)
+                {
+                    Some(val + EXPIRE_OFFSET)
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
             if gatekeeper.expire_on_use {
                 if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                     return Err(ErrorCode::GatewayAppMissing.into());
@@ -112,46 +120,53 @@ pub mod candy_machine {
                 }
                 let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
                 remaining_accounts_counter += 1;
-                ::solana_gateway::Gateway::verify_and_expire_token(
-                    gateway_app.clone(),
-                    gateway_token_info.clone(),
-                    payer.deref().clone(),
-                    &gatekeeper.gatekeeper_network,
-                    network_expire_feature.clone(),
-                )?;
-            } else {
-                ::solana_gateway::Gateway::verify_gateway_token_account_info(
-                    gateway_token_info,
-                    &payer.key(),
-                    &gatekeeper.gatekeeper_network,
-                    None,
-                )?;
-            }
-            // verifies that the gatway token was not created before the candy
-            // machine go_live_date (avoids pre-solving the captcha)
-            match candy_machine.data.go_live_date {
-                Some(val) => {
-                    if (expire_time - EXPIRE_OFFSET) < val {
-                        if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
-                            // when dealing with whitelist, the expire_time can be
-                            // before the go_live_date only if presale enabled
-                            if !ws.presale {
-                                msg!(
-                                    "Invalid gateway token: calculated creation time {} and go_live_date {}",
-                                    expire_time - EXPIRE_OFFSET,
-                                    val);
-                                return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
+                match min_go_live_date {
+                    Some(date) => ::solana_gateway::Gateway::verify_and_expire_token_with_eval(
+                        gateway_app.clone(),
+                        gateway_token_info.clone(),
+                        payer.deref().clone(),
+                        &gatekeeper.gatekeeper_network,
+                        network_expire_feature.clone(),
+                        |token| {
+                            if token.expire_time().map(|val| val < date).unwrap_or(false) {
+                                msg!("Gateway token was issued too early");
+                                Err(ErrorCode::GatewayTokenExpireTimeInvalid.into())
+                            } else {
+                                Ok(())
                             }
-                        } else {
-                            msg!(
-                                "Invalid gateway token: calculated creation time {} and go_live_date {}",
-                                expire_time - EXPIRE_OFFSET,
-                                val);
-                            return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
-                        }
-                    }
+                        },
+                    )?,
+                    None => ::solana_gateway::Gateway::verify_and_expire_token(
+                        gateway_app.clone(),
+                        gateway_token_info.clone(),
+                        payer.deref().clone(),
+                        &gatekeeper.gatekeeper_network,
+                        network_expire_feature.clone(),
+                    )?,
                 }
-                None => {}
+            } else {
+                match min_go_live_date {
+                    Some(date) => ::solana_gateway::Gateway::verify_gateway_token_with_eval(
+                        gateway_token_info,
+                        &payer.key(),
+                        &gatekeeper.gatekeeper_network,
+                        None,
+                        |token| {
+                            if token.expire_time().map(|val| val < date).unwrap_or(false) {
+                                msg!("Gateway token was issued too early");
+                                Err(ErrorCode::GatewayTokenExpireTimeInvalid.into())
+                            } else {
+                                Ok(())
+                            }
+                        },
+                    )?,
+                    None => ::solana_gateway::Gateway::verify_gateway_token_account_info(
+                        gateway_token_info,
+                        &payer.key(),
+                        &gatekeeper.gatekeeper_network,
+                        None,
+                    )?,
+                }
             }
         }
 
@@ -440,10 +455,7 @@ pub mod candy_machine {
 
         let discriminator = &previous_instruction.data[0..8];
         if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
-            msg!(
-                "Transaction had ix with data {:?}",
-                discriminator
-            );
+            msg!("Transaction had ix with data {:?}", discriminator);
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
 
@@ -452,11 +464,15 @@ pub mod candy_machine {
         let mint_ix_metadata = mint_ix_accounts[4].pubkey;
         let signer = mint_ix_accounts[6].pubkey;
         let candy_key = ctx.accounts.candy_machine.key();
-        let metadata =  ctx.accounts.metadata.key();
+        let metadata = ctx.accounts.metadata.key();
         let payer = ctx.accounts.payer.key();
 
         if &signer != &payer {
-            msg!("Signer with pubkey {} does not match the mint ix Signer with pubkey {}", mint_ix_cm, candy_key);
+            msg!(
+                "Signer with pubkey {} does not match the mint ix Signer with pubkey {}",
+                mint_ix_cm,
+                candy_key
+            );
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
         if &mint_ix_cm != &candy_key {
@@ -478,7 +494,11 @@ pub mod candy_machine {
             return Err(ErrorCode::MismatchedCollectionMint.into());
         }
         let seeds = [b"collection".as_ref(), candy_key.as_ref()];
-        let bump = assert_derivation(&candy_machine::id(), &collection_pda.to_account_info(), &seeds)?;
+        let bump = assert_derivation(
+            &candy_machine::id(),
+            &collection_pda.to_account_info(),
+            &seeds,
+        )?;
         let signer_seeds = [b"collection".as_ref(), candy_key.as_ref(), &[bump]];
         let set_collection_infos = vec![
             ctx.accounts.metadata.to_account_info(),

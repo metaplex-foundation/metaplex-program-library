@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "mpl-candy-machine"
-version = "3.1.3"
+version = "3.1.4"
 description = "NFT Candy Machine v2: programmatic and trustless NFT drops."
 authors = ["Jordan Prince", "Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
@@ -28,4 +28,4 @@ spl-associated-token-account = { version = "1.0.3", features = [
 ] }
 anchor-spl = "=0.21.0"
 solana-program = "1.9.6"
-solana-gateway = "0.1.1"
+solana-gateway = { git = "https://github.com/identity-com/on-chain-identity-gateway.git", rev = "f58a874ce1e435063e091392dfe4b4874f5a71cb" }
