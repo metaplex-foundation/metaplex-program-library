@@ -1,7 +1,7 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
-use anchor_lang::{context, prelude::*, AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_lang::{prelude::*, AccountDeserialize, InstructionData, ToAccountMetas};
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
 use solana_sdk::signer::Signer;

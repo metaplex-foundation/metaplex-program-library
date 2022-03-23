@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 use anchor_lang::{prelude::*, AccountDeserialize, InstructionData, ToAccountMetas};
 
 use anchor_client::solana_sdk::sysvar;
@@ -15,7 +15,6 @@ use solana_sdk::{
     transaction::Transaction,
 };
 
-use mpl_auction_house::ErrorCode;
 use spl_associated_token_account::get_associated_token_address;
 use spl_token;
 
