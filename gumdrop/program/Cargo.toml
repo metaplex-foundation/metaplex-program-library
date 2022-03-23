@@ -5,6 +5,7 @@ description = "A Solana program for distributing tokens and NFTs according to a 
 authors = [ "Lawrence Wu <larry.wu@solana.com>" ]
 keywords = ["solana"]
 edition = "2018"
+license = "AGPL-3.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
