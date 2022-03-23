@@ -5,10 +5,11 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { Key, keyBeet } from '../types/Key';
+import { ReservationV1, reservationV1Beet } from '../types/ReservationV1';
 
 /**
  * Arguments used to create {@link ReservationListV1}
@@ -16,10 +17,10 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type ReservationListV1Args = {
-  key: definedTypes.Key;
+  key: Key;
   masterEdition: web3.PublicKey;
   supplySnapshot: beet.COption<beet.bignum>;
-  reservations: definedTypes.ReservationV1[];
+  reservations: ReservationV1[];
 };
 /**
  * Holds the data for the {@link ReservationListV1} Account and provides de/serialization
@@ -30,10 +31,10 @@ export type ReservationListV1Args = {
  */
 export class ReservationListV1 implements ReservationListV1Args {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly masterEdition: web3.PublicKey,
     readonly supplySnapshot: beet.COption<beet.bignum>,
-    readonly reservations: definedTypes.ReservationV1[],
+    readonly reservations: ReservationV1[],
   ) {}
 
   /**
@@ -129,7 +130,7 @@ export class ReservationListV1 implements ReservationListV1Args {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       masterEdition: this.masterEdition.toBase58(),
       supplySnapshot: this.supplySnapshot,
       reservations: this.reservations,
@@ -146,10 +147,10 @@ export const reservationListV1Beet = new beet.FixableBeetStruct<
   ReservationListV1Args
 >(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['masterEdition', beetSolana.publicKey],
     ['supplySnapshot', beet.coption(beet.u64)],
-    ['reservations', beet.array(definedTypes.reservationV1Beet)],
+    ['reservations', beet.array(reservationV1Beet)],
   ],
   ReservationListV1.fromArgs,
   'ReservationListV1',

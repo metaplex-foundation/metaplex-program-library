@@ -5,10 +5,14 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { Key, keyBeet } from '../types/Key';
+import { Data, dataBeet } from '../types/Data';
+import { TokenStandard, tokenStandardBeet } from '../types/TokenStandard';
+import { Collection, collectionBeet } from '../types/Collection';
+import { Uses, usesBeet } from '../types/Uses';
 
 /**
  * Arguments used to create {@link Metadata}
@@ -16,16 +20,16 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type MetadataArgs = {
-  key: definedTypes.Key;
+  key: Key;
   updateAuthority: web3.PublicKey;
   mint: web3.PublicKey;
-  data: definedTypes.Data;
+  data: Data;
   primarySaleHappened: boolean;
   isMutable: boolean;
   editionNonce: beet.COption<number>;
-  tokenStandard: beet.COption<definedTypes.TokenStandard>;
-  collection: beet.COption<definedTypes.Collection>;
-  uses: beet.COption<definedTypes.Uses>;
+  tokenStandard: beet.COption<TokenStandard>;
+  collection: beet.COption<Collection>;
+  uses: beet.COption<Uses>;
 };
 /**
  * Holds the data for the {@link Metadata} Account and provides de/serialization
@@ -36,16 +40,16 @@ export type MetadataArgs = {
  */
 export class Metadata implements MetadataArgs {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly updateAuthority: web3.PublicKey,
     readonly mint: web3.PublicKey,
-    readonly data: definedTypes.Data,
+    readonly data: Data,
     readonly primarySaleHappened: boolean,
     readonly isMutable: boolean,
     readonly editionNonce: beet.COption<number>,
-    readonly tokenStandard: beet.COption<definedTypes.TokenStandard>,
-    readonly collection: beet.COption<definedTypes.Collection>,
-    readonly uses: beet.COption<definedTypes.Uses>,
+    readonly tokenStandard: beet.COption<TokenStandard>,
+    readonly collection: beet.COption<Collection>,
+    readonly uses: beet.COption<Uses>,
   ) {}
 
   /**
@@ -141,7 +145,7 @@ export class Metadata implements MetadataArgs {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       updateAuthority: this.updateAuthority.toBase58(),
       mint: this.mint.toBase58(),
       data: this.data,
@@ -161,16 +165,16 @@ export class Metadata implements MetadataArgs {
  */
 export const metadataBeet = new beet.FixableBeetStruct<Metadata, MetadataArgs>(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['updateAuthority', beetSolana.publicKey],
     ['mint', beetSolana.publicKey],
-    ['data', definedTypes.dataBeet],
+    ['data', dataBeet],
     ['primarySaleHappened', beet.bool],
     ['isMutable', beet.bool],
     ['editionNonce', beet.coption(beet.u8)],
-    ['tokenStandard', beet.coption(definedTypes.tokenStandardBeet)],
-    ['collection', beet.coption(definedTypes.collectionBeet)],
-    ['uses', beet.coption(definedTypes.usesBeet)],
+    ['tokenStandard', beet.coption(tokenStandardBeet)],
+    ['collection', beet.coption(collectionBeet)],
+    ['uses', beet.coption(usesBeet)],
   ],
   Metadata.fromArgs,
   'Metadata',

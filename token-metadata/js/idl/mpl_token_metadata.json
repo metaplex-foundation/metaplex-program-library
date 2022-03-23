@@ -282,7 +282,8 @@
           "name": "reservationList",
           "isMut": true,
           "isSigner": false,
-          "desc": "(Optional) Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list."
+          "desc": "Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list.",
+          "optional": true
         }
       ],
       "args": [],
@@ -1165,13 +1166,15 @@
           "name": "useAuthorityRecord",
           "isMut": true,
           "isSigner": false,
-          "desc": "(Optional) Use Authority Record PDA If present the program Assumes a delegated use authority"
+          "desc": "Use Authority Record PDA If present the program Assumes a delegated use authority",
+          "optional": true
         },
         {
           "name": "burner",
           "isMut": false,
           "isSigner": false,
-          "desc": "(Optional) Program As Signer (Burner)"
+          "desc": "Program As Signer (Burner)",
+          "optional": true
         }
       ],
       "args": [
@@ -1371,7 +1374,8 @@
           "name": "collectionAuthorityRecord",
           "isMut": false,
           "isSigner": false,
-          "desc": "(Optional) Collection Authority Record PDA"
+          "desc": "Collection Authority Record PDA",
+          "optional": true
         }
       ],
       "args": [],
@@ -1521,7 +1525,8 @@
           "name": "collectionAuthorityRecord",
           "isMut": false,
           "isSigner": false,
-          "desc": "(Optional) Collection Authority Record PDA"
+          "desc": "Collection Authority Record PDA",
+          "optional": true
         }
       ],
       "args": [],

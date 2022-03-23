@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link Edition}
@@ -16,7 +16,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type EditionArgs = {
-  key: definedTypes.Key;
+  key: Key;
   parent: web3.PublicKey;
   edition: beet.bignum;
 };
@@ -29,7 +29,7 @@ export type EditionArgs = {
  */
 export class Edition implements EditionArgs {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly parent: web3.PublicKey,
     readonly edition: beet.bignum,
   ) {}
@@ -117,7 +117,7 @@ export class Edition implements EditionArgs {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       parent: this.parent.toBase58(),
       edition: this.edition,
     };
@@ -130,7 +130,7 @@ export class Edition implements EditionArgs {
  */
 export const editionBeet = new beet.BeetStruct<Edition, EditionArgs>(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['parent', beetSolana.publicKey],
     ['edition', beet.u64],
   ],

@@ -2322,18 +2322,18 @@ dependencies = [
 
 [[package]]
 name = "shank"
-version = "0.0.0"
+version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ca46ffd371862f5eb24546958882c77b1326e22c8630a324a4df00e11b233ce"
+checksum = "241e2bc30cdc50633ec58dafea6841a3764f5efca9dc17c9604d9e4c45288167"
 dependencies = [
  "shank_macro",
 ]
 
 [[package]]
 name = "shank_macro"
-version = "0.0.0"
+version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c348d9feb9e17132ffb54f0625e1ebac575108879d036809fef86edea050dd1"
+checksum = "4860f0c3bf7db32960c5e1d75166782b0b096a2e04e2580001e2e9993a7060ef"
 dependencies = [
  "proc-macro2 1.0.36",
  "quote 1.0.15",
@@ -2343,9 +2343,9 @@ dependencies = [
 
 [[package]]
 name = "shank_macro_impl"
-version = "0.0.0"
+version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d40b580c5b227fe9962b87649898289afaa1582470a143d43c48ac3d587ca404"
+checksum = "3c2dae9df9e062c7bbb482667f75ffcec1fb435d55d2e9b6454d32fc1612daa0"
 dependencies = [
  "anyhow",
  "proc-macro2 1.0.36",

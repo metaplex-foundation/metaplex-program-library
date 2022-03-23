@@ -24,7 +24,7 @@ const UnverifyCollectionStruct = new beet.BeetArgsStruct<{
  * @property [] collectionMint Mint of the Collection
  * @property [] collection Metadata Account of the Collection
  * @property [] collectionMasterEditionAccount MasterEdition2 Account of the Collection Token
- * @property [] collectionAuthorityRecord (Optional) Collection Authority Record PDA
+ * @property [] collectionAuthorityRecord (optional) Collection Authority Record PDA
  * @category Instructions
  * @category UnverifyCollection
  * @category generated
@@ -35,7 +35,7 @@ export type UnverifyCollectionInstructionAccounts = {
   collectionMint: web3.PublicKey;
   collection: web3.PublicKey;
   collectionMasterEditionAccount: web3.PublicKey;
-  collectionAuthorityRecord: web3.PublicKey;
+  collectionAuthorityRecord?: web3.PublicKey;
 };
 
 const unverifyCollectionInstructionDiscriminator = 22;
@@ -90,12 +90,15 @@ export function createUnverifyCollectionInstruction(
       isWritable: false,
       isSigner: false,
     },
-    {
+  ];
+
+  if (collectionAuthorityRecord != null) {
+    keys.push({
       pubkey: collectionAuthorityRecord,
       isWritable: false,
       isSigner: false,
-    },
-  ];
+    });
+  }
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),

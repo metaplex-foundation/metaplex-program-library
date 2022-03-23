@@ -6,7 +6,7 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import { useMethodBeet, UseMethod } from '../types/UseMethod';
+import { UseMethod, useMethodBeet } from './UseMethod';
 export type Uses = {
   useMethod: UseMethod;
   remaining: beet.bignum;

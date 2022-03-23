@@ -12,7 +12,7 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
+    "api:gen": "node scripts/api-gen-ts.js && yarn fix:prettier && yarn fix:lint",
     "test": "echo 'Not testing generated code, please run program tests instead'",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
@@ -48,8 +48,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "0.1.0",
-    "@solana/spl-token": "0.1.8",
+    "@metaplex-foundation/solita": "^0.2.0",
     "@types/bn.js": "^5.1.0",
     "@types/debug": "^4.1.7",
     "eslint": "^8.3.0",

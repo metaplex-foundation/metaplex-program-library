@@ -35,7 +35,7 @@ const DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenStruct = new beet
  * @property [**signer**] payer payer
  * @property [] masterUpdateAuthority update authority info for new metadata account
  * @property [] masterMetadata Master record metadata account
- * @property [_writable_] reservationList (Optional) Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list.
+ * @property [_writable_] reservationList (optional) Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list.
  * @category Instructions
  * @category DeprecatedMintNewEditionFromMasterEditionViaPrintingToken
  * @category generated
@@ -53,7 +53,7 @@ export type DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstruction
   payer: web3.PublicKey;
   masterUpdateAuthority: web3.PublicKey;
   masterMetadata: web3.PublicKey;
-  reservationList: web3.PublicKey;
+  reservationList?: web3.PublicKey;
 };
 
 const deprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructionDiscriminator = 3;
@@ -166,12 +166,15 @@ export function createDeprecatedMintNewEditionFromMasterEditionViaPrintingTokenI
       isWritable: false,
       isSigner: false,
     },
-    {
+  ];
+
+  if (reservationList != null) {
+    keys.push({
       pubkey: reservationList,
       isWritable: true,
       isSigner: false,
-    },
-  ];
+    });
+  }
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
