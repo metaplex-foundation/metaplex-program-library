@@ -183,10 +183,6 @@ pub fn assert_at_least_one_creator_matches_or_store_public_and_all_verified(
             if key == *whitelisted_creator_info.key {
                 found = true;
             }
-
-            if !creator.verified {
-                return Err(MetaplexError::CreatorHasNotVerifiedMetadata.into());
-            }
         }
 
         if found {
