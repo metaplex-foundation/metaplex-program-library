@@ -13,6 +13,7 @@ use mpl_token_metadata::state::Metadata;
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account};
 use std::{convert::TryInto, slice::Iter};
+
 pub fn assert_is_ata(
     ata: &AccountInfo,
     wallet: &Pubkey,
@@ -353,13 +354,12 @@ pub fn get_mint_details(account_info: &AccountInfo) -> Result<(u64, u8), Program
 
 #[cfg(test)]
 mod tests {
+    use crate::utils::get_mint_details;
     use anchor_lang::{
         prelude::{AccountInfo, Pubkey},
         solana_program::{program_option::COption, program_pack::Pack},
     };
-    use spl_token::{state::Mint, amount_to_ui_amount};
-
-    use crate::utils::get_mint_details;
+    use spl_token::state::Mint;
 
     #[test]
     fn get_mint_details_smoke_test() {

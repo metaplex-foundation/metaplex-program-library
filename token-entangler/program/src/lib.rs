@@ -148,7 +148,7 @@ pub mod token_entangler {
                 &token_b_escrow.key(),
                 &transfer_authority.key(),
                 &[],
-                1,
+                mint_b_supply,
             )?,
             &[
                 token_b.to_account_info(),
@@ -180,6 +180,7 @@ pub mod token_entangler {
         let payment_account = &ctx.accounts.payment_account;
         let payment_transfer_authority = &ctx.accounts.payment_transfer_authority;
         let token = &ctx.accounts.token;
+        let token_mint = &ctx.accounts.token_mint;
         let replacement_token_metadata = &ctx.accounts.replacement_token_metadata;
         let replacement_token = &ctx.accounts.replacement_token;
         let replacement_token_mint = &ctx.accounts.replacement_token_mint;
@@ -192,7 +193,9 @@ pub mod token_entangler {
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
 
-        if token.amount != 1 {
+        require!(token.mint == token_mint.key(), ErrorCode::InvalidMint);
+        let (token_mint_supply, _) = get_mint_details(token_mint)?;
+        if token.amount != token_mint_supply {
             return Err(ErrorCode::InvalidTokenAmount.into());
         }
 
@@ -250,7 +253,7 @@ pub mod token_entangler {
                 &swap_from_escrow.key(),
                 &transfer_authority.key(),
                 &[],
-                1,
+                token_mint_supply,
             )?,
             &[
                 token.to_account_info(),
@@ -260,6 +263,7 @@ pub mod token_entangler {
             ],
         )?;
 
+        let (replacement_token_mint_supply, _) = get_mint_details(replacement_token_mint)?;
         invoke_signed(
             &spl_token::instruction::transfer(
                 token_program.key,
@@ -267,7 +271,7 @@ pub mod token_entangler {
                 &replacement_token.key(),
                 &entangled_pair.key(),
                 &[],
-                1,
+                replacement_token_mint_supply,
             )?,
             &[
                 swap_to_escrow.to_account_info(),
@@ -350,6 +354,8 @@ pub struct Swap<'info> {
     payment_transfer_authority: UncheckedAccount<'info>,
     #[account(mut)]
     token: Account<'info, TokenAccount>,
+    /// Set to unchecked to avoid stack size limits
+    token_mint: UncheckedAccount<'info>,
     replacement_token_metadata: UncheckedAccount<'info>,
     /// Set to unchecked to avoid stack size limits
     replacement_token_mint: UncheckedAccount<'info>,
