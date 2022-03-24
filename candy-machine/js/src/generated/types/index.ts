@@ -3,6 +3,7 @@ export * from './ConfigLine';
 export * from './Creator';
 export * from './EndSettingType';
 export * from './EndSettings';
+export * from './ErrorCode';
 export * from './GatekeeperConfig';
 export * from './HiddenSettings';
 export * from './WhitelistMintMode';

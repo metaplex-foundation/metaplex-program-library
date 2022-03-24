@@ -38,12 +38,12 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@metaplex-foundation/beet": "^0.0.8",
-    "@metaplex-foundation/beet-solana": "^0.0.6",
+    "@metaplex-foundation/beet": "^0.1.0",
+    "@metaplex-foundation/beet-solana": "^0.1.1",
     "@solana/web3.js": "^1.35.1"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.1.0",
+    "@metaplex-foundation/solita": "^0.2.0",
     "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
     "rimraf": "^3.0.2",
