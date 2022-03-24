@@ -1,6 +1,7 @@
 use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
 use clap::crate_version;
 use console::style;
+use indicatif::{ProgressBar, ProgressStyle};
 use std::{fs::File, sync::Arc};
 
 use crate::cache::Cache;
@@ -23,6 +24,30 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
 
     let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
     let program = client.program(pid);
+
+    // (1) Setting up connection
+
+    println!(
+        "{} {}Initializing connection",
+        style("[1/6]").bold().dim(),
+        COMPUTER_EMOJI
+    );
+    let pb = ProgressBar::new_spinner();
+    pb.enable_steady_tick(120);
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .tick_strings(&[
+                "▹▹▹▹▹",
+                "▸▹▹▹▹",
+                "▹▸▹▹▹",
+                "▹▹▸▹▹",
+                "▹▹▹▸▹",
+                "▹▹▹▹▸",
+                "▪▪▪▪▪",
+            ])
+            .template("{spinner:.dim} {msg}"),
+    );
+    pb.set_message("Connecting...");
 
     // Get keypair as base58 string for Bundlr.
     let keypair = bs58::encode(sugar_config.keypair.to_bytes()).into_string();
@@ -58,12 +83,14 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let bundlr_address = get_bundlr_solana_address(&http_client, bundlr_node).await?;
     let bundlr_pubkey = Pubkey::from_str(&bundlr_address)?;
 
-    // (1) Funds the bundlr wallet for media upload
+    pb.finish_with_message("Connected");
+
+    // (2) Funds the bundlr wallet for media upload
 
     println!(
-        "{} {}Funding Bundlr wallet to upload media",
-        style("[1/5]").bold().dim(),
-        CARD_EMOJI
+        "\n{} {}Funding Bundlr wallet to upload media",
+        style("[2/6]").bold().dim(),
+        PAYMENT_EMOJI
     );
 
     let _response = fund_bundlr_address(
@@ -91,11 +118,11 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     let media_extension_glob = &format!("*.{extension}");
     let metadata_extension_glob = "*.json".to_string();
 
-    // (2) Retrieves the media data and uploads to bundlr
+    // (3) Retrieves the media data and uploads to bundlr
 
     println!(
         "\n{} {}Uploading media to Bundlr",
-        style("[2/5]").bold().dim(),
+        style("[3/6]").bold().dim(),
         UPLOAD_EMOJI
     );
 
@@ -117,18 +144,18 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
         tags: vec![sugar_tag.clone(), media_tag],
         data_type: DataType::Media,
     };
-    // Uploads media files.
+    // uploads media files
     upload_data(upload_media_args, &mut asset_pairs).await?;
 
-    // (3) Funds Bundlr wallet for metadata upload
+    // (4) Funds Bundlr wallet for metadata upload
 
     println!(
         "\n{} {}Funding Bundlr wallet to upload metadata",
-        style("[3/5]").bold().dim(),
-        CARD_EMOJI
+        style("[4/6]").bold().dim(),
+        PAYMENT_EMOJI
     );
 
-    // Updates media links in metadata files.
+    // updates media links in metadata files
     insert_media_links(&asset_pairs)?;
 
     let total_metadata_size = get_data_size(Path::new(&args.assets_dir), "json")?;
@@ -145,11 +172,11 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
     )
     .await?;
 
-    // (4) Uploads metadata to bundlr
+    // (5) Uploads metadata to bundlr
 
     println!(
         "\n{} {}Uploading metadata to Bundlr",
-        style("[4/5]").bold().dim(),
+        style("[5/6]").bold().dim(),
         UPLOAD_EMOJI
     );
 
@@ -160,14 +187,14 @@ pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
         tags: vec![sugar_tag, metadata_tag],
         data_type: DataType::Metadata,
     };
-    // Uploads metadata files.
+    // uploads metadata files
     upload_data(upload_metadata_args, &mut asset_pairs).await?;
 
-    // (5) Creates/updates cache file
+    // (6) Creates/updates cache file
 
     println!(
-        "\n{} {}Preparing cache file",
-        style("[5/5]").bold().dim(),
+        "\n{} {}Writing cache file",
+        style("[6/6]").bold().dim(),
         PAPER_EMOJI
     );
 

@@ -2,7 +2,7 @@ use anchor_client::{
     solana_sdk::{
         instruction::Instruction,
         pubkey::Pubkey,
-        signature::{Keypair, Signer},
+        signature::{Keypair, Signature, Signer},
         system_instruction, system_program, sysvar,
     },
     Client,
@@ -93,14 +93,23 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
             candy_machine_state.data.items_available - candy_machine_state.items_redeemed
         ));
 
-        mint(
+        let result = match mint(
             Arc::clone(&client),
             candy_machine_id,
             Arc::clone(&candy_machine_state),
-        )
-        .ok();
+        ) {
+            Ok(signature) => format!("{} {}", style("Signature:").bold(), signature),
+            Err(err) => {
+                error!("{:?}", err);
+                format!(
+                    "{} {:?}",
+                    style("Could not confirm transaction:").red().bold(),
+                    err
+                )
+            }
+        };
 
-        pb.finish_and_clear();
+        pb.finish_with_message(result);
     } else {
         let pb = ProgressBar::new(number);
 
@@ -125,7 +134,7 @@ pub fn mint(
     client: Arc<Client>,
     candy_machine_id: Pubkey,
     candy_machine_state: Arc<CandyMachine>,
-) -> Result<()> {
+) -> Result<Signature> {
     let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
 
     let program = client.program(pid);
@@ -340,5 +349,6 @@ pub fn mint(
 
     info!("Minted! TxId: {}", sig);
     info!("Cleanup TxId: {}", sig2);
-    Ok(())
+
+    Ok(sig)
 }
