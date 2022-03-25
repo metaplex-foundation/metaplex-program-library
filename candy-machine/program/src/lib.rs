@@ -30,7 +30,7 @@ use {
         },
         utils::{assert_derivation, create_or_allocate_account_raw},
     },
-    solana_gateway::state::GatewayTokenAccess,
+    solana_gateway::state::{GatewayTokenAccess, InPlaceGatewayToken},
     solana_program::sysvar::{instructions::get_instruction_relative, SysvarId},
     spl_token::state::Mint,
     std::{cell::RefMut, ops::Deref, str::FromStr},
@@ -93,23 +93,20 @@ pub mod candy_machine {
             }
             let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-
-            // Date passed in CPI to check if the token was created before candy machine go live date.
-            // Expire offset is 10 minutes since gatekeeper expires tokens after that long
-            let min_go_live_date = if let Some(val) = &candy_machine.data.go_live_date {
-                if !candy_machine
-                    .data
-                    .whitelist_mint_settings
-                    .as_ref()
-                    .map(|wl| wl.presale)
-                    .unwrap_or(false)
-                {
-                    Some(val + EXPIRE_OFFSET)
-                } else {
-                    None
+            
+            // Eval function used in the gateway CPI
+            let eval_function = |token: &InPlaceGatewayToken<&[u8]>| match (&candy_machine.data, token.expire_time()) {
+                (
+                    CandyMachineData {
+                        go_live_date: Some(go_live_date),
+                        whitelist_mint_settings: Some(WhitelistMintSettings { presale, .. }),
+                        ..
+                    },
+                    Some(expire_time),
+                ) if !*presale && expire_time < go_live_date + EXPIRE_OFFSET => {
+                    Err(ErrorCode::GatewayTokenExpireTimeInvalid.into())
                 }
-            } else {
-                None
+                _ => Ok(()),
             };
 
             if gatekeeper.expire_on_use {
@@ -123,55 +120,22 @@ pub mod candy_machine {
                 }
                 let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
                 remaining_accounts_counter += 1;
-                match min_go_live_date {
-                    Some(date) => ::solana_gateway::Gateway::verify_and_expire_token_with_eval(
-                        gateway_app.clone(),
-                        gateway_token_info.clone(),
-                        payer.deref().clone(),
-                        &gatekeeper.gatekeeper_network,
-                        network_expire_feature.clone(),
-                        |token| {
-                            if token.expire_time().map(|val| val < date).unwrap_or(false) {
-                                msg!("Gateway token was issued too early");
-                                Err(ErrorCode::GatewayTokenExpireTimeInvalid.into())
-                            } else {
-                                Ok(())
-                            }
-                        },
-                    )?,
-                    // If none, no need to verify go live date
-                    None => ::solana_gateway::Gateway::verify_and_expire_token(
-                        gateway_app.clone(),
-                        gateway_token_info.clone(),
-                        payer.deref().clone(),
-                        &gatekeeper.gatekeeper_network,
-                        network_expire_feature.clone(),
-                    )?,
-                }
+                ::solana_gateway::Gateway::verify_and_expire_token_with_eval(
+                    gateway_app.clone(),
+                    gateway_token_info.clone(),
+                    payer.deref().clone(),
+                    &gatekeeper.gatekeeper_network,
+                    network_expire_feature.clone(),
+                    eval_function,
+                )?;
             } else {
-                match min_go_live_date {
-                    Some(date) => ::solana_gateway::Gateway::verify_gateway_token_with_eval(
-                        gateway_token_info,
-                        &payer.key(),
-                        &gatekeeper.gatekeeper_network,
-                        None,
-                        |token| {
-                            if token.expire_time().map(|val| val < date).unwrap_or(false) {
-                                msg!("Gateway token was issued too early");
-                                Err(ErrorCode::GatewayTokenExpireTimeInvalid.into())
-                            } else {
-                                Ok(())
-                            }
-                        },
-                    )?,
-                    // If none, no need to verify go live date
-                    None => ::solana_gateway::Gateway::verify_gateway_token_account_info(
-                        gateway_token_info,
-                        &payer.key(),
-                        &gatekeeper.gatekeeper_network,
-                        None,
-                    )?,
-                }
+                ::solana_gateway::Gateway::verify_gateway_token_with_eval(
+                    gateway_token_info,
+                    &payer.key(),
+                    &gatekeeper.gatekeeper_network,
+                    None,
+                    eval_function,
+                )?;
             }
         }
 
