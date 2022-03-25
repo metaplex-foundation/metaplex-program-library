@@ -1,6 +1,6 @@
 use crate::{
     error::ErrorCode,
-    state::{MarketState, SellingResourceState},
+    state::{GatingConfig, MarketState, SellingResourceState},
     utils::*,
     CreateMarket,
 };
@@ -18,6 +18,7 @@ impl<'info> CreateMarket<'info> {
         pieces_in_one_wallet: Option<u64>,
         start_date: u64,
         end_date: Option<u64>,
+        gating_config: Option<GatingConfig>,
     ) -> Result<()> {
         let market = &mut self.market;
         let store = &self.store;
@@ -94,6 +95,7 @@ impl<'info> CreateMarket<'info> {
         market.start_date = start_date;
         market.end_date = end_date;
         market.state = MarketState::Created;
+        market.gatekeeper = gating_config;
         selling_resource.state = SellingResourceState::InUse;
 
         Ok(())

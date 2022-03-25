@@ -1,19 +1,24 @@
 use crate::{
     error::ErrorCode,
-    state::{MarketState, SellingResourceState},
+    state::{GatingConfig, MarketState, SellingResourceState},
     utils::*,
     Buy,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::{
-    solana_program::{program::invoke, system_instruction},
+    solana_program::{program::invoke, program_pack::Pack, system_instruction},
     System,
 };
 use anchor_spl::token;
 use mpl_token_metadata::utils::get_supply_off_master_edition;
 
 impl<'info> Buy<'info> {
-    pub fn process(&mut self, _trade_history_bump: u8, vault_owner_bump: u8) -> Result<()> {
+    pub fn process(
+        &mut self,
+        _trade_history_bump: u8,
+        vault_owner_bump: u8,
+        remaining_accounts: &[AccountInfo<'info>],
+    ) -> Result<()> {
         let market = &mut self.market;
         let selling_resource = &mut self.selling_resource;
         let user_token_account = Box::new(&self.user_token_account);
@@ -77,6 +82,8 @@ impl<'info> Buy<'info> {
         if market.state != MarketState::Active {
             market.state = MarketState::Active;
         }
+
+        Self::verify_gating_token(&market.gatekeeper, &user_wallet, remaining_accounts)?;
 
         // Buy new edition
         let is_native = market.treasury_mint == System::id();
@@ -166,5 +173,90 @@ impl<'info> Buy<'info> {
         }
 
         Ok(())
+    }
+
+    fn verify_gating_token(
+        gate: &Option<GatingConfig>,
+        user_wallet: &AccountInfo<'info>,
+        remaining_accounts: &[AccountInfo<'info>],
+    ) -> Result<()> {
+        if let Some(gatekeeper) = gate {
+            if remaining_accounts.len() != 3 {
+                return Err(ErrorCode::GatingTokenMissing.into());
+            }
+
+            let user_token_acc = &remaining_accounts[0];
+            let token_acc_mint = &remaining_accounts[1];
+
+            if user_token_acc.owner != &spl_token::id() {
+                return Err(ErrorCode::InvalidOwnerForGatingToken.into());
+            }
+            let user_token_acc_data = spl_token::state::Account::unpack_from_slice(
+                user_token_acc.try_borrow_data()?.as_ref(),
+            )?;
+
+            let metadata = &remaining_accounts[2];
+            let data = metadata.try_borrow_data()?;
+            let metadata_data = data.as_ref();
+
+            let token_metadata_program_key = mpl_token_metadata::id();
+            let metadata_seeds = &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                token_metadata_program_key.as_ref(),
+                user_token_acc_data.mint.as_ref(),
+            ];
+            let (metadata_key, _metadata_bump_seed) =
+                Pubkey::find_program_address(metadata_seeds, &mpl_token_metadata::id());
+
+            if metadata.key() != metadata_key {
+                return Err(ErrorCode::WrongGatingMetadataAccount.into());
+            }
+
+            if user_token_acc_data.owner != user_wallet.key() {
+                return Err(ErrorCode::WrongOwnerInTokenGatingAcc.into());
+            }
+
+            // extract data from metadata data slices to save computation units
+            let is_collection_present = metadata_data[328];
+
+            let is_collection_verified = metadata_data[329];
+
+            let collection_key = Pubkey::new(&metadata_data[330..362]);
+
+            // check Option<T> field
+            if is_collection_present != 1 {
+                return Err(ErrorCode::WrongGatingMetadataAccount.into());
+            }
+
+            // check Option<T> field
+            if is_collection_verified != 1 {
+                return Err(ErrorCode::WrongGatingMetadataAccount.into());
+            }
+
+            if collection_key != gatekeeper.collection {
+                return Err(ErrorCode::WrongGatingMetadataAccount.into());
+            }
+
+            if gatekeeper.expire_on_use {
+                invoke(
+                    &spl_token::instruction::burn(
+                        &spl_token::id(),
+                        &user_token_acc.key(),
+                        &token_acc_mint.key(),
+                        &user_wallet.key(),
+                        &[&user_wallet.key()],
+                        1,
+                    )?,
+                    &[
+                        user_token_acc.clone(),
+                        token_acc_mint.clone(),
+                        user_wallet.clone(),
+                    ],
+                )?;
+            }
+            Ok(())
+        } else {
+            Ok(())
+        }
     }
 }

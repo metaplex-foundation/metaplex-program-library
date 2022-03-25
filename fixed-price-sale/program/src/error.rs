@@ -109,7 +109,19 @@ pub enum ErrorCode {
     // 6034
     #[msg("Market owner doesn't receive shares at primary sale")]
     MarketOwnerDoesntHaveShares,
-    // 6034
+    // 6035
     #[msg("PrimaryMetadataCreatorsNotProvided")]
     PrimaryMetadataCreatorsNotProvided,
+    // 6036
+    #[msg("Gating token is missing")]
+    GatingTokenMissing,
+    // 6037
+    #[msg("Invalid program owner for the gating token account")]
+    InvalidOwnerForGatingToken,
+    // 6038
+    #[msg("Wrong Metadata account for the gating token")]
+    WrongGatingMetadataAccount,
+    // 6039
+    #[msg("Wrong owner in token gating account")]
+    WrongOwnerInTokenGatingAcc,
 }
