@@ -93,9 +93,12 @@ pub mod candy_machine {
             }
             let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-            
+
             // Eval function used in the gateway CPI
-            let eval_function = |token: &InPlaceGatewayToken<&[u8]>| match (&candy_machine.data, token.expire_time()) {
+            let eval_function = |token: &InPlaceGatewayToken<&[u8]>| match (
+                &candy_machine.data,
+                token.expire_time(),
+            ) {
                 (
                     CandyMachineData {
                         go_live_date: Some(go_live_date),
