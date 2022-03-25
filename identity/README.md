@@ -55,6 +55,15 @@ The authority can grant read/write access to scopes that they control.
 Third party scopes must be given permission to write to a user identity and the user has the permission to remove it under certain conditions.
 Third party scopes must depend on a core scope from the user to be able to write to the user identity, this ensure that there is a relationship between the user and the "Service Provider"
 
+#### Scope Assertions
+Just as data is stored in a scope, so may an Identity assertion be stored. Assertions are a claim made by the service provider within a scope about the identity to which they are attached.
+Example: The twitter service provider has a scope filled with post data like data and preferences.
+But it also has another scope that contains data and an assertion saying that the user has a twitter account and that the username is X. It also stores a verifiable proof that the assertion is currently true or was true at the time of verification.
+Assertions can expire and be revoked.
+
+#### Verifiers
+Verifiers can be Service Providers or other third parties that provide context and proof that some work of verification has been done to prove an assertion.
+
 ### Use Cases
 * User Authentication
 * Encrypted User Content Permission
