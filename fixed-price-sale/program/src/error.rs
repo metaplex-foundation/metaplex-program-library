@@ -124,4 +124,7 @@ pub enum ErrorCode {
     // 6039
     #[msg("Wrong owner in token gating account")]
     WrongOwnerInTokenGatingAcc,
+    // 6040
+    #[msg("Wrong gating date send")]
+    WrongGatingDate,
 }

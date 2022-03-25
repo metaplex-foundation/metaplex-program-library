@@ -83,7 +83,12 @@ impl<'info> Buy<'info> {
             market.state = MarketState::Active;
         }
 
-        Self::verify_gating_token(&market.gatekeeper, &user_wallet, remaining_accounts)?;
+        Self::verify_gating_token(
+            &market.gatekeeper,
+            &user_wallet,
+            remaining_accounts,
+            clock.unix_timestamp as u64,
+        )?;
 
         // Buy new edition
         let is_native = market.treasury_mint == System::id();
@@ -179,8 +184,15 @@ impl<'info> Buy<'info> {
         gate: &Option<GatingConfig>,
         user_wallet: &AccountInfo<'info>,
         remaining_accounts: &[AccountInfo<'info>],
+        current_time: u64,
     ) -> Result<()> {
         if let Some(gatekeeper) = gate {
+            if let Some(gating_time) = gatekeeper.gating_time {
+                if current_time > gating_time {
+                    return Ok(());
+                }
+            }
+
             if remaining_accounts.len() != 3 {
                 return Err(ErrorCode::GatingTokenMissing.into());
             }

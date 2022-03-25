@@ -88,7 +88,8 @@ impl Market {
         + 8
         + 1
         + 32
-        + 1;
+        + 1
+        + 9;
 }
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug, PartialEq, Eq)]
@@ -96,6 +97,7 @@ pub struct GatingConfig {
     pub collection: Pubkey,
     /// whether program will burn token or just check availability
     pub expire_on_use: bool,
+    pub gating_time: Option<u64>,
 }
 
 #[account]

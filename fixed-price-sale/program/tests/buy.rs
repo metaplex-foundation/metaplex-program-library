@@ -2480,6 +2480,7 @@ mod buy {
             gating_config: Some(GatingConfig {
                 collection: collection_mint,
                 expire_on_use: true,
+                gating_time: None,
             }),
         }
         .data();
@@ -2794,6 +2795,7 @@ mod buy {
             gating_config: Some(GatingConfig {
                 collection: collection_mint,
                 expire_on_use: false,
+                gating_time: None,
             }),
         }
         .data();
@@ -3108,6 +3110,7 @@ mod buy {
             gating_config: Some(GatingConfig {
                 collection: collection_mint,
                 expire_on_use: false,
+                gating_time: None,
             }),
         }
         .data();

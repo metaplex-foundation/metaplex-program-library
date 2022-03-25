@@ -54,6 +54,19 @@ impl<'info> CreateMarket<'info> {
             return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
         }
 
+        if let Some(gating_data) = &gating_config {
+            if let Some(gating_time) = gating_data.gating_time {
+                if gating_time < start_date {
+                    return Err(ErrorCode::WrongGatingDate.into());
+                }
+                if let Some(end_date) = end_date {
+                    if gating_time > end_date {
+                        return Err(ErrorCode::WrongGatingDate.into());
+                    }
+                }
+            }
+        }
+
         let is_native = mint.key() == System::id();
 
         if !is_native {
