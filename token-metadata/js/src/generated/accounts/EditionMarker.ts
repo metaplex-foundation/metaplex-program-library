@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link EditionMarker}
@@ -15,7 +15,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type EditionMarkerArgs = {
-  key: definedTypes.Key;
+  key: Key;
   ledger: number[] /* size: 31 */;
 };
 /**
@@ -26,7 +26,7 @@ export type EditionMarkerArgs = {
  * @category generated
  */
 export class EditionMarker implements EditionMarkerArgs {
-  private constructor(readonly key: definedTypes.Key, readonly ledger: number[] /* size: 31 */) {}
+  private constructor(readonly key: Key, readonly ledger: number[] /* size: 31 */) {}
 
   /**
    * Creates a {@link EditionMarker} instance from the provided args.
@@ -114,7 +114,7 @@ export class EditionMarker implements EditionMarkerArgs {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       ledger: this.ledger,
     };
   }
@@ -126,7 +126,7 @@ export class EditionMarker implements EditionMarkerArgs {
  */
 export const editionMarkerBeet = new beet.BeetStruct<EditionMarker, EditionMarkerArgs>(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['ledger', beet.uniformFixedSizeArray(beet.u8, 31)],
   ],
   EditionMarker.fromArgs,

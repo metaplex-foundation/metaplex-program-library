@@ -6,9 +6,9 @@
  */
 
 import * as splToken from '@solana/spl-token';
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { UtilizeArgs, utilizeArgsBeet } from '../types/UtilizeArgs';
 
 /**
  * @category Instructions
@@ -16,7 +16,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type UtilizeInstructionArgs = {
-  utilizeArgs: definedTypes.UtilizeArgs;
+  utilizeArgs: UtilizeArgs;
 };
 /**
  * @category Instructions
@@ -30,7 +30,7 @@ const UtilizeStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['utilizeArgs', definedTypes.utilizeArgsBeet],
+    ['utilizeArgs', utilizeArgsBeet],
   ],
   'UtilizeInstructionArgs',
 );
@@ -42,8 +42,8 @@ const UtilizeStruct = new beet.BeetArgsStruct<
  * @property [_writable_] mint Mint of the Metadata
  * @property [**signer**] useAuthority A Use Authority / Can be the current Owner of the NFT
  * @property [] owner Owner
- * @property [_writable_] useAuthorityRecord (Optional) Use Authority Record PDA If present the program Assumes a delegated use authority
- * @property [] burner (Optional) Program As Signer (Burner)
+ * @property [_writable_] useAuthorityRecord (optional) Use Authority Record PDA If present the program Assumes a delegated use authority
+ * @property [] burner (optional) Program As Signer (Burner)
  * @category Instructions
  * @category Utilize
  * @category generated
@@ -54,8 +54,8 @@ export type UtilizeInstructionAccounts = {
   mint: web3.PublicKey;
   useAuthority: web3.PublicKey;
   owner: web3.PublicKey;
-  useAuthorityRecord: web3.PublicKey;
-  burner: web3.PublicKey;
+  useAuthorityRecord?: web3.PublicKey;
+  burner?: web3.PublicKey;
 };
 
 const utilizeInstructionDiscriminator = 19;
@@ -127,17 +127,28 @@ export function createUtilizeInstruction(
       isWritable: false,
       isSigner: false,
     },
-    {
+  ];
+
+  if (useAuthorityRecord != null) {
+    keys.push({
       pubkey: useAuthorityRecord,
       isWritable: true,
       isSigner: false,
-    },
-    {
+    });
+  }
+
+  if (burner != null) {
+    if (useAuthorityRecord == null) {
+      throw new Error(
+        "When providing 'burner' then 'useAuthorityRecord' need(s) to be provided as well.",
+      );
+    }
+    keys.push({
       pubkey: burner,
       isWritable: false,
       isSigner: false,
-    },
-  ];
+    });
+  }
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),

@@ -6,9 +6,12 @@
  */
 
 import * as splToken from '@solana/spl-token';
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import {
+  ApproveUseAuthorityArgs,
+  approveUseAuthorityArgsBeet,
+} from '../types/ApproveUseAuthorityArgs';
 
 /**
  * @category Instructions
@@ -16,7 +19,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type ApproveUseAuthorityInstructionArgs = {
-  approveUseAuthorityArgs: definedTypes.ApproveUseAuthorityArgs;
+  approveUseAuthorityArgs: ApproveUseAuthorityArgs;
 };
 /**
  * @category Instructions
@@ -30,7 +33,7 @@ const ApproveUseAuthorityStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['approveUseAuthorityArgs', definedTypes.approveUseAuthorityArgsBeet],
+    ['approveUseAuthorityArgs', approveUseAuthorityArgsBeet],
   ],
   'ApproveUseAuthorityInstructionArgs',
 );

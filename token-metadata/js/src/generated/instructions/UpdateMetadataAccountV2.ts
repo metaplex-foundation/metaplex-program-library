@@ -5,9 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import {
+  UpdateMetadataAccountArgsV2,
+  updateMetadataAccountArgsV2Beet,
+} from '../types/UpdateMetadataAccountArgsV2';
 
 /**
  * @category Instructions
@@ -15,7 +18,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type UpdateMetadataAccountV2InstructionArgs = {
-  updateMetadataAccountArgsV2: definedTypes.UpdateMetadataAccountArgsV2;
+  updateMetadataAccountArgsV2: UpdateMetadataAccountArgsV2;
 };
 /**
  * @category Instructions
@@ -29,7 +32,7 @@ const UpdateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['updateMetadataAccountArgsV2', definedTypes.updateMetadataAccountArgsV2Beet],
+    ['updateMetadataAccountArgsV2', updateMetadataAccountArgsV2Beet],
   ],
   'UpdateMetadataAccountV2InstructionArgs',
 );

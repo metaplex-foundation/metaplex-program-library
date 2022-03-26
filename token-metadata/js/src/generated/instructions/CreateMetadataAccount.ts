@@ -5,9 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import {
+  CreateMetadataAccountArgs,
+  createMetadataAccountArgsBeet,
+} from '../types/CreateMetadataAccountArgs';
 
 /**
  * @category Instructions
@@ -15,7 +18,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type CreateMetadataAccountInstructionArgs = {
-  createMetadataAccountArgs: definedTypes.CreateMetadataAccountArgs;
+  createMetadataAccountArgs: CreateMetadataAccountArgs;
 };
 /**
  * @category Instructions
@@ -29,7 +32,7 @@ const CreateMetadataAccountStruct = new beet.FixableBeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['createMetadataAccountArgs', definedTypes.createMetadataAccountArgsBeet],
+    ['createMetadataAccountArgs', createMetadataAccountArgsBeet],
   ],
   'CreateMetadataAccountInstructionArgs',
 );

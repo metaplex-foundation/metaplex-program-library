@@ -6,9 +6,9 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import { Uses, usesBeet } from './Uses';
 import { Creator, creatorBeet } from './Creator';
 import { Collection, collectionBeet } from './Collection';
+import { Uses, usesBeet } from './Uses';
 export type DataV2 = {
   name: string;
   symbol: string;
