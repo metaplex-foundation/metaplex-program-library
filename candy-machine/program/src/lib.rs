@@ -38,7 +38,7 @@ anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
 
-// Max flag == 39. Flags cant exist if FLAG % 8 = 0 (i.e., 0, 8, 16...)
+// Max flag == 39. Flags cant exist if FLAG % 8 == 0 (i.e., 0, 8, 16...)
 const COLLECTIONS_FLAG: u8 = 1;
 
 // here just in case solana removes the var
