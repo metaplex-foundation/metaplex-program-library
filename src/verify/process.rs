@@ -1,6 +1,8 @@
 use crate::common::*;
 
 use crate::verify::VerifyError;
+use indicatif::ProgressBar;
+use std::{thread, time::Duration};
 
 pub struct VerifyArgs {
     pub keypair: Option<String>,
@@ -67,18 +69,21 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
 
     let mut invalid_items: Vec<CacheItem> = Vec::new();
 
-    for i in 0..num_items {
+    let pb = ProgressBar::new(num_items as u64);
+
+    (0..num_items).into_iter().for_each(|i| {
         let name_start =
             CONFIG_ARRAY_START + STRING_LEN_SIZE + CONFIG_LINE_SIZE * i + CONFIG_NAME_OFFSET;
         let name_end = name_start + MAX_NAME_LENGTH;
         let uri_start =
             CONFIG_ARRAY_START + STRING_LEN_SIZE + CONFIG_LINE_SIZE * i + CONFIG_URI_OFFSET;
         let uri_end = uri_start + MAX_URI_LENGTH;
-
-        let name = String::from_utf8(data[name_start..name_end].to_vec())?
+        let name = String::from_utf8(data[name_start..name_end].to_vec())
+            .unwrap()
             .trim_matches(char::from(0))
             .to_string();
-        let uri = String::from_utf8(data[uri_start..uri_end].to_vec())?
+        let uri = String::from_utf8(data[uri_start..uri_end].to_vec())
+            .unwrap()
             .trim_matches(char::from(0))
             .to_string();
 
@@ -89,7 +94,12 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             cache_item.on_chain = false;
             invalid_items.push(cache_item.clone());
         }
-    }
+
+        pb.inc(1);
+        thread::sleep(Duration::from_millis(100));
+    });
+
+    pb.finish();
 
     if !invalid_items.is_empty() {
         println!("Invalid items found: ");
