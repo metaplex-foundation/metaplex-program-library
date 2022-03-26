@@ -32,12 +32,15 @@ use {
         utils::{assert_derivation, create_or_allocate_account_raw},
     },
     spl_token::state::Mint,
-    std::{cell::RefMut, ops::Deref, str::FromStr},
+    std::{cell::RefMut, convert::TryInto, ops::Deref, str::FromStr},
 };
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
-const COLLECTIONS_UUID: &str = "000000";
+
+// Max flag == 39. Flags cant exist if FLAG % 8 = 0 (i.e., 0, 8, 16...)
+const COLLECTIONS_FLAG: u8 = 1;
+
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
@@ -426,7 +429,7 @@ pub mod candy_machine {
             }
         }
 
-        if candy_machine.data.uuid == COLLECTIONS_UUID {
+        if feature_is_active(&candy_machine.data.uuid, COLLECTIONS_FLAG) {
             let next_instruction = get_instruction_relative(1, &ixs)?;
             if &next_instruction.program_id != &candy_machine::id() {
                 msg!(
@@ -459,10 +462,7 @@ pub mod candy_machine {
 
         let discriminator = &previous_instruction.data[0..8];
         if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
-            msg!(
-                "Transaction had ix with data {:?}",
-                discriminator
-            );
+            msg!("Transaction had ix with data {:?}", discriminator);
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
 
@@ -471,11 +471,15 @@ pub mod candy_machine {
         let mint_ix_metadata = mint_ix_accounts[4].pubkey;
         let signer = mint_ix_accounts[6].pubkey;
         let candy_key = ctx.accounts.candy_machine.key();
-        let metadata =  ctx.accounts.metadata.key();
+        let metadata = ctx.accounts.metadata.key();
         let payer = ctx.accounts.payer.key();
 
         if &signer != &payer {
-            msg!("Signer with pubkey {} does not match the mint ix Signer with pubkey {}", mint_ix_cm, candy_key);
+            msg!(
+                "Signer with pubkey {} does not match the mint ix Signer with pubkey {}",
+                mint_ix_cm,
+                candy_key
+            );
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
         if &mint_ix_cm != &candy_key {
@@ -497,7 +501,11 @@ pub mod candy_machine {
             return Err(ErrorCode::MismatchedCollectionMint.into());
         }
         let seeds = [b"collection".as_ref(), candy_key.as_ref()];
-        let bump = assert_derivation(&candy_machine::id(), &collection_pda.to_account_info(), &seeds)?;
+        let bump = assert_derivation(
+            &candy_machine::id(),
+            &collection_pda.to_account_info(),
+            &seeds,
+        )?;
         let signer_seeds = [b"collection".as_ref(), candy_key.as_ref(), &[bump]];
         let set_collection_infos = vec![
             ctx.accounts.metadata.to_account_info(),
@@ -890,6 +898,18 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
     Ok(num)
 }
 
+/// Checks if the feature is active for a given candy machine based on the uuid 
+fn feature_is_active(uuid: &str, offset: u8) -> bool {
+    let bytes: [u8; 6] = uuid.as_bytes().try_into().unwrap();
+    if bytes[0] == 0x30 {
+        let compare_offset = 7 - offset % 8;
+        let compare_byte = bytes[1 + (offset as usize) / 8];
+        compare_byte & (1 << compare_offset) != 0
+    } else {
+        false
+    }
+}
+
 /// Create a new candy machine.
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
@@ -1084,6 +1104,7 @@ pub struct CandyMachine {
     // here there is a borsh vec u32 indicating number of bytes in bitmask array.
     // here there is a number of bytes equal to ceil(max_number_of_lines/8) and it is a bit mask used to figure out when to increment borsh vec u32
 }
+
 const COLLECTION_PDA_SIZE: usize = 8 + 64;
 /// Collection PDA account
 #[account]
@@ -1421,4 +1442,88 @@ pub enum ErrorCode {
     MismatchedCollectionPDA,
     #[msg("Provided mint account doesn't match collection PDA mint")]
     MismatchedCollectionMint,
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    const SMALL_CONFIG_FLAG: u8 = 2;
+    const OTHER_FLAG: u8 = 9;
+    const LARGEST_FLAG: u8 = 39;
+
+    #[test]
+    fn feature_flag_legacy_detected() {
+        let byte_vec = vec![0x31, 0x20, 0x40, 0x00, 0x00, 0x01];
+        let uuid = String::from_utf8(byte_vec).expect("Couldn't turn utf8 bytes into string!");
+        let active = feature_is_active(&uuid, COLLECTIONS_FLAG);
+        assert_eq!(active, false);
+    }
+
+    #[test]
+    fn collections_flag() {
+        let byte_vec = vec![0x30, 0x40, 0x00, 0x00, 0x00, 0x00];
+        let uuid = String::from_utf8(byte_vec).expect("Couldn't turn utf8 bytes into string!");
+        let collections = feature_is_active(&uuid, COLLECTIONS_FLAG);
+        assert_eq!(collections, true);
+
+        let small_config = feature_is_active(&uuid, SMALL_CONFIG_FLAG);
+        assert_eq!(small_config, false);
+
+        let other_flag = feature_is_active(&uuid, OTHER_FLAG);
+        assert_eq!(other_flag, false);
+
+        let largest_flag = feature_is_active(&uuid, LARGEST_FLAG);
+        assert_eq!(largest_flag, false);
+    }
+
+    #[test]
+    fn small_config() {
+        let byte_vec = vec![0x30, 0x20, 0x00, 0x00, 0x00, 0x00];
+        let uuid = String::from_utf8(byte_vec).expect("Couldn't turn utf8 bytes into string!");
+        let collections = feature_is_active(&uuid, COLLECTIONS_FLAG);
+        assert_eq!(collections, false);
+
+        let small_config = feature_is_active(&uuid, SMALL_CONFIG_FLAG);
+        assert_eq!(small_config, true);
+
+        let other_flag = feature_is_active(&uuid, OTHER_FLAG);
+        assert_eq!(other_flag, false);
+
+        let largest_flag = feature_is_active(&uuid, LARGEST_FLAG);
+        assert_eq!(largest_flag, false);
+    }
+
+    #[test]
+    fn other_flag() {
+        let byte_vec = vec![0x30, 0x00, 0x40, 0x00, 0x00, 0x00];
+        let uuid = String::from_utf8(byte_vec).expect("Couldn't turn utf8 bytes into string!");
+        let collections = feature_is_active(&uuid, COLLECTIONS_FLAG);
+        assert_eq!(collections, false);
+
+        let small_config = feature_is_active(&uuid, SMALL_CONFIG_FLAG);
+        assert_eq!(small_config, false);
+
+        let other_flag = feature_is_active(&uuid, OTHER_FLAG);
+        assert_eq!(other_flag, true);
+
+        let largest_flag = feature_is_active(&uuid, LARGEST_FLAG);
+        assert_eq!(largest_flag, false);
+    }
+
+    #[test]
+    fn check_multiple_flags() {
+        let byte_vec = vec![0x30, 0x20, 0x40, 0x00, 0x00, 0x01];
+        let uuid = String::from_utf8(byte_vec).expect("Couldn't turn utf8 bytes into string!");
+        let collections = feature_is_active(&uuid, COLLECTIONS_FLAG);
+        assert_eq!(collections, false);
+
+        let small_config = feature_is_active(&uuid, SMALL_CONFIG_FLAG);
+        assert_eq!(small_config, true);
+
+        let other_flag = feature_is_active(&uuid, OTHER_FLAG);
+        assert_eq!(other_flag, true);
+
+        let largest_flag = feature_is_active(&uuid, LARGEST_FLAG);
+        assert_eq!(largest_flag, true);
+    }
 }
