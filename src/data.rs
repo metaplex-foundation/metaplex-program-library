@@ -10,7 +10,7 @@ use mpl_candy_machine::{
     WhitelistMintSettings as CandyWhitelistMintSettings,
 };
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct ConfigData {
     pub price: f64,
 
@@ -188,6 +188,12 @@ pub enum UploadMethod {
     Metaplex,
     Bundlr,
     Arloader,
+}
+
+impl Default for UploadMethod {
+    fn default() -> UploadMethod {
+        UploadMethod::Bundlr
+    }
 }
 
 impl FromStr for UploadMethod {

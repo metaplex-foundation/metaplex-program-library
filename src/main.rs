@@ -14,6 +14,7 @@ use sugar_cli::cache::Cache;
 use sugar_cli::candy_machine::{get_candy_machine_state, print_candy_machine_state};
 use sugar_cli::cli::{Cli, Commands};
 use sugar_cli::constants::DEFAULT_CACHE;
+use sugar_cli::create_config::process_create_config;
 use sugar_cli::mint::{process_mint, MintArgs};
 use sugar_cli::setup::sugar_setup;
 use sugar_cli::update::{process_update, UpdateArgs};
@@ -79,6 +80,7 @@ async fn main() -> Result<()> {
     tracing::info!("Lend me some sugar, I am your neighbor.");
 
     match cli.command {
+        Commands::CreateConfig => process_create_config()?,
         Commands::Mint {
             keypair,
             rpc_url,

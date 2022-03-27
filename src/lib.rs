@@ -4,6 +4,7 @@ pub mod cli;
 pub mod common;
 pub mod config;
 pub mod constants;
+pub mod create_config;
 pub mod data;
 pub mod errors;
 pub mod mint;
