@@ -238,7 +238,9 @@ export class Metadata extends Account<MetadataData> {
         .flat()
         .map((account) => Metadata.from(account));
     } else {
-      return (await MetadataProgram.getProgramAccounts(connection, { filters: baseFilters })).map(
+      let accounts = await MetadataProgram.getProgramAccounts(connection, { filters: baseFilters });
+      accounts = accounts || [];
+      return accounts.map(
         (account) => Metadata.from(account),
       );
     }
