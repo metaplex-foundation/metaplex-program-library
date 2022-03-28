@@ -13,7 +13,6 @@ import { createTokenAccount } from '../transactions/createTokenAccount';
 import { mintNFT } from './mintNft';
 import { createInitSellingResourceInstruction } from '../../src/generated/instructions';
 import { Creator } from '@metaplex-foundation/mpl-token-metadata';
-import { CreatorAccountData } from '../../src';
 import { createSavePrimaryMetadataCreators } from '../transactions';
 
 type InitSellingResourceParams = {
@@ -96,11 +95,11 @@ export const initSellingResource = async ({
     },
   );
 
-  const primaryCreator = CreatorAccountData.fromArgs({
+  const primaryCreator = {
     address: payer.publicKey,
     share: 100,
     verified: false,
-  });
+  };
 
   const { savePrimaryMetadataCreatorsInstruction, primaryMetadataCreators } =
     await createSavePrimaryMetadataCreators({
