@@ -1,7 +1,7 @@
 use crate::common::*;
 
 use crate::verify::VerifyError;
-use indicatif::ProgressBar;
+use indicatif::ProgressIterator;
 use std::{thread, time::Duration};
 
 pub struct VerifyArgs {
@@ -65,13 +65,13 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
 
     // let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
     let num_items = cache.items.0.len();
+    // Should sleep for a total of 1.25 seconds
+    let sleep_micros: u64 = 1250000 / num_items as u64;
     let cache_items = &mut cache.items.0;
 
     let mut invalid_items: Vec<CacheItem> = Vec::new();
 
-    let pb = ProgressBar::new(num_items as u64);
-
-    (0..num_items).into_iter().for_each(|i| {
+    (0..num_items).into_iter().progress().for_each(|i| {
         let name_start =
             CONFIG_ARRAY_START + STRING_LEN_SIZE + CONFIG_LINE_SIZE * i + CONFIG_NAME_OFFSET;
         let name_end = name_start + MAX_NAME_LENGTH;
@@ -95,11 +95,10 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             invalid_items.push(cache_item.clone());
         }
 
-        pb.inc(1);
-        thread::sleep(Duration::from_millis(100));
+        thread::sleep(Duration::from_micros(sleep_micros));
     });
 
-    pb.finish();
+    cache.write_to_file(cache_file_path)?;
 
     if !invalid_items.is_empty() {
         println!("Invalid items found: ");
@@ -111,7 +110,6 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         println!("All items checked out. You're good to go!");
     }
 
-    cache.write_to_file(cache_file_path)?;
     Ok(())
 }
 
