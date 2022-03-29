@@ -10,7 +10,7 @@ use anchor_lang::{
     System,
 };
 use anchor_spl::token;
-use mpl_token_metadata::utils::get_supply_off_master_edition;
+use mpl_token_metadata::{state::Metadata, utils::get_supply_off_master_edition};
 
 impl<'info> Buy<'info> {
     pub fn process(
@@ -208,8 +208,7 @@ impl<'info> Buy<'info> {
             )?;
 
             let metadata = &remaining_accounts[2];
-            let data = metadata.try_borrow_data()?;
-            let metadata_data = data.as_ref();
+            let metadata_data = Metadata::from_account_info(metadata)?;
 
             let token_metadata_program_key = mpl_token_metadata::id();
             let metadata_seeds = &[
@@ -228,24 +227,14 @@ impl<'info> Buy<'info> {
                 return Err(ErrorCode::WrongOwnerInTokenGatingAcc.into());
             }
 
-            // extract data from metadata data slices to save computation units
-            let is_collection_present = metadata_data[328];
-
-            let is_collection_verified = metadata_data[329];
-
-            let collection_key = Pubkey::new(&metadata_data[330..362]);
-
-            // check Option<T> field
-            if is_collection_present != 1 {
-                return Err(ErrorCode::WrongGatingMetadataAccount.into());
-            }
-
-            // check Option<T> field
-            if is_collection_verified != 1 {
-                return Err(ErrorCode::WrongGatingMetadataAccount.into());
-            }
-
-            if collection_key != gatekeeper.collection {
+            if let Some(collection) = metadata_data.collection {
+                if !collection.verified {
+                    return Err(ErrorCode::WrongGatingMetadataAccount.into());
+                }
+                if collection.key != gatekeeper.collection {
+                    return Err(ErrorCode::WrongGatingMetadataAccount.into());
+                }
+            } else {
                 return Err(ErrorCode::WrongGatingMetadataAccount.into());
             }
 
