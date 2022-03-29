@@ -74,7 +74,7 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     market.publicKey,
   );
 
-  const { mint: newMint } = await mintTokenToAccount({
+  const { mint: newMint, mintAta } = await mintTokenToAccount({
     connection,
     payer: payer.publicKey,
     transactionHandler,
@@ -109,6 +109,7 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
+    newTokenAccount: mintAta.publicKey,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(

@@ -17,8 +17,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.19.0"
-anchor-spl = "0.19.0"
-solana-program = "1.7.11"
-spl-associated-token-account = { version = "1.0.3", features = [ "no-entrypoint" ] }
-mpl-token-metadata = { version="1.1.0", features = [ "no-entrypoint" ] }
+anchor-lang = "~0.19.0"
+anchor-spl = "~0.19.0"
+solana-program = "~1.9.5"
+spl-associated-token-account = { version = "~1.0.3", features = [ "no-entrypoint" ] }
+mpl-token-metadata = { version="~1.1.0", features = [ "no-entrypoint" ] }

@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.5
+  SOLANA_VERSION: 1.9.9
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -18,6 +18,7 @@ jobs:
     outputs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
+      workflow: ${{ steps.filter.outputs.workflow }}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -29,9 +30,11 @@ jobs:
               - 'core/**'
             package:
               - 'fixed-price-sale/**'
+            workflow:
+              - '.github/workflows/program-fixed-price-sale.yml'
   build-and-test-fixed-price-sale:
     needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-fixed-price-sale
@@ -65,6 +68,13 @@ jobs:
         id: run_test
         working-directory: ./fixed-price-sale/program
         run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test buy -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test change_market -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test claim_resource -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test close_market -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test create_store -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test init_selling_resource -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test resume_market -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test save_primary_metadata_creators -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test suspend_market -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test withdraw -- --test-threads 1

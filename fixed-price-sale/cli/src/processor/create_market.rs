@@ -65,7 +65,7 @@ pub fn create_market(
     .to_account_metas(None);
 
     let data = mpl_fixed_price_sale::instruction::CreateMarket {
-        _treasyry_owner_bump: treasury_owner_bump,
+        _treasury_owner_bump: treasury_owner_bump,
         name: name.clone(),
         description: description.clone(),
         mutable,

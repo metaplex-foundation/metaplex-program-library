@@ -1,6 +1,5 @@
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import {
-  Actions,
   defaultSendOptions,
   TransactionHandler,
   assertConfirmedTransaction,
@@ -13,11 +12,14 @@ import {
   CreateMasterEdition,
   Creator,
 } from '@metaplex-foundation/mpl-token-metadata';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore createMintToInstruction export actually exist but isn't setup correctly
+import { createMintToInstruction } from '@solana/spl-token';
 import { strict as assert } from 'assert';
 
 import { createTokenAccount } from '../transactions/createTokenAccount';
 import { createMetadata } from './createMetadata';
+import { CreateMint } from './createMintAccount';
 
 type MintNFTParams = {
   transactionHandler: TransactionHandler;
@@ -31,13 +33,8 @@ const NAME = 'test';
 const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
 
-export async function mintNFT({
-  transactionHandler,
-  payer,
-  connection,
-  creators = null,
-}: MintNFTParams) {
-  const { mint, createMintTx } = await new Actions(connection).createMintAccount(payer.publicKey);
+export async function mintNFT({ transactionHandler, payer, connection, creators }: MintNFTParams) {
+  const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
     [mint],
@@ -52,14 +49,7 @@ export async function mintNFT({
   });
 
   createTokenTx.add(
-    Token.createMintToInstruction(
-      new PublicKey(TOKEN_PROGRAM_ID),
-      mint.publicKey,
-      tokenAccount.publicKey,
-      payer.publicKey,
-      [],
-      1,
-    ),
+    createMintToInstruction(mint.publicKey, tokenAccount.publicKey, payer.publicKey, 1),
   );
 
   const associatedTokenAccountRes = await transactionHandler.sendAndConfirmTransaction(
@@ -74,7 +64,7 @@ export async function mintNFT({
     name: NAME,
     symbol: SYMBOL,
     sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
-    creators,
+    creators: creators ?? null,
   });
 
   const { createTxDetails } = await createMetadata({

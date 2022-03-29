@@ -1,3 +1,11 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
+import { strict as assert } from 'assert';
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 import bs58 from 'bs58';
@@ -29,17 +37,18 @@ export class AuctionManagerStateV2 extends Borsh.Data<{
   bidsPushedToAcceptPayment: BN;
   hasParticipation: boolean;
 }> {
-  static readonly SCHEMA = this.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = AuctionManagerStateV2.struct([
     ['status', 'u8'],
     ['safetyConfigItemsValidated', 'u64'],
     ['bidsPushedToAcceptPayment', 'u64'],
     ['hasParticipation', 'u8'],
   ]);
 
-  status: AuctionManagerStatus;
-  safetyConfigItemsValidated: BN;
-  bidsPushedToAcceptPayment: BN;
-  hasParticipation;
+  status!: AuctionManagerStatus;
+  safetyConfigItemsValidated!: BN;
+  bidsPushedToAcceptPayment!: BN;
+  hasParticipation!: boolean;
 }
 
 type Args = {
@@ -51,9 +60,10 @@ type Args = {
   state: AuctionManagerStateV2;
 };
 export class AuctionManagerV2Data extends Borsh.Data<Args> {
-  static readonly SCHEMA = new Map([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = new Map([
     ...AuctionManagerStateV2.SCHEMA,
-    ...this.struct([
+    ...AuctionManagerV2Data.struct([
       ['key', 'u8'],
       ['store', 'pubkeyAsString'],
       ['authority', 'pubkeyAsString'],
@@ -65,12 +75,12 @@ export class AuctionManagerV2Data extends Borsh.Data<Args> {
   ]);
 
   key: MetaplexKey;
-  store: StringPublicKey;
-  authority: StringPublicKey;
-  auction: StringPublicKey;
-  vault: StringPublicKey;
-  acceptPayment: StringPublicKey;
-  state: AuctionManagerStateV2;
+  store!: StringPublicKey;
+  authority!: StringPublicKey;
+  auction!: StringPublicKey;
+  vault!: StringPublicKey;
+  acceptPayment!: StringPublicKey;
+  state!: AuctionManagerStateV2;
 
   constructor(args: Args) {
     super(args);
@@ -86,6 +96,7 @@ export class AuctionManager extends Account<AuctionManagerV2Data> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (AuctionManager.isAuctionManagerV1(this.info.data)) {
       throw ERROR_DEPRECATED_ACCOUNT_DATA();
     } else if (AuctionManager.isAuctionManagerV2(this.info.data)) {
@@ -118,36 +129,43 @@ export class AuctionManager extends Account<AuctionManagerV2Data> {
     connection: Connection,
     filters: { store?: AnyPublicKey; authority?: AnyPublicKey } = {},
   ) {
+    const memcmpFilters = [
+      // Filter for AuctionManagerV2 by key
+      {
+        memcmp: {
+          offset: 0,
+          bytes: bs58.encode(Buffer.from([MetaplexKey.AuctionManagerV2])),
+        },
+      },
+    ];
+    if (filters.store != null) {
+      // Filter for assigned to store
+      memcmpFilters.push({
+        memcmp: {
+          offset: 1,
+          bytes: new PublicKey(filters.store).toBase58(),
+        },
+      });
+    }
+    if (filters.authority != null) {
+      // Filter for assigned to authority
+      memcmpFilters.push({
+        memcmp: {
+          offset: 33,
+          bytes: new PublicKey(filters.authority).toBase58(),
+        },
+      });
+    }
+
     return (
       await MetaplexProgram.getProgramAccounts(connection, {
-        filters: [
-          // Filter for AuctionManagerV2 by key
-          {
-            memcmp: {
-              offset: 0,
-              bytes: bs58.encode(Buffer.from([MetaplexKey.AuctionManagerV2])),
-            },
-          },
-          // Filter for assigned to store
-          filters.store && {
-            memcmp: {
-              offset: 1,
-              bytes: new PublicKey(filters.store).toBase58(),
-            },
-          },
-          // Filter for assigned to authority
-          filters.authority && {
-            memcmp: {
-              offset: 33,
-              bytes: new PublicKey(filters.authority).toBase58(),
-            },
-          },
-        ].filter(Boolean),
+        filters: memcmpFilters,
       })
     ).map((account) => AuctionManager.from(account));
   }
 
   async getAuction(connection: Connection) {
+    assert(this.data != null, 'account data needs to be defined');
     return Auction.load(connection, this.data.auction);
   }
 

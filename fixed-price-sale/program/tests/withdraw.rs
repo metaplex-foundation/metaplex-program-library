@@ -14,15 +14,21 @@ mod withdraw {
         accounts as mpl_fixed_price_sale_accounts, instruction as mpl_fixed_price_sale_instruction,
         state::SellingResource,
         utils::{
-            find_payout_ticket_address, find_trade_history_address, find_treasury_owner_address,
-            find_vault_owner_address,
+            find_payout_ticket_address, find_primary_metadata_creators, find_trade_history_address,
+            find_treasury_owner_address, find_vault_owner_address,
         },
     };
     use solana_program::clock::Clock;
     use solana_program_test::*;
     use solana_sdk::{
-        account::ReadableAccount, instruction::Instruction, program_pack::Pack, pubkey::Pubkey,
-        signature::Keypair, signer::Signer, system_program, sysvar, transaction::Transaction,
+        account::ReadableAccount,
+        instruction::{AccountMeta, Instruction},
+        program_pack::Pack,
+        pubkey::Pubkey,
+        signature::Keypair,
+        signer::Signer,
+        system_program, sysvar,
+        transaction::Transaction,
         transport::TransportError,
     };
 
@@ -39,7 +45,7 @@ mod withdraw {
                 100,
                 None,
                 true,
-                false,
+                true,
             )
             .await;
 
@@ -103,7 +109,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -243,6 +249,45 @@ mod withdraw {
             &mpl_token_metadata::id(),
         );
 
+        let (primary_metadata_creators, primary_metadata_creators_bump) =
+            find_primary_metadata_creators(&master_edition_metadata);
+
+        // SavePrimaryMetadataCreators
+        let accounts = mpl_fixed_price_sale_accounts::SavePrimaryMetadataCreators {
+            admin: selling_resource_owner_keypair.pubkey(),
+            metadata: master_edition_metadata,
+            primary_metadata_creators,
+            system_program: system_program::id(),
+        }
+        .to_account_metas(None);
+
+        let primary_royalties_holder = Keypair::new();
+
+        let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
+            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            creators: vec![mpl_token_metadata::state::Creator {
+                address: primary_royalties_holder.pubkey(),
+                verified: false,
+                share: 100,
+            }],
+        }
+        .data();
+
+        let instruction = Instruction {
+            program_id: mpl_fixed_price_sale::id(),
+            data,
+            accounts,
+        };
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &selling_resource_owner_keypair],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
             market: market_keypair.pubkey(),
@@ -258,6 +303,7 @@ mod withdraw {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -319,11 +365,11 @@ mod withdraw {
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
             &market_keypair.pubkey(),
-            &selling_resource_owner_keypair.pubkey(),
+            &primary_royalties_holder.pubkey(),
         );
 
         let destination = spl_associated_token_account::get_associated_token_address(
-            &selling_resource_owner_keypair.pubkey(),
+            &primary_royalties_holder.pubkey(),
             &treasury_mint_keypair.pubkey(),
         );
 
@@ -336,7 +382,7 @@ mod withdraw {
             &mpl_token_metadata::id(),
         );
 
-        let accounts = mpl_fixed_price_sale_accounts::Withdraw {
+        let mut accounts = mpl_fixed_price_sale_accounts::Withdraw {
             market: market_keypair.pubkey(),
             selling_resource: selling_resource_keypair.pubkey(),
             metadata,
@@ -344,7 +390,7 @@ mod withdraw {
             treasury_mint: treasury_mint_keypair.pubkey(),
             owner: treasury_owner,
             destination,
-            funder: selling_resource_owner_keypair.pubkey(),
+            funder: primary_royalties_holder.pubkey(),
             payer: payer_pubkey,
             payout_ticket,
             rent: sysvar::rent::id(),
@@ -354,6 +400,7 @@ mod withdraw {
             system_program: system_program::id(),
         }
         .to_account_metas(None);
+        accounts.push(AccountMeta::new(primary_metadata_creators, false));
 
         let data = mpl_fixed_price_sale_instruction::Withdraw {
             payout_ticket_bump,
@@ -408,7 +455,7 @@ mod withdraw {
                 100,
                 None,
                 true,
-                false,
+                true,
             )
             .await;
 
@@ -455,7 +502,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -580,6 +627,45 @@ mod withdraw {
             &mpl_token_metadata::id(),
         );
 
+        // SavePrimaryMetadataCreators
+        let (primary_metadata_creators, primary_metadata_creators_bump) =
+            find_primary_metadata_creators(&master_edition_metadata);
+
+        let accounts = mpl_fixed_price_sale_accounts::SavePrimaryMetadataCreators {
+            admin: selling_resource_owner_keypair.pubkey(),
+            metadata: master_edition_metadata,
+            primary_metadata_creators,
+            system_program: system_program::id(),
+        }
+        .to_account_metas(None);
+
+        let primary_royalties_holder = Keypair::new();
+
+        let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
+            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            creators: vec![mpl_token_metadata::state::Creator {
+                address: primary_royalties_holder.pubkey(),
+                verified: false,
+                share: 100,
+            }],
+        }
+        .data();
+
+        let instruction = Instruction {
+            program_id: mpl_fixed_price_sale::id(),
+            data,
+            accounts,
+        };
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &selling_resource_owner_keypair],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
             market: market_keypair.pubkey(),
@@ -595,6 +681,7 @@ mod withdraw {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -656,10 +743,10 @@ mod withdraw {
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
             &market_keypair.pubkey(),
-            &selling_resource_owner_keypair.pubkey(),
+            &primary_royalties_holder.pubkey(),
         );
 
-        let destination = selling_resource_owner_keypair.pubkey();
+        let destination = primary_royalties_holder.pubkey();
 
         let (metadata, _) = Pubkey::find_program_address(
             &[
@@ -670,7 +757,7 @@ mod withdraw {
             &mpl_token_metadata::id(),
         );
 
-        let accounts = mpl_fixed_price_sale_accounts::Withdraw {
+        let mut accounts = mpl_fixed_price_sale_accounts::Withdraw {
             market: market_keypair.pubkey(),
             selling_resource: selling_resource_keypair.pubkey(),
             metadata,
@@ -678,7 +765,7 @@ mod withdraw {
             treasury_mint,
             owner: treasury_owner,
             destination,
-            funder: selling_resource_owner_keypair.pubkey(),
+            funder: primary_royalties_holder.pubkey(),
             payer: payer_pubkey,
             payout_ticket,
             rent: sysvar::rent::id(),
@@ -688,6 +775,7 @@ mod withdraw {
             system_program: system_program::id(),
         }
         .to_account_metas(None);
+        accounts.push(AccountMeta::new(primary_metadata_creators, false));
 
         let data = mpl_fixed_price_sale_instruction::Withdraw {
             payout_ticket_bump,
@@ -725,7 +813,7 @@ mod withdraw {
             .unwrap()
             .unwrap();
 
-        assert_eq!(destination_acc.lamports(), 9997714880);
+        assert_eq!(destination_acc.lamports(), 1000000);
     }
 
     #[tokio::test]
@@ -805,7 +893,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -960,6 +1048,7 @@ mod withdraw {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -1162,7 +1251,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -1317,6 +1406,7 @@ mod withdraw {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -1454,7 +1544,7 @@ mod withdraw {
                 100,
                 None,
                 true,
-                false,
+                true,
             )
             .await;
 
@@ -1518,7 +1608,7 @@ mod withdraw {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
-            _treasyry_owner_bump: treasyry_owner_bump,
+            _treasury_owner_bump: treasyry_owner_bump,
             name: name.to_owned(),
             description: description.to_owned(),
             mutable,
@@ -1658,6 +1748,45 @@ mod withdraw {
             &mpl_token_metadata::id(),
         );
 
+        // SavePrimaryMetadataCreators
+        let (primary_metadata_creators, primary_metadata_creators_bump) =
+            find_primary_metadata_creators(&master_edition_metadata);
+
+        let accounts = mpl_fixed_price_sale_accounts::SavePrimaryMetadataCreators {
+            admin: selling_resource_owner_keypair.pubkey(),
+            metadata: master_edition_metadata,
+            primary_metadata_creators,
+            system_program: system_program::id(),
+        }
+        .to_account_metas(None);
+
+        let primary_royalties_holder = Keypair::new();
+
+        let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
+            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            creators: vec![mpl_token_metadata::state::Creator {
+                address: primary_royalties_holder.pubkey(),
+                verified: false,
+                share: 100,
+            }],
+        }
+        .data();
+
+        let instruction = Instruction {
+            program_id: mpl_fixed_price_sale::id(),
+            data,
+            accounts,
+        };
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &selling_resource_owner_keypair],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {
             market: market_keypair.pubkey(),
@@ -1673,6 +1802,7 @@ mod withdraw {
             edition_marker,
             vault: selling_resource.vault,
             owner,
+            new_token_account: new_mint_token_account.pubkey(),
             master_edition_metadata,
             clock: sysvar::clock::id(),
             rent: sysvar::rent::id(),
@@ -1734,11 +1864,11 @@ mod withdraw {
         // Withdraw
         let (payout_ticket, payout_ticket_bump) = find_payout_ticket_address(
             &market_keypair.pubkey(),
-            &selling_resource_owner_keypair.pubkey(),
+            &primary_royalties_holder.pubkey(),
         );
 
         let destination = spl_associated_token_account::get_associated_token_address(
-            &selling_resource_owner_keypair.pubkey(),
+            &primary_royalties_holder.pubkey(),
             &treasury_mint_keypair.pubkey(),
         );
 
@@ -1751,7 +1881,7 @@ mod withdraw {
             &mpl_token_metadata::id(),
         );
 
-        let accounts = mpl_fixed_price_sale_accounts::Withdraw {
+        let mut accounts = mpl_fixed_price_sale_accounts::Withdraw {
             market: market_keypair.pubkey(),
             selling_resource: selling_resource_keypair.pubkey(),
             metadata,
@@ -1759,7 +1889,7 @@ mod withdraw {
             treasury_mint: treasury_mint_keypair.pubkey(),
             owner: treasury_owner,
             destination,
-            funder: selling_resource_owner_keypair.pubkey(),
+            funder: primary_royalties_holder.pubkey(),
             payer: payer_pubkey,
             payout_ticket,
             rent: sysvar::rent::id(),
@@ -1769,6 +1899,7 @@ mod withdraw {
             system_program: system_program::id(),
         }
         .to_account_metas(None);
+        accounts.push(AccountMeta::new(primary_metadata_creators, false));
 
         let data = mpl_fixed_price_sale_instruction::Withdraw {
             payout_ticket_bump,
@@ -1795,7 +1926,7 @@ mod withdraw {
         context.warp_to_slot(clock.slot + 3).unwrap();
 
         // Withdraw
-        let accounts = mpl_fixed_price_sale_accounts::Withdraw {
+        let mut accounts = mpl_fixed_price_sale_accounts::Withdraw {
             market: market_keypair.pubkey(),
             selling_resource: selling_resource_keypair.pubkey(),
             metadata,
@@ -1803,7 +1934,7 @@ mod withdraw {
             treasury_mint: treasury_mint_keypair.pubkey(),
             owner: treasury_owner,
             destination,
-            funder: selling_resource_owner_keypair.pubkey(),
+            funder: primary_royalties_holder.pubkey(),
             payer: payer_pubkey,
             payout_ticket,
             rent: sysvar::rent::id(),
@@ -1813,6 +1944,7 @@ mod withdraw {
             system_program: system_program::id(),
         }
         .to_account_metas(None);
+        accounts.push(AccountMeta::new(primary_metadata_creators, false));
 
         let data = mpl_fixed_price_sale_instruction::Withdraw {
             payout_ticket_bump,

@@ -1,3 +1,11 @@
+/**
+ * NOTE: that we ignore @typescript-eslint/no-explicit-any cases in this file.
+ * The way to fix this properly is to improve the return type of the
+ * @metaplex-foundation/core `struct` and update that library.
+ * Given that these parts of the SDK will be re-generated with solita very soon
+ * that would be a wasted effort and therefore we make an EXCEPTION here.
+ */
+import { strict as assert } from 'assert';
 import {
   Account,
   Borsh,
@@ -17,7 +25,8 @@ type Args = {
   emptied: boolean;
 };
 export class BidderPotData extends Borsh.Data<Args> {
-  static readonly SCHEMA = BidderPotData.struct([
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  static readonly SCHEMA: Map<any, any> = BidderPotData.struct([
     ['bidderPot', 'pubkeyAsString'],
     ['bidderAct', 'pubkeyAsString'],
     ['auctionAct', 'pubkeyAsString'],
@@ -25,13 +34,13 @@ export class BidderPotData extends Borsh.Data<Args> {
   ]);
 
   /// Points at actual pot that is a token account
-  bidderPot: StringPublicKey;
+  bidderPot!: StringPublicKey;
   /// Originating bidder account
-  bidderAct: StringPublicKey;
+  bidderAct!: StringPublicKey;
   /// Auction account
-  auctionAct: StringPublicKey;
+  auctionAct!: StringPublicKey;
   /// emptied or not
-  emptied: boolean;
+  emptied!: boolean;
 }
 
 export class BidderPot extends Account<BidderPotData> {
@@ -44,6 +53,7 @@ export class BidderPot extends Account<BidderPotData> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (!BidderPot.isCompatible(this.info.data)) {
       throw ERROR_INVALID_ACCOUNT_DATA();
     }

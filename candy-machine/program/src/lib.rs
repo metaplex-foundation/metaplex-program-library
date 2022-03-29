@@ -1,5 +1,6 @@
 pub mod utils;
 
+use solana_program::sysvar::{instructions::get_instruction_relative, SysvarId};
 use {
     crate::utils::{
         assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by,
@@ -9,7 +10,6 @@ use {
     anchor_lang::{
         prelude::*,
         solana_program::{
-            log::sol_log_compute_units,
             program::{invoke, invoke_signed},
             serialize_utils::{read_pubkey, read_u16},
             system_instruction, sysvar,
@@ -19,26 +19,31 @@ use {
     anchor_spl::token::Token,
     arrayref::array_ref,
     mpl_token_metadata::{
-        instruction::{create_master_edition, create_metadata_accounts, update_metadata_accounts},
-        state::{
-            MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
+        assertions::collection::assert_master_edition,
+        error::MetadataError,
+        instruction::{
+            approve_collection_authority, create_master_edition_v3, create_metadata_accounts_v2,
+            revoke_collection_authority, set_and_verify_collection, update_metadata_accounts_v2,
         },
+        state::{
+            Metadata, MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
+            MAX_URI_LENGTH,
+        },
+        utils::{assert_derivation, create_or_allocate_account_raw},
     },
     spl_token::state::Mint,
     std::{cell::RefMut, ops::Deref, str::FromStr},
 };
-use solana_program::sysvar::SysvarId;
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
-
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
-pub mod nft_candy_machine_v2 {
-
+pub mod candy_machine {
     use super::*;
 
+    #[inline(never)]
     pub fn mint_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
         creator_bump: u8,
@@ -66,7 +71,7 @@ pub mod nft_candy_machine_v2 {
             match es.end_setting_type {
                 EndSettingType::Date => {
                     if clock.unix_timestamp > es.number as i64 {
-                        if *ctx.accounts.payer.key != candy_machine.authority {
+                        if ctx.accounts.payer.key() != candy_machine.authority {
                             return Err(ErrorCode::CandyMachineNotLive.into());
                         }
                     }
@@ -126,11 +131,6 @@ pub mod nft_candy_machine_v2 {
             // machine go_live_date (avoids pre-solving the captcha)
             match candy_machine.data.go_live_date {
                 Some(val) => {
-                    msg!(
-                        "Comparing token expire time {} and go_live_date {}",
-                        expire_time,
-                        val
-                    );
                     if (expire_time - EXPIRE_OFFSET) < val {
                         if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
                             // when dealing with whitelist, the expire_time can be
@@ -174,7 +174,7 @@ pub mod nft_candy_machine_v2 {
                                 &ctx.remaining_accounts[remaining_accounts_counter];
                             remaining_accounts_counter += 1;
 
-                            assert_keys_equal(*whitelist_token_mint.key, ws.mint)?;
+                            assert_keys_equal(whitelist_token_mint.key(), ws.mint)?;
 
                             spl_token_burn(TokenBurnParams {
                                 mint: whitelist_token_mint.clone(),
@@ -188,14 +188,15 @@ pub mod nft_candy_machine_v2 {
 
                         match candy_machine.data.go_live_date {
                             None => {
-                                if *ctx.accounts.payer.key != candy_machine.authority && !ws.presale
+                                if ctx.accounts.payer.key() != candy_machine.authority
+                                    && !ws.presale
                                 {
                                     return Err(ErrorCode::CandyMachineNotLive.into());
                                 }
                             }
                             Some(val) => {
                                 if clock.unix_timestamp < val
-                                    && *ctx.accounts.payer.key != candy_machine.authority
+                                    && ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
                                     return Err(ErrorCode::CandyMachineNotLive.into());
@@ -214,6 +215,9 @@ pub mod nft_candy_machine_v2 {
                             return Err(ErrorCode::NoWhitelistToken.into());
                         }
                         assert_valid_go_live(payer, clock, candy_machine)?;
+                        if ws.mode == WhitelistMintMode::BurnEveryTime {
+                            remaining_accounts_counter += 2;
+                        }
                     }
                 }
                 Err(_) => {
@@ -222,6 +226,9 @@ pub mod nft_candy_machine_v2 {
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
                         return Err(ErrorCode::NoWhitelistToken.into());
+                    }
+                    if ws.mode == WhitelistMintMode::BurnEveryTime {
+                        remaining_accounts_counter += 2;
                     }
                     assert_valid_go_live(payer, clock, candy_machine)?
                 }
@@ -239,6 +246,7 @@ pub mod nft_candy_machine_v2 {
             let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
             let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
+            remaining_accounts_counter += 1;
             let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
             if token_account.amount < price {
@@ -259,7 +267,7 @@ pub mod nft_candy_machine_v2 {
             }
 
             invoke(
-                &system_instruction::transfer(&ctx.accounts.payer.key, wallet.key, price),
+                &system_instruction::transfer(&ctx.accounts.payer.key(), &wallet.key(), price),
                 &[
                     ctx.accounts.payer.to_account_info(),
                     wallet.to_account_info(),
@@ -267,8 +275,9 @@ pub mod nft_candy_machine_v2 {
                 ],
             )?;
         }
+
         let data = recent_slothashes.data.borrow();
-        let most_recent = array_ref![data, 4, 8];
+        let most_recent = array_ref![data, 12, 8];
 
         let index = u64::from_le_bytes(*most_recent);
         let modded: usize = index
@@ -324,16 +333,13 @@ pub mod nft_candy_machine_v2 {
             ctx.accounts.rent.to_account_info(),
             candy_machine_creator.to_account_info(),
         ];
-        msg!("Before metadata");
-        sol_log_compute_units();
-
         invoke_signed(
-            &create_metadata_accounts(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.metadata.key,
-                *ctx.accounts.mint.key,
-                *ctx.accounts.mint_authority.key,
-                *ctx.accounts.payer.key,
+            &create_metadata_accounts_v2(
+                ctx.accounts.token_metadata_program.key(),
+                ctx.accounts.metadata.key(),
+                ctx.accounts.mint.key(),
+                ctx.accounts.mint_authority.key(),
+                ctx.accounts.payer.key(),
                 candy_machine_creator.key(),
                 config_line.name,
                 candy_machine.data.symbol.clone(),
@@ -342,22 +348,21 @@ pub mod nft_candy_machine_v2 {
                 candy_machine.data.seller_fee_basis_points,
                 true,
                 candy_machine.data.is_mutable,
+                None,
+                None,
             ),
             metadata_infos.as_slice(),
             &[&authority_seeds],
         )?;
-
-        msg!("Before master");
-        sol_log_compute_units();
         invoke_signed(
-            &create_master_edition(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.master_edition.key,
-                *ctx.accounts.mint.key,
+            &create_master_edition_v3(
+                ctx.accounts.token_metadata_program.key(),
+                ctx.accounts.master_edition.key(),
+                ctx.accounts.mint.key(),
                 candy_machine_creator.key(),
-                *ctx.accounts.mint_authority.key,
-                *ctx.accounts.metadata.key,
-                *ctx.accounts.payer.key,
+                ctx.accounts.mint_authority.key(),
+                ctx.accounts.metadata.key(),
+                ctx.accounts.payer.key(),
                 Some(candy_machine.data.max_supply),
             ),
             master_edition_infos.as_slice(),
@@ -369,17 +374,19 @@ pub mod nft_candy_machine_v2 {
         if !candy_machine.data.retain_authority {
             new_update_authority = Some(ctx.accounts.update_authority.key());
         }
-
-        msg!("Before update");
-        sol_log_compute_units();
         invoke_signed(
-            &update_metadata_accounts(
-                *ctx.accounts.token_metadata_program.key,
-                *ctx.accounts.metadata.key,
+            &update_metadata_accounts_v2(
+                ctx.accounts.token_metadata_program.key(),
+                ctx.accounts.metadata.key(),
                 candy_machine_creator.key(),
                 new_update_authority,
                 None,
                 Some(true),
+                if !candy_machine.data.is_mutable {
+                    Some(false)
+                } else {
+                    None
+                },
             ),
             &[
                 ctx.accounts.token_metadata_program.to_account_info(),
@@ -388,10 +395,6 @@ pub mod nft_candy_machine_v2 {
             ],
             &[&authority_seeds],
         )?;
-
-        msg!("Before instr check");
-        sol_log_compute_units();
-
         let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
 
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
@@ -412,7 +415,7 @@ pub mod nft_candy_machine_v2 {
             current += (num_accounts as usize) * (1 + 32);
             let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
 
-            if program_id != nft_candy_machine_v2::id()
+            if program_id != candy_machine::id()
                 && program_id != spl_token::id()
                 && program_id != anchor_lang::solana_program::system_program::ID
                 && program_id != associated_token
@@ -421,9 +424,87 @@ pub mod nft_candy_machine_v2 {
                 return Err(ErrorCode::SuspiciousTransaction.into());
             }
         }
+        Ok(())
+    }
 
-        msg!("At the end");
-        sol_log_compute_units();
+    pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> ProgramResult {
+        let ixs = &ctx.accounts.instructions;
+        let previous_instruction = get_instruction_relative(-1, ixs)?;
+        if &previous_instruction.program_id != &candy_machine::id() {
+            msg!(
+                "Transaction had ix with program id {}",
+                &previous_instruction.program_id
+            );
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+
+        let discriminator = &previous_instruction.data[0..8];
+        if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
+            msg!(
+                "Transaction had ix with data {:?}",
+                discriminator
+            );
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+
+        let mint_ix_accounts = previous_instruction.accounts;
+        let mint_ix_cm = mint_ix_accounts[0].pubkey;
+        let mint_ix_metadata = mint_ix_accounts[4].pubkey;
+        let signer = mint_ix_accounts[6].pubkey;
+        let candy_key = ctx.accounts.candy_machine.key();
+        let metadata =  ctx.accounts.metadata.key();
+        let payer = ctx.accounts.payer.key();
+
+        if &signer != &payer {
+            msg!("Signer with pubkey {} does not match the mint ix Signer with pubkey {}", mint_ix_cm, candy_key);
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+        if &mint_ix_cm != &candy_key {
+            msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, candy_key);
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+        if mint_ix_metadata != metadata {
+            msg!(
+                "Metadata with pubkey {} does not match the mint ix metadata with pubkey {}",
+                mint_ix_metadata,
+                metadata
+            );
+            return Err(ErrorCode::SuspiciousTransaction.into());
+        }
+
+        let collection_pda = &ctx.accounts.collection_pda;
+        let collection_mint = ctx.accounts.collection_mint.to_account_info();
+        if &collection_pda.mint != &collection_mint.key() {
+            return Err(ErrorCode::MismatchedCollectionMint.into());
+        }
+        let seeds = [b"collection".as_ref(), candy_key.as_ref()];
+        let bump = assert_derivation(&candy_machine::id(), &collection_pda.to_account_info(), &seeds)?;
+        let signer_seeds = [b"collection".as_ref(), candy_key.as_ref(), &[bump]];
+        let set_collection_infos = vec![
+            ctx.accounts.metadata.to_account_info(),
+            collection_pda.to_account_info(),
+            ctx.accounts.payer.to_account_info(),
+            ctx.accounts.authority.to_account_info(),
+            collection_mint.to_account_info(),
+            ctx.accounts.collection_metadata.to_account_info(),
+            ctx.accounts.collection_master_edition.to_account_info(),
+            ctx.accounts.collection_authority_record.to_account_info(),
+        ];
+        invoke_signed(
+            &set_and_verify_collection(
+                ctx.accounts.token_metadata_program.key(),
+                ctx.accounts.metadata.key(),
+                collection_pda.key(),
+                ctx.accounts.payer.key(),
+                ctx.accounts.authority.key(),
+                collection_mint.key(),
+                ctx.accounts.collection_metadata.key(),
+                ctx.accounts.collection_master_edition.key(),
+                Some(ctx.accounts.collection_authority_record.key()),
+            ),
+            set_collection_infos.as_slice(),
+            &[&signer_seeds],
+        )?;
         Ok(())
     }
 
@@ -513,8 +594,8 @@ pub mod nft_candy_machine_v2 {
                 .ok_or(ErrorCode::NumericalOverflowError)?;
             let my_position_in_vec = bit_mask_vec_start
                 + position
-                .checked_div(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+                    .checked_div(8)
+                    .ok_or(ErrorCode::NumericalOverflowError)?;
             let position_from_right = 7 - position
                 .checked_rem(8)
                 .ok_or(ErrorCode::NumericalOverflowError)?;
@@ -560,8 +641,8 @@ pub mod nft_candy_machine_v2 {
 
         let mut candy_machine = CandyMachine {
             data,
-            authority: *ctx.accounts.authority.key,
-            wallet: *ctx.accounts.wallet.key,
+            authority: ctx.accounts.authority.key(),
+            wallet: ctx.accounts.wallet.key(),
             token_mint: None,
             items_redeemed: 0,
         };
@@ -575,7 +656,7 @@ pub mod nft_candy_machine_v2 {
             assert_owned_by(&token_mint_info, &spl_token::id())?;
             assert_owned_by(&ctx.accounts.wallet, &spl_token::id())?;
 
-            if token_account.mint != *token_mint_info.key {
+            if token_account.mint != token_mint_info.key() {
                 return Err(ErrorCode::MintMismatch.into());
             }
 
@@ -619,6 +700,116 @@ pub mod nft_candy_machine_v2 {
         Ok(())
     }
 
+    pub fn set_collection(ctx: Context<SetCollection>) -> ProgramResult {
+        let mint = ctx.accounts.mint.to_account_info();
+        let metadata: Metadata =
+            Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
+        if &metadata.update_authority != &ctx.accounts.authority.key() {
+            return Err(ErrorCode::IncorrectCollectionAuthority.into());
+        };
+        if &metadata.mint != &mint.key() {
+            return Err(MetadataError::MintMismatch.into());
+        }
+        let edition = ctx.accounts.edition.to_account_info();
+        let authority_record = ctx.accounts.collection_authority_record.to_account_info();
+        let candy_machine = &ctx.accounts.candy_machine;
+        if authority_record.data_is_empty() {
+            assert_master_edition(&metadata, &edition)?;
+            let approve_collection_infos = vec![
+                authority_record.clone(),
+                ctx.accounts.collection_pda.to_account_info(),
+                ctx.accounts.authority.to_account_info(),
+                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.metadata.to_account_info(),
+                mint.clone(),
+                ctx.accounts.system_program.to_account_info(),
+                ctx.accounts.rent.to_account_info(),
+            ];
+            msg!(
+                "About to approve collection authority for {} with new authority {}.",
+                ctx.accounts.metadata.key(),
+                ctx.accounts.collection_pda.key
+            );
+            invoke(
+                &approve_collection_authority(
+                    ctx.accounts.token_metadata_program.key(),
+                    authority_record.key(),
+                    ctx.accounts.collection_pda.to_account_info().key(),
+                    ctx.accounts.authority.key(),
+                    ctx.accounts.payer.key(),
+                    ctx.accounts.metadata.key(),
+                    mint.key.clone(),
+                ),
+                approve_collection_infos.as_slice(),
+            )?;
+            msg!(
+                "Successfully approved collection authority. Now setting PDA mint to {}.",
+                mint.key()
+            );
+            if ctx.accounts.collection_pda.data_is_empty() {
+                create_or_allocate_account_raw(
+                    crate::id(),
+                    &ctx.accounts.collection_pda.to_account_info(),
+                    &ctx.accounts.rent.to_account_info(),
+                    &ctx.accounts.system_program.to_account_info(),
+                    &ctx.accounts.authority.to_account_info(),
+                    COLLECTION_PDA_SIZE,
+                    &[
+                        b"collection".as_ref(),
+                        &candy_machine.key().as_ref(),
+                        &[*ctx.bumps.get("collection_pda").unwrap()],
+                    ],
+                )?;
+                let mut data_ref: &mut [u8] =
+                    &mut ctx.accounts.collection_pda.try_borrow_mut_data()?;
+                let mut collection_pda_object: CollectionPDA =
+                    AnchorDeserialize::deserialize(&mut &*data_ref)?;
+                collection_pda_object.mint = mint.key();
+                collection_pda_object.candy_machine = candy_machine.key();
+                collection_pda_object.try_serialize(&mut data_ref)?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn remove_collection(ctx: Context<RemoveCollection>) -> ProgramResult {
+        let mint = ctx.accounts.mint.to_account_info();
+        let metadata: Metadata =
+            Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
+        if &metadata.update_authority != &ctx.accounts.authority.key() {
+            return Err(ErrorCode::IncorrectCollectionAuthority.into());
+        };
+        if &metadata.mint != &mint.key() {
+            return Err(MetadataError::MintMismatch.into());
+        }
+
+        let authority_record = ctx.accounts.collection_authority_record.to_account_info();
+
+        let revoke_collection_infos = vec![
+            authority_record.clone(),
+            ctx.accounts.collection_pda.to_account_info(),
+            ctx.accounts.authority.to_account_info(),
+            ctx.accounts.metadata.to_account_info(),
+            mint.clone(),
+        ];
+        msg!(
+            "About to revoke collection authority for {}.",
+            ctx.accounts.metadata.key()
+        );
+        invoke(
+            &revoke_collection_authority(
+                ctx.accounts.token_metadata_program.key(),
+                authority_record.key(),
+                ctx.accounts.collection_pda.key(),
+                ctx.accounts.authority.key(),
+                ctx.accounts.metadata.key(),
+                mint.key(),
+            ),
+            revoke_collection_infos.as_slice(),
+        )?;
+        Ok(())
+    }
+
     pub fn update_authority(
         ctx: Context<UpdateCandyMachine>,
         new_authority: Option<Pubkey>,
@@ -644,6 +835,20 @@ pub mod nft_candy_machine_v2 {
             .checked_add(snapshot)
             .ok_or(ErrorCode::NumericalOverflowError)?;
 
+        if ctx.remaining_accounts.len() > 0 {
+            let seeds = [b"collection".as_ref(), pay.key.as_ref()];
+            let pay = &ctx.remaining_accounts[0];
+            if &pay.key() != &Pubkey::find_program_address(&seeds, &candy_machine::id()).0 {
+                return Err(ErrorCode::MismatchedCollectionPDA.into());
+            }
+            let snapshot: u64 = pay.lamports();
+            **pay.lamports.borrow_mut() = 0;
+            **authority.lamports.borrow_mut() = authority
+                .lamports()
+                .checked_add(snapshot)
+                .ok_or(ErrorCode::NumericalOverflowError)?;
+        }
+
         Ok(())
     }
 }
@@ -657,10 +862,10 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
             + (data.items_available as usize) * CONFIG_LINE_SIZE
             + 8
             + 2 * ((data
-            .items_available
-            .checked_div(8)
-            .ok_or(ErrorCode::NumericalOverflowError)?
-            + 1) as usize)
+                .items_available
+                .checked_div(8)
+                .ok_or(ErrorCode::NumericalOverflowError)?
+                + 1) as usize)
     };
 
     Ok(num)
@@ -670,13 +875,91 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
 #[derive(Accounts)]
 #[instruction(data: CandyMachineData)]
 pub struct InitializeCandyMachine<'info> {
+    /// CHECK: account constraints checked in account trait
     #[account(zero, rent_exempt = skip, constraint = candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= get_space_for_candy(data)?)]
     candy_machine: UncheckedAccount<'info>,
+    /// CHECK: wallet can be any account and is not written to or read
     wallet: UncheckedAccount<'info>,
+    /// CHECK: authority can be any account and is not written to or read
     authority: UncheckedAccount<'info>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+}
+
+/// Sets and verifies the collection during a candy machine mint
+#[derive(Accounts)]
+pub struct SetCollectionDuringMint<'info> {
+    #[account(has_one = authority)]
+    candy_machine: Account<'info, CandyMachine>,
+    /// CHECK: account checked in CPI/instruction sysvar
+    metadata: UncheckedAccount<'info>,
+    payer: Signer<'info>,
+    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
+    collection_pda: Account<'info, CollectionPDA>,
+    /// CHECK: account constraints checked in account trait
+    #[account(address = mpl_token_metadata::id())]
+    token_metadata_program: UncheckedAccount<'info>,
+    /// CHECK: account constraints checked in account trait
+    #[account(address = sysvar::instructions::id())]
+    instructions: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    collection_mint: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    collection_metadata: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    collection_master_edition: UncheckedAccount<'info>,
+    /// CHECK: authority can be any account and is checked in CPI
+    authority: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    collection_authority_record: UncheckedAccount<'info>,
+}
+
+/// Set the collection PDA for the candy machine
+#[derive(Accounts)]
+pub struct SetCollection<'info> {
+    #[account(has_one = authority)]
+    candy_machine: Account<'info, CandyMachine>,
+    authority: Signer<'info>,
+    /// CHECK: account constraints checked in account trait
+    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
+    collection_pda: UncheckedAccount<'info>,
+    payer: Signer<'info>,
+    system_program: Program<'info, System>,
+    rent: Sysvar<'info, Rent>,
+
+    /// CHECK: account checked in CPI
+    metadata: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    mint: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    edition: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    #[account(mut)]
+    collection_authority_record: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    #[account(address = mpl_token_metadata::id())]
+    token_metadata_program: UncheckedAccount<'info>,
+}
+
+/// Set the collection PDA for the candy machine
+#[derive(Accounts)]
+pub struct RemoveCollection<'info> {
+    #[account(has_one = authority)]
+    candy_machine: Account<'info, CandyMachine>,
+    authority: Signer<'info>,
+    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close=authority)]
+    collection_pda: Account<'info, CollectionPDA>,
+    /// CHECK: account checked in CPI
+    metadata: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    mint: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    #[account(mut)]
+    collection_authority_record: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
+    #[account(address = mpl_token_metadata::id())]
+    token_metadata_program: UncheckedAccount<'info>,
 }
 
 /// Add multiple config lines to the candy machine.
@@ -694,6 +977,8 @@ pub struct WithdrawFunds<'info> {
     candy_machine: Account<'info, CandyMachine>,
     #[account(address = candy_machine.authority)]
     authority: Signer<'info>,
+    // > Only if collection
+    // CollectionPDA account
 }
 
 /// Mint a new NFT pseudo-randomly from the config array.
@@ -704,22 +989,28 @@ pub struct MintNFT<'info> {
     mut,
     has_one = wallet
     )]
-    candy_machine: Account<'info, CandyMachine>,
+    candy_machine: Box<Account<'info, CandyMachine>>,
+    /// CHECK: account constraints checked in account trait
     #[account(seeds=[PREFIX.as_bytes(), candy_machine.key().as_ref()], bump=creator_bump)]
     candy_machine_creator: UncheckedAccount<'info>,
     payer: Signer<'info>,
+    /// CHECK: wallet can be any account and is not written to or read
     #[account(mut)]
     wallet: UncheckedAccount<'info>,
     // With the following accounts we aren't using anchor macros because they are CPI'd
     // through to token-metadata which will do all the validations we need on them.
+    /// CHECK: account checked in CPI
     #[account(mut)]
     metadata: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
     #[account(mut)]
     mint: UncheckedAccount<'info>,
     mint_authority: Signer<'info>,
     update_authority: Signer<'info>,
+    /// CHECK: account checked in CPI
     #[account(mut)]
     master_edition: UncheckedAccount<'info>,
+    /// CHECK: account checked in CPI
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
@@ -727,7 +1018,9 @@ pub struct MintNFT<'info> {
     rent: Sysvar<'info, Rent>,
     clock: Sysvar<'info, Clock>,
     // Leaving the name the same for IDL backward compatability
+    /// CHECK: account checked in CPI
     recent_blockhashes: UncheckedAccount<'info>,
+    /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::instructions::id())]
     instruction_sysvar_account: UncheckedAccount<'info>,
     // > Only needed if candy machine has a gatekeeper
@@ -754,6 +1047,7 @@ pub struct UpdateCandyMachine<'info> {
     )]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
+    /// CHECK: wallet can be any account and is not written to or read
     wallet: UncheckedAccount<'info>,
 }
 
@@ -770,6 +1064,14 @@ pub struct CandyMachine {
     // There is actually lines and lines of data after this but we explicitly never want them deserialized.
     // here there is a borsh vec u32 indicating number of bytes in bitmask array.
     // here there is a number of bytes equal to ceil(max_number_of_lines/8) and it is a bit mask used to figure out when to increment borsh vec u32
+}
+const COLLECTION_PDA_SIZE: usize = 8 + 64;
+/// Collection PDA account
+#[account]
+#[derive(Default, Debug)]
+pub struct CollectionPDA {
+    pub mint: Pubkey,
+    pub candy_machine: Pubkey,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
@@ -888,15 +1190,15 @@ pub fn get_good_index(
         + (items_available) * CONFIG_LINE_SIZE
         + 4
         + items_available
-        .checked_div(8)
-        .ok_or(ErrorCode::NumericalOverflowError)?
+            .checked_div(8)
+            .ok_or(ErrorCode::NumericalOverflowError)?
         + 4;
 
     while taken > 0 && index_to_use < items_available {
         let my_position_in_vec = bit_mask_vec_start
             + index_to_use
-            .checked_div(8)
-            .ok_or(ErrorCode::NumericalOverflowError)?;
+                .checked_div(8)
+                .ok_or(ErrorCode::NumericalOverflowError)?;
         /*msg!(
             "My position is {} and value there is {}",
             my_position_in_vec,
@@ -950,7 +1252,6 @@ pub fn get_good_index(
             }
         }
     }
-
     Ok((index_to_use, found))
 }
 
@@ -1095,4 +1396,10 @@ pub enum ErrorCode {
     CannotSwitchToHiddenSettings,
     #[msg("Incorrect SlotHashes PubKey")]
     IncorrectSlotHashesPubkey,
+    #[msg("Incorrect collection NFT authority")]
+    IncorrectCollectionAuthority,
+    #[msg("Collection PDA address is invalid")]
+    MismatchedCollectionPDA,
+    #[msg("Provided mint account doesn't match collection PDA mint")]
+    MismatchedCollectionMint,
 }
