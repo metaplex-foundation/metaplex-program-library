@@ -14,7 +14,7 @@ pub fn assert_valid_use(
         if i.use_method == UseMethod::Single && (i.total != 1 || i.remaining != 1) {
             return Err(MetadataError::InvalidUseMethod.into());
         }
-        if i.use_method == UseMethod::Multiple && i.total < 2 {
+        if i.use_method == UseMethod::Multiple && (i.total < 2 || i.total < i.remaining) {
             return Err(MetadataError::InvalidUseMethod.into());
         }
     }
@@ -50,7 +50,7 @@ pub fn assert_use_authority_derivation(
     use_authority_record_info: &AccountInfo,
     user_info: &AccountInfo,
     mint_info: &AccountInfo,
-) -> Result<u8, ProgramError>{
+) -> Result<u8, ProgramError> {
     let use_authority_seeds = [
         PREFIX.as_bytes(),
         program_id.as_ref(),

@@ -1,6 +1,8 @@
 import BN from 'bn.js';
 import test from 'tape';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore these exports actually exist but aren't setup correctly
+import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token';
 import {
   assertConfirmedTransaction,
   assertError,
@@ -163,12 +165,7 @@ test('claim resource: success', async (t) => {
     payer.publicKey,
   );
 
-  const destination = await Token.getAssociatedTokenAddress(
-    ASSOCIATED_TOKEN_PROGRAM_ID,
-    TOKEN_PROGRAM_ID,
-    treasuryMint.publicKey,
-    payer.publicKey,
-  );
+  const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
   const metadata = await Metadata.getPDA(resourceMint.publicKey);
 
@@ -231,8 +228,7 @@ test('claim resource: success', async (t) => {
 
   assertConfirmedTransaction(t, claimResourceRes.txConfirmed);
 
-  const token = new Token(connection, resourceMint.publicKey, TOKEN_PROGRAM_ID, payer);
-  const createdToken = await token.getAccountInfo(claimToken.publicKey);
+  const createdToken = await getAccount(connection, claimToken.publicKey);
 
   t.assert(createdToken.mint.toBase58() === resourceMint.publicKey.toBase58());
   t.assert(createdToken.owner.toBase58() === payer.publicKey.toBase58());

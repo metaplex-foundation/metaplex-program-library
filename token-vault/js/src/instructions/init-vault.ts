@@ -1,8 +1,8 @@
 import {
   AccountLayout as TokenAccountLayout,
+  AuthorityType,
+  createSetAuthorityInstruction,
   MintLayout,
-  Token,
-  TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
   Connection,
@@ -106,13 +106,11 @@ export class VaultSetup {
   // Fraction Mint
   // -----------------
   async supplyFractionMint(fractionMint: PublicKey, currentMintAuthority: Keypair) {
-    const transferAuthIx = Token.createSetAuthorityInstruction(
-      TOKEN_PROGRAM_ID,
+    const transferAuthIx = createSetAuthorityInstruction(
       fractionMint, // account
-      this.vaultPda, // new authority
-      'MintTokens', // authority type
       currentMintAuthority.publicKey, // current authority
-      [],
+      AuthorityType.MintTokens,
+      this.vaultPda, // new authority
     );
     this.instructions.push(transferAuthIx);
     this.signers.push(currentMintAuthority);

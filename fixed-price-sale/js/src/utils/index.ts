@@ -2,6 +2,7 @@ import { TokenAccount } from '@metaplex-foundation/mpl-core';
 import { Edition, MasterEdition, Metadata } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { PROGRAM_ID } from '../consts';
+import { strict as assert } from 'assert';
 
 const VAULT_OWNER_PREFIX = 'mt_vault';
 const HISTORY_PREFIX = 'history';
@@ -59,6 +60,7 @@ export const validateMembershipToken = async (
   me: MasterEdition,
   ta: TokenAccount,
 ) => {
+  assert(ta.data != null, 'token account data cannot be null');
   const edition = (await Metadata.getEdition(connection, ta.data.mint)) as Edition;
   return edition.data.parent === me.pubkey.toString();
 };

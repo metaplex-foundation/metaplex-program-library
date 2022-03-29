@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { ConfigLine, configLineBeet } from '../types/ConfigLine';
 
 /**
  * @category Instructions
@@ -16,7 +16,7 @@ import * as web3 from '@solana/web3.js';
  */
 export type AddConfigLinesInstructionArgs = {
   index: number;
-  configLines: definedTypes.ConfigLine[];
+  configLines: ConfigLine[];
 };
 /**
  * @category Instructions
@@ -31,7 +31,7 @@ const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['index', beet.u32],
-    ['configLines', beet.array(definedTypes.configLineBeet)],
+    ['configLines', beet.array(configLineBeet)],
   ],
   'AddConfigLinesInstructionArgs',
 );

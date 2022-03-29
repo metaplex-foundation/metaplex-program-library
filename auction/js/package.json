@@ -37,12 +37,13 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
   "dependencies": {
-    "@metaplex-foundation/mpl-core": "^0.0.2",
-    "@solana/spl-token": "^0.1.8",
+    "@metaplex-foundation/mpl-core": "^0.0.5",
+    "@solana/spl-token": "^0.2.0",
     "@solana/web3.js": "^1.35.1"
   },
   "devDependencies": {
     "eslint": "^8.3.0",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.2"
   }
 }

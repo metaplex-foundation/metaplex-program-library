@@ -44,7 +44,7 @@ export const createBuyTransaction = async ({
   newMintMetadata,
   newTokenAccount,
 }: BuyParams) => {
-  const instruction = await createBuyInstruction(
+  const instruction = createBuyInstruction(
     {
       // buyer wallet
       userWallet: buyer,

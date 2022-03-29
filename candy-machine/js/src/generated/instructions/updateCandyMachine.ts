@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { CandyMachineData, candyMachineDataBeet } from '../types/CandyMachineData';
 
 /**
  * @category Instructions
@@ -15,7 +15,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type UpdateCandyMachineInstructionArgs = {
-  data: definedTypes.CandyMachineData;
+  data: CandyMachineData;
 };
 /**
  * @category Instructions
@@ -29,7 +29,7 @@ const updateCandyMachineStruct = new beet.FixableBeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['data', definedTypes.candyMachineDataBeet],
+    ['data', candyMachineDataBeet],
   ],
   'UpdateCandyMachineInstructionArgs',
 );

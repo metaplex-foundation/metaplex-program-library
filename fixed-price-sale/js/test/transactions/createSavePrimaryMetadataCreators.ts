@@ -1,4 +1,3 @@
-import test from 'tape';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
@@ -7,7 +6,6 @@ import { createSavePrimaryMetadataCreatorsInstruction } from '../../src/generate
 import { Creator } from '../../src/types';
 
 type CreateSecondaryMetadataCreatorsParams = {
-  test: test.Test;
   transactionHandler: PayerTransactionHandler;
   payer: Keypair;
   connection: Connection;
