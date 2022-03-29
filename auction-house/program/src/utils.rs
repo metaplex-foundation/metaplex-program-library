@@ -1,4 +1,4 @@
-use crate::{AuctionHouse, ErrorCode, PREFIX};
+use crate::{auctioneer::*, constants::*, AuctionHouse, ErrorCode, PREFIX};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -575,4 +575,39 @@ pub fn assert_valid_trade_state<'a>(
         (Err(_), Ok(bump)) if bump == ts_bump => Ok(bump),
         _ => Err(ErrorCode::DerivedKeyInvalid.into()),
     }
+}
+
+pub fn assert_valid_auctioneer_and_scope(
+    auction_house_instance: &Pubkey,
+    auctioneer_program_id: &Pubkey,
+    auctioneer_pda: &AccountInfo,
+    scope: AuthorityScope,
+) -> Result<(), ProgramError> {
+    let sale_authority_seeds = [
+        SALE_AUTHORITY.as_bytes(),
+        auction_house_instance.as_ref(),
+        auctioneer_program_id.as_ref(),
+    ];
+
+    // Assert we're given the correctly derived account.
+    assert_derivation(&crate::id(), auctioneer_pda, &sale_authority_seeds)?;
+
+    // Deserialize into the Rust struct.
+    let data = auctioneer_pda.data.borrow_mut();
+    let auctioneer = Auctioneer::deserialize(&mut data.as_ref())?;
+
+    // Assert authority, auction house instance and scopes are correct.
+    if auctioneer.auction_house != *auction_house_instance {
+        return Err(ErrorCode::InvalidAuctioneer.into());
+    }
+
+    if auctioneer.auctioneer_program != *auctioneer_program_id {
+        return Err(ErrorCode::InvalidAuctioneer.into());
+    }
+
+    if !(auctioneer.scopes.contains(&scope)) {
+        return Err(ErrorCode::InvalidAuctioneerScope.into());
+    }
+
+    Ok(())
 }

@@ -2,12 +2,15 @@
 //! AuctionHouse is a protocol for marketplaces to implement a decentralized sales contract. It is simple, fast and very cheap. AuctionHouse is a Solana program available on Mainnet Beta and Devnet. Anyone can create an AuctionHouse and accept any SPL token they wish.
 //!
 //! Full docs can be found [here](https://docs.metaplex.com/auction-house/definition).
+pub mod auctioneer;
 pub mod bid;
 pub mod constants;
+pub mod errors;
 pub mod pda;
 pub mod receipt;
+pub mod sale_authority;
 pub mod utils;
-use crate::{bid::*, constants::*, receipt::*, utils::*};
+use crate::{auctioneer::*, bid::*, constants::*, errors::*, receipt::*, utils::*};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -26,6 +29,8 @@ anchor_lang::declare_id!("hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk");
 
 #[program]
 pub mod auction_house {
+
+    use crate::sale_authority::AuthorityScope;
 
     use super::*;
     use solana_program::program_memory::sol_memset;
@@ -313,6 +318,11 @@ pub mod auction_house {
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
 
+        // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+        if auction_house.has_auctioneer {
+            return Err(ErrorCode::MustUseAuctioneerHandler.into());
+        }
+
         let auction_house_key = auction_house.key();
         let seeds = [
             PREFIX.as_bytes(),
@@ -434,6 +444,11 @@ pub mod auction_house {
         let token_program = &ctx.accounts.token_program;
         let rent = &ctx.accounts.rent;
 
+        // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+        if auction_house.has_auctioneer {
+            return Err(ErrorCode::MustUseAuctioneerHandler.into());
+        }
+
         let auction_house_key = auction_house.key();
         let seeds = [
             PREFIX.as_bytes(),
@@ -524,6 +539,12 @@ pub mod auction_house {
         let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
         let trade_state = &ctx.accounts.trade_state;
         let token_program = &ctx.accounts.token_program;
+
+        // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+        if auction_house.has_auctioneer {
+            return Err(ErrorCode::MustUseAuctioneerHandler.into());
+        }
+
         let ts_bump = trade_state.try_borrow_data()?[0];
         assert_valid_trade_state(
             &wallet.key(),
@@ -627,6 +648,11 @@ pub mod auction_house {
         let authority_clone = authority.to_account_info();
         let buyer_receipt_clone = buyer_receipt_token_account.to_account_info();
         let token_account_clone = token_account.to_account_info();
+
+        // If it has an auctioneer authority delegated must use execute_sale_with_auctioneer handler.
+        if auction_house.has_auctioneer {
+            return Err(ErrorCode::MustUseAuctioneerHandler.into());
+        }
 
         let is_native = treasury_mint.key() == spl_token::native_mint::id();
 
@@ -916,6 +942,11 @@ pub mod auction_house {
         let program_as_signer = &ctx.accounts.program_as_signer;
         let rent = &ctx.accounts.rent;
 
+        // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+        if auction_house.has_auctioneer {
+            return Err(ErrorCode::MustUseAuctioneerHandler.into());
+        }
+
         // Wallet has to be a signer but there are different kinds of errors when it's not.
         if !wallet.to_account_info().is_signer {
             if buyer_price == 0 {
@@ -1013,6 +1044,17 @@ pub mod auction_house {
         Ok(())
     }
 
+    pub fn sell_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, SellWithAuctioneer<'info>>,
+        trade_state_bump: u8,
+        _free_trade_state_bump: u8,
+        _program_as_signer_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> ProgramResult {
+        auctioneer::sell_with_auctioneer(ctx, trade_state_bump, 0, 0, buyer_price, token_size)
+    }
+
     /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
     pub fn buy<'info>(
         ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
@@ -1030,6 +1072,22 @@ pub mod auction_house {
         )
     }
 
+    pub fn buy_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> ProgramResult {
+        auctioneer::private_bid_with_auctioneer(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
     /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
     pub fn public_buy<'info>(
         ctx: Context<'_, '_, '_, 'info, PublicBuy<'info>>,
@@ -1039,6 +1097,23 @@ pub mod auction_house {
         token_size: u64,
     ) -> ProgramResult {
         public_bid(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
+    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    pub fn public_buy_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, PublicBuyWithAuctioneer<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> ProgramResult {
+        auctioneer::public_bid_with_auctioneer(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -1371,7 +1446,8 @@ pub const AUCTION_HOUSE_SIZE: usize = 8 + // key
 2 + // seller fee basis points
 1 + // requires sign off
 1 + // can change sale price
-220; //padding
+1 + // has external auctioneer program as an authority
+219; //padding
 
 #[account]
 pub struct AuctionHouse {
@@ -1388,66 +1464,7 @@ pub struct AuctionHouse {
     pub seller_fee_basis_points: u16,
     pub requires_sign_off: bool,
     pub can_change_sale_price: bool,
+    pub has_auctioneer: bool,
 }
 
 pub const TRADE_STATE_SIZE: usize = 1;
-
-#[error]
-pub enum ErrorCode {
-    #[msg("PublicKeyMismatch")]
-    PublicKeyMismatch,
-    #[msg("InvalidMintAuthority")]
-    InvalidMintAuthority,
-    #[msg("UninitializedAccount")]
-    UninitializedAccount,
-    #[msg("IncorrectOwner")]
-    IncorrectOwner,
-    #[msg("PublicKeysShouldBeUnique")]
-    PublicKeysShouldBeUnique,
-    #[msg("StatementFalse")]
-    StatementFalse,
-    #[msg("NotRentExempt")]
-    NotRentExempt,
-    #[msg("NumericalOverflow")]
-    NumericalOverflow,
-    #[msg("Expected a sol account but got an spl token account instead")]
-    ExpectedSolAccount,
-    #[msg("Cannot exchange sol for sol")]
-    CannotExchangeSOLForSol,
-    #[msg("If paying with sol, sol wallet must be signer")]
-    SOLWalletMustSign,
-    #[msg("Cannot take this action without auction house signing too")]
-    CannotTakeThisActionWithoutAuctionHouseSignOff,
-    #[msg("No payer present on this txn")]
-    NoPayerPresent,
-    #[msg("Derived key invalid")]
-    DerivedKeyInvalid,
-    #[msg("Metadata doesn't exist")]
-    MetadataDoesntExist,
-    #[msg("Invalid token amount")]
-    InvalidTokenAmount,
-    #[msg("Both parties need to agree to this sale")]
-    BothPartiesNeedToAgreeToSale,
-    #[msg("Cannot match free sales unless the auction house or seller signs off")]
-    CannotMatchFreeSalesWithoutAuctionHouseOrSellerSignoff,
-    #[msg("This sale requires a signer")]
-    SaleRequiresSigner,
-    #[msg("Old seller not initialized")]
-    OldSellerNotInitialized,
-    #[msg("Seller ata cannot have a delegate set")]
-    SellerATACannotHaveDelegate,
-    #[msg("Buyer ata cannot have a delegate set")]
-    BuyerATACannotHaveDelegate,
-    #[msg("No valid signer present")]
-    NoValidSignerPresent,
-    #[msg("BP must be less than or equal to 10000")]
-    InvalidBasisPoints,
-    #[msg("The trade state account does not exist")]
-    TradeStateDoesntExist,
-    #[msg("The trade state is not empty")]
-    TradeStateIsNotEmpty,
-    #[msg("The receipt is empty")]
-    ReceiptIsEmpty,
-    #[msg("The instruction does not match")]
-    InstructionMismatch,
-}

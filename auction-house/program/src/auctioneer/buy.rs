@@ -1,5 +1,3 @@
-//! Create both private and public bids.
-//! A private bid is a bid on a specific NFT *held by a specific person*. A public bid is a bid on a specific NFT *regardless of who holds it*.
 use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke, system_instruction},
@@ -8,69 +6,12 @@ use anchor_lang::{
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::program_memory::sol_memset;
 
-use crate::{constants::*, utils::*, AuctionHouse, ErrorCode, TRADE_STATE_SIZE};
-
-/// Accounts for the [`public_bid` handler](fn.public_bid.html).
-#[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct PublicBuy<'info> {
-    wallet: Signer<'info>,
-    #[account(mut)]
-    payment_account: UncheckedAccount<'info>,
-    transfer_authority: UncheckedAccount<'info>,
-    treasury_mint: Account<'info, Mint>,
-    token_account: Account<'info, TokenAccount>,
-    metadata: UncheckedAccount<'info>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
-    escrow_payment_account: UncheckedAccount<'info>,
-    authority: UncheckedAccount<'info>,
-    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
-    buyer_trade_state: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
-    system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
-}
-
-/// Create a bid on a specific SPL token.
-/// Public bids are specific to the token itself, rather than the auction, and remain open indefinitely until either the user closes it or the requirements for the bid are met and it is matched with a counter bid and closed as a transaction.
-pub fn public_bid(
-    ctx: Context<PublicBuy>,
-    trade_state_bump: u8,
-    escrow_payment_bump: u8,
-    buyer_price: u64,
-    token_size: u64,
-) -> ProgramResult {
-    bid_logic(
-        ctx.accounts.wallet.to_owned(),
-        ctx.accounts.payment_account.to_owned(),
-        ctx.accounts.transfer_authority.to_owned(),
-        ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
-        ctx.accounts.metadata.to_owned(),
-        ctx.accounts.escrow_payment_account.to_owned(),
-        ctx.accounts.authority.to_owned(),
-        ctx.accounts.auction_house.to_owned(),
-        ctx.accounts.auction_house_fee_account.to_owned(),
-        ctx.accounts.buyer_trade_state.to_owned(),
-        ctx.accounts.token_program.to_owned(),
-        ctx.accounts.system_program.to_owned(),
-        ctx.accounts.rent.to_owned(),
-        trade_state_bump,
-        escrow_payment_bump,
-        buyer_price,
-        token_size,
-        true,
-    )
-}
+use crate::{constants::*, errors::*, utils::*, AuctionHouse, *};
 
 /// Accounts for the [`private_bid` handler](fn.private_bid.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct Buy<'info> {
+pub struct BuyWithAuctioneer<'info> {
     wallet: Signer<'info>,
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
@@ -93,8 +34,8 @@ pub struct Buy<'info> {
 }
 
 /// Create a private bid on a specific SPL token that is *held by a specific wallet*.
-pub fn private_bid<'info>(
-    ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
+pub fn private_bid_with_auctioneer<'info>(
+    ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
     trade_state_bump: u8,
     escrow_payment_bump: u8,
     buyer_price: u64,
@@ -123,6 +64,63 @@ pub fn private_bid<'info>(
     )
 }
 
+/// Accounts for the [`public_bid` handler](fn.public_bid.html).
+#[derive(Accounts)]
+#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+pub struct PublicBuyWithAuctioneer<'info> {
+    wallet: Signer<'info>,
+    #[account(mut)]
+    payment_account: UncheckedAccount<'info>,
+    transfer_authority: UncheckedAccount<'info>,
+    treasury_mint: Account<'info, Mint>,
+    token_account: Account<'info, TokenAccount>,
+    metadata: UncheckedAccount<'info>,
+    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
+    escrow_payment_account: UncheckedAccount<'info>,
+    authority: UncheckedAccount<'info>,
+    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
+    auction_house: Account<'info, AuctionHouse>,
+    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
+    auction_house_fee_account: UncheckedAccount<'info>,
+    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
+    buyer_trade_state: UncheckedAccount<'info>,
+    token_program: Program<'info, Token>,
+    system_program: Program<'info, System>,
+    rent: Sysvar<'info, Rent>,
+}
+
+/// Create a bid on a specific SPL token.
+/// Public bids are specific to the token itself, rather than the auction, and remain open indefinitely until either the user closes it or the requirements for the bid are met and it is matched with a counter bid and closed as a transaction.
+pub fn public_bid_with_auctioneer(
+    ctx: Context<PublicBuyWithAuctioneer>,
+    trade_state_bump: u8,
+    escrow_payment_bump: u8,
+    buyer_price: u64,
+    token_size: u64,
+) -> ProgramResult {
+    bid_logic(
+        ctx.accounts.wallet.to_owned(),
+        ctx.accounts.payment_account.to_owned(),
+        ctx.accounts.transfer_authority.to_owned(),
+        ctx.accounts.treasury_mint.to_owned(),
+        ctx.accounts.token_account.to_owned(),
+        ctx.accounts.metadata.to_owned(),
+        ctx.accounts.escrow_payment_account.to_owned(),
+        ctx.accounts.authority.to_owned(),
+        ctx.accounts.auction_house.to_owned(),
+        ctx.accounts.auction_house_fee_account.to_owned(),
+        ctx.accounts.buyer_trade_state.to_owned(),
+        ctx.accounts.token_program.to_owned(),
+        ctx.accounts.system_program.to_owned(),
+        ctx.accounts.rent.to_owned(),
+        trade_state_bump,
+        escrow_payment_bump,
+        buyer_price,
+        token_size,
+        true,
+    )
+}
+
 /// Handles the bid logic for both private and public bids.
 pub fn bid_logic<'info>(
     wallet: Signer<'info>,
@@ -146,8 +144,8 @@ pub fn bid_logic<'info>(
     public: bool,
 ) -> ProgramResult {
     // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
-    if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
+    if !auction_house.has_auctioneer {
+        return Err(ErrorCode::NoAuctioneerProgramSet.into());
     }
 
     assert_valid_trade_state(
