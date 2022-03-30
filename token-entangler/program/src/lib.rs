@@ -8,7 +8,7 @@ use anchor_lang::{
 };
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{Token, TokenAccount},
+    token::{Token, TokenAccount, Mint},
 };
 
 anchor_lang::declare_id!("qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd");
@@ -194,7 +194,7 @@ pub mod token_entangler {
         let rent = &ctx.accounts.rent;
 
         require!(token.mint == token_mint.key(), ErrorCode::InvalidMint);
-        let (token_mint_supply, _) = get_mint_details(token_mint)?;
+        let token_mint_supply = token_mint.supply;
         if token.amount != token_mint_supply {
             return Err(ErrorCode::InvalidTokenAmount.into());
         }
@@ -355,7 +355,7 @@ pub struct Swap<'info> {
     #[account(mut)]
     token: Account<'info, TokenAccount>,
     /// Set to unchecked to avoid stack size limits
-    token_mint: UncheckedAccount<'info>,
+    token_mint: Box<Account<'info, Mint>>,
     replacement_token_metadata: UncheckedAccount<'info>,
     /// Set to unchecked to avoid stack size limits
     replacement_token_mint: UncheckedAccount<'info>,
