@@ -60,6 +60,7 @@ jobs:
 
       # Build deps
       - uses: ./.github/actions/build-token-vault
+      - uses: ./.github/actions/build-token-metadata
 
       # Run test
       - name: test-candy-machine

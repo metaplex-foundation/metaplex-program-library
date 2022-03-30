@@ -36,7 +36,7 @@ use {
 };
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 const EXPIRE_OFFSET: i64 = 10 * 60;
-const PREFIX: &str = "candy_machine";
+pub const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 #[program]
@@ -155,6 +155,8 @@ pub mod candy_machine {
             }
         }
 
+        let cm_key = candy_machine.key();
+        let authority_seeds = [PREFIX.as_bytes(), cm_key.as_ref(), &[creator_bump]];
         if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
             let whitelist_token_account = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
@@ -176,6 +178,32 @@ pub mod candy_machine {
 
                             assert_keys_equal(whitelist_token_mint.key(), ws.mint)?;
 
+                            let whitelist_freeze_authority = if wta.is_frozen() {
+                                let res = &ctx.remaining_accounts[remaining_accounts_counter];
+                                remaining_accounts_counter += 1;
+                                Some(res)
+                            } else { None };
+
+                            if let Some(whitelist_freeze_authority) = whitelist_freeze_authority {
+                                invoke_signed(
+                                    &spl_token::instruction::thaw_account(
+                                        token_program.key,
+                                        whitelist_token_account.key,
+                                        whitelist_token_mint.key,
+                                        whitelist_freeze_authority.key,
+                                        &[candy_machine_creator.key],
+                                    )?,
+                                    &[
+                                        token_program.to_account_info(),
+                                        whitelist_token_account.clone(),
+                                        whitelist_token_mint.clone(),
+                                        whitelist_freeze_authority.clone(),
+                                        candy_machine_creator.to_account_info(),
+                                    ],
+                                    &[&authority_seeds],
+                                )?;
+                            }
+
                             spl_token_burn(TokenBurnParams {
                                 mint: whitelist_token_mint.clone(),
                                 source: whitelist_token_account.clone(),
@@ -184,6 +212,26 @@ pub mod candy_machine {
                                 authority_signer_seeds: None,
                                 token_program: token_program.to_account_info(),
                             })?;
+
+                            if let Some(whitelist_freeze_authority) = whitelist_freeze_authority {
+                                invoke_signed(
+                                    &spl_token::instruction::freeze_account(
+                                        token_program.key,
+                                        whitelist_token_account.key,
+                                        whitelist_token_mint.key,
+                                        whitelist_freeze_authority.key,
+                                        &[candy_machine_creator.key],
+                                    )?,
+                                    &[
+                                        token_program.to_account_info(),
+                                        whitelist_token_account.clone(),
+                                        whitelist_token_mint.clone(),
+                                        whitelist_freeze_authority.clone(),
+                                        candy_machine_creator.to_account_info(),
+                                    ],
+                                    &[&authority_seeds],
+                                )?;
+                            }
                         }
 
                         match candy_machine.data.go_live_date {
@@ -217,6 +265,9 @@ pub mod candy_machine {
                         assert_valid_go_live(payer, clock, candy_machine)?;
                         if ws.mode == WhitelistMintMode::BurnEveryTime {
                             remaining_accounts_counter += 2;
+                            if wta.is_frozen() {
+                                remaining_accounts_counter += 1;
+                            }
                         }
                     }
                 }
@@ -229,6 +280,8 @@ pub mod candy_machine {
                     }
                     if ws.mode == WhitelistMintMode::BurnEveryTime {
                         remaining_accounts_counter += 2;
+                        // if we don't have an ATA for the whitelist mint, the frontend won't add
+                        // the freeze authority to this instruction so no need to increment
                     }
                     assert_valid_go_live(payer, clock, candy_machine)?
                 }
@@ -290,9 +343,6 @@ pub mod candy_machine {
             .items_redeemed
             .checked_add(1)
             .ok_or(ErrorCode::NumericalOverflowError)?;
-
-        let cm_key = candy_machine.key();
-        let authority_seeds = [PREFIX.as_bytes(), cm_key.as_ref(), &[creator_bump]];
 
         let mut creators: Vec<mpl_token_metadata::state::Creator> =
             vec![mpl_token_metadata::state::Creator {
@@ -853,7 +903,7 @@ pub mod candy_machine {
     }
 }
 
-fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, ProgramError> {
+pub fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, ProgramError> {
     let num = if data.hidden_settings.is_some() {
         CONFIG_ARRAY_START
     } else {
