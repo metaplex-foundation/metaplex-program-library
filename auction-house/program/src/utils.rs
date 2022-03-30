@@ -1,4 +1,4 @@
-use crate::{auctioneer::*, constants::*, AuctionHouse, ErrorCode, PREFIX};
+use crate::{constants::*, AuctionHouse, Auctioneer, AuthorityScope, ErrorCode, PREFIX};
 use anchor_lang::{
     prelude::*,
     solana_program::{
