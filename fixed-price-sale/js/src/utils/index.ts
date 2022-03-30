@@ -38,11 +38,11 @@ export const findTradeHistoryAddress = (
   );
 
 export const findPayoutTicketAddress = (
-  funder: PublicKey,
   market: PublicKey,
+  funder: PublicKey,
 ): Promise<[PublicKey, number]> => {
   return PublicKey.findProgramAddress(
-    [Buffer.from(PAYOUT_TICKET_PREFIX), funder.toBuffer(), market.toBuffer()],
+    [Buffer.from(PAYOUT_TICKET_PREFIX), market.toBuffer(), funder.toBuffer()],
     new PublicKey(PROGRAM_ID),
   );
 };
