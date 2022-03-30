@@ -354,7 +354,6 @@ pub struct Swap<'info> {
     payment_transfer_authority: UncheckedAccount<'info>,
     #[account(mut)]
     token: Account<'info, TokenAccount>,
-    /// Set to unchecked to avoid stack size limits
     token_mint: Box<Account<'info, Mint>>,
     replacement_token_metadata: UncheckedAccount<'info>,
     /// Set to unchecked to avoid stack size limits
