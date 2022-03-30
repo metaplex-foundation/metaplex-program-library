@@ -6,9 +6,12 @@
  */
 
 import * as splToken from '@solana/spl-token';
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import {
+  MintPrintingTokensViaTokenArgs,
+  mintPrintingTokensViaTokenArgsBeet,
+} from '../types/MintPrintingTokensViaTokenArgs';
 
 /**
  * @category Instructions
@@ -16,7 +19,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type DeprecatedMintPrintingTokensInstructionArgs = {
-  mintPrintingTokensViaTokenArgs: definedTypes.MintPrintingTokensViaTokenArgs;
+  mintPrintingTokensViaTokenArgs: MintPrintingTokensViaTokenArgs;
 };
 /**
  * @category Instructions
@@ -30,7 +33,7 @@ const DeprecatedMintPrintingTokensStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['mintPrintingTokensViaTokenArgs', definedTypes.mintPrintingTokensViaTokenArgsBeet],
+    ['mintPrintingTokensViaTokenArgs', mintPrintingTokensViaTokenArgsBeet],
   ],
   'DeprecatedMintPrintingTokensInstructionArgs',
 );

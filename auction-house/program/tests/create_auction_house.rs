@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 use anchor_lang::AccountDeserialize;
 
 use mpl_auction_house::{pda::*, AuctionHouse};

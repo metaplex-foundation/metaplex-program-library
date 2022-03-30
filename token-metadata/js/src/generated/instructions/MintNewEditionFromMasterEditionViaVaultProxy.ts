@@ -6,9 +6,12 @@
  */
 
 import * as splToken from '@solana/spl-token';
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import {
+  MintNewEditionFromMasterEditionViaTokenArgs,
+  mintNewEditionFromMasterEditionViaTokenArgsBeet,
+} from '../types/MintNewEditionFromMasterEditionViaTokenArgs';
 
 /**
  * @category Instructions
@@ -16,7 +19,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs = {
-  mintNewEditionFromMasterEditionViaTokenArgs: definedTypes.MintNewEditionFromMasterEditionViaTokenArgs;
+  mintNewEditionFromMasterEditionViaTokenArgs: MintNewEditionFromMasterEditionViaTokenArgs;
 };
 /**
  * @category Instructions
@@ -32,7 +35,7 @@ const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStru
     ['instructionDiscriminator', beet.u8],
     [
       'mintNewEditionFromMasterEditionViaTokenArgs',
-      definedTypes.mintNewEditionFromMasterEditionViaTokenArgsBeet,
+      mintNewEditionFromMasterEditionViaTokenArgsBeet,
     ],
   ],
   'MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs',

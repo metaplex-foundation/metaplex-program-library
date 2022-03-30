@@ -1,5 +1,5 @@
-
 use solana_client::rpc_request::TokenAccountsFilter;
+use solana_sdk::account::ReadableAccount;
 
 use {
     clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand},
@@ -574,11 +574,25 @@ fn create_metadata_account_call(
         .unwrap(),
     ];
 
+    let mut instructions = vec![];
+
+    let mint_authority = if create_new_mint {
+        instructions.append(&mut new_mint_instructions);
+        payer.pubkey()
+    } else {
+        let mint_account = client
+            .get_account(&mint_key)
+            .expect("Could not find mint account.");
+        let mint = spl_token::state::Mint::unpack(mint_account.data())
+            .expect("Failed to deserialize Mint account.");
+        mint.mint_authority.expect("Mint has no mint authority.")
+    };
+
     let new_metadata_instruction = create_metadata_accounts(
         program_key,
         metadata_key,
         mint_key,
-        payer.pubkey(),
+        mint_authority,
         payer.pubkey(),
         update_authority.pubkey(),
         name,
@@ -589,12 +603,6 @@ fn create_metadata_account_call(
         update_authority.pubkey() != payer.pubkey(),
         mutable,
     );
-
-    let mut instructions = vec![];
-
-    if create_new_mint {
-        instructions.append(&mut new_mint_instructions)
-    }
 
     instructions.push(new_metadata_instruction);
 

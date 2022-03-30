@@ -24,7 +24,7 @@ spl-token = { version="~3.2.0", features = [ "no-entrypoint" ] }
 spl-associated-token-account = { version = "~1.0.3", features = ["no-entrypoint"] }
 thiserror = "~1.0"
 borsh = "~0.9.2"
-shank = "~0.0.0" 
+shank = { version = "~0.0.1" }
 
 [dev-dependencies]
 solana-sdk = "~1.9.5"

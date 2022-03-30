@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link MasterEditionV1}
@@ -16,7 +16,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type MasterEditionV1Args = {
-  key: definedTypes.Key;
+  key: Key;
   supply: beet.bignum;
   maxSupply: beet.COption<beet.bignum>;
   printingMint: web3.PublicKey;
@@ -31,7 +31,7 @@ export type MasterEditionV1Args = {
  */
 export class MasterEditionV1 implements MasterEditionV1Args {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly supply: beet.bignum,
     readonly maxSupply: beet.COption<beet.bignum>,
     readonly printingMint: web3.PublicKey,
@@ -129,7 +129,7 @@ export class MasterEditionV1 implements MasterEditionV1Args {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       supply: this.supply,
       maxSupply: this.maxSupply,
       printingMint: this.printingMint.toBase58(),
@@ -144,7 +144,7 @@ export class MasterEditionV1 implements MasterEditionV1Args {
  */
 export const masterEditionV1Beet = new beet.FixableBeetStruct<MasterEditionV1, MasterEditionV1Args>(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['supply', beet.u64],
     ['maxSupply', beet.coption(beet.u64)],
     ['printingMint', beetSolana.publicKey],

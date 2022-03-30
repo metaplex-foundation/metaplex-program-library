@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link UseAuthorityRecord}
@@ -15,7 +15,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type UseAuthorityRecordArgs = {
-  key: definedTypes.Key;
+  key: Key;
   allowedUses: beet.bignum;
   bump: number;
 };
@@ -28,7 +28,7 @@ export type UseAuthorityRecordArgs = {
  */
 export class UseAuthorityRecord implements UseAuthorityRecordArgs {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly allowedUses: beet.bignum,
     readonly bump: number,
   ) {}
@@ -119,7 +119,7 @@ export class UseAuthorityRecord implements UseAuthorityRecordArgs {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       allowedUses: this.allowedUses,
       bump: this.bump,
     };
@@ -135,7 +135,7 @@ export const useAuthorityRecordBeet = new beet.BeetStruct<
   UseAuthorityRecordArgs
 >(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['allowedUses', beet.u64],
     ['bump', beet.u8],
   ],

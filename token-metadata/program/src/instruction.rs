@@ -76,6 +76,7 @@ pub struct UtilizeArgs {
 
 /// Instructions supported by the Metadata program.
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
+#[rustfmt::skip]
 pub enum MetadataInstruction {
     /// Create Metadata object.
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
@@ -127,7 +128,7 @@ pub enum MetadataInstruction {
     #[account(12, name="token_program", desc="Token program")]
     #[account(13, name="system_program", desc="System program")]
     #[account(14, name="rent", desc="Rent info")]
-    #[account(15, writable, name="reservation_list", desc="(Optional) Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list.")]
+    #[account(15, optional, writable, name="reservation_list", desc="Reservation List - If present, and you are on this list, you can get an edition number given by your position on the list.")]
     DeprecatedMintNewEditionFromMasterEditionViaPrintingToken,
 
     /// Allows updating the primary sale boolean on Metadata solely through owning an account
@@ -310,8 +311,8 @@ pub enum MetadataInstruction {
     #[account(6, name="ata_program", desc="Associated Token program")]
     #[account(7, name="system_program", desc="System program")]
     #[account(8, name="rent", desc="Rent info")]
-    #[account(9, writable, name="use_authority_record", desc="(Optional) Use Authority Record PDA If present the program Assumes a delegated use authority")]
-    #[account(10, name="burner", desc="(Optional) Program As Signer (Burner)")]
+    #[account(9, optional, writable, name="use_authority_record", desc="Use Authority Record PDA If present the program Assumes a delegated use authority")]
+    #[account(10, optional, name="burner", desc="Program As Signer (Burner)")]
     Utilize(UtilizeArgs),
 
     /// Approve another account to call [utilize] on this NFT.
@@ -346,7 +347,7 @@ pub enum MetadataInstruction {
     #[account(2, name="collection_mint", desc="Mint of the Collection")]
     #[account(3, name="collection", desc="Metadata Account of the Collection")]
     #[account(4, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
-    #[account(5, name="collection_authority_record", desc="(Optional) Collection Authority Record PDA")]
+    #[account(5, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     UnverifyCollection,
 
     /// Approve another account to verify NFTs belonging to a collection, [verify_collection] on the collection NFT.
@@ -376,7 +377,7 @@ pub enum MetadataInstruction {
     #[account(4, name="collection_mint", desc="Mint of the Collection")]
     #[account(5, name="collection", desc="Metadata Account of the Collection")]
     #[account(6, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
-    #[account(7, name="collection_authority_record", desc="(Optional) Collection Authority Record PDA")]
+    #[account(7, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     SetAndVerifyCollection,
 
     /// Allow freezing of an NFT if this user is the delegate of the NFT.
@@ -715,14 +716,20 @@ pub fn sign_metadata(program_id: Pubkey, metadata: Pubkey, creator: Pubkey) -> I
 
 /// Remove Creator Verificaton
 #[allow(clippy::too_many_arguments)]
-pub fn remove_creator_verification(program_id: Pubkey, metadata: Pubkey, creator: Pubkey) -> Instruction {
+pub fn remove_creator_verification(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    creator: Pubkey,
+) -> Instruction {
     Instruction {
         program_id,
         accounts: vec![
             AccountMeta::new(metadata, false),
             AccountMeta::new_readonly(creator, true),
         ],
-        data: MetadataInstruction::RemoveCreatorVerification.try_to_vec().unwrap(),
+        data: MetadataInstruction::RemoveCreatorVerification
+            .try_to_vec()
+            .unwrap(),
     }
 }
 
@@ -839,7 +846,7 @@ pub fn verify_collection(
     }
     Instruction {
         program_id,
-        accounts: accounts,
+        accounts,
         data: MetadataInstruction::VerifyCollection.try_to_vec().unwrap(),
     }
 }
@@ -882,7 +889,7 @@ pub fn unverify_collection(
     }
     Instruction {
         program_id,
-        accounts: accounts,
+        accounts,
         data: MetadataInstruction::UnverifyCollection
             .try_to_vec()
             .unwrap(),
