@@ -8,7 +8,7 @@ import {
   assertError,
   defaultSendOptions,
 } from '@metaplex-foundation/amman';
-import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
 import {
   createPrerequisites,
@@ -27,6 +27,9 @@ import {
   createWithdrawTransaction,
 } from './transactions';
 import { killStuckProcess, logDebug, sleep } from './utils';
+import { CreateMarketInstructionArgs } from '../src';
+
+const { Edition, EditionMarker, Metadata } = deprecated;
 
 killStuckProcess();
 
@@ -67,14 +70,15 @@ test('claim resource: success', async (t) => {
   });
 
   const startDate = Math.round(Date.now() / 1000) + 1;
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
-    endDate: null,
+    endDate: startDate + 5 * 20,
     mutable: true,
-    price: 1,
+    price: 0.001,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   const { market, treasuryHolder, treasuryOwnerBump, treasuryOwner } = await createMarket({
@@ -265,7 +269,7 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
   });
 
   const startDate = Math.round(Date.now() / 1000) + 1;
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -273,6 +277,7 @@ test('claim resource:  should fail due to the treasury not empty', async (t) => 
     mutable: true,
     price: 1,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
   const { market, treasuryHolder } = await createMarket({
     test: t,

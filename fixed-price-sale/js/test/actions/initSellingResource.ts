@@ -5,6 +5,7 @@ import {
   PayerTransactionHandler,
 } from '@metaplex-foundation/amman';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 
 import { findVaultOwnerAddress } from '../../src/utils';
 
@@ -12,7 +13,6 @@ import { createAndSignTransaction, logDebug } from '../utils';
 import { createTokenAccount } from '../transactions/createTokenAccount';
 import { mintNFT } from './mintNft';
 import { createInitSellingResourceInstruction } from '../../src/generated/instructions';
-import { Creator } from '@metaplex-foundation/mpl-token-metadata';
 import { createSavePrimaryMetadataCreators } from '../transactions';
 
 type InitSellingResourceParams = {
@@ -40,7 +40,7 @@ export const initSellingResource = async ({
   metadata: PublicKey;
   primaryMetadataCreators: PublicKey;
 }> => {
-  const secondaryCreator = new Creator({
+  const secondaryCreator =  new deprecated.Creator({
     address: payer.publicKey.toBase58(),
     share: 100,
     verified: true,

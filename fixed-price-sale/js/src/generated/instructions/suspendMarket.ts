@@ -10,43 +10,43 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category CloseMarket
+ * @category SuspendMarket
  * @category generated
  */
-const closeMarketStruct = new beet.BeetArgsStruct<{
+const suspendMarketStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'CloseMarketInstructionArgs',
+  'SuspendMarketInstructionArgs',
 );
 /**
- * Accounts required by the _closeMarket_ instruction
+ * Accounts required by the _suspendMarket_ instruction
  * @category Instructions
- * @category CloseMarket
+ * @category SuspendMarket
  * @category generated
  */
-export type CloseMarketInstructionAccounts = {
+export type SuspendMarketInstructionAccounts = {
   market: web3.PublicKey;
   owner: web3.PublicKey;
   clock: web3.PublicKey;
 };
 
-const closeMarketInstructionDiscriminator = [88, 154, 248, 186, 48, 14, 123, 244];
+const suspendMarketInstructionDiscriminator = [246, 27, 129, 46, 10, 196, 165, 118];
 
 /**
- * Creates a _CloseMarket_ instruction.
+ * Creates a _SuspendMarket_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  *
  * @category Instructions
- * @category CloseMarket
+ * @category SuspendMarket
  * @category generated
  */
-export function createCloseMarketInstruction(accounts: CloseMarketInstructionAccounts) {
+export function createSuspendMarketInstruction(accounts: SuspendMarketInstructionAccounts) {
   const { market, owner, clock } = accounts;
 
-  const [data] = closeMarketStruct.serialize({
-    instructionDiscriminator: closeMarketInstructionDiscriminator,
+  const [data] = suspendMarketStruct.serialize({
+    instructionDiscriminator: suspendMarketInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {

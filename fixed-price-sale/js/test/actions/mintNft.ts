@@ -5,12 +5,8 @@ import {
   assertConfirmedTransaction,
 } from '@metaplex-foundation/amman';
 import {
-  MetadataDataData,
-  MetadataProgram,
-  MasterEdition,
-  Metadata,
-  CreateMasterEdition,
-  Creator,
+  PROGRAM_ID,
+  deprecated,
 } from '@metaplex-foundation/mpl-token-metadata';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore createMintToInstruction export actually exist but isn't setup correctly
@@ -25,8 +21,10 @@ type MintNFTParams = {
   transactionHandler: TransactionHandler;
   payer: Keypair;
   connection: Connection;
-  creators?: Creator[];
+  creators?: deprecated.Creator[];
 };
+
+const { CreateMasterEdition, MetadataDataData, MasterEdition, Metadata } = deprecated;
 
 const URI = 'https://arweave.net/Rmg4pcIv-0FQ7M7X838p2r592Q4NU63Fj7o7XsvBHEE';
 const NAME = 'test';
@@ -78,12 +76,12 @@ export async function mintNFT({ transactionHandler, payer, connection, creators 
   const metadataPDA = await Metadata.getPDA(mint.publicKey);
   const [edition, editionBump] = await PublicKey.findProgramAddress(
     [
-      Buffer.from(MetadataProgram.PREFIX),
-      MetadataProgram.PUBKEY.toBuffer(),
+      Buffer.from(deprecated.MetadataProgram.PREFIX),
+      PROGRAM_ID.toBuffer(),
       new PublicKey(mint.publicKey).toBuffer(),
       Buffer.from(MasterEdition.EDITION_PREFIX),
     ],
-    MetadataProgram.PUBKEY,
+    PROGRAM_ID,
   );
 
   const masterEditionTx = new CreateMasterEdition(

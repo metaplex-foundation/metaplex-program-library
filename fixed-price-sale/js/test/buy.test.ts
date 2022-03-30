@@ -1,7 +1,7 @@
 import BN from 'bn.js';
 import test from 'tape';
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
-import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 
 import { findTradeHistoryAddress } from '../src/utils';
 import { createBuyTransaction } from './transactions';
@@ -14,6 +14,9 @@ import {
   createMarket,
   mintTokenToAccount,
 } from './actions';
+import { CreateMarketInstructionArgs } from '../src';
+
+const { Edition, EditionMarker, Metadata } = deprecated
 
 killStuckProcess();
 
@@ -48,7 +51,7 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
   });
 
   const startDate = Math.round(Date.now() / 1000);
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -56,6 +59,7 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     mutable: true,
     price: 0.001,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   const { market, treasuryHolder } = await createMarket({

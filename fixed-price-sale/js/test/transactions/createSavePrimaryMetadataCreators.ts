@@ -1,9 +1,11 @@
 import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { findPrimaryMetadataCreatorsAddress } from '../../src';
-import { createSavePrimaryMetadataCreatorsInstruction } from '../../src/generated/instructions/savePrimaryMetadataCreators';
-import { Creator } from '../../src/types';
+import {
+  Creator,
+  findPrimaryMetadataCreatorsAddress,
+  createSavePrimaryMetadataCreatorsInstruction,
+} from '../../src';
 
 type CreateSecondaryMetadataCreatorsParams = {
   transactionHandler: PayerTransactionHandler;

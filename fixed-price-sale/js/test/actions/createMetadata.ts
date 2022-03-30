@@ -1,16 +1,14 @@
 import { PublicKey } from '@solana/web3.js';
 import { defaultSendOptions, TransactionHandler } from '@metaplex-foundation/amman';
-import {
-  CreateMetadata,
-  Metadata,
-  MetadataDataData,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
+
+const { CreateMetadata, Metadata } = deprecated
 
 type CreateMetadataParams = {
   transactionHandler: TransactionHandler;
   publicKey: PublicKey;
   editionMint: PublicKey;
-  metadataData: MetadataDataData;
+  metadataData: deprecated.MetadataDataData;
 };
 
 export async function createMetadata({

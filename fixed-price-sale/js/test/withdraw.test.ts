@@ -1,10 +1,10 @@
 import BN from 'bn.js';
 import test from 'tape';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore getAssociatedTokenAddress export actually exist but isn't setup correctly
+// @ts-ignore createInitializeMintInstruction export actually exist but isn't setup correctly
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
-import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
 import { closeMarket, createBuyTransaction, createWithdrawTransaction } from './transactions';
 import { killStuckProcess, logDebug, sleep } from './utils';
@@ -16,8 +16,11 @@ import {
   mintNFT,
   mintTokenToAccount,
 } from './actions';
+import { CreateMarketInstructionArgs } from '../src';
 
 killStuckProcess();
+
+const { Edition, EditionMarker, Metadata } = deprecated;
 
 test('withdraw: success', async (t) => {
   const { payer, connection, transactionHandler } = await createPrerequisites();
@@ -56,7 +59,7 @@ test('withdraw: success', async (t) => {
   });
 
   const startDate = Math.round(Date.now() / 1000) + 1;
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -64,6 +67,7 @@ test('withdraw: success', async (t) => {
     mutable: true,
     price: 1,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   const { market, treasuryHolder, treasuryOwnerBump, treasuryOwner } = await createMarket({
