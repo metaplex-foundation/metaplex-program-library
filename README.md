@@ -68,3 +68,7 @@ merged.
 ## Reporting security issues
 
 To report a security issue, please follow the guidance on the [SECURITY](.github/SECURITY.md) page.
+
+## License
+
+The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.txt) license and the JS/TS client libraries are licensed under either the [MIT](https://www.mit.edu/~amini/LICENSE.md) or the [Apache](https://www.apache.org/licenses/LICENSE-2.0.txt) licenses.
