@@ -92,7 +92,7 @@ impl<'info> From<ExecuteSaleWithAuctioneer<'info>> for InstantExecuteSale<'info>
             seller_payment_receipt_account: a.seller_payment_receipt_account,
             buyer_receipt_token_account: a.buyer_receipt_token_account,
             authority: a.authority,
-            auction_house: a.auction_house,
+            auction_house: a.auction_house.into(),
             auction_house_fee_account: a.auction_house_fee_account,
             auction_house_treasury: a.auction_house_treasury,
             buyer_trade_state: a.buyer_trade_state,

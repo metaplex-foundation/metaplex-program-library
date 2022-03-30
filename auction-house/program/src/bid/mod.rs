@@ -83,7 +83,7 @@ pub struct PublicBuyWithAuctioneer<'info> {
     escrow_payment_account: UncheckedAccount<'info>,
     authority: UncheckedAccount<'info>,
     #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    auction_house: Box<Account<'info, AuctionHouse>>,
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
     #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
@@ -116,7 +116,7 @@ pub fn public_bid_with_auctioneer(
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
-        ctx.accounts.auction_house.to_owned(),
+        &mut ctx.accounts.auction_house,
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
         ctx.accounts.auctioneer_authority.to_owned(),
@@ -172,7 +172,7 @@ pub struct BuyWithAuctioneer<'info> {
     escrow_payment_account: UncheckedAccount<'info>,
     authority: UncheckedAccount<'info>,
     #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    auction_house: Box<Account<'info, AuctionHouse>>,
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
     #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
@@ -180,7 +180,7 @@ pub struct BuyWithAuctioneer<'info> {
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [SALE_AUTHORITY.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
+    // #[account(seeds = [SALE_AUTHORITY.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -235,7 +235,7 @@ pub fn private_bid_with_auctioneer<'info>(
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
-        ctx.accounts.auction_house.to_owned(),
+        &mut ctx.accounts.auction_house,
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
         ctx.accounts.auctioneer_authority.to_owned(),
@@ -439,7 +439,7 @@ pub fn auction_bid_logic<'info>(
     metadata: UncheckedAccount<'info>,
     escrow_payment_account: UncheckedAccount<'info>,
     authority: UncheckedAccount<'info>,
-    auction_house: Account<'info, AuctionHouse>,
+    auction_house: &mut Box<Account<'info, AuctionHouse>>,
     auction_house_fee_account: UncheckedAccount<'info>,
     buyer_trade_state: UncheckedAccount<'info>,
     auctioneer_authority: UncheckedAccount<'info>,
