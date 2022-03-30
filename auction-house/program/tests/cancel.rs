@@ -60,7 +60,7 @@ async fn cancel_listing() {
         .unwrap();
     let token =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let accounts = mpl_auction_house::accounts::Cancel {
+    let accounts = mpl_auction_house::accounts::InstantCancel {
         auction_house: ahkey,
         wallet: test_metadata.token.pubkey(),
         token_account: token,
@@ -170,7 +170,7 @@ async fn cancel_bid() {
         .process_transaction(buy_tx)
         .await
         .unwrap();
-    let accounts = mpl_auction_house::accounts::Cancel {
+    let accounts = mpl_auction_house::accounts::InstantCancel {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
