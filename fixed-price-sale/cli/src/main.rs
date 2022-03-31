@@ -273,6 +273,51 @@ fn main() -> Result<(), error::Error> {
 
                 Some(vec![(tx, ui_info)])
             }
+            Commands::SavePrimaryMetadataCreators {
+                admin,
+                metadata,
+                creators_keys,
+                creators_share,
+                creators_verified,
+            } => {
+                let admin = if let Some(admin) = admin {
+                    read_keypair_file(&admin)?
+                } else {
+                    utils::clone_keypair(&payer_wallet)
+                };
+
+                let creators = if creators_keys.is_some()
+                    && creators_share.is_some()
+                    && creators_verified.is_some()
+                {
+                    let mut creators = Vec::new();
+                    for (idx, creator) in creators_keys.unwrap().iter().enumerate() {
+                        creators.push(mpl_token_metadata::state::Creator {
+                            address: creator.clone(),
+                            verified: creators_verified.as_ref().unwrap()[idx],
+                            share: creators_share.as_ref().unwrap()[idx],
+                        })
+                    }
+
+                    creators
+                } else {
+                    vec![mpl_token_metadata::state::Creator {
+                        address: admin.pubkey(),
+                        verified: false,
+                        share: 100,
+                    }]
+                };
+
+                let (tx, ui_info) = processor::save_primary_metadata_creators(
+                    &client,
+                    &payer_wallet,
+                    &admin,
+                    &Pubkey::from_str(&metadata)?,
+                    &creators,
+                )?;
+
+                Some(vec![(tx, ui_info)])
+            }
             Commands::CloseMarket { market, owner } => {
                 let owner = if let Some(owner) = owner {
                     read_keypair_file(&owner)?
