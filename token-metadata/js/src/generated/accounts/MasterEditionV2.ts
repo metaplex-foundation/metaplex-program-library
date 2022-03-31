@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link MasterEditionV2}
@@ -15,7 +15,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type MasterEditionV2Args = {
-  key: definedTypes.Key;
+  key: Key;
   supply: beet.bignum;
   maxSupply: beet.COption<beet.bignum>;
 };
@@ -28,7 +28,7 @@ export type MasterEditionV2Args = {
  */
 export class MasterEditionV2 implements MasterEditionV2Args {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly supply: beet.bignum,
     readonly maxSupply: beet.COption<beet.bignum>,
   ) {}
@@ -118,7 +118,7 @@ export class MasterEditionV2 implements MasterEditionV2Args {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       supply: this.supply,
       maxSupply: this.maxSupply,
     };
@@ -131,7 +131,7 @@ export class MasterEditionV2 implements MasterEditionV2Args {
  */
 export const masterEditionV2Beet = new beet.FixableBeetStruct<MasterEditionV2, MasterEditionV2Args>(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['supply', beet.u64],
     ['maxSupply', beet.coption(beet.u64)],
   ],

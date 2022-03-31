@@ -1,12 +1,12 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 use anchor_lang::AccountDeserialize;
 
 use mpl_auction_house::receipt::ListingReceipt;
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
 use solana_sdk::{signer::Signer, sysvar::clock::Clock};
-use std::{assert_eq, assert_ne};
+use std::assert_eq;
 use utils::setup_functions::*;
 
 #[tokio::test]

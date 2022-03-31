@@ -5,10 +5,11 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { Key, keyBeet } from '../types/Key';
+import { Reservation, reservationBeet } from '../types/Reservation';
 
 /**
  * Arguments used to create {@link ReservationListV2}
@@ -16,10 +17,10 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type ReservationListV2Args = {
-  key: definedTypes.Key;
+  key: Key;
   masterEdition: web3.PublicKey;
   supplySnapshot: beet.COption<beet.bignum>;
-  reservations: definedTypes.Reservation[];
+  reservations: Reservation[];
   totalReservationSpots: beet.bignum;
   currentReservationSpots: beet.bignum;
 };
@@ -32,10 +33,10 @@ export type ReservationListV2Args = {
  */
 export class ReservationListV2 implements ReservationListV2Args {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly masterEdition: web3.PublicKey,
     readonly supplySnapshot: beet.COption<beet.bignum>,
-    readonly reservations: definedTypes.Reservation[],
+    readonly reservations: Reservation[],
     readonly totalReservationSpots: beet.bignum,
     readonly currentReservationSpots: beet.bignum,
   ) {}
@@ -135,7 +136,7 @@ export class ReservationListV2 implements ReservationListV2Args {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       masterEdition: this.masterEdition.toBase58(),
       supplySnapshot: this.supplySnapshot,
       reservations: this.reservations,
@@ -154,10 +155,10 @@ export const reservationListV2Beet = new beet.FixableBeetStruct<
   ReservationListV2Args
 >(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['masterEdition', beetSolana.publicKey],
     ['supplySnapshot', beet.coption(beet.u64)],
-    ['reservations', beet.array(definedTypes.reservationBeet)],
+    ['reservations', beet.array(reservationBeet)],
     ['totalReservationSpots', beet.u64],
     ['currentReservationSpots', beet.u64],
   ],
