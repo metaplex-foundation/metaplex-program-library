@@ -246,6 +246,19 @@ fn main() -> Result<(), error::Error> {
                 new_pieces_in_one_wallet,
             )?)
         }
+        Commands::CloseMarket { market, owner } => {
+            let owner = if let Some(owner) = owner {
+                read_keypair_file(&owner)?
+            } else {
+                utils::clone_keypair(&payer_wallet)
+            };
+
+            Some(processor::close_market(
+                &client,
+                &owner,
+                &Pubkey::from_str(&market)?,
+            )?)
+        }
         Commands::Buy {
             market,
             user_token_account,
