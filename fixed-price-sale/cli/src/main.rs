@@ -260,6 +260,19 @@ fn main() -> Result<(), error::Error> {
                 &payer_wallet,
                 &Pubkey::from_str(&market)?,
             )?),
+            Commands::ClaimResource {
+                market,
+                claim_token,
+            } => {
+                let (tx, ui_info) = processor::claim_resource(
+                    &client,
+                    &payer_wallet,
+                    &Pubkey::from_str(&market)?,
+                    &Pubkey::from_str(&claim_token)?,
+                )?;
+
+                Some(vec![(tx, ui_info)])
+            }
             Commands::CloseMarket { market, owner } => {
                 let owner = if let Some(owner) = owner {
                     read_keypair_file(&owner)?

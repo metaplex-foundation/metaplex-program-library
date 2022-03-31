@@ -146,6 +146,14 @@ pub enum Commands {
         #[clap(long, value_name = "PUBKEY")]
         market: String,
     },
+    /// Perform `ClaimResource` instruction of `mpl_fixed_price_sale` program.
+    ClaimResource {
+        #[clap(long, value_name = "PUBKEY")]
+        market: String,
+
+        #[clap(long, value_name = "PUBKEY")]
+        claim_token: String,
+    },
     /// Perform `ChangeMarket` instruction of `mpl_fixed_price_sale` program.
     ChangeMarket {
         #[clap(long, value_name = "PUBKEY")]

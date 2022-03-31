@@ -2,6 +2,7 @@
 
 mod buy;
 mod change_market;
+mod claim_resource;
 mod close_market;
 mod create_market;
 mod create_store;
@@ -12,6 +13,7 @@ mod suspend_market;
 mod withdraw;
 pub use buy::*;
 pub use change_market::*;
+pub use claim_resource::*;
 pub use close_market::*;
 pub use create_market::*;
 pub use create_store::*;
