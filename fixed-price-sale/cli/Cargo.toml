@@ -16,3 +16,4 @@ borsh = "0.9.1"
 spl-token = { version = "3.2.0", features = [ "no-entrypoint" ] }
 anchor-lang = "0.22.1"
 chrono = "0.4.19"
+spl-associated-token-account = "1.0.3"

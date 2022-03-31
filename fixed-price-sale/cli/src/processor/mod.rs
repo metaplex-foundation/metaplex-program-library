@@ -9,6 +9,7 @@ mod get_account_state;
 mod init_selling_resource;
 mod resume_market;
 mod suspend_market;
+mod withdraw;
 pub use buy::*;
 pub use change_market::*;
 pub use close_market::*;
@@ -18,6 +19,7 @@ pub use get_account_state::*;
 pub use init_selling_resource::*;
 pub use resume_market::*;
 pub use suspend_market::*;
+pub use withdraw::*;
 
 /// Abstract trait to print additional information in tui.
 /// Can be implemented while building instruction.
