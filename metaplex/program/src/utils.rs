@@ -945,21 +945,6 @@ pub fn end_auction<'a: 'b, 'b>(
     Ok(())
 }
 
-// pub fn assert_is_ata(
-//     account: &AccountInfo,
-//     wallet: &Pubkey,
-//     token_program: &Pubkey,
-//     mint: &Pubkey,
-// ) -> ProgramResult {
-//     assert_derivation(
-//         &Pubkey::from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL").unwrap(),
-//         account,
-//         &[wallet.as_ref(), token_program.as_ref(), mint.as_ref()],
-//     )?;
-
-//     Ok(())
-// }
-
 pub fn assert_is_ata(
     ata: &AccountInfo,
     wallet: &Pubkey,
