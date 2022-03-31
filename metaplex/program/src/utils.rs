@@ -31,8 +31,12 @@ use solana_program::{
     system_instruction,
     sysvar::{rent::Rent, Sysvar},
 };
-use spl_token::instruction::{set_authority, AuthorityType};
-use std::{convert::TryInto, str::FromStr};
+use spl_associated_token_account::get_associated_token_address;
+use spl_token::{
+    instruction::{set_authority, AuthorityType},
+    state::Account as SplAccount,
+};
+use std::convert::TryInto;
 
 /// Cheap method to just grab amount from token account, instead of deserializing entire thing
 pub fn get_amount_from_token_account(
@@ -942,16 +946,22 @@ pub fn end_auction<'a: 'b, 'b>(
 }
 
 pub fn assert_is_ata(
-    account: &AccountInfo,
+    ata: &AccountInfo,
     wallet: &Pubkey,
-    token_program: &Pubkey,
     mint: &Pubkey,
-) -> ProgramResult {
-    assert_derivation(
-        &Pubkey::from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL").unwrap(),
-        account,
-        &[wallet.as_ref(), token_program.as_ref(), mint.as_ref()],
-    )?;
+) -> Result<SplAccount, ProgramError> {
+    assert_owned_by(ata, &spl_token::id())?;
+    let ata_account: SplAccount = assert_initialized(ata)?;
+    assert_keys_equal(ata_account.owner, *wallet)?;
+    assert_keys_equal(ata_account.mint, *mint)?;
+    assert_keys_equal(get_associated_token_address(wallet, mint), *ata.key)?;
+    Ok(ata_account)
+}
 
-    Ok(())
+pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
+    if key1 != key2 {
+        Err(MetaplexError::PublicKeyMismatch.into())
+    } else {
+        Ok(())
+    }
 }

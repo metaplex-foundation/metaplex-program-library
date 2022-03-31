@@ -205,7 +205,6 @@ pub fn process_redeem_printing_v2_bid<'a>(
     assert_is_ata(
         new_edition_token_account_info,
         bidder_info.key,
-        token_program_info.key,
         mint_info.key,
     )?;
 
