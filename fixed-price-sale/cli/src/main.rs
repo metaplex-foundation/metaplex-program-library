@@ -220,6 +220,32 @@ fn main() -> Result<(), error::Error> {
                 end_date,
             )?)
         }
+        Commands::ChangeMarket {
+            market,
+            owner,
+            new_name,
+            new_description,
+            mutable,
+            new_price,
+            new_pieces_in_one_wallet,
+        } => {
+            let owner = if let Some(owner) = owner {
+                read_keypair_file(&owner)?
+            } else {
+                utils::clone_keypair(&payer_wallet)
+            };
+
+            Some(processor::change_market(
+                &client,
+                &owner,
+                &Pubkey::from_str(&market)?,
+                new_name,
+                new_description,
+                mutable,
+                new_price,
+                new_pieces_in_one_wallet,
+            )?)
+        }
         Commands::Buy {
             market,
             user_token_account,

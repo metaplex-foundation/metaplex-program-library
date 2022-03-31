@@ -1,11 +1,13 @@
 //! Module provide instructions builder for `mpl_fixed_price_sale` program.
 
 mod buy;
+mod change_market;
 mod create_market;
 mod create_store;
 mod get_account_state;
 mod init_selling_resource;
 pub use buy::*;
+pub use change_market::*;
 pub use create_market::*;
 pub use create_store::*;
 pub use get_account_state::*;
