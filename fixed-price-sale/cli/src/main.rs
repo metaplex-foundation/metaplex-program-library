@@ -259,6 +259,19 @@ fn main() -> Result<(), error::Error> {
                 &Pubkey::from_str(&market)?,
             )?)
         }
+        Commands::ResumeMarket { market, owner } => {
+            let owner = if let Some(owner) = owner {
+                read_keypair_file(&owner)?
+            } else {
+                utils::clone_keypair(&payer_wallet)
+            };
+
+            Some(processor::resume_market(
+                &client,
+                &owner,
+                &Pubkey::from_str(&market)?,
+            )?)
+        }
         Commands::SuspendMarket { market, owner } => {
             let owner = if let Some(owner) = owner {
                 read_keypair_file(&owner)?

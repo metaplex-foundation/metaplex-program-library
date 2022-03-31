@@ -133,6 +133,14 @@ pub enum Commands {
         #[clap(long, value_name = "FILE")]
         owner: Option<String>,
     },
+    /// Perform `ResumeMarket` instruction of `mpl_fixed_price_sale` program.
+    ResumeMarket {
+        #[clap(long, value_name = "PUBKEY")]
+        market: String,
+
+        #[clap(long, value_name = "FILE")]
+        owner: Option<String>,
+    },
     /// Perform `ChangeMarket` instruction of `mpl_fixed_price_sale` program.
     ChangeMarket {
         #[clap(long, value_name = "PUBKEY")]
