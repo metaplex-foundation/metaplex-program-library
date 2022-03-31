@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link CollectionAuthorityRecord}
@@ -15,7 +15,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type CollectionAuthorityRecordArgs = {
-  key: definedTypes.Key;
+  key: Key;
   bump: number;
 };
 /**
@@ -26,7 +26,7 @@ export type CollectionAuthorityRecordArgs = {
  * @category generated
  */
 export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs {
-  private constructor(readonly key: definedTypes.Key, readonly bump: number) {}
+  private constructor(readonly key: Key, readonly bump: number) {}
 
   /**
    * Creates a {@link CollectionAuthorityRecord} instance from the provided args.
@@ -117,7 +117,7 @@ export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs 
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       bump: this.bump,
     };
   }
@@ -132,7 +132,7 @@ export const collectionAuthorityRecordBeet = new beet.BeetStruct<
   CollectionAuthorityRecordArgs
 >(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['bump', beet.u8],
   ],
   CollectionAuthorityRecord.fromArgs,

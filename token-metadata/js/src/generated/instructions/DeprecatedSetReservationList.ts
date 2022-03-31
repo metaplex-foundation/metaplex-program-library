@@ -5,9 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import {
+  SetReservationListArgs,
+  setReservationListArgsBeet,
+} from '../types/SetReservationListArgs';
 
 /**
  * @category Instructions
@@ -15,7 +18,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type DeprecatedSetReservationListInstructionArgs = {
-  setReservationListArgs: definedTypes.SetReservationListArgs;
+  setReservationListArgs: SetReservationListArgs;
 };
 /**
  * @category Instructions
@@ -29,7 +32,7 @@ const DeprecatedSetReservationListStruct = new beet.FixableBeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['setReservationListArgs', definedTypes.setReservationListArgsBeet],
+    ['setReservationListArgs', setReservationListArgsBeet],
   ],
   'DeprecatedSetReservationListInstructionArgs',
 );

@@ -6,9 +6,12 @@
  */
 
 import * as splToken from '@solana/spl-token';
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import {
+  CreateMasterEditionArgs,
+  createMasterEditionArgsBeet,
+} from '../types/CreateMasterEditionArgs';
 
 /**
  * @category Instructions
@@ -16,7 +19,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type CreateMasterEditionV3InstructionArgs = {
-  createMasterEditionArgs: definedTypes.CreateMasterEditionArgs;
+  createMasterEditionArgs: CreateMasterEditionArgs;
 };
 /**
  * @category Instructions
@@ -30,7 +33,7 @@ const CreateMasterEditionV3Struct = new beet.FixableBeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['createMasterEditionArgs', definedTypes.createMasterEditionArgsBeet],
+    ['createMasterEditionArgs', createMasterEditionArgsBeet],
   ],
   'CreateMasterEditionV3InstructionArgs',
 );
