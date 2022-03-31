@@ -91,7 +91,7 @@ pub struct PublicBuyWithAuctioneer<'info> {
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [SALE_AUTHORITY.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,

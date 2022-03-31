@@ -5,6 +5,7 @@
 pub mod bid;
 pub mod cancel;
 pub mod constants;
+pub mod delegate;
 pub mod deposit;
 pub mod errors;
 pub mod execute_sale;
@@ -14,9 +15,12 @@ pub mod sell;
 pub mod state;
 pub mod utils;
 pub mod withdraw;
+
+pub use state::*;
+
 use crate::{
-    bid::*, cancel::*, constants::*, deposit::*, errors::*, execute_sale::*, receipt::*, sell::*,
-    utils::*, withdraw::*,
+    bid::*, cancel::*, constants::*, delegate::*, deposit::*, errors::*, execute_sale::*,
+    receipt::*, sell::*, utils::*, withdraw::*,
 };
 use anchor_lang::{
     prelude::*,
@@ -485,6 +489,14 @@ pub mod auction_house {
         )
     }
 
+    pub fn delegate_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, DelegateAuctioneer<'info>>,
+        ah_auctioneer_pda_bump: u8,
+        scopes: Vec<AuthorityScope>,
+    ) -> ProgramResult {
+        delegate::delegate_auctioneer(ctx, ah_auctioneer_pda_bump, scopes)
+    }
+
     /// Create a listing receipt by creating a `listing_receipt` account.
     pub fn print_listing_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
@@ -522,23 +534,6 @@ pub mod auction_house {
     ) -> ProgramResult {
         receipt::print_purchase_receipt(ctx, purchase_receipt_bump)
     }
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
-pub struct Auctioneer {
-    pub auctioneer_program: Pubkey,
-    pub auction_house: Pubkey,
-    pub scopes: Vec<AuthorityScope>,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
-pub enum AuthorityScope {
-    Buy,
-    PublicBuy,
-    ExecuteSale,
-    Sell,
-    Cancel,
-    Withdraw,
 }
 
 /// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
@@ -692,40 +687,3 @@ pub struct WithdrawFromFee<'info> {
     pub auction_house: Account<'info, AuctionHouse>,
     pub system_program: Program<'info, System>,
 }
-
-pub const AUCTION_HOUSE_SIZE: usize = 8 + // key
-32 + //fee payer
-32 + //treasury
-32 + //treasury_withdrawal_destination
-32 + //fee withdrawal destination
-32 + //treasury mint
-32 + //authority
-32 + // creator
-1 + // bump
-1 + // treasury_bump
-1 + // fee_payer_bump
-2 + // seller fee basis points
-1 + // requires sign off
-1 + // can change sale price
-1 + // has external auctioneer program as an authority
-219; //padding
-
-#[account]
-pub struct AuctionHouse {
-    pub auction_house_fee_account: Pubkey,
-    pub auction_house_treasury: Pubkey,
-    pub treasury_withdrawal_destination: Pubkey,
-    pub fee_withdrawal_destination: Pubkey,
-    pub treasury_mint: Pubkey,
-    pub authority: Pubkey,
-    pub creator: Pubkey,
-    pub bump: u8,
-    pub treasury_bump: u8,
-    pub fee_payer_bump: u8,
-    pub seller_fee_basis_points: u16,
-    pub requires_sign_off: bool,
-    pub can_change_sale_price: bool,
-    pub has_auctioneer: bool,
-}
-
-pub const TRADE_STATE_SIZE: usize = 1;

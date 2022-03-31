@@ -584,7 +584,7 @@ pub fn assert_valid_auctioneer_and_scope(
     scope: AuthorityScope,
 ) -> Result<(), ProgramError> {
     let sale_authority_seeds = [
-        SALE_AUTHORITY.as_bytes(),
+        AUCTIONEER.as_bytes(),
         auction_house_instance.as_ref(),
         auctioneer_program_id.as_ref(),
     ];
@@ -601,7 +601,7 @@ pub fn assert_valid_auctioneer_and_scope(
         return Err(ErrorCode::InvalidAuctioneer.into());
     }
 
-    if auctioneer.auctioneer_program != *auctioneer_program_id {
+    if auctioneer.authority != *auctioneer_program_id {
         return Err(ErrorCode::InvalidAuctioneer.into());
     }
 
