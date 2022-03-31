@@ -74,7 +74,7 @@ test('claim resource: success', async (t) => {
     name: 'Market',
     description: '',
     startDate,
-    endDate: startDate + 5 * 20,
+    endDate: null,
     mutable: true,
     price: 0.001,
     piecesInOneWallet: 1,

@@ -1,4 +1,4 @@
-import { TokenAccount } from '@metaplex-foundation/mpl-core';
+import { StringPublicKey, TokenAccount } from '@metaplex-foundation/mpl-core';
 import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { PROGRAM_ID } from '../generated';
@@ -59,10 +59,10 @@ export const findPrimaryMetadataCreatorsAddress = (
 
 export const validateMembershipToken = async (
   connection: Connection,
-  me: deprecated.MasterEdition,
+  me: StringPublicKey,
   ta: TokenAccount,
 ) => {
   assert(ta.data != null, 'token account data cannot be null');
   const edition = (await Metadata.getEdition(connection, ta.data.mint)) as deprecated.Edition;
-  return edition?.data?.parent === me.pubkey.toString();
+  return edition?.data?.parent === me;
 };

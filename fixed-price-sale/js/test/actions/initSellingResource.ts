@@ -5,7 +5,7 @@ import {
   PayerTransactionHandler,
 } from '@metaplex-foundation/amman';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
+import { Creator } from '@metaplex-foundation/mpl-token-metadata';
 
 import { findVaultOwnerAddress } from '../../src/utils';
 
@@ -40,11 +40,11 @@ export const initSellingResource = async ({
   metadata: PublicKey;
   primaryMetadataCreators: PublicKey;
 }> => {
-  const secondaryCreator =  new deprecated.Creator({
-    address: payer.publicKey.toBase58(),
+  const secondaryCreator: Creator = {
+    address: payer.publicKey,
     share: 100,
     verified: true,
-  });
+  };
 
   const {
     edition: masterEdition,
