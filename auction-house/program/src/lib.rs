@@ -250,6 +250,7 @@ pub mod auction_house {
         auction_house.auction_house_treasury = auction_house_treasury.key();
         auction_house.treasury_withdrawal_destination = treasury_withdrawal_destination.key();
         auction_house.fee_withdrawal_destination = fee_withdrawal_destination.key();
+        auction_house.has_auctioneer = false;
 
         let is_native = treasury_mint.key() == spl_token::native_mint::id();
 
@@ -494,7 +495,7 @@ pub mod auction_house {
         ah_auctioneer_pda_bump: u8,
         scopes: Vec<AuthorityScope>,
     ) -> ProgramResult {
-        delegate::delegate_auctioneer(ctx, ah_auctioneer_pda_bump, scopes)
+        delegate::delegate_auctioneer(ctx, ah_auctioneer_pda_bump, Box::new(scopes))
     }
 
     /// Create a listing receipt by creating a `listing_receipt` account.

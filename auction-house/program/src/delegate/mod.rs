@@ -2,6 +2,7 @@ use anchor_lang::{prelude::*, AnchorDeserialize};
 
 use crate::{
     constants::*,
+    errors::*,
     AuctionHouse,
     // state::{Auctioneer, AuthorityScope},
     Auctioneer,
@@ -32,15 +33,19 @@ pub struct DelegateAuctioneer<'info> {
 pub fn delegate_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, DelegateAuctioneer<'info>>,
     _ah_auctioneer_pda_bump: u8,
-    scopes: Vec<AuthorityScope>,
+    scopes: Box<Vec<AuthorityScope>>,
 ) -> ProgramResult {
+    if scopes.len() > MAX_NUM_SCOPES {
+        return Err(ErrorCode::TooManyScopes.into());
+    }
+
     let auction_house = &mut ctx.accounts.auction_house;
     auction_house.has_auctioneer = true;
 
     let auctioneer = &mut ctx.accounts.ah_auctioneer_pda;
     auctioneer.authority = ctx.accounts.auctioneer_authority.key();
     auctioneer.auction_house = ctx.accounts.auction_house.key();
-    auctioneer.scopes = scopes;
+    auctioneer.scopes = *scopes;
 
     Ok(())
 }

@@ -18,7 +18,6 @@ pub struct AuctionHouse {
     pub has_auctioneer: bool,
 }
 
-// #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
 #[account]
 pub struct Auctioneer {
     pub authority: Pubkey,
@@ -26,7 +25,7 @@ pub struct Auctioneer {
     pub scopes: Vec<AuthorityScope>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
 pub enum AuthorityScope {
     Buy,
     PublicBuy,
