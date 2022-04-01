@@ -20,6 +20,6 @@ npm install @metaplex-foundation/mpl-token-metadata@~2.0 --save
 
 And use the deprecated API explicitly like so:
 
-```sh
-import { deprecated } from @metaplex-foundation/mpl-token-metadata
+```ts
+import { deprecated } from "@metaplex-foundation/mpl-token-metadata";
 ```
