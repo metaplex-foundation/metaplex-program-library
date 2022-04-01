@@ -60,6 +60,17 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     let config_data = get_config_data(&args.config)?;
     let candy_machine_address = &cache.program.candy_machine;
 
+    let num_items = config_data.number;
+
+    // Do this check before creating a candy machine.
+    if num_items != (cache.items.0.len() as u64) {
+        return Err(anyhow!(
+            "Number of items ({}) do not match cache items ({})",
+            num_items,
+            cache.items.0.len()
+        ));
+    }
+
     let candy_pubkey = if candy_machine_address.is_empty() {
         println!(
             "{} {}Creating candy machine",
@@ -132,16 +143,6 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         style("[2/2]").bold().dim(),
         PAPER_EMOJI
     );
-
-    let num_items = config_data.number;
-
-    if num_items != (cache.items.0.len() as u64) {
-        return Err(anyhow!(
-            "Number of items ({}) do not match cache items ({})",
-            num_items,
-            cache.items.0.len()
-        ));
-    }
 
     let config_lines = generate_config_lines(num_items, &cache.items);
 
