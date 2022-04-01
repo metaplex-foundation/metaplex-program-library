@@ -411,6 +411,9 @@ pub mod auction_house {
                 ],
                 &[&escrow_signer_seeds],
             )?;
+
+            // Verify that escrow is still rent exempt.
+            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         Ok(())
@@ -505,6 +508,9 @@ pub mod auction_house {
                     system_program.to_account_info(),
                 ],
             )?;
+
+            // Verify enough exists in the escrow account to keep it rent exempt.
+            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         Ok(())
@@ -813,6 +819,10 @@ pub mod auction_house {
                 ],
                 &[&escrow_signer_seeds],
             )?;
+
+            // The buy instruction should handle accounting for minimum rent exemption for the
+            // escrow account, but double check here just in case.
+            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         if buyer_receipt_token_account.data_is_empty() {
@@ -1450,4 +1460,6 @@ pub enum ErrorCode {
     ReceiptIsEmpty,
     #[msg("The instruction does not match")]
     InstructionMismatch,
+    #[msg("The instruction would drain the escrow below rent exemption threshold")]
+    EscrowUnderRentExemption,
 }
