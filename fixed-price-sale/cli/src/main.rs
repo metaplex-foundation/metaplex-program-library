@@ -12,7 +12,7 @@ use solana_sdk::{
     signer::{keypair::read_keypair_file, Signer},
     transaction::Transaction,
 };
-use std::str::FromStr;
+use std::{fs::File, io::BufReader, str::FromStr};
 
 fn main() -> Result<(), error::Error> {
     let args = CliArgs::parse();
@@ -190,6 +190,8 @@ fn main() -> Result<(), error::Error> {
                     utils::clone_keypair(&payer_wallet)
                 };
 
+                let selling_resource = &Pubkey::from_str(&selling_resource)?;
+
                 let mint = if let Some(mint) = mint {
                     Some(Pubkey::from_str(&mint)?)
                 } else {
@@ -210,11 +212,51 @@ fn main() -> Result<(), error::Error> {
 
                 let decimals = utils::get_mint(&client, &mint)?.decimals;
 
+                let mut bundle = Vec::new();
+
+                let selling_resource_state: mpl_fixed_price_sale::state::SellingResource =
+                    processor::get_account_state(&client, &selling_resource)?;
+
+                let (metadata, _) = Pubkey::find_program_address(
+                    &[
+                        mpl_token_metadata::state::PREFIX.as_bytes(),
+                        mpl_token_metadata::id().as_ref(),
+                        selling_resource_state.resource.as_ref(),
+                    ],
+                    &mpl_token_metadata::id(),
+                );
+
+                let (primary_metadata_creators, _) =
+                    mpl_fixed_price_sale::utils::find_primary_metadata_creators(&metadata);
+
+                let metadata_state: mpl_token_metadata::state::Metadata =
+                    processor::get_account_state_legacy(&client, &metadata)?;
+
+                if !metadata_state.primary_sale_happened
+                    && utils::is_account_empty(&client, &primary_metadata_creators)?
+                {
+                    let (tx, ui_info) = processor::save_primary_metadata_creators(
+                        &client,
+                        &payer_wallet,
+                        &payer_wallet,
+                        &metadata,
+                        &metadata_state.data.creators.unwrap_or(vec![
+                            mpl_token_metadata::state::Creator {
+                                address: payer_wallet.pubkey(),
+                                verified: false,
+                                share: 100,
+                            },
+                        ]),
+                    )?;
+
+                    bundle.push((tx, ui_info));
+                }
+
                 let (tx, ui_info) = processor::create_market(
                     &client,
                     &payer_wallet,
                     &selling_resource_owner,
-                    &Pubkey::from_str(&selling_resource)?,
+                    &selling_resource,
                     &mint,
                     &name,
                     &description,
@@ -225,7 +267,9 @@ fn main() -> Result<(), error::Error> {
                     end_date,
                 )?;
 
-                Some(vec![(tx, ui_info)])
+                bundle.push((tx, ui_info));
+
+                Some(bundle)
             }
             Commands::ChangeMarket {
                 market,
@@ -276,9 +320,7 @@ fn main() -> Result<(), error::Error> {
             Commands::SavePrimaryMetadataCreators {
                 admin,
                 metadata,
-                creators_keys,
-                creators_share,
-                creators_verified,
+                creators,
             } => {
                 let admin = if let Some(admin) = admin {
                     read_keypair_file(&admin)?
@@ -286,20 +328,27 @@ fn main() -> Result<(), error::Error> {
                     utils::clone_keypair(&payer_wallet)
                 };
 
-                let creators = if creators_keys.is_some()
-                    && creators_share.is_some()
-                    && creators_verified.is_some()
-                {
-                    let mut creators = Vec::new();
-                    for (idx, creator) in creators_keys.unwrap().iter().enumerate() {
-                        creators.push(mpl_token_metadata::state::Creator {
-                            address: creator.clone(),
-                            verified: creators_verified.as_ref().unwrap()[idx],
-                            share: creators_share.as_ref().unwrap()[idx],
-                        })
-                    }
+                let creators = if let Some(creators) = creators {
+                    let file = File::open(creators)?;
+                    let reader = BufReader::new(file);
+                    let raw_data: serde_json::Value = serde_json::from_reader(reader).unwrap();
+                    let objs = raw_data.as_array().unwrap();
 
-                    creators
+                    objs.iter()
+                        .map(|obj| {
+                            let obj = obj.as_object().unwrap();
+                            let address = Pubkey::from_str(
+                                &obj.get("address").unwrap().as_str().unwrap().to_string(),
+                            )
+                            .unwrap();
+
+                            mpl_token_metadata::state::Creator {
+                                address,
+                                verified: false,
+                                share: obj.get("share").unwrap().as_u64().unwrap() as u8,
+                            }
+                        })
+                        .collect()
                 } else {
                     vec![mpl_token_metadata::state::Creator {
                         address: admin.pubkey(),

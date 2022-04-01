@@ -1,7 +1,6 @@
 //! Module define CLI structure.
 
 use clap::{Parser, Subcommand};
-use solana_sdk::pubkey::Pubkey;
 
 /// CLI arguments.
 #[derive(Parser, Debug)]
@@ -163,14 +162,8 @@ pub enum Commands {
         #[clap(long, value_name = "PUBKEY")]
         metadata: String,
 
-        #[clap(long, value_name = "PUBKEY'S")]
-        creators_keys: Option<Vec<Pubkey>>,
-
-        #[clap(long, value_name = "U8's")]
-        creators_share: Option<Vec<u8>>,
-
-        #[clap(long, value_name = "BOOL's")]
-        creators_verified: Option<Vec<bool>>,
+        #[clap(long, value_name = "FILE")]
+        creators: Option<String>,
     },
     /// Perform `ChangeMarket` instruction of `mpl_fixed_price_sale` program.
     ChangeMarket {
