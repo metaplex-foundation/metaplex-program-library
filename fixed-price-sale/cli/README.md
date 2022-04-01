@@ -19,6 +19,19 @@ This CLI utility provide ability to interact with on-chain `mpl-fixed-price-sale
 - `GetMarket`
 - `GetTradeHistory`
 
+## Files schema
+Few commands require input `.json` files, here we provide schema examples:
+
+- `creators.json`:
+```json
+[
+    {
+        "address": "...",
+        "share": 30,
+    }
+]
+```
+
 ## Example
 This example demonstrate market creation. Follow step by step (assumed that you compiled executable binary and moved to working directory).
 
