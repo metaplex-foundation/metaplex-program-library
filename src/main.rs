@@ -19,7 +19,7 @@ use sugar_cli::deploy::{process_deploy, DeployArgs};
 use sugar_cli::mint::{process_mint, MintArgs};
 use sugar_cli::setup::sugar_setup;
 use sugar_cli::update::{process_update, UpdateArgs};
-use sugar_cli::upload_assets::{process_upload_assets, UploadAssetsArgs};
+use sugar_cli::upload::{process_upload, UploadArgs};
 use sugar_cli::validate::{process_validate, ValidateArgs};
 use sugar_cli::verify::{process_verify, VerifyArgs};
 use sugar_cli::withdraw::{process_withdraw, WithdrawArgs};
@@ -121,14 +121,14 @@ async fn main() -> Result<()> {
             })
             .await?
         }
-        Commands::UploadAssets {
+        Commands::Upload {
             assets_dir,
             config,
             keypair,
             rpc_url,
             cache,
         } => {
-            process_upload_assets(UploadAssetsArgs {
+            process_upload(UploadArgs {
                 assets_dir,
                 config,
                 keypair,

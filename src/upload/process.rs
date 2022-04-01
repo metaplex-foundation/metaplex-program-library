@@ -4,8 +4,8 @@ use console::style;
 use crate::cache::{load_cache, Cache};
 use crate::common::*;
 use crate::config::{data::SugarConfig, get_config_data, UploadMethod};
-use crate::upload_assets::bundlr::BundlrHandler;
-use crate::upload_assets::*;
+use crate::upload::bundlr::BundlrHandler;
+use crate::upload::*;
 use crate::utils::*;
 
 /// A trait for storage upload handlers.
@@ -22,7 +22,7 @@ pub trait UploadHandler {
     ) -> Result<()>;
 }
 
-pub struct UploadAssetsArgs {
+pub struct UploadArgs {
     pub assets_dir: String,
     pub config: String,
     pub keypair: Option<String>,
@@ -30,7 +30,7 @@ pub struct UploadAssetsArgs {
     pub cache: String,
 }
 
-pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
+pub async fn process_upload(args: UploadArgs) -> Result<()> {
     // loading assets
     println!(
         "{} {}Loading assets",

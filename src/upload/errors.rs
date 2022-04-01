@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum UploadAssetsError {
+pub enum UploadError {
     #[error("Invalid assets directory: {0}")]
     InvalidAssetsDirectory(String),
 

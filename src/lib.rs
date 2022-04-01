@@ -12,7 +12,7 @@ pub mod mint;
 pub mod parse;
 pub mod setup;
 pub mod update;
-pub mod upload_assets;
+pub mod upload;
 pub mod utils;
 pub mod validate;
 pub mod verify;

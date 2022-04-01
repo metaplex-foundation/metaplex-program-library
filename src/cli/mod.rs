@@ -86,7 +86,7 @@ pub enum Commands {
     },
 
     /// Upload assets to storage and creates the cache config
-    UploadAssets {
+    Upload {
         /// Path to the directory with the assets to upload
         #[clap(default_value = DEFAULT_ASSETS)]
         assets_dir: String,
