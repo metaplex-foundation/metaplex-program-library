@@ -17,16 +17,16 @@ use crate::cache::*;
 use crate::candy_machine::uuid_from_pubkey;
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
+use crate::deploy::data::*;
+use crate::deploy::errors::*;
 use crate::setup::{setup_client, sugar_setup};
-use crate::upload::data::*;
-use crate::upload::errors::*;
 use crate::utils::*;
 use crate::validate::format::Metadata;
 
 /// Name of the first metadata file.
 const METADATA_FILE: &str = "0.json";
 
-pub async fn process_upload(args: UploadArgs) -> Result<()> {
+pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     // loads the cache file (this needs to have been created by
     // the upload_assets command)
     let mut cache = load_cache(&args.cache, false)?;

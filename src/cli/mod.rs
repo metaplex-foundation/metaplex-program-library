@@ -39,6 +39,7 @@ pub enum Commands {
         number: Option<u64>,
     },
 
+    /// Update the candy machine config on chain
     Update {
         /// Path to the config file, defaults to "config.json"
         #[clap(short, long, default_value = "config.json")]
@@ -61,8 +62,8 @@ pub enum Commands {
         new_authority: Option<String>,
     },
 
-    /// Upload assets to storage and then insert items into candy machine config
-    Upload {
+    /// Deploy cache items into candy machine config on chain
+    Deploy {
         /// Assets directory to upload, defaults to "assets"
         #[clap(default_value = "assets")]
         assets_dir: String,
@@ -84,6 +85,7 @@ pub enum Commands {
         cache: String,
     },
 
+    /// Upload assets to storage and creates the cache config
     UploadAssets {
         /// Path to the directory with the assets to upload
         #[clap(default_value = DEFAULT_ASSETS)]
@@ -106,7 +108,7 @@ pub enum Commands {
         cache: String,
     },
 
-    /// Withdraw funds from candy machine account closing it.
+    /// Withdraw funds from candy machine account closing it
     Withdraw {
         /// Address of candy machine to withdraw funds from.
         candy_machine: Option<String>,

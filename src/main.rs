@@ -15,10 +15,10 @@ use sugar_cli::candy_machine::{get_candy_machine_state, print_candy_machine_stat
 use sugar_cli::cli::{Cli, Commands};
 use sugar_cli::constants::DEFAULT_CACHE;
 use sugar_cli::create_config::process_create_config;
+use sugar_cli::deploy::{process_deploy, DeployArgs};
 use sugar_cli::mint::{process_mint, MintArgs};
 use sugar_cli::setup::sugar_setup;
 use sugar_cli::update::{process_update, UpdateArgs};
-use sugar_cli::upload::{process_upload, UploadArgs};
 use sugar_cli::upload_assets::{process_upload_assets, UploadAssetsArgs};
 use sugar_cli::validate::{process_validate, ValidateArgs};
 use sugar_cli::verify::{process_verify, VerifyArgs};
@@ -105,14 +105,14 @@ async fn main() -> Result<()> {
             cache,
             new_authority,
         })?,
-        Commands::Upload {
+        Commands::Deploy {
             assets_dir,
             config,
             keypair,
             rpc_url,
             cache,
         } => {
-            process_upload(UploadArgs {
+            process_deploy(DeployArgs {
                 assets_dir,
                 config,
                 keypair,
