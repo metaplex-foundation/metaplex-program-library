@@ -5,7 +5,6 @@
   "categorizeByGroup": false,
   "defaultCategory": "sdk",
   "categoryOrder": [
-    "*",
     "Accounts",
     "Instructions",
     "Errors",
@@ -13,7 +12,8 @@
     "enums",
     "userTypes",
     "sdk",
-    "generated"
+    "generated",
+    "*"
   ],
   "readme": "none",
   "emit": "both",

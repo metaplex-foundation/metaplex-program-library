@@ -470,6 +470,10 @@ pub enum MetaplexError {
     /// Auction manager already in finished state
     #[error("Auction manager already in finished state")]
     AuctionManagerInFishedState,
+
+    /// Public keys don't match in assert check.
+    #[error("PublicKeyMismatch")]
+    PublicKeyMismatch,
 }
 
 impl PrintProgramError for MetaplexError {
