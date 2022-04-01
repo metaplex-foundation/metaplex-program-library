@@ -68,7 +68,7 @@ fn v2_validation<'a>(
     store_info: &AccountInfo<'a>,
     vault_info: &AccountInfo<'a>,
     payer_info: &AccountInfo<'a>,
-    token_program_info: &AccountInfo<'a>,
+    _token_program_info: &AccountInfo<'a>,
     system_info: &AccountInfo<'a>,
     rent_info: &AccountInfo<'a>,
     bidder_info: &AccountInfo<'a>,
@@ -81,12 +81,7 @@ fn v2_validation<'a>(
     let extended = AuctionDataExtended::from_account_info(accounts.auction_extended_info)?;
     let store = Store::from_account_info(store_info)?;
     let destination_amount = get_amount_from_token_account(destination_info)?;
-    assert_is_ata(
-        destination_info,
-        bidder_info.key,
-        token_program_info.key,
-        accounts.mint_info.key,
-    )?;
+    assert_is_ata(destination_info, bidder_info.key, accounts.mint_info.key)?;
 
     if destination_amount != 1 {
         return Err(MetaplexError::ProvidedAccountDoesNotContainOneToken.into());
