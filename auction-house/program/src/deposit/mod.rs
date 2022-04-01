@@ -59,7 +59,7 @@ impl<'info> From<DepositWithAuctioneer<'info>> for InstantDeposit<'info> {
 
 /// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
 #[derive(Accounts, Clone)]
-#[instruction(escrow_payment_bump: u8)]
+#[instruction(escrow_payment_bump: u8, auctioneer_pda_bump: u8)]
 pub struct DepositWithAuctioneer<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
@@ -93,7 +93,7 @@ pub struct DepositWithAuctioneer<'info> {
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -119,6 +119,7 @@ pub fn instant_deposit<'info>(
 pub fn deposit_with_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
     escrow_payment_bump: u8,
+    _auctioneer_pda_bump: u8,
     amount: u64,
 ) -> ProgramResult {
     let auction_house = &ctx.accounts.auction_house;
@@ -157,11 +158,6 @@ fn deposit<'info>(
     let system_program = &accounts.system_program;
     let token_program = &accounts.token_program;
     let rent = &accounts.rent;
-
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
-    if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
-    }
 
     let auction_house_key = auction_house.key();
     let seeds = [

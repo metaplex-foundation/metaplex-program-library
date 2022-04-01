@@ -454,8 +454,6 @@ pub fn auction_bid_logic<'info>(
     public: bool,
 ) -> ProgramResult {
     let ah_auctioneer_pda_account = ah_auctioneer_pda.to_account_info();
-    // let ah_data = *auction_house_unchecked.to_account_info().data.borrow_mut();
-    // let auction_house = AuctionHouse::deserialize(&mut ah_data.as_ref())?;
 
     if !auction_house.has_auctioneer {
         return Err(ErrorCode::NoAuctioneerProgramSet.into());

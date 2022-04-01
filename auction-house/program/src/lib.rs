@@ -319,9 +319,10 @@ pub mod auction_house {
     pub fn deposit_with_auctioneer<'info>(
         ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
         escrow_payment_bump: u8,
+        ah_auctioneer_pda_bump: u8,
         amount: u64,
     ) -> ProgramResult {
-        deposit::deposit_with_auctioneer(ctx, escrow_payment_bump, amount)
+        deposit::deposit_with_auctioneer(ctx, escrow_payment_bump, ah_auctioneer_pda_bump, amount)
     }
 
     pub fn cancel<'info>(

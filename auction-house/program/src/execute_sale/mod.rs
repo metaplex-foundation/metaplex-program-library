@@ -297,11 +297,6 @@ fn execute_sale<'info>(
     let buyer_receipt_clone = buyer_receipt_token_account.to_account_info();
     let token_account_clone = token_account.to_account_info();
 
-    // If it has an auctioneer authority delegated must use execute_sale_with_auctioneer handler.
-    if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
-    }
-
     let is_native = treasury_mint.key() == spl_token::native_mint::id();
 
     if buyer_price == 0 && !authority_clone.is_signer && !seller.is_signer {

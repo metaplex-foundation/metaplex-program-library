@@ -1,19 +1,9 @@
 #![cfg(feature = "test-bpf")]
+pub mod common;
 pub mod utils;
 
-use anchor_lang::prelude::*;
-use mpl_auction_house::{pda::find_auctioneer_pda, AuctionHouse, Auctioneer, AuthorityScope};
-use mpl_testing_utils::{assert_error, assert_transport_error, solana::airdrop};
-use solana_program_test::*;
-use solana_sdk::{
-    instruction::InstructionError, signature::Keypair, signer::Signer,
-    transaction::TransactionError, transport::TransportError,
-};
-use std::assert_eq;
-use utils::setup_functions::*;
-
-const HAS_ONE_CONSTRAINT_VIOLATION: u32 = 2001;
-const TOO_MANY_SCOPES: u32 = 6032;
+use common::*;
+use utils::{helpers::default_scopes, setup_functions::*};
 
 #[tokio::test]
 async fn delegate_success() {
@@ -144,15 +134,8 @@ async fn too_many_scopes() {
     let (auctioneer_pda, auctioneer_pda_bump) =
         find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
 
-    let scopes = vec![
-        AuthorityScope::Buy,
-        AuthorityScope::PublicBuy,
-        AuthorityScope::ExecuteSale,
-        AuthorityScope::Sell,
-        AuthorityScope::Cancel,
-        AuthorityScope::Withdraw,
-        AuthorityScope::Buy,
-    ];
+    let mut scopes = default_scopes();
+    scopes.push(AuthorityScope::Buy);
 
     let err = delegate(
         &mut context,
@@ -191,14 +174,7 @@ async fn incorrect_auctioneer_pda_fails() {
         &mpl_auction_house::id(),
     );
 
-    let scopes = vec![
-        AuthorityScope::Buy,
-        AuthorityScope::PublicBuy,
-        AuthorityScope::ExecuteSale,
-        AuthorityScope::Sell,
-        AuthorityScope::Cancel,
-        AuthorityScope::Withdraw,
-    ];
+    let scopes = default_scopes();
 
     let err = delegate(
         &mut context,

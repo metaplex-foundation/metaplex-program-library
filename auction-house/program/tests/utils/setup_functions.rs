@@ -9,8 +9,8 @@ use anchor_lang::*;
 use mpl_auction_house::{
     pda::{
         find_auction_house_address, find_auction_house_fee_account_address,
-        find_auction_house_treasury_address, find_bid_receipt_address, find_escrow_payment_address,
-        find_listing_receipt_address, find_program_as_signer_address,
+        find_auction_house_treasury_address, find_auctioneer_pda, find_bid_receipt_address,
+        find_escrow_payment_address, find_listing_receipt_address, find_program_as_signer_address,
         find_public_bid_trade_state_address, find_purchase_receipt_address,
         find_trade_state_address,
     },
@@ -151,6 +151,72 @@ pub fn deposit(
     )
 }
 
+pub fn auction_deposit(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    buyer: &Keypair,
+    auctioneer_authority: Pubkey,
+    sale_price: u64,
+) -> (
+    mpl_auction_house::accounts::DepositWithAuctioneer,
+    Transaction,
+) {
+    let seller_token_account =
+        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let (_buyer_trade_state, _sts_bump) = find_trade_state_address(
+        &buyer.pubkey(),
+        &ahkey,
+        &seller_token_account,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        1,
+    );
+    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
+    let accounts = mpl_auction_house::accounts::DepositWithAuctioneer {
+        wallet: buyer.pubkey(),
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        token_program: spl_token::id(),
+        treasury_mint: ah.treasury_mint,
+        payment_account: buyer.pubkey(),
+        transfer_authority: buyer.pubkey(),
+        auctioneer_authority,
+        ah_auctioneer_pda: auctioneer_pda,
+        system_program: solana_program::system_program::id(),
+        rent: sysvar::rent::id(),
+        escrow_payment_account: escrow,
+    };
+    let account_metas = accounts.to_account_metas(None);
+
+    let data = mpl_auction_house::instruction::DepositWithAuctioneer {
+        escrow_payment_bump: escrow_bump,
+        ah_auctioneer_pda_bump: auctioneer_pda_bump,
+        amount: sale_price,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data,
+        accounts: account_metas,
+    };
+
+    (
+        accounts,
+        Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&buyer.pubkey()),
+            &[buyer],
+            context.last_blockhash,
+        ),
+    )
+}
+
 pub fn buy(
     context: &mut ProgramTestContext,
     ahkey: &Pubkey,
@@ -198,6 +264,104 @@ pub fn buy(
     let account_metas = accounts.to_account_metas(None);
 
     let buy_ix = mpl_auction_house::instruction::Buy {
+        trade_state_bump: bts_bump,
+        escrow_payment_bump: escrow_bump,
+        token_size: 1,
+        buyer_price: sale_price,
+    };
+    let data = buy_ix.data();
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data,
+        accounts: account_metas,
+    };
+
+    let (bid_receipt, bid_receipt_bump) = find_bid_receipt_address(&bts);
+    let print_receipt_accounts = mpl_auction_house::accounts::PrintBidReceipt {
+        receipt: bid_receipt,
+        bookkeeper: buyer.pubkey(),
+        system_program: solana_program::system_program::id(),
+        rent: sysvar::rent::id(),
+        instruction: sysvar::instructions::id(),
+    };
+
+    let account_metas = print_receipt_accounts.to_account_metas(None);
+
+    let print_bid_receipt_ix = mpl_auction_house::instruction::PrintBidReceipt {
+        receipt_bump: bid_receipt_bump,
+    };
+    let data = print_bid_receipt_ix.data();
+
+    let print_bid_receipt_instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data,
+        accounts: account_metas,
+    };
+
+    (
+        (accounts, print_receipt_accounts),
+        Transaction::new_signed_with_payer(
+            &[instruction, print_bid_receipt_instruction],
+            Some(&buyer.pubkey()),
+            &[buyer],
+            context.last_blockhash,
+        ),
+    )
+}
+
+pub fn auction_buy(
+    context: &mut ProgramTestContext,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    owner: &Pubkey,
+    buyer: &Keypair,
+    auctioneer_authority: &Pubkey,
+    sale_price: u64,
+) -> (
+    (
+        mpl_auction_house::accounts::BuyWithAuctioneer,
+        mpl_auction_house::accounts::PrintBidReceipt,
+    ),
+    Transaction,
+) {
+    let seller_token_account = get_associated_token_address(&owner, &test_metadata.mint.pubkey());
+    let trade_state = find_trade_state_address(
+        &buyer.pubkey(),
+        &ahkey,
+        &seller_token_account,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        1,
+    );
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
+    let (bts, bts_bump) = trade_state;
+
+    let accounts = mpl_auction_house::accounts::BuyWithAuctioneer {
+        wallet: buyer.pubkey(),
+        token_account: seller_token_account,
+        metadata: test_metadata.pubkey,
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        buyer_trade_state: bts,
+        auctioneer_authority: *auctioneer_authority,
+        ah_auctioneer_pda: auctioneer_pda,
+        token_program: spl_token::id(),
+        treasury_mint: ah.treasury_mint,
+        payment_account: buyer.pubkey(),
+        transfer_authority: buyer.pubkey(),
+        system_program: solana_program::system_program::id(),
+        rent: sysvar::rent::id(),
+        escrow_payment_account: escrow,
+    };
+
+    let account_metas = accounts.to_account_metas(None);
+
+    let buy_ix = mpl_auction_house::instruction::BuyWithAuctioneer {
         trade_state_bump: bts_bump,
         escrow_payment_bump: escrow_bump,
         token_size: 1,
