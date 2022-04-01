@@ -1,4 +1,10 @@
-# Token Metadata
+# mpl-token-metadata
+
+This package contains the token vault contract SDK code.
+
+## API Docs
+
+Find the [token-metadata API docs published here](https://metaplex-foundation.github.io/metaplex-program-library/docs/token-metadata/index.html).
 
 ## Installation
 
@@ -23,3 +29,17 @@ And use the deprecated API explicitly like so:
 ```ts
 import { deprecated } from "@metaplex-foundation/mpl-token-metadata";
 ```
+
+## Developing
+
+In order to update the generated SDK when the rust contract was updated please run:
+
+```
+yarn gen:api
+```
+
+and then update the wrapper code and tests.
+
+## LICENSE
+
+Apache v2.0
