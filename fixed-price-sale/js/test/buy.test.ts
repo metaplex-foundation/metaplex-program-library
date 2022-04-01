@@ -15,6 +15,7 @@ import {
   mintTokenToAccount,
 } from './actions';
 import { CreateMarketInstructionArgs } from '../src';
+import { verifyCollection } from './actions/verifyCollection';
 
 const { Edition, EditionMarker, Metadata } = deprecated
 
@@ -32,6 +33,16 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
       name: 'Store',
       description: 'Description',
     },
+  });
+
+  const {
+    mint: collectionMint,
+    metadata: collectionMetadata,
+    edition: collectionMasterEditionAccount
+  } = await mintNFT({
+    transactionHandler,
+    payer,
+    connection,
   });
 
   const { sellingResource, vault, vaultOwner, vaultOwnerBump, resourceMint } =
@@ -59,7 +70,11 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     mutable: true,
     price: 0.001,
     piecesInOneWallet: 1,
-    gatingConfig: null,
+    gatingConfig: {
+      collection: collectionMint.publicKey,
+      expireOnUse: true,
+      gatingTime: null,
+    }
   };
 
   const { market, treasuryHolder } = await createMarket({
@@ -93,6 +108,29 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
   const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
   const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
 
+  // Create NFT from collection
+  const {
+    mint: userCollectionTokenMint,
+    tokenAccount: userCollectionTokenAcc,
+    metadata: userCollectionMetadata
+  } = await mintNFT({
+    transactionHandler,
+    payer,
+    connection,
+    collectionMint: collectionMint.publicKey
+  });
+
+  await verifyCollection({
+    transactionHandler,
+    connection,
+    payer,
+    metadata: userCollectionMetadata,
+    collectionAuthority: payer.publicKey,
+    collection: collectionMetadata,
+    collectionMint: collectionMint.publicKey,
+    collectionMasterEditionAccount
+  })
+
   await sleep(1000);
 
   const { tx: buyTx } = await createBuyTransaction({
@@ -114,6 +152,23 @@ test('buy: successful purchase for newly minted treasury mint', async (t) => {
     newMintEdition,
     newMintMetadata,
     newTokenAccount: mintAta.publicKey,
+    additionalKeys: [
+      {
+        pubkey: userCollectionTokenAcc.publicKey,
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: userCollectionTokenMint.publicKey,
+        isSigner: false,
+        isWritable: true,
+      },
+      {
+        pubkey: userCollectionMetadata,
+        isSigner: false,
+        isWritable: false,
+      }
+    ]
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(

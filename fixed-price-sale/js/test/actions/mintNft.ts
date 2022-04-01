@@ -10,7 +10,7 @@ import {
   createCreateMasterEditionV3Instruction,
   Creator,
   DataV2,
-  createCreateMetadataAccountV2Instruction
+  createCreateMetadataAccountV2Instruction,
 } from '@metaplex-foundation/mpl-token-metadata';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore createMintToInstruction export actually exist but isn't setup correctly
@@ -26,6 +26,7 @@ type MintNFTParams = {
   connection: Connection;
   maxSupply?: number;
   creators?: Creator[];
+  collectionMint?: PublicKey
 };
 
 const URI = 'https://arweave.net/Rmg4pcIv-0FQ7M7X838p2r592Q4NU63Fj7o7XsvBHEE';
@@ -33,7 +34,7 @@ const NAME = 'test';
 const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
 
-export async function mintNFT({ transactionHandler, payer, connection, creators, maxSupply = 100 }: MintNFTParams) {
+export async function mintNFT({ transactionHandler, payer, connection, creators, collectionMint, maxSupply = 100 }: MintNFTParams) {
   const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
@@ -58,7 +59,10 @@ export async function mintNFT({ transactionHandler, payer, connection, creators,
     symbol: SYMBOL,
     sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
     creators: creators ?? null,
-    collection: null,
+    collection: collectionMint ? {
+      key: collectionMint,
+      verified: false
+    } : null,
     uses: null,
   };
 
