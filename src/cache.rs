@@ -15,6 +15,8 @@ pub struct Cache {
     pub env: String,
     #[serde(rename = "cacheName")]
     pub cache_name: String,
+    #[serde(skip_deserializing, skip_serializing)]
+    pub file_path: String,
 }
 
 impl Cache {
@@ -24,6 +26,7 @@ impl Cache {
             items: CacheItems::new(),
             env: String::new(),
             cache_name: String::new(),
+            file_path: String::new(),
         }
     }
 
@@ -34,6 +37,11 @@ impl Cache {
         f.write_all(c.as_bytes())?;
 
         Ok(())
+    }
+
+    pub fn sync_file(&mut self) -> Result<()> {
+        let file_path = self.file_path.clone();
+        self.write_to_file(Path::new(&file_path))
     }
 }
 
@@ -89,7 +97,10 @@ impl Default for CacheItems {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CacheItem {
     pub name: String,
-    pub link: String,
+    pub media_hash: String,
+    pub media_link: String,
+    pub metadata_hash: String,
+    pub metadata_link: String,
     #[serde(rename = "onChain")]
     pub on_chain: bool,
 }
@@ -99,7 +110,7 @@ impl CacheItem {
         if !self.on_chain {
             Some(ConfigLine {
                 name: self.name.clone(),
-                uri: self.link.clone(),
+                uri: self.metadata_link.clone(),
             })
         } else {
             None
@@ -107,35 +118,43 @@ impl CacheItem {
     }
 }
 
-pub fn load_cache(cache_file_path: &str) -> Result<Cache> {
+pub fn load_cache(cache_file_path: &str, create: bool) -> Result<Cache> {
     let cache_file_path = Path::new(cache_file_path);
     if !cache_file_path.exists() {
-        let cache_file_string = path_to_string(cache_file_path)?;
-        let error = CacheError::CacheFileNotFound(cache_file_string).into();
-        error!("{:?}", error);
-        return Err(error);
-    }
-
-    info!("Cache exists, loading...");
-    let file = match File::open(cache_file_path) {
-        Ok(file) => file,
-        Err(err) => {
+        if create {
+            // if the cache file does not exist, creates a new Cache object
+            let mut cache = Cache::new();
+            cache.file_path = path_to_string(cache_file_path)?;
+            Ok(cache)
+        } else {
             let cache_file_string = path_to_string(cache_file_path)?;
-            let error =
-                CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into();
+            let error = CacheError::CacheFileNotFound(cache_file_string).into();
             error!("{:?}", error);
-            return Err(error);
+            Err(error)
         }
-    };
+    } else {
+        info!("Cache exists, loading...");
+        let file = match File::open(cache_file_path) {
+            Ok(file) => file,
+            Err(err) => {
+                let cache_file_string = path_to_string(cache_file_path)?;
+                let error =
+                    CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into();
+                error!("{:?}", error);
+                return Err(error);
+            }
+        };
 
-    let cache: Cache = match serde_json::from_reader(file) {
-        Ok(cache) => cache,
-        Err(err) => {
-            let error = CacheError::CacheFileWrongFormat(err.to_string()).into();
-            error!("{:?}", error);
-            return Err(error);
-        }
-    };
+        let mut cache: Cache = match serde_json::from_reader(file) {
+            Ok(cache) => cache,
+            Err(err) => {
+                let error = CacheError::CacheFileWrongFormat(err.to_string()).into();
+                error!("{:?}", error);
+                return Err(error);
+            }
+        };
+        cache.file_path = path_to_string(cache_file_path)?;
 
-    Ok(cache)
+        Ok(cache)
+    }
 }

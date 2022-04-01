@@ -92,3 +92,7 @@ pub const PAYMENT_EMOJI: Emoji<'_, '_> = Emoji("💵 ", "");
 pub const UPLOAD_EMOJI: Emoji<'_, '_> = Emoji("📤 ", "");
 
 pub const WITHDRAW_EMOJI: Emoji<'_, '_> = Emoji("🏧 ", "");
+
+pub const ASSETS_EMOJI: Emoji<'_, '_> = Emoji("🗂  ", "");
+
+pub const COMPLETE_EMOJI: Emoji<'_, '_> = Emoji("✅ ", "");

@@ -114,5 +114,5 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
 }
 
 fn items_match(cache_item: &CacheItem, on_chain_item: &OnChainItem) -> bool {
-    cache_item.name == on_chain_item.name && cache_item.link == on_chain_item.uri
+    cache_item.name == on_chain_item.name && cache_item.metadata_link == on_chain_item.uri
 }

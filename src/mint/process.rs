@@ -37,7 +37,7 @@ pub struct MintArgs {
 
 pub fn process_mint(args: MintArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let cache = load_cache(&args.cache)?;
+    let cache = load_cache(&args.cache, false)?;
     let client = Arc::new(setup_client(&sugar_config)?);
 
     let candy_machine_id = match Pubkey::from_str(&cache.program.candy_machine) {

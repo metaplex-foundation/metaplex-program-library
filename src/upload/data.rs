@@ -3,7 +3,6 @@ use std::collections::HashMap;
 
 pub struct UploadArgs {
     pub assets_dir: String,
-    pub arloader_manifest: String,
     pub config: String,
     pub cache: String,
     pub keypair: Option<String>,

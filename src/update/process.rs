@@ -22,7 +22,7 @@ pub struct UpdateArgs {
 
 pub fn process_update(args: UpdateArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let cache = load_cache(&args.cache)?;
+    let cache = load_cache(&args.cache, false)?;
     let client = setup_client(&sugar_config)?;
     let config_data = get_config_data(&args.config)?;
 

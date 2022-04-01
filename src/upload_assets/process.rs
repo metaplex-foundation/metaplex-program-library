@@ -1,13 +1,26 @@
-use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
-use clap::crate_version;
+use async_trait::async_trait;
 use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
-use std::{fs::File, sync::Arc};
 
-use crate::cache::Cache;
+use crate::cache::{load_cache, Cache};
 use crate::common::*;
-use crate::config::{get_config_data, Cluster, UploadMethod};
+use crate::config::{data::SugarConfig, get_config_data, UploadMethod};
+use crate::upload_assets::bundlr::BundlrHandler;
 use crate::upload_assets::*;
+use crate::utils::*;
+
+/// A trait for storage upload handlers.
+#[async_trait]
+pub trait UploadHandler {
+    /// Upload the data to a (permanent) storage.
+    async fn upload_data(
+        &self,
+        config: &SugarConfig,
+        assets: &HashMap<usize, AssetPair>,
+        cache: &mut Cache,
+        indices: &[usize],
+        data_type: DataType,
+    ) -> Result<()>;
+}
 
 pub struct UploadAssetsArgs {
     pub assets_dir: String,
@@ -18,206 +31,199 @@ pub struct UploadAssetsArgs {
 }
 
 pub async fn process_upload_assets(args: UploadAssetsArgs) -> Result<()> {
-    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let http_client = reqwest::Client::new();
-    let client = setup_client(&sugar_config)?;
-
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-    let program = client.program(pid);
-
-    // (1) Setting up connection
-
+    // loading assets
     println!(
-        "{} {}Initializing connection",
-        style("[1/6]").bold().dim(),
-        COMPUTER_EMOJI
+        "{} {}Loading assets",
+        style("[1/4]").bold().dim(),
+        ASSETS_EMOJI
     );
-    let pb = ProgressBar::new_spinner();
+
+    let pb = spinner_with_style();
     pb.enable_steady_tick(120);
-    pb.set_style(
-        ProgressStyle::default_spinner()
-            .tick_strings(&[
-                "▹▹▹▹▹",
-                "▸▹▹▹▹",
-                "▹▸▹▹▹",
-                "▹▹▸▹▹",
-                "▹▹▹▸▹",
-                "▹▹▹▹▸",
-                "▪▪▪▪▪",
-            ])
-            .template("{spinner:.dim} {msg}"),
-    );
-    pb.set_message("Connecting...");
+    pb.set_message("Reading files...");
 
-    // Get keypair as base58 string for Bundlr.
-    let keypair = bs58::encode(sugar_config.keypair.to_bytes()).into_string();
-    let signer = SolanaSigner::from_base58(&keypair);
+    let asset_pairs = get_asset_pairs(&args.assets_dir)?;
+    // creates/loads the cache
+    let mut cache = load_cache(&args.cache, true).unwrap();
+    // list of indices to upload
+    // 0: media
+    // 1: metadata
+    let mut indices = (Vec::new(), Vec::new());
 
-    let config_data = get_config_data(&args.config)?;
-    let solana_cluster: Cluster = get_cluster(program.rpc())?;
-
-    let bundlr_node = match config_data.upload_method {
-        UploadMethod::Bundlr => match solana_cluster {
-            Cluster::Devnet => BUNDLR_DEVNET,
-            Cluster::Mainnet => BUNDLR_MAINNET,
-        },
-        _ => {
-            return Err(anyhow!(format!(
-                "Upload method '{}' currently unsupported!",
-                &config_data.upload_method.to_string()
-            )))
+    for (index, pair) in &asset_pairs {
+        match cache.items.0.get_mut(&index.to_string()) {
+            Some(item) => {
+                // has the media file changed?
+                if !item.media_hash.eq(&pair.media_hash) || item.media_link.is_empty() {
+                    // we replace the entire item to trigger the media and metadata upload
+                    cache
+                        .items
+                        .0
+                        .insert(index.to_string(), pair.clone().into_cache_item());
+                    // we need to upload both media/metadata
+                    indices.0.push(*index);
+                    indices.1.push(*index);
+                } else if !item.metadata_hash.eq(&pair.metadata_hash)
+                    || item.metadata_link.is_empty()
+                {
+                    // triggers the metadata upload
+                    item.metadata_hash = pair.metadata_hash.clone();
+                    item.metadata_link = String::new();
+                    item.on_chain = false;
+                    // we need to upload metadata only
+                    indices.1.push(*index);
+                }
+            }
+            None => {
+                cache
+                    .items
+                    .0
+                    .insert(index.to_string(), pair.clone().into_cache_item());
+                // we need to upload both media/metadata
+                indices.0.push(*index);
+                indices.1.push(*index);
+            }
         }
-    };
-
-    let extension = get_media_extension(&args.assets_dir)?;
-    let total_image_size = get_data_size(Path::new(&args.assets_dir), &extension)?;
-
-    info!("Total image size: {}", total_image_size);
-
-    let media_lamports_fee = get_bundlr_fee(&http_client, bundlr_node, total_image_size).await?;
-    let address = sugar_config.keypair.pubkey().to_string();
-    let balance = get_bundlr_balance(&http_client, &address, bundlr_node).await?;
-
-    info!("Bundlr balance: {}", balance);
-
-    let bundlr_address = get_bundlr_solana_address(&http_client, bundlr_node).await?;
-    let bundlr_pubkey = Pubkey::from_str(&bundlr_address)?;
-
-    pb.finish_with_message("Connected");
-
-    // (2) Funds the bundlr wallet for media upload
-
-    println!(
-        "\n{} {}Funding Bundlr wallet to upload media",
-        style("[2/6]").bold().dim(),
-        PAYMENT_EMOJI
-    );
-
-    let _response = fund_bundlr_address(
-        &program,
-        &http_client,
-        bundlr_pubkey,
-        bundlr_node,
-        &sugar_config.keypair,
-        media_lamports_fee,
-    )
-    .await?;
-
-    let balance = get_bundlr_balance(&http_client, &address, bundlr_node).await?;
-
-    if balance == 0 {
-        let error = UploadAssetsError::NoBundlrBalance(address).into();
-        error!("{error}");
-        return Err(error);
     }
 
-    let sugar_tag = Tag::new("App-Name".into(), format!("Sugar {}", crate_version!()));
-    let media_tag = Tag::new("Content-Type".into(), format!("image/{extension}"));
-    let metadata_tag = Tag::new("Content-Type".into(), "application/json".to_string());
-
-    let media_extension_glob = &format!("*.{extension}");
-    let metadata_extension_glob = "*.json".to_string();
-
-    // (3) Retrieves the media data and uploads to bundlr
+    pb.finish_and_clear();
 
     println!(
-        "\n{} {}Uploading media to Bundlr",
-        style("[3/6]").bold().dim(),
-        UPLOAD_EMOJI
+        "Found {} media/metadata pair(s), uploading files:",
+        asset_pairs.len()
     );
+    println!("+--------------------+");
+    println!("| media     | {:>6} |", indices.0.len());
+    println!("| metadata  | {:>6} |", indices.1.len());
+    println!("+--------------------+");
 
-    let mut asset_pairs = get_asset_pairs(&args.assets_dir)?;
+    // this should never happen, since every time we update the media file we
+    // need to update the metadata
+    if indices.0.len() > indices.1.len() {
+        return Err(anyhow!(format!(
+            "There are more media files ({}) to upload than metadata ({})",
+            indices.0.len(),
+            indices.1.len(),
+        )));
+    }
 
-    let bundlr_client = Bundlr::new(
-        bundlr_node.to_string(),
-        "solana".to_string(),
-        "sol".to_string(),
-        signer,
-    );
+    let need_upload = !indices.0.is_empty() || !indices.1.is_empty();
 
-    let bundlr_client = Arc::new(bundlr_client);
+    // ready to upload data
 
-    let upload_media_args = UploadDataArgs {
-        bundlr_client: bundlr_client.clone(),
-        assets_dir: Path::new(&args.assets_dir),
-        extension_glob: media_extension_glob,
-        tags: vec![sugar_tag.clone(), media_tag],
-        data_type: DataType::Media,
-    };
-    // uploads media files
-    upload_data(upload_media_args, &mut asset_pairs).await?;
+    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
+    let config_data = get_config_data(&args.config)?;
 
-    // (4) Funds Bundlr wallet for metadata upload
+    if need_upload {
+        println!(
+            "\n{} {}Initiliazing upload",
+            style("[2/4]").bold().dim(),
+            COMPUTER_EMOJI
+        );
 
-    println!(
-        "\n{} {}Funding Bundlr wallet to upload metadata",
-        style("[4/6]").bold().dim(),
-        PAYMENT_EMOJI
-    );
+        let handler = match config_data.upload_method {
+            UploadMethod::Bundlr => Box::new(
+                BundlrHandler::initialize(&get_config_data(&args.config)?, &sugar_config)
+                    .await
+                    .unwrap(),
+            ) as Box<dyn UploadHandler>,
+            _ => {
+                return Err(anyhow!(format!(
+                    "Upload method '{}' currently unsupported!",
+                    &config_data.upload_method.to_string()
+                )))
+            }
+        };
 
-    // updates media links in metadata files
-    insert_media_links(&asset_pairs)?;
+        println!(
+            "\n{} {}Uploading media files {}",
+            style("[3/4]").bold().dim(),
+            UPLOAD_EMOJI,
+            if indices.0.is_empty() {
+                "(skipping)"
+            } else {
+                ""
+            }
+        );
 
-    let total_metadata_size = get_data_size(Path::new(&args.assets_dir), "json")?;
-    let metadata_lamports_fee =
-        get_bundlr_fee(&http_client, bundlr_node, total_metadata_size).await?;
+        if !indices.0.is_empty() {
+            handler
+                .upload_data(
+                    &sugar_config,
+                    &asset_pairs,
+                    &mut cache,
+                    &indices.0,
+                    DataType::Media,
+                )
+                .await?;
 
-    let _response = fund_bundlr_address(
-        &program,
-        &http_client,
-        bundlr_pubkey,
-        bundlr_node,
-        &sugar_config.keypair,
-        metadata_lamports_fee,
-    )
-    .await?;
+            // updates the list of metadata indices since the media upload
+            // might fail - removes any index that the media upload failed
+            if !indices.1.is_empty() {
+                for index in indices.0 {
+                    let item = cache.items.0.get(&index.to_string()).unwrap();
 
-    // (5) Uploads metadata to bundlr
+                    if item.media_link.is_empty() {
+                        // no media link, not ready for metadata upload
+                        indices.1.retain(|&x| x != index);
+                    }
+                }
+            }
+        }
 
-    println!(
-        "\n{} {}Uploading metadata to Bundlr",
-        style("[5/6]").bold().dim(),
-        UPLOAD_EMOJI
-    );
+        println!(
+            "\n{} {}Uploading metadata files {}",
+            style("[4/4]").bold().dim(),
+            UPLOAD_EMOJI,
+            if indices.1.is_empty() {
+                "(skipping)"
+            } else {
+                ""
+            }
+        );
 
-    let upload_metadata_args = UploadDataArgs {
-        bundlr_client: bundlr_client.clone(),
-        assets_dir: Path::new(&args.assets_dir),
-        extension_glob: &metadata_extension_glob,
-        tags: vec![sugar_tag, metadata_tag],
-        data_type: DataType::Metadata,
-    };
-    // uploads metadata files
-    upload_data(upload_metadata_args, &mut asset_pairs).await?;
-
-    // (6) Creates/updates cache file
-
-    println!(
-        "\n{} {}Writing cache file",
-        style("[6/6]").bold().dim(),
-        PAPER_EMOJI
-    );
-
-    let cache_file_path = Path::new(&args.cache);
-    let mut cache: Cache = if cache_file_path.exists() {
-        let file = File::open(cache_file_path)?;
-        serde_json::from_reader(file)?
+        if !indices.1.is_empty() {
+            handler
+                .upload_data(
+                    &sugar_config,
+                    &asset_pairs,
+                    &mut cache,
+                    &indices.1,
+                    DataType::Metadata,
+                )
+                .await?;
+        }
     } else {
-        println!("Cache file created");
-        Cache::new()
-    };
-
-    let mut items = IndexMap::new();
-
-    for (key, value) in asset_pairs {
-        items.insert(key.to_string(), value.into_cache_item());
+        println!("\n....no files need uploading, skipping remaining steps.");
     }
-    cache.items.0 = items;
 
-    cache.write_to_file(cache_file_path)?;
-    println!("Cache file saved");
+    // sanity check
 
-    println!("\n{}", style("[Completed]").bold().dim());
+    cache.sync_file()?;
+
+    let mut count = 0;
+
+    for (_index, item) in cache.items.0 {
+        if !(item.media_link.is_empty() || item.metadata_link.is_empty()) {
+            count += 1;
+        }
+    }
+
+    println!(
+        "\n{}",
+        style(format!(
+            "{}/{} media/metadata pair(s) uploaded.",
+            count,
+            asset_pairs.len()
+        ))
+        .bold()
+    );
+
+    if count == asset_pairs.len() {
+        println!("\n{}", style("[Completed]").green().bold());
+    } else {
+        println!("\n{}", style("[Re-run needed]").red().bold())
+    }
 
     Ok(())
 }

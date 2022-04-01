@@ -1,8 +1,4 @@
-use anchor_client::solana_sdk::pubkey::Pubkey;
-use std::str::FromStr;
-
 use crate::validate::errors::ValidateError;
-use crate::validate::format::Creator;
 
 pub const MAX_NAME_LENGTH: usize = 32;
 pub const MAX_SYMBOL_LENGTH: usize = 10;
@@ -31,25 +27,6 @@ pub fn check_url(url: &str) -> Result<(), ValidateError> {
 
 pub fn check_seller_fee_basis_points(seller_fee_basis_points: u16) -> Result<(), ValidateError> {
     if seller_fee_basis_points > 10000 {
-        return Err(ValidateError::InvalidCreatorShare);
-    }
-    Ok(())
-}
-
-pub fn check_creators(creators: &[Creator]) -> Result<(), ValidateError> {
-    let mut sum = 0;
-    for creator in creators {
-        match Pubkey::from_str(&creator.address) {
-            Ok(_) => (),
-            Err(_) => {
-                return Err(ValidateError::InvalidCreatorAddress(
-                    creator.address.clone(),
-                ))
-            }
-        }
-        sum += creator.share;
-    }
-    if sum != 100 {
         return Err(ValidateError::InvalidCreatorShare);
     }
     Ok(())

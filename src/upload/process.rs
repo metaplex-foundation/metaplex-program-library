@@ -5,39 +5,58 @@ use anchor_client::solana_sdk::{
 };
 use anyhow::Result;
 use console::style;
-use indicatif::{ParallelProgressIterator, ProgressBar};
+use futures::future::select_all;
 use rand::rngs::OsRng;
-use rayon::prelude::*;
-use std::{
-    fs::File,
-    path::Path,
-    str::FromStr,
-    sync::{Arc, Mutex},
-};
+use std::{str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 use mpl_candy_machine::{CandyMachineData, ConfigLine, Creator as CandyCreator};
 
 use crate::cache::*;
-use crate::candy_machine::{uuid_from_pubkey, ConfigStatus};
+use crate::candy_machine::uuid_from_pubkey;
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
 use crate::setup::{setup_client, sugar_setup};
 use crate::upload::data::*;
+use crate::upload::errors::*;
+use crate::utils::*;
 use crate::validate::format::Metadata;
 
-pub fn process_upload(args: UploadArgs) -> Result<()> {
+/// Name of the first metadata file.
+const METADATA_FILE: &str = "0.json";
+
+pub async fn process_upload(args: UploadArgs) -> Result<()> {
+    // loads the cache file (this needs to have been created by
+    // the upload_assets command)
+    let mut cache = load_cache(&args.cache, false)?;
+
+    if cache.items.0.is_empty() {
+        println!(
+            "{}",
+            style("No cache items found - run 'upload-assets' to create the cache file first.")
+                .red()
+                .bold()
+        );
+
+        // nothing else to do, just tell that the cache file was not found (or empty)
+        return Err(CacheError::CacheFileNotFound(args.cache).into());
+    }
+
+    // checks that all metadata links are present
+    for (index, item) in &cache.items.0 {
+        if item.metadata_link.is_empty() {
+            return Err(UploadError::MissingMetadataLink(index.to_string()).into());
+        }
+    }
+
     let sugar_config = match sugar_setup(args.keypair, args.rpc_url) {
         Ok(sugar_config) => sugar_config,
         Err(err) => {
             return Err(SetupError::SugarSetupError(err.to_string()).into());
         }
     };
-
     let client = Arc::new(setup_client(&sugar_config)?);
-
-    let mut cache = load_cache(&args.cache)?;
     let config_data = get_config_data(&args.config)?;
     let candy_machine_address = &cache.program.candy_machine;
 
@@ -49,11 +68,26 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
         );
         info!("Candy machine address is empty, creating new candy machine...");
 
+        let spinner = spinner_with_style();
+        spinner.set_message("Creating candy machine...");
+
         let candy_keypair = Keypair::generate(&mut OsRng);
         let candy_pubkey = candy_keypair.pubkey();
 
+        // loads the metadata of the first cache item
+        let metadata: Metadata = {
+            let f = File::open(Path::new(&args.assets_dir).join(METADATA_FILE))?;
+            match serde_json::from_reader(f) {
+                Ok(metadata) => metadata,
+                Err(err) => {
+                    let error = anyhow!("Error parsing metadata ({}): {}", METADATA_FILE, err);
+                    error!("{:?}", error);
+                    return Err(error);
+                }
+            }
+        };
+
         let uuid = uuid_from_pubkey(&candy_pubkey);
-        let metadata = get_metadata_from_first_json(&args.assets_dir)?;
         let candy_data = create_candy_machine_data(&config_data, uuid, metadata)?;
 
         let sig = initialize_candy_machine(&candy_keypair, candy_data, client.clone())?;
@@ -64,7 +98,10 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
         );
 
         cache.program = CacheProgram::new_from_cm(&candy_pubkey);
-        cache.write_to_file(&args.cache)?;
+        cache.sync_file()?;
+
+        spinner.finish_and_clear();
+
         candy_pubkey
     } else {
         println!(
@@ -88,46 +125,50 @@ pub fn process_upload(args: UploadArgs) -> Result<()> {
         }
     };
 
-    println!("Candy machine ID: {}", candy_pubkey);
-    info!("Uploading config lines...");
+    println!("{} {}", style("Candy machine ID:").bold(), candy_pubkey);
 
     println!(
-        "\n{} {}Uploading config lines",
+        "\n{} {}Writing config lines",
         style("[2/2]").bold().dim(),
         PAPER_EMOJI
     );
 
     let num_items = config_data.number;
-    let config_lines = generate_config_lines(num_items, &cache.items);
-    let config_statuses = upload_config_lines(&sugar_config, config_lines, candy_pubkey, client)?;
 
-    for status in config_statuses {
-        let index: String = status.index.to_string();
-        let mut item = cache.items.0.get_mut(&index).unwrap();
-        item.on_chain = status.on_chain;
+    if num_items != (cache.items.0.len() as u64) {
+        return Err(anyhow!(
+            "Number of items ({}) do not match cache items ({})",
+            num_items,
+            cache.items.0.len()
+        ));
     }
 
-    cache.write_to_file(&args.cache)?;
+    let config_lines = generate_config_lines(num_items, &cache.items);
 
-    println!("\n{}", style("[Completed]").bold().dim());
+    let completed = if config_lines.is_empty() {
+        println!("\n{}All config lines deployed", COMPLETE_EMOJI);
+        true
+    } else {
+        upload_config_lines(
+            client,
+            &sugar_config,
+            candy_pubkey,
+            &mut cache,
+            config_lines,
+        )
+        .await?
+    };
+
+    if completed {
+        println!("\n{}", style("[Completed]").green().bold());
+    } else {
+        println!("\n{}", style("[Re-run needed]").red().bold())
+    }
 
     Ok(())
 }
 
-fn get_metadata_from_first_json(assets_dir: &str) -> Result<Metadata> {
-    let f = File::open(Path::new(assets_dir).join("0.json"))?;
-    let metadata: Metadata = match serde_json::from_reader(f) {
-        Ok(metadata) => metadata,
-        Err(err) => {
-            let error = anyhow!("Error parsing metadata from 0.json: {}", err);
-            error!("{:?}", error);
-            return Err(error);
-        }
-    };
-
-    Ok(metadata)
-}
-
+/// Create the candy machine data struct.
 fn create_candy_machine_data(
     config: &ConfigData,
     uuid: String,
@@ -154,7 +195,7 @@ fn create_candy_machine_data(
 
     let mut creators: Vec<CandyCreator> = Vec::new();
 
-    for creator in metadata.properties.creators {
+    for creator in &config.creators {
         creators.push(creator.into_candy_format()?);
     }
 
@@ -174,79 +215,56 @@ fn create_candy_machine_data(
         items_available: config.number,
         gatekeeper,
     };
+
     Ok(data)
 }
 
-#[allow(dead_code)]
-fn populate_cache_with_links(
-    cache: &mut Cache,
-    arloader_manifest: &ArloaderManifest,
-) -> Result<()> {
-    let mut cache_items: CacheItems = CacheItems(IndexMap::new());
-
-    for (key, value) in &arloader_manifest.0 {
-        let name = key
-            .split('/')
-            .last()
-            .expect("Invalid arloader manifest key.");
-
-        let number = name.split('.').next().unwrap().to_string();
-
-        let link = value
-            .files
-            .get(0)
-            .expect("Invalid arloader manifest value.")
-            .uri
-            .clone();
-
-        cache_items.0.insert(
-            number,
-            CacheItem {
-                name: name.to_string(),
-                link,
-                on_chain: false,
-            },
-        );
-    }
-
-    cache.items = cache_items;
-
-    Ok(())
-}
-
-fn _read_arloader_manifest(path: &str) -> Result<ArloaderManifest> {
-    let file = File::open(path)?;
-    let arloader_manifest = serde_json::from_reader(file)?;
-
-    Ok(arloader_manifest)
-}
-
+/// Determine the config lines that need to be uploaded.
 fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u32, ConfigLine)>> {
     let mut config_lines: Vec<Vec<(u32, ConfigLine)>> = Vec::new();
+    let mut on_chain = HashMap::<usize, u32>::new();
 
-    // Populate with empty chunks
+    // initializes each chunck
     for _ in 0..num_items {
         config_lines.push(Vec::new());
     }
 
     for (key, value) in &cache_items.0 {
         let config_line = value.into_config_line();
-
         let key = key.parse::<usize>().unwrap();
-
         let chunk_index = key / CONFIG_CHUNK_SIZE;
 
+        // checks if the config line is already on chain
+        if value.on_chain {
+            on_chain.insert(
+                chunk_index,
+                match on_chain.get(&chunk_index) {
+                    Some(value) => value + 1,
+                    None => 1,
+                },
+            );
+        }
+
         if let Some(config_line) = config_line {
-            let chunk = config_lines
-            .get_mut(chunk_index)
-            .expect("Invalid config line index! Check that your config item number matches the number of assets you're trying to upload.");
+            let chunk = config_lines.get_mut(chunk_index).unwrap();
             chunk.push((key as u32, config_line));
         }
     }
 
+    // removes the chunks where all config lines are on chain already
+    for (index, value) in on_chain {
+        if value == (config_lines.get(index).unwrap().len() as u32) {
+            config_lines.remove(index);
+        }
+    }
+
+    // removes any empty chunk
+    config_lines.retain(|chunk| !chunk.is_empty());
+
     config_lines
 }
 
+/// Send the `initialize_candy_machine` instruction to the candy machine program.
 fn initialize_candy_machine(
     candy_account: &Keypair,
     candy_machine_data: CandyMachineData,
@@ -297,91 +315,112 @@ fn initialize_candy_machine(
     Ok(sig)
 }
 
-fn upload_config_lines(
-    sugar_config: &SugarConfig,
-    config_lines: Vec<Vec<(u32, ConfigLine)>>,
-    candy_pubkey: Pubkey,
+/// Send the config lines to the candy machine program.
+async fn upload_config_lines(
     client: Arc<Client>,
-) -> Result<Vec<ConfigStatus>> {
-    let payer = Arc::new(&sugar_config.keypair);
-    let statuses: Arc<Mutex<Vec<ConfigStatus>>> = Arc::new(Mutex::new(Vec::new()));
-
+    sugar_config: &SugarConfig,
+    candy_pubkey: Pubkey,
+    cache: &mut Cache,
+    config_lines: Vec<Vec<(u32, ConfigLine)>>,
+) -> Result<bool> {
     println!(
-        "Sending {} config line(s): (Ctrl+C to abort)",
+        "Sending config line(s) in {} transaction(s): (Ctrl+C to abort)",
         config_lines.len()
     );
-    let pb = ProgressBar::new(config_lines.len() as u64);
 
-    debug!("Num of config lines: {:?}", config_lines.len());
+    let pb = progress_bar_with_style(config_lines.len() as u64);
+
+    debug!("Num of config line chunks: {:?}", config_lines.len());
     info!("Uploading config lines in chunks...");
 
-    config_lines
-        .into_iter()
-        // Skip empty chunks
-        .filter(|chunk| !chunk.is_empty())
-        .collect::<Vec<Vec<(u32, ConfigLine)>>>()
-        .par_iter()
-        .progress()
-        .for_each(|chunk| {
-            let statuses = statuses.clone();
-            let payer = Arc::clone(&payer);
+    let mut handles = Vec::new();
 
-            match add_config_lines(client.clone(), &candy_pubkey, &payer, chunk) {
-                Ok(_) => {
-                    for (index, _) in chunk {
-                        let _statuses = statuses.lock().unwrap().push(ConfigStatus {
-                            index: *index as u32,
-                            on_chain: true,
-                        });
-                    }
-                }
-                Err(e) => {
-                    info!("{}", e);
-                    for (index, _) in chunk {
-                        let _statuses = statuses.lock().unwrap().push(ConfigStatus {
-                            index: *index as u32,
-                            on_chain: false,
-                        });
-                    }
-                }
-            }
+    for chunk in config_lines {
+        let keypair = bs58::encode(sugar_config.keypair.to_bytes()).into_string();
+        let c = client.clone();
 
-            pb.inc(1);
+        let handle = tokio::spawn(async move {
+            let payer = Keypair::from_base58_string(&keypair);
+            add_config_lines(c, &candy_pubkey, &payer, &chunk).await
         });
 
-    pb.finish();
+        handles.push(handle);
+    }
 
-    let statuses = if let Ok(s) = Arc::try_unwrap(statuses) {
-        s.into_inner().unwrap()
+    let mut failed = false;
+
+    while !handles.is_empty() {
+        match select_all(handles).await {
+            (Ok(res), _index, remaining) => {
+                // independently if the upload was successful or not
+                // we continue to try the remaining ones
+                handles = remaining;
+
+                if res.is_ok() {
+                    let indices = res?;
+
+                    for index in indices {
+                        let item = cache.items.0.get_mut(&index.to_string()).unwrap();
+                        item.on_chain = true;
+                    }
+                    // saves the progress to the cache file
+                    cache.sync_file()?;
+                    // updates the progress bar
+                    pb.inc(1);
+                } else {
+                    // user will need to retry the upload
+                    debug!("add_config_lines error: {:?}", res);
+                    failed = true;
+                }
+            }
+            (Err(err), _index, remaining) => {
+                failed = true;
+                debug!("add_config_lines error: {}", err);
+                // ignoring all errors
+                handles = remaining;
+            }
+        }
+    }
+
+    if failed {
+        pb.abandon_with_message(format!(
+            "{}",
+            style("Error: re-run the deploy to complete the process ")
+                .red()
+                .bold()
+        ));
     } else {
-        panic!("Failed to unwrap statuses.");
-    };
+        pb.finish_with_message(format!("{}", style("Deploy successful ").green().bold()));
+    }
 
-    Ok(statuses)
+    Ok(!failed)
 }
 
-fn add_config_lines(
+/// Send the `add_config_lines` instruction to the candy machine program.
+async fn add_config_lines(
     client: Arc<Client>,
     candy_pubkey: &Pubkey,
     payer: &Keypair,
     chunk: &[(u32, ConfigLine)],
-) -> Result<()> {
+) -> Result<Vec<u32>> {
     let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-
     let program = client.program(pid);
 
-    // ConfigLine does not implement Clone, so we have to do this.
+    // this will be used to update the cache
+    let mut indices: Vec<u32> = Vec::new();
+    // configLine does not implement clone, so we have to do this
     let mut config_lines: Vec<ConfigLine> = Vec::new();
 
-    // First index
-    let index = chunk[0].0;
-
-    for (_, line) in chunk {
+    for (index, line) in chunk {
+        indices.push(*index);
         config_lines.push(ConfigLine {
             name: line.name.clone(),
             uri: line.uri.clone(),
         });
     }
+
+    // first index
+    let index = chunk[0].0;
 
     let _sig = program
         .request()
@@ -394,7 +433,7 @@ fn add_config_lines(
             config_lines,
         })
         .signer(payer)
-        .send()?;
+        .send();
 
-    Ok(())
+    Ok(indices)
 }

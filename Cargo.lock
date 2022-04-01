@@ -532,6 +532,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-trait"
+version = "0.1.53"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ed6aa3524a2dfcf9fe180c51eae2b58738348d819517ceadf95789c51fff7600"
+dependencies = [
+ "proc-macro2 1.0.36",
+ "quote 1.0.15",
+ "syn 1.0.86",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4401,11 +4412,13 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "anyhow",
+ "async-trait",
  "bs58 0.4.0",
  "bundlr-sdk",
  "chrono",
  "clap 3.0.14",
  "console",
+ "data-encoding",
  "dialoguer 0.10.0",
  "futures",
  "glob",
@@ -4419,6 +4432,7 @@ dependencies = [
  "rayon",
  "regex 1.5.4",
  "reqwest",
+ "ring",
  "serde 1.0.136",
  "serde_json 1.0.78",
  "serde_yaml",

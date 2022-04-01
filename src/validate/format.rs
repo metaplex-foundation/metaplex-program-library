@@ -1,11 +1,7 @@
-use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 
 use crate::validate::{errors, parser};
-
-use mpl_candy_machine::Creator as CandyCreator;
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
 pub struct Metadata {
@@ -27,7 +23,6 @@ impl Metadata {
         parser::check_symbol(&self.symbol)?;
         parser::check_url(&self.image)?;
         parser::check_seller_fee_basis_points(self.seller_fee_basis_points)?;
-        parser::check_creators(&self.properties.creators)?;
 
         Ok(())
     }
@@ -53,7 +48,6 @@ impl Metadata {
         parser::check_symbol(&self.symbol)?;
         parser::check_url(&self.image)?;
         parser::check_seller_fee_basis_points(self.seller_fee_basis_points)?;
-        parser::check_creators(&self.properties.creators)?;
 
         Ok(())
     }
@@ -69,25 +63,6 @@ pub struct Collection {
 pub struct Property {
     pub files: Vec<FileAttr>,
     pub category: String,
-    pub creators: Vec<Creator>,
-}
-
-#[derive(Debug, Clone, Deserialize, Default, Serialize)]
-pub struct Creator {
-    pub address: String,
-    pub share: u8,
-}
-
-impl Creator {
-    pub fn into_candy_format(&self) -> Result<CandyCreator> {
-        let creator = CandyCreator {
-            address: Pubkey::from_str(&self.address)?,
-            share: self.share,
-            verified: false,
-        };
-
-        Ok(creator)
-    }
 }
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]

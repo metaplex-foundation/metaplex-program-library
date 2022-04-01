@@ -67,10 +67,6 @@ pub enum Commands {
         #[clap(default_value = "assets")]
         assets_dir: String,
 
-        /// Arloader manifest file containing arweave links and asset names
-        #[clap(default_value = "arloader-manifest.json")]
-        arloader_manifest: String,
-
         /// Path to the config file, defaults to "config.json"
         #[clap(short, long, default_value = "config.json")]
         config: String,
