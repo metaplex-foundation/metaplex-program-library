@@ -4,8 +4,6 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import { PROGRAM_ID } from '../generated';
 import { strict as assert } from 'assert';
 
-const { Metadata } = deprecated
-
 const VAULT_OWNER_PREFIX = 'mt_vault';
 const HISTORY_PREFIX = 'history';
 const PAYOUT_TICKET_PREFIX = 'payout_ticket';
@@ -63,6 +61,6 @@ export const validateMembershipToken = async (
   ta: TokenAccount,
 ) => {
   assert(ta.data != null, 'token account data cannot be null');
-  const edition = (await Metadata.getEdition(connection, ta.data.mint)) as deprecated.Edition;
+  const edition = (await deprecated.Metadata.getEdition(connection, ta.data.mint)) as deprecated.Edition;
   return edition?.data?.parent === me;
 };

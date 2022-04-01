@@ -20,8 +20,6 @@ import { CreateMarketInstructionArgs } from '../src';
 
 killStuckProcess();
 
-const { Edition, EditionMarker, Metadata } = deprecated;
-
 test('withdraw: success', async (t) => {
   const { payer, connection, transactionHandler } = await createPrerequisites();
 
@@ -96,12 +94,12 @@ test('withdraw: success', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
+  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
+  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
 
-  const resourceMintMasterEdition = await Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
+  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
 
   await sleep(1000);
 
@@ -160,7 +158,7 @@ test('withdraw: success', async (t) => {
 
   const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
-  const metadata = await Metadata.getPDA(resourceMint.publicKey);
+  const metadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
 
   const withdrawTx = await createWithdrawTransaction({
     connection,

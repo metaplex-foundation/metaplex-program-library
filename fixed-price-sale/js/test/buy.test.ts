@@ -17,8 +17,6 @@ import {
 import { CreateMarketInstructionArgs } from '../src';
 import { verifyCollection } from './actions/verifyCollection';
 
-const { Edition, EditionMarker, Metadata } = deprecated
-
 killStuckProcess();
 
 test('buy: successful purchase without gating', async (t) => {
@@ -372,12 +370,12 @@ test('buy: unsuccessful purchase with gating', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
+  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
+  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
 
-  const resourceMintMasterEdition = await Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
+  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
 
   await sleep(1000);
 
