@@ -1,9 +1,9 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use anchor_lang::AnchorDeserialize;
+use anchor_lang::prelude::*;
 use mpl_auction_house::{pda::find_auctioneer_pda, AuctionHouse, Auctioneer, AuthorityScope};
-use mpl_testing_utils::{assert_error, solana::airdrop};
+use mpl_testing_utils::{assert_error, assert_transport_error, solana::airdrop};
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError, signature::Keypair, signer::Signer,
@@ -11,6 +11,9 @@ use solana_sdk::{
 };
 use std::assert_eq;
 use utils::setup_functions::*;
+
+const HAS_ONE_CONSTRAINT_VIOLATION: u32 = 2001;
+const TOO_MANY_SCOPES: u32 = 6032;
 
 #[tokio::test]
 async fn delegate_success() {
@@ -121,9 +124,8 @@ async fn incorrect_authority_fails() {
     )
     .await
     .unwrap_err();
-    println!("{:?}", err.to_string());
 
-    assert_error!(err, 2001);
+    assert_error!(err, HAS_ONE_CONSTRAINT_VIOLATION);
 }
 
 #[tokio::test]
@@ -163,7 +165,57 @@ async fn too_many_scopes() {
     )
     .await
     .unwrap_err();
-    println!("{:?}", err.to_string());
 
-    assert_error!(err, 6032);
+    assert_error!(err, TOO_MANY_SCOPES);
+}
+
+#[tokio::test]
+async fn incorrect_auctioneer_pda_fails() {
+    // Setup program test context and a new auction house.
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (_, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+
+    // Call `delegate_auctioneer` with the auction house authority and a new auctioneer program.
+    let auctioneer_authority = Keypair::new();
+    let auctioneer_authority_pubkey = auctioneer_authority.pubkey();
+
+    let (invalid_auctioneer_pda, invalid_auctioneer_pda_bump) = Pubkey::find_program_address(
+        &[
+            "not_auctioneer".as_bytes(),
+            ahkey.as_ref(),
+            auctioneer_authority_pubkey.as_ref(),
+        ],
+        &mpl_auction_house::id(),
+    );
+
+    let scopes = vec![
+        AuthorityScope::Buy,
+        AuthorityScope::PublicBuy,
+        AuthorityScope::ExecuteSale,
+        AuthorityScope::Sell,
+        AuthorityScope::Cancel,
+        AuthorityScope::Withdraw,
+    ];
+
+    let err = delegate(
+        &mut context,
+        ahkey,
+        ah_auth,
+        auctioneer_authority_pubkey,
+        invalid_auctioneer_pda,
+        invalid_auctioneer_pda_bump,
+        scopes.clone(),
+    )
+    .await
+    .unwrap_err();
+
+    println!("{:?}", err);
+
+    assert_transport_error!(
+        err,
+        TransportError::TransactionError(TransactionError::InstructionError(0, _))
+    );
 }
