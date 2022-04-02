@@ -6,7 +6,7 @@ use futures::future::select_all;
 use std::{collections::HashSet, ffi::OsStr, fs, path::Path, sync::Arc};
 use tokio::time::{sleep, Duration};
 
-use crate::{common::*, config::*, upload_assets::*, utils::*};
+use crate::{common::*, config::*, upload::*, utils::*};
 
 /// The number os retries to fetch the Bundlr balance (MAX_RETRY * 5 seconds limit)
 const MAX_RETRY: u64 = 15;
@@ -276,7 +276,7 @@ impl UploadHandler for BundlrHandler {
             pb.finish_and_clear();
 
             if balance < lamports_fee {
-                let error = UploadAssetsError::NoBundlrBalance(address).into();
+                let error = UploadError::NoBundlrBalance(address).into();
                 error!("{error}");
                 return Err(error);
             }

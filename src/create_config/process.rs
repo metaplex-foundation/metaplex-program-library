@@ -3,7 +3,7 @@ use crate::config::{
     go_live_date_as_timestamp, ConfigData, EndSettingType, EndSettings, GatekeeperConfig,
     HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
 };
-use crate::{constants::DEFAULT_ASSETS, upload_assets::count_files};
+use crate::{constants::DEFAULT_ASSETS, upload::count_files};
 use anchor_client::solana_sdk::signer::Signer;
 use anchor_lang::prelude::Pubkey;
 use anyhow::Result;

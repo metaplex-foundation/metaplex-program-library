@@ -11,7 +11,7 @@ use std::{
 };
 
 use crate::common::*;
-use crate::upload_assets::errors::*;
+use crate::upload::errors::*;
 use crate::validate::format::Metadata;
 
 pub struct UploadDataArgs<'a> {
@@ -82,7 +82,7 @@ pub fn get_media_extension(assets_dir: &str) -> Result<String> {
         }
     }
 
-    Err(UploadAssetsError::GetExtensionError.into())
+    Err(UploadError::GetExtensionError.into())
 }
 
 pub fn count_files(assets_dir: &str) -> Result<usize> {
@@ -102,7 +102,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
 
     // number of files should be even
     if num_files % 2 != 0 {
-        return Err(UploadAssetsError::InvalidNumberOfFiles(num_files).into());
+        return Err(UploadError::InvalidNumberOfFiles(num_files).into());
     }
 
     // TODO: should we enforce that all files have the same extension?
