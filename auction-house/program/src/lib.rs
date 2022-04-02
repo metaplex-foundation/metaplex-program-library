@@ -21,14 +21,12 @@ use anchor_spl::{
     token::{Mint, Token, TokenAccount},
 };
 use spl_token::instruction::{approve, revoke};
-
+use solana_program::program_memory::sol_memset;
 anchor_lang::declare_id!("hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk");
 
 #[program]
 pub mod auction_house {
-
     use super::*;
-    use solana_program::program_memory::sol_memset;
 
     /// Withdraw `amount` from the Auction House Fee Account to a provided destination account.
     pub fn withdraw_from_fee<'info>(
