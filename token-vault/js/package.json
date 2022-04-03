@@ -58,7 +58,6 @@
   },
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.1.0",
-    "@types/bn.js": "^5.1.0",
     "@types/debug": "^4.1.7",
     "bn.js": "^5.2.0",
     "eslint": "^8.3.0",
