@@ -90,7 +90,10 @@ test('validate: successful purchase and validation', async (t) => {
 
   const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
   const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   await sleep(1000);
 
@@ -124,13 +127,14 @@ test('validate: successful purchase and validation', async (t) => {
   logDebug('validate: successful purchase');
   assertConfirmedTransaction(t, buyRes.txConfirmed);
 
-  console.log(
-    resourceMintMasterEdition.toString(),
-    userTokenAcc.publicKey.toString(),
-  );
+  console.log(resourceMintMasterEdition.toString(), userTokenAcc.publicKey.toString());
 
   const ta = await TokenAccount.load(connection, newMintAta.publicKey);
-  const result = await validateMembershipToken(connection, resourceMintMasterEdition.toBase58(), ta);
+  const result = await validateMembershipToken(
+    connection,
+    resourceMintMasterEdition.toBase58(),
+    ta,
+  );
 
   logDebug('validate: copy is valid');
   t.equal(result, true);
@@ -207,7 +211,10 @@ test('validate: successful purchase and failed validation', async (t) => {
 
   const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
   const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   await sleep(1000);
 

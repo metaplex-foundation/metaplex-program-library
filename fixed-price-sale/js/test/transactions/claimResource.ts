@@ -39,7 +39,7 @@ export const createClaimResourceTransaction = async ({
       owner,
       destination,
       tokenMetadataProgram: PROGRAM_ID,
-      clock: SYSVAR_CLOCK_PUBKEY
+      clock: SYSVAR_CLOCK_PUBKEY,
     },
     {
       vaultOwnerBump,

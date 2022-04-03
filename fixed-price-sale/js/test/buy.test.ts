@@ -1,6 +1,10 @@
 import BN from 'bn.js';
 import test from 'tape';
-import { assertConfirmedTransaction, assertError, defaultSendOptions } from '@metaplex-foundation/amman';
+import {
+  assertConfirmedTransaction,
+  assertError,
+  defaultSendOptions,
+} from '@metaplex-foundation/amman';
 import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 
 import { findTradeHistoryAddress } from '../src/utils';
@@ -59,7 +63,7 @@ test('buy: successful purchase without gating', async (t) => {
     price: 0.001,
     piecesInOneWallet: 1,
     // No gating
-    gatingConfig: null
+    gatingConfig: null,
   };
 
   const { market, treasuryHolder } = await createMarket({
@@ -91,7 +95,10 @@ test('buy: successful purchase without gating', async (t) => {
 
   const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
   const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   await sleep(1000);
 
@@ -113,7 +120,7 @@ test('buy: successful purchase without gating', async (t) => {
     newMint: newMint.publicKey,
     newMintEdition,
     newMintMetadata,
-    newTokenAccount: mintAta.publicKey
+    newTokenAccount: mintAta.publicKey,
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
@@ -144,7 +151,7 @@ test('buy: successful purchase with gating', async (t) => {
   const {
     mint: collectionMint,
     metadata: collectionMetadata,
-    edition: collectionMasterEditionAccount
+    edition: collectionMasterEditionAccount,
   } = await mintNFT({
     transactionHandler,
     payer,
@@ -182,7 +189,7 @@ test('buy: successful purchase with gating', async (t) => {
       collection: collectionMint.publicKey,
       expireOnUse: true,
       gatingTime: null,
-    }
+    },
   };
 
   const { market, treasuryHolder } = await createMarket({
@@ -214,18 +221,21 @@ test('buy: successful purchase with gating', async (t) => {
 
   const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
   const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   // Create NFT from collection
   const {
     mint: userCollectionTokenMint,
     tokenAccount: userCollectionTokenAcc,
-    metadata: userCollectionMetadata
+    metadata: userCollectionMetadata,
   } = await mintNFT({
     transactionHandler,
     payer,
     connection,
-    collectionMint: collectionMint.publicKey
+    collectionMint: collectionMint.publicKey,
   });
 
   await verifyCollection({
@@ -236,8 +246,8 @@ test('buy: successful purchase with gating', async (t) => {
     collectionAuthority: payer.publicKey,
     collection: collectionMetadata,
     collectionMint: collectionMint.publicKey,
-    collectionMasterEditionAccount
-  })
+    collectionMasterEditionAccount,
+  });
 
   await sleep(1000);
 
@@ -275,8 +285,8 @@ test('buy: successful purchase with gating', async (t) => {
         pubkey: userCollectionMetadata,
         isSigner: false,
         isWritable: false,
-      }
-    ]
+      },
+    ],
   });
 
   const buyRes = await transactionHandler.sendAndConfirmTransaction(
@@ -304,9 +314,7 @@ test('buy: unsuccessful purchase with gating', async (t) => {
   });
 
   // Create collection
-  const {
-    mint: collectionMint,
-  } = await mintNFT({
+  const { mint: collectionMint } = await mintNFT({
     transactionHandler,
     payer,
     connection,
@@ -343,7 +351,7 @@ test('buy: unsuccessful purchase with gating', async (t) => {
       collection: collectionMint.publicKey,
       expireOnUse: true,
       gatingTime: null,
-    }
+    },
   };
 
   const { market, treasuryHolder } = await createMarket({
@@ -375,7 +383,10 @@ test('buy: unsuccessful purchase with gating', async (t) => {
 
   const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
   const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   await sleep(1000);
 
@@ -402,11 +413,7 @@ test('buy: unsuccessful purchase with gating', async (t) => {
   });
 
   try {
-    await transactionHandler.sendAndConfirmTransaction(
-      buyTx,
-      [payer],
-      defaultSendOptions,
-    );
+    await transactionHandler.sendAndConfirmTransaction(buyTx, [payer], defaultSendOptions);
   } catch (err) {
     assertError(t, err, [/GatingTokenMissing/i, /Gating token is missing/i]);
   }

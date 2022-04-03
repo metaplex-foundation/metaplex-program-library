@@ -99,7 +99,10 @@ test('withdraw: success', async (t) => {
 
   const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
   const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   await sleep(1000);
 

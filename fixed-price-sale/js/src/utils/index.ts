@@ -61,6 +61,9 @@ export const validateMembershipToken = async (
   ta: TokenAccount,
 ) => {
   assert(ta.data != null, 'token account data cannot be null');
-  const edition = (await deprecated.Metadata.getEdition(connection, ta.data.mint)) as deprecated.Edition;
+  const edition = (await deprecated.Metadata.getEdition(
+    connection,
+    ta.data.mint,
+  )) as deprecated.Edition;
   return edition?.data?.parent === me;
 };

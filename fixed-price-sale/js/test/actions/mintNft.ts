@@ -26,7 +26,7 @@ type MintNFTParams = {
   connection: Connection;
   maxSupply?: number;
   creators?: Creator[];
-  collectionMint?: PublicKey
+  collectionMint?: PublicKey;
 };
 
 const URI = 'https://arweave.net/Rmg4pcIv-0FQ7M7X838p2r592Q4NU63Fj7o7XsvBHEE';
@@ -34,7 +34,14 @@ const NAME = 'test';
 const SYMBOL = 'sym';
 const SELLER_FEE_BASIS_POINTS = 10;
 
-export async function mintNFT({ transactionHandler, payer, connection, creators, collectionMint, maxSupply = 100 }: MintNFTParams) {
+export async function mintNFT({
+  transactionHandler,
+  payer,
+  connection,
+  creators,
+  collectionMint,
+  maxSupply = 100,
+}: MintNFTParams) {
   const { mint, createMintTx } = await CreateMint.createMintAccount(connection, payer.publicKey);
   const mintRes = await transactionHandler.sendAndConfirmTransaction(
     createMintTx,
@@ -59,10 +66,12 @@ export async function mintNFT({ transactionHandler, payer, connection, creators,
     symbol: SYMBOL,
     sellerFeeBasisPoints: SELLER_FEE_BASIS_POINTS,
     creators: creators ?? null,
-    collection: collectionMint ? {
-      key: collectionMint,
-      verified: false
-    } : null,
+    collection: collectionMint
+      ? {
+          key: collectionMint,
+          verified: false,
+        }
+      : null,
     uses: null,
   };
 
@@ -74,7 +83,7 @@ export async function mintNFT({ transactionHandler, payer, connection, creators,
       mint: mint.publicKey,
       updateAuthority: payer.publicKey,
       mintAuthority: payer.publicKey,
-      payer: payer.publicKey
+      payer: payer.publicKey,
     },
     { createMetadataAccountArgsV2: { isMutable: true, data } },
   );
@@ -98,14 +107,14 @@ export async function mintNFT({ transactionHandler, payer, connection, creators,
       updateAuthority: payer.publicKey,
       mint: mint.publicKey,
       mintAuthority: payer.publicKey,
-      payer: payer.publicKey
+      payer: payer.publicKey,
     },
     {
-      createMasterEditionArgs: { maxSupply }
-    }
+      createMasterEditionArgs: { maxSupply },
+    },
   );
 
-  createTokenTx.add(masterEditionInstruction)
+  createTokenTx.add(masterEditionInstruction);
 
   const res = await transactionHandler.sendAndConfirmTransaction(
     createTokenTx,

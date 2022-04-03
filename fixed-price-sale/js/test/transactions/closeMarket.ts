@@ -18,7 +18,7 @@ export const closeMarket = async ({
   const instruction = await createCloseMarketInstruction({
     market: market.publicKey,
     owner: payer.publicKey,
-    clock: SYSVAR_CLOCK_PUBKEY
+    clock: SYSVAR_CLOCK_PUBKEY,
   });
 
   const marketTx: Transaction = await createAndSignTransaction(

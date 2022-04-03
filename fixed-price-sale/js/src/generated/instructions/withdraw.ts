@@ -86,7 +86,7 @@ export function createWithdrawInstruction(
     payoutTicket,
     clock,
     associatedTokenProgram,
-    primaryMetadataCreators
+    primaryMetadataCreators,
   } = accounts;
 
   const [data] = withdrawStruct.serialize({

@@ -59,7 +59,7 @@ export type BuyInstructionAccounts = {
   masterEditionMetadata: web3.PublicKey;
   clock: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
-  additionalKeys?: web3.AccountMeta[]
+  additionalKeys?: web3.AccountMeta[];
 };
 
 const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];

@@ -48,7 +48,7 @@ export const createWithdrawTransaction = async ({
       payoutTicket: payoutTicket,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       primaryMetadataCreators,
-      clock: SYSVAR_CLOCK_PUBKEY
+      clock: SYSVAR_CLOCK_PUBKEY,
     },
     {
       treasuryOwnerBump,
