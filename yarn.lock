@@ -993,6 +993,7 @@ __metadata:
     "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/solita": ^0.2.0
     "@solana/web3.js": ^1.35.1
+    "@types/bn.js": ^5.1.0
     "@types/tape": ^4.13.2
     bn.js: ^5.2.0
     eslint: ^8.3.0
@@ -1058,6 +1059,7 @@ __metadata:
   resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
   dependencies:
     "@solana/web3.js": ^1.35.1
+    "@types/bn.js": ^5.1.0
     "@types/bs58": ^4.0.1
     bs58: ^4.0.1
     eslint: ^8.3.0
@@ -1200,6 +1202,7 @@ __metadata:
     "@metaplex-foundation/mpl-core": ^0.0.5
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
+    "@types/bn.js": ^5.1.0
     "@types/debug": ^4.1.7
     bn.js: ^5.2.0
     debug: ^4.3.3
