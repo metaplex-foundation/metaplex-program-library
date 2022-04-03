@@ -84,14 +84,14 @@ export class Account<T = unknown> {
       throw new Error('failed to get info about accounts ' + unsafeRes.error.message);
     }
     if (!unsafeRes.result.value) return;
-    const infos = (unsafeRes.result.value as AccountInfo<string[]>[])
-      .filter(Boolean)
-      .map((info) => ({
-        ...info,
-        data: Buffer.from(info.data[0], 'base64'),
-      })) as AccountInfo<Buffer>[];
-    return infos.reduce((acc, info, index) => {
-      acc.set(pubkeys[index], info);
+    const unsafeInfos = unsafeRes.result.value as (AccountInfo<string[]> | null)[];
+    return unsafeInfos.reduce((acc, unsafeInfo, index) => {
+      if (unsafeInfo) {
+        acc.set(pubkeys[index], {
+          ...unsafeInfo,
+          data: Buffer.from(unsafeInfo.data[0], 'base64'),
+        } as AccountInfo<Buffer>);
+      }
       return acc;
     }, new Map<AnyPublicKey, AccountInfo<Buffer>>());
   }
