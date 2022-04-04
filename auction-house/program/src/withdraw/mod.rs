@@ -154,11 +154,6 @@ fn withdraw<'info>(
     let ata_program = &accounts.ata_program;
     let rent = &accounts.rent;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
-    if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
-    }
-
     let auction_house_key = auction_house.key();
     let seeds = [
         PREFIX.as_bytes(),
