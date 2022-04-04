@@ -68,6 +68,10 @@ merged.
 
 To report a security issue, please follow the guidance on the [SECURITY](.github/SECURITY.md) page.
 
+## License
+
+The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.txt) license and the JS/TS client libraries are licensed under either the [MIT](https://www.mit.edu/~amini/LICENSE.md) or the [Apache](https://www.apache.org/licenses/LICENSE-2.0.txt) licenses.
+
 <!-- ===================================== -->
 <!-- Links for badges and such shown above -->
 <!-- Please add any links you add to the   -->
@@ -143,3 +147,4 @@ To report a security issue, please follow the guidance on the [SECURITY](.github
 [mpl-token-metadata-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-token-metadata
 [mpl-core-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-core
 [mpl-auction-house-nimg]:https://img.shields.io/npm/v/@metaplex-foundation/mpl-auction-house
+
