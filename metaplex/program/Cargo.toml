@@ -1,10 +1,10 @@
 [package]
 name = "mpl-metaplex"
-version = "0.0.2"
+version = "0.0.3"
 description = "Metaplex"
 authors = ["Metaplex Maintainers <maintainers@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
-license = "Apache-2.0"
+license = "AGPL-3.0"
 edition = "2018"
 
 [features]
@@ -22,6 +22,7 @@ mpl-token-vault = { path = "../../token-vault/program", features = [ "no-entrypo
 mpl-token-metadata = { version="~1.1.0", features = [ "no-entrypoint" ] }
 thiserror = "~1.0"
 borsh = "~0.9.1"
+spl-associated-token-account = "1.0.3"
 
 [dev-dependencies]
 solana-sdk = "~1.9.5"

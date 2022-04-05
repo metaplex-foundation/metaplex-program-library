@@ -150,6 +150,12 @@ pub fn print_listing_receipt<'info>(
 
     let receipt_info = receipt_account.to_account_info();
 
+    assert_derivation(
+        &id(),
+        &receipt_info,
+        &[LISTING_RECEIPT_PREFIX.as_ref(), seller_trade_state.pubkey.as_ref()],
+    )?;
+
     if receipt_info.data_is_empty() {
         let receipt_seeds = [
             LISTING_RECEIPT_PREFIX.as_bytes(),
@@ -273,6 +279,8 @@ pub fn print_bid_receipt<'info>(
     let system_program = &ctx.accounts.system_program;
     let clock = Clock::get()?;
 
+    let receipt_info = receipt_account.to_account_info();
+
     let prev_instruction = get_instruction_relative(-1, instruction_account)?;
     let prev_instruction_accounts = prev_instruction.accounts;
 
@@ -291,6 +299,12 @@ pub fn print_bid_receipt<'info>(
         BidType::PrivateSale => Some(token_account.pubkey),
         BidType::PublicSale => None,
     };
+
+    assert_derivation(
+        &id(),
+        &receipt_info,
+        &[BID_RECEIPT_PREFIX.as_ref(), buyer_trade_state.pubkey.as_ref()],
+    )?;
 
     assert_keys_equal(prev_instruction.program_id, id())?;
 
@@ -457,6 +471,15 @@ pub fn print_purchase_receipt<'info>(
         &[
             LISTING_RECEIPT_PREFIX.as_ref(),
             seller_trade_state.pubkey.as_ref(),
+        ],
+    )?;
+    assert_derivation(
+        &id(),
+        &purchase_receipt_account,
+        &[
+            PURCHASE_RECEIPT_PREFIX.as_ref(),
+            seller_trade_state.pubkey.as_ref(),
+            buyer_trade_state.pubkey.as_ref(),
         ],
     )?;
     assert_derivation(
