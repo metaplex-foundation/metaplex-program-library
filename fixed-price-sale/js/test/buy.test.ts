@@ -200,6 +200,7 @@ test('buy: successful purchase with gating', async (t) => {
     store: store.publicKey,
     sellingResource: sellingResource.publicKey,
     treasuryMint: treasuryMint.publicKey,
+    collectionMint: collectionMint.publicKey,
     params,
   });
 
@@ -362,6 +363,7 @@ test('buy: unsuccessful purchase with gating', async (t) => {
     store: store.publicKey,
     sellingResource: sellingResource.publicKey,
     treasuryMint: treasuryMint.publicKey,
+    collectionMint: collectionMint.publicKey,
     params,
   });
 

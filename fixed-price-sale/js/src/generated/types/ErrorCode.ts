@@ -52,6 +52,8 @@ export enum ErrorCode {
   WrongGatingMetadataAccount,
   WrongOwnerInTokenGatingAcc,
   WrongGatingDate,
+  CollectionMintMissing,
+  WrongCollectionMintKey,
 }
 
 /**

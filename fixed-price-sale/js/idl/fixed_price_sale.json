@@ -974,6 +974,12 @@
           },
           {
             "name": "WrongGatingDate"
+          },
+          {
+            "name": "CollectionMintMissing"
+          },
+          {
+            "name": "WrongCollectionMintKey"
           }
         ]
       }
