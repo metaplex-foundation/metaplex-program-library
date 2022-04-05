@@ -1057,6 +1057,37 @@ pub mod auction_house {
         )
     }
 
+    /// Close the escrow account of the user.
+    pub fn close_escrow_account<'info>(
+        ctx: Context<'_, '_, '_, 'info, CloseEscrowAccount<'info>>,
+        escrow_payment_bump: u8,
+    ) -> ProgramResult {
+        let auction_house_key = ctx.accounts.auction_house.key();
+        let wallet_key = ctx.accounts.wallet.key();
+
+        let escrow_signer_seeds = [
+            PREFIX.as_bytes(),
+            auction_house_key.as_ref(),
+            wallet_key.as_ref(),
+            &[escrow_payment_bump],
+        ];
+
+        invoke_signed(
+            &system_instruction::transfer(
+                &ctx.accounts.escrow_payment_account.key(),
+                &ctx.accounts.wallet.key(),
+                ctx.accounts.escrow_payment_account.lamports(),
+            ),
+            &[
+                ctx.accounts.escrow_payment_account.to_account_info(),
+                ctx.accounts.wallet.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[&escrow_signer_seeds],
+        )?;
+        Ok(())
+    }
+
     /// Create a listing receipt by creating a `listing_receipt` account.
     pub fn print_listing_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
@@ -1363,6 +1394,20 @@ pub struct WithdrawFromFee<'info> {
     pub auction_house_fee_account: UncheckedAccount<'info>,
     /// Auction House instance PDA account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.key().as_ref()], bump=auction_house.bump, has_one=authority, has_one=fee_withdrawal_destination, has_one=auction_house_fee_account)]
+    pub auction_house: Account<'info, AuctionHouse>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(escrow_payment_bump: u8)]
+pub struct CloseEscrowAccount<'info> {
+    /// User wallet account.
+    pub wallet: Signer<'info>,
+    /// Buyer escrow payment account PDA.
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
+    pub escrow_payment_account: UncheckedAccount<'info>,
+    /// Auction House instance PDA account.
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
     pub auction_house: Account<'info, AuctionHouse>,
     pub system_program: Program<'info, System>,
 }
