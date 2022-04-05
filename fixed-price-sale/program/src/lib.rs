@@ -117,6 +117,7 @@ pub mod fixed_price_sale {
             start_date,
             end_date,
             gating_config,
+            ctx.remaining_accounts,
         )
     }
 
@@ -189,6 +190,8 @@ pub struct CreateMarket<'info> {
     #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasury_owner_bump)]
     owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
+    // if gating config is set collection mint key should be passed
+    // collection_mint: Account<'info, Mint>
 }
 
 #[derive(Accounts)]
@@ -234,9 +237,9 @@ pub struct Buy<'info> {
     system_program: Program<'info, System>,
     // if gatekeeper set for the collection these accounts also should be passed
     // IMPORTANT: accounts should be passed strictly in this order
-    // user_collection_token_account
-    // token_account_mint
-    // metadata_account
+    // user_collection_token_account: Account<'info, TokenAccount>
+    // token_account_mint: Account<'info, Mint>
+    // metadata_account: UncheckedAccount<'info>
 }
 
 #[derive(Accounts)]

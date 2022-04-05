@@ -2456,7 +2456,7 @@ mod buy {
             create_collection(&mut context, &admin_wallet).await;
 
         // CreateMarket
-        let accounts = mpl_fixed_price_sale_accounts::CreateMarket {
+        let mut accounts = mpl_fixed_price_sale_accounts::CreateMarket {
             market: market_keypair.pubkey(),
             store: store_keypair.pubkey(),
             selling_resource_owner: selling_resource_owner_keypair.pubkey(),
@@ -2467,6 +2467,12 @@ mod buy {
             system_program: system_program::id(),
         }
         .to_account_metas(None);
+
+        accounts.push(AccountMeta {
+            pubkey: collection_mint,
+            is_signer: false,
+            is_writable: false,
+        });
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
             _treasury_owner_bump: treasyry_owner_bump,
@@ -2771,7 +2777,7 @@ mod buy {
             create_collection(&mut context, &admin_wallet).await;
 
         // CreateMarket
-        let accounts = mpl_fixed_price_sale_accounts::CreateMarket {
+        let mut accounts = mpl_fixed_price_sale_accounts::CreateMarket {
             market: market_keypair.pubkey(),
             store: store_keypair.pubkey(),
             selling_resource_owner: selling_resource_owner_keypair.pubkey(),
@@ -2782,6 +2788,12 @@ mod buy {
             system_program: system_program::id(),
         }
         .to_account_metas(None);
+
+        accounts.push(AccountMeta {
+            pubkey: collection_mint,
+            is_signer: false,
+            is_writable: false,
+        });
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
             _treasury_owner_bump: treasyry_owner_bump,
@@ -3038,7 +3050,7 @@ mod buy {
     }
 
     #[tokio::test]
-    async fn success_gated_unverified_nft() {
+    async fn err_gated_unverified_nft() {
         setup_context!(context, mpl_fixed_price_sale, mpl_token_metadata);
         let (admin_wallet, store_keypair) = setup_store(&mut context).await;
 
@@ -3086,7 +3098,7 @@ mod buy {
             create_collection(&mut context, &admin_wallet).await;
 
         // CreateMarket
-        let accounts = mpl_fixed_price_sale_accounts::CreateMarket {
+        let mut accounts = mpl_fixed_price_sale_accounts::CreateMarket {
             market: market_keypair.pubkey(),
             store: store_keypair.pubkey(),
             selling_resource_owner: selling_resource_owner_keypair.pubkey(),
@@ -3097,6 +3109,12 @@ mod buy {
             system_program: system_program::id(),
         }
         .to_account_metas(None);
+
+        accounts.push(AccountMeta {
+            pubkey: collection_mint,
+            is_signer: false,
+            is_writable: false,
+        });
 
         let data = mpl_fixed_price_sale_instruction::CreateMarket {
             _treasury_owner_bump: treasyry_owner_bump,

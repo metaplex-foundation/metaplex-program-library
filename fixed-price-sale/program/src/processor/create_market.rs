@@ -19,6 +19,7 @@ impl<'info> CreateMarket<'info> {
         start_date: u64,
         end_date: Option<u64>,
         gating_config: Option<GatingConfig>,
+        remaining_accounts: &[AccountInfo<'info>],
     ) -> Result<()> {
         let market = &mut self.market;
         let store = &self.store;
@@ -64,6 +65,16 @@ impl<'info> CreateMarket<'info> {
                         return Err(ErrorCode::WrongGatingDate.into());
                     }
                 }
+            }
+
+            if remaining_accounts.len() != 1 {
+                return Err(ErrorCode::CollectionMintMissing.into());
+            }
+
+            let collection_mint = &remaining_accounts[0];
+
+            if collection_mint.key != &gating_data.collection || collection_mint.owner != &spl_token::id() {
+                return Err(ErrorCode::WrongCollectionMintKey.into());
             }
         }
 

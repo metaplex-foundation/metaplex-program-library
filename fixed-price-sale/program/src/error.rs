@@ -127,4 +127,10 @@ pub enum ErrorCode {
     // 6040
     #[msg("Wrong gating date send")]
     WrongGatingDate,
+    // 6041
+    #[msg("Collection mint is missing")]
+    CollectionMintMissing,
+    // 6042
+    #[msg("Wrong collection mint key")]
+    WrongCollectionMintKey,
 }
