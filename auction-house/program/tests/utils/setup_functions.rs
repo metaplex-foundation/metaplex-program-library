@@ -178,18 +178,18 @@ pub fn auction_deposit(
     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let accounts = mpl_auction_house::accounts::DepositWithAuctioneer {
         wallet: buyer.pubkey(),
+        payment_account: buyer.pubkey(),
+        transfer_authority: test_metadata.token.pubkey(),
+        escrow_payment_account: escrow,
+        treasury_mint: ah.treasury_mint,
         authority: ah.authority,
         auction_house: *ahkey,
         auction_house_fee_account: ah.auction_house_fee_account,
-        token_program: spl_token::id(),
-        treasury_mint: ah.treasury_mint,
-        payment_account: buyer.pubkey(),
-        transfer_authority: buyer.pubkey(),
         auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
+        token_program: spl_token::id(),
         system_program: solana_program::system_program::id(),
         rent: sysvar::rent::id(),
-        escrow_payment_account: escrow,
     };
     let account_metas = accounts.to_account_metas(None);
 

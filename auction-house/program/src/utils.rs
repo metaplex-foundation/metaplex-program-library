@@ -170,14 +170,18 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
 }
 
 pub enum BidType {
-    PublicSale,
-    PrivateSale,
+    InstantPublicSale,
+    InstantPrivateSale,
+    AuctionPublicSale,
+    AuctionPrivateSale,
 }
 
 pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType, ErrorCode> {
     match sighash {
-        [169, 84, 218, 35, 42, 206, 16, 171] => Ok(BidType::PublicSale),
-        [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::PrivateSale),
+        [169, 84, 218, 35, 42, 206, 16, 171] => Ok(BidType::InstantPublicSale),
+        [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::InstantPrivateSale),
+        [182, 20, 132, 26, 44, 72, 50, 164] => Ok(BidType::AuctionPublicSale),
+        [144, 84, 193, 191, 59, 251, 45, 20] => Ok(BidType::AuctionPrivateSale),
         _ => Err(ErrorCode::InstructionMismatch.into()),
     }
 }
@@ -593,9 +597,11 @@ pub fn assert_valid_auctioneer_and_scope(
     // Assert we're given the correctly derived account.
     assert_derivation(&crate::id(), auctioneer_pda, &sale_authority_seeds)?;
 
+    msg!("here");
     // Deserialize into the Rust struct.
     let data = auctioneer_pda.data.borrow_mut();
-    let auctioneer = Auctioneer::deserialize(&mut data.as_ref())?;
+    let auctioneer = Auctioneer::try_deserialize(&mut data.as_ref())
+        .expect("Failed to deserialize Auctioneer account");
 
     // Assert authority, auction house instance and scopes are correct.
     if auctioneer.auction_house != *auction_house_instance {

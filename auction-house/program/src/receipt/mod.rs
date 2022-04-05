@@ -288,8 +288,10 @@ pub fn print_bid_receipt<'info>(
     let bid_type = assert_program_bid_instruction(&prev_instruction.data[..8])?;
 
     let token_account = match bid_type {
-        BidType::PrivateSale => Some(token_account.pubkey),
-        BidType::PublicSale => None,
+        BidType::InstantPrivateSale => Some(token_account.pubkey),
+        BidType::AuctionPrivateSale => Some(token_account.pubkey),
+        BidType::InstantPublicSale => None,
+        BidType::AuctionPublicSale => None,
     };
 
     assert_keys_equal(prev_instruction.program_id, id())?;

@@ -243,7 +243,7 @@ async fn auction_buy_no_delegate_fails() {
         .process_transaction(deposit_tx)
         .await
         .unwrap();
-    let ((acc, print_bid_acc), buy_tx) = auction_buy(
+    let ((_acc, _print_bid_acc), buy_tx) = auction_buy(
         &mut context,
         &ahkey,
         &ah,
