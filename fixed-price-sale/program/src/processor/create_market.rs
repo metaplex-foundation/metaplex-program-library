@@ -1,6 +1,6 @@
 use crate::{
     error::ErrorCode,
-    state::{MarketState, SellingResourceState},
+    state::{GatingConfig, MarketState, SellingResourceState},
     utils::*,
     CreateMarket,
 };
@@ -18,6 +18,8 @@ impl<'info> CreateMarket<'info> {
         pieces_in_one_wallet: Option<u64>,
         start_date: u64,
         end_date: Option<u64>,
+        gating_config: Option<GatingConfig>,
+        remaining_accounts: &[AccountInfo<'info>],
     ) -> Result<()> {
         let market = &mut self.market;
         let store = &self.store;
@@ -51,6 +53,29 @@ impl<'info> CreateMarket<'info> {
         // end_date should not be greater than start_date
         if end_date.is_some() && start_date > end_date.unwrap() {
             return Err(ErrorCode::EndDateIsEarlierThanBeginDate.into());
+        }
+
+        if let Some(gating_data) = &gating_config {
+            if let Some(gating_time) = gating_data.gating_time {
+                if gating_time < start_date {
+                    return Err(ErrorCode::WrongGatingDate.into());
+                }
+                if let Some(end_date) = end_date {
+                    if gating_time > end_date {
+                        return Err(ErrorCode::WrongGatingDate.into());
+                    }
+                }
+            }
+
+            if remaining_accounts.len() != 1 {
+                return Err(ErrorCode::CollectionMintMissing.into());
+            }
+
+            let collection_mint = &remaining_accounts[0];
+
+            if collection_mint.key != &gating_data.collection || collection_mint.owner != &spl_token::id() {
+                return Err(ErrorCode::WrongCollectionMintKey.into());
+            }
         }
 
         let is_native = mint.key() == System::id();
@@ -94,6 +119,7 @@ impl<'info> CreateMarket<'info> {
         market.start_date = start_date;
         market.end_date = end_date;
         market.state = MarketState::Created;
+        market.gatekeeper = gating_config;
         selling_resource.state = SellingResourceState::InUse;
 
         Ok(())

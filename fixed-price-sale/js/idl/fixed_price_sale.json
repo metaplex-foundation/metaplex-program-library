@@ -518,6 +518,14 @@
           "type": {
             "option": "u64"
           }
+        },
+        {
+          "name": "gatingConfig",
+          "type": {
+            "option": {
+              "defined": "GatingConfig"
+            }
+          }
         }
       ]
     },
@@ -625,7 +633,7 @@
           "name": "creators",
           "type": {
             "vec": {
-              "defined": "mpl_token_metadata::state::Creator"
+              "defined": "Creator"
             }
           }
         }
@@ -767,6 +775,14 @@
           {
             "name": "fundsCollected",
             "type": "u64"
+          },
+          {
+            "name": "gatekeeper",
+            "type": {
+              "option": {
+                "defined": "GatingConfig"
+              }
+            }
           }
         ]
       }
@@ -800,7 +816,7 @@
             "name": "creators",
             "type": {
               "vec": {
-                "defined": "mpl_token_metadata::state::Creator"
+                "defined": "Creator"
               }
             }
           }
@@ -809,6 +825,28 @@
     }
   ],
   "types": [
+    {
+      "name": "GatingConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collection",
+            "type": "publicKey"
+          },
+          {
+            "name": "expireOnUse",
+            "type": "bool"
+          },
+          {
+            "name": "gatingTime",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "ErrorCode",
       "type": {
@@ -921,6 +959,27 @@
           },
           {
             "name": "PrimaryMetadataCreatorsNotProvided"
+          },
+          {
+            "name": "GatingTokenMissing"
+          },
+          {
+            "name": "InvalidOwnerForGatingToken"
+          },
+          {
+            "name": "WrongGatingMetadataAccount"
+          },
+          {
+            "name": "WrongOwnerInTokenGatingAcc"
+          },
+          {
+            "name": "WrongGatingDate"
+          },
+          {
+            "name": "CollectionMintMissing"
+          },
+          {
+            "name": "WrongCollectionMintKey"
           }
         ]
       }
@@ -967,6 +1026,26 @@
           },
           {
             "name": "Ended"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Creator",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "type": "publicKey"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "share",
+            "type": "u8"
           }
         ]
       }

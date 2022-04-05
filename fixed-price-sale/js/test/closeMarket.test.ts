@@ -13,7 +13,7 @@ import {
 } from '@metaplex-foundation/amman';
 import { killStuckProcess, logDebug, sleep } from './utils';
 import { closeMarket } from './transactions';
-import { MarketAccountData } from '../src';
+import { CreateMarketInstructionArgs, Market } from '../src';
 
 killStuckProcess();
 
@@ -49,7 +49,7 @@ test.skip('close-market: success', async (t) => {
   });
 
   const startDate = Math.round(Date.now() / 1000) + 2;
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -57,6 +57,7 @@ test.skip('close-market: success', async (t) => {
     mutable: true,
     price: 1,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   const { market } = await createMarket({
@@ -89,7 +90,7 @@ test.skip('close-market: success', async (t) => {
   assertConfirmedTransaction(t, MarketRes.txConfirmed);
 
   const marketAccount = await connection.getAccountInfo(market.publicKey);
-  const [marketData] = MarketAccountData.deserialize(marketAccount?.data as Buffer);
+  const [marketData] = Market.deserialize(marketAccount?.data as Buffer);
 
   t.assert('Ended' === marketData.state.toString());
 });
@@ -124,7 +125,7 @@ test('close-market: should fail when the market has the specific endDate', async
   });
 
   const startDate = Math.round(Date.now() / 1000) + 2;
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -132,6 +133,7 @@ test('close-market: should fail when the market has the specific endDate', async
     mutable: true,
     price: 1,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   const { market } = await createMarket({

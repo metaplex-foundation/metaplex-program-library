@@ -1,7 +1,7 @@
-import { TokenAccount } from '@metaplex-foundation/mpl-core';
-import { Edition, MasterEdition, Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { StringPublicKey, TokenAccount } from '@metaplex-foundation/mpl-core';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { Connection, PublicKey } from '@solana/web3.js';
-import { PROGRAM_ID } from '../consts';
+import { PROGRAM_ID } from '../generated';
 import { strict as assert } from 'assert';
 
 const VAULT_OWNER_PREFIX = 'mt_vault';
@@ -16,7 +16,7 @@ export const findVaultOwnerAddress = (
 ): Promise<[PublicKey, number]> =>
   PublicKey.findProgramAddress(
     [Buffer.from(VAULT_OWNER_PREFIX), mint.toBuffer(), store.toBuffer()],
-    new PublicKey(PROGRAM_ID),
+    PROGRAM_ID,
   );
 
 export const findTreasuryOwnerAddress = (
@@ -25,7 +25,7 @@ export const findTreasuryOwnerAddress = (
 ): Promise<[PublicKey, number]> =>
   PublicKey.findProgramAddress(
     [Buffer.from(HOLDER_PREFIX), treasuryMint.toBuffer(), sellingResource.toBuffer()],
-    new PublicKey(PROGRAM_ID),
+    PROGRAM_ID,
   );
 
 export const findTradeHistoryAddress = (
@@ -34,7 +34,7 @@ export const findTradeHistoryAddress = (
 ): Promise<[PublicKey, number]> =>
   PublicKey.findProgramAddress(
     [Buffer.from(HISTORY_PREFIX), wallet.toBuffer(), market.toBuffer()],
-    new PublicKey(PROGRAM_ID),
+    PROGRAM_ID,
   );
 
 export const findPayoutTicketAddress = (
@@ -43,7 +43,7 @@ export const findPayoutTicketAddress = (
 ): Promise<[PublicKey, number]> => {
   return PublicKey.findProgramAddress(
     [Buffer.from(PAYOUT_TICKET_PREFIX), market.toBuffer(), funder.toBuffer()],
-    new PublicKey(PROGRAM_ID),
+    PROGRAM_ID,
   );
 };
 
@@ -52,15 +52,18 @@ export const findPrimaryMetadataCreatorsAddress = (
 ): Promise<[PublicKey, number]> =>
   PublicKey.findProgramAddress(
     [Buffer.from(PRIMARY_METADATA_CREATORS_PREFIX), metadata.toBuffer()],
-    new PublicKey(PROGRAM_ID),
+    PROGRAM_ID,
   );
 
 export const validateMembershipToken = async (
   connection: Connection,
-  me: MasterEdition,
+  me: StringPublicKey,
   ta: TokenAccount,
 ) => {
   assert(ta.data != null, 'token account data cannot be null');
-  const edition = (await Metadata.getEdition(connection, ta.data.mint)) as Edition;
-  return edition.data.parent === me.pubkey.toString();
+  const edition = (await deprecated.Metadata.getEdition(
+    connection,
+    ta.data.mint,
+  )) as deprecated.Edition;
+  return edition?.data?.parent === me;
 };

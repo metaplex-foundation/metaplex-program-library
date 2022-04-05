@@ -1,4 +1,4 @@
-import { Connection, Keypair, Transaction } from '@solana/web3.js';
+import { Connection, Keypair, Transaction, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js';
 import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { createAndSignTransaction } from '../utils';
 import { createCloseMarketInstruction } from '../../src/generated/instructions';
@@ -18,6 +18,7 @@ export const closeMarket = async ({
   const instruction = await createCloseMarketInstruction({
     market: market.publicKey,
     owner: payer.publicKey,
+    clock: SYSVAR_CLOCK_PUBKEY,
   });
 
   const marketTx: Transaction = await createAndSignTransaction(
