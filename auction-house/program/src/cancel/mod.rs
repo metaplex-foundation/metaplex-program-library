@@ -53,7 +53,7 @@ impl<'info> From<CancelWithAuctioneer<'info>> for InstantCancel<'info> {
 
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts, Clone)]
-#[instruction(buyer_price: u64, token_size: u64)]
+#[instruction(auctioneer_pda_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct CancelWithAuctioneer<'info> {
     /// User wallet account.
     #[account(mut)]
@@ -85,7 +85,7 @@ pub struct CancelWithAuctioneer<'info> {
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -109,6 +109,7 @@ pub fn instant_cancel<'info>(
 
 pub fn cancel_with_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
+    _auctioneer_pda_bump: u8,
     buyer_price: u64,
     token_size: u64,
 ) -> ProgramResult {
@@ -145,11 +146,6 @@ fn cancel<'info>(
     let auction_house_fee_account = &accounts.auction_house_fee_account;
     let trade_state = &accounts.trade_state;
     let token_program = &accounts.token_program;
-
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
-    if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
-    }
 
     let ts_bump = trade_state.try_borrow_data()?[0];
     assert_valid_trade_state(

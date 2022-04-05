@@ -70,7 +70,7 @@ pub fn public_bid(
 
 /// Accounts for the [`public_bid` handler](fn.public_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, auctioneer_pda_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct PublicBuyWithAuctioneer<'info> {
     wallet: Signer<'info>,
     #[account(mut)]
@@ -91,7 +91,7 @@ pub struct PublicBuyWithAuctioneer<'info> {
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,

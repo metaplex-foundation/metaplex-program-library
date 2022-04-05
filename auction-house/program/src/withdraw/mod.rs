@@ -57,7 +57,7 @@ impl<'info> From<WithdrawWithAuctioneer<'info>> for InstantWithdraw<'info> {
 
 /// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
 #[derive(Accounts, Clone)]
-#[instruction(escrow_payment_bump: u8)]
+#[instruction(escrow_payment_bump: u8, auctioneer_pda_bump: u8)]
 pub struct WithdrawWithAuctioneer<'info> {
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
@@ -88,7 +88,7 @@ pub struct WithdrawWithAuctioneer<'info> {
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -115,6 +115,7 @@ pub fn instant_withdraw<'info>(
 pub fn withdraw_with_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
     escrow_payment_bump: u8,
+    _auctioneer_pda_bump: u8,
     amount: u64,
 ) -> ProgramResult {
     let auction_house = &ctx.accounts.auction_house;

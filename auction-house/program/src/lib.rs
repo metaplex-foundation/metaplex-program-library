@@ -335,10 +335,11 @@ pub mod auction_house {
 
     pub fn cancel_with_auctioneer<'info>(
         ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
+        ah_auctioneer_pda_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
-        cancel::cancel_with_auctioneer(ctx, buyer_price, token_size)
+        cancel::cancel_with_auctioneer(ctx, ah_auctioneer_pda_bump, buyer_price, token_size)
     }
 
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
@@ -354,9 +355,10 @@ pub mod auction_house {
     pub fn withdraw_with_auctioneer<'info>(
         ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
         escrow_payment_bump: u8,
+        ah_auctioneer_pda_bump: u8,
         amount: u64,
     ) -> ProgramResult {
-        withdraw::withdraw_with_auctioneer(ctx, escrow_payment_bump, amount)
+        withdraw::withdraw_with_auctioneer(ctx, escrow_payment_bump, ah_auctioneer_pda_bump, amount)
     }
 
     pub fn execute_sale<'info>(
@@ -382,6 +384,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
+        auctioneer_pda_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
@@ -390,6 +393,7 @@ pub mod auction_house {
             escrow_payment_bump,
             _free_trade_state_bump,
             program_as_signer_bump,
+            auctioneer_pda_bump,
             buyer_price,
             token_size,
         )
@@ -418,10 +422,19 @@ pub mod auction_house {
         trade_state_bump: u8,
         _free_trade_state_bump: u8,
         _program_as_signer_bump: u8,
+        ah_auctioneer_pda_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
-        sell::sell_with_auctioneer(ctx, trade_state_bump, 0, 0, buyer_price, token_size)
+        sell::sell_with_auctioneer(
+            ctx,
+            trade_state_bump,
+            0,
+            0,
+            ah_auctioneer_pda_bump,
+            buyer_price,
+            token_size,
+        )
     }
 
     /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.

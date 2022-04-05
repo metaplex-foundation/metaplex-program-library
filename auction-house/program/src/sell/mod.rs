@@ -66,7 +66,7 @@ impl<'info> From<SellWithAuctioneer<'info>> for InstantSell<'info> {
 
 /// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
 #[derive(Accounts, Clone)]
-#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, auctioneer_pda_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct SellWithAuctioneer<'info> {
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
@@ -101,7 +101,7 @@ pub struct SellWithAuctioneer<'info> {
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -143,6 +143,7 @@ pub fn sell_with_auctioneer<'info>(
     trade_state_bump: u8,
     _free_trade_state_bump: u8,
     _program_as_signer_bump: u8,
+    _auctioneer_pda_bump: u8,
     buyer_price: u64,
     token_size: u64,
 ) -> ProgramResult {

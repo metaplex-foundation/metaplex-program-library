@@ -176,12 +176,51 @@ pub enum BidType {
     AuctionPrivateSale,
 }
 
+pub enum ListingType {
+    InstantSell,
+    AuctionSell,
+}
+
+pub enum PurchaseType {
+    InstantExecuteSale,
+    AuctionExecuteSale,
+}
+
+pub enum CancelType {
+    InstantCancel,
+    AuctionCancel,
+}
+
 pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType, ErrorCode> {
     match sighash {
         [169, 84, 218, 35, 42, 206, 16, 171] => Ok(BidType::InstantPublicSale),
         [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::InstantPrivateSale),
         [182, 20, 132, 26, 44, 72, 50, 164] => Ok(BidType::AuctionPublicSale),
         [144, 84, 193, 191, 59, 251, 45, 20] => Ok(BidType::AuctionPrivateSale),
+        _ => Err(ErrorCode::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_listing_instruction(sighash: &[u8]) -> Result<ListingType, ErrorCode> {
+    match sighash {
+        [51, 230, 133, 164, 1, 127, 131, 173] => Ok(ListingType::InstantSell),
+        [62, 168, 106, 144, 69, 91, 134, 249] => Ok(ListingType::AuctionSell),
+        _ => Err(ErrorCode::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_purchase_instruction(sighash: &[u8]) -> Result<PurchaseType, ErrorCode> {
+    match sighash {
+        [37, 74, 217, 157, 79, 49, 3, 6] => Ok(PurchaseType::InstantExecuteSale),
+        [190, 10, 82, 149, 46, 143, 189, 76] => Ok(PurchaseType::AuctionExecuteSale),
+        _ => Err(ErrorCode::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_cancel_instruction(sighash: &[u8]) -> Result<CancelType, ErrorCode> {
+    match sighash {
+        [232, 219, 223, 41, 219, 236, 220, 190] => Ok(CancelType::InstantCancel),
+        [129, 238, 39, 166, 81, 89, 216, 151] => Ok(CancelType::AuctionCancel),
         _ => Err(ErrorCode::InstructionMismatch.into()),
     }
 }
