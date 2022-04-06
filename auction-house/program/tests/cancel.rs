@@ -144,7 +144,7 @@ async fn auction_cancel_listing() {
     delegate(
         &mut context,
         ahkey,
-        ah_auth,
+        &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
         auctioneer_pda_bump,
@@ -378,7 +378,7 @@ async fn auction_cancel_bid() {
     delegate(
         &mut context,
         ahkey,
-        ah_auth,
+        &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
         auctioneer_pda_bump,

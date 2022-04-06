@@ -897,7 +897,7 @@ pub fn auction_sell(
 pub async fn delegate(
     context: &mut ProgramTestContext,
     auction_house: Pubkey,
-    authority: Keypair,
+    authority: &Keypair,
     auctioneer_authority: Pubkey,
     ah_auctioneer_pda: Pubkey,
     ah_auctioneer_pda_bump: u8,
@@ -927,7 +927,7 @@ pub async fn delegate(
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
         Some(&authority.pubkey()),
-        &[&authority],
+        &[authority],
         context.last_blockhash,
     );
 

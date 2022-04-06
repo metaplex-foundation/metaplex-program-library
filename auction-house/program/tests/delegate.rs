@@ -37,7 +37,7 @@ async fn delegate_success() {
     delegate(
         &mut context,
         ahkey,
-        ah_authority,
+        &ah_authority,
         auctioneer_authority_pubkey,
         auctioneer_pda,
         auctioneer_pda_bump,
@@ -106,7 +106,7 @@ async fn incorrect_authority_fails() {
     let err = delegate(
         &mut context,
         ahkey,
-        invalid_authority,
+        &invalid_authority,
         auctioneer_authority_pubkey,
         auctioneer_pda,
         auctioneer_pda_bump,
@@ -140,7 +140,7 @@ async fn too_many_scopes() {
     let err = delegate(
         &mut context,
         ahkey,
-        ah_auth,
+        &ah_auth,
         auctioneer_authority_pubkey,
         auctioneer_pda,
         auctioneer_pda_bump,
@@ -179,7 +179,7 @@ async fn incorrect_auctioneer_pda_fails() {
     let err = delegate(
         &mut context,
         ahkey,
-        ah_auth,
+        &ah_auth,
         auctioneer_authority_pubkey,
         invalid_auctioneer_pda,
         invalid_auctioneer_pda_bump,

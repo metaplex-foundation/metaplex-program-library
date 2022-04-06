@@ -121,7 +121,7 @@ async fn auction_buy_success() {
     delegate(
         &mut context,
         ahkey,
-        ah_auth,
+        &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
         auctioneer_pda_bump,

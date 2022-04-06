@@ -211,7 +211,7 @@ pub fn assert_program_listing_instruction(sighash: &[u8]) -> Result<ListingType,
 
 pub fn assert_program_purchase_instruction(sighash: &[u8]) -> Result<PurchaseType, ErrorCode> {
     match sighash {
-        [37, 74, 217, 157, 79, 49, 3, 6] => Ok(PurchaseType::InstantExecuteSale),
+        [37, 74, 217, 157, 79, 49, 35, 6] => Ok(PurchaseType::InstantExecuteSale),
         [190, 10, 82, 149, 46, 143, 189, 76] => Ok(PurchaseType::AuctionExecuteSale),
         _ => Err(ErrorCode::InstructionMismatch.into()),
     }
