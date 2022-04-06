@@ -183,6 +183,7 @@ fn main() -> Result<(), error::Error> {
                 pieces_in_one_wallet,
                 start_date,
                 end_date,
+                gating_config,
             } => {
                 let selling_resource_owner = if let Some(owner) = selling_resource_owner_keypair {
                     read_keypair_file(&owner)?
@@ -252,6 +253,27 @@ fn main() -> Result<(), error::Error> {
                     bundle.push((tx, ui_info));
                 }
 
+                let gating_config: Option<mpl_fixed_price_sale::state::GatingConfig> =
+                    if let Some(gating_config) = gating_config {
+                        let file = File::open(gating_config)?;
+                        let reader = BufReader::new(file);
+                        let raw_data: serde_json::Value = serde_json::from_reader(reader).unwrap();
+                        let obj = raw_data.as_object().unwrap();
+
+                        let collection =
+                            Pubkey::from_str(obj.get("collection").unwrap().as_str().unwrap())?;
+                        let expire_on_use = obj.get("expire_on_use").unwrap().as_bool().unwrap();
+                        let gating_time = obj.get("gating_time").unwrap().as_u64();
+
+                        Some(mpl_fixed_price_sale::state::GatingConfig {
+                            collection,
+                            expire_on_use,
+                            gating_time,
+                        })
+                    } else {
+                        None
+                    };
+
                 let (tx, ui_info) = processor::create_market(
                     &client,
                     &payer_wallet,
@@ -265,6 +287,7 @@ fn main() -> Result<(), error::Error> {
                     pieces_in_one_wallet,
                     start_date,
                     end_date,
+                    gating_config,
                 )?;
 
                 bundle.push((tx, ui_info));

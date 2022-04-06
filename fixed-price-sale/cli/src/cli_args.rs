@@ -117,6 +117,9 @@ pub enum Commands {
 
         #[clap(long, value_name = "TIMESTAMP")]
         end_date: Option<u64>,
+
+        #[clap(long, value_name = "FILE")]
+        gating_config: Option<String>,
     },
     /// Perform `CloseMarket` instruction of `mpl_fixed_price_sale` program.
     CloseMarket {

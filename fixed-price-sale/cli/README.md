@@ -32,6 +32,15 @@ Few commands require input `.json` files, here we provide schema examples:
 ]
 ```
 
+- `gating_config.json`:
+```json
+{
+    "collection": "...",
+    "expire_on_use": false,
+    "gating_time": null
+}
+```
+
 ## Example
 This example demonstrate market creation. Follow step by step (assumed that you compiled executable binary and moved to working directory).
 
