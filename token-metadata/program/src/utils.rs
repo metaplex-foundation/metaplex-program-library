@@ -497,10 +497,14 @@ pub fn calculate_supply_change<'a>(
     if reservation_list_info.is_none() {
         let new_supply: u64;
         if let Some(edition) = edition_override {
+            if edition == 0 {
+                return Err(MetadataError::EditionOverrideCannotBeZero.into());
+            }
+
             if edition > me_supply {
                 new_supply = edition;
             } else {
-                new_supply = me_supply
+                new_supply = me_supply;
             }
         } else {
             new_supply = me_supply
@@ -1177,7 +1181,10 @@ pub fn assert_delegated_tokens(
         return Err(MetadataError::NotEnoughTokens.into());
     }
 
-    if token_account.delegate == COption::None || token_account.delegated_amount != token_account.amount || token_account.delegate.unwrap() != *delegate.key {
+    if token_account.delegate == COption::None
+        || token_account.delegated_amount != token_account.amount
+        || token_account.delegate.unwrap() != *delegate.key
+    {
         return Err(MetadataError::InvalidDelegate.into());
     }
     Ok(())
