@@ -23,6 +23,7 @@ type CreateMarketParams = {
   store: PublicKey;
   sellingResource: PublicKey;
   treasuryMint: PublicKey;
+  collectionMint?: PublicKey;
   params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'>;
 };
 
@@ -34,6 +35,7 @@ export const createMarket = async ({
   store,
   sellingResource,
   treasuryMint,
+  collectionMint,
   params,
 }: CreateMarketParams): Promise<{
   market: Keypair;
@@ -75,6 +77,7 @@ export const createMarket = async ({
       mint: treasuryMint,
       treasuryHolder: treasuryHolder.publicKey,
       owner: treasuryOwner,
+      collectionMint,
     },
     {
       treasuryOwnerBump,

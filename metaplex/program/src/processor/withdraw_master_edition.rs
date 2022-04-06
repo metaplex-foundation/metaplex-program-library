@@ -109,7 +109,6 @@ pub fn process_withdraw_master_edition<'a>(
     assert_is_ata(
         destination_info,
         &auction_manager.authority(),
-        token_program_info.key,
         &safety_deposit_box.token_mint,
     )?;
 

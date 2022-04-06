@@ -72,6 +72,7 @@ mod save_primary_metadata_creators {
             100,
             true,
             true,
+            None,
         )
         .await;
 
@@ -178,6 +179,7 @@ mod save_primary_metadata_creators {
             100,
             true,
             true,
+            None,
         )
         .await;
 
@@ -307,6 +309,7 @@ mod save_primary_metadata_creators {
             100,
             true,
             true,
+            None,
         )
         .await;
 
@@ -405,6 +408,7 @@ mod save_primary_metadata_creators {
             100,
             true,
             false,
+            None,
         )
         .await;
 

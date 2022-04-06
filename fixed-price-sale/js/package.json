@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-fixed-price-sale",
-  "version": "0.6.0",
+  "version": "0.9.0",
   "description": "MPL Fixed Price Sale JavaScript API.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -42,12 +42,14 @@
     "@metaplex-foundation/beet-solana": "^0.1.1",
     "@metaplex-foundation/mpl-core": "^0.0.5",
     "@solana/spl-token": "^0.2.0",
-    "@solana/web3.js": "^1.35.1"
+    "@solana/web3.js": "^1.35.1",
+    "bn.js": "^5.2.0"
   },
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.1.0",
-    "@metaplex-foundation/mpl-token-metadata": "1.1.0",
+    "@metaplex-foundation/mpl-token-metadata": "2.0.0",
     "@metaplex-foundation/solita": "^0.2.0",
+    "@types/bn.js": "^5.1.0",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
     "debug": "^4.3.3",

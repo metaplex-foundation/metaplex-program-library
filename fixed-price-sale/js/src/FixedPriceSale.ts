@@ -1,7 +1,6 @@
 import { Program } from '@metaplex-foundation/mpl-core';
-import { PublicKey } from '@solana/web3.js';
-import { PROGRAM_ID } from './consts';
+import { PROGRAM_ID } from './generated';
 
 export class FixedPriceSaleProgram extends Program {
-  static readonly PUBKEY = new PublicKey(PROGRAM_ID);
+  static readonly PUBKEY = PROGRAM_ID;
 }

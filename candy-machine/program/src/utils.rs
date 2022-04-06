@@ -111,6 +111,7 @@ pub fn assert_is_ata<'a>(
     assert_owned_by(ata, &spl_token::id())?;
     let ata_account: spl_token::state::Account = assert_initialized(ata)?;
     assert_keys_equal(ata_account.owner, *wallet)?;
+    assert_keys_equal(ata_account.mint, *mint)?;
     assert_keys_equal(get_associated_token_address(wallet, mint), *ata.key)?;
     Ok(ata_account)
 }

@@ -2200,7 +2200,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-metaplex"
-version = "0.0.2"
+version = "0.0.3"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
@@ -2212,6 +2212,7 @@ dependencies = [
  "solana-program",
  "solana-program-test",
  "solana-sdk",
+ "spl-associated-token-account",
  "spl-token",
  "thiserror",
 ]
@@ -2260,7 +2261,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-entangler"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "anchor-lang 0.20.1",
  "anchor-spl 0.20.1",

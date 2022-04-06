@@ -66,6 +66,7 @@ pub struct Market {
     pub state: MarketState,
     // need this field to calculate royalties at withdraw
     pub funds_collected: u64,
+    pub gatekeeper: Option<GatingConfig>,
 }
 
 impl Market {
@@ -84,7 +85,19 @@ impl Market {
         + 8
         + 9
         + 1
-        + 8;
+        + 8
+        + 1
+        + 32
+        + 1
+        + 9;
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug, PartialEq, Eq)]
+pub struct GatingConfig {
+    pub collection: Pubkey,
+    /// whether program will burn token or just check availability
+    pub expire_on_use: bool,
+    pub gating_time: Option<u64>,
 }
 
 #[account]

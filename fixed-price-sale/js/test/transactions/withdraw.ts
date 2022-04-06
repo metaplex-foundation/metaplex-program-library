@@ -1,5 +1,5 @@
 import { ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js';
 import { createAndSignTransaction } from '../utils';
 import { createWithdrawInstruction } from '../../src/generated/instructions';
 
@@ -48,6 +48,7 @@ export const createWithdrawTransaction = async ({
       payoutTicket: payoutTicket,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       primaryMetadataCreators,
+      clock: SYSVAR_CLOCK_PUBKEY,
     },
     {
       treasuryOwnerBump,

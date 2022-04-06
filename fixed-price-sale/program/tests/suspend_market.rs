@@ -103,6 +103,7 @@ mod suspend_market {
             pieces_in_one_wallet,
             start_date: start_date as u64,
             end_date: None,
+            gating_config: None,
         }
         .data();
 
@@ -241,6 +242,7 @@ mod suspend_market {
             pieces_in_one_wallet,
             start_date: start_date as u64,
             end_date: None,
+            gating_config: None,
         }
         .data();
 
@@ -379,6 +381,7 @@ mod suspend_market {
             pieces_in_one_wallet,
             start_date: start_date as u64,
             end_date: None,
+            gating_config: None,
         }
         .data();
 
@@ -545,6 +548,7 @@ mod suspend_market {
             pieces_in_one_wallet,
             start_date: start_date as u64,
             end_date: None,
+            gating_config: None,
         }
         .data();
 
@@ -710,6 +714,7 @@ mod suspend_market {
             pieces_in_one_wallet,
             start_date: start_date as u64,
             end_date: Some(end_date as u64),
+            gating_config: None,
         }
         .data();
 

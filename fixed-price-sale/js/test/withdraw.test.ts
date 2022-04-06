@@ -1,10 +1,10 @@
 import BN from 'bn.js';
 import test from 'tape';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore getAssociatedTokenAddress export actually exist but isn't setup correctly
+// @ts-ignore createInitializeMintInstruction export actually exist but isn't setup correctly
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
-import { Edition, EditionMarker, Metadata } from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { findPayoutTicketAddress, findTradeHistoryAddress } from '../src/utils';
 import { closeMarket, createBuyTransaction, createWithdrawTransaction } from './transactions';
 import { killStuckProcess, logDebug, sleep } from './utils';
@@ -16,6 +16,7 @@ import {
   mintNFT,
   mintTokenToAccount,
 } from './actions';
+import { CreateMarketInstructionArgs } from '../src';
 
 killStuckProcess();
 
@@ -56,7 +57,7 @@ test('withdraw: success', async (t) => {
   });
 
   const startDate = Math.round(Date.now() / 1000) + 1;
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -64,6 +65,7 @@ test('withdraw: success', async (t) => {
     mutable: true,
     price: 1,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   const { market, treasuryHolder, treasuryOwnerBump, treasuryOwner } = await createMarket({
@@ -92,12 +94,15 @@ test('withdraw: success', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
+  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
+  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
 
-  const resourceMintMasterEdition = await Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
+  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   await sleep(1000);
 
@@ -156,7 +161,7 @@ test('withdraw: success', async (t) => {
 
   const destination = await getAssociatedTokenAddress(treasuryMint.publicKey, payer.publicKey);
 
-  const metadata = await Metadata.getPDA(resourceMint.publicKey);
+  const metadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
 
   const withdrawTx = await createWithdrawTransaction({
     connection,

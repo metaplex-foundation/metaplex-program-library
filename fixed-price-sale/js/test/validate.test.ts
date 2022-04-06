@@ -1,12 +1,7 @@
 import BN from 'bn.js';
 import test from 'tape';
 import { assertConfirmedTransaction, defaultSendOptions } from '@metaplex-foundation/amman';
-import {
-  Edition,
-  EditionMarker,
-  MasterEdition,
-  Metadata,
-} from '@metaplex-foundation/mpl-token-metadata';
+import { deprecated } from '@metaplex-foundation/mpl-token-metadata';
 import { TokenAccount } from '@metaplex-foundation/mpl-core';
 
 import { findTradeHistoryAddress, validateMembershipToken } from '../src/utils';
@@ -20,6 +15,7 @@ import {
   mintNFT,
   createMarket,
 } from './actions';
+import { CreateMarketInstructionArgs } from '../src';
 
 killStuckProcess();
 
@@ -54,7 +50,7 @@ test('validate: successful purchase and validation', async (t) => {
   });
 
   const startDate = Math.round(Date.now() / 1000);
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -62,6 +58,7 @@ test('validate: successful purchase and validation', async (t) => {
     mutable: true,
     price: 0.001,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   const { market, treasuryHolder } = await createMarket({
@@ -88,12 +85,15 @@ test('validate: successful purchase and validation', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
+  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
+  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
 
-  const resourceMintMasterEdition = await Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
+  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   await sleep(1000);
 
@@ -127,15 +127,14 @@ test('validate: successful purchase and validation', async (t) => {
   logDebug('validate: successful purchase');
   assertConfirmedTransaction(t, buyRes.txConfirmed);
 
-  const me = await MasterEdition.load(connection, resourceMintMasterEdition);
-  console.log(
-    me.pubkey.toString(),
-    resourceMintMasterEdition.toString(),
-    userTokenAcc.publicKey.toString(),
-  );
+  console.log(resourceMintMasterEdition.toString(), userTokenAcc.publicKey.toString());
 
   const ta = await TokenAccount.load(connection, newMintAta.publicKey);
-  const result = await validateMembershipToken(connection, me, ta);
+  const result = await validateMembershipToken(
+    connection,
+    resourceMintMasterEdition.toBase58(),
+    ta,
+  );
 
   logDebug('validate: copy is valid');
   t.equal(result, true);
@@ -172,7 +171,7 @@ test('validate: successful purchase and failed validation', async (t) => {
   });
 
   const startDate = Math.round(Date.now() / 1000);
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -180,6 +179,7 @@ test('validate: successful purchase and failed validation', async (t) => {
     mutable: true,
     price: 0.001,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   const { market, treasuryHolder } = await createMarket({
@@ -206,12 +206,15 @@ test('validate: successful purchase and failed validation', async (t) => {
 
   logDebug('new mint', newMint.publicKey.toBase58());
 
-  const newMintEdition = await Edition.getPDA(newMint.publicKey);
-  const newMintMetadata = await Metadata.getPDA(newMint.publicKey);
+  const newMintEdition = await deprecated.Edition.getPDA(newMint.publicKey);
+  const newMintMetadata = await deprecated.Metadata.getPDA(newMint.publicKey);
 
-  const resourceMintMasterEdition = await Edition.getPDA(resourceMint.publicKey);
-  const resourceMintMetadata = await Metadata.getPDA(resourceMint.publicKey);
-  const resourceMintEditionMarker = await EditionMarker.getPDA(resourceMint.publicKey, new BN(1));
+  const resourceMintMasterEdition = await deprecated.Edition.getPDA(resourceMint.publicKey);
+  const resourceMintMetadata = await deprecated.Metadata.getPDA(resourceMint.publicKey);
+  const resourceMintEditionMarker = await deprecated.EditionMarker.getPDA(
+    resourceMint.publicKey,
+    new BN(1),
+  );
 
   await sleep(1000);
 
@@ -251,9 +254,8 @@ test('validate: successful purchase and failed validation', async (t) => {
     connection,
   });
 
-  const me = await MasterEdition.load(connection, masterEdition);
   const ta = await TokenAccount.load(connection, newMintAta.publicKey);
-  const result = await validateMembershipToken(connection, me, ta);
+  const result = await validateMembershipToken(connection, masterEdition.toBase58(), ta);
 
   logDebug('validate: copy is invalid');
   t.equal(result, false);
