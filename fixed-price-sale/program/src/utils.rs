@@ -19,11 +19,7 @@ pub const FLAG_ACCOUNT_SIZE: usize = 1; // Size for flag account to indicate som
 pub const MAX_PRIMARY_CREATORS_LEN: usize = 5; // Total allowed creators in `PrimaryMetadataCreators`
 
 /// Runtime derivation check
-pub fn assert_derivation(
-    program_id: &Pubkey,
-    account: &AccountInfo,
-    path: &[&[u8]],
-) -> Result<u8> {
+pub fn assert_derivation(program_id: &Pubkey, account: &AccountInfo, path: &[&[u8]]) -> Result<u8> {
     let (key, bump) = Pubkey::find_program_address(path, program_id);
     if key != *account.key {
         return Err(ErrorCode::DerivedKeyInvalid.into());
@@ -254,10 +250,7 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     }
 }
 
-pub fn calculate_primary_shares_for_creator(
-    total_amount: u64,
-    shares: u64,
-) -> Result<u64> {
+pub fn calculate_primary_shares_for_creator(total_amount: u64, shares: u64) -> Result<u64> {
     Ok(total_amount
         .checked_mul(shares)
         .ok_or(ErrorCode::MathOverflow)?

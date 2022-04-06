@@ -74,6 +74,7 @@ mod init_selling_resource {
             100,
             true,
             false,
+            None,
         )
         .await;
 
@@ -207,6 +208,7 @@ mod init_selling_resource {
             100,
             true,
             false,
+            None,
         )
         .await;
 
@@ -330,6 +332,7 @@ mod init_selling_resource {
             100,
             true,
             false,
+            None,
         )
         .await;
 

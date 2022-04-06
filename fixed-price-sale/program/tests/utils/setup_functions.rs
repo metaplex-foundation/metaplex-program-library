@@ -149,6 +149,7 @@ pub async fn setup_selling_resource(
         seller_fee_basis_points,
         selling_resource_owner_creator,
         is_mutable,
+        None,
     )
     .await;
 
@@ -277,6 +278,7 @@ pub async fn setup_market(
         pieces_in_one_wallet,
         start_date: start_date as u64,
         end_date: None,
+        gating_config: None,
     }
     .data();
 

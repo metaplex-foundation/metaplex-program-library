@@ -8,6 +8,7 @@ import {
   initSellingResource,
   createMarket,
 } from './actions';
+import { CreateMarketInstructionArgs } from '../src';
 
 killStuckProcess();
 
@@ -41,7 +42,7 @@ test('create-market: success', async (t) => {
   });
 
   const startDate = Math.round(Date.now() / 1000) + 5;
-  const params = {
+  const params: Omit<CreateMarketInstructionArgs, 'treasuryOwnerBump'> = {
     name: 'Market',
     description: '',
     startDate,
@@ -49,6 +50,7 @@ test('create-market: success', async (t) => {
     mutable: true,
     price: 0.001,
     piecesInOneWallet: 1,
+    gatingConfig: null,
   };
 
   await createMarket({

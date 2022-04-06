@@ -1,5 +1,11 @@
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
-import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  SYSVAR_CLOCK_PUBKEY,
+  AccountMeta,
+} from '@solana/web3.js';
+import { PROGRAM_ID } from '@metaplex-foundation/mpl-token-metadata';
 
 import { createBuyInstruction } from '../../src/generated/instructions';
 
@@ -22,6 +28,7 @@ interface BuyParams {
   newMintEdition: PublicKey;
   newMintMetadata: PublicKey;
   newTokenAccount: PublicKey;
+  additionalKeys?: AccountMeta[];
 }
 
 export const createBuyTransaction = async ({
@@ -43,6 +50,7 @@ export const createBuyTransaction = async ({
   newMintEdition,
   newMintMetadata,
   newTokenAccount,
+  additionalKeys,
 }: BuyParams) => {
   const instruction = createBuyInstruction(
     {
@@ -76,7 +84,9 @@ export const createBuyTransaction = async ({
       newEdition: newMintEdition,
       newTokenAccount,
       // metaplex token metadata program address
-      tokenMetadataProgram: MetadataProgram.PUBKEY,
+      tokenMetadataProgram: PROGRAM_ID,
+      clock: SYSVAR_CLOCK_PUBKEY,
+      additionalKeys,
     },
     { tradeHistoryBump, vaultOwnerBump },
   );

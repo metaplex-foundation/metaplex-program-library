@@ -1,15 +1,18 @@
 import { PayerTransactionHandler } from '@metaplex-foundation/amman';
 import { Connection, Keypair, PublicKey, TransactionInstruction } from '@solana/web3.js';
 
-import { CreatorAccountData, findPrimaryMetadataCreatorsAddress } from '../../src';
-import { createSavePrimaryMetadataCreatorsInstruction } from '../../src/generated/instructions/savePrimaryMetadataCreators';
+import {
+  Creator,
+  findPrimaryMetadataCreatorsAddress,
+  createSavePrimaryMetadataCreatorsInstruction,
+} from '../../src';
 
 type CreateSecondaryMetadataCreatorsParams = {
   transactionHandler: PayerTransactionHandler;
   payer: Keypair;
   connection: Connection;
   metadata: PublicKey;
-  creators: CreatorAccountData[];
+  creators: Creator[];
 };
 
 export const createSavePrimaryMetadataCreators = async ({

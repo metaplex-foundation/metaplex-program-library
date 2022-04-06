@@ -103,6 +103,7 @@ mod close_market {
             pieces_in_one_wallet,
             start_date: start_date as u64,
             end_date: None,
+            gating_config: None,
         }
         .data();
 
@@ -241,6 +242,7 @@ mod close_market {
             pieces_in_one_wallet,
             start_date: start_date as u64,
             end_date: Some((start_date + 2) as u64),
+            gating_config: None,
         }
         .data();
 
