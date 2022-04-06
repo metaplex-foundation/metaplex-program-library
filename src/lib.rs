@@ -8,6 +8,7 @@ pub mod create_config;
 pub mod data;
 pub mod deploy;
 pub mod errors;
+pub mod launch;
 pub mod mint;
 pub mod parse;
 pub mod setup;

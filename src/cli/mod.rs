@@ -19,7 +19,31 @@ pub struct Cli {
 pub enum Commands {
     /// Interactive process to create the config file
     CreateConfig,
+    Launch {
+        /// Path to the directory with the assets to upload
+        #[clap(default_value = DEFAULT_ASSETS)]
+        assets_dir: String,
 
+        /// Path to the keypair file [default: solana config or "~/.config/solana/id.json"]
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Strict mode: validate against JSON metadata standard exactly
+        #[clap(long)]
+        strict: bool,
+    },
     /// Mint one NFT from candy machine
     Mint {
         /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"

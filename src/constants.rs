@@ -96,3 +96,5 @@ pub const WITHDRAW_EMOJI: Emoji<'_, '_> = Emoji("🏧 ", "");
 pub const ASSETS_EMOJI: Emoji<'_, '_> = Emoji("🗂  ", "");
 
 pub const COMPLETE_EMOJI: Emoji<'_, '_> = Emoji("✅ ", "");
+
+pub const NEW_CONFIG_EMOJI: Emoji<'_, '_> = Emoji("💃 ","");

@@ -16,6 +16,7 @@ use sugar_cli::cli::{Cli, Commands};
 use sugar_cli::constants::DEFAULT_CACHE;
 use sugar_cli::create_config::process_create_config;
 use sugar_cli::deploy::{process_deploy, DeployArgs};
+use sugar_cli::launch::{process_launch, LaunchArgs};
 use sugar_cli::mint::{process_mint, MintArgs};
 use sugar_cli::setup::sugar_setup;
 use sugar_cli::update::{process_update, UpdateArgs};
@@ -81,6 +82,24 @@ async fn main() -> Result<()> {
 
     match cli.command {
         Commands::CreateConfig => process_create_config()?,
+        Commands::Launch {
+            assets_dir,
+            config,
+            keypair,
+            rpc_url,
+            cache,
+            strict,
+        } => {
+            process_launch(LaunchArgs {
+                assets_dir,
+                config,
+                keypair,
+                rpc_url,
+                cache,
+                strict,
+            })
+            .await?
+        }
         Commands::Mint {
             keypair,
             rpc_url,
