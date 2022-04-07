@@ -15,8 +15,8 @@ use utils::*;
 // NOTE: these tests depend on the token-vault program having been compiled
 // via (cd ../../token-vault/program/ && cargo build-bpf)
 mod mint_new_edition_from_master_edition_via_token {
-    use mpl_token_metadata::state::Collection;
     use super::*;
+    use mpl_token_metadata::state::Collection;
     #[tokio::test]
     async fn success() {
         let mut context = program_test().start_with_context().await;
@@ -90,7 +90,7 @@ mod mint_new_edition_from_master_edition_via_token {
                     key: test_collection.mint.pubkey(),
                     verified: false,
                 }),
-                None
+                None,
             )
             .await
             .unwrap();
@@ -264,5 +264,34 @@ mod mint_new_edition_from_master_edition_via_token {
         test_edition_marker.create(&mut context).await.unwrap();
         let result = test_edition_marker1.create(&mut context).await.unwrap_err();
         assert_custom_error!(result, MetadataError::AlreadyInitialized);
+    }
+
+    #[tokio::test]
+    async fn fail_to_mint_edition_override_0() {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        let test_master_edition = MasterEditionV2::new(&test_metadata);
+        let test_edition_marker = EditionMarker::new(&test_metadata, &test_master_edition, 0);
+
+        test_metadata
+            .create(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+            )
+            .await
+            .unwrap();
+
+        test_master_edition
+            .create(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let result = test_edition_marker.create(&mut context).await.unwrap_err();
+        assert_custom_error!(result, MetadataError::EditionOverrideCannotBeZero);
     }
 }
