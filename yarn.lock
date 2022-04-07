@@ -1076,12 +1076,12 @@ __metadata:
     "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/mpl-token-metadata": 2.0.0
     "@metaplex-foundation/solita": ^0.2.0
+    "@solana/buffer-layout": ^4.0.0
     "@solana/spl-token": ^0.2.0
-    "@solana/web3.js": ^1.35.1
+    "@solana/web3.js": ^1.37.0
     "@types/bn.js": ^5.1.0
     "@types/debug": ^4.1.7
     "@types/tape": ^4.13.2
-    bn.js: ^5.2.0
     debug: ^4.3.3
     eslint: ^8.3.0
     prettier: ^2.5.1
@@ -1624,6 +1624,28 @@ __metadata:
     superstruct: ^0.14.2
     tweetnacl: ^1.0.0
   checksum: ad4d9d7ba189cd8db9657b2998bd667ad8e1d797751b53e443b28ce3e31661bf54c0acbdc2fdfa900d367e9bfdd2e6fb5e47254f1624c490b7e6b746bcaef233
+  languageName: node
+  linkType: hard
+
+"@solana/web3.js@npm:^1.37.0":
+  version: 1.37.1
+  resolution: "@solana/web3.js@npm:1.37.1"
+  dependencies:
+    "@babel/runtime": ^7.12.5
+    "@ethersproject/sha2": ^5.5.0
+    "@solana/buffer-layout": ^4.0.0
+    bn.js: ^5.0.0
+    borsh: ^0.7.0
+    bs58: ^4.0.1
+    buffer: 6.0.1
+    cross-fetch: ^3.1.4
+    jayson: ^3.4.4
+    js-sha3: ^0.8.0
+    rpc-websockets: ^7.4.2
+    secp256k1: ^4.0.2
+    superstruct: ^0.14.2
+    tweetnacl: ^1.0.0
+  checksum: 3bf236c3adc939f832d3a3c4a7a8e0c638d9e7a5b0f01d07850138ceed65309abf2b7c496f7434c725e5219e460324376acc187ba6101413157d61377d06a46b
   languageName: node
   linkType: hard
 
