@@ -66,7 +66,7 @@ impl<'info> From<SellWithAuctioneer<'info>> for InstantSell<'info> {
 
 /// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
 #[derive(Accounts, Clone)]
-#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, auctioneer_pda_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64, auctioneer_pda_bump: u8)]
 pub struct SellWithAuctioneer<'info> {
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
@@ -114,8 +114,8 @@ pub struct SellWithAuctioneer<'info> {
 pub fn instant_sell<'info>(
     ctx: Context<'_, '_, '_, 'info, InstantSell<'info>>,
     trade_state_bump: u8,
-    _free_trade_state_bump: u8,
-    _program_as_signer_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
 ) -> ProgramResult {
@@ -130,8 +130,8 @@ pub fn instant_sell<'info>(
         ctx.accounts,
         ctx.program_id,
         trade_state_bump,
-        _free_trade_state_bump,
-        _program_as_signer_bump,
+        free_trade_state_bump,
+        program_as_signer_bump,
         buyer_price,
         token_size,
     )
@@ -141,11 +141,11 @@ pub fn instant_sell<'info>(
 pub fn sell_with_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, SellWithAuctioneer<'info>>,
     trade_state_bump: u8,
-    _free_trade_state_bump: u8,
-    _program_as_signer_bump: u8,
-    _auctioneer_pda_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    _auctioneer_pda_bump: u8,
 ) -> ProgramResult {
     let auction_house = &ctx.accounts.auction_house;
     let auctioneer_authority = &ctx.accounts.auctioneer_authority;
@@ -168,8 +168,8 @@ pub fn sell_with_auctioneer<'info>(
         &mut accounts,
         ctx.program_id,
         trade_state_bump,
-        _free_trade_state_bump,
-        _program_as_signer_bump,
+        free_trade_state_bump,
+        program_as_signer_bump,
         buyer_price,
         token_size,
     )

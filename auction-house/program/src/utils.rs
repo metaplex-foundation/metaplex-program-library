@@ -169,6 +169,8 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
     }
 }
 
+#[derive(Debug, Clone)]
+
 pub enum BidType {
     InstantPublicSale,
     InstantPrivateSale,
@@ -176,15 +178,20 @@ pub enum BidType {
     AuctionPrivateSale,
 }
 
+#[derive(Debug, Clone)]
 pub enum ListingType {
     InstantSell,
     AuctionSell,
 }
 
+#[derive(Debug, Clone)]
+
 pub enum PurchaseType {
     InstantExecuteSale,
     AuctionExecuteSale,
 }
+
+#[derive(Debug, Clone)]
 
 pub enum CancelType {
     InstantCancel,
@@ -331,7 +338,6 @@ pub fn create_program_token_account_if_not_present<'a>(
             fee_seeds,
             signer_seeds,
         )?;
-        msg!("This.");
         invoke_signed(
             &initialize_account2(
                 &token_program.key,
@@ -349,7 +355,6 @@ pub fn create_program_token_account_if_not_present<'a>(
             ],
             &[&signer_seeds],
         )?;
-        msg!("Passes");
     }
     Ok(())
 }
@@ -636,7 +641,6 @@ pub fn assert_valid_auctioneer_and_scope(
     // Assert we're given the correctly derived account.
     assert_derivation(&crate::id(), auctioneer_pda, &sale_authority_seeds)?;
 
-    msg!("here");
     // Deserialize into the Rust struct.
     let data = auctioneer_pda.data.borrow_mut();
     let auctioneer = Auctioneer::try_deserialize(&mut data.as_ref())

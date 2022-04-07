@@ -1,96 +1,216 @@
-// mod utils;
+#![cfg(feature = "test-bpf")]
+pub mod common;
+pub mod utils;
 
-// #[cfg(test)]
-// mod withdraw {
+use common::*;
+use utils::{helpers::*, setup_functions::*};
 
-//     use super::utils::{
-//         clone_keypair,
-//         helpers::derive_auction_house_buyer_escrow_account_key,
-//         setup_functions::{setup_auction_house, setup_client, setup_program},
-//         transfer_lamports,
-//     };
-//     use anchor_client::{
-//         solana_sdk::{signature::Keypair, signer::Signer, system_program, sysvar},
-//         ClientError,
-//     };
-//     use mpl_auction_house::{
-//         accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
-//         AuctionHouse,
-//     };
+use mpl_testing_utils::{solana::airdrop, utils::Metadata};
+use solana_sdk::signer::Signer;
+use std::assert_eq;
 
-//     #[test]
-//     fn success() -> Result<(), ClientError> {
-//         // Payer Wallet
-//         let payer_wallet = Keypair::new();
+#[tokio::test]
+async fn withdraw_success() {
+    // Setup program test context and a new auction house.
+    let mut context = auction_house_program_test().start_with_context().await;
 
-//         // Client
-//         let client = setup_client(clone_keypair(&payer_wallet));
+    // Payer Wallet
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
 
-//         // Program
-//         let program = setup_program(client);
+    // Setup NFT metadata and owner keypair.
+    let test_metadata = Metadata::new();
+    let owner_pubkey = &test_metadata.token.pubkey();
 
-//         // Airdrop the payer wallet
-//         let signature = program
-//             .rpc()
-//             .request_airdrop(&program.payer(), 10_000_000_000)?;
-//         program.rpc().poll_for_signature(&signature)?;
+    // Airdrop owner with some SOL.
+    airdrop(&mut context, owner_pubkey, 10_000_000_000)
+        .await
+        .unwrap();
 
-//         // Auction house authority
-//         let authority = Keypair::new().pubkey();
+    let airdrop_amount = 10_000_000_000;
+    let sale_price = 1_000_000_000;
+    let withdraw_price = sale_price / 2;
 
-//         // Treasury mint key
-//         let t_mint_key = spl_token::native_mint::id();
+    // Create NFT.
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
 
-//         let auction_house_key = setup_auction_house(&program, &authority, &t_mint_key).unwrap();
-//         let auction_house_account: AuctionHouse = program.account(auction_house_key)?;
-//         let wallet_pubkey = program.payer();
+    // Create a new account for the buyer, airdrop to the wallet and deposit to an AH escrow account.
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), airdrop_amount)
+        .await
+        .unwrap();
 
-//         let (escrow_payment_account, escrow_payment_bump) =
-//             derive_auction_house_buyer_escrow_account_key(
-//                 &auction_house_key,
-//                 &wallet_pubkey,
-//                 &program.id(),
-//             );
+    let (acc, deposit_tx) = deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        sale_price,
+    );
+    context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap();
 
-//         let amount: u64 = 500_000_000;
+    let escrow_balance_before_withdraw = context
+        .banks_client
+        .get_account(acc.escrow_payment_account)
+        .await
+        .expect("Error Getting Escrow")
+        .expect("Trade State Escrow")
+        .lamports;
 
-//         transfer_lamports(
-//             &program.rpc(),
-//             &payer_wallet,
-//             &escrow_payment_account,
-//             amount * 2,
-//         )?;
+    let (_, withdraw_tx) = withdraw(
+        &mut context,
+        &buyer,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        sale_price,
+        withdraw_price,
+    );
+    context
+        .banks_client
+        .process_transaction(withdraw_tx)
+        .await
+        .unwrap();
 
-//         let escrow_balance_before_withdraw = program.rpc().get_balance(&escrow_payment_account)?;
+    let escrow_balance_after_withdraw = context
+        .banks_client
+        .get_account(acc.escrow_payment_account)
+        .await
+        .expect("Error Getting Escrow")
+        .expect("Trade State Escrow")
+        .lamports;
 
-//         program
-//             .request()
-//             .accounts(mpl_auction_house_accounts::Withdraw {
-//                 wallet: wallet_pubkey,
-//                 escrow_payment_account,
-//                 receipt_account: wallet_pubkey,
-//                 treasury_mint: t_mint_key,
-//                 authority,
-//                 auction_house: auction_house_key,
-//                 auction_house_fee_account: auction_house_account.auction_house_fee_account,
-//                 token_program: spl_token::id(),
-//                 system_program: system_program::id(),
-//                 ata_program: spl_associated_token_account::id(),
-//                 rent: sysvar::rent::id(),
-//             })
-//             .args(mpl_auction_house_instruction::Withdraw {
-//                 escrow_payment_bump,
-//                 amount,
-//             })
-//             .send()?;
+    assert_eq!(sale_price, escrow_balance_before_withdraw);
+    assert_eq!(sale_price / 2, escrow_balance_after_withdraw);
 
-//         let escrow_balance_after_withdraw = program.rpc().get_balance(&escrow_payment_account)?;
+    ()
+}
+#[tokio::test]
+async fn auction_withdraw_success() {
+    // Setup program test context and a new auction house.
+    let mut context = auction_house_program_test().start_with_context().await;
 
-//         assert_eq!(
-//             amount,
-//             escrow_balance_before_withdraw - escrow_balance_after_withdraw
-//         );
+    // Payer Wallet
+    let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
 
-//         Ok(())
-//     }
-// }
+    // Setup NFT metadata and owner keypair.
+    let test_metadata = Metadata::new();
+    let owner_pubkey = &test_metadata.token.pubkey();
+
+    // Airdrop owner with some SOL.
+    airdrop(&mut context, owner_pubkey, 10_000_000_000)
+        .await
+        .unwrap();
+
+    let airdrop_amount = 10_000_000_000;
+    let sale_price = 1_000_000_000;
+    let withdraw_price = sale_price / 2;
+
+    // Create NFT.
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+
+    // Create a new account for the buyer, airdrop to the wallet and deposit to an AH escrow account.
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), airdrop_amount)
+        .await
+        .unwrap();
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+    let (auctioneer_pda, auctioneer_pda_bump) =
+        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+
+    delegate(
+        &mut context,
+        ahkey,
+        &ah_auth,
+        auctioneer_authority.pubkey(),
+        auctioneer_pda,
+        auctioneer_pda_bump,
+        default_scopes(),
+    )
+    .await
+    .unwrap();
+
+    let (acc, deposit_tx) = auction_deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        auctioneer_authority.pubkey(),
+        sale_price,
+    );
+    context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap();
+
+    let escrow_balance_before_withdraw = context
+        .banks_client
+        .get_account(acc.escrow_payment_account)
+        .await
+        .expect("Error Getting Escrow")
+        .expect("Trade State Escrow")
+        .lamports;
+
+    let (_, withdraw_tx) = auction_withdraw(
+        &mut context,
+        &buyer,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        auctioneer_authority.pubkey(),
+        sale_price,
+        withdraw_price,
+    );
+    context
+        .banks_client
+        .process_transaction(withdraw_tx)
+        .await
+        .unwrap();
+
+    let escrow_balance_after_withdraw = context
+        .banks_client
+        .get_account(acc.escrow_payment_account)
+        .await
+        .expect("Error Getting Escrow")
+        .expect("Trade State Escrow")
+        .lamports;
+
+    assert_eq!(sale_price, escrow_balance_before_withdraw);
+    assert_eq!(sale_price / 2, escrow_balance_after_withdraw);
+
+    ()
+}

@@ -20,9 +20,7 @@ async fn sell_success() {
         .unwrap();
     let test_metadata = Metadata::new();
     let owner_pubkey = &test_metadata.token.pubkey();
-    airdrop(&mut context, owner_pubkey, 10_000_000_000)
-        .await
-        .unwrap();
+    airdrop(&mut context, owner_pubkey, TEN_SOL).await.unwrap();
     test_metadata
         .create(
             &mut context,
@@ -90,9 +88,7 @@ async fn auction_sell_success() {
         .unwrap();
     let test_metadata = Metadata::new();
     let owner_pubkey = &test_metadata.token.pubkey();
-    airdrop(&mut context, owner_pubkey, 10_000_000_000)
-        .await
-        .unwrap();
+    airdrop(&mut context, owner_pubkey, TEN_SOL).await.unwrap();
     test_metadata
         .create(
             &mut context,
@@ -105,6 +101,8 @@ async fn auction_sell_success() {
         )
         .await
         .unwrap();
+
+    let sale_price = ONE_SOL;
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
@@ -129,7 +127,7 @@ async fn auction_sell_success() {
         &ah,
         &test_metadata,
         &auctioneer_authority.pubkey(),
-        1,
+        sale_price,
     );
 
     context
@@ -162,9 +160,6 @@ async fn auction_sell_success() {
     let listing_receipt =
         ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
 
-    println!("{:?}", listing_receipt.token_size);
-    println!("{:?}", listing_receipt.price);
-
     assert_eq!(listing_receipt.auction_house, acc.auction_house);
     assert_eq!(listing_receipt.metadata, acc.metadata);
     assert_eq!(listing_receipt.seller, acc.wallet);
@@ -173,8 +168,8 @@ async fn auction_sell_success() {
     assert_eq!(listing_receipt.canceled_at, None);
     assert_eq!(listing_receipt.bookkeeper, *owner_pubkey);
     assert_eq!(listing_receipt.seller, *owner_pubkey);
-    // assert_eq!(listing_receipt.price, 1);
-    // assert_eq!(listing_receipt.token_size, 1);
+    assert_eq!(listing_receipt.price, sale_price);
+    assert_eq!(listing_receipt.token_size, 1);
 
     ()
 }

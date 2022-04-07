@@ -24,3 +24,6 @@ pub const HAS_ONE_CONSTRAINT_VIOLATION: u32 = 2001;
 
 pub const NO_AUCTIONEER_PROGRAM_SET: u32 = 6031;
 pub const TOO_MANY_SCOPES: u32 = 6032;
+
+pub const TEN_SOL: u64 = 10_000_000_000;
+pub const ONE_SOL: u64 = 1_000_000_000;

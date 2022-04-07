@@ -402,16 +402,16 @@ pub mod auction_house {
     pub fn sell<'info>(
         ctx: Context<'_, '_, '_, 'info, InstantSell<'info>>,
         trade_state_bump: u8,
-        _free_trade_state_bump: u8,
-        _program_as_signer_bump: u8,
+        free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
         sell::instant_sell(
             ctx,
             trade_state_bump,
-            _free_trade_state_bump,
-            _program_as_signer_bump,
+            free_trade_state_bump,
+            program_as_signer_bump,
             buyer_price,
             token_size,
         )
@@ -420,20 +420,20 @@ pub mod auction_house {
     pub fn sell_with_auctioneer<'info>(
         ctx: Context<'_, '_, '_, 'info, SellWithAuctioneer<'info>>,
         trade_state_bump: u8,
-        _free_trade_state_bump: u8,
-        _program_as_signer_bump: u8,
-        ah_auctioneer_pda_bump: u8,
+        free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        ah_auctioneer_pda_bump: u8,
     ) -> ProgramResult {
         sell::sell_with_auctioneer(
             ctx,
             trade_state_bump,
-            0,
-            0,
-            ah_auctioneer_pda_bump,
+            free_trade_state_bump,
+            program_as_signer_bump,
             buyer_price,
             token_size,
+            ah_auctioneer_pda_bump,
         )
     }
 
@@ -549,60 +549,6 @@ pub mod auction_house {
     ) -> ProgramResult {
         receipt::print_purchase_receipt(ctx, purchase_receipt_bump)
     }
-}
-
-/// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
-#[derive(Accounts)]
-#[instruction(escrow_payment_bump: u8)]
-pub struct Withdraw<'info> {
-    /// User wallet account.
-    pub wallet: UncheckedAccount<'info>,
-    /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
-    #[account(mut)]
-    pub receipt_account: UncheckedAccount<'info>,
-    /// Buyer escrow payment account PDA.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
-    pub escrow_payment_account: UncheckedAccount<'info>,
-    /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
-    /// Auction House instance authority account.
-    pub authority: UncheckedAccount<'info>,
-    /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
-    /// Auction House instance fee account.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    pub auction_house_fee_account: UncheckedAccount<'info>,
-    pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-    pub ata_program: Program<'info, AssociatedToken>,
-    pub rent: Sysvar<'info, Rent>,
-}
-
-/// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
-#[derive(Accounts)]
-#[instruction(buyer_price: u64, token_size: u64)]
-pub struct Cancel<'info> {
-    /// User wallet account.
-    #[account(mut)]
-    pub wallet: UncheckedAccount<'info>,
-    /// SPL token account containing the token of the sale to be canceled.
-    #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
-    /// Token mint account of SPL token.
-    pub token_mint: Account<'info, Mint>,
-    /// Auction House instance authority account.
-    pub authority: UncheckedAccount<'info>,
-    /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
-    /// Auction House instance fee account.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    pub auction_house_fee_account: UncheckedAccount<'info>,
-    /// Trade state PDA account representing the bid or ask to be canceled.
-    #[account(mut)]
-    pub trade_state: UncheckedAccount<'info>,
-    pub token_program: Program<'info, Token>,
 }
 
 /// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).

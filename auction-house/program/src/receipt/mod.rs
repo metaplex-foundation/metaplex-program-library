@@ -138,10 +138,10 @@ pub fn print_listing_receipt<'info>(
     let seller_trade_state = &prev_instruction_accounts[6];
     let metadata = &prev_instruction_accounts[2];
 
+    assert_program_listing_instruction(&prev_instruction.data[..8])?;
+
     let mut buffer = &prev_instruction.data[8..];
     let sell_data = Sell::deserialize(&mut buffer)?;
-
-    assert_program_listing_instruction(&prev_instruction.data[..8])?;
 
     assert_keys_equal(prev_instruction.program_id, id())?;
 

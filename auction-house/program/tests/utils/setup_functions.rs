@@ -663,8 +663,8 @@ pub fn sell_mint(
 
     let data = mpl_auction_house::instruction::Sell {
         trade_state_bump: sts_bump,
-        _free_trade_state_bump: free_sts_bump,
-        _program_as_signer_bump: pas_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: sale_price,
     }
@@ -757,8 +757,8 @@ pub fn sell(
 
     let data = mpl_auction_house::instruction::Sell {
         trade_state_bump: sts_bump,
-        _free_trade_state_bump: free_sts_bump,
-        _program_as_signer_bump: pas_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: sale_price,
     }
@@ -821,6 +821,7 @@ pub fn auction_sell(
         sale_price,
         1,
     );
+
     let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
 
     let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
@@ -833,6 +834,7 @@ pub fn auction_sell(
         1,
     );
     let (pas, pas_bump) = find_program_as_signer_address();
+
     let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
 
     let accounts = mpl_auction_house::accounts::SellWithAuctioneer {
@@ -855,8 +857,8 @@ pub fn auction_sell(
 
     let data = mpl_auction_house::instruction::SellWithAuctioneer {
         trade_state_bump: sts_bump,
-        _free_trade_state_bump: free_sts_bump,
-        _program_as_signer_bump: pas_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
         ah_auctioneer_pda_bump: auctioneer_pda_bump,
         token_size: 1,
         buyer_price: sale_price,
@@ -932,6 +934,134 @@ pub async fn delegate(
     );
 
     context.banks_client.process_transaction(tx).await
+}
+
+pub fn withdraw(
+    context: &mut ProgramTestContext,
+    buyer: &Keypair,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    sale_price: u64,
+    withdraw_amount: u64,
+) -> ((mpl_auction_house::accounts::InstantWithdraw,), Transaction) {
+    let seller_token_account =
+        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let (_buyer_trade_state, _sts_bump) = find_trade_state_address(
+        &buyer.pubkey(),
+        &ahkey,
+        &seller_token_account,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        1,
+    );
+    let (escrow_payment_account, escrow_bump) =
+        find_escrow_payment_address(&ahkey, &buyer.pubkey());
+
+    let accounts = mpl_auction_house::accounts::InstantWithdraw {
+        wallet: buyer.pubkey(),
+        escrow_payment_account,
+        receipt_account: buyer.pubkey(),
+        treasury_mint: ah.treasury_mint,
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        token_program: spl_token::id(),
+        system_program: system_program::id(),
+        ata_program: spl_associated_token_account::id(),
+        rent: sysvar::rent::id(),
+    };
+
+    let accounts_metas = accounts.to_account_metas(None);
+
+    let data = mpl_auction_house::instruction::Withdraw {
+        escrow_payment_bump: escrow_bump,
+        amount: withdraw_amount,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data,
+        accounts: accounts_metas,
+    };
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&buyer.pubkey()),
+        &[buyer],
+        context.last_blockhash,
+    );
+
+    ((accounts,), tx)
+}
+
+pub fn auction_withdraw(
+    context: &mut ProgramTestContext,
+    buyer: &Keypair,
+    ahkey: &Pubkey,
+    ah: &AuctionHouse,
+    test_metadata: &Metadata,
+    auctioneer_authority: Pubkey,
+    sale_price: u64,
+    withdraw_amount: u64,
+) -> (
+    mpl_auction_house::accounts::WithdrawWithAuctioneer,
+    Transaction,
+) {
+    let seller_token_account =
+        get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    let (_buyer_trade_state, _sts_bump) = find_trade_state_address(
+        &buyer.pubkey(),
+        &ahkey,
+        &seller_token_account,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        1,
+    );
+    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (escrow_payment_account, escrow_bump) =
+        find_escrow_payment_address(&ahkey, &buyer.pubkey());
+
+    let accounts = mpl_auction_house::accounts::WithdrawWithAuctioneer {
+        wallet: buyer.pubkey(),
+        escrow_payment_account,
+        receipt_account: buyer.pubkey(),
+        treasury_mint: ah.treasury_mint,
+        authority: ah.authority,
+        auction_house: *ahkey,
+        auction_house_fee_account: ah.auction_house_fee_account,
+        auctioneer_authority,
+        ah_auctioneer_pda: auctioneer_pda,
+        token_program: spl_token::id(),
+        system_program: system_program::id(),
+        ata_program: spl_associated_token_account::id(),
+        rent: sysvar::rent::id(),
+    };
+
+    let accounts_metas = accounts.to_account_metas(None);
+
+    let data = mpl_auction_house::instruction::WithdrawWithAuctioneer {
+        escrow_payment_bump: escrow_bump,
+        ah_auctioneer_pda_bump: auctioneer_pda_bump,
+        amount: withdraw_amount,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id: mpl_auction_house::id(),
+        data,
+        accounts: accounts_metas,
+    };
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&buyer.pubkey()),
+        &[buyer],
+        context.last_blockhash,
+    );
+
+    (accounts, tx)
 }
 
 pub async fn existing_auction_house_test_context(

@@ -188,8 +188,6 @@ async fn incorrect_auctioneer_pda_fails() {
     .await
     .unwrap_err();
 
-    println!("{:?}", err);
-
     assert_transport_error!(
         err,
         TransportError::TransactionError(TransactionError::InstructionError(0, _))
