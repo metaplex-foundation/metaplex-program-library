@@ -5,16 +5,12 @@ use std::{fs, io::Write, path::Path};
 
 use mpl_candy_machine::ConfigLine;
 
-use crate::candy_machine::uuid_from_pubkey;
 use crate::common::*;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cache {
     pub program: CacheProgram,
     pub items: CacheItems,
-    pub env: String,
-    #[serde(rename = "cacheName")]
-    pub cache_name: String,
     #[serde(skip_deserializing, skip_serializing)]
     pub file_path: String,
 }
@@ -24,8 +20,6 @@ impl Cache {
         Cache {
             program: CacheProgram::new(),
             items: CacheItems::new(),
-            env: String::new(),
-            cache_name: String::new(),
             file_path: String::new(),
         }
     }
@@ -53,7 +47,6 @@ impl Default for Cache {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CacheProgram {
-    pub uuid: String,
     #[serde(rename = "candyMachine")]
     pub candy_machine: String,
 }
@@ -61,14 +54,12 @@ pub struct CacheProgram {
 impl CacheProgram {
     pub fn new() -> Self {
         CacheProgram {
-            uuid: String::new(),
             candy_machine: String::new(),
         }
     }
 
     pub fn new_from_cm(candy_machine: &Pubkey) -> Self {
         CacheProgram {
-            uuid: uuid_from_pubkey(candy_machine),
             candy_machine: candy_machine.to_string(),
         }
     }
