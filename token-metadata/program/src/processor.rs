@@ -1081,16 +1081,12 @@ pub fn process_utilize(
         if approved_authority_is_using {
             let burn_path = &[PREFIX.as_bytes(), program_id.as_ref(), BURN.as_bytes()];
             let burn_authority_info = next_account_info(account_info_iter)?;
-            assert_burner(burn_authority_info.key)?;
+            let seed = assert_burner(burn_authority_info.key)?;
             let burn_bump_ref = &[
                 PREFIX.as_bytes(),
                 program_id.as_ref(),
                 BURN.as_bytes(),
-                &[assert_derivation(
-                    &program_id,
-                    burn_authority_info,
-                    burn_path,
-                )?],
+                &[seed],
             ];
             spl_token_burn(TokenBurnParams {
                 mint: mint_info.clone(),

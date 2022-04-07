@@ -31,12 +31,12 @@ pub fn assert_valid_use(
     };
 }
 
-pub fn assert_burner(program_as_burner: &Pubkey) -> Result<(), MetadataError> {
-    let (canon_burn, _) = pda::find_program_as_burner_account();
+pub fn assert_burner(program_as_burner: &Pubkey) -> Result<u8, MetadataError> {
+    let (canon_burn, b) = pda::find_program_as_burner_account();
     if &canon_burn != program_as_burner {
         return Err(MetadataError::DerivedKeyInvalid.into());
     }
-    Ok(())
+    Ok(b)
 }
 
 pub fn assert_valid_bump(
