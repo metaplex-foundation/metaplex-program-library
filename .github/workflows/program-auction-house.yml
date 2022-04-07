@@ -8,7 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.14
+  SOLANA_VERSION_STABLE: 1.9.13
+  SOLANA_VERSION_UNSTABLE: 1.10
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -29,7 +30,7 @@ jobs:
             - 'core/**'
           package:
             - 'auction-house/**'
-  build-and-test-auction-house:
+  build-and-test-auction-house-stable:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
@@ -42,7 +43,45 @@ jobs:
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
         with: 
-          solana_version: ${{ env.SOLANA_VERSION }}
+          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
+      - uses: ./.github/actions/install-rust
+        with: 
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      # Restore Cache from previous build/test
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./rust/target
+          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+      - uses: ./.github/actions/build-token-metadata
+      # Run test
+      - name: test-auction-house-program
+        id: run_test
+        working-directory: ./auction-house/program
+        run: |
+          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
+
+  build-and-test-auction-house-unstable:
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-auction-house
+
+    steps:
+      # Setup Deps
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-solana
+        with: 
+          solana_version: ${{ env.SOLANA_VERSION_UNSTABLE }}
       - uses: ./.github/actions/install-rust
         with: 
           toolchain: ${{ env.RUST_TOOLCHAIN }}
