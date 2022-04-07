@@ -12,8 +12,8 @@ use solana_sdk::{
 use utils::*;
 mod revoke_use_authority {
     use mpl_token_metadata::pda::find_program_as_burner_account;
-    use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
-    use spl_token::state::Account;
+    use solana_program::{borsh::try_from_slice_unchecked};
+    
 
     use super::*;
     #[tokio::test]

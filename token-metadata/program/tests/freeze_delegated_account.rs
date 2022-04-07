@@ -1,10 +1,10 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use mpl_token_metadata::state::{UseAuthorityRecord, UseMethod, Uses};
+
 
 use mpl_token_metadata::error::MetadataError;
-use mpl_token_metadata::pda::find_use_authority_account;
+
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
@@ -16,9 +16,9 @@ use solana_sdk::{
 use utils::*;
 mod freeze_delegated {
 
-    use mpl_token_metadata::{pda::find_program_as_burner_account, state::Key};
-    use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
-    use spl_token::state::Account;
+    
+    
+    
 
     use super::*;
     #[tokio::test]
@@ -102,7 +102,7 @@ mod freeze_delegated {
     }
 
 
-    use super::*;
+    
     #[tokio::test]
     async fn freeze_delegated_no_freeze_authority() {
         let mut context = program_test().start_with_context().await;
@@ -155,12 +155,12 @@ mod freeze_delegated {
         assert_custom_error!(err, MetadataError::InvalidFreezeAuthority);
     }
 
-    use super::*;
+    
     #[tokio::test]
     async fn freeze_delegated_token_not_delegated() {
         let mut context = program_test().start_with_context().await;
         let freeze_authority = &context.payer.pubkey();
-        let delegate = Keypair::new();
+        let _delegate = Keypair::new();
 
         // create metadata
         let test_metadata = Metadata::new();
@@ -213,7 +213,7 @@ mod freeze_delegated {
     }
 
 
-    use super::*;
+    
     #[tokio::test]
     async fn freeze_delegated_token_try_thaw() {
         let mut context = program_test().start_with_context().await;
@@ -256,7 +256,7 @@ mod freeze_delegated {
             test_master_edition.pubkey,
             test_master_edition.mint_pubkey,
         );
-        let freeze_tx = Transaction::new_signed_with_payer(
+        let _freeze_tx = Transaction::new_signed_with_payer(
             &[freeze_ix],
             Some(&context.payer.pubkey()),
             &[&context.payer, &delegate],

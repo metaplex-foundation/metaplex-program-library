@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use crate::{
     assertions::{
         collection::{
@@ -16,10 +15,10 @@ use crate::{
         Collection, CollectionAuthorityRecord, DataV2, Key, MasterEditionV1, MasterEditionV2,
         Metadata, TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
         COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN, PREFIX, USER,
-        USE_AUTHORITY_RECORD_SIZE, EDITION_MARKER_BIT_SIZE
+        USE_AUTHORITY_RECORD_SIZE,
     },
     solana_program::{
-        program_memory::{ sol_memset},
+        program_memory::{sol_memset},
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_derivation, assert_initialized,
@@ -47,8 +46,8 @@ use spl_token::{
     instruction::{approve, revoke, freeze_account, thaw_account},
     state::{Account, Mint},
 };
-use spl_token::instruction::close_account;
-use crate::assertions::uses::{assert_use_authority_derivation, assert_valid_bump};
+
+use crate::assertions::uses::{assert_burner, assert_use_authority_derivation, assert_valid_bump};
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
@@ -307,6 +306,7 @@ pub fn process_update_metadata_accounts_v2(
     metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
     Ok(())
 }
+
 pub fn process_update_primary_sale_happened_via_token(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -584,7 +584,7 @@ pub fn process_convert_master_edition_v1_to_v2(
         supply: master_edition.supply,
         max_supply: master_edition.max_supply,
     }
-    .serialize(&mut *master_edition_info.try_borrow_mut_data()?)?;
+        .serialize(&mut *master_edition_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -893,6 +893,7 @@ pub fn process_approve_use_authority(
         return Err(MetadataError::NotEnoughUses.into());
     }
     if metadata_uses.use_method == UseMethod::Burn {
+        assert_burner(program_as_burner.key)?;
         invoke(
             &approve(
                 &token_program_account_info.key,
@@ -902,7 +903,7 @@ pub fn process_approve_use_authority(
                 &[],
                 1,
             )
-            .unwrap(),
+                .unwrap(),
             &[
                 token_program_account_info.clone(),
                 token_account_info.clone(),
@@ -966,7 +967,7 @@ pub fn process_revoke_use_authority(
     }
     assert_valid_bump(
         canonical_bump,
-        &record
+        &record,
     )?;
     let metadata_uses = metadata.uses.unwrap();
     if metadata_uses.use_method == UseMethod::Burn {
@@ -977,7 +978,7 @@ pub fn process_revoke_use_authority(
                 &owner_info.key,
                 &[],
             )
-            .unwrap(),
+                .unwrap(),
             &[
                 token_program_account_info.clone(),
                 token_account_info.clone(),
@@ -1050,7 +1051,7 @@ pub fn process_utilize(
             false,
         )?;
         assert_owned_by(use_authority_record_info, program_id)?;
-        let canonical_bump= assert_use_authority_derivation(
+        let canonical_bump = assert_use_authority_derivation(
             program_id,
             use_authority_record_info,
             user_info,
@@ -1063,28 +1064,29 @@ pub fn process_utilize(
         }
         assert_valid_bump(
             canonical_bump,
-            &record
+            &record,
         )?;
         record.allowed_uses = record
             .allowed_uses
             .checked_sub(number_of_uses)
             .ok_or(MetadataError::NotEnoughUses)?;
         record.serialize(data)?;
+    } else {
+        if user_info.key != owner_info.key {
+            return Err(MetadataError::InvalidUser.into());
+        }
     }
     metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     if remaining_uses <= 0 && must_burn {
         if approved_authority_is_using {
             let burn_path = &[PREFIX.as_bytes(), program_id.as_ref(), BURN.as_bytes()];
             let burn_authority_info = next_account_info(account_info_iter)?;
+            let seed = assert_burner(burn_authority_info.key)?;
             let burn_bump_ref = &[
                 PREFIX.as_bytes(),
                 program_id.as_ref(),
                 BURN.as_bytes(),
-                &[assert_derivation(
-                    &program_id,
-                    burn_authority_info,
-                    burn_path,
-                )?],
+                &[seed],
             ];
             spl_token_burn(TokenBurnParams {
                 mint: mint_info.clone(),
@@ -1315,7 +1317,7 @@ pub fn process_freeze_delegated_account(
             &edition_info.key,
             &[],
         )
-        .unwrap(),
+            .unwrap(),
         &[
             token_account_info.clone(),
             mint_info.clone(),
@@ -1344,7 +1346,7 @@ pub fn process_thaw_delegated_account(
     let mint: Mint = assert_initialized(mint_info)?;
     assert_owned_by(edition_info, program_id)?;
     assert_freeze_authority_matches_mint(&mint.freeze_authority, edition_info)?;
-   
+
     // assert delegate is signer and delegated tokens
     assert_signer(&delegate_info)?;
     assert_delegated_tokens(
@@ -1352,7 +1354,7 @@ pub fn process_thaw_delegated_account(
         mint_info,
         token_account_info,
     )?;
-    
+
     let edition_info_path = Vec::from([
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -1374,7 +1376,7 @@ pub fn process_thaw_delegated_account(
             &edition_info.key,
             &[],
         )
-        .unwrap(),
+            .unwrap(),
         &[
             token_account_info.clone(),
             mint_info.clone(),

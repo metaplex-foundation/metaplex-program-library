@@ -20,7 +20,7 @@ use solana_sdk::{
 use utils::*;
 mod verify_collection {
 
-    use mpl_token_metadata::state::CollectionAuthorityRecord;
+    use mpl_token_metadata::state::{COLLECTION_AUTHORITY_RECORD_SIZE, CollectionAuthorityRecord};
     use solana_program::borsh::try_from_slice_unchecked;
     use solana_sdk::transaction::Transaction;
 
@@ -863,6 +863,7 @@ mod verify_collection {
         
     }
 
+    #[tokio::test]
     async fn fail_verify_collection_with_authority() {
         let mut context = program_test().start_with_context().await;
         let new_collection_authority = Keypair::new();
@@ -923,7 +924,7 @@ mod verify_collection {
         );
         assert_eq!(metadata.collection.unwrap().verified, false);
         let (record, _) = find_collection_authority_account(
-            &test_metadata.mint.pubkey(),
+            &test_collection.mint.pubkey(),
             &new_collection_authority.pubkey(),
         );
         let ix = mpl_token_metadata::instruction::approve_collection_authority(
@@ -932,8 +933,8 @@ mod verify_collection {
             new_collection_authority.pubkey(),
             context.payer.pubkey(),
             context.payer.pubkey(),
-            test_metadata.token.pubkey(),
-            test_metadata.mint.pubkey(),
+            test_collection.pubkey,
+            test_collection.mint.pubkey(),
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -945,13 +946,16 @@ mod verify_collection {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
+        let account_before = context.banks_client.get_account(record).await.unwrap().unwrap();
+        assert_eq!(account_before.data.len(), COLLECTION_AUTHORITY_RECORD_SIZE);
+
         let ixrevoke = mpl_token_metadata::instruction::revoke_collection_authority(
             mpl_token_metadata::id(),
             record,
             new_collection_authority.pubkey(),
             context.payer.pubkey(),
-            test_metadata.pubkey,
-            test_metadata.mint.pubkey(),
+            test_collection.pubkey,
+            test_collection.mint.pubkey(),
         );
 
         let txrevoke = Transaction::new_signed_with_payer(
@@ -967,8 +971,8 @@ mod verify_collection {
             .await
             .unwrap();
 
-        let account = context.banks_client.get_account(record).await.unwrap().unwrap();
-        assert_eq!(account.data.len(), 0);
+        let account_after_none = context.banks_client.get_account(record).await.unwrap().is_none();
+        assert_eq!(account_after_none, true);
 
         let err = test_metadata
             .verify_collection(
