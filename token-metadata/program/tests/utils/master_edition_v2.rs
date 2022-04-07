@@ -10,7 +10,7 @@ use solana_program::{
     instruction::{AccountMeta, Instruction},
     sysvar,
 };
-use solana_program_test::*;
+
 use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},

@@ -379,6 +379,10 @@ pub enum MetadataError {
     /// Edition override cannot be zero
     #[error("Edition override cannot be zero")]
     EditionOverrideCannotBeZero,
+
+    #[error("Invalid User")]
+    InvalidUser,
+
 }
 
 impl PrintProgramError for MetadataError {

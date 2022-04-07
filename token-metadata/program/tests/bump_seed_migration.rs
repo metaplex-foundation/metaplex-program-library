@@ -1,25 +1,21 @@
 #![cfg(feature = "test-bpf")]
 mod utils;
 
-use mpl_token_metadata::pda::find_collection_authority_account;
-use mpl_token_metadata::state::Collection;
+
+
 use mpl_token_metadata::state::{UseMethod, Uses};
 use mpl_token_metadata::{
-    error::MetadataError,
-    state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
-use num_traits::FromPrimitive;
+
 use solana_program_test::*;
 use solana_sdk::{
-    instruction::InstructionError,
     signature::{Keypair, Signer},
-    transaction::TransactionError,
-    transport::TransportError,
 };
 use utils::*;
 use borsh::{BorshSerialize};
-use mpl_token_metadata::state::{CollectionAuthorityRecord, UseAuthorityRecord};
+use mpl_token_metadata::state::{UseAuthorityRecord};
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::account::{Account, AccountSharedData};
 use solana_sdk::transaction::Transaction;
@@ -27,9 +23,9 @@ use mpl_token_metadata::pda::{find_program_as_burner_account, find_use_authority
 use mpl_token_metadata::state::Key as MetadataKey;
 use solana_sdk::account::{ReadableAccount, WritableAccount};
 mod bump_seed_migration {
-    use std::borrow::BorrowMut;
-    use solana_program::program_memory::sol_memset;
-    use mpl_token_metadata::state::USE_AUTHORITY_RECORD_SIZE;
+    
+    
+    
     use super::*;
 
     #[tokio::test]
@@ -39,9 +35,9 @@ mod bump_seed_migration {
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
         let test_metadata = Metadata::new();
-        let puffed_name = puffed_out_string(&name, MAX_NAME_LENGTH);
-        let puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
-        let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
+        let _puffed_name = puffed_out_string(&name, MAX_NAME_LENGTH);
+        let _puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
+        let _puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
         let uses = Some(Uses {
             total: 1,
             remaining: 1,
