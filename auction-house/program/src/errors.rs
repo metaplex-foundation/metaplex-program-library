@@ -120,7 +120,7 @@ pub enum ErrorCode {
 
     // 6029
     #[msg("The Auctioneer does not have the correct scope for this action.")]
-    InvalidAuctioneerScope,
+    MissingAuctioneerScope,
 
     // 6030
     #[msg("Must use auctioneer handler.")]

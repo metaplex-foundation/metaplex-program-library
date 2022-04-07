@@ -2,6 +2,7 @@ use mpl_auction_house::AuthorityScope;
 
 pub fn default_scopes() -> Vec<AuthorityScope> {
     vec![
+        AuthorityScope::Deposit,
         AuthorityScope::Buy,
         AuthorityScope::PublicBuy,
         AuthorityScope::ExecuteSale,

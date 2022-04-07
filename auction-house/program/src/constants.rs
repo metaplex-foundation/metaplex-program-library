@@ -7,7 +7,7 @@ pub const BID_RECEIPT_PREFIX: &str = "bid_receipt";
 pub const LISTING_RECEIPT_PREFIX: &str = "listing_receipt";
 pub const AUCTIONEER: &str = "auctioneer";
 pub const TRADE_STATE_SIZE: usize = 1;
-pub const MAX_NUM_SCOPES: usize = 6;
+pub const MAX_NUM_SCOPES: usize = 7;
 pub const AUCTIONEER_SIZE: usize = 8 +                      // Anchor discriminator/sighash
 32 +                                                        // Auctioneer authority
 32 +                                                        // Auction house instance

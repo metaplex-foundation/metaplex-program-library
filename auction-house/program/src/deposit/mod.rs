@@ -134,7 +134,7 @@ pub fn deposit_with_auctioneer<'info>(
         &auction_house.key(),
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
-        AuthorityScope::Sell,
+        AuthorityScope::Deposit,
     )?;
 
     let mut accounts: InstantDeposit<'info> = (*ctx.accounts).clone().into();

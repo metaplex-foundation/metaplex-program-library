@@ -465,7 +465,7 @@ pub fn auction_bid_logic<'info>(
         &auction_house.key(),
         &auctioneer_authority.key(),
         &ah_auctioneer_pda_account,
-        AuthorityScope::Sell,
+        AuthorityScope::Buy,
     )?;
 
     assert_valid_trade_state(

@@ -656,7 +656,7 @@ pub fn assert_valid_auctioneer_and_scope(
     }
 
     if !(auctioneer.scopes.contains(&scope)) {
-        return Err(ErrorCode::InvalidAuctioneerScope.into());
+        return Err(ErrorCode::MissingAuctioneerScope.into());
     }
 
     Ok(())

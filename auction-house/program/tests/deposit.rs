@@ -128,6 +128,72 @@ async fn auction_deposit_success() {
 }
 
 #[tokio::test]
+async fn auction_deposit_missing_scope_fails() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+    let (auctioneer_pda, auctioneer_pda_bump) =
+        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+
+    // Missing Deposit scope, so tx should fail.
+    let scopes = vec![];
+
+    delegate(
+        &mut context,
+        ahkey,
+        &ah_auth,
+        auctioneer_authority.pubkey(),
+        auctioneer_pda,
+        auctioneer_pda_bump,
+        scopes.clone(),
+    )
+    .await
+    .unwrap();
+
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), 2000000000)
+        .await
+        .unwrap();
+    let (_, deposit_tx) = auction_deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        auctioneer_authority.pubkey(),
+        1000000000,
+    );
+
+    let error = context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap_err();
+    assert_error!(error, MISSING_AUCTIONEER_SCOPE);
+}
+
+#[tokio::test]
 async fn auction_deposit_no_delegate_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet

@@ -237,7 +237,7 @@ pub fn execute_sale_with_auctioneer<'info>(
         &auction_house.key(),
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
-        AuthorityScope::Sell,
+        AuthorityScope::ExecuteSale,
     )?;
 
     let mut accounts: InstantExecuteSale<'info> = (*ctx.accounts).clone().into();

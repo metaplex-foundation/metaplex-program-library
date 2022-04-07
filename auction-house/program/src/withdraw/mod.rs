@@ -130,7 +130,7 @@ pub fn withdraw_with_auctioneer<'info>(
         &auction_house.key(),
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
-        AuthorityScope::Sell,
+        AuthorityScope::Withdraw,
     )?;
 
     let mut accounts: InstantWithdraw<'info> = (*ctx.accounts).clone().into();

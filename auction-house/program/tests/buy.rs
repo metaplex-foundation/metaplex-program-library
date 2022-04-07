@@ -262,3 +262,90 @@ async fn auction_buy_no_delegate_fails() {
 
     assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
 }
+
+#[tokio::test]
+async fn auction_buy_invalid_scope_fails() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+    let (auctioneer_pda, auctioneer_pda_bump) =
+        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+
+    // Missing Buy scope so buy_tx should fail.
+    let scopes = vec![AuthorityScope::Deposit];
+
+    delegate(
+        &mut context,
+        ahkey,
+        &ah_auth,
+        auctioneer_authority.pubkey(),
+        auctioneer_pda,
+        auctioneer_pda_bump,
+        scopes.clone(),
+    )
+    .await
+    .unwrap();
+
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), 10000000000)
+        .await
+        .unwrap();
+
+    // Deposit to escrow account.
+    let (_, deposit_tx) = auction_deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        auctioneer_authority.pubkey(),
+        1000000000,
+    );
+
+    context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap();
+
+    let ((_, _), buy_tx) = auction_buy(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &test_metadata.token.pubkey(),
+        &buyer,
+        &auctioneer_authority.pubkey(),
+        1000000000,
+    );
+
+    let error = context
+        .banks_client
+        .process_transaction(buy_tx)
+        .await
+        .unwrap_err();
+
+    assert_error!(error, MISSING_AUCTIONEER_SCOPE);
+}

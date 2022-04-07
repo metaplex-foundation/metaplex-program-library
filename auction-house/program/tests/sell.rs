@@ -170,8 +170,67 @@ async fn auction_sell_success() {
     assert_eq!(listing_receipt.seller, *owner_pubkey);
     assert_eq!(listing_receipt.price, sale_price);
     assert_eq!(listing_receipt.token_size, 1);
+}
 
-    ()
+#[tokio::test]
+async fn auction_sell_missing_scope_fails() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    let owner_pubkey = &test_metadata.token.pubkey();
+    airdrop(&mut context, owner_pubkey, TEN_SOL).await.unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+
+    let sale_price = ONE_SOL;
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+    let (auctioneer_pda, auctioneer_pda_bump) =
+        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+
+    let scopes = vec![];
+
+    delegate(
+        &mut context,
+        ahkey,
+        &ah_auth,
+        auctioneer_authority.pubkey(),
+        auctioneer_pda,
+        auctioneer_pda_bump,
+        scopes.clone(),
+    )
+    .await
+    .unwrap();
+
+    let ((_, _), sell_tx) = auction_sell(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &auctioneer_authority.pubkey(),
+        sale_price,
+    );
+
+    let error = context
+        .banks_client
+        .process_transaction(sell_tx)
+        .await
+        .unwrap_err();
+    assert_error!(error, MISSING_AUCTIONEER_SCOPE);
 }
 
 #[tokio::test]

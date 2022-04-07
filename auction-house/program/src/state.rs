@@ -27,6 +27,7 @@ pub struct Auctioneer {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
 pub enum AuthorityScope {
+    Deposit,
     Buy,
     PublicBuy,
     ExecuteSale,

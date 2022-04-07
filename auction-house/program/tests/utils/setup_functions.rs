@@ -196,8 +196,8 @@ pub fn auction_deposit(
 
     let data = mpl_auction_house::instruction::DepositWithAuctioneer {
         escrow_payment_bump: escrow_bump,
-        ah_auctioneer_pda_bump: auctioneer_pda_bump,
         amount: sale_price,
+        ah_auctioneer_pda_bump: auctioneer_pda_bump,
     }
     .data();
 
