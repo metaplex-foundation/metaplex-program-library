@@ -70,7 +70,7 @@ pub fn public_bid(
 
 /// Accounts for the [`public_bid` handler](fn.public_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, auctioneer_pda_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64, auctioneer_pda_bump: u8)]
 pub struct PublicBuyWithAuctioneer<'info> {
     wallet: Signer<'info>,
     #[account(mut)]
@@ -106,6 +106,7 @@ pub fn public_bid_with_auctioneer(
     escrow_payment_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    _ah_auctioneer_pda_bump: u8,
 ) -> ProgramResult {
     auction_bid_logic(
         ctx.accounts.wallet.to_owned(),
@@ -159,7 +160,7 @@ pub struct Buy<'info> {
 
 /// Accounts for the [`private_bid` handler](fn.private_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64, auctioneer_pda_bump: u8)]
 pub struct BuyWithAuctioneer<'info> {
     wallet: Signer<'info>,
     #[account(mut)]
@@ -180,7 +181,7 @@ pub struct BuyWithAuctioneer<'info> {
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
     /// The auctioneer PDA owned by Auction House storing scopes.
-    // #[account(seeds = [SALE_AUTHORITY.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -225,6 +226,7 @@ pub fn private_bid_with_auctioneer<'info>(
     escrow_payment_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    _ah_auctioneer_pda_bump: u8,
 ) -> ProgramResult {
     auction_bid_logic(
         ctx.accounts.wallet.to_owned(),

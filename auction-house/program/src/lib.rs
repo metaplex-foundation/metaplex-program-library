@@ -384,18 +384,18 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
-        auctioneer_pda_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        ah_auctioneer_pda_bump: u8,
     ) -> ProgramResult {
         execute_sale::execute_sale_with_auctioneer(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
             program_as_signer_bump,
-            auctioneer_pda_bump,
             buyer_price,
             token_size,
+            ah_auctioneer_pda_bump,
         )
     }
 
@@ -460,6 +460,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        ah_auctioneer_pda_bump: u8,
     ) -> ProgramResult {
         private_bid_with_auctioneer(
             ctx,
@@ -467,6 +468,7 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
+            ah_auctioneer_pda_bump,
         )
     }
 
@@ -494,6 +496,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        ah_auctioneer_pda_bump: u8,
     ) -> ProgramResult {
         public_bid_with_auctioneer(
             ctx,
@@ -501,6 +504,7 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
+            ah_auctioneer_pda_bump,
         )
     }
 
