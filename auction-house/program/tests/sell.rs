@@ -173,3 +173,49 @@ async fn auction_sell_success() {
 
     ()
 }
+
+#[tokio::test]
+async fn auction_sell_no_delegate_fails() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    let owner_pubkey = &test_metadata.token.pubkey();
+    airdrop(&mut context, owner_pubkey, TEN_SOL).await.unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+
+    let sale_price = ONE_SOL;
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+
+    let ((_acc, _listing_receipt_acc), sell_tx) = auction_sell(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &auctioneer_authority.pubkey(),
+        sale_price,
+    );
+
+    let error = context
+        .banks_client
+        .process_transaction(sell_tx)
+        .await
+        .unwrap_err();
+
+    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+}

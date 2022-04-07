@@ -214,3 +214,82 @@ async fn auction_withdraw_success() {
 
     ()
 }
+
+#[tokio::test]
+async fn auction_withdraw_no_delegate_fails() {
+    // Setup program test context and a new auction house.
+    let mut context = auction_house_program_test().start_with_context().await;
+
+    // Payer Wallet
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+
+    // Setup NFT metadata and owner keypair.
+    let test_metadata = Metadata::new();
+    let owner_pubkey = &test_metadata.token.pubkey();
+
+    // Airdrop owner with some SOL.
+    airdrop(&mut context, owner_pubkey, 10_000_000_000)
+        .await
+        .unwrap();
+
+    let airdrop_amount = 10_000_000_000;
+    let sale_price = 1_000_000_000;
+    let withdraw_price = sale_price / 2;
+
+    // Create NFT.
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+
+    // Create a new account for the buyer, airdrop to the wallet and deposit to an AH escrow account.
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), airdrop_amount)
+        .await
+        .unwrap();
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+
+    let (_acc, deposit_tx) = deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        sale_price,
+    );
+    context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap();
+
+    let (_, withdraw_tx) = auction_withdraw(
+        &mut context,
+        &buyer,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        auctioneer_authority.pubkey(),
+        sale_price,
+        withdraw_price,
+    );
+    let error = context
+        .banks_client
+        .process_transaction(withdraw_tx)
+        .await
+        .unwrap_err();
+
+    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+}

@@ -126,3 +126,53 @@ async fn auction_deposit_success() {
         .expect("Trade State Escrow");
     assert_eq!(escrow.lamports, 1000000000);
 }
+
+#[tokio::test]
+async fn auction_deposit_no_delegate_fails() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), 2000000000)
+        .await
+        .unwrap();
+    let (_acc, deposit_tx) = auction_deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        auctioneer_authority.pubkey(),
+        1000000000,
+    );
+
+    let error = context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap_err();
+
+    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+}
