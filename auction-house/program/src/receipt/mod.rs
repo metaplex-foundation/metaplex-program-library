@@ -282,9 +282,9 @@ pub fn print_bid_receipt<'info>(
     let bid_type = assert_program_bid_instruction(&prev_instruction.data[..8])?;
 
     let token_account = match bid_type {
-        BidType::InstantPrivateSale => Some(token_account.pubkey),
+        BidType::PrivateSale => Some(token_account.pubkey),
         BidType::AuctionPrivateSale => Some(token_account.pubkey),
-        BidType::InstantPublicSale => None,
+        BidType::PublicSale => None,
         BidType::AuctionPublicSale => None,
     };
 
