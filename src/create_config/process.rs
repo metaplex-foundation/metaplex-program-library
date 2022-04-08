@@ -1,6 +1,6 @@
 use crate::common::{sugar_setup, CANDY_EMOJI, CONFETTI_EMOJI};
 use crate::config::{
-    go_live_date_as_timestamp, ConfigData, EndSettingType, EndSettings, GatekeeperConfig,
+    go_live_date_as_timestamp, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
     HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
 };
 use crate::{constants::DEFAULT_ASSETS, upload::count_files};
@@ -29,6 +29,7 @@ pub fn process_create_config() -> Result<()> {
             Ok(())
         }
     };
+
     let float_validator = |input: &String| -> Result<(), String> {
         if input.parse::<f64>().is_err() {
             Err(format!(
@@ -40,12 +41,13 @@ pub fn process_create_config() -> Result<()> {
         }
     };
     let number_validator = |input: &String| -> Result<(), String> {
-        if input.parse::<u64>().is_err() {
+        if input.parse::<u64>().is_err() || input.parse::<u8>().is_err() {
             Err(format!("Couldn't parse input of '{}' to a number!", input))
         } else {
             Ok(())
         }
     };
+
     let date_validator = |input: &String| -> Result<(), String> {
         if go_live_date_as_timestamp(input).is_err() {
             Err(format!("Couldn't parse input of '{}' to a date!", input))
@@ -96,26 +98,79 @@ pub fn process_create_config() -> Result<()> {
     let num_files = count_files(DEFAULT_ASSETS);
     let num_files_ok = num_files.as_ref().map(|num| num % 2 == 0).unwrap_or(false);
     config.number = if num_files_ok && Confirm::with_theme(&theme)
-			.with_prompt(
-				format!(
-					"I found {} file pairs in the default assets directory. Is this how many NFTs you will have in your candy machine?", num_files.as_ref().unwrap() / 2
-				)
-			)
-			.interact()? {
-		(num_files.unwrap() / 2) as u64
-	} else {
-		Input::with_theme(&theme)
+        .with_prompt(
+            format!(
+                "I found {} file pairs in the default assets directory. Is this how many NFTs you will have in your candy machine?", num_files.as_ref().unwrap() / 2
+            )
+        )
+        .interact()? {
+        (num_files.unwrap() / 2) as u64
+    } else {
+        Input::with_theme(&theme)
             .with_prompt("How many NFTs will you have in your candy machine?")
             .validate_with(number_validator)
             .interact()
             .unwrap().parse::<u64>().expect("Failed to parse number into u64 that should have already been validated.")
-	};
+    };
 
     config.go_live_date = Input::with_theme(&theme)
         .with_prompt("What is your go live date? Enter it in RFC 3339 format, i.e., \"2022-02-25T13:00:00Z\", which is 1:00 PM UTC on Feburary 25, 2022.")
         .validate_with(date_validator)
         .interact()
         .unwrap();
+
+    let num_creators = Input::with_theme(&theme)
+        .with_prompt("How many creators do you have? (Max limit of 4)")
+        .validate_with(number_validator)
+        .validate_with({
+            |input: &String| match input.parse::<u8>().unwrap() {
+                1 | 2 | 3 | 4 => Ok(()),
+                _ => Err("Number of creators must be between 1 and 4, inclusive!"),
+            }
+        })
+        .interact()
+        .unwrap()
+        .parse::<u8>()
+        .expect("Failed to parse number into u8 that should have already been validated.");
+
+    let mut total_share = 0;
+
+    (0..num_creators).into_iter().for_each(|i| {
+        let address = Pubkey::from_str(
+            &Input::with_theme(&theme)
+                .with_prompt(format!("Enter creator address #{}", i + 1))
+                .validate_with(pubkey_validator)
+                .interact()
+                .unwrap(),
+        )
+            .expect("Failed to parse string into pubkey that should have already been validated.");
+
+        let share = Input::with_theme(&theme)
+            .with_prompt(format!(
+                "Enter royalty percentage share for creator #{} (i.e. 70). Total shares must add to 100!",
+                i + 1
+            ))
+            .validate_with(number_validator)
+            .validate_with({
+                |input: &String| -> Result<(), &str> {
+                    if input.parse::<u8>().unwrap() + total_share > 100 {
+                        Err("Royalty share total has exceeded 100 percent!")
+                    } else if i == num_creators && input.parse::<u8>().unwrap() + total_share != 100 {
+                        Err("Royalty share for all creators must total 100 percent!")
+                    } else {
+                        Ok(())
+                    }
+                }
+            })
+            .interact()
+            .unwrap()
+            .parse::<u8>()
+            .expect("Failed to parse number into u64 that should have already been validated.");
+
+        total_share += share;
+        let creator = Creator { address, share };
+        config.creators.push(creator);
+    });
 
     const GATEKEEPER_INDEX: usize = 0;
     const SPL_INDEX: usize = 1;
@@ -131,7 +186,9 @@ pub fn process_create_config() -> Result<()> {
     ];
 
     let choices = MultiSelect::with_theme(&theme)
-        .with_prompt("Which extra features do you want to use?")
+        .with_prompt(
+            "Which extra features do you want to use? (Use spacebar to select options you want. Hit enter for when done.)",
+        )
         .items(&extra_functions_options)
         .interact()?;
 
@@ -172,15 +229,15 @@ pub fn process_create_config() -> Result<()> {
             .expect("Failed to parse string into pubkey that should have already been validated."),
         );
         config.spl_token_account = Some(
-			Pubkey::from_str(
-				&Input::with_theme(&theme)
+            Pubkey::from_str(
+                &Input::with_theme(&theme)
                     .with_prompt("What is your SPL token account address (the account that will hold the SPL token mints)?")
                     .validate_with(pubkey_validator)
                     .interact()
                     .unwrap(),
-			)
-            .expect("Failed to parse string into pubkey that should have already been validated."),
-		)
+            )
+                .expect("Failed to parse string into pubkey that should have already been validated."),
+        )
     } else {
         config.spl_token = None;
         config.spl_token_account = None;
@@ -340,7 +397,7 @@ pub fn process_create_config() -> Result<()> {
     };
     config.retain_authority = Confirm::with_theme(&theme).with_prompt("Do you want to retain update authority on your NFTs? We HIGHLY reccomend you choose yes!").interact()?;
     config.is_mutable = Confirm::with_theme(&theme)
-        .with_prompt("Do you want your NFTs to remain mutable? We HIGHLY reccomend you choose yes!")
+        .with_prompt("Do you want your NFTs to remain mutable? We HIGHLY recommend you choose yes!")
         .interact()?;
 
     println!();

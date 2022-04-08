@@ -307,6 +307,7 @@ impl<'de> Deserialize<'de> for UploadMethod {
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
 pub struct Creator {
     #[serde(deserialize_with = "to_pubkey")]
+    #[serde(serialize_with = "to_string")]
     pub address: Pubkey,
     pub share: u8,
 }
