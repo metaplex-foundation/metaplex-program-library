@@ -3,7 +3,7 @@ use bundlr_sdk::{tags::Tag, Bundlr, BundlrTx, SolanaSigner};
 use clap::crate_version;
 use console::style;
 use futures::future::select_all;
-use std::{collections::HashSet, ffi::OsStr, fs, path::Path, sync::Arc};
+use std::{cmp, collections::HashSet, ffi::OsStr, fs, path::Path, sync::Arc};
 use tokio::time::{sleep, Duration};
 
 use crate::{common::*, config::*, upload::*, utils::*};
@@ -194,16 +194,20 @@ impl UploadHandler for BundlrHandler {
             };
 
             let path = Path::new(&file_path);
-            total_size += match data_type {
-                DataType::Media => std::fs::metadata(path)?.len(),
-                DataType::Metadata => {
-                    let cache_item = cache.items.0.get(&index.to_string()).unwrap();
-                    get_updated_metadata(item, cache_item)
-                        .unwrap()
-                        .into_bytes()
-                        .len() as u64
-                }
-            };
+            total_size += 2000
+                + cmp::max(
+                    10000,
+                    match data_type {
+                        DataType::Media => std::fs::metadata(path)?.len(),
+                        DataType::Metadata => {
+                            let cache_item = cache.items.0.get(&index.to_string()).unwrap();
+                            get_updated_metadata(item, cache_item)
+                                .unwrap()
+                                .into_bytes()
+                                .len() as u64
+                        }
+                    },
+                );
 
             let ext = path.extension().and_then(OsStr::to_str).unwrap();
             extension.insert(String::from(ext));
