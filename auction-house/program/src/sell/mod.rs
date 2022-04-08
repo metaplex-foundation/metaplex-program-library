@@ -6,7 +6,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 /// Accounts for the [`sell` handler](auction_house/fn.sell.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct InstantSell<'info> {
+pub struct Sell<'info> {
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
     #[account(mut)]
@@ -45,9 +45,9 @@ pub struct InstantSell<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<SellWithAuctioneer<'info>> for InstantSell<'info> {
-    fn from(a: SellWithAuctioneer<'info>) -> InstantSell<'info> {
-        InstantSell {
+impl<'info> From<SellWithAuctioneer<'info>> for Sell<'info> {
+    fn from(a: SellWithAuctioneer<'info>) -> Sell<'info> {
+        Sell {
             wallet: a.wallet,
             token_account: a.token_account,
             metadata: a.metadata,
@@ -111,8 +111,8 @@ pub struct SellWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn instant_sell<'info>(
-    ctx: Context<'_, '_, '_, 'info, InstantSell<'info>>,
+pub fn sell<'info>(
+    ctx: Context<'_, '_, '_, 'info, Sell<'info>>,
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -126,7 +126,7 @@ pub fn instant_sell<'info>(
         return Err(ErrorCode::MustUseAuctioneerHandler.into());
     }
 
-    sell(
+    sell_logic(
         ctx.accounts,
         ctx.program_id,
         trade_state_bump,
@@ -162,9 +162,9 @@ pub fn sell_with_auctioneer<'info>(
         AuthorityScope::Sell,
     )?;
 
-    let mut accounts: InstantSell<'info> = (*ctx.accounts).clone().into();
+    let mut accounts: Sell<'info> = (*ctx.accounts).clone().into();
 
-    sell(
+    sell_logic(
         &mut accounts,
         ctx.program_id,
         trade_state_bump,
@@ -176,8 +176,8 @@ pub fn sell_with_auctioneer<'info>(
 }
 
 /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
-fn sell<'info>(
-    accounts: &mut InstantSell<'info>,
+fn sell_logic<'info>(
+    accounts: &mut Sell<'info>,
     program_id: &Pubkey,
     trade_state_bump: u8,
     _free_trade_state_bump: u8,

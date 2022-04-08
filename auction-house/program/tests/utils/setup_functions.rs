@@ -100,7 +100,7 @@ pub fn deposit(
     test_metadata: &Metadata,
     buyer: &Keypair,
     sale_price: u64,
-) -> (mpl_auction_house::accounts::InstantDeposit, Transaction) {
+) -> (mpl_auction_house::accounts::Deposit, Transaction) {
     let seller_token_account =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
     let (_buyer_trade_state, _sts_bump) = find_trade_state_address(
@@ -113,7 +113,7 @@ pub fn deposit(
         1,
     );
     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
-    let accounts = mpl_auction_house::accounts::InstantDeposit {
+    let accounts = mpl_auction_house::accounts::Deposit {
         wallet: buyer.pubkey(),
         authority: ah.authority,
         auction_house: *ahkey,
@@ -615,7 +615,7 @@ pub fn execute_sale(
     buyer_price: u64,
 ) -> (
     (
-        mpl_auction_house::accounts::InstantExecuteSale,
+        mpl_auction_house::accounts::ExecuteSale,
         mpl_auction_house::accounts::PrintPurchaseReceipt,
     ),
     Transaction,
@@ -639,7 +639,7 @@ pub fn execute_sale(
         find_purchase_receipt_address(seller_trade_state, buyer_trade_state);
     let (listing_receipt, _listing_receipt_bump) = find_listing_receipt_address(seller_trade_state);
     let (bid_receipt, _public_bid_receipt_bump) = find_bid_receipt_address(buyer_trade_state);
-    let execute_sale_accounts = mpl_auction_house::accounts::InstantExecuteSale {
+    let execute_sale_accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: *buyer,
         seller: *seller,
         auction_house: *ahkey,
@@ -830,7 +830,7 @@ pub fn sell_mint(
     sale_price: u64,
 ) -> (
     (
-        mpl_auction_house::accounts::InstantSell,
+        mpl_auction_house::accounts::Sell,
         mpl_auction_house::accounts::PrintListingReceipt,
     ),
     Transaction,
@@ -858,7 +858,7 @@ pub fn sell_mint(
     let (pas, pas_bump) = find_program_as_signer_address();
     let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
 
-    let accounts = mpl_auction_house::accounts::InstantSell {
+    let accounts = mpl_auction_house::accounts::Sell {
         wallet: seller.pubkey(),
         token_account: token,
         metadata,
@@ -1021,7 +1021,7 @@ pub fn sell(
     sale_price: u64,
 ) -> (
     (
-        mpl_auction_house::accounts::InstantSell,
+        mpl_auction_house::accounts::Sell,
         mpl_auction_house::accounts::PrintListingReceipt,
     ),
     Transaction,
@@ -1051,7 +1051,7 @@ pub fn sell(
     );
     let (pas, pas_bump) = find_program_as_signer_address();
 
-    let accounts = mpl_auction_house::accounts::InstantSell {
+    let accounts = mpl_auction_house::accounts::Sell {
         wallet: test_metadata.token.pubkey(),
         token_account: token,
         metadata: test_metadata.pubkey,
@@ -1256,7 +1256,7 @@ pub fn withdraw(
     test_metadata: &Metadata,
     sale_price: u64,
     withdraw_amount: u64,
-) -> ((mpl_auction_house::accounts::InstantWithdraw,), Transaction) {
+) -> ((mpl_auction_house::accounts::Withdraw,), Transaction) {
     let seller_token_account =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
     let (_buyer_trade_state, _sts_bump) = find_trade_state_address(
@@ -1271,7 +1271,7 @@ pub fn withdraw(
     let (escrow_payment_account, escrow_bump) =
         find_escrow_payment_address(&ahkey, &buyer.pubkey());
 
-    let accounts = mpl_auction_house::accounts::InstantWithdraw {
+    let accounts = mpl_auction_house::accounts::Withdraw {
         wallet: buyer.pubkey(),
         escrow_payment_account,
         receipt_account: buyer.pubkey(),

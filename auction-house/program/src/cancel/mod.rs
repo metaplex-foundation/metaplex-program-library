@@ -6,7 +6,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts)]
 #[instruction(buyer_price: u64, token_size: u64)]
-pub struct InstantCancel<'info> {
+pub struct Cancel<'info> {
     /// User wallet account.
     #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
@@ -36,9 +36,9 @@ pub struct InstantCancel<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-impl<'info> From<CancelWithAuctioneer<'info>> for InstantCancel<'info> {
-    fn from(a: CancelWithAuctioneer<'info>) -> InstantCancel<'info> {
-        InstantCancel {
+impl<'info> From<CancelWithAuctioneer<'info>> for Cancel<'info> {
+    fn from(a: CancelWithAuctioneer<'info>) -> Cancel<'info> {
+        Cancel {
             wallet: a.wallet,
             token_account: a.token_account,
             token_mint: a.token_mint,
@@ -92,8 +92,8 @@ pub struct CancelWithAuctioneer<'info> {
 }
 
 // Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
-pub fn instant_cancel<'info>(
-    mut ctx: Context<'_, '_, '_, 'info, InstantCancel<'info>>,
+pub fn cancel<'info>(
+    mut ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
     buyer_price: u64,
     token_size: u64,
 ) -> ProgramResult {
@@ -104,7 +104,7 @@ pub fn instant_cancel<'info>(
         return Err(ErrorCode::MustUseAuctioneerHandler.into());
     }
 
-    cancel(&mut ctx.accounts, buyer_price, token_size)
+    cancel_logic(&mut ctx.accounts, buyer_price, token_size)
 }
 
 pub fn cancel_with_auctioneer<'info>(
@@ -128,13 +128,13 @@ pub fn cancel_with_auctioneer<'info>(
         AuthorityScope::Cancel,
     )?;
 
-    let mut accounts: InstantCancel<'info> = (*ctx.accounts).clone().into();
+    let mut accounts: Cancel<'info> = (*ctx.accounts).clone().into();
 
-    cancel(&mut accounts, buyer_price, token_size)
+    cancel_logic(&mut accounts, buyer_price, token_size)
 }
 
-fn cancel<'info>(
-    accounts: &mut InstantCancel<'info>,
+fn cancel_logic<'info>(
+    accounts: &mut Cancel<'info>,
     buyer_price: u64,
     token_size: u64,
 ) -> ProgramResult {

@@ -6,7 +6,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct InstantExecuteSale<'info> {
+pub struct ExecuteSale<'info> {
     /// Buyer user wallet account.
     #[account(mut)]
     pub buyer: UncheckedAccount<'info>,
@@ -79,9 +79,9 @@ pub struct InstantExecuteSale<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<ExecuteSaleWithAuctioneer<'info>> for InstantExecuteSale<'info> {
-    fn from(a: ExecuteSaleWithAuctioneer<'info>) -> InstantExecuteSale<'info> {
-        InstantExecuteSale {
+impl<'info> From<ExecuteSaleWithAuctioneer<'info>> for ExecuteSale<'info> {
+    fn from(a: ExecuteSaleWithAuctioneer<'info>) -> ExecuteSale<'info> {
+        ExecuteSale {
             buyer: a.buyer,
             seller: a.seller,
             token_account: a.token_account,
@@ -190,8 +190,8 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn instant_execute_sale<'info>(
-    ctx: Context<'_, '_, '_, 'info, InstantExecuteSale<'info>>,
+pub fn execute_sale<'info>(
+    ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -205,7 +205,7 @@ pub fn instant_execute_sale<'info>(
         return Err(ErrorCode::MustUseAuctioneerHandler.into());
     }
 
-    execute_sale(
+    execute_sale_logic(
         ctx.accounts,
         ctx.remaining_accounts,
         escrow_payment_bump,
@@ -240,9 +240,9 @@ pub fn execute_sale_with_auctioneer<'info>(
         AuthorityScope::ExecuteSale,
     )?;
 
-    let mut accounts: InstantExecuteSale<'info> = (*ctx.accounts).clone().into();
+    let mut accounts: ExecuteSale<'info> = (*ctx.accounts).clone().into();
 
-    execute_sale(
+    execute_sale_logic(
         &mut accounts,
         ctx.remaining_accounts,
         escrow_payment_bump,
@@ -255,8 +255,8 @@ pub fn execute_sale_with_auctioneer<'info>(
 
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
 #[inline(never)]
-fn execute_sale<'info>(
-    accounts: &mut InstantExecuteSale<'info>,
+fn execute_sale_logic<'info>(
+    accounts: &mut ExecuteSale<'info>,
     remaining_accounts: &[AccountInfo<'info>],
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,

@@ -1,13 +1,6 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
 
-use crate::{
-    constants::*,
-    errors::*,
-    AuctionHouse,
-    // state::{Auctioneer, AuthorityScope},
-    Auctioneer,
-    AuthorityScope,
-};
+use crate::{constants::*, errors::*, AuctionHouse, Auctioneer, AuthorityScope};
 
 /// Accounts for the [`delegate_auctioneer` handler](auction_house/fn.delegate_auctioneer.html).
 #[derive(Accounts)]

@@ -5,7 +5,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 /// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8)]
-pub struct InstantDeposit<'info> {
+pub struct Deposit<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
 
@@ -39,9 +39,9 @@ pub struct InstantDeposit<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<DepositWithAuctioneer<'info>> for InstantDeposit<'info> {
-    fn from(a: DepositWithAuctioneer<'info>) -> InstantDeposit<'info> {
-        InstantDeposit {
+impl<'info> From<DepositWithAuctioneer<'info>> for Deposit<'info> {
+    fn from(a: DepositWithAuctioneer<'info>) -> Deposit<'info> {
+        Deposit {
             wallet: a.wallet,
             payment_account: a.payment_account,
             transfer_authority: a.transfer_authority,
@@ -101,8 +101,8 @@ pub struct DepositWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn instant_deposit<'info>(
-    mut ctx: Context<'_, '_, '_, 'info, InstantDeposit<'info>>,
+pub fn deposit<'info>(
+    mut ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
     escrow_payment_bump: u8,
     amount: u64,
 ) -> ProgramResult {
@@ -113,7 +113,7 @@ pub fn instant_deposit<'info>(
         return Err(ErrorCode::MustUseAuctioneerHandler.into());
     }
 
-    deposit(&mut ctx.accounts, escrow_payment_bump, amount)
+    deposit_logic(&mut ctx.accounts, escrow_payment_bump, amount)
 }
 
 pub fn deposit_with_auctioneer<'info>(
@@ -137,13 +137,13 @@ pub fn deposit_with_auctioneer<'info>(
         AuthorityScope::Deposit,
     )?;
 
-    let mut accounts: InstantDeposit<'info> = (*ctx.accounts).clone().into();
+    let mut accounts: Deposit<'info> = (*ctx.accounts).clone().into();
 
-    deposit(&mut accounts, escrow_payment_bump, amount)
+    deposit_logic(&mut accounts, escrow_payment_bump, amount)
 }
 
-fn deposit<'info>(
-    accounts: &mut InstantDeposit<'info>,
+fn deposit_logic<'info>(
+    accounts: &mut Deposit<'info>,
     escrow_payment_bump: u8,
     amount: u64,
 ) -> ProgramResult {

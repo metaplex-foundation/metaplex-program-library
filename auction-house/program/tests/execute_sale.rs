@@ -74,7 +74,7 @@ async fn execute_sale_success() {
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
 
-    let accounts = mpl_auction_house::accounts::InstantExecuteSale {
+    let accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
         auction_house: ahkey,

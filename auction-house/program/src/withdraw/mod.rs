@@ -5,7 +5,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 /// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8)]
-pub struct InstantWithdraw<'info> {
+pub struct Withdraw<'info> {
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
 
@@ -37,9 +37,9 @@ pub struct InstantWithdraw<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<WithdrawWithAuctioneer<'info>> for InstantWithdraw<'info> {
-    fn from(a: WithdrawWithAuctioneer<'info>) -> InstantWithdraw<'info> {
-        InstantWithdraw {
+impl<'info> From<WithdrawWithAuctioneer<'info>> for Withdraw<'info> {
+    fn from(a: WithdrawWithAuctioneer<'info>) -> Withdraw<'info> {
+        Withdraw {
             wallet: a.wallet,
             receipt_account: a.receipt_account,
             escrow_payment_account: a.escrow_payment_account,
@@ -97,8 +97,8 @@ pub struct WithdrawWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn instant_withdraw<'info>(
-    ctx: Context<'_, '_, '_, 'info, InstantWithdraw<'info>>,
+pub fn withdraw<'info>(
+    ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
     escrow_payment_bump: u8,
     amount: u64,
 ) -> ProgramResult {
@@ -109,7 +109,7 @@ pub fn instant_withdraw<'info>(
         return Err(ErrorCode::MustUseAuctioneerHandler.into());
     }
 
-    withdraw(ctx.accounts, escrow_payment_bump, amount)
+    withdraw_logic(ctx.accounts, escrow_payment_bump, amount)
 }
 
 pub fn withdraw_with_auctioneer<'info>(
@@ -133,13 +133,13 @@ pub fn withdraw_with_auctioneer<'info>(
         AuthorityScope::Withdraw,
     )?;
 
-    let mut accounts: InstantWithdraw<'info> = (*ctx.accounts).clone().into();
+    let mut accounts: Withdraw<'info> = (*ctx.accounts).clone().into();
 
-    withdraw(&mut accounts, escrow_payment_bump, amount)
+    withdraw_logic(&mut accounts, escrow_payment_bump, amount)
 }
 
-fn withdraw<'info>(
-    accounts: &mut InstantWithdraw<'info>,
+fn withdraw_logic<'info>(
+    accounts: &mut Withdraw<'info>,
     escrow_payment_bump: u8,
     amount: u64,
 ) -> ProgramResult {

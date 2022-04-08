@@ -308,11 +308,11 @@ pub mod auction_house {
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
     pub fn deposit<'info>(
-        ctx: Context<'_, '_, '_, 'info, InstantDeposit<'info>>,
+        ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
     ) -> ProgramResult {
-        deposit::instant_deposit(ctx, escrow_payment_bump, amount)
+        deposit::deposit(ctx, escrow_payment_bump, amount)
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
@@ -326,11 +326,11 @@ pub mod auction_house {
     }
 
     pub fn cancel<'info>(
-        ctx: Context<'_, '_, '_, 'info, InstantCancel<'info>>,
+        ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
-        cancel::instant_cancel(ctx, buyer_price, token_size)
+        cancel::cancel(ctx, buyer_price, token_size)
     }
 
     pub fn cancel_with_auctioneer<'info>(
@@ -344,11 +344,11 @@ pub mod auction_house {
 
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
     pub fn withdraw<'info>(
-        ctx: Context<'_, '_, '_, 'info, InstantWithdraw<'info>>,
+        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
     ) -> ProgramResult {
-        withdraw::instant_withdraw(ctx, escrow_payment_bump, amount)
+        withdraw::withdraw(ctx, escrow_payment_bump, amount)
     }
 
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
@@ -362,14 +362,14 @@ pub mod auction_house {
     }
 
     pub fn execute_sale<'info>(
-        ctx: Context<'_, '_, '_, 'info, InstantExecuteSale<'info>>,
+        ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
-        execute_sale::instant_execute_sale(
+        execute_sale::execute_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -400,14 +400,14 @@ pub mod auction_house {
     }
 
     pub fn sell<'info>(
-        ctx: Context<'_, '_, '_, 'info, InstantSell<'info>>,
+        ctx: Context<'_, '_, '_, 'info, Sell<'info>>,
         trade_state_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
-        sell::instant_sell(
+        sell::sell(
             ctx,
             trade_state_bump,
             free_trade_state_bump,
