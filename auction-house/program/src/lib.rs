@@ -445,7 +445,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
-        private_bid(
+        bid::private_bid(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -462,7 +462,7 @@ pub mod auction_house {
         token_size: u64,
         ah_auctioneer_pda_bump: u8,
     ) -> ProgramResult {
-        private_bid_with_auctioneer(
+        bid::private_bid_with_auctioneer(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -480,7 +480,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> ProgramResult {
-        public_bid(
+        bid::public_bid(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -498,7 +498,7 @@ pub mod auction_house {
         token_size: u64,
         ah_auctioneer_pda_bump: u8,
     ) -> ProgramResult {
-        public_bid_with_auctioneer(
+        bid::public_bid_with_auctioneer(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
