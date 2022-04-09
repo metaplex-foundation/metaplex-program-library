@@ -1,14 +1,11 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use console::Style;
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Confirm;
-use futures::future::ok;
-use std::fs::OpenOptions;
-use std::io::ErrorKind;
-use tracing::error;
+use std::process::exit;
 
 use crate::common::NEW_CONFIG_EMOJI;
-use crate::config::{errors::ConfigError, parser::get_config_data, ConfigData};
+use crate::config::parser::get_config_data;
 use crate::create_config::process_create_config;
 use crate::deploy::{process_deploy, DeployArgs};
 use crate::upload::{process_upload, UploadArgs};
@@ -33,7 +30,10 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         strict: validate_args.strict.clone(),
     };
 
-    process_validate(validate_args)?;
+    if process_validate(validate_args).is_err() {
+        exit(1)
+    };
+
     println!("\n");
 
     let theme = ColorfulTheme {
@@ -41,22 +41,19 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         ..Default::default()
     };
 
-    match get_config_data(&args.config) {
-        Ok(config) => config,
-        Err(_err) => {
-            if Confirm::with_theme(&theme)
-                .with_prompt(format!(
-                    "No configuration file found. Would you like to create a new config file? {}",
-                    NEW_CONFIG_EMOJI
-                ))
-                .interact()?
-            {
-                process_create_config()?;
-            } // add exit if no
-
-            return Ok(());
+    if get_config_data(&args.config).is_err() {
+        if Confirm::with_theme(&theme)
+            .with_prompt(format!(
+                "No configuration file found. Would you like to create a new config file? {}",
+                NEW_CONFIG_EMOJI
+            ))
+            .interact()?
+        {
+            process_create_config()?;
+        } else {
+            exit(1)
         }
-    };
+    }
 
     println!("\n");
 
@@ -70,7 +67,10 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         cache: upload_args.cache.clone(),
     };
 
-    process_upload(upload_args).await?;
+    if process_upload(upload_args).await.is_err() {
+        exit(1)
+    };
+
     println!("\n");
 
     let deploy_args = Arc::new(&args);
@@ -83,7 +83,9 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         cache: deploy_args.cache.clone(),
     };
 
-    process_deploy(deploy_args).await?;
+    if process_deploy(deploy_args).await.is_err() {
+        exit(1)
+    };
 
     let verify_args = Arc::new(&args);
 
@@ -93,7 +95,9 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         cache: verify_args.cache.clone(),
     };
 
-    process_verify(verify_args)?;
+    if process_verify(verify_args).is_err() {
+        exit(1)
+    };
     println!("\n");
 
     Ok(())
