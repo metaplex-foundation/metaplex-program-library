@@ -15,6 +15,11 @@ use std::path::Path;
 use std::str::FromStr;
 use url::Url;
 
+pub struct CreateConfigArgs {
+    pub keypair: Option<String>,
+    pub rpc_url: Option<String>,
+}
+
 pub fn process_create_config() -> Result<()> {
     let mut config: ConfigData = ConfigData::default();
     let theme = ColorfulTheme {
