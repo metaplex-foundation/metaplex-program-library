@@ -396,8 +396,12 @@ async fn upload_config_lines(
         }
 
         if !transactions.is_empty() {
-            let tx = transactions.pop().unwrap();
-            handles.push(tokio::spawn(async move { add_config_lines(tx).await }));
+            // if we are half way through, let spawn more transactions
+            if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
+                for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT / 2)) {
+                    handles.push(tokio::spawn(async move { add_config_lines(tx).await }));
+                }
+            }
         }
     }
 

@@ -400,10 +400,16 @@ impl UploadHandler for BundlrHandler {
             }
 
             if !transactions.is_empty() {
-                let tx = transactions.pop().unwrap();
-                handles.push(tokio::spawn(async move {
-                    BundlrHandler::send_bundlr_tx(tx).await
-                }));
+                // if we are half way through, let spawn more transactions
+                if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
+                    for tx in
+                        transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT / 2))
+                    {
+                        handles.push(tokio::spawn(async move {
+                            BundlrHandler::send_bundlr_tx(tx).await
+                        }));
+                    }
+                }
             }
         }
 
