@@ -1,3 +1,4 @@
+pub use anchor_client::solana_sdk::native_token::LAMPORTS_PER_SOL;
 use async_trait::async_trait;
 use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
 use clap::crate_version;
@@ -122,8 +123,12 @@ impl BundlrHandler {
         );
 
         println!("Funding address:");
-        println!("  -> pubkey:  {payer_pubkey}");
-        println!("  -> lamports: {amount}");
+        println!("  -> pubkey: {}", payer_pubkey);
+        println!(
+            "  -> lamports: {} (𑗏 {})",
+            amount,
+            amount as f64 / LAMPORTS_PER_SOL as f64
+        );
 
         let sig = program
             .rpc()
@@ -205,7 +210,7 @@ impl UploadHandler for BundlrHandler {
         cache: &mut Cache,
         indices: &[usize],
         data_type: DataType,
-    ) -> Result<()> {
+    ) -> Result<Vec<UploadError>> {
         // calculates the size of the files to upload
         let mut total_size = 0;
         let mut extension = HashSet::with_capacity(1);
@@ -353,7 +358,7 @@ impl UploadHandler for BundlrHandler {
             }));
         }
 
-        let mut failed = false;
+        let mut errors = Vec::new();
 
         while !handles.is_empty() {
             match select_all(handles).await {
@@ -378,13 +383,17 @@ impl UploadHandler for BundlrHandler {
                         pb.inc(1);
                     } else {
                         // user will need to retry the upload
-                        debug!("Bundlr upload error: {:?}", res);
-                        failed = true;
+                        errors.push(UploadError::SendDataFailed(format!(
+                            "Bundlr upload error: {:?}",
+                            res.err().unwrap()
+                        )));
                     }
                 }
                 (Err(err), _index, remaining) => {
-                    failed = true;
-                    debug!("Bundlr upload error: {}", err);
+                    errors.push(UploadError::SendDataFailed(format!(
+                        "Bundlr upload error: {:?}",
+                        err
+                    )));
                     // ignoring all errors
                     handles = remaining;
                 }
@@ -398,17 +407,12 @@ impl UploadHandler for BundlrHandler {
             }
         }
 
-        if failed {
-            pb.abandon_with_message(format!(
-                "{}",
-                style("Error: re-run the upload to complete the process ")
-                    .red()
-                    .bold()
-            ));
+        if !errors.is_empty() {
+            pb.abandon_with_message(format!("{}", style("Upload failed ").red().bold()));
         } else {
             pb.finish_with_message(format!("{}", style("Upload successful ").green().bold()));
         }
 
-        Ok(())
+        Ok(errors)
     }
 }

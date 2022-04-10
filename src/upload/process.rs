@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use console::style;
+use std::collections::HashSet;
 
 use crate::cache::{load_cache, Cache};
 use crate::common::*;
@@ -19,7 +20,7 @@ pub trait UploadHandler {
         cache: &mut Cache,
         indices: &[usize],
         data_type: DataType,
-    ) -> Result<()>;
+    ) -> Result<Vec<UploadError>>;
 }
 
 pub struct UploadArgs {
@@ -113,6 +114,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let config_data = get_config_data(&args.config)?;
+    let mut errors = Vec::new();
 
     if need_upload {
         println!(
@@ -147,15 +149,17 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         );
 
         if !indices.0.is_empty() {
-            handler
-                .upload_data(
-                    &sugar_config,
-                    &asset_pairs,
-                    &mut cache,
-                    &indices.0,
-                    DataType::Media,
-                )
-                .await?;
+            errors.extend(
+                handler
+                    .upload_data(
+                        &sugar_config,
+                        &asset_pairs,
+                        &mut cache,
+                        &indices.0,
+                        DataType::Media,
+                    )
+                    .await?,
+            );
 
             // updates the list of metadata indices since the media upload
             // might fail - removes any index that the media upload failed
@@ -183,15 +187,17 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         );
 
         if !indices.1.is_empty() {
-            handler
-                .upload_data(
-                    &sugar_config,
-                    &asset_pairs,
-                    &mut cache,
-                    &indices.1,
-                    DataType::Metadata,
-                )
-                .await?;
+            errors.extend(
+                handler
+                    .upload_data(
+                        &sugar_config,
+                        &asset_pairs,
+                        &mut cache,
+                        &indices.1,
+                        DataType::Metadata,
+                    )
+                    .await?,
+            );
         }
     } else {
         println!("\n....no files need uploading, skipping remaining steps.");
@@ -219,10 +225,31 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         .bold()
     );
 
-    if count == asset_pairs.len() {
-        println!("\n{}", style("[Completed]").green().bold());
-    } else {
-        println!("\n{}", style("[Re-run needed]").red().bold())
+    if count != asset_pairs.len() {
+        let message = if !errors.is_empty() {
+            let mut message = String::new();
+            message.push_str(&format!(
+                "Failed to upload all files, {0} error(s) occurred:",
+                errors.len()
+            ));
+
+            let mut unique = HashSet::new();
+
+            for err in errors {
+                unique.insert(err.to_string());
+            }
+
+            for u in unique {
+                message.push_str("\n\t• ");
+                message.push_str(&u);
+            }
+
+            message
+        } else {
+            "Incorrect number of media/metadata pairs".to_string()
+        };
+
+        return Err(UploadError::Incomplete(message).into());
     }
 
     Ok(())
