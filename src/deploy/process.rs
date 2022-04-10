@@ -58,6 +58,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     };
     let client = Arc::new(setup_client(&sugar_config)?);
     let config_data = get_config_data(&args.config)?;
+
     let candy_machine_address = &cache.program.candy_machine;
 
     let num_items = config_data.number;
@@ -100,6 +101,18 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
         let uuid = uuid_from_pubkey(&candy_pubkey);
         let candy_data = create_candy_machine_data(&config_data, uuid, metadata)?;
+
+        let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
+
+        let program = client.program(pid);
+
+        if let Some(spl_token) = config_data.spl_token {
+            if !program.rpc().get_account_data(&spl_token)?.is_empty() {
+                let error = anyhow!("If spl-token is set, spl-token-account must also be set");
+                error!("{:?}", error);
+                return Err(error);
+            }
+        }
 
         let sig = initialize_candy_machine(&candy_keypair, candy_data, client.clone())?;
         info!("Candy machine initialized with sig: {}", sig);
