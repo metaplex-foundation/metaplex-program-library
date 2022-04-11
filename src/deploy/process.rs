@@ -7,7 +7,7 @@ use anyhow::Result;
 use console::style;
 use futures::future::select_all;
 use rand::rngs::OsRng;
-use std::{str::FromStr, sync::Arc};
+use std::{cmp, str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
@@ -25,6 +25,13 @@ use crate::validate::format::Metadata;
 
 /// Name of the first metadata file.
 const METADATA_FILE: &str = "0.json";
+
+struct TxInfo {
+    client: Arc<Client>,
+    candy_pubkey: Pubkey,
+    payer: Keypair,
+    chunk: Vec<(u32, ConfigLine)>,
+}
 
 pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     // loads the cache file (this needs to have been created by
@@ -334,18 +341,24 @@ async fn upload_config_lines(
     debug!("Num of config line chunks: {:?}", config_lines.len());
     info!("Uploading config lines in chunks...");
 
-    let mut handles = Vec::new();
+    let mut transactions = Vec::new();
 
     for chunk in config_lines {
         let keypair = bs58::encode(sugar_config.keypair.to_bytes()).into_string();
-        let c = client.clone();
+        let payer = Keypair::from_base58_string(&keypair);
 
-        let handle = tokio::spawn(async move {
-            let payer = Keypair::from_base58_string(&keypair);
-            add_config_lines(c, &candy_pubkey, &payer, &chunk).await
+        transactions.push(TxInfo {
+            client: client.clone(),
+            candy_pubkey,
+            payer,
+            chunk,
         });
+    }
 
-        handles.push(handle);
+    let mut handles = Vec::new();
+
+    for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT)) {
+        handles.push(tokio::spawn(async move { add_config_lines(tx).await }));
     }
 
     let mut failed = false;
@@ -381,6 +394,15 @@ async fn upload_config_lines(
                 handles = remaining;
             }
         }
+
+        if !transactions.is_empty() {
+            // if we are half way through, let spawn more transactions
+            if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
+                for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT / 2)) {
+                    handles.push(tokio::spawn(async move { add_config_lines(tx).await }));
+                }
+            }
+        }
     }
 
     if failed {
@@ -398,42 +420,36 @@ async fn upload_config_lines(
 }
 
 /// Send the `add_config_lines` instruction to the candy machine program.
-async fn add_config_lines(
-    client: Arc<Client>,
-    candy_pubkey: &Pubkey,
-    payer: &Keypair,
-    chunk: &[(u32, ConfigLine)],
-) -> Result<Vec<u32>> {
+async fn add_config_lines(tx_info: TxInfo) -> Result<Vec<u32>> {
     let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-    let program = client.program(pid);
+    let program = tx_info.client.program(pid);
 
     // this will be used to update the cache
     let mut indices: Vec<u32> = Vec::new();
     // configLine does not implement clone, so we have to do this
     let mut config_lines: Vec<ConfigLine> = Vec::new();
+    // first index
+    let index = tx_info.chunk[0].0;
 
-    for (index, line) in chunk {
-        indices.push(*index);
+    for (index, line) in tx_info.chunk {
+        indices.push(index);
         config_lines.push(ConfigLine {
             name: line.name.clone(),
             uri: line.uri.clone(),
         });
     }
 
-    // first index
-    let index = chunk[0].0;
-
     let _sig = program
         .request()
         .accounts(nft_accounts::AddConfigLines {
-            candy_machine: *candy_pubkey,
+            candy_machine: tx_info.candy_pubkey,
             authority: program.payer(),
         })
         .args(nft_instruction::AddConfigLines {
             index,
             config_lines,
         })
-        .signer(payer)
+        .signer(&tx_info.payer)
         .send();
 
     Ok(indices)
