@@ -19,8 +19,8 @@ pub struct ConfigData {
     pub gatekeeper: Option<GatekeeperConfig>,
 
     #[serde(rename = "solTreasuryAccount")]
-    #[serde(deserialize_with = "to_pubkey")]
-    pub sol_treasury_account: Pubkey,
+    #[serde(deserialize_with = "to_option_pubkey")]
+    pub sol_treasury_account: Option<Pubkey>,
 
     #[serde(rename = "splTokenAccount")]
     pub spl_token_account: Option<Pubkey>,

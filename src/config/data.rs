@@ -34,9 +34,9 @@ pub struct ConfigData {
     pub gatekeeper: Option<GatekeeperConfig>,
     pub creators: Vec<Creator>,
 
-    #[serde(deserialize_with = "to_pubkey")]
-    #[serde(serialize_with = "to_string")]
-    pub sol_treasury_account: Pubkey,
+    #[serde(deserialize_with = "to_option_pubkey")]
+    #[serde(serialize_with = "to_option_string")]
+    pub sol_treasury_account: Option<Pubkey>,
 
     #[serde(deserialize_with = "to_option_pubkey")]
     #[serde(serialize_with = "to_option_string")]

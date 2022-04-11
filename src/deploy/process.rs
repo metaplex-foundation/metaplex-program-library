@@ -7,6 +7,7 @@ use anyhow::Result;
 use console::style;
 use futures::future::select_all;
 use rand::rngs::OsRng;
+use spl_associated_token_account::get_associated_token_address;
 use std::{str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
@@ -57,7 +58,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         }
     };
     let client = Arc::new(setup_client(&sugar_config)?);
-    let config_data = get_config_data(&args.config)?;
+    let mut config_data = get_config_data(&args.config)?;
 
     let candy_machine_address = &cache.program.candy_machine;
 
@@ -106,8 +107,27 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
         let program = client.program(pid);
 
+        let payer = program.payer();
+
         if let Some(spl_token) = config_data.spl_token {
-            if !program.rpc().get_account_data(&spl_token)?.is_empty() {
+            let spl_token_account_figured = if config_data.spl_token_account.is_some() {
+                true
+            } else {
+                let ata = Some(get_associated_token_address(&payer, &spl_token));
+                let ata_exists = ata.is_some();
+                if ata_exists {
+                    config_data.spl_token_account = ata;
+                };
+                ata_exists
+            };
+
+            if config_data.sol_treasury_account.is_some() {
+                let error = anyhow!("If spl-token-account or spl-token is set then sol-treasury-account cannot be set");
+                error!("{:?}", error);
+                return Err(error);
+            }
+
+            if spl_token_account_figured {
                 let error = anyhow!("If spl-token is set, spl-token-account must also be set");
                 error!("{:?}", error);
                 return Err(error);
