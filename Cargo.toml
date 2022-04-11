@@ -14,6 +14,8 @@ anchor-lang = "0.19.0"
 anchor-spl = "0.19.0"
 anyhow = "1.0.52"
 async-trait = "0.1.52"
+aws-config = "0.9.0"
+aws-sdk-s3 = "0.9.0"
 bs58 = "0.4.0"
 bundlr-sdk = { git = "https://github.com/Bundlr-Network/rust-sdk", features = [
   "solana",

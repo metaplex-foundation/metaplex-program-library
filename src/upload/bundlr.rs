@@ -27,9 +27,6 @@ impl BundlrHandler {
         config_data: &ConfigData,
         sugar_config: &SugarConfig,
     ) -> Result<BundlrHandler> {
-        let pb = spinner_with_style();
-        pb.set_message("Connecting...");
-
         let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
         let client = setup_client(sugar_config)?;
         let program = client.program(pid);
@@ -63,8 +60,6 @@ impl BundlrHandler {
             "sol".to_string(),
             signer,
         );
-
-        pb.finish_with_message("Connected");
 
         Ok(BundlrHandler {
             client: Arc::new(bundlr_client),

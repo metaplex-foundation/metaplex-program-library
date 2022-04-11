@@ -59,6 +59,9 @@ pub struct ConfigData {
     pub retain_authority: bool,
 
     pub is_mutable: bool,
+
+    #[serde(serialize_with = "to_option_string")]
+    pub aws_s3_bucket: Option<String>,
 }
 
 pub fn to_string<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
@@ -117,6 +120,7 @@ fn discount_price_to_lamports(discount_price: Option<f64>) -> Option<u64> {
 #[serde(rename_all = "camelCase")]
 pub struct GatekeeperConfig {
     /// The network for the gateway token required
+    #[serde(deserialize_with = "to_pubkey")]
     #[serde(serialize_with = "to_string")]
     gatekeeper_network: Pubkey,
     /// Whether or not the token should expire after minting.
@@ -263,6 +267,7 @@ pub enum UploadMethod {
     Metaplex,
     Bundlr,
     Arloader,
+    AWS,
 }
 
 impl Default for UploadMethod {
@@ -279,6 +284,7 @@ impl FromStr for UploadMethod {
             "metaplex" => Ok(UploadMethod::Metaplex),
             "bundlr" => Ok(UploadMethod::Bundlr),
             "arloader" => Ok(UploadMethod::Arloader),
+            "aws" => Ok(UploadMethod::AWS),
             _ => Err(ConfigError::InvalidUploadMethod(s.to_string())),
         }
     }
@@ -290,6 +296,7 @@ impl ToString for UploadMethod {
             UploadMethod::Metaplex => "metaplex".to_string(),
             UploadMethod::Bundlr => "bundlr".to_string(),
             UploadMethod::Arloader => "arloader".to_string(),
+            UploadMethod::AWS => "aws".to_string(),
         }
     }
 }
