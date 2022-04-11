@@ -4,13 +4,14 @@ use console::style;
 use futures::future::select_all;
 use std::{cmp, collections::HashSet, ffi::OsStr, fs, path::Path, sync::Arc};
 
-use crate::{common::*, config::*, upload::*, utils::*};
+use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*};
 
 struct ObjectInfo {
     asset_id: String,
     file_path: String,
     media_link: String,
     data_type: DataType,
+    content_type: String,
     aws_client: Arc<Client>,
     bucket: String,
 }
@@ -19,18 +20,12 @@ pub struct AWSHandler {
     client: Arc<Client>,
     bucket: String,
 }
-/// AWS_ACCESS_KEY_ID
-/// AWS_SECRET_ACCESS_KEY
-/// AWS_DEFAULT_REGION
+
 impl AWSHandler {
     /// Initialize a new AWSHandler.
     pub async fn initialize(config_data: &ConfigData) -> Result<AWSHandler> {
         let shared_config = aws_config::load_from_env().await;
-        // TODO validate that the connection was succesful
         let client = Client::new(&shared_config);
-
-        //let req = client.list_tables().limit(10);
-        //let resp = req.send().await?;
 
         if let Some(aws_s3_bucket) = &config_data.aws_s3_bucket {
             Ok(AWSHandler {
@@ -38,11 +33,11 @@ impl AWSHandler {
                 bucket: aws_s3_bucket.to_string(),
             })
         } else {
-            Err(anyhow!("Missing AWS S3 bucket name"))
+            Err(anyhow!("Missing 'awsS3Bucket' value in config file."))
         }
     }
 
-    /// Send a transaction to AWS and wait for a response.
+    /// Send an object to AWS and wait for a response.
     async fn send_to_aws(info: ObjectInfo) -> Result<(String, String)> {
         let data = match info.data_type {
             DataType::Media => fs::read(&info.file_path)?,
@@ -61,8 +56,9 @@ impl AWSHandler {
         info.aws_client
             .put_object()
             .bucket(info.bucket)
-            .key(file_name)
+            .key(&file_name)
             .body(ByteStream::from(data))
+            .content_type(info.content_type)
             .send()
             .await?;
 
@@ -72,10 +68,10 @@ impl AWSHandler {
 
 #[async_trait]
 impl UploadHandler for AWSHandler {
-    /// Upload the data to Bundlr.
+    /// Upload the data to AWS S3.
     async fn upload_data(
         &self,
-        sugar_config: &SugarConfig,
+        _sugar_config: &SugarConfig,
         assets: &HashMap<usize, AssetPair>,
         cache: &mut Cache,
         indices: &[usize],
@@ -106,6 +102,11 @@ impl UploadHandler for AWSHandler {
             return Err(anyhow!("Invalid file extension: {:?}", extension));
         };
 
+        let content_type = match data_type {
+            DataType::Media => format!("image/{}", extension),
+            DataType::Metadata => "application/json".to_string(),
+        };
+
         println!("\nSending data: (Ctrl+C to abort)");
 
         let pb = progress_bar_with_style(paths.len() as u64);
@@ -116,16 +117,15 @@ impl UploadHandler for AWSHandler {
             let path = Path::new(&file_path);
             // id of the asset (to be used to update the cache link)
             let asset_id = String::from(path.file_stem().and_then(OsStr::to_str).unwrap());
-
             let cache_item = cache.items.0.get(&asset_id).unwrap();
-            let aws_client = self.client.clone();
 
             objects.push(ObjectInfo {
                 asset_id: asset_id.to_string(),
                 file_path: String::from(path.to_str().unwrap()),
                 media_link: cache_item.media_link.clone(),
                 data_type: data_type.clone(),
-                aws_client,
+                content_type: content_type.clone(),
+                aws_client: self.client.clone(),
                 bucket: self.bucket.clone(),
             });
         }
@@ -149,7 +149,11 @@ impl UploadHandler for AWSHandler {
 
                     if res.is_ok() {
                         let val = res?;
-                        let link = format!("https://arweave.net/{}", val.clone().1);
+                        let link = format!(
+                            "https://{}.s3.amazonaws.com/{}",
+                            self.bucket,
+                            val.clone().1
+                        );
                         // cache item to update
                         let item = cache.items.0.get_mut(&val.0).unwrap();
 
@@ -197,6 +201,6 @@ impl UploadHandler for AWSHandler {
             pb.finish_with_message(format!("{}", style("Upload successful ").green().bold()));
         }
 
-        Ok(Vec::new())
+        Ok(errors)
     }
 }
