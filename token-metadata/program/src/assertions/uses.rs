@@ -1,10 +1,6 @@
 use solana_program::{account_info::AccountInfo, program_error::ProgramError, pubkey::Pubkey};
 
-use crate::{
-    error::MetadataError,
-    state::{UseAuthorityRecord, UseMethod, Uses, PREFIX, USER},
-    utils::assert_derivation,
-};
+use crate::{error::MetadataError, pda, state::{UseAuthorityRecord, UseMethod, Uses, PREFIX, USER}, utils::assert_derivation};
 
 pub fn assert_valid_use(
     incoming_use: &Option<Uses>,
@@ -33,6 +29,14 @@ pub fn assert_valid_use(
         }
         _ => Ok(()),
     };
+}
+
+pub fn assert_burner(program_as_burner: &Pubkey) -> Result<u8, MetadataError> {
+    let (canon_burn, b) = pda::find_program_as_burner_account();
+    if &canon_burn != program_as_burner {
+        return Err(MetadataError::DerivedKeyInvalid.into());
+    }
+    Ok(b)
 }
 
 pub fn assert_valid_bump(

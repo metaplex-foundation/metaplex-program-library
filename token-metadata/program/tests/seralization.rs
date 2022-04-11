@@ -2,16 +2,13 @@
 mod utils;
 
 use mpl_token_metadata::state::MasterEditionV2 as ProgramME;
-use mpl_token_metadata::{error::MetadataError, instruction, state::Key};
+use mpl_token_metadata::{state::Key};
 use mpl_token_metadata::{state::MAX_MASTER_EDITION_LEN, utils::try_from_slice_checked};
-use num_traits::FromPrimitive;
+
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
 use solana_sdk::{
-    instruction::InstructionError,
-    signature::{Keypair, Signer},
-    transaction::{Transaction, TransactionError},
-    transport::TransportError,
+    signature::{Signer},
 };
 use utils::*;
 mod serialization {
@@ -35,7 +32,7 @@ mod serialization {
             .await
             .unwrap();
 
-        let mint = get_mint(context, &test_master_edition.mint_pubkey).await;
+        let _mint = get_mint(context, &test_master_edition.mint_pubkey).await;
 
         test_master_edition.create(context, Some(10)).await.unwrap();
 
@@ -46,13 +43,13 @@ mod serialization {
     #[tokio::test]
     async fn success() {
         let mut context = program_test().start_with_context().await;
-        let (nft, master) = setup(&mut context).await;
+        let (_nft, master) = setup(&mut context).await;
         let otherbytes = master.clone();
-        let me: ProgramME = try_from_slice_unchecked(&master).unwrap();
-        let me2: ProgramME =
+        let _me: ProgramME = try_from_slice_unchecked(&master).unwrap();
+        let _me2: ProgramME =
             try_from_slice_checked(&otherbytes, Key::MasterEditionV2, MAX_MASTER_EDITION_LEN)
                 .unwrap();
-        let me2: ProgramME =
+        let _me2: ProgramME =
             try_from_slice_checked(&otherbytes, Key::MasterEditionV2, MAX_MASTER_EDITION_LEN)
                 .unwrap();
     }

@@ -22,6 +22,67 @@ mod uses {
     use spl_token::state::Account;
 
     use super::*;
+
+    #[tokio::test]
+    async fn single_use_wrong_user_fail() {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        let fake_user = Keypair::new();
+        airdrop(&mut context, &fake_user.pubkey(), 10000000)
+            .await
+            .unwrap();
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                Some(Uses {
+                    use_method: UseMethod::Single,
+                    total: 1,
+                    remaining: 1,
+                }),
+            )
+            .await
+            .unwrap();
+
+        let ix = mpl_token_metadata::instruction::utilize(
+            mpl_token_metadata::id(),
+            test_metadata.pubkey.clone(),
+            test_metadata.token.pubkey(),
+            test_metadata.mint.pubkey(),
+            None,
+            fake_user.pubkey(),
+            context.payer.pubkey(),
+            None,
+            1,
+        );
+        println!("{:?} {:?}", &context.payer, &test_metadata.token);
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&fake_user.pubkey()),
+            &[&fake_user],
+            context.last_blockhash,
+        );
+
+        let err = context.banks_client.process_transaction(tx).await.unwrap_err();
+        assert_custom_error!(err, MetadataError::InvalidUser);
+        let metadata = test_metadata.get_data(&mut context).await;
+        let metadata_uses = metadata.uses.unwrap();
+        let total_uses = metadata_uses.total;
+        let remaining_uses = metadata_uses.remaining;
+
+        // Confirm we consumed a use and decremented from 1 -> 0
+        assert_eq!(remaining_uses, 1);
+        assert_eq!(total_uses, 1);
+    }
+
     #[tokio::test]
     async fn single_use_success() {
         let mut context = program_test().start_with_context().await;
@@ -52,16 +113,17 @@ mod uses {
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             None,
-            test_metadata.token.pubkey(),
+            context.payer.pubkey(),
             context.payer.pubkey(),
             None,
             1,
         );
+        println!("{:?} {:?}", &context.payer, &test_metadata.token);
 
         let tx = Transaction::new_signed_with_payer(
             &[ix],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &test_metadata.token],
+            &[&context.payer],
             context.last_blockhash,
         );
 
@@ -107,7 +169,7 @@ mod uses {
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             None,
-            test_metadata.token.pubkey(),
+            context.payer.pubkey(),
             context.payer.pubkey(),
             None,
             2,
@@ -116,7 +178,7 @@ mod uses {
         let tx_error = Transaction::new_signed_with_payer(
             &[ix],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &test_metadata.token],
+            &[&context.payer],
             context.last_blockhash,
         );
 
