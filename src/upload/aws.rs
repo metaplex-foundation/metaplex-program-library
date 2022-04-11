@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use aws_sdk_s3::{types::ByteStream, Client};
+use bs58;
 use console::style;
 use futures::future::select_all;
 use std::{cmp, collections::HashSet, ffi::OsStr, fs, path::Path, sync::Arc};
@@ -50,19 +51,18 @@ impl AWSHandler {
             }
         };
 
-        let path = Path::new(&info.file_path);
-        let file_name = String::from(path.file_name().and_then(OsStr::to_str).unwrap());
+        let key = bs58::encode(&info.file_path).into_string();
 
         info.aws_client
             .put_object()
             .bucket(info.bucket)
-            .key(&file_name)
+            .key(&key)
             .body(ByteStream::from(data))
             .content_type(info.content_type)
             .send()
             .await?;
 
-        Ok((info.asset_id, file_name))
+        Ok((info.asset_id, key))
     }
 }
 
@@ -152,7 +152,7 @@ impl UploadHandler for AWSHandler {
                         let link = format!(
                             "https://{}.s3.amazonaws.com/{}",
                             self.bucket,
-                            val.clone().1
+                            val.1
                         );
                         // cache item to update
                         let item = cache.items.0.get_mut(&val.0).unwrap();
