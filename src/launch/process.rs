@@ -30,7 +30,8 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         strict: validate_args.strict.clone(),
     };
 
-    if process_validate(validate_args).is_err() {
+    if let Err(err) = process_validate(validate_args) {
+        println!("Error: {}", err);
         exit(1)
     };
 
@@ -41,7 +42,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         ..Default::default()
     };
 
-    if get_config_data(&args.config).is_err() {
+    if let Err(err) = get_config_data(&args.config) {
         if Confirm::with_theme(&theme)
             .with_prompt(format!(
                 "No configuration file found. Would you like to create a new config file? {}",
@@ -51,6 +52,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         {
             process_create_config()?;
         } else {
+            println!("Error: {}", err);
             exit(1)
         }
     }
@@ -67,7 +69,8 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         cache: upload_args.cache.clone(),
     };
 
-    if process_upload(upload_args).await.is_err() {
+    if let Err(err) = process_upload(upload_args).await {
+        println!("Error: {}", err);
         exit(1)
     };
 
@@ -83,7 +86,8 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         cache: deploy_args.cache.clone(),
     };
 
-    if process_deploy(deploy_args).await.is_err() {
+    if let Err(err) = process_deploy(deploy_args).await {
+        println!("Error: {}", err);
         exit(1)
     };
 
@@ -95,7 +99,8 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         cache: verify_args.cache.clone(),
     };
 
-    if process_verify(verify_args).is_err() {
+    if let Err(err) = process_verify(verify_args) {
+        println!("Error: {}", err);
         exit(1)
     };
     println!("\n");

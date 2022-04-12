@@ -60,7 +60,7 @@ pub fn price_as_lamports(price: f64) -> u64 {
     (price * LAMPORTS_PER_SOL as f64) as u64
 }
 
-fn to_pubkey<'de, D>(deserializer: D) -> Result<Pubkey, D::Error>
+fn _to_pubkey<'de, D>(deserializer: D) -> Result<Pubkey, D::Error>
 where
     D: Deserializer<'de>,
 {
