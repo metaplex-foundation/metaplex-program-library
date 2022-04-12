@@ -1,5 +1,4 @@
 use anchor_client::solana_sdk::{
-    program_pack::{IsInitialized, Pack},
     pubkey::Pubkey,
     signature::{Keypair, Signature, Signer},
     system_instruction, system_program, sysvar,
@@ -8,8 +7,6 @@ use anyhow::Result;
 use console::style;
 use futures::future::select_all;
 use rand::rngs::OsRng;
-use spl_associated_token_account::get_associated_token_address;
-use spl_token::state::{Account, Mint};
 use std::{str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
