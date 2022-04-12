@@ -2311,7 +2311,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-auction"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
