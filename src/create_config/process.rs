@@ -70,8 +70,6 @@ pub fn process_create_config() -> Result<()> {
         }
     };
 
-    let sugar_config = sugar_setup(None, None)?;
-
     println!(
         "{}{} {}",
         CANDY_EMOJI,

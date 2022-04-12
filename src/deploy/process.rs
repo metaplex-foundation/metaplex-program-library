@@ -1,4 +1,5 @@
 use anchor_client::solana_sdk::{
+    program_pack::{Pack, IsInitialized},
     pubkey::Pubkey,
     signature::{Keypair, Signature, Signer},
     system_instruction, system_program, sysvar,
@@ -8,6 +9,7 @@ use console::style;
 use futures::future::select_all;
 use rand::rngs::OsRng;
 use spl_associated_token_account::get_associated_token_address;
+use spl_token::state::{Account, Mint};
 use std::{str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
@@ -109,24 +111,41 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
         let payer = program.payer();
 
-        println!("here");
         if config_data.spl_token.is_some() {
+            let spl_token = config_data.spl_token.unwrap();
             let spl_token_account_figured = if config_data.spl_token_account.is_some() {
-                true
+                config_data.spl_token_account
             } else {
-                let spl_token = config_data.spl_token.unwrap();
-                let ata = Some(get_associated_token_address(&payer, &spl_token));
-                ata.is_some()
+                Some(get_associated_token_address(&payer, &spl_token))
             };
 
+            let token_data = program.rpc().get_account_data(&spl_token)?;
+
+            let token_mint = Mint::unpack_from_slice(&token_data)?;
+            if !token_mint.is_initialized {
+                let error = anyhow!("The specified spl-token is not initialized.");
+                error!("{:?}", error);
+                return Err(error);
+            }
+
+            let ata_data = program
+                .rpc()
+                .get_account_data(&spl_token_account_figured.unwrap())?;
+            let ata_account = Account::unpack_unchecked(&ata_data)?;
+            let is_initialized = IsInitialized::is_initialized(&ata_account);
+            if !is_initialized {
+                let error = anyhow!("The specified spl-token is not initialized.");
+                error!("{:?}", error);
+                return Err(error);
+            }
+
             if config_data.sol_treasury_account.is_some() {
-                println!("here");
                 let error = anyhow!("If spl-token-account or spl-token is set then sol-treasury-account cannot be set");
                 error!("{:?}", error);
                 return Err(error);
             }
 
-            if spl_token_account_figured {
+            if spl_token_account_figured.is_none() {
                 let error = anyhow!("If spl-token is set, spl-token-account must also be set");
                 error!("{:?}", error);
                 return Err(error);
