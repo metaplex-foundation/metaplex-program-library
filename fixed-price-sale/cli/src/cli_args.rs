@@ -1,6 +1,7 @@
 //! Module define CLI structure.
 
 use clap::{Parser, Subcommand};
+use std::env;
 
 /// CLI arguments.
 #[derive(Parser, Debug)]
@@ -13,7 +14,7 @@ pub struct CliArgs {
     pub url: String,
 
     /// Path to transaction payer keypair file.
-    #[clap(short, long, default_value_t = String::from("~/.config/solana/id.json"), value_name = "FILE")]
+    #[clap(short, long, default_value_t = format!("{}/.config/solana/id.json", env::var("HOME").unwrap()), value_name = "FILE")]
     pub payer_keypair: String,
 
     #[clap(subcommand)]
@@ -116,5 +117,79 @@ pub enum Commands {
 
         #[clap(long, value_name = "TIMESTAMP")]
         end_date: Option<u64>,
+
+        #[clap(long, value_name = "FILE")]
+        gating_config: Option<String>,
+    },
+    /// Perform `CloseMarket` instruction of `mpl_fixed_price_sale` program.
+    CloseMarket {
+        #[clap(long, value_name = "PUBKEY")]
+        market: String,
+
+        #[clap(long, value_name = "FILE")]
+        owner: Option<String>,
+    },
+    /// Perform `SuspendMarket` instruction of `mpl_fixed_price_sale` program.
+    SuspendMarket {
+        #[clap(long, value_name = "PUBKEY")]
+        market: String,
+
+        #[clap(long, value_name = "FILE")]
+        owner: Option<String>,
+    },
+    /// Perform `ResumeMarket` instruction of `mpl_fixed_price_sale` program.
+    ResumeMarket {
+        #[clap(long, value_name = "PUBKEY")]
+        market: String,
+
+        #[clap(long, value_name = "FILE")]
+        owner: Option<String>,
+    },
+    /// Perform `Withdraw` instruction of `mpl_fixed_price_sale` program.
+    Withdraw {
+        #[clap(long, value_name = "PUBKEY")]
+        market: String,
+    },
+    /// Perform `ClaimResource` instruction of `mpl_fixed_price_sale` program.
+    ClaimResource {
+        #[clap(long, value_name = "PUBKEY")]
+        market: String,
+
+        #[clap(long, value_name = "PUBKEY")]
+        claim_token: String,
+    },
+    /// Perform `SavePrimaryMetadataCreators` instruction of `mpl_fixed_price_sale` program.
+    SavePrimaryMetadataCreators {
+        #[clap(long, value_name = "FILE")]
+        admin: Option<String>,
+
+        #[clap(long, value_name = "PUBKEY")]
+        metadata: String,
+
+        #[clap(long, value_name = "FILE")]
+        creators: Option<String>,
+    },
+    /// Perform `ChangeMarket` instruction of `mpl_fixed_price_sale` program.
+    ChangeMarket {
+        #[clap(long, value_name = "PUBKEY")]
+        market: String,
+
+        #[clap(long, value_name = "FILE")]
+        owner: Option<String>,
+
+        #[clap(long, value_name = "STRING")]
+        new_name: Option<String>,
+
+        #[clap(long, value_name = "STRING")]
+        new_description: Option<String>,
+
+        #[clap(long, value_name = "BOOL")]
+        mutable: Option<bool>,
+
+        #[clap(long, value_name = "U64")]
+        new_price: Option<u64>,
+
+        #[clap(long, value_name = "U64")]
+        new_pieces_in_one_wallet: Option<u64>,
     },
 }

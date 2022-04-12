@@ -39,6 +39,7 @@ pub fn create_market(
     pieces_in_one_wallet: Option<u64>,
     start_date: u64,
     end_date: Option<u64>,
+    gating_config: Option<mpl_fixed_price_sale::state::GatingConfig>,
 ) -> Result<(Transaction, Box<dyn UiTransactionInfo>), error::Error> {
     let (treasury_owner, treasury_owner_bump) =
         find_treasury_owner_address(&mint, selling_resource);
@@ -73,6 +74,7 @@ pub fn create_market(
         pieces_in_one_wallet,
         start_date,
         end_date,
+        gating_config,
     }
     .data();
 
