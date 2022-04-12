@@ -19,6 +19,7 @@ use sugar_cli::create_config::process_create_config;
 use sugar_cli::deploy::{process_deploy, DeployArgs};
 use sugar_cli::mint::{process_mint, MintArgs};
 use sugar_cli::setup::sugar_setup;
+use sugar_cli::show::{process_show, ShowArgs};
 use sugar_cli::update::{process_update, UpdateArgs};
 use sugar_cli::upload::{process_upload, UploadArgs};
 use sugar_cli::validate::{process_validate, ValidateArgs};
@@ -66,7 +67,7 @@ async fn main() {
             println!(
                 "\n{}{}",
                 COMPLETE_EMOJI,
-                style("Command successful.").green().bold()
+                style("Command successful.").green().bold().dim()
             );
         }
         Err(err) => {
@@ -183,6 +184,17 @@ async fn run() -> Result<()> {
             keypair,
             rpc_url,
             cache,
+        })?,
+        Commands::Show {
+            keypair,
+            rpc_url,
+            cache,
+            candy_machine,
+        } => process_show(ShowArgs {
+            keypair,
+            rpc_url,
+            cache,
+            candy_machine,
         })?,
     }
 

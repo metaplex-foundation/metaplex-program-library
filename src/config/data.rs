@@ -117,6 +117,7 @@ fn discount_price_to_lamports(discount_price: Option<f64>) -> Option<u64> {
 #[serde(rename_all = "camelCase")]
 pub struct GatekeeperConfig {
     /// The network for the gateway token required
+    #[serde(deserialize_with = "to_pubkey")]
     #[serde(serialize_with = "to_string")]
     gatekeeper_network: Pubkey,
     /// Whether or not the token should expire after minting.
