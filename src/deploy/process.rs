@@ -37,7 +37,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     if cache.items.0.is_empty() {
         println!(
             "{}",
-            style("No cache items found - run 'upload-assets' to create the cache file first.")
+            style("No cache items found - run 'upload' to create the cache file first.")
                 .red()
                 .bold()
         );

@@ -1,6 +1,7 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use console::style;
 use std::{
     fs::{File, OpenOptions},
     path::PathBuf,
@@ -13,12 +14,13 @@ use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
 use sugar_cli::cache::Cache;
 use sugar_cli::candy_machine::{get_candy_machine_state, print_candy_machine_state};
 use sugar_cli::cli::{Cli, Commands};
-use sugar_cli::constants::DEFAULT_CACHE;
+use sugar_cli::constants::{COMPLETE_EMOJI, DEFAULT_CACHE, ERROR_EMOJI};
 use sugar_cli::create_config::process_create_config;
 use sugar_cli::deploy::{process_deploy, DeployArgs};
 use sugar_cli::launch::{process_launch, LaunchArgs};
 use sugar_cli::mint::{process_mint, MintArgs};
 use sugar_cli::setup::sugar_setup;
+use sugar_cli::show::{process_show, ShowArgs};
 use sugar_cli::update::{process_update, UpdateArgs};
 use sugar_cli::upload::{process_upload, UploadArgs};
 use sugar_cli::validate::{process_validate, ValidateArgs};
@@ -60,7 +62,29 @@ fn setup_logging(level: Option<EnvFilter>) -> Result<()> {
 }
 
 #[tokio::main(worker_threads = 4)]
-async fn main() -> Result<()> {
+async fn main() {
+    match run().await {
+        Ok(()) => {
+            println!(
+                "\n{}{}",
+                COMPLETE_EMOJI,
+                style("Command successful.").green().bold().dim()
+            );
+        }
+        Err(err) => {
+            println!(
+                "\n{}{} {}",
+                ERROR_EMOJI,
+                style("Error running command (re-run needed):").red(),
+                err,
+            );
+            // finished the program with an error code to the OS
+            std::process::exit(1);
+        }
+    }
+}
+
+async fn run() -> Result<()> {
     let cli = Cli::parse();
 
     let log_level_error: Result<()> = Err(anyhow!(
@@ -179,6 +203,17 @@ async fn main() -> Result<()> {
             keypair,
             rpc_url,
             cache,
+        })?,
+        Commands::Show {
+            keypair,
+            rpc_url,
+            cache,
+            candy_machine,
+        } => process_show(ShowArgs {
+            keypair,
+            rpc_url,
+            cache,
+            candy_machine,
         })?,
     }
 

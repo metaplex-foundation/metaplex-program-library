@@ -12,6 +12,7 @@ pub mod launch;
 pub mod mint;
 pub mod parse;
 pub mod setup;
+pub mod show;
 pub mod update;
 pub mod upload;
 pub mod utils;

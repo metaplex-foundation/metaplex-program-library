@@ -105,7 +105,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         for item in invalid_items {
             println!("{:?}", item);
         }
-        println!("Cache updated. Rerun `upload`.");
+        println!("Cache updated. Rerun `deploy`.");
     } else {
         println!("All items checked out. You're good to go!");
     }
