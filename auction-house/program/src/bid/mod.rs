@@ -43,7 +43,7 @@ pub fn public_bid(
     escrow_payment_bump: u8,
     buyer_price: u64,
     token_size: u64,
-) -> ProgramResult {
+) -> Result<()> {
     bid_logic(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
@@ -99,7 +99,7 @@ pub fn private_bid<'info>(
     escrow_payment_bump: u8,
     buyer_price: u64,
     token_size: u64,
-) -> ProgramResult {
+) -> Result<()> {
     bid_logic(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
@@ -144,7 +144,7 @@ pub fn bid_logic<'info>(
     buyer_price: u64,
     token_size: u64,
     public: bool,
-) -> ProgramResult {
+) -> Result<()> {
     assert_valid_trade_state(
         &wallet.key(),
         &auction_house,

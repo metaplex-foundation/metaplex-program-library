@@ -32,7 +32,7 @@ pub mod auction_house {
     pub fn withdraw_from_fee<'info>(
         ctx: Context<'_, '_, '_, 'info, WithdrawFromFee<'info>>,
         amount: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
         let fee_withdrawal_destination = &ctx.accounts.fee_withdrawal_destination;
         let auction_house = &ctx.accounts.auction_house;
@@ -67,7 +67,7 @@ pub mod auction_house {
     pub fn withdraw_from_treasury<'info>(
         ctx: Context<'_, '_, '_, 'info, WithdrawFromTreasury<'info>>,
         amount: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let treasury_mint = &ctx.accounts.treasury_mint;
         let treasury_withdrawal_destination = &ctx.accounts.treasury_withdrawal_destination;
         let auction_house_treasury = &ctx.accounts.auction_house_treasury;
@@ -133,7 +133,7 @@ pub mod auction_house {
         seller_fee_basis_points: Option<u16>,
         requires_sign_off: Option<bool>,
         can_change_sale_price: Option<bool>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let treasury_mint = &ctx.accounts.treasury_mint;
         let payer = &ctx.accounts.payer;
         let new_authority = &ctx.accounts.new_authority;
@@ -200,13 +200,12 @@ pub mod auction_house {
     /// Create a new Auction House instance.
     pub fn create_auction_house<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateAuctionHouse<'info>>,
-        bump: u8,
         fee_payer_bump: u8,
         treasury_bump: u8,
         seller_fee_basis_points: u16,
         requires_sign_off: bool,
         can_change_sale_price: bool,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let treasury_mint = &ctx.accounts.treasury_mint;
         let payer = &ctx.accounts.payer;
         let authority = &ctx.accounts.authority;
@@ -222,7 +221,7 @@ pub mod auction_house {
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
 
-        auction_house.bump = bump;
+        auction_house.bump = *ctx.bumps.get("auction_house").unwrap();
         auction_house.fee_payer_bump = fee_payer_bump;
         auction_house.treasury_bump = treasury_bump;
         if seller_fee_basis_points > 10000 {
@@ -298,7 +297,7 @@ pub mod auction_house {
         ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let wallet = &ctx.accounts.wallet;
         let receipt_account = &ctx.accounts.receipt_account;
         let escrow_payment_account = &ctx.accounts.escrow_payment_account;
@@ -419,7 +418,7 @@ pub mod auction_house {
         ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let wallet = &ctx.accounts.wallet;
         let payment_account = &ctx.accounts.payment_account;
         let transfer_authority = &ctx.accounts.transfer_authority;
@@ -513,7 +512,7 @@ pub mod auction_house {
         ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let wallet = &ctx.accounts.wallet;
         let token_account = &ctx.accounts.token_account;
         let token_mint = &ctx.accounts.token_mint;
@@ -591,7 +590,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let buyer = &ctx.accounts.buyer;
         let seller = &ctx.accounts.seller;
         let token_account = &ctx.accounts.token_account;
@@ -900,7 +899,7 @@ pub mod auction_house {
         _program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let wallet = &ctx.accounts.wallet;
         let token_account = &ctx.accounts.token_account;
         let metadata = &ctx.accounts.metadata;
@@ -1018,7 +1017,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         private_bid(
             ctx,
             trade_state_bump,
@@ -1035,7 +1034,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         public_bid(
             ctx,
             trade_state_bump,
@@ -1049,14 +1048,14 @@ pub mod auction_house {
     pub fn print_listing_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
         receipt_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         receipt::print_listing_receipt(ctx, receipt_bump)
     }
 
     /// Cancel an active listing receipt by setting the `canceled_at` field to the current time.
     pub fn cancel_listing_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, CancelListingReceipt<'info>>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         receipt::cancel_listing_receipt(ctx)
     }
 
@@ -1064,14 +1063,14 @@ pub mod auction_house {
     pub fn print_bid_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintBidReceipt<'info>>,
         receipt_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         receipt::print_bid_receipt(ctx, receipt_bump)
     }
 
     /// Cancel an active bid receipt by setting the `canceled_at` field to the current time.
     pub fn cancel_bid_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, CancelBidReceipt<'info>>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         receipt::cancel_bid_receipt(ctx)
     }
 
@@ -1079,7 +1078,7 @@ pub mod auction_house {
     pub fn print_purchase_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
         purchase_receipt_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         receipt::print_purchase_receipt(ctx, purchase_receipt_bump)
     }
 }
@@ -1259,11 +1258,12 @@ pub struct Cancel<'info> {
 
 /// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).
 #[derive(Accounts)]
-#[instruction(bump: u8, fee_payer_bump: u8, treasury_bump: u8)]
+#[instruction(fee_payer_bump: u8, treasury_bump: u8)]
 pub struct CreateAuctionHouse<'info> {
     /// Treasury mint account, either native SOL mint or a SPL token mint.
     pub treasury_mint: Account<'info, Mint>,
     /// Key paying SOL fees for setting up the Auction House.
+    #[account(mut)]
     pub payer: Signer<'info>,
     // Authority key for the Auction House.
     pub authority: UncheckedAccount<'info>,
@@ -1276,7 +1276,7 @@ pub struct CreateAuctionHouse<'info> {
     /// Owner of the `treasury_withdrawal_destination` account or the same address if the `treasury_mint` is native.
     pub treasury_withdrawal_destination_owner: UncheckedAccount<'info>,
     /// Auction House instance PDA account.
-    #[account(init, seeds=[PREFIX.as_bytes(), authority.key().as_ref(), treasury_mint.key().as_ref()], bump=bump, space=AUCTION_HOUSE_SIZE, payer=payer)]
+    #[account(init, seeds=[PREFIX.as_bytes(), authority.key().as_ref(), treasury_mint.key().as_ref()], bump, space=AUCTION_HOUSE_SIZE, payer=payer)]
     pub auction_house: Account<'info, AuctionHouse>,
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=fee_payer_bump)]
@@ -1390,7 +1390,7 @@ pub struct AuctionHouse {
 
 pub const TRADE_STATE_SIZE: usize = 1;
 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     #[msg("PublicKeyMismatch")]
     PublicKeyMismatch,

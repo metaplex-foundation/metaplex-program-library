@@ -121,7 +121,7 @@ pub struct PrintListingReceipt<'info> {
 pub fn print_listing_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
     receipt_bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     let receipt_account = &ctx.accounts.receipt;
     let instruction_account = &ctx.accounts.instruction;
     let bookkeeper_account = &ctx.accounts.bookkeeper;
@@ -208,7 +208,7 @@ pub struct CancelListingReceipt<'info> {
 /// Add a cancelation time to a listing receipt.
 pub fn cancel_listing_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelListingReceipt<'info>>,
-) -> ProgramResult {
+) -> Result<()> {
     let receipt_account = &ctx.accounts.receipt;
     let instruction_account = &ctx.accounts.instruction;
     let clock = Clock::get()?;
@@ -270,7 +270,7 @@ pub struct PrintBidReceipt<'info> {
 pub fn print_bid_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintBidReceipt<'info>>,
     receipt_bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     let receipt_account = &ctx.accounts.receipt;
     let instruction_account = &ctx.accounts.instruction;
     let bookkeeper_account = &ctx.accounts.bookkeeper;
@@ -363,7 +363,7 @@ pub struct CancelBidReceipt<'info> {
 /// Add a canceled_at timestamp to the Bid Receipt account.
 pub fn cancel_bid_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelBidReceipt<'info>>,
-) -> ProgramResult {
+) -> Result<()> {
     let receipt_account = &ctx.accounts.receipt;
     let instruction_account = &ctx.accounts.instruction;
     let clock = Clock::get()?;
@@ -429,7 +429,7 @@ pub struct PrintPurchaseReceipt<'info> {
 pub fn print_purchase_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
     purchase_receipt_bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     let purchase_receipt_account = &ctx.accounts.purchase_receipt;
     let listing_receipt_account = &ctx.accounts.listing_receipt;
     let bid_receipt_account = &ctx.accounts.bid_receipt;
