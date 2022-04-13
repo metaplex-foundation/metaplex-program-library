@@ -9,7 +9,7 @@ use {
     },
     anchor_spl::{
         associated_token::AssociatedToken,
-        token::{Token, TokenAccount},
+        token::{Mint, Token, TokenAccount},
     },
 };
 
@@ -31,7 +31,7 @@ pub mod token_entangler {
         token_b_escrow_bump: u8,
         price: u64,
         pays_every_time: bool,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let treasury_mint = &ctx.accounts.treasury_mint;
         let payer = &ctx.accounts.payer;
         let transfer_authority = &ctx.accounts.transfer_authority;
@@ -79,8 +79,14 @@ pub mod token_entangler {
             None
         };
 
-        require!(get_mint_supply(mint_a)? == 1, ErrorCode::MustHaveSupplyOne);
-        require!(get_mint_supply(mint_b)? == 1, ErrorCode::MustHaveSupplyOne);
+        require!(
+            get_mint_supply(&mint_a.to_account_info())? == 1,
+            ErrorCode::MustHaveSupplyOne
+        );
+        require!(
+            get_mint_supply(&mint_b.to_account_info())? == 1,
+            ErrorCode::MustHaveSupplyOne
+        );
 
         assert_metadata_valid(metadata_a, edition_option_a, &mint_a.key())?;
         assert_metadata_valid(metadata_b, edition_option_b, &mint_b.key())?;
@@ -111,7 +117,7 @@ pub mod token_entangler {
             system_program,
             &payer,
             token_program,
-            mint_a,
+            &mint_a.to_account_info(),
             &entangled_pair.to_account_info(),
             rent,
             &token_a_escrow_seeds,
@@ -123,7 +129,7 @@ pub mod token_entangler {
             system_program,
             &payer,
             token_program,
-            mint_b,
+            &mint_b.to_account_info(),
             &entangled_pair.to_account_info(),
             rent,
             &token_b_escrow_seeds,
@@ -153,7 +159,7 @@ pub mod token_entangler {
         ctx: Context<'_, '_, '_, 'info, UpdateEntangledPair<'info>>,
         price: u64,
         pays_every_time: bool,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let new_authority = &ctx.accounts.new_authority;
         let entangled_pair = &mut ctx.accounts.entangled_pair;
 
@@ -163,7 +169,7 @@ pub mod token_entangler {
         Ok(())
     }
 
-    pub fn swap<'info>(ctx: Context<'_, '_, '_, 'info, Swap<'info>>) -> ProgramResult {
+    pub fn swap<'info>(ctx: Context<'_, '_, '_, 'info, Swap<'info>>) -> Result<()> {
         let treasury_mint = &ctx.accounts.treasury_mint;
         let payer = &ctx.accounts.payer;
         let payment_account = &ctx.accounts.payment_account;
@@ -291,19 +297,17 @@ pub mod token_entangler {
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8, reverse_bump: u8, token_a_escrow_bump: u8, token_b_escrow_bump: u8)]
+#[instruction(reverse_bump: u8, token_a_escrow_bump: u8, token_b_escrow_bump: u8)]
 pub struct CreateEntangledPair<'info> {
-    /// Set to unchecked to avoid stack size limits
-    treasury_mint: UncheckedAccount<'info>,
+    treasury_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
     payer: Signer<'info>,
     transfer_authority: Signer<'info>,
     authority: UncheckedAccount<'info>,
-    /// Set to unchecked to avoid stack size limits
-    mint_a: UncheckedAccount<'info>,
+    mint_a: Box<Account<'info, Mint>>,
     metadata_a: UncheckedAccount<'info>,
     edition_a: UncheckedAccount<'info>,
-    /// Set to unchecked to avoid stack size limits
-    mint_b: UncheckedAccount<'info>,
+    mint_b: Box<Account<'info, Mint>>,
     metadata_b: UncheckedAccount<'info>,
     edition_b: UncheckedAccount<'info>,
     #[account(mut)]
@@ -312,7 +316,7 @@ pub struct CreateEntangledPair<'info> {
     token_a_escrow: UncheckedAccount<'info>,
     #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), B_NAME.as_bytes()], bump=token_b_escrow_bump)]
     token_b_escrow: UncheckedAccount<'info>,
-    #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump=bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
+    #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
     entangled_pair: Box<Account<'info, EntangledPair>>,
     #[account(mut, seeds=[PREFIX.as_bytes(), mint_b.key().as_ref(), mint_a.key().as_ref()], bump=reverse_bump)]
     reverse_entangled_pair: UncheckedAccount<'info>,
@@ -331,8 +335,7 @@ pub struct UpdateEntangledPair<'info> {
 
 #[derive(Accounts)]
 pub struct Swap<'info> {
-    /// Set to unchecked to avoid stack size limits
-    treasury_mint: UncheckedAccount<'info>,
+    treasury_mint: Box<Account<'info, Mint>>,
     payer: Signer<'info>,
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
@@ -340,8 +343,7 @@ pub struct Swap<'info> {
     #[account(mut)]
     token: Account<'info, TokenAccount>,
     replacement_token_metadata: UncheckedAccount<'info>,
-    /// Set to unchecked to avoid stack size limits
-    replacement_token_mint: UncheckedAccount<'info>,
+    replacement_token_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     replacement_token: UncheckedAccount<'info>,
     transfer_authority: Signer<'info>,
@@ -387,7 +389,7 @@ pub struct EntangledPair {
     pub pays_every_time: bool,
 }
 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     #[msg("PublicKeyMismatch")]
     PublicKeyMismatch,
