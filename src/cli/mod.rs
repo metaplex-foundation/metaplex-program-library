@@ -18,7 +18,19 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Interactive process to create the config file
-    CreateConfig,
+    CreateConfig {
+        /// Path to the config file
+        #[clap(short, long)]
+        config: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the keypair file [default: solana config or "~/.config/solana/id.json"]
+        #[clap(short, long)]
+        keypair: Option<String>,
+    },
     /// Create a candy machine deployment from assets
     Launch {
         /// Path to the directory with the assets to upload

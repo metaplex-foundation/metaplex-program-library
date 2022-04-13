@@ -17,10 +17,11 @@ use url::Url;
 pub struct CreateConfigArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
+    pub config: Option<String>,
 }
 
-pub fn process_create_config() -> Result<()> {
-    let mut config: ConfigData = ConfigData::default();
+pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
+    let mut config_data: ConfigData = ConfigData::default();
     let theme = ColorfulTheme {
         prompt_style: Style::new(),
         ..Default::default()
@@ -89,7 +90,7 @@ pub fn process_create_config() -> Result<()> {
         style(" to learn about the options!").magenta()
     );
 
-    config.price = Input::with_theme(&theme)
+    config_data.price = Input::with_theme(&theme)
         .with_prompt("What is the price of each NFT?")
         .validate_with(float_validator)
         .interact()
@@ -99,7 +100,7 @@ pub fn process_create_config() -> Result<()> {
 
     let num_files = count_files(DEFAULT_ASSETS);
     let num_files_ok = num_files.as_ref().map(|num| num % 2 == 0).unwrap_or(false);
-    config.number = if num_files_ok && Confirm::with_theme(&theme)
+    config_data.number = if num_files_ok && Confirm::with_theme(&theme)
         .with_prompt(
             format!(
                 "I found {} file pairs in the default assets directory. Is this how many NFTs you will have in your candy machine?", num_files.as_ref().unwrap() / 2
@@ -115,7 +116,7 @@ pub fn process_create_config() -> Result<()> {
             .unwrap().parse::<u64>().expect("Failed to parse number into u64 that should have already been validated.")
     };
 
-    config.go_live_date = Input::with_theme(&theme)
+    config_data.go_live_date = Input::with_theme(&theme)
         .with_prompt("What is your go live date? Enter it in RFC 3339 format, i.e., \"2022-02-25T13:00:00Z\", which is 1:00 PM UTC on Feburary 25, 2022.")
         .validate_with(date_validator)
         .interact()
@@ -171,7 +172,7 @@ pub fn process_create_config() -> Result<()> {
 
         total_share += share;
         let creator = Creator { address, share };
-        config.creators.push(creator);
+        config_data.creators.push(creator);
     });
 
     const GATEKEEPER_INDEX: usize = 0;
@@ -194,7 +195,7 @@ pub fn process_create_config() -> Result<()> {
         .items(&extra_functions_options)
         .interact()?;
 
-    config.gatekeeper = if choices.contains(&GATEKEEPER_INDEX) {
+    config_data.gatekeeper = if choices.contains(&GATEKEEPER_INDEX) {
         let gatekeeper_options = vec!["Civic Pass", "Verify by Encore"];
         let civic_network =
             Pubkey::from_str("ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6").unwrap();
@@ -219,8 +220,8 @@ pub fn process_create_config() -> Result<()> {
     };
 
     if choices.contains(&SPL_INDEX) {
-        config.sol_treasury_account = None;
-        config.spl_token = Some(
+        config_data.sol_treasury_account = None;
+        config_data.spl_token = Some(
             Pubkey::from_str(
                 &Input::with_theme(&theme)
                     .with_prompt("What is your SPL token mint?")
@@ -230,7 +231,7 @@ pub fn process_create_config() -> Result<()> {
             )
             .expect("Failed to parse string into pubkey that should have already been validated."),
         );
-        config.spl_token_account = Some(
+        config_data.spl_token_account = Some(
             Pubkey::from_str(
                 &Input::with_theme(&theme)
                     .with_prompt("What is your SPL token account address (the account that will hold the SPL token mints)?")
@@ -241,9 +242,9 @@ pub fn process_create_config() -> Result<()> {
                 .expect("Failed to parse string into pubkey that should have already been validated."),
         )
     } else {
-        config.spl_token = None;
-        config.spl_token_account = None;
-        config.sol_treasury_account = Some(
+        config_data.spl_token = None;
+        config_data.spl_token_account = None;
+        config_data.sol_treasury_account = Some(
             Pubkey::from_str(
                 &Input::with_theme(&theme)
                     .with_prompt("What is your SOL treasury address?")
@@ -255,7 +256,7 @@ pub fn process_create_config() -> Result<()> {
         );
     };
 
-    config.whitelist_mint_settings = if choices.contains(&WL_INDEX) {
+    config_data.whitelist_mint_settings = if choices.contains(&WL_INDEX) {
         let mint = Pubkey::from_str(
             &Input::with_theme(&theme)
                 .with_prompt("What is your WL token mint address?")
@@ -302,7 +303,7 @@ pub fn process_create_config() -> Result<()> {
         None
     };
 
-    config.end_settings = if choices.contains(&END_SETTINGS_INDEX) {
+    config_data.end_settings = if choices.contains(&END_SETTINGS_INDEX) {
         let end_settings_options = vec!["Date", "Amount"];
         let end_setting_type = match Select::with_theme(&theme)
             .with_prompt("What end settings type do you want to use?")
@@ -321,7 +322,7 @@ pub fn process_create_config() -> Result<()> {
                 .with_prompt("What is your end settings ammount?")
                 .validate_with(number_validator)
                 .validate_with(|num: &String| {
-                    if num.parse::<u64>().unwrap() < config.number {
+                    if num.parse::<u64>().unwrap() < config_data.number {
                         Ok(())
                     } else {
                         Err("Your end settings ammount can't be more than the number of items in your candy machine!")
@@ -346,7 +347,7 @@ pub fn process_create_config() -> Result<()> {
         None
     };
 
-    config.hidden_settings = if choices.contains(&HIDDEN_SETTINGS_INDEX) {
+    config_data.hidden_settings = if choices.contains(&HIDDEN_SETTINGS_INDEX) {
         let name = Input::with_theme(&theme)
             .with_prompt("What is your hidden settings name?")
             .validate_with(|name: &String| {
@@ -387,7 +388,7 @@ pub fn process_create_config() -> Result<()> {
     };
 
     let upload_options = vec!["Bundlr", "Arloader", "Metaplex"];
-    config.upload_method = match Select::with_theme(&theme)
+    config_data.upload_method = match Select::with_theme(&theme)
         .with_prompt("What upload method do you want to use?")
         .items(&upload_options)
         .default(0)
@@ -399,8 +400,8 @@ pub fn process_create_config() -> Result<()> {
         2 => UploadMethod::Metaplex,
         _ => UploadMethod::Bundlr,
     };
-    config.retain_authority = Confirm::with_theme(&theme).with_prompt("Do you want to retain update authority on your NFTs? We HIGHLY reccomend you choose yes!").interact()?;
-    config.is_mutable = Confirm::with_theme(&theme)
+    config_data.retain_authority = Confirm::with_theme(&theme).with_prompt("Do you want to retain update authority on your NFTs? We HIGHLY reccomend you choose yes!").interact()?;
+    config_data.is_mutable = Confirm::with_theme(&theme)
         .with_prompt("Do you want your NFTs to remain mutable? We HIGHLY recommend you choose yes!")
         .interact()?;
 
@@ -417,16 +418,26 @@ pub fn process_create_config() -> Result<()> {
     }
 
     if save_file {
-        let file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .truncate(true)
-            .open("./config.json");
+        let file = match args.config {
+            Some(config) => {
+                let path = format!("{}", &config);
+                OpenOptions::new()
+                    .write(true)
+                    .create(true)
+                    .truncate(true)
+                    .open(Path::new(&path))
+            }
+            None => OpenOptions::new()
+                .write(true)
+                .create(true)
+                .truncate(true)
+                .open("./config.json"),
+        };
 
         match file {
             Ok(f) => {
                 println!("{}", style("Saving config info file...").dim());
-                serde_json::to_writer_pretty(f, &config)
+                serde_json::to_writer_pretty(f, &config_data)
                     .expect("Unable to convert config to JSON!");
                 println!(
                     "{}{} {}",
@@ -448,7 +459,7 @@ pub fn process_create_config() -> Result<()> {
                 println!(
                     "{}",
                     style(
-                        serde_json::to_string_pretty(&config)
+                        serde_json::to_string_pretty(&config_data)
                             .expect("Unable to convert config to JSON!")
                     )
                     .red()
@@ -460,7 +471,8 @@ pub fn process_create_config() -> Result<()> {
         println!(
             "{}",
             style(
-                serde_json::to_string_pretty(&config).expect("Unable to convert config to JSON!")
+                serde_json::to_string_pretty(&config_data)
+                    .expect("Unable to convert config to JSON!")
             )
             .green()
         );

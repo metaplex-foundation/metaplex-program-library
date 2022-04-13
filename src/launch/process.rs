@@ -6,7 +6,7 @@ use std::process::exit;
 
 use crate::common::NEW_CONFIG_EMOJI;
 use crate::config::parser::get_config_data;
-use crate::create_config::process_create_config;
+use crate::create_config::{process_create_config, CreateConfigArgs};
 use crate::deploy::{process_deploy, DeployArgs};
 use crate::upload::{process_upload, UploadArgs};
 use crate::validate::{process_validate, ValidateArgs};
@@ -50,7 +50,15 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
             ))
             .interact()?
         {
-            process_create_config()?;
+            let create_config_args = Arc::new(&args);
+
+            let create_config_args = CreateConfigArgs {
+                config: Some(create_config_args.config.clone()),
+                keypair: create_config_args.keypair.clone(),
+                rpc_url: create_config_args.rpc_url.clone(),
+            };
+
+            process_create_config(create_config_args)?;
         } else {
             println!("Error: {:?}", err);
             exit(1)

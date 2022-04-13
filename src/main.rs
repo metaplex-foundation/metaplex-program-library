@@ -8,7 +8,7 @@ use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
 
 use sugar_cli::cli::{Cli, Commands};
 use sugar_cli::constants::{COMPLETE_EMOJI, ERROR_EMOJI};
-use sugar_cli::create_config::process_create_config;
+use sugar_cli::create_config::{process_create_config, CreateConfigArgs};
 use sugar_cli::deploy::{process_deploy, DeployArgs};
 use sugar_cli::launch::{process_launch, LaunchArgs};
 use sugar_cli::mint::{process_mint, MintArgs};
@@ -97,7 +97,15 @@ async fn run() -> Result<()> {
     tracing::info!("Lend me some sugar, I am your neighbor.");
 
     match cli.command {
-        Commands::CreateConfig => process_create_config()?,
+        Commands::CreateConfig {
+            config,
+            keypair,
+            rpc_url,
+        } => process_create_config(CreateConfigArgs {
+            config,
+            keypair,
+            rpc_url,
+        })?,
         Commands::Launch {
             assets_dir,
             config,
