@@ -7,7 +7,7 @@ use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
 
 use sugar_cli::cli::{Cli, Commands};
-use sugar_cli::constants::{COMPLETE_EMOJI, DEFAULT_CACHE, ERROR_EMOJI};
+use sugar_cli::constants::{COMPLETE_EMOJI, ERROR_EMOJI};
 use sugar_cli::create_config::{process_create_config, CreateConfigArgs};
 use sugar_cli::deploy::{process_deploy, DeployArgs};
 use sugar_cli::launch::{process_launch, LaunchArgs};
