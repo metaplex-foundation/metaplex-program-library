@@ -37,7 +37,6 @@ pub async fn create_auction_house(
     t_mint_key: &Pubkey,
     tdw_ata: &Pubkey,
     auction_house_key: &Pubkey,
-    auction_house_key_bump: u8,
     auction_fee_account_key: &Pubkey,
     auction_fee_account_key_bump: u8,
     auction_house_treasury_key: &Pubkey,
@@ -45,7 +44,7 @@ pub async fn create_auction_house(
     seller_fee_basis_points: u16,
     requires_sign_off: bool,
     can_change_sale_price: bool,
-) -> Result<Pubkey, TransportError> {
+) -> std::result::Result<Pubkey, TransportError> {
     let accounts = mpl_auction_house::accounts::CreateAuctionHouse {
         treasury_mint: *t_mint_key,
         payer: payer_wallet.pubkey(),
@@ -64,7 +63,6 @@ pub async fn create_auction_house(
     .to_account_metas(None);
 
     let data = mpl_auction_house::instruction::CreateAuctionHouse {
-        bump: auction_house_key_bump,
         fee_payer_bump: auction_fee_account_key_bump,
         treasury_bump: auction_house_treasury_key_bump,
         seller_fee_basis_points,
@@ -632,7 +630,7 @@ pub fn sell(
 
 pub async fn existing_auction_house_test_context(
     context: &mut ProgramTestContext,
-) -> Result<(AuctionHouse, Pubkey, Keypair), TransportError> {
+) -> std::result::Result<(AuctionHouse, Pubkey, Keypair), TransportError> {
     let twd_key = context.payer.pubkey().clone();
     let fwd_key = context.payer.pubkey().clone();
     let t_mint_key = spl_token::native_mint::id();
@@ -641,7 +639,7 @@ pub async fn existing_auction_house_test_context(
     let authority = Keypair::new();
     airdrop(context, &authority.pubkey(), 10_000_000_000).await?;
     // Derive Auction House Key
-    let (auction_house_address, bump) =
+    let (auction_house_address, _bump) =
         find_auction_house_address(&authority.pubkey(), &t_mint_key);
     let (auction_fee_account_key, fee_payer_bump) =
         find_auction_house_fee_account_address(&auction_house_address);
@@ -656,7 +654,6 @@ pub async fn existing_auction_house_test_context(
         &t_mint_key,
         &tdw_ata,
         &auction_house_address,
-        bump,
         &auction_fee_account_key,
         fee_payer_bump,
         &auction_house_treasury_key,
