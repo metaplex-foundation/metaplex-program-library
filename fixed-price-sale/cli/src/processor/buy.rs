@@ -137,6 +137,7 @@ pub fn buy(
         new_edition,
         master_edition,
         new_mint: new_mint.pubkey(),
+        new_token_account: new_mint_token_account.pubkey(),
         edition_marker,
         vault: selling_resource_state.vault,
         owner,
