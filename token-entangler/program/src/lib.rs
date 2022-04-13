@@ -303,21 +303,29 @@ pub struct CreateEntangledPair<'info> {
     #[account(mut)]
     payer: Signer<'info>,
     transfer_authority: Signer<'info>,
+    /// CHECK: Verified through CPI
     authority: UncheckedAccount<'info>,
     mint_a: Box<Account<'info, Mint>>,
+    /// CHECK: Verified through CPI
     metadata_a: UncheckedAccount<'info>,
+    /// CHECK: Verified through CPI
     edition_a: UncheckedAccount<'info>,
     mint_b: Box<Account<'info, Mint>>,
+    /// CHECK: Verified through CPI
     metadata_b: UncheckedAccount<'info>,
+    /// CHECK: Verified through CPI
     edition_b: UncheckedAccount<'info>,
     #[account(mut)]
     token_b: Box<Account<'info, TokenAccount>>,
+    /// CHECK: Verified through CPI
     #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), A_NAME.as_bytes()], bump=token_a_escrow_bump)]
     token_a_escrow: UncheckedAccount<'info>,
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), B_NAME.as_bytes()], bump=token_b_escrow_bump)]
     token_b_escrow: UncheckedAccount<'info>,
     #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
     entangled_pair: Box<Account<'info, EntangledPair>>,
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds=[PREFIX.as_bytes(), mint_b.key().as_ref(), mint_a.key().as_ref()], bump=reverse_bump)]
     reverse_entangled_pair: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
@@ -328,6 +336,7 @@ pub struct CreateEntangledPair<'info> {
 #[derive(Accounts)]
 pub struct UpdateEntangledPair<'info> {
     authority: Signer<'info>,
+    /// CHECK: Verified through CPI
     new_authority: UncheckedAccount<'info>,
     #[account(mut, seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref()], bump=entangled_pair.bump, has_one=authority)]
     entangled_pair: Account<'info, EntangledPair>,
@@ -337,18 +346,24 @@ pub struct UpdateEntangledPair<'info> {
 pub struct Swap<'info> {
     treasury_mint: Box<Account<'info, Mint>>,
     payer: Signer<'info>,
+    /// CHECK: Verified through CPI
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
+    /// CHECK: Verified through CPI
     payment_transfer_authority: UncheckedAccount<'info>,
     #[account(mut)]
     token: Account<'info, TokenAccount>,
+    /// CHECK: Verified through CPI
     replacement_token_metadata: UncheckedAccount<'info>,
     replacement_token_mint: Box<Account<'info, Mint>>,
+    /// CHECK: Verified through CPI
     #[account(mut)]
     replacement_token: UncheckedAccount<'info>,
     transfer_authority: Signer<'info>,
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut,seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref(), ESCROW.as_bytes(), A_NAME.as_bytes()], bump=entangled_pair.token_a_escrow_bump)]
     token_a_escrow: UncheckedAccount<'info>,
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut,seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref(), ESCROW.as_bytes(), B_NAME.as_bytes()], bump=entangled_pair.token_b_escrow_bump)]
     token_b_escrow: UncheckedAccount<'info>,
     #[account(mut, seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref()], bump=entangled_pair.bump, has_one=treasury_mint)]
