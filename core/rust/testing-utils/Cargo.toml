@@ -14,7 +14,7 @@ crate-type = ["lib"]
 path = "src/lib.rs"
 
 [dependencies]
-anchor-client = "~0.24.0"
+anchor-client = "~0.24.1"
 shellexpand = "~2.1.0"
 serde_json = "~1.0"
 solana-program-test = "~1.9.15"
