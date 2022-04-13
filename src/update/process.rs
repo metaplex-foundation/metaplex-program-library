@@ -10,6 +10,7 @@ use mpl_candy_machine::{accounts as nft_accounts, CandyMachineData};
 use crate::candy_machine::*;
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
+use crate::constants::CANDY_MACHINE_V2;
 use crate::{cache::load_cache, config::data::ConfigData};
 
 pub struct UpdateArgs {
@@ -53,9 +54,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
         }
     }
 
-    let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
-        .parse()
-        .expect("Failed to parse PID");
+    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
 
     let program = client.program(pid);
 

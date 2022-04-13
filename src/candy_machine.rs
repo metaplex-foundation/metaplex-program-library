@@ -5,6 +5,7 @@ use anyhow::Result;
 use mpl_candy_machine::{CandyMachine, CandyMachineData, WhitelistMintMode, WhitelistMintSettings};
 
 use crate::config::data::SugarConfig;
+use crate::constants::CANDY_MACHINE_V2;
 use crate::setup::setup_client;
 
 #[derive(Debug)]
@@ -18,9 +19,7 @@ pub fn get_candy_machine_state(
     candy_machine_id: &Pubkey,
 ) -> Result<CandyMachine> {
     let client = setup_client(sugar_config)?;
-    let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
-        .parse()
-        .expect("Failed to parse PID");
+    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
 
     let program = client.program(pid);
     let data = program.rpc().get_account_data(candy_machine_id)?;
@@ -33,9 +32,7 @@ pub fn get_candy_machine_data(
     candy_machine_id: &Pubkey,
 ) -> Result<CandyMachineData> {
     let client = setup_client(sugar_config)?;
-    let pid = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ"
-        .parse()
-        .expect("Failed to parse PID");
+    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
 
     let program = client.program(pid);
     let data = program.rpc().get_account_data(candy_machine_id)?;
