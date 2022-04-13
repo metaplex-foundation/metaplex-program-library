@@ -150,9 +150,6 @@ pub enum Commands {
         list: bool,
     },
 
-    /// Test command
-    Test,
-
     /// Validate JSON metadata files
     Validate {
         /// Assets directory to upload, defaults to "assets"

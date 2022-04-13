@@ -1,25 +1,17 @@
-use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use console::style;
-use std::{
-    fs::{File, OpenOptions},
-    path::PathBuf,
-    str::FromStr,
-};
+use std::{fs::OpenOptions, path::PathBuf, str::FromStr};
 use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
 
-use sugar_cli::cache::Cache;
-use sugar_cli::candy_machine::{get_candy_machine_state, print_candy_machine_state};
 use sugar_cli::cli::{Cli, Commands};
-use sugar_cli::constants::{COMPLETE_EMOJI, DEFAULT_CACHE, ERROR_EMOJI};
+use sugar_cli::constants::{COMPLETE_EMOJI, ERROR_EMOJI};
 use sugar_cli::create_config::process_create_config;
 use sugar_cli::deploy::{process_deploy, DeployArgs};
 use sugar_cli::launch::{process_launch, LaunchArgs};
 use sugar_cli::mint::{process_mint, MintArgs};
-use sugar_cli::setup::sugar_setup;
 use sugar_cli::show::{process_show, ShowArgs};
 use sugar_cli::update::{process_update, UpdateArgs};
 use sugar_cli::upload::{process_upload, UploadArgs};
@@ -180,7 +172,6 @@ async fn run() -> Result<()> {
             })
             .await?
         }
-        Commands::Test => process_test_command(),
         Commands::Validate { assets_dir, strict } => {
             process_validate(ValidateArgs { assets_dir, strict })?
         }
@@ -218,15 +209,4 @@ async fn run() -> Result<()> {
     }
 
     Ok(())
-}
-
-fn process_test_command() {
-    let sugar_config = sugar_setup(None, None).unwrap();
-    let file = File::open(DEFAULT_CACHE).unwrap();
-    let cache: Cache = serde_json::from_reader(file).unwrap();
-
-    let candy_machine_id = Pubkey::from_str(&cache.program.candy_machine).unwrap();
-    let state = get_candy_machine_state(&sugar_config, &candy_machine_id).unwrap();
-
-    print_candy_machine_state(state);
 }
