@@ -136,7 +136,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
             });
 
             println!(
-                "Found {} candy machines, total amount: 𑗏 {}",
+                "Found {} candy machines, total amount: ◎ {}",
                 accounts.len(),
                 total / LAMPORTS_PER_SOL as f64
             );
