@@ -11,17 +11,17 @@ pub const MAX_NUM_SCOPES: usize = 7;
 pub const AUCTIONEER_SIZE: usize = 8 +                      // Anchor discriminator/sighash
 32 +                                                        // Auctioneer authority
 32 +                                                        // Auction house instance
-4 +                                                         // Vector length
-1 * MAX_NUM_SCOPES                                          // Vector of AuthorityScope enums
+1 * MAX_NUM_SCOPES +                                        // Array of AuthorityScope bools
+64                                                          // Padding
 ;
 
 pub const AUCTION_HOUSE_SIZE: usize = 8 +                   // key
-32 +                                                        //fee payer
-32 +                                                        //treasury
-32 +                                                        //treasury_withdrawal_destination
-32 +                                                        //fee withdrawal destination
-32 +                                                        //treasury mint
-32 +                                                        //authority
+32 +                                                        // fee Payer
+32 +                                                        // treasury
+32 +                                                        // treasury_withdrawal_destination
+32 +                                                        // fee withdrawal destination
+32 +                                                        // treasury mint
+32 +                                                        // authority
 32 +                                                        // creator
 1 +                                                         // bump
 1 +                                                         // treasury_bump

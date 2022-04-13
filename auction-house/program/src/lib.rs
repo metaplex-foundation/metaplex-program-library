@@ -2,10 +2,10 @@
 //! AuctionHouse is a protocol for marketplaces to implement a decentralized sales contract. It is simple, fast and very cheap. AuctionHouse is a Solana program available on Mainnet Beta and Devnet. Anyone can create an AuctionHouse and accept any SPL token they wish.
 //!
 //! Full docs can be found [here](https://docs.metaplex.com/auction-house/definition).
+pub mod auctioneer;
 pub mod bid;
 pub mod cancel;
 pub mod constants;
-pub mod delegate;
 pub mod deposit;
 pub mod errors;
 pub mod execute_sale;
@@ -19,7 +19,7 @@ pub mod withdraw;
 pub use state::*;
 
 use crate::{
-    bid::*, cancel::*, constants::*, delegate::*, deposit::*, errors::*, execute_sale::*,
+    auctioneer::*, bid::*, cancel::*, constants::*, deposit::*, errors::*, execute_sale::*,
     receipt::*, sell::*, utils::*, withdraw::*,
 };
 use anchor_lang::{
@@ -513,7 +513,15 @@ pub mod auction_house {
         ah_auctioneer_pda_bump: u8,
         scopes: Vec<AuthorityScope>,
     ) -> ProgramResult {
-        delegate::delegate_auctioneer(ctx, ah_auctioneer_pda_bump, Box::new(scopes))
+        auctioneer::delegate_auctioneer(ctx, ah_auctioneer_pda_bump, Box::new(scopes))
+    }
+
+    pub fn update_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateAuctioneer<'info>>,
+        ah_auctioneer_pda_bump: u8,
+        scopes: Vec<AuthorityScope>,
+    ) -> ProgramResult {
+        auctioneer::update_auctioneer(ctx, ah_auctioneer_pda_bump, Box::new(scopes))
     }
 
     /// Create a listing receipt by creating a `listing_receipt` account.

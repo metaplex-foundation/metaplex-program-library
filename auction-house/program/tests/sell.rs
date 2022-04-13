@@ -109,7 +109,7 @@ async fn auction_sell_success() {
     let (auctioneer_pda, auctioneer_pda_bump) =
         find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -205,7 +205,7 @@ async fn auction_sell_missing_scope_fails() {
 
     let scopes = vec![];
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,

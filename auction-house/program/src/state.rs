@@ -1,5 +1,7 @@
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 
+use crate::constants::*;
+
 #[account]
 pub struct AuctionHouse {
     pub auction_house_fee_account: Pubkey,
@@ -20,18 +22,19 @@ pub struct AuctionHouse {
 
 #[account]
 pub struct Auctioneer {
-    pub authority: Pubkey,
+    pub auctioneer_authority: Pubkey,
     pub auction_house: Pubkey,
-    pub scopes: Vec<AuthorityScope>,
+    pub scopes: [bool; MAX_NUM_SCOPES],
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
+#[repr(u32)]
 pub enum AuthorityScope {
-    Deposit,
-    Buy,
-    PublicBuy,
-    ExecuteSale,
-    Sell,
-    Cancel,
-    Withdraw,
+    Deposit = 0,
+    Buy = 1,
+    PublicBuy = 2,
+    ExecuteSale = 3,
+    Sell = 4,
+    Cancel = 5,
+    Withdraw = 6,
 }

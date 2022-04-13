@@ -198,7 +198,7 @@ async fn auction_execute_sale_success() {
     let (auctioneer_pda, auctioneer_pda_bump) =
         find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -376,7 +376,7 @@ async fn auction_execute_sale_missing_scope_fails() {
 
     let scopes = vec![AuthorityScope::Sell, AuthorityScope::Buy];
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -911,7 +911,7 @@ async fn execute_auction_public_sale_success() {
     let (auctioneer_pda, auctioneer_pda_bump) =
         find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -1201,7 +1201,7 @@ async fn execute_auction_public_sale_missing_scope_fails() {
         find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     let scopes = vec![AuthorityScope::Sell, AuthorityScope::Buy];
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,

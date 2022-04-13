@@ -3,7 +3,10 @@ pub mod common;
 pub mod utils;
 
 use common::*;
-use utils::{helpers::default_scopes, setup_functions::*};
+use utils::{
+    helpers::{assert_scopes_eq, default_scopes},
+    setup_functions::*,
+};
 
 #[tokio::test]
 async fn delegate_success() {
@@ -25,16 +28,8 @@ async fn delegate_success() {
     let (auctioneer_pda, auctioneer_pda_bump) =
         find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
 
-    let scopes = vec![
-        AuthorityScope::Buy,
-        AuthorityScope::PublicBuy,
-        AuthorityScope::ExecuteSale,
-        AuthorityScope::Sell,
-        AuthorityScope::Cancel,
-        AuthorityScope::Withdraw,
-    ];
-
-    delegate(
+    let scopes = default_scopes();
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_authority,
@@ -68,9 +63,9 @@ async fn delegate_success() {
     assert!(!ah.has_auctioneer);
     assert!(new_ah.has_auctioneer);
 
-    assert_eq!(auctioneer_authority_pubkey, auctioneer.authority);
+    assert_eq!(auctioneer_authority_pubkey, auctioneer.auctioneer_authority);
     assert_eq!(ahkey, auctioneer.auction_house);
-    assert_eq!(scopes, auctioneer.scopes);
+    assert_scopes_eq(scopes, auctioneer.scopes);
 }
 
 #[tokio::test]
@@ -103,7 +98,7 @@ async fn incorrect_authority_fails() {
         AuthorityScope::Withdraw,
     ];
 
-    let err = delegate(
+    let err = delegate_auctioneer(
         &mut context,
         ahkey,
         &invalid_authority,
@@ -137,7 +132,7 @@ async fn too_many_scopes() {
     let mut scopes = default_scopes();
     scopes.push(AuthorityScope::Buy);
 
-    let err = delegate(
+    let err = delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -176,7 +171,7 @@ async fn incorrect_auctioneer_pda_fails() {
 
     let scopes = default_scopes();
 
-    let err = delegate(
+    let err = delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,

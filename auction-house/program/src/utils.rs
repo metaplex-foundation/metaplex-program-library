@@ -651,12 +651,25 @@ pub fn assert_valid_auctioneer_and_scope(
         return Err(ErrorCode::InvalidAuctioneer.into());
     }
 
-    if auctioneer.authority != *auctioneer_program_id {
+    if auctioneer.auctioneer_authority != *auctioneer_program_id {
         return Err(ErrorCode::InvalidAuctioneer.into());
     }
 
-    if !(auctioneer.scopes.contains(&scope)) {
+    if !(auctioneer.scopes[scope as usize]) {
         return Err(ErrorCode::MissingAuctioneerScope.into());
+    }
+
+    Ok(())
+}
+
+pub fn assert_scopes_eq(
+    scopes: Vec<AuthorityScope>,
+    scopes_array: [bool; MAX_NUM_SCOPES],
+) -> Result<(), ProgramError> {
+    for scope in scopes {
+        if !scopes_array[scope as usize] {
+            return Err(ErrorCode::MissingAuctioneerScope.into());
+        }
     }
 
     Ok(())

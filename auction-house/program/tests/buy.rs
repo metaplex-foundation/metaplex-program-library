@@ -118,7 +118,7 @@ async fn auction_buy_success() {
     let (auctioneer_pda, auctioneer_pda_bump) =
         find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -296,7 +296,7 @@ async fn auction_buy_invalid_scope_fails() {
     // Missing Buy scope so buy_tx should fail.
     let scopes = vec![AuthorityScope::Deposit];
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,

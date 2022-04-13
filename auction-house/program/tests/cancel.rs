@@ -141,7 +141,7 @@ async fn auction_cancel_listing() {
     let (auctioneer_pda, auctioneer_pda_bump) =
         find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -274,7 +274,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
     // Missing Cancel scope so auction_cancel should fail.
     let scopes = vec![AuthorityScope::Sell];
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -590,7 +590,7 @@ async fn auction_cancel_bid() {
     let (auctioneer_pda, auctioneer_pda_bump) =
         find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,
@@ -724,7 +724,7 @@ async fn auction_cancel_bid_missing_scope_fails() {
     // Missing Cancel scope so auction_cancel should fail.
     let scopes = vec![AuthorityScope::Buy];
 
-    delegate(
+    delegate_auctioneer(
         &mut context,
         ahkey,
         &ah_auth,

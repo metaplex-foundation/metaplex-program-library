@@ -133,4 +133,8 @@ pub enum ErrorCode {
     // 6032
     #[msg("Too many scopes.")]
     TooManyScopes,
+
+    // 6033
+    #[msg("Auction House not delegated.")]
+    AuctionHouseNotDelegated,
 }
