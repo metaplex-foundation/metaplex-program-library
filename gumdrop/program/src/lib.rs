@@ -1,6 +1,7 @@
 //! Program for distributing tokens efficiently via uploading a Merkle root.
 
 use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
 use anchor_spl::token::{self, Token, TokenAccount};
 use mpl_token_metadata;
 use solana_program::{
@@ -56,7 +57,7 @@ fn get_or_create_claim_count<'a>(
         let dst: &mut [u8] = &mut data;
         let mut cursor = std::io::Cursor::new(dst);
         cursor
-            .write_all(&<ClaimCount as anchor_lang::Discriminator>::discriminator())
+            .write_all(&<ClaimCount as Discriminator>::discriminator())
             .unwrap();
     }
 
@@ -521,7 +522,7 @@ pub mod merkle_distributor {
 #[instruction(bump: u8)]
 pub struct NewDistributor<'info> {
     /// Base key of the distributor.
-    pub base: Signer<'info>,
+    pub base: AccountInfo<'info>,
 
     /// [MerkleDistributor].
     #[account(
