@@ -123,11 +123,17 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             COMPUTER_EMOJI
         );
 
+        let pb = spinner_with_style();
+        pb.set_message("Connecting...");
+
         let handler = match config_data.upload_method {
             UploadMethod::Bundlr => Box::new(
                 BundlrHandler::initialize(&get_config_data(&args.config)?, &sugar_config)
-                    .await
-                    .unwrap(),
+                    .await?,
+            ) as Box<dyn UploadHandler>,
+            UploadMethod::AWS => Box::new(
+                AWSHandler::initialize(&get_config_data(&args.config)?)
+                    .await?,
             ) as Box<dyn UploadHandler>,
             _ => {
                 return Err(anyhow!(format!(
@@ -136,6 +142,8 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                 )))
             }
         };
+
+        pb.finish_with_message("Connected");
 
         println!(
             "\n{} {}Uploading media files {}",

@@ -56,6 +56,10 @@ pub const STRING_LEN_SIZE: usize = 4;
 
 pub const MINT_LAYOUT: u64 = 82;
 
+/// Maximum number of concurrent tasks (this is important for tasks that handle files
+/// and network connections).
+pub const PARALLEL_LIMIT: usize = 50;
+
 /// Default path for assets folder.
 pub const DEFAULT_ASSETS: &str = "assets";
 

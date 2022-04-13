@@ -1,19 +1,34 @@
 pub use anchor_client::solana_sdk::native_token::LAMPORTS_PER_SOL;
 use async_trait::async_trait;
-use bundlr_sdk::{tags::Tag, Bundlr, BundlrTx, SolanaSigner};
+use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
 use clap::crate_version;
 use console::style;
 use futures::future::select_all;
 use std::{cmp, collections::HashSet, ffi::OsStr, fs, path::Path, sync::Arc};
 use tokio::time::{sleep, Duration};
 
-use crate::{common::*, config::*, upload::*, utils::*};
+use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*};
 
 /// The number os retries to fetch the Bundlr balance (MAX_RETRY * 5 seconds limit)
 const MAX_RETRY: u64 = 15;
 
 /// Time (ms) to wait until next try
 const DELAY_UNTIL_RETRY: u64 = 5000;
+
+/// Size of Bundlr transaction header
+const HEADER_SIZE: u64 = 2000;
+
+/// Minimum file size for cost calculation
+const MINIMUM_SIZE: u64 = 10000;
+
+struct TxInfo {
+    asset_id: String,
+    file_path: String,
+    media_link: String,
+    data_type: DataType,
+    bundlr_client: Arc<Bundlr<SolanaSigner>>,
+    tag: Vec<Tag>,
+}
 
 pub struct BundlrHandler {
     client: Arc<Bundlr<SolanaSigner>>,
@@ -27,9 +42,6 @@ impl BundlrHandler {
         config_data: &ConfigData,
         sugar_config: &SugarConfig,
     ) -> Result<BundlrHandler> {
-        let pb = spinner_with_style();
-        pb.set_message("Connecting...");
-
         let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
         let client = setup_client(sugar_config)?;
         let program = client.program(pid);
@@ -63,8 +75,6 @@ impl BundlrHandler {
             "sol".to_string(),
             signer,
         );
-
-        pb.finish_with_message("Connected");
 
         Ok(BundlrHandler {
             client: Arc::new(bundlr_client),
@@ -163,14 +173,25 @@ impl BundlrHandler {
     }
 
     /// Send a transaction to Bundlr and wait for a response.
-    async fn send_bundlr_tx(
-        bundlr_client: Arc<Bundlr<SolanaSigner>>,
-        asset_id: String,
-        tx: BundlrTx,
-    ) -> Result<(String, String)> {
-        let response = bundlr_client.send_transaction(tx).await?;
+    async fn send_bundlr_tx(tx_info: TxInfo) -> Result<(String, String)> {
+        let data = match tx_info.data_type {
+            DataType::Media => fs::read(&tx_info.file_path)?,
+            DataType::Metadata => {
+                // replaces the media link without modifying the original file to avoid
+                // changing the hash of the metadata file
+                get_updated_metadata(&tx_info.file_path, &tx_info.media_link)
+                    .unwrap()
+                    .into_bytes()
+            }
+        };
+
+        let tx = tx_info
+            .bundlr_client
+            .create_transaction_with_tags(data, tx_info.tag);
+        let response = tx_info.bundlr_client.send_transaction(tx).await?;
         let id = response.get("id").unwrap().as_str().unwrap();
-        Ok((asset_id, id.to_string()))
+
+        Ok((tx_info.asset_id, id.to_string()))
     }
 }
 
@@ -199,14 +220,14 @@ impl UploadHandler for BundlrHandler {
             };
 
             let path = Path::new(&file_path);
-            total_size += 2000
+            total_size += HEADER_SIZE
                 + cmp::max(
-                    10000,
+                    MINIMUM_SIZE,
                     match data_type {
                         DataType::Media => std::fs::metadata(path)?.len(),
                         DataType::Metadata => {
                             let cache_item = cache.items.0.get(&index.to_string()).unwrap();
-                            get_updated_metadata(item, cache_item)
+                            get_updated_metadata(&item.metadata, &cache_item.metadata_link)
                                 .unwrap()
                                 .into_bytes()
                                 .len() as u64
@@ -303,35 +324,33 @@ impl UploadHandler for BundlrHandler {
         println!("\nSending data: (Ctrl+C to abort)");
 
         let pb = progress_bar_with_style(paths.len() as u64);
-        let mut handles = Vec::new();
+        let mut transactions = Vec::new();
 
         for file_path in paths {
+            // path to the media/metadata file
             let path = Path::new(&file_path);
+            // id of the asset (to be used to update the cache link)
             let asset_id = String::from(path.file_stem().and_then(OsStr::to_str).unwrap());
 
-            let data = match data_type {
-                DataType::Media => fs::read(&path)?,
-                DataType::Metadata => {
-                    let index = asset_id.parse::<usize>().unwrap();
-                    let asset_pair = assets.get(&index).unwrap();
-                    let cache_item = cache.items.0.get(&asset_id).unwrap();
-                    // replaces the media link without modifying the original file to avoid
-                    // changing the hash of the metadata file
-                    get_updated_metadata(asset_pair, cache_item)
-                        .unwrap()
-                        .into_bytes()
-                }
-            };
-
+            let cache_item = cache.items.0.get(&asset_id).unwrap();
             let bundlr_client = self.client.clone();
-            let tx = bundlr_client
-                .create_transaction_with_tags(data, vec![sugar_tag.clone(), media_tag.clone()]);
 
-            let handle = tokio::spawn(async move {
-                BundlrHandler::send_bundlr_tx(bundlr_client, asset_id.to_string(), tx).await
+            transactions.push(TxInfo {
+                asset_id: asset_id.to_string(),
+                file_path: String::from(path.to_str().unwrap()),
+                media_link: cache_item.media_link.clone(),
+                data_type: data_type.clone(),
+                bundlr_client: bundlr_client.clone(),
+                tag: vec![sugar_tag.clone(), media_tag.clone()],
             });
+        }
 
-            handles.push(handle);
+        let mut handles = Vec::new();
+
+        for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT)) {
+            handles.push(tokio::spawn(async move {
+                BundlrHandler::send_bundlr_tx(tx).await
+            }));
         }
 
         let mut errors = Vec::new();
@@ -372,6 +391,19 @@ impl UploadHandler for BundlrHandler {
                     )));
                     // ignoring all errors
                     handles = remaining;
+                }
+            }
+
+            if !transactions.is_empty() {
+                // if we are half way through, let spawn more transactions
+                if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
+                    for tx in
+                        transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT / 2))
+                    {
+                        handles.push(tokio::spawn(async move {
+                            BundlrHandler::send_bundlr_tx(tx).await
+                        }));
+                    }
                 }
             }
         }
