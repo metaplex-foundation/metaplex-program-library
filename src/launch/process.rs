@@ -27,7 +27,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
 
     let validate_args = ValidateArgs {
         assets_dir: validate_args.assets_dir.clone(),
-        strict: validate_args.strict.clone(),
+        strict: validate_args.strict,
     };
 
     if let Err(err) = process_validate(validate_args) {
@@ -52,7 +52,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         {
             process_create_config()?;
         } else {
-            println!("Error: {}", err);
+            println!("Error: {:?}", err);
             exit(1)
         }
     }

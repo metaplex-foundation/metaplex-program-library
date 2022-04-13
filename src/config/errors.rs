@@ -8,7 +8,7 @@ pub enum ConfigError {
     #[error("Missing configuration file '{0}'")]
     MissingFileError(String),
 
-    #[error("The configuration file path is invalid ('{0}' is a drectory)")]
+    #[error("The configuration file path is invalid ('{0}' is a directory)")]
     InvalidPathError(String),
 
     #[error("Could not open config file '{0}'")]

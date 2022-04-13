@@ -1,4 +1,4 @@
-use crate::common::{sugar_setup, CANDY_EMOJI, CONFETTI_EMOJI};
+use crate::common::{CANDY_EMOJI, CONFETTI_EMOJI};
 use crate::config::{
     go_live_date_as_timestamp, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
     HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,

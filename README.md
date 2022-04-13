@@ -2,7 +2,7 @@
 
 ## Quick Start
 
-Set up your Solana CLI config with a RPC url and a keypair:
+Set up your Solana CLI config with an RPC url and a keypair:
 
 ```bash
 solana config set --url <rpc_url> --keypair <path_to_keypair_file>
@@ -14,7 +14,7 @@ Create a directory with a folder named "assets" where you store your json file a
 
 Set up your config file, only `Bundlr` upload method is currently supported.
 
-Check your assets folder contains valid metadata:
+Check that your assets folder contains valid metadata:
 
 ```bash
 sugar validate
