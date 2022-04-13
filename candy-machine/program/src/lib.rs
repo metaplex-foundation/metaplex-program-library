@@ -440,10 +440,7 @@ pub mod candy_machine {
 
         let discriminator = &previous_instruction.data[0..8];
         if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
-            msg!(
-                "Transaction had ix with data {:?}",
-                discriminator
-            );
+            msg!("Transaction had ix with data {:?}", discriminator);
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
 
@@ -452,11 +449,15 @@ pub mod candy_machine {
         let mint_ix_metadata = mint_ix_accounts[4].pubkey;
         let signer = mint_ix_accounts[6].pubkey;
         let candy_key = ctx.accounts.candy_machine.key();
-        let metadata =  ctx.accounts.metadata.key();
+        let metadata = ctx.accounts.metadata.key();
         let payer = ctx.accounts.payer.key();
 
         if &signer != &payer {
-            msg!("Signer with pubkey {} does not match the mint ix Signer with pubkey {}", mint_ix_cm, candy_key);
+            msg!(
+                "Signer with pubkey {} does not match the mint ix Signer with pubkey {}",
+                mint_ix_cm,
+                candy_key
+            );
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
         if &mint_ix_cm != &candy_key {
@@ -478,7 +479,11 @@ pub mod candy_machine {
             return Err(ErrorCode::MismatchedCollectionMint.into());
         }
         let seeds = [b"collection".as_ref(), candy_key.as_ref()];
-        let bump = assert_derivation(&candy_machine::id(), &collection_pda.to_account_info(), &seeds)?;
+        let bump = assert_derivation(
+            &candy_machine::id(),
+            &collection_pda.to_account_info(),
+            &seeds,
+        )?;
         let signer_seeds = [b"collection".as_ref(), candy_key.as_ref(), &[bump]];
         let set_collection_infos = vec![
             ctx.accounts.metadata.to_account_info(),
@@ -713,8 +718,8 @@ pub mod candy_machine {
         let edition = ctx.accounts.edition.to_account_info();
         let authority_record = ctx.accounts.collection_authority_record.to_account_info();
         let candy_machine = &ctx.accounts.candy_machine;
+        assert_master_edition(&metadata, &edition)?;
         if authority_record.data_is_empty() {
-            assert_master_edition(&metadata, &edition)?;
             let approve_collection_infos = vec![
                 authority_record.clone(),
                 ctx.accounts.collection_pda.to_account_info(),
@@ -746,29 +751,28 @@ pub mod candy_machine {
                 "Successfully approved collection authority. Now setting PDA mint to {}.",
                 mint.key()
             );
-            if ctx.accounts.collection_pda.data_is_empty() {
-                create_or_allocate_account_raw(
-                    crate::id(),
-                    &ctx.accounts.collection_pda.to_account_info(),
-                    &ctx.accounts.rent.to_account_info(),
-                    &ctx.accounts.system_program.to_account_info(),
-                    &ctx.accounts.authority.to_account_info(),
-                    COLLECTION_PDA_SIZE,
-                    &[
-                        b"collection".as_ref(),
-                        &candy_machine.key().as_ref(),
-                        &[*ctx.bumps.get("collection_pda").unwrap()],
-                    ],
-                )?;
-                let mut data_ref: &mut [u8] =
-                    &mut ctx.accounts.collection_pda.try_borrow_mut_data()?;
-                let mut collection_pda_object: CollectionPDA =
-                    AnchorDeserialize::deserialize(&mut &*data_ref)?;
-                collection_pda_object.mint = mint.key();
-                collection_pda_object.candy_machine = candy_machine.key();
-                collection_pda_object.try_serialize(&mut data_ref)?;
-            }
         }
+        if ctx.accounts.collection_pda.data_is_empty() {
+            create_or_allocate_account_raw(
+                crate::id(),
+                &ctx.accounts.collection_pda.to_account_info(),
+                &ctx.accounts.rent.to_account_info(),
+                &ctx.accounts.system_program.to_account_info(),
+                &ctx.accounts.authority.to_account_info(),
+                COLLECTION_PDA_SIZE,
+                &[
+                    b"collection".as_ref(),
+                    &candy_machine.key().as_ref(),
+                    &[*ctx.bumps.get("collection_pda").unwrap()],
+                ],
+            )?;
+        }
+        let mut data_ref: &mut [u8] = &mut ctx.accounts.collection_pda.try_borrow_mut_data()?;
+        let mut collection_pda_object: CollectionPDA =
+            AnchorDeserialize::deserialize(&mut &*data_ref)?;
+        collection_pda_object.mint = mint.key();
+        collection_pda_object.candy_machine = candy_machine.key();
+        collection_pda_object.try_serialize(&mut data_ref)?;
         Ok(())
     }
 
