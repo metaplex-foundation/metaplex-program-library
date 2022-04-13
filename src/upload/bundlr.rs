@@ -110,7 +110,7 @@ impl BundlrHandler {
         println!("Funding address:");
         println!("  -> pubkey: {}", payer_pubkey);
         println!(
-            "  -> lamports: {} (𑗏 {})",
+            "  -> lamports: {} (◎ {})",
             amount,
             amount as f64 / LAMPORTS_PER_SOL as f64
         );
