@@ -57,7 +57,7 @@ fn get_or_create_claim_count<'a>(
         let dst: &mut [u8] = &mut data;
         let mut cursor = std::io::Cursor::new(dst);
         cursor
-            .write_all(&<ClaimCount as Discriminator>::discriminator())
+            .write_all(&<ClaimCount as anchor_lang::Discriminator>::discriminator())
             .unwrap();
     }
 
