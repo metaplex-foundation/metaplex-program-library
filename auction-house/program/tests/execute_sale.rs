@@ -215,8 +215,8 @@ async fn auction_execute_sale_success() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         100_000_000,
+        &auctioneer_authority.pubkey(),
     );
     context
         .banks_client
@@ -393,8 +393,8 @@ async fn auction_execute_sale_missing_scope_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         100_000_000,
+        &auctioneer_authority.pubkey(),
     );
     context
         .banks_client
@@ -931,8 +931,8 @@ async fn execute_auction_public_sale_success() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         price,
+        &auctioneer_authority.pubkey(),
     );
     context
         .banks_client
@@ -1221,8 +1221,8 @@ async fn execute_auction_public_sale_missing_scope_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         price,
+        &auctioneer_authority.pubkey(),
     );
     context
         .banks_client

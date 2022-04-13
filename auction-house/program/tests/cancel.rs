@@ -160,8 +160,8 @@ async fn auction_cancel_listing() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         10,
+        &auctioneer_authority.pubkey(),
     );
     context
         .banks_client
@@ -293,8 +293,8 @@ async fn auction_cancel_listing_missing_scope_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         10,
+        &auctioneer_authority.pubkey(),
     );
     context
         .banks_client

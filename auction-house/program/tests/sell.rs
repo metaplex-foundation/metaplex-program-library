@@ -126,8 +126,8 @@ async fn auction_sell_success() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         sale_price,
+        &auctioneer_authority.pubkey(),
     );
 
     context
@@ -135,6 +135,7 @@ async fn auction_sell_success() {
         .process_transaction(sell_tx)
         .await
         .unwrap();
+
     let sts = context
         .banks_client
         .get_account(acc.seller_trade_state)
@@ -221,8 +222,8 @@ async fn auction_sell_missing_scope_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         sale_price,
+        &auctioneer_authority.pubkey(),
     );
 
     let error = context
@@ -266,8 +267,8 @@ async fn auction_sell_no_delegate_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
         sale_price,
+        &auctioneer_authority.pubkey(),
     );
 
     let error = context

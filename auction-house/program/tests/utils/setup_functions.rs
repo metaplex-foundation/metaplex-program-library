@@ -1112,8 +1112,8 @@ pub fn auction_sell(
     ahkey: &Pubkey,
     ah: &AuctionHouse,
     test_metadata: &Metadata,
-    auctioneer_authority: &Pubkey,
     sale_price: u64,
+    auctioneer_authority: &Pubkey,
 ) -> (
     (
         mpl_auction_house::accounts::SellWithAuctioneer,
@@ -1133,7 +1133,6 @@ pub fn auction_sell(
         sale_price,
         1,
     );
-
     let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
 
     let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
@@ -1171,9 +1170,9 @@ pub fn auction_sell(
         trade_state_bump: sts_bump,
         free_trade_state_bump: free_sts_bump,
         program_as_signer_bump: pas_bump,
-        ah_auctioneer_pda_bump: auctioneer_pda_bump,
         token_size: 1,
         buyer_price: sale_price,
+        ah_auctioneer_pda_bump: auctioneer_pda_bump,
     }
     .data();
 

@@ -49,10 +49,10 @@ impl<'info> From<SellWithAuctioneer<'info>> for Sell<'info> {
     fn from(a: SellWithAuctioneer<'info>) -> Sell<'info> {
         Sell {
             wallet: a.wallet,
-            token_account: a.token_account,
+            token_account: *a.token_account,
             metadata: a.metadata,
             authority: a.authority,
-            auction_house: a.auction_house,
+            auction_house: *a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             seller_trade_state: a.seller_trade_state,
             free_seller_trade_state: a.free_seller_trade_state,
@@ -73,7 +73,7 @@ pub struct SellWithAuctioneer<'info> {
 
     /// SPL token account containing token for sale.
     #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
@@ -83,7 +83,7 @@ pub struct SellWithAuctioneer<'info> {
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
