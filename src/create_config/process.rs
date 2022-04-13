@@ -4,7 +4,6 @@ use crate::config::{
     HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
 };
 use crate::{constants::DEFAULT_ASSETS, upload::count_files};
-use anchor_client::solana_sdk::signer::Signer;
 use anchor_lang::prelude::Pubkey;
 use anyhow::Result;
 use console::{style, Style};
@@ -14,6 +13,11 @@ use std::fs::OpenOptions;
 use std::path::Path;
 use std::str::FromStr;
 use url::Url;
+
+pub struct CreateConfigArgs {
+    pub keypair: Option<String>,
+    pub rpc_url: Option<String>,
+}
 
 pub fn process_create_config() -> Result<()> {
     let mut config: ConfigData = ConfigData::default();
@@ -65,8 +69,6 @@ pub fn process_create_config() -> Result<()> {
             Ok(())
         }
     };
-
-    let sugar_config = sugar_setup(None, None)?;
 
     println!(
         "{}{} {}",
@@ -217,7 +219,7 @@ pub fn process_create_config() -> Result<()> {
     };
 
     if choices.contains(&SPL_INDEX) {
-        config.sol_treasury_account = sugar_config.keypair.pubkey();
+        config.sol_treasury_account = None;
         config.spl_token = Some(
             Pubkey::from_str(
                 &Input::with_theme(&theme)
@@ -241,14 +243,16 @@ pub fn process_create_config() -> Result<()> {
     } else {
         config.spl_token = None;
         config.spl_token_account = None;
-        config.sol_treasury_account = Pubkey::from_str(
-            &Input::with_theme(&theme)
-                .with_prompt("What is your SOL treasury address?")
-                .validate_with(pubkey_validator)
-                .interact()
-                .unwrap(),
-        )
-        .expect("Failed to parse string into pubkey that should have already been validated.");
+        config.sol_treasury_account = Some(
+            Pubkey::from_str(
+                &Input::with_theme(&theme)
+                    .with_prompt("What is your SOL treasury address?")
+                    .validate_with(pubkey_validator)
+                    .interact()
+                    .unwrap(),
+            )
+            .expect("Failed to parse string into pubkey that should have already been validated."),
+        );
     };
 
     config.whitelist_mint_settings = if choices.contains(&WL_INDEX) {

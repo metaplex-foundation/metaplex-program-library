@@ -64,7 +64,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
         .accounts(nft_accounts::UpdateCandyMachine {
             candy_machine: candy_machine_id,
             authority: program.payer(),
-            wallet: config_data.sol_treasury_account,
+            wallet: config_data.sol_treasury_account.unwrap(),
         })
         .args(nft_instruction::UpdateCandyMachine {
             data: candy_machine_data,
@@ -83,12 +83,13 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
 
     if let Some(new_authority) = args.new_authority {
         let new_authority_pubkey = Pubkey::from_str(&new_authority)?;
+
         let builder = program
             .request()
             .accounts(nft_accounts::UpdateCandyMachine {
                 candy_machine: candy_machine_id,
                 authority: program.payer(),
-                wallet: config_data.sol_treasury_account,
+                wallet: config_data.sol_treasury_account.unwrap(),
             })
             .args(nft_instruction::UpdateAuthority {
                 new_authority: Some(new_authority_pubkey),

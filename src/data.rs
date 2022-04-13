@@ -19,8 +19,8 @@ pub struct ConfigData {
     pub gatekeeper: Option<GatekeeperConfig>,
 
     #[serde(rename = "solTreasuryAccount")]
-    #[serde(deserialize_with = "to_pubkey")]
-    pub sol_treasury_account: Pubkey,
+    #[serde(deserialize_with = "to_option_pubkey")]
+    pub sol_treasury_account: Option<Pubkey>,
 
     #[serde(rename = "splTokenAccount")]
     pub spl_token_account: Option<Pubkey>,
@@ -60,7 +60,7 @@ pub fn price_as_lamports(price: f64) -> u64 {
     (price * LAMPORTS_PER_SOL as f64) as u64
 }
 
-fn to_pubkey<'de, D>(deserializer: D) -> Result<Pubkey, D::Error>
+fn _to_pubkey<'de, D>(deserializer: D) -> Result<Pubkey, D::Error>
 where
     D: Deserializer<'de>,
 {

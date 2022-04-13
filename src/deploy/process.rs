@@ -58,6 +58,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     };
     let client = Arc::new(setup_client(&sugar_config)?);
     let config_data = get_config_data(&args.config)?;
+
     let candy_machine_address = &cache.program.candy_machine;
 
     let num_items = config_data.number;
