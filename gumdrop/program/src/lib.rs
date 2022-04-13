@@ -1,6 +1,7 @@
 //! Program for distributing tokens efficiently via uploading a Merkle root.
 
 use anchor_lang::prelude::*;
+use anchor_lang::Discriminator;
 use anchor_spl::token::{self, Token, TokenAccount};
 use mpl_token_metadata;
 use solana_program::{
@@ -622,7 +623,6 @@ pub struct CloseDistributor<'info> {
 #[instruction(_bump: u8, index: u64)]
 pub struct Claim<'info> {
     /// The [MerkleDistributor].
-    #[account(mut)]
     pub distributor: Account<'info, MerkleDistributor>,
 
     /// Status of the claim.
