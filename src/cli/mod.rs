@@ -19,6 +19,7 @@ pub struct Cli {
 pub enum Commands {
     /// Interactive process to create the config file
     CreateConfig,
+    /// Create a candy machine deployment from assets
     Launch {
         /// Path to the directory with the assets to upload
         #[clap(default_value = DEFAULT_ASSETS)]
@@ -63,7 +64,7 @@ pub enum Commands {
         number: Option<u64>,
     },
 
-    /// Update the candy machine config on chain
+    /// Update the candy machine config on-chain
     Update {
         /// Path to the config file, defaults to "config.json"
         #[clap(short, long, default_value = "config.json")]
@@ -86,7 +87,7 @@ pub enum Commands {
         new_authority: Option<String>,
     },
 
-    /// Deploy cache items into candy machine config on chain
+    /// Deploy cache items into candy machine config on-chain
     Deploy {
         /// Assets directory to upload, defaults to "assets"
         #[clap(default_value = "assets")]
