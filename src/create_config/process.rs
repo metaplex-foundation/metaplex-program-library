@@ -420,7 +420,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     if save_file {
         let file = match args.config {
             Some(config) => {
-                let path = format!("{}config.json", &config);
+                let path = format!("{}", &config);
                 OpenOptions::new()
                     .write(true)
                     .create(true)
