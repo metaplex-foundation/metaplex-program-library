@@ -562,3 +562,12 @@ pub fn assert_valid_trade_state<'a>(
         _ => Err(ErrorCode::DerivedKeyInvalid.into()),
     }
 }
+
+pub fn assert_escrow_rent_exempt(escrow_account: AccountInfo) -> Result<()>{
+    if escrow_account.lamports() < (Rent::get()?).minimum_balance(escrow_account.data_len()) {
+        return err!(ErrorCode::EscrowUnderRentExemption);
+    }
+    else {
+        Ok(())
+    }
+}

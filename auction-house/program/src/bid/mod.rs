@@ -210,8 +210,10 @@ pub fn bid_logic<'info>(
     if is_native {
         assert_keys_equal(wallet.key(), payment_account.key())?;
 
-        if escrow_payment_account.lamports() < buyer_price {
+        if escrow_payment_account.lamports() < buyer_price.checked_add(rent.minimum_balance(escrow_payment_account.data_len())).ok_or(ErrorCode::NumericalOverflow)? {
             let diff = buyer_price
+                .checked_add(rent.minimum_balance(escrow_payment_account.data_len()))
+                .ok_or(ErrorCode::NumericalOverflow)?
                 .checked_sub(escrow_payment_account.lamports())
                 .ok_or(ErrorCode::NumericalOverflow)?;
             invoke(

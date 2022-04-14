@@ -408,6 +408,9 @@ pub mod auction_house {
                 ],
                 &[&escrow_signer_seeds],
             )?;
+
+            // Verify that escrow is still rent exempt.
+            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         Ok(())
@@ -502,6 +505,9 @@ pub mod auction_house {
                     system_program.to_account_info(),
                 ],
             )?;
+
+            // Verify enough exists in the escrow account to keep it rent exempt.
+            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         Ok(())
@@ -810,6 +816,10 @@ pub mod auction_house {
                 ],
                 &[&escrow_signer_seeds],
             )?;
+
+            // The buy instruction should handle accounting for minimum rent exemption for the
+            // escrow account, but double check here just in case.
+            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         if buyer_receipt_token_account.data_is_empty() {
@@ -1042,6 +1052,37 @@ pub mod auction_house {
             buyer_price,
             token_size,
         )
+    }
+
+    /// Close the escrow account of the user.
+    pub fn close_escrow_account<'info>(
+        ctx: Context<'_, '_, '_, 'info, CloseEscrowAccount<'info>>,
+        escrow_payment_bump: u8,
+    ) -> Result<()> {
+        let auction_house_key = ctx.accounts.auction_house.key();
+        let wallet_key = ctx.accounts.wallet.key();
+
+        let escrow_signer_seeds = [
+            PREFIX.as_bytes(),
+            auction_house_key.as_ref(),
+            wallet_key.as_ref(),
+            &[escrow_payment_bump],
+        ];
+
+        invoke_signed(
+            &system_instruction::transfer(
+                &ctx.accounts.escrow_payment_account.key(),
+                &ctx.accounts.wallet.key(),
+                ctx.accounts.escrow_payment_account.lamports(),
+            ),
+            &[
+                ctx.accounts.escrow_payment_account.to_account_info(),
+                ctx.accounts.wallet.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[&escrow_signer_seeds],
+        )?;
+        Ok(())
     }
 
     /// Create a listing receipt by creating a `listing_receipt` account.
@@ -1404,6 +1445,20 @@ pub struct WithdrawFromFee<'info> {
     pub system_program: Program<'info, System>,
 }
 
+#[derive(Accounts)]
+#[instruction(escrow_payment_bump: u8)]
+pub struct CloseEscrowAccount<'info> {
+    /// User wallet account.
+    pub wallet: Signer<'info>,
+    /// Buyer escrow payment account PDA.
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
+    pub escrow_payment_account: UncheckedAccount<'info>,
+    /// Auction House instance PDA account.
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
+    pub auction_house: Account<'info, AuctionHouse>,
+    pub system_program: Program<'info, System>,
+}
+
 pub const AUCTION_HOUSE_SIZE: usize = 8 + // key
 32 + //fee payer
 32 + //treasury
@@ -1441,60 +1496,62 @@ pub const TRADE_STATE_SIZE: usize = 1;
 
 #[error_code]
 pub enum ErrorCode {
-    #[msg("PublicKeyMismatch")]
+    #[msg("PublicKeyMismatch")] // 0
     PublicKeyMismatch,
-    #[msg("InvalidMintAuthority")]
+    #[msg("InvalidMintAuthority")] // 1
     InvalidMintAuthority,
-    #[msg("UninitializedAccount")]
+    #[msg("UninitializedAccount")] // 2
     UninitializedAccount,
-    #[msg("IncorrectOwner")]
+    #[msg("IncorrectOwner")] // 3
     IncorrectOwner,
-    #[msg("PublicKeysShouldBeUnique")]
+    #[msg("PublicKeysShouldBeUnique")] // 4
     PublicKeysShouldBeUnique,
-    #[msg("StatementFalse")]
+    #[msg("StatementFalse")] // 5
     StatementFalse,
-    #[msg("NotRentExempt")]
+    #[msg("NotRentExempt")] // 6
     NotRentExempt,
-    #[msg("NumericalOverflow")]
+    #[msg("NumericalOverflow")] // 7
     NumericalOverflow,
-    #[msg("Expected a sol account but got an spl token account instead")]
+    #[msg("Expected a sol account but got an spl token account instead")] // 8
     ExpectedSolAccount,
-    #[msg("Cannot exchange sol for sol")]
+    #[msg("Cannot exchange sol for sol")] // 9
     CannotExchangeSOLForSol,
-    #[msg("If paying with sol, sol wallet must be signer")]
+    #[msg("If paying with sol, sol wallet must be signer")] // 10
     SOLWalletMustSign,
-    #[msg("Cannot take this action without auction house signing too")]
+    #[msg("Cannot take this action without auction house signing too")] // 11
     CannotTakeThisActionWithoutAuctionHouseSignOff,
-    #[msg("No payer present on this txn")]
+    #[msg("No payer present on this txn")] // 12
     NoPayerPresent,
-    #[msg("Derived key invalid")]
+    #[msg("Derived key invalid")] // 13
     DerivedKeyInvalid,
-    #[msg("Metadata doesn't exist")]
+    #[msg("Metadata doesn't exist")] // 14
     MetadataDoesntExist,
-    #[msg("Invalid token amount")]
+    #[msg("Invalid token amount")] // 15
     InvalidTokenAmount,
-    #[msg("Both parties need to agree to this sale")]
+    #[msg("Both parties need to agree to this sale")] // 16
     BothPartiesNeedToAgreeToSale,
-    #[msg("Cannot match free sales unless the auction house or seller signs off")]
+    #[msg("Cannot match free sales unless the auction house or seller signs off")] // 17
     CannotMatchFreeSalesWithoutAuctionHouseOrSellerSignoff,
-    #[msg("This sale requires a signer")]
+    #[msg("This sale requires a signer")] // 18
     SaleRequiresSigner,
-    #[msg("Old seller not initialized")]
+    #[msg("Old seller not initialized")] // 19
     OldSellerNotInitialized,
-    #[msg("Seller ata cannot have a delegate set")]
+    #[msg("Seller ata cannot have a delegate set")] // 20
     SellerATACannotHaveDelegate,
-    #[msg("Buyer ata cannot have a delegate set")]
+    #[msg("Buyer ata cannot have a delegate set")] // 21
     BuyerATACannotHaveDelegate,
-    #[msg("No valid signer present")]
+    #[msg("No valid signer present")] // 22
     NoValidSignerPresent,
-    #[msg("BP must be less than or equal to 10000")]
+    #[msg("BP must be less than or equal to 10000")] // 23
     InvalidBasisPoints,
-    #[msg("The trade state account does not exist")]
+    #[msg("The trade state account does not exist")] // 24
     TradeStateDoesntExist,
-    #[msg("The trade state is not empty")]
+    #[msg("The trade state is not empty")] // 25
     TradeStateIsNotEmpty,
-    #[msg("The receipt is empty")]
+    #[msg("The receipt is empty")] // 26
     ReceiptIsEmpty,
-    #[msg("The instruction does not match")]
+    #[msg("The instruction does not match")] // 27
     InstructionMismatch,
+    #[msg("The instruction would drain the escrow below rent exemption threshold")] // 28
+    EscrowUnderRentExemption,
 }
