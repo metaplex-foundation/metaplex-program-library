@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.14
+  SOLANA_VERSION: 1.9.15
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -19,32 +19,32 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
     steps:
-    - uses: actions/checkout@v2
-    # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          core:
-            - 'core/**'
-          package:
-            - 'auction/**'
+      - uses: actions/checkout@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+            package:
+              - 'auction/**'
   build-and-test-auction:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
-      cache_id: program-auction 
+      cache_id: program-auction
 
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
-        with: 
+        with:
           solana_version: ${{ env.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
-        with: 
+        with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
       # Restore Cache from previous build/test
@@ -56,7 +56,9 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ./rust/target
-          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+          key:
+            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
+            env.RUSTC_HASH }}
 
       # Run test
       - name: test-auction-program

@@ -53,6 +53,15 @@ pub fn init_selling_resource(
         &mpl_token_metadata::id(),
     );
 
+    let (metadata, _) = Pubkey::find_program_address(
+        &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            mpl_token_metadata::id().as_ref(),
+            resource_mint.as_ref(),
+        ],
+        &mpl_token_metadata::id(),
+    );
+
     let vault_keypair = Keypair::new();
     utils::create_token_account(client, payer, &vault_keypair, &resource_mint, &vault_owner)?;
 
@@ -63,6 +72,7 @@ pub fn init_selling_resource(
         selling_resource_owner: *selling_resource_owner,
         resource_mint: *resource_mint,
         master_edition,
+        metadata,
         vault: vault_keypair.pubkey(),
         owner: vault_owner,
         resource_token: *resource_token,

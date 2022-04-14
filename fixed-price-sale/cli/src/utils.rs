@@ -95,6 +95,13 @@ pub fn create_mint(
     Ok(())
 }
 
+/// Check if `account` is empty.
+pub fn is_account_empty(client: &RpcClient, account: &Pubkey) -> Result<bool, error::Error> {
+    let account = client.get_account(account)?;
+
+    Ok(account.data.is_empty())
+}
+
 /// Mint new tokens.
 pub fn mint_to(
     client: &RpcClient,
