@@ -188,10 +188,12 @@ if [ -z ${STORAGE+x} ]; then
     echo ""
     CYN "Storage type:"
     echo "1. bundlr (default)"
-    echo  -n "$(CYN "Select the storage type") (default 1): "
+    echo "2. aws"
+    echo  -n "$(CYN "Select the storage type [1-2]") (default 1): "
     read Input
     case "$Input" in
         1) STORAGE="bundlr" ;;
+        2) STORAGE="aws" ;;
     esac
 fi
 

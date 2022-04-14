@@ -128,18 +128,11 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
         let handler = match config_data.upload_method {
             UploadMethod::Bundlr => Box::new(
-                BundlrHandler::initialize(&get_config_data(&args.config)?, &sugar_config)
-                    .await?,
+                BundlrHandler::initialize(&get_config_data(&args.config)?, &sugar_config).await?,
             ) as Box<dyn UploadHandler>,
-            UploadMethod::AWS => Box::new(
-                AWSHandler::initialize(&get_config_data(&args.config)?)
-                    .await?,
-            ) as Box<dyn UploadHandler>,
-            _ => {
-                return Err(anyhow!(format!(
-                    "Upload method '{}' currently unsupported!",
-                    &config_data.upload_method.to_string()
-                )))
+            UploadMethod::AWS => {
+                Box::new(AWSHandler::initialize(&get_config_data(&args.config)?).await?)
+                    as Box<dyn UploadHandler>
             }
         };
 

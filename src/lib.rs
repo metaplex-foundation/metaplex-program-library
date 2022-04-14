@@ -5,7 +5,6 @@ pub mod common;
 pub mod config;
 pub mod constants;
 pub mod create_config;
-pub mod data;
 pub mod deploy;
 pub mod errors;
 pub mod launch;

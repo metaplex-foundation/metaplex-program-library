@@ -149,11 +149,7 @@ impl UploadHandler for AWSHandler {
 
                     if res.is_ok() {
                         let val = res?;
-                        let link = format!(
-                            "https://{}.s3.amazonaws.com/{}",
-                            self.bucket,
-                            val.1
-                        );
+                        let link = format!("https://{}.s3.amazonaws.com/{}", self.bucket, val.1);
                         // cache item to update
                         let item = cache.items.0.get_mut(&val.0).unwrap();
 
