@@ -21,6 +21,9 @@ const HEADER_SIZE: u64 = 2000;
 /// Minimum file size for cost calculation
 const MINIMUM_SIZE: u64 = 10000;
 
+/// Size of the mock media URI for cost calculation
+const MOCK_URI_SIZE: usize = 100;
+
 struct TxInfo {
     asset_id: String,
     file_path: String,
@@ -197,56 +200,37 @@ impl BundlrHandler {
 
 #[async_trait]
 impl UploadHandler for BundlrHandler {
-    /// Upload the data to Bundlr.
-    async fn upload_data(
+    /// Funds Bundlr account for the upload.
+    async fn prepare(
         &self,
         sugar_config: &SugarConfig,
         assets: &HashMap<usize, AssetPair>,
-        cache: &mut Cache,
-        indices: &[usize],
-        data_type: DataType,
-    ) -> Result<Vec<UploadError>> {
+        media_indices: &[usize],
+        metadata_indices: &[usize],
+    ) -> Result<()> {
         // calculates the size of the files to upload
         let mut total_size = 0;
-        let mut extension = HashSet::with_capacity(1);
-        let mut paths = Vec::new();
 
-        for index in indices {
+        for index in media_indices {
             let item = assets.get(index).unwrap();
-            // chooses the file path based on the data type
-            let file_path = match data_type {
-                DataType::Media => item.media.clone(),
-                DataType::Metadata => item.metadata.clone(),
-            };
+            let path = Path::new(&item.media);
+            total_size += HEADER_SIZE + cmp::max(MINIMUM_SIZE, std::fs::metadata(path)?.len());
+        }
 
-            let path = Path::new(&file_path);
+        let mock_uri = "x".repeat(MOCK_URI_SIZE);
+
+        for index in metadata_indices {
+            let item = assets.get(index).unwrap();
+
             total_size += HEADER_SIZE
                 + cmp::max(
                     MINIMUM_SIZE,
-                    match data_type {
-                        DataType::Media => std::fs::metadata(path)?.len(),
-                        DataType::Metadata => {
-                            let cache_item = cache.items.0.get(&index.to_string()).unwrap();
-                            get_updated_metadata(&item.metadata, &cache_item.metadata_link)
-                                .unwrap()
-                                .into_bytes()
-                                .len() as u64
-                        }
-                    },
+                    get_updated_metadata(&item.metadata, &mock_uri)
+                        .unwrap()
+                        .into_bytes()
+                        .len() as u64,
                 );
-
-            let ext = path.extension().and_then(OsStr::to_str).unwrap();
-            extension.insert(String::from(ext));
-
-            paths.push(file_path);
         }
-
-        // validates that all files have the same extension
-        let extension = if extension.len() == 1 {
-            extension.iter().next().unwrap()
-        } else {
-            return Err(anyhow!("Invalid file extension: {:?}", extension));
-        };
 
         info!("Total upload size: {}", total_size);
 
@@ -311,6 +295,43 @@ impl UploadHandler for BundlrHandler {
                 return Err(error);
             }
         }
+
+        Ok(())
+    }
+
+    /// Upload the data to Bundlr.
+    async fn upload_data(
+        &self,
+        _sugar_config: &SugarConfig,
+        assets: &HashMap<usize, AssetPair>,
+        cache: &mut Cache,
+        indices: &[usize],
+        data_type: DataType,
+    ) -> Result<Vec<UploadError>> {
+        let mut extension = HashSet::with_capacity(1);
+        let mut paths = Vec::new();
+
+        for index in indices {
+            let item = assets.get(index).unwrap();
+            // chooses the file path based on the data type
+            let file_path = match data_type {
+                DataType::Media => item.media.clone(),
+                DataType::Metadata => item.metadata.clone(),
+            };
+
+            let path = Path::new(&file_path);
+            let ext = path.extension().and_then(OsStr::to_str).unwrap();
+            extension.insert(String::from(ext));
+
+            paths.push(file_path);
+        }
+
+        // validates that all files have the same extension
+        let extension = if extension.len() == 1 {
+            extension.iter().next().unwrap()
+        } else {
+            return Err(anyhow!("Invalid file extension: {:?}", extension));
+        };
 
         let sugar_tag = Tag::new("App-Name".into(), format!("Sugar {}", crate_version!()));
 
