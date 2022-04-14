@@ -1,16 +1,14 @@
 pub mod utils;
 
-use {
-    crate::utils::*,
-    anchor_lang::{
-        prelude::*,
-        solana_program::program::{invoke, invoke_signed},
-        AnchorDeserialize, AnchorSerialize,
-    },
-    anchor_spl::{
-        associated_token::AssociatedToken,
-        token::{Mint, Token, TokenAccount},
-    },
+use crate::utils::*;
+use anchor_lang::{
+    prelude::*,
+    solana_program::program::{invoke, invoke_signed},
+    AnchorDeserialize, AnchorSerialize,
+};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
 };
 
 anchor_lang::declare_id!("qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd");
@@ -21,6 +19,8 @@ const A_NAME: &str = "A";
 const B_NAME: &str = "B";
 #[program]
 pub mod token_entangler {
+    use spl_token::amount_to_ui_amount;
+
     use super::*;
 
     pub fn create_entangled_pair<'info>(
@@ -79,12 +79,17 @@ pub mod token_entangler {
             None
         };
 
+        let (mint_a_supply, mint_a_decimals) = get_mint_details(&mint_a.to_account_info())?;
+        let mint_a_ui_supply = amount_to_ui_amount(mint_a_supply, mint_a_decimals);
         require!(
-            get_mint_supply(&mint_a.to_account_info())? == 1,
+            mint_a_supply == 1 || mint_a_ui_supply == 1.0,
             ErrorCode::MustHaveSupplyOne
         );
+
+        let (mint_b_supply, mint_b_decimals) = get_mint_details(&mint_b.to_account_info())?;
+        let mint_b_ui_supply = amount_to_ui_amount(mint_b_supply, mint_b_decimals);
         require!(
-            get_mint_supply(&mint_b.to_account_info())? == 1,
+            mint_b_supply == 1 || mint_b_ui_supply == 1.0,
             ErrorCode::MustHaveSupplyOne
         );
 
@@ -143,7 +148,7 @@ pub mod token_entangler {
                 &token_b_escrow.key(),
                 &transfer_authority.key(),
                 &[],
-                1,
+                mint_b_supply,
             )?,
             &[
                 token_b.to_account_info(),
@@ -175,6 +180,7 @@ pub mod token_entangler {
         let payment_account = &ctx.accounts.payment_account;
         let payment_transfer_authority = &ctx.accounts.payment_transfer_authority;
         let token = &ctx.accounts.token;
+        let token_mint = &ctx.accounts.token_mint;
         let replacement_token_metadata = &ctx.accounts.replacement_token_metadata;
         let replacement_token = &ctx.accounts.replacement_token;
         let replacement_token_mint = &ctx.accounts.replacement_token_mint;
@@ -187,7 +193,9 @@ pub mod token_entangler {
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
 
-        if token.amount != 1 {
+        require!(token.mint == token_mint.key(), ErrorCode::InvalidMint);
+        let token_mint_supply = token_mint.supply;
+        if token.amount != token_mint_supply {
             return Err(ErrorCode::InvalidTokenAmount.into());
         }
 
@@ -245,7 +253,7 @@ pub mod token_entangler {
                 &swap_from_escrow.key(),
                 &transfer_authority.key(),
                 &[],
-                1,
+                token_mint_supply,
             )?,
             &[
                 token.to_account_info(),
@@ -255,6 +263,8 @@ pub mod token_entangler {
             ],
         )?;
 
+        let (replacement_token_mint_supply, _) =
+            get_mint_details(&replacement_token_mint.to_account_info())?;
         invoke_signed(
             &spl_token::instruction::transfer(
                 token_program.key,
@@ -262,7 +272,7 @@ pub mod token_entangler {
                 &replacement_token.key(),
                 &entangled_pair.key(),
                 &[],
-                1,
+                replacement_token_mint_supply,
             )?,
             &[
                 swap_to_escrow.to_account_info(),
@@ -353,6 +363,7 @@ pub struct Swap<'info> {
     payment_transfer_authority: UncheckedAccount<'info>,
     #[account(mut)]
     token: Account<'info, TokenAccount>,
+    token_mint: Box<Account<'info, Mint>>,
     /// CHECK: Verified through CPI
     replacement_token_metadata: UncheckedAccount<'info>,
     replacement_token_mint: Box<Account<'info, Mint>>,
