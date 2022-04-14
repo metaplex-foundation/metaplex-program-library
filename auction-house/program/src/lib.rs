@@ -1058,7 +1058,7 @@ pub mod auction_house {
     pub fn close_escrow_account<'info>(
         ctx: Context<'_, '_, '_, 'info, CloseEscrowAccount<'info>>,
         escrow_payment_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let auction_house_key = ctx.accounts.auction_house.key();
         let wallet_key = ctx.accounts.wallet.key();
 
@@ -1496,62 +1496,62 @@ pub const TRADE_STATE_SIZE: usize = 1;
 
 #[error_code]
 pub enum ErrorCode {
-    #[msg("PublicKeyMismatch")]
+    #[msg("PublicKeyMismatch")] // 0
     PublicKeyMismatch,
-    #[msg("InvalidMintAuthority")]
+    #[msg("InvalidMintAuthority")] // 1
     InvalidMintAuthority,
-    #[msg("UninitializedAccount")]
+    #[msg("UninitializedAccount")] // 2
     UninitializedAccount,
-    #[msg("IncorrectOwner")]
+    #[msg("IncorrectOwner")] // 3
     IncorrectOwner,
-    #[msg("PublicKeysShouldBeUnique")]
+    #[msg("PublicKeysShouldBeUnique")] // 4
     PublicKeysShouldBeUnique,
-    #[msg("StatementFalse")]
+    #[msg("StatementFalse")] // 5
     StatementFalse,
-    #[msg("NotRentExempt")]
+    #[msg("NotRentExempt")] // 6
     NotRentExempt,
-    #[msg("NumericalOverflow")]
+    #[msg("NumericalOverflow")] // 7
     NumericalOverflow,
-    #[msg("Expected a sol account but got an spl token account instead")]
+    #[msg("Expected a sol account but got an spl token account instead")] // 8
     ExpectedSolAccount,
-    #[msg("Cannot exchange sol for sol")]
+    #[msg("Cannot exchange sol for sol")] // 9
     CannotExchangeSOLForSol,
-    #[msg("If paying with sol, sol wallet must be signer")]
+    #[msg("If paying with sol, sol wallet must be signer")] // 10
     SOLWalletMustSign,
-    #[msg("Cannot take this action without auction house signing too")]
+    #[msg("Cannot take this action without auction house signing too")] // 11
     CannotTakeThisActionWithoutAuctionHouseSignOff,
-    #[msg("No payer present on this txn")]
+    #[msg("No payer present on this txn")] // 12
     NoPayerPresent,
-    #[msg("Derived key invalid")]
+    #[msg("Derived key invalid")] // 13
     DerivedKeyInvalid,
-    #[msg("Metadata doesn't exist")]
+    #[msg("Metadata doesn't exist")] // 14
     MetadataDoesntExist,
-    #[msg("Invalid token amount")]
+    #[msg("Invalid token amount")] // 15
     InvalidTokenAmount,
-    #[msg("Both parties need to agree to this sale")]
+    #[msg("Both parties need to agree to this sale")] // 16
     BothPartiesNeedToAgreeToSale,
-    #[msg("Cannot match free sales unless the auction house or seller signs off")]
+    #[msg("Cannot match free sales unless the auction house or seller signs off")] // 17
     CannotMatchFreeSalesWithoutAuctionHouseOrSellerSignoff,
-    #[msg("This sale requires a signer")]
+    #[msg("This sale requires a signer")] // 18
     SaleRequiresSigner,
-    #[msg("Old seller not initialized")]
+    #[msg("Old seller not initialized")] // 19
     OldSellerNotInitialized,
-    #[msg("Seller ata cannot have a delegate set")]
+    #[msg("Seller ata cannot have a delegate set")] // 20
     SellerATACannotHaveDelegate,
-    #[msg("Buyer ata cannot have a delegate set")]
+    #[msg("Buyer ata cannot have a delegate set")] // 21
     BuyerATACannotHaveDelegate,
-    #[msg("No valid signer present")]
+    #[msg("No valid signer present")] // 22
     NoValidSignerPresent,
-    #[msg("BP must be less than or equal to 10000")]
+    #[msg("BP must be less than or equal to 10000")] // 23
     InvalidBasisPoints,
-    #[msg("The trade state account does not exist")]
+    #[msg("The trade state account does not exist")] // 24
     TradeStateDoesntExist,
-    #[msg("The trade state is not empty")]
+    #[msg("The trade state is not empty")] // 25
     TradeStateIsNotEmpty,
-    #[msg("The receipt is empty")]
+    #[msg("The receipt is empty")] // 26
     ReceiptIsEmpty,
-    #[msg("The instruction does not match")]
+    #[msg("The instruction does not match")] // 27
     InstructionMismatch,
-    #[msg("The instruction would drain the escrow below rent exemption threshold")]
+    #[msg("The instruction would drain the escrow below rent exemption threshold")] // 28
     EscrowUnderRentExemption,
 }
