@@ -12,10 +12,19 @@ use crate::utils::*;
 /// A trait for storage upload handlers.
 #[async_trait]
 pub trait UploadHandler {
+    /// Prepares the upload of the specified media/metadata files.
+    async fn prepare(
+        &self,
+        sugar_config: &SugarConfig,
+        assets: &HashMap<usize, AssetPair>,
+        media_indices: &[usize],
+        metadata_indices: &[usize],
+    ) -> Result<()>;
+
     /// Upload the data to a (permanent) storage.
     async fn upload_data(
         &self,
-        config: &SugarConfig,
+        sugar_config: &SugarConfig,
         assets: &HashMap<usize, AssetPair>,
         cache: &mut Cache,
         indices: &[usize],
@@ -45,7 +54,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     let asset_pairs = get_asset_pairs(&args.assets_dir)?;
     // creates/loads the cache
-    let mut cache = load_cache(&args.cache, true).unwrap();
+    let mut cache = load_cache(&args.cache, true)?;
     // list of indices to upload
     // 0: media
     // 1: metadata
@@ -137,6 +146,10 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         };
 
         pb.finish_with_message("Connected");
+
+        handler
+            .prepare(&sugar_config, &asset_pairs, &indices.0, &indices.1)
+            .await?;
 
         println!(
             "\n{} {}Uploading media files {}",
