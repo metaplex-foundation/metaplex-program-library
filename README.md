@@ -12,7 +12,11 @@ Sugar will then use these settings by default if you don't specify them as CLI o
 
 Create a directory with a folder named "assets" where you store your json file and asset file pairs with the naming convention 0.json, 0.<ext>, 1.json, 1.<ext>, etc. where the extension is `.png`, `.json`, etc.
 
-Set up your config file, only `Bundlr` upload method is currently supported.
+Set up your config file, `Bundlr` or `AWS` upload methods are currently supported:
+
+```bash
+sugar create-config
+```
 
 Check that your assets folder contains valid metadata:
 
@@ -20,16 +24,16 @@ Check that your assets folder contains valid metadata:
 sugar validate
 ```
 
-Upload your assets to Arweave through Bundlr:
-
-```bash
-sugar upload-assets
-```
-
-Once the cache file is successfully populated, upload your items to Solana:
+Upload your assets to the selected storage:
 
 ```bash
 sugar upload
+```
+
+Once the cache file is successfully populated, deploy your items to Solana:
+
+```bash
+sugar deploy
 ```
 
 Verify that all items in your cache file have been successfully written on-chain:
@@ -37,6 +41,3 @@ Verify that all items in your cache file have been successfully written on-chain
 ```bash
 sugar verify
 ```
-
-
-
