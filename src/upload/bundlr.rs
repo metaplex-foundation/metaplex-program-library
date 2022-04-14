@@ -9,7 +9,7 @@ use tokio::time::{sleep, Duration};
 
 use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*};
 
-/// The number os retries to fetch the Bundlr balance (MAX_RETRY DELAY_UNTIL_RETRY ms limit)
+/// The number os retries to fetch the Bundlr balance (MAX_RETRY * DELAY_UNTIL_RETRY ms limit)
 const MAX_RETRY: u64 = 120;
 
 /// Time (ms) to wait until next try
