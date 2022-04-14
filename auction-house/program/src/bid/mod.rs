@@ -160,6 +160,9 @@ pub fn bid_logic<'info>(
     token_size: u64,
     public: bool,
 ) -> Result<()> {
+    
+    msg!("DEBUG: Buy Amount: {:?}", buyer_price);
+
     assert_valid_trade_state(
         &wallet.key(),
         &auction_house,
@@ -211,11 +214,13 @@ pub fn bid_logic<'info>(
         assert_keys_equal(wallet.key(), payment_account.key())?;
 
         if escrow_payment_account.lamports() < buyer_price.checked_add(rent.minimum_balance(escrow_payment_account.data_len())).ok_or(ErrorCode::NumericalOverflow)? {
+            msg!("DEBUG: Escrow account has insufficient {:?} lamports, not enough to cover the buyer price of {:?} and rent of {:?}.", escrow_payment_account.lamports(), buyer_price, rent.minimum_balance(escrow_payment_account.data_len()));
             let diff = buyer_price
                 .checked_add(rent.minimum_balance(escrow_payment_account.data_len()))
                 .ok_or(ErrorCode::NumericalOverflow)?
                 .checked_sub(escrow_payment_account.lamports())
                 .ok_or(ErrorCode::NumericalOverflow)?;
+            msg!("DEBUG: Transferring {:?} lamports to correct.", diff);
             invoke(
                 &system_instruction::transfer(
                     &payment_account.key(),
@@ -228,6 +233,10 @@ pub fn bid_logic<'info>(
                     system_program.to_account_info(),
                 ],
             )?;
+        }
+        else {
+            msg!("DEBUG: Escrow account has sufficient {:?} lamports, enough to cover the buyer price of {:?} and rent of {:?}.", escrow_payment_account.lamports(), buyer_price, rent.minimum_balance(escrow_payment_account.data_len()));
+            msg!("DEBUG: No further action needed.");
         }
     } else {
         let escrow_payment_loaded: spl_token::state::Account =

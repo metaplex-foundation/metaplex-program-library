@@ -563,11 +563,32 @@ pub fn assert_valid_trade_state<'a>(
     }
 }
 
-pub fn assert_escrow_rent_exempt(escrow_account: AccountInfo) -> Result<()>{
-    if escrow_account.lamports() < (Rent::get()?).minimum_balance(escrow_account.data_len()) {
-        return err!(ErrorCode::EscrowUnderRentExemption);
+pub fn rent_checked_sub(escrow_account: AccountInfo, diff: u64) -> Result<u64>{
+    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
+    let account_lamports: u64 = escrow_account.lamports().checked_sub(diff).ok_or(ErrorCode::NumericalOverflow)?;
+
+    if account_lamports <  rent_minimum {
+        msg!("DEBUG: Insufficient rent remaining for {:?} debit.", diff);
+        msg!("DEBUG: Providing new {:?} debit.", escrow_account.lamports() - rent_minimum);
+        Ok(escrow_account.lamports() - rent_minimum)
     }
     else {
-        Ok(())
+        msg!("DEBUG: Sufficient rent remaining after debit.");
+        Ok(diff)
+    }
+}
+
+pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64>{
+    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
+    let account_lamports: u64 = escrow_account.lamports().checked_add(diff).ok_or(ErrorCode::NumericalOverflow)?;
+
+    if account_lamports <  rent_minimum {
+        msg!("DEBUG: Insufficient rent supplied by {:?} addition.", diff);
+        msg!("DEBUG: Providing new {:?} addition.", escrow_account.lamports() - rent_minimum);
+        Ok(rent_minimum)
+    }
+    else {
+        msg!("DEBUG: Sufficient rent added after addition.");
+        Ok(diff)
     }
 }

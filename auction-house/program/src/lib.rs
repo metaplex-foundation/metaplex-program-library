@@ -395,11 +395,12 @@ pub mod auction_house {
             )?;
         } else {
             assert_keys_equal(receipt_account.key(), wallet.key())?;
+            let checked_amount = rent_checked_sub(escrow_payment_account.to_account_info(), amount)?;
             invoke_signed(
                 &system_instruction::transfer(
                     &escrow_payment_account.key(),
                     &receipt_account.key(),
-                    amount,
+                    checked_amount,
                 ),
                 &[
                     escrow_payment_account.to_account_info(),
@@ -408,9 +409,6 @@ pub mod auction_house {
                 ],
                 &[&escrow_signer_seeds],
             )?;
-
-            // Verify that escrow is still rent exempt.
-            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         Ok(())
@@ -433,6 +431,8 @@ pub mod auction_house {
         let system_program = &ctx.accounts.system_program;
         let token_program = &ctx.accounts.token_program;
         let rent = &ctx.accounts.rent;
+
+        msg!("DEBUG: Deposit Amount: {:?}", amount);
 
         let auction_house_key = auction_house.key();
         let seeds = [
@@ -493,11 +493,12 @@ pub mod auction_house {
             )?;
         } else {
             assert_keys_equal(payment_account.key(), wallet.key())?;
+            let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), amount)?;
             invoke(
                 &system_instruction::transfer(
                     &payment_account.key(),
                     &escrow_payment_account.key(),
-                    amount,
+                    checked_amount,
                 ),
                 &[
                     escrow_payment_account.to_account_info(),
@@ -505,9 +506,6 @@ pub mod auction_house {
                     system_program.to_account_info(),
                 ],
             )?;
-
-            // Verify enough exists in the escrow account to keep it rent exempt.
-            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         Ok(())
@@ -630,6 +628,8 @@ pub mod auction_house {
         let authority_clone = authority.to_account_info();
         let buyer_receipt_clone = buyer_receipt_token_account.to_account_info();
         let token_account_clone = token_account.to_account_info();
+
+        msg!("DEBUG: Buyer Price: {:?}", buyer_price);
 
         let is_native = treasury_mint.key() == spl_token::native_mint::id();
 
@@ -816,10 +816,6 @@ pub mod auction_house {
                 ],
                 &[&escrow_signer_seeds],
             )?;
-
-            // The buy instruction should handle accounting for minimum rent exemption for the
-            // escrow account, but double check here just in case.
-            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         if buyer_receipt_token_account.data_is_empty() {
@@ -922,6 +918,8 @@ pub mod auction_house {
         let system_program = &ctx.accounts.system_program;
         let program_as_signer = &ctx.accounts.program_as_signer;
         let rent = &ctx.accounts.rent;
+
+        msg!("DEBUG: Sale Price: {:?}", buyer_price);
 
         // Wallet has to be a signer but there are different kinds of errors when it's not.
         if !wallet.to_account_info().is_signer {
