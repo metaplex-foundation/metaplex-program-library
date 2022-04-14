@@ -19,7 +19,7 @@ fn string_to_array(value: &str) -> Result<[u8; 32], TransportError> {
         return Err(TransportError::Custom("String too long".to_string()));
     }
     let mut result: [u8; 32] = Default::default();
-    &result[0..value.len()].copy_from_slice(value.as_bytes());
+    result[0..value.len()].copy_from_slice(value.as_bytes());
     Ok(result)
 }
 
