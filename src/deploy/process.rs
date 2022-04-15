@@ -241,6 +241,7 @@ fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u
     for (key, value) in &cache_items.0 {
         let config_line = value.into_config_line();
         let key = key.parse::<usize>().unwrap();
+
         let chunk_index = key / CONFIG_CHUNK_SIZE;
 
         // checks if the config line is already on chain
@@ -375,7 +376,12 @@ async fn upload_config_lines(
                     let indices = res?;
 
                     for index in indices {
-                        let item = cache.items.0.get_mut(&index.to_string()).unwrap();
+                        let item = match cache.items.0.get_mut(&index.to_string()) {
+                            Some(item) => item,
+                            None => {
+                                return Err(anyhow!("Failed to get config item at index {}", index))
+                            }
+                        };
                         item.on_chain = true;
                     }
                     // saves the progress to the cache file
