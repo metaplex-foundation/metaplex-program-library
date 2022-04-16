@@ -1451,6 +1451,7 @@ pub struct WithdrawFromFee<'info> {
 pub struct CloseEscrowAccount<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
+    /// CHECK: Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
