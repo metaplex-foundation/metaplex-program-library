@@ -51,6 +51,7 @@ async fn init_native_success() {
         &t_mint_key,
         &tdw_ata,
         &auction_house_address,
+        bump,
         &auction_fee_account_key,
         fee_payer_bump,
         &auction_house_treasury_key,
@@ -118,7 +119,7 @@ async fn init_native_success_reinitialize_fail() {
         .await
         .unwrap();
     // Derive Auction House Key
-    let (auction_house_address, _bump) =
+    let (auction_house_address, bump) =
         find_auction_house_address(&authority.pubkey(), &t_mint_key);
     let (auction_fee_account_key, fee_payer_bump) =
         find_auction_house_fee_account_address(&auction_house_address);
@@ -133,6 +134,7 @@ async fn init_native_success_reinitialize_fail() {
         &t_mint_key,
         &tdw_ata,
         &auction_house_address,
+        bump,
         &auction_fee_account_key,
         fee_payer_bump,
         &auction_house_treasury_key,
@@ -162,6 +164,7 @@ async fn init_native_success_reinitialize_fail() {
         &t_mint_key,
         &hacked_tdw_ata,
         &auction_house_address,
+        bump,
         &auction_fee_account_key,
         fee_payer_bump,
         &auction_house_treasury_key,
@@ -222,6 +225,7 @@ async fn init_mint_success() {
         &t_mint_key,
         &tdw_ata,
         &auction_house_address,
+        bump,
         &auction_fee_account_key,
         fee_payer_bump,
         &auction_house_treasury_key,
@@ -291,7 +295,7 @@ async fn init_mint_failure() {
         .await
         .unwrap();
     // Derive Auction House Key
-    let (auction_house_address, _bump) =
+    let (auction_house_address, bump) =
         find_auction_house_address(&authority.pubkey(), &t_mint_key);
     let (auction_fee_account_key, fee_payer_bump) =
         find_auction_house_fee_account_address(&auction_house_address);
@@ -306,6 +310,7 @@ async fn init_mint_failure() {
         &t_mint_key,
         &tdw_ata,
         &auction_house_address,
+        bump,
         &auction_fee_account_key,
         fee_payer_bump,
         &auction_house_treasury_key,
