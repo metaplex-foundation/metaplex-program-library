@@ -30,22 +30,18 @@ fn setup_logging(level: Option<EnvFilter>) -> Result<()> {
         .open(&log_path)
         .unwrap();
 
-    // Prioritize user-provided level, otherwise read from RUST_LOG env var for log level, fall back to "info" if not set.
+    // Prioritize user-provided level, otherwise read from RUST_LOG env var for log level, fall back to "tracing" if not set.
     let env_filter = if let Some(filter) = level {
         filter
     } else {
-        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("off"))
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("trace"))
     };
 
     let formatting_layer = BunyanFormattingLayer::new("sugar".into(), file);
-    // let debug_log = tracing_subscriber::fmt::layer().with_writer(Arc::new(file));
-    let stdout_layer = tracing_subscriber::fmt::layer().pretty();
-
     let level_filter = LevelFilter::from_str(&env_filter.to_string())?;
 
     let subscriber = tracing_subscriber::registry()
-        .with(stdout_layer.with_filter(level_filter))
-        .with(formatting_layer)
+        .with(formatting_layer.with_filter(level_filter))
         .with(JsonStorageLayer);
 
     set_global_default(subscriber).expect("Failed to set global default subscriber");
