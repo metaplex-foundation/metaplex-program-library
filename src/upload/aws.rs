@@ -68,6 +68,17 @@ impl AWSHandler {
 
 #[async_trait]
 impl UploadHandler for AWSHandler {
+    /// Nothing to do, AWS client ready for the upload.
+    async fn prepare(
+        &self,
+        _sugar_config: &SugarConfig,
+        _assets: &HashMap<usize, AssetPair>,
+        _media_indices: &[usize],
+        _metadata_indices: &[usize],
+    ) -> Result<()> {
+        Ok(())
+    }
+
     /// Upload the data to AWS S3.
     async fn upload_data(
         &self,
