@@ -1024,10 +1024,23 @@ __metadata:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/cusper": ^0.0.2
-    "@metaplex-foundation/mpl-core": ^0.0.5
+    "@metaplex-foundation/mpl-core": ^0.6.1
     "@solana/web3.js": ^1.35.1
     eslint: ^8.3.0
     prettier: ^2.5.1
+    rimraf: ^3.0.2
+    typescript: ^4.6.2
+  languageName: unknown
+  linkType: soft
+
+"@metaplex-foundation/mpl-core@^0.6.1, @metaplex-foundation/mpl-core@workspace:core/js":
+  version: 0.0.0-use.local
+  resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
+  dependencies:
+    "@solana/web3.js": ^1.35.1
+    "@types/bs58": ^4.0.1
+    bs58: ^4.0.1
+    eslint: ^8.3.0
     rimraf: ^3.0.2
     typescript: ^4.6.2
   languageName: unknown
@@ -1053,19 +1066,6 @@ __metadata:
   checksum: 2e5913ab2f050d5e26152b872633f80069432356d576e16f0725781738a1f1eea8a84682baa00f59f8501c6ceda07e2356ab6b3c67812d4dcb73efb4e123c3e8
   languageName: node
   linkType: hard
-
-"@metaplex-foundation/mpl-core@workspace:core/js":
-  version: 0.0.0-use.local
-  resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
-  dependencies:
-    "@solana/web3.js": ^1.35.1
-    "@types/bs58": ^4.0.1
-    bs58: ^4.0.1
-    eslint: ^8.3.0
-    rimraf: ^3.0.2
-    typescript: ^4.6.2
-  languageName: unknown
-  linkType: soft
 
 "@metaplex-foundation/mpl-fixed-price-sale@workspace:fixed-price-sale/js":
   version: 0.0.0-use.local
