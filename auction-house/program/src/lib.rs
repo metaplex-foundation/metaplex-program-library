@@ -200,6 +200,7 @@ pub mod auction_house {
     /// Create a new Auction House instance.
     pub fn create_auction_house<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateAuctionHouse<'info>>,
+        _bump: u8,
         fee_payer_bump: u8,
         treasury_bump: u8,
         seller_fee_basis_points: u16,
@@ -1334,7 +1335,7 @@ pub struct Cancel<'info> {
 
 /// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).
 #[derive(Accounts)]
-#[instruction(fee_payer_bump: u8, treasury_bump: u8)]
+#[instruction(_bump: u8, fee_payer_bump: u8, treasury_bump: u8)]
 pub struct CreateAuctionHouse<'info> {
     /// Treasury mint account, either native SOL mint or a SPL token mint.
     pub treasury_mint: Account<'info, Mint>,
@@ -1450,6 +1451,7 @@ pub struct WithdrawFromFee<'info> {
 pub struct CloseEscrowAccount<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
+    /// CHECK: Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
