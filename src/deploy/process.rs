@@ -236,6 +236,7 @@ fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u
     for (key, value) in &cache_items.0 {
         let config_line = value.into_config_line();
         let key = key.parse::<usize>().unwrap();
+
         let chunk_index = key / CONFIG_CHUNK_SIZE;
 
         // checks if the config line is already on chain

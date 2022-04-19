@@ -45,9 +45,7 @@ impl AWSHandler {
             DataType::Metadata => {
                 // replaces the media link without modifying the original file to avoid
                 // changing the hash of the metadata file
-                get_updated_metadata(&info.file_path, &info.media_link)
-                    .unwrap()
-                    .into_bytes()
+                get_updated_metadata(&info.file_path, &info.media_link)?.into_bytes()
             }
         };
 
@@ -100,7 +98,10 @@ impl UploadHandler for AWSHandler {
             };
 
             let path = Path::new(&file_path);
-            let ext = path.extension().and_then(OsStr::to_str).unwrap();
+            let ext = path
+                .extension()
+                .and_then(OsStr::to_str)
+                .expect("Failed to convert path extension to valid unicode.");
             extension.insert(String::from(ext));
 
             paths.push(file_path);
@@ -127,12 +128,26 @@ impl UploadHandler for AWSHandler {
             // path to the media/metadata file
             let path = Path::new(&file_path);
             // id of the asset (to be used to update the cache link)
-            let asset_id = String::from(path.file_stem().and_then(OsStr::to_str).unwrap());
-            let cache_item = cache.items.0.get(&asset_id).unwrap();
+            let asset_id = String::from(
+                path.file_stem()
+                    .and_then(OsStr::to_str)
+                    .expect("Failed to get convert path file ext to valid unicode."),
+            );
+            let cache_item = match cache.items.0.get(&asset_id) {
+                Some(item) => item,
+                None => {
+                    return Err(anyhow::anyhow!(
+                        "Failed to get config item at index: {}",
+                        asset_id
+                    ))
+                }
+            };
 
             objects.push(ObjectInfo {
                 asset_id: asset_id.to_string(),
-                file_path: String::from(path.to_str().unwrap()),
+                file_path: String::from(
+                    path.to_str().expect("Failed to convert path from unicode."),
+                ),
                 media_link: cache_item.media_link.clone(),
                 data_type: data_type.clone(),
                 content_type: content_type.clone(),

@@ -59,6 +59,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     let asset_pairs = get_asset_pairs(&args.assets_dir)?;
     // creates/loads the cache
     let mut cache = load_cache(&args.cache, true)?;
+
     // list of indices to upload
     // 0: media
     // 1: metadata

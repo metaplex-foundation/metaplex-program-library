@@ -54,8 +54,9 @@ pub fn get_data_size(assets_dir: &Path, extension: &str) -> Result<u64> {
     let path = assets_dir
         .join(format!("*.{extension}"))
         .to_str()
-        .unwrap()
+        .expect("Failed to convert asset directory path from unicode.")
         .to_string();
+
     let assets = glob(&path)?;
 
     let mut total_size = 0;
@@ -76,7 +77,9 @@ pub fn get_media_extension(assets_dir: &str) -> Result<String> {
 
     for entry in entries {
         let path = entry?.path();
-        if let Some(captures) = re.captures(path.to_str().unwrap()) {
+        if let Some(captures) =
+            re.captures(path.to_str().expect("Failed to convert to valid unicode."))
+        {
             let extension = captures.get(1).unwrap().as_str();
             return Ok(extension.to_string());
         }
@@ -89,8 +92,15 @@ pub fn count_files(assets_dir: &str) -> Result<usize> {
     let files = fs::read_dir(assets_dir)?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            !entry.file_name().to_str().unwrap().starts_with('.')
-                && entry.metadata().unwrap().is_file()
+            !entry
+                .file_name()
+                .to_str()
+                .expect("Failed to convert file name to valid unicode.")
+                .starts_with('.')
+                && entry
+                    .metadata()
+                    .expect("Failed to retrieve metadata from file")
+                    .is_file()
         });
     Ok(files.count())
 }
@@ -113,12 +123,13 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
         let metadata_file = PathBuf::from(assets_dir)
             .join(format!("{i}.json"))
             .to_str()
-            .unwrap()
+            .expect("Failed to convert media path from unicode.")
             .to_string();
+
         let media_file = Path::new(assets_dir)
             .join(format!("{i}.{extension}"))
             .to_str()
-            .unwrap()
+            .expect("Failed to convert metadata path from unicode.")
             .to_string();
 
         let m = File::open(&metadata_file)?;
