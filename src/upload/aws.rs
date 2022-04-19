@@ -45,10 +45,7 @@ impl AWSHandler {
             DataType::Metadata => {
                 // replaces the media link without modifying the original file to avoid
                 // changing the hash of the metadata file
-                match get_updated_metadata(&info.file_path, &info.media_link) {
-                    Ok(metadata) => metadata.into_bytes(),
-                    Err(_) => return Err(anyhow!("Failed to get updated metadata.")),
-                }
+                get_updated_metadata(&info.file_path, &info.media_link)?.into_bytes()
             }
         };
 
