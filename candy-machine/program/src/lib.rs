@@ -124,7 +124,7 @@ pub mod candy_machine {
                     &payer.key(),
                     &gatekeeper.gatekeeper_network,
                     None,
-                );
+                )?;
             }
             // verifies that the gatway token was not created before the candy
             // machine go_live_date (avoids pre-solving the captcha)
