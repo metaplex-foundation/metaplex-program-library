@@ -376,12 +376,7 @@ async fn upload_config_lines(
                     let indices = res?;
 
                     for index in indices {
-                        let item = match cache.items.0.get_mut(&index.to_string()) {
-                            Some(item) => item,
-                            None => {
-                                return Err(anyhow!("Failed to get config item at index {}", index))
-                            }
-                        };
+                        let item = cache.items.0.get_mut(&index.to_string()).unwrap();
                         item.on_chain = true;
                     }
                     // saves the progress to the cache file

@@ -78,18 +78,12 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         let uri_start =
             CONFIG_ARRAY_START + STRING_LEN_SIZE + CONFIG_LINE_SIZE * i + CONFIG_URI_OFFSET;
         let uri_end = uri_start + MAX_URI_LENGTH;
-        let name_error = format!(
-            "Cache file failed to decode name at line item {}",
-            i.to_string()
-        );
+        let name_error = format!("Cache file failed to decode name at line item {}", i);
         let name = String::from_utf8(data[name_start..name_end].to_vec())
             .expect(&name_error)
             .trim_matches(char::from(0))
             .to_string();
-        let uri_error = format!(
-            "Cache file failed to decode uri at line item {}",
-            i.to_string()
-        );
+        let uri_error = format!("Cache file failed to decode uri at line item {}", i);
         let uri = String::from_utf8(data[uri_start..uri_end].to_vec())
             .expect(&uri_error)
             .trim_matches(char::from(0))

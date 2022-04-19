@@ -225,15 +225,7 @@ impl UploadHandler for BundlrHandler {
         let mut total_size = 0;
 
         for index in media_indices {
-            let item = match assets.get(index) {
-                Some(asset_index) => asset_index,
-                None => {
-                    return Err(anyhow::anyhow!(
-                        "Failed to get media asset at index {}",
-                        index
-                    ))
-                }
-            };
+            let item = assets.get(index).unwrap();
             let path = Path::new(&item.media);
             total_size += HEADER_SIZE + cmp::max(MINIMUM_SIZE, std::fs::metadata(path)?.len());
         }
@@ -241,15 +233,7 @@ impl UploadHandler for BundlrHandler {
         let mock_uri = "x".repeat(MOCK_URI_SIZE);
 
         for index in metadata_indices {
-            let item = match assets.get(index) {
-                Some(asset_index) => asset_index,
-                None => {
-                    return Err(anyhow::anyhow!(
-                        "Failed to get metadata asset at index {}",
-                        index
-                    ))
-                }
-            };
+            let item = assets.get(index).unwrap();
 
             total_size += HEADER_SIZE
                 + cmp::max(
@@ -430,12 +414,7 @@ impl UploadHandler for BundlrHandler {
                         let val = res?;
                         let link = format!("https://arweave.net/{}", val.clone().1);
                         // cache item to update
-                        let item = match cache.items.0.get_mut(&val.0) {
-                            Some(item) => item,
-                            None => {
-                                return Err(anyhow!("Failed to get cache item at index {}", val.0))
-                            }
-                        };
+                        let item = cache.items.0.get_mut(&val.0).unwrap();
 
                         match data_type {
                             DataType::Media => item.media_link = link,

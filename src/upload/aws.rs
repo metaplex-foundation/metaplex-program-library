@@ -45,9 +45,10 @@ impl AWSHandler {
             DataType::Metadata => {
                 // replaces the media link without modifying the original file to avoid
                 // changing the hash of the metadata file
-                get_updated_metadata(&info.file_path, &info.media_link)
-                    .expect("Failed to get updated metadata.")
-                    .into_bytes()
+                match get_updated_metadata(&info.file_path, &info.media_link) {
+                    Ok(metadata) => metadata.into_bytes(),
+                    Err(_) => return Err(anyhow!("Failed to get updated metadata.")),
+                }
             }
         };
 
@@ -92,10 +93,7 @@ impl UploadHandler for AWSHandler {
         let mut paths = Vec::new();
 
         for index in indices {
-            let item = match assets.get(index) {
-                Some(item) => item,
-                None => return Err(anyhow!("Failed to get asset at index: {}", index)),
-            };
+            let item = assets.get(index).unwrap();
             // chooses the file path based on the data type
             let file_path = match data_type {
                 DataType::Media => item.media.clone(),
@@ -182,15 +180,7 @@ impl UploadHandler for AWSHandler {
                         let val = res?;
                         let link = format!("https://{}.s3.amazonaws.com/{}", self.bucket, val.1);
                         // cache item to update
-                        let item = match cache.items.0.get_mut(&val.0) {
-                            Some(item) => item,
-                            None => {
-                                return Err(anyhow::anyhow!(
-                                    "Failed to get cache item at index: {}",
-                                    val.0
-                                ))
-                            }
-                        };
+                        let item = cache.items.0.get_mut(&val.0).unwrap();
 
                         match data_type {
                             DataType::Media => item.media_link = link,

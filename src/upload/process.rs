@@ -54,7 +54,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     let asset_pairs = get_asset_pairs(&args.assets_dir)?;
     // creates/loads the cache
-    let mut cache = load_cache(&args.cache, true).expect("Failed to load cache.");
+    let mut cache = load_cache(&args.cache, true)?;
 
     // list of indices to upload
     // 0: media
@@ -180,15 +180,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             // might fail - removes any index that the media upload failed
             if !indices.1.is_empty() {
                 for index in indices.0 {
-                    let item = match cache.items.0.get(&index.to_string()) {
-                        Some(item) => item,
-                        None => {
-                            return Err(anyhow!(
-                                "Failed to get metadata at index {}.",
-                                index.to_string()
-                            ))
-                        }
-                    };
+                    let item = cache.items.0.get(&index.to_string()).unwrap();
 
                     if item.media_link.is_empty() {
                         // no media link, not ready for metadata upload
