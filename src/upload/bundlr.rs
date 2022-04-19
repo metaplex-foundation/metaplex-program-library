@@ -191,9 +191,10 @@ impl BundlrHandler {
             DataType::Metadata => {
                 // replaces the media link without modifying the original file to avoid
                 // changing the hash of the metadata file
-                get_updated_metadata(&tx_info.file_path, &tx_info.media_link)
-                    .expect("Failed to get updated metadata.")
-                    .into_bytes()
+                match get_updated_metadata(&info.file_path, &info.media_link) {
+                    Ok(metadata) => metadata.into_bytes(),
+                    Err(_) => return Err(anyhow!("Failed to get updated metadata.")),
+                }
             }
         };
 
