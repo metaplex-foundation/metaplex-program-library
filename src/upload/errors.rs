@@ -25,4 +25,9 @@ pub enum UploadError {
 
     #[error("{0}")]
     SendDataFailed(String),
+
+    #[error(
+        "Mismatch value for \"{0}\" property in file \"{1}\": expected \"{2}\", found \"{3}\""
+    )]
+    MismatchValue(String, String, String, String),
 }

@@ -8,6 +8,7 @@ use crate::config::{data::SugarConfig, get_config_data, UploadMethod};
 use crate::upload::bundlr::BundlrHandler;
 use crate::upload::*;
 use crate::utils::*;
+use crate::validate::format::Metadata;
 
 /// A trait for storage upload handlers.
 #[async_trait]
@@ -41,6 +42,9 @@ pub struct UploadArgs {
 }
 
 pub async fn process_upload(args: UploadArgs) -> Result<()> {
+    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
+    let config_data = get_config_data(&args.config)?;
+
     // loading assets
     println!(
         "{} {}Loading assets",
@@ -94,6 +98,39 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                 indices.1.push(*index);
             }
         }
+        // sanity check: verifies that both symbol and seller-fee-basis-points are the
+        // same as the ones in the config file
+        let f = File::open(Path::new(&pair.metadata))?;
+        match serde_json::from_reader(f) {
+            Ok(metadata) => {
+                let metadata: Metadata = metadata;
+                // symbol check
+                if config_data.symbol.ne(&metadata.symbol) {
+                    return Err(UploadError::MismatchValue(
+                        "symbol".to_string(),
+                        pair.metadata.clone(),
+                        config_data.symbol,
+                        metadata.symbol,
+                    )
+                    .into());
+                }
+                // seller-fee-basis-points check
+                if config_data.seller_fee_basis_points != metadata.seller_fee_basis_points {
+                    return Err(UploadError::MismatchValue(
+                        "seller_fee_basis_points".to_string(),
+                        pair.metadata.clone(),
+                        config_data.seller_fee_basis_points.to_string(),
+                        metadata.seller_fee_basis_points.to_string(),
+                    )
+                    .into());
+                }
+            }
+            Err(err) => {
+                let error = anyhow!("Error parsing metadata ({}): {}", pair.metadata, err);
+                error!("{:?}", error);
+                return Err(error);
+            }
+        }
     }
 
     pb.finish_and_clear();
@@ -121,13 +158,11 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     // ready to upload data
 
-    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let config_data = get_config_data(&args.config)?;
     let mut errors = Vec::new();
 
     if need_upload {
         println!(
-            "\n{} {}Initiliazing upload",
+            "\n{} {}Initializing upload",
             style("[2/4]").bold().dim(),
             COMPUTER_EMOJI
         );

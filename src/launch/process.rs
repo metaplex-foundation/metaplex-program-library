@@ -87,7 +87,6 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
     let deploy_args = Arc::new(&args);
 
     let deploy_args = DeployArgs {
-        assets_dir: deploy_args.assets_dir.clone(),
         config: deploy_args.config.clone(),
         keypair: deploy_args.keypair.clone(),
         rpc_url: deploy_args.rpc_url.clone(),

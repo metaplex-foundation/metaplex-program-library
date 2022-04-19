@@ -1,25 +1,23 @@
+pub use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
+
 use crate::validate::errors::ValidateError;
 
-pub const MAX_NAME_LENGTH: usize = 32;
-pub const MAX_SYMBOL_LENGTH: usize = 10;
-pub const MAX_URI_LENGTH: usize = 200;
-
 pub fn check_name(name: &str) -> Result<(), ValidateError> {
-    if name.chars().count() > 32 {
+    if name.len() > MAX_NAME_LENGTH {
         return Err(ValidateError::NameTooLong);
     }
     Ok(())
 }
 
 pub fn check_symbol(symbol: &str) -> Result<(), ValidateError> {
-    if symbol.chars().count() > 10 {
+    if symbol.len() > MAX_SYMBOL_LENGTH {
         return Err(ValidateError::SymbolTooLong);
     }
     Ok(())
 }
 
 pub fn check_url(url: &str) -> Result<(), ValidateError> {
-    if url.chars().count() > 200 {
+    if url.len() > MAX_URI_LENGTH {
         return Err(ValidateError::UrlTooLong);
     }
     Ok(())

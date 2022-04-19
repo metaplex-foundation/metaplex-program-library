@@ -62,6 +62,10 @@ pub struct ConfigData {
 
     #[serde(serialize_with = "to_option_string")]
     pub aws_s3_bucket: Option<String>,
+
+    pub symbol: String,
+
+    pub seller_fee_basis_points: u16,
 }
 
 pub fn to_string<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>

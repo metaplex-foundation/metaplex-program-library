@@ -12,6 +12,7 @@ use std::{cmp, str::FromStr, sync::Arc};
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 use mpl_candy_machine::{CandyMachineData, ConfigLine, Creator as CandyCreator};
+pub use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
 
 use crate::cache::*;
 use crate::candy_machine::uuid_from_pubkey;
@@ -21,10 +22,7 @@ use crate::deploy::data::*;
 use crate::deploy::errors::*;
 use crate::setup::{setup_client, sugar_setup};
 use crate::utils::*;
-use crate::validate::format::Metadata;
-
-/// Name of the first metadata file.
-const METADATA_FILE: &str = "0.json";
+use crate::validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url};
 
 struct TxInfo {
     client: Arc<Client>,
@@ -35,7 +33,7 @@ struct TxInfo {
 
 pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     // loads the cache file (this needs to have been created by
-    // the upload_assets command)
+    // the upload command)
     let mut cache = load_cache(&args.cache, false)?;
 
     if cache.items.0.is_empty() {
@@ -50,10 +48,20 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         return Err(CacheError::CacheFileNotFound(args.cache).into());
     }
 
-    // checks that all metadata links are present
+    // checks that all metadata information are present and have the
+    // correct length
+
     for (index, item) in &cache.items.0 {
+        if item.name.is_empty() {
+            return Err(DeployError::MissingName(index.to_string()).into());
+        } else {
+            check_name(&item.name)?;
+        }
+
         if item.metadata_link.is_empty() {
-            return Err(UploadError::MissingMetadataLink(index.to_string()).into());
+            return Err(DeployError::MissingMetadataLink(index.to_string()).into());
+        } else {
+            check_url(&item.metadata_link)?;
         }
     }
 
@@ -68,15 +76,19 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
     let candy_machine_address = &cache.program.candy_machine;
 
+    // checks the candy machine data
+
     let num_items = config_data.number;
 
-    // Do this check before creating a candy machine.
     if num_items != (cache.items.0.len() as u64) {
         return Err(anyhow!(
             "Number of items ({}) do not match cache items ({})",
             num_items,
             cache.items.0.len()
         ));
+    } else {
+        check_symbol(&config_data.symbol)?;
+        check_seller_fee_basis_points(config_data.seller_fee_basis_points)?;
     }
 
     let candy_pubkey = if candy_machine_address.is_empty() {
@@ -93,21 +105,8 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         let candy_keypair = Keypair::generate(&mut OsRng);
         let candy_pubkey = candy_keypair.pubkey();
 
-        // loads the metadata of the first cache item
-        let metadata: Metadata = {
-            let f = File::open(Path::new(&args.assets_dir).join(METADATA_FILE))?;
-            match serde_json::from_reader(f) {
-                Ok(metadata) => metadata,
-                Err(err) => {
-                    let error = anyhow!("Error parsing metadata ({}): {}", METADATA_FILE, err);
-                    error!("{:?}", error);
-                    return Err(error);
-                }
-            }
-        };
-
         let uuid = uuid_from_pubkey(&candy_pubkey);
-        let candy_data = create_candy_machine_data(&config_data, uuid, metadata)?;
+        let candy_data = create_candy_machine_data(&config_data, uuid)?;
 
         let sig = initialize_candy_machine(&candy_keypair, candy_data, client.clone())?;
         info!("Candy machine initialized with sig: {}", sig);
@@ -178,11 +177,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 }
 
 /// Create the candy machine data struct.
-fn create_candy_machine_data(
-    config: &ConfigData,
-    uuid: String,
-    metadata: Metadata,
-) -> Result<CandyMachineData> {
+fn create_candy_machine_data(config: &ConfigData, uuid: String) -> Result<CandyMachineData> {
     let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
 
     let end_settings = config.end_settings.as_ref().map(|s| s.into_candy_format());
@@ -211,8 +206,8 @@ fn create_candy_machine_data(
     let data = CandyMachineData {
         uuid,
         price: price_as_lamports(config.price),
-        symbol: metadata.symbol,
-        seller_fee_basis_points: metadata.seller_fee_basis_points,
+        symbol: config.symbol.clone(),
+        seller_fee_basis_points: config.seller_fee_basis_points,
         max_supply: config.number,
         is_mutable: config.is_mutable,
         retain_authority: config.retain_authority,

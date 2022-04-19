@@ -508,6 +508,8 @@ cat >$CONFIG_FILE <<-EOM
 {
     "price": 0.1,
     "number": $ITEMS,
+    "symbol": "TEST",
+    "sellerFeeBasisPoints": 500,
     "gatekeeper": null,
     "solTreasuryAccount": "$(solana address)",
     "splTokenAccount": null,
@@ -559,7 +561,7 @@ function upload {
 
 # run the deploy command
 function deploy {
-    $SUGAR_BIN deploy -c ${CONFIG_FILE} --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC $ASSETS_DIR
+    $SUGAR_BIN deploy -c ${CONFIG_FILE} --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC
     EXIT_CODE=$?
     if [ ! $EXIT_CODE -eq 0 ]; then
         MAG "<<<"

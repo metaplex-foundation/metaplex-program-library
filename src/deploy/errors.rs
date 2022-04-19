@@ -1,9 +1,9 @@
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum UploadError {
-    #[error("Invalid arloader manifest key: {0}")]
-    InvalidArloaderManifestKey(String),
+pub enum DeployError {
     #[error("Missing metadata link for cache item {0}")]
     MissingMetadataLink(String),
+    #[error("Missing name for cache item {0}")]
+    MissingName(String),
 }
