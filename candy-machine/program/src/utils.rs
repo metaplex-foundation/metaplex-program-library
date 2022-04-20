@@ -84,7 +84,7 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> Result<()> {
     } = params;
 
     let mut signer_seeds = vec![];
-    if authority_signer_seeds.len() > 0 {
+    if !authority_signer_seeds.is_empty() {
         signer_seeds.push(authority_signer_seeds)
     }
 
@@ -104,7 +104,7 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> Result<()> {
     result.map_err(|_| CandyError::TokenTransferFailed.into())
 }
 
-pub fn assert_is_ata<'a>(
+pub fn assert_is_ata(
     ata: &AccountInfo,
     wallet: &Pubkey,
     mint: &Pubkey,

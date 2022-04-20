@@ -69,10 +69,10 @@ pub mod candy_machine {
         if let Some(es) = &candy_machine.data.end_settings {
             match es.end_setting_type {
                 EndSettingType::Date => {
-                    if clock.unix_timestamp > es.number as i64 {
-                        if ctx.accounts.payer.key() != candy_machine.authority {
-                            return err!(CandyError::CandyMachineNotLive);
-                        }
+                    if clock.unix_timestamp > es.number as i64
+                        && ctx.accounts.payer.key() != candy_machine.authority
+                    {
+                        return err!(CandyError::CandyMachineNotLive);
                     }
                 }
                 EndSettingType::Amount => {
@@ -246,7 +246,10 @@ pub mod candy_machine {
             let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
             let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
+
+            // If we ever add another account, this will need to be uncommented:
+            // remaining_accounts_counter += 1;
+
             let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
             if token_account.amount < price {
@@ -284,7 +287,7 @@ pub mod candy_machine {
             .checked_rem(candy_machine.data.items_available)
             .ok_or(CandyError::NumericalOverflowError)? as usize;
 
-        let config_line = get_config_line(&candy_machine, modded, candy_machine.items_redeemed)?;
+        let config_line = get_config_line(candy_machine, modded, candy_machine.items_redeemed)?;
 
         candy_machine.items_redeemed = candy_machine
             .items_redeemed
@@ -430,7 +433,7 @@ pub mod candy_machine {
     pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> Result<()> {
         let ixs = &ctx.accounts.instructions;
         let previous_instruction = get_instruction_relative(-1, ixs)?;
-        if &previous_instruction.program_id != &candy_machine::id() {
+        if previous_instruction.program_id != candy_machine::id() {
             msg!(
                 "Transaction had ix with program id {}",
                 &previous_instruction.program_id
@@ -452,7 +455,7 @@ pub mod candy_machine {
         let metadata = ctx.accounts.metadata.key();
         let payer = ctx.accounts.payer.key();
 
-        if &signer != &payer {
+        if signer != payer {
             msg!(
                 "Signer with pubkey {} does not match the mint ix Signer with pubkey {}",
                 mint_ix_cm,
@@ -460,7 +463,7 @@ pub mod candy_machine {
             );
             return err!(CandyError::SuspiciousTransaction);
         }
-        if &mint_ix_cm != &candy_key {
+        if mint_ix_cm != candy_key {
             msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, candy_key);
             return err!(CandyError::SuspiciousTransaction);
         }
@@ -475,7 +478,7 @@ pub mod candy_machine {
 
         let collection_pda = &ctx.accounts.collection_pda;
         let collection_mint = ctx.accounts.collection_mint.to_account_info();
-        if &collection_pda.mint != &collection_mint.key() {
+        if collection_pda.mint != collection_mint.key() {
             return err!(CandyError::MismatchedCollectionMint);
         }
         let seeds = [b"collection".as_ref(), candy_key.as_ref()];
@@ -535,7 +538,7 @@ pub mod candy_machine {
         candy_machine.wallet = ctx.accounts.wallet.key();
         candy_machine.data = data;
 
-        if ctx.remaining_accounts.len() > 0 {
+        if !ctx.remaining_accounts.is_empty() {
             candy_machine.token_mint = Some(ctx.remaining_accounts[0].key())
         } else {
             candy_machine.token_mint = None;
@@ -607,7 +610,7 @@ pub mod candy_machine {
             let mask = u8::pow(2, position_from_right as u32);
 
             let old_value_in_vec = data[my_position_in_vec];
-            data[my_position_in_vec] = data[my_position_in_vec] | mask;
+            data[my_position_in_vec] |= mask;
             msg!(
                 "My position in vec is {} my mask is going to be {}, the old value is {}",
                 position,
@@ -652,13 +655,13 @@ pub mod candy_machine {
             items_redeemed: 0,
         };
 
-        if ctx.remaining_accounts.len() > 0 {
+        if !ctx.remaining_accounts.is_empty() {
             let token_mint_info = &ctx.remaining_accounts[0];
-            let _token_mint: Mint = assert_initialized(&token_mint_info)?;
+            let _token_mint: Mint = assert_initialized(token_mint_info)?;
             let token_account: spl_token::state::Account =
                 assert_initialized(&ctx.accounts.wallet)?;
 
-            assert_owned_by(&token_mint_info, &spl_token::id())?;
+            assert_owned_by(token_mint_info, &spl_token::id())?;
             assert_owned_by(&ctx.accounts.wallet, &spl_token::id())?;
 
             if token_account.mint != token_mint_info.key() {
@@ -709,10 +712,10 @@ pub mod candy_machine {
         let mint = ctx.accounts.mint.to_account_info();
         let metadata: Metadata =
             Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-        if &metadata.update_authority != &ctx.accounts.authority.key() {
+        if metadata.update_authority != ctx.accounts.authority.key() {
             return err!(CandyError::IncorrectCollectionAuthority);
         };
-        if &metadata.mint != &mint.key() {
+        if metadata.mint != mint.key() {
             return err!(CandyError::MintMismatch);
         }
         let edition = ctx.accounts.edition.to_account_info();
@@ -743,7 +746,7 @@ pub mod candy_machine {
                     ctx.accounts.authority.key(),
                     ctx.accounts.payer.key(),
                     ctx.accounts.metadata.key(),
-                    mint.key.clone(),
+                    *mint.key,
                 ),
                 approve_collection_infos.as_slice(),
             )?;
@@ -761,7 +764,7 @@ pub mod candy_machine {
                     COLLECTION_PDA_SIZE,
                     &[
                         b"collection".as_ref(),
-                        &candy_machine.key().as_ref(),
+                        candy_machine.key().as_ref(),
                         &[*ctx.bumps.get("collection_pda").unwrap()],
                     ],
                 )?;
@@ -781,10 +784,10 @@ pub mod candy_machine {
         let mint = ctx.accounts.mint.to_account_info();
         let metadata: Metadata =
             Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-        if &metadata.update_authority != &ctx.accounts.authority.key() {
+        if metadata.update_authority != ctx.accounts.authority.key() {
             return err!(CandyError::IncorrectCollectionAuthority);
         };
-        if &metadata.mint != &mint.key() {
+        if metadata.mint != mint.key() {
             return err!(CandyError::MintMismatch);
         }
 
@@ -840,10 +843,10 @@ pub mod candy_machine {
             .checked_add(snapshot)
             .ok_or(CandyError::NumericalOverflowError)?;
 
-        if ctx.remaining_accounts.len() > 0 {
+        if !ctx.remaining_accounts.is_empty() {
             let seeds = [b"collection".as_ref(), pay.key.as_ref()];
             let pay = &ctx.remaining_accounts[0];
-            if &pay.key() != &Pubkey::find_program_address(&seeds, &candy_machine::id()).0 {
+            if pay.key() != Pubkey::find_program_address(&seeds, &candy_machine::id()).0 {
                 return err!(CandyError::MismatchedCollectionPDA);
             }
             let snapshot: u64 = pay.lamports();
@@ -1240,28 +1243,33 @@ pub fn get_good_index(
             let mask = u8::pow(2, position_from_right as u32);
 
             taken = mask & arr[my_position_in_vec];
-            if taken > 0 {
-                //msg!("Index to use {} is taken", index_to_use);
-                if pos {
-                    index_to_use += 1;
-                } else {
-                    if index_to_use == 0 {
-                        break;
+
+            match taken {
+                x if x > 0 => {
+                    //msg!("Index to use {} is taken", index_to_use);
+                    if pos {
+                        index_to_use += 1;
+                    } else {
+                        if index_to_use == 0 {
+                            break;
+                        }
+                        index_to_use -= 1;
                     }
-                    index_to_use -= 1;
                 }
-            } else if taken == 0 {
-                //msg!("Index to use {} is not taken, exiting", index_to_use);
-                found = true;
-                arr[my_position_in_vec] = arr[my_position_in_vec] | mask;
+                0 => {
+                    //msg!("Index to use {} is not taken, exiting", index_to_use);
+                    found = true;
+                    arr[my_position_in_vec] |= mask;
+                }
+                _ => (),
             }
         }
     }
     Ok((index_to_use, found))
 }
 
-pub fn get_config_line<'info>(
-    a: &Account<'info, CandyMachine>,
+pub fn get_config_line(
+    a: &Account<'_, CandyMachine>,
     index: usize,
     mint_number: u64,
 ) -> Result<ConfigLine> {
@@ -1300,12 +1308,16 @@ pub fn get_config_line<'info>(
 
     let mut name_vec = vec![];
     let mut uri_vec = vec![];
+
+    #[allow(clippy::needless_range_loop)]
     for i in 4..4 + MAX_NAME_LENGTH {
         if data_array[i] == 0 {
             break;
         }
         name_vec.push(data_array[i])
     }
+
+    #[allow(clippy::needless_range_loop)]
     for i in 8 + MAX_NAME_LENGTH..8 + MAX_NAME_LENGTH + MAX_URI_LENGTH {
         if data_array[i] == 0 {
             break;
