@@ -3,6 +3,7 @@ use anchor_client::solana_sdk::{
     signature::{Keypair, Signature, Signer},
     system_instruction, system_program, sysvar,
 };
+use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 use console::style;
 use futures::future::select_all;
@@ -112,33 +113,46 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
         let program = client.program(pid);
 
-        if let Some(spl_token) = config_data.spl_token {
-            let spl_token_account_figured = if config_data.spl_token_account.is_some() {
-                config_data.spl_token_account
-            } else {
-                Some(get_associated_token_address(&program.payer(), &spl_token))
-            };
+        let treasury_wallet = match config_data.spl_token {
+            Some(spl_token) => {
+                let spl_token_account_figured = if config_data.spl_token_account.is_some() {
+                    config_data.spl_token_account
+                } else {
+                    Some(get_associated_token_address(&program.payer(), &spl_token))
+                };
 
-            if config_data.sol_treasury_account.is_some() {
-                return Err(anyhow!("If spl-token-account or spl-token is set then sol-treasury-account cannot be set"));
+                if config_data.sol_treasury_account.is_some() {
+                    return Err(anyhow!("If spl-token-account or spl-token is set then sol-treasury-account cannot be set"));
+                }
+
+                // validates the mint address of the token accepted as payment
+                check_spl_token(&program, &spl_token.to_string())?;
+
+                if let Some(token_account) = spl_token_account_figured {
+                    // validates the spl token wallet to receive proceedings from SPL token payments
+                    check_spl_token_account(&program, &token_account.to_string())?;
+                    token_account
+                } else {
+                    return Err(anyhow!(
+                        "If spl-token is set, spl-token-account must also be set"
+                    ));
+                }
             }
-
-            // validates the mint address of the token accepted as payment
-            check_spl_token(&program, &spl_token.to_string())?;
-
-            if let Some(token_account) = spl_token_account_figured {
-                // validates the spl token wallet to receive proceedings from SPL token payments
-                check_spl_token_account(&program, &token_account.to_string())?;
-            } else {
-                return Err(anyhow!(
-                    "If spl-token is set, spl-token account must also be set"
-                ));
-            };
-        }
+            None => match config_data.sol_treasury_account {
+                Some(sol_treasury_account) => sol_treasury_account,
+                None => sugar_config.keypair.pubkey(),
+            },
+        };
 
         // all good, let's create the candy machine
 
-        let sig = initialize_candy_machine(&candy_keypair, candy_data, program)?;
+        let sig = initialize_candy_machine(
+            &config_data,
+            &candy_keypair,
+            candy_data,
+            treasury_wallet,
+            program,
+        )?;
         info!("Candy machine initialized with sig: {}", sig);
         info!(
             "Candy machine created with address: {}",
@@ -301,8 +315,10 @@ fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u
 
 /// Send the `initialize_candy_machine` instruction to the candy machine program.
 fn initialize_candy_machine(
+    config_data: &ConfigData,
     candy_account: &Keypair,
     candy_machine_data: CandyMachineData,
+    treasury_wallet: Pubkey,
     program: Program,
 ) -> Result<Signature> {
     let payer = program.payer();
@@ -319,7 +335,8 @@ fn initialize_candy_machine(
         candy_account_size,
         candy_account.pubkey().to_string()
     );
-    let sig = program
+
+    let mut tx = program
         .request()
         .instruction(system_instruction::create_account(
             &payer,
@@ -333,7 +350,7 @@ fn initialize_candy_machine(
         .signer(candy_account)
         .accounts(nft_accounts::InitializeCandyMachine {
             candy_machine: candy_account.pubkey(),
-            wallet: payer,
+            wallet: treasury_wallet,
             authority: payer,
             payer,
             system_program: system_program::id(),
@@ -341,8 +358,17 @@ fn initialize_candy_machine(
         })
         .args(nft_instruction::InitializeCandyMachine {
             data: candy_machine_data,
-        })
-        .send()?;
+        });
+
+    if let Some(token) = config_data.spl_token {
+        tx = tx.accounts(AccountMeta {
+            pubkey: token,
+            is_signer: false,
+            is_writable: false,
+        });
+    }
+
+    let sig = tx.send()?;
 
     Ok(sig)
 }
