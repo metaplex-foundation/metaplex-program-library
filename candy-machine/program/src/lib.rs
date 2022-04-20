@@ -124,7 +124,8 @@ pub mod candy_machine {
                     &payer.key(),
                     &gatekeeper.gatekeeper_network,
                     None,
-                )?;
+                )
+                .map_err(Into::<ProgramError>::into)?;
             }
             // verifies that the gatway token was not created before the candy
             // machine go_live_date (avoids pre-solving the captcha)
@@ -420,7 +421,7 @@ pub mod candy_machine {
                 && program_id != associated_token
             {
                 msg!("Transaction had ix with program id {}", program_id);
-                return err!(CandyError::SuspiciousTransaction.into());
+                return err!(CandyError::SuspiciousTransaction);
             }
         }
         Ok(())
