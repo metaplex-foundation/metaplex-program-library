@@ -7,6 +7,7 @@ use anyhow::Result;
 use console::style;
 use futures::future::select_all;
 use rand::rngs::OsRng;
+use spl_associated_token_account::get_associated_token_address;
 use std::{cmp, str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
@@ -108,7 +109,36 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         let uuid = uuid_from_pubkey(&candy_pubkey);
         let candy_data = create_candy_machine_data(&config_data, uuid)?;
 
-        let sig = initialize_candy_machine(&candy_keypair, candy_data, client.clone())?;
+        let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
+        let program = client.program(pid);
+
+        if let Some(spl_token) = config_data.spl_token {
+            let spl_token_account_figured = if config_data.spl_token_account.is_some() {
+                config_data.spl_token_account
+            } else {
+                Some(get_associated_token_address(&program.payer(), &spl_token))
+            };
+
+            if config_data.sol_treasury_account.is_some() {
+                return Err(anyhow!("If spl-token-account or spl-token is set then sol-treasury-account cannot be set"));
+            }
+
+            // validates the mint address of the token accepted as payment
+            check_spl_token(&program, &spl_token.to_string())?;
+
+            if let Some(token_account) = spl_token_account_figured {
+                // validates the spl token wallet to receive proceedings from SPL token payments
+                check_spl_token_account(&program, &token_account.to_string())?;
+            } else {
+                return Err(anyhow!(
+                    "If spl-token is set, spl-token account must also be set"
+                ));
+            };
+        }
+
+        // all good, let's create the candy machine
+
+        let sig = initialize_candy_machine(&candy_keypair, candy_data, program)?;
         info!("Candy machine initialized with sig: {}", sig);
         info!(
             "Candy machine created with address: {}",
@@ -273,11 +303,8 @@ fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u
 fn initialize_candy_machine(
     candy_account: &Keypair,
     candy_machine_data: CandyMachineData,
-    client: Arc<Client>,
+    program: Program,
 ) -> Result<Signature> {
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-
-    let program = client.program(pid);
     let payer = program.payer();
     let items_available = candy_machine_data.items_available;
 

@@ -1,7 +1,7 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
-
+use spl_associated_token_account::get_associated_token_address;
 use std::str::FromStr;
 
 use mpl_candy_machine::instruction as nft_instruction;
@@ -11,6 +11,7 @@ use crate::candy_machine::*;
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
 use crate::constants::CANDY_MACHINE_V2;
+use crate::utils::{check_spl_token, check_spl_token_account};
 use crate::{cache::load_cache, config::data::ConfigData};
 
 pub struct UpdateArgs {
@@ -58,12 +59,43 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
 
     let program = client.program(pid);
 
+    let treasury_account = match config_data.spl_token {
+        Some(spl_token) => {
+            let spl_token_account_figured = if config_data.spl_token_account.is_some() {
+                config_data.spl_token_account
+            } else {
+                Some(get_associated_token_address(&program.payer(), &spl_token))
+            };
+
+            if config_data.sol_treasury_account.is_some() {
+                return Err(anyhow!("If spl-token-account or spl-token is set then sol-treasury-account cannot be set"));
+            }
+
+            // validates the mint address of the token accepted as payment
+            check_spl_token(&program, &spl_token.to_string())?;
+
+            if let Some(token_account) = spl_token_account_figured {
+                // validates the spl token wallet to receive proceedings from SPL token payments
+                check_spl_token_account(&program, &token_account.to_string())?;
+                token_account
+            } else {
+                return Err(anyhow!(
+                    "If spl-token is set, spl-token-account must also be set"
+                ));
+            }
+        }
+        None => match config_data.sol_treasury_account {
+            Some(sol_treasury_account) => sol_treasury_account,
+            None => sugar_config.keypair.pubkey(),
+        },
+    };
+
     let mut builder = program
         .request()
         .accounts(nft_accounts::UpdateCandyMachine {
             candy_machine: candy_machine_id,
             authority: program.payer(),
-            wallet: config_data.sol_treasury_account.unwrap(),
+            wallet: treasury_account,
         })
         .args(nft_instruction::UpdateCandyMachine {
             data: candy_machine_data,
@@ -88,7 +120,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
             .accounts(nft_accounts::UpdateCandyMachine {
                 candy_machine: candy_machine_id,
                 authority: program.payer(),
-                wallet: config_data.sol_treasury_account.unwrap(),
+                wallet: treasury_account,
             })
             .args(nft_instruction::UpdateAuthority {
                 new_authority: Some(new_authority_pubkey),

@@ -4,17 +4,20 @@ use console::{style, Style};
 use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
 use std::fs::OpenOptions;
-use std::path::Path;
-use std::str::FromStr;
+use std::{path::Path, str::FromStr, sync::Arc};
 use url::Url;
 
-use crate::common::{CANDY_EMOJI, CONFETTI_EMOJI};
+use crate::common::{CANDY_EMOJI, CANDY_MACHINE_V2, CONFETTI_EMOJI};
 use crate::config::{
     go_live_date_as_timestamp, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
     HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
 };
-use crate::constants::{DEFAULT_ASSETS, DEFAULT_CONFIG};
-use crate::upload::count_files;
+use crate::setup::{setup_client, sugar_setup};
+use crate::utils::{check_spl_token, check_spl_token_account};
+use crate::{
+    constants::{DEFAULT_ASSETS, DEFAULT_CONFIG},
+    upload::count_files,
+};
 
 pub struct CreateConfigArgs {
     pub keypair: Option<String>,
@@ -221,6 +224,11 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         None
     };
 
+    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
+    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
+    let client = Arc::new(setup_client(&sugar_config)?);
+    let program = client.program(pid);
+
     if choices.contains(&SPL_INDEX) {
         config_data.sol_treasury_account = None;
         config_data.spl_token = Some(
@@ -228,6 +236,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                 &Input::with_theme(&theme)
                     .with_prompt("What is your SPL token mint?")
                     .validate_with(pubkey_validator)
+                    .validate_with(|input: &String| -> Result<()> {
+                        check_spl_token(&program, input)
+                    })
                     .interact()
                     .unwrap(),
             )
@@ -238,6 +249,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                 &Input::with_theme(&theme)
                     .with_prompt("What is your SPL token account address (the account that will hold the SPL token mints)?")
                     .validate_with(pubkey_validator)
+                    .validate_with(|input: &String| -> Result<()> {
+                        check_spl_token_account(&program, input)
+                    })
                     .interact()
                     .unwrap(),
             )

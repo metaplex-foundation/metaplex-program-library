@@ -1,7 +1,15 @@
 pub use anchor_client::solana_sdk::hash::Hash;
+use anchor_client::{
+    solana_sdk::{
+        program_pack::{IsInitialized, Pack},
+        pubkey::Pubkey,
+    },
+    Program,
+};
 pub use anyhow::{anyhow, Result};
 pub use indicatif::{ProgressBar, ProgressStyle};
 use solana_client::rpc_client::RpcClient;
+use spl_token::state::{Account, Mint};
 use std::str::FromStr;
 
 use crate::config::data::Cluster;
@@ -26,6 +34,38 @@ pub fn get_cluster(rpc_client: RpcClient) -> Result<Cluster> {
         Err(anyhow!(format!(
             "Genesis hash '{}' doesn't match supported Solana clusters for Bundlr",
             genesis_hash
+        )))
+    }
+}
+
+/// Check that the mint token is a valid address.
+pub fn check_spl_token(program: &Program, input: &str) -> Result<()> {
+    let pubkey = Pubkey::from_str(input)?;
+    let token_data = program.rpc().get_account_data(&pubkey)?;
+    let token_mint = Mint::unpack_from_slice(&token_data)?;
+
+    if token_mint.is_initialized {
+        Ok(())
+    } else {
+        Err(anyhow!(format!(
+            "The specified spl-token is not initialized: {}",
+            input
+        )))
+    }
+}
+
+/// Check that the mint token account is a valid account.
+pub fn check_spl_token_account(program: &Program, input: &str) -> Result<()> {
+    let pubkey = Pubkey::from_str(input)?;
+    let ata_data = program.rpc().get_account_data(&pubkey)?;
+    let ata_account = Account::unpack_unchecked(&ata_data)?;
+
+    if IsInitialized::is_initialized(&ata_account) {
+        Ok(())
+    } else {
+        Err(anyhow!(format!(
+            "The specified spl-token account is not initialized: {}",
+            input
         )))
     }
 }
