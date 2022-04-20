@@ -10,7 +10,6 @@ use anchor_client::{
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
 use rand::rngs::OsRng;
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
@@ -27,6 +26,7 @@ use crate::cache::load_cache;
 use crate::candy_machine::*;
 use crate::common::*;
 use crate::mint::pdas::*;
+use crate::utils::*;
 
 pub struct MintArgs {
     pub keypair: Option<String>,
@@ -73,21 +73,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
     info!("Candy machine program id: {:?}", CANDY_MACHINE_V2);
 
     if number == 1 {
-        let pb = ProgressBar::new_spinner();
-        pb.enable_steady_tick(120);
-        pb.set_style(
-            ProgressStyle::default_spinner()
-                .tick_strings(&[
-                    "▹▹▹▹▹",
-                    "▸▹▹▹▹",
-                    "▹▸▹▹▹",
-                    "▹▹▸▹▹",
-                    "▹▹▹▸▹",
-                    "▹▹▹▹▸",
-                    "▪▪▪▪▪",
-                ])
-                .template("{spinner:.dim} {msg}"),
-        );
+        let pb = spinner_with_style();
         pb.set_message(format!(
             "{} item(s) remaining",
             candy_machine_state.data.items_available - candy_machine_state.items_redeemed
@@ -111,21 +97,23 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
 
         pb.finish_with_message(result);
     } else {
-        let pb = ProgressBar::new(number);
+        let pb = progress_bar_with_style(number);
 
-        (0..number).into_iter().for_each(|_num| {
-            mint(
+        for _i in 0..number {
+            if let Err(err) = mint(
                 Arc::clone(&client),
                 candy_machine_id,
                 Arc::clone(&candy_machine_state),
-            )
-            .ok();
+            ) {
+                pb.abandon_with_message(format!("{}", style("Mint failed ").red().bold()));
+                return Err(err);
+            }
+
             pb.inc(1);
-        });
+        }
+
         pb.finish();
     }
-
-    println!("\n{}", style("[Completed]").bold().dim());
 
     Ok(())
 }
