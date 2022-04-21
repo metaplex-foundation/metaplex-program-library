@@ -2,12 +2,18 @@
 //! AuctionHouse is a protocol for marketplaces to implement a decentralized sales contract. It is simple, fast and very cheap. AuctionHouse is a Solana program available on Mainnet Beta and Devnet. Anyone can create an AuctionHouse and accept any SPL token they wish.
 //!
 //! Full docs can be found [here](https://docs.metaplex.com/auction-house/definition).
+
+pub mod auctioneer;
 pub mod bid;
 pub mod constants;
+pub mod errors;
 pub mod pda;
 pub mod receipt;
+pub mod state;
 pub mod utils;
-use crate::{bid::*, constants::*, receipt::*, utils::*};
+
+use crate::{auctioneer::*, bid::*, constants::*, receipt::*, state::*, utils::*};
+
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -1082,6 +1088,20 @@ pub mod auction_house {
         Ok(())
     }
 
+    pub fn delegate_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, DelegateAuctioneer<'info>>,
+        scopes: Vec<AuthorityScope>,
+    ) -> Result<()> {
+        auctioneer::delegate_auctioneer(ctx, Box::new(scopes))
+    }
+
+    pub fn update_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateAuctioneer<'info>>,
+        scopes: Vec<AuthorityScope>,
+    ) -> Result<()> {
+        auctioneer::update_auctioneer(ctx, Box::new(scopes))
+    }
+
     /// Create a listing receipt by creating a `listing_receipt` account.
     pub fn print_listing_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
@@ -1456,41 +1476,6 @@ pub struct CloseEscrowAccount<'info> {
     pub auction_house: Account<'info, AuctionHouse>,
     pub system_program: Program<'info, System>,
 }
-
-pub const AUCTION_HOUSE_SIZE: usize = 8 + // key
-32 + //fee payer
-32 + //treasury
-32 + //treasury_withdrawal_destination
-32 + //fee withdrawal destination
-32 + //treasury mint
-32 + //authority
-32 + // creator
-1 + // bump
-1 + // treasury_bump
-1 + // fee_payer_bump
-2 + // seller fee basis points
-1 + // requires sign off
-1 + // can change sale price
-220; //padding
-
-#[account]
-pub struct AuctionHouse {
-    pub auction_house_fee_account: Pubkey,
-    pub auction_house_treasury: Pubkey,
-    pub treasury_withdrawal_destination: Pubkey,
-    pub fee_withdrawal_destination: Pubkey,
-    pub treasury_mint: Pubkey,
-    pub authority: Pubkey,
-    pub creator: Pubkey,
-    pub bump: u8,
-    pub treasury_bump: u8,
-    pub fee_payer_bump: u8,
-    pub seller_fee_basis_points: u16,
-    pub requires_sign_off: bool,
-    pub can_change_sale_price: bool,
-}
-
-pub const TRADE_STATE_SIZE: usize = 1;
 
 #[error_code]
 pub enum ErrorCode {
