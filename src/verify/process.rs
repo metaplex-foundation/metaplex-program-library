@@ -1,8 +1,11 @@
-use crate::common::*;
-
-use crate::verify::VerifyError;
-use indicatif::ProgressIterator;
+use console::style;
 use std::{thread, time::Duration};
+
+use crate::cache::*;
+use crate::common::*;
+use crate::constants::{CANDY_EMOJI, PAPER_EMOJI};
+use crate::utils::*;
+use crate::verify::VerifyError;
 
 pub struct VerifyArgs {
     pub keypair: Option<String>,
@@ -17,44 +20,37 @@ pub struct OnChainItem {
 }
 
 pub fn process_verify(args: VerifyArgs) -> Result<()> {
-    let sugar_config = match sugar_setup(args.keypair, args.rpc_url) {
-        Ok(sugar_config) => sugar_config,
-        Err(err) => {
-            return Err(SetupError::SugarSetupError(err.to_string()).into());
-        }
-    };
+    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
 
-    let cache_file_path = Path::new(&args.cache);
+    // loads the cache file (this needs to have been created by
+    // the upload command)
+    let mut cache = load_cache(&args.cache, false)?;
 
-    if !cache_file_path.exists() {
-        return Err(CacheError::CacheFileNotFound(args.cache.clone()).into());
+    if cache.items.0.is_empty() {
+        println!(
+            "{}",
+            style("No cache items found - run 'upload' to create the cache file first.")
+                .red()
+                .bold()
+        );
+
+        // nothing else to do, just tell that the cache file was not found (or empty)
+        return Err(CacheError::CacheFileNotFound(args.cache).into());
     }
 
-    info!("Cache exists, loading...");
-    let file = match File::open(cache_file_path) {
-        Ok(file) => file,
-        Err(err) => {
-            let cache_file_string = path_to_string(cache_file_path)?;
+    println!(
+        "{} {}Loading candy machine",
+        style("[1/2]").bold().dim(),
+        CANDY_EMOJI
+    );
 
-            return Err(
-                CacheError::FailedToOpenCacheFile(cache_file_string, err.to_string()).into(),
-            );
-        }
-    };
-
-    let mut cache: Cache = match serde_json::from_reader(file) {
-        Ok(cache) => cache,
-        Err(err) => {
-            error!("Failed to parse cache file: {}", err);
-            return Err(CacheError::CacheFileWrongFormat(err.to_string()).into());
-        }
-    };
+    let pb = spinner_with_style();
+    pb.set_message("Connecting...");
 
     let candy_machine_pubkey = Pubkey::from_str(&cache.program.candy_machine)?;
     let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
     let client = setup_client(&sugar_config)?;
     let program = client.program(pid);
-    // let payer = program.payer();
 
     let data = match program.rpc().get_account_data(&candy_machine_pubkey) {
         Ok(account_data) => account_data,
@@ -63,26 +59,42 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         }
     };
 
-    // let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
     let num_items = cache.items.0.len();
-    // Should sleep for a total of 1.25 seconds
-    let sleep_micros: u64 = 1250000 / num_items as u64;
     let cache_items = &mut cache.items.0;
-
     let mut invalid_items: Vec<CacheItem> = Vec::new();
 
-    (0..num_items).into_iter().progress().for_each(|i| {
-        let name_start =
-            CONFIG_ARRAY_START + STRING_LEN_SIZE + CONFIG_LINE_SIZE * i + CONFIG_NAME_OFFSET;
+    pb.finish_with_message("Completed");
+
+    println!(
+        "\n{} {}Verification",
+        style("[2/2]").bold().dim(),
+        PAPER_EMOJI
+    );
+
+    println!("Verifying {} config line(s): (Ctrl+C to abort)", num_items);
+    let pb = progress_bar_with_style(num_items as u64);
+    // Should sleep for a total of 1.25 seconds
+    let step: u64 = 1_250_000 / num_items as u64;
+
+    for i in 0..num_items {
+        let name_start = CONFIG_ARRAY_START
+            + STRING_LEN_SIZE
+            + CONFIG_LINE_SIZE * (i as usize)
+            + CONFIG_NAME_OFFSET;
         let name_end = name_start + MAX_NAME_LENGTH;
-        let uri_start =
-            CONFIG_ARRAY_START + STRING_LEN_SIZE + CONFIG_LINE_SIZE * i + CONFIG_URI_OFFSET;
+
+        let uri_start = CONFIG_ARRAY_START
+            + STRING_LEN_SIZE
+            + CONFIG_LINE_SIZE * (i as usize)
+            + CONFIG_URI_OFFSET;
         let uri_end = uri_start + MAX_URI_LENGTH;
+
         let name_error = format!("Cache file failed to decode name at line item {}", i);
         let name = String::from_utf8(data[name_start..name_end].to_vec())
             .expect(&name_error)
             .trim_matches(char::from(0))
             .to_string();
+
         let uri_error = format!("Cache file failed to decode uri at line item {}", i);
         let uri = String::from_utf8(data[uri_start..uri_end].to_vec())
             .expect(&uri_error)
@@ -99,19 +111,22 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             invalid_items.push(cache_item.clone());
         }
 
-        thread::sleep(Duration::from_micros(sleep_micros));
-    });
+        pb.inc(1);
+        thread::sleep(Duration::from_micros(step));
+    }
 
-    cache.write_to_file(cache_file_path)?;
+    pb.finish();
+
+    cache.sync_file()?;
 
     if !invalid_items.is_empty() {
-        println!("Invalid items found: ");
+        println!("\nInvalid items found: ");
         for item in invalid_items {
-            println!("{:?}", item);
+            println!("\t- {:?}", item);
         }
-        println!("Cache updated. Rerun `deploy`.");
+        println!("\nCache updated - re-run `deploy`.");
     } else {
-        println!("All items checked out. You're good to go!");
+        println!("\nAll items checked out. You're good to go!");
     }
 
     Ok(())

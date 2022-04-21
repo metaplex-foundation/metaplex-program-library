@@ -10,9 +10,6 @@ pub use anchor_client::{
     Client, Program,
 };
 use console::style;
-use indicatif::{ProgressBar, ProgressStyle};
-use mpl_candy_machine::accounts as nft_accounts;
-use mpl_candy_machine::instruction as nft_instruction;
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
@@ -24,8 +21,12 @@ use std::{
     str::FromStr,
 };
 
+use mpl_candy_machine::accounts as nft_accounts;
+use mpl_candy_machine::instruction as nft_instruction;
+
 use crate::common::*;
 use crate::setup::{setup_client, sugar_setup};
+use crate::utils::*;
 
 pub struct WithdrawArgs {
     pub candy_machine: Option<String>,
@@ -43,21 +44,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
         COMPUTER_EMOJI
     );
 
-    let pb = ProgressBar::new_spinner();
-    let spinner_style = ProgressStyle::default_spinner()
-        .tick_strings(&[
-            "▹▹▹▹▹",
-            "▸▹▹▹▹",
-            "▹▸▹▹▹",
-            "▹▹▸▹▹",
-            "▹▹▹▸▹",
-            "▹▹▹▹▸",
-            "▪▪▪▪▪",
-        ])
-        .template("{spinner:.dim} {msg}");
-
-    pb.enable_steady_tick(120);
-    pb.set_style(spinner_style.clone());
+    let pb = spinner_with_style();
     pb.set_message("Connecting...");
 
     let (program, payer) = setup_withdraw(args.keypair, args.rpc_url)?;
@@ -88,16 +75,12 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
                 }
             };
 
-            let pb = ProgressBar::new_spinner();
-            pb.enable_steady_tick(120);
-            pb.set_style(spinner_style);
+            let pb = spinner_with_style();
             pb.set_message("Draining candy machine...");
 
             do_withdraw(Rc::new(program), candy_machine, payer)?;
 
             pb.finish_with_message("Done");
-
-            println!("\n{}", style("[Completed]").bold().dim());
         }
         None => {
             let config = RpcProgramAccountsConfig {
@@ -116,9 +99,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
                 with_context: None,
             };
 
-            let pb = ProgressBar::new_spinner();
-            pb.enable_steady_tick(120);
-            pb.set_style(spinner_style);
+            let pb = spinner_with_style();
             pb.set_message("Looking up candy machines...");
 
             let program = Rc::new(program);
@@ -169,7 +150,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
                 stdin().read_line(&mut s).expect("Error reading input.");
 
                 if let Some('Y') = s.chars().next() {
-                    let pb = ProgressBar::new(accounts.len() as u64);
+                    let pb = progress_bar_with_style(accounts.len() as u64);
                     let mut not_drained = 0;
 
                     accounts.iter().for_each(|account| {
@@ -192,12 +173,10 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
                                 .dim()
                         );
                     }
-
-                    println!("\n{}", style("[Completed]").bold().dim());
                 } else {
                     // there were candy machines to drain, but the user decided
                     // to abort the withdraw
-                    println!("\n{}", style("[Aborted]").red().bold().dim());
+                    println!("\n{}", style("Withdraw aborted.").red().bold().dim());
                 }
             }
         }
