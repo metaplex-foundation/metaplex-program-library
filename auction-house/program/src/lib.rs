@@ -396,11 +396,13 @@ pub mod auction_house {
             )?;
         } else {
             assert_keys_equal(receipt_account.key(), wallet.key())?;
+            let checked_amount =
+                rent_checked_sub(escrow_payment_account.to_account_info(), amount)?;
             invoke_signed(
                 &system_instruction::transfer(
                     &escrow_payment_account.key(),
                     &receipt_account.key(),
-                    amount,
+                    checked_amount,
                 ),
                 &[
                     escrow_payment_account.to_account_info(),
@@ -409,9 +411,6 @@ pub mod auction_house {
                 ],
                 &[&escrow_signer_seeds],
             )?;
-
-            // Verify that escrow is still rent exempt.
-            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         Ok(())
@@ -494,11 +493,15 @@ pub mod auction_house {
             )?;
         } else {
             assert_keys_equal(payment_account.key(), wallet.key())?;
+            // Reach rental exemption and then
+            let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), 0)?
+                .checked_add(amount)
+                .ok_or(ErrorCode::NumericalOverflow)?;
             invoke(
                 &system_instruction::transfer(
                     &payment_account.key(),
                     &escrow_payment_account.key(),
-                    amount,
+                    checked_amount,
                 ),
                 &[
                     escrow_payment_account.to_account_info(),
@@ -506,9 +509,6 @@ pub mod auction_house {
                     system_program.to_account_info(),
                 ],
             )?;
-
-            // Verify enough exists in the escrow account to keep it rent exempt.
-            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         Ok(())
@@ -817,10 +817,6 @@ pub mod auction_house {
                 ],
                 &[&escrow_signer_seeds],
             )?;
-
-            // The buy instruction should handle accounting for minimum rent exemption for the
-            // escrow account, but double check here just in case.
-            assert_escrow_rent_exempt(escrow_payment_account.to_account_info())?;
         }
 
         if buyer_receipt_token_account.data_is_empty() {
