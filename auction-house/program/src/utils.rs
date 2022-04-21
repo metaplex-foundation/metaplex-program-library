@@ -566,14 +566,8 @@ pub fn rent_checked_sub(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
         .ok_or(ErrorCode::NumericalOverflow)?;
 
     if account_lamports < rent_minimum {
-        msg!("DEBUG: Insufficient rent remaining for {:?} debit.", diff);
-        msg!(
-            "DEBUG: Providing new {:?} debit.",
-            escrow_account.lamports() - rent_minimum
-        );
         Ok(escrow_account.lamports() - rent_minimum)
     } else {
-        msg!("DEBUG: Sufficient rent remaining after debit.");
         Ok(diff)
     }
 }
@@ -586,14 +580,8 @@ pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
         .ok_or(ErrorCode::NumericalOverflow)?;
 
     if account_lamports < rent_minimum {
-        msg!("DEBUG: Insufficient rent supplied by {:?} addition.", diff);
-        msg!(
-            "DEBUG: Providing new {:?} addition.",
-            escrow_account.lamports() - rent_minimum
-        );
         Ok(rent_minimum - account_lamports)
     } else {
-        msg!("DEBUG: Sufficient rent added after addition.");
         Ok(diff)
     }
 }
