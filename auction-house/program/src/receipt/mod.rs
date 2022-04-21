@@ -102,12 +102,17 @@ pub struct PurchaseReceipt {
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintListingReceipt<'info> {
+    /// CHECK: TODO
     #[account(mut)]
     pub receipt: UncheckedAccount<'info>,
+
     #[account(mut)]
     pub bookkeeper: Signer<'info>,
+
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     pub instruction: UncheckedAccount<'info>,
 }
@@ -198,9 +203,13 @@ pub fn print_listing_receipt<'info>(
 /// Accounts for the [`cancel_listing_receipt` handler](fn.cancel_listing_receipt.html).
 #[derive(Accounts)]
 pub struct CancelListingReceipt<'info> {
+    /// CHECK: TODO
     #[account(mut)]
     pub receipt: UncheckedAccount<'info>,
+
     pub system_program: Program<'info, System>,
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     pub instruction: UncheckedAccount<'info>,
 }
@@ -248,12 +257,17 @@ pub fn cancel_listing_receipt<'info>(
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintBidReceipt<'info> {
+    /// CHECK: TODO
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
+
     #[account(mut)]
     bookkeeper: Signer<'info>,
+
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -355,9 +369,13 @@ pub fn print_bid_receipt<'info>(
 /// Accounts for the [`cancel_bid_receipt` handler](fn.cancel_bid_receipt.html).
 #[derive(Accounts)]
 pub struct CancelBidReceipt<'info> {
+    /// CHECK: TODO
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
+
     system_program: Program<'info, System>,
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -405,16 +423,25 @@ pub fn cancel_bid_receipt<'info>(
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintPurchaseReceipt<'info> {
+    /// CHECK: TODO
     #[account(mut)]
     purchase_receipt: UncheckedAccount<'info>,
+
+    /// CHECK: TODO
     #[account(mut)]
     listing_receipt: UncheckedAccount<'info>,
+
+    /// CHECK: TODO
     #[account(mut)]
     bid_receipt: UncheckedAccount<'info>,
+
     #[account(mut)]
     bookkeeper: Signer<'info>,
+
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }

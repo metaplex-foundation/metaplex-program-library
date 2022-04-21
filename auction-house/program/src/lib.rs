@@ -12,27 +12,26 @@ pub mod errors;
 pub mod execute_sale;
 pub mod pda;
 pub mod receipt;
+pub mod sell;
 pub mod state;
 pub mod utils;
+pub mod withdraw;
 
 use crate::{
     auctioneer::*, bid::*, cancel::*, constants::*, deposit::*, execute_sale::*, receipt::*,
-    state::*, utils::*,
+    sell::*, state::*, utils::*, withdraw::*,
 };
 
 use anchor_lang::{
     prelude::*,
-    solana_program::{
-        program::{invoke, invoke_signed},
-        system_instruction,
-    },
+    solana_program::{program::invoke_signed, system_instruction},
     AnchorDeserialize, AnchorSerialize,
 };
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
 };
-use spl_token::instruction::{approve, revoke};
+use spl_token::instruction::revoke;
 anchor_lang::declare_id!("hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk");
 
 #[program]
@@ -304,127 +303,38 @@ pub mod auction_house {
         Ok(())
     }
 
-    /// Withdraw `amount` from the escrow payment account for your specific wallet.
-    pub fn withdraw<'info>(
-        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
+    /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    pub fn buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
+        trade_state_bump: u8,
         escrow_payment_bump: u8,
-        amount: u64,
+        buyer_price: u64,
+        token_size: u64,
     ) -> Result<()> {
-        let wallet = &ctx.accounts.wallet;
-        let receipt_account = &ctx.accounts.receipt_account;
-        let escrow_payment_account = &ctx.accounts.escrow_payment_account;
-        let authority = &ctx.accounts.authority;
-        let auction_house = &ctx.accounts.auction_house;
-        let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-        let treasury_mint = &ctx.accounts.treasury_mint;
-        let system_program = &ctx.accounts.system_program;
-        let token_program = &ctx.accounts.token_program;
-        let ata_program = &ctx.accounts.ata_program;
-        let rent = &ctx.accounts.rent;
+        private_bid(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
 
-        let auction_house_key = auction_house.key();
-        let seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            FEE_PAYER.as_bytes(),
-            &[auction_house.fee_payer_bump],
-        ];
-
-        let ah_seeds = [
-            PREFIX.as_bytes(),
-            auction_house.creator.as_ref(),
-            auction_house.treasury_mint.as_ref(),
-            &[auction_house.bump],
-        ];
-
-        let auction_house_key = auction_house.key();
-        let wallet_key = wallet.key();
-
-        if !wallet.to_account_info().is_signer && !authority.to_account_info().is_signer {
-            return Err(ErrorCode::NoValidSignerPresent.into());
-        }
-
-        let escrow_signer_seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            wallet_key.as_ref(),
-            &[escrow_payment_bump],
-        ];
-
-        let (fee_payer, fee_seeds) = get_fee_payer(
-            authority,
-            auction_house,
-            wallet.to_account_info(),
-            auction_house_fee_account.to_account_info(),
-            &seeds,
-        )?;
-
-        let is_native = treasury_mint.key() == spl_token::native_mint::id();
-
-        if !is_native {
-            if receipt_account.data_is_empty() {
-                make_ata(
-                    receipt_account.to_account_info(),
-                    wallet.to_account_info(),
-                    treasury_mint.to_account_info(),
-                    fee_payer.to_account_info(),
-                    ata_program.to_account_info(),
-                    token_program.to_account_info(),
-                    system_program.to_account_info(),
-                    rent.to_account_info(),
-                    &fee_seeds,
-                )?;
-            }
-
-            let rec_acct = assert_is_ata(
-                &receipt_account.to_account_info(),
-                &wallet.key(),
-                &treasury_mint.key(),
-            )?;
-
-            // make sure you cant get rugged
-            if rec_acct.delegate.is_some() {
-                return Err(ErrorCode::BuyerATACannotHaveDelegate.into());
-            }
-
-            assert_is_ata(receipt_account, &wallet.key(), &treasury_mint.key())?;
-            invoke_signed(
-                &spl_token::instruction::transfer(
-                    token_program.key,
-                    &escrow_payment_account.key(),
-                    &receipt_account.key(),
-                    &auction_house.key(),
-                    &[],
-                    amount,
-                )?,
-                &[
-                    escrow_payment_account.to_account_info(),
-                    receipt_account.to_account_info(),
-                    token_program.to_account_info(),
-                    auction_house.to_account_info(),
-                ],
-                &[&ah_seeds],
-            )?;
-        } else {
-            assert_keys_equal(receipt_account.key(), wallet.key())?;
-            let checked_amount =
-                rent_checked_sub(escrow_payment_account.to_account_info(), amount)?;
-            invoke_signed(
-                &system_instruction::transfer(
-                    &escrow_payment_account.key(),
-                    &receipt_account.key(),
-                    checked_amount,
-                ),
-                &[
-                    escrow_payment_account.to_account_info(),
-                    receipt_account.to_account_info(),
-                    system_program.to_account_info(),
-                ],
-                &[&escrow_signer_seeds],
-            )?;
-        }
-
-        Ok(())
+    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    pub fn public_buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, PublicBuy<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        public_bid(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
     }
 
     /// Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
@@ -499,157 +409,58 @@ pub mod auction_house {
         )
     }
 
-    /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
     pub fn sell<'info>(
         ctx: Context<'_, '_, '_, 'info, Sell<'info>>,
         trade_state_bump: u8,
-        _free_trade_state_bump: u8,
-        _program_as_signer_bump: u8,
+        free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        let wallet = &ctx.accounts.wallet;
-        let token_account = &ctx.accounts.token_account;
-        let metadata = &ctx.accounts.metadata;
-        let authority = &ctx.accounts.authority;
-        let seller_trade_state = &ctx.accounts.seller_trade_state;
-        let free_seller_trade_state = &ctx.accounts.free_seller_trade_state;
-        let auction_house = &ctx.accounts.auction_house;
-        let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-        let token_program = &ctx.accounts.token_program;
-        let system_program = &ctx.accounts.system_program;
-        let program_as_signer = &ctx.accounts.program_as_signer;
-        let rent = &ctx.accounts.rent;
-
-        // Wallet has to be a signer but there are different kinds of errors when it's not.
-        if !wallet.to_account_info().is_signer {
-            if buyer_price == 0 {
-                return Err(ErrorCode::SaleRequiresSigner.into());
-            } else {
-                if free_seller_trade_state.data_is_empty() {
-                    return Err(ErrorCode::SaleRequiresSigner.into());
-                } else if !free_seller_trade_state.data_is_empty()
-                    && (!authority.to_account_info().is_signer
-                        || !auction_house.can_change_sale_price)
-                {
-                    return Err(ErrorCode::SaleRequiresSigner.into());
-                }
-            }
-        }
-
-        let auction_house_key = auction_house.key();
-
-        let seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            FEE_PAYER.as_bytes(),
-            &[auction_house.fee_payer_bump],
-        ];
-
-        let (fee_payer, fee_seeds) = get_fee_payer(
-            authority,
-            auction_house,
-            wallet.to_account_info(),
-            auction_house_fee_account.to_account_info(),
-            &seeds,
-        )?;
-        assert_is_ata(
-            &token_account.to_account_info(),
-            &wallet.key(),
-            &token_account.mint,
-        )?;
-
-        assert_metadata_valid(metadata, token_account)?;
-
-        if token_size > token_account.amount {
-            return Err(ErrorCode::InvalidTokenAmount.into());
-        }
-
-        if wallet.is_signer {
-            invoke(
-                &approve(
-                    &token_program.key(),
-                    &token_account.key(),
-                    &program_as_signer.key(),
-                    &wallet.key(),
-                    &[],
-                    token_size,
-                )
-                .unwrap(),
-                &[
-                    token_program.to_account_info(),
-                    token_account.to_account_info(),
-                    program_as_signer.to_account_info(),
-                    wallet.to_account_info(),
-                ],
-            )?;
-        }
-
-        let ts_info = seller_trade_state.to_account_info();
-        if ts_info.data_is_empty() {
-            let token_account_key = token_account.key();
-            let wallet_key = wallet.key();
-            let ts_seeds = [
-                PREFIX.as_bytes(),
-                wallet_key.as_ref(),
-                auction_house_key.as_ref(),
-                token_account_key.as_ref(),
-                auction_house.treasury_mint.as_ref(),
-                token_account.mint.as_ref(),
-                &buyer_price.to_le_bytes(),
-                &token_size.to_le_bytes(),
-                &[trade_state_bump],
-            ];
-            create_or_allocate_account_raw(
-                *ctx.program_id,
-                &ts_info,
-                &rent.to_account_info(),
-                &system_program,
-                &fee_payer,
-                TRADE_STATE_SIZE,
-                fee_seeds,
-                &ts_seeds,
-            )?;
-        }
-
-        let data = &mut ts_info.data.borrow_mut();
-        data[0] = trade_state_bump;
-
-        Ok(())
-    }
-
-    /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
-        trade_state_bump: u8,
-        escrow_payment_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> Result<()> {
-        private_bid(
+        sell::sell(
             ctx,
             trade_state_bump,
-            escrow_payment_bump,
+            free_trade_state_bump,
+            program_as_signer_bump,
             buyer_price,
             token_size,
         )
     }
 
-    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn public_buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, PublicBuy<'info>>,
+    pub fn sell_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, SellWithAuctioneer<'info>>,
         trade_state_bump: u8,
-        escrow_payment_bump: u8,
+        free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        public_bid(
+        sell::sell_with_auctioneer(
             ctx,
             trade_state_bump,
-            escrow_payment_bump,
+            free_trade_state_bump,
+            program_as_signer_bump,
             buyer_price,
             token_size,
         )
+    }
+
+    /// Withdraw `amount` from the escrow payment account for your specific wallet.
+    pub fn withdraw<'info>(
+        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
+        escrow_payment_bump: u8,
+        amount: u64,
+    ) -> Result<()> {
+        withdraw::withdraw(ctx, escrow_payment_bump, amount)
+    }
+
+    /// Withdraw `amount` from the escrow payment account for your specific wallet.
+    pub fn withdraw_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
+        escrow_payment_bump: u8,
+        amount: u64,
+    ) -> Result<()> {
+        withdraw::withdraw_with_auctioneer(ctx, escrow_payment_bump, amount)
     }
 
     /// Close the escrow account of the user.
@@ -734,78 +545,6 @@ pub mod auction_house {
     ) -> Result<()> {
         receipt::print_purchase_receipt(ctx, purchase_receipt_bump)
     }
-}
-
-/// Accounts for the [`sell` handler](auction_house/fn.sell.html).
-#[derive(Accounts)]
-#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct Sell<'info> {
-    /// User wallet account.
-    /// CHECK: Verified through CPI
-    pub wallet: UncheckedAccount<'info>,
-    #[account(mut)]
-    /// SPL token account containing token for sale.
-    pub token_account: Account<'info, TokenAccount>,
-    /// Metaplex metadata account decorating SPL mint account.
-    /// CHECK: Verified through CPI
-    pub metadata: UncheckedAccount<'info>,
-    /// Auction House authority account.
-    /// CHECK: Verified through CPI
-    pub authority: UncheckedAccount<'info>,
-    /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
-    /// Auction House instance fee account.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    pub auction_house_fee_account: UncheckedAccount<'info>,
-    /// Seller trade state PDA account encoding the sell order.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
-    pub seller_trade_state: UncheckedAccount<'info>,
-    /// Free seller trade state PDA account encoding a free sell order.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
-    pub free_seller_trade_state: UncheckedAccount<'info>,
-    pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
-    pub program_as_signer: UncheckedAccount<'info>,
-    pub rent: Sysvar<'info, Rent>,
-}
-
-/// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
-#[derive(Accounts)]
-#[instruction(escrow_payment_bump: u8)]
-pub struct Withdraw<'info> {
-    /// User wallet account.
-    /// CHECK: Verified through CPI
-    pub wallet: UncheckedAccount<'info>,
-    /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
-    /// CHECK: Verified through CPI
-    #[account(mut)]
-    pub receipt_account: UncheckedAccount<'info>,
-    /// Buyer escrow payment account PDA.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
-    pub escrow_payment_account: UncheckedAccount<'info>,
-    /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
-    /// Auction House instance authority account.
-    /// CHECK: Verified through CPI
-    pub authority: UncheckedAccount<'info>,
-    /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
-    /// Auction House instance fee account.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    pub auction_house_fee_account: UncheckedAccount<'info>,
-    pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-    pub ata_program: Program<'info, AssociatedToken>,
-    pub rent: Sysvar<'info, Rent>,
 }
 
 /// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).

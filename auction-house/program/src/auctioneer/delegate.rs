@@ -12,6 +12,7 @@ pub struct DelegateAuctioneer<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
 
+    /// CHECK: The auction house authority can set this to whatever external address they wish.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
