@@ -27,8 +27,8 @@ pub struct PublicBuy<'info> {
     /// CHECK: Verified through CPI
     transfer_authority: UncheckedAccount<'info>,
 
-    treasury_mint: Account<'info, Mint>,
-    token_account: Account<'info, TokenAccount>,
+    treasury_mint: Box<Account<'info, Mint>>,
+    token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Verified through CPI
     metadata: UncheckedAccount<'info>,
@@ -42,7 +42,7 @@ pub struct PublicBuy<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
@@ -70,12 +70,12 @@ pub fn public_bid(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
-        ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
+        *ctx.accounts.treasury_mint.to_owned(),
+        *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
-        ctx.accounts.auction_house.to_owned(),
+        *ctx.accounts.auction_house.to_owned(),
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
         ctx.accounts.token_program.to_owned(),
@@ -102,9 +102,9 @@ pub struct PublicBuyWithAuctioneer<'info> {
     /// CHECK: Verified through CPI
     transfer_authority: UncheckedAccount<'info>,
 
-    treasury_mint: Account<'info, Mint>,
+    treasury_mint: Box<Account<'info, Mint>>,
 
-    token_account: Account<'info, TokenAccount>,
+    token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Verified through CPI
     metadata: UncheckedAccount<'info>,
@@ -154,8 +154,8 @@ pub fn public_bid_with_auctioneer(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
-        ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
+        *ctx.accounts.treasury_mint.to_owned(),
+        *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
@@ -195,7 +195,7 @@ pub struct Buy<'info> {
     treasury_mint: Account<'info, Mint>,
 
     /// SPL token account.
-    token_account: Account<'info, TokenAccount>,
+    token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Verified through CPI
     /// SPL token account metadata.
@@ -212,7 +212,7 @@ pub struct Buy<'info> {
 
     /// Auction House instance PDA account.
     #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
@@ -242,11 +242,11 @@ pub fn private_bid<'info>(
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
         ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
+        *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
-        ctx.accounts.auction_house.to_owned(),
+        *ctx.accounts.auction_house.to_owned(),
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
         ctx.accounts.token_program.to_owned(),
@@ -277,10 +277,10 @@ pub struct BuyWithAuctioneer<'info> {
     transfer_authority: UncheckedAccount<'info>,
 
     /// Auction House instance treasury mint account.
-    treasury_mint: Account<'info, Mint>,
+    treasury_mint: Box<Account<'info, Mint>>,
 
     /// SPL token account.
-    token_account: Account<'info, TokenAccount>,
+    token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Verified through CPI
     /// SPL token account metadata.
@@ -350,8 +350,8 @@ pub fn private_bid_with_auctioneer<'info>(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
-        ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
+        *ctx.accounts.treasury_mint.to_owned(),
+        *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),

@@ -13,7 +13,7 @@ pub struct Sell<'info> {
     #[account(mut)]
 
     /// SPL token account containing token for sale.
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
@@ -56,7 +56,7 @@ impl<'info> From<SellWithAuctioneer<'info>> for Sell<'info> {
     fn from(a: SellWithAuctioneer<'info>) -> Sell<'info> {
         Sell {
             wallet: a.wallet,
-            token_account: *a.token_account,
+            token_account: a.token_account,
             metadata: a.metadata,
             authority: a.authority,
             auction_house: *a.auction_house,

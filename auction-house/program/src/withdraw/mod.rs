@@ -21,7 +21,7 @@ pub struct Withdraw<'info> {
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
+    pub treasury_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: Verified through CPI
     /// Auction House instance authority account.
@@ -29,7 +29,7 @@ pub struct Withdraw<'info> {
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
@@ -95,7 +95,7 @@ pub struct WithdrawWithAuctioneer<'info> {
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
+    pub treasury_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: Verified through CPI
     /// Auction House instance authority account.
@@ -103,7 +103,7 @@ pub struct WithdrawWithAuctioneer<'info> {
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.

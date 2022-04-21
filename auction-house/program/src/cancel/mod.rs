@@ -14,10 +14,10 @@ pub struct Cancel<'info> {
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Token mint account of SPL token.
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: Verified through CPI
     /// Auction House instance authority account.
@@ -25,7 +25,7 @@ pub struct Cancel<'info> {
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
@@ -66,10 +66,10 @@ pub struct CancelWithAuctioneer<'info> {
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Token mint account of SPL token.
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: TODO
     /// Auction House instance authority account.
@@ -77,7 +77,7 @@ pub struct CancelWithAuctioneer<'info> {
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: TODO
     /// Auction House instance fee account.

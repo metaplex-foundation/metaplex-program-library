@@ -213,7 +213,7 @@ pub mod auction_house {
     /// Create a new Auction House instance.
     pub fn create_auction_house<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateAuctionHouse<'info>>,
-        bump: u8,
+        _bump: u8,
         fee_payer_bump: u8,
         treasury_bump: u8,
         seller_fee_basis_points: u16,
