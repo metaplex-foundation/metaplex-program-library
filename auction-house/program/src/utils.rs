@@ -550,12 +550,7 @@ pub fn assert_valid_trade_state<'a>(
             &token_size_bytes,
         ],
     );
-    msg!(
-        "{:?}, {:?}, {:?}",
-        canonical_public_bump,
-        canonical_bump,
-        ts_bump
-    );
+
     match (canonical_public_bump, canonical_bump) {
         (Ok(public), Err(_)) if public == ts_bump => Ok(public),
         (Err(_), Ok(bump)) if bump == ts_bump => Ok(bump),
