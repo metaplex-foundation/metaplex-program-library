@@ -396,7 +396,8 @@ pub mod auction_house {
             )?;
         } else {
             assert_keys_equal(receipt_account.key(), wallet.key())?;
-            let checked_amount = rent_checked_sub(escrow_payment_account.to_account_info(), amount)?;
+            let checked_amount =
+                rent_checked_sub(escrow_payment_account.to_account_info(), amount)?;
             invoke_signed(
                 &system_instruction::transfer(
                     &escrow_payment_account.key(),
@@ -494,7 +495,10 @@ pub mod auction_house {
             )?;
         } else {
             assert_keys_equal(payment_account.key(), wallet.key())?;
-            let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), amount)?;
+            // Reach rental exemption and then
+            let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), 0)?
+                .checked_add(amount)
+                .ok_or(ErrorCode::NumericalOverflow)?;
             invoke(
                 &system_instruction::transfer(
                     &payment_account.key(),
