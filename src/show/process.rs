@@ -78,7 +78,7 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         "",
         "price",
         format!(
-            "𑗏{} ({})",
+            "◎ {} ({})",
             cndy_data.price as f64 / LAMPORTS_PER_SOL as f64,
             cndy_data.price
         ),
