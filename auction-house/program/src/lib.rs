@@ -5,14 +5,18 @@
 
 pub mod auctioneer;
 pub mod bid;
+pub mod cancel;
 pub mod constants;
+pub mod deposit;
 pub mod errors;
 pub mod pda;
 pub mod receipt;
 pub mod state;
 pub mod utils;
 
-use crate::{auctioneer::*, bid::*, constants::*, receipt::*, state::*, utils::*};
+use crate::{
+    auctioneer::*, bid::*, cancel::*, constants::*, deposit::*, receipt::*, state::*, utils::*,
+};
 
 use anchor_lang::{
     prelude::*,
@@ -422,176 +426,40 @@ pub mod auction_house {
         Ok(())
     }
 
-    /// Deposit `amount` into the escrow payment account for your specific wallet.
-    pub fn deposit<'info>(
-        ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
-        escrow_payment_bump: u8,
-        amount: u64,
-    ) -> Result<()> {
-        let wallet = &ctx.accounts.wallet;
-        let payment_account = &ctx.accounts.payment_account;
-        let transfer_authority = &ctx.accounts.transfer_authority;
-        let escrow_payment_account = &ctx.accounts.escrow_payment_account;
-        let authority = &ctx.accounts.authority;
-        let auction_house = &ctx.accounts.auction_house;
-        let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-        let treasury_mint = &ctx.accounts.treasury_mint;
-        let system_program = &ctx.accounts.system_program;
-        let token_program = &ctx.accounts.token_program;
-        let rent = &ctx.accounts.rent;
-
-        let auction_house_key = auction_house.key();
-        let seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            FEE_PAYER.as_bytes(),
-            &[auction_house.fee_payer_bump],
-        ];
-        let wallet_key = wallet.key();
-
-        let escrow_signer_seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            wallet_key.as_ref(),
-            &[escrow_payment_bump],
-        ];
-
-        let (fee_payer, fee_seeds) = get_fee_payer(
-            authority,
-            auction_house,
-            wallet.to_account_info(),
-            auction_house_fee_account.to_account_info(),
-            &seeds,
-        )?;
-
-        let is_native = treasury_mint.key() == spl_token::native_mint::id();
-
-        create_program_token_account_if_not_present(
-            escrow_payment_account,
-            system_program,
-            &fee_payer,
-            token_program,
-            treasury_mint,
-            &auction_house.to_account_info(),
-            rent,
-            &escrow_signer_seeds,
-            fee_seeds,
-            is_native,
-        )?;
-
-        if !is_native {
-            assert_is_ata(payment_account, &wallet.key(), &treasury_mint.key())?;
-            invoke(
-                &spl_token::instruction::transfer(
-                    token_program.key,
-                    &payment_account.key(),
-                    &escrow_payment_account.key(),
-                    &transfer_authority.key(),
-                    &[],
-                    amount,
-                )?,
-                &[
-                    escrow_payment_account.to_account_info(),
-                    payment_account.to_account_info(),
-                    token_program.to_account_info(),
-                    transfer_authority.to_account_info(),
-                ],
-            )?;
-        } else {
-            assert_keys_equal(payment_account.key(), wallet.key())?;
-            // Reach rental exemption and then
-            let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), 0)?
-                .checked_add(amount)
-                .ok_or(ErrorCode::NumericalOverflow)?;
-            invoke(
-                &system_instruction::transfer(
-                    &payment_account.key(),
-                    &escrow_payment_account.key(),
-                    checked_amount,
-                ),
-                &[
-                    escrow_payment_account.to_account_info(),
-                    payment_account.to_account_info(),
-                    system_program.to_account_info(),
-                ],
-            )?;
-        }
-
-        Ok(())
-    }
-
     /// Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
     pub fn cancel<'info>(
         ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        let wallet = &ctx.accounts.wallet;
-        let token_account = &ctx.accounts.token_account;
-        let token_mint = &ctx.accounts.token_mint;
-        let authority = &ctx.accounts.authority;
-        let auction_house = &ctx.accounts.auction_house;
-        let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-        let trade_state = &ctx.accounts.trade_state;
-        let token_program = &ctx.accounts.token_program;
-        let ts_bump = trade_state.try_borrow_data()?[0];
-        assert_valid_trade_state(
-            &wallet.key(),
-            auction_house,
-            buyer_price,
-            token_size,
-            &trade_state.to_account_info(),
-            &token_account.mint.key(),
-            &token_account.key(),
-            ts_bump,
-        )?;
-        assert_keys_equal(token_mint.key(), token_account.mint)?;
-        if !wallet.to_account_info().is_signer && !authority.to_account_info().is_signer {
-            return Err(ErrorCode::NoValidSignerPresent.into());
-        }
+        cancel::cancel(ctx, buyer_price, token_size)
+    }
 
-        let auction_house_key = auction_house.key();
-        let seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            FEE_PAYER.as_bytes(),
-            &[auction_house.fee_payer_bump],
-        ];
+    /// Cancel, but with an auctioneer
+    pub fn cancel_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        cancel::cancel_with_auctioneer(ctx, buyer_price, token_size)
+    }
 
-        let (fee_payer, _) = get_fee_payer(
-            authority,
-            auction_house,
-            wallet.to_account_info(),
-            auction_house_fee_account.to_account_info(),
-            &seeds,
-        )?;
+    /// Deposit `amount` into the escrow payment account for your specific wallet.
+    pub fn deposit<'info>(
+        ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
+        escrow_payment_bump: u8,
+        amount: u64,
+    ) -> Result<()> {
+        deposit::deposit(ctx, escrow_payment_bump, amount)
+    }
 
-        if token_account.owner == wallet.key() && wallet.is_signer {
-            invoke(
-                &revoke(
-                    &token_program.key(),
-                    &token_account.key(),
-                    &wallet.key(),
-                    &[],
-                )
-                .unwrap(),
-                &[
-                    token_program.to_account_info(),
-                    token_account.to_account_info(),
-                    wallet.to_account_info(),
-                ],
-            )?;
-        }
-
-        let curr_lamp = trade_state.lamports();
-        **trade_state.lamports.borrow_mut() = 0;
-
-        **fee_payer.lamports.borrow_mut() = fee_payer
-            .lamports()
-            .checked_add(curr_lamp)
-            .ok_or(ErrorCode::NumericalOverflow)?;
-        sol_memset(*trade_state.try_borrow_mut_data()?, 0, TRADE_STATE_SIZE);
-        Ok(())
+    /// Deposit `amount` into the escrow payment account for your specific wallet.
+    pub fn deposit_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
+        escrow_payment_bump: u8,
+        amount: u64,
+    ) -> Result<()> {
+        deposit::deposit_with_auctioneer(ctx, escrow_payment_bump, amount)
     }
 
     /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
@@ -1252,40 +1120,6 @@ pub struct ExecuteSale<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-/// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
-#[derive(Accounts)]
-#[instruction(escrow_payment_bump: u8)]
-pub struct Deposit<'info> {
-    /// User wallet account.
-    pub wallet: Signer<'info>,
-    /// User SOL or SPL account to transfer funds from.
-    /// CHECK: Verified through CPI
-    #[account(mut)]
-    pub payment_account: UncheckedAccount<'info>,
-    /// SPL token account transfer authority.
-    /// CHECK: Verified through CPI
-    pub transfer_authority: UncheckedAccount<'info>,
-    /// Buyer escrow payment account PDA.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
-    pub escrow_payment_account: UncheckedAccount<'info>,
-    /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
-    /// Auction House instance authority account.
-    /// CHECK: Verified through CPI
-    pub authority: UncheckedAccount<'info>,
-    /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
-    /// Auction House instance fee account.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    pub auction_house_fee_account: UncheckedAccount<'info>,
-    pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
-    pub rent: Sysvar<'info, Rent>,
-}
-
 /// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8)]
@@ -1317,36 +1151,6 @@ pub struct Withdraw<'info> {
     pub system_program: Program<'info, System>,
     pub ata_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
-}
-
-/// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
-#[derive(Accounts)]
-#[instruction(buyer_price: u64, token_size: u64)]
-pub struct Cancel<'info> {
-    /// User wallet account.
-    /// CHECK: Verified through CPI
-    #[account(mut)]
-    pub wallet: UncheckedAccount<'info>,
-    /// SPL token account containing the token of the sale to be canceled.
-    #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
-    /// Token mint account of SPL token.
-    pub token_mint: Account<'info, Mint>,
-    /// Auction House instance authority account.
-    /// CHECK: Verified through CPI
-    pub authority: UncheckedAccount<'info>,
-    /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
-    /// Auction House instance fee account.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
-    pub auction_house_fee_account: UncheckedAccount<'info>,
-    /// Trade state PDA account representing the bid or ask to be canceled.
-    /// CHECK: Verified through CPI
-    #[account(mut)]
-    pub trade_state: UncheckedAccount<'info>,
-    pub token_program: Program<'info, Token>,
 }
 
 /// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).
