@@ -14,7 +14,9 @@ use std::{cmp, str::FromStr, sync::Arc};
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 use mpl_candy_machine::{CandyMachineData, ConfigLine, Creator as CandyCreator};
-pub use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH};
+pub use mpl_token_metadata::state::{
+    MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
+};
 
 use crate::cache::*;
 use crate::candy_machine::uuid_from_pubkey;
@@ -198,7 +200,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     let config_lines = generate_config_lines(num_items, &cache.items);
 
     let completed = if config_lines.is_empty() {
-        println!("\n{}All config lines deployed", COMPLETE_EMOJI);
+        println!("\nAll config lines deployed.");
         true
     } else {
         upload_config_lines(
@@ -211,10 +213,13 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         .await?
     };
 
-    if completed {
-        println!("\n{}", style("[Completed]").green().bold());
-    } else {
-        println!("\n{}", style("[Re-run needed]").red().bold())
+    if !completed {
+        println!(
+            "\n{}",
+            style("Not all config lines deployed - re-run needed.")
+                .red()
+                .bold()
+        )
     }
 
     Ok(())
@@ -242,9 +247,27 @@ fn create_candy_machine_data(config: &ConfigData, uuid: String) -> Result<CandyM
         .map(|gatekeeper| gatekeeper.into_candy_format());
 
     let mut creators: Vec<CandyCreator> = Vec::new();
+    let mut share = 0u32;
 
     for creator in &config.creators {
-        creators.push(creator.into_candy_format()?);
+        let c = creator.into_candy_format()?;
+        share += c.share as u32;
+
+        creators.push(c);
+    }
+
+    if creators.is_empty() || creators.len() > (MAX_CREATOR_LIMIT - 1) {
+        return Err(anyhow!(
+            "The number of creators must be between 1 and {}.",
+            MAX_CREATOR_LIMIT - 1,
+        ));
+    }
+
+    if share != 100 {
+        return Err(anyhow!(
+            "Creator(s) share must add up to 100, current total {}.",
+            share,
+        ));
     }
 
     let data = CandyMachineData {
