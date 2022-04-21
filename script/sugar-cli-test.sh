@@ -485,7 +485,7 @@ if [ $RESUME -eq 0 ]; then
     fi
 
     if [ "$MANUAL_CACHE" == "Y" ]; then
-        echo -n "{\"program\":{\"candyMachine\":\"\"}, \"items\":{" >> $CACHE_FILE
+        echo -n "{\"program\":{\"candyMachine\":\"\", \"candyMachineCreator\":\"\"}, \"items\":{" >> $CACHE_FILE
         
         for ((i = 0; i < $ITEMS; i++)); do
             if [ "$i" -gt "0" ]; then
