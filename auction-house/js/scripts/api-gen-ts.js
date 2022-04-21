@@ -8,7 +8,7 @@ const path = require('path');
 const programDir = path.join(__dirname, '..', '..', 'program');
 const generatedIdlDir = path.join(__dirname, '..', 'idl');
 const generatedSDKDir = path.join(__dirname, '..', 'src', 'generated');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 // NOTE: Solita has to be yarn linked at the moment until it is published and installed here
 const { Solita } = require('@metaplex-foundation/solita');
 const { writeFile } = require('fs/promises');
@@ -35,10 +35,16 @@ anchor.stderr.on('data', (buf) => console.error(buf.toString('utf8')));
 async function generateTypeScriptSDK() {
   console.error('Generating TypeScript SDK to %s', generatedSDKDir);
   const generatedIdlPath = path.join(generatedIdlDir, `${PROGRAM_NAME}.json`);
+  const anchorVersion = getAnchorVersion();
 
   const idl = require(generatedIdlPath);
   if (idl.metadata?.address == null) {
-    idl.metadata = { ...idl.metadata, address: PROGRAM_ID };
+    idl.metadata = {
+      ...idl.metadata,
+      address: PROGRAM_ID,
+      origin: 'anchor',
+      version: anchorVersion,
+    };
     await writeFile(generatedIdlPath, JSON.stringify(idl, null, 2));
   }
   const gen = new Solita(idl, { formatCode: true });
@@ -47,4 +53,9 @@ async function generateTypeScriptSDK() {
   console.error('Success!');
 
   process.exit(0);
+}
+
+function getAnchorVersion() {
+  const stdout = execSync('anchor --version');
+  return stdout.toString().trim().split(' ')[1];
 }
