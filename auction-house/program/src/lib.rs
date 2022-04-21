@@ -434,8 +434,6 @@ pub mod auction_house {
         let token_program = &ctx.accounts.token_program;
         let rent = &ctx.accounts.rent;
 
-        msg!("DEBUG: Deposit Amount: {:?}", amount);
-
         let auction_house_key = auction_house.key();
         let seeds = [
             PREFIX.as_bytes(),
@@ -633,8 +631,6 @@ pub mod auction_house {
         let authority_clone = authority.to_account_info();
         let buyer_receipt_clone = buyer_receipt_token_account.to_account_info();
         let token_account_clone = token_account.to_account_info();
-
-        msg!("DEBUG: Buyer Price: {:?}", buyer_price);
 
         let is_native = treasury_mint.key() == spl_token::native_mint::id();
 
@@ -923,8 +919,6 @@ pub mod auction_house {
         let system_program = &ctx.accounts.system_program;
         let program_as_signer = &ctx.accounts.program_as_signer;
         let rent = &ctx.accounts.rent;
-
-        msg!("DEBUG: Sale Price: {:?}", buyer_price);
 
         // Wallet has to be a signer but there are different kinds of errors when it's not.
         if !wallet.to_account_info().is_signer {
