@@ -170,16 +170,66 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     }
 }
 
+#[derive(Debug, Clone)]
+
 pub enum BidType {
     PublicSale,
     PrivateSale,
+    AuctionPublicSale,
+    AuctionPrivateSale,
+}
+
+#[derive(Debug, Clone)]
+pub enum ListingType {
+    Sell,
+    AuctionSell,
+}
+
+#[derive(Debug, Clone)]
+
+pub enum PurchaseType {
+    ExecuteSale,
+    AuctionExecuteSale,
+}
+
+#[derive(Debug, Clone)]
+
+pub enum CancelType {
+    Cancel,
+    AuctionCancel,
 }
 
 pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType> {
     match sighash {
         [169, 84, 218, 35, 42, 206, 16, 171] => Ok(BidType::PublicSale),
         [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::PrivateSale),
-        _ => return err!(AuctionHouseError::InstructionMismatch),
+        [182, 20, 132, 26, 44, 72, 50, 164] => Ok(BidType::AuctionPublicSale),
+        [144, 84, 193, 191, 59, 251, 45, 20] => Ok(BidType::AuctionPrivateSale),
+        _ => Err(AuctionHouseError::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_listing_instruction(sighash: &[u8]) -> Result<ListingType> {
+    match sighash {
+        [51, 230, 133, 164, 1, 127, 131, 173] => Ok(ListingType::Sell),
+        [62, 168, 106, 144, 69, 91, 134, 249] => Ok(ListingType::AuctionSell),
+        _ => Err(AuctionHouseError::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_purchase_instruction(sighash: &[u8]) -> Result<PurchaseType> {
+    match sighash {
+        [37, 74, 217, 157, 79, 49, 35, 6] => Ok(PurchaseType::ExecuteSale),
+        [190, 10, 82, 149, 46, 143, 189, 76] => Ok(PurchaseType::AuctionExecuteSale),
+        _ => Err(AuctionHouseError::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_cancel_instruction(sighash: &[u8]) -> Result<CancelType> {
+    match sighash {
+        [232, 219, 223, 41, 219, 236, 220, 190] => Ok(CancelType::Cancel),
+        [129, 238, 39, 166, 81, 89, 216, 151] => Ok(CancelType::AuctionCancel),
+        _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
 
