@@ -17,9 +17,11 @@ pub mod state;
 pub mod utils;
 pub mod withdraw;
 
+pub use state::*;
+
 use crate::{
-    auctioneer::*, bid::*, cancel::*, constants::*, deposit::*, execute_sale::*, receipt::*,
-    sell::*, state::*, utils::*, withdraw::*,
+    auctioneer::*, bid::*, cancel::*, constants::*, deposit::*, errors::AuctionHouseError,
+    execute_sale::*, receipt::*, sell::*, utils::*, withdraw::*,
 };
 
 use anchor_lang::{
@@ -32,6 +34,7 @@ use anchor_spl::{
     token::{Mint, Token, TokenAccount},
 };
 use spl_token::instruction::revoke;
+
 anchor_lang::declare_id!("hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk");
 
 #[program]
@@ -160,7 +163,7 @@ pub mod auction_house {
 
         if let Some(sfbp) = seller_fee_basis_points {
             if sfbp > 10000 {
-                return Err(ErrorCode::InvalidBasisPoints.into());
+                return Err(AuctionHouseError::InvalidBasisPoints.into());
             }
 
             auction_house.seller_fee_basis_points = sfbp;
@@ -210,7 +213,7 @@ pub mod auction_house {
     /// Create a new Auction House instance.
     pub fn create_auction_house<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateAuctionHouse<'info>>,
-        _bump: u8,
+        bump: u8,
         fee_payer_bump: u8,
         treasury_bump: u8,
         seller_fee_basis_points: u16,
@@ -232,11 +235,14 @@ pub mod auction_house {
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
 
-        auction_house.bump = *ctx.bumps.get("auction_house").unwrap();
+        auction_house.bump = *ctx
+            .bumps
+            .get("auction_house")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
         auction_house.fee_payer_bump = fee_payer_bump;
         auction_house.treasury_bump = treasury_bump;
         if seller_fee_basis_points > 10000 {
-            return Err(ErrorCode::InvalidBasisPoints.into());
+            return Err(AuctionHouseError::InvalidBasisPoints.into());
         }
         auction_house.seller_fee_basis_points = seller_fee_basis_points;
         auction_house.requires_sign_off = requires_sign_off;
@@ -320,6 +326,22 @@ pub mod auction_house {
         )
     }
 
+    pub fn buy_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        bid::private_bid_with_auctioneer(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
     /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
     pub fn public_buy<'info>(
         ctx: Context<'_, '_, '_, 'info, PublicBuy<'info>>,
@@ -329,6 +351,23 @@ pub mod auction_house {
         token_size: u64,
     ) -> Result<()> {
         public_bid(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
+    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    pub fn public_buy_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, PublicBuyWithAuctioneer<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        bid::public_bid_with_auctioneer(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -549,7 +588,7 @@ pub mod auction_house {
 
 /// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).
 #[derive(Accounts)]
-#[instruction(_bump: u8, fee_payer_bump: u8, treasury_bump: u8)]
+#[instruction(bump: u8, fee_payer_bump: u8, treasury_bump: u8)]
 pub struct CreateAuctionHouse<'info> {
     /// Treasury mint account, either native SOL mint or a SPL token mint.
     pub treasury_mint: Account<'info, Mint>,
@@ -673,66 +712,4 @@ pub struct CloseEscrowAccount<'info> {
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
     pub auction_house: Account<'info, AuctionHouse>,
     pub system_program: Program<'info, System>,
-}
-
-#[error_code]
-pub enum ErrorCode {
-    #[msg("PublicKeyMismatch")] // 0
-    PublicKeyMismatch,
-    #[msg("InvalidMintAuthority")] // 1
-    InvalidMintAuthority,
-    #[msg("UninitializedAccount")] // 2
-    UninitializedAccount,
-    #[msg("IncorrectOwner")] // 3
-    IncorrectOwner,
-    #[msg("PublicKeysShouldBeUnique")] // 4
-    PublicKeysShouldBeUnique,
-    #[msg("StatementFalse")] // 5
-    StatementFalse,
-    #[msg("NotRentExempt")] // 6
-    NotRentExempt,
-    #[msg("NumericalOverflow")] // 7
-    NumericalOverflow,
-    #[msg("Expected a sol account but got an spl token account instead")] // 8
-    ExpectedSolAccount,
-    #[msg("Cannot exchange sol for sol")] // 9
-    CannotExchangeSOLForSol,
-    #[msg("If paying with sol, sol wallet must be signer")] // 10
-    SOLWalletMustSign,
-    #[msg("Cannot take this action without auction house signing too")] // 11
-    CannotTakeThisActionWithoutAuctionHouseSignOff,
-    #[msg("No payer present on this txn")] // 12
-    NoPayerPresent,
-    #[msg("Derived key invalid")] // 13
-    DerivedKeyInvalid,
-    #[msg("Metadata doesn't exist")] // 14
-    MetadataDoesntExist,
-    #[msg("Invalid token amount")] // 15
-    InvalidTokenAmount,
-    #[msg("Both parties need to agree to this sale")] // 16
-    BothPartiesNeedToAgreeToSale,
-    #[msg("Cannot match free sales unless the auction house or seller signs off")] // 17
-    CannotMatchFreeSalesWithoutAuctionHouseOrSellerSignoff,
-    #[msg("This sale requires a signer")] // 18
-    SaleRequiresSigner,
-    #[msg("Old seller not initialized")] // 19
-    OldSellerNotInitialized,
-    #[msg("Seller ata cannot have a delegate set")] // 20
-    SellerATACannotHaveDelegate,
-    #[msg("Buyer ata cannot have a delegate set")] // 21
-    BuyerATACannotHaveDelegate,
-    #[msg("No valid signer present")] // 22
-    NoValidSignerPresent,
-    #[msg("BP must be less than or equal to 10000")] // 23
-    InvalidBasisPoints,
-    #[msg("The trade state account does not exist")] // 24
-    TradeStateDoesntExist,
-    #[msg("The trade state is not empty")] // 25
-    TradeStateIsNotEmpty,
-    #[msg("The receipt is empty")] // 26
-    ReceiptIsEmpty,
-    #[msg("The instruction does not match")] // 27
-    InstructionMismatch,
-    #[msg("The instruction would drain the escrow below rent exemption threshold")] // 28
-    EscrowUnderRentExemption,
 }

@@ -260,7 +260,7 @@ pub fn private_bid<'info>(
     )
 }
 
-/// Accounts for the [`private_bid` handler](fn.private_bid.html).
+/// Accounts for the [`private_bid_with_auctioneer` handler](fn.private_bid_with_auctioneer.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct BuyWithAuctioneer<'info> {
@@ -288,7 +288,15 @@ pub struct BuyWithAuctioneer<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            wallet.key().as_ref()
+        ],
+        bump = escrow_payment_bump
+    )]
     escrow_payment_account: UncheckedAccount<'info>,
 
     /// CHECK: Verified with has_one constraint on auction house account.
@@ -315,7 +323,14 @@ pub struct BuyWithAuctioneer<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
+    #[account(
+        seeds = [
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
+            auctioneer_authority.key().as_ref()
+        ],
+        bump = auction_house.auctioneer_pda_bump,
+    )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     token_program: Program<'info, Token>,
