@@ -12,7 +12,9 @@ mod buy {
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
-    use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+    use anchor_lang::{
+        error::ERROR_CODE_OFFSET, AccountDeserialize, InstructionData, ToAccountMetas,
+    };
     use mpl_fixed_price_sale::{
         accounts as mpl_fixed_price_sale_accounts,
         error::ErrorCode,
@@ -2452,7 +2454,7 @@ mod buy {
         let price = 1_000_000;
         let pieces_in_one_wallet = Some(1);
 
-        let (collection_mint, collection_token_acc) =
+        let (collection_mint, _collection_token_acc) =
             create_collection(&mut context, &admin_wallet).await;
 
         // CreateMarket
@@ -2615,15 +2617,6 @@ mod buy {
             &mpl_token_metadata::id(),
         );
 
-        let (collection_metadata, _) = Pubkey::find_program_address(
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                collection_mint.as_ref(),
-            ],
-            &mpl_token_metadata::id(),
-        );
-
         // Buy
         let mut accounts = mpl_fixed_price_sale_accounts::Buy {
             market: market_keypair.pubkey(),
@@ -2773,7 +2766,7 @@ mod buy {
         let price = 1_000_000;
         let pieces_in_one_wallet = Some(1);
 
-        let (collection_mint, collection_token_acc) =
+        let (collection_mint, _collection_token_acc) =
             create_collection(&mut context, &admin_wallet).await;
 
         // CreateMarket
@@ -2932,15 +2925,6 @@ mod buy {
                 mpl_token_metadata::id().as_ref(),
                 new_mint_keypair.pubkey().as_ref(),
                 mpl_token_metadata::state::EDITION.as_bytes(),
-            ],
-            &mpl_token_metadata::id(),
-        );
-
-        let (collection_metadata, _) = Pubkey::find_program_address(
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                collection_mint.as_ref(),
             ],
             &mpl_token_metadata::id(),
         );
@@ -3094,7 +3078,7 @@ mod buy {
         let price = 1_000_000;
         let pieces_in_one_wallet = Some(1);
 
-        let (collection_mint, collection_token_acc) =
+        let (collection_mint, _collection_token_acc) =
             create_collection(&mut context, &admin_wallet).await;
 
         // CreateMarket
@@ -3257,15 +3241,6 @@ mod buy {
             &mpl_token_metadata::id(),
         );
 
-        let (collection_metadata, _) = Pubkey::find_program_address(
-            &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                mpl_token_metadata::id().as_ref(),
-                collection_mint.as_ref(),
-            ],
-            &mpl_token_metadata::id(),
-        );
-
         // Buy
         let mut accounts = mpl_fixed_price_sale_accounts::Buy {
             market: market_keypair.pubkey(),
@@ -3332,13 +3307,16 @@ mod buy {
             .await
             .unwrap_err();
 
-        let err_code = ErrorCode::WrongGatingMetadataAccount as u32;
-
         match err {
             TransportError::TransactionError(TransactionError::InstructionError(
                 0,
                 InstructionError::Custom(err_code),
-            )) => assert!(true),
+            )) => {
+                assert_eq!(
+                    err_code,
+                    ERROR_CODE_OFFSET + ErrorCode::WrongGatingMetadataAccount as u32
+                );
+            }
             _ => assert!(false),
         }
     }

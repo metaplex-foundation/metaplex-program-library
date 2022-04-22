@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 impl<'info> SavePrimaryMetadataCreators<'info> {
     pub fn process(
         &mut self,
-        primary_metadata_creators_bump: u8,
+        _primary_metadata_creators_bump: u8,
         creators: Vec<mpl_token_metadata::state::Creator>,
     ) -> Result<()> {
         let metadata = &self.metadata;

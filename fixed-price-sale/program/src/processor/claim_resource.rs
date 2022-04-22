@@ -1,10 +1,4 @@
-use crate::{
-    error::ErrorCode,
-    id,
-    state::{MarketState, PrimaryMetadataCreators},
-    utils::*,
-    ClaimResource,
-};
+use crate::{error::ErrorCode, state::MarketState, utils::*, ClaimResource};
 use anchor_lang::{prelude::*, solana_program::program_pack::Pack, System};
 use anchor_spl::token;
 

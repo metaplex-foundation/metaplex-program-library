@@ -550,12 +550,7 @@ pub fn assert_valid_trade_state<'a>(
             &token_size_bytes,
         ],
     );
-    msg!(
-        "{:?}, {:?}, {:?}",
-        canonical_public_bump,
-        canonical_bump,
-        ts_bump
-    );
+
     match (canonical_public_bump, canonical_bump) {
         (Ok(public), Err(_)) if public == ts_bump => Ok(public),
         (Err(_), Ok(bump)) if bump == ts_bump => Ok(bump),
@@ -563,11 +558,30 @@ pub fn assert_valid_trade_state<'a>(
     }
 }
 
-pub fn assert_escrow_rent_exempt(escrow_account: AccountInfo) -> Result<()>{
-    if escrow_account.lamports() < (Rent::get()?).minimum_balance(escrow_account.data_len()) {
-        return err!(ErrorCode::EscrowUnderRentExemption);
+pub fn rent_checked_sub(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
+    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
+    let account_lamports: u64 = escrow_account
+        .lamports()
+        .checked_sub(diff)
+        .ok_or(ErrorCode::NumericalOverflow)?;
+
+    if account_lamports < rent_minimum {
+        Ok(escrow_account.lamports() - rent_minimum)
+    } else {
+        Ok(diff)
     }
-    else {
-        Ok(())
+}
+
+pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
+    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
+    let account_lamports: u64 = escrow_account
+        .lamports()
+        .checked_add(diff)
+        .ok_or(ErrorCode::NumericalOverflow)?;
+
+    if account_lamports < rent_minimum {
+        Ok(rent_minimum - account_lamports)
+    } else {
+        Ok(diff)
     }
 }
