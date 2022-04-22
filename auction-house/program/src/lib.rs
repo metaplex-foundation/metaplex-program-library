@@ -2,6 +2,7 @@
 //! AuctionHouse is a protocol for marketplaces to implement a decentralized sales contract. It is simple, fast and very cheap. AuctionHouse is a Solana program available on Mainnet Beta and Devnet. Anyone can create an AuctionHouse and accept any SPL token they wish.
 //!
 //! Full docs can be found [here](https://docs.metaplex.com/auction-house/definition).
+
 pub mod auctioneer;
 pub mod bid;
 pub mod cancel;
@@ -19,9 +20,10 @@ pub mod withdraw;
 pub use state::*;
 
 use crate::{
-    auctioneer::*, bid::*, cancel::*, constants::*, deposit::*, errors::*, execute_sale::*,
-    receipt::*, sell::*, utils::*, withdraw::*,
+    auctioneer::*, bid::*, cancel::*, constants::*, deposit::*, errors::AuctionHouseError,
+    execute_sale::*, receipt::*, sell::*, utils::*, withdraw::*,
 };
+
 use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke_signed, system_instruction},
@@ -161,7 +163,7 @@ pub mod auction_house {
 
         if let Some(sfbp) = seller_fee_basis_points {
             if sfbp > 10000 {
-                return Err(ErrorCode::InvalidBasisPoints.into());
+                return Err(AuctionHouseError::InvalidBasisPoints.into());
             }
 
             auction_house.seller_fee_basis_points = sfbp;
@@ -233,11 +235,14 @@ pub mod auction_house {
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
 
-        auction_house.bump = *ctx.bumps.get("auction_house").unwrap();
+        auction_house.bump = *ctx
+            .bumps
+            .get("auction_house")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
         auction_house.fee_payer_bump = fee_payer_bump;
         auction_house.treasury_bump = treasury_bump;
         if seller_fee_basis_points > 10000 {
-            return Err(ErrorCode::InvalidBasisPoints.into());
+            return Err(AuctionHouseError::InvalidBasisPoints.into());
         }
         auction_house.seller_fee_basis_points = seller_fee_basis_points;
         auction_house.requires_sign_off = requires_sign_off;
@@ -249,7 +254,6 @@ pub mod auction_house {
         auction_house.auction_house_treasury = auction_house_treasury.key();
         auction_house.treasury_withdrawal_destination = treasury_withdrawal_destination.key();
         auction_house.fee_withdrawal_destination = fee_withdrawal_destination.key();
-        auction_house.has_auctioneer = false;
 
         let is_native = treasury_mint.key() == spl_token::native_mint::id();
 
@@ -305,12 +309,97 @@ pub mod auction_house {
         Ok(())
     }
 
+    /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    pub fn buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        private_bid(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
+    pub fn buy_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        bid::private_bid_with_auctioneer(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
+    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    pub fn public_buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, PublicBuy<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        public_bid(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
+    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    pub fn public_buy_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, PublicBuyWithAuctioneer<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        bid::public_bid_with_auctioneer(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
+    /// Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
+    pub fn cancel<'info>(
+        ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        cancel::cancel(ctx, buyer_price, token_size)
+    }
+
+    /// Cancel, but with an auctioneer
+    pub fn cancel_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        cancel::cancel_with_auctioneer(ctx, buyer_price, token_size)
+    }
+
     /// Deposit `amount` into the escrow payment account for your specific wallet.
     pub fn deposit<'info>(
         ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         deposit::deposit(ctx, escrow_payment_bump, amount)
     }
 
@@ -318,46 +407,9 @@ pub mod auction_house {
     pub fn deposit_with_auctioneer<'info>(
         ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
         escrow_payment_bump: u8,
-        ah_auctioneer_pda_bump: u8,
         amount: u64,
-    ) -> ProgramResult {
-        deposit::deposit_with_auctioneer(ctx, escrow_payment_bump, ah_auctioneer_pda_bump, amount)
-    }
-
-    pub fn cancel<'info>(
-        ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> ProgramResult {
-        cancel::cancel(ctx, buyer_price, token_size)
-    }
-
-    pub fn cancel_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
-        ah_auctioneer_pda_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> ProgramResult {
-        cancel::cancel_with_auctioneer(ctx, ah_auctioneer_pda_bump, buyer_price, token_size)
-    }
-
-    /// Withdraw `amount` from the escrow payment account for your specific wallet.
-    pub fn withdraw<'info>(
-        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
-        escrow_payment_bump: u8,
-        amount: u64,
-    ) -> ProgramResult {
-        withdraw::withdraw(ctx, escrow_payment_bump, amount)
-    }
-
-    /// Withdraw `amount` from the escrow payment account for your specific wallet.
-    pub fn withdraw_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
-        escrow_payment_bump: u8,
-        ah_auctioneer_pda_bump: u8,
-        amount: u64,
-    ) -> ProgramResult {
-        withdraw::withdraw_with_auctioneer(ctx, escrow_payment_bump, ah_auctioneer_pda_bump, amount)
+    ) -> Result<()> {
+        deposit::deposit_with_auctioneer(ctx, escrow_payment_bump, amount)
     }
 
     pub fn execute_sale<'info>(
@@ -367,7 +419,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         execute_sale::execute_sale(
             ctx,
             escrow_payment_bump,
@@ -385,8 +437,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-        ah_auctioneer_pda_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         execute_sale::execute_sale_with_auctioneer(
             ctx,
             escrow_payment_bump,
@@ -394,7 +445,6 @@ pub mod auction_house {
             program_as_signer_bump,
             buyer_price,
             token_size,
-            ah_auctioneer_pda_bump,
         )
     }
 
@@ -405,7 +455,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         sell::sell(
             ctx,
             trade_state_bump,
@@ -423,8 +473,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-        ah_auctioneer_pda_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         sell::sell_with_auctioneer(
             ctx,
             trade_state_bump,
@@ -432,95 +481,70 @@ pub mod auction_house {
             program_as_signer_bump,
             buyer_price,
             token_size,
-            ah_auctioneer_pda_bump,
         )
     }
 
-    /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
-        trade_state_bump: u8,
+    /// Withdraw `amount` from the escrow payment account for your specific wallet.
+    pub fn withdraw<'info>(
+        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
         escrow_payment_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> ProgramResult {
-        bid::private_bid(
-            ctx,
-            trade_state_bump,
-            escrow_payment_bump,
-            buyer_price,
-            token_size,
-        )
+        amount: u64,
+    ) -> Result<()> {
+        withdraw::withdraw(ctx, escrow_payment_bump, amount)
     }
 
-    pub fn buy_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
-        trade_state_bump: u8,
+    /// Withdraw `amount` from the escrow payment account for your specific wallet.
+    pub fn withdraw_with_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
         escrow_payment_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-        ah_auctioneer_pda_bump: u8,
-    ) -> ProgramResult {
-        bid::private_bid_with_auctioneer(
-            ctx,
-            trade_state_bump,
-            escrow_payment_bump,
-            buyer_price,
-            token_size,
-            ah_auctioneer_pda_bump,
-        )
+        amount: u64,
+    ) -> Result<()> {
+        withdraw::withdraw_with_auctioneer(ctx, escrow_payment_bump, amount)
     }
 
-    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn public_buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, PublicBuy<'info>>,
-        trade_state_bump: u8,
+    /// Close the escrow account of the user.
+    pub fn close_escrow_account<'info>(
+        ctx: Context<'_, '_, '_, 'info, CloseEscrowAccount<'info>>,
         escrow_payment_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> ProgramResult {
-        bid::public_bid(
-            ctx,
-            trade_state_bump,
-            escrow_payment_bump,
-            buyer_price,
-            token_size,
-        )
-    }
+    ) -> Result<()> {
+        let auction_house_key = ctx.accounts.auction_house.key();
+        let wallet_key = ctx.accounts.wallet.key();
 
-    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn public_buy_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, PublicBuyWithAuctioneer<'info>>,
-        trade_state_bump: u8,
-        escrow_payment_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-        ah_auctioneer_pda_bump: u8,
-    ) -> ProgramResult {
-        bid::public_bid_with_auctioneer(
-            ctx,
-            trade_state_bump,
-            escrow_payment_bump,
-            buyer_price,
-            token_size,
-            ah_auctioneer_pda_bump,
-        )
+        let escrow_signer_seeds = [
+            PREFIX.as_bytes(),
+            auction_house_key.as_ref(),
+            wallet_key.as_ref(),
+            &[escrow_payment_bump],
+        ];
+
+        invoke_signed(
+            &system_instruction::transfer(
+                &ctx.accounts.escrow_payment_account.key(),
+                &ctx.accounts.wallet.key(),
+                ctx.accounts.escrow_payment_account.lamports(),
+            ),
+            &[
+                ctx.accounts.escrow_payment_account.to_account_info(),
+                ctx.accounts.wallet.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[&escrow_signer_seeds],
+        )?;
+        Ok(())
     }
 
     pub fn delegate_auctioneer<'info>(
         ctx: Context<'_, '_, '_, 'info, DelegateAuctioneer<'info>>,
-        ah_auctioneer_pda_bump: u8,
         scopes: Vec<AuthorityScope>,
-    ) -> ProgramResult {
-        auctioneer::delegate_auctioneer(ctx, ah_auctioneer_pda_bump, Box::new(scopes))
+    ) -> Result<()> {
+        auctioneer::delegate_auctioneer(ctx, Box::new(scopes))
     }
 
     pub fn update_auctioneer<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateAuctioneer<'info>>,
-        ah_auctioneer_pda_bump: u8,
         scopes: Vec<AuthorityScope>,
-    ) -> ProgramResult {
-        auctioneer::update_auctioneer(ctx, ah_auctioneer_pda_bump, Box::new(scopes))
+    ) -> Result<()> {
+        auctioneer::update_auctioneer(ctx, Box::new(scopes))
     }
 
     /// Create a listing receipt by creating a `listing_receipt` account.
@@ -564,7 +588,7 @@ pub mod auction_house {
 
 /// Accounts for the [`create_auction_house` handler](auction_house/fn.create_auction_house.html).
 #[derive(Accounts)]
-#[instruction(_bump: u8, fee_payer_bump: u8, treasury_bump: u8)]
+#[instruction(bump: u8, fee_payer_bump: u8, treasury_bump: u8)]
 pub struct CreateAuctionHouse<'info> {
     /// Treasury mint account, either native SOL mint or a SPL token mint.
     pub treasury_mint: Account<'info, Mint>,
@@ -671,6 +695,21 @@ pub struct WithdrawFromFee<'info> {
     pub auction_house_fee_account: UncheckedAccount<'info>,
     /// Auction House instance PDA account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.key().as_ref()], bump=auction_house.bump, has_one=authority, has_one=fee_withdrawal_destination, has_one=auction_house_fee_account)]
+    pub auction_house: Account<'info, AuctionHouse>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+#[instruction(escrow_payment_bump: u8)]
+pub struct CloseEscrowAccount<'info> {
+    /// User wallet account.
+    pub wallet: Signer<'info>,
+    /// CHECK: Account seeds checked in constraint.
+    /// Buyer escrow payment account PDA.
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
+    pub escrow_payment_account: UncheckedAccount<'info>,
+    /// Auction House instance PDA account.
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
     pub auction_house: Account<'info, AuctionHouse>,
     pub system_program: Program<'info, System>,
 }

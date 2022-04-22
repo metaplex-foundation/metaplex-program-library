@@ -21,9 +21,11 @@ pub use solana_sdk::{
 pub use std::assert_eq;
 
 pub const HAS_ONE_CONSTRAINT_VIOLATION: u32 = 2001;
+pub const INVALID_SEEDS: u32 = 2006;
 
 pub const MISSING_AUCTIONEER_SCOPE: u32 = 6029;
 pub const NO_AUCTIONEER_PROGRAM_SET: u32 = 6031;
+pub const INVALID_SEEDS_OR_NO_DELEGATE: u32 = 6036;
 pub const TOO_MANY_SCOPES: u32 = 6032;
 
 pub const TEN_SOL: u64 = 10_000_000_000;

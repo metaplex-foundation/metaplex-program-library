@@ -1,10 +1,10 @@
 //! Create PDAs to to track the status and results of various Auction House actions.
 use crate::{
     constants::*,
+    errors::AuctionHouseError,
     id,
     instruction::{Buy, ExecuteSale, Sell},
     utils::*,
-    ErrorCode,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
 use solana_program::{sysvar, sysvar::instructions::get_instruction_relative};
@@ -102,14 +102,17 @@ pub struct PurchaseReceipt {
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintListingReceipt<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: TODO
     #[account(mut)]
     pub receipt: UncheckedAccount<'info>,
+
     #[account(mut)]
     pub bookkeeper: Signer<'info>,
+
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
-    /// CHECK: Verified through instruction ID
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     pub instruction: UncheckedAccount<'info>,
 }
@@ -200,11 +203,13 @@ pub fn print_listing_receipt<'info>(
 /// Accounts for the [`cancel_listing_receipt` handler](fn.cancel_listing_receipt.html).
 #[derive(Accounts)]
 pub struct CancelListingReceipt<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: TODO
     #[account(mut)]
     pub receipt: UncheckedAccount<'info>,
+
     pub system_program: Program<'info, System>,
-    /// CHECK: Verified through instruction ID
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     pub instruction: UncheckedAccount<'info>,
 }
@@ -227,7 +232,7 @@ pub fn cancel_listing_receipt<'info>(
     assert_program_cancel_instruction(&prev_instruction.data[..8])?;
 
     if receipt_info.data_is_empty() {
-        return Err(ErrorCode::ReceiptIsEmpty.into());
+        return Err(AuctionHouseError::ReceiptIsEmpty.into());
     }
 
     assert_derivation(
@@ -252,14 +257,17 @@ pub fn cancel_listing_receipt<'info>(
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintBidReceipt<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: TODO
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
+
     #[account(mut)]
     bookkeeper: Signer<'info>,
+
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
-    /// CHECK: Verified through instruction ID
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -361,11 +369,13 @@ pub fn print_bid_receipt<'info>(
 /// Accounts for the [`cancel_bid_receipt` handler](fn.cancel_bid_receipt.html).
 #[derive(Accounts)]
 pub struct CancelBidReceipt<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: TODO
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
+
     system_program: Program<'info, System>,
-    /// CHECK: Verified through instruction ID
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -388,7 +398,7 @@ pub fn cancel_bid_receipt<'info>(
     assert_program_cancel_instruction(&prev_instruction.data[..8])?;
 
     if receipt_info.data_is_empty() {
-        return Err(ErrorCode::ReceiptIsEmpty.into());
+        return Err(AuctionHouseError::ReceiptIsEmpty.into());
     }
 
     assert_derivation(
@@ -413,20 +423,25 @@ pub fn cancel_bid_receipt<'info>(
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintPurchaseReceipt<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: TODO
     #[account(mut)]
     purchase_receipt: UncheckedAccount<'info>,
-    /// CHECK: Verified through CPI
+
+    /// CHECK: TODO
     #[account(mut)]
     listing_receipt: UncheckedAccount<'info>,
-    /// CHECK: Verified through CPI
+
+    /// CHECK: TODO
     #[account(mut)]
     bid_receipt: UncheckedAccount<'info>,
+
     #[account(mut)]
     bookkeeper: Signer<'info>,
+
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
-    /// CHECK: Verified through instruction ID
+
+    /// CHECK: TODO
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -500,7 +515,7 @@ pub fn print_purchase_receipt<'info>(
     )?;
 
     if listing_receipt_info.data_is_empty() || bid_receipt_info.data_is_empty() {
-        return Err(ErrorCode::ReceiptIsEmpty.into());
+        return Err(AuctionHouseError::ReceiptIsEmpty.into());
     }
 
     if purchase_receipt_info.data_is_empty() {

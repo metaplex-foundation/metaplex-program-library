@@ -6,27 +6,32 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8)]
 pub struct Withdraw<'info> {
+    /// CHECK: Verified through CPI
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
     /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
     #[account(mut)]
     pub receipt_account: UncheckedAccount<'info>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
+    pub treasury_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: Verified through CPI
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -55,40 +60,63 @@ impl<'info> From<WithdrawWithAuctioneer<'info>> for Withdraw<'info> {
     }
 }
 
-/// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
+/// Withdraw `amount` from the escrow payment account for your specific wallet.
+pub fn withdraw<'info>(
+    ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
+    escrow_payment_bump: u8,
+    amount: u64,
+) -> Result<()> {
+    let auction_house = &ctx.accounts.auction_house;
+
+    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    if auction_house.has_auctioneer {
+        return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    withdraw_logic(ctx.accounts, escrow_payment_bump, amount)
+}
+
+/// Accounts for the [`withdraw_with_auctioneer` handler](auction_house/fn.withdraw_with_auctioneer.html).
 #[derive(Accounts, Clone)]
-#[instruction(escrow_payment_bump: u8, auctioneer_pda_bump: u8)]
+#[instruction(escrow_payment_bump: u8)]
 pub struct WithdrawWithAuctioneer<'info> {
+    /// CHECK: Verified through CPI
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
     /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
     #[account(mut)]
     pub receipt_account: UncheckedAccount<'info>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
+    pub treasury_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: Verified through CPI
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -97,33 +125,18 @@ pub struct WithdrawWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn withdraw<'info>(
-    ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
-    escrow_payment_bump: u8,
-    amount: u64,
-) -> ProgramResult {
-    let auction_house = &ctx.accounts.auction_house;
-
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
-    if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
-    }
-
-    withdraw_logic(ctx.accounts, escrow_payment_bump, amount)
-}
-
+/// Withdraw but with an auctioneer.
 pub fn withdraw_with_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
     escrow_payment_bump: u8,
-    _auctioneer_pda_bump: u8,
     amount: u64,
-) -> ProgramResult {
+) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
     let auctioneer_authority = &ctx.accounts.auctioneer_authority;
     let ah_auctioneer_pda = &ctx.accounts.ah_auctioneer_pda;
 
     if !auction_house.has_auctioneer {
-        return Err(ErrorCode::NoAuctioneerProgramSet.into());
+        return Err(AuctionHouseError::NoAuctioneerProgramSet.into());
     }
 
     assert_valid_auctioneer_and_scope(
@@ -142,7 +155,7 @@ fn withdraw_logic<'info>(
     accounts: &mut Withdraw<'info>,
     escrow_payment_bump: u8,
     amount: u64,
-) -> ProgramResult {
+) -> Result<()> {
     let wallet = &accounts.wallet;
     let receipt_account = &accounts.receipt_account;
     let escrow_payment_account = &accounts.escrow_payment_account;
@@ -174,7 +187,7 @@ fn withdraw_logic<'info>(
     let wallet_key = wallet.key();
 
     if !wallet.to_account_info().is_signer && !authority.to_account_info().is_signer {
-        return Err(ErrorCode::NoValidSignerPresent.into());
+        return Err(AuctionHouseError::NoValidSignerPresent.into());
     }
 
     let escrow_signer_seeds = [
@@ -217,7 +230,7 @@ fn withdraw_logic<'info>(
 
         // make sure you cant get rugged
         if rec_acct.delegate.is_some() {
-            return Err(ErrorCode::BuyerATACannotHaveDelegate.into());
+            return Err(AuctionHouseError::BuyerATACannotHaveDelegate.into());
         }
 
         assert_is_ata(receipt_account, &wallet.key(), &treasury_mint.key())?;
@@ -240,11 +253,13 @@ fn withdraw_logic<'info>(
         )?;
     } else {
         assert_keys_equal(receipt_account.key(), wallet.key())?;
+
+        let checked_amount = rent_checked_sub(escrow_payment_account.to_account_info(), amount)?;
         invoke_signed(
             &system_instruction::transfer(
                 &escrow_payment_account.key(),
                 &receipt_account.key(),
-                amount,
+                checked_amount,
             ),
             &[
                 escrow_payment_account.to_account_info(),

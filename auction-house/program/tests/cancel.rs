@@ -138,8 +138,7 @@ async fn auction_cancel_listing() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     delegate_auctioneer(
         &mut context,
@@ -147,7 +146,6 @@ async fn auction_cancel_listing() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         default_scopes(),
     )
     .await
@@ -186,7 +184,6 @@ async fn auction_cancel_listing() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::CancelWithAuctioneer {
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
             buyer_price: 10,
             token_size: 1,
         }
@@ -268,8 +265,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     // Missing Cancel scope so auction_cancel should fail.
     let scopes = vec![AuthorityScope::Sell];
@@ -280,7 +276,6 @@ async fn auction_cancel_listing_missing_scope_fails() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -319,7 +314,6 @@ async fn auction_cancel_listing_missing_scope_fails() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::CancelWithAuctioneer {
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
             buyer_price: 10,
             token_size: 1,
         }
@@ -382,8 +376,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
         .unwrap();
 
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     context.warp_to_slot(100).unwrap();
     let buyer = Keypair::new();
@@ -416,7 +409,6 @@ async fn auction_cancel_listing_no_delegate_fails() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::CancelWithAuctioneer {
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
             buyer_price: price,
             token_size: 1,
         }
@@ -450,7 +442,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+    assert_error!(error, INVALID_SEEDS);
 }
 
 #[tokio::test]
@@ -587,8 +579,7 @@ async fn auction_cancel_bid() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     delegate_auctioneer(
         &mut context,
@@ -596,7 +587,6 @@ async fn auction_cancel_bid() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         default_scopes(),
     )
     .await
@@ -642,7 +632,6 @@ async fn auction_cancel_bid() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::CancelWithAuctioneer {
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
             buyer_price: price,
             token_size: 1,
         }
@@ -718,8 +707,7 @@ async fn auction_cancel_bid_missing_scope_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     // Missing Cancel scope so auction_cancel should fail.
     let scopes = vec![AuthorityScope::Buy];
@@ -730,7 +718,6 @@ async fn auction_cancel_bid_missing_scope_fails() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -776,7 +763,6 @@ async fn auction_cancel_bid_missing_scope_fails() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::CancelWithAuctioneer {
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
             buyer_price: price,
             token_size: 1,
         }
@@ -839,8 +825,7 @@ async fn auction_cancel_bid_no_delegate_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     context.warp_to_slot(100).unwrap();
     let buyer = Keypair::new();
@@ -881,7 +866,6 @@ async fn auction_cancel_bid_no_delegate_fails() {
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
         data: mpl_auction_house::instruction::CancelWithAuctioneer {
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
             buyer_price: price,
             token_size: 1,
         }
@@ -915,5 +899,5 @@ async fn auction_cancel_bid_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+    assert_error!(error, INVALID_SEEDS);
 }

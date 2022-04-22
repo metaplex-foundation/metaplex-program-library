@@ -33,29 +33,28 @@ async fn deposit_success() {
         .await
         .unwrap();
     let buyer = Keypair::new();
-    airdrop(&mut context, &buyer.pubkey(), 2000000000)
+    airdrop(&mut context, &buyer.pubkey(), ONE_SOL * 2)
         .await
         .unwrap();
-    let (acc, deposit_tx) = deposit(
-        &mut context,
-        &ahkey,
-        &ah,
-        &test_metadata,
-        &buyer,
-        1000000000,
-    );
+    let (acc, deposit_tx) = deposit(&mut context, &ahkey, &ah, &test_metadata, &buyer, ONE_SOL);
+
     context
         .banks_client
         .process_transaction(deposit_tx)
         .await
         .unwrap();
+
+    let escrow_payment_account_data_len = 0;
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(escrow_payment_account_data_len);
+
     let escrow = context
         .banks_client
         .get_account(acc.escrow_payment_account)
         .await
         .expect("Error Getting Escrow")
         .expect("Trade State Escrow");
-    assert_eq!(escrow.lamports, 1000890880);
+    assert_eq!(escrow.lamports, ONE_SOL + rent_exempt_min);
 }
 
 #[tokio::test]
@@ -82,10 +81,11 @@ async fn auction_deposit_success() {
         .await
         .unwrap();
 
+    let deposit_amount = 1_000_000_000;
+
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     delegate_auctioneer(
         &mut context,
@@ -93,14 +93,13 @@ async fn auction_deposit_success() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         default_scopes(),
     )
     .await
     .unwrap();
 
     let buyer = Keypair::new();
-    airdrop(&mut context, &buyer.pubkey(), 2000000000)
+    airdrop(&mut context, &buyer.pubkey(), deposit_amount * 2)
         .await
         .unwrap();
     let (acc, deposit_tx) = auction_deposit(
@@ -110,7 +109,7 @@ async fn auction_deposit_success() {
         &test_metadata,
         &buyer,
         auctioneer_authority.pubkey(),
-        1000000000,
+        deposit_amount,
     );
 
     context
@@ -118,13 +117,18 @@ async fn auction_deposit_success() {
         .process_transaction(deposit_tx)
         .await
         .unwrap();
+
+    let escrow_payment_account_data_len = 0;
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(escrow_payment_account_data_len);
+
     let escrow = context
         .banks_client
         .get_account(acc.escrow_payment_account)
         .await
         .expect("Error Getting Escrow")
         .expect("Trade State Escrow");
-    assert_eq!(escrow.lamports, 1000000000);
+    assert_eq!(escrow.lamports, deposit_amount + rent_exempt_min);
 }
 
 #[tokio::test]
@@ -153,8 +157,7 @@ async fn auction_deposit_missing_scope_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     // Missing Deposit scope, so tx should fail.
     let scopes = vec![];
@@ -165,7 +168,6 @@ async fn auction_deposit_missing_scope_fails() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -240,5 +242,5 @@ async fn auction_deposit_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+    assert_error!(error, INVALID_SEEDS);
 }

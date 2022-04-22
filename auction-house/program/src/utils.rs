@@ -1,4 +1,7 @@
-use crate::{constants::*, AuctionHouse, Auctioneer, AuthorityScope, ErrorCode, PREFIX};
+use crate::{
+    constants::*, errors::AuctionHouseError, AuctionHouse, Auctioneer, AuthorityScope, PREFIX,
+};
+
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -82,7 +85,7 @@ pub fn assert_metadata_valid<'a>(
     )?;
 
     if metadata.data_is_empty() {
-        return Err(ErrorCode::MetadataDoesntExist.into());
+        return Err(AuctionHouseError::MetadataDoesntExist.into());
     }
     Ok(())
 }
@@ -101,11 +104,11 @@ pub fn get_fee_payer<'a, 'b>(
         fee_payer = auction_house_fee_account;
     } else if wallet.is_signer {
         if auction_house.requires_sign_off {
-            return Err(ErrorCode::CannotTakeThisActionWithoutAuctionHouseSignOff.into());
+            return Err(AuctionHouseError::CannotTakeThisActionWithoutAuctionHouseSignOff.into());
         }
         fee_payer = wallet
     } else {
-        return Err(ErrorCode::NoPayerPresent.into());
+        return Err(AuctionHouseError::NoPayerPresent.into());
     };
 
     Ok((fee_payer, &seeds))
@@ -144,11 +147,11 @@ pub fn assert_valid_delegation(
         }
         Err(_) => {
             if mint.key() != spl_token::native_mint::id() {
-                return err!(ErrorCode::ExpectedSolAccount);
+                return err!(AuctionHouseError::ExpectedSolAccount);
             }
 
             if !src_wallet.is_signer {
-                return err!(ErrorCode::SOLWalletMustSign);
+                return err!(AuctionHouseError::SOLWalletMustSign);
             }
 
             assert_keys_equal(*src_wallet.key, src_account.key())?;
@@ -161,7 +164,7 @@ pub fn assert_valid_delegation(
 
 pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
-        return err!(ErrorCode::PublicKeyMismatch);
+        return err!(AuctionHouseError::PublicKeyMismatch);
     } else {
         Ok(())
     }
@@ -202,37 +205,37 @@ pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType> {
         [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::PrivateSale),
         [182, 20, 132, 26, 44, 72, 50, 164] => Ok(BidType::AuctionPublicSale),
         [144, 84, 193, 191, 59, 251, 45, 20] => Ok(BidType::AuctionPrivateSale),
-        _ => Err(ErrorCode::InstructionMismatch.into()),
+        _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
 
-pub fn assert_program_listing_instruction(sighash: &[u8]) -> Result<ListingType, ErrorCode> {
+pub fn assert_program_listing_instruction(sighash: &[u8]) -> Result<ListingType> {
     match sighash {
         [51, 230, 133, 164, 1, 127, 131, 173] => Ok(ListingType::Sell),
         [62, 168, 106, 144, 69, 91, 134, 249] => Ok(ListingType::AuctionSell),
-        _ => Err(ErrorCode::InstructionMismatch.into()),
+        _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
 
-pub fn assert_program_purchase_instruction(sighash: &[u8]) -> Result<PurchaseType, ErrorCode> {
+pub fn assert_program_purchase_instruction(sighash: &[u8]) -> Result<PurchaseType> {
     match sighash {
         [37, 74, 217, 157, 79, 49, 35, 6] => Ok(PurchaseType::ExecuteSale),
         [190, 10, 82, 149, 46, 143, 189, 76] => Ok(PurchaseType::AuctionExecuteSale),
-        _ => Err(ErrorCode::InstructionMismatch.into()),
+        _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
 
-pub fn assert_program_cancel_instruction(sighash: &[u8]) -> Result<CancelType, ErrorCode> {
+pub fn assert_program_cancel_instruction(sighash: &[u8]) -> Result<CancelType> {
     match sighash {
         [232, 219, 223, 41, 219, 236, 220, 190] => Ok(CancelType::Cancel),
         [129, 238, 39, 166, 81, 89, 216, 151] => Ok(CancelType::AuctionCancel),
-        _ => Err(ErrorCode::InstructionMismatch.into()),
+        _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
 
 pub fn assert_program_instruction_equal(sighash: &[u8], expected_sighash: [u8; 8]) -> Result<()> {
     if sighash != expected_sighash {
-        return err!(ErrorCode::InstructionMismatch);
+        return err!(AuctionHouseError::InstructionMismatch);
     } else {
         Ok(())
     }
@@ -241,7 +244,7 @@ pub fn assert_program_instruction_equal(sighash: &[u8], expected_sighash: [u8; 8
 pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
     if !account.is_initialized() {
-        return err!(ErrorCode::UninitializedAccount);
+        return err!(AuctionHouseError::UninitializedAccount);
     } else {
         Ok(account)
     }
@@ -249,7 +252,7 @@ pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -
 
 pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
     if account.owner != owner {
-        return err!(ErrorCode::IncorrectOwner);
+        return err!(AuctionHouseError::IncorrectOwner);
     } else {
         Ok(())
     }
@@ -269,9 +272,9 @@ pub fn pay_auction_house_fees<'a>(
     let fees = auction_house.seller_fee_basis_points;
     let total_fee = (fees as u128)
         .checked_mul(size as u128)
-        .ok_or(ErrorCode::NumericalOverflow)?
+        .ok_or(AuctionHouseError::NumericalOverflow)?
         .checked_div(10000)
-        .ok_or(ErrorCode::NumericalOverflow)? as u64;
+        .ok_or(AuctionHouseError::NumericalOverflow)? as u64;
     if !is_native {
         invoke_signed(
             &spl_token::instruction::transfer(
@@ -331,6 +334,7 @@ pub fn create_program_token_account_if_not_present<'a>(
             fee_seeds,
             signer_seeds,
         )?;
+        msg!("This.");
         invoke_signed(
             &initialize_account2(
                 &token_program.key,
@@ -348,6 +352,7 @@ pub fn create_program_token_account_if_not_present<'a>(
             ],
             &[&signer_seeds],
         )?;
+        msg!("Passes");
     }
     Ok(())
 }
@@ -373,25 +378,25 @@ pub fn pay_creator_fees<'a>(
     let fees = metadata.data.seller_fee_basis_points;
     let total_fee = (fees as u128)
         .checked_mul(size as u128)
-        .ok_or(ErrorCode::NumericalOverflow)?
+        .ok_or(AuctionHouseError::NumericalOverflow)?
         .checked_div(10000)
-        .ok_or(ErrorCode::NumericalOverflow)? as u64;
+        .ok_or(AuctionHouseError::NumericalOverflow)? as u64;
     let mut remaining_fee = total_fee;
     let remaining_size = size
         .checked_sub(total_fee)
-        .ok_or(ErrorCode::NumericalOverflow)?;
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
     match metadata.data.creators {
         Some(creators) => {
             for creator in creators {
                 let pct = creator.share as u128;
-                let creator_fee = pct
-                    .checked_mul(total_fee as u128)
-                    .ok_or(ErrorCode::NumericalOverflow)?
-                    .checked_div(100)
-                    .ok_or(ErrorCode::NumericalOverflow)? as u64;
+                let creator_fee =
+                    pct.checked_mul(total_fee as u128)
+                        .ok_or(AuctionHouseError::NumericalOverflow)?
+                        .checked_div(100)
+                        .ok_or(AuctionHouseError::NumericalOverflow)? as u64;
                 remaining_fee = remaining_fee
                     .checked_sub(creator_fee)
-                    .ok_or(ErrorCode::NumericalOverflow)?;
+                    .ok_or(AuctionHouseError::NumericalOverflow)?;
                 let current_creator_info = next_account_info(remaining_accounts)?;
                 assert_keys_equal(creator.address, *current_creator_info.key)?;
                 if !is_native {
@@ -457,7 +462,7 @@ pub fn pay_creator_fees<'a>(
     // Any dust is returned to the party posting the NFT
     Ok(remaining_size
         .checked_add(remaining_fee)
-        .ok_or(ErrorCode::NumericalOverflow)?)
+        .ok_or(AuctionHouseError::NumericalOverflow)?)
 }
 
 /// Cheap method to just grab mint Pubkey from token account, instead of deserializing entire thing
@@ -547,7 +552,7 @@ pub fn create_or_allocate_account_raw<'a>(
 pub fn assert_derivation(program_id: &Pubkey, account: &AccountInfo, path: &[&[u8]]) -> Result<u8> {
     let (key, bump) = Pubkey::find_program_address(&path, program_id);
     if key != *account.key {
-        return Err(ErrorCode::DerivedKeyInvalid.into());
+        return Err(AuctionHouseError::DerivedKeyInvalid.into());
     }
     Ok(bump)
 }
@@ -602,7 +607,35 @@ pub fn assert_valid_trade_state<'a>(
     match (canonical_public_bump, canonical_bump) {
         (Ok(public), Err(_)) if public == ts_bump => Ok(public),
         (Err(_), Ok(bump)) if bump == ts_bump => Ok(bump),
-        _ => Err(ErrorCode::DerivedKeyInvalid.into()),
+        _ => Err(AuctionHouseError::DerivedKeyInvalid.into()),
+    }
+}
+
+pub fn rent_checked_sub(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
+    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
+    let account_lamports: u64 = escrow_account
+        .lamports()
+        .checked_sub(diff)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
+
+    if account_lamports < rent_minimum {
+        Ok(escrow_account.lamports() - rent_minimum)
+    } else {
+        Ok(diff)
+    }
+}
+
+pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
+    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
+    let account_lamports: u64 = escrow_account
+        .lamports()
+        .checked_add(diff)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
+
+    if account_lamports < rent_minimum {
+        Ok(rent_minimum - account_lamports)
+    } else {
+        Ok(diff)
     }
 }
 
@@ -611,7 +644,7 @@ pub fn assert_valid_auctioneer_and_scope(
     auctioneer_program_id: &Pubkey,
     auctioneer_pda: &AccountInfo,
     scope: AuthorityScope,
-) -> Result<(), ProgramError> {
+) -> Result<()> {
     let sale_authority_seeds = [
         AUCTIONEER.as_bytes(),
         auction_house_instance.as_ref(),
@@ -628,15 +661,15 @@ pub fn assert_valid_auctioneer_and_scope(
 
     // Assert authority, auction house instance and scopes are correct.
     if auctioneer.auction_house != *auction_house_instance {
-        return Err(ErrorCode::InvalidAuctioneer.into());
+        return Err(AuctionHouseError::InvalidAuctioneer.into());
     }
 
     if auctioneer.auctioneer_authority != *auctioneer_program_id {
-        return Err(ErrorCode::InvalidAuctioneer.into());
+        return Err(AuctionHouseError::InvalidAuctioneer.into());
     }
 
     if !(auctioneer.scopes[scope as usize]) {
-        return Err(ErrorCode::MissingAuctioneerScope.into());
+        return Err(AuctionHouseError::MissingAuctioneerScope.into());
     }
 
     Ok(())
@@ -645,10 +678,10 @@ pub fn assert_valid_auctioneer_and_scope(
 pub fn assert_scopes_eq(
     scopes: Vec<AuthorityScope>,
     scopes_array: [bool; MAX_NUM_SCOPES],
-) -> Result<(), ProgramError> {
+) -> Result<()> {
     for scope in scopes {
         if !scopes_array[scope as usize] {
-            return Err(ErrorCode::MissingAuctioneerScope.into());
+            return Err(AuctionHouseError::MissingAuctioneerScope.into());
         }
     }
 

@@ -25,8 +25,7 @@ async fn delegate_success() {
     let auctioneer_authority = Keypair::new();
     let auctioneer_authority_pubkey = auctioneer_authority.pubkey();
 
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
 
     let scopes = default_scopes();
     delegate_auctioneer(
@@ -35,7 +34,6 @@ async fn delegate_success() {
         &ah_authority,
         auctioneer_authority_pubkey,
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -86,8 +84,7 @@ async fn incorrect_authority_fails() {
     let auctioneer_authority = Keypair::new();
     let auctioneer_authority_pubkey = auctioneer_authority.pubkey();
 
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
 
     let scopes = vec![
         AuthorityScope::Buy,
@@ -104,7 +101,6 @@ async fn incorrect_authority_fails() {
         &invalid_authority,
         auctioneer_authority_pubkey,
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -126,8 +122,7 @@ async fn too_many_scopes() {
     let auctioneer_authority = Keypair::new();
     let auctioneer_authority_pubkey = auctioneer_authority.pubkey();
 
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
 
     let mut scopes = default_scopes();
     scopes.push(AuthorityScope::Buy);
@@ -138,7 +133,6 @@ async fn too_many_scopes() {
         &ah_auth,
         auctioneer_authority_pubkey,
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -160,7 +154,7 @@ async fn incorrect_auctioneer_pda_fails() {
     let auctioneer_authority = Keypair::new();
     let auctioneer_authority_pubkey = auctioneer_authority.pubkey();
 
-    let (invalid_auctioneer_pda, invalid_auctioneer_pda_bump) = Pubkey::find_program_address(
+    let (invalid_auctioneer_pda, _) = Pubkey::find_program_address(
         &[
             "not_auctioneer".as_bytes(),
             ahkey.as_ref(),
@@ -177,7 +171,6 @@ async fn incorrect_auctioneer_pda_fails() {
         &ah_auth,
         auctioneer_authority_pubkey,
         invalid_auctioneer_pda,
-        invalid_auctioneer_pda_bump,
         scopes.clone(),
     )
     .await

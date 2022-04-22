@@ -17,7 +17,9 @@ pub struct AuctionHouse {
     pub seller_fee_basis_points: u16,
     pub requires_sign_off: bool,
     pub can_change_sale_price: bool,
+    pub escrow_payment_bump: u8,
     pub has_auctioneer: bool,
+    pub auctioneer_pda_bump: u8,
 }
 
 #[account]

@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-#[error]
-pub enum ErrorCode {
+#[error_code]
+pub enum AuctionHouseError {
     // 6000
     #[msg("PublicKeyMismatch")]
     PublicKeyMismatch,
@@ -137,4 +137,16 @@ pub enum ErrorCode {
     // 6033
     #[msg("Auction House not delegated.")]
     AuctionHouseNotDelegated,
+
+    // 6034
+    #[msg("Bump seed not in hash map.")]
+    BumpSeedNotInHashMap,
+
+    // 6035
+    #[msg("The instruction would drain the escrow below rent exemption threshold")]
+    EscrowUnderRentExemption,
+
+    // 6036
+    #[msg("Invalid seeds or Auction House not delegated")]
+    InvalidSeedsOrAuctionHouseNotDelegated,
 }

@@ -195,8 +195,7 @@ async fn auction_execute_sale_success() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     delegate_auctioneer(
         &mut context,
@@ -204,7 +203,6 @@ async fn auction_execute_sale_success() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         default_scopes(),
     )
     .await
@@ -293,7 +291,6 @@ async fn auction_execute_sale_success() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
         }
         .data(),
         accounts,
@@ -371,8 +368,7 @@ async fn auction_execute_sale_missing_scope_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     let scopes = vec![AuthorityScope::Sell, AuthorityScope::Buy];
 
@@ -382,7 +378,6 @@ async fn auction_execute_sale_missing_scope_fails() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -471,7 +466,6 @@ async fn auction_execute_sale_missing_scope_fails() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
         }
         .data(),
         accounts,
@@ -520,8 +514,7 @@ pub async fn auction_execute_sale_no_delegate_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     let ((sell_acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 100_000_000);
     context
@@ -598,7 +591,6 @@ pub async fn auction_execute_sale_no_delegate_fails() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
         }
         .data(),
         accounts,
@@ -620,7 +612,7 @@ pub async fn auction_execute_sale_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+    assert_error!(error, INVALID_SEEDS);
 }
 
 #[tokio::test]
@@ -908,8 +900,7 @@ async fn execute_auction_public_sale_success() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     delegate_auctioneer(
         &mut context,
@@ -917,7 +908,6 @@ async fn execute_auction_public_sale_success() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         default_scopes(),
     )
     .await
@@ -1197,8 +1187,7 @@ async fn execute_auction_public_sale_missing_scope_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     let scopes = vec![AuthorityScope::Sell, AuthorityScope::Buy];
     delegate_auctioneer(
@@ -1207,7 +1196,6 @@ async fn execute_auction_public_sale_missing_scope_fails() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -1402,5 +1390,5 @@ async fn execute_auction_public_sale_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+    assert_error!(error, INVALID_SEEDS);
 }

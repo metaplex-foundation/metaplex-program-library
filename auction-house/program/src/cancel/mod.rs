@@ -7,28 +7,32 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 #[derive(Accounts)]
 #[instruction(buyer_price: u64, token_size: u64)]
 pub struct Cancel<'info> {
+    /// CHECK: Verified through CPI
     /// User wallet account.
     #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Token mint account of SPL token.
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: Verified through CPI
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
     /// Trade state PDA account representing the bid or ask to be canceled.
     #[account(mut)]
     pub trade_state: UncheckedAccount<'info>,
@@ -53,39 +57,45 @@ impl<'info> From<CancelWithAuctioneer<'info>> for Cancel<'info> {
 
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts, Clone)]
-#[instruction(auctioneer_pda_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(buyer_price: u64, token_size: u64)]
 pub struct CancelWithAuctioneer<'info> {
+    /// CHECK: TODO
     /// User wallet account.
     #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]
-    pub token_account: Account<'info, TokenAccount>,
+    pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// Token mint account of SPL token.
-    pub token_mint: Account<'info, Mint>,
+    pub token_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: TODO
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
+    /// CHECK: TODO
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
+    /// CHECK: TODO
     /// Trade state PDA account representing the bid or ask to be canceled.
     #[account(mut)]
     pub trade_state: UncheckedAccount<'info>,
 
+    /// CHECK: TODO
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
+    /// CHECK: TODO
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -96,12 +106,12 @@ pub fn cancel<'info>(
     mut ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
     buyer_price: u64,
     token_size: u64,
-) -> ProgramResult {
+) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
     if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
+        return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
     cancel_logic(&mut ctx.accounts, buyer_price, token_size)
@@ -109,16 +119,15 @@ pub fn cancel<'info>(
 
 pub fn cancel_with_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
-    _auctioneer_pda_bump: u8,
     buyer_price: u64,
     token_size: u64,
-) -> ProgramResult {
+) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
     let auctioneer_authority = &ctx.accounts.auctioneer_authority;
     let ah_auctioneer_pda = &ctx.accounts.ah_auctioneer_pda;
 
     if !auction_house.has_auctioneer {
-        return Err(ErrorCode::NoAuctioneerProgramSet.into());
+        return Err(AuctionHouseError::NoAuctioneerProgramSet.into());
     }
 
     assert_valid_auctioneer_and_scope(
@@ -137,7 +146,7 @@ fn cancel_logic<'info>(
     accounts: &mut Cancel<'info>,
     buyer_price: u64,
     token_size: u64,
-) -> ProgramResult {
+) -> Result<()> {
     let wallet = &accounts.wallet;
     let token_account = &accounts.token_account;
     let token_mint = &accounts.token_mint;
@@ -160,7 +169,7 @@ fn cancel_logic<'info>(
     )?;
     assert_keys_equal(token_mint.key(), token_account.mint)?;
     if !wallet.to_account_info().is_signer && !authority.to_account_info().is_signer {
-        return Err(ErrorCode::NoValidSignerPresent.into());
+        return Err(AuctionHouseError::NoValidSignerPresent.into());
     }
 
     let auction_house_key = auction_house.key();
@@ -202,7 +211,7 @@ fn cancel_logic<'info>(
     **fee_payer.lamports.borrow_mut() = fee_payer
         .lamports()
         .checked_add(curr_lamp)
-        .ok_or(ErrorCode::NumericalOverflow)?;
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
     sol_memset(*trade_state.try_borrow_mut_data()?, 0, TRADE_STATE_SIZE);
     Ok(())
 }

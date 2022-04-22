@@ -321,5 +321,6 @@ async fn init_mint_failure() {
     )
     .await
     .unwrap_err();
+    println!("{:?}", err.to_string());
     assert_error!(err, 6000);
 }

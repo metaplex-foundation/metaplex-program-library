@@ -9,36 +9,49 @@ use anchor_lang::{
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::program_memory::sol_memset;
 
-use crate::{constants::*, utils::*, AuctionHouse, AuthorityScope, ErrorCode, TRADE_STATE_SIZE};
+use crate::{
+    constants::*, errors::AuctionHouseError, utils::*, AuctionHouse, AuthorityScope,
+    TRADE_STATE_SIZE,
+};
 
 /// Accounts for the [`public_bid` handler](fn.public_bid.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct PublicBuy<'info> {
     wallet: Signer<'info>,
+
     /// CHECK: Verified through CPI
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
+
     /// CHECK: Verified through CPI
     transfer_authority: UncheckedAccount<'info>,
-    treasury_mint: Account<'info, Mint>,
-    token_account: Account<'info, TokenAccount>,
+
+    treasury_mint: Box<Account<'info, Mint>>,
+    token_account: Box<Account<'info, TokenAccount>>,
+
     /// CHECK: Verified through CPI
     metadata: UncheckedAccount<'info>,
+
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
     escrow_payment_account: UncheckedAccount<'info>,
-    /// CHECK: Verified through CPI
+
+    /// CHECK: Verified with has_one constraint on auction house account.
     authority: UncheckedAccount<'info>,
+
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
+    auction_house: Box<Account<'info, AuctionHouse>>,
+
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
+
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
     buyer_trade_state: UncheckedAccount<'info>,
+
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
@@ -57,12 +70,12 @@ pub fn public_bid(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
-        ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
+        *ctx.accounts.treasury_mint.to_owned(),
+        *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
-        ctx.accounts.auction_house.to_owned(),
+        *ctx.accounts.auction_house.to_owned(),
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
         ctx.accounts.token_program.to_owned(),
@@ -76,31 +89,53 @@ pub fn public_bid(
     )
 }
 
-/// Accounts for the [`public_bid` handler](fn.public_bid.html).
+/// Accounts for the [`public_bid_with_auctioneer` handler](fn.public_bid_with_auctioneer.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64, auctioneer_pda_bump: u8)]
+#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct PublicBuyWithAuctioneer<'info> {
     wallet: Signer<'info>,
+
+    /// CHECK: Verified through CPI
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
+
+    /// CHECK: Verified through CPI
     transfer_authority: UncheckedAccount<'info>,
-    treasury_mint: Account<'info, Mint>,
-    token_account: Account<'info, TokenAccount>,
+
+    treasury_mint: Box<Account<'info, Mint>>,
+
+    token_account: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK: Verified through CPI
     metadata: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
     escrow_payment_account: UncheckedAccount<'info>,
+
+    /// CHECK: Verified with has_one constraint on auction house account.
     authority: UncheckedAccount<'info>,
+
     #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
     auction_house: Box<Account<'info, AuctionHouse>>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
     buyer_trade_state: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
+
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
@@ -114,14 +149,13 @@ pub fn public_bid_with_auctioneer(
     escrow_payment_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    _ah_auctioneer_pda_bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     auction_bid_logic(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
-        ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
+        *ctx.accounts.treasury_mint.to_owned(),
+        *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
@@ -145,59 +179,51 @@ pub fn public_bid_with_auctioneer(
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct Buy<'info> {
+    /// User wallet account.
     wallet: Signer<'info>,
-    /// CHECK: Verified through CPI
-    #[account(mut)]
-    payment_account: UncheckedAccount<'info>,
-    /// CHECK: Verified through CPI
-    transfer_authority: UncheckedAccount<'info>,
-    treasury_mint: Account<'info, Mint>,
-    token_account: Account<'info, TokenAccount>,
-    /// CHECK: Verified through CPI
-    metadata: UncheckedAccount<'info>,
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
-    escrow_payment_account: UncheckedAccount<'info>,
-    /// CHECK: Verified through CPI
-    authority: UncheckedAccount<'info>,
-    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
-    buyer_trade_state: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
-    system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
-}
 
-/// Accounts for the [`private_bid` handler](fn.private_bid.html).
-#[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64, auctioneer_pda_bump: u8)]
-pub struct BuyWithAuctioneer<'info> {
-    wallet: Signer<'info>,
+    /// CHECK: Verified through CPI
+    /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
+
+    /// CHECK: Verified through CPI
+    /// SPL token account transfer authority.
     transfer_authority: UncheckedAccount<'info>,
+
+    /// Auction House instance treasury mint account.
     treasury_mint: Account<'info, Mint>,
-    token_account: Account<'info, TokenAccount>,
+
+    /// SPL token account.
+    token_account: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK: Verified through CPI
+    /// SPL token account metadata.
     metadata: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Buyer escrow payment account PDA.
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
     escrow_payment_account: UncheckedAccount<'info>,
+
+    /// CHECK: Verified through CPI
+    /// Auction House instance authority account.
     authority: UncheckedAccount<'info>,
+
+    /// Auction House instance PDA account.
     #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
     auction_house: Box<Account<'info, AuctionHouse>>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Auction House instance fee account.
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Buyer trade state PDA.
     #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
     buyer_trade_state: UncheckedAccount<'info>,
-    /// The auctioneer program PDA running this auction.
-    pub auctioneer_authority: UncheckedAccount<'info>,
-    /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
@@ -216,11 +242,11 @@ pub fn private_bid<'info>(
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
         ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
+        *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
-        ctx.accounts.auction_house.to_owned(),
+        *ctx.accounts.auction_house.to_owned(),
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
         ctx.accounts.token_program.to_owned(),
@@ -234,6 +260,84 @@ pub fn private_bid<'info>(
     )
 }
 
+/// Accounts for the [`private_bid_with_auctioneer` handler](fn.private_bid_with_auctioneer.html).
+#[derive(Accounts)]
+#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+pub struct BuyWithAuctioneer<'info> {
+    /// User wallet account.
+    wallet: Signer<'info>,
+
+    /// CHECK: Verified through CPI
+    /// User SOL or SPL account to transfer funds from.
+    #[account(mut)]
+    payment_account: UncheckedAccount<'info>,
+
+    /// CHECK:
+    /// SPL token account transfer authority.
+    transfer_authority: UncheckedAccount<'info>,
+
+    /// Auction House instance treasury mint account.
+    treasury_mint: Box<Account<'info, Mint>>,
+
+    /// SPL token account.
+    token_account: Box<Account<'info, TokenAccount>>,
+
+    /// CHECK: Verified through CPI
+    /// SPL token account metadata.
+    metadata: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Buyer escrow payment account PDA.
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            wallet.key().as_ref()
+        ],
+        bump = escrow_payment_bump
+    )]
+    escrow_payment_account: UncheckedAccount<'info>,
+
+    /// CHECK: Verified with has_one constraint on auction house account.
+    /// Auction House instance authority account.
+    authority: UncheckedAccount<'info>,
+
+    /// Auction House instance PDA account.
+    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
+    auction_house: Box<Account<'info, AuctionHouse>>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Auction House instance fee account.
+    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
+    auction_house_fee_account: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Buyer trade state PDA.
+    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
+    buyer_trade_state: UncheckedAccount<'info>,
+
+    /// CHECK: Is used as a seed for ah_auctioneer_pda.
+    /// The auctioneer program PDA running this auction.
+    pub auctioneer_authority: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// The auctioneer PDA owned by Auction House storing scopes.
+    #[account(
+        seeds = [
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
+            auctioneer_authority.key().as_ref()
+        ],
+        bump = auction_house.auctioneer_pda_bump,
+    )]
+    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+
+    token_program: Program<'info, Token>,
+    system_program: Program<'info, System>,
+    rent: Sysvar<'info, Rent>,
+}
+
 /// Create a private bid on a specific SPL token that is *held by a specific wallet*.
 pub fn private_bid_with_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
@@ -241,14 +345,13 @@ pub fn private_bid_with_auctioneer<'info>(
     escrow_payment_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    _ah_auctioneer_pda_bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     auction_bid_logic(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
-        ctx.accounts.treasury_mint.to_owned(),
-        ctx.accounts.token_account.to_owned(),
+        *ctx.accounts.treasury_mint.to_owned(),
+        *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
         ctx.accounts.authority.to_owned(),
@@ -289,10 +392,10 @@ pub fn bid_logic<'info>(
     buyer_price: u64,
     token_size: u64,
     public: bool,
-) -> ProgramResult {
+) -> Result<()> {
     // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
     if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
+        return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
     assert_valid_trade_state(
@@ -345,10 +448,17 @@ pub fn bid_logic<'info>(
     if is_native {
         assert_keys_equal(wallet.key(), payment_account.key())?;
 
-        if escrow_payment_account.lamports() < buyer_price {
+        if escrow_payment_account.lamports()
+            < buyer_price
+                .checked_add(rent.minimum_balance(escrow_payment_account.data_len()))
+                .ok_or(AuctionHouseError::NumericalOverflow)?
+        {
             let diff = buyer_price
+                .checked_add(rent.minimum_balance(escrow_payment_account.data_len()))
+                .ok_or(AuctionHouseError::NumericalOverflow)?
                 .checked_sub(escrow_payment_account.lamports())
-                .ok_or(ErrorCode::NumericalOverflow)?;
+                .ok_or(AuctionHouseError::NumericalOverflow)?;
+
             invoke(
                 &system_instruction::transfer(
                     &payment_account.key(),
@@ -369,7 +479,7 @@ pub fn bid_logic<'info>(
         if escrow_payment_loaded.amount < buyer_price {
             let diff = buyer_price
                 .checked_sub(escrow_payment_loaded.amount)
-                .ok_or(ErrorCode::NumericalOverflow)?;
+                .ok_or(AuctionHouseError::NumericalOverflow)?;
             invoke(
                 &spl_token::instruction::transfer(
                     &token_program.key(),
@@ -446,7 +556,7 @@ pub fn bid_logic<'info>(
     Ok(())
 }
 
-/// Handles the bid logic for both private and public bids.
+// Handles the bid logic for both private and public auctioneer bids.
 pub fn auction_bid_logic<'info>(
     wallet: Signer<'info>,
     payment_account: UncheckedAccount<'info>,
@@ -469,11 +579,11 @@ pub fn auction_bid_logic<'info>(
     buyer_price: u64,
     token_size: u64,
     public: bool,
-) -> ProgramResult {
+) -> Result<()> {
     let ah_auctioneer_pda_account = ah_auctioneer_pda.to_account_info();
 
     if !auction_house.has_auctioneer {
-        return Err(ErrorCode::NoAuctioneerProgramSet.into());
+        return Err(AuctionHouseError::NoAuctioneerProgramSet.into());
     }
 
     assert_valid_auctioneer_and_scope(
@@ -533,17 +643,10 @@ pub fn auction_bid_logic<'info>(
     if is_native {
         assert_keys_equal(wallet.key(), payment_account.key())?;
 
-        if escrow_payment_account.lamports()
-            < buyer_price
-                .checked_add(rent.minimum_balance(escrow_payment_account.data_len()))
-                .ok_or(ErrorCode::NumericalOverflow)?
-        {
+        if escrow_payment_account.lamports() < buyer_price {
             let diff = buyer_price
-                .checked_add(rent.minimum_balance(escrow_payment_account.data_len()))
-                .ok_or(ErrorCode::NumericalOverflow)?
                 .checked_sub(escrow_payment_account.lamports())
-                .ok_or(ErrorCode::NumericalOverflow)?;
-
+                .ok_or(AuctionHouseError::NumericalOverflow)?;
             invoke(
                 &system_instruction::transfer(
                     &payment_account.key(),
@@ -564,7 +667,7 @@ pub fn auction_bid_logic<'info>(
         if escrow_payment_loaded.amount < buyer_price {
             let diff = buyer_price
                 .checked_sub(escrow_payment_loaded.amount)
-                .ok_or(ErrorCode::NumericalOverflow)?;
+                .ok_or(AuctionHouseError::NumericalOverflow)?;
             invoke(
                 &spl_token::instruction::transfer(
                     &token_program.key(),

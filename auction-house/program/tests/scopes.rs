@@ -45,8 +45,7 @@ async fn overwrite_scopes() {
     let auctioneer_authority = Keypair::new();
     let auctioneer_authority_pubkey = auctioneer_authority.pubkey();
 
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
 
     let scopes = default_scopes();
 
@@ -56,7 +55,6 @@ async fn overwrite_scopes() {
         &ah_auth,
         auctioneer_authority_pubkey,
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -117,7 +115,6 @@ async fn overwrite_scopes() {
         &ah_auth,
         auctioneer_authority_pubkey,
         auctioneer_pda,
-        auctioneer_pda_bump,
         new_scopes.clone(),
     )
     .await

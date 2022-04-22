@@ -23,14 +23,17 @@ async fn withdraw_success() {
     let test_metadata = Metadata::new();
     let owner_pubkey = &test_metadata.token.pubkey();
 
+    let airdrop_amount = 2_000_000_000;
     // Airdrop owner with some SOL.
-    airdrop(&mut context, owner_pubkey, 10_000_000_000)
+    airdrop(&mut context, owner_pubkey, airdrop_amount)
         .await
         .unwrap();
 
-    let airdrop_amount = 10_000_000_000;
+    let escrow_payment_account_data_len = 0;
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(escrow_payment_account_data_len);
+
     let sale_price = 1_000_000_000;
-    let withdraw_price = sale_price / 2;
 
     // Create NFT.
     test_metadata
@@ -81,7 +84,7 @@ async fn withdraw_success() {
         &ah,
         &test_metadata,
         sale_price,
-        withdraw_price,
+        sale_price,
     );
     context
         .banks_client
@@ -97,8 +100,8 @@ async fn withdraw_success() {
         .expect("Trade State Escrow")
         .lamports;
 
-    assert_eq!(sale_price, escrow_balance_before_withdraw);
-    assert_eq!(sale_price / 2, escrow_balance_after_withdraw);
+    assert_eq!(sale_price + rent_exempt_min, escrow_balance_before_withdraw);
+    assert_eq!(rent_exempt_min, escrow_balance_after_withdraw);
 
     ()
 }
@@ -116,14 +119,17 @@ async fn auction_withdraw_success() {
     let test_metadata = Metadata::new();
     let owner_pubkey = &test_metadata.token.pubkey();
 
+    let airdrop_amount = 10_000_000_000;
     // Airdrop owner with some SOL.
-    airdrop(&mut context, owner_pubkey, 10_000_000_000)
+    airdrop(&mut context, owner_pubkey, airdrop_amount)
         .await
         .unwrap();
 
-    let airdrop_amount = 10_000_000_000;
+    let escrow_payment_account_data_len = 0;
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(escrow_payment_account_data_len);
+
     let sale_price = 1_000_000_000;
-    let withdraw_price = sale_price / 2;
 
     // Create NFT.
     test_metadata
@@ -147,8 +153,7 @@ async fn auction_withdraw_success() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     delegate_auctioneer(
         &mut context,
@@ -156,7 +161,6 @@ async fn auction_withdraw_success() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         default_scopes(),
     )
     .await
@@ -193,7 +197,7 @@ async fn auction_withdraw_success() {
         &test_metadata,
         auctioneer_authority.pubkey(),
         sale_price,
-        withdraw_price,
+        sale_price,
     );
     context
         .banks_client
@@ -209,8 +213,8 @@ async fn auction_withdraw_success() {
         .expect("Trade State Escrow")
         .lamports;
 
-    assert_eq!(sale_price, escrow_balance_before_withdraw);
-    assert_eq!(sale_price / 2, escrow_balance_after_withdraw);
+    assert_eq!(sale_price + rent_exempt_min, escrow_balance_before_withdraw);
+    assert_eq!(rent_exempt_min, escrow_balance_after_withdraw);
 }
 
 #[tokio::test]
@@ -258,8 +262,7 @@ async fn auction_withdraw_missing_scope_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
-    let (auctioneer_pda, auctioneer_pda_bump) =
-        find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     let scopes = vec![AuthorityScope::Deposit];
 
@@ -269,7 +272,6 @@ async fn auction_withdraw_missing_scope_fails() {
         &ah_auth,
         auctioneer_authority.pubkey(),
         auctioneer_pda,
-        auctioneer_pda_bump,
         scopes.clone(),
     )
     .await
@@ -384,5 +386,5 @@ async fn auction_withdraw_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, NO_AUCTIONEER_PROGRAM_SET);
+    assert_error!(error, INVALID_SEEDS);
 }

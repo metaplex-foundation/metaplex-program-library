@@ -17,6 +17,7 @@ use mpl_auction_house::{
     AuctionHouse, AuthorityScope,
 };
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
+use std::result::Result as StdResult;
 
 use mpl_token_metadata::pda::find_metadata_account;
 use solana_program_test::*;
@@ -45,7 +46,7 @@ pub async fn create_auction_house(
     seller_fee_basis_points: u16,
     requires_sign_off: bool,
     can_change_sale_price: bool,
-) -> std::result::Result<Pubkey, TransportError> {
+) -> StdResult<Pubkey, TransportError> {
     let accounts = mpl_auction_house::accounts::CreateAuctionHouse {
         treasury_mint: *t_mint_key,
         payer: payer_wallet.pubkey(),
@@ -174,7 +175,7 @@ pub fn auction_deposit(
         sale_price,
         1,
     );
-    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
 
     let accounts = mpl_auction_house::accounts::DepositWithAuctioneer {
@@ -197,7 +198,6 @@ pub fn auction_deposit(
     let data = mpl_auction_house::instruction::DepositWithAuctioneer {
         escrow_payment_bump: escrow_bump,
         amount: sale_price,
-        ah_auctioneer_pda_bump: auctioneer_pda_bump,
     }
     .data();
 
@@ -337,7 +337,7 @@ pub fn auction_buy(
         sale_price,
         1,
     );
-    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (bts, bts_bump) = trade_state;
 
@@ -367,7 +367,6 @@ pub fn auction_buy(
         escrow_payment_bump: escrow_bump,
         token_size: 1,
         buyer_price: sale_price,
-        ah_auctioneer_pda_bump: auctioneer_pda_bump,
     };
     let data = buy_ix.data();
 
@@ -528,7 +527,7 @@ pub fn auction_public_buy(
         1,
     );
 
-    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (bts, bts_bump) = trade_state;
 
@@ -557,7 +556,6 @@ pub fn auction_public_buy(
         escrow_payment_bump: escrow_bump,
         token_size: 1,
         buyer_price: sale_price,
-        ah_auctioneer_pda_bump: auctioneer_pda_bump,
     };
     let data = buy_ix.data();
 
@@ -743,7 +741,7 @@ pub fn auction_execute_sale(
         token_size,
     );
 
-    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let (escrow_payment_account, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer);
     let (purchase_receipt, purchase_receipt_bump) =
         find_purchase_receipt_address(seller_trade_state, buyer_trade_state);
@@ -786,7 +784,6 @@ pub fn auction_execute_sale(
             program_as_signer_bump: pas_bump,
             token_size,
             buyer_price,
-            ah_auctioneer_pda_bump: auctioneer_pda_bump,
         }
         .data(),
         accounts: execute_sale_account_metas,
@@ -950,7 +947,7 @@ pub fn auction_sell_mint(
         1,
     );
 
-    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let (pas, pas_bump) = find_program_as_signer_address();
     let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
 
@@ -978,7 +975,6 @@ pub fn auction_sell_mint(
         program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: sale_price,
-        ah_auctioneer_pda_bump: auctioneer_pda_bump,
     }
     .data();
 
@@ -1146,7 +1142,7 @@ pub fn auction_sell(
     );
     let (pas, pas_bump) = find_program_as_signer_address();
 
-    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
 
     let accounts = mpl_auction_house::accounts::SellWithAuctioneer {
         wallet: test_metadata.token.pubkey(),
@@ -1172,7 +1168,6 @@ pub fn auction_sell(
         program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: sale_price,
-        ah_auctioneer_pda_bump: auctioneer_pda_bump,
     }
     .data();
 
@@ -1213,9 +1208,8 @@ pub async fn delegate_auctioneer(
     authority: &Keypair,
     auctioneer_authority: Pubkey,
     ah_auctioneer_pda: Pubkey,
-    ah_auctioneer_pda_bump: u8,
     scopes: Vec<AuthorityScope>,
-) -> Result<(), TransportError> {
+) -> StdResult<(), TransportError> {
     let accounts = mpl_auction_house::accounts::DelegateAuctioneer {
         auction_house,
         authority: authority.pubkey(),
@@ -1225,11 +1219,7 @@ pub async fn delegate_auctioneer(
     }
     .to_account_metas(None);
 
-    let data = mpl_auction_house::instruction::DelegateAuctioneer {
-        ah_auctioneer_pda_bump,
-        scopes,
-    }
-    .data();
+    let data = mpl_auction_house::instruction::DelegateAuctioneer { scopes }.data();
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
@@ -1253,9 +1243,8 @@ pub async fn update_auctioneer(
     authority: &Keypair,
     auctioneer_authority: Pubkey,
     ah_auctioneer_pda: Pubkey,
-    ah_auctioneer_pda_bump: u8,
     scopes: Vec<AuthorityScope>,
-) -> Result<(), TransportError> {
+) -> StdResult<(), TransportError> {
     let accounts = mpl_auction_house::accounts::UpdateAuctioneer {
         auction_house,
         authority: authority.pubkey(),
@@ -1265,11 +1254,7 @@ pub async fn update_auctioneer(
     }
     .to_account_metas(None);
 
-    let data = mpl_auction_house::instruction::UpdateAuctioneer {
-        ah_auctioneer_pda_bump,
-        scopes,
-    }
-    .data();
+    let data = mpl_auction_house::instruction::UpdateAuctioneer { scopes }.data();
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
@@ -1371,7 +1356,7 @@ pub fn auction_withdraw(
         sale_price,
         1,
     );
-    let (auctioneer_pda, auctioneer_pda_bump) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let (escrow_payment_account, escrow_bump) =
         find_escrow_payment_address(&ahkey, &buyer.pubkey());
 
@@ -1395,7 +1380,6 @@ pub fn auction_withdraw(
 
     let data = mpl_auction_house::instruction::WithdrawWithAuctioneer {
         escrow_payment_bump: escrow_bump,
-        ah_auctioneer_pda_bump: auctioneer_pda_bump,
         amount: withdraw_amount,
     }
     .data();
@@ -1417,7 +1401,7 @@ pub fn auction_withdraw(
 
 pub async fn existing_auction_house_test_context(
     context: &mut ProgramTestContext,
-) -> std::result::Result<(AuctionHouse, Pubkey, Keypair), TransportError> {
+) -> StdResult<(AuctionHouse, Pubkey, Keypair), TransportError> {
     let twd_key = context.payer.pubkey().clone();
     let fwd_key = context.payer.pubkey().clone();
     let t_mint_key = spl_token::native_mint::id();

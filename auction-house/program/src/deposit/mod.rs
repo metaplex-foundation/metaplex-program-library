@@ -9,27 +9,32 @@ pub struct Deposit<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
 
+    /// CHECK: Verified through CPI
     /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     pub payment_account: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
     /// SPL token account transfer authority.
     pub transfer_authority: UncheckedAccount<'info>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
+    pub treasury_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: Verified through CPI
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -57,43 +62,65 @@ impl<'info> From<DepositWithAuctioneer<'info>> for Deposit<'info> {
     }
 }
 
+pub fn deposit<'info>(
+    mut ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
+    escrow_payment_bump: u8,
+    amount: u64,
+) -> Result<()> {
+    let auction_house = &ctx.accounts.auction_house;
+
+    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    if auction_house.has_auctioneer {
+        return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    deposit_logic(&mut ctx.accounts, escrow_payment_bump, amount)
+}
+
 /// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
 #[derive(Accounts, Clone)]
-#[instruction(escrow_payment_bump: u8, auctioneer_pda_bump: u8)]
+#[instruction(escrow_payment_bump: u8)]
 pub struct DepositWithAuctioneer<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
 
+    /// CHECK: Verified through CPI
     /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     pub payment_account: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
     /// SPL token account transfer authority.
     pub transfer_authority: UncheckedAccount<'info>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury mint account.
-    pub treasury_mint: Account<'info, Mint>,
+    pub treasury_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: Verified through CPI
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
-    pub auction_house: Account<'info, AuctionHouse>,
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
+    /// CHECK: TODO
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auctioneer_pda_bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -101,33 +128,17 @@ pub struct DepositWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn deposit<'info>(
-    mut ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
-    escrow_payment_bump: u8,
-    amount: u64,
-) -> ProgramResult {
-    let auction_house = &ctx.accounts.auction_house;
-
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
-    if auction_house.has_auctioneer {
-        return Err(ErrorCode::MustUseAuctioneerHandler.into());
-    }
-
-    deposit_logic(&mut ctx.accounts, escrow_payment_bump, amount)
-}
-
 pub fn deposit_with_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
     escrow_payment_bump: u8,
-    _auctioneer_pda_bump: u8,
     amount: u64,
-) -> ProgramResult {
+) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
     let auctioneer_authority = &ctx.accounts.auctioneer_authority;
     let ah_auctioneer_pda = &ctx.accounts.ah_auctioneer_pda;
 
     if !auction_house.has_auctioneer {
-        return Err(ErrorCode::NoAuctioneerProgramSet.into());
+        return Err(AuctionHouseError::NoAuctioneerProgramSet.into());
     }
 
     assert_valid_auctioneer_and_scope(
@@ -142,11 +153,12 @@ pub fn deposit_with_auctioneer<'info>(
     deposit_logic(&mut accounts, escrow_payment_bump, amount)
 }
 
+/// Deposit `amount` into the escrow payment account for your specific wallet.
 fn deposit_logic<'info>(
     accounts: &mut Deposit<'info>,
     escrow_payment_bump: u8,
     amount: u64,
-) -> ProgramResult {
+) -> Result<()> {
     let wallet = &accounts.wallet;
     let payment_account = &accounts.payment_account;
     let transfer_authority = &accounts.transfer_authority;
@@ -218,11 +230,16 @@ fn deposit_logic<'info>(
         )?;
     } else {
         assert_keys_equal(payment_account.key(), wallet.key())?;
+
+        // Reach rental exemption and then add deposit amount.
+        let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), 0)?
+            .checked_add(amount)
+            .ok_or(AuctionHouseError::NumericalOverflow)?;
         invoke(
             &system_instruction::transfer(
                 &payment_account.key(),
                 &escrow_payment_account.key(),
-                amount,
+                checked_amount,
             ),
             &[
                 escrow_payment_account.to_account_info(),
