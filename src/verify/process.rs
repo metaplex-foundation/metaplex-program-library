@@ -73,8 +73,8 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
 
     println!("Verifying {} config line(s): (Ctrl+C to abort)", num_items);
     let pb = progress_bar_with_style(num_items as u64);
-    // Should sleep for a total of 1.25 seconds
-    let step: u64 = 1_250_000 / num_items as u64;
+    // sleeps for a about 1 second
+    let step: u64 = 1_000_000 / num_items as u64;
 
     for i in 0..num_items {
         let name_start = CONFIG_ARRAY_START
@@ -120,14 +120,18 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     cache.sync_file()?;
 
     if !invalid_items.is_empty() {
+        let total = invalid_items.len();
         println!("\nInvalid items found: ");
+
         for item in invalid_items {
             println!("\t- {:?}", item);
         }
         println!("\nCache updated - re-run `deploy`.");
-    } else {
-        println!("\nAll items checked out. You're good to go!");
+
+        return Err(anyhow!("{} invalid item(s) found.", total));
     }
+
+    println!("\nAll items checked out. You're good to go!");
 
     Ok(())
 }

@@ -46,13 +46,13 @@ pub const CONFIG_ARRAY_START: usize = 8 +   // key
 /// Default length (in bytes) of a config line.
 pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
 
+pub const STRING_LEN_SIZE: usize = 4;
+
 pub const CONFIG_CHUNK_SIZE: usize = 10;
 
-pub const CONFIG_NAME_OFFSET: usize = 2;
+pub const CONFIG_NAME_OFFSET: usize = STRING_LEN_SIZE;
 
-pub const CONFIG_URI_OFFSET: usize = 40;
-
-pub const STRING_LEN_SIZE: usize = 4;
+pub const CONFIG_URI_OFFSET: usize = STRING_LEN_SIZE + CONFIG_NAME_OFFSET + MAX_NAME_LENGTH;
 
 pub const MINT_LAYOUT: u64 = 82;
 
