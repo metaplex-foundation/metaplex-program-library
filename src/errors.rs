@@ -9,7 +9,7 @@ pub enum SetupError {
 
 #[derive(Debug, Error)]
 pub enum CacheError {
-    #[error("Cache file '{0}' not found. Run `sugar upload-assets` to create it or provide it with the --cache option.")]
+    #[error("Cache file '{0}' not found. Run `sugar upload` to create it or provide it with the --cache option.")]
     CacheFileNotFound(String),
 
     #[error("Invalid candy machine address: {0}")]
