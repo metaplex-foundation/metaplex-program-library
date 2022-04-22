@@ -42,6 +42,9 @@ pub fn get_cluster(rpc_client: RpcClient) -> Result<Cluster> {
 pub fn check_spl_token(program: &Program, input: &str) -> Result<()> {
     let pubkey = Pubkey::from_str(input)?;
     let token_data = program.rpc().get_account_data(&pubkey)?;
+    if token_data.len() != 82 {
+        return Err(anyhow!("Invalid spl-token passed in."));
+    }
     let token_mint = Mint::unpack_from_slice(&token_data)?;
 
     if token_mint.is_initialized {
