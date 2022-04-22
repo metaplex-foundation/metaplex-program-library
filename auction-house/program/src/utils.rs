@@ -1,4 +1,4 @@
-use crate::{AuctionHouse, ErrorCode, PREFIX};
+use crate::{constants::*, AuctionHouse, Auctioneer, AuthorityScope, ErrorCode, PREFIX};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -167,16 +167,66 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     }
 }
 
+#[derive(Debug, Clone)]
+
 pub enum BidType {
     PublicSale,
     PrivateSale,
+    AuctionPublicSale,
+    AuctionPrivateSale,
+}
+
+#[derive(Debug, Clone)]
+pub enum ListingType {
+    Sell,
+    AuctionSell,
+}
+
+#[derive(Debug, Clone)]
+
+pub enum PurchaseType {
+    ExecuteSale,
+    AuctionExecuteSale,
+}
+
+#[derive(Debug, Clone)]
+
+pub enum CancelType {
+    Cancel,
+    AuctionCancel,
 }
 
 pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType> {
     match sighash {
         [169, 84, 218, 35, 42, 206, 16, 171] => Ok(BidType::PublicSale),
         [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::PrivateSale),
-        _ => return err!(ErrorCode::InstructionMismatch),
+        [182, 20, 132, 26, 44, 72, 50, 164] => Ok(BidType::AuctionPublicSale),
+        [144, 84, 193, 191, 59, 251, 45, 20] => Ok(BidType::AuctionPrivateSale),
+        _ => Err(ErrorCode::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_listing_instruction(sighash: &[u8]) -> Result<ListingType, ErrorCode> {
+    match sighash {
+        [51, 230, 133, 164, 1, 127, 131, 173] => Ok(ListingType::Sell),
+        [62, 168, 106, 144, 69, 91, 134, 249] => Ok(ListingType::AuctionSell),
+        _ => Err(ErrorCode::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_purchase_instruction(sighash: &[u8]) -> Result<PurchaseType, ErrorCode> {
+    match sighash {
+        [37, 74, 217, 157, 79, 49, 35, 6] => Ok(PurchaseType::ExecuteSale),
+        [190, 10, 82, 149, 46, 143, 189, 76] => Ok(PurchaseType::AuctionExecuteSale),
+        _ => Err(ErrorCode::InstructionMismatch.into()),
+    }
+}
+
+pub fn assert_program_cancel_instruction(sighash: &[u8]) -> Result<CancelType, ErrorCode> {
+    match sighash {
+        [232, 219, 223, 41, 219, 236, 220, 190] => Ok(CancelType::Cancel),
+        [129, 238, 39, 166, 81, 89, 216, 151] => Ok(CancelType::AuctionCancel),
+        _ => Err(ErrorCode::InstructionMismatch.into()),
     }
 }
 
@@ -281,7 +331,6 @@ pub fn create_program_token_account_if_not_present<'a>(
             fee_seeds,
             signer_seeds,
         )?;
-        msg!("This.");
         invoke_signed(
             &initialize_account2(
                 &token_program.key,
@@ -299,7 +348,6 @@ pub fn create_program_token_account_if_not_present<'a>(
             ],
             &[&signer_seeds],
         )?;
-        msg!("Passes");
     }
     Ok(())
 }
@@ -558,30 +606,51 @@ pub fn assert_valid_trade_state<'a>(
     }
 }
 
-pub fn rent_checked_sub(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
-    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
-    let account_lamports: u64 = escrow_account
-        .lamports()
-        .checked_sub(diff)
-        .ok_or(ErrorCode::NumericalOverflow)?;
+pub fn assert_valid_auctioneer_and_scope(
+    auction_house_instance: &Pubkey,
+    auctioneer_program_id: &Pubkey,
+    auctioneer_pda: &AccountInfo,
+    scope: AuthorityScope,
+) -> Result<(), ProgramError> {
+    let sale_authority_seeds = [
+        AUCTIONEER.as_bytes(),
+        auction_house_instance.as_ref(),
+        auctioneer_program_id.as_ref(),
+    ];
 
-    if account_lamports < rent_minimum {
-        Ok(escrow_account.lamports() - rent_minimum)
-    } else {
-        Ok(diff)
+    // Assert we're given the correctly derived account.
+    assert_derivation(&crate::id(), auctioneer_pda, &sale_authority_seeds)?;
+
+    // Deserialize into the Rust struct.
+    let data = auctioneer_pda.data.borrow_mut();
+    let auctioneer = Auctioneer::try_deserialize(&mut data.as_ref())
+        .expect("Failed to deserialize Auctioneer account");
+
+    // Assert authority, auction house instance and scopes are correct.
+    if auctioneer.auction_house != *auction_house_instance {
+        return Err(ErrorCode::InvalidAuctioneer.into());
     }
+
+    if auctioneer.auctioneer_authority != *auctioneer_program_id {
+        return Err(ErrorCode::InvalidAuctioneer.into());
+    }
+
+    if !(auctioneer.scopes[scope as usize]) {
+        return Err(ErrorCode::MissingAuctioneerScope.into());
+    }
+
+    Ok(())
 }
 
-pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
-    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
-    let account_lamports: u64 = escrow_account
-        .lamports()
-        .checked_add(diff)
-        .ok_or(ErrorCode::NumericalOverflow)?;
-
-    if account_lamports < rent_minimum {
-        Ok(rent_minimum - account_lamports)
-    } else {
-        Ok(diff)
+pub fn assert_scopes_eq(
+    scopes: Vec<AuthorityScope>,
+    scopes_array: [bool; MAX_NUM_SCOPES],
+) -> Result<(), ProgramError> {
+    for scope in scopes {
+        if !scopes_array[scope as usize] {
+            return Err(ErrorCode::MissingAuctioneerScope.into());
+        }
     }
+
+    Ok(())
 }

@@ -140,13 +140,10 @@ pub fn print_listing_receipt<'info>(
     let seller_trade_state = &prev_instruction_accounts[6];
     let metadata = &prev_instruction_accounts[2];
 
+    assert_program_listing_instruction(&prev_instruction.data[..8])?;
+
     let mut buffer = &prev_instruction.data[8..];
     let sell_data = Sell::deserialize(&mut buffer)?;
-
-    assert_program_instruction_equal(
-        &prev_instruction.data[..8],
-        [51, 230, 133, 164, 1, 127, 131, 173],
-    )?;
 
     assert_keys_equal(prev_instruction.program_id, id())?;
 
@@ -227,10 +224,7 @@ pub fn cancel_listing_receipt<'info>(
 
     let trade_state = &prev_instruction_accounts[6];
 
-    assert_program_instruction_equal(
-        &prev_instruction.data[..8],
-        [232, 219, 223, 41, 219, 236, 220, 190],
-    )?;
+    assert_program_cancel_instruction(&prev_instruction.data[..8])?;
 
     if receipt_info.data_is_empty() {
         return Err(ErrorCode::ReceiptIsEmpty.into());
@@ -306,7 +300,9 @@ pub fn print_bid_receipt<'info>(
 
     let token_account = match bid_type {
         BidType::PrivateSale => Some(token_account.pubkey),
+        BidType::AuctionPrivateSale => Some(token_account.pubkey),
         BidType::PublicSale => None,
+        BidType::AuctionPublicSale => None,
     };
 
     assert_derivation(
@@ -389,10 +385,7 @@ pub fn cancel_bid_receipt<'info>(
 
     let trade_state = &prev_instruction_accounts[6];
 
-    assert_program_instruction_equal(
-        &prev_instruction.data[..8],
-        [232, 219, 223, 41, 219, 236, 220, 190],
-    )?;
+    assert_program_cancel_instruction(&prev_instruction.data[..8])?;
 
     if receipt_info.data_is_empty() {
         return Err(ErrorCode::ReceiptIsEmpty.into());
@@ -463,10 +456,7 @@ pub fn print_purchase_receipt<'info>(
     let mut buffer = &prev_instruction.data[8..];
     let execute_sale_data = ExecuteSale::deserialize(&mut buffer)?;
 
-    assert_program_instruction_equal(
-        &prev_instruction.data[..8],
-        [37, 74, 217, 157, 79, 49, 35, 6],
-    )?;
+    assert_program_purchase_instruction(&prev_instruction.data[..8])?;
 
     assert_keys_equal(prev_instruction.program_id, id())?;
 

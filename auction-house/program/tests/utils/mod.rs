@@ -2,6 +2,7 @@
 
 // #![allow(unused)]
 
+pub mod helpers;
 pub mod setup_functions;
 
 // use std::{env, str::FromStr};
