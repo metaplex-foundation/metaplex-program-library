@@ -75,6 +75,26 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             Ok(())
         }
     };
+    let symbol_validator = |input: &String| -> Result<(), String> {
+        if input.len() > 10 {
+            Err(String::from("Symbol must be 10 characters or less!"))
+        } else {
+            Ok(())
+        }
+    };
+    let seller_fee_basis_points_validator = |input: &String| -> Result<(), String> {
+        let value = match input.parse::<u16>() {
+            Ok(value) => value,
+            Err(_) => return Err(format!("Couldn't parse input of '{}' to a number!", input)),
+        };
+        if value > 10_000 {
+            Err(String::from(
+                "Seller fee basis points must be 10,000 or less!",
+            ))
+        } else {
+            Ok(())
+        }
+    };
 
     println!(
         "{}{} {}",
@@ -120,6 +140,24 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .interact()
             .unwrap().parse::<u64>().expect("Failed to parse number into u64 that should have already been validated.")
     };
+
+    config_data.symbol = Input::with_theme(&theme)
+        .with_prompt(
+            "What is the symbol of your collection? (This must match what's in your asset files.)",
+        )
+        .validate_with(symbol_validator)
+        .interact()
+        .unwrap();
+
+    config_data.seller_fee_basis_points = Input::with_theme(&theme)
+        .with_prompt(
+            "What is the seller fee basis points? (This must match what's in your asset files.)",
+        )
+        .validate_with(seller_fee_basis_points_validator)
+        .interact()
+        .unwrap()
+        .parse::<u16>()
+        .expect("Failed to parse number into u16 that should have already been validated.");
 
     config_data.go_live_date = Input::with_theme(&theme)
         .with_prompt("What is your go live date? Enter it in RFC 3339 format, i.e., \"2022-02-25T13:00:00Z\", which is 1:00 PM UTC on Feburary 25, 2022.")
