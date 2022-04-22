@@ -2,6 +2,7 @@ export * from './buy';
 export * from './cancel';
 export * from './cancelBidReceipt';
 export * from './cancelListingReceipt';
+export * from './closeEscrowAccount';
 export * from './createAuctionHouse';
 export * from './deposit';
 export * from './executeSale';

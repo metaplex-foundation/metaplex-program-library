@@ -101,7 +101,7 @@ export function createCreateAuctionHouseInstruction(
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
