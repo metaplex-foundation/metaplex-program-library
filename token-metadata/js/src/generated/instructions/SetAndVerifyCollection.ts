@@ -13,9 +13,10 @@ import * as web3 from '@solana/web3.js';
  * @category SetAndVerifyCollection
  * @category generated
  */
-const SetAndVerifyCollectionStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'SetAndVerifyCollectionInstructionArgs');
+const SetAndVerifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'SetAndVerifyCollectionInstructionArgs',
+);
 /**
  * Accounts required by the _SetAndVerifyCollection_ instruction
  *
