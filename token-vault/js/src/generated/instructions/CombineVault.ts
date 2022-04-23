@@ -14,9 +14,10 @@ import * as web3 from '@solana/web3.js';
  * @category CombineVault
  * @category generated
  */
-const CombineVaultStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'CombineVaultInstructionArgs');
+const CombineVaultStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'CombineVaultInstructionArgs',
+);
 /**
  * Accounts required by the _CombineVault_ instruction
  *

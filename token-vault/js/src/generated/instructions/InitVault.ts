@@ -6,9 +6,9 @@
  */
 
 import * as splToken from '@solana/spl-token';
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { InitVaultArgs, initVaultArgsBeet } from '../types/InitVaultArgs';
 
 /**
  * @category Instructions
@@ -16,7 +16,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type InitVaultInstructionArgs = {
-  initVaultArgs: definedTypes.InitVaultArgs;
+  initVaultArgs: InitVaultArgs;
 };
 /**
  * @category Instructions
@@ -30,7 +30,7 @@ const InitVaultStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['initVaultArgs', definedTypes.initVaultArgsBeet],
+    ['initVaultArgs', initVaultArgsBeet],
   ],
   'InitVaultInstructionArgs',
 );
