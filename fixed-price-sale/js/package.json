@@ -48,7 +48,7 @@
   "devDependencies": {
     "@metaplex-foundation/amman": "^0.1.0",
     "@metaplex-foundation/mpl-token-metadata": "2.0.0",
-    "@metaplex-foundation/solita": "^0.2.0",
+    "@metaplex-foundation/solita": "^0.5.0",
     "@types/bn.js": "^5.1.0",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
