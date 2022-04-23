@@ -1136,7 +1136,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
-    "@metaplex-foundation/solita": ^0.2.0
+    "@metaplex-foundation/solita": ^0.3.1
     "@solana/web3.js": ^1.35.1
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
