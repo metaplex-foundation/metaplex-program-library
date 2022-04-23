@@ -104,6 +104,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         keypair: verify_args.keypair.clone(),
         rpc_url: verify_args.rpc_url.clone(),
         cache: verify_args.cache.clone(),
+        config: verify_args.config.clone(),
     };
 
     if let Err(err) = process_verify(verify_args) {

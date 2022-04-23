@@ -181,6 +181,10 @@ pub enum Commands {
         /// Path to the cache file, defaults to "cache.json"
         #[clap(long, default_value = DEFAULT_CACHE)]
         cache: String,
+
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
     },
 
     /// Show the on-chain config of an existing candy machine

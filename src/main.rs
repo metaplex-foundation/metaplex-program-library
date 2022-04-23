@@ -192,10 +192,12 @@ async fn run() -> Result<()> {
             keypair,
             rpc_url,
             cache,
+            config,
         } => process_verify(VerifyArgs {
             keypair,
             rpc_url,
             cache,
+            config,
         })?,
         Commands::Show {
             keypair,

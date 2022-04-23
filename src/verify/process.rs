@@ -1,16 +1,17 @@
-use console::style;
-use std::{thread, time::Duration};
-
 use crate::cache::*;
 use crate::common::*;
+use crate::config::parser::get_config_data;
 use crate::constants::{CANDY_EMOJI, PAPER_EMOJI};
 use crate::utils::*;
 use crate::verify::VerifyError;
+use console::style;
+use std::{thread, time::Duration};
 
 pub struct VerifyArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
     pub cache: String,
+    pub config: String,
 }
 
 #[derive(Debug)]
@@ -21,6 +22,7 @@ pub struct OnChainItem {
 
 pub fn process_verify(args: VerifyArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
+    let config_data = get_config_data(&args.config)?;
 
     // loads the cache file (this needs to have been created by
     // the upload command)
@@ -106,10 +108,10 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             .get_mut(&i.to_string())
             .expect("Failed to get item from config.");
 
-        if !items_match(cache_item, &on_chain_item) {
+        if config_data.hidden_settings.is_none() && !items_match(cache_item, &on_chain_item) {
             cache_item.on_chain = false;
             invalid_items.push(cache_item.clone());
-        }
+        };
 
         pb.inc(1);
         thread::sleep(Duration::from_micros(step));
