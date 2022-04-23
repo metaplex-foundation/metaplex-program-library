@@ -29,6 +29,14 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     let mut config_data: ConfigData = ConfigData::default();
     let theme = ColorfulTheme {
         prompt_style: Style::new(),
+        checked_item_prefix: style("✔".to_string())
+            .for_stderr()
+            .green()
+            .force_styling(true),
+        unchecked_item_prefix: style("✔".to_string())
+            .for_stderr()
+            .black()
+            .force_styling(true),
         ..Default::default()
     };
 
@@ -232,9 +240,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     ];
 
     let choices = MultiSelect::with_theme(&theme)
-        .with_prompt(
-            "Which extra features do you want to use? (Use spacebar to select options you want. Hit enter for when done.)",
-        )
+        .with_prompt("Which extra features do you want to use? (Use spacebar to select options you want. Hit enter for when done.)")
         .items(&extra_functions_options)
         .interact()?;
 
