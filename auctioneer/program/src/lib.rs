@@ -1,5 +1,14 @@
+pub mod bid;
+pub mod cancel;
+pub mod constants;
+pub mod deposit;
+pub mod execute_sale;
+pub mod sell;
+pub mod withdraw;
+
+use crate::{bid::*, cancel::*, deposit::*, execute_sale::*, sell::*, withdraw::*};
+
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::entrypoint::ProgramResult;
 
 use anchor_spl::{
     associated_token::AssociatedToken,
@@ -8,27 +17,8 @@ use anchor_spl::{
 
 use mpl_auction_house::{
     self,
-    constants::{
-        PREFIX,
-        FEE_PAYER,
-        TREASURY,
-        SIGNER,
-    },
-    //auction_house::{
-    cpi::{
-        accounts::{
-            Withdraw as AHWithdraw,
-            Deposit as AHDeposit,
-            Cancel as AHCancel,
-            ExecuteSale as AHExecuteSale,
-            Sell as AHSell,
-            Buy as AHBuy,
-            PublicBuy as AHPublicBuy,
-        },
-    },
-    program::AuctionHouse as AuctionHouseProgram,//program::auction_house as AuctionHouseProgram,
-        //program::auction_house,
-    //},
+    constants::{FEE_PAYER, PREFIX, SIGNER, TREASURY},
+    program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
     AuctionHouse,
 };
 
@@ -42,202 +32,102 @@ pub mod auctioneer {
 
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
     pub fn withdraw<'info>(
-        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
+        ctx: Context<'_, '_, '_, 'info, AuctioneerWithdraw<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
-    ) -> ProgramResult {
-        let cpi_program = ctx.accounts.auction_house_program.to_account_info();
-        let cpi_accounts = AHWithdraw {
-            wallet: ctx.accounts.wallet.to_account_info(),
-            receipt_account: ctx.accounts.receipt_account.to_account_info(),
-            escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
-            treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            ata_program: ctx.accounts.ata_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-        
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        mpl_auction_house::cpi::withdraw(cpi_ctx, escrow_payment_bump, amount)
+    ) -> Result<()> {
+        auctioneer_withdraw(ctx, escrow_payment_bump, amount)
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
     pub fn deposit<'info>(
-        ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
+        ctx: Context<'_, '_, '_, 'info, AuctioneerDeposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
-    ) -> ProgramResult {
-        let cpi_program = ctx.accounts.auction_house_program.to_account_info();
-        let cpi_accounts = AHDeposit {
-            wallet: ctx.accounts.wallet.to_account_info(),
-            payment_account: ctx.accounts.payment_account.to_account_info(),
-            transfer_authority: ctx.accounts.transfer_authority.to_account_info(),
-            escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
-            treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-        
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        mpl_auction_house::cpi::deposit(cpi_ctx, escrow_payment_bump, amount)
+    ) -> Result<()> {
+        auctioneer_deposit(ctx, escrow_payment_bump, amount)
     }
 
     /// Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
     pub fn cancel<'info>(
-        ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
+        ctx: Context<'_, '_, '_, 'info, AuctioneerCancel<'info>>,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
-        let cpi_program = ctx.accounts.auction_house_program.to_account_info();
-        let cpi_accounts = AHCancel {
-            wallet: ctx.accounts.wallet.to_account_info(),
-            token_account: ctx.accounts.token_account.to_account_info(),
-            token_mint: ctx.accounts.token_mint.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            trade_state: ctx.accounts.trade_state.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-        };
-        
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        mpl_auction_house::cpi::cancel(cpi_ctx, buyer_price, token_size)
+    ) -> Result<()> {
+        auctioneer_cancel(ctx, buyer_price, token_size)
     }
 
     /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
     #[inline(never)]
     pub fn execute_sale<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+        ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
         escrow_payment_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
-        let cpi_program = ctx.accounts.auction_house_program.to_account_info();
-        let cpi_accounts = AHExecuteSale {
-            buyer: ctx.accounts.buyer.to_account_info(),
-            seller: ctx.accounts.seller.to_account_info(),
-            token_account: ctx.accounts.token_account.to_account_info(),
-            token_mint: ctx.accounts.token_mint.to_account_info(),
-            metadata: ctx.accounts.metadata.to_account_info(),
-            treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-            escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
-            seller_payment_receipt_account: ctx.accounts.seller_payment_receipt_account.to_account_info(),
-            buyer_receipt_token_account: ctx.accounts.buyer_receipt_token_account.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            auction_house_treasury: ctx.accounts.auction_house_treasury.to_account_info(),
-            buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),
-            seller_trade_state: ctx.accounts.seller_trade_state.to_account_info(),
-            free_trade_state: ctx.accounts.free_trade_state.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            ata_program: ctx.accounts.ata_program.to_account_info(),
-            program_as_signer: ctx.accounts.program_as_signer.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-        
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        mpl_auction_house::cpi::execute_sale(cpi_ctx, escrow_payment_bump, free_trade_state_bump, program_as_signer_bump, buyer_price, token_size)
+    ) -> Result<()> {
+        auctioneer_execute_sale(
+            ctx,
+            escrow_payment_bump,
+            free_trade_state_bump,
+            program_as_signer_bump,
+            buyer_price,
+            token_size,
+        )
     }
 
     /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
     pub fn sell<'info>(
-        ctx: Context<'_, '_, '_, 'info, Sell<'info>>,
+        ctx: Context<'_, '_, '_, 'info, AuctioneerSell<'info>>,
         trade_state_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
-        let cpi_program = ctx.accounts.auction_house_program.to_account_info();
-        let cpi_accounts = AHSell {
-            wallet: ctx.accounts.wallet.to_account_info(),
-            token_account: ctx.accounts.token_account.to_account_info(),
-            metadata: ctx.accounts.metadata.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            seller_trade_state: ctx.accounts.seller_trade_state.to_account_info(),
-            free_seller_trade_state: ctx.accounts.free_seller_trade_state.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            program_as_signer: ctx.accounts.program_as_signer.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-        
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        mpl_auction_house::cpi::sell(cpi_ctx, trade_state_bump, free_trade_state_bump, program_as_signer_bump, buyer_price, token_size)
+    ) -> Result<()> {
+        auctioneer_sell(
+            ctx,
+            trade_state_bump,
+            free_trade_state_bump,
+            program_as_signer_bump,
+            buyer_price,
+            token_size,
+        )
     }
 
     /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
     pub fn buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, Buy<'info>>,
+        ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
         trade_state_bump: u8,
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
-        let cpi_program = ctx.accounts.auction_house_program.to_account_info();
-        let cpi_accounts = AHBuy {
-            wallet: ctx.accounts.wallet.to_account_info(),
-            payment_account: ctx.accounts.payment_account.to_account_info(),
-            transfer_authority: ctx.accounts.transfer_authority.to_account_info(),
-            treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-            token_account: ctx.accounts.token_account.to_account_info(),
-            metadata: ctx.accounts.metadata.to_account_info(),
-            escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-        
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        mpl_auction_house::cpi::buy(cpi_ctx, trade_state_bump, escrow_payment_bump, buyer_price, token_size)
+    ) -> Result<()> {
+        auctioneer_buy(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
     }
 
     /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
     pub fn public_buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, PublicBuy<'info>>,
+        ctx: Context<'_, '_, '_, 'info, AuctioneerPublicBuy<'info>>,
         trade_state_bump: u8,
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
-    ) -> ProgramResult {
-        let cpi_program = ctx.accounts.auction_house_program.to_account_info();
-        let cpi_accounts = AHPublicBuy {
-            wallet: ctx.accounts.wallet.to_account_info(),
-            payment_account: ctx.accounts.payment_account.to_account_info(),
-            transfer_authority: ctx.accounts.transfer_authority.to_account_info(),
-            treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-            token_account: ctx.accounts.token_account.to_account_info(),
-            metadata: ctx.accounts.metadata.to_account_info(),
-            escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-            system_program: ctx.accounts.system_program.to_account_info(),
-            rent: ctx.accounts.rent.to_account_info(),
-        };
-        
-        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        mpl_auction_house::cpi::public_buy(cpi_ctx, trade_state_bump, escrow_payment_bump, buyer_price, token_size)
+    ) -> Result<()> {
+        auctioneer_public_buy(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
     }
 }
 
@@ -422,58 +312,4 @@ pub struct Sell<'info> {
     #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
     pub program_as_signer: UncheckedAccount<'info>,
     pub rent: Sysvar<'info, Rent>,
-}
-
-/// Accounts for the [`private_bid` handler](fn.private_bid.html).
-#[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct Buy<'info> {
-    /// Auction House Program
-    pub auction_house_program: Program<'info, AuctionHouseProgram>,
-    wallet: Signer<'info>,
-    #[account(mut)]
-    payment_account: UncheckedAccount<'info>,
-    transfer_authority: UncheckedAccount<'info>,
-    treasury_mint: Account<'info, Mint>,
-    token_account: Account<'info, TokenAccount>,
-    metadata: UncheckedAccount<'info>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
-    escrow_payment_account: UncheckedAccount<'info>,
-    authority: UncheckedAccount<'info>,
-    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
-    buyer_trade_state: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
-    system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
-}
-
-/// Accounts for the [`public_bid` handler](fn.public_bid.html).
-#[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct PublicBuy<'info> {
-    /// Auction House Program
-    pub auction_house_program: Program<'info, AuctionHouseProgram>,
-    wallet: Signer<'info>,
-    #[account(mut)]
-    payment_account: UncheckedAccount<'info>,
-    transfer_authority: UncheckedAccount<'info>,
-    treasury_mint: Account<'info, Mint>,
-    token_account: Account<'info, TokenAccount>,
-    metadata: UncheckedAccount<'info>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
-    escrow_payment_account: UncheckedAccount<'info>,
-    authority: UncheckedAccount<'info>,
-    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
-    auction_house: Account<'info, AuctionHouse>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
-    auction_house_fee_account: UncheckedAccount<'info>,
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
-    buyer_trade_state: UncheckedAccount<'info>,
-    token_program: Program<'info, Token>,
-    system_program: Program<'info, System>,
-    rent: Sysvar<'info, Rent>,
 }
