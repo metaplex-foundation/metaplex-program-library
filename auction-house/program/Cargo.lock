@@ -1783,7 +1783,7 @@ dependencies = [
  "mpl-token-vault 0.1.0",
  "num-derive",
  "num-traits",
- "shank 0.0.1",
+ "shank",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
@@ -1811,7 +1811,7 @@ dependencies = [
  "borsh",
  "num-derive",
  "num-traits",
- "shank 0.0.2",
+ "shank",
  "solana-program",
  "spl-token",
  "thiserror",
@@ -2672,32 +2672,11 @@ dependencies = [
 
 [[package]]
 name = "shank"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "241e2bc30cdc50633ec58dafea6841a3764f5efca9dc17c9604d9e4c45288167"
-dependencies = [
- "shank_macro 0.0.1",
-]
-
-[[package]]
-name = "shank"
 version = "0.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9cfd616747d1ce69f15e62ea30589e393115e4b884d7c1cbceb751b8753e95d"
 dependencies = [
- "shank_macro 0.0.2",
-]
-
-[[package]]
-name = "shank_macro"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4860f0c3bf7db32960c5e1d75166782b0b096a2e04e2580001e2e9993a7060ef"
-dependencies = [
- "proc-macro2 1.0.37",
- "quote 1.0.18",
- "shank_macro_impl 0.0.1",
- "syn 1.0.91",
+ "shank_macro",
 ]
 
 [[package]]
@@ -2708,20 +2687,7 @@ checksum = "0a27d3b536acc60a3ff359181d3a912d10b91539f85909447ca7d33ea0a91d56"
 dependencies = [
  "proc-macro2 1.0.37",
  "quote 1.0.18",
- "shank_macro_impl 0.0.2",
- "syn 1.0.91",
-]
-
-[[package]]
-name = "shank_macro_impl"
-version = "0.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3c2dae9df9e062c7bbb482667f75ffcec1fb435d55d2e9b6454d32fc1612daa0"
-dependencies = [
- "anyhow",
- "proc-macro2 1.0.37",
- "quote 1.0.18",
- "serde",
+ "shank_macro_impl",
  "syn 1.0.91",
 ]
 
