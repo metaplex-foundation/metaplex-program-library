@@ -84,7 +84,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
     let num_items = config_data.number;
 
-    if num_items != (cache.items.0.len() as u64) {
+    if num_items != (cache.items.0.len() as u64) && config_data.hidden_settings.is_none() {
         return Err(anyhow!(
             "Number of items ({}) do not match cache items ({})",
             num_items,
