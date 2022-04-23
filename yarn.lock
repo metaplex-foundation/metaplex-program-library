@@ -1249,8 +1249,8 @@ __metadata:
   linkType: hard
 
 "@metaplex-foundation/solita@npm:^0.5.0":
-  version: 0.5.0
-  resolution: "@metaplex-foundation/solita@npm:0.5.0"
+  version: 0.5.1
+  resolution: "@metaplex-foundation/solita@npm:0.5.1"
   dependencies:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
@@ -1264,7 +1264,7 @@ __metadata:
     spok: ^1.4.3
   bin:
     solita: dist/src/cli/solita.js
-  checksum: 410eca2fa20a608c6d7bf3db3ff0dad81e6cf674d48acd6f8f2b80d880935108db398a6c10b26c84e658d5d970e8e50bda632770656dc0d709a205858d3784a7
+  checksum: 2e6a6b86d7bb9b5a3bd773b0052dad7117192a35c7c8e9c81979158d95182ba83c5def3621aeaaf0fd6c9cd93ba5297131b953bf1f68a1fffae1ef0bd572c2ab
   languageName: node
   linkType: hard
 
