@@ -158,7 +158,7 @@ A minimum configuration file looks like this:
     "hiddenSettings": null,
     "uploadMethod": "bundlr",
     "awsS3Bucket": null,
-    "retainAuthority": false,
+    "retainAuthority": true,
     "isMutable": true,
     "creators": [
     {
@@ -175,7 +175,7 @@ A minimum configuration file looks like this:
 
 The main differences with the previous configuration file are:
 - **goLiveDate**: this needs to be specified using [RFC 3339 standard](https://datatracker.ietf.org/doc/html/rfc3339). In most cases, the format used will be "yyyy-mm-dd`T`hh:mm:ss`Z`", where `T` is the separator between the *full-date* and *full-time* and `Z` is the timezone offset from UTC (use `Z` or `+00:00` for UTC time);
-- **retainAuthority**: this is similar to the previous *noRetainAuthority* property, but provides a clearer meaning&mdash;you should specify **yes** to indicate that the candy machine retains the update authority for each mint (most common case) or **no** to transfer the authority to the minter;
+- **retainAuthority**: this is similar to the previous *noRetainAuthority* property, but provides a clearer meaning&mdash;you should specify **true** to indicate that the candy machine retains the update authority for each mint (most common case) or **false** to transfer the authority to the minter;
 - **isMutable**: this is similar to the previous *noMutable* property, but provides a clearer meaning&mdash;you should specify **yes** to indicate that the metadata is mutable (most common case) or **no** to prevent updates to the metadata;
 - **creators**: specifies the list of creators and their percentage share of the royalties&mdash; at least one creator must be specified (up to a maximum of four) and the sum of shares must add up to `100`. This information used to be located on each metadata file, but has been deprecated since Token Metadata Standard v1.1.0 and therefore needs to be specfied in the configuration file. The list of creators will be the same to all NFTs minted from the Candy Machine.
 
