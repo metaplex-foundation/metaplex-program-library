@@ -275,7 +275,7 @@ fn create_candy_machine_data(config: &ConfigData, uuid: String) -> Result<CandyM
         price: price_as_lamports(config.price),
         symbol: config.symbol.clone(),
         seller_fee_basis_points: config.seller_fee_basis_points,
-        max_supply: config.number,
+        max_supply: 0,
         is_mutable: config.is_mutable,
         retain_authority: config.retain_authority,
         go_live_date,
