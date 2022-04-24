@@ -2248,6 +2248,8 @@ dependencies = [
  "anchor-spl 0.24.1",
  "arrayref",
  "mpl-token-metadata 1.2.7",
+ "solana-program-test",
+ "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",

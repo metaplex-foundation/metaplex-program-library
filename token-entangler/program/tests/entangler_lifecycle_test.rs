@@ -1,0 +1,218 @@
+use anchor_lang::{
+    prelude::{Pubkey, Rent},
+    InstructionData, ToAccountMetas,
+};
+use mpl_token_metadata::{
+    instruction::{create_master_edition, create_metadata_accounts},
+    pda::find_metadata_account,
+};
+use solana_program_test::{tokio, ProgramTest};
+use solana_sdk::{
+    instruction::Instruction, program_pack::Pack, signature::Keypair, signer::Signer,
+    system_instruction::create_account, transaction::Transaction,
+};
+use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
+use spl_token::{
+    instruction::{initialize_mint, mint_to},
+    state::Mint,
+};
+use test_utils::{
+    find_entangled_pair, find_escrow_a, find_escrow_b, find_master_edition_address,
+    instructions_to_mint_an_nft,
+};
+
+#[tokio::test]
+async fn lifecycle_test() {
+    #[allow(unused_mut)]
+    let mut program_test = ProgramTest::default();
+    program_test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program_test.add_program("mpl_token_entangler", mpl_token_entangler::id(), None);
+
+    let context = program_test.start_with_context().await;
+    let mut banks_client = context.banks_client;
+    let payer = context.payer;
+    let rent = banks_client.get_sysvar::<Rent>().await.unwrap();
+
+    let mint_a = Keypair::new();
+    let mint_a_tx = Transaction::new_signed_with_payer(
+        &instructions_to_mint_an_nft(payer.pubkey(), mint_a.pubkey(), &rent),
+        Some(&payer.pubkey()),
+        &[&payer, &mint_a],
+        context.last_blockhash,
+    );
+    banks_client.process_transaction(mint_a_tx).await.unwrap();
+
+    let mint_b = Keypair::new();
+    let mint_b_tx = Transaction::new_signed_with_payer(
+        &instructions_to_mint_an_nft(payer.pubkey(), mint_b.pubkey(), &rent),
+        Some(&payer.pubkey()),
+        &[&payer, &mint_b],
+        context.last_blockhash,
+    );
+    banks_client.process_transaction(mint_b_tx).await.unwrap();
+
+    // CreateEntangledPair (marathon)
+    let transfer_authority = Keypair::new();
+    let accounts = mpl_token_entangler::accounts::CreateEntangledPair {
+        treasury_mint: "So11111111111111111111111111111111111111112"
+            .parse()
+            .unwrap(),
+        authority: payer.pubkey(),
+        transfer_authority: transfer_authority.pubkey(),
+        mint_a: mint_a.pubkey(),
+        mint_b: mint_b.pubkey(),
+        token_a_escrow: find_escrow_b(mint_a.pubkey(), mint_b.pubkey()).0,
+        token_b: get_associated_token_address(&payer.pubkey(), &mint_b.pubkey()),
+        token_b_escrow: find_escrow_b(mint_a.pubkey(), mint_b.pubkey()).0,
+        metadata_a: find_metadata_account(&mint_a.pubkey()).0,
+        metadata_b: find_metadata_account(&mint_b.pubkey()).0,
+        edition_a: find_master_edition_address(mint_a.pubkey()),
+        edition_b: find_master_edition_address(mint_b.pubkey()),
+        entangled_pair: find_entangled_pair(mint_a.pubkey(), mint_b.pubkey()).0,
+        reverse_entangled_pair: find_entangled_pair(mint_b.pubkey(), mint_a.pubkey()).0,
+        payer: payer.pubkey(),
+        rent: "SysvarRent111111111111111111111111111111111"
+            .parse()
+            .unwrap(),
+        token_program: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+            .parse()
+            .unwrap(),
+        system_program: "11111111111111111111111111111111".parse().unwrap(),
+    }
+    .to_account_metas(None);
+
+    let data = mpl_token_entangler::instruction::CreateEntangledPair {
+        bump: find_entangled_pair(mint_a.pubkey(), mint_b.pubkey()).1,
+        _reverse_bump: find_entangled_pair(mint_b.pubkey(), mint_a.pubkey()).1,
+        token_a_escrow_bump: find_escrow_a(mint_a.pubkey(), mint_b.pubkey()).1,
+        token_b_escrow_bump: find_escrow_b(mint_a.pubkey(), mint_b.pubkey()).1,
+        price: 0,
+        pays_every_time: false,
+    }
+    .data();
+
+    let instruction = Instruction {
+        program_id: mpl_token_entangler::id(),
+        data,
+        accounts,
+    };
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction],
+        Some(&payer.pubkey()),
+        &[&payer, &transfer_authority],
+        context.last_blockhash,
+    );
+
+    banks_client.process_transaction(tx).await.unwrap();
+
+    // tokens should be entangled here; check stuff like this:
+    // - payer should hold token-a
+    // - escrow should hold token-b
+}
+
+mod test_utils {
+    use crate::*;
+
+    pub fn instructions_to_mint_an_nft(
+        payer: Pubkey,
+        mint: Pubkey,
+        rent: &Rent,
+    ) -> Vec<solana_sdk::instruction::Instruction> {
+        vec![
+            create_account(
+                &payer,
+                &mint,
+                rent.minimum_balance(Mint::LEN),
+                Mint::LEN as u64,
+                &spl_token::id(),
+            ),
+            initialize_mint(&spl_token::id(), &mint, &payer, Some(&payer), 0).unwrap(),
+            create_associated_token_account(&payer, &payer, &mint),
+            create_metadata_accounts(
+                mpl_token_metadata::id(),
+                find_metadata_account(&mint).0,
+                mint,
+                payer,
+                payer,
+                payer,
+                "a-name".to_owned(),
+                "a-symbol".to_owned(),
+                "a-uri".to_owned(),
+                None,
+                500,
+                true,
+                true,
+            ),
+            mint_to(
+                &spl_token::id(),
+                &mint,
+                &get_associated_token_address(&payer, &mint),
+                &payer,
+                &[&payer],
+                1,
+            )
+            .unwrap(),
+            create_master_edition(
+                mpl_token_metadata::id(),
+                find_master_edition_address(mint),
+                mint,
+                payer,
+                payer,
+                find_metadata_account(&mint).0,
+                payer,
+                Some(1),
+            ),
+        ]
+    }
+
+    pub fn find_entangled_pair(mint_a: Pubkey, mint_b: Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[
+                "token_entangler".as_bytes(),
+                mint_a.as_ref(),
+                mint_b.as_ref(),
+            ],
+            &mpl_token_entangler::id(),
+        )
+    }
+
+    pub fn find_escrow_a(mint_a: Pubkey, mint_b: Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[
+                "token_entangler".as_bytes(),
+                mint_a.as_ref(),
+                mint_b.as_ref(),
+                "escrow".as_bytes(),
+                "A".as_bytes(),
+            ],
+            &mpl_token_entangler::id(),
+        )
+    }
+
+    pub fn find_escrow_b(mint_a: Pubkey, mint_b: Pubkey) -> (Pubkey, u8) {
+        Pubkey::find_program_address(
+            &[
+                "token_entangler".as_bytes(),
+                mint_a.as_ref(),
+                mint_b.as_ref(),
+                "escrow".as_bytes(),
+                "B".as_bytes(),
+            ],
+            &mpl_token_entangler::id(),
+        )
+    }
+
+    pub fn find_master_edition_address(mint: Pubkey) -> Pubkey {
+        let (address, _bump) = Pubkey::find_program_address(
+            &[
+                mpl_token_metadata::state::PREFIX.as_bytes(),
+                mpl_token_metadata::id().as_ref(),
+                mint.as_ref(),
+                "edition".as_ref(),
+            ],
+            &mpl_token_metadata::id(),
+        );
+        address
+    }
+}
