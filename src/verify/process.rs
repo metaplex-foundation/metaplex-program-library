@@ -63,7 +63,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
 
     let num_items = cache.items.0.len();
     let cache_items = &mut cache.items.0;
-    let mut invalid_items: Vec<CacheItem> = Vec::new();
+    let mut errors = Vec::new();
 
     pb.finish_with_message("Completed");
 
@@ -108,10 +108,12 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             .get_mut(&i.to_string())
             .expect("Failed to get item from config.");
 
-        if config_data.hidden_settings.is_none() && !items_match(cache_item, &on_chain_item) {
-            cache_item.on_chain = false;
-            invalid_items.push(cache_item.clone());
-        };
+        if config_data.hidden_settings.is_none() {
+            if let Err(err) = items_match(cache_item, &on_chain_item) {
+                cache_item.on_chain = false;
+                errors.push((i.to_string(), err.to_string()));
+            }
+        }
 
         pb.inc(1);
         thread::sleep(Duration::from_micros(step));
@@ -121,12 +123,12 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
 
     cache.sync_file()?;
 
-    if !invalid_items.is_empty() {
-        let total = invalid_items.len();
+    if !errors.is_empty() {
+        let total = errors.len();
         println!("\nInvalid items found: ");
 
-        for item in invalid_items {
-            println!("\t- {:?}", item);
+        for e in errors {
+            println!("- Item {}: {}", e.0, e.1);
         }
         println!("\nCache updated - re-run `deploy`.");
 
@@ -138,6 +140,22 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     Ok(())
 }
 
-fn items_match(cache_item: &CacheItem, on_chain_item: &OnChainItem) -> bool {
-    cache_item.name == on_chain_item.name && cache_item.metadata_link == on_chain_item.uri
+fn items_match(cache_item: &CacheItem, on_chain_item: &OnChainItem) -> Result<()> {
+    if cache_item.name != on_chain_item.name {
+        return Err(VerifyError::Mismatch(
+            "name".to_string(),
+            cache_item.name.clone(),
+            on_chain_item.name.clone(),
+        )
+        .into());
+    } else if cache_item.metadata_link != on_chain_item.uri {
+        return Err(VerifyError::Mismatch(
+            "uri".to_string(),
+            cache_item.metadata_link.clone(),
+            on_chain_item.uri.clone(),
+        )
+        .into());
+    }
+
+    Ok(())
 }

@@ -119,7 +119,7 @@ echo "3. mainnet-beta"
 echo "4. devnet [manual cache]"
 
 if [ -f "$RESUME_FILE" ]; then
-    echo "5. resume previous run"
+    echo "5. previous run ($(RED "resume"))"
     echo -n "$(CYN "Select test template [1-5]") (default 'devnet'): "
 else
     echo -n "$(CYN "Select test template [1-4]") (default 'devnet'): "
@@ -572,7 +572,7 @@ function deploy {
 
 # run the verify upload command
 function verify {
-    $SUGAR_BIN verify --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC
+    $SUGAR_BIN verify -c ${CONFIG_FILE} --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC
     EXIT_CODE=$?
     if [ ! $EXIT_CODE -eq 0 ]; then
         MAG "<<<"
