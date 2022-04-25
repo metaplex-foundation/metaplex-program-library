@@ -1,5 +1,5 @@
 {
-  "version": "1.2.5",
+  "version": "1.2.7",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -2853,10 +2853,22 @@
       "code": 96,
       "name": "NotAllowedToChangeSellerFeeBasisPoints",
       "msg": "Not allowed to change seller fee basis points."
+    },
+    {
+      "code": 97,
+      "name": "EditionOverrideCannotBeZero",
+      "msg": "Edition override cannot be zero"
+    },
+    {
+      "code": 98,
+      "name": "InvalidUser",
+      "msg": "Invalid User"
     }
   ],
   "metadata": {
     "origin": "shank",
-    "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+    "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "binaryVersion": "0.0.2",
+    "libVersion": "~0.0.2"
   }
 }

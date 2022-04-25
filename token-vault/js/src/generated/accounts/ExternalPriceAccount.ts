@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link ExternalPriceAccount}
@@ -16,7 +16,7 @@ import * as beetSolana from '@metaplex-foundation/beet-solana';
  * @category generated
  */
 export type ExternalPriceAccountArgs = {
-  key: definedTypes.Key;
+  key: Key;
   pricePerShare: beet.bignum;
   priceMint: web3.PublicKey;
   allowedToCombine: boolean;
@@ -30,7 +30,7 @@ export type ExternalPriceAccountArgs = {
  */
 export class ExternalPriceAccount implements ExternalPriceAccountArgs {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly pricePerShare: beet.bignum,
     readonly priceMint: web3.PublicKey,
     readonly allowedToCombine: boolean,
@@ -127,7 +127,7 @@ export class ExternalPriceAccount implements ExternalPriceAccountArgs {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       pricePerShare: this.pricePerShare,
       priceMint: this.priceMint.toBase58(),
       allowedToCombine: this.allowedToCombine,
@@ -144,7 +144,7 @@ export const externalPriceAccountBeet = new beet.BeetStruct<
   ExternalPriceAccountArgs
 >(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['pricePerShare', beet.u64],
     ['priceMint', beetSolana.publicKey],
     ['allowedToCombine', beet.bool],

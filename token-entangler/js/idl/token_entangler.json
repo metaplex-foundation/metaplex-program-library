@@ -121,8 +121,7 @@
           "name": "paysEveryTime",
           "type": "bool"
         }
-      ],
-      "returns": null
+      ]
     },
     {
       "name": "updateEntangledPair",
@@ -152,8 +151,7 @@
           "name": "paysEveryTime",
           "type": "bool"
         }
-      ],
-      "returns": null
+      ]
     },
     {
       "name": "swap",
@@ -244,8 +242,7 @@
           "isSigner": false
         }
       ],
-      "args": [],
-      "returns": null
+      "args": []
     }
   ],
   "accounts": [
@@ -384,6 +381,9 @@
     }
   ],
   "metadata": {
-    "address": "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd"
+    "address": "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd",
+    "origin": "anchor",
+    "binaryVersion": "0.24.2",
+    "libVersion": "~0.24.1"
   }
 }

@@ -991,7 +991,7 @@ __metadata:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/mpl-core": ^0.0.5
-    "@metaplex-foundation/solita": ^0.2.0
+    "@metaplex-foundation/solita": ^0.5.0
     "@solana/web3.js": ^1.35.1
     "@types/tape": ^4.13.2
     bn.js: ^5.2.0
@@ -1076,7 +1076,7 @@ __metadata:
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/mpl-core": ^0.0.5
     "@metaplex-foundation/mpl-token-metadata": 2.0.0
-    "@metaplex-foundation/solita": ^0.2.0
+    "@metaplex-foundation/solita": ^0.5.0
     "@solana/buffer-layout": ^4.0.0
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.37.0
@@ -1136,7 +1136,7 @@ __metadata:
   dependencies:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
-    "@metaplex-foundation/solita": ^0.2.0
+    "@metaplex-foundation/solita": ^0.5.0
     "@solana/web3.js": ^1.35.1
     "@types/tape": ^4.13.2
     eslint: ^8.3.0
@@ -1180,7 +1180,7 @@ __metadata:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/cusper": ^0.0.2
-    "@metaplex-foundation/solita": ^0.2.0
+    "@metaplex-foundation/solita": ^0.5.0
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/bn.js": ^5.1.0
@@ -1203,6 +1203,7 @@ __metadata:
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/cusper": ^0.0.2
     "@metaplex-foundation/mpl-core": ^0.0.5
+    "@metaplex-foundation/solita": ^0.5.0
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/debug": ^4.1.7
@@ -1218,9 +1219,21 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@metaplex-foundation/rustbin@npm:^0.3.0":
+  version: 0.3.1
+  resolution: "@metaplex-foundation/rustbin@npm:0.3.1"
+  dependencies:
+    debug: ^4.3.3
+    semver: ^7.3.7
+    text-table: ^0.2.0
+    toml: ^3.0.0
+  checksum: 042eb8cb729e886477efa885693dadcf31722c071f8adc5a49509483d846d4d359999b9f2beff9406f4dc9fa0a0f0bdb37be4b0c68426864f9f9f60b456cc74b
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/solita@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@metaplex-foundation/solita@npm:0.2.0"
+  version: 0.2.1
+  resolution: "@metaplex-foundation/solita@npm:0.2.1"
   dependencies:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
@@ -1231,7 +1244,27 @@ __metadata:
     prettier: ^2.5.1
     snake-case: ^3.0.4
     spok: ^1.4.3
-  checksum: a84d744e1a4f2c156d7fc39877d5608c966a8ca9bae4e0f89061302edca238a748e5e0e427c1ea06f0801fa67ff7900f6b385a25c6b1aa0df351bcd998d77fd9
+  checksum: 807e3ef055f6234e1784143da54a20c80ad3f6614b483773b82c57b20a814d2a33dfeff21a2b854e85b8d238ceccfc7711e7349b6bcbbb77cc3381e8b7505f2f
+  languageName: node
+  linkType: hard
+
+"@metaplex-foundation/solita@npm:^0.5.0":
+  version: 0.5.1
+  resolution: "@metaplex-foundation/solita@npm:0.5.1"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.1.0
+    "@metaplex-foundation/beet-solana": ^0.1.1
+    "@metaplex-foundation/rustbin": ^0.3.0
+    "@solana/web3.js": ^1.36.0
+    camelcase: ^6.2.1
+    debug: ^4.3.3
+    js-sha256: ^0.9.0
+    prettier: ^2.5.1
+    snake-case: ^3.0.4
+    spok: ^1.4.3
+  bin:
+    solita: dist/src/cli/solita.js
+  checksum: 2e6a6b86d7bb9b5a3bd773b0052dad7117192a35c7c8e9c81979158d95182ba83c5def3621aeaaf0fd6c9cd93ba5297131b953bf1f68a1fffae1ef0bd572c2ab
   languageName: node
   linkType: hard
 
@@ -7186,6 +7219,17 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 5eafe6102bea2a7439897c1856362e31cc348ccf96efd455c8b5bc2c61e6f7e7b8250dc26b8828c1d76a56f818a7ee907a36ae9fb37a599d3d24609207001d60
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.3.7":
+  version: 7.3.7
+  resolution: "semver@npm:7.3.7"
+  dependencies:
+    lru-cache: ^6.0.0
+  bin:
+    semver: bin/semver.js
+  checksum: 2fa3e877568cd6ce769c75c211beaed1f9fce80b28338cadd9d0b6c40f2e2862bafd62c19a6cff42f3d54292b7c623277bcab8816a2b5521cf15210d43e75232
   languageName: node
   linkType: hard
 

@@ -13,9 +13,10 @@ import * as web3 from '@solana/web3.js';
  * @category SignMetadata
  * @category generated
  */
-const SignMetadataStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'SignMetadataInstructionArgs');
+const SignMetadataStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'SignMetadataInstructionArgs',
+);
 /**
  * Accounts required by the _SignMetadata_ instruction
  *

@@ -1455,6 +1455,7 @@
   "metadata": {
     "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
     "origin": "anchor",
-    "version": "0.24.2"
+    "binaryVersion": "0.24.2",
+    "libVersion": "~0.24.1"
   }
 }

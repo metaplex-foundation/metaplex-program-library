@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -15,13 +15,13 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type CreateEntangledPairInstructionArgs = {
-  bump: number
-  reverseBump: number
-  tokenAEscrowBump: number
-  tokenBEscrowBump: number
-  price: beet.bignum
-  paysEveryTime: boolean
-}
+  bump: number;
+  reverseBump: number;
+  tokenAEscrowBump: number;
+  tokenBEscrowBump: number;
+  price: beet.bignum;
+  paysEveryTime: boolean;
+};
 /**
  * @category Instructions
  * @category CreateEntangledPair
@@ -29,7 +29,7 @@ export type CreateEntangledPairInstructionArgs = {
  */
 const createEntangledPairStruct = new beet.BeetArgsStruct<
   CreateEntangledPairInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -41,8 +41,8 @@ const createEntangledPairStruct = new beet.BeetArgsStruct<
     ['price', beet.u64],
     ['paysEveryTime', beet.bool],
   ],
-  'CreateEntangledPairInstructionArgs'
-)
+  'CreateEntangledPairInstructionArgs',
+);
 /**
  * Accounts required by the _createEntangledPair_ instruction
  * @category Instructions
@@ -50,26 +50,24 @@ const createEntangledPairStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type CreateEntangledPairInstructionAccounts = {
-  treasuryMint: web3.PublicKey
-  payer: web3.PublicKey
-  transferAuthority: web3.PublicKey
-  authority: web3.PublicKey
-  mintA: web3.PublicKey
-  metadataA: web3.PublicKey
-  editionA: web3.PublicKey
-  mintB: web3.PublicKey
-  metadataB: web3.PublicKey
-  editionB: web3.PublicKey
-  tokenB: web3.PublicKey
-  tokenAEscrow: web3.PublicKey
-  tokenBEscrow: web3.PublicKey
-  entangledPair: web3.PublicKey
-  reverseEntangledPair: web3.PublicKey
-}
+  treasuryMint: web3.PublicKey;
+  payer: web3.PublicKey;
+  transferAuthority: web3.PublicKey;
+  authority: web3.PublicKey;
+  mintA: web3.PublicKey;
+  metadataA: web3.PublicKey;
+  editionA: web3.PublicKey;
+  mintB: web3.PublicKey;
+  metadataB: web3.PublicKey;
+  editionB: web3.PublicKey;
+  tokenB: web3.PublicKey;
+  tokenAEscrow: web3.PublicKey;
+  tokenBEscrow: web3.PublicKey;
+  entangledPair: web3.PublicKey;
+  reverseEntangledPair: web3.PublicKey;
+};
 
-const createEntangledPairInstructionDiscriminator = [
-  166, 106, 32, 45, 156, 210, 209, 240,
-]
+const createEntangledPairInstructionDiscriminator = [166, 106, 32, 45, 156, 210, 209, 240];
 
 /**
  * Creates a _CreateEntangledPair_ instruction.
@@ -83,7 +81,7 @@ const createEntangledPairInstructionDiscriminator = [
  */
 export function createCreateEntangledPairInstruction(
   accounts: CreateEntangledPairInstructionAccounts,
-  args: CreateEntangledPairInstructionArgs
+  args: CreateEntangledPairInstructionArgs,
 ) {
   const {
     treasuryMint,
@@ -101,12 +99,12 @@ export function createCreateEntangledPairInstruction(
     tokenBEscrow,
     entangledPair,
     reverseEntangledPair,
-  } = accounts
+  } = accounts;
 
   const [data] = createEntangledPairStruct.serialize({
     instructionDiscriminator: createEntangledPairInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: treasuryMint,
@@ -198,14 +196,12 @@ export function createCreateEntangledPairInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey(
-      'qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd'
-    ),
+    programId: new web3.PublicKey('qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd'),
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

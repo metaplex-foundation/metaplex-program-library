@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
+import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 
 /**
  * Arguments used to create {@link EntangledPair}
@@ -15,21 +15,21 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
  * @category generated
  */
 export type EntangledPairArgs = {
-  treasuryMint: web3.PublicKey
-  mintA: web3.PublicKey
-  mintB: web3.PublicKey
-  tokenAEscrow: web3.PublicKey
-  tokenBEscrow: web3.PublicKey
-  authority: web3.PublicKey
-  bump: number
-  tokenAEscrowBump: number
-  tokenBEscrowBump: number
-  price: beet.bignum
-  paid: boolean
-  paysEveryTime: boolean
-}
+  treasuryMint: web3.PublicKey;
+  mintA: web3.PublicKey;
+  mintB: web3.PublicKey;
+  tokenAEscrow: web3.PublicKey;
+  tokenBEscrow: web3.PublicKey;
+  authority: web3.PublicKey;
+  bump: number;
+  tokenAEscrowBump: number;
+  tokenBEscrowBump: number;
+  price: beet.bignum;
+  paid: boolean;
+  paysEveryTime: boolean;
+};
 
-const entangledPairDiscriminator = [133, 118, 20, 210, 1, 54, 172, 116]
+const entangledPairDiscriminator = [133, 118, 20, 210, 1, 54, 172, 116];
 /**
  * Holds the data for the {@link EntangledPair} Account and provides de/serialization
  * functionality for that data
@@ -50,7 +50,7 @@ export class EntangledPair implements EntangledPairArgs {
     readonly tokenBEscrowBump: number,
     readonly price: beet.bignum,
     readonly paid: boolean,
-    readonly paysEveryTime: boolean
+    readonly paysEveryTime: boolean,
   ) {}
 
   /**
@@ -69,8 +69,8 @@ export class EntangledPair implements EntangledPairArgs {
       args.tokenBEscrowBump,
       args.price,
       args.paid,
-      args.paysEveryTime
-    )
+      args.paysEveryTime,
+    );
   }
 
   /**
@@ -79,9 +79,9 @@ export class EntangledPair implements EntangledPairArgs {
    */
   static fromAccountInfo(
     accountInfo: web3.AccountInfo<Buffer>,
-    offset = 0
+    offset = 0,
   ): [EntangledPair, number] {
-    return EntangledPair.deserialize(accountInfo.data, offset)
+    return EntangledPair.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -92,13 +92,13 @@ export class EntangledPair implements EntangledPairArgs {
    */
   static async fromAccountAddress(
     connection: web3.Connection,
-    address: web3.PublicKey
+    address: web3.PublicKey,
   ): Promise<EntangledPair> {
-    const accountInfo = await connection.getAccountInfo(address)
+    const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo == null) {
-      throw new Error(`Unable to find EntangledPair account at ${address}`)
+      throw new Error(`Unable to find EntangledPair account at ${address}`);
     }
-    return EntangledPair.fromAccountInfo(accountInfo, 0)[0]
+    return EntangledPair.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -106,7 +106,7 @@ export class EntangledPair implements EntangledPairArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [EntangledPair, number] {
-    return entangledPairBeet.deserialize(buf, offset)
+    return entangledPairBeet.deserialize(buf, offset);
   }
 
   /**
@@ -117,7 +117,7 @@ export class EntangledPair implements EntangledPairArgs {
     return entangledPairBeet.serialize({
       accountDiscriminator: entangledPairDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -125,7 +125,7 @@ export class EntangledPair implements EntangledPairArgs {
    * {@link EntangledPair}
    */
   static get byteSize() {
-    return entangledPairBeet.byteSize
+    return entangledPairBeet.byteSize;
   }
 
   /**
@@ -136,12 +136,9 @@ export class EntangledPair implements EntangledPairArgs {
    */
   static async getMinimumBalanceForRentExemption(
     connection: web3.Connection,
-    commitment?: web3.Commitment
+    commitment?: web3.Commitment,
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      EntangledPair.byteSize,
-      commitment
-    )
+    return connection.getMinimumBalanceForRentExemption(EntangledPair.byteSize, commitment);
   }
 
   /**
@@ -149,7 +146,7 @@ export class EntangledPair implements EntangledPairArgs {
    * hold {@link EntangledPair} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === EntangledPair.byteSize
+    return buf.byteLength - offset === EntangledPair.byteSize;
   }
 
   /**
@@ -170,7 +167,7 @@ export class EntangledPair implements EntangledPairArgs {
       price: this.price,
       paid: this.paid,
       paysEveryTime: this.paysEveryTime,
-    }
+    };
   }
 }
 
@@ -181,7 +178,7 @@ export class EntangledPair implements EntangledPairArgs {
 export const entangledPairBeet = new beet.BeetStruct<
   EntangledPair,
   EntangledPairArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -200,5 +197,5 @@ export const entangledPairBeet = new beet.BeetStruct<
     ['paysEveryTime', beet.bool],
   ],
   EntangledPair.fromArgs,
-  'EntangledPair'
-)
+  'EntangledPair',
+);

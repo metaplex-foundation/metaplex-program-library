@@ -14,9 +14,10 @@ import * as web3 from '@solana/web3.js';
  * @category FreezeDelegatedAccount
  * @category generated
  */
-const FreezeDelegatedAccountStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'FreezeDelegatedAccountInstructionArgs');
+const FreezeDelegatedAccountStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'FreezeDelegatedAccountInstructionArgs',
+);
 /**
  * Accounts required by the _FreezeDelegatedAccount_ instruction
  *
