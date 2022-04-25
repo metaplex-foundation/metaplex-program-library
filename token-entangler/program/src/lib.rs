@@ -310,18 +310,18 @@ pub mod token_entangler {
 #[derive(Accounts)]
 #[instruction(bump: u8, reverse_bump: u8, token_a_escrow_bump: u8, token_b_escrow_bump: u8)]
 pub struct CreateEntangledPair<'info> {
-    treasury_mint: UncheckedAccount<'info>,
+    treasury_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
     payer: Signer<'info>,
     transfer_authority: Signer<'info>,
     /// CHECK: Verified through CPI
     authority: UncheckedAccount<'info>,
-    mint_a: UncheckedAccount<'info>,
+    mint_a: Box<Account<'info, Mint>>,
     /// CHECK: Verified through CPI
     metadata_a: UncheckedAccount<'info>,
     /// CHECK: Verified through CPI
     edition_a: UncheckedAccount<'info>,
-    mint_b: UncheckedAccount<'info>,
+    mint_b: Box<Account<'info, Mint>>,
     /// CHECK: Verified through CPI
     metadata_b: UncheckedAccount<'info>,
     /// CHECK: Verified through CPI
