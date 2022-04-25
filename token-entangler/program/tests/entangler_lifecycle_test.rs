@@ -58,46 +58,48 @@ async fn lifecycle_test() {
     // CreateEntangledPair (marathon)
     let transfer_authority = Keypair::new();
 
+    let entangled_pair = find_entangled_pair(mint_a.pubkey(), mint_b.pubkey());
+    let reverse_pair = find_entangled_pair(mint_b.pubkey(), mint_a.pubkey());
+
+    let escrow_a = find_escrow_a(mint_a.pubkey(), mint_b.pubkey());
+    let escrow_b = find_escrow_b(mint_a.pubkey(), mint_b.pubkey());
+
     let accounts = mpl_token_entangler::accounts::CreateEntangledPair {
-        treasury_mint: TREASURY_MINT.parse().unwrap(),
+        payer: payer.pubkey(),
         authority: payer.pubkey(),
+        treasury_mint: TREASURY_MINT.parse().unwrap(),
         transfer_authority: transfer_authority.pubkey(),
-        entangled_pair: find_entangled_pair(mint_a.pubkey(), mint_b.pubkey()).0,
-        reverse_entangled_pair: find_entangled_pair(mint_b.pubkey(), mint_a.pubkey()).0,
+        entangled_pair: entangled_pair.0,
+        reverse_entangled_pair: reverse_pair.0,
         mint_a: mint_a.pubkey(),
         mint_b: mint_b.pubkey(),
-        token_a_escrow: find_escrow_a(mint_a.pubkey(), mint_b.pubkey()).0,
-        token_b_escrow: find_escrow_b(mint_a.pubkey(), mint_b.pubkey()).0,
+        token_a_escrow: escrow_a.0,
+        token_b_escrow: escrow_b.0,
         metadata_a: find_metadata_account(&mint_a.pubkey()).0,
         metadata_b: find_metadata_account(&mint_b.pubkey()).0,
         edition_a: find_master_edition_address(mint_a.pubkey()),
         edition_b: find_master_edition_address(mint_b.pubkey()),
         token_b: get_associated_token_address(&payer.pubkey(), &mint_b.pubkey()),
-        payer: payer.pubkey(),
-        rent: RENT_SYSVAR_ADDRESS.parse().unwrap(),
         token_program: spl_token::id(),
+        rent: RENT_SYSVAR_ADDRESS.parse().unwrap(),
         system_program: SYSTEM_PROGRAM_ADDRESS.parse().unwrap(),
-    }
-    .to_account_metas(None);
+    };
 
-    let data = mpl_token_entangler::instruction::CreateEntangledPair {
-        bump: find_entangled_pair(mint_a.pubkey(), mint_b.pubkey()).1,
-        _reverse_bump: find_entangled_pair(mint_b.pubkey(), mint_a.pubkey()).1,
-        token_a_escrow_bump: find_escrow_a(mint_a.pubkey(), mint_b.pubkey()).1,
-        token_b_escrow_bump: find_escrow_b(mint_a.pubkey(), mint_b.pubkey()).1,
+    let instruction = mpl_token_entangler::instruction::CreateEntangledPair {
+        bump: entangled_pair.1,
+        _reverse_bump: reverse_pair.1,
+        token_a_escrow_bump: escrow_a.1,
+        token_b_escrow_bump: escrow_b.1,
         price: 1,
-        pays_every_time: false,
-    }
-    .data();
-
-    let instruction = Instruction {
-        program_id: mpl_token_entangler::id(),
-        data,
-        accounts,
+        pays_every_time: true,
     };
 
     let tx = Transaction::new_signed_with_payer(
-        &[instruction],
+        &[Instruction {
+            program_id: mpl_token_entangler::id(),
+            accounts: accounts.to_account_metas(None),
+            data: instruction.data(),
+        }],
         Some(&payer.pubkey()),
         &[&payer, &transfer_authority],
         context.last_blockhash,
