@@ -64,7 +64,7 @@ Set up your Solana CLI config with an RPC url and a keypair:
 solana config set --url <rpc url> --keypair <path to keypair file>
 ```
 
-Sugar will then use these settings by default if you don't specify them as CLI options, allowing commands to be much simpler. 
+Sugar will then use these settings by default if you don't specify them as CLI options, allowing commands to be much simpler. If you need help setting up Solana CLI and creating a `devnet` wallet, check the [Candy Machine v2 documentation](http://docs.metaplex.com/candy-machine-v2/getting-started#solana-wallet).
 
 Create a folder named `assets` to store your json and media file pairs with the naming convention 0.json, 0.<ext>, 1.json, 1.<ext>, etc., where the extension is `.png`, `.jpg`, etc. This is the same format described in the [Candy Machine v2 documentation](http://docs.metaplex.com/candy-machine-v2/preparing-assets).
 
@@ -242,7 +242,7 @@ sugar validate
 if your assest are in a folder named `assets` or:
 
 ```bash
-sugar validate [ASSETS_DIR]
+sugar validate <ASSETS_DIR>
 ```
 
 to specify a custom asset `<ASSETS DIR>` folder name.
