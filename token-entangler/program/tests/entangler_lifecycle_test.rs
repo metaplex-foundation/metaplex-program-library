@@ -21,6 +21,10 @@ use test_utils::{
     instructions_to_mint_an_nft,
 };
 
+const TREASURY_MINT: &str = "So11111111111111111111111111111111111111112";
+const RENT_SYSVAR_ADDRESS: &str = "SysvarRent111111111111111111111111111111111";
+const SYSTEM_PROGRAM_ADDRESS: &str = "11111111111111111111111111111111";
+
 #[tokio::test]
 async fn lifecycle_test() {
     #[allow(unused_mut)]
@@ -53,31 +57,26 @@ async fn lifecycle_test() {
 
     // CreateEntangledPair (marathon)
     let transfer_authority = Keypair::new();
+
     let accounts = mpl_token_entangler::accounts::CreateEntangledPair {
-        treasury_mint: "So11111111111111111111111111111111111111112"
-            .parse()
-            .unwrap(),
+        treasury_mint: TREASURY_MINT.parse().unwrap(),
         authority: payer.pubkey(),
         transfer_authority: transfer_authority.pubkey(),
+        entangled_pair: find_entangled_pair(mint_a.pubkey(), mint_b.pubkey()).0,
+        reverse_entangled_pair: find_entangled_pair(mint_b.pubkey(), mint_a.pubkey()).0,
         mint_a: mint_a.pubkey(),
         mint_b: mint_b.pubkey(),
-        token_a_escrow: find_escrow_b(mint_a.pubkey(), mint_b.pubkey()).0,
-        token_b: get_associated_token_address(&payer.pubkey(), &mint_b.pubkey()),
+        token_a_escrow: find_escrow_a(mint_a.pubkey(), mint_b.pubkey()).0,
         token_b_escrow: find_escrow_b(mint_a.pubkey(), mint_b.pubkey()).0,
         metadata_a: find_metadata_account(&mint_a.pubkey()).0,
         metadata_b: find_metadata_account(&mint_b.pubkey()).0,
         edition_a: find_master_edition_address(mint_a.pubkey()),
         edition_b: find_master_edition_address(mint_b.pubkey()),
-        entangled_pair: find_entangled_pair(mint_a.pubkey(), mint_b.pubkey()).0,
-        reverse_entangled_pair: find_entangled_pair(mint_b.pubkey(), mint_a.pubkey()).0,
+        token_b: get_associated_token_address(&payer.pubkey(), &mint_b.pubkey()),
         payer: payer.pubkey(),
-        rent: "SysvarRent111111111111111111111111111111111"
-            .parse()
-            .unwrap(),
-        token_program: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-            .parse()
-            .unwrap(),
-        system_program: "11111111111111111111111111111111".parse().unwrap(),
+        rent: RENT_SYSVAR_ADDRESS.parse().unwrap(),
+        token_program: spl_token::id(),
+        system_program: SYSTEM_PROGRAM_ADDRESS.parse().unwrap(),
     }
     .to_account_metas(None);
 
@@ -86,7 +85,7 @@ async fn lifecycle_test() {
         _reverse_bump: find_entangled_pair(mint_b.pubkey(), mint_a.pubkey()).1,
         token_a_escrow_bump: find_escrow_a(mint_a.pubkey(), mint_b.pubkey()).1,
         token_b_escrow_bump: find_escrow_b(mint_a.pubkey(), mint_b.pubkey()).1,
-        price: 0,
+        price: 1,
         pays_every_time: false,
     }
     .data();
