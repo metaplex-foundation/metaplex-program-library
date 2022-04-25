@@ -9,7 +9,7 @@ use console::style;
 use futures::future::select_all;
 use rand::rngs::OsRng;
 use spl_associated_token_account::get_associated_token_address;
-use std::{cmp, str::FromStr, sync::Arc};
+use std::{cmp, collections::HashSet, str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
@@ -27,6 +27,12 @@ use crate::deploy::errors::*;
 use crate::setup::{setup_client, sugar_setup};
 use crate::utils::*;
 use crate::validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url};
+
+/// The maximum config line bytes per transaction.
+const MAX_TRANSACTION_BYTES: usize = 1000;
+
+/// The maximum number of config lines per transaction.
+const MAX_TRANSACTION_LINES: usize = 17;
 
 struct TxInfo {
     client: Arc<Client>,
@@ -83,8 +89,9 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     // checks the candy machine data
 
     let num_items = config_data.number;
+    let hidden = config_data.hidden_settings.is_some();
 
-    if num_items != (cache.items.0.len() as u64) && config_data.hidden_settings.is_none() {
+    if num_items != (cache.items.0.len() as u64) {
         return Err(anyhow!(
             "Number of items ({}) do not match cache items ({})",
             num_items,
@@ -98,7 +105,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     let candy_pubkey = if candy_machine_address.is_empty() {
         println!(
             "{} {}Creating candy machine",
-            style("[1/2]").bold().dim(),
+            style(if hidden { "[1/1]" } else { "[1/2]" }).bold().dim(),
             CANDY_EMOJI
         );
         info!("Candy machine address is empty, creating new candy machine...");
@@ -170,7 +177,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     } else {
         println!(
             "{} {}Loading candy machine",
-            style("[1/2]").bold().dim(),
+            style(if hidden { "[1/1]" } else { "[1/2]" }).bold().dim(),
             CANDY_EMOJI
         );
 
@@ -191,35 +198,50 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
     println!("{} {}", style("Candy machine ID:").bold(), candy_pubkey);
 
-    println!(
-        "\n{} {}Writing config lines",
-        style("[2/2]").bold().dim(),
-        PAPER_EMOJI
-    );
-
-    let config_lines = generate_config_lines(num_items, &cache.items);
-
-    let completed = if config_lines.is_empty() {
-        println!("\nAll config lines deployed.");
-        true
-    } else {
-        upload_config_lines(
-            client,
-            &sugar_config,
-            candy_pubkey,
-            &mut cache,
-            config_lines,
-        )
-        .await?
-    };
-
-    if !completed {
+    if !hidden {
         println!(
-            "\n{}",
-            style("Not all config lines deployed - re-run needed.")
-                .red()
-                .bold()
-        )
+            "\n{} {}Writing config lines",
+            style("[2/2]").bold().dim(),
+            PAPER_EMOJI
+        );
+
+        let config_lines = generate_config_lines(num_items, &cache.items)?;
+
+        if config_lines.is_empty() {
+            println!("\nAll config lines deployed.");
+        } else {
+            let errors = upload_config_lines(
+                client,
+                &sugar_config,
+                candy_pubkey,
+                &mut cache,
+                config_lines,
+            )
+            .await?;
+
+            if !errors.is_empty() {
+                let mut message = String::new();
+                message.push_str(&format!(
+                    "Failed to deploy all config lines, {0} error(s) occurred:",
+                    errors.len()
+                ));
+
+                let mut unique = HashSet::new();
+
+                for err in errors {
+                    unique.insert(err.to_string());
+                }
+
+                for u in unique {
+                    message.push_str("\n\t• ");
+                    message.push_str(&u);
+                }
+
+                return Err(DeployError::AddConfigLineFailed(message).into());
+            }
+        }
+    } else {
+        println!("\nCandy machine with hidden settings deployed.");
     }
 
     Ok(())
@@ -291,49 +313,57 @@ fn create_candy_machine_data(config: &ConfigData, uuid: String) -> Result<CandyM
 }
 
 /// Determine the config lines that need to be uploaded.
-fn generate_config_lines(num_items: u64, cache_items: &CacheItems) -> Vec<Vec<(u32, ConfigLine)>> {
+fn generate_config_lines(
+    num_items: u64,
+    cache_items: &CacheItems,
+) -> Result<Vec<Vec<(u32, ConfigLine)>>> {
     let mut config_lines: Vec<Vec<(u32, ConfigLine)>> = Vec::new();
-    let mut on_chain = HashMap::<usize, u32>::new();
+    let mut current: Vec<(u32, ConfigLine)> = Vec::new();
+    let mut tx_size = 0;
 
-    // initializes each chunck
-    for _ in 0..num_items {
-        config_lines.push(Vec::new());
+    for i in 0..num_items {
+        let item = match cache_items.0.get(&i.to_string()) {
+            Some(item) => item,
+            None => {
+                return Err(
+                    DeployError::AddConfigLineFailed(format!("Missing cache item {}", i)).into(),
+                );
+            }
+        };
+
+        if item.on_chain {
+            // if the current item is on-chain already, store the previous
+            // items as a transaction since we cannot have gaps in the indices
+            // to write the config lines
+            if !current.is_empty() {
+                config_lines.push(current);
+                current = Vec::new();
+                tx_size = 0;
+            }
+        } else {
+            let config_line = item
+                .into_config_line()
+                .expect("Could not convert item to config line");
+
+            let size = (2 * STRING_LEN_SIZE) + config_line.name.len() + config_line.uri.len();
+
+            if (tx_size + size) > MAX_TRANSACTION_BYTES || current.len() == MAX_TRANSACTION_LINES {
+                // we need a separate tx to not break the size limit
+                config_lines.push(current);
+                current = Vec::new();
+                tx_size = 0;
+            }
+
+            tx_size += size;
+            current.push((i as u32, config_line));
+        }
+    }
+    // adds the last chunk (if there is one)
+    if !current.is_empty() {
+        config_lines.push(current);
     }
 
-    for (key, value) in &cache_items.0 {
-        let config_line = value.into_config_line();
-        let key = key.parse::<usize>().unwrap();
-
-        let chunk_index = key / CONFIG_CHUNK_SIZE;
-
-        // checks if the config line is already on chain
-        if value.on_chain {
-            on_chain.insert(
-                chunk_index,
-                match on_chain.get(&chunk_index) {
-                    Some(value) => value + 1,
-                    None => 1,
-                },
-            );
-        }
-
-        if let Some(config_line) = config_line {
-            let chunk = config_lines.get_mut(chunk_index).unwrap();
-            chunk.push((key as u32, config_line));
-        }
-    }
-
-    // removes the chunks where all config lines are on chain already
-    for (index, value) in on_chain {
-        if value == (config_lines.get(index).unwrap().len() as u32) {
-            config_lines.remove(index);
-        }
-    }
-
-    // removes any empty chunk
-    config_lines.retain(|chunk| !chunk.is_empty());
-
-    config_lines
+    Ok(config_lines)
 }
 
 /// Send the `initialize_candy_machine` instruction to the candy machine program.
@@ -403,7 +433,7 @@ async fn upload_config_lines(
     candy_pubkey: Pubkey,
     cache: &mut Cache,
     config_lines: Vec<Vec<(u32, ConfigLine)>>,
-) -> Result<bool> {
+) -> Result<Vec<DeployError>> {
     println!(
         "Sending config line(s) in {} transaction(s): (Ctrl+C to abort)",
         config_lines.len()
@@ -434,7 +464,7 @@ async fn upload_config_lines(
         handles.push(tokio::spawn(async move { add_config_lines(tx).await }));
     }
 
-    let mut failed = false;
+    let mut errors = Vec::new();
 
     while !handles.is_empty() {
         match select_all(handles).await {
@@ -456,13 +486,18 @@ async fn upload_config_lines(
                     pb.inc(1);
                 } else {
                     // user will need to retry the upload
-                    debug!("add_config_lines error: {:?}", res);
-                    failed = true;
+                    errors.push(DeployError::AddConfigLineFailed(format!(
+                        "Transaction error: {:?}",
+                        res.err().unwrap()
+                    )));
                 }
             }
             (Err(err), _index, remaining) => {
-                failed = true;
-                debug!("add_config_lines error: {}", err);
+                // user will need to retry the upload
+                errors.push(DeployError::AddConfigLineFailed(format!(
+                    "Transaction error: {:?}",
+                    err
+                )));
                 // ignoring all errors
                 handles = remaining;
             }
@@ -478,18 +513,13 @@ async fn upload_config_lines(
         }
     }
 
-    if failed {
-        pb.abandon_with_message(format!(
-            "{}",
-            style("Error: re-run the deploy to complete the process ")
-                .red()
-                .bold()
-        ));
+    if !errors.is_empty() {
+        pb.abandon_with_message(format!("{}", style("Deploy failed ").red().bold()));
     } else {
         pb.finish_with_message(format!("{}", style("Deploy successful ").green().bold()));
     }
 
-    Ok(!failed)
+    Ok(errors)
 }
 
 /// Send the `add_config_lines` instruction to the candy machine program.
@@ -501,15 +531,12 @@ async fn add_config_lines(tx_info: TxInfo) -> Result<Vec<u32>> {
     let mut indices: Vec<u32> = Vec::new();
     // configLine does not implement clone, so we have to do this
     let mut config_lines: Vec<ConfigLine> = Vec::new();
-    // first index
-    let index = tx_info.chunk[0].0;
+    // start index
+    let start_index = tx_info.chunk[0].0;
 
     for (index, line) in tx_info.chunk {
         indices.push(index);
-        config_lines.push(ConfigLine {
-            name: line.name.clone(),
-            uri: line.uri.clone(),
-        });
+        config_lines.push(line);
     }
 
     let _sig = program
@@ -519,11 +546,11 @@ async fn add_config_lines(tx_info: TxInfo) -> Result<Vec<u32>> {
             authority: program.payer(),
         })
         .args(nft_instruction::AddConfigLines {
-            index,
+            index: start_index,
             config_lines,
         })
         .signer(&tx_info.payer)
-        .send();
+        .send()?;
 
     Ok(indices)
 }

@@ -67,6 +67,7 @@ function default_settings() {
     CLOSE="Y"
     CHANGE="n"
     TEST_IMAGE="n"
+    HIDDEN="n"
 
     ARWEAVE_JWK="null"
     INFURA_ID="null"
@@ -82,6 +83,7 @@ function max_settings() {
     CLOSE="Y"
     CHANGE="n"
     TEST_IMAGE="n"
+    HIDDEN="n"
 
     ARWEAVE_JWK="null"
     INFURA_ID="null"
@@ -117,12 +119,13 @@ echo "1. interactive"
 echo "2. devnet (default)"
 echo "3. mainnet-beta"
 echo "4. devnet [manual cache]"
+echo "5. devnet [hidden settings]"
 
 if [ -f "$RESUME_FILE" ]; then
-    echo "5. previous run ($(RED "resume"))"
-    echo -n "$(CYN "Select test template [1-5]") (default 'devnet'): "
+    echo "6. previous run ($(RED "resume"))"
+    echo -n "$(CYN "Select test template [1-6]") (default 'devnet'): "
 else
-    echo -n "$(CYN "Select test template [1-4]") (default 'devnet'): "
+    echo -n "$(CYN "Select test template [1-5]") (default 'devnet'): "
 fi
 
 read Template
@@ -140,6 +143,11 @@ case "$Template" in
         max_settings
     ;;
     5)
+        devnet_env
+        max_settings
+        HIDDEN="Y"
+    ;;
+    6)
         source $RESUME_FILE
         RESUME=1
         RESET="n"
@@ -303,28 +311,6 @@ if [ -z ${ITEMS+x} ]; then
     fi
 fi
 
-# Test image.extension instead of index
-
-if [ -z ${TEST_IMAGE+x} ]; then
-    echo ""
-    echo -n "$(CYN "Test image.ext replacement [Y/n]") (default 'Y'): "
-    read TEST_IMAGE
-    if [ -z "$TEST_IMAGE" ]; then
-        TEST_IMAGE="Y"
-    fi
-fi
-
-# Test reupload
-
-if [ -z ${CHANGE+x} ]; then
-    echo ""
-    echo -n "$(CYN "Test re-deploy [Y/n]") (default 'Y'): "
-    read CHANGE
-    if [ -z "$CHANGE" ]; then
-        CHANGE="Y"
-    fi
-fi
-
 # Mint tokens
 
 if [ -z ${MULTIPLE+x} ]; then
@@ -337,6 +323,39 @@ if [ -z ${MULTIPLE+x} ]; then
     else
         # make sure we are dealing with a number
         MULTIPLE=$(($Number + 0))
+    fi
+fi
+
+# Enable hidden settings
+
+if [ -z ${HIDDEN+x} ]; then
+    echo ""
+    echo -n "$(CYN "Enable hidden settings [Y/n]") (default 'n'): "
+    read HIDDEN
+    if [ -z "$HIDDEN" ]; then
+        HIDDEN="n"
+    fi
+fi
+
+# Test image.extension instead of index
+
+if [ -z ${TEST_IMAGE+x} ]; then
+    echo ""
+    echo -n "$(CYN "Test image.ext replacement [Y/n]") (default 'n'): "
+    read TEST_IMAGE
+    if [ -z "$TEST_IMAGE" ]; then
+        TEST_IMAGE="n"
+    fi
+fi
+
+# Test reupload
+
+if [ -z ${CHANGE+x} ]; then
+    echo ""
+    echo -n "$(CYN "Test re-deploy [Y/n]") (default 'n'): "
+    read CHANGE
+    if [ -z "$CHANGE" ]; then
+        CHANGE="n"
     fi
 fi
 
@@ -359,31 +378,6 @@ if [ -z ${CLOSE+x} ]; then
         CLOSE="Y"
     fi
 fi
-
-# Resume checkpoint
-
-cat >$RESUME_FILE <<-EOM
-#!/bin/bash
-
-MANUAL_CACHE="$MANUAL_CACHE"
-ITEMS=$ITEMS
-MULTIPLE=$MULTIPLE
-
-RESET="$RESET"
-EXT="$EXT"
-CLOSE="$CLOSE"
-CHANGE="$CHANGE"
-TEST_IMAGE="$TEST_IMAGE"
-
-ARWEAVE_JWK="$ARWEAVE_JWK"
-INFURA_ID="$INFURA_ID"
-INFURA_SECRET="$INFURA_SECRET"
-AWS_BUCKET="$AWS_BUCKET"
-
-ENV_URL="$ENV_URL"
-RPC="$RPC"
-STORAGE="$STORAGE"
-EOM
 
 echo ""
 
@@ -504,6 +498,12 @@ fi
 
 CONFIG_FILE="config.json"
 
+if [ "$HIDDEN" = "Y" ]; then
+    HIDDEN_SETTINGS="{\"name\":\"TEST Hidden Collection \",\"uri\":\"$METADATA_URL\",\"hash\":\"44kiGWWsSgdqPMvmqYgTS78Mx2BKCWzd\"}"
+else
+    HIDDEN_SETTINGS="null"
+fi
+
 cat >$CONFIG_FILE <<-EOM
 {
     "price": 0.1,
@@ -517,7 +517,7 @@ cat >$CONFIG_FILE <<-EOM
     "goLiveDate": "$(date "+%Y-%m-%dT%T%z" | sed "s@^.\{22\}@&:@")",
     "endSettings": null,
     "whitelistMintSettings": null,
-    "hiddenSettings": null,
+    "hiddenSettings": $HIDDEN_SETTINGS,
     "uploadMethod": "${STORAGE}",
     "ipfsInfuraProjectId": "${INFURA_ID}",
     "ipfsInfuraSecret": "${INFURA_SECRET}",
@@ -531,6 +531,32 @@ cat >$CONFIG_FILE <<-EOM
     }
   ]
 }
+EOM
+
+# Resume checkpoint
+
+cat >$RESUME_FILE <<-EOM
+#!/bin/bash
+
+MANUAL_CACHE="$MANUAL_CACHE"
+ITEMS=$ITEMS
+MULTIPLE=$MULTIPLE
+
+RESET="$RESET"
+EXT="$EXT"
+CLOSE="$CLOSE"
+CHANGE="$CHANGE"
+TEST_IMAGE="$TEST_IMAGE"
+HIDDEN="$HIDDEN"
+
+ARWEAVE_JWK="$ARWEAVE_JWK"
+INFURA_ID="$INFURA_ID"
+INFURA_SECRET="$INFURA_SECRET"
+AWS_BUCKET="$AWS_BUCKET"
+
+ENV_URL="$ENV_URL"
+RPC="$RPC"
+STORAGE="$STORAGE"
 EOM
 
 #-----------------------------------------------------------------------------#
@@ -572,7 +598,7 @@ function deploy {
 
 # run the verify upload command
 function verify {
-    $SUGAR_BIN verify -c ${CONFIG_FILE} --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC
+    $SUGAR_BIN verify --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC
     EXIT_CODE=$?
     if [ ! $EXIT_CODE -eq 0 ]; then
         MAG "<<<"
@@ -594,6 +620,10 @@ echo "[$(date "+%T")] Deploying Candy Machine with $ITEMS items"
 echo "[$(date "+%T")] Environment: ${ENV_URL}"
 echo "[$(date "+%T")] RPC URL: ${RPC}"
 echo "[$(date "+%T")] Testing started using ${STORAGE} storage"
+if [ "${HIDDEN}" = "Y" ]; then
+    echo "[$(date "+%T")] Config with hidden settings"
+fi
+
 echo ""
 CYN "1. Validating JSON metadata files"
 echo ""

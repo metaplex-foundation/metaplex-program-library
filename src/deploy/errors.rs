@@ -6,4 +6,6 @@ pub enum DeployError {
     MissingMetadataLink(String),
     #[error("Missing name for cache item {0}")]
     MissingName(String),
+    #[error("{0}")]
+    AddConfigLineFailed(String),
 }

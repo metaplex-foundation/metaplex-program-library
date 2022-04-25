@@ -1,17 +1,19 @@
+use anchor_lang::AccountDeserialize;
+use console::style;
+use std::{thread, time::Duration};
+
+use mpl_candy_machine::CandyMachine;
+
 use crate::cache::*;
 use crate::common::*;
-use crate::config::parser::get_config_data;
 use crate::constants::{CANDY_EMOJI, PAPER_EMOJI};
 use crate::utils::*;
 use crate::verify::VerifyError;
-use console::style;
-use std::{thread, time::Duration};
 
 pub struct VerifyArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
     pub cache: String,
-    pub config: String,
 }
 
 #[derive(Debug)]
@@ -22,7 +24,6 @@ pub struct OnChainItem {
 
 pub fn process_verify(args: VerifyArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let config_data = get_config_data(&args.config)?;
 
     // loads the cache file (this needs to have been created by
     // the upload command)
@@ -60,10 +61,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             return Err(VerifyError::FailedToGetAccountData(err.to_string()).into());
         }
     };
-
-    let num_items = cache.items.0.len();
-    let cache_items = &mut cache.items.0;
-    let mut errors = Vec::new();
+    let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
 
     pb.finish_with_message("Completed");
 
@@ -73,69 +71,77 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         PAPER_EMOJI
     );
 
-    println!("Verifying {} config line(s): (Ctrl+C to abort)", num_items);
-    let pb = progress_bar_with_style(num_items as u64);
-    // sleeps for a about 1 second
-    let step: u64 = 1_000_000 / num_items as u64;
+    if candy_machine.data.hidden_settings.is_none() {
+        let num_items = cache.items.0.len();
+        let cache_items = &mut cache.items.0;
+        let mut errors = Vec::new();
 
-    for i in 0..num_items {
-        let name_start = CONFIG_ARRAY_START
-            + STRING_LEN_SIZE
-            + CONFIG_LINE_SIZE * (i as usize)
-            + CONFIG_NAME_OFFSET;
-        let name_end = name_start + MAX_NAME_LENGTH;
+        println!("Verifying {} config line(s): (Ctrl+C to abort)", num_items);
+        let pb = progress_bar_with_style(num_items as u64);
+        // sleeps for a about 1 second
+        let step: u64 = 1_000_000 / num_items as u64;
 
-        let uri_start = CONFIG_ARRAY_START
-            + STRING_LEN_SIZE
-            + CONFIG_LINE_SIZE * (i as usize)
-            + CONFIG_URI_OFFSET;
-        let uri_end = uri_start + MAX_URI_LENGTH;
+        for i in 0..num_items {
+            let name_start = CONFIG_ARRAY_START
+                + STRING_LEN_SIZE
+                + CONFIG_LINE_SIZE * (i as usize)
+                + CONFIG_NAME_OFFSET;
+            let name_end = name_start + MAX_NAME_LENGTH;
 
-        let name_error = format!("Cache file failed to decode name at line item {}", i);
-        let name = String::from_utf8(data[name_start..name_end].to_vec())
-            .expect(&name_error)
-            .trim_matches(char::from(0))
-            .to_string();
+            let uri_start = CONFIG_ARRAY_START
+                + STRING_LEN_SIZE
+                + CONFIG_LINE_SIZE * (i as usize)
+                + CONFIG_URI_OFFSET;
+            let uri_end = uri_start + MAX_URI_LENGTH;
 
-        let uri_error = format!("Cache file failed to decode uri at line item {}", i);
-        let uri = String::from_utf8(data[uri_start..uri_end].to_vec())
-            .expect(&uri_error)
-            .trim_matches(char::from(0))
-            .to_string();
+            let name_error = format!("Failed to decode name for item {}", i);
+            let name = String::from_utf8(data[name_start..name_end].to_vec())
+                .expect(&name_error)
+                .trim_matches(char::from(0))
+                .to_string();
 
-        let on_chain_item = OnChainItem { name, uri };
-        let cache_item = cache_items
-            .get_mut(&i.to_string())
-            .expect("Failed to get item from config.");
+            let uri_error = format!("Failed to decode uri for item {}", i);
+            let uri = String::from_utf8(data[uri_start..uri_end].to_vec())
+                .expect(&uri_error)
+                .trim_matches(char::from(0))
+                .to_string();
 
-        if config_data.hidden_settings.is_none() {
+            let on_chain_item = OnChainItem { name, uri };
+            let cache_item = cache_items
+                .get_mut(&i.to_string())
+                .expect("Failed to get item from config.");
+
             if let Err(err) = items_match(cache_item, &on_chain_item) {
                 cache_item.on_chain = false;
                 errors.push((i.to_string(), err.to_string()));
             }
+
+            pb.inc(1);
+            thread::sleep(Duration::from_micros(step));
         }
 
-        pb.inc(1);
-        thread::sleep(Duration::from_micros(step));
-    }
+        pb.finish();
 
-    pb.finish();
+        if !errors.is_empty() {
+            cache.sync_file()?;
 
-    cache.sync_file()?;
+            let total = errors.len();
+            println!("\nInvalid items found: ");
 
-    if !errors.is_empty() {
-        let total = errors.len();
-        println!("\nInvalid items found: ");
+            for e in errors {
+                println!("- Item {}: {}", e.0, e.1);
+            }
+            println!("\nCache updated - re-run `deploy`.");
 
-        for e in errors {
-            println!("- Item {}: {}", e.0, e.1);
+            return Err(anyhow!("{} invalid item(s) found.", total));
         }
-        println!("\nCache updated - re-run `deploy`.");
 
-        return Err(anyhow!("{} invalid item(s) found.", total));
+        println!("\nAll items checked out. You're good to go!");
+    } else {
+        // nothing else todo, there are no config lines in a candy machine
+        // with hidden settings
+        println!("\nHidden settings enabled. You're good to go!");
     }
-
-    println!("\nAll items checked out. You're good to go!");
 
     Ok(())
 }
