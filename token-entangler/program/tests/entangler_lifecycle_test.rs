@@ -2,10 +2,7 @@ use anchor_lang::{
     prelude::{Pubkey, Rent},
     InstructionData, ToAccountMetas,
 };
-use mpl_token_metadata::{
-    instruction::{create_master_edition, create_metadata_accounts},
-    pda::find_metadata_account,
-};
+use mpl_token_metadata::{instruction::create_metadata_accounts, pda::find_metadata_account};
 use solana_program_test::{tokio, ProgramTest};
 use solana_sdk::{
     instruction::Instruction, program_pack::Pack, signature::Keypair, signer::Signer,
@@ -113,6 +110,8 @@ async fn lifecycle_test() {
 }
 
 mod test_utils {
+    use mpl_token_metadata::instruction::create_master_edition_v3;
+
     use crate::*;
 
     pub fn instructions_to_mint_an_nft(
@@ -154,7 +153,7 @@ mod test_utils {
                 1,
             )
             .unwrap(),
-            create_master_edition(
+            create_master_edition_v3(
                 mpl_token_metadata::id(),
                 find_master_edition_address(mint),
                 mint,
