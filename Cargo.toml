@@ -17,9 +17,7 @@ async-trait = "0.1.52"
 aws-config = "0.9.0"
 aws-sdk-s3 = "0.9.0"
 bs58 = "0.4.0"
-bundlr-sdk = { git = "https://github.com/Bundlr-Network/rust-sdk", features = [
-  "solana",
-] }
+bundlr-sdk = {version = "0.1.0", features = [ "solana"] }
 chrono = "0.4.19"
 clap = { version = "3.0.0", features = ["derive", "cargo"] }
 console = "0.15.0"
