@@ -10,7 +10,7 @@ use solana_sdk::{
 };
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
-    instruction::{initialize_mint, mint_to},
+    instruction::{approve, initialize_mint, mint_to, revoke},
     state::Mint,
 };
 use test_utils::{
@@ -61,6 +61,8 @@ async fn lifecycle_test() {
     let escrow_a = find_escrow_a(mint_a.pubkey(), mint_b.pubkey());
     let escrow_b = find_escrow_b(mint_a.pubkey(), mint_b.pubkey());
 
+    let token_b = get_associated_token_address(&payer.pubkey(), &mint_b.pubkey());
+
     let accounts = mpl_token_entangler::accounts::CreateEntangledPair {
         payer: payer.pubkey(),
         authority: payer.pubkey(),
@@ -76,7 +78,7 @@ async fn lifecycle_test() {
         metadata_b: find_metadata_account(&mint_b.pubkey()).0,
         edition_a: find_master_edition_address(mint_a.pubkey()),
         edition_b: find_master_edition_address(mint_b.pubkey()),
-        token_b: get_associated_token_address(&payer.pubkey(), &mint_b.pubkey()),
+        token_b,
         token_program: spl_token::id(),
         rent: RENT_SYSVAR_ADDRESS.parse().unwrap(),
         system_program: SYSTEM_PROGRAM_ADDRESS.parse().unwrap(),
@@ -91,12 +93,26 @@ async fn lifecycle_test() {
         pays_every_time: true,
     };
 
-    let tx = Transaction::new_signed_with_payer(
-        &[Instruction {
+    let instructions = [
+        approve(
+            &spl_token::id(),
+            &token_b,
+            &transfer_authority.pubkey(),
+            &payer.pubkey(),
+            &[],
+            1,
+        )
+        .unwrap(),
+        Instruction {
             program_id: mpl_token_entangler::id(),
             accounts: accounts.to_account_metas(None),
             data: instruction.data(),
-        }],
+        },
+        revoke(&spl_token::id(), &token_b, &payer.pubkey(), &[]).unwrap(),
+    ];
+
+    let tx = Transaction::new_signed_with_payer(
+        &instructions,
         Some(&payer.pubkey()),
         &[&payer, &transfer_authority],
         context.last_blockhash,
