@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
@@ -313,4 +313,4 @@ mod update_metadata_account_v2 {
             MetadataError::CollectionCannotBeVerifiedInThisInstruction
         );
     }
-} 
+}
