@@ -97,10 +97,12 @@ async fn run() -> Result<()> {
             config,
             keypair,
             rpc_url,
+            assets_dir,
         } => process_create_config(CreateConfigArgs {
             config,
             keypair,
             rpc_url,
+            assets_dir,
         })?,
         Commands::Launch {
             assets_dir,

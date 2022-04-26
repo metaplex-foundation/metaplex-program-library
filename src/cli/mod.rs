@@ -28,6 +28,10 @@ pub enum Commands {
         /// Path to the keypair file [default: solana config or "~/.config/solana/id.json"]
         #[clap(short, long)]
         keypair: Option<String>,
+
+        /// Path to the directory with the assets
+        #[clap(default_value = DEFAULT_ASSETS)]
+        assets_dir: String,
     },
     /// Create a candy machine deployment from assets
     Launch {

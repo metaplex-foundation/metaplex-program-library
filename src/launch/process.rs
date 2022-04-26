@@ -56,6 +56,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
                 config: Some(create_config_args.config.clone()),
                 keypair: create_config_args.keypair.clone(),
                 rpc_url: create_config_args.rpc_url.clone(),
+                assets_dir: create_config_args.assets_dir.clone(),
             };
 
             process_create_config(create_config_args)?;

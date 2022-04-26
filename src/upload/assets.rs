@@ -123,13 +123,13 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
         let metadata_file = PathBuf::from(assets_dir)
             .join(format!("{i}.json"))
             .to_str()
-            .expect("Failed to convert media path from unicode.")
+            .expect("Failed to convert metadata path from unicode.")
             .to_string();
 
         let media_file = Path::new(assets_dir)
             .join(format!("{i}.{extension}"))
             .to_str()
-            .expect("Failed to convert metadata path from unicode.")
+            .expect("Failed to convert media path from unicode.")
             .to_string();
 
         let m = File::open(&metadata_file)?;
