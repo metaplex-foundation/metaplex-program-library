@@ -218,7 +218,7 @@ pub struct Collection {
 }
 
 #[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
+#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, PartialEq, ShankAccount)]
 pub struct Metadata {
     pub key: Key,
     pub update_authority: Pubkey,
