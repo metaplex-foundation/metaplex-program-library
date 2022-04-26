@@ -286,7 +286,11 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     if let Some(val) = primary_sale_happened {
+        // If val is true, flip to true.
         if val {
+            metadata.primary_sale_happened = val
+        // If value is false and metadata.primary_sale_happened is still false, keep the same.
+        } else if !val && !metadata.primary_sale_happened {
             metadata.primary_sale_happened = val
         } else {
             return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
@@ -294,7 +298,11 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     if let Some(val) = is_mutable {
+        // If value is false, flip to false.
         if !val {
+            metadata.is_mutable = val
+        // If value is true and is_mutable is still true, keep the same.
+        } else if val && metadata.is_mutable {
             metadata.is_mutable = val
         } else {
             return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
@@ -308,7 +316,6 @@ pub fn process_update_metadata_accounts_v2(
     metadata_account_info_data[0..].fill(0);
 
     metadata.serialize(&mut *metadata_account_info_data)?;
-    // metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
     Ok(())
 }
 
