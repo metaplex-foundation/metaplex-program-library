@@ -307,7 +307,7 @@ pub mod token_entangler {
 }
 
 #[derive(Accounts)]
-#[instruction(reverse_bump: u8, token_a_escrow_bump: u8, token_b_escrow_bump: u8)]
+#[instruction(bump: u8, reverse_bump: u8, token_a_escrow_bump: u8, token_b_escrow_bump: u8)]
 pub struct CreateEntangledPair<'info> {
     treasury_mint: Box<Account<'info, Mint>>,
     #[account(mut)]
