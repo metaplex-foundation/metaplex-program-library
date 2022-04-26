@@ -22,7 +22,7 @@ const RevokeUseAuthorityStruct = new beet.BeetArgsStruct<{ instructionDiscrimina
  * Accounts required by the _RevokeUseAuthority_ instruction
  *
  * @property [_writable_] useAuthorityRecord Use Authority Record PDA
- * @property [**signer**] owner Owner
+ * @property [_writable_, **signer**] owner Owner
  * @property [] user A Use Authority
  * @property [_writable_] ownerTokenAccount Owned Token Account Of Mint
  * @property [] mint Mint of Metadata
@@ -67,7 +67,7 @@ export function createRevokeUseAuthorityInstruction(
     },
     {
       pubkey: owner,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

@@ -21,8 +21,8 @@ const VerifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscriminato
  * Accounts required by the _VerifyCollection_ instruction
  *
  * @property [_writable_] metadata Metadata account
- * @property [**signer**] collectionAuthority Collection Update authority
- * @property [**signer**] payer payer
+ * @property [_writable_, **signer**] collectionAuthority Collection Update authority
+ * @property [_writable_, **signer**] payer payer
  * @property [] collectionMint Mint of the Collection
  * @property [] collection Metadata Account of the Collection
  * @property [] collectionMasterEditionAccount MasterEdition2 Account of the Collection Token
@@ -71,12 +71,12 @@ export function createVerifyCollectionInstruction(accounts: VerifyCollectionInst
     },
     {
       pubkey: collectionAuthority,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
