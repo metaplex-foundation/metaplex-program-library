@@ -100,6 +100,12 @@ pub struct GatingConfig {
     pub gating_time: Option<u64>,
 }
 
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
+pub enum PiecesMode {
+    Limited(u64),
+    Unlimited,
+}
+
 #[account]
 #[derive(Default)]
 pub struct TradeHistory {

@@ -5,7 +5,10 @@ pub mod utils;
 
 use crate::{
     error::ErrorCode,
-    state::{GatingConfig, Market, PrimaryMetadataCreators, SellingResource, Store, TradeHistory},
+    state::{
+        GatingConfig, Market, PiecesMode, PrimaryMetadataCreators, SellingResource, Store,
+        TradeHistory,
+    },
     utils::*,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize, System};
@@ -66,15 +69,10 @@ pub mod fixed_price_sale {
         new_description: Option<String>,
         mutable: Option<bool>,
         new_price: Option<u64>,
-        new_pieces_in_one_wallet: Option<u64>,
+        pieces_mode: Option<PiecesMode>,
     ) -> Result<()> {
-        ctx.accounts.process(
-            new_name,
-            new_description,
-            mutable,
-            new_price,
-            new_pieces_in_one_wallet,
-        )
+        ctx.accounts
+            .process(new_name, new_description, mutable, new_price, pieces_mode)
     }
 
     pub fn resume_market<'info>(
@@ -319,7 +317,7 @@ pub struct ResumeMarket<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(new_name: Option<String>, new_description: Option<String>, mutable: Option<bool>, new_price: Option<u64>, new_pieces_in_one_wallet: Option<u64>)]
+#[instruction(new_name: Option<String>, new_description: Option<String>, mutable: Option<bool>, new_price: Option<u64>, pieces_mode: Option<PiecesMode>)]
 pub struct ChangeMarket<'info> {
     #[account(mut, has_one=owner)]
     market: Account<'info, Market>,

@@ -1,4 +1,9 @@
-use crate::{error::ErrorCode, state::MarketState, utils::*, ChangeMarket};
+use crate::{
+    error::ErrorCode,
+    state::{MarketState, PiecesMode},
+    utils::*,
+    ChangeMarket,
+};
 use anchor_lang::prelude::*;
 
 impl<'info> ChangeMarket<'info> {
@@ -8,7 +13,7 @@ impl<'info> ChangeMarket<'info> {
         new_description: Option<String>,
         mutable: Option<bool>,
         new_price: Option<u64>,
-        new_pieces_in_one_wallet: Option<u64>,
+        pieces_mode: Option<PiecesMode>,
     ) -> Result<()> {
         let market = &mut self.market;
         let clock = &self.clock;
@@ -58,7 +63,12 @@ impl<'info> ChangeMarket<'info> {
             market.price = new_price;
         }
 
-        market.pieces_in_one_wallet = new_pieces_in_one_wallet;
+        if let Some(pieces_mode) = pieces_mode {
+            match pieces_mode {
+                PiecesMode::Limited(value) => market.pieces_in_one_wallet = Some(value),
+                PiecesMode::Unlimited => market.pieces_in_one_wallet = None,
+            }
+        }
 
         Ok(())
     }
