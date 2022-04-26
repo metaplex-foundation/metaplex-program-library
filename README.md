@@ -15,7 +15,8 @@ Sugar is the next iteration of the Metaplex Candy Machine CLI. It has been writt
 Binaries for the supported OS can be found at:
 - [Sugar Releases](https://github.com/metaplex-foundation/sugar/releases)
 
-To use one of the binaries, download the version for your OS and unzip the binary. Then copy to a folder in your file system (preferable a folder in your `PATH` environment variable). If you have Rust installed we recommend putting it in `~/.cargo/bin`, otherwise `/usr/local/bin` is a good place for it on Linux and macOS. Once the binary is at that location your OS will find it automatically and you will be able to run the `sugar` binary from any directory in your file system as a normal command line application.
+To use one of the binaries, download the version for your OS and unzip the binary. Copy the binary file to a folder in your file system (preferably a folder in your `PATH` environment variable). If you have Rust installed we recommend putting it in `~/.cargo/bin`, otherwise `/usr/local/bin` is a good place for it on Linux and macOS. Once the binary is at that location your OS will find it automatically and you will be able to run the `sugar` binary from any directory in your file system as a normal command line application.
+
 It is recommended to rename the downloaded binary (e.g., `sugar-ubuntu-latest` or `sugar-macos-latest`) to `sugar` for simplicitly &mdash; the remainder of this guide assumes that the binary is called `sugar`.
 
 ### Build From Source
