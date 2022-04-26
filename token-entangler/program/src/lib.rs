@@ -157,7 +157,6 @@ pub mod token_entangler {
                 transfer_authority.to_account_info(),
             ],
         )?;
-
         Ok(())
     }
 

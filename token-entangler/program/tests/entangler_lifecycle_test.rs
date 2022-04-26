@@ -52,77 +52,206 @@ async fn lifecycle_test() {
     );
     banks_client.process_transaction(mint_b_tx).await.unwrap();
 
-    // CreateEntangledPair (marathon)
-    let transfer_authority = Keypair::new();
-
     let entangled_pair = find_entangled_pair(mint_a.pubkey(), mint_b.pubkey());
     let reverse_pair = find_entangled_pair(mint_b.pubkey(), mint_a.pubkey());
 
     let escrow_a = find_escrow_a(mint_a.pubkey(), mint_b.pubkey());
     let escrow_b = find_escrow_b(mint_a.pubkey(), mint_b.pubkey());
 
-    let token_b = get_associated_token_address(&payer.pubkey(), &mint_b.pubkey());
+    {
+        // CreateEntangledPair (marathon)
+        let transfer_authority = Keypair::new();
+        let token_b = get_associated_token_address(&payer.pubkey(), &mint_b.pubkey());
 
-    let accounts = mpl_token_entangler::accounts::CreateEntangledPair {
-        payer: payer.pubkey(),
-        authority: payer.pubkey(),
-        treasury_mint: TREASURY_MINT.parse().unwrap(),
-        transfer_authority: transfer_authority.pubkey(),
-        entangled_pair: entangled_pair.0,
-        reverse_entangled_pair: reverse_pair.0,
-        mint_a: mint_a.pubkey(),
-        mint_b: mint_b.pubkey(),
-        token_a_escrow: escrow_a.0,
-        token_b_escrow: escrow_b.0,
-        metadata_a: find_metadata_account(&mint_a.pubkey()).0,
-        metadata_b: find_metadata_account(&mint_b.pubkey()).0,
-        edition_a: find_master_edition_address(mint_a.pubkey()),
-        edition_b: find_master_edition_address(mint_b.pubkey()),
-        token_b,
-        token_program: spl_token::id(),
-        rent: RENT_SYSVAR_ADDRESS.parse().unwrap(),
-        system_program: SYSTEM_PROGRAM_ADDRESS.parse().unwrap(),
-    };
+        let accounts = mpl_token_entangler::accounts::CreateEntangledPair {
+            payer: payer.pubkey(),
+            authority: payer.pubkey(),
+            treasury_mint: TREASURY_MINT.parse().unwrap(),
+            transfer_authority: transfer_authority.pubkey(),
+            entangled_pair: entangled_pair.0,
+            reverse_entangled_pair: reverse_pair.0,
+            mint_a: mint_a.pubkey(),
+            mint_b: mint_b.pubkey(),
+            token_a_escrow: escrow_a.0,
+            token_b_escrow: escrow_b.0,
+            metadata_a: find_metadata_account(&mint_a.pubkey()).0,
+            metadata_b: find_metadata_account(&mint_b.pubkey()).0,
+            edition_a: find_master_edition_address(mint_a.pubkey()),
+            edition_b: find_master_edition_address(mint_b.pubkey()),
+            token_b,
+            token_program: spl_token::id(),
+            rent: RENT_SYSVAR_ADDRESS.parse().unwrap(),
+            system_program: SYSTEM_PROGRAM_ADDRESS.parse().unwrap(),
+        };
 
-    let instruction = mpl_token_entangler::instruction::CreateEntangledPair {
-        bump: entangled_pair.1,
-        _reverse_bump: reverse_pair.1,
-        token_a_escrow_bump: escrow_a.1,
-        token_b_escrow_bump: escrow_b.1,
-        price: 1,
-        pays_every_time: true,
-    };
+        let instruction = mpl_token_entangler::instruction::CreateEntangledPair {
+            bump: entangled_pair.1,
+            _reverse_bump: reverse_pair.1,
+            token_a_escrow_bump: escrow_a.1,
+            token_b_escrow_bump: escrow_b.1,
+            price: 1,
+            pays_every_time: true,
+        };
 
-    let instructions = [
-        approve(
-            &spl_token::id(),
-            &token_b,
-            &transfer_authority.pubkey(),
-            &payer.pubkey(),
-            &[],
-            1,
-        )
-        .unwrap(),
-        Instruction {
-            program_id: mpl_token_entangler::id(),
-            accounts: accounts.to_account_metas(None),
-            data: instruction.data(),
-        },
-        revoke(&spl_token::id(), &token_b, &payer.pubkey(), &[]).unwrap(),
-    ];
+        let instructions = [
+            approve(
+                &spl_token::id(),
+                &token_b,
+                &transfer_authority.pubkey(),
+                &payer.pubkey(),
+                &[],
+                1,
+            )
+            .unwrap(),
+            Instruction {
+                program_id: mpl_token_entangler::id(),
+                accounts: accounts.to_account_metas(None),
+                data: instruction.data(),
+            },
+            revoke(
+                &spl_token::id(),
+                &token_b,
+                &payer.pubkey(),
+                &[], //
+            )
+            .unwrap(),
+        ];
 
-    let tx = Transaction::new_signed_with_payer(
-        &instructions,
-        Some(&payer.pubkey()),
-        &[&payer, &transfer_authority],
-        context.last_blockhash,
-    );
+        let tx = Transaction::new_signed_with_payer(
+            &instructions,
+            Some(&payer.pubkey()),
+            &[&payer, &transfer_authority],
+            context.last_blockhash,
+        );
 
-    banks_client.process_transaction(tx).await.unwrap();
+        banks_client.process_transaction(tx).await.unwrap();
+    }
 
-    // tokens should be entangled here; check stuff like this:
-    // - payer should hold token-a
-    // - escrow should hold token-b
+    {
+        // SWAP'em
+        let payment_transfer_authority = Keypair::new();
+        let transfer_authority = Keypair::new();
+        let token_a = get_associated_token_address(&payer.pubkey(), &mint_a.pubkey());
+        let token_b = get_associated_token_address(&payer.pubkey(), &mint_b.pubkey());
+
+        let accounts = mpl_token_entangler::accounts::Swap {
+            treasury_mint: TREASURY_MINT.parse().unwrap(),
+            payer: payer.pubkey(),
+            payment_account: payer.pubkey(),
+            payment_transfer_authority: payment_transfer_authority.pubkey(),
+            token: token_a,
+            token_mint: mint_a.pubkey(),
+            replacement_token_metadata: find_metadata_account(&mint_b.pubkey()).0,
+            replacement_token_mint: mint_b.pubkey(),
+            replacement_token: token_b,
+            transfer_authority: transfer_authority.pubkey(),
+            token_a_escrow: escrow_a.0,
+            token_b_escrow: escrow_b.0,
+            entangled_pair: entangled_pair.0,
+            token_program: spl_token::id(),
+            system_program: SYSTEM_PROGRAM_ADDRESS.parse().unwrap(),
+            ata_program: spl_associated_token_account::id(),
+            rent: RENT_SYSVAR_ADDRESS.parse().unwrap(),
+        };
+
+        let instruction = mpl_token_entangler::instruction::Swap {};
+
+        let instructions = [
+            approve(
+                &spl_token::id(),
+                &token_a,
+                &transfer_authority.pubkey(),
+                &payer.pubkey(),
+                &[],
+                1,
+            )
+            .unwrap(),
+            Instruction {
+                program_id: mpl_token_entangler::id(),
+                accounts: accounts.to_account_metas(None),
+                data: instruction.data(),
+            },
+            revoke(
+                &spl_token::id(),
+                &token_a,
+                &payer.pubkey(),
+                &[], //
+            )
+            .unwrap(),
+        ];
+
+        let tx = Transaction::new_signed_with_payer(
+            &instructions,
+            Some(&payer.pubkey()),
+            &[&payer, &transfer_authority],
+            context.last_blockhash,
+        );
+
+        banks_client.process_transaction(tx).await.unwrap();
+    }
+
+    {
+        // SWAP'em again
+        let payment_transfer_authority = Keypair::new();
+        let transfer_authority = Keypair::new();
+        let token_a = get_associated_token_address(&payer.pubkey(), &mint_a.pubkey());
+        let token_b = get_associated_token_address(&payer.pubkey(), &mint_b.pubkey());
+
+        let accounts = mpl_token_entangler::accounts::Swap {
+            treasury_mint: TREASURY_MINT.parse().unwrap(),
+            payer: payer.pubkey(),
+            payment_account: payer.pubkey(),
+            payment_transfer_authority: payment_transfer_authority.pubkey(),
+            token: token_b,
+            token_mint: mint_b.pubkey(),
+            replacement_token_metadata: find_metadata_account(&mint_a.pubkey()).0,
+            replacement_token_mint: mint_a.pubkey(),
+            replacement_token: token_a,
+            transfer_authority: transfer_authority.pubkey(),
+            token_a_escrow: escrow_a.0,
+            token_b_escrow: escrow_b.0,
+            entangled_pair: entangled_pair.0,
+            token_program: spl_token::id(),
+            system_program: SYSTEM_PROGRAM_ADDRESS.parse().unwrap(),
+            ata_program: spl_associated_token_account::id(),
+            rent: RENT_SYSVAR_ADDRESS.parse().unwrap(),
+        };
+
+        let instruction = mpl_token_entangler::instruction::Swap {};
+
+        let instructions = [
+            approve(
+                &spl_token::id(),
+                &token_b,
+                &transfer_authority.pubkey(),
+                &payer.pubkey(),
+                &[],
+                1,
+            )
+            .unwrap(),
+            Instruction {
+                program_id: mpl_token_entangler::id(),
+                accounts: accounts.to_account_metas(None),
+                data: instruction.data(),
+            },
+            revoke(
+                &spl_token::id(),
+                &token_b,
+                &payer.pubkey(),
+                &[], //
+            )
+            .unwrap(),
+        ];
+
+        let tx = Transaction::new_signed_with_payer(
+            &instructions,
+            Some(&payer.pubkey()),
+            &[&payer, &transfer_authority],
+            context.last_blockhash,
+        );
+
+        banks_client.process_transaction(tx).await.unwrap();
+    }
 }
 
 mod test_utils {
