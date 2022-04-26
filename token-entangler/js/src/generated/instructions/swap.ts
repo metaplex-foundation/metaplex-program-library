@@ -5,21 +5,19 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as splToken from '@solana/spl-token'
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as splToken from '@solana/spl-token';
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
  * @category Swap
  * @category generated
  */
-const swapStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
+const swapStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number[] /* size: 8 */ }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'SwapInstructionArgs'
-)
+  'SwapInstructionArgs',
+);
 /**
  * Accounts required by the _swap_ instruction
  * @category Instructions
@@ -27,22 +25,22 @@ const swapStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type SwapInstructionAccounts = {
-  treasuryMint: web3.PublicKey
-  payer: web3.PublicKey
-  paymentAccount: web3.PublicKey
-  paymentTransferAuthority: web3.PublicKey
-  token: web3.PublicKey
-  tokenMint: web3.PublicKey
-  replacementTokenMetadata: web3.PublicKey
-  replacementTokenMint: web3.PublicKey
-  replacementToken: web3.PublicKey
-  transferAuthority: web3.PublicKey
-  tokenAEscrow: web3.PublicKey
-  tokenBEscrow: web3.PublicKey
-  entangledPair: web3.PublicKey
-}
+  treasuryMint: web3.PublicKey;
+  payer: web3.PublicKey;
+  paymentAccount: web3.PublicKey;
+  paymentTransferAuthority: web3.PublicKey;
+  token: web3.PublicKey;
+  tokenMint: web3.PublicKey;
+  replacementTokenMetadata: web3.PublicKey;
+  replacementTokenMint: web3.PublicKey;
+  replacementToken: web3.PublicKey;
+  transferAuthority: web3.PublicKey;
+  tokenAEscrow: web3.PublicKey;
+  tokenBEscrow: web3.PublicKey;
+  entangledPair: web3.PublicKey;
+};
 
-const swapInstructionDiscriminator = [248, 198, 158, 145, 225, 117, 135, 200]
+const swapInstructionDiscriminator = [248, 198, 158, 145, 225, 117, 135, 200];
 
 /**
  * Creates a _Swap_ instruction.
@@ -68,11 +66,11 @@ export function createSwapInstruction(accounts: SwapInstructionAccounts) {
     tokenAEscrow,
     tokenBEscrow,
     entangledPair,
-  } = accounts
+  } = accounts;
 
   const [data] = swapStruct.serialize({
     instructionDiscriminator: swapInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: treasuryMint,
@@ -159,14 +157,12 @@ export function createSwapInstruction(accounts: SwapInstructionAccounts) {
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey(
-      'qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd'
-    ),
+    programId: new web3.PublicKey('qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd'),
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

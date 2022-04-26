@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "name": "mpl_token_vault",
   "instructions": [
     {
@@ -1118,6 +1118,8 @@
   ],
   "metadata": {
     "origin": "shank",
-    "address": "vau1zxA2LbssAUEF7Gpw91zMM1LvXrvpzJtmZ58rPsn"
+    "address": "vau1zxA2LbssAUEF7Gpw91zMM1LvXrvpzJtmZ58rPsn",
+    "binaryVersion": "0.0.2",
+    "libVersion": "~0.0.2"
   }
 }

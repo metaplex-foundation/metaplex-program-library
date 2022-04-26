@@ -14,9 +14,10 @@ import * as web3 from '@solana/web3.js';
  * @category RevokeUseAuthority
  * @category generated
  */
-const RevokeUseAuthorityStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'RevokeUseAuthorityInstructionArgs');
+const RevokeUseAuthorityStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'RevokeUseAuthorityInstructionArgs',
+);
 /**
  * Accounts required by the _RevokeUseAuthority_ instruction
  *

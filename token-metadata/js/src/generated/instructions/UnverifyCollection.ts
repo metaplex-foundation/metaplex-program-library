@@ -13,9 +13,10 @@ import * as web3 from '@solana/web3.js';
  * @category UnverifyCollection
  * @category generated
  */
-const UnverifyCollectionStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'UnverifyCollectionInstructionArgs');
+const UnverifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'UnverifyCollectionInstructionArgs',
+);
 /**
  * Accounts required by the _UnverifyCollection_ instruction
  *
