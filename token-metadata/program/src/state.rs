@@ -33,9 +33,9 @@ pub const MAX_METADATA_LEN: usize =
 + 1 // primary sale
 + 1 // mutable
 + 9 // nonce (pretty sure this only needs to be 2)
++ 2 // token standard
 + 34 // collection
 + 18 // uses
-+ 2 // token standard
 + 118; // Padding
 
 pub const MAX_DATA_SIZE: usize = 4
