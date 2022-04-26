@@ -49,7 +49,7 @@ const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStru
  * @property [_writable_] newMint Mint of new token - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
  * @property [_writable_] editionMarkPda Edition pda to mark creation - will be checked for pre-existence. (pda of ['metadata', program id, master metadata mint id, 'edition', edition_number]) where edition_number is NOT the edition number you pass in args but actually edition_number = floor(edition/EDITION_MARKER_BIT_SIZE).
  * @property [**signer**] newMintAuthority Mint authority of new mint
- * @property [**signer**] payer payer
+ * @property [_writable_, **signer**] payer payer
  * @property [**signer**] vaultAuthority Vault authority
  * @property [] safetyDepositStore Safety deposit token store account
  * @property [] safetyDepositBox Safety deposit box
@@ -148,7 +148,7 @@ export function createMintNewEditionFromMasterEditionViaVaultProxyInstruction(
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

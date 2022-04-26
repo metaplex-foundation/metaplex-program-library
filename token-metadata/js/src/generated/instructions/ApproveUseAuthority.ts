@@ -41,8 +41,8 @@ const ApproveUseAuthorityStruct = new beet.BeetArgsStruct<
  * Accounts required by the _ApproveUseAuthority_ instruction
  *
  * @property [_writable_] useAuthorityRecord Use Authority Record PDA
- * @property [**signer**] owner Owner
- * @property [**signer**] payer Payer
+ * @property [_writable_, **signer**] owner Owner
+ * @property [_writable_, **signer**] payer Payer
  * @property [] user A Use Authority
  * @property [_writable_] ownerTokenAccount Owned Token Account Of Mint
  * @property [] metadata Metadata account
@@ -94,12 +94,12 @@ export function createApproveUseAuthorityInstruction(
     },
     {
       pubkey: owner,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

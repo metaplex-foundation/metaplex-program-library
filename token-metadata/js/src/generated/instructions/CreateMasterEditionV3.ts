@@ -44,7 +44,7 @@ const CreateMasterEditionV3Struct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] mint Metadata mint
  * @property [**signer**] updateAuthority Update authority
  * @property [**signer**] mintAuthority Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY
- * @property [**signer**] payer payer
+ * @property [_writable_, **signer**] payer payer
  * @property [_writable_] metadata Metadata account
  * @category Instructions
  * @category CreateMasterEditionV3
@@ -104,7 +104,7 @@ export function createCreateMasterEditionV3Instruction(
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

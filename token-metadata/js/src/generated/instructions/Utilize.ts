@@ -40,7 +40,7 @@ const UtilizeStruct = new beet.BeetArgsStruct<
  * @property [_writable_] metadata Metadata account
  * @property [_writable_] tokenAccount Token Account Of NFT
  * @property [_writable_] mint Mint of the Metadata
- * @property [**signer**] useAuthority A Use Authority / Can be the current Owner of the NFT
+ * @property [_writable_, **signer**] useAuthority A Use Authority / Can be the current Owner of the NFT
  * @property [] owner Owner
  * @property [_writable_] useAuthorityRecord (optional) Use Authority Record PDA If present the program Assumes a delegated use authority
  * @property [] burner (optional) Program As Signer (Burner)
@@ -99,7 +99,7 @@ export function createUtilizeInstruction(
     },
     {
       pubkey: useAuthority,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

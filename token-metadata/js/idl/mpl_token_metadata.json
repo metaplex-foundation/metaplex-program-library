@@ -25,7 +25,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
@@ -594,7 +594,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
@@ -677,7 +677,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
@@ -806,7 +806,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
@@ -952,7 +952,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
@@ -1017,7 +1017,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
@@ -1070,13 +1070,13 @@
         },
         {
           "name": "collectionAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Collection Update authority"
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
@@ -1128,7 +1128,7 @@
         },
         {
           "name": "useAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "A Use Authority / Can be the current Owner of the NFT"
         },
@@ -1201,13 +1201,13 @@
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Owner"
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Payer"
         },
@@ -1284,7 +1284,7 @@
         },
         {
           "name": "owner",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Owner"
         },
@@ -1348,7 +1348,7 @@
         },
         {
           "name": "collectionAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Collection Authority"
         },
@@ -1401,13 +1401,13 @@
         },
         {
           "name": "updateAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Update Authority of Collection NFT"
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Payer"
         },
@@ -1453,7 +1453,7 @@
         },
         {
           "name": "updateAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Update Authority of Collection NFT"
         },
@@ -1487,13 +1487,13 @@
         },
         {
           "name": "collectionAuthority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Collection Update authority"
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Payer"
         },
@@ -1540,7 +1540,7 @@
       "accounts": [
         {
           "name": "delegate",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Delegate"
         },
@@ -1580,7 +1580,7 @@
       "accounts": [
         {
           "name": "delegate",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "Delegate"
         },
