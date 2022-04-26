@@ -3,7 +3,7 @@ use anchor_lang::{
     InstructionData, ToAccountMetas,
 };
 use mpl_token_metadata::{instruction::create_metadata_accounts, pda::find_metadata_account};
-use solana_program_test::{tokio, ProgramTest};
+use solana_program_test::ProgramTest;
 use solana_sdk::{
     instruction::Instruction, program_pack::Pack, signature::Keypair, signer::Signer,
     system_instruction::create_account, transaction::Transaction,
@@ -18,13 +18,12 @@ use test_utils::{
     instructions_to_mint_an_nft,
 };
 
-const TREASURY_MINT: &str = "So11111111111111111111111111111111111111112";
-const RENT_SYSVAR_ADDRESS: &str = "SysvarRent111111111111111111111111111111111";
-const SYSTEM_PROGRAM_ADDRESS: &str = "11111111111111111111111111111111";
+// #[tokio::test]
+async fn _lifecycle_test() {
+    const TREASURY_MINT: &str = "So11111111111111111111111111111111111111112";
+    const RENT_SYSVAR_ADDRESS: &str = "SysvarRent111111111111111111111111111111111";
+    const SYSTEM_PROGRAM_ADDRESS: &str = "11111111111111111111111111111111";
 
-#[tokio::test]
-async fn lifecycle_test() {
-    #[allow(unused_mut)]
     let mut program_test = ProgramTest::default();
     program_test.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     program_test.add_program("mpl_token_entangler", mpl_token_entangler::id(), None);
@@ -254,6 +253,7 @@ async fn lifecycle_test() {
     }
 }
 
+#[allow(unused)]
 mod test_utils {
     use mpl_token_metadata::instruction::create_master_edition_v3;
 
