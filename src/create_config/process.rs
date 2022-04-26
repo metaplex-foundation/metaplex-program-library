@@ -151,8 +151,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     config_data.symbol = Input::with_theme(&theme)
         .with_prompt(
-            "What is the symbol of your collection? (This must match what's in your asset files.)",
+            "What is the symbol of your collection? (This must match what's in your asset files.) Hit enter for no symbol.",
         )
+        .allow_empty(true)
         .validate_with(symbol_validator)
         .interact()
         .unwrap();
