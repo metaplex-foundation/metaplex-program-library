@@ -25,7 +25,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
@@ -952,7 +952,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true,
           "desc": "payer"
         },
