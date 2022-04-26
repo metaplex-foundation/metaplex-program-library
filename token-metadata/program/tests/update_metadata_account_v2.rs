@@ -185,6 +185,70 @@ mod update_metadata_account_v2 {
     }
 
     #[tokio::test]
+    async fn cannot_flip_primary_sale_happened_from_true_to_false() {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        let name = "Test".to_string();
+        let symbol = "TST".to_string();
+        let uri = "uri".to_string();
+
+        // Primary sale happened created as false by default.
+        test_metadata
+            .create(
+                &mut context,
+                name,
+                symbol.clone(),
+                uri.clone(),
+                None,
+                10,
+                true,
+            )
+            .await
+            .unwrap();
+
+        // Flip true.
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey().clone(),
+                None,
+                None,
+                Some(true),
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // Try to flip back to false; this should fail.
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey().clone(),
+                None,
+                None,
+                Some(false),
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+        let result = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        // We should not be able to make an immutable NFT mutable again.
+        assert_custom_error!(result, MetadataError::PrimarySaleCanOnlyBeFlippedToTrue);
+    }
+
+    #[tokio::test]
     async fn cannot_flip_is_mutable_from_false_to_true() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
