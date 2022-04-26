@@ -73,7 +73,9 @@ impl<'info> CreateMarket<'info> {
 
             let collection_mint = &remaining_accounts[0];
 
-            if collection_mint.key != &gating_data.collection || collection_mint.owner != &spl_token::id() {
+            if collection_mint.key != &gating_data.collection
+                || collection_mint.owner != &spl_token::id()
+            {
                 return Err(ErrorCode::WrongCollectionMintKey.into());
             }
         }

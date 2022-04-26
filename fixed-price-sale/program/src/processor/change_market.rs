@@ -58,10 +58,7 @@ impl<'info> ChangeMarket<'info> {
             market.price = new_price;
         }
 
-        // Check is required, because we can overwrite existing value
-        if let Some(new_pieces_in_one_wallet) = new_pieces_in_one_wallet {
-            market.pieces_in_one_wallet = Some(new_pieces_in_one_wallet);
-        }
+        market.pieces_in_one_wallet = new_pieces_in_one_wallet;
 
         Ok(())
     }

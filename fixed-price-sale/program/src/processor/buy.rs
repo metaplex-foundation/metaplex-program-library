@@ -74,7 +74,7 @@ impl<'info> Buy<'info> {
 
         // Check, that user not reach buy limit
         if let Some(pieces_in_one_wallet) = market.pieces_in_one_wallet {
-            if trade_history.already_bought == pieces_in_one_wallet {
+            if trade_history.already_bought >= pieces_in_one_wallet {
                 return Err(ErrorCode::UserReachBuyLimit.into());
             }
         }
