@@ -82,7 +82,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
     #[account(1, name="mint", desc="Mint of token asset")]
     #[account(2, signer, name="mint_authority", desc="Mint authority")]
-    #[account(3, signer, name="payer", desc="payer")]
+    #[account(3, signer, writable, name="payer", desc="payer")]
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
@@ -204,7 +204,7 @@ pub enum MetadataInstruction {
     #[account(1, writable, name="mint", desc="Metadata mint")]
     #[account(2, signer, name="update_authority", desc="Update authority")]
     #[account(3, signer, name="mint_authority", desc="Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY")]
-    #[account(4, signer, name="payer", desc="payer")]
+    #[account(4, signer, writable, name="payer", desc="payer")]
     #[account(5, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
     #[account(7, name="system_program", desc="System program")]
@@ -219,7 +219,7 @@ pub enum MetadataInstruction {
     #[account(3, writable, name="new_mint", desc="Mint of new token - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY")]
     #[account(4, writable, name="edition_mark_pda", desc="Edition pda to mark creation - will be checked for pre-existence. (pda of ['metadata', program id, master metadata mint id, 'edition', edition_number]) where edition_number is NOT the edition number you pass in args but actually edition_number = floor(edition/EDITION_MARKER_BIT_SIZE).")]
     #[account(5, signer, name="new_mint_authority", desc="Mint authority of new mint")]
-    #[account(6, signer, name="payer", desc="payer")]
+    #[account(6, signer, writable, name="payer", desc="payer")]
     #[account(7, signer, name="token_account_owner", desc="owner of token account containing master token (#8)")]
     #[account(8, name="token_account", desc="token account containing token from master metadata mint")]
     #[account(9, name="new_metadata_update_authority", desc="Update authority info for new metadata")]
@@ -244,7 +244,7 @@ pub enum MetadataInstruction {
     #[account(3, writable, name="new_mint", desc="Mint of new token - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY")]
     #[account(4, writable, name="edition_mark_pda", desc="Edition pda to mark creation - will be checked for pre-existence. (pda of ['metadata', program id, master metadata mint id, 'edition', edition_number]) where edition_number is NOT the edition number you pass in args but actually edition_number = floor(edition/EDITION_MARKER_BIT_SIZE).")]
     #[account(5, signer, name="new_mint_authority", desc="Mint authority of new mint")]
-    #[account(6, signer, name="payer", desc="payer")]
+    #[account(6, signer, writable, name="payer", desc="payer")]
     #[account(7, signer, name="vault_authority", desc="Vault authority")]
     #[account(8, name="safety_deposit_store", desc="Safety deposit token store account")]
     #[account(9, name="safety_deposit_box", desc="Safety deposit box")]
@@ -271,7 +271,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
     #[account(1, name="mint", desc="Mint of token asset")]
     #[account(2, signer, name="mint_authority", desc="Mint authority")]
-    #[account(3, signer, name="payer", desc="payer")]
+    #[account(3, signer, writable, name="payer", desc="payer")]
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
@@ -284,7 +284,7 @@ pub enum MetadataInstruction {
     #[account(1, writable, name="mint", desc="Metadata mint")]
     #[account(2, signer, name="update_authority", desc="Update authority")]
     #[account(3, signer, name="mint_authority", desc="Mint authority on the metadata's mint - THIS WILL TRANSFER AUTHORITY AWAY FROM THIS KEY")]
-    #[account(4, signer, name="payer", desc="payer")]
+    #[account(4, signer, writable, name="payer", desc="payer")]
     #[account(5, writable, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
     #[account(7, name="system_program", desc="System program")]
@@ -293,8 +293,8 @@ pub enum MetadataInstruction {
 
     /// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, name="collection_authority", desc="Collection Update authority")]
-    #[account(2, signer, name="payer", desc="payer")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, signer, writable, name="payer", desc="payer")]
     #[account(3, name="collection_mint", desc="Mint of the Collection")]
     #[account(4, name="collection", desc="Metadata Account of the Collection")]
     #[account(5, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
@@ -305,7 +305,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, writable, name="token_account", desc="Token Account Of NFT")]
     #[account(2, writable, name="mint", desc="Mint of the Metadata")]
-    #[account(3, signer, name="use_authority", desc="A Use Authority / Can be the current Owner of the NFT")]
+    #[account(3, signer, writable, name="use_authority", desc="A Use Authority / Can be the current Owner of the NFT")]
     #[account(4, name="owner", desc="Owner")]
     #[account(5, name="token_program", desc="Token program")]
     #[account(6, name="ata_program", desc="Associated Token program")]
@@ -317,8 +317,8 @@ pub enum MetadataInstruction {
 
     /// Approve another account to call [utilize] on this NFT.
     #[account(0, writable, name="use_authority_record", desc="Use Authority Record PDA")]
-    #[account(1, signer, name="owner", desc="Owner")]
-    #[account(2, signer, name="payer", desc="Payer")]
+    #[account(1, signer, writable, name="owner", desc="Owner")]
+    #[account(2, signer, writable, name="payer", desc="Payer")]
     #[account(3, name="user", desc="A Use Authority")]
     #[account(4, writable, name="owner_token_account", desc="Owned Token Account Of Mint")]
     #[account(5, name="metadata", desc="Metadata account")]
@@ -331,7 +331,7 @@ pub enum MetadataInstruction {
 
     /// Revoke account to call [utilize] on this NFT.
     #[account(0, writable, name="use_authority_record", desc="Use Authority Record PDA")]
-    #[account(1, signer, name="owner", desc="Owner")]
+    #[account(1, signer, writable, name="owner", desc="Owner")]
     #[account(2, name="user", desc="A Use Authority")]
     #[account(3, writable, name="owner_token_account", desc="Owned Token Account Of Mint")]
     #[account(4, name="mint", desc="Mint of Metadata")]
@@ -343,7 +343,7 @@ pub enum MetadataInstruction {
 
     /// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, name="collection_authority", desc="Collection Authority")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Authority")]
     #[account(2, name="collection_mint", desc="Mint of the Collection")]
     #[account(3, name="collection", desc="Metadata Account of the Collection")]
     #[account(4, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
@@ -353,8 +353,8 @@ pub enum MetadataInstruction {
     /// Approve another account to verify NFTs belonging to a collection, [verify_collection] on the collection NFT.
     #[account(0, writable, name="collection_authority_record", desc="Collection Authority Record PDA")]
     #[account(1, name="new_collection_authority", desc="A Collection Authority")]
-    #[account(2, signer, name="update_authority", desc="Update Authority of Collection NFT")]
-    #[account(3, signer, name="payer", desc="Payer")]
+    #[account(2, signer, writable, name="update_authority", desc="Update Authority of Collection NFT")]
+    #[account(3, signer, writable, name="payer", desc="Payer")]
     #[account(4, name="metadata", desc="Collection Metadata account")]
     #[account(5, name="mint", desc="Mint of Collection Metadata")]
     #[account(6, name="system_program", desc="System program")]
@@ -363,7 +363,7 @@ pub enum MetadataInstruction {
 
     /// Revoke account to call [verify_collection] on this NFT.
     #[account(0, writable, name="collection_authority_record", desc="Collection Authority Record PDA")]
-    #[account(1, signer, name="update_authority", desc="Update Authority of Collection NFT")]
+    #[account(1, signer, writable, name="update_authority", desc="Update Authority of Collection NFT")]
     #[account(2, name="metadata", desc="Metadata account")]
     #[account(3, name="mint", desc="Mint of Metadata")]
     RevokeCollectionAuthority,
@@ -371,8 +371,8 @@ pub enum MetadataInstruction {
     /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
     /// with collection and [verify_collection] on the NFT/Collection in one instruction.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, name="collection_authority", desc="Collection Update authority")]
-    #[account(2, signer, name="payer", desc="Payer")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, signer, writable, name="payer", desc="Payer")]
     #[account(3, name="update_authority", desc="Update Authority of Collection NFT and NFT")]
     #[account(4, name="collection_mint", desc="Mint of the Collection")]
     #[account(5, name="collection", desc="Metadata Account of the Collection")]
@@ -381,7 +381,7 @@ pub enum MetadataInstruction {
     SetAndVerifyCollection,
 
     /// Allow freezing of an NFT if this user is the delegate of the NFT.
-    #[account(0, signer, name="delegate", desc="Delegate")]
+    #[account(0, signer, writable, name="delegate", desc="Delegate")]
     #[account(1, writable, name="token_account", desc="Token account to freeze")]
     #[account(2, name="edition", desc="Edition")]
     #[account(3, name="mint", desc="Token mint")]
@@ -389,7 +389,7 @@ pub enum MetadataInstruction {
     FreezeDelegatedAccount,
 
     /// Allow thawing of an NFT if this user is the delegate of the NFT.
-    #[account(0, signer, name="delegate", desc="Delegate")]
+    #[account(0, signer, writable, name="delegate", desc="Delegate")]
     #[account(1, writable, name="token_account", desc="Token account to thaw")]
     #[account(2, name="edition", desc="Edition")]
     #[account(3, name="mint", desc="Token mint")]
