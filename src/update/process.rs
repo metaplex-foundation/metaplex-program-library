@@ -161,7 +161,7 @@ fn create_candy_machine_data(
         price: price_as_lamports(config.price),
         symbol: candy_machine.symbol,
         seller_fee_basis_points: candy_machine.seller_fee_basis_points,
-        max_supply: config.number,
+        max_supply: 0,
         is_mutable: config.is_mutable,
         retain_authority: config.retain_authority,
         go_live_date,
