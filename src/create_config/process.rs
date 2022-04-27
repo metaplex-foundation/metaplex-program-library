@@ -14,8 +14,9 @@ use url::Url;
 
 use crate::common::{CANDY_EMOJI, CANDY_MACHINE_V2, CONFETTI_EMOJI};
 use crate::config::{
-    go_live_date_as_timestamp, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
-    HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
+    go_live_date_rfc2822_as_timestamp, go_live_date_rfc3339_as_timestamp, ConfigData, Creator,
+    EndSettingType, EndSettings, GatekeeperConfig, GoLiveDateFormat, HiddenSettings, UploadMethod,
+    WhitelistMintMode, WhitelistMintSettings,
 };
 use crate::setup::{setup_client, sugar_setup};
 use crate::utils::{check_spl_token, check_spl_token_account};
@@ -72,13 +73,22 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         }
     };
 
-    let date_validator = |input: &String| -> Result<(), String> {
-        if go_live_date_as_timestamp(input).is_err() {
+    let rfc3339_date_validator = |input: &String| -> Result<(), String> {
+        if go_live_date_rfc3339_as_timestamp(input).is_err() {
             Err(format!("Couldn't parse input of '{}' to a date.", input))
         } else {
             Ok(())
         }
     };
+
+    let rfc2822_date_validator = |input: &String| -> Result<(), String> {
+        if go_live_date_rfc2822_as_timestamp(input).is_err() {
+            Err(format!("Couldn't parse input of '{}' to a date.", input))
+        } else {
+            Ok(())
+        }
+    };
+
     let url_validator = |input: &String| -> Result<(), String> {
         if Url::parse(input).is_err() {
             Err(format!(
@@ -231,13 +241,36 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .expect("Failed to parse number into u16 that should have already been validated.")
     };
 
-    // go_live_date
-
-    config_data.go_live_date = Input::with_theme(&theme)
-        .with_prompt("What is your go live date? Enter it in RFC 3339 format, e.g., \"2022-02-25T13:00:00Z\" for 1:00 PM UTC on Feburary 25, 2022.")
-        .validate_with(date_validator)
+    let go_live_date_options = vec![
+        "RFC 3339 format, e.g., \"2022-02-25T13:00:00Z\" for 1:00 PM UTC on Feburary 25, 2022.",
+        "RFC 2822 format, e.g., \"Fri, 14 Jul 2022 02:40:00 -0400\" for 2:40 AM EST on Friday, July 14, 2022.",
+        "Current date and time."
+    ];
+    let date_format = match Select::with_theme(&theme)
+        .with_prompt("What is the format of your go live date?")
+        .items(&go_live_date_options)
+        .default(0)
         .interact()
-        .unwrap();
+        .unwrap()
+    {
+        0 => GoLiveDateFormat::RFC3339,
+        1 => GoLiveDateFormat::RFC2822,
+        _ => GoLiveDateFormat::Now,
+    };
+
+    config_data.go_live_date = match date_format {
+        GoLiveDateFormat::RFC3339 => Input::with_theme(&theme)
+            .with_prompt("Enter your date in RFC3339 format.")
+            .validate_with(rfc3339_date_validator)
+            .interact()
+            .unwrap(),
+        GoLiveDateFormat::RFC2822 => Input::with_theme(&theme)
+            .with_prompt("Enter your date in RFC2822 format.")
+            .validate_with(rfc2822_date_validator)
+            .interact()
+            .unwrap(),
+        GoLiveDateFormat::Now => String::from("now"),
+    };
 
     // creators
 
@@ -471,10 +504,10 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             EndSettingType::Date => {
                 let date = Input::with_theme(&theme)
                     .with_prompt("What is the date to stop the mint? Enter it in RFC 3339 format, e.g., \"2022-02-25T13:00:00Z\" for 1:00 PM UTC on Feburary 25, 2022.")
-                    .validate_with(date_validator)
+                    .validate_with(rfc3339_date_validator)
                     .interact()
                     .unwrap();
-                go_live_date_as_timestamp(&date).expect("Failed to parse string into timestamp that should have already been validated.") as u64
+                    go_live_date_rfc3339_as_timestamp(&date).expect("Failed to parse string into timestamp that should have already been validated.") as u64
             }
         };
 
