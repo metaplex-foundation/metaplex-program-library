@@ -69,6 +69,23 @@ pub mod fixed_price_sale {
         new_description: Option<String>,
         mutable: Option<bool>,
         new_price: Option<u64>,
+        new_pieces_in_one_wallet: Option<u64>,
+    ) -> Result<()> {
+        ctx.accounts.process(
+            new_name,
+            new_description,
+            mutable,
+            new_price,
+            new_pieces_in_one_wallet,
+        )
+    }
+
+    pub fn change_market_v2<'info>(
+        ctx: Context<'_, '_, '_, 'info, ChangeMarketV2<'info>>,
+        new_name: Option<String>,
+        new_description: Option<String>,
+        mutable: Option<bool>,
+        new_price: Option<u64>,
         pieces_mode: Option<PiecesMode>,
     ) -> Result<()> {
         ctx.accounts
@@ -316,9 +333,19 @@ pub struct ResumeMarket<'info> {
     clock: Sysvar<'info, Clock>,
 }
 
+/// #[deprecated(since="0.1.0", note="Instruction args can mislead and broke logic. Please use `ChangeMarketV2` instead.")]
+#[derive(Accounts)]
+#[instruction(new_name: Option<String>, new_description: Option<String>, mutable: Option<bool>, new_price: Option<u64>, new_pieces_in_one_wallet: Option<u64>)]
+pub struct ChangeMarket<'info> {
+    #[account(mut, has_one=owner)]
+    market: Account<'info, Market>,
+    owner: Signer<'info>,
+    clock: Sysvar<'info, Clock>,
+}
+
 #[derive(Accounts)]
 #[instruction(new_name: Option<String>, new_description: Option<String>, mutable: Option<bool>, new_price: Option<u64>, pieces_mode: Option<PiecesMode>)]
-pub struct ChangeMarket<'info> {
+pub struct ChangeMarketV2<'info> {
     #[account(mut, has_one=owner)]
     market: Account<'info, Market>,
     owner: Signer<'info>,

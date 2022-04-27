@@ -169,7 +169,7 @@ mod change_market {
             new_description: Some(String::from("2")),
             mutable: None,
             new_price: None,
-            pieces_mode: None,
+            new_pieces_in_one_wallet: None,
         }
         .data();
 
@@ -381,7 +381,7 @@ mod change_market {
             new_description: Some(String::from("2")),
             mutable: None,
             new_price: None,
-            pieces_mode: None,
+            new_pieces_in_one_wallet: None,
         }
         .data();
 
@@ -563,7 +563,7 @@ mod change_market {
             new_description: Some(String::from("2")),
             mutable: None,
             new_price: None,
-            pieces_mode: None,
+            new_pieces_in_one_wallet: None,
         }
         .data();
 

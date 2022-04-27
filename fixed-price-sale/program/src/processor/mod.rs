@@ -1,5 +1,6 @@
 pub mod buy;
 pub mod change_market;
+pub mod change_market_v2;
 pub mod claim_resource;
 pub mod close_market;
 pub mod create_market;
