@@ -699,6 +699,34 @@ pub mod auction_house {
             ],
         )?;
 
+        // For native purchases, verify that the amount in escrow is sufficient to actually purchase the token.
+        // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
+        // The fee payer makes up the shortfall up to the amount of rent for an empty account.
+        if is_native {
+            let diff = rent_checked_sub(escrow_payment_account.to_account_info(), buyer_price)?;
+            if diff != buyer_price {
+                // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
+                let shortfall = std::cmp::min(
+                    diff.checked_sub(buyer_price)
+                        .ok_or(ErrorCode::NumericalOverflow)?,
+                    rent.minimum_balance(escrow_payment_account.data_len()),
+                );
+                invoke_signed(
+                    &system_instruction::transfer(
+                        &fee_payer.key,
+                        &escrow_payment_account.key,
+                        shortfall,
+                    ),
+                    &[
+                        fee_payer.to_account_info(),
+                        escrow_payment_account.to_account_info(),
+                        system_program.to_account_info(),
+                    ],
+                    &[&fee_payer_seeds],
+                )?;
+            }
+        }
+
         if metadata.data_is_empty() {
             return Err(ErrorCode::MetadataDoesntExist.into());
         }
