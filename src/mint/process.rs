@@ -86,12 +86,9 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
         ) {
             Ok(signature) => format!("{} {}", style("Signature:").bold(), signature),
             Err(err) => {
+                pb.abandon_with_message(format!("{}", style("Mint failed ").red().bold()));
                 error!("{:?}", err);
-                format!(
-                    "{} {:?}",
-                    style("Could not confirm transaction:").red().bold(),
-                    err
-                )
+                return Err(err);
             }
         };
 
@@ -106,6 +103,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
                 Arc::clone(&candy_machine_state),
             ) {
                 pb.abandon_with_message(format!("{}", style("Mint failed ").red().bold()));
+                error!("{:?}", err);
                 return Err(err);
             }
 
