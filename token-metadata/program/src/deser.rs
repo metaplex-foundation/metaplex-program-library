@@ -1,9 +1,9 @@
 use crate::state::{Collection, Data, Key, Metadata, TokenStandard, Uses};
-use borsh::BorshDeserialize;
-use solana_program::{msg, program_error::ProgramError, pubkey::Pubkey};
+use borsh::{maybestd::io::Error as BorshError, BorshDeserialize};
+use solana_program::{msg, pubkey::Pubkey};
 
 // Custom deserialization function to handle NFTs with corrupted data.
-pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, ProgramError> {
+pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Error> {
     // Metadata corruption shouldn't appear until after edition_nonce.
     let key: Key = BorshDeserialize::deserialize(buf)?;
     let update_authority: Pubkey = BorshDeserialize::deserialize(buf)?;
@@ -13,33 +13,25 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, ProgramError> {
     let is_mutable: bool = BorshDeserialize::deserialize(buf)?;
     let edition_nonce: Option<u8> = BorshDeserialize::deserialize(buf)?;
 
-    let token_standard: Option<TokenStandard> = match BorshDeserialize::deserialize(buf) {
-        Ok(token_standard) => Some(token_standard),
-        Err(_) => {
-            msg!("Corrupted metadata on token standard, setting to None");
-            None
-        }
-    };
+    let token_standard_res: Result<Option<TokenStandard>, BorshError> =
+        BorshDeserialize::deserialize(buf);
+    let collection_res: Result<Option<Collection>, BorshError> = BorshDeserialize::deserialize(buf);
+    let uses_res: Result<Option<Uses>, BorshError> = BorshDeserialize::deserialize(buf);
 
-    let collection: Option<Collection> = match BorshDeserialize::deserialize(buf) {
-        Ok(collection) => Some(collection),
-        Err(_) => {
-            msg!("Corrupted metadata on collection, setting to None");
-            None
-        }
-    };
-
-    let uses: Option<Uses> = match BorshDeserialize::deserialize(buf) {
-        Ok(uses) => Some(uses),
-        Err(_) => {
-            msg!("Corrupted metadata on uses, setting to None");
-            None
-        }
-    };
-
-    /*
-     Add deserizalition match statements for any future additions to the Metadata struct here.
+    /* We can have accidentally valid, but corrupted data, particularly on the Collection struct,
+    so to increase probability of catching errors If any of these deserializations fail, set all values to None.
     */
+    let (token_standard, collection, uses) =
+        if token_standard_res.is_err() || collection_res.is_err() || uses_res.is_err() {
+            msg!("Corrupted metadata discovered: setting values to None");
+            (None, None, None)
+        } else {
+            (
+                token_standard_res.unwrap(),
+                collection_res.unwrap(),
+                uses_res.unwrap(),
+            )
+        };
 
     let metadata = Metadata {
         key,

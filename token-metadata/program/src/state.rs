@@ -1,4 +1,4 @@
-use crate::{error::MetadataError, utils::try_from_slice_checked};
+use crate::{deser::meta_deser, error::MetadataError, utils::try_from_slice_checked};
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{
@@ -218,7 +218,7 @@ pub struct Collection {
 }
 
 #[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, PartialEq, ShankAccount)]
+#[derive(Clone, BorshSerialize, Debug, PartialEq, ShankAccount)]
 pub struct Metadata {
     pub key: Key,
     pub update_authority: Pubkey,
@@ -241,11 +241,21 @@ pub struct Metadata {
 impl Metadata {
     pub fn from_account_info(a: &AccountInfo) -> Result<Metadata, ProgramError> {
         let md: Metadata =
-            try_from_slice_checked(&a.data.borrow_mut(), Key::MetadataV1, MAX_METADATA_LEN)?;
+            meta_deser(&mut a.data.borrow_mut().as_ref())?;
 
         Ok(md)
     }
 }
+
+impl borsh::de::BorshDeserialize for Metadata
+    {
+        fn deserialize(
+            buf: &mut &[u8],
+        ) -> ::core::result::Result<Self, borsh::maybestd::io::Error> {
+            let md = meta_deser(buf)?;
+            Ok(md)
+        }
+    }
 
 pub trait MasterEdition {
     fn key(&self) -> Key;
