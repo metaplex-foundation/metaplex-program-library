@@ -55,7 +55,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     };
 
     let float_validator = |input: &String| -> Result<(), String> {
-        if input.parse::<f64>().is_err() {
+        if !input.is_empty() && input.parse::<f64>().is_err() {
             Err(format!(
                 "Couldn't parse price input of '{}' to a float.",
                 input
@@ -411,19 +411,22 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .with_prompt("Do you want to enable presale mint with your whitelist token?")
             .interact()?;
         let discount_price: Option<f64> = if presale {
-            Some(
-                Input::with_theme(&theme)
+            let price = Input::with_theme(&theme)
                     .with_prompt(
-                        "What is the discount price for the presale? Hit [ENTER] for no discount.",
+                        "What is the discount price for the presale? Hit [ENTER] to not set a discount price.",
                     )
+                    .allow_empty(true)
                     .validate_with(float_validator)
                     .interact()
-                    .unwrap()
-                    .parse::<f64>()
-                    .expect(
-                        "Failed to parse string into f64 that should have already been validated.",
-                    ),
-            )
+                    .unwrap();
+            if price.is_empty() {
+                // the discount price can be set to null
+                None
+            } else {
+                Some(price.parse::<f64>().expect(
+                    "Failed to parse string into f64 that should have already been validated.",
+                ))
+            }
         } else {
             None
         };
@@ -628,14 +631,10 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             }
         }
     } else {
-        println!("{}\n", style("Logging config to console:"));
+        println!("{}\n", style("Logging config to console:").dim());
         println!(
             "{}",
-            style(
-                serde_json::to_string_pretty(&config_data)
-                    .expect("Unable to convert config to JSON.")
-            )
-            .dim()
+            serde_json::to_string_pretty(&config_data).expect("Unable to convert config to JSON.")
         );
     }
 
