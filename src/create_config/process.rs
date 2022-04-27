@@ -65,7 +65,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         }
     };
     let number_validator = |input: &String| -> Result<(), String> {
-        if input.parse::<u64>().is_err() || input.parse::<u8>().is_err() {
+        if input.parse::<u64>().is_err() {
             Err(format!("Couldn't parse input of '{}' to a number.", input))
         } else {
             Ok(())
