@@ -42,8 +42,7 @@ pub fn assert_has_collection_authority(
             collection_authority_info.key,
             mint,
         )?;
-        let data = collection_authority_record
-            .try_borrow_data()?;
+        let data = collection_authority_record.try_borrow_data()?;
         if data.len() == 0 {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }

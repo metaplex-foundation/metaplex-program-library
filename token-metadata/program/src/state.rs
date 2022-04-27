@@ -25,8 +25,7 @@ pub const MAX_SYMBOL_LENGTH: usize = 10;
 
 pub const MAX_URI_LENGTH: usize = 200;
 
-pub const MAX_METADATA_LEN: usize = 
-1 //key 
+pub const MAX_METADATA_LEN: usize = 1 //key 
 + 32 // update auth pubkey
 + 32 // mint pubkey
 + MAX_DATA_SIZE 
@@ -76,7 +75,6 @@ pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
-
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
 pub enum Key {
@@ -89,7 +87,7 @@ pub enum Key {
     MasterEditionV2,
     EditionMarker,
     UseAuthorityRecord,
-    CollectionAuthorityRecord
+    CollectionAuthorityRecord,
 }
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -148,64 +146,75 @@ pub enum UseMethod {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub struct Uses { // 17 bytes + Option byte
+pub struct Uses {
+    // 17 bytes + Option byte
     pub use_method: UseMethod, //1
-    pub remaining: u64, //8
-    pub total: u64, //8
+    pub remaining: u64,        //8
+    pub total: u64,            //8
 }
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum TokenStandard {
-    NonFungible,  // This is a master edition
-    FungibleAsset, // A token with metadata that can also have attrributes
-    Fungible,     // A token with simple metadata
-    NonFungibleEdition,      // This is a limited edition
+    NonFungible,        // This is a master edition
+    FungibleAsset,      // A token with metadata that can also have attrributes
+    Fungible,           // A token with simple metadata
+    NonFungibleEdition, // This is a limited edition
 }
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct UseAuthorityRecord {
-    pub key: Key, //1
+    pub key: Key,          //1
     pub allowed_uses: u64, //8
-    pub bump: u8
+    pub bump: u8,
 }
 
 impl UseAuthorityRecord {
     pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
-        let ua: UseAuthorityRecord =
-            try_from_slice_checked(&a.data.borrow_mut(), Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+        let ua: UseAuthorityRecord = try_from_slice_checked(
+            &a.data.borrow_mut(),
+            Key::UseAuthorityRecord,
+            USE_AUTHORITY_RECORD_SIZE,
+        )?;
         Ok(ua)
     }
 
     pub fn from_bytes(b: &[u8]) -> Result<UseAuthorityRecord, ProgramError> {
-        let ua: UseAuthorityRecord = try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+        let ua: UseAuthorityRecord =
+            try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
         Ok(ua)
     }
 
     pub fn bump_empty(&self) -> bool {
-       return self.bump == 0 && self.key == Key::UseAuthorityRecord;
+        return self.bump == 0 && self.key == Key::UseAuthorityRecord;
     }
 }
-
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct CollectionAuthorityRecord {
     pub key: Key, //1
-    pub bump: u8 //1
+    pub bump: u8, //1
 }
 
 impl CollectionAuthorityRecord {
     pub fn from_account_info(a: &AccountInfo) -> Result<CollectionAuthorityRecord, ProgramError> {
-        let ua: CollectionAuthorityRecord =
-            try_from_slice_checked(&a.data.borrow_mut(), Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
+        let ua: CollectionAuthorityRecord = try_from_slice_checked(
+            &a.data.borrow_mut(),
+            Key::CollectionAuthorityRecord,
+            COLLECTION_AUTHORITY_RECORD_SIZE,
+        )?;
 
         Ok(ua)
     }
 
     pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
-        let ca: CollectionAuthorityRecord = try_from_slice_checked(b, Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
+        let ca: CollectionAuthorityRecord = try_from_slice_checked(
+            b,
+            Key::CollectionAuthorityRecord,
+            COLLECTION_AUTHORITY_RECORD_SIZE,
+        )?;
         Ok(ca)
     }
 }
@@ -240,22 +249,18 @@ pub struct Metadata {
 
 impl Metadata {
     pub fn from_account_info(a: &AccountInfo) -> Result<Metadata, ProgramError> {
-        let md: Metadata =
-            meta_deser(&mut a.data.borrow_mut().as_ref())?;
+        let md: Metadata = meta_deser(&mut a.data.borrow_mut().as_ref())?;
 
         Ok(md)
     }
 }
 
-impl borsh::de::BorshDeserialize for Metadata
-    {
-        fn deserialize(
-            buf: &mut &[u8],
-        ) -> ::core::result::Result<Self, borsh::maybestd::io::Error> {
-            let md = meta_deser(buf)?;
-            Ok(md)
-        }
+impl borsh::de::BorshDeserialize for Metadata {
+    fn deserialize(buf: &mut &[u8]) -> ::core::result::Result<Self, borsh::maybestd::io::Error> {
+        let md = meta_deser(buf)?;
+        Ok(md)
     }
+}
 
 pub trait MasterEdition {
     fn key(&self) -> Key;
