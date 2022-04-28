@@ -3,7 +3,17 @@ use aws_sdk_s3::{types::ByteStream, Client};
 use bs58;
 use console::style;
 use futures::future::select_all;
-use std::{cmp, collections::HashSet, ffi::OsStr, fs, path::Path, sync::Arc};
+use std::{
+    cmp,
+    collections::HashSet,
+    ffi::OsStr,
+    fs,
+    path::Path,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 
 use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*};
 
@@ -13,7 +23,6 @@ struct ObjectInfo {
     media_link: String,
     data_type: DataType,
     content_type: String,
-    aws_client: Arc<Client>,
     bucket: String,
 }
 
@@ -39,7 +48,7 @@ impl AWSHandler {
     }
 
     /// Send an object to AWS and wait for a response.
-    async fn send_to_aws(info: ObjectInfo) -> Result<(String, String)> {
+    async fn send_to_aws(aws_client: Arc<Client>, info: ObjectInfo) -> Result<(String, String)> {
         let data = match info.data_type {
             DataType::Media => fs::read(&info.file_path)?,
             DataType::Metadata => {
@@ -51,7 +60,7 @@ impl AWSHandler {
 
         let key = bs58::encode(&info.file_path).into_string();
 
-        info.aws_client
+        aws_client
             .put_object()
             .bucket(info.bucket)
             .key(&key)
@@ -85,6 +94,7 @@ impl UploadHandler for AWSHandler {
         cache: &mut Cache,
         indices: &[usize],
         data_type: DataType,
+        handler: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>> {
         let mut extension = HashSet::with_capacity(1);
         let mut paths = Vec::new();
@@ -151,7 +161,6 @@ impl UploadHandler for AWSHandler {
                 media_link: cache_item.media_link.clone(),
                 data_type: data_type.clone(),
                 content_type: content_type.clone(),
-                aws_client: self.client.clone(),
                 bucket: self.bucket.clone(),
             });
         }
@@ -159,14 +168,15 @@ impl UploadHandler for AWSHandler {
         let mut handles = Vec::new();
 
         for object in objects.drain(0..cmp::min(objects.len(), PARALLEL_LIMIT)) {
+            let aws_client = self.client.clone();
             handles.push(tokio::spawn(async move {
-                AWSHandler::send_to_aws(object).await
+                AWSHandler::send_to_aws(aws_client, object).await
             }));
         }
 
         let mut errors = Vec::new();
 
-        while !handles.is_empty() {
+        while handler.load(Ordering::SeqCst) && !handles.is_empty() {
             match select_all(handles).await {
                 (Ok(res), _index, remaining) => {
                     // independently if the upload was successful or not
@@ -183,8 +193,6 @@ impl UploadHandler for AWSHandler {
                             DataType::Media => item.media_link = link,
                             DataType::Metadata => item.metadata_link = link,
                         }
-                        // saves the progress to the cache file
-                        cache.sync_file()?;
                         // updates the progress bar
                         pb.inc(1);
                     } else {
@@ -208,9 +216,13 @@ impl UploadHandler for AWSHandler {
             if !objects.is_empty() {
                 // if we are half way through, let spawn more transactions
                 if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
+                    // syncs cache (checkpoint)
+                    cache.sync_file()?;
+
                     for object in objects.drain(0..cmp::min(objects.len(), PARALLEL_LIMIT / 2)) {
+                        let aws_client = self.client.clone();
                         handles.push(tokio::spawn(async move {
-                            AWSHandler::send_to_aws(object).await
+                            AWSHandler::send_to_aws(aws_client, object).await
                         }));
                     }
                 }
@@ -219,9 +231,17 @@ impl UploadHandler for AWSHandler {
 
         if !errors.is_empty() {
             pb.abandon_with_message(format!("{}", style("Upload failed ").red().bold()));
+        } else if !objects.is_empty() {
+            pb.abandon_with_message(format!("{}", style("Upload aborted ").red().bold()));
+            return Err(
+                UploadError::SendDataFailed("Not all files were uploaded.".to_string()).into(),
+            );
         } else {
             pb.finish_with_message(format!("{}", style("Upload successful ").green().bold()));
         }
+
+        // makes sure the cache file is updated
+        cache.sync_file()?;
 
         Ok(errors)
     }

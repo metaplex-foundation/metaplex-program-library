@@ -1,6 +1,13 @@
 use async_trait::async_trait;
 use console::style;
-use std::collections::HashSet;
+use ctrlc;
+use std::{
+    collections::HashSet,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 
 use crate::cache::{load_cache, Cache};
 use crate::common::*;
@@ -30,6 +37,7 @@ pub trait UploadHandler {
         cache: &mut Cache,
         indices: &[usize],
         data_type: DataType,
+        handler: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>>;
 }
 
@@ -198,6 +206,14 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             }
         );
 
+        let running = Arc::new(AtomicBool::new(true));
+        let r = running.clone();
+
+        ctrlc::set_handler(move || {
+            r.store(false, Ordering::SeqCst);
+        })
+        .expect("Error setting Ctrl-C handler");
+
         if !indices.0.is_empty() {
             errors.extend(
                 handler
@@ -207,6 +223,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                         &mut cache,
                         &indices.0,
                         DataType::Media,
+                        running.clone(),
                     )
                     .await?,
             );
@@ -245,6 +262,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                         &mut cache,
                         &indices.1,
                         DataType::Metadata,
+                        running,
                     )
                     .await?,
             );
@@ -255,6 +273,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     // sanity check
 
+    cache.items.0.sort_keys();
     cache.sync_file()?;
 
     let mut count = 0;
@@ -290,7 +309,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             }
 
             for u in unique {
-                message.push_str("\n\t• ");
+                message.push_str(&style("\n=> ").dim().to_string());
                 message.push_str(&u);
             }
 

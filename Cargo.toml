@@ -21,6 +21,7 @@ bundlr-sdk = {version = "0.1.0", features = [ "solana"] }
 chrono = "0.4.19"
 clap = { version = "3.0.0", features = ["derive", "cargo"] }
 console = "0.15.0"
+ctrlc = "3.2.2"
 data-encoding = "2.3.2"
 futures = "0.3.19"
 glob = "0.3.0"
