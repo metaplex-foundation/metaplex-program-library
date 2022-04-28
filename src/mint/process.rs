@@ -33,20 +33,27 @@ pub struct MintArgs {
     pub rpc_url: Option<String>,
     pub cache: String,
     pub number: Option<u64>,
+    pub candy_machine: Option<String>,
 }
 
 pub fn process_mint(args: MintArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let cache = load_cache(&args.cache, false)?;
     let client = Arc::new(setup_client(&sugar_config)?);
 
-    let candy_machine_id = match Pubkey::from_str(&cache.program.candy_machine) {
-        Ok(candy_machine_id) => candy_machine_id,
+    // the candy machine id specified takes precedence over the one from the cache
+
+    let candy_machine_id = match args.candy_machine {
+        Some(candy_machine_id) => candy_machine_id,
+        None => {
+            let cache = load_cache(&args.cache, false)?;
+            cache.program.candy_machine
+        }
+    };
+
+    let candy_pubkey = match Pubkey::from_str(&candy_machine_id) {
+        Ok(candy_pubkey) => candy_pubkey,
         Err(_) => {
-            let error = anyhow!(
-                "Failed to parse candy machine id: {}",
-                cache.program.candy_machine
-            );
+            let error = anyhow!("Failed to parse candy machine id: {}", candy_machine_id);
             error!("{:?}", error);
             return Err(error);
         }
@@ -59,7 +66,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
     );
     println!("Candy machine ID: {}", &candy_machine_id);
 
-    let candy_machine_state = Arc::new(get_candy_machine_state(&sugar_config, &candy_machine_id)?);
+    let candy_machine_state = Arc::new(get_candy_machine_state(&sugar_config, &candy_pubkey)?);
     let number = args.number.unwrap_or(1);
     let available = candy_machine_state.data.items_available - candy_machine_state.items_redeemed;
 
@@ -81,7 +88,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
 
         let result = match mint(
             Arc::clone(&client),
-            candy_machine_id,
+            candy_pubkey,
             Arc::clone(&candy_machine_state),
         ) {
             Ok(signature) => format!("{} {}", style("Signature:").bold(), signature),
@@ -99,7 +106,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
         for _i in 0..number {
             if let Err(err) = mint(
                 Arc::clone(&client),
-                candy_machine_id,
+                candy_pubkey,
                 Arc::clone(&candy_machine_state),
             ) {
                 pb.abandon_with_message(format!("{}", style("Mint failed ").red().bold()));

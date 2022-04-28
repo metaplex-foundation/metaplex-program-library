@@ -20,27 +20,34 @@ pub struct UpdateArgs {
     pub cache: String,
     pub new_authority: Option<String>,
     pub config: String,
+    pub candy_machine: Option<String>,
 }
 
 pub fn process_update(args: UpdateArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let cache = load_cache(&args.cache, false)?;
     let client = setup_client(&sugar_config)?;
     let config_data = get_config_data(&args.config)?;
 
-    let candy_machine_id = match Pubkey::from_str(&cache.program.candy_machine) {
-        Ok(candy_machine_id) => candy_machine_id,
-        Err(_) => {
-            error!(
-                "Failed to parse candy_machine_id: {}",
-                &cache.program.candy_machine
-            );
-            std::process::exit(1);
+    // the candy machine id specified takes precedence over the one from the cache
+
+    let candy_machine_id = match args.candy_machine {
+        Some(candy_machine_id) => candy_machine_id,
+        None => {
+            let cache = load_cache(&args.cache, false)?;
+            cache.program.candy_machine
         }
     };
 
-    let candy_machine_state = get_candy_machine_state(&sugar_config, &candy_machine_id)?;
+    let candy_pubkey = match Pubkey::from_str(&candy_machine_id) {
+        Ok(candy_pubkey) => candy_pubkey,
+        Err(_) => {
+            let error = anyhow!("Failed to parse candy machine id: {}", candy_machine_id);
+            error!("{:?}", error);
+            return Err(error);
+        }
+    };
 
+    let candy_machine_state = get_candy_machine_state(&sugar_config, &candy_pubkey)?;
     let candy_machine_data = create_candy_machine_data(&config_data, candy_machine_state.data)?;
 
     let mut remaining_accounts: Vec<AccountMeta> = Vec::new();
@@ -93,7 +100,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
     let mut builder = program
         .request()
         .accounts(nft_accounts::UpdateCandyMachine {
-            candy_machine: candy_machine_id,
+            candy_machine: candy_pubkey,
             authority: program.payer(),
             wallet: treasury_account,
         })
@@ -108,7 +115,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
     }
 
     let sig = builder.send()?;
-    let message = format!("Candy machine updated! TxId: {sig}");
+    let message = format!("Candy machine updated.\nSignature: {sig}");
     info!("{message}");
     println!("{message}");
 
@@ -118,7 +125,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
         let builder = program
             .request()
             .accounts(nft_accounts::UpdateCandyMachine {
-                candy_machine: candy_machine_id,
+                candy_machine: candy_pubkey,
                 authority: program.payer(),
                 wallet: treasury_account,
             })
@@ -127,7 +134,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
             });
 
         let sig = builder.send()?;
-        let message = format!("Candy machine update authority updated! TxId: {sig}");
+        let message = format!("Candy machine update authority updated.\nSignature: {sig}");
         info!("{message}");
         println!("{message}");
     }
