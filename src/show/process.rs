@@ -175,7 +175,7 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
             ":   ",
             "discount price",
             if let Some(value) = whitelist_settings.discount_price {
-                format!("𑗏{} ({})", value as f64 / LAMPORTS_PER_SOL as f64, value)
+                format!("◎ {} ({})", value as f64 / LAMPORTS_PER_SOL as f64, value)
             } else {
                 "none".to_string()
             },
