@@ -382,7 +382,6 @@ pub enum MetadataError {
 
     #[error("Invalid User")]
     InvalidUser,
-
 }
 
 impl PrintProgramError for MetadataError {

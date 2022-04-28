@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::state::{UseAuthorityRecord, UseMethod, Uses};
 

@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::state::{UseMethod, Uses};
 use num_traits::FromPrimitive;
@@ -71,7 +71,11 @@ mod uses {
             context.last_blockhash,
         );
 
-        let err = context.banks_client.process_transaction(tx).await.unwrap_err();
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
         assert_custom_error!(err, MetadataError::InvalidUser);
         let metadata = test_metadata.get_data(&mut context).await;
         let metadata_uses = metadata.uses.unwrap();
