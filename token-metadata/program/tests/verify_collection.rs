@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::pda::find_collection_authority_account;
 use mpl_token_metadata::state::Collection;
@@ -20,7 +20,7 @@ use solana_sdk::{
 use utils::*;
 mod verify_collection {
 
-    use mpl_token_metadata::state::{COLLECTION_AUTHORITY_RECORD_SIZE, CollectionAuthorityRecord};
+    use mpl_token_metadata::state::{CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE};
     use solana_program::borsh::try_from_slice_unchecked;
     use solana_sdk::transaction::Transaction;
 
@@ -142,7 +142,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
-                None
+                None,
             )
             .await
             .unwrap();
@@ -164,7 +164,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
-                None
+                None,
             )
             .await
             .unwrap();
@@ -777,7 +777,7 @@ mod verify_collection {
                 false,
                 None,
                 None,
-                None
+                None,
             )
             .await
             .unwrap();
@@ -792,7 +792,18 @@ mod verify_collection {
         let uri = "uri".to_string();
         let test_metadata = Metadata::new();
         test_metadata
-            .create_v2(&mut context, name, symbol, uri, None, 10, false, None, None, None)
+            .create_v2(
+                &mut context,
+                name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
             .await
             .unwrap();
 
@@ -860,7 +871,6 @@ mod verify_collection {
             .unwrap();
         let metadata_after_unverify = test_metadata.get_data(&mut context).await;
         assert_eq!(metadata_after_unverify.collection.unwrap().verified, false);
-        
     }
 
     #[tokio::test]
@@ -946,7 +956,12 @@ mod verify_collection {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let account_before = context.banks_client.get_account(record).await.unwrap().unwrap();
+        let account_before = context
+            .banks_client
+            .get_account(record)
+            .await
+            .unwrap()
+            .unwrap();
         assert_eq!(account_before.data.len(), COLLECTION_AUTHORITY_RECORD_SIZE);
 
         let ixrevoke = mpl_token_metadata::instruction::revoke_collection_authority(
@@ -971,7 +986,12 @@ mod verify_collection {
             .await
             .unwrap();
 
-        let account_after_none = context.banks_client.get_account(record).await.unwrap().is_none();
+        let account_after_none = context
+            .banks_client
+            .get_account(record)
+            .await
+            .unwrap()
+            .is_none();
         assert_eq!(account_after_none, true);
 
         let err = test_metadata

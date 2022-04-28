@@ -256,7 +256,7 @@ pub fn process_update_metadata_accounts_v2(
 
     let metadata_account_info = next_account_info(account_info_iter)?;
     let update_authority_info = next_account_info(account_info_iter)?;
-    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+    let mut metadata = Metadata::from_account_info(&metadata_account_info)?;
 
     assert_owned_by(metadata_account_info, program_id)?;
     assert_update_authority_is_correct(&metadata, update_authority_info)?;
@@ -285,7 +285,11 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     if let Some(val) = primary_sale_happened {
+        // If received val is true, flip to true.
         if val {
+            metadata.primary_sale_happened = val
+        // If received value is false and primary_sale_happened is still false, keep the same.
+        } else if !val && !metadata.primary_sale_happened {
             metadata.primary_sale_happened = val
         } else {
             return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
@@ -293,7 +297,11 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     if let Some(val) = is_mutable {
+        // If received value is false, flip to false.
         if !val {
+            metadata.is_mutable = val
+        // If received value is true and is_mutable is still true, keep the same.
+        } else if val && metadata.is_mutable {
             metadata.is_mutable = val
         } else {
             return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
@@ -302,7 +310,11 @@ pub fn process_update_metadata_accounts_v2(
 
     puff_out_data_fields(&mut metadata);
 
-    metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
+    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
+    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
+    metadata_account_info_data[0..].fill(0);
+
+    metadata.serialize(&mut *metadata_account_info_data)?;
     Ok(())
 }
 

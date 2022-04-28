@@ -1,10 +1,10 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    state::{Collection, DataV2, Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{Collection, Creator, DataV2, Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
@@ -185,6 +185,70 @@ mod update_metadata_account_v2 {
     }
 
     #[tokio::test]
+    async fn cannot_flip_primary_sale_happened_from_true_to_false() {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+        let name = "Test".to_string();
+        let symbol = "TST".to_string();
+        let uri = "uri".to_string();
+
+        // Primary sale happened created as false by default.
+        test_metadata
+            .create(
+                &mut context,
+                name,
+                symbol.clone(),
+                uri.clone(),
+                None,
+                10,
+                true,
+            )
+            .await
+            .unwrap();
+
+        // Flip true.
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey().clone(),
+                None,
+                None,
+                Some(true),
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // Try to flip back to false; this should fail.
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey().clone(),
+                None,
+                None,
+                Some(false),
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+        let result = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        // We should not be able to make an immutable NFT mutable again.
+        assert_custom_error!(result, MetadataError::PrimarySaleCanOnlyBeFlippedToTrue);
+    }
+
+    #[tokio::test]
     async fn cannot_flip_is_mutable_from_false_to_true() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
@@ -313,4 +377,91 @@ mod update_metadata_account_v2 {
             MetadataError::CollectionCannotBeVerifiedInThisInstruction
         );
     }
-} 
+
+    #[tokio::test]
+    async fn extra_data_zeroed() {
+        let mut context = program_test().start_with_context().await;
+
+        /*
+            Create a metadata account with five creators.
+            Update it to have only one and ensure that all data after uses struct is zeroed out.
+        */
+
+        let creator1 = Keypair::new();
+        let creator2 = Keypair::new();
+        let creator3 = Keypair::new();
+        let creator4 = Keypair::new();
+
+        let creators = vec![
+            Creator {
+                address: creator1.pubkey(),
+                verified: false,
+                share: 20,
+            },
+            Creator {
+                address: creator2.pubkey(),
+                verified: false,
+                share: 20,
+            },
+            Creator {
+                address: creator3.pubkey(),
+                verified: false,
+                share: 20,
+            },
+            Creator {
+                address: creator4.pubkey(),
+                verified: false,
+                share: 20,
+            },
+            // Context key must be in array or we get an error.
+            Creator {
+                address: context.payer.pubkey(),
+                verified: false,
+                share: 20,
+            },
+        ];
+
+        let test_metadata = Metadata::new();
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                Some(creators),
+                10,
+                true,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        test_metadata
+            .update_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                Some(vec![Creator {
+                    address: creator1.pubkey(),
+                    verified: false,
+                    share: 100,
+                }]),
+                10,
+                true,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let data = get_account(&mut context, &test_metadata.pubkey).await.data;
+
+        let padding_index = 1 + 32 + 32 + 36 + 14 + 204 + 7 + 34 + 1 + 1 + 2 + 2 + 1 + 1;
+        let zeros_len = data.len() - padding_index;
+        let zeros = vec![0u8; zeros_len];
+        assert_eq!(data[padding_index..], zeros[..]);
+    }
+}
