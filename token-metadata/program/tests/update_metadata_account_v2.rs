@@ -130,7 +130,7 @@ mod update_metadata_account_v2 {
 
         let metadata = test_metadata.get_data(&mut context).await;
 
-        assert_eq!(metadata.data.name, puffed_updated_name,);
+        assert_eq!(metadata.data.name, puffed_updated_name);
         assert_eq!(metadata.data.symbol, puffed_symbol);
         assert_eq!(metadata.data.uri, puffed_uri);
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
@@ -147,12 +147,19 @@ mod update_metadata_account_v2 {
     async fn success_update_metadata_when_collection_is_verified() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
+        let name = "Test".to_string();
+        let symbol = "TST".to_string();
+        let uri = "uri".to_string();
+
+        let puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
+        let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
+
         test_metadata
             .create_v2(
                 &mut context,
-                "Test".to_string(),
-                "TST".to_string(),
-                "uri".to_string(),
+                name,
+                symbol.clone(),
+                uri.clone(),
                 None,
                 10,
                 true,
@@ -222,6 +229,9 @@ mod update_metadata_account_v2 {
             .await
             .unwrap();
 
+        let updated_name = "New Name".to_string();
+        let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
+
         let tx2 = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
                 id(),
@@ -229,9 +239,9 @@ mod update_metadata_account_v2 {
                 context.payer.pubkey().clone(),
                 None,
                 Some(DataV2 {
-                    name: "Test".to_string(),
-                    symbol: "TST".to_string(),
-                    uri: "uri".to_string(),
+                    name: updated_name,
+                    symbol: symbol.clone(),
+                    uri: uri.clone(),
                     creators: None,
                     seller_fee_basis_points: 10,
                     collection: Some(Collection {
@@ -241,7 +251,7 @@ mod update_metadata_account_v2 {
                     uses: None,
                 }),
                 None,
-                None,
+                Some(false),
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],
@@ -249,6 +259,24 @@ mod update_metadata_account_v2 {
         );
 
         context.banks_client.process_transaction(tx2).await.unwrap();
+
+        let metadata = test_metadata.get_data(&mut context).await;
+
+        assert_eq!(metadata.data.name, puffed_updated_name);
+        assert_eq!(metadata.data.symbol, puffed_symbol);
+        assert_eq!(metadata.data.uri, puffed_uri);
+        assert_eq!(metadata.data.seller_fee_basis_points, 10);
+        assert_eq!(metadata.data.creators, None);
+
+        assert_eq!(metadata.primary_sale_happened, false);
+        assert_eq!(metadata.is_mutable, false);
+        assert_eq!(metadata.mint, test_metadata.mint.pubkey());
+        assert_eq!(metadata.update_authority, context.payer.pubkey());
+        assert_eq!(metadata.key, Key::MetadataV1);
+        assert_eq!(
+            metadata.collection.unwrap().key,
+            test_collection.mint.pubkey()
+        );
     }
 
     #[tokio::test]
@@ -567,6 +595,7 @@ mod update_metadata_account_v2 {
             .await
             .unwrap();
 
+        let fake_collection_pubkey = collection_master_edition_account.pubkey;
         let tx2 = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
                 id(),
@@ -580,7 +609,7 @@ mod update_metadata_account_v2 {
                     creators: None,
                     seller_fee_basis_points: 10,
                     collection: Some(Collection {
-                        key: collection_master_edition_account.pubkey,
+                        key: fake_collection_pubkey,
                         verified: true,
                     }),
                     uses: None,
