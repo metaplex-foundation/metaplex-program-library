@@ -859,6 +859,13 @@ pub mod auction_house {
                 rent.to_account_info(),
                 &fee_payer_seeds,
             )?;
+        } else {
+            let data = buyer_receipt_token_account.try_borrow_data()?;
+            let token_account =
+                TokenAccount::try_deserialize(&mut data.as_ref())?;
+            if &token_account.owner != buyer.key {
+                return Err(ErrorCode::IncorrectOwner.into())
+            }
         }
 
         let buyer_rec_acct = assert_is_ata(&buyer_receipt_clone, &buyer.key(), &token_mint.key())?;
