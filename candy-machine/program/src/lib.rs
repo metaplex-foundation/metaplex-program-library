@@ -684,17 +684,21 @@ pub mod candy_machine {
             data[i] = new_data[i];
         }
 
-        let vec_start = CONFIG_ARRAY_START
-            + 4
-            + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE;
-        let as_bytes = (candy_machine
-            .data
-            .items_available
-            .checked_div(8)
-            .ok_or(ErrorCode::NumericalOverflowError)? as u32)
-            .to_le_bytes();
-        for i in 0..4 {
-            data[vec_start + i] = as_bytes[i]
+        // only if we are not using hidden settings we will have space for
+        // the config lines
+        if candy_machine.data.hidden_settings.is_none() {
+            let vec_start = CONFIG_ARRAY_START
+                + 4
+                + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE;
+            let as_bytes = (candy_machine
+                .data
+                .items_available
+                .checked_div(8)
+                .ok_or(ErrorCode::NumericalOverflowError)? as u32)
+                .to_le_bytes();
+            for i in 0..4 {
+                data[vec_start + i] = as_bytes[i]
+            }
         }
 
         Ok(())
