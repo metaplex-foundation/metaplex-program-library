@@ -1,5 +1,6 @@
 use anchor_lang::prelude::Pubkey;
 use anyhow::Result;
+use chrono::DateTime;
 use console::{style, Style};
 use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
@@ -482,11 +483,12 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                 .expect("Failed to parse number into u64 that should have already been validated."),
             EndSettingType::Date => {
                 let date = Input::with_theme(&theme)
-                    .with_prompt("What is the date to stop the mint? Enter it in one of these formats must be: RFC2822(Fri, 14 Jul 2022 02:40:00 -0400), RFC3339(2022-02-25T13:00:00Z), or UNIX timestamp.")
+                    .with_prompt("What is the date to stop the mint? Enter it this format, DD-MM-YYYY HH:MM:SS UTC-OFFSET")
                     .validate_with(date_validator)
                     .interact()
                     .unwrap();
-                    go_live_date_as_timestamp(&date).expect("Failed to parse string into timestamp that should have already been validated.") as u64
+                    let date_time = DateTime::parse_from_str(&date, "%d-%m-%Y %H:%M:%S %z")?;
+                    date_time.timestamp() as u64
             }
         };
 
