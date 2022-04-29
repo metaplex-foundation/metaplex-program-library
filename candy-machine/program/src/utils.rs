@@ -1,42 +1,46 @@
-use anchor_lang::prelude::{Signer, Sysvar};
-
-use {
-    crate::{CandyMachine, ErrorCode},
-    anchor_lang::{
-        prelude::{Account, AccountInfo, Clock, ProgramError, ProgramResult, Pubkey},
-        solana_program::{
-            program::invoke_signed,
-            program_pack::{IsInitialized, Pack},
-        },
-    },
-    spl_associated_token_account::get_associated_token_address,
+use anchor_lang::{
+    prelude::{Signer, Sysvar},
+    Result,
 };
 
-pub fn assert_initialized<T: Pack + IsInitialized>(
-    account_info: &AccountInfo,
-) -> Result<T, ProgramError> {
+use crate::{CandyError, CandyMachine};
+use anchor_lang::{
+    prelude::{Account, AccountInfo, Clock, ProgramError, Pubkey},
+    solana_program::{
+        program::invoke_signed,
+        program_pack::{IsInitialized, Pack},
+    },
+};
+use solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES};
+use spl_associated_token_account::get_associated_token_address;
+
+pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
     if !account.is_initialized() {
-        Err(ErrorCode::Uninitialized.into())
+        Err(CandyError::Uninitialized.into())
     } else {
         Ok(account)
     }
+}
+
+pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
+    sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
 }
 
 pub fn assert_valid_go_live<'info>(
     payer: &Signer<'info>,
     clock: &Sysvar<Clock>,
     candy_machine: &Account<'info, CandyMachine>,
-) -> ProgramResult {
+) -> Result<()> {
     match candy_machine.data.go_live_date {
         None => {
             if *payer.key != candy_machine.authority {
-                return Err(ErrorCode::CandyMachineNotLive.into());
+                return Err(CandyError::CandyMachineNotLive.into());
             }
         }
         Some(val) => {
             if clock.unix_timestamp < val && *payer.key != candy_machine.authority {
-                return Err(ErrorCode::CandyMachineNotLive.into());
+                return Err(CandyError::CandyMachineNotLive.into());
             }
         }
     }
@@ -44,9 +48,9 @@ pub fn assert_valid_go_live<'info>(
     Ok(())
 }
 
-pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> ProgramResult {
-    if account.owner != owner {
-        Err(ErrorCode::IncorrectOwner.into())
+pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
+    if !cmp_pubkeys(account.key, owner) {
+        Err(CandyError::IncorrectOwner.into())
     } else {
         Ok(())
     }
@@ -72,7 +76,7 @@ pub struct TokenTransferParams<'a: 'b, 'b> {
 }
 
 #[inline(always)]
-pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult {
+pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> Result<()> {
     let TokenTransferParams {
         source,
         destination,
@@ -83,7 +87,7 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult 
     } = params;
 
     let mut signer_seeds = vec![];
-    if authority_signer_seeds.len() > 0 {
+    if !authority_signer_seeds.is_empty() {
         signer_seeds.push(authority_signer_seeds)
     }
 
@@ -100,10 +104,10 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult 
         &signer_seeds,
     );
 
-    result.map_err(|_| ErrorCode::TokenTransferFailed.into())
+    result.map_err(|_| CandyError::TokenTransferFailed.into())
 }
 
-pub fn assert_is_ata<'a>(
+pub fn assert_is_ata(
     ata: &AccountInfo,
     wallet: &Pubkey,
     mint: &Pubkey,
@@ -116,9 +120,9 @@ pub fn assert_is_ata<'a>(
     Ok(ata_account)
 }
 
-pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
-    if key1 != key2 {
-        Err(ErrorCode::PublicKeyMismatch.into())
+pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
+    if !cmp_pubkeys(&key1, &key2) {
+        Err(CandyError::PublicKeyMismatch.into())
     } else {
         Ok(())
     }
@@ -144,7 +148,7 @@ pub struct TokenBurnParams<'a: 'b, 'b> {
     pub token_program: AccountInfo<'a>,
 }
 
-pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
+pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> Result<()> {
     let TokenBurnParams {
         mint,
         source,
@@ -169,5 +173,5 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
         &[source, mint, authority, token_program],
         seeds.as_slice(),
     );
-    result.map_err(|_| ErrorCode::TokenBurnFailed.into())
+    result.map_err(|_| CandyError::TokenBurnFailed.into())
 }

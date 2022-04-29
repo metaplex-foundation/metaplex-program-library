@@ -1,39 +1,35 @@
 pub mod utils;
 
-use solana_program::sysvar::{instructions::get_instruction_relative, SysvarId};
-use {
-    crate::utils::{
-        assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by,
-        assert_valid_go_live, spl_token_burn, spl_token_transfer, TokenBurnParams,
-        TokenTransferParams,
-    },
-    anchor_lang::{
-        prelude::*,
-        solana_program::{
-            program::{invoke, invoke_signed},
-            serialize_utils::{read_pubkey, read_u16},
-            system_instruction, sysvar,
-        },
-        AnchorDeserialize, AnchorSerialize, Discriminator, Key,
-    },
-    anchor_spl::token::Token,
-    arrayref::array_ref,
-    mpl_token_metadata::{
-        assertions::collection::assert_master_edition,
-        error::MetadataError,
-        instruction::{
-            approve_collection_authority, create_master_edition_v3, create_metadata_accounts_v2,
-            revoke_collection_authority, set_and_verify_collection, update_metadata_accounts_v2,
-        },
-        state::{
-            Metadata, MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-            MAX_URI_LENGTH,
-        },
-        utils::{assert_derivation, create_or_allocate_account_raw},
-    },
-    spl_token::state::Mint,
-    std::{cell::RefMut, ops::Deref, str::FromStr},
+use crate::utils::{
+    assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by, assert_valid_go_live,
+    spl_token_burn, spl_token_transfer, TokenBurnParams, TokenTransferParams,
 };
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        program::{invoke, invoke_signed},
+        serialize_utils::{read_pubkey, read_u16},
+        system_instruction, sysvar,
+    },
+    AnchorDeserialize, AnchorSerialize, Discriminator, Key,
+};
+use anchor_spl::token::Token;
+use arrayref::array_ref;
+use mpl_token_metadata::{
+    assertions::collection::assert_master_edition,
+    instruction::{
+        approve_collection_authority, create_master_edition_v3, create_metadata_accounts_v2,
+        revoke_collection_authority, set_and_verify_collection, update_metadata_accounts_v2,
+    },
+    state::{
+        Metadata, MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
+        MAX_URI_LENGTH,
+    },
+    utils::{assert_derivation, create_or_allocate_account_raw},
+};
+use solana_program::sysvar::{instructions::get_instruction_relative, SysvarId};
+use spl_token::state::Mint;
+use std::{cell::RefMut, ops::Deref, str::FromStr};
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
@@ -47,7 +43,7 @@ pub mod candy_machine {
     pub fn mint_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
         creator_bump: u8,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let candy_machine = &mut ctx.accounts.candy_machine;
         let candy_machine_creator = &ctx.accounts.candy_machine_creator;
         let clock = &ctx.accounts.clock;
@@ -64,21 +60,21 @@ pub mod candy_machine {
         if recent_slothashes.key() != sysvar::slot_hashes::SlotHashes::id()
             && recent_slothashes.key().to_string() != BLOCK_HASHES
         {
-            return Err(ErrorCode::IncorrectSlotHashesPubkey.into());
+            return err!(CandyError::IncorrectSlotHashesPubkey);
         }
         let mut price = candy_machine.data.price;
         if let Some(es) = &candy_machine.data.end_settings {
             match es.end_setting_type {
                 EndSettingType::Date => {
-                    if clock.unix_timestamp > es.number as i64 {
-                        if ctx.accounts.payer.key() != candy_machine.authority {
-                            return Err(ErrorCode::CandyMachineNotLive.into());
-                        }
+                    if clock.unix_timestamp > es.number as i64
+                        && ctx.accounts.payer.key() != candy_machine.authority
+                    {
+                        return err!(CandyError::CandyMachineNotLive);
                     }
                 }
                 EndSettingType::Amount => {
                     if candy_machine.items_redeemed >= es.number {
-                        return Err(ErrorCode::CandyMachineNotLive.into());
+                        return err!(CandyError::CandyMachineNotLive);
                     }
                 }
             }
@@ -87,7 +83,7 @@ pub mod candy_machine {
         let mut remaining_accounts_counter: usize = 0;
         if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-                return Err(ErrorCode::GatewayTokenMissing.into());
+                return err!(CandyError::GatewayTokenMissing);
             }
             let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
             let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
@@ -98,17 +94,17 @@ pub mod candy_machine {
             // calculate the creation time
             let expire_time = gateway_token
                 .expire_time
-                .ok_or(ErrorCode::GatewayTokenExpireTimeInvalid)?
+                .ok_or(CandyError::GatewayTokenExpireTimeInvalid)?
                 as i64;
             remaining_accounts_counter += 1;
             if gatekeeper.expire_on_use {
                 if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-                    return Err(ErrorCode::GatewayAppMissing.into());
+                    return err!(CandyError::GatewayAppMissing);
                 }
                 let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
                 remaining_accounts_counter += 1;
                 if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-                    return Err(ErrorCode::NetworkExpireFeatureMissing.into());
+                    return err!(CandyError::NetworkExpireFeatureMissing);
                 }
                 let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
                 remaining_accounts_counter += 1;
@@ -125,7 +121,8 @@ pub mod candy_machine {
                     &payer.key(),
                     &gatekeeper.gatekeeper_network,
                     None,
-                )?;
+                )
+                .map_err(Into::<ProgramError>::into)?;
             }
             // verifies that the gatway token was not created before the candy
             // machine go_live_date (avoids pre-solving the captcha)
@@ -140,14 +137,14 @@ pub mod candy_machine {
                                     "Invalid gateway token: calculated creation time {} and go_live_date {}",
                                     expire_time - EXPIRE_OFFSET,
                                     val);
-                                return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
+                                return err!(CandyError::GatewayTokenExpireTimeInvalid);
                             }
                         } else {
                             msg!(
                                 "Invalid gateway token: calculated creation time {} and go_live_date {}",
                                 expire_time - EXPIRE_OFFSET,
                                 val);
-                            return Err(ErrorCode::GatewayTokenExpireTimeInvalid.into());
+                            return err!(CandyError::GatewayTokenExpireTimeInvalid);
                         }
                     }
                 }
@@ -191,7 +188,7 @@ pub mod candy_machine {
                                 if ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
-                                    return Err(ErrorCode::CandyMachineNotLive.into());
+                                    return err!(CandyError::CandyMachineNotLive);
                                 }
                             }
                             Some(val) => {
@@ -199,7 +196,7 @@ pub mod candy_machine {
                                     && ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
-                                    return Err(ErrorCode::CandyMachineNotLive.into());
+                                    return err!(CandyError::CandyMachineNotLive);
                                 }
                             }
                         }
@@ -212,7 +209,7 @@ pub mod candy_machine {
                             // A non-presale whitelist with no discount price is a forced whitelist
                             // If a pre-sale has no discount, its no issue, because the "discount"
                             // is minting first - a presale whitelist always has an open post sale.
-                            return Err(ErrorCode::NoWhitelistToken.into());
+                            return err!(CandyError::NoWhitelistToken);
                         }
                         assert_valid_go_live(payer, clock, candy_machine)?;
                         if ws.mode == WhitelistMintMode::BurnEveryTime {
@@ -225,7 +222,7 @@ pub mod candy_machine {
                         // A non-presale whitelist with no discount price is a forced whitelist
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
-                        return Err(ErrorCode::NoWhitelistToken.into());
+                        return err!(CandyError::NoWhitelistToken);
                     }
                     if ws.mode == WhitelistMintMode::BurnEveryTime {
                         remaining_accounts_counter += 2;
@@ -239,18 +236,21 @@ pub mod candy_machine {
         }
 
         if candy_machine.items_redeemed >= candy_machine.data.items_available {
-            return Err(ErrorCode::CandyMachineEmpty.into());
+            return err!(CandyError::CandyMachineEmpty);
         }
 
         if let Some(mint) = candy_machine.token_mint {
             let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
             let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
+
+            // If we ever add another account, this will need to be uncommented:
+            // remaining_accounts_counter += 1;
+
             let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
             if token_account.amount < price {
-                return Err(ErrorCode::NotEnoughTokens.into());
+                return err!(CandyError::NotEnoughTokens);
             }
 
             spl_token_transfer(TokenTransferParams {
@@ -263,7 +263,7 @@ pub mod candy_machine {
             })?;
         } else {
             if ctx.accounts.payer.lamports() < price {
-                return Err(ErrorCode::NotEnoughSOL.into());
+                return err!(CandyError::NotEnoughSOL);
             }
 
             invoke(
@@ -282,14 +282,14 @@ pub mod candy_machine {
         let index = u64::from_le_bytes(*most_recent);
         let modded: usize = index
             .checked_rem(candy_machine.data.items_available)
-            .ok_or(ErrorCode::NumericalOverflowError)? as usize;
+            .ok_or(CandyError::NumericalOverflowError)? as usize;
 
-        let config_line = get_config_line(&candy_machine, modded, candy_machine.items_redeemed)?;
+        let config_line = get_config_line(candy_machine, modded, candy_machine.items_redeemed)?;
 
         candy_machine.items_redeemed = candy_machine
             .items_redeemed
             .checked_add(1)
-            .ok_or(ErrorCode::NumericalOverflowError)?;
+            .ok_or(CandyError::NumericalOverflowError)?;
 
         let cm_key = candy_machine.key();
         let authority_seeds = [PREFIX.as_bytes(), cm_key.as_ref(), &[creator_bump]];
@@ -421,27 +421,27 @@ pub mod candy_machine {
                 && program_id != associated_token
             {
                 msg!("Transaction had ix with program id {}", program_id);
-                return Err(ErrorCode::SuspiciousTransaction.into());
+                return err!(CandyError::SuspiciousTransaction);
             }
         }
         Ok(())
     }
 
-    pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> ProgramResult {
+    pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> Result<()> {
         let ixs = &ctx.accounts.instructions;
         let previous_instruction = get_instruction_relative(-1, ixs)?;
-        if &previous_instruction.program_id != &candy_machine::id() {
+        if previous_instruction.program_id != candy_machine::id() {
             msg!(
                 "Transaction had ix with program id {}",
                 &previous_instruction.program_id
             );
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            return err!(CandyError::SuspiciousTransaction);
         }
 
         let discriminator = &previous_instruction.data[0..8];
         if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
             msg!("Transaction had ix with data {:?}", discriminator);
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            return err!(CandyError::SuspiciousTransaction);
         }
 
         let mint_ix_accounts = previous_instruction.accounts;
@@ -452,17 +452,17 @@ pub mod candy_machine {
         let metadata = ctx.accounts.metadata.key();
         let payer = ctx.accounts.payer.key();
 
-        if &signer != &payer {
+        if signer != payer {
             msg!(
                 "Signer with pubkey {} does not match the mint ix Signer with pubkey {}",
                 mint_ix_cm,
                 candy_key
             );
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            return err!(CandyError::SuspiciousTransaction);
         }
-        if &mint_ix_cm != &candy_key {
+        if mint_ix_cm != candy_key {
             msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, candy_key);
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            return err!(CandyError::SuspiciousTransaction);
         }
         if mint_ix_metadata != metadata {
             msg!(
@@ -470,13 +470,13 @@ pub mod candy_machine {
                 mint_ix_metadata,
                 metadata
             );
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            return err!(CandyError::SuspiciousTransaction);
         }
 
         let collection_pda = &ctx.accounts.collection_pda;
         let collection_mint = ctx.accounts.collection_mint.to_account_info();
-        if &collection_pda.mint != &collection_mint.key() {
-            return Err(ErrorCode::MismatchedCollectionMint.into());
+        if collection_pda.mint != collection_mint.key() {
+            return err!(CandyError::MismatchedCollectionMint);
         }
         let seeds = [b"collection".as_ref(), candy_key.as_ref()];
         let bump = assert_derivation(
@@ -516,26 +516,26 @@ pub mod candy_machine {
     pub fn update_candy_machine(
         ctx: Context<UpdateCandyMachine>,
         data: CandyMachineData,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let candy_machine = &mut ctx.accounts.candy_machine;
 
         if data.items_available != candy_machine.data.items_available
             && data.hidden_settings.is_none()
         {
-            return Err(ErrorCode::CannotChangeNumberOfLines.into());
+            return err!(CandyError::CannotChangeNumberOfLines);
         }
 
         if candy_machine.data.items_available > 0
             && candy_machine.data.hidden_settings.is_none()
             && data.hidden_settings.is_some()
         {
-            return Err(ErrorCode::CannotSwitchToHiddenSettings.into());
+            return err!(CandyError::CannotSwitchToHiddenSettings);
         }
 
         candy_machine.wallet = ctx.accounts.wallet.key();
         candy_machine.data = data;
 
-        if ctx.remaining_accounts.len() > 0 {
+        if !ctx.remaining_accounts.is_empty() {
             candy_machine.token_mint = Some(ctx.remaining_accounts[0].key())
         } else {
             candy_machine.token_mint = None;
@@ -547,7 +547,7 @@ pub mod candy_machine {
         ctx: Context<AddConfigLines>,
         index: u32,
         config_lines: Vec<ConfigLine>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let candy_machine = &mut ctx.accounts.candy_machine;
         let account = candy_machine.to_account_info();
         let current_count = get_config_count(&account.data.borrow_mut())?;
@@ -556,10 +556,10 @@ pub mod candy_machine {
         // No risk overflow because you literally cant store this many in an account
         // going beyond u32 only happens with the hidden store candies, which dont use this.
         if index > (candy_machine.data.items_available as u32) - 1 {
-            return Err(ErrorCode::IndexGreaterThanLength.into());
+            return err!(CandyError::IndexGreaterThanLength);
         }
         if candy_machine.data.hidden_settings.is_some() {
-            return Err(ErrorCode::HiddenSettingsConfigsDoNotHaveConfigLines.into());
+            return err!(CandyError::HiddenSettingsConfigsDoNotHaveConfigLines);
         }
         for line in &config_lines {
             let mut array_of_zeroes = vec![];
@@ -596,18 +596,18 @@ pub mod candy_machine {
         for i in 0..fixed_config_lines.len() {
             let position = (index as usize)
                 .checked_add(i)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+                .ok_or(CandyError::NumericalOverflowError)?;
             let my_position_in_vec = bit_mask_vec_start
                 + position
                     .checked_div(8)
-                    .ok_or(ErrorCode::NumericalOverflowError)?;
+                    .ok_or(CandyError::NumericalOverflowError)?;
             let position_from_right = 7 - position
                 .checked_rem(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+                .ok_or(CandyError::NumericalOverflowError)?;
             let mask = u8::pow(2, position_from_right as u32);
 
             let old_value_in_vec = data[my_position_in_vec];
-            data[my_position_in_vec] = data[my_position_in_vec] | mask;
+            data[my_position_in_vec] |= mask;
             msg!(
                 "My position in vec is {} my mask is going to be {}, the old value is {}",
                 position,
@@ -623,7 +623,7 @@ pub mod candy_machine {
                 msg!("Increasing count");
                 new_count = new_count
                     .checked_add(1)
-                    .ok_or(ErrorCode::NumericalOverflowError)?;
+                    .ok_or(CandyError::NumericalOverflowError)?;
             }
         }
 
@@ -637,11 +637,11 @@ pub mod candy_machine {
     pub fn initialize_candy_machine(
         ctx: Context<InitializeCandyMachine>,
         data: CandyMachineData,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let candy_machine_account = &mut ctx.accounts.candy_machine;
 
         if data.uuid.len() != 6 {
-            return Err(ErrorCode::UuidMustBeExactly6Length.into());
+            return err!(CandyError::UuidMustBeExactly6Length);
         }
 
         let mut candy_machine = CandyMachine {
@@ -652,17 +652,17 @@ pub mod candy_machine {
             items_redeemed: 0,
         };
 
-        if ctx.remaining_accounts.len() > 0 {
+        if !ctx.remaining_accounts.is_empty() {
             let token_mint_info = &ctx.remaining_accounts[0];
-            let _token_mint: Mint = assert_initialized(&token_mint_info)?;
+            let _token_mint: Mint = assert_initialized(token_mint_info)?;
             let token_account: spl_token::state::Account =
                 assert_initialized(&ctx.accounts.wallet)?;
 
-            assert_owned_by(&token_mint_info, &spl_token::id())?;
+            assert_owned_by(token_mint_info, &spl_token::id())?;
             assert_owned_by(&ctx.accounts.wallet, &spl_token::id())?;
 
             if token_account.mint != token_mint_info.key() {
-                return Err(ErrorCode::MintMismatch.into());
+                return err!(CandyError::MintMismatch);
             }
 
             candy_machine.token_mint = Some(*token_mint_info.key);
@@ -678,7 +678,7 @@ pub mod candy_machine {
 
         // - 1 because we are going to be a creator
         if candy_machine.data.creators.len() > MAX_CREATOR_LIMIT - 1 {
-            return Err(ErrorCode::TooManyCreators.into());
+            return err!(CandyError::TooManyCreators);
         }
 
         let mut new_data = CandyMachine::discriminator().try_to_vec().unwrap();
@@ -696,7 +696,7 @@ pub mod candy_machine {
             .data
             .items_available
             .checked_div(8)
-            .ok_or(ErrorCode::NumericalOverflowError)? as u32)
+            .ok_or(CandyError::NumericalOverflowError)? as u32)
             .to_le_bytes();
         for i in 0..4 {
             data[vec_start + i] = as_bytes[i]
@@ -705,15 +705,15 @@ pub mod candy_machine {
         Ok(())
     }
 
-    pub fn set_collection(ctx: Context<SetCollection>) -> ProgramResult {
+    pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
         let mint = ctx.accounts.mint.to_account_info();
         let metadata: Metadata =
             Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-        if &metadata.update_authority != &ctx.accounts.authority.key() {
-            return Err(ErrorCode::IncorrectCollectionAuthority.into());
+        if metadata.update_authority != ctx.accounts.authority.key() {
+            return err!(CandyError::IncorrectCollectionAuthority);
         };
-        if &metadata.mint != &mint.key() {
-            return Err(MetadataError::MintMismatch.into());
+        if metadata.mint != mint.key() {
+            return err!(CandyError::MintMismatch);
         }
         let edition = ctx.accounts.edition.to_account_info();
         let authority_record = ctx.accounts.collection_authority_record.to_account_info();
@@ -743,7 +743,7 @@ pub mod candy_machine {
                     ctx.accounts.authority.key(),
                     ctx.accounts.payer.key(),
                     ctx.accounts.metadata.key(),
-                    mint.key.clone(),
+                    *mint.key,
                 ),
                 approve_collection_infos.as_slice(),
             )?;
@@ -762,7 +762,7 @@ pub mod candy_machine {
                 COLLECTION_PDA_SIZE,
                 &[
                     b"collection".as_ref(),
-                    &candy_machine.key().as_ref(),
+                    candy_machine.key().as_ref(),
                     &[*ctx.bumps.get("collection_pda").unwrap()],
                 ],
             )?;
@@ -776,15 +776,15 @@ pub mod candy_machine {
         Ok(())
     }
 
-    pub fn remove_collection(ctx: Context<RemoveCollection>) -> ProgramResult {
+    pub fn remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
         let mint = ctx.accounts.mint.to_account_info();
         let metadata: Metadata =
             Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-        if &metadata.update_authority != &ctx.accounts.authority.key() {
-            return Err(ErrorCode::IncorrectCollectionAuthority.into());
+        if metadata.update_authority != ctx.accounts.authority.key() {
+            return err!(CandyError::IncorrectCollectionAuthority);
         };
-        if &metadata.mint != &mint.key() {
-            return Err(MetadataError::MintMismatch.into());
+        if metadata.mint != mint.key() {
+            return err!(CandyError::MintMismatch);
         }
 
         let authority_record = ctx.accounts.collection_authority_record.to_account_info();
@@ -817,7 +817,7 @@ pub mod candy_machine {
     pub fn update_authority(
         ctx: Context<UpdateCandyMachine>,
         new_authority: Option<Pubkey>,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let candy_machine = &mut ctx.accounts.candy_machine;
 
         if let Some(new_auth) = new_authority {
@@ -827,7 +827,7 @@ pub mod candy_machine {
         Ok(())
     }
 
-    pub fn withdraw_funds<'info>(ctx: Context<WithdrawFunds<'info>>) -> ProgramResult {
+    pub fn withdraw_funds<'info>(ctx: Context<WithdrawFunds<'info>>) -> Result<()> {
         let authority = &ctx.accounts.authority;
         let pay = &ctx.accounts.candy_machine.to_account_info();
         let snapshot: u64 = pay.lamports();
@@ -837,27 +837,27 @@ pub mod candy_machine {
         **authority.lamports.borrow_mut() = authority
             .lamports()
             .checked_add(snapshot)
-            .ok_or(ErrorCode::NumericalOverflowError)?;
+            .ok_or(CandyError::NumericalOverflowError)?;
 
-        if ctx.remaining_accounts.len() > 0 {
+        if !ctx.remaining_accounts.is_empty() {
             let seeds = [b"collection".as_ref(), pay.key.as_ref()];
             let pay = &ctx.remaining_accounts[0];
-            if &pay.key() != &Pubkey::find_program_address(&seeds, &candy_machine::id()).0 {
-                return Err(ErrorCode::MismatchedCollectionPDA.into());
+            if pay.key() != Pubkey::find_program_address(&seeds, &candy_machine::id()).0 {
+                return err!(CandyError::MismatchedCollectionPDA);
             }
             let snapshot: u64 = pay.lamports();
             **pay.lamports.borrow_mut() = 0;
             **authority.lamports.borrow_mut() = authority
                 .lamports()
                 .checked_add(snapshot)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+                .ok_or(CandyError::NumericalOverflowError)?;
         }
 
         Ok(())
     }
 }
 
-fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, ProgramError> {
+fn get_space_for_candy(data: CandyMachineData) -> Result<usize> {
     let num = if data.hidden_settings.is_some() {
         CONFIG_ARRAY_START
     } else {
@@ -868,7 +868,7 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
             + 2 * ((data
                 .items_available
                 .checked_div(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?
+                .ok_or(CandyError::NumericalOverflowError)?
                 + 1) as usize)
     };
 
@@ -1176,7 +1176,7 @@ pub struct HiddenSettings {
     pub hash: [u8; 32],
 }
 
-pub fn get_config_count(data: &RefMut<&mut [u8]>) -> core::result::Result<usize, ProgramError> {
+pub fn get_config_count(data: &RefMut<&mut [u8]>) -> Result<usize> {
     return Ok(u32::from_le_bytes(*array_ref![data, CONFIG_ARRAY_START, 4]) as usize);
 }
 
@@ -1185,7 +1185,7 @@ pub fn get_good_index(
     items_available: usize,
     index: usize,
     pos: bool,
-) -> core::result::Result<(usize, bool), ProgramError> {
+) -> Result<(usize, bool)> {
     let mut index_to_use = index;
     let mut taken = 1;
     let mut found = false;
@@ -1195,14 +1195,14 @@ pub fn get_good_index(
         + 4
         + items_available
             .checked_div(8)
-            .ok_or(ErrorCode::NumericalOverflowError)?
+            .ok_or(CandyError::NumericalOverflowError)?
         + 4;
 
     while taken > 0 && index_to_use < items_available {
         let my_position_in_vec = bit_mask_vec_start
             + index_to_use
                 .checked_div(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+                .ok_or(CandyError::NumericalOverflowError)?;
         /*msg!(
             "My position is {} and value there is {}",
             my_position_in_vec,
@@ -1212,7 +1212,7 @@ pub fn get_good_index(
             //msg!("We are screwed here, move on");
             let eight_remainder = 8 - index_to_use
                 .checked_rem(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+                .ok_or(CandyError::NumericalOverflowError)?;
             let reversed = 8 - eight_remainder + 1;
             if (eight_remainder != 0 && pos) || (reversed != 0 && !pos) {
                 //msg!("Moving by {}", eight_remainder);
@@ -1235,35 +1235,40 @@ pub fn get_good_index(
         } else {
             let position_from_right = 7 - index_to_use
                 .checked_rem(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+                .ok_or(CandyError::NumericalOverflowError)?;
             let mask = u8::pow(2, position_from_right as u32);
 
             taken = mask & arr[my_position_in_vec];
-            if taken > 0 {
-                //msg!("Index to use {} is taken", index_to_use);
-                if pos {
-                    index_to_use += 1;
-                } else {
-                    if index_to_use == 0 {
-                        break;
+
+            match taken {
+                x if x > 0 => {
+                    //msg!("Index to use {} is taken", index_to_use);
+                    if pos {
+                        index_to_use += 1;
+                    } else {
+                        if index_to_use == 0 {
+                            break;
+                        }
+                        index_to_use -= 1;
                     }
-                    index_to_use -= 1;
                 }
-            } else if taken == 0 {
-                //msg!("Index to use {} is not taken, exiting", index_to_use);
-                found = true;
-                arr[my_position_in_vec] = arr[my_position_in_vec] | mask;
+                0 => {
+                    //msg!("Index to use {} is not taken, exiting", index_to_use);
+                    found = true;
+                    arr[my_position_in_vec] |= mask;
+                }
+                _ => (),
             }
         }
     }
     Ok((index_to_use, found))
 }
 
-pub fn get_config_line<'info>(
-    a: &Account<'info, CandyMachine>,
+pub fn get_config_line(
+    a: &Account<'_, CandyMachine>,
     index: usize,
     mint_number: u64,
-) -> core::result::Result<ConfigLine, ProgramError> {
+) -> Result<ConfigLine> {
     if let Some(hs) = &a.data.hidden_settings {
         return Ok(ConfigLine {
             name: hs.name.clone() + "#" + &(mint_number + 1).to_string(),
@@ -1282,7 +1287,7 @@ pub fn get_config_line<'info>(
             get_good_index(&mut arr, a.data.items_available as usize, index, false)?;
         index_to_use = index_to_use_new;
         if !good_new {
-            return Err(ErrorCode::CannotFindUsableConfigLine.into());
+            return err!(CandyError::CannotFindUsableConfigLine);
         }
     }
 
@@ -1291,7 +1296,7 @@ pub fn get_config_line<'info>(
         index_to_use
     );
     if arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)] == 1 {
-        return Err(ErrorCode::CannotFindUsableConfigLine.into());
+        return err!(CandyError::CannotFindUsableConfigLine);
     }
 
     let data_array = &mut arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)
@@ -1299,12 +1304,16 @@ pub fn get_config_line<'info>(
 
     let mut name_vec = vec![];
     let mut uri_vec = vec![];
+
+    #[allow(clippy::needless_range_loop)]
     for i in 4..4 + MAX_NAME_LENGTH {
         if data_array[i] == 0 {
             break;
         }
         name_vec.push(data_array[i])
     }
+
+    #[allow(clippy::needless_range_loop)]
     for i in 8 + MAX_NAME_LENGTH..8 + MAX_NAME_LENGTH + MAX_URI_LENGTH {
         if data_array[i] == 0 {
             break;
@@ -1314,11 +1323,11 @@ pub fn get_config_line<'info>(
     let config_line: ConfigLine = ConfigLine {
         name: match String::from_utf8(name_vec) {
             Ok(val) => val,
-            Err(_) => return Err(ErrorCode::InvalidString.into()),
+            Err(_) => return err!(CandyError::InvalidString),
         },
         uri: match String::from_utf8(uri_vec) {
             Ok(val) => val,
-            Err(_) => return Err(ErrorCode::InvalidString.into()),
+            Err(_) => return err!(CandyError::InvalidString),
         },
     };
 
@@ -1344,8 +1353,8 @@ pub struct Creator {
     pub share: u8,
 }
 
-#[error]
-pub enum ErrorCode {
+#[error_code]
+pub enum CandyError {
     #[msg("Account does not have correct owner!")]
     IncorrectOwner,
     #[msg("Account is not initialized!")]
