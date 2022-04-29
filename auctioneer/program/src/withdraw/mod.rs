@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, AnchorDeserialize};
+use anchor_lang::{prelude::*, AnchorDeserialize, InstructionData};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token},
@@ -14,6 +14,8 @@ use mpl_auction_house::{
     //},
     AuctionHouse,
 };
+
+use solana_program::program::invoke;
 
 /// Accounts for the [`withdraw_with_auctioneer` handler](auction_house/fn.withdraw_with_auctioneer.html).
 #[derive(Accounts, Clone)]
@@ -90,6 +92,26 @@ pub fn auctioneer_withdraw<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
 
-    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    mpl_auction_house::cpi::withdraw_with_auctioneer(cpi_ctx, escrow_payment_bump, amount)
+    let withdraw_data = mpl_auction_house::instruction::WithdrawWithAuctioneer {
+        escrow_payment_bump,
+        amount,
+    };
+
+    let ix = solana_program::instruction::Instruction {
+        program_id: cpi_program.key(),
+        accounts: cpi_accounts
+            .to_account_metas(None)
+            .into_iter()
+            .zip(cpi_accounts.to_account_infos())
+            .map(|mut pair| {
+                pair.0.is_signer = pair.1.is_signer;
+                pair.0
+            })
+            .collect(),
+        data: withdraw_data.data(),
+    };
+
+    invoke(&ix, &cpi_accounts.to_account_infos())?;
+
+    Ok(())
 }

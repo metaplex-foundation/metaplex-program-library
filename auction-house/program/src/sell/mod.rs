@@ -9,10 +9,11 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 pub struct Sell<'info> {
     /// CHECK: Verified through CPI
     /// User wallet account.
-    pub wallet: UncheckedAccount<'info>,
     #[account(mut)]
+    pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing token for sale.
+    #[account(mut)]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Verified through CPI
@@ -77,6 +78,7 @@ impl<'info> From<SellWithAuctioneer<'info>> for Sell<'info> {
 pub struct SellWithAuctioneer<'info> {
     /// CHECK: TODO
     /// User wallet account.
+    #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing token for sale.

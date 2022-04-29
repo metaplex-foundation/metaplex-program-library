@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, AnchorDeserialize};
+use anchor_lang::{prelude::*, AnchorDeserialize, InstructionData};
 use anchor_spl::token::{Token, TokenAccount};
 
 use mpl_auction_house::{
@@ -12,6 +12,8 @@ use mpl_auction_house::{
     AuctionHouse,
 };
 
+use solana_program::program::invoke;
+
 /// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
 #[derive(Accounts, Clone)]
 #[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
@@ -21,6 +23,7 @@ pub struct AuctioneerSell<'info> {
 
     /// CHECK: TODO
     /// User wallet account.
+    #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing token for sale.
@@ -99,13 +102,29 @@ pub fn auctioneer_sell<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
 
-    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    mpl_auction_house::cpi::sell_with_auctioneer(
-        cpi_ctx,
+    let sell_data = mpl_auction_house::instruction::SellWithAuctioneer {
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
         buyer_price,
         token_size,
-    )
+    };
+
+    let ix = solana_program::instruction::Instruction {
+        program_id: cpi_program.key(),
+        accounts: cpi_accounts
+            .to_account_metas(None)
+            .into_iter()
+            .zip(cpi_accounts.to_account_infos())
+            .map(|mut pair| {
+                pair.0.is_signer = pair.1.is_signer;
+                pair.0
+            })
+            .collect(),
+        data: sell_data.data(),
+    };
+
+    invoke(&ix, &cpi_accounts.to_account_infos())?;
+
+    Ok(())
 }

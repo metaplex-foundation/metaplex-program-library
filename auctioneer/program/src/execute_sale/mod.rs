@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, AnchorDeserialize};
+use anchor_lang::{prelude::*, AnchorDeserialize, InstructionData};
 use anchor_spl::{associated_token::AssociatedToken, token::Token};
 
 use mpl_auction_house::{
@@ -11,6 +11,8 @@ use mpl_auction_house::{
     //},
     AuctionHouse,
 };
+
+use solana_program::program::invoke;
 
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
@@ -49,7 +51,7 @@ pub struct AuctioneerExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], seeds::program=auction_house_program, bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// CHECK: Verified through CPI
@@ -67,17 +69,17 @@ pub struct AuctioneerExecuteSale<'info> {
     pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], seeds::program=auction_house_program, bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance treasury account.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], seeds::program=auction_house_program, bump=auction_house.treasury_bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
 
     /// CHECK: Verified through CPI
@@ -87,12 +89,12 @@ pub struct AuctioneerExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
-    #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=seller_trade_state.to_account_info().data.borrow()[0])]
+    #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], seeds::program=auction_house_program, bump=seller_trade_state.to_account_info().data.borrow()[0])]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Free seller trade state PDA account encoding a free sell order.
-    #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], seeds::program=auction_house_program, bump=free_trade_state_bump)]
     pub free_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Verified through CPI
@@ -101,7 +103,7 @@ pub struct AuctioneerExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], seeds::program=auction_house_program, bump = auction_house.auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -109,7 +111,7 @@ pub struct AuctioneerExecuteSale<'info> {
     pub ata_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], seeds::program=auction_house_program, bump=program_as_signer_bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -153,13 +155,29 @@ pub fn auctioneer_execute_sale<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
 
-    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    mpl_auction_house::cpi::execute_sale_with_auctioneer(
-        cpi_ctx,
+    let execute_sale_data = mpl_auction_house::instruction::ExecuteSaleWithAuctioneer {
         escrow_payment_bump,
-        free_trade_state_bump,
+        _free_trade_state_bump: free_trade_state_bump,
         program_as_signer_bump,
         buyer_price,
         token_size,
-    )
+    };
+
+    let ix = solana_program::instruction::Instruction {
+        program_id: cpi_program.key(),
+        accounts: cpi_accounts
+            .to_account_metas(None)
+            .into_iter()
+            .zip(cpi_accounts.to_account_infos())
+            .map(|mut pair| {
+                pair.0.is_signer = pair.1.is_signer;
+                pair.0
+            })
+            .collect(),
+        data: execute_sale_data.data(),
+    };
+
+    invoke(&ix, &cpi_accounts.to_account_infos())?;
+
+    Ok(())
 }
