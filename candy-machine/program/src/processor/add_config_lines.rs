@@ -1,9 +1,9 @@
-use crate::{
-    get_config_count, CandyError, CandyMachine, ConfigLine, CONFIG_ARRAY_START, CONFIG_LINE_SIZE,
-};
+use crate::{CandyError, CandyMachine, ConfigLine, CONFIG_ARRAY_START, CONFIG_LINE_SIZE};
 use anchor_lang::prelude::*;
+use arrayref::array_ref;
 use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_URI_LENGTH};
 use solana_program::msg;
+use std::cell::RefMut;
 
 /// Add multiple config lines to the candy machine.
 #[derive(Accounts)]
@@ -102,4 +102,8 @@ pub fn handle_add_config_lines(
         .copy_from_slice(&(new_count as u32).to_le_bytes());
 
     Ok(())
+}
+
+pub fn get_config_count(data: &RefMut<&mut [u8]>) -> Result<usize> {
+    return Ok(u32::from_le_bytes(*array_ref![data, CONFIG_ARRAY_START, 4]) as usize);
 }
