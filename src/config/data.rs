@@ -1,6 +1,7 @@
 use anchor_client::solana_sdk::signature::Keypair;
 use anchor_client::solana_sdk::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 pub use anyhow::{anyhow, Result};
+use chrono::DateTime;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::fmt::Display;
 use std::str::FromStr;
@@ -87,27 +88,21 @@ where
     }
 }
 
-pub fn go_live_date_rfc3339_as_timestamp(go_live_date: &str) -> Result<i64> {
-    let go_live_date = chrono::DateTime::parse_from_rfc3339(go_live_date)?;
-    Ok(go_live_date.timestamp())
-}
-
-pub fn go_live_date_rfc2822_as_timestamp(go_live_date: &str) -> Result<i64> {
-    let go_live_date = chrono::DateTime::parse_from_rfc2822(go_live_date)?;
-    Ok(go_live_date.timestamp())
+pub fn parse_string_as_date(go_live_date: &str) -> Result<String> {
+    let date = DateTime::parse_from_str(go_live_date, "%d-%m-%Y %H:%M:%S %z")?;
+    Ok(date.to_rfc2822())
 }
 
 pub fn go_live_date_as_timestamp(go_live_date: &str) -> Result<i64> {
     let format;
     if chrono::DateTime::parse_from_rfc2822(go_live_date).is_ok() {
-        format = go_live_date_rfc2822_as_timestamp(go_live_date)?
+        format = chrono::DateTime::parse_from_rfc2822(go_live_date)?.timestamp()
     } else if chrono::DateTime::parse_from_rfc3339(go_live_date).is_ok() {
-        format = go_live_date_rfc3339_as_timestamp(go_live_date)?
-    } else if go_live_date.contains("now") {
-        let current_time = chrono::Utc::now();
-        format = current_time.timestamp()
+        format = chrono::DateTime::parse_from_rfc3339(go_live_date)?.timestamp()
+    } else if go_live_date.parse::<i64>().is_ok() {
+        format = go_live_date.parse::<i64>()?
     } else {
-        return Err(anyhow!("Invalid date format. Format must be: RFC2822(Fri, 14 Jul 2022 02:40:00 -0400), RFC3339(2022-02-25T13:00:00Z), or 'now'."));
+        return Err(anyhow!("Invalid date format. Format must be: RFC2822(Fri, 14 Jul 2022 02:40:00 -0400), RFC3339(2022-02-25T13:00:00Z), or UNIX timestamp."));
     };
 
     Ok(format)
@@ -285,19 +280,6 @@ impl HiddenSettings {
                 .try_into()
                 .expect("Hidden settings hash has to be 32 characters long!"),
         }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Serialize)]
-pub enum GoLiveDateFormat {
-    RFC2822,
-    RFC3339,
-    Now,
-}
-
-impl Default for GoLiveDateFormat {
-    fn default() -> GoLiveDateFormat {
-        GoLiveDateFormat::Now
     }
 }
 
