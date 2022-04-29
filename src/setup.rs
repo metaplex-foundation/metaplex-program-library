@@ -43,6 +43,7 @@ pub fn sugar_setup(
             Ok(keypair) => keypair,
             Err(e) => {
                 error!("Failed to read keypair file: {}", e);
+                println!("Failed to read keypair file: {}", e);
                 std::process::exit(1);
             }
         },
@@ -55,6 +56,10 @@ pub fn sugar_setup(
                         "Failed to read keypair file: {}, {}",
                         &sol_config.keypair_path, e
                     );
+                    println!(
+                        "Failed to read keypair file: {}, {}",
+                        &sol_config.keypair_path, e
+                    );
                     std::process::exit(1);
                 }
             },
@@ -62,6 +67,7 @@ pub fn sugar_setup(
                 Ok(keypair) => keypair,
                 Err(e) => {
                     error!("Failed to read keypair file: {}, {}", DEFAULT_KEYPATH, e);
+                    println!("Failed to read keypair file: {}, {}", DEFAULT_KEYPATH, e);
                     std::process::exit(1);
                 }
             },
