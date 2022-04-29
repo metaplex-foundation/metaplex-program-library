@@ -1,6 +1,7 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
+use console::style;
 use spl_associated_token_account::get_associated_token_address;
 use std::str::FromStr;
 
@@ -11,7 +12,7 @@ use crate::candy_machine::*;
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
 use crate::constants::CANDY_MACHINE_V2;
-use crate::utils::{check_spl_token, check_spl_token_account};
+use crate::utils::{check_spl_token, check_spl_token_account, spinner_with_style};
 use crate::{cache::load_cache, config::data::ConfigData};
 
 pub struct UpdateArgs {
@@ -47,8 +48,26 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
         }
     };
 
+    println!(
+        "{} {}Loading candy machine",
+        style("[1/2]").bold().dim(),
+        LOOKING_GLASS_EMOJI
+    );
+    println!("{} {}", style("Candy machine ID:").bold(), candy_machine_id);
+
+    let pb = spinner_with_style();
+    pb.set_message("Connecting...");
+
     let candy_machine_state = get_candy_machine_state(&sugar_config, &candy_pubkey)?;
     let candy_machine_data = create_candy_machine_data(&config_data, candy_machine_state.data)?;
+
+    pb.finish_with_message("Done");
+
+    println!(
+        "\n{} {}Updating configuration",
+        style("[2/2]").bold().dim(),
+        COMPUTER_EMOJI
+    );
 
     let mut remaining_accounts: Vec<AccountMeta> = Vec::new();
 
@@ -63,7 +82,6 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
     }
 
     let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-
     let program = client.program(pid);
 
     let treasury_account = match config_data.spl_token {
@@ -114,14 +132,22 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
         }
     }
 
-    let sig = builder.send()?;
-    let message = format!("Candy machine updated.\nSignature: {sig}");
-    info!("{message}");
-    println!("{message}");
+    let pb = spinner_with_style();
+    pb.set_message("Sending update transaction...");
+
+    let update_signature = builder.send()?;
+
+    pb.finish_with_message(format!(
+        "{} {}",
+        style("Update signature:").bold(),
+        update_signature
+    ));
 
     if let Some(new_authority) = args.new_authority {
-        let new_authority_pubkey = Pubkey::from_str(&new_authority)?;
+        let pb = spinner_with_style();
+        pb.set_message("Sending update authority transaction...");
 
+        let new_authority_pubkey = Pubkey::from_str(&new_authority)?;
         let builder = program
             .request()
             .accounts(nft_accounts::UpdateCandyMachine {
@@ -133,10 +159,12 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
                 new_authority: Some(new_authority_pubkey),
             });
 
-        let sig = builder.send()?;
-        let message = format!("Candy machine update authority updated.\nSignature: {sig}");
-        info!("{message}");
-        println!("{message}");
+        let authority_signature = builder.send()?;
+        pb.finish_with_message(format!(
+            "{} {}",
+            style("Authority signature:").bold(),
+            authority_signature
+        ));
     }
 
     Ok(())
