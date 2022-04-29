@@ -381,11 +381,15 @@ fn initialize_candy_machine(
     let payer = program.payer();
     let items_available = candy_machine_data.items_available;
 
-    let candy_account_size = CONFIG_ARRAY_START
-        + 4
-        + items_available as usize * CONFIG_LINE_SIZE
-        + 8
-        + 2 * (items_available as usize / 8 + 1);
+    let candy_account_size = if candy_machine_data.hidden_settings.is_some() {
+        CONFIG_ARRAY_START
+    } else {
+        CONFIG_ARRAY_START
+            + 4
+            + items_available as usize * CONFIG_LINE_SIZE
+            + 8
+            + 2 * (items_available as usize / 8 + 1)
+    };
 
     info!(
         "Initializing candy machine with account size of: {} and address of: {}",
