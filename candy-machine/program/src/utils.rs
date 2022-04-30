@@ -205,7 +205,7 @@ pub fn remove_feature_flag(uuid: &str, feature_index: usize) -> String {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use crate::candy_machine::COLLECTIONS_FEATURE_INDEX;
+    use crate::constants::COLLECTIONS_FEATURE_INDEX;
 
     #[test]
     fn feature_flag_working() {
