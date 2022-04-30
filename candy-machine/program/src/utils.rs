@@ -75,11 +75,7 @@ pub struct TokenTransferParams<'a: 'b, 'b> {
 
 pub fn punish_bots(err: ErrorCode, bot_account: &AccountInfo, payment_account: &AccountInfo, fee: u64) -> Result<(), ProgramError> {
     msg!("Error: {}, Candy Machine Botting is taxed at {:?} lamports", err.to_string(), fee);
-    let bot_lamp = bot_account.lamports();
-    let mut final_fee = fee;
-    if bot_lamp < fee {
-        final_fee = bot_lamp;
-    }
+    let final_fee = fee.min(bot_account.lamports());
     **bot_account.try_borrow_mut_lamports()? = bot_account.lamports() - final_fee;
     **payment_account.try_borrow_mut_lamports()? = payment_account.lamports() + final_fee;
     Ok(())
