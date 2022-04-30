@@ -1,13 +1,16 @@
 [workspace]
 [package]
 name = "mpl-candy-machine"
-version = "3.1.4"
+version = "3.2.0"
 description = "NFT Candy Machine v2: programmatic and trustless NFT drops."
 authors = ["Jordan Prince", "Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"
 license = "AGPL-3.0"
 edition = "2018"
 readme = "README.md"
+
+[profile.release]
+overflow-checks = true
 
 [lib]
 crate-type = ["cdylib", "lib"]
@@ -17,6 +20,7 @@ no-entrypoint = []
 no-idl = []
 cpi = ["no-entrypoint"]
 default = []
+
 
 [dependencies]
 anchor-lang = "=0.21.0"

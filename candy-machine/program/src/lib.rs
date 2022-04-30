@@ -6,6 +6,7 @@ use {
         assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by,
         assert_valid_go_live, spl_token_burn, spl_token_transfer, TokenBurnParams,
         TokenTransferParams,
+        punish_bots,
     },
     anchor_lang::{
         prelude::*,
@@ -39,6 +40,14 @@ const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
+const BOT_FEE: u64 = 1000000;
+
+pub const GUMDROP_ID: Pubkey = Pubkey::new_from_array([
+    0x0a, 0x27, 0x53, 0xf9, 0x40, 0xcb, 0xd3, 0xc6, 0xfa, 0x7d, 0xf3, 0xc0, 0x2e, 0x24, 0xb5, 0x77,
+    0x08, 0xc4, 0x87, 0xd3, 0x52, 0x15, 0x7d, 0x80, 0x4b, 0x0c, 0x5e, 0xb0, 0xec, 0x27, 0xcf, 0x41
+]);
+
+
 #[program]
 pub mod candy_machine {
     use super::*;
@@ -58,6 +67,22 @@ pub mod candy_machine {
         //Account name the same for IDL compatability
         let recent_slothashes = &ctx.accounts.recent_blockhashes;
         let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
+        let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
+        let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
+        let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
+        /// Restrict Who can call Candy Machine via CPI
+        if current_ix.program_id != candy_machine::id() || current_ix.program_id != GUMDROP_ID {
+            punish_bots(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+            return Ok(());
+        }
+        let next_ix = get_instruction_relative(1, &instruction_sysvar_account_info);
+        if next_ix.is_ok() {
+            let discriminator = &next_ix.unwrap().data[0..8];
+            if discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
+                punish_bots(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+                return Ok(());
+            }
+        }
         if recent_slothashes.key().to_string() == BLOCK_HASHES {
             msg!("recent_blockhashes is deprecated and will break soon");
         }
@@ -66,18 +91,24 @@ pub mod candy_machine {
         {
             return Err(ErrorCode::IncorrectSlotHashesPubkey.into());
         }
+
         let mut price = candy_machine.data.price;
         if let Some(es) = &candy_machine.data.end_settings {
             match es.end_setting_type {
                 EndSettingType::Date => {
                     if clock.unix_timestamp > es.number as i64 {
                         if ctx.accounts.payer.key() != candy_machine.authority {
-                            return Err(ErrorCode::CandyMachineNotLive.into());
+                            punish_bots(ErrorCode::CandyMachineNotLive, &payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+                            return Ok(());
                         }
                     }
                 }
                 EndSettingType::Amount => {
                     if candy_machine.items_redeemed >= es.number {
+                        if ctx.accounts.payer.key() != candy_machine.authority {
+                            punish_bots(ErrorCode::CandyMachineEmpty, &payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+                            return Ok(());
+                        }
                         return Err(ErrorCode::CandyMachineNotLive.into());
                     }
                 }
@@ -191,7 +222,8 @@ pub mod candy_machine {
                                 if ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
-                                    return Err(ErrorCode::CandyMachineNotLive.into());
+                                    punish_bots(ErrorCode::CandyMachineNotLive, &payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+                                    return Ok(());
                                 }
                             }
                             Some(val) => {
@@ -199,7 +231,8 @@ pub mod candy_machine {
                                     && ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
-                                    return Err(ErrorCode::CandyMachineNotLive.into());
+                                    punish_bots(ErrorCode::CandyMachineNotLive, &payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+                                    return Ok(());
                                 }
                             }
                         }
@@ -212,7 +245,8 @@ pub mod candy_machine {
                             // A non-presale whitelist with no discount price is a forced whitelist
                             // If a pre-sale has no discount, its no issue, because the "discount"
                             // is minting first - a presale whitelist always has an open post sale.
-                            return Err(ErrorCode::NoWhitelistToken.into());
+                            punish_bots(ErrorCode::NoWhitelistToken, &payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+                            return Ok(());
                         }
                         assert_valid_go_live(payer, clock, candy_machine)?;
                         if ws.mode == WhitelistMintMode::BurnEveryTime {
@@ -225,7 +259,8 @@ pub mod candy_machine {
                         // A non-presale whitelist with no discount price is a forced whitelist
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
-                        return Err(ErrorCode::NoWhitelistToken.into());
+                        punish_bots(ErrorCode::NoWhitelistToken, &payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+                        return Ok(());
                     }
                     if ws.mode == WhitelistMintMode::BurnEveryTime {
                         remaining_accounts_counter += 2;
@@ -395,9 +430,6 @@ pub mod candy_machine {
             ],
             &[&authority_seeds],
         )?;
-        let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
-
-        let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
 
         let mut idx = 0;
         let num_instructions = read_u16(&mut idx, &instruction_sysvar)
@@ -421,9 +453,11 @@ pub mod candy_machine {
                 && program_id != associated_token
             {
                 msg!("Transaction had ix with program id {}", program_id);
-                return Err(ErrorCode::SuspiciousTransaction.into());
+                punish_bots(ErrorCode::SuspiciousTransaction, &payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+                return Ok(());
             }
         }
+
         Ok(())
     }
 
@@ -435,13 +469,15 @@ pub mod candy_machine {
                 "Transaction had ix with program id {}",
                 &previous_instruction.program_id
             );
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            punish_bots(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+            return Ok(());
         }
 
         let discriminator = &previous_instruction.data[0..8];
         if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
             msg!("Transaction had ix with data {:?}", discriminator);
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            punish_bots(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+            return Ok(());
         }
 
         let mint_ix_accounts = previous_instruction.accounts;
@@ -458,11 +494,13 @@ pub mod candy_machine {
                 mint_ix_cm,
                 candy_key
             );
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            punish_bots(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+            return Ok(());
         }
         if &mint_ix_cm != &candy_key {
             msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, candy_key);
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            punish_bots(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+            return Ok(());
         }
         if mint_ix_metadata != metadata {
             msg!(
@@ -470,7 +508,8 @@ pub mod candy_machine {
                 mint_ix_metadata,
                 metadata
             );
-            return Err(ErrorCode::SuspiciousTransaction.into());
+            punish_bots(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program, BOT_FEE)?;
+            return Ok(());
         }
 
         let collection_pda = &ctx.accounts.collection_pda;
@@ -599,8 +638,8 @@ pub mod candy_machine {
                 .ok_or(ErrorCode::NumericalOverflowError)?;
             let my_position_in_vec = bit_mask_vec_start
                 + position
-                    .checked_div(8)
-                    .ok_or(ErrorCode::NumericalOverflowError)?;
+                .checked_div(8)
+                .ok_or(ErrorCode::NumericalOverflowError)?;
             let position_from_right = 7 - position
                 .checked_rem(8)
                 .ok_or(ErrorCode::NumericalOverflowError)?;
@@ -866,10 +905,10 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
             + (data.items_available as usize) * CONFIG_LINE_SIZE
             + 8
             + 2 * ((data
-                .items_available
-                .checked_div(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?
-                + 1) as usize)
+            .items_available
+            .checked_div(8)
+            .ok_or(ErrorCode::NumericalOverflowError)?
+            + 1) as usize)
     };
 
     Ok(num)
@@ -880,7 +919,7 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
 #[instruction(data: CandyMachineData)]
 pub struct InitializeCandyMachine<'info> {
     /// CHECK: account constraints checked in account trait
-    #[account(zero, rent_exempt = skip, constraint = candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= get_space_for_candy(data)?)]
+    #[account(zero, rent_exempt = skip, constraint = candy_machine.to_account_info().owner == program_id && candy_machine.to_account_info().data_len() >= get_space_for_candy(data) ?)]
     candy_machine: UncheckedAccount<'info>,
     /// CHECK: wallet can be any account and is not written to or read
     wallet: UncheckedAccount<'info>,
@@ -952,7 +991,7 @@ pub struct RemoveCollection<'info> {
     #[account(has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
-    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close=authority)]
+    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close = authority)]
     collection_pda: Account<'info, CollectionPDA>,
     /// CHECK: account checked in CPI
     metadata: UncheckedAccount<'info>,
@@ -995,7 +1034,7 @@ pub struct MintNFT<'info> {
     )]
     candy_machine: Box<Account<'info, CandyMachine>>,
     /// CHECK: account constraints checked in account trait
-    #[account(seeds=[PREFIX.as_bytes(), candy_machine.key().as_ref()], bump=creator_bump)]
+    #[account(seeds = [PREFIX.as_bytes(), candy_machine.key().as_ref()], bump = creator_bump)]
     candy_machine_creator: UncheckedAccount<'info>,
     payer: Signer<'info>,
     /// CHECK: wallet can be any account and is not written to or read
@@ -1069,7 +1108,9 @@ pub struct CandyMachine {
     // here there is a borsh vec u32 indicating number of bytes in bitmask array.
     // here there is a number of bytes equal to ceil(max_number_of_lines/8) and it is a bit mask used to figure out when to increment borsh vec u32
 }
+
 const COLLECTION_PDA_SIZE: usize = 8 + 64;
+
 /// Collection PDA account
 #[account]
 #[derive(Default, Debug)]
@@ -1150,7 +1191,7 @@ pub const CONFIG_ARRAY_START: usize = 8 + // key
     10 + // end settings
     4 + MAX_SYMBOL_LENGTH + // u32 len + symbol
     2 + // seller fee basis points
-    4 + MAX_CREATOR_LIMIT*MAX_CREATOR_LEN + // optional + u32 len + actual vec
+    4 + MAX_CREATOR_LIMIT * MAX_CREATOR_LEN + // optional + u32 len + actual vec
     8 + //max supply
     1 + // is mutable
     1 + // retain authority
@@ -1194,15 +1235,15 @@ pub fn get_good_index(
         + (items_available) * CONFIG_LINE_SIZE
         + 4
         + items_available
-            .checked_div(8)
-            .ok_or(ErrorCode::NumericalOverflowError)?
+        .checked_div(8)
+        .ok_or(ErrorCode::NumericalOverflowError)?
         + 4;
 
     while taken > 0 && index_to_use < items_available {
         let my_position_in_vec = bit_mask_vec_start
             + index_to_use
-                .checked_div(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+            .checked_div(8)
+            .ok_or(ErrorCode::NumericalOverflowError)?;
         /*msg!(
             "My position is {} and value there is {}",
             my_position_in_vec,
@@ -1327,6 +1368,7 @@ pub fn get_config_line<'info>(
 
 /// Individual config line for storing NFT data pre-mint.
 pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
+
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct ConfigLine {
     pub name: String,
