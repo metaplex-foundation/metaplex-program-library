@@ -17,6 +17,7 @@ use std::{
 };
 use tokio::time::{sleep, Duration};
 
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*};
 
 /// The number os retries to fetch the Bundlr balance (MAX_RETRY * DELAY_UNTIL_RETRY ms limit)
@@ -54,9 +55,8 @@ impl BundlrHandler {
         config_data: &ConfigData,
         sugar_config: &SugarConfig,
     ) -> Result<BundlrHandler> {
-        let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
         let client = setup_client(sugar_config)?;
-        let program = client.program(pid);
+        let program = client.program(CANDY_MACHINE_ID);
         let solana_cluster: Cluster = get_cluster(program.rpc())?;
 
         let bundlr_node = match config_data.upload_method {
@@ -270,9 +270,8 @@ impl UploadHandler for BundlrHandler {
 
         // funds the bundlr wallet for media upload
 
-        let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
         let client = setup_client(sugar_config)?;
-        let program = client.program(pid);
+        let program = client.program(CANDY_MACHINE_ID);
 
         if lamports_fee > balance {
             BundlrHandler::fund_bundlr_address(

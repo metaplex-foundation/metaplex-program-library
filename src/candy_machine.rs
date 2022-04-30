@@ -5,8 +5,13 @@ use anyhow::Result;
 use mpl_candy_machine::{CandyMachine, CandyMachineData, WhitelistMintMode, WhitelistMintSettings};
 
 use crate::config::data::SugarConfig;
-use crate::constants::CANDY_MACHINE_V2;
 use crate::setup::setup_client;
+
+pub use mpl_candy_machine::ID;
+// To test a custom candy machine program, comment the line above and use the
+// following lines to declare the id to use:
+//use solana_program::declare_id;
+//declare_id!("<CANDY MACHINE ID>");
 
 #[derive(Debug)]
 pub struct ConfigStatus {
@@ -19,11 +24,11 @@ pub fn get_candy_machine_state(
     candy_machine_id: &Pubkey,
 ) -> Result<CandyMachine> {
     let client = setup_client(sugar_config)?;
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
+    let program = client.program(ID);
 
-    let program = client.program(pid);
     let data = program.rpc().get_account_data(candy_machine_id)?;
     let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
+
     Ok(candy_machine)
 }
 
@@ -31,12 +36,7 @@ pub fn get_candy_machine_data(
     sugar_config: &SugarConfig,
     candy_machine_id: &Pubkey,
 ) -> Result<CandyMachineData> {
-    let client = setup_client(sugar_config)?;
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-
-    let program = client.program(pid);
-    let data = program.rpc().get_account_data(candy_machine_id)?;
-    let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
+    let candy_machine = get_candy_machine_state(sugar_config, candy_machine_id)?;
     Ok(candy_machine.data)
 }
 

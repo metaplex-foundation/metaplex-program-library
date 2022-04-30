@@ -8,10 +8,10 @@ use std::str::FromStr;
 use mpl_candy_machine::instruction as nft_instruction;
 use mpl_candy_machine::{accounts as nft_accounts, CandyMachineData};
 
-use crate::candy_machine::*;
+use crate::candy_machine::get_candy_machine_state;
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
-use crate::constants::CANDY_MACHINE_V2;
 use crate::utils::{check_spl_token, check_spl_token_account, spinner_with_style};
 use crate::{cache::load_cache, config::data::ConfigData};
 
@@ -81,8 +81,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
         }
     }
 
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-    let program = client.program(pid);
+    let program = client.program(CANDY_MACHINE_ID);
 
     let treasury_account = match config_data.spl_token {
         Some(spl_token) => {

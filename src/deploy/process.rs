@@ -29,9 +29,9 @@ pub use mpl_token_metadata::state::{
 
 use crate::cache::*;
 use crate::candy_machine::uuid_from_pubkey;
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
-use crate::constants::CANDY_MACHINE_V2;
 use crate::deploy::data::*;
 use crate::deploy::errors::*;
 use crate::setup::{setup_client, sugar_setup};
@@ -122,9 +122,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
         let uuid = uuid_from_pubkey(&candy_pubkey);
         let candy_data = create_candy_machine_data(&config_data, uuid)?;
-
-        let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-        let program = client.program(pid);
+        let program = client.program(CANDY_MACHINE_ID);
 
         let treasury_wallet = match config_data.spl_token {
             Some(spl_token) => {
@@ -550,8 +548,7 @@ async fn upload_config_lines(
 
 /// Send the `add_config_lines` instruction to the candy machine program.
 async fn add_config_lines(client: Arc<Client>, tx_info: TxInfo) -> Result<Vec<u32>> {
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-    let program = client.program(pid);
+    let program = client.program(CANDY_MACHINE_ID);
 
     // this will be used to update the cache
     let mut indices: Vec<u32> = Vec::new();

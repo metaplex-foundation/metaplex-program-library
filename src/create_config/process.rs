@@ -12,15 +12,16 @@ use std::{
 };
 use url::Url;
 
-use crate::common::{CANDY_EMOJI, CANDY_MACHINE_V2, CONFETTI_EMOJI};
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::config::{
     go_live_date_as_timestamp, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
     HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
 };
+use crate::constants::*;
 use crate::setup::{setup_client, sugar_setup};
+use crate::upload::count_files;
 use crate::utils::{check_spl_token, check_spl_token_account};
 use crate::validate::Metadata;
-use crate::{constants::*, upload::count_files};
 
 /// Default name of the first metadata file.
 const DEFAULT_METADATA: &str = "0.json";
@@ -338,10 +339,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // SPL token mint
 
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let client = Arc::new(setup_client(&sugar_config)?);
-    let program = client.program(pid);
+    let program = client.program(CANDY_MACHINE_ID);
 
     if choices.contains(&SPL_INDEX) {
         config_data.sol_treasury_account = None;

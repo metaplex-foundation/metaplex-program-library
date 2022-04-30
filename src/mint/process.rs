@@ -23,6 +23,7 @@ use mpl_candy_machine::instruction as nft_instruction;
 use mpl_candy_machine::{CandyMachine, WhitelistMintMode};
 
 use crate::cache::load_cache;
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::candy_machine::*;
 use crate::common::*;
 use crate::mint::pdas::*;
@@ -77,7 +78,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
     }
 
     info!("Minting NFT from candy machine: {}", &candy_machine_id);
-    info!("Candy machine program id: {:?}", CANDY_MACHINE_V2);
+    info!("Candy machine program id: {:?}", CANDY_MACHINE_ID);
 
     if number == 1 {
         let pb = spinner_with_style();
@@ -128,9 +129,7 @@ pub fn mint(
     candy_machine_id: Pubkey,
     candy_machine_state: Arc<CandyMachine>,
 ) -> Result<Signature> {
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-
-    let program = client.program(pid);
+    let program = client.program(CANDY_MACHINE_ID);
     let payer = program.payer();
     let wallet = candy_machine_state.wallet;
 
