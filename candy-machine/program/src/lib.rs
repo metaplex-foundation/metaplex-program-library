@@ -34,28 +34,40 @@ use {
     spl_token::state::Mint,
     std::{cell::RefMut, ops::Deref, str::FromStr},
 };
+
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
+
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
+
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
+
 #[program]
 pub mod candy_machine {
     use super::*;
 
+    /// This mints an NFT into a wallet.
+    /// This looks at and respects the various CandyMachine configs:
+    ///
+    /// * gatekeeper
+    /// * whitelist / presale
     #[inline(never)]
     pub fn mint_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
         creator_bump: u8,
     ) -> ProgramResult {
         let candy_machine = &mut ctx.accounts.candy_machine;
-        let candy_machine_creator = &ctx.accounts.candy_machine_creator;
         let clock = &ctx.accounts.clock;
-        // Note this is the wallet of the Candy machine
+
+        /// Note this is the wallet of the Candy machine - this is the account where the payments
+        /// will go to.
         let wallet = &ctx.accounts.wallet;
+
         let payer = &ctx.accounts.payer;
         let token_program = &ctx.accounts.token_program;
-        //Account name the same for IDL compatability
+
+        // Account name the same for IDL compatability
         let recent_slothashes = &ctx.accounts.recent_blockhashes;
         let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
         if recent_slothashes.key().to_string() == BLOCK_HASHES {
@@ -66,7 +78,12 @@ pub mod candy_machine {
         {
             return Err(ErrorCode::IncorrectSlotHashesPubkey.into());
         }
-        let mut price = candy_machine.data.price;
+
+        /// Check if the Candy Machine is active
+        ///
+        /// A candy machine can be inactive in two scenarios:
+        /// 1. all of the items have been redeemed
+        /// 2. the mint has not yet started.
         if let Some(es) = &candy_machine.data.end_settings {
             match es.end_setting_type {
                 EndSettingType::Date => {
@@ -84,15 +101,28 @@ pub mod candy_machine {
             }
         }
 
-        let mut remaining_accounts_counter: usize = 0;
+        /// Gateway / Gatekeeper
+        /// Solana Gateway is a program that allows onchain Gatekeepers to issue credentials
+        /// as tokens. If the candy machine is set up with a Gatekeeper, then to mint an NFT
+        /// you will need one of the Gateway tokens from a Gatekeeper.
+        /// Here we will see if a Gateway token is needed and then check if it is valid.
+        /// Gateway Docs: https://crates.io/crates/solana-gateway
+        ///
+        /// TODO: how is this actually used? how do people use Gatekeepers? this should be more
+        ///       documented.
+        let mut remaining_accounts_idx: usize = 0;
         if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
-            if ctx.remaining_accounts.len() <= remaining_accounts_counter {
+            if ctx.remaining_accounts.len() <= remaining_accounts_idx {
                 return Err(ErrorCode::GatewayTokenMissing.into());
             }
-            let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
+
+            let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_idx];
+            remaining_accounts_idx += 1;
+
             let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
                 ::solana_gateway::state::GatewayToken,
             >(*gateway_token_info.data.borrow())?;
+
             // stores the expire_time before the verification, since the verification
             // will update the expire_time of the token and we won't be able to
             // calculate the creation time
@@ -100,18 +130,17 @@ pub mod candy_machine {
                 .expire_time
                 .ok_or(ErrorCode::GatewayTokenExpireTimeInvalid)?
                 as i64;
-            remaining_accounts_counter += 1;
             if gatekeeper.expire_on_use {
-                if ctx.remaining_accounts.len() <= remaining_accounts_counter {
+                if ctx.remaining_accounts.len() <= remaining_accounts_idx {
                     return Err(ErrorCode::GatewayAppMissing.into());
                 }
-                let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
-                remaining_accounts_counter += 1;
-                if ctx.remaining_accounts.len() <= remaining_accounts_counter {
+                let gateway_app = &ctx.remaining_accounts[remaining_accounts_idx];
+                remaining_accounts_idx += 1;
+                if ctx.remaining_accounts.len() <= remaining_accounts_idx {
                     return Err(ErrorCode::NetworkExpireFeatureMissing.into());
                 }
-                let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
-                remaining_accounts_counter += 1;
+                let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_idx];
+                remaining_accounts_idx += 1;
                 ::solana_gateway::Gateway::verify_and_expire_token(
                     gateway_app.clone(),
                     gateway_token_info.clone(),
@@ -127,7 +156,8 @@ pub mod candy_machine {
                     None,
                 )?;
             }
-            // verifies that the gatway token was not created before the candy
+
+            // verifies that the Gateway token was not created before the candy
             // machine go_live_date (avoids pre-solving the captcha)
             match candy_machine.data.go_live_date {
                 Some(val) => {
@@ -155,24 +185,28 @@ pub mod candy_machine {
             }
         }
 
+        let mut price = candy_machine.data.price;
+
+        /// Whitelist
+        /// The whitelist allows you to mint if you have an SPL token that was designated as the
+        /// whitelist token. The whitelist token is passed in as an additional account.
         if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
-            let whitelist_token_account = &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
-            // If the user has not actually made this account,
-            // this explodes and we just check normal dates.
-            // If they have, we check amount, if it's > 0 we let them use the logic
-            // if 0, check normal dates.
+            let whitelist_token_account = &ctx.remaining_accounts[remaining_accounts_idx];
+            remaining_accounts_idx += 1;
+
+            /// If you are using a whitelist token, it must be in the payer's ATA and the payer must
+            /// have amount > 0.
             match assert_is_ata(whitelist_token_account, &payer.key(), &ws.mint) {
                 Ok(wta) => {
                     if wta.amount > 0 {
                         if ws.mode == WhitelistMintMode::BurnEveryTime {
                             let whitelist_token_mint =
-                                &ctx.remaining_accounts[remaining_accounts_counter];
-                            remaining_accounts_counter += 1;
+                                &ctx.remaining_accounts[remaining_accounts_idx];
+                            remaining_accounts_idx += 1;
 
                             let whitelist_burn_authority =
-                                &ctx.remaining_accounts[remaining_accounts_counter];
-                            remaining_accounts_counter += 1;
+                                &ctx.remaining_accounts[remaining_accounts_idx];
+                            remaining_accounts_idx += 1;
 
                             assert_keys_equal(whitelist_token_mint.key(), ws.mint)?;
 
@@ -186,6 +220,8 @@ pub mod candy_machine {
                             })?;
                         }
 
+                        /// If `presale` is true, the wallet can mint before the go live date or
+                        /// even if a go live date isn't set.
                         match candy_machine.data.go_live_date {
                             None => {
                                 if ctx.accounts.payer.key() != candy_machine.authority
@@ -216,7 +252,7 @@ pub mod candy_machine {
                         }
                         assert_valid_go_live(payer, clock, candy_machine)?;
                         if ws.mode == WhitelistMintMode::BurnEveryTime {
-                            remaining_accounts_counter += 2;
+                            remaining_accounts_idx += 2;
                         }
                     }
                 }
@@ -228,7 +264,7 @@ pub mod candy_machine {
                         return Err(ErrorCode::NoWhitelistToken.into());
                     }
                     if ws.mode == WhitelistMintMode::BurnEveryTime {
-                        remaining_accounts_counter += 2;
+                        remaining_accounts_idx += 2;
                     }
                     assert_valid_go_live(payer, clock, candy_machine)?
                 }
@@ -242,11 +278,17 @@ pub mod candy_machine {
             return Err(ErrorCode::CandyMachineEmpty.into());
         }
 
+        /// Pay
+        /// If the price is an SPL token, then we accept payment here.
         if let Some(mint) = candy_machine.token_mint {
-            let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
-            let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
+            /// Pay with SPL Token
+            let token_account_info = &ctx.remaining_accounts[remaining_accounts_idx];
+            remaining_accounts_idx += 1;
+
+            let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_idx];
+            remaining_accounts_idx += 1;
+
+            /// This is a weird constraint - the SPL token payment has to come from your ATA.
             let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
             if token_account.amount < price {
@@ -262,6 +304,7 @@ pub mod candy_machine {
                 amount: price,
             })?;
         } else {
+            /// Pay with SOL
             if ctx.accounts.payer.lamports() < price {
                 return Err(ErrorCode::NotEnoughSOL.into());
             }
@@ -276,15 +319,22 @@ pub mod candy_machine {
             )?;
         }
 
-        let data = recent_slothashes.data.borrow();
-        let most_recent = array_ref![data, 12, 8];
-
+        /// This is where randomness is introduced into the minting process so that a minter can't
+        /// predict what they will mint. A pseudorandom number is generated by looking at a slice
+        /// of the recent blockhash.
+        let recent_hash_data = recent_slothashes.data.borrow();
+        let most_recent = array_ref![recent_hash_data, 12, 8];
         let index = u64::from_le_bytes(*most_recent);
-        let modded: usize = index
+        let item_index: usize = index
             .checked_rem(candy_machine.data.items_available)
             .ok_or(ErrorCode::NumericalOverflowError)? as usize;
 
-        let config_line = get_config_line(&candy_machine, modded, candy_machine.items_redeemed)?;
+        /// Choose a random config line to get the `name` and `uri` for the new token.
+        let config_line = get_config_line(
+            &candy_machine,
+            item_index,
+            candy_machine.items_redeemed
+        )?;
 
         candy_machine.items_redeemed = candy_machine
             .items_redeemed
@@ -294,6 +344,9 @@ pub mod candy_machine {
         let cm_key = candy_machine.key();
         let authority_seeds = [PREFIX.as_bytes(), cm_key.as_ref(), &[creator_bump]];
 
+        /// The CandyMachine program can sign the new NFT minted. That's why many marketplaces
+        /// look at the first signer to see what items are part of an NFT collection.
+        let candy_machine_creator = &ctx.accounts.candy_machine_creator;
         let mut creators: Vec<mpl_token_metadata::state::Creator> =
             vec![mpl_token_metadata::state::Creator {
                 address: candy_machine_creator.key(),
@@ -309,6 +362,13 @@ pub mod candy_machine {
             });
         }
 
+        /// Below we do the CPI calls for the following:
+        ///
+        /// * create Metadata account for the new token
+        /// * create a Master Edition account
+        /// * update Metadata authority (if needed)
+        ///
+        /// TODO: where do the mint and token accounts get created?
         let metadata_infos = vec![
             ctx.accounts.metadata.to_account_info(),
             ctx.accounts.mint.to_account_info(),
@@ -320,7 +380,6 @@ pub mod candy_machine {
             ctx.accounts.rent.to_account_info(),
             candy_machine_creator.to_account_info(),
         ];
-
         let master_edition_infos = vec![
             ctx.accounts.master_edition.to_account_info(),
             ctx.accounts.mint.to_account_info(),
@@ -395,17 +454,16 @@ pub mod candy_machine {
             ],
             &[&authority_seeds],
         )?;
+
+        /// This defends against other programs being used as part of the mint.
+        /// It's unclear how this works.
         let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
-
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
-
-        let mut idx = 0;
-        let num_instructions = read_u16(&mut idx, &instruction_sysvar)
+        let mut instruction_idx = 0;
+        let num_instructions = read_u16(&mut instruction_idx, &instruction_sysvar)
             .map_err(|_| ProgramError::InvalidAccountData)?;
-
         let associated_token =
             Pubkey::from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL").unwrap();
-
         for index in 0..num_instructions {
             let mut current = 2 + (index * 2) as usize;
             let start = read_u16(&mut current, &instruction_sysvar).unwrap();
@@ -427,6 +485,10 @@ pub mod candy_machine {
         Ok(())
     }
 
+    /// This can be called in the same TX as `mint_nft` to set the collection of the new NFT as
+    /// part of the mint process.
+    ///
+    /// This instruction must be called immediately after `mint_nft`
     pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> ProgramResult {
         let ixs = &ctx.accounts.instructions;
         let previous_instruction = get_instruction_relative(-1, ixs)?;
@@ -438,6 +500,7 @@ pub mod candy_machine {
             return Err(ErrorCode::SuspiciousTransaction.into());
         }
 
+        /// I think this is the discriminator for `mint_nft`
         let discriminator = &previous_instruction.data[0..8];
         if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
             msg!("Transaction had ix with data {:?}", discriminator);
@@ -543,6 +606,12 @@ pub mod candy_machine {
         Ok(())
     }
 
+    /// This adds more mints to the Candy Machine. Mints are stored as config lines at the
+    /// end of the candy machine.
+    ///
+    /// This instruction is useful since there is a size limit on transactions so if you want to
+    /// set up a Candy Machine with a lot o mints, you'll need to split it up over multiple
+    /// transactions.
     pub fn add_config_lines(
         ctx: Context<AddConfigLines>,
         index: u32,
@@ -1061,14 +1130,20 @@ pub struct UpdateCandyMachine<'info> {
 pub struct CandyMachine {
     pub authority: Pubkey,
     pub wallet: Pubkey,
+
+    /// The SPL token that minters will pay with. If `None`, then the minters will pay with SOL.
     pub token_mint: Option<Pubkey>,
+
+    /// Once `items_redeemed > items_available`, minting is over.
     pub items_redeemed: u64,
     pub data: CandyMachineData,
+
     // there's a borsh vec u32 denoting how many actual lines of data there are currently (eventually equals items available)
     // There is actually lines and lines of data after this but we explicitly never want them deserialized.
     // here there is a borsh vec u32 indicating number of bytes in bitmask array.
     // here there is a number of bytes equal to ceil(max_number_of_lines/8) and it is a bit mask used to figure out when to increment borsh vec u32
 }
+
 const COLLECTION_PDA_SIZE: usize = 8 + 64;
 /// Collection PDA account
 #[account]
@@ -1180,6 +1255,22 @@ pub fn get_config_count(data: &RefMut<&mut [u8]>) -> core::result::Result<usize,
     return Ok(u32::from_le_bytes(*array_ref![data, CONFIG_ARRAY_START, 4]) as usize);
 }
 
+/// Iterate through config lines in the candy machine to find a line that hasn't been used
+///
+/// This code is pretty confusing and there are no tests, so you can probably assume that there
+/// are bugs or vulnerabilities here.
+///
+/// This also updates the config line to mark it as used.
+///
+/// # Arguments
+/// * `arr` the data in the candy machine
+/// * `items_available` the number of mints remaining
+/// * `index` the random number of the mint we are going to use
+/// * `pos` huh
+///
+/// # Returns
+/// * `index_to_use` usize
+/// * `found` if this can actually be used
 pub fn get_good_index(
     arr: &mut RefMut<&mut [u8]>,
     items_available: usize,
@@ -1259,27 +1350,33 @@ pub fn get_good_index(
     Ok((index_to_use, found))
 }
 
+/// This gets the information about the mint that you are going to create.
+/// The candy machine stores config lines about each mint in the account after the Data field.
 pub fn get_config_line<'info>(
-    a: &Account<'info, CandyMachine>,
-    index: usize,
+    candy_machine: &Account<'info, CandyMachine>,
+    random_index: usize,
     mint_number: u64,
 ) -> core::result::Result<ConfigLine, ProgramError> {
-    if let Some(hs) = &a.data.hidden_settings {
+    /// If you are using hidden settings (which means that you are using a constant name / uri) then
+    /// the randomness isn't used since we don't keep track of how which mints have been minted
+    if let Some(hs) = &candy_machine.data.hidden_settings {
         return Ok(ConfigLine {
             name: hs.name.clone() + "#" + &(mint_number + 1).to_string(),
             uri: hs.uri.clone(),
         });
     }
-    msg!("Index is set to {:?}", index);
-    let a_info = a.to_account_info();
 
-    let mut arr = a_info.data.borrow_mut();
+    msg!("Index is set to {:?}", random_index);
+
+    let cm_info = candy_machine.to_account_info();
+    let mut arr = cm_info.data.borrow_mut();
 
     let (mut index_to_use, good) =
-        get_good_index(&mut arr, a.data.items_available as usize, index, true)?;
+        get_good_index(&mut arr, candy_machine.data.items_available as usize, random_index, true)?;
+
     if !good {
         let (index_to_use_new, good_new) =
-            get_good_index(&mut arr, a.data.items_available as usize, index, false)?;
+            get_good_index(&mut arr, candy_machine.data.items_available as usize, random_index, false)?;
         index_to_use = index_to_use_new;
         if !good_new {
             return Err(ErrorCode::CannotFindUsableConfigLine.into());
@@ -1290,26 +1387,30 @@ pub fn get_config_line<'info>(
         "Index actually ends up due to used bools {:?}",
         index_to_use
     );
+
+    /// This checks again if the config line is taken. But that's pretty confusing since I thought the
+    /// `get_good_index` code was marking the line as used...
     if arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)] == 1 {
         return Err(ErrorCode::CannotFindUsableConfigLine.into());
     }
 
-    let data_array = &mut arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)
+    /// This is the data for the new token that we are going to create
+    let token_data_array = &mut arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)
         ..CONFIG_ARRAY_START + 4 + (index_to_use + 1) * (CONFIG_LINE_SIZE)];
 
     let mut name_vec = vec![];
     let mut uri_vec = vec![];
     for i in 4..4 + MAX_NAME_LENGTH {
-        if data_array[i] == 0 {
+        if token_data_array[i] == 0 {
             break;
         }
-        name_vec.push(data_array[i])
+        name_vec.push(token_data_array[i])
     }
     for i in 8 + MAX_NAME_LENGTH..8 + MAX_NAME_LENGTH + MAX_URI_LENGTH {
-        if data_array[i] == 0 {
+        if token_data_array[i] == 0 {
             break;
         }
-        uri_vec.push(data_array[i])
+        uri_vec.push(token_data_array[i])
     }
     let config_line: ConfigLine = ConfigLine {
         name: match String::from_utf8(name_vec) {

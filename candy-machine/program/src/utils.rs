@@ -103,6 +103,13 @@ pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult 
     result.map_err(|_| ErrorCode::TokenTransferFailed.into())
 }
 
+/// Asserts that the ATA is owned by the wallet and is for a specific token. And that the ATA
+/// is at the canonical PDA for the owner
+///
+/// # Arguments
+/// * `ata` the account to check
+/// * `wallet` the owner of the ATA
+/// * `mint` the SPL mint that was used
 pub fn assert_is_ata<'a>(
     ata: &AccountInfo,
     wallet: &Pubkey,
@@ -116,6 +123,7 @@ pub fn assert_is_ata<'a>(
     Ok(ata_account)
 }
 
+/// Throws an error if `key1` doesn't match `key2`
 pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
     if key1 != key2 {
         Err(ErrorCode::PublicKeyMismatch.into())
