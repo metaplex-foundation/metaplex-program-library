@@ -1,18 +1,18 @@
+pub mod constants;
 pub mod errors;
 pub mod processor;
 pub mod state;
 pub mod utils;
 
-use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
-pub use errors::CandyError;
-pub use processor::*;
-pub use state::*;
-pub use utils::*;
+use anchor_lang::prelude::*;
+use errors::CandyError;
+use processor::*;
+use state::*;
+use utils::*;
 
 #[program]
 pub mod candy_machine {
     use super::*;
-    pub const PREFIX: &str = "candy_machine";
 
     declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 

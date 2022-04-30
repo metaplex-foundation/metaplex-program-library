@@ -1,17 +1,13 @@
-use anchor_lang::{
-    prelude::{Signer, Sysvar},
-    Result,
-};
-
 use crate::{CandyError, CandyMachine};
-use anchor_lang::{
-    prelude::{Account, AccountInfo, Clock, ProgramError, Pubkey},
-    solana_program::{
-        program::invoke_signed,
-        program_pack::{IsInitialized, Pack},
-    },
+use anchor_lang::prelude::*;
+use solana_program::{
+    account_info::AccountInfo,
+    clock::Clock,
+    program::invoke_signed,
+    program_memory::sol_memcmp,
+    program_pack::{IsInitialized, Pack},
+    pubkey::{Pubkey, PUBKEY_BYTES},
 };
-use solana_program::{program_memory::sol_memcmp, pubkey::PUBKEY_BYTES};
 use spl_associated_token_account::get_associated_token_address;
 
 pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
@@ -49,7 +45,7 @@ pub fn assert_valid_go_live<'info>(
 }
 
 pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
-    if !cmp_pubkeys(account.key, owner) {
+    if !cmp_pubkeys(account.owner, owner) {
         Err(CandyError::IncorrectOwner.into())
     } else {
         Ok(())
@@ -174,4 +170,71 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> Result<()> {
         seeds.as_slice(),
     );
     result.map_err(|_| CandyError::TokenBurnFailed.into())
+}
+
+pub fn is_feature_active(uuid: &str, feature_index: usize) -> bool {
+    uuid.as_bytes()[feature_index] == b"1"[0]
+}
+
+// string is 6 bytes long, can be any valid utf8 char coming in.
+// feature_index is between 0 and 5, inclusive
+// unsafe is fine because we know for a fact that the vec will only
+// contain valid UTF8 bytes (we set it as "1" or "0")
+pub fn set_feature_flag(uuid: &str, feature_index: usize) -> String {
+    let mut bytes: Vec<u8> = vec![b"0"[0]; 6];
+    uuid.bytes().enumerate().for_each(|(i, byte)| {
+        if i == feature_index || byte == "1".as_bytes()[0] {
+            bytes[i] = b"1"[0]
+        }
+    });
+    unsafe { String::from_utf8_unchecked(bytes) }
+}
+
+pub fn remove_feature_flag(uuid: &str, feature_index: usize) -> String {
+    let mut bytes: Vec<u8> = vec![b"0"[0]; 6];
+    uuid.bytes().enumerate().for_each(|(i, byte)| {
+        if i == feature_index {
+            bytes[i] = b"0"[0];
+        } else if byte == "1".as_bytes()[0] {
+            bytes[i] = b"1"[0];
+        }
+    });
+    unsafe { String::from_utf8_unchecked(bytes) }
+}
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+    use crate::candy_machine::COLLECTIONS_FEATURE_INDEX;
+
+    #[test]
+    fn feature_flag_working() {
+        let mut uuid = String::from("ABCDEF");
+        println!("{}", uuid.as_bytes()[COLLECTIONS_FEATURE_INDEX]);
+        assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
+
+        uuid = set_feature_flag(&uuid, COLLECTIONS_FEATURE_INDEX);
+        println!("{}", uuid);
+        assert!(is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
+        uuid = remove_feature_flag(&uuid, COLLECTIONS_FEATURE_INDEX);
+        println!("{}", uuid);
+        assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
+
+        let uuid = String::from("01H333");
+        println!("{}", uuid);
+        assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
+    }
+
+    #[test]
+    fn check_keys_equal() {
+        let key1 = Pubkey::new_unique();
+        assert!(cmp_pubkeys(&key1, &key1));
+    }
+
+    #[test]
+    fn check_keys_not_equal() {
+        let key1 = Pubkey::new_unique();
+        let key2 = Pubkey::new_unique();
+        assert_eq!(cmp_pubkeys(&key1, &key2), false);
+    }
 }

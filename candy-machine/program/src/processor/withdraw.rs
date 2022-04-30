@@ -1,6 +1,5 @@
 use crate::{candy_machine, CandyError, CandyMachine};
-use anchor_lang::{err, prelude::*};
-use solana_program::pubkey::Pubkey;
+use anchor_lang::prelude::*;
 
 /// Withdraw SOL from candy machine account.
 #[derive(Accounts)]

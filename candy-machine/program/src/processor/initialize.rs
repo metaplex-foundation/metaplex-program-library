@@ -1,6 +1,7 @@
 use crate::{
-    assert_initialized, assert_owned_by, CandyError, CandyMachine, CandyMachineData,
-    CONFIG_ARRAY_START, CONFIG_LINE_SIZE,
+    assert_initialized, assert_owned_by,
+    constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
+    CandyError, CandyMachine, CandyMachineData,
 };
 use anchor_lang::{prelude::*, Discriminator};
 use mpl_token_metadata::state::{MAX_CREATOR_LIMIT, MAX_SYMBOL_LENGTH};

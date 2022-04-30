@@ -1,6 +1,10 @@
 use crate::{
-    candy_machine, utils::*, CandyError, CandyMachine, ConfigLine, EndSettingType,
-    WhitelistMintMode, CONFIG_ARRAY_START, CONFIG_LINE_SIZE,
+    candy_machine,
+    constants::{
+        COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START, CONFIG_LINE_SIZE, EXPIRE_OFFSET, PREFIX,
+    },
+    utils::*,
+    CandyError, CandyMachine, ConfigLine, EndSettingType, WhitelistMintMode,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
@@ -9,25 +13,17 @@ use mpl_token_metadata::{
     instruction::{
         create_master_edition_v3, create_metadata_accounts_v2, update_metadata_accounts_v2,
     },
-    state::{MAX_NAME_LENGTH, MAX_URI_LENGTH, PREFIX},
+    state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
 };
 use solana_gateway::{borsh::try_from_slice_incomplete, state::GatewayToken, Gateway};
 use solana_program::{
     clock::Clock,
-    msg,
     program::{invoke, invoke_signed},
-    program_error::ProgramError,
-    pubkey::Pubkey,
-    rent::Rent,
     serialize_utils::{read_pubkey, read_u16},
     system_instruction, sysvar,
-    sysvar::SysvarId,
+    sysvar::instructions::get_instruction_relative,
 };
 use std::{cell::RefMut, ops::Deref, str::FromStr};
-
-// here just in case solana removes the var
-const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
-const EXPIRE_OFFSET: i64 = 10 * 60;
 
 /// Mint a new NFT pseudo-randomly from the config array.
 #[derive(Accounts)]
@@ -98,17 +94,28 @@ pub fn handle_mint_nft<'info>(
     let wallet = &ctx.accounts.wallet;
     let payer = &ctx.accounts.payer;
     let token_program = &ctx.accounts.token_program;
-    //Account name the same for IDL compatability
-    let recent_slothashes = &ctx.accounts.recent_blockhashes;
     let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
-    if recent_slothashes.key().to_string() == BLOCK_HASHES {
-        msg!("recent_blockhashes is deprecated and will break soon");
+
+    let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
+    let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
+    if is_feature_active(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX) {
+        let next_instruction = get_instruction_relative(1, &instruction_sysvar_account_info)?;
+        if next_instruction.program_id != candy_machine::id() {
+            msg!(
+                "Transaction had ix with program id {}",
+                &next_instruction.program_id
+            );
+            return Err(CandyError::SuspiciousTransaction.into());
+        }
+        let discriminator = &next_instruction.data[0..8];
+
+        // Set collection during mint discriminator
+        if discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
+            msg!("Transaction had ix with data {:?}", discriminator);
+            return Err(CandyError::SuspiciousTransaction.into());
+        }
     }
-    if recent_slothashes.key() != SlotHashes::id()
-        && recent_slothashes.key().to_string() != BLOCK_HASHES
-    {
-        return err!(CandyError::IncorrectSlotHashesPubkey);
-    }
+
     let mut price = candy_machine.data.price;
     if let Some(es) = &candy_machine.data.end_settings {
         match es.end_setting_type {
@@ -318,10 +325,12 @@ pub fn handle_mint_nft<'info>(
             ],
         )?;
     }
+    let recent_slothashes = <SlotHashes as sysvar::Sysvar>::get()?;
+    let (_most_recent, hash) = recent_slothashes
+        .first()
+        .ok_or(CandyError::SlotHashesEmpty)?;
 
-    let data = recent_slothashes.data.borrow();
-    let most_recent = array_ref![data, 12, 8];
-
+    let most_recent = array_ref![hash.as_ref(), 0, 8];
     let index = u64::from_le_bytes(*most_recent);
     let modded: usize = index
         .checked_rem(candy_machine.data.items_available)
@@ -438,9 +447,6 @@ pub fn handle_mint_nft<'info>(
         ],
         &[&authority_seeds],
     )?;
-    let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
-
-    let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
 
     let mut idx = 0;
     let num_instructions =
@@ -467,6 +473,7 @@ pub fn handle_mint_nft<'info>(
             return err!(CandyError::SuspiciousTransaction);
         }
     }
+
     Ok(())
 }
 

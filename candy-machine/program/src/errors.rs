@@ -62,4 +62,6 @@ pub enum CandyError {
     MismatchedCollectionPDA,
     #[msg("Provided mint account doesn't match collection PDA mint")]
     MismatchedCollectionMint,
+    #[msg("Slot hashes Sysvar is empty")]
+    SlotHashesEmpty,
 }

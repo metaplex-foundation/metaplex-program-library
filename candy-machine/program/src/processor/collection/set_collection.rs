@@ -1,15 +1,18 @@
-use crate::{CandyError, CandyMachine, CollectionPDA, COLLECTION_PDA_SIZE};
+use crate::{
+    constants::{COLLECTIONS_FEATURE_INDEX, COLLECTION_PDA_SIZE},
+    set_feature_flag, CandyError, CandyMachine, CollectionPDA,
+};
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
     assertions::collection::assert_master_edition, instruction::approve_collection_authority,
     state::Metadata, utils::create_or_allocate_account_raw,
 };
-use solana_program::{msg, program::invoke};
+use solana_program::program::invoke;
 
 /// Set the collection PDA for the candy machine
 #[derive(Accounts)]
 pub struct SetCollection<'info> {
-    #[account(has_one = authority)]
+    #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
     /// CHECK: account constraints checked in account trait
@@ -44,7 +47,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     }
     let edition = ctx.accounts.edition.to_account_info();
     let authority_record = ctx.accounts.collection_authority_record.to_account_info();
-    let candy_machine = &ctx.accounts.candy_machine;
+    let candy_machine = &mut ctx.accounts.candy_machine;
     assert_master_edition(&metadata, &edition)?;
     if authority_record.data_is_empty() {
         let approve_collection_infos = vec![
@@ -99,5 +102,6 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     collection_pda_object.mint = mint.key();
     collection_pda_object.candy_machine = candy_machine.key();
     collection_pda_object.try_serialize(&mut data_ref)?;
+    candy_machine.data.uuid = set_feature_flag(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX);
     Ok(())
 }

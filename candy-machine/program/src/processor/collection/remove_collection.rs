@@ -1,4 +1,7 @@
-use crate::{CandyError, CandyMachine, CollectionPDA};
+use crate::{
+    constants::COLLECTIONS_FEATURE_INDEX, remove_feature_flag, CandyError, CandyMachine,
+    CollectionPDA,
+};
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{instruction::revoke_collection_authority, state::Metadata};
 use solana_program::program::invoke;
@@ -6,7 +9,7 @@ use solana_program::program::invoke;
 /// Set the collection PDA for the candy machine
 #[derive(Accounts)]
 pub struct RemoveCollection<'info> {
-    #[account(has_one = authority)]
+    #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
     #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close=authority)]
@@ -25,6 +28,7 @@ pub struct RemoveCollection<'info> {
 
 pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
     let mint = ctx.accounts.mint.to_account_info();
+    let candy_machine = &mut ctx.accounts.candy_machine;
     let metadata: Metadata = Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
     if metadata.update_authority != ctx.accounts.authority.key() {
         return err!(CandyError::IncorrectCollectionAuthority);
@@ -57,5 +61,7 @@ pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
         ),
         revoke_collection_infos.as_slice(),
     )?;
+    candy_machine.data.uuid =
+        remove_feature_flag(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX);
     Ok(())
 }
