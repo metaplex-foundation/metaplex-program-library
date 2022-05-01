@@ -68,9 +68,7 @@ pub mod candy_machine {
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
         let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
         /// Restrict Who can call Candy Machine via CPI
-         msg!("{:?}", current_ix.program_id);
         if current_ix.program_id != candy_machine::id() && current_ix.program_id != GUMDROP_ID {
-            msg!("un auth cpi");
             punish_bots(
                 ErrorCode::SuspiciousTransaction,
                 payer.to_account_info(),
@@ -133,7 +131,7 @@ pub mod candy_machine {
                             )?;
                             return Ok(());
                         }
-                        return Err(ErrorCode::CandyMachineNotLive.into());
+                        return Err(ErrorCode::CandyMachineEmpty.into());
                     }
                 }
             }
@@ -142,7 +140,14 @@ pub mod candy_machine {
         let mut remaining_accounts_counter: usize = 0;
         if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-                return Err(ErrorCode::GatewayTokenMissing.into());
+                punish_bots(
+                    ErrorCode::GatewayTokenMissing,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
+                return Ok(());
             }
             let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
             let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
@@ -290,7 +295,17 @@ pub mod candy_machine {
                             )?;
                             return Ok(());
                         }
-                        assert_valid_go_live(payer, clock, candy_machine)?;
+                        let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                        if go_live.is_err() {
+                            punish_bots(
+                                ErrorCode::CandyMachineNotLive,
+                                payer.to_account_info(),
+                                ctx.accounts.candy_machine.to_account_info(),
+                                ctx.accounts.system_program.to_account_info(),
+                                BOT_FEE,
+                            )?;
+                            return Ok(());
+                        }
                         if ws.mode == WhitelistMintMode::BurnEveryTime {
                             remaining_accounts_counter += 2;
                         }
@@ -313,16 +328,43 @@ pub mod candy_machine {
                     if ws.mode == WhitelistMintMode::BurnEveryTime {
                         remaining_accounts_counter += 2;
                     }
-                    assert_valid_go_live(payer, clock, candy_machine)?
+                    let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                    if go_live.is_err() {
+                        punish_bots(
+                            ErrorCode::CandyMachineNotLive,
+                            payer.to_account_info(),
+                            ctx.accounts.candy_machine.to_account_info(),
+                            ctx.accounts.system_program.to_account_info(),
+                            BOT_FEE,
+                        )?;
+                        return Ok(());
+                    }
                 }
             }
         } else {
             // no whitelist means normal datecheck
-            assert_valid_go_live(payer, clock, candy_machine)?;
+            let go_live = assert_valid_go_live(payer, clock, candy_machine);
+            if go_live.is_err() {
+                punish_bots(
+                    ErrorCode::CandyMachineNotLive,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
+                return Ok(());
+            }
         }
 
         if candy_machine.items_redeemed >= candy_machine.data.items_available {
-            return Err(ErrorCode::CandyMachineEmpty.into());
+            punish_bots(
+                ErrorCode::CandyMachineEmpty,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
+            );
+            return Ok(());
         }
 
         if let Some(mint) = candy_machine.token_mint {
