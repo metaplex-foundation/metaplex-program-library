@@ -79,6 +79,21 @@ pub mod candy_machine {
         mint_memory.wallet = payer.key();
         mint_memory.cm_id = candy_machine.key();
 
+        if mint_memory.minted >= candy_machine.data.allowed_per_wallet {
+            mint_memory.failed += 1;
+            punish_bots(
+                ErrorCode::ReachedMintLimit,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
+                candy_machine.data.price,
+                candy_machine.data.allowed_per_wallet,
+                mint_memory.failed
+            )?;
+            return Ok(());
+        }
+
         /// Restrict Who can call Candy Machine via CPI
         if current_ix.program_id != candy_machine::id() && current_ix.program_id != GUMDROP_ID {
             mint_memory.failed += 1;
@@ -1573,6 +1588,8 @@ pub struct MintMemory {
 
 #[error]
 pub enum ErrorCode {
+    #[msg("Reached mint limit")]
+    ReachedMintLimit,
     #[msg("Account does not have correct owner!")]
     IncorrectOwner,
     #[msg("Account is not initialized!")]
