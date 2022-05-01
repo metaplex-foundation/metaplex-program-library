@@ -2060,7 +2060,7 @@ dependencies = [
  "anchor-lang 0.24.2",
  "anchor-spl 0.24.2",
  "arrayref",
- "mpl-token-metadata 1.2.7",
+ "mpl-token-metadata 1.2.8",
  "solana-program-test",
  "solana-sdk",
  "spl-associated-token-account",
@@ -2087,7 +2087,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.2.7"
+version = "1.2.8"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
