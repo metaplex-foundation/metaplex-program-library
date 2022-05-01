@@ -68,7 +68,7 @@ pub mod candy_machine {
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
         let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
         /// Restrict Who can call Candy Machine via CPI
-        if current_ix.program_id != candy_machine::id() || current_ix.program_id != GUMDROP_ID {
+        if current_ix.program_id != candy_machine::id() && current_ix.program_id != GUMDROP_ID {
             msg!("un auth cpi");
             punish_bots(
                 ErrorCode::SuspiciousTransaction,
