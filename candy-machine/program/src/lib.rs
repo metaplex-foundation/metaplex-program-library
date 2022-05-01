@@ -4,9 +4,8 @@ use solana_program::sysvar::{instructions::get_instruction_relative, SysvarId};
 use {
     crate::utils::{
         assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by,
-        assert_valid_go_live, spl_token_burn, spl_token_transfer, TokenBurnParams,
+        assert_valid_go_live, punish_bots, spl_token_burn, spl_token_transfer, TokenBurnParams,
         TokenTransferParams,
-        punish_bots,
     },
     anchor_lang::{
         prelude::*,
@@ -47,8 +46,8 @@ const A_TOKEN: Pubkey = solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH2
 
 #[program]
 pub mod candy_machine {
-    use crate::utils::punish_bots_lamports;
     use super::*;
+    use crate::utils::punish_bots_lamports;
 
     #[inline(never)]
     pub fn mint_nft<'info>(
@@ -70,11 +69,12 @@ pub mod candy_machine {
         let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
         /// Restrict Who can call Candy Machine via CPI
         if current_ix.program_id != candy_machine::id() || current_ix.program_id != GUMDROP_ID {
-            punish_bots(ErrorCode::SuspiciousTransaction,
-                        payer.to_account_info(),
-                        ctx.accounts.token_metadata_program.to_account_info(),
-                        ctx.accounts.system_program.to_account_info(),
-                        BOT_FEE
+            punish_bots(
+                ErrorCode::SuspiciousTransaction,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
             )?;
             return Ok(());
         }
@@ -82,11 +82,12 @@ pub mod candy_machine {
         if next_ix.is_ok() {
             let discriminator = &next_ix.unwrap().data[0..8];
             if discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
-                punish_bots(ErrorCode::SuspiciousTransaction,
-                            payer.to_account_info(),
-                            ctx.accounts.token_metadata_program.to_account_info(),
-                            ctx.accounts.system_program.to_account_info(),
-                            BOT_FEE
+                punish_bots(
+                    ErrorCode::SuspiciousTransaction,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
                 )?;
                 return Ok(());
             }
@@ -106,7 +107,13 @@ pub mod candy_machine {
                 EndSettingType::Date => {
                     if clock.unix_timestamp > es.number as i64 {
                         if ctx.accounts.payer.key() != candy_machine.authority {
-                            punish_bots(ErrorCode::CandyMachineNotLive, payer.to_account_info(), ctx.accounts.token_metadata_program.to_account_info(), ctx.accounts.system_program.to_account_info(),BOT_FEE)?;
+                            punish_bots(
+                                ErrorCode::CandyMachineNotLive,
+                                payer.to_account_info(),
+                                ctx.accounts.candy_machine.to_account_info(),
+                                ctx.accounts.system_program.to_account_info(),
+                                BOT_FEE,
+                            )?;
                             return Ok(());
                         }
                     }
@@ -114,7 +121,13 @@ pub mod candy_machine {
                 EndSettingType::Amount => {
                     if candy_machine.items_redeemed >= es.number {
                         if ctx.accounts.payer.key() != candy_machine.authority {
-                            punish_bots(ErrorCode::CandyMachineEmpty, payer.to_account_info(), ctx.accounts.token_metadata_program.to_account_info(), ctx.accounts.system_program.to_account_info(),BOT_FEE)?;
+                            punish_bots(
+                                ErrorCode::CandyMachineEmpty,
+                                payer.to_account_info(),
+                                ctx.accounts.candy_machine.to_account_info(),
+                                ctx.accounts.system_program.to_account_info(),
+                                BOT_FEE,
+                            )?;
                             return Ok(());
                         }
                         return Err(ErrorCode::CandyMachineNotLive.into());
@@ -230,7 +243,13 @@ pub mod candy_machine {
                                 if ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
-                                    punish_bots(ErrorCode::CandyMachineNotLive, payer.to_account_info(), ctx.accounts.token_metadata_program.to_account_info(), ctx.accounts.system_program.to_account_info(),BOT_FEE)?;
+                                    punish_bots(
+                                        ErrorCode::CandyMachineNotLive,
+                                        payer.to_account_info(),
+                                        ctx.accounts.candy_machine.to_account_info(),
+                                        ctx.accounts.system_program.to_account_info(),
+                                        BOT_FEE,
+                                    )?;
                                     return Ok(());
                                 }
                             }
@@ -239,7 +258,13 @@ pub mod candy_machine {
                                     && ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
-                                    punish_bots(ErrorCode::CandyMachineNotLive, payer.to_account_info(), ctx.accounts.token_metadata_program.to_account_info(), ctx.accounts.system_program.to_account_info(),BOT_FEE)?;
+                                    punish_bots(
+                                        ErrorCode::CandyMachineNotLive,
+                                        payer.to_account_info(),
+                                        ctx.accounts.candy_machine.to_account_info(),
+                                        ctx.accounts.system_program.to_account_info(),
+                                        BOT_FEE,
+                                    )?;
                                     return Ok(());
                                 }
                             }
@@ -253,7 +278,13 @@ pub mod candy_machine {
                             // A non-presale whitelist with no discount price is a forced whitelist
                             // If a pre-sale has no discount, its no issue, because the "discount"
                             // is minting first - a presale whitelist always has an open post sale.
-                            punish_bots(ErrorCode::NoWhitelistToken, payer.to_account_info(), ctx.accounts.token_metadata_program.to_account_info(),  ctx.accounts.system_program.to_account_info(),BOT_FEE)?;
+                            punish_bots(
+                                ErrorCode::NoWhitelistToken,
+                                payer.to_account_info(),
+                                ctx.accounts.candy_machine.to_account_info(),
+                                ctx.accounts.system_program.to_account_info(),
+                                BOT_FEE,
+                            )?;
                             return Ok(());
                         }
                         assert_valid_go_live(payer, clock, candy_machine)?;
@@ -267,7 +298,13 @@ pub mod candy_machine {
                         // A non-presale whitelist with no discount price is a forced whitelist
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
-                        punish_bots(ErrorCode::NoWhitelistToken, payer.to_account_info(), ctx.accounts.token_metadata_program.to_account_info(),  ctx.accounts.system_program.to_account_info(),BOT_FEE)?;
+                        punish_bots(
+                            ErrorCode::NoWhitelistToken,
+                            payer.to_account_info(),
+                            ctx.accounts.candy_machine.to_account_info(),
+                            ctx.accounts.system_program.to_account_info(),
+                            BOT_FEE,
+                        )?;
                         return Ok(());
                     }
                     if ws.mode == WhitelistMintMode::BurnEveryTime {
@@ -461,7 +498,13 @@ pub mod candy_machine {
                 && program_id != associated_token
             {
                 msg!("Transaction had ix with program id {}", program_id);
-                punish_bots(ErrorCode::SuspiciousTransaction, payer.to_account_info(), ctx.accounts.token_metadata_program.to_account_info(),  ctx.accounts.system_program.to_account_info(),BOT_FEE)?;
+                punish_bots(
+                    ErrorCode::SuspiciousTransaction,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
                 return Ok(());
             }
         }
@@ -477,14 +520,24 @@ pub mod candy_machine {
                 "Transaction had ix with program id {}",
                 &previous_instruction.program_id
             );
-            punish_bots_lamports(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program,BOT_FEE)?;
+            punish_bots_lamports(
+                ErrorCode::SuspiciousTransaction,
+                &ctx.accounts.payer,
+                &ctx.accounts.collection_pda.to_account_info(),
+                BOT_FEE,
+            )?;
             return Ok(());
         }
 
         let discriminator = &previous_instruction.data[0..8];
         if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
             msg!("Transaction had ix with data {:?}", discriminator);
-            punish_bots_lamports(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program,BOT_FEE)?;
+            punish_bots_lamports(
+                ErrorCode::SuspiciousTransaction,
+                &ctx.accounts.payer,
+                &ctx.accounts.collection_pda.to_account_info(),
+                BOT_FEE,
+            )?;
             return Ok(());
         }
 
@@ -502,12 +555,22 @@ pub mod candy_machine {
                 mint_ix_cm,
                 candy_key
             );
-            punish_bots_lamports(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program,BOT_FEE)?;
+            punish_bots_lamports(
+                ErrorCode::SuspiciousTransaction,
+                &ctx.accounts.payer,
+                &ctx.accounts.collection_pda.to_account_info(),
+                BOT_FEE,
+            )?;
             return Ok(());
         }
         if &mint_ix_cm != &candy_key {
             msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, candy_key);
-            punish_bots_lamports(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program,BOT_FEE)?;
+            punish_bots_lamports(
+                ErrorCode::SuspiciousTransaction,
+                &ctx.accounts.payer,
+                &ctx.accounts.collection_pda.to_account_info(),
+                BOT_FEE,
+            )?;
             return Ok(());
         }
         if mint_ix_metadata != metadata {
@@ -516,7 +579,12 @@ pub mod candy_machine {
                 mint_ix_metadata,
                 metadata
             );
-            punish_bots_lamports(ErrorCode::SuspiciousTransaction, &ctx.accounts.payer, &ctx.accounts.token_metadata_program,BOT_FEE)?;
+            punish_bots_lamports(
+                ErrorCode::SuspiciousTransaction,
+                &ctx.accounts.payer,
+                &ctx.accounts.collection_pda.to_account_info(),
+                BOT_FEE,
+            )?;
             return Ok(());
         }
 
@@ -646,8 +714,8 @@ pub mod candy_machine {
                 .ok_or(ErrorCode::NumericalOverflowError)?;
             let my_position_in_vec = bit_mask_vec_start
                 + position
-                .checked_div(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?;
+                    .checked_div(8)
+                    .ok_or(ErrorCode::NumericalOverflowError)?;
             let position_from_right = 7 - position
                 .checked_rem(8)
                 .ok_or(ErrorCode::NumericalOverflowError)?;
@@ -913,10 +981,10 @@ fn get_space_for_candy(data: CandyMachineData) -> core::result::Result<usize, Pr
             + (data.items_available as usize) * CONFIG_LINE_SIZE
             + 8
             + 2 * ((data
-            .items_available
-            .checked_div(8)
-            .ok_or(ErrorCode::NumericalOverflowError)?
-            + 1) as usize)
+                .items_available
+                .checked_div(8)
+                .ok_or(ErrorCode::NumericalOverflowError)?
+                + 1) as usize)
     };
 
     Ok(num)
@@ -1243,15 +1311,15 @@ pub fn get_good_index(
         + (items_available) * CONFIG_LINE_SIZE
         + 4
         + items_available
-        .checked_div(8)
-        .ok_or(ErrorCode::NumericalOverflowError)?
+            .checked_div(8)
+            .ok_or(ErrorCode::NumericalOverflowError)?
         + 4;
 
     while taken > 0 && index_to_use < items_available {
         let my_position_in_vec = bit_mask_vec_start
             + index_to_use
-            .checked_div(8)
-            .ok_or(ErrorCode::NumericalOverflowError)?;
+                .checked_div(8)
+                .ok_or(ErrorCode::NumericalOverflowError)?;
         /*msg!(
             "My position is {} and value there is {}",
             my_position_in_vec,
