@@ -69,6 +69,7 @@ pub mod candy_machine {
         let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
         /// Restrict Who can call Candy Machine via CPI
         if current_ix.program_id != candy_machine::id() || current_ix.program_id != GUMDROP_ID {
+            msg!("un auth cpi");
             punish_bots(
                 ErrorCode::SuspiciousTransaction,
                 payer.to_account_info(),
@@ -82,6 +83,7 @@ pub mod candy_machine {
         if next_ix.is_ok() {
             let discriminator = &next_ix.unwrap().data[0..8];
             if discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
+                msg!("un auth ix");
                 punish_bots(
                     ErrorCode::SuspiciousTransaction,
                     payer.to_account_info(),

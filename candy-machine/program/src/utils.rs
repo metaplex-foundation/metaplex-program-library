@@ -82,7 +82,7 @@ pub fn punish_bots<'a>(
     fee: u64,
 ) -> Result<(), ProgramError> {
     msg!(
-        "Error: {}, Candy Machine Botting is taxed at {:?} lamports",
+        "{}, Candy Machine Botting is taxed at {:?} lamports",
         err.to_string(),
         fee
     );
