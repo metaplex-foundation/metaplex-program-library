@@ -1,39 +1,36 @@
 pub mod utils;
 
-use solana_program::sysvar::{instructions::get_instruction_relative, SysvarId};
-use {
-    crate::utils::{
-        assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by,
-        assert_valid_go_live, punish_bots, spl_token_burn, spl_token_transfer, TokenBurnParams,
-        TokenTransferParams,
-    },
-    anchor_lang::{
-        prelude::*,
-        solana_program::{
-            program::{invoke, invoke_signed},
-            serialize_utils::{read_pubkey, read_u16},
-            system_instruction, sysvar,
-        },
-        AnchorDeserialize, AnchorSerialize, Discriminator, Key,
-    },
-    anchor_spl::token::Token,
-    arrayref::array_ref,
-    mpl_token_metadata::{
-        assertions::collection::assert_master_edition,
-        error::MetadataError,
-        instruction::{
-            approve_collection_authority, create_master_edition_v3, create_metadata_accounts_v2,
-            revoke_collection_authority, set_and_verify_collection, update_metadata_accounts_v2,
-        },
-        state::{
-            Metadata, MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-            MAX_URI_LENGTH,
-        },
-        utils::{assert_derivation, create_or_allocate_account_raw},
-    },
-    spl_token::state::Mint,
-    std::{cell::RefMut, ops::Deref, str::FromStr},
+use crate::utils::{
+    assert_initialized, assert_is_ata, assert_keys_equal, assert_owned_by, assert_valid_go_live,
+    punish_bots, spl_token_burn, spl_token_transfer, TokenBurnParams, TokenTransferParams,
 };
+use anchor_lang::{
+    prelude::*,
+    solana_program::{
+        program::{invoke, invoke_signed},
+        serialize_utils::{read_pubkey, read_u16},
+        system_instruction, sysvar,
+    },
+    AnchorDeserialize, AnchorSerialize, Discriminator, Key,
+};
+use anchor_spl::token::Token;
+use arrayref::array_ref;
+use mpl_token_metadata::{
+    assertions::collection::assert_master_edition,
+    error::MetadataError,
+    instruction::{
+        approve_collection_authority, create_master_edition_v3, create_metadata_accounts_v2,
+        revoke_collection_authority, set_and_verify_collection, update_metadata_accounts_v2,
+    },
+    state::{
+        Metadata, MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
+        MAX_URI_LENGTH,
+    },
+    utils::{assert_derivation, create_or_allocate_account_raw},
+};
+use solana_program::sysvar::{instructions::get_instruction_relative, SysvarId};
+use spl_token::state::Mint;
+use std::{cell::RefMut, ops::Deref, str::FromStr};
 anchor_lang::declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
@@ -224,27 +221,6 @@ pub mod candy_machine {
             match assert_is_ata(whitelist_token_account, &payer.key(), &ws.mint) {
                 Ok(wta) => {
                     if wta.amount > 0 {
-                        if ws.mode == WhitelistMintMode::BurnEveryTime {
-                            let whitelist_token_mint =
-                                &ctx.remaining_accounts[remaining_accounts_counter];
-                            remaining_accounts_counter += 1;
-
-                            let whitelist_burn_authority =
-                                &ctx.remaining_accounts[remaining_accounts_counter];
-                            remaining_accounts_counter += 1;
-
-                            assert_keys_equal(whitelist_token_mint.key(), ws.mint)?;
-
-                            spl_token_burn(TokenBurnParams {
-                                mint: whitelist_token_mint.clone(),
-                                source: whitelist_token_account.clone(),
-                                amount: 1,
-                                authority: whitelist_burn_authority.clone(),
-                                authority_signer_seeds: None,
-                                token_program: token_program.to_account_info(),
-                            })?;
-                        }
-
                         match candy_machine.data.go_live_date {
                             None => {
                                 if ctx.accounts.payer.key() != candy_machine.authority
@@ -275,6 +251,27 @@ pub mod candy_machine {
                                     return Ok(());
                                 }
                             }
+                        }
+
+                        if ws.mode == WhitelistMintMode::BurnEveryTime {
+                            let whitelist_token_mint =
+                                &ctx.remaining_accounts[remaining_accounts_counter];
+                            remaining_accounts_counter += 1;
+
+                            let whitelist_burn_authority =
+                                &ctx.remaining_accounts[remaining_accounts_counter];
+                            remaining_accounts_counter += 1;
+
+                            assert_keys_equal(whitelist_token_mint.key(), ws.mint)?;
+
+                            spl_token_burn(TokenBurnParams {
+                                mint: whitelist_token_mint.clone(),
+                                source: whitelist_token_account.clone(),
+                                amount: 1,
+                                authority: whitelist_burn_authority.clone(),
+                                authority_signer_seeds: None,
+                                token_program: token_program.to_account_info(),
+                            })?;
                         }
 
                         if let Some(dp) = ws.discount_price {
@@ -566,7 +563,9 @@ pub mod candy_machine {
             return Ok(());
         }
         /// Check if the metadata acount has data if not bot fee
-        if ctx.accounts.metadata.owner != &mpl_token_metadata::id() || ctx.accounts.token_metadata_program.data_len() == 0 {
+        if ctx.accounts.metadata.owner != &mpl_token_metadata::id()
+            || ctx.accounts.token_metadata_program.data_len() == 0
+        {
             return Ok(());
         }
 
