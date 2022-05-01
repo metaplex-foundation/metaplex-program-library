@@ -40,6 +40,14 @@ const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
 const BOT_FEE: u64 = 10000000;
+const MINT_MEMORY_SPACE: u64 =
+    std::mem::size_of::<Pubkey>() + /* wallet */
+    std::mem::size_of::<Pubkey>() + /* cm_id */
+    8 + /* minted */
+    8 + /* failed */
+    100 /* padding */
+;
+
 
 const GUMDROP_ID: Pubkey = solana_program::pubkey!("gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a");
 const A_TOKEN: Pubkey = solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
@@ -52,7 +60,9 @@ pub mod candy_machine {
     pub fn mint_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
         creator_bump: u8,
+        memory_mint: u8
     ) -> ProgramResult {
+        let mint_memory = &mut ctx.accounts.mint_memory;
         let candy_machine = &mut ctx.accounts.candy_machine;
         let candy_machine_creator = &ctx.accounts.candy_machine_creator;
         let clock = &ctx.accounts.clock;
@@ -66,14 +76,20 @@ pub mod candy_machine {
         let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
         let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
+        mint_memory.wallet = payer.key();
+        mint_memory.cm_id = candy_machine.key();
+
         /// Restrict Who can call Candy Machine via CPI
         if current_ix.program_id != candy_machine::id() && current_ix.program_id != GUMDROP_ID {
             punish_bots(
                 ErrorCode::SuspiciousTransaction,
+                mint_memory.to_account_info(),
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
                 BOT_FEE,
+                candy_machine.data.price,
+                candy_machine.data.allowed_per_wallet
             )?;
             return Ok(());
         }
@@ -88,6 +104,7 @@ pub mod candy_machine {
                     ctx.accounts.candy_machine.to_account_info(),
                     ctx.accounts.system_program.to_account_info(),
                     BOT_FEE,
+
                 )?;
                 return Ok(());
             }
@@ -1126,6 +1143,14 @@ pub struct WithdrawFunds<'info> {
 #[instruction(creator_bump: u8)]
 pub struct MintNFT<'info> {
     #[account(
+        init_if_needed,
+        payer=payer,
+        space=MINT_MEMORY_SPACE,
+        seeds=[candy_machine.key().as_ref(), payer.key().as_ref()],
+        bump=memory_bump
+    )]
+    pub mint_memory: Account<'info, MintMemory>,
+    #[account(
     mut,
     has_one = wallet
     )]
@@ -1238,6 +1263,7 @@ pub enum WhitelistMintMode {
 pub struct CandyMachineData {
     pub uuid: String,
     pub price: u64,
+    pub allowed_per_wallet: u64,
     /// The symbol for the asset
     pub symbol: String,
     /// Royalty basis points that goes to creators in secondary sales (0-10000)
@@ -1482,6 +1508,15 @@ pub struct Creator {
     // In percentages, NOT basis points ;) Watch out!
     pub share: u8,
 }
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct MintMemory {
+    pub wallet: Pubkey,
+    pub cm_id: Pubkey,
+    pub minted: u64,
+    pub failed: u64
+}
+
 
 #[error]
 pub enum ErrorCode {

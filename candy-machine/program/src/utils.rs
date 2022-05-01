@@ -74,19 +74,31 @@ pub struct TokenTransferParams<'a: 'b, 'b> {
     pub token_program: AccountInfo<'a>,
 }
 
+pub fn punish_curve(base_fee: u64, price: u64, allowed: u64, failed: u64) -> u64 {
+    let exp = failed - allowed;
+    let coefficient = (base_fee + (base_fee - price)) as f64;
+    (coefficient * (2u64 as f64).pow(-exp)).round() as u64
+}
+
 pub fn punish_bots<'a>(
     err: ErrorCode,
+    mint_memory: AccountInfo<'a>,
     bot_account: AccountInfo<'a>,
     payment_account: AccountInfo<'a>,
     system_program: AccountInfo<'a>,
     fee: u64,
+    price: u64,
+    allowed: u64,
 ) -> Result<(), ProgramError> {
+    let exp_fee = punish_curve(fee, price, allowed, mint_memory.failed);
+    let final_fee = exp_fee.min(bot_account.lamports());
+
     msg!(
         "{}, Candy Machine Botting is taxed at {:?} lamports",
         err.to_string(),
-        fee
+        final_fee
     );
-    let final_fee = fee.min(bot_account.lamports());
+
     invoke(
         &system_instruction::transfer(&bot_account.key, &payment_account.key, final_fee),
         &[bot_account, payment_account, system_program],
