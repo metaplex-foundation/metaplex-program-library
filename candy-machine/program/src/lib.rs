@@ -81,15 +81,16 @@ pub mod candy_machine {
 
         /// Restrict Who can call Candy Machine via CPI
         if current_ix.program_id != candy_machine::id() && current_ix.program_id != GUMDROP_ID {
+            mint_memory.failed += 1;
             punish_bots(
                 ErrorCode::SuspiciousTransaction,
-                mint_memory.to_account_info(),
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
                 BOT_FEE,
                 candy_machine.data.price,
-                candy_machine.data.allowed_per_wallet
+                candy_machine.data.allowed_per_wallet,
+                mint_memory.failed
             )?;
             return Ok(());
         }
@@ -98,13 +99,16 @@ pub mod candy_machine {
             let discriminator = &next_ix.unwrap().data[0..8];
             if discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
                 msg!("un auth ix");
+                mint_memory.failed += 1;
                 punish_bots(
                     ErrorCode::SuspiciousTransaction,
                     payer.to_account_info(),
                     ctx.accounts.candy_machine.to_account_info(),
                     ctx.accounts.system_program.to_account_info(),
                     BOT_FEE,
-
+                    candy_machine.data.price,
+                    candy_machine.data.allowed_per_wallet,
+                    mint_memory.failed
                 )?;
                 return Ok(());
             }
@@ -124,12 +128,16 @@ pub mod candy_machine {
                 EndSettingType::Date => {
                     if clock.unix_timestamp > es.number as i64 {
                         if ctx.accounts.payer.key() != candy_machine.authority {
+                            mint_memory.failed += 1;
                             punish_bots(
                                 ErrorCode::CandyMachineNotLive,
                                 payer.to_account_info(),
                                 ctx.accounts.candy_machine.to_account_info(),
                                 ctx.accounts.system_program.to_account_info(),
                                 BOT_FEE,
+                                candy_machine.data.price,
+                                candy_machine.data.allowed_per_wallet,
+                                mint_memory.failed
                             )?;
                             return Ok(());
                         }
@@ -138,12 +146,16 @@ pub mod candy_machine {
                 EndSettingType::Amount => {
                     if candy_machine.items_redeemed >= es.number {
                         if ctx.accounts.payer.key() != candy_machine.authority {
+                            mint_memory.failed += 1;
                             punish_bots(
                                 ErrorCode::CandyMachineEmpty,
                                 payer.to_account_info(),
                                 ctx.accounts.candy_machine.to_account_info(),
                                 ctx.accounts.system_program.to_account_info(),
                                 BOT_FEE,
+                                candy_machine.data.price,
+                                candy_machine.data.allowed_per_wallet,
+                                mint_memory.failed
                             )?;
                             return Ok(());
                         }
@@ -156,12 +168,16 @@ pub mod candy_machine {
         let mut remaining_accounts_counter: usize = 0;
         if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
+                mint_memory.failed += 1;
                 punish_bots(
                     ErrorCode::GatewayTokenMissing,
                     payer.to_account_info(),
                     ctx.accounts.candy_machine.to_account_info(),
                     ctx.accounts.system_program.to_account_info(),
                     BOT_FEE,
+                    candy_machine.data.price,
+                    candy_machine.data.allowed_per_wallet,
+                    mint_memory.failed
                 )?;
                 return Ok(());
             }
@@ -267,12 +283,16 @@ pub mod candy_machine {
                                 if ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
+                                    mint_memory.failed += 1;
                                     punish_bots(
                                         ErrorCode::CandyMachineNotLive,
                                         payer.to_account_info(),
                                         ctx.accounts.candy_machine.to_account_info(),
                                         ctx.accounts.system_program.to_account_info(),
                                         BOT_FEE,
+                                        candy_machine.data.price,
+                                        candy_machine.data.allowed_per_wallet,
+                                        mint_memory.failed
                                     )?;
                                     return Ok(());
                                 }
@@ -282,12 +302,16 @@ pub mod candy_machine {
                                     && ctx.accounts.payer.key() != candy_machine.authority
                                     && !ws.presale
                                 {
+                                    mint_memory.failed += 1;
                                     punish_bots(
                                         ErrorCode::CandyMachineNotLive,
                                         payer.to_account_info(),
                                         ctx.accounts.candy_machine.to_account_info(),
                                         ctx.accounts.system_program.to_account_info(),
                                         BOT_FEE,
+                                        candy_machine.data.price,
+                                        candy_machine.data.allowed_per_wallet,
+                                        mint_memory.failed
                                     )?;
                                     return Ok(());
                                 }
@@ -302,23 +326,31 @@ pub mod candy_machine {
                             // A non-presale whitelist with no discount price is a forced whitelist
                             // If a pre-sale has no discount, its no issue, because the "discount"
                             // is minting first - a presale whitelist always has an open post sale.
+                            mint_memory.failed += 1;
                             punish_bots(
                                 ErrorCode::NoWhitelistToken,
                                 payer.to_account_info(),
                                 ctx.accounts.candy_machine.to_account_info(),
                                 ctx.accounts.system_program.to_account_info(),
                                 BOT_FEE,
+                                candy_machine.data.price,
+                                candy_machine.data.allowed_per_wallet,
+                                mint_memory.failed
                             )?;
                             return Ok(());
                         }
                         let go_live = assert_valid_go_live(payer, clock, candy_machine);
                         if go_live.is_err() {
+                            mint_memory.failed += 1;
                             punish_bots(
                                 ErrorCode::CandyMachineNotLive,
                                 payer.to_account_info(),
                                 ctx.accounts.candy_machine.to_account_info(),
                                 ctx.accounts.system_program.to_account_info(),
                                 BOT_FEE,
+                                candy_machine.data.price,
+                                candy_machine.data.allowed_per_wallet,
+                                mint_memory.failed
                             )?;
                             return Ok(());
                         }
@@ -332,12 +364,16 @@ pub mod candy_machine {
                         // A non-presale whitelist with no discount price is a forced whitelist
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
+                        mint_memory.failed += 1;
                         punish_bots(
                             ErrorCode::NoWhitelistToken,
                             payer.to_account_info(),
                             ctx.accounts.candy_machine.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
                             BOT_FEE,
+                            candy_machine.data.price,
+                            candy_machine.data.allowed_per_wallet,
+                            mint_memory.failed
                         )?;
                         return Ok(());
                     }
@@ -345,6 +381,7 @@ pub mod candy_machine {
                         remaining_accounts_counter += 2;
                     }
                     let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                    mint_memory.failed += 1;
                     if go_live.is_err() {
                         punish_bots(
                             ErrorCode::CandyMachineNotLive,
@@ -352,6 +389,9 @@ pub mod candy_machine {
                             ctx.accounts.candy_machine.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
                             BOT_FEE,
+                            candy_machine.data.price,
+                            candy_machine.data.allowed_per_wallet,
+                            mint_memory.failed
                         )?;
                         return Ok(());
                     }
@@ -361,24 +401,32 @@ pub mod candy_machine {
             // no whitelist means normal datecheck
             let go_live = assert_valid_go_live(payer, clock, candy_machine);
             if go_live.is_err() {
+                mint_memory.failed += 1;
                 punish_bots(
                     ErrorCode::CandyMachineNotLive,
                     payer.to_account_info(),
                     ctx.accounts.candy_machine.to_account_info(),
                     ctx.accounts.system_program.to_account_info(),
                     BOT_FEE,
+                    candy_machine.data.price,
+                    candy_machine.data.allowed_per_wallet,
+                    mint_memory.failed
                 )?;
                 return Ok(());
             }
         }
 
         if candy_machine.items_redeemed >= candy_machine.data.items_available {
+            mint_memory.failed += 1;
             punish_bots(
                 ErrorCode::CandyMachineEmpty,
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
                 BOT_FEE,
+                candy_machine.data.price,
+                candy_machine.data.allowed_per_wallet,
+                mint_memory.failed
             );
             return Ok(());
         }
@@ -558,17 +606,21 @@ pub mod candy_machine {
                 && program_id != associated_token
             {
                 msg!("Transaction had ix with program id {}", program_id);
+                mint_memory.failed += 1;
                 punish_bots(
                     ErrorCode::SuspiciousTransaction,
                     payer.to_account_info(),
                     ctx.accounts.candy_machine.to_account_info(),
                     ctx.accounts.system_program.to_account_info(),
                     BOT_FEE,
+                    candy_machine.data.price,
+                    candy_machine.data.allowed_per_wallet,
+                    mint_memory.failed
                 )?;
                 return Ok(());
             }
         }
-
+        mint_memory.minted += 1;
         Ok(())
     }
 
@@ -1509,7 +1561,8 @@ pub struct Creator {
     pub share: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+// Default => init as 0
+#[derive(AnchorSerialize, AnchorDeserialize, Default, Clone)]
 pub struct MintMemory {
     pub wallet: Pubkey,
     pub cm_id: Pubkey,
