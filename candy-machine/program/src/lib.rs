@@ -636,7 +636,13 @@ pub mod candy_machine {
         let collection_pda = &ctx.accounts.collection_pda;
         let collection_mint = ctx.accounts.collection_mint.to_account_info();
         if &collection_pda.mint != &collection_mint.key() {
-            return Err(ErrorCode::MismatchedCollectionMint.into());
+            punish_bots_lamports(
+                ErrorCode::MismatchedCollectionMint,
+                &ctx.accounts.payer,
+                &ctx.accounts.collection_pda.to_account_info(),
+                BOT_FEE,
+            )?;
+            return Ok(());
         }
         let seeds = [b"collection".as_ref(), candy_key.as_ref()];
         let bump = assert_derivation(
