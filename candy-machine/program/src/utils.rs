@@ -94,23 +94,6 @@ pub fn punish_bots<'a>(
     Ok(())
 }
 
-pub fn punish_bots_lamports(
-    err: ErrorCode,
-    bot_account: &AccountInfo,
-    payment_account: &AccountInfo,
-    fee: u64,
-) -> Result<(), ProgramError> {
-    msg!(
-        "Error: {}, Candy Machine Botting is taxed at {:?} lamports",
-        err.to_string(),
-        fee
-    );
-    let final_fee = fee.min(bot_account.lamports());
-    **bot_account.try_borrow_mut_lamports()? = bot_account.lamports() - final_fee;
-    **payment_account.try_borrow_mut_lamports()? = payment_account.lamports() + final_fee;
-    Ok(())
-}
-
 #[inline(always)]
 pub fn spl_token_transfer(params: TokenTransferParams<'_, '_>) -> ProgramResult {
     let TokenTransferParams {

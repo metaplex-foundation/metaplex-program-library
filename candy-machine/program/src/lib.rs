@@ -39,7 +39,7 @@ const EXPIRE_OFFSET: i64 = 10 * 60;
 const PREFIX: &str = "candy_machine";
 // here just in case solana removes the var
 const BLOCK_HASHES: &str = "SysvarRecentB1ockHashes11111111111111111111";
-const BOT_FEE: u64 = 1000000;
+const BOT_FEE: u64 = 10000000;
 
 const GUMDROP_ID: Pubkey = solana_program::pubkey!("gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a");
 const A_TOKEN: Pubkey = solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
@@ -47,7 +47,6 @@ const A_TOKEN: Pubkey = solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH2
 #[program]
 pub mod candy_machine {
     use super::*;
-    use crate::utils::punish_bots_lamports;
 
     #[inline(never)]
     pub fn mint_nft<'info>(
@@ -525,8 +524,7 @@ pub mod candy_machine {
         let num_instructions = read_u16(&mut idx, &instruction_sysvar)
             .map_err(|_| ProgramError::InvalidAccountData)?;
 
-        let associated_token =
-            Pubkey::from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL").unwrap();
+        let associated_token = A_TOKEN;
 
         for index in 0..num_instructions {
             let mut current = 2 + (index * 2) as usize;
@@ -565,24 +563,16 @@ pub mod candy_machine {
                 "Transaction had ix with program id {}",
                 &previous_instruction.program_id
             );
-            punish_bots_lamports(
-                ErrorCode::SuspiciousTransaction,
-                &ctx.accounts.payer,
-                &ctx.accounts.collection_pda.to_account_info(),
-                BOT_FEE,
-            )?;
+            return Ok(());
+        }
+        /// Check if the metadata acount has data if not bot fee
+        if ctx.accounts.metadata.owner != &mpl_token_metadata::id() || ctx.accounts.token_metadata_program.data_len() == 0 {
             return Ok(());
         }
 
         let discriminator = &previous_instruction.data[0..8];
         if discriminator != [211, 57, 6, 167, 15, 219, 35, 251] {
             msg!("Transaction had ix with data {:?}", discriminator);
-            punish_bots_lamports(
-                ErrorCode::SuspiciousTransaction,
-                &ctx.accounts.payer,
-                &ctx.accounts.collection_pda.to_account_info(),
-                BOT_FEE,
-            )?;
             return Ok(());
         }
 
@@ -600,22 +590,10 @@ pub mod candy_machine {
                 mint_ix_cm,
                 candy_key
             );
-            punish_bots_lamports(
-                ErrorCode::SuspiciousTransaction,
-                &ctx.accounts.payer,
-                &ctx.accounts.collection_pda.to_account_info(),
-                BOT_FEE,
-            )?;
             return Ok(());
         }
         if &mint_ix_cm != &candy_key {
             msg!("Candy Machine with pubkey {} does not match the mint ix Candy Machine with pubkey {}", mint_ix_cm, candy_key);
-            punish_bots_lamports(
-                ErrorCode::SuspiciousTransaction,
-                &ctx.accounts.payer,
-                &ctx.accounts.collection_pda.to_account_info(),
-                BOT_FEE,
-            )?;
             return Ok(());
         }
         if mint_ix_metadata != metadata {
@@ -624,24 +602,12 @@ pub mod candy_machine {
                 mint_ix_metadata,
                 metadata
             );
-            punish_bots_lamports(
-                ErrorCode::SuspiciousTransaction,
-                &ctx.accounts.payer,
-                &ctx.accounts.collection_pda.to_account_info(),
-                BOT_FEE,
-            )?;
             return Ok(());
         }
 
         let collection_pda = &ctx.accounts.collection_pda;
         let collection_mint = ctx.accounts.collection_mint.to_account_info();
         if &collection_pda.mint != &collection_mint.key() {
-            punish_bots_lamports(
-                ErrorCode::MismatchedCollectionMint,
-                &ctx.accounts.payer,
-                &ctx.accounts.collection_pda.to_account_info(),
-                BOT_FEE,
-            )?;
             return Ok(());
         }
         let seeds = [b"collection".as_ref(), candy_key.as_ref()];
@@ -661,7 +627,7 @@ pub mod candy_machine {
             ctx.accounts.collection_master_edition.to_account_info(),
             ctx.accounts.collection_authority_record.to_account_info(),
         ];
-        invoke_signed(
+        let set = invoke_signed(
             &set_and_verify_collection(
                 ctx.accounts.token_metadata_program.key(),
                 ctx.accounts.metadata.key(),
@@ -675,7 +641,11 @@ pub mod candy_machine {
             ),
             set_collection_infos.as_slice(),
             &[&signer_seeds],
-        )?;
+        );
+        /// Set will only fail if the above IX fails
+        if set.is_err() {
+            return Ok(());
+        }
         Ok(())
     }
 
