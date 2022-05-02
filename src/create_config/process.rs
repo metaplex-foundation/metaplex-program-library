@@ -316,9 +316,10 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     const WL_INDEX: usize = 2;
     const END_SETTINGS_INDEX: usize = 3;
     const HIDDEN_SETTINGS_INDEX: usize = 4;
+
     let extra_functions_options = vec![
-        "Gatekeeper",
         "SPL Token Mint",
+        "Gatekeeper",
         "Whitelist Mint",
         "End Settings",
         "Hidden Settings",
@@ -328,30 +329,6 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         .with_prompt("Which extra features do you want to use? (use [SPACEBAR] to select options you want and hit [ENTER] when done)")
         .items(&extra_functions_options)
         .interact()?;
-
-    // gatekeeper
-
-    config_data.gatekeeper = if choices.contains(&GATEKEEPER_INDEX) {
-        let gatekeeper_options = vec!["Civic Pass", "Verify by Encore"];
-        let civic_network = Pubkey::from_str(CIVIC_NETWORK).unwrap();
-        let encore_network = Pubkey::from_str(ENCORE_NETWORK).unwrap();
-        let selection = Select::with_theme(&theme)
-            .with_prompt("Which gatekeeper network do you want to use? Check https://docs.metaplex.com/candy-machine-v2/configuration#provider-networks for more info.")
-            .items(&gatekeeper_options)
-            .default(0)
-            .interact()?;
-        let gatekeeper_network = match selection {
-            0 => civic_network,
-            1 => encore_network,
-            _ => civic_network,
-        };
-
-        let expire_on_use = Confirm::with_theme(&theme)
-            .with_prompt("To help prevent bots even more, do you want to expire the gatekeeper token on each mint?").interact()?;
-        Some(GatekeeperConfig::new(gatekeeper_network, expire_on_use))
-    } else {
-        None
-    };
 
     // SPL token mint
 
@@ -375,18 +352,18 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .expect("Failed to parse string into pubkey that should have already been validated."),
         );
         config_data.spl_token_account = Some(
-            Pubkey::from_str(
-                &Input::with_theme(&theme)
-                    .with_prompt("What is your SPL token account address (the account that will hold the SPL token mints)?")
-                    .validate_with(pubkey_validator)
-                    .validate_with(|input: &String| -> Result<()> {
-                        check_spl_token_account(&program, input)
-                    })
-                    .interact()
-                    .unwrap(),
+                Pubkey::from_str(
+                    &Input::with_theme(&theme)
+                        .with_prompt("What is your SPL token account address (the account that will hold the SPL token mints)?")
+                        .validate_with(pubkey_validator)
+                        .validate_with(|input: &String| -> Result<()> {
+                            check_spl_token_account(&program, input)
+                        })
+                        .interact()
+                        .unwrap(),
+                )
+                    .expect("Failed to parse string into pubkey that should have already been validated."),
             )
-                .expect("Failed to parse string into pubkey that should have already been validated."),
-        )
     } else {
         config_data.spl_token = None;
         config_data.spl_token_account = None;
@@ -400,6 +377,30 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             )
             .expect("Failed to parse string into pubkey that should have already been validated."),
         );
+    };
+
+    // gatekeeper
+
+    config_data.gatekeeper = if choices.contains(&GATEKEEPER_INDEX) {
+        let gatekeeper_options = vec!["Civic Pass", "Verify by Encore"];
+        let civic_network = Pubkey::from_str(CIVIC_NETWORK).unwrap();
+        let encore_network = Pubkey::from_str(ENCORE_NETWORK).unwrap();
+        let selection = Select::with_theme(&theme)
+            .with_prompt("Which gatekeeper network do you want to use? Check https://docs.metaplex.com/candy-machine-v2/configuration#provider-networks for more info.")
+            .items(&gatekeeper_options)
+            .default(0)
+            .interact()?;
+        let gatekeeper_network = match selection {
+            0 => civic_network,
+            1 => encore_network,
+            _ => civic_network,
+        };
+
+        let expire_on_use = Confirm::with_theme(&theme)
+            .with_prompt("To help prevent bots even more, do you want to expire the gatekeeper token on each mint?").interact()?;
+        Some(GatekeeperConfig::new(gatekeeper_network, expire_on_use))
+    } else {
+        None
     };
 
     // whitelist mint settings
