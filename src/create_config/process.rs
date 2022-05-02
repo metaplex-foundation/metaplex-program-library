@@ -15,9 +15,8 @@ use url::Url;
 
 use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::config::{
-    go_live_date_as_timestamp, parse_string_as_date, ConfigData, Creator, EndSettingType,
-    EndSettings, GatekeeperConfig, HiddenSettings, UploadMethod, WhitelistMintMode,
-    WhitelistMintSettings,
+    parse_string_as_date, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
+    HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
 };
 use crate::constants::*;
 use crate::setup::{setup_client, sugar_setup};
@@ -76,8 +75,11 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     };
 
     let date_validator = |input: &String| -> Result<(), String> {
-        if go_live_date_as_timestamp(input).is_err() {
-            Err(format!("Couldn't parse input of '{}' to a date.", input))
+        if parse_string_as_date(input).is_err() {
+            Err(format!(
+                "Couldn't parse input of '{}' to a valid date.",
+                input
+            ))
         } else {
             Ok(())
         }
@@ -249,9 +251,10 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     config_data.go_live_date = if date.contains("now") {
         let current_time = chrono::Utc::now();
-        current_time.to_rfc2822()
+        current_time.format("%d %b %Y %H:%M:%S %z").to_string()
     } else {
-        parse_string_as_date(&date)?
+        let date = DateTime::parse_from_str(&date, "%d-%m-%Y %H:%M:%S %z")?;
+        date.format("%d %b %Y %H:%M:%S %z").to_string()
     };
     // creators
 
