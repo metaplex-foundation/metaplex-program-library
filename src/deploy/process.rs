@@ -6,19 +6,10 @@ use anchor_client::solana_sdk::{
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 use console::style;
-use ctrlc;
 use futures::future::select_all;
 use rand::rngs::OsRng;
 use spl_associated_token_account::get_associated_token_address;
-use std::{
-    cmp,
-    collections::HashSet,
-    str::FromStr,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
-};
+use std::{cmp, collections::HashSet, str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
@@ -469,15 +460,8 @@ async fn upload_config_lines(
     }
 
     let mut errors = Vec::new();
-    let running = Arc::new(AtomicBool::new(true));
-    let r = running.clone();
 
-    ctrlc::set_handler(move || {
-        r.store(false, Ordering::SeqCst);
-    })
-    .expect("Error setting Ctrl-C handler");
-
-    while running.load(Ordering::SeqCst) && !handles.is_empty() {
+    while !handles.is_empty() {
         match select_all(handles).await {
             (Ok(res), _index, remaining) => {
                 // independently if the upload was successful or not
