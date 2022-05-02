@@ -15,6 +15,8 @@ use mpl_auction_house::{
     AuctionHouse,
 };
 
+use crate::{constants::*, sell::config::*, utils::*};
+
 /// Accounts for the [`public_bid_with_auctioneer` handler](fn.public_bid_with_auctioneer.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
@@ -22,6 +24,26 @@ pub struct AuctioneerPublicBuy<'info> {
     /// Auction House Program
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
 
+    // Accounts used for Auctioneer
+    /// The Listing Config used for listing settings
+    #[account(
+        seeds=[
+            LISTING_CONFIG.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_account.mint.as_ref(),
+            &token_size.to_le_bytes()
+        ],
+        bump,
+    )]
+    pub listing_config: Account<'info, ListingConfig>,
+
+    /// The seller of the NFT
+    pub seller: UncheckedAccount<'info>,
+
+    // Accounts passed into Auction House CPI call
     wallet: Signer<'info>,
 
     /// CHECK: Verified through CPI
@@ -79,6 +101,12 @@ pub fn auctioneer_public_buy(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
+    assert_auction_valid(&ctx.accounts.listing_config)?;
+    assert_higher_bid(&ctx.accounts.listing_config, buyer_price)?;
+    ctx.accounts.listing_config.highest_bid.amount = buyer_price;
+    ctx.accounts.listing_config.highest_bid.buyer_trade_state =
+        ctx.accounts.buyer_trade_state.key();
+
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHPublicBuy {
         wallet: ctx.accounts.wallet.to_account_info(),
@@ -116,6 +144,26 @@ pub struct AuctioneerBuy<'info> {
     /// Auction House Program
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
 
+    // Accounts used for Auctioneer
+    /// The Listing Config used for listing settings
+    #[account(
+        seeds=[
+            LISTING_CONFIG.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_account.mint.as_ref(),
+            &token_size.to_le_bytes()
+        ],
+        bump,
+    )]
+    pub listing_config: Account<'info, ListingConfig>,
+
+    /// The seller of the NFT
+    pub seller: UncheckedAccount<'info>,
+
+    // Accounts passed into Auction House CPI call
     /// User wallet account.
     wallet: Signer<'info>,
 
@@ -198,6 +246,12 @@ pub fn auctioneer_buy<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
+    assert_auction_valid(&ctx.accounts.listing_config)?;
+    assert_higher_bid(&ctx.accounts.listing_config, buyer_price)?;
+    ctx.accounts.listing_config.highest_bid.amount = buyer_price;
+    ctx.accounts.listing_config.highest_bid.buyer_trade_state =
+        ctx.accounts.buyer_trade_state.key();
+
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHBuy {
         wallet: ctx.accounts.wallet.to_account_info(),

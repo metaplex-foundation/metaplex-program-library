@@ -12,6 +12,8 @@ use mpl_auction_house::{
     AuctionHouse,
 };
 
+use crate::{constants::*, sell::config::*, utils::*};
+
 use solana_program::program::invoke;
 
 #[derive(Accounts)]
@@ -20,6 +22,23 @@ pub struct AuctioneerExecuteSale<'info> {
     /// Auction House Program
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
 
+    // Accounts used for Auctioneer
+    /// The Listing Config used for listing settings
+    #[account(
+        seeds=[
+            LISTING_CONFIG.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &token_size.to_le_bytes()
+        ],
+        bump=listing_config.bump,
+    )]
+    pub listing_config: Account<'info, ListingConfig>,
+
+    // Accounts passed into Auction House CPI call
     /// CHECK: Verified through CPI
     /// Buyer user wallet account.
     #[account(mut)]
@@ -125,6 +144,8 @@ pub fn auctioneer_execute_sale<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
+    assert_auction_valid(&ctx.accounts.listing_config)?;
+
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHExecuteSale {
         buyer: ctx.accounts.buyer.to_account_info(),

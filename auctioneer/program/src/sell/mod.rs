@@ -1,3 +1,7 @@
+pub mod config;
+
+use crate::{constants::*, errors::*, sell::config::*};
+
 use anchor_lang::{prelude::*, AnchorDeserialize, InstructionData};
 use anchor_spl::token::{Token, TokenAccount};
 
@@ -12,15 +16,35 @@ use mpl_auction_house::{
     AuctionHouse,
 };
 
-use solana_program::program::invoke;
+use solana_program::{clock::UnixTimestamp, program::invoke};
 
 /// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
 #[derive(Accounts, Clone)]
 #[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct AuctioneerSell<'info> {
-    /// Auction House Program
+    /// Auction House Program used for CPI call
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
 
+    // Accounts used for Auctioneer
+    /// The Listing Config used for listing settings
+    #[account(
+        init,
+        payer=wallet,
+        space=LISTING_CONFIG_SIZE,
+        seeds=[
+            LISTING_CONFIG.as_bytes(),
+            wallet.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_account.mint.as_ref(),
+            &token_size.to_le_bytes()
+        ],
+        bump,
+    )]
+    pub listing_config: Account<'info, ListingConfig>,
+
+    // Accounts passed into Auction House CPI call
     /// CHECK: TODO
     /// User wallet account.
     #[account(mut)]
@@ -83,7 +107,16 @@ pub fn auctioneer_sell<'info>(
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    start_time: UnixTimestamp,
+    end_time: UnixTimestamp,
 ) -> Result<()> {
+    ctx.accounts.listing_config.start_time = start_time;
+    ctx.accounts.listing_config.end_time = end_time;
+    ctx.accounts.listing_config.bump = *ctx
+        .bumps
+        .get("listing_config")
+        .ok_or(AuctioneerError::BumpSeedNotInHashMap)?;
+
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHSell {
         wallet: ctx.accounts.wallet.to_account_info(),
