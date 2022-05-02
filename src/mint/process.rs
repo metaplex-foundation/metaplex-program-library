@@ -212,7 +212,7 @@ pub fn mint(
         &TOKEN_PROGRAM_ID,
     );
 
-    // Initalize mint ix
+    // Initialize mint ix
     let init_mint_ix = initialize_mint(
         &TOKEN_PROGRAM_ID,
         &nft_mint.pubkey(),

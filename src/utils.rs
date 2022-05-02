@@ -94,7 +94,7 @@ pub fn spinner_with_style() -> ProgressBar {
 
 pub fn progress_bar_with_style(len: u64) -> ProgressBar {
     let pb = ProgressBar::new(len);
-    // forces the progress bar to show immediatly
+    // forces the progress bar to show immediately
     pb.tick();
     pb.enable_steady_tick(1000);
     pb.set_style(

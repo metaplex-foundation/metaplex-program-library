@@ -159,7 +159,7 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
 
     // whitelist mint settings
     if let Some(whitelist_settings) = cndy_data.whitelist_mint_settings {
-        print_with_style("", "whiltelist mint settings", "".to_string());
+        print_with_style("", "whitelist mint settings", "".to_string());
         print_with_style(
             ":   ",
             "mode",
@@ -181,10 +181,10 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
             },
         );
     } else {
-        print_with_style("", "whiltelist mint settings", "none".to_string());
+        print_with_style("", "whitelist mint settings", "none".to_string());
     }
 
-    // gatekeeper setttings
+    // gatekeeper settings
     if let Some(gatekeeper) = cndy_data.gatekeeper {
         print_with_style("", "gatekeeper", "".to_string());
         print_with_style(

@@ -2,7 +2,7 @@
 
 Sugar is an alternative to the current Metaplex Candy Machine CLI. It has been written from the ground up and includes several improvements:
 
-- better peformace for upload of media/metadata files and deploy of the candy machine &mdash; these operations take advantage of multi-threaded systems to significantly speed up the computational time needed;
+- better performance for upload of media/metadata files and deploy of the candy machine &mdash; these operations take advantage of multithreaded systems to significantly speed up the computational time needed;
 - simplified build and installation procedures taking advantage of `cargo` package management, including a binary distributable package ready to use;
 - robust error handling and validation of inputs, including improvements to config and cache files, leading to more informative error messages.
 
@@ -17,9 +17,9 @@ To install, either download a binary or install from source. Non-technical users
 Binaries for the supported OS can be found at:
 - [Sugar Releases](https://github.com/metaplex-foundation/sugar/releases)
 
-To use one of the binaries, download the version for your OS and unzip the binary. Copy the binary file to a folder in your file system (preferably a folder in your `PATH` environment variable). If you have Rust installed we recommend putting it in `~/.cargo/bin`, otherwise `/usr/local/bin` is a good place for it on Linux and macOS. Once the binary is at that location your OS will find it automatically and you will be able to run the `sugar` binary from any directory in your file system as a normal command line application.
+To use one of the binaries, download the version for your OS and unzip the binary. Copy the binary file to a folder in your file system (preferably a folder in your `PATH` environment variable). If you have Rust installed we recommend putting it in `~/.cargo/bin`, otherwise `/usr/local/bin` is a good place for it on Linux and macOS. Once the binary is at that location your OS will find it automatically, and you will be able to run the `sugar` binary from any directory in your file system as a normal command line application.
 
-It is recommended to rename the downloaded binary (e.g., `sugar-ubuntu-latest` or `sugar-macos-latest`) to `sugar` for simplicitly &mdash; the remainder of this guide assumes that the binary is called `sugar`.
+It is recommended to rename the downloaded binary (e.g., `sugar-ubuntu-latest` or `sugar-macos-latest`) to `sugar` for simplicity &mdash; the remainder of this guide assumes that the binary is called `sugar`.
 
 ### Build From Source
 
@@ -43,7 +43,7 @@ The next step is to clone Sugar repository:
 git clone https://github.com/metaplex-foundation/sugar.git
 ```
 
-This will create a directory `sugar` with the lastest code from the repository. Switch to the newly created directory:
+This will create a directory `sugar` with the latest code from the repository. Switch to the newly created directory:
 
 ```bash
 cd sugar
@@ -57,7 +57,7 @@ cargo install --locked --path ./
 
 As long as `./cargo/bin` is in your `PATH` environment variable, you will be able to execute `sugar` from any directory in your file system.
 
-> **Note:** You need to execute `cargo install` from Sugar souce code root directory &mdash; the directory where the `Cargo.toml` is located.
+> **Note:** You need to execute `cargo install` from Sugar source code root directory &mdash; the directory where the `Cargo.toml` is located.
 
 ## Quick Start
 
@@ -71,7 +71,7 @@ Sugar will then use these settings by default if you don't specify them as CLI o
 
 Create a folder named `assets` to store your json and media file pairs with the naming convention 0.json, 0.<ext>, 1.json, 1.<ext>, etc., where the extension is `.png`, `.jpg`, etc. This is the same format described in the [Candy Machine v2 documentation](http://docs.metaplex.com/candy-machine-v2/preparing-assets).
 
-You can then use the `launch` command to start an interative process to create your config file and deploy a Candy Machine to Solana:
+You can then use the `launch` command to start an interactive process to create your config file and deploy a Candy Machine to Solana:
 
 ```bash
 sugar launch
@@ -142,7 +142,7 @@ OPTIONS:
 
 ### Configuration
 
-> Most users should use the `create-config` command to create the config file as that will ensure the generation of a valid config file and it is easier to use for non-technical users.
+> Most users should use the `create-config` command to create the config file as that will ensure the generation of a valid config file, and it is easier to use for non-technical users.
 
 Sugar uses a JSON configuration file to deploy and interact with a Candy Machine. The configuration file is largely similar to the [existing Candy Machine v2 configuration file](http://docs.metaplex.com/candy-machine-v2/configuration), but there are important differences.
 
@@ -183,7 +183,7 @@ The main differences with the previous configuration file are:
 - **goLiveDate**: this needs to be specified using [RFC 3339 standard](https://datatracker.ietf.org/doc/html/rfc3339). In most cases, the format used will be "yyyy-mm-dd`T`hh:mm:ss`Z`", where `T` is the separator between the *full-date* and *full-time* and `Z` is the timezone offset from UTC (use `Z` or `+00:00` for UTC time);
 - **retainAuthority**: this is similar to the previous *noRetainAuthority* property, but provides a clearer meaning&mdash;you should specify **true** to indicate that the candy machine retains the update authority for each mint (most common case) or **false** to transfer the authority to the minter;
 - **isMutable**: this is similar to the previous *noMutable* property, but provides a clearer meaning&mdash;you should specify **yes** to indicate that the metadata is mutable (most common case) or **no** to prevent updates to the metadata;
-- **creators**: specifies the list of creators and their percentage share of the royalties&mdash; at least one creator must be specified (up to a maximum of four) and the sum of shares must add up to `100`. This information used to be located on each metadata file, but has been deprecated since Token Metadata Standard v1.1.0 and therefore needs to be specfied in the configuration file. The list of creators will be the same to all NFTs minted from the Candy Machine.
+- **creators**: specifies the list of creators and their percentage share of the royalties&mdash; at least one creator must be specified (up to a maximum of four) and the sum of shares must add up to `100`. This information used to be located on each metadata file, but has been deprecated since Token Metadata Standard v1.1.0 and therefore needs to be specified in the configuration file. The list of creators will be the same to all NFTs minted from the Candy Machine.
 - **whitelistMintSettings**: the configuration for `"mode"` has been simplified. There are now two valid values for `"mode"`: `"burnEveryTime"` or `"neverBurn"` &mdash; no need to specify the option followed by a boolean value, e.g.:
   ```
   "whitelistMintSettings": {
@@ -193,7 +193,7 @@ The main differences with the previous configuration file are:
      "discountPrice": null
   }
   ```
-- **endSettings**: the configuration has been simplified. The `"endSettingsType"` is now specified as either `"Date"` or `"Amount"`; the value is now speficied with a property `"number"` - e.g.:
+- **endSettings**: the configuration has been simplified. The `"endSettingsType"` is now specified as either `"Date"` or `"Amount"`; the value is now specified with a property `"number"` - e.g.:
   ```
   "endSettings": {
     "endSettingType": "Amount",
@@ -246,7 +246,7 @@ You can either create this file manually, following the instructions above, or u
 sugar create-config
 ```
 
-Executing the command starts an interative process consisting in a sequence of prompts to gather information about all configuration options. At the end of it, a configuration file is saved (default to `config.json`) or its content is displayed on screen. To specify a custom file name, use the option `-c`:
+Executing the command starts an interactive process consisting in a sequence of prompts to gather information about all configuration options. At the end of it, a configuration file is saved (default to `config.json`) or its content is displayed on screen. To specify a custom file name, use the option `-c`:
 
 ```bash
 sugar create-config -c my-config.json
@@ -260,7 +260,7 @@ The `validate` command is used to check that all files in the assets folder are 
 sugar validate
 ```
 
-if your assest are in a folder named `assets` or:
+if your assets are in a folder named `assets` or:
 
 ```bash
 sugar validate <ASSETS_DIR>
@@ -278,7 +278,7 @@ The `upload` command uploads assets to the specified storage and creates the cac
 sugar upload
 ```
 
-if your assest are in a folder named `assets` or:
+if your assets are in a folder named `assets` or:
 
 ```bash
 sugar upload <ASSETS DIR>
@@ -296,7 +296,7 @@ Once all assets are uploaded and the cache file is successfully created, you are
 sugar deploy
 ```
 
-The `deploy` command will write the information of your cache file to the Candy Machine account on-chain. This effectively creates the Cancy Machine and displays its on-chain ID &mdash; use this ID to query its information on-chain using an [explorer](https://explorer.solana.com/). You can specify the path for the configuration file with the `-c` option (default `config.json`) and the name of the cache file with the option `--cache` (default `cache.json`) in case you are not using the default names.
+The `deploy` command will write the information of your cache file to the Candy Machine account on-chain. This effectively creates the Candy Machine and displays its on-chain ID &mdash; use this ID to query its information on-chain using an [explorer](https://explorer.solana.com/). You can specify the path for the configuration file with the `-c` option (default `config.json`) and the name of the cache file with the option `--cache` (default `cache.json`) in case you are not using the default names.
 
 
 After a succesful deploy, the Candy Machine is ready to be minted according to its `goLiveDate` and `whitelistMintSettings`.

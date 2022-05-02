@@ -268,7 +268,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         .validate_with({
             |input: &String| match input.parse::<u8>().unwrap() {
                 1 | 2 | 3 | 4 => Ok(()),
-                _ => Err("Number of creator walltets must be between 1 and 4, inclusive."),
+                _ => Err("Number of creator wallets must be between 1 and 4, inclusive."),
             }
         })
         .interact()
@@ -485,7 +485,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                     if num.parse::<u64>().unwrap() < config_data.number {
                         Ok(())
                     } else {
-                        Err("Your end settings ammount cannot be more than the number of items in your candy machine.")
+                        Err("Your end settings amount cannot be more than the number of items in your candy machine.")
                     }
                 })
                 .interact()

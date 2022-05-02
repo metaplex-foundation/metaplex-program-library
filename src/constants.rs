@@ -66,7 +66,7 @@ pub const DEFAULT_CACHE: &str = "cache.json";
 /// Default path for config file.
 pub const DEFAULT_CONFIG: &str = "config.json";
 
-/// Default path for kaypair file.
+/// Default path for keypair file.
 pub const DEFAULT_KEYPATH: &str = "~/.config/solana/id.json";
 
 /// Bundlr devnet endpoint.
