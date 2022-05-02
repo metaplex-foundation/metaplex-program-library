@@ -1,6 +1,7 @@
 use anchor_client::{
     solana_sdk::{
         instruction::Instruction,
+        program_pack::Pack,
         pubkey::Pubkey,
         signature::{Keypair, Signature, Signer},
         system_instruction, system_program, sysvar,
@@ -15,6 +16,7 @@ use rand::rngs::OsRng;
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
     instruction::{initialize_mint, mint_to},
+    state::Account,
     ID as TOKEN_PROGRAM_ID,
 };
 use std::{str::FromStr, sync::Arc};
@@ -178,7 +180,6 @@ pub fn mint(
         if let Some(end_settings) = &candy_machine_data.end_settings {
             match end_settings.end_setting_type {
                 EndSettingType::Date => {
-                    // mint will be enabled if current date is before the end date
                     if (end_settings.number as i64) < mint_date {
                         return Err(anyhow!(ErrorCode::CandyMachineNotLive));
                     }
@@ -266,26 +267,41 @@ pub fn mint(
                 is_writable: false,
             });
 
-            let ata_exists = !program.rpc().get_account_data(&whitelist_token)?.is_empty();
+            let mut token_found = false;
 
-            if ata_exists {
-                let approve_ix = spl_token::instruction::approve(
-                    &TOKEN_PROGRAM_ID,
-                    &whitelist_token,
-                    &whitelist_burn_authority.pubkey(),
-                    &payer,
-                    &[],
-                    1,
-                )?;
-                let revoke_ix = spl_token::instruction::revoke(
-                    &TOKEN_PROGRAM_ID,
-                    &whitelist_token,
-                    &payer,
-                    &[],
-                )?;
+            match program.rpc().get_account_data(&whitelist_token) {
+                Ok(ata_data) => {
+                    if !ata_data.is_empty() {
+                        let account = Account::unpack_unchecked(&ata_data)?;
 
-                additional_instructions.push(approve_ix);
-                cleanup_instructions.push(revoke_ix);
+                        if account.amount > 0 {
+                            let approve_ix = spl_token::instruction::approve(
+                                &TOKEN_PROGRAM_ID,
+                                &whitelist_token,
+                                &whitelist_burn_authority.pubkey(),
+                                &payer,
+                                &[],
+                                1,
+                            )?;
+                            let revoke_ix = spl_token::instruction::revoke(
+                                &TOKEN_PROGRAM_ID,
+                                &whitelist_token,
+                                &payer,
+                                &[],
+                            )?;
+
+                            additional_instructions.push(approve_ix);
+                            cleanup_instructions.push(revoke_ix);
+
+                            token_found = true;
+                        }
+                    }
+                }
+                Err(err) => return Err(anyhow!(err)),
+            }
+
+            if !token_found {
+                return Err(anyhow!(ErrorCode::NoWhitelistToken));
             }
 
             additional_signers.push(whitelist_burn_authority);
