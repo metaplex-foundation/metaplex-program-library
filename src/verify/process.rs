@@ -51,7 +51,17 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     let pb = spinner_with_style();
     pb.set_message("Connecting...");
 
-    let candy_machine_pubkey = Pubkey::from_str(&cache.program.candy_machine)?;
+    let candy_machine_pubkey = match Pubkey::from_str(&cache.program.candy_machine) {
+        Ok(pubkey) => pubkey,
+        Err(_) => {
+            pb.finish_and_clear();
+            return Err(CacheError::InvalidCandyMachineAddress(
+                cache.program.candy_machine.clone(),
+            )
+            .into());
+        }
+    };
+
     let client = setup_client(&sugar_config)?;
     let program = client.program(CANDY_MACHINE_ID);
 
@@ -136,7 +146,10 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             return Err(anyhow!("{} invalid item(s) found.", total));
         }
 
-        println!("\nAll items checked out. You're good to go!");
+        println!(
+            "\nAll items checked out. You're good to go!\nSee your candy machine at: https://www.solaneyes.com/address/{}",
+            cache.program.candy_machine
+        );
     } else {
         // nothing else todo, there are no config lines in a candy machine
         // with hidden settings

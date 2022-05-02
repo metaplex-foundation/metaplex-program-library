@@ -12,7 +12,7 @@ pub enum CacheError {
     #[error("Cache file '{0}' not found. Run `sugar upload` to create it or provide it with the --cache option.")]
     CacheFileNotFound(String),
 
-    #[error("Invalid candy machine address: {0}")]
+    #[error("Invalid candy machine address: '{0}'. Check your cache file or run deploy to ensure your candy machine was created.")]
     InvalidCandyMachineAddress(String),
 
     #[error("Failed to open cache file: {0} with error: {1}")]
