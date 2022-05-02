@@ -104,6 +104,17 @@ async fn run() -> Result<()> {
     let r = running.clone();
 
     ctrlc::set_handler(move || {
+        if !r.load(Ordering::SeqCst) {
+            // we really need to exit
+            println!(
+                "\n\n{}{} Operation aborted.",
+                ERROR_EMOJI,
+                style("Error running command (re-run needed):").red(),
+            );
+            // finished the program with an error code to the OS
+            std::process::exit(1);
+        }
+
         r.store(false, Ordering::SeqCst);
     })
     .expect("Error setting Ctrl-C handler");
