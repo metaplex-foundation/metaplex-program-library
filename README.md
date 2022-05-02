@@ -184,6 +184,22 @@ The main differences with the previous configuration file are:
 - **retainAuthority**: this is similar to the previous *noRetainAuthority* property, but provides a clearer meaning&mdash;you should specify **true** to indicate that the candy machine retains the update authority for each mint (most common case) or **false** to transfer the authority to the minter;
 - **isMutable**: this is similar to the previous *noMutable* property, but provides a clearer meaning&mdash;you should specify **yes** to indicate that the metadata is mutable (most common case) or **no** to prevent updates to the metadata;
 - **creators**: specifies the list of creators and their percentage share of the royalties&mdash; at least one creator must be specified (up to a maximum of four) and the sum of shares must add up to `100`. This information used to be located on each metadata file, but has been deprecated since Token Metadata Standard v1.1.0 and therefore needs to be specfied in the configuration file. The list of creators will be the same to all NFTs minted from the Candy Machine.
+- **whitelistMintSettings**: the configuration for `"mode"` has been simplified. There are now two valid values for `"mode"`: `"burnEveryTime"` or `"neverBurn"` &mdash; no need to specify the option followed by a boolean value, e.g.:
+  ```
+  "whitelistMintSettings": {
+     "mode": "burnEveryTime",
+     "mint": "7nE1GmnMmDKiycFkpHF7mKtxt356FQzVonZqBWsTWZNf",
+     "presale": true,
+     "discountPrice": null
+  }
+  ```
+- **endSettings**: the configuration has been simplified. The `"endSettingsType"` is now specified as either `"Date"` or `"Amount"`; the value is now speficied with a property `"number"` - e.g.:
+  ```
+  "endSettings": {
+    "endSettingType": "Amount",
+    "number": 10
+  }
+  ```
 
 #### Upload Methods
 
