@@ -14,13 +14,14 @@ import * as web3 from '@solana/web3.js';
  * @category FreezeDelegatedAccount
  * @category generated
  */
-const FreezeDelegatedAccountStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'FreezeDelegatedAccountInstructionArgs');
+const FreezeDelegatedAccountStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'FreezeDelegatedAccountInstructionArgs',
+);
 /**
  * Accounts required by the _FreezeDelegatedAccount_ instruction
  *
- * @property [**signer**] delegate Delegate
+ * @property [_writable_, **signer**] delegate Delegate
  * @property [_writable_] tokenAccount Token account to freeze
  * @property [] edition Edition
  * @property [] mint Token mint
@@ -57,7 +58,7 @@ export function createFreezeDelegatedAccountInstruction(
   const keys: web3.AccountMeta[] = [
     {
       pubkey: delegate,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

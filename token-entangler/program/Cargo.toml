@@ -1,6 +1,6 @@
 [package]
 name = "mpl-token-entangler"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2018"
 license = "AGPL-3.0"
 
@@ -17,10 +17,14 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "~0.20.1"
-anchor-spl = "~0.20.1"
+anchor-lang = "~0.24.2"
+anchor-spl = "~0.24.2"
 spl-token = { version = "~3.2",  features = ["no-entrypoint"] }
 spl-associated-token-account = {version = "~1.0.3", features = ["no-entrypoint"]}
-mpl-token-metadata = { version="~1.1.0", features = [ "no-entrypoint" ] }
+mpl-token-metadata = { version="~1.2.7", features = [ "no-entrypoint" ], path="../../token-metadata/program" }
 thiserror = "~1.0"
 arrayref = "~0.3.6"
+
+[dev-dependencies]
+solana-program-test = "~1.9.5"
+solana-sdk = "~1.9.5"

@@ -13,9 +13,10 @@ import * as web3 from '@solana/web3.js';
  * @category SetAuthority
  * @category generated
  */
-const SetAuthorityStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'SetAuthorityInstructionArgs');
+const SetAuthorityStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'SetAuthorityInstructionArgs',
+);
 /**
  * Accounts required by the _SetAuthority_ instruction
  *

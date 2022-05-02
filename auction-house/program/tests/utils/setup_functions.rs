@@ -45,7 +45,7 @@ pub async fn create_auction_house(
     seller_fee_basis_points: u16,
     requires_sign_off: bool,
     can_change_sale_price: bool,
-) -> Result<Pubkey, TransportError> {
+) -> std::result::Result<Pubkey, TransportError> {
     let accounts = mpl_auction_house::accounts::CreateAuctionHouse {
         treasury_mint: *t_mint_key,
         payer: payer_wallet.pubkey(),
@@ -64,7 +64,7 @@ pub async fn create_auction_house(
     .to_account_metas(None);
 
     let data = mpl_auction_house::instruction::CreateAuctionHouse {
-        bump: auction_house_key_bump,
+        _bump: auction_house_key_bump,
         fee_payer_bump: auction_fee_account_key_bump,
         treasury_bump: auction_house_treasury_key_bump,
         seller_fee_basis_points,
@@ -632,7 +632,7 @@ pub fn sell(
 
 pub async fn existing_auction_house_test_context(
     context: &mut ProgramTestContext,
-) -> Result<(AuctionHouse, Pubkey, Keypair), TransportError> {
+) -> std::result::Result<(AuctionHouse, Pubkey, Keypair), TransportError> {
     let twd_key = context.payer.pubkey().clone();
     let fwd_key = context.payer.pubkey().clone();
     let t_mint_key = spl_token::native_mint::id();

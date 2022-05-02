@@ -1,16 +1,14 @@
 pub mod utils;
 
-use {
-    crate::utils::*,
-    anchor_lang::{
-        prelude::*,
-        solana_program::program::{invoke, invoke_signed},
-        AnchorDeserialize, AnchorSerialize,
-    },
-    anchor_spl::{
-        associated_token::AssociatedToken,
-        token::{Token, TokenAccount},
-    },
+use crate::utils::*;
+use anchor_lang::{
+    prelude::*,
+    solana_program::program::{invoke, invoke_signed},
+    AnchorDeserialize, AnchorSerialize,
+};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
 };
 
 anchor_lang::declare_id!("qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd");
@@ -21,6 +19,8 @@ const A_NAME: &str = "A";
 const B_NAME: &str = "B";
 #[program]
 pub mod token_entangler {
+    use spl_token::amount_to_ui_amount;
+
     use super::*;
 
     pub fn create_entangled_pair<'info>(
@@ -31,7 +31,7 @@ pub mod token_entangler {
         token_b_escrow_bump: u8,
         price: u64,
         pays_every_time: bool,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let treasury_mint = &ctx.accounts.treasury_mint;
         let payer = &ctx.accounts.payer;
         let transfer_authority = &ctx.accounts.transfer_authority;
@@ -79,8 +79,19 @@ pub mod token_entangler {
             None
         };
 
-        require!(get_mint_supply(mint_a)? == 1, ErrorCode::MustHaveSupplyOne);
-        require!(get_mint_supply(mint_b)? == 1, ErrorCode::MustHaveSupplyOne);
+        let (mint_a_supply, mint_a_decimals) = get_mint_details(&mint_a.to_account_info())?;
+        let mint_a_ui_supply = amount_to_ui_amount(mint_a_supply, mint_a_decimals);
+        require!(
+            mint_a_supply == 1 || mint_a_ui_supply == 1.0,
+            ErrorCode::MustHaveSupplyOne
+        );
+
+        let (mint_b_supply, mint_b_decimals) = get_mint_details(&mint_b.to_account_info())?;
+        let mint_b_ui_supply = amount_to_ui_amount(mint_b_supply, mint_b_decimals);
+        require!(
+            mint_b_supply == 1 || mint_b_ui_supply == 1.0,
+            ErrorCode::MustHaveSupplyOne
+        );
 
         assert_metadata_valid(metadata_a, edition_option_a, &mint_a.key())?;
         assert_metadata_valid(metadata_b, edition_option_b, &mint_b.key())?;
@@ -111,7 +122,7 @@ pub mod token_entangler {
             system_program,
             &payer,
             token_program,
-            mint_a,
+            &mint_a.to_account_info(),
             &entangled_pair.to_account_info(),
             rent,
             &token_a_escrow_seeds,
@@ -123,7 +134,7 @@ pub mod token_entangler {
             system_program,
             &payer,
             token_program,
-            mint_b,
+            &mint_b.to_account_info(),
             &entangled_pair.to_account_info(),
             rent,
             &token_b_escrow_seeds,
@@ -137,7 +148,7 @@ pub mod token_entangler {
                 &token_b_escrow.key(),
                 &transfer_authority.key(),
                 &[],
-                1,
+                mint_b_supply,
             )?,
             &[
                 token_b.to_account_info(),
@@ -153,7 +164,7 @@ pub mod token_entangler {
         ctx: Context<'_, '_, '_, 'info, UpdateEntangledPair<'info>>,
         price: u64,
         pays_every_time: bool,
-    ) -> ProgramResult {
+    ) -> Result<()> {
         let new_authority = &ctx.accounts.new_authority;
         let entangled_pair = &mut ctx.accounts.entangled_pair;
 
@@ -163,12 +174,13 @@ pub mod token_entangler {
         Ok(())
     }
 
-    pub fn swap<'info>(ctx: Context<'_, '_, '_, 'info, Swap<'info>>) -> ProgramResult {
+    pub fn swap<'info>(ctx: Context<'_, '_, '_, 'info, Swap<'info>>) -> Result<()> {
         let treasury_mint = &ctx.accounts.treasury_mint;
         let payer = &ctx.accounts.payer;
         let payment_account = &ctx.accounts.payment_account;
         let payment_transfer_authority = &ctx.accounts.payment_transfer_authority;
         let token = &ctx.accounts.token;
+        let token_mint = &ctx.accounts.token_mint;
         let replacement_token_metadata = &ctx.accounts.replacement_token_metadata;
         let replacement_token = &ctx.accounts.replacement_token;
         let replacement_token_mint = &ctx.accounts.replacement_token_mint;
@@ -181,7 +193,9 @@ pub mod token_entangler {
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
 
-        if token.amount != 1 {
+        require!(token.mint == token_mint.key(), ErrorCode::InvalidMint);
+        let token_mint_supply = token_mint.supply;
+        if token.amount != token_mint_supply {
             return Err(ErrorCode::InvalidTokenAmount.into());
         }
 
@@ -239,7 +253,7 @@ pub mod token_entangler {
                 &swap_from_escrow.key(),
                 &transfer_authority.key(),
                 &[],
-                1,
+                token_mint_supply,
             )?,
             &[
                 token.to_account_info(),
@@ -249,6 +263,8 @@ pub mod token_entangler {
             ],
         )?;
 
+        let (replacement_token_mint_supply, _) =
+            get_mint_details(&replacement_token_mint.to_account_info())?;
         invoke_signed(
             &spl_token::instruction::transfer(
                 token_program.key,
@@ -256,7 +272,7 @@ pub mod token_entangler {
                 &replacement_token.key(),
                 &entangled_pair.key(),
                 &[],
-                1,
+                replacement_token_mint_supply,
             )?,
             &[
                 swap_to_escrow.to_account_info(),
@@ -293,27 +309,33 @@ pub mod token_entangler {
 #[derive(Accounts)]
 #[instruction(bump: u8, reverse_bump: u8, token_a_escrow_bump: u8, token_b_escrow_bump: u8)]
 pub struct CreateEntangledPair<'info> {
-    /// Set to unchecked to avoid stack size limits
-    treasury_mint: UncheckedAccount<'info>,
+    treasury_mint: Box<Account<'info, Mint>>,
+    #[account(mut)]
     payer: Signer<'info>,
     transfer_authority: Signer<'info>,
+    /// CHECK: Verified through CPI
     authority: UncheckedAccount<'info>,
-    /// Set to unchecked to avoid stack size limits
-    mint_a: UncheckedAccount<'info>,
+    mint_a: Box<Account<'info, Mint>>,
+    /// CHECK: Verified through CPI
     metadata_a: UncheckedAccount<'info>,
+    /// CHECK: Verified through CPI
     edition_a: UncheckedAccount<'info>,
-    /// Set to unchecked to avoid stack size limits
-    mint_b: UncheckedAccount<'info>,
+    mint_b: Box<Account<'info, Mint>>,
+    /// CHECK: Verified through CPI
     metadata_b: UncheckedAccount<'info>,
+    /// CHECK: Verified through CPI
     edition_b: UncheckedAccount<'info>,
     #[account(mut)]
     token_b: Box<Account<'info, TokenAccount>>,
+    /// CHECK: Verified through CPI
     #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), A_NAME.as_bytes()], bump=token_a_escrow_bump)]
     token_a_escrow: UncheckedAccount<'info>,
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut,seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref(), ESCROW.as_bytes(), B_NAME.as_bytes()], bump=token_b_escrow_bump)]
     token_b_escrow: UncheckedAccount<'info>,
-    #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump=bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
+    #[account(init, seeds=[PREFIX.as_bytes(), mint_a.key().as_ref(), mint_b.key().as_ref()], bump, space=ENTANGLED_PAIR_SIZE, payer=payer)]
     entangled_pair: Box<Account<'info, EntangledPair>>,
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds=[PREFIX.as_bytes(), mint_b.key().as_ref(), mint_a.key().as_ref()], bump=reverse_bump)]
     reverse_entangled_pair: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
@@ -324,6 +346,7 @@ pub struct CreateEntangledPair<'info> {
 #[derive(Accounts)]
 pub struct UpdateEntangledPair<'info> {
     authority: Signer<'info>,
+    /// CHECK: Verified through CPI
     new_authority: UncheckedAccount<'info>,
     #[account(mut, seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref()], bump=entangled_pair.bump, has_one=authority)]
     entangled_pair: Account<'info, EntangledPair>,
@@ -331,22 +354,27 @@ pub struct UpdateEntangledPair<'info> {
 
 #[derive(Accounts)]
 pub struct Swap<'info> {
-    /// Set to unchecked to avoid stack size limits
-    treasury_mint: UncheckedAccount<'info>,
+    treasury_mint: Box<Account<'info, Mint>>,
     payer: Signer<'info>,
+    /// CHECK: Verified through CPI
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
+    /// CHECK: Verified through CPI
     payment_transfer_authority: UncheckedAccount<'info>,
     #[account(mut)]
     token: Account<'info, TokenAccount>,
+    token_mint: Box<Account<'info, Mint>>,
+    /// CHECK: Verified through CPI
     replacement_token_metadata: UncheckedAccount<'info>,
-    /// Set to unchecked to avoid stack size limits
-    replacement_token_mint: UncheckedAccount<'info>,
+    replacement_token_mint: Box<Account<'info, Mint>>,
+    /// CHECK: Verified through CPI
     #[account(mut)]
     replacement_token: UncheckedAccount<'info>,
     transfer_authority: Signer<'info>,
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut,seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref(), ESCROW.as_bytes(), A_NAME.as_bytes()], bump=entangled_pair.token_a_escrow_bump)]
     token_a_escrow: UncheckedAccount<'info>,
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut,seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref(), ESCROW.as_bytes(), B_NAME.as_bytes()], bump=entangled_pair.token_b_escrow_bump)]
     token_b_escrow: UncheckedAccount<'info>,
     #[account(mut, seeds=[PREFIX.as_bytes(), entangled_pair.mint_a.as_ref(), entangled_pair.mint_b.as_ref()], bump=entangled_pair.bump, has_one=treasury_mint)]
@@ -387,7 +415,7 @@ pub struct EntangledPair {
     pub pays_every_time: bool,
 }
 
-#[error]
+#[error_code]
 pub enum ErrorCode {
     #[msg("PublicKeyMismatch")]
     PublicKeyMismatch,

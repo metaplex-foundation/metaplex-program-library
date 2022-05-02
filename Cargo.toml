@@ -1,8 +1,6 @@
 [workspace]
 members=[
   "auction/program",
-
-  "gumdrop/program",
   "metaplex/program",
   "token-entangler/program",
   "token-vault/program",

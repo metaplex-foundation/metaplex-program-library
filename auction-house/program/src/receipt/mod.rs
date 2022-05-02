@@ -102,12 +102,14 @@ pub struct PurchaseReceipt {
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintListingReceipt<'info> {
+    /// CHECK: Verified through CPI
     #[account(mut)]
     pub receipt: UncheckedAccount<'info>,
     #[account(mut)]
     pub bookkeeper: Signer<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
+    /// CHECK: Verified through instruction ID
     #[account(address = sysvar::instructions::id())]
     pub instruction: UncheckedAccount<'info>,
 }
@@ -121,7 +123,7 @@ pub struct PrintListingReceipt<'info> {
 pub fn print_listing_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
     receipt_bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     let receipt_account = &ctx.accounts.receipt;
     let instruction_account = &ctx.accounts.instruction;
     let bookkeeper_account = &ctx.accounts.bookkeeper;
@@ -153,7 +155,10 @@ pub fn print_listing_receipt<'info>(
     assert_derivation(
         &id(),
         &receipt_info,
-        &[LISTING_RECEIPT_PREFIX.as_ref(), seller_trade_state.pubkey.as_ref()],
+        &[
+            LISTING_RECEIPT_PREFIX.as_ref(),
+            seller_trade_state.pubkey.as_ref(),
+        ],
     )?;
 
     if receipt_info.data_is_empty() {
@@ -198,9 +203,11 @@ pub fn print_listing_receipt<'info>(
 /// Accounts for the [`cancel_listing_receipt` handler](fn.cancel_listing_receipt.html).
 #[derive(Accounts)]
 pub struct CancelListingReceipt<'info> {
+    /// CHECK: Verified through CPI
     #[account(mut)]
     pub receipt: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
+    /// CHECK: Verified through instruction ID
     #[account(address = sysvar::instructions::id())]
     pub instruction: UncheckedAccount<'info>,
 }
@@ -208,7 +215,7 @@ pub struct CancelListingReceipt<'info> {
 /// Add a cancelation time to a listing receipt.
 pub fn cancel_listing_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelListingReceipt<'info>>,
-) -> ProgramResult {
+) -> Result<()> {
     let receipt_account = &ctx.accounts.receipt;
     let instruction_account = &ctx.accounts.instruction;
     let clock = Clock::get()?;
@@ -251,12 +258,14 @@ pub fn cancel_listing_receipt<'info>(
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintBidReceipt<'info> {
+    /// CHECK: Verified through CPI
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
     #[account(mut)]
     bookkeeper: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+    /// CHECK: Verified through instruction ID
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -270,7 +279,7 @@ pub struct PrintBidReceipt<'info> {
 pub fn print_bid_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintBidReceipt<'info>>,
     receipt_bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     let receipt_account = &ctx.accounts.receipt;
     let instruction_account = &ctx.accounts.instruction;
     let bookkeeper_account = &ctx.accounts.bookkeeper;
@@ -303,7 +312,10 @@ pub fn print_bid_receipt<'info>(
     assert_derivation(
         &id(),
         &receipt_info,
-        &[BID_RECEIPT_PREFIX.as_ref(), buyer_trade_state.pubkey.as_ref()],
+        &[
+            BID_RECEIPT_PREFIX.as_ref(),
+            buyer_trade_state.pubkey.as_ref(),
+        ],
     )?;
 
     assert_keys_equal(prev_instruction.program_id, id())?;
@@ -353,9 +365,11 @@ pub fn print_bid_receipt<'info>(
 /// Accounts for the [`cancel_bid_receipt` handler](fn.cancel_bid_receipt.html).
 #[derive(Accounts)]
 pub struct CancelBidReceipt<'info> {
+    /// CHECK: Verified through CPI
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
+    /// CHECK: Verified through instruction ID
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -363,7 +377,7 @@ pub struct CancelBidReceipt<'info> {
 /// Add a canceled_at timestamp to the Bid Receipt account.
 pub fn cancel_bid_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, CancelBidReceipt<'info>>,
-) -> ProgramResult {
+) -> Result<()> {
     let receipt_account = &ctx.accounts.receipt;
     let instruction_account = &ctx.accounts.instruction;
     let clock = Clock::get()?;
@@ -406,16 +420,20 @@ pub fn cancel_bid_receipt<'info>(
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintPurchaseReceipt<'info> {
+    /// CHECK: Verified through CPI
     #[account(mut)]
     purchase_receipt: UncheckedAccount<'info>,
+    /// CHECK: Verified through CPI
     #[account(mut)]
     listing_receipt: UncheckedAccount<'info>,
+    /// CHECK: Verified through CPI
     #[account(mut)]
     bid_receipt: UncheckedAccount<'info>,
     #[account(mut)]
     bookkeeper: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+    /// CHECK: Verified through instruction ID
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -429,7 +447,7 @@ pub struct PrintPurchaseReceipt<'info> {
 pub fn print_purchase_receipt<'info>(
     ctx: Context<'_, '_, '_, 'info, PrintPurchaseReceipt<'info>>,
     purchase_receipt_bump: u8,
-) -> ProgramResult {
+) -> Result<()> {
     let purchase_receipt_account = &ctx.accounts.purchase_receipt;
     let listing_receipt_account = &ctx.accounts.listing_receipt;
     let bid_receipt_account = &ctx.accounts.bid_receipt;

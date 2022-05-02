@@ -6,9 +6,9 @@
  */
 
 import * as splToken from '@solana/spl-token';
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { NumberOfShareArgs, numberOfShareArgsBeet } from '../types/NumberOfShareArgs';
 
 /**
  * @category Instructions
@@ -16,7 +16,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type AddSharesToTreasuryInstructionArgs = {
-  numberOfShareArgs: definedTypes.NumberOfShareArgs;
+  numberOfShareArgs: NumberOfShareArgs;
 };
 /**
  * @category Instructions
@@ -30,7 +30,7 @@ const AddSharesToTreasuryStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['numberOfShareArgs', definedTypes.numberOfShareArgsBeet],
+    ['numberOfShareArgs', numberOfShareArgsBeet],
   ],
   'AddSharesToTreasuryInstructionArgs',
 );
