@@ -30,6 +30,9 @@ const DEFAULT_METADATA: &str = "0.json";
 /// Default value to represent an invalid seller fee basis points.
 const INVALID_SELLER_FEE: u16 = std::u16::MAX;
 
+/// Date mask for formatting input.
+const DATE_MASK: &str = "%Y-%m-%d %H:%M:%S %z";
+
 pub struct CreateConfigArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
@@ -254,7 +257,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         let current_time = chrono::Utc::now();
         current_time.format("%d %b %Y %H:%M:%S %z").to_string()
     } else {
-        let date = DateTime::parse_from_str(&date, "%d-%m-%Y %H:%M:%S %z")?;
+        let date = DateTime::parse_from_str(&date, DATE_MASK)?;
         date.format("%d %b %Y %H:%M:%S %z").to_string()
     };
     // creators
@@ -496,7 +499,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                     .validate_with(date_validator)
                     .interact()
                     .unwrap();
-                    let date_time = DateTime::parse_from_str(&date, "%Y-%m-%d %H:%M:%S %z")?;
+                    let date_time = DateTime::parse_from_str(&date, DATE_MASK)?;
                     date_time.timestamp() as u64
             }
         };
