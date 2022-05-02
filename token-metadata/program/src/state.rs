@@ -28,7 +28,7 @@ pub const MAX_URI_LENGTH: usize = 200;
 pub const MAX_METADATA_LEN: usize = 1 //key 
 + 32 // update auth pubkey
 + 32 // mint pubkey
-+ MAX_DATA_SIZE 
++ MAX_DATA_SIZE
 + 1 // primary sale
 + 1 // mutable
 + 9 // nonce (pretty sure this only needs to be 2)
