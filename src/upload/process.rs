@@ -1,12 +1,8 @@
 use async_trait::async_trait;
 use console::style;
-use ctrlc;
 use std::{
     collections::HashSet,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
+    sync::{atomic::AtomicBool, Arc},
 };
 
 use crate::cache::{load_cache, Cache};
@@ -47,6 +43,7 @@ pub struct UploadArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
     pub cache: String,
+    pub handler: Arc<AtomicBool>,
 }
 
 pub async fn process_upload(args: UploadArgs) -> Result<()> {
@@ -206,14 +203,6 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             }
         );
 
-        let running = Arc::new(AtomicBool::new(true));
-        let r = running.clone();
-
-        ctrlc::set_handler(move || {
-            r.store(false, Ordering::SeqCst);
-        })
-        .expect("Error setting Ctrl-C handler");
-
         if !indices.0.is_empty() {
             errors.extend(
                 handler
@@ -223,7 +212,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                         &mut cache,
                         &indices.0,
                         DataType::Media,
-                        running.clone(),
+                        args.handler.clone(),
                     )
                     .await?,
             );
@@ -262,7 +251,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                         &mut cache,
                         &indices.1,
                         DataType::Metadata,
-                        running,
+                        args.handler.clone(),
                     )
                     .await?,
             );

@@ -1,7 +1,15 @@
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use console::style;
-use std::{fs::OpenOptions, path::PathBuf, str::FromStr};
+use std::{
+    fs::OpenOptions,
+    path::PathBuf,
+    str::FromStr,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
@@ -92,6 +100,14 @@ async fn run() -> Result<()> {
 
     tracing::info!("Lend me some sugar, I am your neighbor.");
 
+    let running = Arc::new(AtomicBool::new(true));
+    let r = running.clone();
+
+    ctrlc::set_handler(move || {
+        r.store(false, Ordering::SeqCst);
+    })
+    .expect("Error setting Ctrl-C handler");
+
     match cli.command {
         Commands::CreateConfig {
             config,
@@ -119,6 +135,7 @@ async fn run() -> Result<()> {
                 rpc_url,
                 cache,
                 strict,
+                handler: running.clone(),
             })
             .await?
         }
@@ -161,6 +178,7 @@ async fn run() -> Result<()> {
                 keypair,
                 rpc_url,
                 cache,
+                handler: running.clone(),
             })
             .await?
         }
@@ -177,6 +195,7 @@ async fn run() -> Result<()> {
                 keypair,
                 rpc_url,
                 cache,
+                handler: running.clone(),
             })
             .await?
         }

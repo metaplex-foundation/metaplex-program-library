@@ -120,9 +120,10 @@ echo "2. devnet (default)"
 echo "3. mainnet-beta"
 echo "4. devnet [manual cache]"
 echo "5. devnet [hidden settings]"
+echo "6. devnet [launch]"
 
 if [ -f "$RESUME_FILE" ]; then
-    echo "6. previous run ($(RED "resume"))"
+    echo "7. previous run ($(RED "resume"))"
     echo -n "$(CYN "Select test template [1-6]") (default 'devnet'): "
 else
     echo -n "$(CYN "Select test template [1-5]") (default 'devnet'): "
@@ -148,6 +149,11 @@ case "$Template" in
         HIDDEN="Y"
     ;;
     6)
+        devnet_env
+        max_settings
+        LAUNCH="Y"
+    ;;
+    7)
         source $RESUME_FILE
         RESUME=1
         RESET="n"
@@ -620,46 +626,61 @@ echo "[$(date "+%T")] Deploying Candy Machine with $ITEMS items"
 echo "[$(date "+%T")] Environment: ${ENV_URL}"
 echo "[$(date "+%T")] RPC URL: ${RPC}"
 echo "[$(date "+%T")] Testing started using ${STORAGE} storage"
+
 if [ "${HIDDEN}" = "Y" ]; then
     echo "[$(date "+%T")] Config with hidden settings"
 fi
 
-echo ""
-CYN "1. Validating JSON metadata files"
-echo ""
-MAG ">>>"
-$SUGAR_BIN validate $ASSETS_DIR
-EXIT_CODE=$?
-MAG "<<<"
+if [ "$LAUNCH" = "Y" ]; then
+    echo ""
+    CYN "Executing Sugar launch: steps [1, 2, 3, 4]"
+    echo ""
+    MAG ">>>"
+    $SUGAR_BIN launch -c ${CONFIG_FILE} --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC $ASSETS_DIR
+    EXIT_CODE=$?
+    MAG "<<<"
+    
+    if [ ! $EXIT_CODE -eq 0 ]; then
+        RED "[$(date "+%T")] Aborting: launch failed"
+        exit 1
+    fi
+else
+    echo ""
+    CYN "1. Validating JSON metadata files"
+    echo ""
+    MAG ">>>"
+    $SUGAR_BIN validate $ASSETS_DIR
+    EXIT_CODE=$?
+    MAG "<<<"
 
-if [ ! $EXIT_CODE -eq 0 ]; then
-    RED "[$(date "+%T")] Aborting: validation failed"
-    exit 1
+    if [ ! $EXIT_CODE -eq 0 ]; then
+        RED "[$(date "+%T")] Aborting: validation failed"
+        exit 1
+    fi
+
+    echo ""
+    CYN "2. Uploading assets"
+    echo ""
+    MAG ">>>"
+    upload
+    MAG "<<<"
+    echo ""
+
+    echo ""
+    CYN "3. Deploying Candy Machine"
+    echo ""
+    MAG ">>>"
+    deploy
+    MAG "<<<"
+    echo ""
+
+    echo ""
+    CYN "4. Verifying deployment"
+    echo ""
+    MAG ">>>"
+    verify
+    MAG "<<<"
 fi
-
-echo ""
-CYN "2. Uploading assets"
-echo ""
-MAG ">>>"
-upload
-MAG "<<<"
-echo ""
-
-echo ""
-CYN "3. Deploying Candy Machine"
-echo ""
-MAG ">>>"
-deploy
-MAG "<<<"
-echo ""
-
-echo ""
-CYN "4. Verifying deployment"
-echo ""
-MAG ">>>"
-verify
-MAG "<<<"
-echo ""
 
 echo ""
 if [ "${CHANGE}" = "Y" ]; then

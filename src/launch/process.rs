@@ -2,6 +2,7 @@ use anyhow::Result;
 use console::{style, Style};
 use dialoguer::theme::ColorfulTheme;
 use dialoguer::Confirm;
+use std::sync::{atomic::AtomicBool, Arc};
 
 use crate::common::LAUNCH_EMOJI;
 use crate::config::parser::get_config_data;
@@ -18,6 +19,7 @@ pub struct LaunchArgs {
     pub rpc_url: Option<String>,
     pub cache: String,
     pub strict: bool,
+    pub handler: Arc<AtomicBool>,
 }
 
 pub async fn process_launch(args: LaunchArgs) -> Result<()> {
@@ -67,6 +69,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         keypair: args.keypair.clone(),
         rpc_url: args.rpc_url.clone(),
         cache: args.cache.clone(),
+        handler: args.handler.clone(),
     };
 
     process_upload(upload_args).await?;
@@ -78,6 +81,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
         keypair: args.keypair.clone(),
         rpc_url: args.rpc_url.clone(),
         cache: args.cache.clone(),
+        handler: args.handler.clone(),
     };
 
     process_deploy(deploy_args).await?;
