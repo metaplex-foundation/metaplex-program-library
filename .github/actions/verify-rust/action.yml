@@ -4,14 +4,12 @@ runs:
   using: "composite"
   steps:
     - name: Run cargo fmt
-      id: rust_toolchain
       uses: actions-rs/cargo@v1
       with:
         command: fmt
         args: --all -- --check
 
     - name: Run cargo clippy
-      id: rust_toolchain
       uses: actions-rs/cargo@v1
       with:
         command: clippy
