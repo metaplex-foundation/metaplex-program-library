@@ -78,6 +78,7 @@ pub enum Commands {
         number: Option<u64>,
 
         /// Address of candy machine to mint from.
+        #[clap(long)]
         candy_machine: Option<String>,
     },
 
@@ -104,6 +105,7 @@ pub enum Commands {
         new_authority: Option<String>,
 
         /// Address of candy machine to update.
+        #[clap(long)]
         candy_machine: Option<String>,
     },
 
@@ -152,6 +154,7 @@ pub enum Commands {
     /// Withdraw funds from candy machine account closing it
     Withdraw {
         /// Address of candy machine to withdraw funds from.
+        #[clap(long)]
         candy_machine: Option<String>,
 
         /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"

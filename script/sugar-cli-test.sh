@@ -693,7 +693,7 @@ if [ "${CLOSE}" = "Y" ]; then
     CYN "7. Withdrawing Candy Machine funds and clean up"
     echo ""
     MAG ">>>"
-    $SUGAR_BIN withdraw --keypair $WALLET_KEY -r $RPC $CANDY_MACHINE_ID
+    $SUGAR_BIN withdraw --keypair $WALLET_KEY -r $RPC --candy-machine $CANDY_MACHINE_ID
     EXIT_CODE=$?
     MAG "<<<"
     
