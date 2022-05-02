@@ -43,7 +43,7 @@ jobs:
             binary_extension=".exe"
           fi
 
-          if [[ "${RUNNER_OS}" == "MacOS" ]]; then
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
             binary_path="sugar-macos-intel-latest${binary_extension}"
           else
             binary_path="sugar-${{ matrix.os }}${binary_extension}"
