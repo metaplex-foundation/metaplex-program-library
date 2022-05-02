@@ -89,7 +89,7 @@ where
 }
 
 pub fn parse_string_as_date(go_live_date: &str) -> Result<String> {
-    let date = DateTime::parse_from_str(go_live_date, "%d-%m-%Y %H:%M:%S %z")?;
+    let date = DateTime::parse_from_str(go_live_date, "%Y-%m-%d %H:%M:%S %z")?;
     Ok(date.to_rfc2822())
 }
 

@@ -238,12 +238,13 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     };
 
     let date= Input::with_theme(&theme)
-    .with_prompt("What is your go live date? Enter it this format, DD-MM-YYYY HH:MM:SS UTC-OFFSET or type 'now' for current time in UTC.")
+    .with_prompt("What is your go live date? Enter it this format, YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET or type 'now' for \
+     current time. For example 2022-05-02 18:00:00 +0000 for May 2, 2022 18:00:00 UTC.")
      .validate_with(|input: &String| {
         if parse_string_as_date(input).is_ok() || input.contains("now"){
             Ok(())
         } else {
-            Err("Invalid date format. Format must be DD-MM-YYYY HH:MM:SS UTC-OFFSET or 'now'.")
+            Err("Invalid date format. Format must be YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET or 'now'.")
         }
     })
     .interact()
@@ -490,11 +491,12 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                 .expect("Failed to parse number into u64 that should have already been validated."),
             EndSettingType::Date => {
                 let date = Input::with_theme(&theme)
-                    .with_prompt("What is the date to stop the mint? Enter it this format, DD-MM-YYYY HH:MM:SS UTC-OFFSET")
+                    .with_prompt("What is the date to stop the mint? Enter it this format, YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET. \
+                    For example 2022-05-02 18:00:00 +0000 for May 2, 2022 18:00:00 UTC.")
                     .validate_with(date_validator)
                     .interact()
                     .unwrap();
-                    let date_time = DateTime::parse_from_str(&date, "%d-%m-%Y %H:%M:%S %z")?;
+                    let date_time = DateTime::parse_from_str(&date, "%Y-%m-%d %H:%M:%S %z")?;
                     date_time.timestamp() as u64
             }
         };
