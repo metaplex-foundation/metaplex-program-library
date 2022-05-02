@@ -1,5 +1,6 @@
 use anchor_lang::prelude::Pubkey;
 use anyhow::Result;
+use chrono::DateTime;
 use console::{style, Style};
 use dialoguer::Confirm;
 use dialoguer::{theme::ColorfulTheme, Input, MultiSelect, Select};
@@ -14,7 +15,7 @@ use url::Url;
 
 use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::config::{
-    go_live_date_as_timestamp, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
+    parse_string_as_date, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
     HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
 };
 use crate::constants::*;
@@ -74,12 +75,16 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     };
 
     let date_validator = |input: &String| -> Result<(), String> {
-        if go_live_date_as_timestamp(input).is_err() {
-            Err(format!("Couldn't parse input of '{}' to a date.", input))
+        if parse_string_as_date(input).is_err() {
+            Err(format!(
+                "Couldn't parse input of '{}' to a valid date.",
+                input
+            ))
         } else {
             Ok(())
         }
     };
+
     let url_validator = |input: &String| -> Result<(), String> {
         if Url::parse(input).is_err() {
             Err(format!(
@@ -232,14 +237,25 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .expect("Failed to parse number into u16 that should have already been validated.")
     };
 
-    // go_live_date
+    let date= Input::with_theme(&theme)
+    .with_prompt("What is your go live date? Enter it this format, DD-MM-YYYY HH:MM:SS UTC-OFFSET or type 'now' for current time in UTC.")
+     .validate_with(|input: &String| {
+        if parse_string_as_date(input).is_ok() || input.contains("now"){
+            Ok(())
+        } else {
+            Err("Invalid date format. Format must be DD-MM-YYYY HH:MM:SS UTC-OFFSET or 'now'.")
+        }
+    })
+    .interact()
+    .unwrap();
 
-    config_data.go_live_date = Input::with_theme(&theme)
-        .with_prompt("What is your go live date? Enter it in RFC 3339 format, e.g., \"2022-02-25T13:00:00Z\" for 1:00 PM UTC on Feburary 25, 2022.")
-        .validate_with(date_validator)
-        .interact()
-        .unwrap();
-
+    config_data.go_live_date = if date.contains("now") {
+        let current_time = chrono::Utc::now();
+        current_time.format("%d %b %Y %H:%M:%S %z").to_string()
+    } else {
+        let date = DateTime::parse_from_str(&date, "%d-%m-%Y %H:%M:%S %z")?;
+        date.format("%d %b %Y %H:%M:%S %z").to_string()
+    };
     // creators
 
     let num_creators = Input::with_theme(&theme)
@@ -473,11 +489,12 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                 .expect("Failed to parse number into u64 that should have already been validated."),
             EndSettingType::Date => {
                 let date = Input::with_theme(&theme)
-                    .with_prompt("What is the date to stop the mint? Enter it in RFC 3339 format, e.g., \"2022-02-25T13:00:00Z\" for 1:00 PM UTC on Feburary 25, 2022.")
+                    .with_prompt("What is the date to stop the mint? Enter it this format, DD-MM-YYYY HH:MM:SS UTC-OFFSET")
                     .validate_with(date_validator)
                     .interact()
                     .unwrap();
-                go_live_date_as_timestamp(&date).expect("Failed to parse string into timestamp that should have already been validated.") as u64
+                    let date_time = DateTime::parse_from_str(&date, "%d-%m-%Y %H:%M:%S %z")?;
+                    date_time.timestamp() as u64
             }
         };
 
