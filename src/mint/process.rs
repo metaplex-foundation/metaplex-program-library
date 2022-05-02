@@ -9,6 +9,7 @@ use anchor_client::{
 };
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
+use chrono::Utc;
 use console::style;
 use rand::rngs::OsRng;
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
@@ -20,7 +21,7 @@ use std::{str::FromStr, sync::Arc};
 
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{CandyMachine, WhitelistMintMode};
+use mpl_candy_machine::{CandyMachine, EndSettingType, ErrorCode, WhitelistMintMode};
 
 use crate::cache::load_cache;
 use crate::candy_machine::ID as CANDY_MACHINE_ID;
@@ -134,6 +135,66 @@ pub fn mint(
     let wallet = candy_machine_state.wallet;
 
     let candy_machine_data = &candy_machine_state.data;
+
+    if let Some(_gatekeeper) = &candy_machine_data.gatekeeper {
+        return Err(anyhow!(
+            "Command-line mint disabled (gatekeeper settings in use)"
+        ));
+    } else if candy_machine_state.items_redeemed >= candy_machine_data.items_available {
+        return Err(anyhow!(ErrorCode::CandyMachineEmpty));
+    }
+
+    if candy_machine_state.authority != payer {
+        // we are not authority, we need to follow the rules
+        // 1. go_live_date
+        // 2. whitelist mint settings
+        // 3. end settings
+        let mint_date = Utc::now().timestamp();
+        let mut mint_enabled;
+
+        if let Some(date) = candy_machine_data.go_live_date {
+            // mint will be enabled only if the go live date is earlier
+            // than the current date
+            mint_enabled = date < mint_date;
+        } else {
+            // this is the case that go live date is null
+            mint_enabled = false;
+        }
+
+        if let Some(wl_mint_settings) = &candy_machine_data.whitelist_mint_settings {
+            if wl_mint_settings.presale {
+                // we (temporarily) enable the mint - we will validate if the user
+                // has the wl token when creating the transaction
+                mint_enabled = true;
+            } else if !mint_enabled {
+                return Err(anyhow!(ErrorCode::CandyMachineNotLive));
+            }
+        }
+
+        if !mint_enabled {
+            // no whitelist mint settings (or no presale) and we are earlier than
+            // go live date
+            return Err(anyhow!(ErrorCode::CandyMachineNotLive));
+        }
+
+        if let Some(end_settings) = &candy_machine_data.end_settings {
+            match end_settings.end_setting_type {
+                EndSettingType::Date => {
+                    // mint will be enabled if current date is before the end date
+                    if (end_settings.number as i64) < mint_date {
+                        return Err(anyhow!(ErrorCode::CandyMachineNotLive));
+                    }
+                }
+                EndSettingType::Amount => {
+                    if candy_machine_state.items_redeemed >= end_settings.number {
+                        return Err(anyhow!(
+                            "Candy machine is not live (end settings amount reached)"
+                        ));
+                    }
+                }
+            }
+        }
+    }
 
     let nft_mint = Keypair::new();
     let metaplex_program_id = Pubkey::from_str(METAPLEX_PROGRAM_ID)?;
