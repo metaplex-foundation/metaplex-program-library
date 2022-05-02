@@ -1,3 +1,11 @@
+[![Crate](https://img.shields.io/crates/v/sugar-cli)](https://crates.io/crates/sugar-cli)
+[![Downloads](https://img.shields.io/crates/d/sugar-cli)](https://crates.io/crates/sugar-cli)
+[![Stars](https://img.shields.io/github/stars/metaplex-foundation/sugar?style=social)](https://img.shields.io/github/stars/metaplex-foundation/sugar?style=social)
+[![Forks](https://img.shields.io/github/forks/metaplex-foundation/sugar?style=social)](https://img.shields.io/github/forks/metaplex-foundation/sugar?style=social)
+[![Release](https://img.shields.io/github/v/release/metaplex-foundation/sugar)](https://img.shields.io/github/v/release/metaplex-foundation/sugar)
+[![Build and Release](https://github.com/metaplex-foundation/sugar/actions/workflows/build.yml/badge.svg)](https://github.com/metaplex-foundation/sugar/actions/workflows/build.yml)
+[![License](https://img.shields.io/crates/l/sugar-cli)](https://github.com/metaplex-foundation/sugar/blob/main/LICENSE)
+
 # Sugar: A Candy Machine CLI
 
 Sugar is an alternative to the current Metaplex Candy Machine CLI. It has been written from the ground up and includes several improvements:
