@@ -150,16 +150,14 @@ pub fn mint(
         // 2. whitelist mint settings
         // 3. end settings
         let mint_date = Utc::now().timestamp();
-        let mut mint_enabled;
-
-        if let Some(date) = candy_machine_data.go_live_date {
+        let mut mint_enabled = if let Some(date) = candy_machine_data.go_live_date {
             // mint will be enabled only if the go live date is earlier
             // than the current date
-            mint_enabled = date < mint_date;
+            date < mint_date
         } else {
             // this is the case that go live date is null
-            mint_enabled = false;
-        }
+            false
+        };
 
         if let Some(wl_mint_settings) = &candy_machine_data.whitelist_mint_settings {
             if wl_mint_settings.presale {
