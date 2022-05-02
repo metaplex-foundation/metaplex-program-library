@@ -702,11 +702,15 @@ if [ "${CLOSE}" = "Y" ]; then
         exit 1
     fi
 
+    echo ""
+    echo "[$(date "+%T")] Removing generated files"
+
     clean_up
+else
+    echo ""
 fi
 
 # save to delete the resume checkpoint
 rm -rf $RESUME_FILE 2>/dev/null
 
-echo ""
 echo "[$(date "+%T")] Test completed"

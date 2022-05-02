@@ -76,6 +76,9 @@ pub enum Commands {
         /// Amount of NFTs to be minted in bulk
         #[clap(short, long)]
         number: Option<u64>,
+
+        /// Address of candy machine to mint from.
+        candy_machine: Option<String>,
     },
 
     /// Update the candy machine config on-chain
@@ -99,6 +102,9 @@ pub enum Commands {
         /// Pubkey for the new authority
         #[clap(short, long)]
         new_authority: Option<String>,
+
+        /// Address of candy machine to update.
+        candy_machine: Option<String>,
     },
 
     /// Deploy cache items into candy machine config on-chain

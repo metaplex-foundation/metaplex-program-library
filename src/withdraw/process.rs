@@ -24,6 +24,7 @@ use std::{
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::common::*;
 use crate::setup::{setup_client, sugar_setup};
 use crate::utils::*;
@@ -66,14 +67,7 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
 
     match &candy_machine {
         Some(candy_machine) => {
-            let candy_machine = match Pubkey::from_str(candy_machine) {
-                Ok(candy_machine) => candy_machine,
-                Err(_) => {
-                    let error = anyhow!("Failed to parse candy machine id: {}", candy_machine);
-                    error!("{:?}", error);
-                    return Err(error);
-                }
-            };
+            let candy_machine = Pubkey::from_str(candy_machine)?;
 
             let pb = spinner_with_style();
             pb.set_message("Draining candy machine...");
@@ -187,11 +181,8 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
 
 fn setup_withdraw(keypair: Option<String>, rpc_url: Option<String>) -> Result<(Program, Pubkey)> {
     let sugar_config = sugar_setup(keypair, rpc_url)?;
-
     let client = setup_client(&sugar_config)?;
-
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
-    let program = client.program(pid);
+    let program = client.program(CANDY_MACHINE_ID);
     let payer = program.payer();
 
     Ok((program, payer))

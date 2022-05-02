@@ -4,9 +4,20 @@ use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
 use clap::crate_version;
 use console::style;
 use futures::future::select_all;
-use std::{cmp, collections::HashSet, ffi::OsStr, fs, path::Path, sync::Arc};
+use std::{
+    cmp,
+    collections::HashSet,
+    ffi::OsStr,
+    fs,
+    path::Path,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+};
 use tokio::time::{sleep, Duration};
 
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*};
 
 /// The number os retries to fetch the Bundlr balance (MAX_RETRY * DELAY_UNTIL_RETRY ms limit)
@@ -29,7 +40,6 @@ struct TxInfo {
     file_path: String,
     media_link: String,
     data_type: DataType,
-    bundlr_client: Arc<Bundlr<SolanaSigner>>,
     tag: Vec<Tag>,
 }
 
@@ -45,9 +55,8 @@ impl BundlrHandler {
         config_data: &ConfigData,
         sugar_config: &SugarConfig,
     ) -> Result<BundlrHandler> {
-        let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
         let client = setup_client(sugar_config)?;
-        let program = client.program(pid);
+        let program = client.program(CANDY_MACHINE_ID);
         let solana_cluster: Cluster = get_cluster(program.rpc())?;
 
         let bundlr_node = match config_data.upload_method {
@@ -185,7 +194,10 @@ impl BundlrHandler {
     }
 
     /// Send a transaction to Bundlr and wait for a response.
-    async fn send_bundlr_tx(tx_info: TxInfo) -> Result<(String, String)> {
+    async fn send_bundlr_tx(
+        bundlr_client: Arc<Bundlr<SolanaSigner>>,
+        tx_info: TxInfo,
+    ) -> Result<(String, String)> {
         let data = match tx_info.data_type {
             DataType::Media => fs::read(&tx_info.file_path)?,
             DataType::Metadata => {
@@ -195,10 +207,8 @@ impl BundlrHandler {
             }
         };
 
-        let tx = tx_info
-            .bundlr_client
-            .create_transaction_with_tags(data, tx_info.tag);
-        let response = tx_info.bundlr_client.send_transaction(tx).await?;
+        let tx = bundlr_client.create_transaction_with_tags(data, tx_info.tag);
+        let response = bundlr_client.send_transaction(tx).await?;
         let id = response
             .get("id")
             .expect("Failed to convert transaction id to string.")
@@ -260,9 +270,8 @@ impl UploadHandler for BundlrHandler {
 
         // funds the bundlr wallet for media upload
 
-        let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
         let client = setup_client(sugar_config)?;
-        let program = client.program(pid);
+        let program = client.program(CANDY_MACHINE_ID);
 
         if lamports_fee > balance {
             BundlrHandler::fund_bundlr_address(
@@ -318,6 +327,7 @@ impl UploadHandler for BundlrHandler {
         cache: &mut Cache,
         indices: &[usize],
         data_type: DataType,
+        handler: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>> {
         let mut extension = HashSet::with_capacity(1);
         let mut paths = Vec::new();
@@ -379,14 +389,12 @@ impl UploadHandler for BundlrHandler {
                 Some(item) => item,
                 None => return Err(anyhow!("Failed to get config item at index {}", asset_id)),
             };
-            let bundlr_client = self.client.clone();
 
             transactions.push(TxInfo {
                 asset_id: asset_id.to_string(),
                 file_path: String::from(path.to_str().expect("Failed to parse path from unicode.")),
                 media_link: cache_item.media_link.clone(),
                 data_type: data_type.clone(),
-                bundlr_client: bundlr_client.clone(),
                 tag: vec![sugar_tag.clone(), media_tag.clone()],
             });
         }
@@ -394,14 +402,15 @@ impl UploadHandler for BundlrHandler {
         let mut handles = Vec::new();
 
         for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT)) {
+            let bundlr_client = self.client.clone();
             handles.push(tokio::spawn(async move {
-                BundlrHandler::send_bundlr_tx(tx).await
+                BundlrHandler::send_bundlr_tx(bundlr_client, tx).await
             }));
         }
 
         let mut errors = Vec::new();
 
-        while !handles.is_empty() {
+        while handler.load(Ordering::SeqCst) && !handles.is_empty() {
             match select_all(handles).await {
                 (Ok(res), _index, remaining) => {
                     // independently if the upload was successful or not
@@ -418,8 +427,6 @@ impl UploadHandler for BundlrHandler {
                             DataType::Media => item.media_link = link,
                             DataType::Metadata => item.metadata_link = link,
                         }
-                        // saves the progress to the cache file
-                        cache.sync_file()?;
                         // updates the progress bar
                         pb.inc(1);
                     } else {
@@ -443,11 +450,15 @@ impl UploadHandler for BundlrHandler {
             if !transactions.is_empty() {
                 // if we are half way through, let spawn more transactions
                 if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
+                    // syncs cache (checkpoint)
+                    cache.sync_file()?;
+
                     for tx in
                         transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT / 2))
                     {
+                        let bundlr_client = self.client.clone();
                         handles.push(tokio::spawn(async move {
-                            BundlrHandler::send_bundlr_tx(tx).await
+                            BundlrHandler::send_bundlr_tx(bundlr_client, tx).await
                         }));
                     }
                 }
@@ -456,9 +467,17 @@ impl UploadHandler for BundlrHandler {
 
         if !errors.is_empty() {
             pb.abandon_with_message(format!("{}", style("Upload failed ").red().bold()));
+        } else if !transactions.is_empty() {
+            pb.abandon_with_message(format!("{}", style("Upload aborted ").red().bold()));
+            return Err(
+                UploadError::SendDataFailed("Not all files were uploaded.".to_string()).into(),
+            );
         } else {
             pb.finish_with_message(format!("{}", style("Upload successful ").green().bold()));
         }
+
+        // makes sure the cache file is updated
+        cache.sync_file()?;
 
         Ok(errors)
     }

@@ -13,16 +13,17 @@ use std::{
 };
 use url::Url;
 
-use crate::common::{CANDY_EMOJI, CANDY_MACHINE_V2, CONFETTI_EMOJI};
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::config::{
     go_live_date_as_timestamp, parse_string_as_date, ConfigData, Creator, EndSettingType,
     EndSettings, GatekeeperConfig, HiddenSettings, UploadMethod, WhitelistMintMode,
     WhitelistMintSettings,
 };
+use crate::constants::*;
 use crate::setup::{setup_client, sugar_setup};
+use crate::upload::count_files;
 use crate::utils::{check_spl_token, check_spl_token_account};
 use crate::validate::Metadata;
-use crate::{constants::*, upload::count_files};
 
 /// Default name of the first metadata file.
 const DEFAULT_METADATA: &str = "0.json";
@@ -57,7 +58,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     };
 
     let float_validator = |input: &String| -> Result<(), String> {
-        if input.parse::<f64>().is_err() {
+        if !input.is_empty() && input.parse::<f64>().is_err() {
             Err(format!(
                 "Couldn't parse price input of '{}' to a float.",
                 input
@@ -67,7 +68,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         }
     };
     let number_validator = |input: &String| -> Result<(), String> {
-        if input.parse::<u64>().is_err() || input.parse::<u8>().is_err() {
+        if input.parse::<u64>().is_err() {
             Err(format!("Couldn't parse input of '{}' to a number.", input))
         } else {
             Ok(())
@@ -351,10 +352,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // SPL token mint
 
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let client = Arc::new(setup_client(&sugar_config)?);
-    let program = client.program(pid);
+    let program = client.program(CANDY_MACHINE_ID);
 
     if choices.contains(&SPL_INDEX) {
         config_data.sol_treasury_account = None;
@@ -424,19 +424,22 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .with_prompt("Do you want to enable presale mint with your whitelist token?")
             .interact()?;
         let discount_price: Option<f64> = if presale {
-            Some(
-                Input::with_theme(&theme)
+            let price = Input::with_theme(&theme)
                     .with_prompt(
-                        "What is the discount price for the presale? Hit [ENTER] for no discount.",
+                        "What is the discount price for the presale? Hit [ENTER] to not set a discount price.",
                     )
+                    .allow_empty(true)
                     .validate_with(float_validator)
                     .interact()
-                    .unwrap()
-                    .parse::<f64>()
-                    .expect(
-                        "Failed to parse string into f64 that should have already been validated.",
-                    ),
-            )
+                    .unwrap();
+            if price.is_empty() {
+                // the discount price can be set to null
+                None
+            } else {
+                Some(price.parse::<f64>().expect(
+                    "Failed to parse string into f64 that should have already been validated.",
+                ))
+            }
         } else {
             None
         };
@@ -642,14 +645,10 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             }
         }
     } else {
-        println!("{}\n", style("Logging config to console:"));
+        println!("{}\n", style("Logging config to console:").dim());
         println!(
             "{}",
-            style(
-                serde_json::to_string_pretty(&config_data)
-                    .expect("Unable to convert config to JSON.")
-            )
-            .dim()
+            serde_json::to_string_pretty(&config_data).expect("Unable to convert config to JSON.")
         );
     }
 

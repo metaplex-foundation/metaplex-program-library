@@ -7,9 +7,6 @@ use console::Emoji;
 /// Metaplex program id.
 pub const METAPLEX_PROGRAM_ID: &str = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
 
-/// Candy Machine V2 program id.
-pub const CANDY_MACHINE_V2: &str = "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ";
-
 /// Civic gateway program id.
 pub const CIVIC: &str = "gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs";
 
@@ -58,7 +55,7 @@ pub const MINT_LAYOUT: u64 = 82;
 
 /// Maximum number of concurrent tasks (this is important for tasks that handle files
 /// and network connections).
-pub const PARALLEL_LIMIT: usize = 50;
+pub const PARALLEL_LIMIT: usize = 45;
 
 /// Default path for assets folder.
 pub const DEFAULT_ASSETS: &str = "assets";

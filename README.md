@@ -1,14 +1,16 @@
 # Sugar: A Candy Machine CLI
 
-Sugar is the next iteration of the Metaplex Candy Machine CLI. It has been written from the ground up and includes several improvements:
+Sugar is an alternative to the current Metaplex Candy Machine CLI. It has been written from the ground up and includes several improvements:
 
 - better peformace for upload of media/metadata files and deploy of the candy machine &mdash; these operations take advantage of multi-threaded systems to significantly speed up the computational time needed;
 - simplified build and installation procedures taking advantage of `cargo` package management, including a binary distributable package ready to use;
 - robust error handling and validation of inputs, including improvements to config and cache files, leading to more informative error messages.
 
-> **Note:** This is an alpha release of Sugar. Use at your own risk. The current version supports only systems running macOS, Linux, or another Unix-like OS.
+> **Note:** This is a beta release of Sugar. Use at your own risk. The current version supports only systems running macOS, Linux, or another Unix-like OS.
 
 ## Installation
+
+To install, either download a binary or install from source. Non-technical users will typically find using a pre-built binary to be simpler.
 
 ### Binaries
 
@@ -140,6 +142,8 @@ OPTIONS:
 
 ### Configuration
 
+> Most users should use the `create-config` command to create the config file as that will ensure the generation of a valid config file and it is easier to use for non-technical users.
+
 Sugar uses a JSON configuration file to deploy and interact with a Candy Machine. The configuration file is largely similar to the [existing Candy Machine v2 configuration file](http://docs.metaplex.com/candy-machine-v2/configuration), but there are important differences.
 
 A minimum configuration file looks like this:
@@ -183,7 +187,7 @@ The main differences with the previous configuration file are:
 
 #### Upload Methods
 
-There are currently two upload (storage) methods available in Sugar: `"bundlr"` and `"aws"`.
+There are currently two upload (storage) methods available in Sugar: `"bundlr"` and `"aws"`. Uploading in Sugar is designed as a Rust trait to make it easier for new methods to be added. We plan to release a developer guide for how to do this so we can support a wide-variety of upload methods.
 
 ##### Bundlr
 

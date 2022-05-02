@@ -5,6 +5,7 @@ use std::{thread, time::Duration};
 use mpl_candy_machine::CandyMachine;
 
 use crate::cache::*;
+use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::common::*;
 use crate::constants::{CANDY_EMOJI, PAPER_EMOJI};
 use crate::utils::*;
@@ -51,9 +52,8 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     pb.set_message("Connecting...");
 
     let candy_machine_pubkey = Pubkey::from_str(&cache.program.candy_machine)?;
-    let pid = CANDY_MACHINE_V2.parse().expect("Failed to parse PID");
     let client = setup_client(&sugar_config)?;
-    let program = client.program(pid);
+    let program = client.program(CANDY_MACHINE_ID);
 
     let data = match program.rpc().get_account_data(&candy_machine_pubkey) {
         Ok(account_data) => account_data,

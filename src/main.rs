@@ -127,11 +127,13 @@ async fn run() -> Result<()> {
             rpc_url,
             cache,
             number,
+            candy_machine,
         } => process_mint(MintArgs {
             keypair,
             rpc_url,
             cache,
             number,
+            candy_machine,
         })?,
         Commands::Update {
             config,
@@ -139,12 +141,14 @@ async fn run() -> Result<()> {
             rpc_url,
             cache,
             new_authority,
+            candy_machine,
         } => process_update(UpdateArgs {
             config,
             keypair,
             rpc_url,
             cache,
             new_authority,
+            candy_machine,
         })?,
         Commands::Deploy {
             config,
