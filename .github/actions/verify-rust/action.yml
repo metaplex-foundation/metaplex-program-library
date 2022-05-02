@@ -1,16 +1,23 @@
 name: Verify Rust
 
+inputs:
+  path:
+    description: The program directory we're linting
+    required: true
+
 runs:
   using: "composite"
   steps:
     - name: Run cargo fmt
       uses: actions-rs/cargo@v1
       with:
+        path: ${{ inputs.path }} 
         command: fmt
         args: --all -- --check
 
     - name: Run cargo clippy
       uses: actions-rs/cargo@v1
       with:
+        path: ${{ inputs.path }} 
         command: clippy
         args: -- -D warnings
