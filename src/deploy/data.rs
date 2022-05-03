@@ -5,5 +5,5 @@ pub struct DeployArgs {
     pub cache: String,
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
-    pub handler: Arc<AtomicBool>,
+    pub interrupted: Arc<AtomicBool>,
 }

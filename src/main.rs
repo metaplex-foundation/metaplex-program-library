@@ -100,11 +100,11 @@ async fn run() -> Result<()> {
 
     tracing::info!("Lend me some sugar, I am your neighbor.");
 
-    let running = Arc::new(AtomicBool::new(true));
-    let r = running.clone();
+    let interrupted = Arc::new(AtomicBool::new(true));
+    let ctrl_handler = interrupted.clone();
 
     ctrlc::set_handler(move || {
-        if !r.load(Ordering::SeqCst) {
+        if ctrl_handler.load(Ordering::SeqCst) {
             // we really need to exit
             println!(
                 "\n\n{}{} Operation aborted.",
@@ -114,8 +114,8 @@ async fn run() -> Result<()> {
             // finished the program with an error code to the OS
             std::process::exit(1);
         }
-
-        r.store(false, Ordering::SeqCst);
+        // signal that we want to exit
+        ctrl_handler.store(true, Ordering::SeqCst);
     })
     .expect("Error setting Ctrl-C handler");
 
@@ -146,7 +146,7 @@ async fn run() -> Result<()> {
                 rpc_url,
                 cache,
                 strict,
-                handler: running.clone(),
+                interrupted: interrupted.clone(),
             })
             .await?
         }
@@ -189,7 +189,7 @@ async fn run() -> Result<()> {
                 keypair,
                 rpc_url,
                 cache,
-                handler: running.clone(),
+                interrupted: interrupted.clone(),
             })
             .await?
         }
@@ -206,7 +206,7 @@ async fn run() -> Result<()> {
                 keypair,
                 rpc_url,
                 cache,
-                handler: running.clone(),
+                interrupted: interrupted.clone(),
             })
             .await?
         }

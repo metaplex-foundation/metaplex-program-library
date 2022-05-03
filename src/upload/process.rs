@@ -2,7 +2,10 @@ use async_trait::async_trait;
 use console::style;
 use std::{
     collections::HashSet,
-    sync::{atomic::AtomicBool, Arc},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 use crate::cache::{load_cache, Cache};
@@ -33,7 +36,7 @@ pub trait UploadHandler {
         cache: &mut Cache,
         indices: &[usize],
         data_type: DataType,
-        handler: Arc<AtomicBool>,
+        interrupted: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>>;
 }
 
@@ -43,7 +46,7 @@ pub struct UploadArgs {
     pub keypair: Option<String>,
     pub rpc_url: Option<String>,
     pub cache: String,
-    pub handler: Arc<AtomicBool>,
+    pub interrupted: Arc<AtomicBool>,
 }
 
 pub async fn process_upload(args: UploadArgs) -> Result<()> {
@@ -192,6 +195,9 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             .prepare(&sugar_config, &asset_pairs, &indices.0, &indices.1)
             .await?;
 
+        // clear the interruption handler value ahead of the upload
+        args.interrupted.store(false, Ordering::SeqCst);
+
         println!(
             "\n{} {}Uploading media files {}",
             style("[3/4]").bold().dim(),
@@ -212,7 +218,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                         &mut cache,
                         &indices.0,
                         DataType::Media,
-                        args.handler.clone(),
+                        args.interrupted.clone(),
                     )
                     .await?,
             );
@@ -251,7 +257,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                         &mut cache,
                         &indices.1,
                         DataType::Metadata,
-                        args.handler.clone(),
+                        args.interrupted.clone(),
                     )
                     .await?,
             );

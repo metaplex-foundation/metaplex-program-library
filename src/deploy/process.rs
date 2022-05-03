@@ -211,13 +211,16 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         if config_lines.is_empty() {
             println!("\nAll config lines deployed.");
         } else {
+            // clear the interruption handler value ahead of the upload
+            args.interrupted.store(false, Ordering::SeqCst);
+
             let errors = upload_config_lines(
                 client,
                 &sugar_config,
                 candy_pubkey,
                 &mut cache,
                 config_lines,
-                args.handler,
+                args.interrupted,
             )
             .await?;
 
@@ -435,7 +438,7 @@ async fn upload_config_lines(
     candy_pubkey: Pubkey,
     cache: &mut Cache,
     config_lines: Vec<Vec<(u32, ConfigLine)>>,
-    handler: Arc<AtomicBool>,
+    interrupted: Arc<AtomicBool>,
 ) -> Result<Vec<DeployError>> {
     println!(
         "Sending config line(s) in {} transaction(s): (Ctrl+C to abort)",
@@ -471,7 +474,7 @@ async fn upload_config_lines(
 
     let mut errors = Vec::new();
 
-    while handler.load(Ordering::SeqCst) && !handles.is_empty() {
+    while !interrupted.load(Ordering::SeqCst) && !handles.is_empty() {
         match select_all(handles).await {
             (Ok(res), _index, remaining) => {
                 // independently if the upload was successful or not

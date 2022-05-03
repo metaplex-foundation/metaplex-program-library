@@ -94,7 +94,7 @@ impl UploadHandler for AWSHandler {
         cache: &mut Cache,
         indices: &[usize],
         data_type: DataType,
-        handler: Arc<AtomicBool>,
+        interrupted: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>> {
         let mut extension = HashSet::with_capacity(1);
         let mut paths = Vec::new();
@@ -176,7 +176,7 @@ impl UploadHandler for AWSHandler {
 
         let mut errors = Vec::new();
 
-        while handler.load(Ordering::SeqCst) && !handles.is_empty() {
+        while !interrupted.load(Ordering::SeqCst) && !handles.is_empty() {
             match select_all(handles).await {
                 (Ok(res), _index, remaining) => {
                     // independently if the upload was successful or not
