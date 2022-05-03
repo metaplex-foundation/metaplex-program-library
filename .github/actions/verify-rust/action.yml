@@ -1,8 +1,8 @@
 name: Verify Rust
 
 inputs:
-  crate:
-    description: The crate you want to verify
+  working-directory:
+    description: The program directory you're trying to verify
     required: true
 
 runs:
@@ -10,12 +10,14 @@ runs:
   steps:
     - name: Run cargo fmt
       uses: actions-rs/cargo@v1
+      working-directory: ${{ inputs.working-directory }}
       with:
         command: fmt
         args: --all -- --check
 
     - name: Run cargo clippy
       uses: actions-rs/cargo@v1
+      working-directory: ${{ inputs.working-directory }}
       with:
         command: clippy
-        args: -p ${{ inputs.crate }} --all-features --no-deps -- -D warnings
+        args: --all-features --no-deps -- -D warnings
