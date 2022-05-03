@@ -63,7 +63,7 @@ pub mod candy_machine {
         let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
         let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
-        /// Restrict Who can call Candy Machine via CPI
+        // Restrict Who can call Candy Machine via CPI
         if current_ix.program_id != candy_machine::id() && current_ix.program_id != GUMDROP_ID {
             punish_bots(
                 ErrorCode::SuspiciousTransaction,
@@ -78,28 +78,11 @@ pub mod candy_machine {
         if next_ix.is_ok() {
             let ix = &next_ix.unwrap();
             let discriminator = &ix.data[0..8];
-            if ix.program_id != candy_machine::id() || discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
-                msg!("un auth ix");
-                punish_bots(
-                    ErrorCode::SuspiciousTransaction,
-                    payer.to_account_info(),
-                    ctx.accounts.candy_machine.to_account_info(),
-                    ctx.accounts.system_program.to_account_info(),
-                    BOT_FEE,
-                )?;
-                return Ok(());
-            }
             let after_collection_ix = get_instruction_relative(2, &instruction_sysvar_account_info);
-            if after_collection_ix.is_ok() {
-                msg!("un auth ix");
-                punish_bots(
-                    ErrorCode::SuspiciousTransaction,
-                    payer.to_account_info(),
-                    ctx.accounts.candy_machine.to_account_info(),
-                    ctx.accounts.system_program.to_account_info(),
-                    BOT_FEE,
-                )?;
-                return Ok(());
+            if ix.program_id != candy_machine::id() || discriminator != [103, 17, 200, 25, 118, 95, 125, 61] || after_collection_ix.is_ok()  {
+                // We fail here. Its much cheaper to fail here than to allow a malicious user to add an ix at the end and then fail.
+                msg!("Failing and Halting Here due to an extra unauthorized instruction");
+                return Err(ErrorCode::SuspiciousTransaction.into());
             }
         }
         let mut idx = 0;
