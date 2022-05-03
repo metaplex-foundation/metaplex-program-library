@@ -97,10 +97,10 @@ mod verify_collection {
             metadata.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata.collection.unwrap().verified, false);
+        assert!(!metadata.collection.unwrap().verified);
 
-        assert_eq!(metadata.primary_sale_happened, false);
-        assert_eq!(metadata.is_mutable, false);
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
@@ -123,7 +123,7 @@ mod verify_collection {
             metadata_after.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata_after.collection.unwrap().verified, true);
+        assert!(metadata_after.collection.unwrap().verified);
     }
 
     #[tokio::test]
@@ -220,10 +220,10 @@ mod verify_collection {
             metadata.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata.collection.unwrap().verified, false);
+        assert!(!metadata.collection.unwrap().verified);
 
-        assert_eq!(metadata.primary_sale_happened, false);
-        assert_eq!(metadata.is_mutable, false);
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
@@ -316,7 +316,7 @@ mod verify_collection {
             metadata_after.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata_after.collection.unwrap().verified, false);
+        assert!(!metadata_after.collection.unwrap().verified);
     }
 
     #[tokio::test]
@@ -392,7 +392,7 @@ mod verify_collection {
             metadata_after.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata_after.collection.unwrap().verified, false);
+        assert!(!metadata_after.collection.unwrap().verified);
     }
 
     #[tokio::test]
@@ -464,7 +464,7 @@ mod verify_collection {
             metadata_after.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata_after.collection.unwrap().verified, false);
+        assert!(!metadata_after.collection.unwrap().verified);
     }
 
     #[tokio::test]
@@ -540,7 +540,7 @@ mod verify_collection {
             metadata_after.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata_after.collection.unwrap().verified, false);
+        assert!(!metadata_after.collection.unwrap().verified);
     }
 
     #[tokio::test]
@@ -615,10 +615,10 @@ mod verify_collection {
             metadata.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata.collection.unwrap().verified, false);
+        assert!(!metadata.collection.unwrap().verified);
 
-        assert_eq!(metadata.primary_sale_happened, false);
-        assert_eq!(metadata.is_mutable, false);
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
@@ -641,7 +641,7 @@ mod verify_collection {
             metadata_after.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata_after.collection.unwrap().verified, true);
+        assert!(metadata_after.collection.unwrap().verified);
     }
 
     #[tokio::test]
@@ -698,7 +698,7 @@ mod verify_collection {
             metadata.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata.collection.unwrap().verified, false);
+        assert!(!metadata.collection.unwrap().verified);
         let (record, _) = find_collection_authority_account(
             &test_collection.mint.pubkey(),
             &new_collection_authority.pubkey(),
@@ -744,7 +744,7 @@ mod verify_collection {
             metadata_after.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata_after.collection.unwrap().verified, true);
+        assert!(metadata_after.collection.unwrap().verified);
 
         test_metadata
             .unverify_collection(
@@ -758,7 +758,7 @@ mod verify_collection {
             .await
             .unwrap();
         let metadata_after_unverify = test_metadata.get_data(&mut context).await;
-        assert_eq!(metadata_after_unverify.collection.unwrap().verified, false);
+        assert!(!metadata_after_unverify.collection.unwrap().verified);
     }
 
     #[tokio::test]
@@ -808,8 +808,8 @@ mod verify_collection {
             .unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
-        assert_eq!(metadata.collection.is_none(), true);
-        let update_authority = context.payer.pubkey().clone();
+        assert!(metadata.collection.is_none());
+        let update_authority = context.payer.pubkey();
         let (record, _) = find_collection_authority_account(
             &test_collection.mint.pubkey(),
             &new_collection_authority.pubkey(),
@@ -856,7 +856,7 @@ mod verify_collection {
             metadata_after.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata_after.collection.unwrap().verified, true);
+        assert!(metadata_after.collection.unwrap().verified);
 
         test_metadata
             .unverify_collection(
@@ -870,7 +870,7 @@ mod verify_collection {
             .await
             .unwrap();
         let metadata_after_unverify = test_metadata.get_data(&mut context).await;
-        assert_eq!(metadata_after_unverify.collection.unwrap().verified, false);
+        assert!(!metadata_after_unverify.collection.unwrap().verified);
     }
 
     #[tokio::test]
@@ -932,7 +932,7 @@ mod verify_collection {
             metadata.collection.to_owned().unwrap().key,
             test_collection.mint.pubkey()
         );
-        assert_eq!(metadata.collection.unwrap().verified, false);
+        assert!(!metadata.collection.unwrap().verified);
         let (record, _) = find_collection_authority_account(
             &test_collection.mint.pubkey(),
             &new_collection_authority.pubkey(),
@@ -992,7 +992,7 @@ mod verify_collection {
             .await
             .unwrap()
             .is_none();
-        assert_eq!(account_after_none, true);
+        assert!(account_after_none);
 
         let err = test_metadata
             .verify_collection(
@@ -1007,6 +1007,6 @@ mod verify_collection {
             .unwrap_err();
         assert_custom_error!(err, MetadataError::InvalidCollectionUpdateAuthority);
         let metadata_after = test_metadata.get_data(&mut context).await;
-        assert_eq!(metadata_after.collection.unwrap().verified, false);
+        assert!(!metadata_after.collection.unwrap().verified);
     }
 }

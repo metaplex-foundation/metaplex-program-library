@@ -65,8 +65,8 @@ pub fn assert_data_valid(
                 let mut total: u8 = 0;
                 for i in 0..creators.len() {
                     let creator = &creators[i];
-                    for j in (i + 1)..creators.len() {
-                        if creators[j].address == creator.address {
+                    for iter in creators.iter().skip(i + 1) {
+                        if iter.address == creator.address {
                             return Err(MetadataError::DuplicateCreatorAddress.into());
                         }
                     }
@@ -110,10 +110,8 @@ pub fn assert_data_valid(
                                     }
                                 }
                             }
-                        } else {
-                            if creator.verified {
-                                return Err(MetadataError::CannotVerifyAnotherCreator.into());
-                            }
+                        } else if creator.verified {
+                            return Err(MetadataError::CannotVerifyAnotherCreator.into());
                         }
                     }
                 }
@@ -163,7 +161,7 @@ pub fn create_or_allocate_account_raw<'a>(
     if required_lamports > 0 {
         msg!("Transfer {} lamports to the new account", required_lamports);
         invoke(
-            &system_instruction::transfer(&payer_info.key, new_account_info.key, required_lamports),
+            &system_instruction::transfer(payer_info.key, new_account_info.key, required_lamports),
             &[
                 payer_info.clone(),
                 new_account_info.clone(),
@@ -178,14 +176,14 @@ pub fn create_or_allocate_account_raw<'a>(
     invoke_signed(
         &system_instruction::allocate(new_account_info.key, size.try_into().unwrap()),
         accounts,
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     msg!("Assign the account to the owning program");
     invoke_signed(
         &system_instruction::assign(new_account_info.key, &program_id),
         accounts,
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -232,7 +230,7 @@ pub fn get_mint_authority(account_info: &AccountInfo) -> Result<COption<Pubkey>,
     let data = account_info.try_borrow_data().unwrap();
     let authority_bytes = array_ref![data, 0, 36];
 
-    Ok(unpack_coption_key(&authority_bytes)?)
+    unpack_coption_key(authority_bytes)
 }
 
 pub fn get_mint_freeze_authority(
@@ -241,7 +239,7 @@ pub fn get_mint_freeze_authority(
     let data = account_info.try_borrow_data().unwrap();
     let authority_bytes = array_ref![data, 36 + 8 + 1 + 1, 36];
 
-    Ok(unpack_coption_key(&authority_bytes)?)
+    unpack_coption_key(authority_bytes)
 }
 
 /// cheap method to just get supply off a mint without unpacking whole object
@@ -328,7 +326,7 @@ pub fn transfer_mint_authority<'a>(
             Some(edition_key),
             AuthorityType::MintTokens,
             mint_authority_info.key,
-            &[&mint_authority_info.key],
+            &[mint_authority_info.key],
         )
         .unwrap(),
         accounts,
@@ -341,10 +339,10 @@ pub fn transfer_mint_authority<'a>(
             &set_authority(
                 token_program_info.key,
                 mint_info.key,
-                Some(&edition_key),
+                Some(edition_key),
                 AuthorityType::FreezeAccount,
                 mint_authority_info.key,
-                &[&mint_authority_info.key],
+                &[mint_authority_info.key],
             )
             .unwrap(),
             accounts,
@@ -375,7 +373,7 @@ pub fn assert_edition_valid(
     let edition_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint.as_ref(),
+        mint.as_ref(),
         EDITION.as_bytes(),
     ];
     let (edition_key, _) = Pubkey::find_program_address(edition_seeds, program_id);
@@ -432,12 +430,10 @@ pub fn extract_edition_number_from_deprecated_reservation_list(
             Some(val) => Ok(supply_snapshot
                 .checked_add(val)
                 .ok_or(MetadataError::NumericalOverflowError)?),
-            None => {
-                return Err(MetadataError::AddressNotInReservation.into());
-            }
+            None => Err(MetadataError::AddressNotInReservation.into()),
         }
     } else {
-        return Err(MetadataError::ReservationNotSet.into());
+        Err(MetadataError::ReservationNotSet.into())
     }
 }
 
@@ -521,8 +517,7 @@ pub fn calculate_supply_change<'a>(
         let edition_data = &mut master_edition_account_info.data.borrow_mut();
         let output = array_mut_ref![edition_data, 0, MAX_MASTER_EDITION_LEN];
 
-        let (_key, supply, _the_rest) =
-            mut_array_refs![output, 1, 8, MAX_MASTER_EDITION_LEN - 8 - 1];
+        let (_key, supply, _the_rest) = mut_array_refs![output, 1, 8, 273];
         *supply = new_supply.to_le_bytes();
     }
 
@@ -564,7 +559,7 @@ pub fn mint_limited_edition<'a>(
     let edition_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint_info.key.as_ref(),
+        mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ];
     let (edition_key, bump_seed) = Pubkey::find_program_address(edition_seeds, program_id);
@@ -604,7 +599,7 @@ pub fn mint_limited_edition<'a>(
     // create the metadata the normal way...
 
     process_create_metadata_accounts_logic(
-        &program_id,
+        program_id,
         CreateMetadataAccountsLogicArgs {
             metadata_account_info: new_metadata_account_info,
             mint_info,
@@ -623,7 +618,7 @@ pub fn mint_limited_edition<'a>(
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint_info.key.as_ref(),
+        mint_info.key.as_ref(),
         EDITION.as_bytes(),
         &[bump_seed],
     ];
@@ -760,7 +755,7 @@ pub fn assert_derivation(
     account: &AccountInfo,
     path: &[&[u8]],
 ) -> Result<u8, ProgramError> {
-    let (key, bump) = Pubkey::find_program_address(&path, program_id);
+    let (key, bump) = Pubkey::find_program_address(path, program_id);
     if key != *account.key {
         return Err(MetadataError::DerivedKeyInvalid.into());
     }
@@ -956,24 +951,24 @@ pub fn puff_out_data_fields(metadata: &mut Metadata) {
 
 /// Pads the string to the desired size with `0u8`s.
 /// NOTE: it is assumed that the string's size is never larger than the given size.
-pub fn puffed_out_string(s: &String, size: usize) -> String {
+pub fn puffed_out_string(s: &str, size: usize) -> String {
     let mut array_of_zeroes = vec![];
     let puff_amount = size - s.len();
     while array_of_zeroes.len() < puff_amount {
         array_of_zeroes.push(0u8);
     }
-    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
+    s.to_owned() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
 /// Pads the string to the desired size with `0u8`s.
 /// NOTE: it is assumed that the string's size is never larger than the given size.
-pub fn zero_account(s: &String, size: usize) -> String {
+pub fn zero_account(s: &str, size: usize) -> String {
     let mut array_of_zeroes = vec![];
     let puff_amount = size - s.len();
     while array_of_zeroes.len() < puff_amount {
         array_of_zeroes.push(0u8);
     }
-    s.clone() + std::str::from_utf8(&array_of_zeroes).unwrap()
+    s.to_owned() + std::str::from_utf8(&array_of_zeroes).unwrap()
 }
 
 pub struct MintNewEditionFromMasterEditionViaTokenLogicArgs<'a> {

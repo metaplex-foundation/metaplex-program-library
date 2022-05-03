@@ -75,8 +75,8 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
         assert_eq!(metadata.data.creators, None);
 
-        assert_eq!(metadata.primary_sale_happened, false);
-        assert_eq!(metadata.is_mutable, false);
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
@@ -136,8 +136,8 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
         assert_eq!(metadata.data.creators, None);
 
-        assert_eq!(metadata.primary_sale_happened, false);
-        assert_eq!(metadata.is_mutable, false);
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
@@ -193,7 +193,7 @@ mod update_metadata_account_v2 {
             .await
             .unwrap();
 
-        let update_authority = context.payer.pubkey().clone();
+        let update_authority = context.payer.pubkey();
         let (record, _) = find_collection_authority_account(
             &test_collection.mint.pubkey(),
             &new_collection_authority.pubkey(),
@@ -236,7 +236,7 @@ mod update_metadata_account_v2 {
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 test_metadata.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 Some(DataV2 {
                     name: updated_name,
@@ -268,8 +268,8 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
         assert_eq!(metadata.data.creators, None);
 
-        assert_eq!(metadata.primary_sale_happened, false);
-        assert_eq!(metadata.is_mutable, false);
+        assert!(!metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable);
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
@@ -349,7 +349,7 @@ mod update_metadata_account_v2 {
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 test_metadata.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 None,
                 Some(true),
@@ -366,7 +366,7 @@ mod update_metadata_account_v2 {
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 test_metadata.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 None,
                 Some(false),
@@ -414,7 +414,7 @@ mod update_metadata_account_v2 {
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 test_metadata.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 None,
                 None,
@@ -482,7 +482,7 @@ mod update_metadata_account_v2 {
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 test_metadata.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 Some(DataV2 {
                     name: "Test".to_string(),
@@ -559,7 +559,7 @@ mod update_metadata_account_v2 {
             .await
             .unwrap();
 
-        let update_authority = context.payer.pubkey().clone();
+        let update_authority = context.payer.pubkey();
         let (record, _) = find_collection_authority_account(
             &test_collection.mint.pubkey(),
             &new_collection_authority.pubkey(),
@@ -600,7 +600,7 @@ mod update_metadata_account_v2 {
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 test_metadata.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 Some(DataV2 {
                     name: "Test".to_string(),

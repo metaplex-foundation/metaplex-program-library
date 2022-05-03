@@ -28,7 +28,7 @@ pub const MAX_URI_LENGTH: usize = 200;
 pub const MAX_METADATA_LEN: usize = 1 //key 
 + 32 // update auth pubkey
 + 32 // mint pubkey
-+ MAX_DATA_SIZE 
++ MAX_DATA_SIZE
 + 1 // primary sale
 + 1 // mutable
 + 9 // nonce (pretty sure this only needs to be 2)
@@ -187,7 +187,7 @@ impl UseAuthorityRecord {
     }
 
     pub fn bump_empty(&self) -> bool {
-        return self.bump == 0 && self.key == Key::UseAuthorityRecord;
+        self.bump == 0 && self.key == Key::UseAuthorityRecord
     }
 }
 
@@ -274,11 +274,13 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
     let version = account.data.borrow()[0];
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
-    match version {
-        2 => return Ok(Box::new(MasterEditionV1::from_account_info(account)?)),
-        6 => return Ok(Box::new(MasterEditionV2::from_account_info(account)?)),
-        _ => return Err(MetadataError::DataTypeMismatch.into()),
+    let master_edition_result: Result<Box<dyn MasterEdition>, ProgramError> = match version {
+        2 => Ok(Box::new(MasterEditionV1::from_account_info(account)?)),
+        6 => Ok(Box::new(MasterEditionV2::from_account_info(account)?)),
+        _ => Err(MetadataError::DataTypeMismatch.into()),
     };
+
+    master_edition_result
 }
 
 #[repr(C)]
@@ -446,11 +448,13 @@ pub fn get_reservation_list(
     let version = account.data.borrow()[0];
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
-    match version {
-        3 => return Ok(Box::new(ReservationListV1::from_account_info(account)?)),
-        5 => return Ok(Box::new(ReservationListV2::from_account_info(account)?)),
-        _ => return Err(MetadataError::DataTypeMismatch.into()),
+    let reservation_list_result: Result<Box<dyn ReservationList>, ProgramError> = match version {
+        3 => Ok(Box::new(ReservationListV1::from_account_info(account)?)),
+        5 => Ok(Box::new(ReservationListV2::from_account_info(account)?)),
+        _ => Err(MetadataError::DataTypeMismatch.into()),
     };
+
+    reservation_list_result
 }
 
 #[repr(C)]
@@ -760,7 +764,7 @@ impl EditionMarker {
     pub fn insert_edition(&mut self, edition: u64) -> ProgramResult {
         let (index, mask) = EditionMarker::get_index_and_mask(edition)?;
         // bitwise or a 1 into our position in that position
-        self.ledger[index] = self.ledger[index] | mask;
+        self.ledger[index] |= mask;
         Ok(())
     }
 }

@@ -20,7 +20,7 @@ mod sign_metadata {
     async fn success_verify_unverify_creator() {
         let mut context = program_test().start_with_context().await;
         let creator = Keypair::new();
-        let ua_creator = context.payer.pubkey().clone();
+        let ua_creator = context.payer.pubkey();
         let test_meta = Metadata::new();
         test_meta
             .create_v2(
@@ -61,7 +61,7 @@ mod sign_metadata {
             .await
             .unwrap();
         let after_sign = test_meta.get_data(&mut context).await;
-        assert_eq!(after_sign.data.creators.unwrap()[1].verified, true);
+        assert!(after_sign.data.creators.unwrap()[1].verified);
 
         let remove_ix = remove_creator_verification(
             mpl_token_metadata::id(),
@@ -80,6 +80,6 @@ mod sign_metadata {
             .await
             .unwrap();
         let after_remove = test_meta.get_data(&mut context).await;
-        assert_eq!(after_remove.data.creators.unwrap()[1].verified, false);
+        assert!(!after_remove.data.creators.unwrap()[1].verified);
     }
 }

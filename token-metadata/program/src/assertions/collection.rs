@@ -11,8 +11,7 @@ pub fn assert_collection_update_is_valid(
     existing: &Option<Collection>,
     incoming: &Option<Collection>,
 ) -> Result<(), ProgramError> {
-    let is_incoming_verified_true =
-        incoming.is_some() && incoming.as_ref().unwrap().verified == true;
+    let is_incoming_verified_true = incoming.is_some() && incoming.as_ref().unwrap().verified;
 
     // If incoming verified is true. Confirm incoming and existing are identical
     let is_incoming_data_valid = !is_incoming_verified_true
@@ -59,10 +58,8 @@ pub fn assert_has_collection_authority(
         if bump_match.bump != bump {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }
-    } else {
-        if collection_data.update_authority != *collection_authority_info.key {
-            return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
-        }
+    } else if collection_data.update_authority != *collection_authority_info.key {
+        return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
     }
     Ok(())
 }

@@ -838,12 +838,16 @@ pub fn verify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    if collection_authority_record.is_some() {
-        accounts.push(AccountMeta::new_readonly(
-            collection_authority_record.unwrap(),
-            false,
-        ));
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
     }
+
     Instruction {
         program_id,
         accounts,
@@ -881,12 +885,16 @@ pub fn unverify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    if collection_authority_record.is_some() {
-        accounts.push(AccountMeta::new_readonly(
-            collection_authority_record.unwrap(),
-            false,
-        ));
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
     }
+
     Instruction {
         program_id,
         accounts,
@@ -937,11 +945,18 @@ pub fn utilize(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
-    if use_authority_record_pda.is_some() {
-        accounts.push(AccountMeta::new(use_authority_record_pda.unwrap(), false));
+    match use_authority_record_pda {
+        Some(use_authority_record_pda) => {
+            accounts.push(AccountMeta::new(use_authority_record_pda, false));
+        }
+        None => (),
     }
-    if burner.is_some() {
-        accounts.push(AccountMeta::new_readonly(burner.unwrap(), false));
+
+    match burner {
+        Some(burner) => {
+            accounts.push(AccountMeta::new_readonly(burner, false));
+        }
+        None => (),
     }
 
     Instruction {
@@ -1165,12 +1180,16 @@ pub fn set_and_verify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    if collection_authority_record.is_some() {
-        accounts.push(AccountMeta::new_readonly(
-            collection_authority_record.unwrap(),
-            false,
-        ));
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
     }
+
     Instruction {
         program_id,
         accounts,

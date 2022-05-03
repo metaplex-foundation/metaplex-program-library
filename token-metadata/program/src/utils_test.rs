@@ -21,7 +21,7 @@ mod puff_out_test {
             ),
         ];
         for (s, size, puffed_out) in cases {
-            let result = puffed_out_string(&s.to_string(), *size);
+            let result = puffed_out_string(s, *size);
             assert_eq!(result, puffed_out.to_string(), "s: {:?}, size: {}", s, size,);
         }
     }
