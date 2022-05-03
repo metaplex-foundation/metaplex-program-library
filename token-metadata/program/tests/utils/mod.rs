@@ -24,7 +24,7 @@ use solana_sdk::{
 use spl_token::state::Mint;
 pub use vault::Vault;
 
-pub fn program_test<'a>() -> ProgramTest {
+pub fn program_test() -> ProgramTest {
     ProgramTest::new("mpl_token_metadata", mpl_token_metadata::id(), None)
 }
 

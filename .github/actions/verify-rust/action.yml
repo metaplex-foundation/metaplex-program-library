@@ -10,14 +10,12 @@ runs:
   steps:
     - name: Run cargo fmt
       uses: actions-rs/cargo@v1
-      working-directory: ${{ inputs.working-directory }}
       with:
         command: fmt
         args: --all -- --check
 
     - name: Run cargo clippy
       uses: actions-rs/cargo@v1
-      working-directory: ${{ inputs.working-directory }}
       with:
         command: clippy
-        args: --all-features --no-deps -- -D warnings
+        args: -all-features --no-deps --manifest-path ${{ inputs.working-directory }}/Cargo.toml -- -D warnings

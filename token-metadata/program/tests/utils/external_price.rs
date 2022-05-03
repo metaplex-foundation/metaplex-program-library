@@ -80,3 +80,9 @@ impl ExternalPrice {
         context.banks_client.process_transaction(tx).await
     }
 }
+
+impl Default for ExternalPrice {
+    fn default() -> Self {
+        Self::new()
+    }
+}

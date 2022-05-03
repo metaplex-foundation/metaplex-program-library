@@ -221,3 +221,9 @@ impl Vault {
         context.banks_client.process_transaction(tx).await
     }
 }
+
+impl Default for Vault {
+    fn default() -> Self {
+        Self::new()
+    }
+}
