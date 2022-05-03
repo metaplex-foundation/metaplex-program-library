@@ -89,7 +89,8 @@ pub fn get_media_extension(assets_dir: &str) -> Result<String> {
 }
 
 pub fn count_files(assets_dir: &str) -> Result<usize> {
-    let files = fs::read_dir(assets_dir)?
+    let files = fs::read_dir(assets_dir)
+        .map_err(|_| anyhow!("Failed to read assets directory"))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
             !entry
