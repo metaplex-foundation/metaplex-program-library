@@ -62,6 +62,8 @@ jobs:
 
       # Run format and lint checks
       - uses: ./.github/actions/verify-rust
+        with: 
+          crate: mpl-token-metadata
 
       # Build deps
       - uses: ./.github/actions/build-token-vault
