@@ -76,9 +76,53 @@ pub mod candy_machine {
         }
         let next_ix = get_instruction_relative(1, &instruction_sysvar_account_info);
         if next_ix.is_ok() {
-            let discriminator = &next_ix.unwrap().data[0..8];
-            if discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
+            let ix = &next_ix.unwrap();
+            let discriminator = &ix.data[0..8];
+            if ix.program_id != candy_machine::id() || discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
                 msg!("un auth ix");
+                punish_bots(
+                    ErrorCode::SuspiciousTransaction,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
+                return Ok(());
+            }
+            let after_collection_ix = get_instruction_relative(2, &instruction_sysvar_account_info);
+            if after_collection_ix.is_ok() {
+                msg!("un auth ix");
+                punish_bots(
+                    ErrorCode::SuspiciousTransaction,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
+                return Ok(());
+            }
+        }
+        let mut idx = 0;
+        let num_instructions = read_u16(&mut idx, &instruction_sysvar)
+            .map_err(|_| ProgramError::InvalidAccountData)?;
+
+        let associated_token = A_TOKEN;
+
+        for index in 0..num_instructions {
+            let mut current = 2 + (index * 2) as usize;
+            let start = read_u16(&mut current, &instruction_sysvar).unwrap();
+
+            current = start as usize;
+            let num_accounts = read_u16(&mut current, &instruction_sysvar).unwrap();
+            current += (num_accounts as usize) * (1 + 32);
+            let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
+
+            if program_id != candy_machine::id()
+                && program_id != spl_token::id()
+                && program_id != anchor_lang::solana_program::system_program::ID
+                && program_id != associated_token
+            {
+                msg!("Transaction had ix with program id {}", program_id);
                 punish_bots(
                     ErrorCode::SuspiciousTransaction,
                     payer.to_account_info(),
@@ -516,38 +560,6 @@ pub mod candy_machine {
             ],
             &[&authority_seeds],
         )?;
-
-        let mut idx = 0;
-        let num_instructions = read_u16(&mut idx, &instruction_sysvar)
-            .map_err(|_| ProgramError::InvalidAccountData)?;
-
-        let associated_token = A_TOKEN;
-
-        for index in 0..num_instructions {
-            let mut current = 2 + (index * 2) as usize;
-            let start = read_u16(&mut current, &instruction_sysvar).unwrap();
-
-            current = start as usize;
-            let num_accounts = read_u16(&mut current, &instruction_sysvar).unwrap();
-            current += (num_accounts as usize) * (1 + 32);
-            let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
-
-            if program_id != candy_machine::id()
-                && program_id != spl_token::id()
-                && program_id != anchor_lang::solana_program::system_program::ID
-                && program_id != associated_token
-            {
-                msg!("Transaction had ix with program id {}", program_id);
-                punish_bots(
-                    ErrorCode::SuspiciousTransaction,
-                    payer.to_account_info(),
-                    ctx.accounts.candy_machine.to_account_info(),
-                    ctx.accounts.system_program.to_account_info(),
-                    BOT_FEE,
-                )?;
-                return Ok(());
-            }
-        }
 
         Ok(())
     }
