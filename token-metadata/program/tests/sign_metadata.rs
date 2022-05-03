@@ -20,7 +20,7 @@ mod sign_metadata {
     async fn success_verify_unverify_creator() {
         let mut context = program_test().start_with_context().await;
         let creator = Keypair::new();
-        let ua_creator = context.payer.pubkey().clone();
+        let ua_creator = context.payer.pubkey();
         let test_meta = Metadata::new();
         test_meta
             .create_v2(

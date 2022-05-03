@@ -22,11 +22,9 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
     so to increase probability of catching errors If any of these deserializations fail, set all values to None.
     */
     let (token_standard, collection, uses) = match (token_standard_res, collection_res, uses_res) {
-        (Ok(token_standard_res), Ok(collection_res), Ok(uses_res)) => (
-            Some(token_standard_res.unwrap()),
-            Some(collection_res.unwrap()),
-            Some(uses_res.unwrap()),
-        ),
+        (Ok(token_standard_res), Ok(collection_res), Ok(uses_res)) => {
+            (token_standard_res, collection_res, uses_res)
+        }
         _ => {
             msg!("Corrupted metadata discovered: setting values to None");
             (None, None, None)

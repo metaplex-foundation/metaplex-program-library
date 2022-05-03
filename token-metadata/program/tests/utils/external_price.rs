@@ -51,7 +51,7 @@ impl ExternalPrice {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
@@ -77,6 +77,6 @@ impl ExternalPrice {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

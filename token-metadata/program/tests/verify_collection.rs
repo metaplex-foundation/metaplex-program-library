@@ -809,7 +809,7 @@ mod verify_collection {
 
         let metadata = test_metadata.get_data(&mut context).await;
         assert_eq!(metadata.collection.is_none(), true);
-        let update_authority = context.payer.pubkey().clone();
+        let update_authority = context.payer.pubkey();
         let (record, _) = find_collection_authority_account(
             &test_collection.mint.pubkey(),
             &new_collection_authority.pubkey(),
