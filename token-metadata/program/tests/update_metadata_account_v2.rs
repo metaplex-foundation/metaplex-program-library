@@ -156,7 +156,7 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
-        assert_eq!(metadata.collection.unwrap().verified, false);
+        assert!(!metadata.collection.unwrap().verified);
         assert_eq!(metadata.uses.unwrap().total, 15);
     }
 
@@ -767,7 +767,7 @@ mod update_metadata_account_v2 {
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 test_metadata.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 Some(DataV2 {
                     name: "Test".to_string(),
