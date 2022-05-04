@@ -63,6 +63,9 @@ pub mod candy_machine {
         let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
         let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
+        if !ctx.accounts.metadata.data_is_empty() {
+           return Err(ErrorCode::MetadataAccountMustBeEmpty.into())
+        }
         // Restrict Who can call Candy Machine via CPI
         if current_ix.program_id != candy_machine::id() && current_ix.program_id != GUMDROP_ID {
             punish_bots(
@@ -79,7 +82,10 @@ pub mod candy_machine {
             let ix = &next_ix.unwrap();
             let discriminator = &ix.data[0..8];
             let after_collection_ix = get_instruction_relative(2, &instruction_sysvar_account_info);
-            if ix.program_id != candy_machine::id() || discriminator != [103, 17, 200, 25, 118, 95, 125, 61] || after_collection_ix.is_ok()  {
+            if ix.program_id != candy_machine::id()
+                || discriminator != [103, 17, 200, 25, 118, 95, 125, 61]
+                || after_collection_ix.is_ok()
+            {
                 // We fail here. Its much cheaper to fail here than to allow a malicious user to add an ix at the end and then fail.
                 msg!("Failing and Halting Here due to an extra unauthorized instruction");
                 return Err(ErrorCode::SuspiciousTransaction.into());
@@ -1539,4 +1545,6 @@ pub enum ErrorCode {
     MismatchedCollectionPDA,
     #[msg("Provided mint account doesn't match collection PDA mint")]
     MismatchedCollectionMint,
+    #[msg("The metadata account has data in it, and this must be empty to mint a new NFT")]
+    MetadataAccountMustBeEmpty
 }
