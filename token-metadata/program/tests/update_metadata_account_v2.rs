@@ -100,8 +100,6 @@ mod update_metadata_account_v2 {
         let puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
-        let freeze_authority = test_metadata.pubkey;
-
         test_metadata
             .create_v2(
                 &mut context,
@@ -111,22 +109,16 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
-                Some(&freeze_authority),
-                Some(Collection {
-                    verified: false,
-                    key: test_metadata.pubkey,
-                }),
-                Some(Uses {
-                    use_method: UseMethod::Multiple,
-                    remaining: 5,
-                    total: 10,
-                }),
+                None,
+                None,
+                None,
             )
             .await
             .unwrap();
 
         let updated_name = "New Name".to_string();
         let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
+        let collections_key = Keypair::new();
 
         test_metadata
             .update_v2(
@@ -138,7 +130,7 @@ mod update_metadata_account_v2 {
                 10,
                 false,
                 Some(Collection {
-                    verified: true,
+                    verified: false,
                     key: test_metadata.pubkey,
                 }),
                 Some(Uses {
@@ -163,7 +155,7 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
-        assert_eq!(metadata.collection.unwrap().verified, true);
+        assert_eq!(metadata.collection.unwrap().verified, false);
         assert_eq!(metadata.uses.unwrap().total, 15);
     }
 
