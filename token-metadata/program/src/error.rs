@@ -43,7 +43,7 @@ pub enum MetadataError {
     #[error("Update Authority given does not match")]
     UpdateAuthorityIncorrect,
 
-    /// Update Authority needs to be signer to update  metadata
+    /// Update Authority needs to be signer to update metadata
     #[error("Update Authority needs to be signer to update metadata")]
     UpdateAuthorityIsNotSigner,
 
@@ -382,6 +382,10 @@ pub enum MetadataError {
 
     #[error("Invalid User")]
     InvalidUser,
+
+    /// Revoke Collection Authority signer is incorrect
+    #[error("Revoke Collection Authority signer is incorrect")]
+    RevokeCollectionAuthoritySignerIncorrect,
 }
 
 impl PrintProgramError for MetadataError {

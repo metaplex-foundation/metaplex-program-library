@@ -1167,15 +1167,17 @@ pub fn process_revoke_collection_authority(
     let account_info_iter = &mut accounts.iter();
     let collection_authority_record = next_account_info(account_info_iter)?;
     let delegate_authority = next_account_info(account_info_iter)?;
-    let update_authority = next_account_info(account_info_iter)?;
+    let revoke_authority = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::id())?;
-    assert_signer(update_authority)?;
-    if metadata.update_authority != *update_authority.key {
-        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    assert_signer(revoke_authority)?;
+    if metadata.update_authority != *revoke_authority.key
+        && *delegate_authority.key != *revoke_authority.key
+    {
+        return Err(MetadataError::RevokeCollectionAuthoritySignerIncorrect.into());
     }
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());
@@ -1192,7 +1194,7 @@ pub fn process_revoke_collection_authority(
     )?;
     let lamports = collection_authority_record.lamports();
     **collection_authority_record.try_borrow_mut_lamports()? = 0;
-    **update_authority.try_borrow_mut_lamports()? = update_authority
+    **revoke_authority.try_borrow_mut_lamports()? = revoke_authority
         .lamports()
         .checked_add(lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;

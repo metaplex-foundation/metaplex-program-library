@@ -363,9 +363,10 @@ pub enum MetadataInstruction {
 
     /// Revoke account to call [verify_collection] on this NFT.
     #[account(0, writable, name="collection_authority_record", desc="Collection Authority Record PDA")]
-    #[account(1, signer, writable, name="update_authority", desc="Update Authority of Collection NFT")]
-    #[account(2, name="metadata", desc="Metadata account")]
-    #[account(3, name="mint", desc="Mint of Metadata")]
+    #[account(1, signer, writable, name="delegate_authority", desc="Delegated Collection Authority")]
+    #[account(2, signer, writable, name="revoke_authority", desc="Update Authority, or Delegated Authority, of Collection NFT")]
+    #[account(3, name="metadata", desc="Metadata account")]
+    #[account(4, name="mint", desc="Mint of Metadata")]
     RevokeCollectionAuthority,
 
     /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
@@ -1118,7 +1119,7 @@ pub fn approve_collection_authority(
 ///
 ///   0. `[writable]` Collection Authority Record PDA
 ///   1. `[writable]` The Authority that was delegated to
-///   2. `[signer]` The Original Update Authority
+///   2. `[signer]` The Original Update Authority or Delegated Authority
 ///   2. `[]` Metadata account
 ///   3. `[]` Mint of Metadata
 #[allow(clippy::too_many_arguments)]
@@ -1126,7 +1127,7 @@ pub fn revoke_collection_authority(
     program_id: Pubkey,
     collection_authority_record: Pubkey,
     delegate_authority: Pubkey,
-    update_authority: Pubkey,
+    revoke_authority: Pubkey,
     metadata: Pubkey,
     mint: Pubkey,
 ) -> Instruction {
@@ -1135,7 +1136,7 @@ pub fn revoke_collection_authority(
         accounts: vec![
             AccountMeta::new(collection_authority_record, false),
             AccountMeta::new_readonly(delegate_authority, false),
-            AccountMeta::new(update_authority, true),
+            AccountMeta::new(revoke_authority, true),
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
         ],

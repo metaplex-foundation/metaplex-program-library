@@ -874,6 +874,130 @@ mod verify_collection {
     }
 
     #[tokio::test]
+    async fn success_set_and_verify_collection_with_authority_and_revoke_as_delegate() {
+        let mut context = program_test().start_with_context().await;
+        let new_collection_authority = Keypair::new();
+        airdrop(&mut context, &new_collection_authority.pubkey(), 10000000)
+            .await
+            .unwrap();
+
+        let test_collection = Metadata::new();
+        test_collection
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+        collection_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let name = "Test".to_string();
+        let symbol = "TST".to_string();
+        let uri = "uri".to_string();
+        let test_metadata = Metadata::new();
+        test_metadata
+            .create_v2(
+                &mut context,
+                name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let metadata = test_metadata.get_data(&mut context).await;
+        assert!(metadata.collection.is_none());
+        let update_authority = context.payer.pubkey();
+        let (record, _) = find_collection_authority_account(
+            &test_collection.mint.pubkey(),
+            &new_collection_authority.pubkey(),
+        );
+        let ix = mpl_token_metadata::instruction::approve_collection_authority(
+            mpl_token_metadata::id(),
+            record,
+            new_collection_authority.pubkey(),
+            update_authority,
+            context.payer.pubkey(),
+            test_collection.pubkey,
+            test_collection.mint.pubkey(),
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let record_account = get_account(&mut context, &record).await;
+        let record_data: CollectionAuthorityRecord =
+            try_from_slice_unchecked(&record_account.data).unwrap();
+        assert_eq!(record_data.key, Key::CollectionAuthorityRecord);
+
+        test_metadata
+            .set_and_verify_collection(
+                &mut context,
+                test_collection.pubkey,
+                &new_collection_authority,
+                update_authority,
+                test_collection.mint.pubkey(),
+                collection_master_edition_account.pubkey,
+                Some(record),
+            )
+            .await
+            .unwrap();
+
+        let metadata_after = test_metadata.get_data(&mut context).await;
+        assert_eq!(
+            metadata_after.collection.to_owned().unwrap().key,
+            test_collection.mint.pubkey()
+        );
+        assert!(metadata_after.collection.unwrap().verified);
+
+        let ix_revoke = mpl_token_metadata::instruction::revoke_collection_authority(
+            mpl_token_metadata::id(),
+            record,
+            new_collection_authority.pubkey(),
+            new_collection_authority.pubkey(),
+            test_collection.pubkey,
+            test_collection.mint.pubkey(),
+        );
+
+        let tx_revoke = Transaction::new_signed_with_payer(
+            &[ix_revoke],
+            Some(&new_collection_authority.pubkey()),
+            &[&new_collection_authority],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(tx_revoke)
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
     async fn fail_verify_collection_with_authority() {
         let mut context = program_test().start_with_context().await;
         let new_collection_authority = Keypair::new();
@@ -1005,8 +1129,150 @@ mod verify_collection {
             )
             .await
             .unwrap_err();
+
         assert_custom_error!(err, MetadataError::InvalidCollectionUpdateAuthority);
         let metadata_after = test_metadata.get_data(&mut context).await;
         assert!(!metadata_after.collection.unwrap().verified);
+    }
+
+    #[tokio::test]
+    async fn fail_set_and_verify_collection_with_authority_and_revoke_as_wrong_signer() {
+        let mut context = program_test().start_with_context().await;
+        let new_collection_authority = Keypair::new();
+        let incorrect_revoke_authority = Keypair::new();
+        airdrop(&mut context, &incorrect_revoke_authority.pubkey(), 10000000)
+            .await
+            .unwrap();
+
+        let test_collection = Metadata::new();
+        test_collection
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+        collection_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let name = "Test".to_string();
+        let symbol = "TST".to_string();
+        let uri = "uri".to_string();
+        let test_metadata = Metadata::new();
+        test_metadata
+            .create_v2(
+                &mut context,
+                name,
+                symbol,
+                uri,
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let metadata = test_metadata.get_data(&mut context).await;
+        assert!(metadata.collection.is_none());
+        let update_authority = context.payer.pubkey();
+        let (record, _) = find_collection_authority_account(
+            &test_collection.mint.pubkey(),
+            &new_collection_authority.pubkey(),
+        );
+        let ix = mpl_token_metadata::instruction::approve_collection_authority(
+            mpl_token_metadata::id(),
+            record,
+            new_collection_authority.pubkey(),
+            update_authority,
+            context.payer.pubkey(),
+            test_collection.pubkey,
+            test_collection.mint.pubkey(),
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let record_account = get_account(&mut context, &record).await;
+        let record_data: CollectionAuthorityRecord =
+            try_from_slice_unchecked(&record_account.data).unwrap();
+        assert_eq!(record_data.key, Key::CollectionAuthorityRecord);
+
+        test_metadata
+            .set_and_verify_collection(
+                &mut context,
+                test_collection.pubkey,
+                &new_collection_authority,
+                update_authority,
+                test_collection.mint.pubkey(),
+                collection_master_edition_account.pubkey,
+                Some(record),
+            )
+            .await
+            .unwrap();
+
+        let metadata_after = test_metadata.get_data(&mut context).await;
+        assert_eq!(
+            metadata_after.collection.to_owned().unwrap().key,
+            test_collection.mint.pubkey()
+        );
+        assert!(metadata_after.collection.unwrap().verified);
+
+        test_metadata
+            .unverify_collection(
+                &mut context,
+                test_collection.pubkey,
+                &new_collection_authority,
+                test_collection.mint.pubkey(),
+                collection_master_edition_account.pubkey,
+                Some(record),
+            )
+            .await
+            .unwrap();
+        let metadata_after_unverify = test_metadata.get_data(&mut context).await;
+        assert!(!metadata_after_unverify.collection.unwrap().verified);
+
+        let ix_revoke = mpl_token_metadata::instruction::revoke_collection_authority(
+            mpl_token_metadata::id(),
+            record,
+            new_collection_authority.pubkey(),
+            incorrect_revoke_authority.pubkey(),
+            test_collection.pubkey,
+            test_collection.mint.pubkey(),
+        );
+
+        let tx_revoke = Transaction::new_signed_with_payer(
+            &[ix_revoke],
+            Some(&incorrect_revoke_authority.pubkey()),
+            &[&incorrect_revoke_authority],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx_revoke)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::RevokeCollectionAuthoritySignerIncorrect);
     }
 }
