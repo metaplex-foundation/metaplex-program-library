@@ -35,7 +35,7 @@ mod serialization {
 
         let account = get_account(context, &test_metadata.pubkey).await;
         let me_account = get_account(context, &test_master_edition.pubkey).await;
-        return (account.data, me_account.data);
+        (account.data, me_account.data)
     }
     #[tokio::test]
     async fn success() {

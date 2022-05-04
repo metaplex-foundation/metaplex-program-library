@@ -213,7 +213,7 @@ mod create_master_edition {
 
         let test_master_edition = MasterEditionV2::new(&Metadata {
             mint: fake_mint,
-            pubkey: test_metadata.pubkey.clone(),
+            pubkey: test_metadata.pubkey,
             token: fake_account,
         });
 
@@ -367,7 +367,7 @@ mod create_master_edition {
 
         let test_master_edition = MasterEditionV2::new(&Metadata {
             mint: fake_mint,
-            pubkey: test_metadata.pubkey.clone(),
+            pubkey: test_metadata.pubkey,
             token: fake_account,
         });
 

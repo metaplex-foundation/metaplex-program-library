@@ -363,9 +363,10 @@ pub enum MetadataInstruction {
 
     /// Revoke account to call [verify_collection] on this NFT.
     #[account(0, writable, name="collection_authority_record", desc="Collection Authority Record PDA")]
-    #[account(1, signer, writable, name="update_authority", desc="Update Authority of Collection NFT")]
-    #[account(2, name="metadata", desc="Metadata account")]
-    #[account(3, name="mint", desc="Mint of Metadata")]
+    #[account(1, signer, writable, name="delegate_authority", desc="Delegated Collection Authority")]
+    #[account(2, signer, writable, name="revoke_authority", desc="Update Authority, or Delegated Authority, of Collection NFT")]
+    #[account(3, name="metadata", desc="Metadata account")]
+    #[account(4, name="mint", desc="Mint of Metadata")]
     RevokeCollectionAuthority,
 
     /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
@@ -838,12 +839,16 @@ pub fn verify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    if collection_authority_record.is_some() {
-        accounts.push(AccountMeta::new_readonly(
-            collection_authority_record.unwrap(),
-            false,
-        ));
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
     }
+
     Instruction {
         program_id,
         accounts,
@@ -881,12 +886,16 @@ pub fn unverify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    if collection_authority_record.is_some() {
-        accounts.push(AccountMeta::new_readonly(
-            collection_authority_record.unwrap(),
-            false,
-        ));
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
     }
+
     Instruction {
         program_id,
         accounts,
@@ -937,11 +946,18 @@ pub fn utilize(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
-    if use_authority_record_pda.is_some() {
-        accounts.push(AccountMeta::new(use_authority_record_pda.unwrap(), false));
+    match use_authority_record_pda {
+        Some(use_authority_record_pda) => {
+            accounts.push(AccountMeta::new(use_authority_record_pda, false));
+        }
+        None => (),
     }
-    if burner.is_some() {
-        accounts.push(AccountMeta::new_readonly(burner.unwrap(), false));
+
+    match burner {
+        Some(burner) => {
+            accounts.push(AccountMeta::new_readonly(burner, false));
+        }
+        None => (),
     }
 
     Instruction {
@@ -1103,7 +1119,7 @@ pub fn approve_collection_authority(
 ///
 ///   0. `[writable]` Collection Authority Record PDA
 ///   1. `[writable]` The Authority that was delegated to
-///   2. `[signer]` The Original Update Authority
+///   2. `[signer]` The Original Update Authority or Delegated Authority
 ///   2. `[]` Metadata account
 ///   3. `[]` Mint of Metadata
 #[allow(clippy::too_many_arguments)]
@@ -1111,7 +1127,7 @@ pub fn revoke_collection_authority(
     program_id: Pubkey,
     collection_authority_record: Pubkey,
     delegate_authority: Pubkey,
-    update_authority: Pubkey,
+    revoke_authority: Pubkey,
     metadata: Pubkey,
     mint: Pubkey,
 ) -> Instruction {
@@ -1120,7 +1136,7 @@ pub fn revoke_collection_authority(
         accounts: vec![
             AccountMeta::new(collection_authority_record, false),
             AccountMeta::new_readonly(delegate_authority, false),
-            AccountMeta::new(update_authority, true),
+            AccountMeta::new(revoke_authority, true),
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(mint, false),
         ],
@@ -1165,12 +1181,16 @@ pub fn set_and_verify_collection(
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    if collection_authority_record.is_some() {
-        accounts.push(AccountMeta::new_readonly(
-            collection_authority_record.unwrap(),
-            false,
-        ));
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
     }
+
     Instruction {
         program_id,
         accounts,

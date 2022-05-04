@@ -31,7 +31,7 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
     let rent_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
-        &program_id,
+        program_id,
         CreateMetadataAccountsLogicArgs {
             metadata_account_info,
             mint_info,

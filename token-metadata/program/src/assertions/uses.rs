@@ -19,7 +19,7 @@ pub fn assert_valid_use(
             return Err(MetadataError::InvalidUseMethod.into());
         }
     }
-    return match (incoming_use, current_use) {
+    match (incoming_use, current_use) {
         (Some(incoming), Some(current)) => {
             if incoming.use_method != current.use_method && current.total != current.remaining {
                 return Err(MetadataError::CannotChangeUseMethodAfterFirstUse.into());
@@ -33,13 +33,13 @@ pub fn assert_valid_use(
             Ok(())
         }
         _ => Ok(()),
-    };
+    }
 }
 
 pub fn assert_burner(program_as_burner: &Pubkey) -> Result<u8, MetadataError> {
     let (canon_burn, b) = pda::find_program_as_burner_account();
     if &canon_burn != program_as_burner {
-        return Err(MetadataError::DerivedKeyInvalid.into());
+        return Err(MetadataError::DerivedKeyInvalid);
     }
     Ok(b)
 }
@@ -63,11 +63,11 @@ pub fn assert_use_authority_derivation(
     let use_authority_seeds = [
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint_info.key.as_ref(),
+        mint_info.key.as_ref(),
         USER.as_bytes(),
-        &user_info.key.as_ref(),
+        user_info.key.as_ref(),
     ];
-    assert_derivation(&program_id, use_authority_record_info, &use_authority_seeds)
+    assert_derivation(program_id, use_authority_record_info, &use_authority_seeds)
 }
 
 pub fn process_use_authority_validation(
@@ -79,10 +79,8 @@ pub fn process_use_authority_validation(
         if !record_info_empty {
             return Err(MetadataError::UseAuthorityRecordAlreadyExists.into());
         }
-    } else {
-        if record_info_empty {
-            return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
-        }
+    } else if record_info_empty {
+        return Err(MetadataError::UseAuthorityRecordAlreadyRevoked.into());
     }
     Ok(())
 }

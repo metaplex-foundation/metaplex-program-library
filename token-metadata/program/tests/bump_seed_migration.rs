@@ -80,7 +80,7 @@ mod bump_seed_migration {
         let (burner, _) = find_program_as_burner_account();
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
-            test_metadata.pubkey.clone(),
+            test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             Some(record),

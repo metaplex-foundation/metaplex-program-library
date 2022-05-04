@@ -21,17 +21,15 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
     /* We can have accidentally valid, but corrupted data, particularly on the Collection struct,
     so to increase probability of catching errors If any of these deserializations fail, set all values to None.
     */
-    let (token_standard, collection, uses) =
-        if token_standard_res.is_err() || collection_res.is_err() || uses_res.is_err() {
+    let (token_standard, collection, uses) = match (token_standard_res, collection_res, uses_res) {
+        (Ok(token_standard_res), Ok(collection_res), Ok(uses_res)) => {
+            (token_standard_res, collection_res, uses_res)
+        }
+        _ => {
             msg!("Corrupted metadata discovered: setting values to None");
             (None, None, None)
-        } else {
-            (
-                token_standard_res.unwrap(),
-                collection_res.unwrap(),
-                uses_res.unwrap(),
-            )
-        };
+        }
+    };
 
     let metadata = Metadata {
         key,

@@ -24,7 +24,7 @@ use solana_sdk::{
 use spl_token::state::Mint;
 pub use vault::Vault;
 
-pub fn program_test<'a>() -> ProgramTest {
+pub fn program_test() -> ProgramTest {
     ProgramTest::new("mpl_token_metadata", mpl_token_metadata::id(), None)
 }
 
@@ -114,7 +114,7 @@ pub async fn create_token_account(
             .unwrap(),
         ],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &account],
+        &[&context.payer, account],
         context.last_blockhash,
     );
 
@@ -141,14 +141,14 @@ pub async fn create_mint(
             spl_token::instruction::initialize_mint(
                 &spl_token::id(),
                 &mint.pubkey(),
-                &manager,
+                manager,
                 freeze_authority,
                 0,
             )
             .unwrap(),
         ],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &mint],
+        &[&context.payer, mint],
         context.last_blockhash,
     );
 
