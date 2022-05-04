@@ -315,8 +315,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         config_data.creators.push(creator);
     });
 
-    const GATEKEEPER_INDEX: usize = 0;
-    const SPL_INDEX: usize = 1;
+    const SPL_INDEX: usize = 0;
+    const GATEKEEPER_INDEX: usize = 1;
     const WL_INDEX: usize = 2;
     const END_SETTINGS_INDEX: usize = 3;
     const HIDDEN_SETTINGS_INDEX: usize = 4;
