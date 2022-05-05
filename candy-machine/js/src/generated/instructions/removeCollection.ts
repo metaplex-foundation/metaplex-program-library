@@ -63,7 +63,7 @@ export function createRemoveCollectionInstruction(accounts: RemoveCollectionInst
   const keys: web3.AccountMeta[] = [
     {
       pubkey: candyMachine,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

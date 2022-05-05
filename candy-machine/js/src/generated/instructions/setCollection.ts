@@ -67,7 +67,7 @@ export function createSetCollectionInstruction(accounts: SetCollectionInstructio
   const keys: web3.AccountMeta[] = [
     {
       pubkey: candyMachine,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

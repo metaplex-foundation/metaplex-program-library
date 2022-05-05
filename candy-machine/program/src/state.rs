@@ -1,82 +1,11 @@
 use anchor_lang::prelude::*;
 
-/// Configurations options for the gatekeeper.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct GatekeeperConfig {
-    /// The network for the gateway token required
-    pub gatekeeper_network: Pubkey,
-    /// Whether or not the token should expire after minting.
-    /// The gatekeeper network must support this if true.
-    pub expire_on_use: bool,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub enum EndSettingType {
-    Date,
-    Amount,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct EndSettings {
-    pub end_setting_type: EndSettingType,
-    pub number: u64,
-}
-
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct WhitelistMintSettings {
     pub mode: WhitelistMintMode,
     pub mint: Pubkey,
     pub presale: bool,
     pub discount_price: Option<u64>,
-}
-
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
-pub enum WhitelistMintMode {
-    // Only captcha uses the bytes, the others just need to have same length
-    // for front end borsh to not crap itself
-    // Holds the validation window
-    BurnEveryTime,
-    NeverBurn,
-}
-
-/// Hidden Settings for large mints used with offline data.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
-pub struct HiddenSettings {
-    pub name: String,
-    pub uri: String,
-    pub hash: [u8; 32],
-}
-
-// Unfortunate duplication of token metadata so that IDL picks it up.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
-pub struct Creator {
-    pub address: Pubkey,
-    pub verified: bool,
-    // In percentages, NOT basis points ;) Watch out!
-    pub share: u8,
-}
-
-/// Individual config line for storing NFT data pre-mint.
-#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
-pub struct ConfigLine {
-    pub name: String,
-    /// URI pointing to JSON representing the asset
-    pub uri: String,
-}
-
-/// Candy machine state and config data.
-#[account]
-#[derive(Default)]
-pub struct CandyMachine {
-    pub authority: Pubkey,
-    pub wallet: Pubkey,
-    pub token_mint: Option<Pubkey>,
-    pub items_redeemed: u64,
-    pub data: CandyMachineData,
-    // there's a borsh vec u32 denoting how many actual lines of data there are currently (eventually equals items available)
-    // There is actually lines and lines of data after this but we explicitly never want them deserialized.
-    // here there is a borsh vec u32 indicating number of bytes in bitmask array.
-    // here there is a number of bytes equal to ceil(max_number_of_lines/8) and it is a bit mask used to figure out when to increment borsh vec u32
 }
 
 /// Candy machine settings data.
@@ -99,6 +28,77 @@ pub struct CandyMachineData {
     pub items_available: u64,
     /// If [`Some`] requires gateway tokens on mint
     pub gatekeeper: Option<GatekeeperConfig>,
+}
+
+/// Configurations options for the gatekeeper.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct GatekeeperConfig {
+    /// The network for the gateway token required
+    pub gatekeeper_network: Pubkey,
+    /// Whether or not the token should expire after minting.
+    /// The gatekeeper network must support this if true.
+    pub expire_on_use: bool,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct EndSettings {
+    pub end_setting_type: EndSettingType,
+    pub number: u64,
+}
+
+/// Hidden Settings for large mints used with offline data.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
+pub struct HiddenSettings {
+    pub name: String,
+    pub uri: String,
+    pub hash: [u8; 32],
+}
+
+/// Individual config line for storing NFT data pre-mint.
+#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
+pub struct ConfigLine {
+    pub name: String,
+    /// URI pointing to JSON representing the asset
+    pub uri: String,
+}
+
+// Unfortunate duplication of token metadata so that IDL picks it up.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct Creator {
+    pub address: Pubkey,
+    pub verified: bool,
+    // In percentages, NOT basis points ;) Watch out!
+    pub share: u8,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
+pub enum WhitelistMintMode {
+    // Only captcha uses the bytes, the others just need to have same length
+    // for front end borsh to not crap itself
+    // Holds the validation window
+    BurnEveryTime,
+    NeverBurn,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub enum EndSettingType {
+    Date,
+    Amount,
+}
+
+/// Candy machine state and config data.
+#[account]
+#[derive(Default)]
+pub struct CandyMachine {
+    pub authority: Pubkey,
+    pub wallet: Pubkey,
+    pub token_mint: Option<Pubkey>,
+    pub items_redeemed: u64,
+    pub data: CandyMachineData,
+    // there's a borsh vec u32 denoting how many actual lines of data there are currently (eventually equals items available)
+    // There is actually lines and lines of data after this but we explicitly never want them deserialized.
+    // here there is a borsh vec u32 indicating number of bytes in bitmask array.
+    // here there is a number of bytes equal to ceil(max_number_of_lines/8) and it is a bit mask used to figure out when to increment borsh vec u32
 }
 
 /// Collection PDA account
