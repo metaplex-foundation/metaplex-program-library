@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 use solana_program::clock::UnixTimestamp;
 
-pub const LISTING_CONFIG_SIZE: usize = 8 + 8 + 8 + 1;
+pub const BID_SIZE: usize = 8 + 32;
+pub const LISTING_CONFIG_SIZE: usize = 8 + 8 + 8 + BID_SIZE + 1;
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct Bid {

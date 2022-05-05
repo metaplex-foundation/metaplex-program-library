@@ -30,3 +30,6 @@ pub const TOO_MANY_SCOPES: u32 = 6032;
 
 pub const TEN_SOL: u64 = 10_000_000_000;
 pub const ONE_SOL: u64 = 1_000_000_000;
+
+pub const AUCTION_NOT_STARTED: u32 = 6001;
+pub const AUCTION_ENDED: u32 = 6002;

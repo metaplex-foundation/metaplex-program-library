@@ -2,14 +2,14 @@
 pub mod common;
 pub mod utils;
 
-use anchor_lang::AccountDeserialize;
+// use anchor_lang::AccountDeserialize;
 use common::*;
-use utils::{helpers::default_scopes, setup_functions::*};
+use utils::setup_functions::*;
 
 use mpl_auction_house::receipt::ListingReceipt;
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
-use solana_sdk::{signer::Signer, sysvar::clock::Clock};
-use std::assert_eq;
+use solana_sdk::{clock::UnixTimestamp, signer::Signer, sysvar::clock::Clock};
+use std::{assert_eq, time::SystemTime};
 
 #[tokio::test]
 async fn sell_success() {
@@ -33,7 +33,22 @@ async fn sell_success() {
         )
         .await
         .unwrap();
-    let ((acc, listing_receipt_acc), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 1);
+    let ((acc, listing_config_address, listing_receipt_acc), sell_tx) = sell(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        1,
+        (SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs()) as i64,
+        (SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .expect("Time went backwards")
+            .as_secs()
+            + 60) as i64,
+    );
 
     context
         .banks_client

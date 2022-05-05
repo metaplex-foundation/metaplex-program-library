@@ -14,17 +14,23 @@ use mpl_auction_house::{
         find_public_bid_trade_state_address, find_purchase_receipt_address,
         find_trade_state_address,
     },
-    AuctionHouse, AuthorityScope,
+    AuctionHouse,
 };
+use mpl_auctioneer::pda::find_listing_config_address;
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use std::result::Result as StdResult;
 
 use mpl_token_metadata::pda::find_metadata_account;
 use solana_program_test::*;
-use solana_sdk::{instruction::Instruction, transaction::Transaction, transport::TransportError};
+use solana_sdk::{
+    clock::UnixTimestamp, instruction::Instruction, transaction::Transaction,
+    transport::TransportError,
+};
 use spl_associated_token_account::get_associated_token_address;
 
 use crate::utils::helpers::default_scopes;
+
+use std::time::SystemTime;
 
 pub fn auctioneer_program_test<'a>() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auctioneer", mpl_auctioneer::id(), None);
@@ -194,6 +200,8 @@ pub fn buy(
     test_metadata: &Metadata,
     owner: &Pubkey,
     buyer: &Keypair,
+    seller: &Pubkey,
+    listing_config: &Pubkey,
     sale_price: u64,
 ) -> (
     (
@@ -217,6 +225,8 @@ pub fn buy(
     let (bts, bts_bump) = trade_state;
     let accounts = mpl_auctioneer::accounts::AuctioneerBuy {
         auction_house_program: mpl_auction_house::id(),
+        listing_config: *listing_config,
+        seller: *seller,
         wallet: buyer.pubkey(),
         token_account: seller_token_account,
         metadata: test_metadata.pubkey,
@@ -291,6 +301,8 @@ pub fn public_buy(
     test_metadata: &Metadata,
     owner: &Pubkey,
     buyer: &Keypair,
+    seller: &Pubkey,
+    listing_config: &Pubkey,
     sale_price: u64,
 ) -> (
     (
@@ -314,6 +326,8 @@ pub fn public_buy(
 
     let accounts = mpl_auctioneer::accounts::AuctioneerPublicBuy {
         auction_house_program: mpl_auction_house::id(),
+        listing_config: *listing_config,
+        seller: *seller,
         wallet: buyer.pubkey(),
         token_account: seller_token_account,
         metadata: test_metadata.pubkey,
@@ -382,6 +396,7 @@ pub fn public_buy(
 
 pub fn execute_sale(
     context: &mut ProgramTestContext,
+    listing_config: &Pubkey,
     ahkey: &Pubkey,
     ah: &AuctionHouse,
     authority: &Keypair,
@@ -421,6 +436,7 @@ pub fn execute_sale(
     let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &mpl_auctioneer::id());
     let execute_sale_accounts = mpl_auctioneer::accounts::AuctioneerExecuteSale {
         auction_house_program: mpl_auction_house::id(),
+        listing_config: *listing_config,
         buyer: *buyer,
         seller: *seller,
         auction_house: *ahkey,
@@ -499,9 +515,12 @@ pub fn sell_mint(
     test_metadata_mint: &Pubkey,
     seller: &Keypair,
     sale_price: u64,
+    start_time: UnixTimestamp,
+    end_time: UnixTimestamp,
 ) -> (
     (
         mpl_auctioneer::accounts::AuctioneerSell,
+        Pubkey,
         mpl_auction_house::accounts::PrintListingReceipt,
     ),
     Transaction,
@@ -526,12 +545,23 @@ pub fn sell_mint(
         0,
         1,
     );
+
+    let (listing_config_address, list_bump) = find_listing_config_address(
+        &seller.pubkey(),
+        &ahkey,
+        &token,
+        &ah.treasury_mint,
+        &test_metadata_mint,
+        1,
+    );
+
     let (pas, pas_bump) = find_program_as_signer_address();
     let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
     let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &mpl_auctioneer::id());
 
     let accounts = mpl_auctioneer::accounts::AuctioneerSell {
         auction_house_program: mpl_auction_house::id(),
+        listing_config: listing_config_address,
         wallet: seller.pubkey(),
         token_account: token,
         metadata,
@@ -555,6 +585,8 @@ pub fn sell_mint(
         program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: sale_price,
+        start_time,
+        end_time,
     }
     .data();
 
@@ -579,7 +611,7 @@ pub fn sell_mint(
     // };
 
     (
-        (accounts, listing_receipt_accounts),
+        (accounts, listing_config_address, listing_receipt_accounts),
         Transaction::new_signed_with_payer(
             &[instruction /*, print_receipt_instruction*/],
             Some(&seller.pubkey()),
@@ -595,9 +627,12 @@ pub fn sell(
     ah: &AuctionHouse,
     test_metadata: &Metadata,
     sale_price: u64,
+    start_time: UnixTimestamp,
+    end_time: UnixTimestamp,
 ) -> (
     (
         mpl_auctioneer::accounts::AuctioneerSell,
+        Pubkey,
         mpl_auction_house::accounts::PrintListingReceipt,
     ),
     Transaction,
@@ -624,11 +659,22 @@ pub fn sell(
         0,
         1,
     );
+
+    let (listing_config_address, list_bump) = find_listing_config_address(
+        &test_metadata.token.pubkey(),
+        &ahkey,
+        &token,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        1,
+    );
+
     let (pas, pas_bump) = find_program_as_signer_address();
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &mpl_auctioneer::id());
 
     let accounts = mpl_auctioneer::accounts::AuctioneerSell {
         auction_house_program: mpl_auction_house::id(),
+        listing_config: listing_config_address,
         wallet: test_metadata.token.pubkey(),
         token_account: token,
         metadata: test_metadata.pubkey,
@@ -652,6 +698,8 @@ pub fn sell(
         program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: sale_price,
+        start_time,
+        end_time,
     }
     .data();
 
@@ -676,7 +724,7 @@ pub fn sell(
     // };
 
     (
-        (accounts, listing_receipt_accounts),
+        (accounts, listing_config_address, listing_receipt_accounts),
         Transaction::new_signed_with_payer(
             &[instruction /*, print_receipt_instruction*/],
             Some(&test_metadata.token.pubkey()),
