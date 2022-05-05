@@ -1,4 +1,5 @@
 use crate::{
+    cmp_pubkeys,
     constants::{COLLECTIONS_FEATURE_INDEX, COLLECTION_PDA_SIZE},
     set_feature_flag, CandyError, CandyMachine, CollectionPDA,
 };
@@ -39,10 +40,10 @@ pub struct SetCollection<'info> {
 pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let mint = ctx.accounts.mint.to_account_info();
     let metadata: Metadata = Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-    if metadata.update_authority != ctx.accounts.authority.key() {
+    if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {
         return err!(CandyError::IncorrectCollectionAuthority);
     };
-    if metadata.mint != mint.key() {
+    if !cmp_pubkeys(&metadata.mint, &mint.key()) {
         return err!(CandyError::MintMismatch);
     }
     let edition = ctx.accounts.edition.to_account_info();
@@ -102,6 +103,6 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     collection_pda_object.mint = mint.key();
     collection_pda_object.candy_machine = candy_machine.key();
     collection_pda_object.try_serialize(&mut data_ref)?;
-    candy_machine.data.uuid = set_feature_flag(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX);
+    set_feature_flag(&mut candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX);
     Ok(())
 }

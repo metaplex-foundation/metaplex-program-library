@@ -1,7 +1,8 @@
 use crate::{
     candy_machine,
     constants::{
-        COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START, CONFIG_LINE_SIZE, EXPIRE_OFFSET, PREFIX,
+        A_TOKEN, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START, CONFIG_LINE_SIZE,
+        EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
     },
     utils::*,
     CandyError, CandyMachine, ConfigLine, EndSettingType, WhitelistMintMode,
@@ -15,7 +16,6 @@ use mpl_token_metadata::{
     },
     state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
 };
-use solana_gateway::{borsh::try_from_slice_incomplete, state::GatewayToken, Gateway};
 use solana_program::{
     clock::Clock,
     program::{invoke, invoke_signed},
@@ -23,7 +23,7 @@ use solana_program::{
     system_instruction, sysvar,
     sysvar::instructions::get_instruction_relative,
 };
-use std::{cell::RefMut, ops::Deref, str::FromStr};
+use std::{cell::RefMut, ops::Deref};
 
 /// Mint a new NFT pseudo-randomly from the config array.
 #[derive(Accounts)]
@@ -60,9 +60,10 @@ pub struct MintNFT<'info> {
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
+    /// Account not actually used.
     clock: Sysvar<'info, Clock>,
     // Leaving the name the same for IDL backward compatability
-    /// CHECK: account checked in CPI
+    /// CHECK: account not actually used.
     recent_blockhashes: UncheckedAccount<'info>,
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::instructions::id())]
@@ -82,37 +83,94 @@ pub struct MintNFT<'info> {
     // transfer_authority_info
 }
 
-#[inline(never)]
 pub fn handle_mint_nft<'info>(
     ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
     creator_bump: u8,
 ) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
     let candy_machine_creator = &ctx.accounts.candy_machine_creator;
-    let clock = &ctx.accounts.clock;
     // Note this is the wallet of the Candy machine
     let wallet = &ctx.accounts.wallet;
     let payer = &ctx.accounts.payer;
     let token_program = &ctx.accounts.token_program;
+    let clock = Clock::get()?;
     let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
-
     let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
     let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
-    if is_feature_active(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX) {
-        let next_instruction = get_instruction_relative(1, &instruction_sysvar_account_info)?;
-        if next_instruction.program_id != candy_machine::id() {
-            msg!(
-                "Transaction had ix with program id {}",
-                &next_instruction.program_id
-            );
-            return Err(CandyError::SuspiciousTransaction.into());
+    let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
+    if !ctx.accounts.metadata.data_is_empty() {
+        return err!(CandyError::MetadataAccountMustBeEmpty);
+    }
+    // Restrict Who can call Candy Machine via CPI
+    if !cmp_pubkeys(&current_ix.program_id, &candy_machine::id())
+        && !cmp_pubkeys(&current_ix.program_id, &GUMDROP_ID)
+    {
+        punish_bots(
+            CandyError::SuspiciousTransaction,
+            payer.to_account_info(),
+            ctx.accounts.candy_machine.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            BOT_FEE,
+        )?;
+        return Ok(());
+    }
+    let next_ix = get_instruction_relative(1, &instruction_sysvar_account_info);
+    match next_ix {
+        Ok(ix) => {
+            let discriminator = &ix.data[0..8];
+            let after_collection_ix = get_instruction_relative(2, &instruction_sysvar_account_info);
+            if !cmp_pubkeys(&ix.program_id, &candy_machine::id())
+                || discriminator != [103, 17, 200, 25, 118, 95, 125, 61]
+                || after_collection_ix.is_ok()
+            {
+                // We fail here. Its much cheaper to fail here than to allow a malicious user to add an ix at the end and then fail.
+                msg!("Failing and Halting Here due to an extra unauthorized instruction");
+                return err!(CandyError::SuspiciousTransaction);
+            }
         }
-        let discriminator = &next_instruction.data[0..8];
+        Err(_) => {
+            if is_feature_active(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX) {
+                punish_bots(
+                    CandyError::MissingSetCollectionDuringMint,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
+                return Ok(());
+            }
+        }
+    }
+    let mut idx = 0;
+    let num_instructions =
+        read_u16(&mut idx, &instruction_sysvar).map_err(|_| ProgramError::InvalidAccountData)?;
 
-        // Set collection during mint discriminator
-        if discriminator != [103, 17, 200, 25, 118, 95, 125, 61] {
-            msg!("Transaction had ix with data {:?}", discriminator);
-            return Err(CandyError::SuspiciousTransaction.into());
+    for index in 0..num_instructions {
+        let mut current = 2 + (index * 2) as usize;
+        let start = read_u16(&mut current, &instruction_sysvar).unwrap();
+
+        current = start as usize;
+        let num_accounts = read_u16(&mut current, &instruction_sysvar).unwrap();
+        current += (num_accounts as usize) * (1 + 32);
+        let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
+
+        if !cmp_pubkeys(&program_id, &candy_machine::id())
+            && !cmp_pubkeys(&program_id, &spl_token::id())
+            && !cmp_pubkeys(
+                &program_id,
+                &anchor_lang::solana_program::system_program::ID,
+            )
+            && !cmp_pubkeys(&program_id, &A_TOKEN)
+        {
+            msg!("Transaction had ix with program id {}", program_id);
+            punish_bots(
+                CandyError::SuspiciousTransaction,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
+            )?;
+            return Ok(());
         }
     }
 
@@ -121,14 +179,31 @@ pub fn handle_mint_nft<'info>(
         match es.end_setting_type {
             EndSettingType::Date => {
                 if clock.unix_timestamp > es.number as i64
-                    && ctx.accounts.payer.key() != candy_machine.authority
+                    && !cmp_pubkeys(&ctx.accounts.payer.key(), &candy_machine.authority)
                 {
-                    return err!(CandyError::CandyMachineNotLive);
+                    punish_bots(
+                        CandyError::CandyMachineNotLive,
+                        payer.to_account_info(),
+                        ctx.accounts.candy_machine.to_account_info(),
+                        ctx.accounts.system_program.to_account_info(),
+                        BOT_FEE,
+                    )?;
+                    return Ok(());
                 }
             }
             EndSettingType::Amount => {
                 if candy_machine.items_redeemed >= es.number {
-                    return err!(CandyError::CandyMachineNotLive);
+                    if !cmp_pubkeys(&ctx.accounts.payer.key(), &candy_machine.authority) {
+                        punish_bots(
+                            CandyError::CandyMachineEmpty,
+                            payer.to_account_info(),
+                            ctx.accounts.candy_machine.to_account_info(),
+                            ctx.accounts.system_program.to_account_info(),
+                            BOT_FEE,
+                        )?;
+                        return Ok(());
+                    }
+                    return err!(CandyError::CandyMachineEmpty);
                 }
             }
         }
@@ -137,11 +212,19 @@ pub fn handle_mint_nft<'info>(
     let mut remaining_accounts_counter: usize = 0;
     if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
         if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-            return err!(CandyError::GatewayTokenMissing);
+            punish_bots(
+                CandyError::GatewayTokenMissing,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
+            )?;
+            return Ok(());
         }
         let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
-        let gateway_token =
-            try_from_slice_incomplete::<GatewayToken>(*gateway_token_info.data.borrow())?;
+        let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
+            ::solana_gateway::state::GatewayToken,
+        >(*gateway_token_info.data.borrow())?;
         // stores the expire_time before the verification, since the verification
         // will update the expire_time of the token and we won't be able to
         // calculate the creation time
@@ -160,7 +243,7 @@ pub fn handle_mint_nft<'info>(
             }
             let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-            Gateway::verify_and_expire_token(
+            ::solana_gateway::Gateway::verify_and_expire_token(
                 gateway_app.clone(),
                 gateway_token_info.clone(),
                 payer.deref().clone(),
@@ -168,7 +251,7 @@ pub fn handle_mint_nft<'info>(
                 network_expire_feature.clone(),
             )?;
         } else {
-            Gateway::verify_gateway_token_account_info(
+            ::solana_gateway::Gateway::verify_gateway_token_account_info(
                 gateway_token_info,
                 &payer.key(),
                 &gatekeeper.gatekeeper_network,
@@ -214,6 +297,38 @@ pub fn handle_mint_nft<'info>(
         match assert_is_ata(whitelist_token_account, &payer.key(), &ws.mint) {
             Ok(wta) => {
                 if wta.amount > 0 {
+                    match candy_machine.data.go_live_date {
+                        None => {
+                            if !cmp_pubkeys(&ctx.accounts.payer.key(), &candy_machine.authority)
+                                && !ws.presale
+                            {
+                                punish_bots(
+                                    CandyError::CandyMachineNotLive,
+                                    payer.to_account_info(),
+                                    ctx.accounts.candy_machine.to_account_info(),
+                                    ctx.accounts.system_program.to_account_info(),
+                                    BOT_FEE,
+                                )?;
+                                return Ok(());
+                            }
+                        }
+                        Some(val) => {
+                            if clock.unix_timestamp < val
+                                && !cmp_pubkeys(&ctx.accounts.payer.key(), &candy_machine.authority)
+                                && !ws.presale
+                            {
+                                punish_bots(
+                                    CandyError::CandyMachineNotLive,
+                                    payer.to_account_info(),
+                                    ctx.accounts.candy_machine.to_account_info(),
+                                    ctx.accounts.system_program.to_account_info(),
+                                    BOT_FEE,
+                                )?;
+                                return Ok(());
+                            }
+                        }
+                    }
+
                     if ws.mode == WhitelistMintMode::BurnEveryTime {
                         let whitelist_token_mint =
                             &ctx.remaining_accounts[remaining_accounts_counter];
@@ -235,22 +350,6 @@ pub fn handle_mint_nft<'info>(
                         })?;
                     }
 
-                    match candy_machine.data.go_live_date {
-                        None => {
-                            if ctx.accounts.payer.key() != candy_machine.authority && !ws.presale {
-                                return err!(CandyError::CandyMachineNotLive);
-                            }
-                        }
-                        Some(val) => {
-                            if clock.unix_timestamp < val
-                                && ctx.accounts.payer.key() != candy_machine.authority
-                                && !ws.presale
-                            {
-                                return err!(CandyError::CandyMachineNotLive);
-                            }
-                        }
-                    }
-
                     if let Some(dp) = ws.discount_price {
                         price = dp;
                     }
@@ -259,9 +358,26 @@ pub fn handle_mint_nft<'info>(
                         // A non-presale whitelist with no discount price is a forced whitelist
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
-                        return err!(CandyError::NoWhitelistToken);
+                        punish_bots(
+                            CandyError::NoWhitelistToken,
+                            payer.to_account_info(),
+                            ctx.accounts.candy_machine.to_account_info(),
+                            ctx.accounts.system_program.to_account_info(),
+                            BOT_FEE,
+                        )?;
+                        return Ok(());
                     }
-                    assert_valid_go_live(payer, clock, candy_machine)?;
+                    let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                    if go_live.is_err() {
+                        punish_bots(
+                            CandyError::CandyMachineNotLive,
+                            payer.to_account_info(),
+                            ctx.accounts.candy_machine.to_account_info(),
+                            ctx.accounts.system_program.to_account_info(),
+                            BOT_FEE,
+                        )?;
+                        return Ok(());
+                    }
                     if ws.mode == WhitelistMintMode::BurnEveryTime {
                         remaining_accounts_counter += 2;
                     }
@@ -272,31 +388,63 @@ pub fn handle_mint_nft<'info>(
                     // A non-presale whitelist with no discount price is a forced whitelist
                     // If a pre-sale has no discount, its no issue, because the "discount"
                     // is minting first - a presale whitelist always has an open post sale.
-                    return err!(CandyError::NoWhitelistToken);
+                    punish_bots(
+                        CandyError::NoWhitelistToken,
+                        payer.to_account_info(),
+                        ctx.accounts.candy_machine.to_account_info(),
+                        ctx.accounts.system_program.to_account_info(),
+                        BOT_FEE,
+                    )?;
+                    return Ok(());
                 }
                 if ws.mode == WhitelistMintMode::BurnEveryTime {
                     remaining_accounts_counter += 2;
                 }
-                assert_valid_go_live(payer, clock, candy_machine)?
+                let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                if go_live.is_err() {
+                    punish_bots(
+                        CandyError::CandyMachineNotLive,
+                        payer.to_account_info(),
+                        ctx.accounts.candy_machine.to_account_info(),
+                        ctx.accounts.system_program.to_account_info(),
+                        BOT_FEE,
+                    )?;
+                    return Ok(());
+                }
             }
         }
     } else {
         // no whitelist means normal datecheck
-        assert_valid_go_live(payer, clock, candy_machine)?;
+        let go_live = assert_valid_go_live(payer, clock, candy_machine);
+        if go_live.is_err() {
+            punish_bots(
+                CandyError::CandyMachineNotLive,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
+            )?;
+            return Ok(());
+        }
     }
 
     if candy_machine.items_redeemed >= candy_machine.data.items_available {
-        return err!(CandyError::CandyMachineEmpty);
+        punish_bots(
+            CandyError::CandyMachineEmpty,
+            payer.to_account_info(),
+            ctx.accounts.candy_machine.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            BOT_FEE,
+        )?;
+        return Ok(());
     }
 
     if let Some(mint) = candy_machine.token_mint {
         let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
         remaining_accounts_counter += 1;
         let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
-
-        // If we ever add another account, this will need to be uncommented:
+        // If we add more extra accounts later on we need to uncomment the following line out.
         // remaining_accounts_counter += 1;
-
         let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
         if token_account.amount < price {
@@ -325,12 +473,14 @@ pub fn handle_mint_nft<'info>(
             ],
         )?;
     }
+
     let recent_slothashes = <SlotHashes as sysvar::Sysvar>::get()?;
     let (_most_recent, hash) = recent_slothashes
         .first()
         .ok_or(CandyError::SlotHashesEmpty)?;
 
     let most_recent = array_ref![hash.as_ref(), 0, 8];
+
     let index = u64::from_le_bytes(*most_recent);
     let modded: usize = index
         .checked_rem(candy_machine.data.items_available)
@@ -447,32 +597,6 @@ pub fn handle_mint_nft<'info>(
         ],
         &[&authority_seeds],
     )?;
-
-    let mut idx = 0;
-    let num_instructions =
-        read_u16(&mut idx, &instruction_sysvar).map_err(|_| ProgramError::InvalidAccountData)?;
-
-    let associated_token =
-        Pubkey::from_str("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL").unwrap();
-
-    for index in 0..num_instructions {
-        let mut current = 2 + (index * 2) as usize;
-        let start = read_u16(&mut current, &instruction_sysvar).unwrap();
-
-        current = start as usize;
-        let num_accounts = read_u16(&mut current, &instruction_sysvar).unwrap();
-        current += (num_accounts as usize) * (1 + 32);
-        let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
-
-        if program_id != candy_machine::id()
-            && program_id != spl_token::id()
-            && program_id != anchor_lang::solana_program::system_program::ID
-            && program_id != associated_token
-        {
-            msg!("Transaction had ix with program id {}", program_id);
-            return err!(CandyError::SuspiciousTransaction);
-        }
-    }
 
     Ok(())
 }

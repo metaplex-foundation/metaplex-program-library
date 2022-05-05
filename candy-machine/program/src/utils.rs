@@ -3,12 +3,14 @@ use anchor_lang::prelude::*;
 use solana_program::{
     account_info::AccountInfo,
     clock::Clock,
-    program::invoke_signed,
+    program::{invoke, invoke_signed},
     program_memory::sol_memcmp,
     program_pack::{IsInitialized, Pack},
     pubkey::{Pubkey, PUBKEY_BYTES},
+    system_instruction,
 };
 use spl_associated_token_account::get_associated_token_address;
+use std::str::from_utf8_unchecked;
 
 pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
@@ -25,17 +27,17 @@ pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
 
 pub fn assert_valid_go_live<'info>(
     payer: &Signer<'info>,
-    clock: &Sysvar<Clock>,
+    clock: Clock,
     candy_machine: &Account<'info, CandyMachine>,
 ) -> Result<()> {
     match candy_machine.data.go_live_date {
         None => {
-            if *payer.key != candy_machine.authority {
+            if !cmp_pubkeys(payer.key, &candy_machine.authority) {
                 return Err(CandyError::CandyMachineNotLive.into());
             }
         }
         Some(val) => {
-            if clock.unix_timestamp < val && *payer.key != candy_machine.authority {
+            if clock.unix_timestamp < val && !cmp_pubkeys(payer.key, &candy_machine.authority) {
                 return Err(CandyError::CandyMachineNotLive.into());
             }
         }
@@ -118,7 +120,7 @@ pub fn assert_is_ata(
 
 pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     if !cmp_pubkeys(&key1, &key2) {
-        Err(CandyError::PublicKeyMismatch.into())
+        err!(CandyError::PublicKeyMismatch)
     } else {
         Ok(())
     }
@@ -178,20 +180,26 @@ pub fn is_feature_active(uuid: &str, feature_index: usize) -> bool {
 
 // string is 6 bytes long, can be any valid utf8 char coming in.
 // feature_index is between 0 and 5, inclusive
-// unsafe is fine because we know for a fact that the vec will only
+// unsafe is fine because we know for a fact that the array will only
 // contain valid UTF8 bytes (we set it as "1" or "0")
-pub fn set_feature_flag(uuid: &str, feature_index: usize) -> String {
-    let mut bytes: Vec<u8> = vec![b"0"[0]; 6];
+pub fn set_feature_flag(uuid: &mut String, feature_index: usize) {
+    let mut bytes: [u8; 6] = [b"0"[0]; 6];
     uuid.bytes().enumerate().for_each(|(i, byte)| {
         if i == feature_index || byte == "1".as_bytes()[0] {
             bytes[i] = b"1"[0]
         }
     });
-    unsafe { String::from_utf8_unchecked(bytes) }
+    unsafe {
+        uuid.replace_range(.., from_utf8_unchecked(&bytes));
+    }
 }
 
-pub fn remove_feature_flag(uuid: &str, feature_index: usize) -> String {
-    let mut bytes: Vec<u8> = vec![b"0"[0]; 6];
+// string is 6 bytes long, can be any valid utf8 char coming in.
+// feature_index is between 0 and 5, inclusive
+// unsafe is fine because we know for a fact that the array will only
+// contain valid UTF8 bytes (we set it as "1" or "0")
+pub fn remove_feature_flag(uuid: &mut String, feature_index: usize) {
+    let mut bytes: [u8; 6] = [b"0"[0]; 6];
     uuid.bytes().enumerate().for_each(|(i, byte)| {
         if i == feature_index {
             bytes[i] = b"0"[0];
@@ -199,7 +207,29 @@ pub fn remove_feature_flag(uuid: &str, feature_index: usize) -> String {
             bytes[i] = b"1"[0];
         }
     });
-    unsafe { String::from_utf8_unchecked(bytes) }
+    unsafe {
+        uuid.replace_range(.., from_utf8_unchecked(&bytes));
+    }
+}
+
+pub fn punish_bots<'a>(
+    err: CandyError,
+    bot_account: AccountInfo<'a>,
+    payment_account: AccountInfo<'a>,
+    system_program: AccountInfo<'a>,
+    fee: u64,
+) -> Result<()> {
+    msg!(
+        "{}, Candy Machine Botting is taxed at {:?} lamports",
+        err.to_string(),
+        fee
+    );
+    let final_fee = fee.min(bot_account.lamports());
+    invoke(
+        &system_instruction::transfer(bot_account.key, payment_account.key, final_fee),
+        &[bot_account, payment_account, system_program],
+    )?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -213,10 +243,10 @@ pub mod tests {
         println!("{}", uuid.as_bytes()[COLLECTIONS_FEATURE_INDEX]);
         assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
 
-        uuid = set_feature_flag(&uuid, COLLECTIONS_FEATURE_INDEX);
+        set_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX);
         println!("{}", uuid);
         assert!(is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
-        uuid = remove_feature_flag(&uuid, COLLECTIONS_FEATURE_INDEX);
+        remove_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX);
         println!("{}", uuid);
         assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
 
@@ -235,6 +265,6 @@ pub mod tests {
     fn check_keys_not_equal() {
         let key1 = Pubkey::new_unique();
         let key2 = Pubkey::new_unique();
-        assert_eq!(cmp_pubkeys(&key1, &key2), false);
+        assert!(!cmp_pubkeys(&key1, &key2));
     }
 }

@@ -27,5 +27,5 @@ spl-associated-token-account = { version = "1.0.3", features = [
   "no-entrypoint",
 ] }
 anchor-spl = "0.24.2"
-solana-program = "1.9.6"
-solana-gateway = "0.1.2"
+solana-program = "1.9.18"
+solana-gateway = "0.2.0"

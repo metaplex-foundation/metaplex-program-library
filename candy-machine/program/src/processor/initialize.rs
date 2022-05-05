@@ -1,5 +1,5 @@
 use crate::{
-    assert_initialized, assert_owned_by,
+    assert_initialized, assert_owned_by, cmp_pubkeys,
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
     CandyError, CandyMachine, CandyMachineData,
 };
@@ -49,7 +49,7 @@ pub fn handle_initialize_candy_machine(
         assert_owned_by(token_mint_info, &spl_token::id())?;
         assert_owned_by(&ctx.accounts.wallet, &spl_token::id())?;
 
-        if token_account.mint != token_mint_info.key() {
+        if !cmp_pubkeys(&token_account.mint, &token_mint_info.key()) {
             return err!(CandyError::MintMismatch);
         }
 

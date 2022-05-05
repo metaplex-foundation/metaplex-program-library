@@ -64,4 +64,8 @@ pub enum CandyError {
     MismatchedCollectionMint,
     #[msg("Slot hashes Sysvar is empty")]
     SlotHashesEmpty,
+    #[msg("The metadata account has data in it, and this must be empty to mint a new NFT")]
+    MetadataAccountMustBeEmpty,
+    #[msg("Missing set collection during mint IX for Candy Machine with collection set")]
+    MissingSetCollectionDuringMint,
 }

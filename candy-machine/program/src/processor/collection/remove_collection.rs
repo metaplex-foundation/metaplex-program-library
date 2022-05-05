@@ -1,6 +1,6 @@
 use crate::{
-    constants::COLLECTIONS_FEATURE_INDEX, remove_feature_flag, CandyError, CandyMachine,
-    CollectionPDA,
+    cmp_pubkeys, constants::COLLECTIONS_FEATURE_INDEX, remove_feature_flag, CandyError,
+    CandyMachine, CollectionPDA,
 };
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{instruction::revoke_collection_authority, state::Metadata};
@@ -30,15 +30,13 @@ pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
     let mint = ctx.accounts.mint.to_account_info();
     let candy_machine = &mut ctx.accounts.candy_machine;
     let metadata: Metadata = Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
-    if metadata.update_authority != ctx.accounts.authority.key() {
+    if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {
         return err!(CandyError::IncorrectCollectionAuthority);
     };
-    if metadata.mint != mint.key() {
+    if !cmp_pubkeys(&metadata.mint, &mint.key()) {
         return err!(CandyError::MintMismatch);
     }
-
     let authority_record = ctx.accounts.collection_authority_record.to_account_info();
-
     let revoke_collection_infos = vec![
         authority_record.clone(),
         ctx.accounts.collection_pda.to_account_info(),
@@ -61,7 +59,6 @@ pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
         ),
         revoke_collection_infos.as_slice(),
     )?;
-    candy_machine.data.uuid =
-        remove_feature_flag(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX);
+    remove_feature_flag(&mut candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX);
     Ok(())
 }
