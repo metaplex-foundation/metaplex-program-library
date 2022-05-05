@@ -86,6 +86,7 @@ pub enum MetadataInstruction {
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
+    #[account(7, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
     CreateMetadataAccount(CreateMetadataAccountArgs),
 
     /// Update a Metadata
@@ -265,6 +266,7 @@ pub enum MetadataInstruction {
     /// Update a Metadata with is_mutable as a parameter
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, name="update_authority", desc="Update authority key")]
+    #[account(2, optional, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
     UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2),
 
     /// Create Metadata object.
@@ -275,6 +277,7 @@ pub enum MetadataInstruction {
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
+    #[account(7, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
     CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.

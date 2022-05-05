@@ -2,10 +2,10 @@ use crate::{
     assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
     error::MetadataError,
     state::{
-        get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, Metadata,
-        TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
-        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
-        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
+        get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, MasterEditionV2,
+        Metadata, TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT,
+        MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN,
+        MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -608,6 +608,7 @@ pub fn mint_limited_edition<'a>(
             update_authority_info,
             system_account_info,
             rent_info,
+            edition_account_info: master_edition_account_info,
         },
         data_v2,
         true,
@@ -810,6 +811,7 @@ pub struct CreateMetadataAccountsLogicArgs<'a> {
     pub update_authority_info: &'a AccountInfo<'a>,
     pub system_account_info: &'a AccountInfo<'a>,
     pub rent_info: &'a AccountInfo<'a>,
+    pub edition_account_info: &'a AccountInfo<'a>,
 }
 
 // This equals the program address of the metadata program:
@@ -840,6 +842,7 @@ pub fn process_create_metadata_accounts_logic(
         update_authority_info,
         system_account_info,
         rent_info,
+        edition_account_info,
     } = accounts;
 
     let mut update_authority_key = *update_authority_info.key;
@@ -902,8 +905,6 @@ pub fn process_create_metadata_accounts_logic(
         false,
     )?;
 
-    let mint_decimals = get_mint_decimals(mint_info)?;
-
     metadata.mint = *mint_info.key;
     metadata.key = Key::MetadataV1;
     metadata.data = data.to_v1();
@@ -913,18 +914,10 @@ pub fn process_create_metadata_accounts_logic(
     metadata.uses = data.uses;
     assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
-    if add_token_standard {
-        let token_standard = if is_edition {
-            TokenStandard::NonFungibleEdition
-        } else if mint_decimals == 0 {
-            TokenStandard::FungibleAsset
-        } else {
-            TokenStandard::Fungible
-        };
-        metadata.token_standard = Some(token_standard);
-    } else {
-        metadata.token_standard = None;
-    }
+
+    metadata.token_standard =
+        check_token_standard(metadata.clone(), Some(edition_account_info), program_id);
+
     puff_out_data_fields(&mut metadata);
 
     let edition_seeds = &[
@@ -936,6 +929,73 @@ pub fn process_create_metadata_accounts_logic(
     let (_, edition_bump_seed) = Pubkey::find_program_address(edition_seeds, program_id);
     metadata.edition_nonce = Some(edition_bump_seed);
     metadata.serialize(&mut *metadata_account_info.data.borrow_mut())?;
+
+    Ok(())
+}
+
+pub fn check_token_standard(
+    metadata: Metadata,
+    edition_account_info: Option<&AccountInfo>,
+    program_id: &Pubkey,
+) -> Option<TokenStandard> {
+    if let Some(val) = edition_account_info {
+        let mint_decimals = get_mint_decimals(val).ok()?;
+        let _token_standard = if assert_master_edition(val, mint_decimals).is_ok() {
+            TokenStandard::NonFungible
+        } else if assert_edition(metadata, val, mint_decimals, program_id).is_ok() {
+            TokenStandard::NonFungibleEdition
+        } else if mint_decimals == 0 {
+            TokenStandard::FungibleAsset
+        } else {
+            TokenStandard::Fungible
+        };
+
+        Some(_token_standard)
+    } else {
+        None
+    }
+}
+
+pub fn assert_master_edition(
+    edition_account_info: &AccountInfo,
+    mint_decimals: u8,
+) -> Result<(), ProgramError> {
+    let master_edition = match MasterEditionV2::from_account_info(edition_account_info) {
+        Ok(master_edition) => master_edition,
+        Err(_) => todo!(),
+    };
+
+    if master_edition.max_supply != Some(0) {
+        // get diff error
+        return Err(MetadataError::CollectionMustBeAUniqueMasterEdition.into());
+    }
+
+    if mint_decimals != 0 {
+        todo!();
+        // err of some kind
+    }
+
+    Ok(())
+}
+
+pub fn assert_edition(
+    metadata: Metadata,
+    edition_account_info: &AccountInfo,
+    mint_decimals: u8,
+    program_id: &Pubkey,
+) -> Result<(), ProgramError> {
+    assert_edition_valid(program_id, &metadata.mint, edition_account_info)?;
+
+    let mint_supply = get_mint_supply(edition_account_info)?;
+
+    if mint_supply != 1 {
+        return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
+    }
+
+    if mint_decimals != 0 {
+        todo!();
+        // err of some kind
+    }
 
     Ok(())
 }

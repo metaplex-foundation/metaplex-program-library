@@ -23,7 +23,7 @@ use crate::{
         assert_freeze_authority_matches_mint, assert_initialized,
         assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
-        create_or_allocate_account_raw, get_owner_from_token_account,
+        check_token_standard, create_or_allocate_account_raw, get_owner_from_token_account,
         process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
@@ -223,6 +223,7 @@ pub fn process_create_metadata_accounts_v2<'a>(
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
         program_id,
@@ -234,6 +235,7 @@ pub fn process_create_metadata_accounts_v2<'a>(
             update_authority_info,
             system_account_info,
             rent_info,
+            edition_account_info,
         },
         data,
         allow_direct_creator_writes,
@@ -257,6 +259,11 @@ pub fn process_update_metadata_accounts_v2(
     let metadata_account_info = next_account_info(account_info_iter)?;
     let update_authority_info = next_account_info(account_info_iter)?;
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+
+    let edition_account_info = match next_account_info(account_info_iter) {
+        Ok(edition_account_info) => Some(edition_account_info),
+        Err(_) => None,
+    };
 
     assert_owned_by(metadata_account_info, program_id)?;
     assert_update_authority_is_correct(&metadata, update_authority_info)?;
@@ -301,6 +308,9 @@ pub fn process_update_metadata_accounts_v2(
             return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
         }
     }
+
+    metadata.token_standard =
+        check_token_standard(metadata.clone(), edition_account_info, program_id);
 
     puff_out_data_fields(&mut metadata);
 

@@ -29,6 +29,7 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
         program_id,
@@ -40,6 +41,7 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
             update_authority_info,
             system_account_info,
             rent_info,
+            edition_account_info,
         },
         DataV2 {
             name: data.name,
