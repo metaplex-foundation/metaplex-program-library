@@ -5,7 +5,8 @@ use crate::{
         EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
     },
     utils::*,
-    CandyError, CandyMachine, ConfigLine, EndSettingType, WhitelistMintMode,
+    CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
+    WhitelistMintSettings,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
@@ -15,6 +16,10 @@ use mpl_token_metadata::{
         create_master_edition_v3, create_metadata_accounts_v2, update_metadata_accounts_v2,
     },
     state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
+};
+use solana_gateway::{
+    state::{GatewayTokenAccess, InPlaceGatewayToken},
+    Gateway,
 };
 use solana_program::{
     clock::Clock,
@@ -208,7 +213,6 @@ pub fn handle_mint_nft<'info>(
             }
         }
     }
-
     let mut remaining_accounts_counter: usize = 0;
     if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
         if ctx.remaining_accounts.len() <= remaining_accounts_counter {
@@ -222,16 +226,29 @@ pub fn handle_mint_nft<'info>(
             return Ok(());
         }
         let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
-        let gateway_token = ::solana_gateway::borsh::try_from_slice_incomplete::<
-            ::solana_gateway::state::GatewayToken,
-        >(*gateway_token_info.data.borrow())?;
-        // stores the expire_time before the verification, since the verification
-        // will update the expire_time of the token and we won't be able to
-        // calculate the creation time
-        let expire_time = gateway_token
-            .expire_time
-            .ok_or(CandyError::GatewayTokenExpireTimeInvalid)? as i64;
         remaining_accounts_counter += 1;
+
+        // Eval function used in the gateway CPI
+        let eval_function =
+            |token: &InPlaceGatewayToken<&[u8]>| match (&candy_machine.data, token.expire_time()) {
+                (
+                    CandyMachineData {
+                        go_live_date: Some(go_live_date),
+                        whitelist_mint_settings: Some(WhitelistMintSettings { presale, .. }),
+                        ..
+                    },
+                    Some(expire_time),
+                ) if !*presale && expire_time < go_live_date + EXPIRE_OFFSET => {
+                    msg!(
+                        "Invalid gateway token: calculated creation time {} and go_live_date {}",
+                        expire_time - EXPIRE_OFFSET,
+                        go_live_date
+                    );
+                    Err(error!(CandyError::GatewayTokenExpireTimeInvalid).into())
+                }
+                _ => Ok(()),
+            };
+
         if gatekeeper.expire_on_use {
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::GatewayAppMissing);
@@ -243,47 +260,22 @@ pub fn handle_mint_nft<'info>(
             }
             let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-            ::solana_gateway::Gateway::verify_and_expire_token(
+            Gateway::verify_and_expire_token_with_eval(
                 gateway_app.clone(),
                 gateway_token_info.clone(),
                 payer.deref().clone(),
                 &gatekeeper.gatekeeper_network,
                 network_expire_feature.clone(),
+                eval_function,
             )?;
         } else {
-            ::solana_gateway::Gateway::verify_gateway_token_account_info(
+            Gateway::verify_gateway_token_with_eval(
                 gateway_token_info,
                 &payer.key(),
                 &gatekeeper.gatekeeper_network,
                 None,
-            )
-            .map_err(Into::<ProgramError>::into)?;
-        }
-        // verifies that the gatway token was not created before the candy
-        // machine go_live_date (avoids pre-solving the captcha)
-        match candy_machine.data.go_live_date {
-            Some(val) => {
-                if (expire_time - EXPIRE_OFFSET) < val {
-                    if let Some(ws) = &candy_machine.data.whitelist_mint_settings {
-                        // when dealing with whitelist, the expire_time can be
-                        // before the go_live_date only if presale enabled
-                        if !ws.presale {
-                            msg!(
-                                    "Invalid gateway token: calculated creation time {} and go_live_date {}",
-                                    expire_time - EXPIRE_OFFSET,
-                                    val);
-                            return err!(CandyError::GatewayTokenExpireTimeInvalid);
-                        }
-                    } else {
-                        msg!(
-                                "Invalid gateway token: calculated creation time {} and go_live_date {}",
-                                expire_time - EXPIRE_OFFSET,
-                                val);
-                        return err!(CandyError::GatewayTokenExpireTimeInvalid);
-                    }
-                }
-            }
-            None => {}
+                eval_function,
+            )?;
         }
     }
 
