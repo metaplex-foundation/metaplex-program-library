@@ -1,4 +1,4 @@
-use crate::{candy_machine, cmp_pubkeys, CandyError, CandyMachine};
+use crate::{cmp_pubkeys, CandyError, CandyMachine};
 use anchor_lang::prelude::*;
 
 /// Withdraw SOL from candy machine account.
@@ -29,7 +29,7 @@ pub fn handle_withdraw_funds<'info>(ctx: Context<WithdrawFunds<'info>>) -> Resul
         let pay = &ctx.remaining_accounts[0];
         if !cmp_pubkeys(
             &pay.key(),
-            &Pubkey::find_program_address(&seeds, &candy_machine::id()).0,
+            &Pubkey::find_program_address(&seeds, &crate::id()).0,
         ) {
             return err!(CandyError::MismatchedCollectionPDA);
         }

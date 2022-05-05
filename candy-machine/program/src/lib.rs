@@ -5,16 +5,15 @@ pub mod state;
 pub mod utils;
 
 use anchor_lang::prelude::*;
-use errors::CandyError;
-use processor::*;
-use state::*;
-use utils::*;
+pub use errors::CandyError;
+pub use processor::*;
+pub use state::*;
+pub use utils::*;
+declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
 #[program]
 pub mod candy_machine {
     use super::*;
-
-    declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
     pub fn mint_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,

@@ -1,4 +1,4 @@
-use crate::{candy_machine, cmp_pubkeys, CandyMachine, CollectionPDA};
+use crate::{cmp_pubkeys, CandyMachine, CollectionPDA};
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{instruction::set_and_verify_collection, utils::assert_derivation};
 use solana_program::{
@@ -36,7 +36,7 @@ pub struct SetCollectionDuringMint<'info> {
 pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> Result<()> {
     let ixs = &ctx.accounts.instructions;
     let previous_instruction = get_instruction_relative(-1, ixs)?;
-    if !cmp_pubkeys(&previous_instruction.program_id, &candy_machine::id()) {
+    if !cmp_pubkeys(&previous_instruction.program_id, &crate::id()) {
         msg!(
             "Transaction had ix with program id {}",
             &previous_instruction.program_id
@@ -95,11 +95,7 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
         return Ok(());
     }
     let seeds = [b"collection".as_ref(), candy_key.as_ref()];
-    let bump = assert_derivation(
-        &candy_machine::id(),
-        &collection_pda.to_account_info(),
-        &seeds,
-    )?;
+    let bump = assert_derivation(&crate::id(), &collection_pda.to_account_info(), &seeds)?;
     let signer_seeds = [b"collection".as_ref(), candy_key.as_ref(), &[bump]];
     let set_collection_infos = vec![
         ctx.accounts.metadata.to_account_info(),

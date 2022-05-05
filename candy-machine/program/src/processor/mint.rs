@@ -1,5 +1,4 @@
 use crate::{
-    candy_machine,
     constants::{
         A_TOKEN, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START, CONFIG_LINE_SIZE,
         EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
@@ -107,7 +106,7 @@ pub fn handle_mint_nft<'info>(
         return err!(CandyError::MetadataAccountMustBeEmpty);
     }
     // Restrict Who can call Candy Machine via CPI
-    if !cmp_pubkeys(&current_ix.program_id, &candy_machine::id())
+    if !cmp_pubkeys(&current_ix.program_id, &crate::id())
         && !cmp_pubkeys(&current_ix.program_id, &GUMDROP_ID)
     {
         punish_bots(
@@ -124,7 +123,7 @@ pub fn handle_mint_nft<'info>(
         Ok(ix) => {
             let discriminator = &ix.data[0..8];
             let after_collection_ix = get_instruction_relative(2, &instruction_sysvar_account_info);
-            if !cmp_pubkeys(&ix.program_id, &candy_machine::id())
+            if !cmp_pubkeys(&ix.program_id, &crate::id())
                 || discriminator != [103, 17, 200, 25, 118, 95, 125, 61]
                 || after_collection_ix.is_ok()
             {
@@ -159,7 +158,7 @@ pub fn handle_mint_nft<'info>(
         current += (num_accounts as usize) * (1 + 32);
         let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
 
-        if !cmp_pubkeys(&program_id, &candy_machine::id())
+        if !cmp_pubkeys(&program_id, &crate::id())
             && !cmp_pubkeys(&program_id, &spl_token::id())
             && !cmp_pubkeys(
                 &program_id,
