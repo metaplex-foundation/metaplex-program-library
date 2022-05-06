@@ -4,7 +4,10 @@ pub mod utils;
 use mpl_token_metadata::{
     error::MetadataError,
     id, instruction,
-    state::{Collection, Creator, DataV2, Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{
+        Collection, Creator, DataV2, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
+        MAX_URI_LENGTH,
+    },
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;
@@ -62,7 +65,11 @@ mod update_metadata_account_v2 {
                     key: test_metadata.pubkey,
                     verified: false,
                 }),
-                None,
+                Some(Uses {
+                    use_method: UseMethod::Multiple,
+                    remaining: 5,
+                    total: 10,
+                }),
             )
             .await
             .unwrap();
@@ -81,6 +88,7 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
         assert_eq!(metadata.collection.unwrap().key, test_metadata.pubkey);
+        assert_eq!(metadata.uses.unwrap().use_method, UseMethod::Multiple)
     }
 
     #[tokio::test]
@@ -122,8 +130,15 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 false,
-                None,
-                None,
+                Some(Collection {
+                    verified: false,
+                    key: test_metadata.pubkey,
+                }),
+                Some(Uses {
+                    use_method: UseMethod::Multiple,
+                    remaining: 5,
+                    total: 15,
+                }),
             )
             .await
             .unwrap();
@@ -141,6 +156,8 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
+        assert!(!metadata.collection.unwrap().verified);
+        assert_eq!(metadata.uses.unwrap().total, 15);
     }
 
     #[tokio::test]
@@ -719,5 +736,66 @@ mod update_metadata_account_v2 {
         let zeros_len = data.len() - padding_index;
         let zeros = vec![0u8; zeros_len];
         assert_eq!(data[padding_index..], zeros[..]);
+    }
+
+    #[tokio::test]
+    async fn fail_invalid_use_method() {
+        let mut context = program_test().start_with_context().await;
+        let test_metadata = Metadata::new();
+
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                true,
+                None,
+                None,
+                Some(Uses {
+                    use_method: UseMethod::Single,
+                    remaining: 1,
+                    total: 1,
+                }),
+            )
+            .await
+            .unwrap();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey(),
+                None,
+                Some(DataV2 {
+                    name: "Test".to_string(),
+                    symbol: "TST".to_string(),
+                    uri: "uri".to_string(),
+                    creators: None,
+                    seller_fee_basis_points: 10,
+                    collection: None,
+                    uses: Some(Uses {
+                        use_method: UseMethod::Multiple,
+                        remaining: 1,
+                        total: 1,
+                    }),
+                }),
+                None,
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        let result = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(result, MetadataError::InvalidUseMethod);
     }
 }
