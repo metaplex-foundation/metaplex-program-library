@@ -27,6 +27,7 @@ pub fn handle_update_authority(
     Ok(())
 }
 
+// updates without modifying UUID
 pub fn handle_update_candy_machine(
     ctx: Context<UpdateCandyMachine>,
     data: CandyMachineData,
@@ -45,8 +46,10 @@ pub fn handle_update_candy_machine(
         return err!(CandyError::CannotSwitchToHiddenSettings);
     }
 
+    let old_uuid = candy_machine.data.uuid.clone();
     candy_machine.wallet = ctx.accounts.wallet.key();
     candy_machine.data = data;
+    candy_machine.data.uuid = old_uuid;
 
     if !ctx.remaining_accounts.is_empty() {
         candy_machine.token_mint = Some(ctx.remaining_accounts[0].key())

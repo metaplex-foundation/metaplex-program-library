@@ -179,34 +179,44 @@ pub fn is_feature_active(uuid: &str, feature_index: usize) -> bool {
 }
 
 // string is 6 bytes long, can be any valid utf8 char coming in.
-// feature_index is between 0 and 5, inclusive
-// unsafe is fine because we know for a fact that the array will only
-// contain valid UTF8 bytes (we set it as "1" or "0")
+// feature_index is between 0 and 5, inclusive. We set it to an array of utf8 "0"s first
 pub fn set_feature_flag(uuid: &mut String, feature_index: usize) {
-    let mut bytes: [u8; 6] = [b"0"[0]; 6];
+    let mut bytes: [u8; 6] = [b'0'; 6];
     uuid.bytes().enumerate().for_each(|(i, byte)| {
-        if i == feature_index || byte == "1".as_bytes()[0] {
-            bytes[i] = b"1"[0]
+        if i == feature_index || byte == b'1' {
+            bytes[i] = b'1';
         }
     });
+
+    // unsafe is fine because we know for a fact that the array will only
+    // contain valid UTF8 bytes since we fully ignore user inputted UUID and set
+    // it to an array of only valid bytes (b'0') and then only modify the bytes in
+    // that valid utf8 byte array to other valid utf8 characters (b'1')
+    // This saves a bit of compute from the overhead of using the from_utf8 or
+    // other similar methods that need to ensure that the bytes are valid
     unsafe {
         uuid.replace_range(.., from_utf8_unchecked(&bytes));
     }
 }
 
 // string is 6 bytes long, can be any valid utf8 char coming in.
-// feature_index is between 0 and 5, inclusive
-// unsafe is fine because we know for a fact that the array will only
-// contain valid UTF8 bytes (we set it as "1" or "0")
+// feature_index is between 0 and 5, inclusive. We set it to an array of utf8 "0"s first
 pub fn remove_feature_flag(uuid: &mut String, feature_index: usize) {
-    let mut bytes: [u8; 6] = [b"0"[0]; 6];
+    let mut bytes: [u8; 6] = [b'0'; 6];
     uuid.bytes().enumerate().for_each(|(i, byte)| {
         if i == feature_index {
-            bytes[i] = b"0"[0];
-        } else if byte == "1".as_bytes()[0] {
-            bytes[i] = b"1"[0];
+            bytes[i] = b'0';
+        } else if byte == b'1' {
+            bytes[i] = b'1';
         }
     });
+
+    // unsafe is fine because we know for a fact that the array will only
+    // contain valid UTF8 bytes since we fully ignore user inputted UUID and set
+    // it to an array of only valid bytes (b'0') and then only modify the bytes in
+    // that valid utf8 byte array to other valid utf8 characters (b'1')
+    // This saves a bit of compute from the overhead of using the from_utf8 or
+    // other similar methods that need to ensure that the bytes are valid
     unsafe {
         uuid.replace_range(.., from_utf8_unchecked(&bytes));
     }
@@ -240,19 +250,26 @@ pub mod tests {
     #[test]
     fn feature_flag_working() {
         let mut uuid = String::from("ABCDEF");
-        println!("{}", uuid.as_bytes()[COLLECTIONS_FEATURE_INDEX]);
-        assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
+        println!(
+            "Should be 65: {}",
+            uuid.as_bytes()[COLLECTIONS_FEATURE_INDEX]
+        );
+
+        uuid = String::from("01H333");
+        println!("Should be 01H333: {}", uuid);
+        set_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX + 1);
+        assert!(is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX + 1));
+        println!("Should be 010000: {}", uuid);
+        remove_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX + 1);
+        assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX + 1));
+        println!("Should be 000000: {}", uuid);
 
         set_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX);
-        println!("{}", uuid);
         assert!(is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
+        println!("Should be 100000: {}", uuid);
         remove_feature_flag(&mut uuid, COLLECTIONS_FEATURE_INDEX);
-        println!("{}", uuid);
         assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
-
-        let uuid = String::from("01H333");
-        println!("{}", uuid);
-        assert!(!is_feature_active(&uuid, COLLECTIONS_FEATURE_INDEX));
+        println!("Should be 000000: {}", uuid);
     }
 
     #[test]
