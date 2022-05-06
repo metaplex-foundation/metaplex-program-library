@@ -64,7 +64,7 @@ pub mod candy_machine {
         let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
         let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
         if !ctx.accounts.metadata.data_is_empty() {
-           return Err(ErrorCode::MetadataAccountMustBeEmpty.into())
+            return Err(ErrorCode::MetadataAccountMustBeEmpty.into());
         }
         // Restrict Who can call Candy Machine via CPI
         if current_ix.program_id != candy_machine::id() && current_ix.program_id != GUMDROP_ID {
@@ -295,9 +295,7 @@ pub mod candy_machine {
                                 &ctx.remaining_accounts[remaining_accounts_counter];
                             remaining_accounts_counter += 1;
 
-                            let keys_check = assert_keys_equal(whitelist_token_mint.key(), ws.mint);
-                            let owner_check = assert_keys_equal(whitelist_burn_authority.key(), *whitelist_token_account.owner);
-                            if keys_check.is_err() || owner_check.is_err() {
+                            if assert_keys_equal(whitelist_token_mint.key(), ws.mint).is_err() {
                                 punish_bots(
                                     ErrorCode::CandyMachineNotLive,
                                     payer.to_account_info(),
@@ -1552,5 +1550,5 @@ pub enum ErrorCode {
     #[msg("Provided mint account doesn't match collection PDA mint")]
     MismatchedCollectionMint,
     #[msg("The metadata account has data in it, and this must be empty to mint a new NFT")]
-    MetadataAccountMustBeEmpty
+    MetadataAccountMustBeEmpty,
 }
