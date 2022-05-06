@@ -386,6 +386,14 @@ pub enum MetadataError {
     /// Revoke Collection Authority signer is incorrect
     #[error("Revoke Collection Authority signer is incorrect")]
     RevokeCollectionAuthoritySignerIncorrect,
+
+    /// To use the encapsulated mint instruction the Metadata, Mint, Edition and TokenAccounts must be empty
+    #[error("To use the encapsulated mint instruction the Metadata, Mint, Edition and TokenAccounts must be empty")]
+    AccountsMustBeEmpty,
+
+    /// Invalid associated token account program
+    #[error("Invalid associated token account program")]
+    InvalidATAProgram,
 }
 
 impl PrintProgramError for MetadataError {

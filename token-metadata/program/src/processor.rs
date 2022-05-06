@@ -1,10 +1,11 @@
+use std::cmp::min;
 use crate::{
     assertions::{
         collection::{
             assert_collection_update_is_valid, assert_collection_verify_is_valid,
             assert_has_collection_authority,
         },
-        uses::{assert_valid_use, process_use_authority_validation},
+        uses::process_use_authority_validation,
     },
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
@@ -19,9 +20,9 @@ use crate::{
         USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
-        assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
-        assert_freeze_authority_matches_mint, assert_initialized,
-        assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
+        assert_ata_program_matches_package, assert_currently_holding, assert_data_valid,
+        assert_delegated_tokens, assert_derivation, assert_freeze_authority_matches_mint,
+        assert_initialized, assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
         create_or_allocate_account_raw, get_owner_from_token_account,
         process_create_metadata_accounts_logic,
@@ -29,6 +30,9 @@ use crate::{
         spl_token_burn, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams,
     },
+    solana_program::sysvar::Sysvar,
+    solana_program::program_pack::Pack,
+    pda::get_associated_token_address,
 };
 use arrayref::array_ref;
 use borsh::{BorshDeserialize, BorshSerialize};
@@ -41,12 +45,16 @@ use solana_program::{
     program_error::ProgramError,
     pubkey::Pubkey,
 };
+use solana_program::rent::Rent;
 use spl_token::{
     instruction::{approve, freeze_account, revoke, thaw_account},
     state::{Account, Mint},
 };
 
 use crate::assertions::uses::{assert_burner, assert_use_authority_derivation, assert_valid_bump};
+use crate::instruction::create_metadata_accounts_v2;
+use crate::state::{MasterEditionSupply, MAX_EDITION_LEN};
+use crate::utils::{assert_account_empty, assert_keys_equal, assert_system_program, cmp_pubkeys, create_or_allocate_account, get_total_mint_rent};
 
 pub fn process_instruction<'a>(
     program_id: &'a Pubkey,
@@ -205,7 +213,154 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Thaw Delegated Account");
             process_thaw_delegated_account(program_id, accounts)
         }
+        MetadataInstruction::Mint(mint_args) => {
+            msg!("Instruction: Mint");
+            process_mint(
+                program_id,
+                accounts,
+                mint_args.data,
+                false,
+                mint_args.is_mutable,
+                mint_args.supply,
+            )
+        }
     }
+}
+
+pub fn process_mint<'a>(
+    program_id: &'a Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    data: DataV2,
+    allow_direct_creator_writes: bool,
+    is_mutable: bool,
+    max_supply: MasterEditionSupply,
+) -> ProgramResult {
+    // Grab the Accounts
+    let account_info_iter = &mut accounts.iter();
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let token_account_info = next_account_info(account_info_iter)?;
+    let owner_info = next_account_info(account_info_iter)?;
+    let payer_account_info = next_account_info(account_info_iter)?;
+    let update_authority_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+    let spl_token_info = next_account_info(account_info_iter)?;
+    let spl_ata_account_info = next_account_info(account_info_iter)?;
+    // SPL Token Requires the rent Account... fail
+    let rent_info = next_account_info(account_info_iter)?;
+    // Validation and Checks
+    assert_token_program_matches_package(spl_token_info)?;
+    assert_ata_program_matches_package(spl_ata_account_info)?;
+    assert_system_program(system_account_info);
+    assert_owned_by(owner_info, &solana_program::system_program::id());
+    let (cannonical_ata, ata_bump) = get_associated_token_address(owner_info.key, mint_info.key);
+    assert_keys_equal(token_account_info.key, &cannonical_ata)?;
+    let rent = Rent::get()?;
+    // - Payer has enough lamports
+    let total_rent_needed = get_total_mint_rent(&rent);
+    let payer_lamp = payer_account_info.lamports();
+    if payer_account_info.lamports() < total_rent_needed {
+        msg!(
+            "InsufficientFunds: Needed: {}, Provided: {}",
+            total_rent_needed,
+            payer_lamp
+        );
+        return Err(ProgramError::InsufficientFunds);
+    }
+    // - PDAs empty, Mint empty, ATA Empty
+    assert_account_empty(metadata_account_info)?;
+    assert_account_empty(edition_account_info)?;
+    assert_account_empty(mint_info)?;
+    assert_account_empty(token_account_info)?;
+    // Create Mint
+    create_or_allocate_account(
+        spl_token::id(),
+        mint_info,
+        &rent,
+        system_account_info,
+        payer_account_info,
+        spl_token::state::Mint::LEN,
+        &[],
+    )?;
+    invoke(
+        &spl_token::instruction::initialize_mint(
+            spl_token_info.key,
+            mint_info.key,
+            update_authority_info.key,
+            Some(update_authority_info.key),
+            0,
+        )?,
+        &[
+            spl_token_info.clone(),
+            mint_info.clone(),
+            edition_account_info.clone(),
+            rent_info.clone()
+        ],
+    )?;
+    invoke(
+        &spl_associated_token_account::create_associated_token_account(
+            payer_account_info.key,
+            owner_info.key,
+            mint_info.key,
+        ),
+        &[
+            payer_account_info.clone(),
+            token_account_info.clone(),
+            owner_info.clone(),
+            mint_info.clone(),
+            system_account_info.clone(),
+            spl_token_info.clone(),
+            rent_info.clone()
+        ])?;
+
+    process_create_metadata_accounts_logic(
+        &crate::id(),
+        CreateMetadataAccountsLogicArgs {
+            metadata_account_info,
+            mint_info,
+            mint_authority_info: update_authority_info,
+            payer_account_info,
+            update_authority_info,
+            system_account_info,
+            rent: rent,
+        },
+        data,
+        allow_direct_creator_writes,
+        is_mutable,
+        false,
+        true,
+    )?;
+
+    let supply = match max_supply {
+        MasterEditionSupply::Unlimited => {
+            None
+        },
+        MasterEditionSupply::Single => {
+            Some(0)
+        },
+        MasterEditionSupply::Fixed(num) => {
+            Some(num)
+        }
+    };
+
+    process_create_master_edition(
+        &crate::id(),
+        &[
+            edition_account_info.clone(),
+            mint_info.clone(),
+            update_authority_info.clone(),
+            update_authority_info.clone(),
+            payer_account_info.clone(),
+            metadata_account_info.clone(),
+            spl_token_info.clone(),
+            system_account_info.clone(),
+            rent_info.clone()
+        ],
+        supply
+    )?;
+
+    Ok(())
 }
 
 pub fn process_create_metadata_accounts_v2<'a>(
@@ -223,7 +378,7 @@ pub fn process_create_metadata_accounts_v2<'a>(
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
-
+    let rent = Rent::from_account_info(rent_info)?;
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -233,7 +388,7 @@ pub fn process_create_metadata_accounts_v2<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
+            rent: rent,
         },
         data,
         allow_direct_creator_writes,
@@ -275,8 +430,6 @@ pub fn process_update_metadata_accounts_v2(
             metadata.data = compatible_data;
             assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
             metadata.collection = data.collection;
-            assert_valid_use(&data.uses, &metadata.uses)?;
-            metadata.uses = data.uses;
         } else {
             return Err(MetadataError::DataIsImmutable.into());
         }
@@ -453,7 +606,6 @@ pub fn process_create_master_edition(
     assert_mint_authority_matches_mint(&mint.mint_authority, mint_authority_info)?;
     assert_owned_by(metadata_account_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::id())?;
-
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());
     }
@@ -594,7 +746,7 @@ pub fn process_convert_master_edition_v1_to_v2(
         supply: master_edition.supply,
         max_supply: master_edition.max_supply,
     }
-    .serialize(&mut *master_edition_info.try_borrow_mut_data()?)?;
+        .serialize(&mut *master_edition_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -910,7 +1062,7 @@ pub fn process_approve_use_authority(
                 &[],
                 1,
             )
-            .unwrap(),
+                .unwrap(),
             &[
                 token_program_account_info.clone(),
                 token_account_info.clone(),
@@ -979,7 +1131,7 @@ pub fn process_revoke_use_authority(
                 owner_info.key,
                 &[],
             )
-            .unwrap(),
+                .unwrap(),
             &[
                 token_program_account_info.clone(),
                 token_account_info.clone(),
@@ -1310,7 +1462,7 @@ pub fn process_freeze_delegated_account(
             edition_info.key,
             &[],
         )
-        .unwrap(),
+            .unwrap(),
         &[
             token_account_info.clone(),
             mint_info.clone(),
@@ -1365,7 +1517,7 @@ pub fn process_thaw_delegated_account(
             edition_info.key,
             &[],
         )
-        .unwrap(),
+            .unwrap(),
         &[
             token_account_info.clone(),
             mint_info.clone(),

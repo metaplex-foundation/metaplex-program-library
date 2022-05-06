@@ -65,3 +65,17 @@ pub fn find_program_as_burner_account() -> (Pubkey, u8) {
         &crate::id(),
     )
 }
+
+pub fn get_associated_token_address(
+    wallet_address: &Pubkey,
+    spl_token_mint_address: &Pubkey
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            &wallet_address.to_bytes(),
+            &spl_token::id().to_bytes(),
+            &spl_token_mint_address.to_bytes(),
+        ],
+        &spl_associated_token_account::id(),
+    )
+}

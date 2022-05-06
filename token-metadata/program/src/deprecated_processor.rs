@@ -13,6 +13,8 @@ use solana_program::{
     entrypoint::ProgramResult,
     pubkey::Pubkey,
 };
+use solana_program::sysvar::Sysvar;
+use solana_program::rent::Rent;
 
 pub fn process_deprecated_create_metadata_accounts<'a>(
     program_id: &'a Pubkey,
@@ -29,7 +31,7 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
-
+    let rent = Rent::from_account_info(rent_info)?;
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -39,7 +41,7 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
+            rent: rent,
         },
         DataV2 {
             name: data.name,

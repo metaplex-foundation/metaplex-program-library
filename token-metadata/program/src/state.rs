@@ -75,6 +75,15 @@ pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
+/// This should keep the people happy
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
+pub enum MasterEditionSupply {
+    Unlimited,
+    Fixed(u64),
+    Single,
+}
+
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
 pub enum Key {

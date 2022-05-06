@@ -20,7 +20,7 @@ use solana_program::{
     program_option::COption,
     program_pack::{IsInitialized, Pack},
     pubkey::Pubkey,
-    system_instruction,
+    system_instruction, system_program,
     sysvar::{rent::Rent, Sysvar},
 };
 use spl_token::{
@@ -28,6 +28,8 @@ use spl_token::{
     state::{Account, Mint},
 };
 use std::convert::TryInto;
+use solana_program::program_memory::sol_memcmp;
+use solana_program::pubkey::PUBKEY_BYTES;
 
 pub fn assert_data_valid(
     data: &Data,
@@ -153,11 +155,31 @@ pub fn create_or_allocate_account_raw<'a>(
     signer_seeds: &[&[u8]],
 ) -> ProgramResult {
     let rent = &Rent::from_account_info(rent_sysvar_info)?;
+    create_or_allocate_account(
+        program_id,
+        new_account_info,
+        rent,
+        system_program_info,
+        payer_info,
+        size,
+        signer_seeds,
+    )
+}
+
+/// Create Account without the Rent Account SysVar
+pub fn create_or_allocate_account<'a>(
+    program_id: Pubkey,
+    new_account_info: &AccountInfo<'a>,
+    rent: &Rent,
+    system_program_info: &AccountInfo<'a>,
+    payer_info: &AccountInfo<'a>,
+    size: usize,
+    signer_seeds: &[&[u8]],
+) -> ProgramResult {
     let required_lamports = rent
         .minimum_balance(size)
         .max(1)
         .saturating_sub(new_account_info.lamports());
-
     if required_lamports > 0 {
         msg!("Transfer {} lamports to the new account", required_lamports);
         invoke(
@@ -169,24 +191,27 @@ pub fn create_or_allocate_account_raw<'a>(
             ],
         )?;
     }
-
     let accounts = &[new_account_info.clone(), system_program_info.clone()];
-
     msg!("Allocate space for the account");
     invoke_signed(
         &system_instruction::allocate(new_account_info.key, size.try_into().unwrap()),
         accounts,
         &[signer_seeds],
     )?;
-
     msg!("Assign the account to the owning program");
     invoke_signed(
         &system_instruction::assign(new_account_info.key, &program_id),
         accounts,
         &[signer_seeds],
     )?;
-
     Ok(())
+}
+
+pub fn get_total_mint_rent(rent: &Rent) -> u64 {
+    rent.minimum_balance(spl_token::state::Mint::LEN)
+        + rent.minimum_balance(spl_token::state::Account::LEN)
+        + rent.minimum_balance(MAX_METADATA_LEN)
+        + rent.minimum_balance(MAX_MASTER_EDITION_LEN)
 }
 
 pub fn assert_update_authority_is_correct(
@@ -328,7 +353,7 @@ pub fn transfer_mint_authority<'a>(
             mint_authority_info.key,
             &[mint_authority_info.key],
         )
-        .unwrap(),
+            .unwrap(),
         accounts,
         &[],
     )?;
@@ -344,7 +369,7 @@ pub fn transfer_mint_authority<'a>(
                 mint_authority_info.key,
                 &[mint_authority_info.key],
             )
-            .unwrap(),
+                .unwrap(),
             accounts,
             &[],
         )?;
@@ -597,7 +622,7 @@ pub fn mint_limited_edition<'a>(
         }),
     };
     // create the metadata the normal way...
-
+    let rent = Rent::from_account_info(rent_info)?;
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -607,7 +632,7 @@ pub fn mint_limited_edition<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
+            rent: rent,
         },
         data_v2,
         true,
@@ -623,10 +648,10 @@ pub fn mint_limited_edition<'a>(
         &[bump_seed],
     ];
 
-    create_or_allocate_account_raw(
+    create_or_allocate_account(
         *program_id,
         new_edition_account_info,
-        rent_info,
+        &rent,
         system_account_info,
         payer_account_info,
         MAX_EDITION_LEN,
@@ -648,7 +673,7 @@ pub fn mint_limited_edition<'a>(
         edition_override,
         me_supply,
     )?
-    .to_le_bytes();
+        .to_le_bytes();
 
     // Now make sure this mint can never be used by anybody else.
     transfer_mint_authority(
@@ -756,7 +781,7 @@ pub fn assert_derivation(
     path: &[&[u8]],
 ) -> Result<u8, ProgramError> {
     let (key, bump) = Pubkey::find_program_address(path, program_id);
-    if key != *account.key {
+    if !cmp_pubkeys(&key, account.key) {
         return Err(MetadataError::DerivedKeyInvalid.into());
     }
     Ok(bump)
@@ -771,7 +796,7 @@ pub fn assert_signer(account_info: &AccountInfo) -> ProgramResult {
 }
 
 pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> ProgramResult {
-    if account.owner != owner {
+    if !cmp_pubkeys(account.owner, owner) {
         Err(MetadataError::IncorrectOwner.into())
     } else {
         Ok(())
@@ -779,8 +804,24 @@ pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> ProgramResult {
 }
 
 pub fn assert_token_program_matches_package(token_program_info: &AccountInfo) -> ProgramResult {
-    if *token_program_info.key != spl_token::id() {
+    if !cmp_pubkeys(token_program_info.key, &spl_token::id()) {
         return Err(MetadataError::InvalidTokenProgram.into());
+    }
+
+    Ok(())
+}
+
+pub fn assert_ata_program_matches_package(token_program_info: &AccountInfo) -> ProgramResult {
+    if !cmp_pubkeys(token_program_info.key, &spl_associated_token_account::id()) {
+        return Err(MetadataError::InvalidATAProgram.into());
+    }
+
+    Ok(())
+}
+
+pub fn assert_system_program(system_program_info: &AccountInfo) -> ProgramResult {
+    if !cmp_pubkeys(system_program_info.key, &system_program::id()) {
+        return Err(ProgramError::IncorrectProgramId.into());
     }
 
     Ok(())
@@ -809,7 +850,7 @@ pub struct CreateMetadataAccountsLogicArgs<'a> {
     pub payer_account_info: &'a AccountInfo<'a>,
     pub update_authority_info: &'a AccountInfo<'a>,
     pub system_account_info: &'a AccountInfo<'a>,
-    pub rent_info: &'a AccountInfo<'a>,
+    pub rent: Rent,
 }
 
 // This equals the program address of the metadata program:
@@ -822,6 +863,7 @@ const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
     0x92, 0x17, 0x2c, 0xc4, 0x72, 0x5d, 0xc0, 0x41, 0xf9, 0xdd, 0x8c, 0x51, 0x52, 0x60, 0x04, 0x26,
     0x00, 0x93, 0xa3, 0x0b, 0x02, 0x73, 0xdc, 0xfa, 0x74, 0x92, 0x17, 0xfc, 0x94, 0xa2, 0x40, 0x49,
 ]);
+
 /// Create a new account instruction
 pub fn process_create_metadata_accounts_logic(
     program_id: &Pubkey,
@@ -839,7 +881,7 @@ pub fn process_create_metadata_accounts_logic(
         payer_account_info,
         update_authority_info,
         system_account_info,
-        rent_info,
+        rent,
     } = accounts;
 
     let mut update_authority_key = *update_authority_info.key;
@@ -881,10 +923,10 @@ pub fn process_create_metadata_accounts_logic(
         return Err(MetadataError::InvalidMetadataKey.into());
     }
 
-    create_or_allocate_account_raw(
+    create_or_allocate_account(
         *program_id,
         metadata_account_info,
-        rent_info,
+        &rent,
         system_account_info,
         payer_account_info,
         MAX_METADATA_LEN,
@@ -1013,7 +1055,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
 
     assert_token_program_matches_package(token_program_account_info)?;
     assert_owned_by(mint_info, &spl_token::id())?;
-    assert_owned_by(token_account_info, &spl_token::id())?;
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
 
@@ -1107,6 +1148,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     )?;
     Ok(())
 }
+
 pub fn assert_currently_holding(
     program_id: &Pubkey,
     owner_info: &AccountInfo,
@@ -1183,4 +1225,25 @@ pub fn assert_delegated_tokens(
         return Err(MetadataError::InvalidDelegate.into());
     }
     Ok(())
+}
+
+pub fn assert_account_empty<'a>(account_info: &AccountInfo<'a>) -> ProgramResult {
+    let empty = account_info.lamports() == 0
+        && account_info.data_is_empty()
+        && cmp_pubkeys(account_info.owner, &system_program::id());
+    if !empty {
+        return Err(MetadataError::AccountsMustBeEmpty.into());
+    }
+    Ok(())
+}
+
+pub fn assert_keys_equal(a: &Pubkey, b: &Pubkey) -> ProgramResult {
+    if !cmp_pubkeys(a, b) {
+        return Err(MetadataError::DerivedKeyInvalid.into());
+    }
+    Ok(())
+}
+
+pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
+    sol_memcmp(a.as_ref(), b.as_ref(), PUBKEY_BYTES) == 0
 }

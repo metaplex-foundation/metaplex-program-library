@@ -1,3 +1,4 @@
+use crate::state::MasterEditionSupply;
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
     state::{Collection, Creator, Data, DataV2, Uses, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
@@ -9,6 +10,8 @@ use solana_program::{
     pubkey::Pubkey,
     sysvar,
 };
+use spl_associated_token_account::get_associated_token_address;
+use crate::pda::{find_master_edition_account, find_metadata_account};
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -47,6 +50,18 @@ pub struct CreateMetadataAccountArgsV2 {
     pub data: DataV2,
     /// Whether you want your metadata to be updateable in the future.
     pub is_mutable: bool,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+/// Args for create call
+pub struct MintArgs {
+    /// Note that unique metadatas are disabled for now.
+    pub data: DataV2,
+    /// Whether you want your metadata to be updateable in the future.
+    pub is_mutable: bool,
+    /// The explicit supply of a master edition
+    pub supply: MasterEditionSupply
 }
 
 #[repr(C)]
@@ -400,7 +415,22 @@ pub enum MetadataInstruction {
     /// Remove Creator Verificaton.
     #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(1, signer, name="creator", desc="Creator")]
-    RemoveCreatorVerification
+    RemoveCreatorVerification,
+
+
+    /// Encapsulates all Instructions to make an NFT
+    #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(1, writable, name="edition", desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
+    #[account(2, signer, name="mint", desc="Mint of token asset")]
+    #[account(3, writable, name="destination_token_account", desc="Destination of Token")]
+    #[account(4, signer, writable, name="payer", desc="payer")]
+    #[account(5, name="owner", desc="Owner of destination token account")]
+    #[account(6, name="update_authority", desc="update authority info")]
+    #[account(7, name="system_program", desc="System program")]
+    #[account(8, name="spl_token_program", desc="Token Program")]
+    #[account(9, name="ata_program", desc="Associated Token program")]
+    #[account(10, name="rent", desc="Rent Sysvar: Needed for SPL Token Program")]
+    Mint(MintArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1259,6 +1289,61 @@ pub fn thaw_delegated_account(
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: MetadataInstruction::ThawDelegatedAccount
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+/// Encapsulates all Instructions to make an NFT
+
+pub fn mint(mint: Pubkey,
+            payer: Pubkey,
+            owner: Pubkey,
+            update_authority: Pubkey,
+            name: String,
+            symbol: String,
+            uri: String,
+            creators: Option<Vec<Creator>>,
+            seller_fee_basis_points: u16,
+            update_authority_is_signer: bool,
+            is_mutable: bool,
+            collection: Option<Collection>,
+            uses: Option<Uses>,
+            supply: MasterEditionSupply
+) -> Instruction {
+
+    let (metadata_account, _) = find_metadata_account(&mint);
+    let (edition_account, _) = find_master_edition_account(&mint);
+    let token_account = get_associated_token_address(&owner, &mint);
+
+    Instruction {
+        program_id: crate::id(),
+        accounts: vec![
+            AccountMeta::new(metadata_account, false),
+            AccountMeta::new(edition_account, false),
+            AccountMeta::new(mint, true),
+            AccountMeta::new(token_account, false),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(owner, false),
+            AccountMeta::new_readonly(update_authority, update_authority_is_signer),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: MetadataInstruction::Mint(MintArgs {
+            data: DataV2 {
+                name,
+                symbol,
+                uri,
+                seller_fee_basis_points,
+                creators,
+                collection,
+                uses,
+            },
+            is_mutable,
+            supply
+        })
             .try_to_vec()
             .unwrap(),
     }
