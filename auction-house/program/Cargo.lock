@@ -1725,7 +1725,7 @@ dependencies = [
  "env_logger",
  "metaplex-token-metadata",
  "mpl-testing-utils",
- "mpl-token-metadata 1.2.8",
+ "mpl-token-metadata 1.2.9",
  "serde_json",
  "shellexpand",
  "solana-program",
@@ -1776,7 +1776,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.2.8"
+version = "1.2.9"
 dependencies = [
  "arrayref",
  "borsh",
