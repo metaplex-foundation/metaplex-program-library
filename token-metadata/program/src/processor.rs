@@ -24,10 +24,11 @@ use crate::{
         assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
         check_token_standard, create_or_allocate_account_raw, get_owner_from_token_account,
-        process_create_metadata_accounts_logic,
+        process_create_metadata_accounts_logic, process_create_metadata_accounts_v3_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
-        MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, CreateMetadataAccountsV3LogicArgs,
+        CreateMetadataAccountsV3LogicArgs, MintNewEditionFromMasterEditionViaTokenLogicArgs,
+        TokenBurnParams,
     },
 };
 use arrayref::array_ref;
@@ -98,6 +99,17 @@ pub fn process_instruction<'a>(
         MetadataInstruction::UpdateMetadataAccountV2(args) => {
             msg!("Instruction: Update Metadata Accounts v2");
             process_update_metadata_accounts_v2(
+                program_id,
+                accounts,
+                args.data,
+                args.update_authority,
+                args.primary_sale_happened,
+                args.is_mutable,
+            )
+        }
+        MetadataInstruction::UpdateMetadataAccountV3(args) => {
+            msg!("Instruction: Update Metadata Accounts v3");
+            process_update_metadata_accounts_v3(
                 program_id,
                 accounts,
                 args.data,
@@ -286,12 +298,80 @@ pub fn process_create_metadata_accounts_v3<'a>(
         allow_direct_creator_writes,
         is_mutable,
         false,
-        true,
     )
 }
 
 // Update existing account instruction
 pub fn process_update_metadata_accounts_v2(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    optional_data: Option<DataV2>,
+    update_authority: Option<Pubkey>,
+    primary_sale_happened: Option<bool>,
+    is_mutable: Option<bool>,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let update_authority_info = next_account_info(account_info_iter)?;
+    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+
+    assert_owned_by(metadata_account_info, program_id)?;
+    assert_update_authority_is_correct(&metadata, update_authority_info)?;
+
+    if let Some(data) = optional_data {
+        if metadata.is_mutable {
+            let compatible_data = data.to_v1();
+            assert_data_valid(
+                &compatible_data,
+                update_authority_info.key,
+                &metadata,
+                false,
+                update_authority_info.is_signer,
+                true,
+            )?;
+            metadata.data = compatible_data;
+            assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
+            metadata.collection = data.collection;
+        } else {
+            return Err(MetadataError::DataIsImmutable.into());
+        }
+    }
+
+    if let Some(val) = update_authority {
+        metadata.update_authority = val;
+    }
+
+    if let Some(val) = primary_sale_happened {
+        // If received val is true, flip to true.
+        if val || !metadata.primary_sale_happened {
+            metadata.primary_sale_happened = val
+        } else {
+            return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
+        }
+    }
+
+    if let Some(val) = is_mutable {
+        // If received value is false, flip to false.
+        if !val || metadata.is_mutable {
+            metadata.is_mutable = val
+        } else {
+            return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
+        }
+    }
+
+    puff_out_data_fields(&mut metadata);
+
+    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
+    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
+    metadata_account_info_data[0..].fill(0);
+
+    metadata.serialize(&mut *metadata_account_info_data)?;
+    Ok(())
+}
+
+// Update existing account instruction
+pub fn process_update_metadata_accounts_v3(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
     optional_data: Option<DataV2>,

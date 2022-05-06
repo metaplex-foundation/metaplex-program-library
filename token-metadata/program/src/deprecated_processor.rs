@@ -29,7 +29,6 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
     let update_authority_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
-    let edition_account_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
         program_id,

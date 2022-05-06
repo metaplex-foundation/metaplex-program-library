@@ -913,6 +913,8 @@ pub fn process_create_metadata_accounts_logic(
         false,
     )?;
 
+    let mint_decimals = get_mint_decimals(mint_info)?;
+
     metadata.mint = *mint_info.key;
     metadata.key = Key::MetadataV1;
     metadata.data = data.to_v1();
@@ -923,7 +925,18 @@ pub fn process_create_metadata_accounts_logic(
     assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
 
-    metadata.token_standard = check_token_standard(metadata.clone(), None, program_id);
+    if add_token_standard {
+        let token_standard = if is_edition {
+            TokenStandard::NonFungibleEdition
+        } else if mint_decimals == 0 {
+            TokenStandard::FungibleAsset
+        } else {
+            TokenStandard::Fungible
+        };
+        metadata.token_standard = Some(token_standard);
+    } else {
+        metadata.token_standard = None;
+    }
 
     puff_out_data_fields(&mut metadata);
 
@@ -948,7 +961,6 @@ pub fn process_create_metadata_accounts_v3_logic(
     allow_direct_creator_writes: bool,
     mut is_mutable: bool,
     is_edition: bool,
-    add_token_standard: bool,
 ) -> ProgramResult {
     let CreateMetadataAccountsV3LogicArgs {
         metadata_account_info,
