@@ -296,8 +296,7 @@ pub mod candy_machine {
                             remaining_accounts_counter += 1;
 
                             let keys_check = assert_keys_equal(whitelist_token_mint.key(), ws.mint);
-                            let owner_check = assert_keys_equal(whitelist_burn_authority.key(), *whitelist_token_account.owner);
-                            if keys_check.is_err() || owner_check.is_err() {
+                            if keys_check.is_err() {
                                 punish_bots(
                                     ErrorCode::CandyMachineNotLive,
                                     payer.to_account_info(),
