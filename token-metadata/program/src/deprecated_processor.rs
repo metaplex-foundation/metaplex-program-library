@@ -41,7 +41,6 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
             update_authority_info,
             system_account_info,
             rent_info,
-            edition_account_info,
         },
         DataV2 {
             name: data.name,

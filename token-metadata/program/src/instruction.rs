@@ -31,6 +31,16 @@ pub struct UpdateMetadataAccountArgsV2 {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+/// Args for update call
+pub struct UpdateMetadataAccountArgsV3 {
+    pub data: Option<DataV2>,
+    pub update_authority: Option<Pubkey>,
+    pub primary_sale_happened: Option<bool>,
+    pub is_mutable: Option<bool>,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 /// Args for create call
 pub struct CreateMetadataAccountArgs {
     /// Note that unique metadatas are disabled for now.
@@ -43,6 +53,16 @@ pub struct CreateMetadataAccountArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 /// Args for create call
 pub struct CreateMetadataAccountArgsV2 {
+    /// Note that unique metadatas are disabled for now.
+    pub data: DataV2,
+    /// Whether you want your metadata to be updateable in the future.
+    pub is_mutable: bool,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+/// Args for create call
+pub struct CreateMetadataAccountArgsV3 {
     /// Note that unique metadatas are disabled for now.
     pub data: DataV2,
     /// Whether you want your metadata to be updateable in the future.
@@ -86,7 +106,6 @@ pub enum MetadataInstruction {
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
-    #[account(7, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
     CreateMetadataAccount(CreateMetadataAccountArgs),
 
     /// Update a Metadata
@@ -266,8 +285,13 @@ pub enum MetadataInstruction {
     /// Update a Metadata with is_mutable as a parameter
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, name="update_authority", desc="Update authority key")]
-    #[account(2, optional, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
     UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2),
+
+    /// Update a Metadata with is_mutable as a parameter
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, name="update_authority", desc="Update authority key")]
+    #[account(2, optional, writable, name="edition",  desc="Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']")]
+    UpdateMetadataAccountV3(UpdateMetadataAccountArgsV3),
 
     /// Create Metadata object.
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
@@ -277,8 +301,19 @@ pub enum MetadataInstruction {
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
-    #[account(7, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
     CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
+
+
+      /// Create Metadata object.
+      #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+      #[account(1, name="mint", desc="Mint of token asset")]
+      #[account(2, signer, name="mint_authority", desc="Mint authority")]
+      #[account(3, signer, writable, name="payer", desc="payer")]
+      #[account(4, name="update_authority", desc="update authority info")]
+      #[account(5, name="system_program", desc="System program")]
+      #[account(6, name="rent", desc="Rent info")]
+      #[account(7, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
+      CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
@@ -497,6 +532,55 @@ pub fn create_metadata_accounts_v2(
     }
 }
 
+/// Creates an CreateMetadataAccounts instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_metadata_accounts_v3(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    mint: Pubkey,
+    mint_authority: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    name: String,
+    symbol: String,
+    uri: String,
+    creators: Option<Vec<Creator>>,
+    seller_fee_basis_points: u16,
+    update_authority_is_signer: bool,
+    is_mutable: bool,
+    collection: Option<Collection>,
+    uses: Option<Uses>,
+    edition: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata_account, false),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new_readonly(mint_authority, true),
+            AccountMeta::new(payer, true),
+            AccountMeta::new_readonly(update_authority, update_authority_is_signer),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+            AccountMeta::new(edition, false),
+        ],
+        data: MetadataInstruction::CreateMetadataAccountV3(CreateMetadataAccountArgsV3 {
+            data: DataV2 {
+                name,
+                symbol,
+                uri,
+                seller_fee_basis_points,
+                creators,
+                collection,
+                uses,
+            },
+            is_mutable,
+        })
+        .try_to_vec()
+        .unwrap(),
+    }
+}
+
 /// update metadata account instruction
 /// #[deprecated(since="1.1.0", note="please use `update_metadata_accounts_v2` instead")]
 pub fn update_metadata_accounts(
@@ -540,6 +624,43 @@ pub fn update_metadata_accounts_v2(
             AccountMeta::new_readonly(update_authority, true),
         ],
         data: MetadataInstruction::UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2 {
+            data,
+            update_authority: new_update_authority,
+            primary_sale_happened,
+            is_mutable,
+        })
+        .try_to_vec()
+        .unwrap(),
+    }
+}
+
+// update metadata account v3 instruction
+pub fn update_metadata_accounts_v3(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    update_authority: Pubkey,
+    new_update_authority: Option<Pubkey>,
+    data: Option<DataV2>,
+    primary_sale_happened: Option<bool>,
+    is_mutable: Option<bool>,
+    edition: Option<Pubkey>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(update_authority, true),
+    ];
+
+    match edition {
+        Some(edition) => {
+            accounts.push(AccountMeta::new(edition, false));
+        }
+        None => (),
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::UpdateMetadataAccountV3(UpdateMetadataAccountArgsV3 {
             data,
             update_authority: new_update_authority,
             primary_sale_happened,

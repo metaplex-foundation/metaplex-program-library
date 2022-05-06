@@ -608,7 +608,6 @@ pub fn mint_limited_edition<'a>(
             update_authority_info,
             system_account_info,
             rent_info,
-            edition_account_info: master_edition_account_info,
         },
         data_v2,
         true,
@@ -811,7 +810,6 @@ pub struct CreateMetadataAccountsLogicArgs<'a> {
     pub update_authority_info: &'a AccountInfo<'a>,
     pub system_account_info: &'a AccountInfo<'a>,
     pub rent_info: &'a AccountInfo<'a>,
-    pub edition_account_info: &'a AccountInfo<'a>,
 }
 
 // This equals the program address of the metadata program:
@@ -842,7 +840,6 @@ pub fn process_create_metadata_accounts_logic(
         update_authority_info,
         system_account_info,
         rent_info,
-        edition_account_info,
     } = accounts;
 
     let mut update_authority_key = *update_authority_info.key;

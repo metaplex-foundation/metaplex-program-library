@@ -235,7 +235,6 @@ pub fn process_create_metadata_accounts_v2<'a>(
             update_authority_info,
             system_account_info,
             rent_info,
-            edition_account_info,
         },
         data,
         allow_direct_creator_writes,
