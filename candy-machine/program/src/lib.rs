@@ -295,8 +295,18 @@ pub mod candy_machine {
                                 &ctx.remaining_accounts[remaining_accounts_counter];
                             remaining_accounts_counter += 1;
 
-                            assert_keys_equal(whitelist_token_mint.key(), ws.mint)?;
-
+                            let keys_check = assert_keys_equal(whitelist_token_mint.key(), ws.mint);
+                            let owner_check = assert_keys_equal(whitelist_burn_authority.key(), *whitelist_token_account.owner);
+                            if keys_check.is_err() || owner_check.is_err() {
+                                punish_bots(
+                                    ErrorCode::CandyMachineNotLive,
+                                    payer.to_account_info(),
+                                    ctx.accounts.candy_machine.to_account_info(),
+                                    ctx.accounts.system_program.to_account_info(),
+                                    BOT_FEE,
+                                )?;
+                                return Ok(());
+                            }
                             spl_token_burn(TokenBurnParams {
                                 mint: whitelist_token_mint.clone(),
                                 source: whitelist_token_account.clone(),
@@ -627,7 +637,7 @@ pub mod candy_machine {
             ctx.accounts.collection_master_edition.to_account_info(),
             ctx.accounts.collection_authority_record.to_account_info(),
         ];
-        let set = invoke_signed(
+        invoke_signed(
             &set_and_verify_collection(
                 ctx.accounts.token_metadata_program.key(),
                 ctx.accounts.metadata.key(),
@@ -641,11 +651,7 @@ pub mod candy_machine {
             ),
             set_collection_infos.as_slice(),
             &[&signer_seeds],
-        );
-        /// Set will only fail if the above IX fails
-        if set.is_err() {
-            return Ok(());
-        }
+        )?;
         Ok(())
     }
 
