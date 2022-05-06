@@ -4,7 +4,7 @@ use crate::{
             assert_collection_update_is_valid, assert_collection_verify_is_valid,
             assert_has_collection_authority,
         },
-        uses::process_use_authority_validation,
+        uses::{assert_valid_use, process_use_authority_validation},
     },
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
@@ -275,6 +275,8 @@ pub fn process_update_metadata_accounts_v2(
             metadata.data = compatible_data;
             assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
             metadata.collection = data.collection;
+            assert_valid_use(&data.uses, &metadata.uses)?;
+            metadata.uses = data.uses;
         } else {
             return Err(MetadataError::DataIsImmutable.into());
         }
