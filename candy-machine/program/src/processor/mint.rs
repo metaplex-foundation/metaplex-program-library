@@ -329,7 +329,22 @@ pub fn handle_mint_nft<'info>(
                             &ctx.remaining_accounts[remaining_accounts_counter];
                         remaining_accounts_counter += 1;
 
-                        assert_keys_equal(whitelist_token_mint.key(), ws.mint)?;
+                        let key_check = assert_keys_equal(whitelist_token_mint.key(), ws.mint);
+                        let owner_check = assert_keys_equal(
+                            whitelist_burn_authority.key(),
+                            *whitelist_token_account.owner,
+                        );
+
+                        if key_check.is_err() || owner_check.is_err() {
+                            punish_bots(
+                                CandyError::IncorrectOwner,
+                                payer.to_account_info(),
+                                ctx.accounts.candy_machine.to_account_info(),
+                                ctx.accounts.system_program.to_account_info(),
+                                BOT_FEE,
+                            )?;
+                            return Ok(());
+                        }
 
                         spl_token_burn(TokenBurnParams {
                             mint: whitelist_token_mint.clone(),
