@@ -27,6 +27,9 @@ To install, either download a binary, install from Crates.io, or install from so
 Binaries for the supported OS can be found at:
 - [Sugar Releases](https://github.com/metaplex-foundation/sugar/releases)
 
+
+To install the pre-built binary on macOS or linux simply run `bash <(curl -s https://raw.githubusercontent.com/metaplex-foundation/sugar/main/script/sugar-install.sh )` 
+
 ### Using Crates.io
 
 ```bash
