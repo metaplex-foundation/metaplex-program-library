@@ -176,7 +176,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // number
 
-    config_data.number = if (num_files % 2) == 0 && Confirm::with_theme(&theme)
+    config_data.number = if num_files > 0 && (num_files % 2) == 0 && Confirm::with_theme(&theme)
         .with_prompt(
             format!(
                 "Found {} file pairs in \"{}\". Is this how many NFTs you will have in your candy machine?", num_files / 2, args.assets_dir,
