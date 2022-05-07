@@ -16,7 +16,7 @@ Sugar is an alternative to the current Metaplex Candy Machine CLI. It has been w
 
 > **Note:** This is a beta release of Sugar. Use at your own risk. The current version supports only systems running macOS, Linux, or another Unix-like OS.
 
-See [the docs](https://docs-git-sugar-deps-metaplex.vercel.app/sugar/introduction) for full installation and usage instructions.
+See [the docs](https://docs.metaplex.com/sugar/introduction) for full installation and usage instructions.
 
 ## Installation
 
@@ -34,7 +34,6 @@ cargo install sugar-cli --locked
 ```
 
 ### Build From Source
-
 
 ```bash
 cargo install --locked --path ./
