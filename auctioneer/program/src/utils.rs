@@ -28,8 +28,19 @@ pub fn assert_higher_bid(
     new_bid_price: u64,
 ) -> Result<()> {
     if new_bid_price <= listing_config.highest_bid.amount {
+        msg!(
+            "{:?} is not higher than {:?}",
+            new_bid_price,
+            listing_config.highest_bid.amount
+        );
         return err!(AuctioneerError::BidTooLow);
     }
+
+    msg!(
+        "{:?} is higher than {:?}",
+        new_bid_price,
+        listing_config.highest_bid.amount
+    );
 
     Ok(())
 }

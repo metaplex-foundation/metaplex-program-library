@@ -294,105 +294,105 @@ pub fn buy(
     )
 }
 
-pub fn public_buy(
-    context: &mut ProgramTestContext,
-    ahkey: &Pubkey,
-    ah: &AuctionHouse,
-    test_metadata: &Metadata,
-    owner: &Pubkey,
-    buyer: &Keypair,
-    seller: &Pubkey,
-    listing_config: &Pubkey,
-    sale_price: u64,
-) -> (
-    (
-        mpl_auctioneer::accounts::AuctioneerPublicBuy,
-        mpl_auction_house::accounts::PrintBidReceipt,
-    ),
-    Transaction,
-) {
-    let seller_token_account = get_associated_token_address(&owner, &test_metadata.mint.pubkey());
-    let trade_state = find_public_bid_trade_state_address(
-        &buyer.pubkey(),
-        &ahkey,
-        &ah.treasury_mint,
-        &test_metadata.mint.pubkey(),
-        sale_price,
-        1,
-    );
-    let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
-    let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &mpl_auctioneer::id());
-    let (bts, bts_bump) = trade_state;
+// pub fn public_buy(
+//     context: &mut ProgramTestContext,
+//     ahkey: &Pubkey,
+//     ah: &AuctionHouse,
+//     test_metadata: &Metadata,
+//     owner: &Pubkey,
+//     buyer: &Keypair,
+//     seller: &Pubkey,
+//     listing_config: &Pubkey,
+//     sale_price: u64,
+// ) -> (
+//     (
+//         mpl_auctioneer::accounts::AuctioneerPublicBuy,
+//         mpl_auction_house::accounts::PrintBidReceipt,
+//     ),
+//     Transaction,
+// ) {
+//     let seller_token_account = get_associated_token_address(&owner, &test_metadata.mint.pubkey());
+//     let trade_state = find_public_bid_trade_state_address(
+//         &buyer.pubkey(),
+//         &ahkey,
+//         &ah.treasury_mint,
+//         &test_metadata.mint.pubkey(),
+//         sale_price,
+//         1,
+//     );
+//     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
+//     let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &mpl_auctioneer::id());
+//     let (bts, bts_bump) = trade_state;
 
-    let accounts = mpl_auctioneer::accounts::AuctioneerPublicBuy {
-        auction_house_program: mpl_auction_house::id(),
-        listing_config: *listing_config,
-        seller: *seller,
-        wallet: buyer.pubkey(),
-        token_account: seller_token_account,
-        metadata: test_metadata.pubkey,
-        authority: ah.authority,
-        auction_house: *ahkey,
-        auction_house_fee_account: ah.auction_house_fee_account,
-        buyer_trade_state: bts,
-        token_program: spl_token::id(),
-        treasury_mint: ah.treasury_mint,
-        payment_account: buyer.pubkey(),
-        transfer_authority: buyer.pubkey(),
-        system_program: solana_program::system_program::id(),
-        rent: sysvar::rent::id(),
-        escrow_payment_account: escrow,
-        auctioneer_authority: mpl_auctioneer::id(),
-        ah_auctioneer_pda: auctioneer_pda,
-    };
-    let account_metas = accounts.to_account_metas(None);
+//     let accounts = mpl_auctioneer::accounts::AuctioneerPublicBuy {
+//         auction_house_program: mpl_auction_house::id(),
+//         listing_config: *listing_config,
+//         seller: *seller,
+//         wallet: buyer.pubkey(),
+//         token_account: seller_token_account,
+//         metadata: test_metadata.pubkey,
+//         authority: ah.authority,
+//         auction_house: *ahkey,
+//         auction_house_fee_account: ah.auction_house_fee_account,
+//         buyer_trade_state: bts,
+//         token_program: spl_token::id(),
+//         treasury_mint: ah.treasury_mint,
+//         payment_account: buyer.pubkey(),
+//         transfer_authority: buyer.pubkey(),
+//         system_program: solana_program::system_program::id(),
+//         rent: sysvar::rent::id(),
+//         escrow_payment_account: escrow,
+//         auctioneer_authority: mpl_auctioneer::id(),
+//         ah_auctioneer_pda: auctioneer_pda,
+//     };
+//     let account_metas = accounts.to_account_metas(None);
 
-    let buy_ix = mpl_auctioneer::instruction::PublicBuy {
-        trade_state_bump: bts_bump,
-        escrow_payment_bump: escrow_bump,
-        token_size: 1,
-        buyer_price: sale_price,
-    };
-    let data = buy_ix.data();
+//     let buy_ix = mpl_auctioneer::instruction::PublicBuy {
+//         trade_state_bump: bts_bump,
+//         escrow_payment_bump: escrow_bump,
+//         token_size: 1,
+//         buyer_price: sale_price,
+//     };
+//     let data = buy_ix.data();
 
-    let instruction = Instruction {
-        program_id: mpl_auctioneer::id(),
-        data,
-        accounts: account_metas,
-    };
+//     let instruction = Instruction {
+//         program_id: mpl_auctioneer::id(),
+//         data,
+//         accounts: account_metas,
+//     };
 
-    let (bid_receipt, bid_receipt_bump) = find_bid_receipt_address(&bts);
-    let print_receipt_accounts = mpl_auction_house::accounts::PrintBidReceipt {
-        receipt: bid_receipt,
-        bookkeeper: buyer.pubkey(),
-        system_program: solana_program::system_program::id(),
-        rent: sysvar::rent::id(),
-        instruction: sysvar::instructions::id(),
-    };
+//     let (bid_receipt, bid_receipt_bump) = find_bid_receipt_address(&bts);
+//     let print_receipt_accounts = mpl_auction_house::accounts::PrintBidReceipt {
+//         receipt: bid_receipt,
+//         bookkeeper: buyer.pubkey(),
+//         system_program: solana_program::system_program::id(),
+//         rent: sysvar::rent::id(),
+//         instruction: sysvar::instructions::id(),
+//     };
 
-    let account_metas = print_receipt_accounts.to_account_metas(None);
+//     let account_metas = print_receipt_accounts.to_account_metas(None);
 
-    // let print_bid_receipt_ix = mpl_auction_house::instruction::PrintBidReceipt {
-    //     receipt_bump: bid_receipt_bump,
-    // };
-    // let data = print_bid_receipt_ix.data();
+//     // let print_bid_receipt_ix = mpl_auction_house::instruction::PrintBidReceipt {
+//     //     receipt_bump: bid_receipt_bump,
+//     // };
+//     // let data = print_bid_receipt_ix.data();
 
-    // let print_bid_receipt_instruction = Instruction {
-    //     program_id: mpl_auction_house::id(),
-    //     data,
-    //     accounts: account_metas,
-    // };
+//     // let print_bid_receipt_instruction = Instruction {
+//     //     program_id: mpl_auction_house::id(),
+//     //     data,
+//     //     accounts: account_metas,
+//     // };
 
-    (
-        (accounts, print_receipt_accounts),
-        Transaction::new_signed_with_payer(
-            &[instruction /*, print_bid_receipt_instruction*/],
-            Some(&buyer.pubkey()),
-            &[buyer],
-            context.last_blockhash,
-        ),
-    )
-}
+//     (
+//         (accounts, print_receipt_accounts),
+//         Transaction::new_signed_with_payer(
+//             &[instruction /*, print_bid_receipt_instruction*/],
+//             Some(&buyer.pubkey()),
+//             &[buyer],
+//             context.last_blockhash,
+//         ),
+//     )
+// }
 
 pub fn execute_sale(
     context: &mut ProgramTestContext,

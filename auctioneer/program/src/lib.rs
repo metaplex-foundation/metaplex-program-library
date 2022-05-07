@@ -15,7 +15,7 @@ use anchor_lang::prelude::*;
 
 use solana_program::clock::UnixTimestamp;
 
-declare_id!("Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS");
+declare_id!("neer8g6yJq2mQM6KbnViEDAD4gr3gRZyMMf4F2p3MEh");
 
 //pub const PREFIX: &str = "auctioneer";
 
@@ -102,23 +102,6 @@ pub mod auctioneer {
         token_size: u64,
     ) -> Result<()> {
         auctioneer_buy(
-            ctx,
-            trade_state_bump,
-            escrow_payment_bump,
-            buyer_price,
-            token_size,
-        )
-    }
-
-    /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn public_buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, AuctioneerPublicBuy<'info>>,
-        trade_state_bump: u8,
-        escrow_payment_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> Result<()> {
-        auctioneer_public_buy(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
