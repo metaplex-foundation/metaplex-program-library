@@ -390,6 +390,11 @@ pub fn process_update_metadata_accounts_v3(
         Err(_) => None,
     };
 
+    let mint_info = match next_account_info(account_info_iter) {
+        Ok(mint_info) => Some(mint_info),
+        Err(_) => None,
+    };
+
     assert_owned_by(metadata_account_info, program_id)?;
     assert_update_authority_is_correct(&metadata, update_authority_info)?;
 
@@ -434,8 +439,12 @@ pub fn process_update_metadata_accounts_v3(
         }
     }
 
-    metadata.token_standard =
-        check_token_standard(metadata.clone(), edition_account_info, program_id);
+    metadata.token_standard = check_token_standard(
+        metadata.clone(),
+        edition_account_info,
+        program_id,
+        mint_info,
+    );
 
     puff_out_data_fields(&mut metadata);
 

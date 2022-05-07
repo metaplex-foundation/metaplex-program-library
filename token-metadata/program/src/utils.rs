@@ -1043,8 +1043,12 @@ pub fn process_create_metadata_accounts_v3_logic(
     assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
 
-    metadata.token_standard =
-        check_token_standard(metadata.clone(), Some(edition_account_info), program_id);
+    metadata.token_standard = check_token_standard(
+        metadata.clone(),
+        Some(edition_account_info),
+        program_id,
+        Some(mint_info),
+    );
 
     puff_out_data_fields(&mut metadata);
 
@@ -1065,12 +1069,14 @@ pub fn check_token_standard(
     metadata: Metadata,
     edition_account_info: Option<&AccountInfo>,
     program_id: &Pubkey,
+    mint_info: Option<&AccountInfo>,
 ) -> Option<TokenStandard> {
-    if let Some(val) = edition_account_info {
-        let mint_decimals = get_mint_decimals(val).ok()?;
-        let _token_standard = if assert_master_edition(val, mint_decimals).is_ok() {
+    if let (Some(edition_account), Some(mint)) = (edition_account_info, mint_info) {
+        let mint_decimals = get_mint_decimals(mint).ok()?;
+        let _token_standard = if assert_master_edition(edition_account, mint_decimals).is_ok() {
             TokenStandard::NonFungible
-        } else if assert_edition(metadata, val, mint_decimals, program_id).is_ok() {
+        } else if assert_edition(metadata, edition_account, mint_decimals, program_id, mint).is_ok()
+        {
             TokenStandard::NonFungibleEdition
         } else if mint_decimals == 0 {
             TokenStandard::FungibleAsset
@@ -1111,10 +1117,11 @@ pub fn assert_edition(
     edition_account_info: &AccountInfo,
     mint_decimals: u8,
     program_id: &Pubkey,
+    mint_info: &AccountInfo,
 ) -> Result<(), ProgramError> {
     assert_edition_valid(program_id, &metadata.mint, edition_account_info)?;
 
-    let mint_supply = get_mint_supply(edition_account_info)?;
+    let mint_supply = get_mint_supply(mint_info)?;
 
     if mint_supply != 1 {
         return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
