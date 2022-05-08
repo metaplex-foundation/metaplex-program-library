@@ -961,14 +961,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/beet@npm:^0.1.4":
-  version: 0.1.4
-  resolution: "@metaplex-foundation/beet@npm:0.1.4"
+"@metaplex-foundation/beet@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "@metaplex-foundation/beet@npm:0.2.0"
   dependencies:
     ansicolors: ^0.3.2
     bn.js: ^5.2.0
     debug: ^4.3.3
-  checksum: 7dc2c077539f71f28b7d91869e6f13d8fe042c2afffba7e1ce48fed8cb17ac18226192b4fb159bb1ee5a945446326b3102f205de4186640aa933141ad6f9830f
+  checksum: e0e167659531bbbc9f1a0eda78d054047c1732fe77c7e85e0031b8581eff3c17c4d6cdbc30f6be7c007bbc1d731a98b4595b6693a4fa2ccceb1baf2e6b81997f
   languageName: node
   linkType: hard
 
@@ -1035,15 +1035,12 @@ __metadata:
     "@metaplex-foundation/beet": ^0.1.0
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/cusper": ^0.0.2
-    "@metaplex-foundation/solita": ^0.5.0
+    "@metaplex-foundation/solita": ^0.7.0
     "@solana/web3.js": ^1.35.1
-    "@types/tape": ^4.13.2
     bn.js: ^5.2.0
     eslint: ^8.3.0
     prettier: ^2.5.1
     rimraf: ^3.0.2
-    spok: ^1.4.3
-    tape: ^5.5.2
     typescript: ^4.6.2
   languageName: unknown
   linkType: soft
@@ -1278,11 +1275,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/solita@npm:^0.5.0":
-  version: 0.5.5
-  resolution: "@metaplex-foundation/solita@npm:0.5.5"
+"@metaplex-foundation/solita@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@metaplex-foundation/solita@npm:0.7.0"
   dependencies:
-    "@metaplex-foundation/beet": ^0.1.4
+    "@metaplex-foundation/beet": ^0.2.0
     "@metaplex-foundation/beet-solana": ^0.1.1
     "@metaplex-foundation/rustbin": ^0.3.0
     "@solana/web3.js": ^1.36.0
@@ -1294,7 +1291,7 @@ __metadata:
     spok: ^1.4.3
   bin:
     solita: dist/src/cli/solita.js
-  checksum: dd4323cd2ae8b26d98c7f1d6678556446efaa640af60e0ff7d440de06aa8eca9a6dbd425567d9606ee96b9a4bdb2b395e02d47ea7a4c165596ac55a5b8538ebc
+  checksum: 16cc9a2ce058217eea6546bff058291f24437c5e021b37c1c59884b6934788cab0f619e2e61e2cd5e7ae5a7897aff5c5343a146c2cd1a90b0ca4d64f58dcff6d
   languageName: node
   linkType: hard
 
