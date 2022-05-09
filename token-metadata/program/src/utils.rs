@@ -1169,12 +1169,7 @@ pub fn process_create_metadata_accounts_v3_logic(
         false,
     )?;
 
-    metadata.token_standard = check_token_standard(
-        metadata.clone(),
-        Some(edition_account_info),
-        program_id,
-        Some(mint_info),
-    );
+    metadata.token_standard = check_token_standard(Some(edition_account_info), mint_info);
 
     metadata.mint = *mint_info.key;
     metadata.key = Key::MetadataV1;
@@ -1203,28 +1198,22 @@ pub fn process_create_metadata_accounts_v3_logic(
 }
 
 pub fn check_token_standard(
-    metadata: Metadata,
     edition_account_info: Option<&AccountInfo>,
-    program_id: &Pubkey,
-    mint_info: Option<&AccountInfo>,
+    mint_info: &AccountInfo,
 ) -> Option<TokenStandard> {
-    if let (Some(edition_account), Some(mint)) = (edition_account_info, mint_info) {
-        let mint_decimals = get_mint_decimals(mint).ok()?;
-        let token_standard = if assert_master_edition(edition_account, mint_decimals).is_ok() {
+    let mint_decimals = get_mint_decimals(mint_info).ok()?;
+
+    let token_standard =
+        if assert_master_edition(edition_account_info.unwrap(), mint_decimals).is_ok() {
             TokenStandard::NonFungible
-        } else if assert_edition(metadata, edition_account, mint_decimals, program_id, mint).is_ok()
-        {
+        } else if assert_edition(mint_decimals, mint_info).is_ok() {
             TokenStandard::NonFungibleEdition
         } else if mint_decimals == 0 {
             TokenStandard::FungibleAsset
         } else {
             TokenStandard::Fungible
         };
-
-        Some(token_standard)
-    } else {
-        None
-    }
+    Some(token_standard)
 }
 
 pub fn assert_master_edition(
@@ -1249,15 +1238,7 @@ pub fn assert_master_edition(
     Ok(())
 }
 
-pub fn assert_edition(
-    metadata: Metadata,
-    edition_account_info: &AccountInfo,
-    mint_decimals: u8,
-    program_id: &Pubkey,
-    mint_info: &AccountInfo,
-) -> Result<(), ProgramError> {
-    assert_edition_valid(program_id, &metadata.mint, edition_account_info)?;
-
+pub fn assert_edition(mint_decimals: u8, mint_info: &AccountInfo) -> Result<(), ProgramError> {
     let mint_supply = get_mint_supply(mint_info)?;
 
     if mint_supply != 1 {

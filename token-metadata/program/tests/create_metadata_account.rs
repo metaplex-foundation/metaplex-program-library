@@ -113,7 +113,6 @@ mod create_meta_accounts {
     async fn success_v3() {
         let mut context = program_test().start_with_context().await;
         let test_metadata = Metadata::new();
-        let test_edition = Edition::new(&test_metadata);
         let name = "Test".to_string();
         let symbol = "TST".to_string();
         let uri = "uri".to_string();
@@ -159,7 +158,7 @@ mod create_meta_accounts {
         assert_eq!(metadata.key, Key::MetadataV1);
         assert_eq!(
             metadata.token_standard.unwrap(),
-            TokenStandard::NonFungibleEdition
+            TokenStandard::FungibleAsset
         );
     }
 

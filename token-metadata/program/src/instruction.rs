@@ -291,6 +291,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, name="update_authority", desc="Update authority key")]
     #[account(2, optional, writable, name="edition",  desc="Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']")]
+    #[account(3, name="mint", desc="Mint of token asset")]
     UpdateMetadataAccountV3(UpdateMetadataAccountArgsV3),
 
     /// Create Metadata object.
@@ -312,7 +313,7 @@ pub enum MetadataInstruction {
       #[account(4, name="update_authority", desc="update authority info")]
       #[account(5, name="system_program", desc="System program")]
       #[account(6, name="rent", desc="Rent info")]
-      #[account(7, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
+      #[account(7, optional, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
       CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
@@ -541,6 +542,7 @@ pub fn create_metadata_accounts_v3(
     mint_authority: Pubkey,
     payer: Pubkey,
     update_authority: Pubkey,
+    edition: Option<Pubkey>,
     name: String,
     symbol: String,
     uri: String,
@@ -550,20 +552,23 @@ pub fn create_metadata_accounts_v3(
     is_mutable: bool,
     collection: Option<Collection>,
     uses: Option<Uses>,
-    edition: Pubkey,
 ) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new_readonly(mint_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(update_authority, update_authority_is_signer),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+    if let Some(edition) = edition {
+        accounts.push(AccountMeta::new(edition, false));
+    }
+
     Instruction {
         program_id,
-        accounts: vec![
-            AccountMeta::new(metadata_account, false),
-            AccountMeta::new_readonly(mint, false),
-            AccountMeta::new_readonly(mint_authority, true),
-            AccountMeta::new(payer, true),
-            AccountMeta::new_readonly(update_authority, update_authority_is_signer),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
-            AccountMeta::new(edition, false),
-        ],
+        accounts,
         data: MetadataInstruction::CreateMetadataAccountV3(CreateMetadataAccountArgsV3 {
             data: DataV2 {
                 name,
@@ -640,21 +645,20 @@ pub fn update_metadata_accounts_v3(
     metadata_account: Pubkey,
     update_authority: Pubkey,
     new_update_authority: Option<Pubkey>,
+    edition: Option<Pubkey>,
+    mint: Pubkey,
     data: Option<DataV2>,
     primary_sale_happened: Option<bool>,
     is_mutable: Option<bool>,
-    edition: Option<Pubkey>,
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(mint, false),
     ];
 
-    match edition {
-        Some(edition) => {
-            accounts.push(AccountMeta::new(edition, false));
-        }
-        None => (),
+    if let Some(edition) = edition {
+        accounts.push(AccountMeta::new(edition, false));
     }
 
     Instruction {
