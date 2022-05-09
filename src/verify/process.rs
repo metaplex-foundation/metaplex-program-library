@@ -7,6 +7,7 @@ use mpl_candy_machine::CandyMachine;
 use crate::cache::*;
 use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::common::*;
+use crate::config::Cluster;
 use crate::constants::{CANDY_EMOJI, PAPER_EMOJI};
 use crate::utils::*;
 use crate::verify::VerifyError;
@@ -146,9 +147,15 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             return Err(anyhow!("{} invalid item(s) found.", total));
         }
 
+        let cluster = match get_cluster(program.rpc())? {
+            Cluster::Devnet => "devnet",
+            Cluster::Mainnet => "mainnet",
+        };
+
         println!(
-            "\nAll items checked out. You're good to go!\nSee your candy machine at: https://www.solaneyes.com/address/{}",
-            cache.program.candy_machine
+            "\nAll items checked out. You're good to go!\nSee your candy machine at: https://www.solaneyes.com/address/{}?cluster={}",
+            cache.program.candy_machine,
+            cluster
         );
     } else {
         // nothing else todo, there are no config lines in a candy machine
