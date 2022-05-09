@@ -707,7 +707,8 @@ pub mod auction_house {
             if diff != buyer_price {
                 // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
                 let shortfall = std::cmp::min(
-                    diff.checked_sub(buyer_price)
+                    buyer_price
+                        .checked_sub(diff)
                         .ok_or(ErrorCode::NumericalOverflow)?,
                     rent.minimum_balance(escrow_payment_account.data_len()),
                 );
@@ -861,10 +862,9 @@ pub mod auction_house {
             )?;
         } else {
             let data = buyer_receipt_token_account.try_borrow_data()?;
-            let token_account =
-                TokenAccount::try_deserialize(&mut data.as_ref())?;
+            let token_account = TokenAccount::try_deserialize(&mut data.as_ref())?;
             if &token_account.owner != buyer.key {
-                return Err(ErrorCode::IncorrectOwner.into())
+                return Err(ErrorCode::IncorrectOwner.into());
             }
         }
 
