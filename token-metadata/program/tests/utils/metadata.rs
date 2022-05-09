@@ -156,6 +156,70 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    pub async fn create_v3(
+        &self,
+        context: &mut ProgramTestContext,
+        name: String,
+        symbol: String,
+        uri: String,
+        creators: Option<Vec<Creator>>,
+        seller_fee_basis_points: u16,
+        is_mutable: bool,
+        freeze_authority: Option<&Pubkey>,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
+    ) -> transport::Result<()> {
+        create_mint(
+            context,
+            &self.mint,
+            &context.payer.pubkey(),
+            freeze_authority,
+        )
+        .await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
+        mint_tokens(
+            context,
+            &self.mint.pubkey(),
+            &self.token.pubkey(),
+            1,
+            &context.payer.pubkey(),
+            None,
+        )
+        .await?;
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::create_metadata_accounts_v3(
+                id(),
+                self.pubkey,
+                self.mint.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                name,
+                symbol,
+                uri,
+                creators,
+                seller_fee_basis_points,
+                false,
+                is_mutable,
+                collection,
+                uses,
+                self.pubkey(),
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
     pub async fn update_primary_sale_happened_via_token(
         &self,
         context: &mut ProgramTestContext,

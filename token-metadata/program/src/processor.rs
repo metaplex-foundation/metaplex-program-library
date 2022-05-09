@@ -297,7 +297,6 @@ pub fn process_create_metadata_accounts_v3<'a>(
         data,
         allow_direct_creator_writes,
         is_mutable,
-        false,
     )
 }
 

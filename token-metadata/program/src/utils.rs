@@ -662,6 +662,143 @@ pub fn mint_limited_edition<'a>(
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
+pub fn mint_limited_edition_v2<'a>(
+    program_id: &'a Pubkey,
+    master_metadata: Metadata,
+    new_metadata_account_info: &'a AccountInfo<'a>,
+    new_edition_account_info: &'a AccountInfo<'a>,
+    master_edition_account_info: &'a AccountInfo<'a>,
+    mint_info: &'a AccountInfo<'a>,
+    mint_authority_info: &'a AccountInfo<'a>,
+    payer_account_info: &'a AccountInfo<'a>,
+    update_authority_info: &'a AccountInfo<'a>,
+    token_program_account_info: &'a AccountInfo<'a>,
+    system_account_info: &'a AccountInfo<'a>,
+    rent_info: &'a AccountInfo<'a>,
+    // Only present with MasterEditionV1 calls, if present, use edition based off address in res list,
+    // otherwise, pull off the top
+    reservation_list_info: Option<&'a AccountInfo<'a>>,
+    // Only present with MasterEditionV2 calls, if present, means
+    // directing to a specific version, otherwise just pull off the top
+    edition_override: Option<u64>,
+) -> ProgramResult {
+    let me_supply = get_supply_off_master_edition(master_edition_account_info)?;
+    let mint_authority = get_mint_authority(mint_info)?;
+    let mint_supply = get_mint_supply(mint_info)?;
+    assert_mint_authority_matches_mint(&mint_authority, mint_authority_info)?;
+
+    assert_edition_valid(
+        program_id,
+        &master_metadata.mint,
+        master_edition_account_info,
+    )?;
+
+    let edition_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+    ];
+    let (edition_key, bump_seed) = Pubkey::find_program_address(edition_seeds, program_id);
+    if edition_key != *new_edition_account_info.key {
+        return Err(MetadataError::InvalidEditionKey.into());
+    }
+
+    if reservation_list_info.is_some() && edition_override.is_some() {
+        return Err(MetadataError::InvalidOperation.into());
+    }
+
+    calculate_supply_change(
+        master_edition_account_info,
+        reservation_list_info,
+        edition_override,
+        me_supply,
+    )?;
+
+    if mint_supply != 1 {
+        return Err(MetadataError::EditionsMustHaveExactlyOneToken.into());
+    }
+    let master_data = master_metadata.data;
+    // bundle data into v2
+    let data_v2 = DataV2 {
+        name: master_data.name,
+        symbol: master_data.symbol,
+        uri: master_data.uri,
+        seller_fee_basis_points: master_data.seller_fee_basis_points,
+        creators: master_data.creators,
+        collection: master_metadata.collection,
+        uses: master_metadata.uses.map(|u| Uses {
+            use_method: u.use_method,
+            remaining: u.total, // reset remaining uses per edition for extra fun
+            total: u.total,
+        }),
+    };
+    // create the metadata the normal way...
+
+    process_create_metadata_accounts_v3_logic(
+        program_id,
+        CreateMetadataAccountsV3LogicArgs {
+            metadata_account_info: new_metadata_account_info,
+            mint_info,
+            mint_authority_info,
+            payer_account_info,
+            update_authority_info,
+            system_account_info,
+            rent_info,
+            edition_account_info: new_edition_account_info,
+        },
+        data_v2,
+        true,
+        false,
+    )?;
+    let edition_authority_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+        &[bump_seed],
+    ];
+
+    create_or_allocate_account_raw(
+        *program_id,
+        new_edition_account_info,
+        rent_info,
+        system_account_info,
+        payer_account_info,
+        MAX_EDITION_LEN,
+        edition_authority_seeds,
+    )?;
+
+    // Doing old school serialization to protect CPU credits.
+    let edition_data = &mut new_edition_account_info.data.borrow_mut();
+    let output = array_mut_ref![edition_data, 0, MAX_EDITION_LEN];
+
+    let (key, parent, edition, _padding) = mut_array_refs![output, 1, 32, 8, 200];
+
+    *key = [Key::EditionV1 as u8];
+    parent.copy_from_slice(master_edition_account_info.key.as_ref());
+
+    *edition = calculate_edition_number(
+        mint_authority_info,
+        reservation_list_info,
+        edition_override,
+        me_supply,
+    )?
+    .to_le_bytes();
+
+    // Now make sure this mint can never be used by anybody else.
+    transfer_mint_authority(
+        &edition_key,
+        new_edition_account_info,
+        mint_info,
+        mint_authority_info,
+        token_program_account_info,
+    )?;
+
+    Ok(())
+}
+
 pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
     let TokenBurnParams {
         mint,
@@ -960,7 +1097,6 @@ pub fn process_create_metadata_accounts_v3_logic(
     data: DataV2,
     allow_direct_creator_writes: bool,
     mut is_mutable: bool,
-    is_edition: bool,
 ) -> ProgramResult {
     let CreateMetadataAccountsV3LogicArgs {
         metadata_account_info,
@@ -1033,6 +1169,13 @@ pub fn process_create_metadata_accounts_v3_logic(
         false,
     )?;
 
+    metadata.token_standard = check_token_standard(
+        metadata.clone(),
+        Some(edition_account_info),
+        program_id,
+        Some(mint_info),
+    );
+
     metadata.mint = *mint_info.key;
     metadata.key = Key::MetadataV1;
     metadata.data = data.to_v1();
@@ -1040,15 +1183,9 @@ pub fn process_create_metadata_accounts_v3_logic(
     metadata.update_authority = update_authority_key;
     assert_valid_use(&data.uses, &None)?;
     metadata.uses = data.uses;
+    let is_edition = metadata.clone().token_standard.unwrap() == TokenStandard::NonFungibleEdition;
     assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
-
-    metadata.token_standard = check_token_standard(
-        metadata.clone(),
-        Some(edition_account_info),
-        program_id,
-        Some(mint_info),
-    );
 
     puff_out_data_fields(&mut metadata);
 
@@ -1073,7 +1210,7 @@ pub fn check_token_standard(
 ) -> Option<TokenStandard> {
     if let (Some(edition_account), Some(mint)) = (edition_account_info, mint_info) {
         let mint_decimals = get_mint_decimals(mint).ok()?;
-        let _token_standard = if assert_master_edition(edition_account, mint_decimals).is_ok() {
+        let token_standard = if assert_master_edition(edition_account, mint_decimals).is_ok() {
             TokenStandard::NonFungible
         } else if assert_edition(metadata, edition_account, mint_decimals, program_id, mint).is_ok()
         {
@@ -1084,7 +1221,7 @@ pub fn check_token_standard(
             TokenStandard::Fungible
         };
 
-        Some(_token_standard)
+        Some(token_standard)
     } else {
         None
     }
