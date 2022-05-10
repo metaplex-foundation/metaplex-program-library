@@ -77,7 +77,7 @@ async fn cancel_listing() {
     let instruction = Instruction {
         program_id: mpl_auctioneer::id(),
         data: mpl_auctioneer::instruction::Cancel {
-            buyer_price: 10,
+            buyer_price: u64::MAX,
             token_size: 1,
         }
         .data(),

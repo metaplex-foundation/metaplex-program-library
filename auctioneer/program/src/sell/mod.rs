@@ -20,7 +20,7 @@ use solana_program::{clock::UnixTimestamp, program::invoke};
 
 /// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
 #[derive(Accounts, Clone)]
-#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, token_size: u64)]
 pub struct AuctioneerSell<'info> {
     /// Auction House Program used for CPI call
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
@@ -73,7 +73,7 @@ pub struct AuctioneerSell<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
-    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], seeds::program=auction_house_program, bump=trade_state_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &u64::MAX.to_le_bytes(), &token_size.to_le_bytes()], seeds::program=auction_house_program, bump=trade_state_bump)]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -105,7 +105,6 @@ pub fn auctioneer_sell<'info>(
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64,
     token_size: u64,
     start_time: UnixTimestamp,
     end_time: UnixTimestamp,
@@ -139,7 +138,6 @@ pub fn auctioneer_sell<'info>(
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
-        buyer_price,
         token_size,
     };
 

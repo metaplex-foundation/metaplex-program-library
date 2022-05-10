@@ -9,8 +9,9 @@ use anchor_lang::*;
 use mpl_auction_house::{
     pda::{
         find_auction_house_address, find_auction_house_fee_account_address,
-        find_auction_house_treasury_address, find_auctioneer_pda, find_bid_receipt_address,
-        find_escrow_payment_address, find_listing_receipt_address, find_program_as_signer_address,
+        find_auction_house_treasury_address, find_auctioneer_pda,
+        find_auctioneer_trade_state_address, find_bid_receipt_address, find_escrow_payment_address,
+        find_listing_receipt_address, find_program_as_signer_address,
         find_public_bid_trade_state_address, find_purchase_receipt_address,
         find_trade_state_address,
     },
@@ -527,13 +528,12 @@ pub fn sell_mint(
 ) {
     let token = get_associated_token_address(&seller.pubkey(), &test_metadata_mint);
     let (metadata, _) = find_metadata_account(test_metadata_mint);
-    let (seller_trade_state, sts_bump) = find_trade_state_address(
+    let (seller_trade_state, sts_bump) = find_auctioneer_trade_state_address(
         &seller.pubkey(),
         &ahkey,
         &token,
         &ah.treasury_mint,
         &test_metadata_mint,
-        sale_price,
         1,
     );
     let (free_seller_trade_state, free_sts_bump) = find_trade_state_address(
@@ -584,7 +584,6 @@ pub fn sell_mint(
         free_trade_state_bump: free_sts_bump,
         program_as_signer_bump: pas_bump,
         token_size: 1,
-        buyer_price: sale_price,
         start_time,
         end_time,
     }
@@ -639,13 +638,12 @@ pub fn sell(
 ) {
     let token =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let (seller_trade_state, sts_bump) = find_trade_state_address(
+    let (seller_trade_state, sts_bump) = find_auctioneer_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
         &token,
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
-        sale_price,
         1,
     );
     let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
@@ -697,7 +695,6 @@ pub fn sell(
         free_trade_state_bump: free_sts_bump,
         program_as_signer_bump: pas_bump,
         token_size: 1,
-        buyer_price: sale_price,
         start_time,
         end_time,
     }
