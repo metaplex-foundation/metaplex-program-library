@@ -492,6 +492,10 @@
           "type": "u8"
         },
         {
+          "name": "buyerPrice",
+          "type": "u64"
+        },
+        {
           "name": "tokenSize",
           "type": "u64"
         },
@@ -699,11 +703,5 @@
       "name": "BidTooLow",
       "msg": "The bid was lower than the highest bid."
     }
-  ],
-  "metadata": {
-    "address": "neer8g6yJq2mQM6KbnViEDAD4gr3gRZyMMf4F2p3MEh",
-    "origin": "anchor",
-    "binaryVersion": "0.24.2",
-    "libVersion": "~0.24.2"
-  }
+  ]
 }

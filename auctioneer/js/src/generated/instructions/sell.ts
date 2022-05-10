@@ -18,7 +18,6 @@ export type SellInstructionArgs = {
   tradeStateBump: number;
   freeTradeStateBump: number;
   programAsSignerBump: number;
-  buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
   startTime: beet.bignum;
   endTime: beet.bignum;
@@ -38,7 +37,6 @@ const sellStruct = new beet.BeetArgsStruct<
     ['tradeStateBump', beet.u8],
     ['freeTradeStateBump', beet.u8],
     ['programAsSignerBump', beet.u8],
-    ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
     ['startTime', beet.i64],
     ['endTime', beet.i64],
