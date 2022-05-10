@@ -49,6 +49,9 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let edition = ctx.accounts.edition.to_account_info();
     let authority_record = ctx.accounts.collection_authority_record.to_account_info();
     let candy_machine = &mut ctx.accounts.candy_machine;
+    if candy_machine.items_redeemed > 0 {
+        return err!(CandyError::NoChangingCollectionDuringMint);
+    }
     assert_master_edition(&metadata, &edition)?;
     if authority_record.data_is_empty() {
         let approve_collection_infos = vec![

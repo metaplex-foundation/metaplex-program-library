@@ -68,4 +68,6 @@ pub enum CandyError {
     MetadataAccountMustBeEmpty,
     #[msg("Missing set collection during mint IX for Candy Machine with collection set")]
     MissingSetCollectionDuringMint,
+    #[msg("Can't change collection settings after items have begun to be minted")]
+    NoChangingCollectionDuringMint,
 }
