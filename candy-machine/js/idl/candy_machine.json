@@ -855,6 +855,11 @@
       "code": 6032,
       "name": "MissingSetCollectionDuringMint",
       "msg": "Missing set collection during mint IX for Candy Machine with collection set"
+    },
+    {
+      "code": 6033,
+      "name": "NoChangingCollectionDuringMint",
+      "msg": "Can't change collection settings after items have begun to be minted"
     }
   ],
   "metadata": {

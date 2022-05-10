@@ -710,6 +710,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * NoChangingCollectionDuringMint: 'Can't change collection settings after items have begun to be minted'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoChangingCollectionDuringMintError extends Error {
+  readonly code: number = 0x1791;
+  readonly name: string = 'NoChangingCollectionDuringMint';
+  constructor() {
+    super("Can't change collection settings after items have begun to be minted");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoChangingCollectionDuringMintError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1791, () => new NoChangingCollectionDuringMintError());
+createErrorFromNameLookup.set(
+  'NoChangingCollectionDuringMint',
+  () => new NoChangingCollectionDuringMintError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
