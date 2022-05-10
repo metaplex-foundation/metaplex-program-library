@@ -3,7 +3,9 @@ use anyhow::Result;
 use chrono::NaiveDateTime;
 use console::style;
 use mpl_candy_machine::{EndSettingType, WhitelistMintMode};
+use spl_associated_token_account::get_associated_token_address;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use crate::cache::load_cache;
 use crate::candy_machine::*;
@@ -199,6 +201,17 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         );
     } else {
         print_with_style("", "gatekeeper", "none".to_string());
+    }
+
+    if let Some(spl_token) = cndy_state.token_mint {
+        let client = Arc::new(setup_client(&sugar_config)?);
+        let program = client.program(candy_machine_id);
+        let spl_token_account = get_associated_token_address(&program.payer(), &spl_token);
+        print_with_style("", "spl token", spl_token.to_string());
+        print_with_style("", "spl token account", spl_token_account.to_string());
+    } else {
+        print_with_style("", "spl token", "none".to_string());
+        print_with_style("", "spl token account", "none".to_string());
     }
 
     Ok(())
