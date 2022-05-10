@@ -128,7 +128,7 @@ pub fn auctioneer_buy<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
-    assert_auction_valid(&ctx.accounts.listing_config)?;
+    assert_auction_active(&ctx.accounts.listing_config)?;
     assert_higher_bid(&ctx.accounts.listing_config, buyer_price)?;
     ctx.accounts.listing_config.highest_bid.amount = buyer_price;
     ctx.accounts.listing_config.highest_bid.buyer_trade_state =

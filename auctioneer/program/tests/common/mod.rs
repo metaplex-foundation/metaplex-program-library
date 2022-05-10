@@ -33,3 +33,4 @@ pub const ONE_SOL: u64 = 1_000_000_000;
 
 pub const AUCTION_NOT_STARTED: u32 = 6001;
 pub const AUCTION_ENDED: u32 = 6002;
+pub const AUCTION_ACTIVE: u32 = 6003;

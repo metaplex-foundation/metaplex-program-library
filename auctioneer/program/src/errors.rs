@@ -14,6 +14,10 @@ pub enum AuctioneerError {
     #[msg("Auction has ended")]
     AuctionEnded,
 
+    // 6002
+    #[msg("Auction has not ended yet")]
+    AuctionActive,
+
     // 6003
     #[msg("The bid was lower than the highest bid.")]
     BidTooLow,

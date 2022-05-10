@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{errors::*, sell::config::*};
 
-pub fn assert_auction_valid(listing_config: &Account<ListingConfig>) -> Result<()> {
+pub fn assert_auction_active(listing_config: &Account<ListingConfig>) -> Result<()> {
     msg!(
         "Start: {:?}, End: {:?}",
         listing_config.start_time,
@@ -18,6 +18,19 @@ pub fn assert_auction_valid(listing_config: &Account<ListingConfig>) -> Result<(
         return err!(AuctioneerError::AuctionNotStarted);
     } else if current_timestamp > listing_config.end_time {
         return err!(AuctioneerError::AuctionEnded);
+    }
+
+    Ok(())
+}
+
+pub fn assert_auction_over(listing_config: &Account<ListingConfig>) -> Result<()> {
+    let clock = Clock::get()?;
+    let current_timestamp = clock.unix_timestamp;
+
+    msg!("Current: {:?}", current_timestamp);
+
+    if current_timestamp < listing_config.end_time {
+        return err!(AuctioneerError::AuctionActive);
     }
 
     Ok(())
