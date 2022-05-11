@@ -133,4 +133,7 @@ pub enum ErrorCode {
     // 6042
     #[msg("Wrong collection mint key")]
     WrongCollectionMintKey,
+    // 6043
+    #[msg("Wrong gating token")]
+    WrongGatingToken,
 }
