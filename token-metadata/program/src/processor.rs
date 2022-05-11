@@ -86,30 +86,9 @@ pub fn process_instruction<'a>(
                 args.is_mutable,
             )
         }
-        MetadataInstruction::CreateMetadataAccountV3(args) => {
-            msg!("Instruction: Create Metadata Accounts v3");
-            process_create_metadata_accounts_v3(
-                program_id,
-                accounts,
-                args.data,
-                false,
-                args.is_mutable,
-            )
-        }
         MetadataInstruction::UpdateMetadataAccountV2(args) => {
             msg!("Instruction: Update Metadata Accounts v2");
             process_update_metadata_accounts_v2(
-                program_id,
-                accounts,
-                args.data,
-                args.update_authority,
-                args.primary_sale_happened,
-                args.is_mutable,
-            )
-        }
-        MetadataInstruction::UpdateMetadataAccountV3(args) => {
-            msg!("Instruction: Update Metadata Accounts v3");
-            process_update_metadata_accounts_v3(
                 program_id,
                 accounts,
                 args.data,
@@ -226,6 +205,27 @@ pub fn process_instruction<'a>(
         MetadataInstruction::ThawDelegatedAccount => {
             msg!("Instruction: Thaw Delegated Account");
             process_thaw_delegated_account(program_id, accounts)
+        }
+        MetadataInstruction::CreateMetadataAccountV3(args) => {
+            msg!("Instruction: Create Metadata Accounts v3");
+            process_create_metadata_accounts_v3(
+                program_id,
+                accounts,
+                args.data,
+                false,
+                args.is_mutable,
+            )
+        }
+        MetadataInstruction::UpdateMetadataAccountV3(args) => {
+            msg!("Instruction: Update Metadata Accounts v3");
+            process_update_metadata_accounts_v3(
+                program_id,
+                accounts,
+                args.data,
+                args.update_authority,
+                args.primary_sale_happened,
+                args.is_mutable,
+            )
         }
     }
 }

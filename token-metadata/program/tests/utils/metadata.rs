@@ -309,6 +309,48 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
+    pub async fn update_v3(
+        &self,
+        context: &mut ProgramTestContext,
+        name: String,
+        symbol: String,
+        uri: String,
+        creators: Option<Vec<Creator>>,
+        seller_fee_basis_points: u16,
+        is_mutable: bool,
+        collection: Option<Collection>,
+        uses: Option<Uses>,
+        mint: Pubkey,
+        edition: Option<Pubkey>,
+    ) -> transport::Result<()> {
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v3(
+                id(),
+                self.pubkey,
+                context.payer.pubkey(),
+                None,
+                mint,
+                edition,
+                Some(DataV2 {
+                    name,
+                    symbol,
+                    uri,
+                    creators,
+                    seller_fee_basis_points,
+                    collection,
+                    uses,
+                }),
+                None,
+                Some(is_mutable),
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
+
     pub async fn verify_collection(
         &self,
         context: &mut ProgramTestContext,

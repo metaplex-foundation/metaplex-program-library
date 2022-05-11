@@ -287,13 +287,6 @@ pub enum MetadataInstruction {
     #[account(1, signer, name="update_authority", desc="Update authority key")]
     UpdateMetadataAccountV2(UpdateMetadataAccountArgsV2),
 
-    /// Update a Metadata with is_mutable as a parameter
-    #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, name="update_authority", desc="Update authority key")]
-    #[account(2, optional, writable, name="edition",  desc="Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']")]
-    #[account(3, name="mint", desc="Mint of token asset")]
-    UpdateMetadataAccountV3(UpdateMetadataAccountArgsV3),
-
     /// Create Metadata object.
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
     #[account(1, name="mint", desc="Mint of token asset")]
@@ -303,18 +296,6 @@ pub enum MetadataInstruction {
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
     CreateMetadataAccountV2(CreateMetadataAccountArgsV2),
-
-
-      /// Create Metadata object.
-      #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
-      #[account(1, name="mint", desc="Mint of token asset")]
-      #[account(2, signer, name="mint_authority", desc="Mint authority")]
-      #[account(3, signer, writable, name="payer", desc="payer")]
-      #[account(4, name="update_authority", desc="update authority info")]
-      #[account(5, name="system_program", desc="System program")]
-      #[account(6, name="rent", desc="Rent info")]
-      #[account(7, optional, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
-      CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
 
     /// Register a Metadata as a Master Edition V2, which means Edition V2s can be minted.
     /// Henceforth, no further tokens will be mintable from this primary mint. Will throw an error if more than one
@@ -439,7 +420,25 @@ pub enum MetadataInstruction {
     /// Remove Creator Verificaton.
     #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(1, signer, name="creator", desc="Creator")]
-    RemoveCreatorVerification
+    RemoveCreatorVerification,
+
+       /// Update a Metadata with is_mutable as a parameter
+       #[account(0, writable, name="metadata", desc="Metadata account")]
+       #[account(1, signer, name="update_authority", desc="Update authority key")]
+       #[account(2, name="mint", desc="Mint of token asset")]
+       #[account(3, optional, writable, name="edition",  desc="Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']")]
+       UpdateMetadataAccountV3(UpdateMetadataAccountArgsV3),
+
+         /// Create Metadata object.
+      #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+      #[account(1, name="mint", desc="Mint of token asset")]
+      #[account(2, signer, name="mint_authority", desc="Mint authority")]
+      #[account(3, signer, writable, name="payer", desc="payer")]
+      #[account(4, name="update_authority", desc="update authority info")]
+      #[account(5, name="system_program", desc="System program")]
+      #[account(6, name="rent", desc="Rent info")]
+      #[account(7, optional, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
+      CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -645,8 +644,8 @@ pub fn update_metadata_accounts_v3(
     metadata_account: Pubkey,
     update_authority: Pubkey,
     new_update_authority: Option<Pubkey>,
-    edition: Option<Pubkey>,
     mint: Pubkey,
+    edition: Option<Pubkey>,
     data: Option<DataV2>,
     primary_sale_happened: Option<bool>,
     is_mutable: Option<bool>,
