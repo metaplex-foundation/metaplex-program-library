@@ -204,11 +204,8 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
     }
 
     if let Some(spl_token) = cndy_state.token_mint {
-        let client = Arc::new(setup_client(&sugar_config)?);
-        let program = client.program(candy_machine_id);
-        let spl_token_account = get_associated_token_address(&program.payer(), &spl_token);
         print_with_style("", "spl token", spl_token.to_string());
-        print_with_style("", "spl token account", spl_token_account.to_string());
+        print_with_style("", "spl token account", cndy_state.wallet.to_string());
     } else {
         print_with_style("", "spl token", "none".to_string());
         print_with_style("", "spl token account", "none".to_string());
