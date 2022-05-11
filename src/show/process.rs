@@ -3,9 +3,7 @@ use anyhow::Result;
 use chrono::NaiveDateTime;
 use console::style;
 use mpl_candy_machine::{EndSettingType, WhitelistMintMode};
-use spl_associated_token_account::get_associated_token_address;
 use std::str::FromStr;
-use std::sync::Arc;
 
 use crate::cache::load_cache;
 use crate::candy_machine::*;
