@@ -66,7 +66,7 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
     print_with_style("", "wallet", cndy_state.wallet.to_string());
 
     if let Some(token_mint) = cndy_state.token_mint {
-        println!(":.. {}", token_mint);
+        print_with_style("", "spl token", token_mint.to_string());
     }
 
     print_with_style("", "max supply", cndy_data.max_supply.to_string());
@@ -199,14 +199,6 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         );
     } else {
         print_with_style("", "gatekeeper", "none".to_string());
-    }
-
-    if let Some(spl_token) = cndy_state.token_mint {
-        print_with_style("", "spl token", spl_token.to_string());
-        print_with_style("", "spl token account", cndy_state.wallet.to_string());
-    } else {
-        print_with_style("", "spl token", "none".to_string());
-        print_with_style("", "spl token account", "none".to_string());
     }
 
     Ok(())
