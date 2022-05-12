@@ -20,7 +20,8 @@ const RevokeCollectionAuthorityStruct = new beet.BeetArgsStruct<{
  * Accounts required by the _RevokeCollectionAuthority_ instruction
  *
  * @property [_writable_] collectionAuthorityRecord Collection Authority Record PDA
- * @property [_writable_, **signer**] updateAuthority Update Authority of Collection NFT
+ * @property [_writable_, **signer**] delegateAuthority Delegated Collection Authority
+ * @property [_writable_, **signer**] revokeAuthority Update Authority, or Delegated Authority, of Collection NFT
  * @property [] metadata Metadata account
  * @property [] mint Mint of Metadata
  * @category Instructions
@@ -29,7 +30,8 @@ const RevokeCollectionAuthorityStruct = new beet.BeetArgsStruct<{
  */
 export type RevokeCollectionAuthorityInstructionAccounts = {
   collectionAuthorityRecord: web3.PublicKey;
-  updateAuthority: web3.PublicKey;
+  delegateAuthority: web3.PublicKey;
+  revokeAuthority: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
 };
@@ -48,7 +50,8 @@ const revokeCollectionAuthorityInstructionDiscriminator = 24;
 export function createRevokeCollectionAuthorityInstruction(
   accounts: RevokeCollectionAuthorityInstructionAccounts,
 ) {
-  const { collectionAuthorityRecord, updateAuthority, metadata, mint } = accounts;
+  const { collectionAuthorityRecord, delegateAuthority, revokeAuthority, metadata, mint } =
+    accounts;
 
   const [data] = RevokeCollectionAuthorityStruct.serialize({
     instructionDiscriminator: revokeCollectionAuthorityInstructionDiscriminator,
@@ -60,7 +63,12 @@ export function createRevokeCollectionAuthorityInstruction(
       isSigner: false,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: delegateAuthority,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: revokeAuthority,
       isWritable: true,
       isSigner: true,
     },
