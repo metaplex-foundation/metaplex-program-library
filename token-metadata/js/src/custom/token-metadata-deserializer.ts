@@ -33,8 +33,8 @@ export function deserializeTokenMetadata(buf: Buffer, offset = 0): [Metadata, nu
   cursor += beetSolana.publicKey.byteSize;
 
   // data
-  const [data, off] = dataBeet.deserialize(buf, cursor);
-  cursor = off;
+  const [data, dataDelta] = dataBeet.deserialize(buf, cursor);
+  cursor = dataDelta;
 
   // primarySaleHappened
   const primarySaleHappened = beet.bool.read(buf, cursor);
@@ -54,16 +54,16 @@ export function deserializeTokenMetadata(buf: Buffer, offset = 0): [Metadata, nu
   // -----------------
 
   // tokenStandard
-  const [tokenStandard, tokenOff] = tryReadOption(beet.coption(tokenStandardBeet), buf, cursor);
-  cursor += tokenOff;
+  const [tokenStandard, tokenDelta] = tryReadOption(beet.coption(tokenStandardBeet), buf, cursor);
+  cursor += tokenDelta;
 
   // collection
-  const [collection, collectionOff] = tryReadOption(beet.coption(collectionBeet), buf, cursor);
-  cursor += collectionOff;
+  const [collection, collectionDelta] = tryReadOption(beet.coption(collectionBeet), buf, cursor);
+  cursor += collectionDelta;
 
   // uses
-  const [uses, usesOff] = tryReadOption(beet.coption(usesBeet), buf, cursor);
-  cursor += usesOff;
+  const [uses, usesDelta] = tryReadOption(beet.coption(usesBeet), buf, cursor);
+  cursor += usesDelta;
 
   const metadata = {
     key,
