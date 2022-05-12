@@ -13,6 +13,9 @@ import { Data, dataBeet } from '../types/Data';
 import { TokenStandard, tokenStandardBeet } from '../types/TokenStandard';
 import { Collection, collectionBeet } from '../types/Collection';
 import { Uses, usesBeet } from '../types/Uses';
+// TODO(thlorenz): This is temporarily added here manually until solita
+// supports overriding de/serialization
+import { deserializeTokenMetadata } from '../../custom/token-metadata-deserializer';
 
 /**
  * Arguments used to create {@link Metadata}
@@ -100,7 +103,9 @@ export class Metadata implements MetadataArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [Metadata, number] {
-    return metadataBeet.deserialize(buf, offset);
+    // TODO(thlorenz): This is temporarily added here manually until solita
+    // supports overriding de/serialization
+    return deserializeTokenMetadata(buf, offset);
   }
 
   /**
