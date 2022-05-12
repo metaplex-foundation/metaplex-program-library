@@ -400,7 +400,49 @@ pub enum MetadataInstruction {
     /// Remove Creator Verificaton.
     #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
     #[account(1, signer, name="creator", desc="Creator")]
-    RemoveCreatorVerification
+    RemoveCreatorVerification,
+
+    /// Completely burn a NFT, including closing the metadata account.
+    #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
+    #[account(1, signer, name="creator", desc="Creator")]
+    #[account(2, name="mint", desc="Mint of the NFT")]
+    #[account(3, name="token_account", desc="Token account to close")]
+    #[account(4, name="edition_account", desc="MasterEdition2 or Edition Account of the NFT")]
+    #[account(5, writable, name="collection_metadata", desc="Metadata of the Collection")]
+    #[account(6, name="spl token program", desc="SPL Token Program")]
+    BurnNFT,
+
+    /// Verify Collection v1.3--supports Collection Details.
+    /// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection.
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, signer, writable, name="payer", desc="payer")]
+    #[account(3, name="collection_mint", desc="Mint of the Collection")]
+    #[account(4, writable, name="collection", desc="Metadata Account of the Collection")]
+    #[account(5, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
+    VerifyCollectionV2,
+
+    /// Unverify Collection v1.3--supports Collection Details.
+    /// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection.
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Authority")]
+    #[account(2, name="collection_mint", desc="Mint of the Collection")]
+    #[account(3, writable, name="collection", desc="Metadata Account of the Collection")]
+    #[account(4, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
+    #[account(5, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    UnverifyCollectionV2,
+
+    /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
+    /// with collection and [verify_collection] on the NFT/Collection in one instruction.
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, signer, writable, name="payer", desc="Payer")]
+    #[account(3, name="update_authority", desc="Update Authority of Collection NFT and NFT")]
+    #[account(4, name="collection_mint", desc="Mint of the Collection")]
+    #[account(5, writable, name="collection", desc="Metadata Account of the Collection")]
+    #[account(6, writable, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
+    #[account(7, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    SetAndVerifyCollectionV2,
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1259,6 +1301,142 @@ pub fn thaw_delegated_account(
             AccountMeta::new_readonly(spl_token::id(), false),
         ],
         data: MetadataInstruction::ThawDelegatedAccount
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+///# Burn NFT
+///
+/// Burn an NFT, closing its token, metadata and edition accounts.
+///
+/// 0. `[writable]` NFT metadata
+/// 1. `[signer]` Owner of NFT
+/// 2. `[]` Mint of NFT
+/// 3. `[]` NFT token account
+/// 4. `[]` NFT edition account
+/// 5. `[]` Collection metadata account (if applicable)
+/// 6. `[]` SPL Token program.
+pub fn burn_nft(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    owner: Pubkey,
+    mint: Pubkey,
+    token: Pubkey,
+    edition: Pubkey,
+    collection_metadata: Pubkey,
+    spl_token: Pubkey,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata, false),
+            AccountMeta::new(owner, true),
+            AccountMeta::new_readonly(mint, false),
+            AccountMeta::new(token, false),
+            AccountMeta::new(edition, false),
+            AccountMeta::new(collection_metadata, false),
+            AccountMeta::new_readonly(spl_token, false),
+        ],
+        data: MetadataInstruction::BurnNFT.try_to_vec().unwrap(),
+    }
+}
+
+/// # Verify Collection V2 -- Supports v1.3 Collection Details
+///
+/// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection
+///
+/// ### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[signer]` Collection Update authority
+///   2. `[signer]` payer
+///   3. `[]` Mint of the Collection
+///   4. `[writable]` Metadata Account of the Collection
+///   5. `[]` MasterEdition2 Account of the Collection Token
+#[allow(clippy::too_many_arguments)]
+pub fn verify_collection_v2(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    collection_authority: Pubkey,
+    payer: Pubkey,
+    collection_mint: Pubkey,
+    collection: Pubkey,
+    collection_master_edition_account: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(collection_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(collection_mint, false),
+        AccountMeta::new(collection, false),
+        AccountMeta::new_readonly(collection_master_edition_account, false),
+    ];
+
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::VerifyCollectionV2
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+/// # Unverify Collection V2 -- Supports v1.3 Collection Details
+///
+/// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection
+///
+/// ### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[signer]` Collection Authority
+///   2. `[signer]` payer
+///   3. `[]` Mint of the Collection
+///   4. `[writable]` Metadata Account of the Collection
+///   5. `[]` MasterEdition2 Account of the Collection Token
+#[allow(clippy::too_many_arguments)]
+pub fn unverify_collection_v2(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    collection_authority: Pubkey,
+    collection_mint: Pubkey,
+    collection: Pubkey,
+    collection_master_edition_account: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(collection_authority, true),
+        AccountMeta::new_readonly(collection_mint, false),
+        AccountMeta::new(collection, false),
+        AccountMeta::new_readonly(collection_master_edition_account, false),
+    ];
+
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::UnverifyCollectionV2
             .try_to_vec()
             .unwrap(),
     }

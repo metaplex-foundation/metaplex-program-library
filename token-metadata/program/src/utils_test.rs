@@ -4,7 +4,7 @@ mod puff_out_test {
     use solana_program::pubkey::Pubkey;
 
     use crate::{
-        state::{Data, Key, Metadata},
+        state::{Data, ItemDetails, Key, Metadata},
         utils::{puff_out_data_fields, puffed_out_string},
     };
 
@@ -45,6 +45,7 @@ mod puff_out_test {
             collection: None,
             uses: None,
             token_standard: None,
+            item_details: ItemDetails::None,
         };
 
         puff_out_data_fields(&mut metadata);

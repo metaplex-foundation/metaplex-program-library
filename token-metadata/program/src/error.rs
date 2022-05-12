@@ -386,6 +386,10 @@ pub enum MetadataError {
     /// Revoke Collection Authority signer is incorrect
     #[error("Revoke Collection Authority signer is incorrect")]
     RevokeCollectionAuthoritySignerIncorrect,
+
+    /// Token close failed
+    #[error("Token close failed")]
+    TokenCloseFailed,
 }
 
 impl PrintProgramError for MetadataError {

@@ -2,10 +2,10 @@ use crate::{
     assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
     error::MetadataError,
     state::{
-        get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, Metadata,
-        TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
-        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
-        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
+        get_reservation_list, Data, DataV2, EditionMarker, ItemDetails, Key, MasterEditionV1,
+        Metadata, TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT,
+        MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN,
+        MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -690,6 +690,32 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
     result.map_err(|_| MetadataError::TokenBurnFailed.into())
 }
 
+pub fn spl_token_close(params: TokenCloseParams<'_, '_>) -> ProgramResult {
+    let TokenCloseParams {
+        account,
+        destination,
+        owner,
+        authority_signer_seeds,
+        token_program,
+    } = params;
+    let mut seeds: Vec<&[&[u8]]> = vec![];
+    if let Some(seed) = authority_signer_seeds {
+        seeds.push(seed);
+    }
+    let result = invoke_signed(
+        &spl_token::instruction::close_account(
+            token_program.key,
+            account.key,
+            destination.key,
+            owner.key,
+            &[],
+        )?,
+        &[account, destination, owner, token_program],
+        seeds.as_slice(),
+    );
+    result.map_err(|_| MetadataError::TokenCloseFailed.into())
+}
+
 /// TokenBurnParams
 pub struct TokenBurnParams<'a: 'b, 'b> {
     /// mint
@@ -700,6 +726,20 @@ pub struct TokenBurnParams<'a: 'b, 'b> {
     pub amount: u64,
     /// authority
     pub authority: AccountInfo<'a>,
+    /// authority_signer_seeds
+    pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
+    /// token_program
+    pub token_program: AccountInfo<'a>,
+}
+
+/// TokenCloseParams
+pub struct TokenCloseParams<'a: 'b, 'b> {
+    /// Token account
+    pub account: AccountInfo<'a>,
+    /// Destination for redeemed SOL.
+    pub destination: AccountInfo<'a>,
+    /// Owner of the token account.
+    pub owner: AccountInfo<'a>,
     /// authority_signer_seeds
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
     /// token_program
@@ -1183,4 +1223,58 @@ pub fn assert_delegated_tokens(
         return Err(MetadataError::InvalidDelegate.into());
     }
     Ok(())
+}
+
+pub fn increment_collection_size(
+    metadata: &mut Metadata,
+    metadata_info: &AccountInfo,
+) -> ProgramResult {
+    match metadata.item_details {
+        ItemDetails::None => {
+            msg!("No collection details found. Cannot increment collection size.");
+            Ok(())
+        }
+        ItemDetails::CollectionInfo {
+            tradeable,
+            is_sized,
+            size,
+        } => {
+            if is_sized {
+                metadata.item_details = ItemDetails::CollectionInfo {
+                    tradeable,
+                    is_sized,
+                    size: size + 1,
+                };
+                metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+            }
+            Ok(())
+        }
+    }
+}
+
+pub fn decrement_collection_size(
+    metadata: &mut Metadata,
+    metadata_info: &AccountInfo,
+) -> ProgramResult {
+    match metadata.item_details {
+        ItemDetails::None => {
+            msg!("No collection details found. Cannot increment collection size.");
+            Ok(())
+        }
+        ItemDetails::CollectionInfo {
+            tradeable,
+            is_sized,
+            size,
+        } => {
+            if is_sized {
+                metadata.item_details = ItemDetails::CollectionInfo {
+                    tradeable,
+                    is_sized,
+                    size: size - 1,
+                };
+                metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+            }
+            Ok(())
+        }
+    }
 }
