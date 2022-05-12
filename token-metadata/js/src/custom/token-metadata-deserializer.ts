@@ -54,15 +54,15 @@ export function deserializeTokenMetadata(buf: Buffer, offset = 0): [Metadata, nu
   // -----------------
 
   // tokenStandard
-  const [tokenStandard, tokenOff] = tryReadOption(beet.coption(tokenStandardBeet), buf, offset);
+  const [tokenStandard, tokenOff] = tryReadOption(beet.coption(tokenStandardBeet), buf, cursor);
   cursor += tokenOff;
 
   // collection
-  const [collection, collectionOff] = tryReadOption(beet.coption(collectionBeet), buf, offset);
+  const [collection, collectionOff] = tryReadOption(beet.coption(collectionBeet), buf, cursor);
   cursor += collectionOff;
 
   // uses
-  const [uses, usesOff] = tryReadOption(beet.coption(usesBeet), buf, offset);
+  const [uses, usesOff] = tryReadOption(beet.coption(usesBeet), buf, cursor);
   cursor += usesOff;
 
   const metadata = {
@@ -90,7 +90,7 @@ function tryReadOption<T>(
     const fixed = optionBeet.toFixedFromData(buf, offset);
     const value = fixed.read(buf, offset);
     return [value, fixed.byteSize];
-  } catch (_) {
+  } catch (err) {
     return [null, optionBeet.toFixedFromValue(null).byteSize];
   }
 }
