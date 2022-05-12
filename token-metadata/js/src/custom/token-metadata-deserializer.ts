@@ -65,7 +65,7 @@ export function deserializeTokenMetadata(buf: Buffer, offset = 0): [Metadata, nu
   const [uses, usesDelta] = tryReadOption(beet.coption(usesBeet), buf, cursor);
   cursor += usesDelta;
 
-  const metadata = {
+  const args = {
     key,
     updateAuthority,
     mint,
@@ -78,7 +78,7 @@ export function deserializeTokenMetadata(buf: Buffer, offset = 0): [Metadata, nu
     uses,
   };
 
-  return [metadata as Metadata, cursor];
+  return [Metadata.fromArgs(args), cursor];
 }
 
 function tryReadOption<T>(
