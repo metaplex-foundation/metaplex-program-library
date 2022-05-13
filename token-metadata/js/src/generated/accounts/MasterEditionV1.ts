@@ -84,7 +84,7 @@ export class MasterEditionV1 implements MasterEditionV1Args {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [MasterEditionV1, number] {
-    return masterEditionV1Beet.deserialize(buf, offset);
+    return resolvedDeserialize(buf, offset);
   }
 
   /**
@@ -92,7 +92,7 @@ export class MasterEditionV1 implements MasterEditionV1Args {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return masterEditionV1Beet.serialize(this);
+    return resolvedSerialize(this);
   }
 
   /**
@@ -130,7 +130,17 @@ export class MasterEditionV1 implements MasterEditionV1Args {
   pretty() {
     return {
       key: 'Key.' + Key[this.key],
-      supply: this.supply,
+      supply: (() => {
+        const x = <{ toNumber: () => number }>this.supply;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       maxSupply: this.maxSupply,
       printingMint: this.printingMint.toBase58(),
       oneTimePrintingAuthorizationMint: this.oneTimePrintingAuthorizationMint.toBase58(),
@@ -153,3 +163,6 @@ export const masterEditionV1Beet = new beet.FixableBeetStruct<MasterEditionV1, M
   MasterEditionV1.fromArgs,
   'MasterEditionV1',
 );
+
+const resolvedSerialize = masterEditionV1Beet.serialize.bind(masterEditionV1Beet);
+const resolvedDeserialize = masterEditionV1Beet.deserialize.bind(masterEditionV1Beet);

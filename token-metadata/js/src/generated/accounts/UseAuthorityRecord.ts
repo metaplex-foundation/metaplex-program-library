@@ -73,7 +73,7 @@ export class UseAuthorityRecord implements UseAuthorityRecordArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [UseAuthorityRecord, number] {
-    return useAuthorityRecordBeet.deserialize(buf, offset);
+    return resolvedDeserialize(buf, offset);
   }
 
   /**
@@ -81,7 +81,7 @@ export class UseAuthorityRecord implements UseAuthorityRecordArgs {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return useAuthorityRecordBeet.serialize(this);
+    return resolvedSerialize(this);
   }
 
   /**
@@ -120,7 +120,17 @@ export class UseAuthorityRecord implements UseAuthorityRecordArgs {
   pretty() {
     return {
       key: 'Key.' + Key[this.key],
-      allowedUses: this.allowedUses,
+      allowedUses: (() => {
+        const x = <{ toNumber: () => number }>this.allowedUses;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       bump: this.bump,
     };
   }
@@ -142,3 +152,6 @@ export const useAuthorityRecordBeet = new beet.BeetStruct<
   UseAuthorityRecord.fromArgs,
   'UseAuthorityRecord',
 );
+
+const resolvedSerialize = useAuthorityRecordBeet.serialize.bind(useAuthorityRecordBeet);
+const resolvedDeserialize = useAuthorityRecordBeet.deserialize.bind(useAuthorityRecordBeet);

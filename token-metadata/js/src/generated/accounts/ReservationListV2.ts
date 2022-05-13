@@ -88,7 +88,7 @@ export class ReservationListV2 implements ReservationListV2Args {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [ReservationListV2, number] {
-    return reservationListV2Beet.deserialize(buf, offset);
+    return resolvedDeserialize(buf, offset);
   }
 
   /**
@@ -96,7 +96,7 @@ export class ReservationListV2 implements ReservationListV2Args {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return reservationListV2Beet.serialize(this);
+    return resolvedSerialize(this);
   }
 
   /**
@@ -140,8 +140,28 @@ export class ReservationListV2 implements ReservationListV2Args {
       masterEdition: this.masterEdition.toBase58(),
       supplySnapshot: this.supplySnapshot,
       reservations: this.reservations,
-      totalReservationSpots: this.totalReservationSpots,
-      currentReservationSpots: this.currentReservationSpots,
+      totalReservationSpots: (() => {
+        const x = <{ toNumber: () => number }>this.totalReservationSpots;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
+      currentReservationSpots: (() => {
+        const x = <{ toNumber: () => number }>this.currentReservationSpots;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
     };
   }
 }
@@ -165,3 +185,6 @@ export const reservationListV2Beet = new beet.FixableBeetStruct<
   ReservationListV2.fromArgs,
   'ReservationListV2',
 );
+
+const resolvedSerialize = reservationListV2Beet.serialize.bind(reservationListV2Beet);
+const resolvedDeserialize = reservationListV2Beet.deserialize.bind(reservationListV2Beet);

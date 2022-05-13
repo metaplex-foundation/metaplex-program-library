@@ -42,7 +42,6 @@ const revokeCollectionAuthorityInstructionDiscriminator = 24;
  * Creates a _RevokeCollectionAuthority_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category RevokeCollectionAuthority
  * @category generated

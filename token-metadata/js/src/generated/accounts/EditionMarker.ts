@@ -68,7 +68,7 @@ export class EditionMarker implements EditionMarkerArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [EditionMarker, number] {
-    return editionMarkerBeet.deserialize(buf, offset);
+    return resolvedDeserialize(buf, offset);
   }
 
   /**
@@ -76,7 +76,7 @@ export class EditionMarker implements EditionMarkerArgs {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return editionMarkerBeet.serialize(this);
+    return resolvedSerialize(this);
   }
 
   /**
@@ -132,3 +132,6 @@ export const editionMarkerBeet = new beet.BeetStruct<EditionMarker, EditionMarke
   EditionMarker.fromArgs,
   'EditionMarker',
 );
+
+const resolvedSerialize = editionMarkerBeet.serialize.bind(editionMarkerBeet);
+const resolvedDeserialize = editionMarkerBeet.deserialize.bind(editionMarkerBeet);
