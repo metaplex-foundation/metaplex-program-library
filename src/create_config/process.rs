@@ -142,7 +142,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     // checks if we have an assets dir and count the number of files
     // assumes 0 in case of error since assets_dir is optional
     let num_files = match count_files(&args.assets_dir) {
-        Ok(number) => number,
+        Ok(number) => number.len(),
         _ => 0,
     };
 

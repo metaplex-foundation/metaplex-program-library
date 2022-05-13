@@ -50,12 +50,13 @@ impl AWSHandler {
     /// Send an object to AWS and wait for a response.
     async fn send_to_aws(aws_client: Arc<Client>, info: ObjectInfo) -> Result<(String, String)> {
         let data = match info.data_type {
-            DataType::Media => fs::read(&info.file_path)?,
+            DataType::Img => fs::read(&info.file_path)?,
             DataType::Metadata => {
                 // replaces the media link without modifying the original file to avoid
                 // changing the hash of the metadata file
                 get_updated_metadata(&info.file_path, &info.media_link)?.into_bytes()
             }
+            DataType::Movie => todo!(),
         };
 
         let key = bs58::encode(&info.file_path).into_string();
@@ -103,8 +104,9 @@ impl UploadHandler for AWSHandler {
             let item = assets.get(index).unwrap();
             // chooses the file path based on the data type
             let file_path = match data_type {
-                DataType::Media => item.media.clone(),
+                DataType::Img => item.media.clone(),
                 DataType::Metadata => item.metadata.clone(),
+                DataType::Movie => todo!(),
             };
 
             let path = Path::new(&file_path);
@@ -125,8 +127,9 @@ impl UploadHandler for AWSHandler {
         };
 
         let content_type = match data_type {
-            DataType::Media => format!("image/{}", extension),
+            DataType::Img => format!("image/{}", extension),
             DataType::Metadata => "application/json".to_string(),
+            DataType::Movie => todo!(),
         };
 
         println!("\nSending data: (Ctrl+C to abort)");
@@ -190,8 +193,9 @@ impl UploadHandler for AWSHandler {
                         let item = cache.items.0.get_mut(&val.0).unwrap();
 
                         match data_type {
-                            DataType::Media => item.media_link = link,
+                            DataType::Img => item.media_link = link,
                             DataType::Metadata => item.metadata_link = link,
+                            DataType::Movie => todo!(),
                         }
                         // updates the progress bar
                         pb.inc(1);

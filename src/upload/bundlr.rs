@@ -199,12 +199,13 @@ impl BundlrHandler {
         tx_info: TxInfo,
     ) -> Result<(String, String)> {
         let data = match tx_info.data_type {
-            DataType::Media => fs::read(&tx_info.file_path)?,
+            DataType::Img => fs::read(&tx_info.file_path)?,
             DataType::Metadata => {
                 // replaces the media link without modifying the original file to avoid
                 // changing the hash of the metadata file
                 get_updated_metadata(&tx_info.file_path, &tx_info.media_link)?.into_bytes()
             }
+            DataType::Movie => todo!(),
         };
 
         let tx = bundlr_client.create_transaction_with_tags(data, tx_info.tag);
@@ -339,8 +340,9 @@ impl UploadHandler for BundlrHandler {
             };
             // chooses the file path based on the data type
             let file_path = match data_type {
-                DataType::Media => item.media.clone(),
+                DataType::Img => item.media.clone(),
                 DataType::Metadata => item.metadata.clone(),
+                DataType::Movie => todo!(),
             };
 
             let path = Path::new(&file_path);
@@ -363,8 +365,9 @@ impl UploadHandler for BundlrHandler {
         let sugar_tag = Tag::new("App-Name".into(), format!("Sugar {}", crate_version!()));
 
         let media_tag = match data_type {
-            DataType::Media => Tag::new("Content-Type".into(), format!("image/{extension}")),
+            DataType::Img => Tag::new("Content-Type".into(), format!("image/{extension}")),
             DataType::Metadata => Tag::new("Content-Type".into(), "application/json".to_string()),
+            DataType::Movie => todo!(),
         };
 
         // upload data to bundlr
@@ -424,8 +427,9 @@ impl UploadHandler for BundlrHandler {
                         let item = cache.items.0.get_mut(&val.0).unwrap();
 
                         match data_type {
-                            DataType::Media => item.media_link = link,
+                            DataType::Img => item.media_link = link,
                             DataType::Metadata => item.metadata_link = link,
+                            DataType::Movie => todo!(),
                         }
                         // updates the progress bar
                         pb.inc(1);

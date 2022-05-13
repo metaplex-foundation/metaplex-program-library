@@ -5,7 +5,7 @@ use regex::Regex;
 use ring::digest::{Context, SHA256};
 use serde_json;
 use std::{
-    fs::{self, File, OpenOptions},
+    fs::{self, DirEntry, File, OpenOptions},
     io::{BufReader, Read},
     sync::Arc,
 };
@@ -24,8 +24,9 @@ pub struct UploadDataArgs<'a> {
 
 #[derive(Debug, Clone)]
 pub enum DataType {
-    Media,
+    Img,
     Metadata,
+    Movie,
 }
 
 #[derive(Debug, Clone)]
@@ -88,7 +89,7 @@ pub fn get_media_extension(assets_dir: &str) -> Result<String> {
     Err(UploadError::GetExtensionError.into())
 }
 
-pub fn count_files(assets_dir: &str) -> Result<usize> {
+pub fn count_files(assets_dir: &str) -> Result<Vec<DirEntry>> {
     let files = fs::read_dir(assets_dir)
         .map_err(|_| anyhow!("Failed to read assets directory"))?
         .filter_map(|entry| entry.ok())
@@ -103,24 +104,31 @@ pub fn count_files(assets_dir: &str) -> Result<usize> {
                     .expect("Failed to retrieve metadata from file")
                     .is_file()
         });
-    Ok(files.count())
+
+    Ok(files.collect())
 }
 
 pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
     // filters out directories and hidden files
-    let num_files = count_files(assets_dir)?;
+    let filtered_files = count_files(assets_dir)?;
+
     let mut asset_pairs: HashMap<usize, AssetPair> = HashMap::new();
 
-    // number of files should be even
-    if num_files % 2 != 0 {
-        return Err(UploadError::InvalidNumberOfFiles(num_files).into());
-    }
+    let last = &filtered_files[filtered_files.len() - 1]
+        .path()
+        .into_os_string()
+        .into_string()
+        .unwrap();
+
+    let mut v: Vec<&str> = last.split('/').collect();
+    v = v[1].split('.').collect();
+    let num_files = v[0].parse::<usize>().unwrap();
 
     // TODO: should we enforce that all files have the same extension?
     let extension = get_media_extension(assets_dir)?;
 
     // iterate over asset pairs
-    for i in 0..(num_files / 2) {
+    for i in 0..=num_files {
         let metadata_file = PathBuf::from(assets_dir)
             .join(format!("{i}.json"))
             .to_str()
