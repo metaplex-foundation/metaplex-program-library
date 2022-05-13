@@ -160,7 +160,7 @@ async fn execute_sale_success() {
             .get_account(buyer_token_account)
             .await
             .unwrap();
-        assert_eq!(buyer_token_before.is_none(), true);
+        assert_eq!(buyer_token_before.is_none(), !dedicated_escrow);
         context.banks_client.process_transaction(tx).await.unwrap();
 
         let seller_after = context
@@ -184,7 +184,7 @@ async fn execute_sale_success() {
             sale_price - ((ah.seller_fee_basis_points as u64 * sale_price) / 10000);
         assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
         assert_eq!(seller_before.lamports < seller_after.lamports, true);
-        assert_eq!(buyer_token_after.amount, 1);
+        assert_eq!(buyer_token_after.amount, 1 + dedicated_escrow as u64);
     }
 }
 #[tokio::test]
@@ -456,17 +456,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
         &[&authority],
         context.last_blockhash,
     );
-    let seller_before = context
-        .banks_client
-        .get_account(test_metadata.token.pubkey())
-        .await
-        .unwrap()
-        .unwrap();
-    let buyer_token_before = &context
-        .banks_client
-        .get_account(malicious_buyer_token_account)
-        .await
-        .unwrap();
+
     let err = context
         .banks_client
         .process_transaction(tx)
