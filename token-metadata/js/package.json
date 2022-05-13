@@ -48,7 +48,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.5.0",
+    "@metaplex-foundation/solita": "^0.8.0",
     "@types/bn.js": "^5.1.0",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",
