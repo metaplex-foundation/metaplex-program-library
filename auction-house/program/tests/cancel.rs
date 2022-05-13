@@ -163,6 +163,7 @@ async fn cancel_bid() {
         &test_metadata.token.pubkey(),
         &buyer,
         price,
+        false,
     );
 
     context

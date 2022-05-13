@@ -298,6 +298,7 @@ pub mod auction_house {
         ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
+        buyer_trade_state: Option<Pubkey>,
     ) -> Result<()> {
         let wallet = &ctx.accounts.wallet;
         let receipt_account = &ctx.accounts.receipt_account;
@@ -333,12 +334,24 @@ pub mod auction_house {
             return Err(ErrorCode::NoValidSignerPresent.into());
         }
 
-        let escrow_signer_seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            wallet_key.as_ref(),
-            &[escrow_payment_bump],
-        ];
+        let (buyer_trade_state_key, dedicated_escrow) =
+            if let Some(buyer_trade_state) = buyer_trade_state {
+                (buyer_trade_state.key(), true)
+            } else {
+                (Pubkey::default(), false)
+            };
+
+        let escrow_payment_account_key = escrow_payment_account.key();
+        let escrow_payment_bump_seed = [escrow_payment_bump];
+
+        let escrow_signer_seeds = get_escrow_seeds(
+            &escrow_payment_account_key,
+            &escrow_payment_bump_seed,
+            &auction_house_key,
+            &wallet_key,
+            &buyer_trade_state_key,
+            dedicated_escrow,
+        )?;
 
         let (fee_payer, fee_seeds) = get_fee_payer(
             authority,
@@ -421,6 +434,7 @@ pub mod auction_house {
         ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
+        buyer_trade_state: Option<Pubkey>,
     ) -> Result<()> {
         let wallet = &ctx.accounts.wallet;
         let payment_account = &ctx.accounts.payment_account;
@@ -443,12 +457,24 @@ pub mod auction_house {
         ];
         let wallet_key = wallet.key();
 
-        let escrow_signer_seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            wallet_key.as_ref(),
-            &[escrow_payment_bump],
-        ];
+        let (buyer_trade_state_key, dedicated_escrow) =
+            if let Some(buyer_trade_state) = buyer_trade_state {
+                (buyer_trade_state.key(), true)
+            } else {
+                (Pubkey::default(), false)
+            };
+
+        let escrow_payment_account_key = escrow_payment_account.key();
+        let escrow_payment_bump_seed = [escrow_payment_bump];
+
+        let escrow_signer_seeds = get_escrow_seeds(
+            &escrow_payment_account_key,
+            &escrow_payment_bump_seed,
+            &auction_house_key,
+            &wallet_key,
+            &buyer_trade_state_key,
+            dedicated_escrow,
+        )?;
 
         let (fee_payer, fee_seeds) = get_fee_payer(
             authority,
@@ -597,6 +623,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        dedicated_escrow: bool,
     ) -> Result<()> {
         let buyer = &ctx.accounts.buyer;
         let seller = &ctx.accounts.seller;
@@ -734,12 +761,18 @@ pub mod auction_house {
 
         let auction_house_key = auction_house.key();
         let wallet_key = buyer.key();
-        let escrow_signer_seeds = [
-            PREFIX.as_bytes(),
-            auction_house_key.as_ref(),
-            wallet_key.as_ref(),
-            &[escrow_payment_bump],
-        ];
+        let buyer_trade_state_key = buyer_trade_state.key();
+        let escrow_payment_account_key = escrow_payment_account.key();
+        let escrow_payment_bump_seed = [escrow_payment_bump];
+
+        let escrow_signer_seeds = get_escrow_seeds(
+            &escrow_payment_account_key,
+            &escrow_payment_bump_seed,
+            &auction_house_key,
+            &wallet_key,
+            &buyer_trade_state_key,
+            dedicated_escrow,
+        )?;
 
         let ah_seeds = [
             PREFIX.as_bytes(),
@@ -1059,6 +1092,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        dedicated_escrow: bool,
     ) -> Result<()> {
         private_bid(
             ctx,
@@ -1066,6 +1100,7 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
+            dedicated_escrow,
         )
     }
 
@@ -1076,6 +1111,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        dedicated_escrow: bool,
     ) -> Result<()> {
         public_bid(
             ctx,
@@ -1083,6 +1119,7 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
+            dedicated_escrow,
         )
     }
 
@@ -1221,8 +1258,8 @@ pub struct ExecuteSale<'info> {
     /// Auction House treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
     /// Buyer escrow payment account.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
+    /// CHECK: Not dangerous. Account seeds checked in execute_sale fn.
+    #[account(mut)]
     pub escrow_payment_account: UncheckedAccount<'info>,
     /// Seller SOL or SPL account to receive payment at.
     /// CHECK: Verified through CPI
@@ -1281,8 +1318,8 @@ pub struct Deposit<'info> {
     /// CHECK: Verified through CPI
     pub transfer_authority: UncheckedAccount<'info>,
     /// Buyer escrow payment account PDA.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
+    /// CHECK: Not dangerous. Account seeds checked deposit fn.
+    #[account(mut)]
     pub escrow_payment_account: UncheckedAccount<'info>,
     /// Auction House instance treasury mint account.
     pub treasury_mint: Account<'info, Mint>,
@@ -1313,8 +1350,8 @@ pub struct Withdraw<'info> {
     #[account(mut)]
     pub receipt_account: UncheckedAccount<'info>,
     /// Buyer escrow payment account PDA.
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
+    /// CHECK: Not dangerous. Account seeds checked in withdraw fn.
+    #[account(mut)]
     pub escrow_payment_account: UncheckedAccount<'info>,
     /// Auction House instance treasury mint account.
     pub treasury_mint: Account<'info, Mint>,
@@ -1587,4 +1624,6 @@ pub enum ErrorCode {
     InstructionMismatch,
     #[msg("The instruction would drain the escrow below rent exemption threshold")] // 28
     EscrowUnderRentExemption,
+    #[msg("The provided escrow account does not match the required seeds")] // 29
+    EscrowAccountInvalid,
 }

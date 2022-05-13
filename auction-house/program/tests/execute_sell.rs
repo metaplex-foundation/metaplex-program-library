@@ -8,25 +8,187 @@ use solana_sdk::signer::Signer;
 
 use std::assert_eq;
 
-use solana_program::{instruction::Instruction, system_program, sysvar};
 use solana_program::instruction::InstructionError;
+use solana_program::{instruction::Instruction, system_program, sysvar};
 
 use solana_program::program_pack::Pack;
 
 use mpl_auction_house::{
-    pda::{find_escrow_payment_address, find_program_as_signer_address, find_trade_state_address},
+    pda::*,
     receipt::{BidReceipt, ListingReceipt, PurchaseReceipt},
 };
-use solana_sdk::{signature::Keypair, transaction::Transaction};
+use mpl_testing_utils::solana::create_associated_token_account;
 use solana_sdk::transaction::TransactionError;
 use solana_sdk::transport::TransportError;
+use solana_sdk::{signature::Keypair, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::state::Account;
-use mpl_testing_utils::solana::create_associated_token_account;
 use utils::setup_functions::*;
 
 #[tokio::test]
 async fn execute_sale_success() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+        )
+        .await
+        .unwrap();
+
+    for dedicated_escrow in [false] {
+        let sale_price = if dedicated_escrow {
+            200_000_000
+        } else {
+            100_000_000
+        };
+
+        let ((sell_acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, sale_price);
+        context
+            .banks_client
+            .process_transaction(sell_tx)
+            .await
+            .unwrap();
+        let buyer = Keypair::new();
+        airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
+            .await
+            .unwrap();
+        let ((bid_acc, _), buy_tx) = buy(
+            &mut context,
+            &ahkey,
+            &ah,
+            &test_metadata,
+            &test_metadata.token.pubkey(),
+            &buyer,
+            sale_price,
+            dedicated_escrow,
+        );
+        context
+            .banks_client
+            .process_transaction(buy_tx)
+            .await
+            .unwrap();
+        let buyer_token_account =
+            get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
+
+        let accounts = mpl_auction_house::accounts::ExecuteSale {
+            buyer: buyer.pubkey(),
+            seller: test_metadata.token.pubkey(),
+            auction_house: ahkey,
+            metadata: test_metadata.pubkey,
+            token_account: sell_acc.token_account,
+            authority: ah.authority,
+            seller_trade_state: sell_acc.seller_trade_state,
+            buyer_trade_state: bid_acc.buyer_trade_state,
+            token_program: spl_token::id(),
+            free_trade_state: sell_acc.free_seller_trade_state,
+            seller_payment_receipt_account: test_metadata.token.pubkey(),
+            buyer_receipt_token_account: buyer_token_account,
+            escrow_payment_account: bid_acc.escrow_payment_account,
+            token_mint: test_metadata.mint.pubkey(),
+            auction_house_fee_account: ah.auction_house_fee_account,
+            auction_house_treasury: ah.auction_house_treasury,
+            treasury_mint: ah.treasury_mint,
+            program_as_signer: sell_acc.program_as_signer,
+            system_program: system_program::id(),
+            ata_program: spl_associated_token_account::id(),
+            rent: sysvar::rent::id(),
+        }
+        .to_account_metas(None);
+        let (_, free_sts_bump) = find_trade_state_address(
+            &test_metadata.token.pubkey(),
+            &ahkey,
+            &sell_acc.token_account,
+            &ah.treasury_mint,
+            &test_metadata.mint.pubkey(),
+            0,
+            1,
+        );
+
+        let trade_state_key = bid_acc.buyer_trade_state.key();
+        let (_, escrow_bump) = if dedicated_escrow {
+            find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
+        } else {
+            find_escrow_payment_address(&ahkey, &buyer.pubkey())
+        };
+        let (_, pas_bump) = find_program_as_signer_address();
+
+        let instruction = Instruction {
+            program_id: mpl_auction_house::id(),
+            data: mpl_auction_house::instruction::ExecuteSale {
+                escrow_payment_bump: escrow_bump,
+                _free_trade_state_bump: free_sts_bump,
+                program_as_signer_bump: pas_bump,
+                token_size: 1,
+                buyer_price: 100_000_000,
+                dedicated_escrow,
+            }
+            .data(),
+            accounts,
+        };
+        airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
+            .await
+            .unwrap();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction],
+            Some(&authority.pubkey()),
+            &[&authority],
+            context.last_blockhash,
+        );
+        let seller_before = context
+            .banks_client
+            .get_account(test_metadata.token.pubkey())
+            .await
+            .unwrap()
+            .unwrap();
+        let buyer_token_before = &context
+            .banks_client
+            .get_account(buyer_token_account)
+            .await
+            .unwrap();
+        assert_eq!(buyer_token_before.is_none(), true);
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let seller_after = context
+            .banks_client
+            .get_account(test_metadata.token.pubkey())
+            .await
+            .unwrap()
+            .unwrap();
+        let buyer_token_after = Account::unpack_from_slice(
+            &context
+                .banks_client
+                .get_account(buyer_token_account)
+                .await
+                .unwrap()
+                .unwrap()
+                .data
+                .as_slice(),
+        )
+        .unwrap();
+        let fee_minus: u64 =
+            sale_price - ((ah.seller_fee_basis_points as u64 * sale_price) / 10000);
+        assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
+        assert_eq!(seller_before.lamports < seller_after.lamports, true);
+        assert_eq!(buyer_token_after.amount, 1);
+    }
+}
+#[tokio::test]
+async fn execute_sale_existing_token_account_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
@@ -66,6 +228,7 @@ async fn execute_sale_success() {
         &test_metadata.token.pubkey(),
         &buyer,
         100_000_000,
+        false,
     );
     context
         .banks_client
@@ -74,7 +237,9 @@ async fn execute_sale_success() {
         .unwrap();
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
-
+    create_associated_token_account(&mut context, &buyer, &test_metadata.mint.pubkey())
+        .await
+        .unwrap();
     let accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
@@ -119,152 +284,9 @@ async fn execute_sale_success() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
+            dedicated_escrow: false,
         }
         .data(),
-        accounts,
-    };
-    airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
-        .await
-        .unwrap();
-
-    let tx = Transaction::new_signed_with_payer(
-        &[instruction],
-        Some(&authority.pubkey()),
-        &[&authority],
-        context.last_blockhash,
-    );
-    let seller_before = context
-        .banks_client
-        .get_account(test_metadata.token.pubkey())
-        .await
-        .unwrap()
-        .unwrap();
-    let buyer_token_before = &context
-        .banks_client
-        .get_account(buyer_token_account)
-        .await
-        .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
-    context.banks_client.process_transaction(tx).await.unwrap();
-
-    let seller_after = context
-        .banks_client
-        .get_account(test_metadata.token.pubkey())
-        .await
-        .unwrap()
-        .unwrap();
-    let buyer_token_after = Account::unpack_from_slice(
-        &context
-            .banks_client
-            .get_account(buyer_token_account)
-            .await
-            .unwrap()
-            .unwrap()
-            .data
-            .as_slice(),
-    )
-    .unwrap();
-    let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
-    assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
-    assert_eq!(buyer_token_after.amount, 1);
-}
-#[tokio::test]
-async fn execute_sale_existing_token_account_success() {
-    let mut context = auction_house_program_test().start_with_context().await;
-    // Payer Wallet
-    let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
-        .await
-        .unwrap();
-    let test_metadata = Metadata::new();
-    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
-        .await
-        .unwrap();
-    test_metadata
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-        )
-        .await
-        .unwrap();
-    let ((sell_acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 100_000_000);
-    context
-        .banks_client
-        .process_transaction(sell_tx)
-        .await
-        .unwrap();
-    let buyer = Keypair::new();
-    airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
-        .await
-        .unwrap();
-    let ((bid_acc, _), buy_tx) = buy(
-        &mut context,
-        &ahkey,
-        &ah,
-        &test_metadata,
-        &test_metadata.token.pubkey(),
-        &buyer,
-        100_000_000,
-    );
-    context
-        .banks_client
-        .process_transaction(buy_tx)
-        .await
-        .unwrap();
-    let buyer_token_account =
-        get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
-    create_associated_token_account(&mut context, &buyer, &test_metadata.mint.pubkey()).await.unwrap();
-    let accounts = mpl_auction_house::accounts::ExecuteSale {
-        buyer: buyer.pubkey(),
-        seller: test_metadata.token.pubkey(),
-        auction_house: ahkey,
-        metadata: test_metadata.pubkey,
-        token_account: sell_acc.token_account,
-        authority: ah.authority,
-        seller_trade_state: sell_acc.seller_trade_state,
-        buyer_trade_state: bid_acc.buyer_trade_state,
-        token_program: spl_token::id(),
-        free_trade_state: sell_acc.free_seller_trade_state,
-        seller_payment_receipt_account: test_metadata.token.pubkey(),
-        buyer_receipt_token_account: buyer_token_account,
-        escrow_payment_account: bid_acc.escrow_payment_account,
-        token_mint: test_metadata.mint.pubkey(),
-        auction_house_fee_account: ah.auction_house_fee_account,
-        auction_house_treasury: ah.auction_house_treasury,
-        treasury_mint: ah.treasury_mint,
-        program_as_signer: sell_acc.program_as_signer,
-        system_program: system_program::id(),
-        ata_program: spl_associated_token_account::id(),
-        rent: sysvar::rent::id(),
-    }
-        .to_account_metas(None);
-    let (_, free_sts_bump) = find_trade_state_address(
-        &test_metadata.token.pubkey(),
-        &ahkey,
-        &sell_acc.token_account,
-        &ah.treasury_mint,
-        &test_metadata.mint.pubkey(),
-        0,
-        1,
-    );
-    let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
-    let (_, pas_bump) = find_program_as_signer_address();
-
-    let instruction = Instruction {
-        program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
-            escrow_payment_bump: escrow_bump,
-            _free_trade_state_bump: free_sts_bump,
-            program_as_signer_bump: pas_bump,
-            token_size: 1,
-            buyer_price: 100_000_000,
-        }
-            .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -307,7 +329,7 @@ async fn execute_sale_existing_token_account_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert_eq!(seller_before.lamports < seller_after.lamports, true);
@@ -363,6 +385,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
         &test_metadata.token.pubkey(),
         &buyer,
         100_000_000,
+        false,
     );
     context
         .banks_client
@@ -371,7 +394,9 @@ async fn execute_sale_wrong_token_account_owner_success() {
         .unwrap();
     let malicious_buyer_token_account =
         get_associated_token_address(&malicious.pubkey(), &test_metadata.mint.pubkey());
-    create_associated_token_account(&mut context, &malicious, &test_metadata.mint.pubkey()).await.unwrap();
+    create_associated_token_account(&mut context, &malicious, &test_metadata.mint.pubkey())
+        .await
+        .unwrap();
     let accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
@@ -395,7 +420,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -416,8 +441,9 @@ async fn execute_sale_wrong_token_account_owner_success() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
+            dedicated_escrow: false,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -441,13 +467,17 @@ async fn execute_sale_wrong_token_account_owner_success() {
         .get_account(malicious_buyer_token_account)
         .await
         .unwrap();
-    let err= context.banks_client.process_transaction(tx).await.unwrap_err();
+    let err = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
     println!("{:?}", err);
     match err {
         TransportError::TransactionError(TransactionError::InstructionError(
-                                             0,
-                                             InstructionError::Custom(6003),
-                                         )) => (),
+            0,
+            InstructionError::Custom(6003),
+        )) => (),
         _ => assert!(false, "Expected custom error"),
     }
 }
@@ -498,6 +528,7 @@ async fn execute_public_sale_success() {
         &test_metadata.token.pubkey(),
         &public_bidder,
         price,
+        false,
     );
     context
         .banks_client
@@ -517,6 +548,7 @@ async fn execute_public_sale_success() {
         &test_metadata.token.pubkey(),
         &buyer,
         price,
+        false,
     );
     context
         .banks_client
@@ -538,6 +570,7 @@ async fn execute_public_sale_success() {
         &bid_acc.buyer_trade_state,
         1,
         price,
+        false,
     );
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
         .await
@@ -622,6 +655,7 @@ async fn execute_public_sale_success() {
         &public_bid_acc.buyer_trade_state,
         1,
         price.to_owned(),
+        false,
     );
 
     context

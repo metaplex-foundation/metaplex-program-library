@@ -40,6 +40,7 @@ async fn deposit_success() {
         &test_metadata,
         &buyer,
         1000000000,
+        None,
     );
     context
         .banks_client

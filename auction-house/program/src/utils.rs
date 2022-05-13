@@ -1,4 +1,4 @@
-use crate::{AuctionHouse, ErrorCode, PREFIX};
+use crate::{pda::*, AuctionHouse, ErrorCode, ESCROW_PREFIX, PREFIX};
 use anchor_lang::{
     prelude::*,
     solana_program::{
@@ -583,5 +583,42 @@ pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
         Ok(rent_minimum - account_lamports)
     } else {
         Ok(diff)
+    }
+}
+
+pub fn get_escrow_seeds<'a>(
+    escrow_payment_account: &'a Pubkey,
+    escrow_payment_bump_seed: &'a [u8],
+    auction_house: &'a Pubkey,
+    wallet: &'a Pubkey,
+    buyer_trade_state: &'a Pubkey,
+    dedicated_escrow: bool,
+) -> Result<[&'a [u8]; 4]> {
+    if dedicated_escrow {
+        let (expected_escrow_payment_account, _) =
+            find_auction_house_buyer_escrow_account_address_dedicated(&buyer_trade_state);
+        if escrow_payment_account != &expected_escrow_payment_account {
+            Err(ErrorCode::EscrowAccountInvalid.into())
+        } else {
+            Ok([
+                PREFIX.as_bytes(),
+                ESCROW_PREFIX.as_bytes(),
+                buyer_trade_state.as_ref(),
+                escrow_payment_bump_seed,
+            ])
+        }
+    } else {
+        let (expected_escrow_payment_account, _) =
+            find_auction_house_buyer_escrow_account_address(auction_house, wallet);
+        if escrow_payment_account.key() != expected_escrow_payment_account {
+            Err(ErrorCode::EscrowAccountInvalid.into())
+        } else {
+            Ok([
+                PREFIX.as_bytes(),
+                auction_house.as_ref(),
+                wallet.as_ref(),
+                escrow_payment_bump_seed,
+            ])
+        }
     }
 }

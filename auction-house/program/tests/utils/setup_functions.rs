@@ -6,16 +6,7 @@ use anchor_client::solana_sdk::{
     system_program, sysvar,
 };
 use anchor_lang::*;
-use mpl_auction_house::{
-    pda::{
-        find_auction_house_address, find_auction_house_fee_account_address,
-        find_auction_house_treasury_address, find_bid_receipt_address, find_escrow_payment_address,
-        find_listing_receipt_address, find_program_as_signer_address,
-        find_public_bid_trade_state_address, find_purchase_receipt_address,
-        find_trade_state_address,
-    },
-    AuctionHouse,
-};
+use mpl_auction_house::{pda::*, AuctionHouse};
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 
 use mpl_token_metadata::pda::find_metadata_account;
@@ -25,6 +16,11 @@ use spl_associated_token_account::get_associated_token_address;
 
 pub fn auction_house_program_test<'a>() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
+    std::fs::copy(
+        "../../token-metadata/target/deploy/mpl_token_metadata.so",
+        "target/deploy/mpl_token_metadata.so",
+    )
+    .unwrap();
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     program
 }
@@ -100,6 +96,7 @@ pub fn deposit(
     test_metadata: &Metadata,
     buyer: &Keypair,
     sale_price: u64,
+    buyer_trade_state: Option<Pubkey>,
 ) -> (mpl_auction_house::accounts::Deposit, Transaction) {
     let seller_token_account =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
@@ -112,7 +109,20 @@ pub fn deposit(
         sale_price,
         1,
     );
-    let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
+
+    let (buyer_trade_state_key, dedicated_escrow) =
+        if let Some(buyer_trade_state) = buyer_trade_state {
+            (buyer_trade_state.key(), true)
+        } else {
+            (Pubkey::default(), false)
+        };
+
+    let (escrow, escrow_bump) = if dedicated_escrow {
+        find_auction_house_buyer_escrow_account_address_dedicated(&buyer_trade_state_key)
+    } else {
+        find_escrow_payment_address(&ahkey, &buyer.pubkey())
+    };
+
     let accounts = mpl_auction_house::accounts::Deposit {
         wallet: buyer.pubkey(),
         authority: ah.authority,
@@ -131,6 +141,7 @@ pub fn deposit(
     let data = mpl_auction_house::instruction::Deposit {
         amount: sale_price,
         escrow_payment_bump: escrow_bump,
+        buyer_trade_state: buyer_trade_state,
     }
     .data();
 
@@ -159,6 +170,7 @@ pub fn buy(
     owner: &Pubkey,
     buyer: &Keypair,
     sale_price: u64,
+    dedicated_escrow: bool,
 ) -> (
     (
         mpl_auction_house::accounts::Buy,
@@ -167,7 +179,7 @@ pub fn buy(
     Transaction,
 ) {
     let seller_token_account = get_associated_token_address(&owner, &test_metadata.mint.pubkey());
-    let trade_state = find_trade_state_address(
+    let (trade_state, trade_state_bump) = find_trade_state_address(
         &buyer.pubkey(),
         &ahkey,
         &seller_token_account,
@@ -176,8 +188,13 @@ pub fn buy(
         sale_price,
         1,
     );
-    let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
-    let (bts, bts_bump) = trade_state;
+    let trade_state_key = trade_state.key();
+    let (escrow, escrow_bump) = if dedicated_escrow {
+        find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
+    } else {
+        find_escrow_payment_address(&ahkey, &buyer.pubkey())
+    };
+
     let accounts = mpl_auction_house::accounts::Buy {
         wallet: buyer.pubkey(),
         token_account: seller_token_account,
@@ -185,7 +202,7 @@ pub fn buy(
         authority: ah.authority,
         auction_house: *ahkey,
         auction_house_fee_account: ah.auction_house_fee_account,
-        buyer_trade_state: bts,
+        buyer_trade_state: trade_state,
         token_program: spl_token::id(),
         treasury_mint: ah.treasury_mint,
         payment_account: buyer.pubkey(),
@@ -198,10 +215,11 @@ pub fn buy(
     let account_metas = accounts.to_account_metas(None);
 
     let buy_ix = mpl_auction_house::instruction::Buy {
-        trade_state_bump: bts_bump,
+        trade_state_bump: trade_state_bump,
         escrow_payment_bump: escrow_bump,
         token_size: 1,
         buyer_price: sale_price,
+        dedicated_escrow,
     };
     let data = buy_ix.data();
 
@@ -211,7 +229,7 @@ pub fn buy(
         accounts: account_metas,
     };
 
-    let (bid_receipt, bid_receipt_bump) = find_bid_receipt_address(&bts);
+    let (bid_receipt, bid_receipt_bump) = find_bid_receipt_address(&trade_state);
     let print_receipt_accounts = mpl_auction_house::accounts::PrintBidReceipt {
         receipt: bid_receipt,
         bookkeeper: buyer.pubkey(),
@@ -252,6 +270,7 @@ pub fn public_buy(
     owner: &Pubkey,
     buyer: &Keypair,
     sale_price: u64,
+    dedicated_escrow: bool,
 ) -> (
     (
         mpl_auction_house::accounts::PublicBuy,
@@ -268,8 +287,13 @@ pub fn public_buy(
         sale_price,
         1,
     );
-    let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (bts, bts_bump) = trade_state;
+    let trade_state_key = bts.key();
+    let (escrow, escrow_bump) = if dedicated_escrow {
+        find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
+    } else {
+        find_escrow_payment_address(&ahkey, &buyer.pubkey())
+    };
 
     let accounts = mpl_auction_house::accounts::PublicBuy {
         wallet: buyer.pubkey(),
@@ -294,6 +318,7 @@ pub fn public_buy(
         escrow_payment_bump: escrow_bump,
         token_size: 1,
         buyer_price: sale_price,
+        dedicated_escrow,
     };
     let data = buy_ix.data();
 
@@ -349,6 +374,7 @@ pub fn execute_sale(
     buyer_trade_state: &Pubkey,
     token_size: u64,
     buyer_price: u64,
+    dedicated_escrow: bool,
 ) -> (
     (
         mpl_auction_house::accounts::ExecuteSale,
@@ -370,7 +396,14 @@ pub fn execute_sale(
         0,
         token_size,
     );
-    let (escrow_payment_account, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer);
+
+    let trade_state_key = buyer_trade_state.key();
+    let (escrow_payment_account, escrow_bump) = if dedicated_escrow {
+        find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
+    } else {
+        find_escrow_payment_address(&ahkey, &buyer.key())
+    };
+
     let (purchase_receipt, purchase_receipt_bump) =
         find_purchase_receipt_address(seller_trade_state, buyer_trade_state);
     let (listing_receipt, _listing_receipt_bump) = find_listing_receipt_address(seller_trade_state);
@@ -409,6 +442,7 @@ pub fn execute_sale(
             program_as_signer_bump: pas_bump,
             token_size,
             buyer_price,
+            dedicated_escrow,
         }
         .data(),
         accounts: execute_sale_account_metas,

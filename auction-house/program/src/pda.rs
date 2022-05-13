@@ -37,6 +37,19 @@ pub fn find_auction_house_buyer_escrow_account_address(
     Pubkey::find_program_address(auction_house_buyer_escrow_seeds, &id())
 }
 
+pub fn find_auction_house_buyer_escrow_account_address_dedicated(
+    trade_state_address: &Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PREFIX.as_bytes(),
+            ESCROW_PREFIX.as_bytes(),
+            trade_state_address.as_ref(),
+        ],
+        &id(),
+    )
+}
+
 pub fn find_program_as_signer_address() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[PREFIX.as_bytes(), SIGNER.as_bytes()], &id())
 }

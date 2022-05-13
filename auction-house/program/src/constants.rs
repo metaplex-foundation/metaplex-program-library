@@ -5,3 +5,4 @@ pub const SIGNER: &str = "signer";
 pub const PURCHASE_RECEIPT_PREFIX: &str = "purchase_receipt";
 pub const BID_RECEIPT_PREFIX: &str = "bid_receipt";
 pub const LISTING_RECEIPT_PREFIX: &str = "listing_receipt";
+pub const ESCROW_PREFIX: &str = "escrow";
