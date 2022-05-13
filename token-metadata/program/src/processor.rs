@@ -20,7 +20,7 @@ use crate::{
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
-        assert_freeze_authority_matches_mint, assert_initialized,
+        assert_freeze_authority_matches_mint, assert_initialized, assert_member_of_collection,
         assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
         create_or_allocate_account_raw, decrement_collection_size, get_owner_from_token_account,
@@ -83,6 +83,17 @@ pub fn process_instruction<'a>(
                 args.data,
                 false,
                 args.is_mutable,
+            )
+        }
+        MetadataInstruction::CreateMetadataAccountV3(args) => {
+            msg!("Instruction: Create Metadata Accounts v2");
+            process_create_metadata_accounts_v3(
+                program_id,
+                accounts,
+                args.data,
+                false,
+                args.is_mutable,
+                args.is_collection_parent,
             )
         }
         MetadataInstruction::UpdateMetadataAccountV2(args) => {
@@ -240,6 +251,9 @@ pub fn process_create_metadata_accounts_v2<'a>(
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
+    // V2 does not suport collection parents.
+    let is_collection_parent = false;
+
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -256,6 +270,44 @@ pub fn process_create_metadata_accounts_v2<'a>(
         is_mutable,
         false,
         true,
+        is_collection_parent,
+    )
+}
+
+pub fn process_create_metadata_accounts_v3<'a>(
+    program_id: &'a Pubkey,
+    accounts: &'a [AccountInfo<'a>],
+    data: DataV2,
+    allow_direct_creator_writes: bool,
+    is_mutable: bool,
+    is_collection_parent: bool,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let mint_authority_info = next_account_info(account_info_iter)?;
+    let payer_account_info = next_account_info(account_info_iter)?;
+    let update_authority_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
+    process_create_metadata_accounts_logic(
+        program_id,
+        CreateMetadataAccountsLogicArgs {
+            metadata_account_info,
+            mint_info,
+            mint_authority_info,
+            payer_account_info,
+            update_authority_info,
+            system_account_info,
+            rent_info,
+        },
+        data,
+        allow_direct_creator_writes,
+        is_mutable,
+        false,
+        true,
+        is_collection_parent,
     )
 }
 
@@ -802,8 +854,17 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         )?;
     }
 
-    // If the NFT has collection data, we set it to be verified and then update the collection
-    // size on the Collection Parent.
+    // This handler can only verify non-sized NFTs
+    if let ItemDetails::CollectionInfo {
+        tradeable: _,
+        is_sized: _,
+        size: _,
+    } = collection_data.item_details
+    {
+        return Err(MetadataError::SizedCollection.into());
+    }
+
+    // If the NFT has collection data, we set it to be verified
     if let Some(collection) = &mut metadata.collection {
         collection.verified = true;
         metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
@@ -905,6 +966,16 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
             collection_mint.key,
             None,
         )?;
+    }
+
+    // This handler can only unverify non-sized NFTs
+    if let ItemDetails::CollectionInfo {
+        tradeable: _,
+        is_sized: _,
+        size: _,
+    } = collection_data.item_details
+    {
+        return Err(MetadataError::SizedCollection.into());
     }
 
     // If the NFT has collection data, we set it to be unverified and then update the collection
@@ -1393,6 +1464,16 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         edition_account_info,
     )?;
 
+    // This handler can only verify non-sized NFTs
+    if let ItemDetails::CollectionInfo {
+        tradeable: _,
+        is_sized: _,
+        size: _,
+    } = collection_data.item_details
+    {
+        return Err(MetadataError::SizedCollection.into());
+    }
+
     // If the NFT has collection data, we set it to be unverified and then update the collection
     // size on the Collection Parent.
     match collection_data.item_details {
@@ -1597,13 +1678,19 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     let mint_info = next_account_info(account_info_iter)?;
     let token_info = next_account_info(account_info_iter)?;
     let edition_info = next_account_info(account_info_iter)?;
-    let collection_metadata_info = next_account_info(account_info_iter)?;
     let spl_token_program_info = next_account_info(account_info_iter)?;
+
+    let collection_nft_provided = accounts.len() == 7;
 
     let metadata = Metadata::from_account_info(metadata_info)?;
 
-    // Get our collections metadata into a Rust type so we can update the collection size after burning.
-    let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
+    // If the NFT is a verified part of a collection but the user has not provided the collection
+    // metadata account, we cannot burn it because we need to decrement the collection size.
+    if !collection_nft_provided && metadata.collection.is_some() {
+        if metadata.collection.as_ref().unwrap().verified {
+            return Err(MetadataError::MissingCollectionMetadata.into());
+        }
+    }
 
     // Checks:
     // * Metadata is owned by the token-metadata program
@@ -1623,9 +1710,8 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         token_info,
     )?;
 
-    // These accounts are owned by token-metadata program.
+    // Owned by token-metadata program.
     assert_owned_by(edition_info, program_id)?;
-    assert_owned_by(collection_metadata_info, program_id)?;
 
     // Owner is a signer.
     assert_signer(owner_info)?;
@@ -1684,8 +1770,21 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     sol_memset(metadata_data, 0, MAX_METADATA_LEN);
     sol_memset(edition_data, 0, edition_data_len);
 
-    // Update collection size.
-    increment_collection_size(&mut collection_metadata, collection_metadata_info)?;
+    if collection_nft_provided {
+        let collection_metadata_info = next_account_info(account_info_iter)?;
+
+        // Get our collections metadata into a Rust type so we can update the collection size after burning.
+        let mut collection_metadata = Metadata::from_account_info(collection_metadata_info)?;
+
+        // Owned by token metadata program.
+        assert_owned_by(collection_metadata_info, program_id)?;
+
+        // NFT is actually part of the specified collection.
+        assert_member_of_collection(&metadata, &collection_metadata)?;
+
+        // Update collection size.
+        increment_collection_size(&mut collection_metadata, collection_metadata_info)?;
+    }
 
     Ok(())
 }

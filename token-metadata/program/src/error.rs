@@ -390,6 +390,24 @@ pub enum MetadataError {
     /// Token close failed
     #[error("Token close failed")]
     TokenCloseFailed,
+
+    /// Calling v1.3 function on unsized collection
+    #[error("Can't use this function on unsized collection")]
+    UnsizedCollection,
+
+    /// Calling v1.2 function on a sized collection
+    #[error("Can't use this function on a sized collection")]
+    SizedCollection,
+
+    /// Can't burn a verified member of a collection w/o providing collection metadata account
+    #[error(
+        "Can't burn a verified member of a collection w/o providing collection metadata account"
+    )]
+    MissingCollectionMetadata,
+
+    /// This NFT is not a member of the specified collection.
+    #[error("This NFT is not a member of the specified collection.")]
+    NotAMemberOfCollection,
 }
 
 impl PrintProgramError for MetadataError {

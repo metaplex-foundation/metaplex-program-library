@@ -598,6 +598,8 @@ pub fn mint_limited_edition<'a>(
     };
     // create the metadata the normal way...
 
+    let is_collection_parent = false;
+
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -614,6 +616,7 @@ pub fn mint_limited_edition<'a>(
         false,
         true,
         true,
+        is_collection_parent,
     )?;
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),
@@ -681,10 +684,10 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
             source.key,
             mint.key,
             authority.key,
-            &[],
+            &[authority.key],
             amount,
         )?,
-        &[source, mint, authority, token_program],
+        &[source, mint, authority],
         seeds.as_slice(),
     );
     result.map_err(|_| MetadataError::TokenBurnFailed.into())
@@ -871,6 +874,7 @@ pub fn process_create_metadata_accounts_logic(
     mut is_mutable: bool,
     is_edition: bool,
     add_token_standard: bool,
+    is_collection_parent: bool,
 ) -> ProgramResult {
     let CreateMetadataAccountsLogicArgs {
         metadata_account_info,
@@ -949,10 +953,23 @@ pub fn process_create_metadata_accounts_logic(
     metadata.data = data.to_v1();
     metadata.is_mutable = is_mutable;
     metadata.update_authority = update_authority_key;
+
     assert_valid_use(&data.uses, &None)?;
     metadata.uses = data.uses;
+
     assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
+
+    if is_collection_parent {
+        metadata.item_details = ItemDetails::CollectionInfo {
+            tradeable: false,
+            is_sized: true,
+            size: 0,
+        };
+    } else {
+        metadata.item_details = ItemDetails::None;
+    }
+
     if add_token_standard {
         let token_standard = if is_edition {
             TokenStandard::NonFungibleEdition
@@ -1246,6 +1263,9 @@ pub fn increment_collection_size(
                     size: size + 1,
                 };
                 metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+            } else {
+                msg!("Collection is not sized. Cannot increment collection size.");
+                return Err(MetadataError::UnsizedCollection.into());
             }
             Ok(())
         }
@@ -1277,4 +1297,19 @@ pub fn decrement_collection_size(
             Ok(())
         }
     }
+}
+
+pub fn assert_member_of_collection(
+    item_metadata: &Metadata,
+    collection_metadata: &Metadata,
+) -> ProgramResult {
+    if let Some(ref collection) = item_metadata.collection {
+        if collection_metadata.mint != collection.key {
+            return Err(MetadataError::NotAMemberOfCollection.into());
+        }
+    } else {
+        return Err(MetadataError::NotAMemberOfCollection.into());
+    }
+
+    Ok(())
 }

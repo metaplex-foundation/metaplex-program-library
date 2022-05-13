@@ -10,6 +10,7 @@ pub use edition_marker::EditionMarker;
 pub use external_price::ExternalPrice;
 pub use master_edition_v2::MasterEditionV2;
 pub use metadata::Metadata;
+pub use mpl_token_metadata::instruction;
 use solana_program_test::*;
 use solana_sdk::{
     account::Account,
@@ -59,6 +60,35 @@ pub async fn airdrop(
     );
 
     context.banks_client.process_transaction(tx).await.unwrap();
+    Ok(())
+}
+
+pub async fn burn(
+    context: &mut ProgramTestContext,
+    metadata: Pubkey,
+    mint: Pubkey,
+    token: Pubkey,
+    edition: Pubkey,
+    collection_metadata: Option<Pubkey>,
+) -> Result<(), TransportError> {
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction::burn_nft(
+            mpl_token_metadata::ID,
+            metadata,
+            context.payer.pubkey(),
+            mint,
+            token,
+            edition,
+            spl_token::ID,
+            collection_metadata,
+        )],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await.unwrap();
+
     Ok(())
 }
 

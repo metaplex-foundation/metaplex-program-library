@@ -30,6 +30,9 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
+    // Does not support collection parents.
+    let is_collection_parent = false;
+
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -54,6 +57,7 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
         is_mutable,
         false,
         false,
+        is_collection_parent,
     )
 }
 

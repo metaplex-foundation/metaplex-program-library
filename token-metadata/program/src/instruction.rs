@@ -51,6 +51,18 @@ pub struct CreateMetadataAccountArgsV2 {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+/// Args for create call
+pub struct CreateMetadataAccountArgsV3 {
+    /// Note that unique metadatas are disabled for now.
+    pub data: DataV2,
+    /// Whether you want your metadata to be updateable in the future.
+    pub is_mutable: bool,
+    /// If this is a collection parent NFT.
+    pub is_collection_parent: bool,
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct CreateMasterEditionArgs {
     /// If set, means that no more than this number of editions can ever be minted. This is immutable.
     pub max_supply: Option<u64>,
@@ -443,6 +455,16 @@ pub enum MetadataInstruction {
     #[account(6, writable, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
     #[account(7, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     SetAndVerifyCollectionV2,
+
+    /// Create Metadata object.
+    #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
+    #[account(1, name="mint", desc="Mint of token asset")]
+    #[account(2, signer, name="mint_authority", desc="Mint authority")]
+    #[account(3, signer, writable, name="payer", desc="payer")]
+    #[account(4, name="update_authority", desc="update authority info")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="rent", desc="Rent info")]
+    CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1315,8 +1337,8 @@ pub fn thaw_delegated_account(
 /// 2. `[]` Mint of NFT
 /// 3. `[]` NFT token account
 /// 4. `[]` NFT edition account
-/// 5. `[]` Collection metadata account (if applicable)
-/// 6. `[]` SPL Token program.
+/// 5. `[]` SPL Token program.
+/// 6. Optional `[]` Collection metadata account
 pub fn burn_nft(
     program_id: Pubkey,
     metadata: Pubkey,
@@ -1324,20 +1346,25 @@ pub fn burn_nft(
     mint: Pubkey,
     token: Pubkey,
     edition: Pubkey,
-    collection_metadata: Pubkey,
     spl_token: Pubkey,
+    collection_metadata: Option<Pubkey>,
 ) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(owner, true),
+        AccountMeta::new(mint, false),
+        AccountMeta::new(token, false),
+        AccountMeta::new(edition, false),
+        AccountMeta::new_readonly(spl_token, false),
+    ];
+
+    if let Some(collection_metadata) = collection_metadata {
+        accounts.push(AccountMeta::new(collection_metadata, false));
+    }
+
     Instruction {
         program_id,
-        accounts: vec![
-            AccountMeta::new(metadata, false),
-            AccountMeta::new(owner, true),
-            AccountMeta::new_readonly(mint, false),
-            AccountMeta::new(token, false),
-            AccountMeta::new(edition, false),
-            AccountMeta::new(collection_metadata, false),
-            AccountMeta::new_readonly(spl_token, false),
-        ],
+        accounts,
         data: MetadataInstruction::BurnNFT.try_to_vec().unwrap(),
     }
 }
@@ -1437,6 +1464,60 @@ pub fn unverify_collection_v2(
         program_id,
         accounts,
         data: MetadataInstruction::UnverifyCollectionV2
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+//# Set And Verify Collection V2 -- Supports v1.3 Collection Details
+///
+///Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] with collection and [verify_collection] on the NFT/Collection in one instruction
+///
+/// ### Accounts:
+///
+///   0. `[writable]` Metadata account
+///   1. `[signer]` Collection Update authority
+///   2. `[signer]` payer
+///   3. `[] Update Authority of Collection NFT and NFT
+///   3. `[]` Mint of the Collection
+///   4. `[writable]` Metadata Account of the Collection
+///   5. `[]` MasterEdition2 Account of the Collection Token
+#[allow(clippy::too_many_arguments)]
+pub fn set_and_verify_collection_v2(
+    program_id: Pubkey,
+    metadata: Pubkey,
+    collection_authority: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    collection_mint: Pubkey,
+    collection: Pubkey,
+    collection_master_edition_account: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(collection_authority, true),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(update_authority, false),
+        AccountMeta::new_readonly(collection_mint, false),
+        AccountMeta::new(collection, false),
+        AccountMeta::new_readonly(collection_master_edition_account, false),
+    ];
+
+    match collection_authority_record {
+        Some(collection_authority_record) => {
+            accounts.push(AccountMeta::new_readonly(
+                collection_authority_record,
+                false,
+            ));
+        }
+        None => (),
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::SetAndVerifyCollectionV2
             .try_to_vec()
             .unwrap(),
     }
