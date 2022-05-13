@@ -1,5 +1,5 @@
 use anchor_lang::prelude::Pubkey;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use chrono::DateTime;
 use console::{style, Style};
 use dialoguer::Confirm;
@@ -158,7 +158,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .to_string();
 
         let m = File::open(&metadata_file)?;
-        let metadata: Metadata = serde_json::from_reader(m)?;
+        let metadata: Metadata = serde_json::from_reader(m).map_err(|e| {
+            anyhow!("Failed to read metadata file '{metadata_file}' with error: {e}")
+        })?;
 
         symbol = metadata.symbol;
         seller_fee = metadata.seller_fee_basis_points;
