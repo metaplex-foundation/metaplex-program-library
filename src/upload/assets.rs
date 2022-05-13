@@ -134,7 +134,9 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             .to_string();
 
         let m = File::open(&metadata_file)?;
-        let metadata: Metadata = serde_json::from_reader(m)?;
+        let metadata: Metadata = serde_json::from_reader(m).map_err(|e| {
+            anyhow!("Failed to read metadata file: {metadata_file} with error: {e}")
+        })?;
         let name = metadata.name.clone();
 
         let asset_pair = AssetPair {
@@ -170,7 +172,12 @@ fn encode(file: &str) -> Result<String> {
 
 pub fn get_updated_metadata(metadata_file: &str, media_link: &str) -> Result<String> {
     let mut metadata: Metadata = {
-        let m = OpenOptions::new().read(true).open(metadata_file)?;
+        let m = OpenOptions::new()
+            .read(true)
+            .open(metadata_file)
+            .map_err(|e| {
+                anyhow!("Failed to read metadata file: {metadata_file} with error: {e}")
+            })?;
         serde_json::from_reader(&m)?
     };
 
