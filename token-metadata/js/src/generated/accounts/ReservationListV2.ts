@@ -88,7 +88,7 @@ export class ReservationListV2 implements ReservationListV2Args {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [ReservationListV2, number] {
-    return resolvedDeserialize(buf, offset);
+    return reservationListV2Beet.deserialize(buf, offset);
   }
 
   /**
@@ -96,7 +96,7 @@ export class ReservationListV2 implements ReservationListV2Args {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return resolvedSerialize(this);
+    return reservationListV2Beet.serialize(this);
   }
 
   /**
@@ -185,6 +185,3 @@ export const reservationListV2Beet = new beet.FixableBeetStruct<
   ReservationListV2.fromArgs,
   'ReservationListV2',
 );
-
-const resolvedSerialize = reservationListV2Beet.serialize.bind(reservationListV2Beet);
-const resolvedDeserialize = reservationListV2Beet.deserialize.bind(reservationListV2Beet);

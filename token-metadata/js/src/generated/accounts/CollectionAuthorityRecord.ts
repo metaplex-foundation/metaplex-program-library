@@ -68,7 +68,7 @@ export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs 
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [CollectionAuthorityRecord, number] {
-    return resolvedDeserialize(buf, offset);
+    return collectionAuthorityRecordBeet.deserialize(buf, offset);
   }
 
   /**
@@ -76,7 +76,7 @@ export class CollectionAuthorityRecord implements CollectionAuthorityRecordArgs 
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return resolvedSerialize(this);
+    return collectionAuthorityRecordBeet.serialize(this);
   }
 
   /**
@@ -137,11 +137,4 @@ export const collectionAuthorityRecordBeet = new beet.BeetStruct<
   ],
   CollectionAuthorityRecord.fromArgs,
   'CollectionAuthorityRecord',
-);
-
-const resolvedSerialize = collectionAuthorityRecordBeet.serialize.bind(
-  collectionAuthorityRecordBeet,
-);
-const resolvedDeserialize = collectionAuthorityRecordBeet.deserialize.bind(
-  collectionAuthorityRecordBeet,
 );

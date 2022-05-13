@@ -73,7 +73,7 @@ export class MasterEditionV2 implements MasterEditionV2Args {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [MasterEditionV2, number] {
-    return resolvedDeserialize(buf, offset);
+    return masterEditionV2Beet.deserialize(buf, offset);
   }
 
   /**
@@ -81,7 +81,7 @@ export class MasterEditionV2 implements MasterEditionV2Args {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return resolvedSerialize(this);
+    return masterEditionV2Beet.serialize(this);
   }
 
   /**
@@ -148,6 +148,3 @@ export const masterEditionV2Beet = new beet.FixableBeetStruct<MasterEditionV2, M
   MasterEditionV2.fromArgs,
   'MasterEditionV2',
 );
-
-const resolvedSerialize = masterEditionV2Beet.serialize.bind(masterEditionV2Beet);
-const resolvedDeserialize = masterEditionV2Beet.deserialize.bind(masterEditionV2Beet);

@@ -71,7 +71,7 @@ export class Edition implements EditionArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [Edition, number] {
-    return resolvedDeserialize(buf, offset);
+    return editionBeet.deserialize(buf, offset);
   }
 
   /**
@@ -79,7 +79,7 @@ export class Edition implements EditionArgs {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return resolvedSerialize(this);
+    return editionBeet.serialize(this);
   }
 
   /**
@@ -147,6 +147,3 @@ export const editionBeet = new beet.BeetStruct<Edition, EditionArgs>(
   Edition.fromArgs,
   'Edition',
 );
-
-const resolvedSerialize = editionBeet.serialize.bind(editionBeet);
-const resolvedDeserialize = editionBeet.deserialize.bind(editionBeet);
