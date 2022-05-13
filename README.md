@@ -6,7 +6,12 @@
 [![Build and Release](https://github.com/metaplex-foundation/sugar/actions/workflows/build.yml/badge.svg)](https://github.com/metaplex-foundation/sugar/actions/workflows/build.yml)
 [![License](https://img.shields.io/crates/l/sugar-cli)](https://github.com/metaplex-foundation/sugar/blob/main/LICENSE)
 
+
 # Sugar: A Candy Machine CLI
+
+![sugar animation](animation.gif?raw=true)
+
+
 
 Sugar is an alternative to the current Metaplex Candy Machine CLI. It has been written from the ground up and includes several improvements:
 
