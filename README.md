@@ -9,7 +9,9 @@
 
 # Sugar: A Candy Machine CLI
 
-![sugar animation](animation.gif?raw=true)
+<p align="center">
+  <img src="animation.gif">
+</p>
 
 
 
