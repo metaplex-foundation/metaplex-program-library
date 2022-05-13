@@ -32,24 +32,25 @@ async fn execute_sale_success() {
     let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
-    let test_metadata = Metadata::new();
-    airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
-        .await
-        .unwrap();
-    test_metadata
-        .create(
-            &mut context,
-            "Test".to_string(),
-            "TST".to_string(),
-            "uri".to_string(),
-            None,
-            10,
-            false,
-        )
-        .await
-        .unwrap();
 
-    for dedicated_escrow in [false] {
+    for dedicated_escrow in [false, true] {
+        let test_metadata = Metadata::new();
+        airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
+            .await
+            .unwrap();
+        test_metadata
+            .create(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+            )
+            .await
+            .unwrap();
+
         let sale_price = if dedicated_escrow {
             200_000_000
         } else {
@@ -133,7 +134,7 @@ async fn execute_sale_success() {
                 _free_trade_state_bump: free_sts_bump,
                 program_as_signer_bump: pas_bump,
                 token_size: 1,
-                buyer_price: 100_000_000,
+                buyer_price: sale_price,
                 dedicated_escrow,
             }
             .data(),
@@ -160,7 +161,7 @@ async fn execute_sale_success() {
             .get_account(buyer_token_account)
             .await
             .unwrap();
-        assert_eq!(buyer_token_before.is_none(), !dedicated_escrow);
+        assert_eq!(buyer_token_before.is_none(), true);
         context.banks_client.process_transaction(tx).await.unwrap();
 
         let seller_after = context
@@ -184,7 +185,7 @@ async fn execute_sale_success() {
             sale_price - ((ah.seller_fee_basis_points as u64 * sale_price) / 10000);
         assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
         assert_eq!(seller_before.lamports < seller_after.lamports, true);
-        assert_eq!(buyer_token_after.amount, 1 + dedicated_escrow as u64);
+        assert_eq!(buyer_token_after.amount, 1);
     }
 }
 #[tokio::test]
