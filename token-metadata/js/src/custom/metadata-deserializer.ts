@@ -17,7 +17,7 @@ import { usesBeet } from '../generated/types/Uses';
  * This deserializer matches the [fix implemented in the Rust program](https://github.com/metaplex-foundation/metaplex-program-library/blob/df36da5a78fb17e1690247b8041b761d27c83b1b/token-metadata/program/src/deser.rs#L6).
  * Also @see ../../../program/src/deser.rs
  */
-export function deserializeTokenMetadata(buf: Buffer, offset = 0): [Metadata, number] {
+export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
   let cursor = offset;
 
   // key
