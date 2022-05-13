@@ -159,7 +159,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
         let m = File::open(&metadata_file)?;
         let metadata: Metadata = serde_json::from_reader(m).map_err(|e| {
-            anyhow!("Failed to read metadata file: {metadata_file} with error: {e}")
+            anyhow!("Failed to read metadata file: '{metadata_file}' with error: {e}")
         })?;
 
         symbol = metadata.symbol;
