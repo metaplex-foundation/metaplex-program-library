@@ -148,11 +148,7 @@ pub enum UseMethod {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum ItemDetails {
     None,
-    CollectionInfo {
-        tradeable: bool,
-        is_sized: bool,
-        size: u64,
-    },
+    CollectionInfo { tradeable: bool, size: u64 },
 }
 
 #[repr(C)]

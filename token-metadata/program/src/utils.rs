@@ -963,7 +963,6 @@ pub fn process_create_metadata_accounts_logic(
     if is_collection_parent {
         metadata.item_details = ItemDetails::CollectionInfo {
             tradeable: false,
-            is_sized: true,
             size: 0,
         };
     } else {
@@ -1249,24 +1248,14 @@ pub fn increment_collection_size(
     match metadata.item_details {
         ItemDetails::None => {
             msg!("No collection details found. Cannot increment collection size.");
-            Ok(())
+            return Err(MetadataError::UnsizedCollection.into());
         }
-        ItemDetails::CollectionInfo {
-            tradeable,
-            is_sized,
-            size,
-        } => {
-            if is_sized {
-                metadata.item_details = ItemDetails::CollectionInfo {
-                    tradeable,
-                    is_sized,
-                    size: size + 1,
-                };
-                metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
-            } else {
-                msg!("Collection is not sized. Cannot increment collection size.");
-                return Err(MetadataError::UnsizedCollection.into());
-            }
+        ItemDetails::CollectionInfo { tradeable, size } => {
+            metadata.item_details = ItemDetails::CollectionInfo {
+                tradeable,
+                size: size + 1,
+            };
+            metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
             Ok(())
         }
     }
@@ -1279,21 +1268,14 @@ pub fn decrement_collection_size(
     match metadata.item_details {
         ItemDetails::None => {
             msg!("No collection details found. Cannot increment collection size.");
-            Ok(())
+            return Err(MetadataError::UnsizedCollection.into());
         }
-        ItemDetails::CollectionInfo {
-            tradeable,
-            is_sized,
-            size,
-        } => {
-            if is_sized {
-                metadata.item_details = ItemDetails::CollectionInfo {
-                    tradeable,
-                    is_sized,
-                    size: size - 1,
-                };
-                metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
-            }
+        ItemDetails::CollectionInfo { tradeable, size } => {
+            metadata.item_details = ItemDetails::CollectionInfo {
+                tradeable,
+                size: size - 1,
+            };
+            metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
             Ok(())
         }
     }

@@ -828,11 +828,11 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
-    let collection_data = Metadata::from_account_info(collection_info)?;
+    let collection_metadata = Metadata::from_account_info(collection_info)?;
 
     assert_collection_verify_is_valid(
         &metadata,
-        &collection_data,
+        &collection_metadata,
         collection_mint,
         edition_account_info,
     )?;
@@ -841,14 +841,14 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         let collection_authority_record = next_account_info(account_info_iter)?;
         assert_has_collection_authority(
             collection_authority_info,
-            &collection_data,
+            &collection_metadata,
             collection_mint.key,
             Some(collection_authority_record),
         )?;
     } else {
         assert_has_collection_authority(
             collection_authority_info,
-            &collection_data,
+            &collection_metadata,
             collection_mint.key,
             None,
         )?;
@@ -857,9 +857,8 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     // This handler can only verify non-sized NFTs
     if let ItemDetails::CollectionInfo {
         tradeable: _,
-        is_sized: _,
         size: _,
-    } = collection_data.item_details
+    } = collection_metadata.item_details
     {
         return Err(MetadataError::SizedCollection.into());
     }
@@ -971,7 +970,6 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     // This handler can only unverify non-sized NFTs
     if let ItemDetails::CollectionInfo {
         tradeable: _,
-        is_sized: _,
         size: _,
     } = collection_data.item_details
     {
@@ -1467,7 +1465,6 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     // This handler can only verify non-sized NFTs
     if let ItemDetails::CollectionInfo {
         tradeable: _,
-        is_sized: _,
         size: _,
     } = collection_data.item_details
     {
@@ -1478,14 +1475,9 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     // size on the Collection Parent.
     match collection_data.item_details {
         ItemDetails::None => (),
-        ItemDetails::CollectionInfo {
-            tradeable,
-            is_sized,
-            size,
-        } => {
+        ItemDetails::CollectionInfo { tradeable, size } => {
             collection_data.item_details = ItemDetails::CollectionInfo {
                 tradeable,
-                is_sized,
                 size: size + 1,
             };
             collection_data.serialize(&mut *collection_info.try_borrow_mut_data()?)?;
