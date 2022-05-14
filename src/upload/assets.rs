@@ -1,7 +1,7 @@
 use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
 use data_encoding::HEXLOWER;
 use glob::glob;
-use regex::{Regex, RegexBuilder};
+use regex::RegexBuilder;
 use ring::digest::{Context, SHA256};
 use serde_json;
 use std::{
@@ -11,7 +11,6 @@ use std::{
 };
 
 use crate::common::*;
-use crate::upload::errors::*;
 use crate::validate::format::Metadata;
 
 pub struct UploadDataArgs<'a> {
@@ -36,6 +35,8 @@ pub struct AssetPair {
     pub metadata_hash: String,
     pub media: String,
     pub media_hash: String,
+    pub animation: Option<String>,
+    pub animation_hash: Option<String>,
 }
 
 impl AssetPair {
@@ -70,31 +71,6 @@ pub fn get_data_size(assets_dir: &Path, extension: &str) -> Result<u64> {
 
     Ok(total_size)
 }
-
-// pub fn get_media_extension(filtered_files: Vec<DirEntry>, index: usize) -> Result<Vec<&str>> {
-//     let files = Vec::new();
-
-//     // let re = Regex::new(r".+\d+\.(\w+[^json|JSON])$").expect("Failed to create regex.");
-//     let re = Regex::new(r"\.[^.]{1,}").expect("Failed to create regex.");
-
-//     // for entry in filtered_files {
-//     //     let path = entry?.path();
-//     //     if let Some(captures) =
-//     //         re.captures(path.to_str().expect("Failed to convert to valid unicode."))
-//     //     {
-//     //         let extension = captures.get(1).unwrap().as_str();
-//     //         files.push(extension);
-//     //         // return Ok(extension.to_string());
-//     //     }
-//     // }
-
-//     if let Some(captures) = re.captures(filtered_files) {
-//         println!("{:?}", captures);
-//     };
-
-//     Ok(files)
-//     // Err(UploadError::GetExtensionError.into())
-// }
 
 pub fn count_files(assets_dir: &str) -> Result<Vec<DirEntry>> {
     let files = fs::read_dir(assets_dir)
@@ -132,21 +108,11 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
 
     let mut asset_pairs: HashMap<usize, AssetPair> = HashMap::new();
 
-    // let last = &filtered_files[filtered_files.len() - 1]
-    //     .path()
-    //     .into_os_string()
-    //     .into_string()
-    //     .unwrap();
-
-    // let mut v: Vec<&str> = last.split('/').collect();
-    // v = v[1].split('.').collect();
-    // let num_files = v[0].parse::<usize>().unwrap();
-
-    // TODO: should we enforce that all files have the same extension?
-    //let extension = "png";
+    let paths_ref = &paths;
 
     // todo: case sensitivity on extension
-    let metadata_filenames = paths
+    let metadata_filenames = paths_ref
+        .clone()
         .into_iter()
         .filter(|p| p.ends_with(".json"))
         .collect::<Vec<String>>();
@@ -155,52 +121,76 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
         // TODO: parse i here first to verify that is an integer
 
         let i = metadata_filename.split(".").nth(0).unwrap();
+
         let img_pattern = format!("^{}\\.((jpg)|(gif)|(png))$", i); //"^" + i.to_string() + "\\.[^.]+$";
+
         let img_regex = RegexBuilder::new(&img_pattern)
             .case_insensitive(true)
             .build()
             .expect("Failed to create regex.");
-        let media_filenames = paths
+
+        let img_filenames = paths_ref
+            .clone()
             .into_iter()
             .filter(|p| img_regex.is_match(p))
             .collect::<Vec<String>>();
-        let filename_of_media_file = media_filenames[0];
+
+        let img_filename = &img_filenames[0];
+
         let animation_pattern = format!("^{}\\.((mp4)|(mov)|(webm))$", i);
         let animation_regex = RegexBuilder::new(&animation_pattern)
             .case_insensitive(true)
             .build()
             .expect("Failed to create regex.");
-        let animation_filenames = paths
-            .iter()
+        let animation_filenames = paths_ref
+            .clone()
+            .into_iter()
             .filter(|p| animation_regex.is_match(p))
             .collect::<Vec<String>>();
-        let filename_of_animation_file = if let Some(filename) = animation_filenames[0] {
-            filename
+
+        let metadata_filepath = Path::new(assets_dir)
+            .join(&metadata_filename)
+            .to_str()
+            .expect("Failed to convert metadata path from unicode.")
+            .to_string();
+
+        let m = File::open(&metadata_filepath)?;
+        let metadata: Metadata = serde_json::from_reader(m)?;
+        let name = metadata.name.clone();
+
+        let img_filepath = Path::new(assets_dir)
+            .join(img_filename)
+            .to_str()
+            .expect("Failed to convert media path from unicode.")
+            .to_string();
+
+        let filename_of_animation_file = if !animation_filenames.is_empty() {
+            let animation_filepath = Path::new(assets_dir)
+                .join(&animation_filenames[0])
+                .to_str()
+                .expect("Failed to convert media path from unicode.")
+                .to_string();
+
+            Some(animation_filepath)
         } else {
             None
         };
 
-        let m = File::open(&metadata_filename)?;
-        let metadata: Metadata = serde_json::from_reader(m)?;
-        let name = metadata.name.clone();
-
-        let metadata_filepath = PathBuf::new(assets_dir)
-            .join(metadata_filename)
-            .to_str()
-            .expect("Failed to convert metadata path from unicode.")
-            .to_string();
-        let media_filepath = PathBuf::new(assets_dir)
-            .join(media_filename)
-            .to_str()
-            .expect("Failed to convert media path from unicode.")
-            .to_string();
+        let animation_hash = if let Some(animation_file) = &filename_of_animation_file {
+            let encoded_filename = encode(&animation_file)?;
+            Some(encoded_filename)
+        } else {
+            None
+        };
 
         let asset_pair = AssetPair {
             name,
             metadata: metadata_filepath.clone(),
             metadata_hash: encode(&metadata_filepath)?,
-            media: media_filepath.clone(),
-            media_hash: encode(&media_filepath)?,
+            media: img_filepath.clone(),
+            media_hash: encode(&img_filepath)?,
+            animation_hash,
+            animation: filename_of_animation_file,
         };
 
         asset_pairs.insert(
@@ -208,42 +198,6 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             asset_pair,
         );
     }
-
-    // todo: add error results for bogus stuff
-    /*
-    // iterate over asset pairs
-    for i in 0..=1 {
-        // let file = filtered_files[i];
-        // let extensions = get_media_extension(assets_dir, index)
-
-        let metadata_file = PathBuf::from(assets_dir)
-            .join(format!("{i}.json"))
-            .to_str()
-            .expect("Failed to convert metadata path from unicode.")
-            .to_string();
-
-        let media_filename_extension = image_filename_extension_map.get(i);
-
-        let media_file = Path::new(assets_dir)
-            .join(format!("{i}.{extension}"))
-            .to_str()
-            .expect("Failed to convert media path from unicode.")
-            .to_string();
-
-        let m = File::open(&metadata_file)?;
-        let metadata: Metadata = serde_json::from_reader(m)?;
-        let name = metadata.name.clone();
-
-        let asset_pair = AssetPair {
-            name,
-            metadata: metadata_file.clone(),
-            metadata_hash: encode(&metadata_file)?,
-            media: media_file.clone(),
-            media_hash: encode(&media_file)?,
-        };
-
-        asset_pairs.insert(i, asset_pair);
-    }*/
 
     Ok(asset_pairs)
 }
