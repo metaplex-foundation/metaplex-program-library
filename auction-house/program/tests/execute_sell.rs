@@ -135,7 +135,6 @@ async fn execute_sale_success() {
                 program_as_signer_bump: pas_bump,
                 token_size: 1,
                 buyer_price: sale_price,
-                dedicated_escrow,
             }
             .data(),
             accounts,
@@ -285,7 +284,6 @@ async fn execute_sale_existing_token_account_success() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            dedicated_escrow: false,
         }
         .data(),
         accounts,
@@ -442,7 +440,6 @@ async fn execute_sale_wrong_token_account_owner_success() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            dedicated_escrow: false,
         }
         .data(),
         accounts,
@@ -497,7 +494,7 @@ async fn execute_public_sale_success() {
         .await
         .unwrap();
     let price = 100_000_000;
-    let fee_minus: u64 = price - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
+    let fee_minus: u64 = price - ((ah.seller_fee_basis_points as u64 * price) / 10000);
     // Create Listing
     let ((sell_acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, price);
     context

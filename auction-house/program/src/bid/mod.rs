@@ -12,7 +12,7 @@ use crate::{constants::*, utils::*, AuctionHouse, ErrorCode, TRADE_STATE_SIZE};
 
 /// Accounts for the [`public_bid` handler](fn.public_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64, dedicated_escrow: bool)]
+#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct PublicBuy<'info> {
     wallet: Signer<'info>,
     /// CHECK: Verified through CPI
@@ -51,7 +51,6 @@ pub fn public_bid(
     escrow_payment_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    dedicated_escrow: bool,
 ) -> Result<()> {
     bid_logic(
         ctx.accounts.wallet.to_owned(),
@@ -73,7 +72,6 @@ pub fn public_bid(
         buyer_price,
         token_size,
         true,
-        dedicated_escrow,
     )
 }
 
@@ -116,7 +114,6 @@ pub fn private_bid<'info>(
     escrow_payment_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    dedicated_escrow: bool,
 ) -> Result<()> {
     bid_logic(
         ctx.accounts.wallet.to_owned(),
@@ -138,7 +135,6 @@ pub fn private_bid<'info>(
         buyer_price,
         token_size,
         false,
-        dedicated_escrow,
     )
 }
 
@@ -163,7 +159,6 @@ pub fn bid_logic<'info>(
     buyer_price: u64,
     token_size: u64,
     public: bool,
-    dedicated_escrow: bool,
 ) -> Result<()> {
     assert_valid_trade_state(
         &wallet.key(),
@@ -203,9 +198,9 @@ pub fn bid_logic<'info>(
         &escrow_payment_bump_seed,
         &auction_house_key,
         &wallet_key,
-        &buyer_trade_state_key,
-        dedicated_escrow,
+        Some(&buyer_trade_state_key),
     )?;
+    msg!("escrow_signer_seeds{:?}", escrow_signer_seeds);
 
     create_program_token_account_if_not_present(
         &escrow_payment_account,

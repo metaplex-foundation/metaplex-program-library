@@ -334,13 +334,6 @@ pub mod auction_house {
             return Err(ErrorCode::NoValidSignerPresent.into());
         }
 
-        let (buyer_trade_state_key, dedicated_escrow) =
-            if let Some(buyer_trade_state) = buyer_trade_state {
-                (buyer_trade_state.key(), true)
-            } else {
-                (Pubkey::default(), false)
-            };
-
         let escrow_payment_account_key = escrow_payment_account.key();
         let escrow_payment_bump_seed = [escrow_payment_bump];
 
@@ -349,8 +342,7 @@ pub mod auction_house {
             &escrow_payment_bump_seed,
             &auction_house_key,
             &wallet_key,
-            &buyer_trade_state_key,
-            dedicated_escrow,
+            buyer_trade_state.as_ref(),
         )?;
 
         let (fee_payer, fee_seeds) = get_fee_payer(
@@ -430,7 +422,7 @@ pub mod auction_house {
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
-    pub fn deposit<'info>(
+    pub fn deposit<'info, 'a>(
         ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
@@ -457,13 +449,6 @@ pub mod auction_house {
         ];
         let wallet_key = wallet.key();
 
-        let (buyer_trade_state_key, dedicated_escrow) =
-            if let Some(buyer_trade_state) = buyer_trade_state {
-                (buyer_trade_state.key(), true)
-            } else {
-                (Pubkey::default(), false)
-            };
-
         let escrow_payment_account_key = escrow_payment_account.key();
         let escrow_payment_bump_seed = [escrow_payment_bump];
 
@@ -472,8 +457,7 @@ pub mod auction_house {
             &escrow_payment_bump_seed,
             &auction_house_key,
             &wallet_key,
-            &buyer_trade_state_key,
-            dedicated_escrow,
+            buyer_trade_state.as_ref(),
         )?;
 
         let (fee_payer, fee_seeds) = get_fee_payer(
@@ -623,7 +607,6 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-        dedicated_escrow: bool,
     ) -> Result<()> {
         let buyer = &ctx.accounts.buyer;
         let seller = &ctx.accounts.seller;
@@ -770,8 +753,7 @@ pub mod auction_house {
             &escrow_payment_bump_seed,
             &auction_house_key,
             &wallet_key,
-            &buyer_trade_state_key,
-            dedicated_escrow,
+            Some(&buyer_trade_state_key),
         )?;
 
         let ah_seeds = [
@@ -1092,7 +1074,6 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
-        dedicated_escrow: bool,
     ) -> Result<()> {
         private_bid(
             ctx,
@@ -1100,7 +1081,6 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
-            dedicated_escrow,
         )
     }
 
@@ -1111,7 +1091,6 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
-        dedicated_escrow: bool,
     ) -> Result<()> {
         public_bid(
             ctx,
@@ -1119,7 +1098,6 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
-            dedicated_escrow,
         )
     }
 

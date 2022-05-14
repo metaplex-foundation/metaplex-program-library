@@ -219,7 +219,6 @@ pub fn buy(
         escrow_payment_bump: escrow_bump,
         token_size: 1,
         buyer_price: sale_price,
-        dedicated_escrow,
     };
     let data = buy_ix.data();
 
@@ -279,7 +278,7 @@ pub fn public_buy(
     Transaction,
 ) {
     let seller_token_account = get_associated_token_address(&owner, &test_metadata.mint.pubkey());
-    let trade_state = find_public_bid_trade_state_address(
+    let (trade_state, trade_state_bump) = find_public_bid_trade_state_address(
         &buyer.pubkey(),
         &ahkey,
         &ah.treasury_mint,
@@ -287,8 +286,8 @@ pub fn public_buy(
         sale_price,
         1,
     );
-    let (bts, bts_bump) = trade_state;
-    let trade_state_key = bts.key();
+
+    let trade_state_key = trade_state.key();
     let (escrow, escrow_bump) = if dedicated_escrow {
         find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
     } else {
@@ -302,7 +301,7 @@ pub fn public_buy(
         authority: ah.authority,
         auction_house: *ahkey,
         auction_house_fee_account: ah.auction_house_fee_account,
-        buyer_trade_state: bts,
+        buyer_trade_state: trade_state,
         token_program: spl_token::id(),
         treasury_mint: ah.treasury_mint,
         payment_account: buyer.pubkey(),
@@ -314,11 +313,10 @@ pub fn public_buy(
     let account_metas = accounts.to_account_metas(None);
 
     let buy_ix = mpl_auction_house::instruction::PublicBuy {
-        trade_state_bump: bts_bump,
+        trade_state_bump,
         escrow_payment_bump: escrow_bump,
         token_size: 1,
         buyer_price: sale_price,
-        dedicated_escrow,
     };
     let data = buy_ix.data();
 
@@ -328,7 +326,7 @@ pub fn public_buy(
         accounts: account_metas,
     };
 
-    let (bid_receipt, bid_receipt_bump) = find_bid_receipt_address(&bts);
+    let (bid_receipt, bid_receipt_bump) = find_bid_receipt_address(&trade_state);
     let print_receipt_accounts = mpl_auction_house::accounts::PrintBidReceipt {
         receipt: bid_receipt,
         bookkeeper: buyer.pubkey(),
@@ -442,7 +440,6 @@ pub fn execute_sale(
             program_as_signer_bump: pas_bump,
             token_size,
             buyer_price,
-            dedicated_escrow,
         }
         .data(),
         accounts: execute_sale_account_metas,
