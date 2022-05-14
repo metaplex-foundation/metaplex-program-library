@@ -1,10 +1,8 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
-use mpl_auction_house::pda::find_trade_state_address;
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
-use spl_associated_token_account::get_associated_token_address;
 use std::assert_eq;
 use utils::setup_functions::*;
 
@@ -35,27 +33,8 @@ async fn deposit_success() {
     airdrop(&mut context, &buyer.pubkey(), 3_000_000_000)
         .await
         .unwrap();
-    for dedicated_escrow in [false, true] {
+    for escrow_v2 in [false, true] {
         let sale_price = 1_000_000_000;
-        let seller_token_account = get_associated_token_address(
-            &test_metadata.token.pubkey(),
-            &test_metadata.mint.pubkey(),
-        );
-        let (trade_state, _) = find_trade_state_address(
-            &buyer.pubkey(),
-            &ahkey,
-            &seller_token_account,
-            &ah.treasury_mint,
-            &test_metadata.mint.pubkey(),
-            sale_price,
-            1,
-        );
-
-        let buyer_trade_state = if dedicated_escrow {
-            Some(trade_state)
-        } else {
-            None
-        };
 
         let (acc, deposit_tx) = deposit(
             &mut context,
@@ -64,7 +43,7 @@ async fn deposit_success() {
             &test_metadata,
             &buyer,
             sale_price,
-            buyer_trade_state,
+            escrow_v2,
         );
 
         context

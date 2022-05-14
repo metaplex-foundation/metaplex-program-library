@@ -292,9 +292,19 @@ pub mod auction_house {
 
         Ok(())
     }
-
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
     pub fn withdraw<'info>(
+        ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
+        escrow_payment_bump: u8,
+        amount: u64,
+    ) -> Result<()> {
+        withdraw_v2(ctx, escrow_payment_bump, amount, None)
+    }
+
+    /// Withdraw `amount` from the escrow payment account for your specific wallet
+    /// or from the escrow payment account specific for your buy offer by providing
+    /// a `buyer_trade_state`.
+    pub fn withdraw_v2<'info>(
         ctx: Context<'_, '_, '_, 'info, Withdraw<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
@@ -422,7 +432,18 @@ pub mod auction_house {
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
-    pub fn deposit<'info, 'a>(
+    pub fn deposit<'info>(
+        ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
+        escrow_payment_bump: u8,
+        amount: u64,
+    ) -> Result<()> {
+        deposit_v2(ctx, escrow_payment_bump, amount, None)
+    }
+
+    /// Deposit `amount` into the escrow payment account for your specific wallet
+    /// or into the escrow payment account specific for your buy offer by providing
+    /// a `buyer_trade_state` argument.
+    pub fn deposit_v2<'info>(
         ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,

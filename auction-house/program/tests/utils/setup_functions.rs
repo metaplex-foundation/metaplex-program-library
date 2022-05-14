@@ -96,11 +96,12 @@ pub fn deposit(
     test_metadata: &Metadata,
     buyer: &Keypair,
     sale_price: u64,
-    buyer_trade_state: Option<Pubkey>,
+    escrow_v2: bool,
 ) -> (mpl_auction_house::accounts::Deposit, Transaction) {
     let seller_token_account =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let (_buyer_trade_state, _sts_bump) = find_trade_state_address(
+
+    let (buyer_trade_state, _) = find_trade_state_address(
         &buyer.pubkey(),
         &ahkey,
         &seller_token_account,
@@ -110,15 +111,8 @@ pub fn deposit(
         1,
     );
 
-    let (buyer_trade_state_key, dedicated_escrow) =
-        if let Some(buyer_trade_state) = buyer_trade_state {
-            (buyer_trade_state.key(), true)
-        } else {
-            (Pubkey::default(), false)
-        };
-
-    let (escrow, escrow_bump) = if dedicated_escrow {
-        find_auction_house_buyer_escrow_account_address_dedicated(&buyer_trade_state_key)
+    let (escrow, escrow_bump) = if escrow_v2 {
+        find_auction_house_buyer_escrow_account_address_v2(&buyer_trade_state)
     } else {
         find_escrow_payment_address(&ahkey, &buyer.pubkey())
     };
@@ -138,12 +132,20 @@ pub fn deposit(
     };
     let account_metas = accounts.to_account_metas(None);
 
-    let data = mpl_auction_house::instruction::Deposit {
-        amount: sale_price,
-        escrow_payment_bump: escrow_bump,
-        buyer_trade_state: buyer_trade_state,
-    }
-    .data();
+    let data = if escrow_v2 {
+        mpl_auction_house::instruction::DepositV2 {
+            amount: sale_price,
+            escrow_payment_bump: escrow_bump,
+            buyer_trade_state: Some(buyer_trade_state),
+        }
+        .data()
+    } else {
+        mpl_auction_house::instruction::Deposit {
+            amount: sale_price,
+            escrow_payment_bump: escrow_bump,
+        }
+        .data()
+    };
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
@@ -170,7 +172,7 @@ pub fn buy(
     owner: &Pubkey,
     buyer: &Keypair,
     sale_price: u64,
-    dedicated_escrow: bool,
+    escrow_v2: bool,
 ) -> (
     (
         mpl_auction_house::accounts::Buy,
@@ -189,8 +191,8 @@ pub fn buy(
         1,
     );
     let trade_state_key = trade_state.key();
-    let (escrow, escrow_bump) = if dedicated_escrow {
-        find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
+    let (escrow, escrow_bump) = if escrow_v2 {
+        find_auction_house_buyer_escrow_account_address_v2(&trade_state_key)
     } else {
         find_escrow_payment_address(&ahkey, &buyer.pubkey())
     };
@@ -269,7 +271,7 @@ pub fn public_buy(
     owner: &Pubkey,
     buyer: &Keypair,
     sale_price: u64,
-    dedicated_escrow: bool,
+    escrow_v2: bool,
 ) -> (
     (
         mpl_auction_house::accounts::PublicBuy,
@@ -288,8 +290,8 @@ pub fn public_buy(
     );
 
     let trade_state_key = trade_state.key();
-    let (escrow, escrow_bump) = if dedicated_escrow {
-        find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
+    let (escrow, escrow_bump) = if escrow_v2 {
+        find_auction_house_buyer_escrow_account_address_v2(&trade_state_key)
     } else {
         find_escrow_payment_address(&ahkey, &buyer.pubkey())
     };
@@ -372,7 +374,7 @@ pub fn execute_sale(
     buyer_trade_state: &Pubkey,
     token_size: u64,
     buyer_price: u64,
-    dedicated_escrow: bool,
+    escrow_v2: bool,
 ) -> (
     (
         mpl_auction_house::accounts::ExecuteSale,
@@ -395,9 +397,8 @@ pub fn execute_sale(
         token_size,
     );
 
-    let trade_state_key = buyer_trade_state.key();
-    let (escrow_payment_account, escrow_bump) = if dedicated_escrow {
-        find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
+    let (escrow_payment_account, escrow_bump) = if escrow_v2 {
+        find_auction_house_buyer_escrow_account_address_v2(buyer_trade_state)
     } else {
         find_escrow_payment_address(&ahkey, &buyer.key())
     };

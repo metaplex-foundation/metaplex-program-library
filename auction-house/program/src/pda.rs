@@ -37,7 +37,7 @@ pub fn find_auction_house_buyer_escrow_account_address(
     Pubkey::find_program_address(auction_house_buyer_escrow_seeds, &id())
 }
 
-pub fn find_auction_house_buyer_escrow_account_address_dedicated(
+pub fn find_auction_house_buyer_escrow_account_address_v2(
     trade_state_address: &Pubkey,
 ) -> (Pubkey, u8) {
     Pubkey::find_program_address(

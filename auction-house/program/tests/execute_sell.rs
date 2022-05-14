@@ -33,7 +33,7 @@ async fn execute_sale_success() {
         .await
         .unwrap();
 
-    for dedicated_escrow in [false, true] {
+    for escrow_v2 in [false, true] {
         let test_metadata = Metadata::new();
         airdrop(&mut context, &test_metadata.token.pubkey(), 10_000_000_000)
             .await
@@ -51,11 +51,7 @@ async fn execute_sale_success() {
             .await
             .unwrap();
 
-        let sale_price = if dedicated_escrow {
-            200_000_000
-        } else {
-            100_000_000
-        };
+        let sale_price = if escrow_v2 { 200_000_000 } else { 100_000_000 };
 
         let ((sell_acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, sale_price);
         context
@@ -75,7 +71,7 @@ async fn execute_sale_success() {
             &test_metadata.token.pubkey(),
             &buyer,
             sale_price,
-            dedicated_escrow,
+            escrow_v2,
         );
         context
             .banks_client
@@ -120,8 +116,8 @@ async fn execute_sale_success() {
         );
 
         let trade_state_key = bid_acc.buyer_trade_state.key();
-        let (_, escrow_bump) = if dedicated_escrow {
-            find_auction_house_buyer_escrow_account_address_dedicated(&trade_state_key)
+        let (_, escrow_bump) = if escrow_v2 {
+            find_auction_house_buyer_escrow_account_address_v2(&trade_state_key)
         } else {
             find_escrow_payment_address(&ahkey, &buyer.pubkey())
         };

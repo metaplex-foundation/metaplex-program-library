@@ -605,7 +605,7 @@ pub fn get_escrow_seeds<'a>(
     } else {
         if let Some(buyer_trade_state) = buyer_trade_state {
             let (expected_escrow_payment_account, _) =
-                find_auction_house_buyer_escrow_account_address_dedicated(&buyer_trade_state);
+                find_auction_house_buyer_escrow_account_address_v2(&buyer_trade_state);
             if escrow_payment_account == &expected_escrow_payment_account {
                 Ok([
                     PREFIX.as_bytes(),
