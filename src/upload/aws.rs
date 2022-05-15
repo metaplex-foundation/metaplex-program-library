@@ -58,7 +58,7 @@ impl AWSHandler {
                 get_updated_metadata(&info.file_path, &info.media_link, info.animation_link)?
                     .into_bytes()
             }
-            DataType::Movie => todo!(),
+            DataType::Movie => fs::read(&info.file_path)?,
         };
 
         let key = bs58::encode(&info.file_path).into_string();
@@ -109,7 +109,7 @@ impl UploadHandler for AWSHandler {
             let file_path = match data_type {
                 DataType::Img => item.media.clone(),
                 DataType::Metadata => item.metadata.clone(),
-                DataType::Movie => todo!(),
+                DataType::Movie => item.animation.clone().unwrap(),
             };
 
             let path = Path::new(&file_path);
@@ -199,7 +199,7 @@ impl UploadHandler for AWSHandler {
                         match data_type {
                             DataType::Img => item.media_link = link,
                             DataType::Metadata => item.metadata_link = link,
-                            DataType::Movie => todo!(),
+                            DataType::Movie => item.animation_link = Some(link),
                         }
                         // updates the progress bar
                         pb.inc(1);

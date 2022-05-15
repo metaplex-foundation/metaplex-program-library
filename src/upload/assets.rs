@@ -100,10 +100,8 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
     let paths = filtered_files
         .into_iter()
         .map(|entry| {
-            let entry_path = entry.path();
-            let file_name = entry_path.file_name().unwrap();
-            let file_name_as_str = file_name.to_str().unwrap();
-            let file_name_as_string = String::from(file_name_as_str);
+            let file_name_as_string =
+                String::from(entry.path().file_name().unwrap().to_str().unwrap());
             file_name_as_string
         })
         .collect::<Vec<String>>();
@@ -116,15 +114,15 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
     let metadata_filenames = paths_ref
         .clone()
         .into_iter()
-        .filter(|p| p.ends_with(".json"))
+        .filter(|p| p.to_lowercase().ends_with(".json"))
         .collect::<Vec<String>>();
 
     for metadata_filename in metadata_filenames {
         // TODO: parse i here first to verify that is an integer
 
-        let i = metadata_filename.split(".").nth(0).unwrap();
+        let i = metadata_filename.split('.').next().unwrap();
 
-        let img_pattern = format!("^{}\\.((jpg)|(gif)|(png))$", i); //"^" + i.to_string() + "\\.[^.]+$";
+        let img_pattern = format!("^{}\\.((jpg)|(gif)|(png))$", i);
 
         let img_regex = RegexBuilder::new(&img_pattern)
             .case_insensitive(true)
@@ -179,7 +177,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
         };
 
         let animation_hash = if let Some(animation_file) = &filename_of_animation_file {
-            let encoded_filename = encode(&animation_file)?;
+            let encoded_filename = encode(animation_file)?;
             Some(encoded_filename)
         } else {
             None
@@ -236,7 +234,7 @@ pub fn get_updated_metadata(
 
     if animation_link.is_some() {
         metadata.animation_url = animation_link.clone();
-        metadata.properties.files[1].uri = animation_link.clone().unwrap();
+        metadata.properties.files[1].uri = animation_link.unwrap();
     }
 
     Ok(serde_json::to_string(&metadata).unwrap())
