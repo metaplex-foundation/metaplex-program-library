@@ -110,7 +110,6 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
 
     let paths_ref = &paths;
 
-    // todo: case sensitivity on extension
     let metadata_filenames = paths_ref
         .clone()
         .into_iter()
@@ -119,6 +118,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
 
     for metadata_filename in metadata_filenames {
         // TODO: parse i here first to verify that is an integer
+        // add error for invlid filename if i doesn't parse to integer
 
         let i = metadata_filename.split('.').next().unwrap();
 
