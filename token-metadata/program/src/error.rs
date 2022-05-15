@@ -387,11 +387,11 @@ pub enum MetadataError {
     #[error("Revoke Collection Authority signer is incorrect")]
     RevokeCollectionAuthoritySignerIncorrect,
 
-    /// Token close failed
+    /// 100 - Token close failed
     #[error("Token close failed")]
     TokenCloseFailed,
 
-    /// Calling v1.3 function on unsized collection
+    /// 101 - Calling v1.3 function on unsized collection
     #[error("Can't use this function on unsized collection")]
     UnsizedCollection,
 
@@ -408,6 +408,10 @@ pub enum MetadataError {
     /// This NFT is not a member of the specified collection.
     #[error("This NFT is not a member of the specified collection.")]
     NotAMemberOfCollection,
+
+    /// This NFT is not a collection parent NFT.
+    #[error("This NFT is not a collection parent NFT.")]
+    NotACollectionParent,
 }
 
 impl PrintProgramError for MetadataError {

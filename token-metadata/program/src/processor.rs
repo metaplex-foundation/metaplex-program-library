@@ -10,7 +10,7 @@ use crate::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
     },
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction::{CollectionStatus, MetadataInstruction},
     solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, DataV2, ItemDetails, Key, MasterEditionV1,
@@ -231,6 +231,10 @@ pub fn process_instruction<'a>(
         MetadataInstruction::UnverifyCollectionV2 => {
             msg!("Instruction: Unverify Collection");
             unverify_collection_v2(program_id, accounts)
+        }
+        MetadataInstruction::SetCollectionStatus(status) => {
+            msg!("Instruction: Set Collection Status");
+            set_collection_status(program_id, accounts, status)
         }
     }
 }
@@ -855,11 +859,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     }
 
     // This handler can only verify non-sized NFTs
-    if let ItemDetails::CollectionInfo {
-        tradeable: _,
-        size: _,
-    } = collection_metadata.item_details
-    {
+    if let ItemDetails::CollectionInfo { status: _, size: _ } = collection_metadata.item_details {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -922,6 +922,8 @@ pub fn verify_collection_v2(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pr
         metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
 
         increment_collection_size(&mut collection_metadata, collection_info)?;
+    } else {
+        return Err(MetadataError::CollectionNotFound.into());
     }
     Ok(())
 }
@@ -968,11 +970,7 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     }
 
     // This handler can only unverify non-sized NFTs
-    if let ItemDetails::CollectionInfo {
-        tradeable: _,
-        size: _,
-    } = collection_data.item_details
-    {
+    if let ItemDetails::CollectionInfo { status: _, size: _ } = collection_data.item_details {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -1030,10 +1028,12 @@ pub fn unverify_collection_v2(program_id: &Pubkey, accounts: &[AccountInfo]) -> 
     // size on the Collection Parent.
     if let Some(collection) = &mut metadata.collection {
         collection.verified = false;
+        metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
 
         decrement_collection_size(&mut collection_metadata, collection_info)?;
+    } else {
+        return Err(MetadataError::CollectionNotFound.into());
     }
-    metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     Ok(())
 }
 
@@ -1463,11 +1463,7 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     )?;
 
     // This handler can only verify non-sized NFTs
-    if let ItemDetails::CollectionInfo {
-        tradeable: _,
-        size: _,
-    } = collection_data.item_details
-    {
+    if let ItemDetails::CollectionInfo { status: _, size: _ } = collection_data.item_details {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -1475,9 +1471,9 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     // size on the Collection Parent.
     match collection_data.item_details {
         ItemDetails::None => (),
-        ItemDetails::CollectionInfo { tradeable, size } => {
+        ItemDetails::CollectionInfo { status, size } => {
             collection_data.item_details = ItemDetails::CollectionInfo {
-                tradeable,
+                status,
                 size: size + 1,
             };
             collection_data.serialize(&mut *collection_info.try_borrow_mut_data()?)?;
@@ -1678,10 +1674,11 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
 
     // If the NFT is a verified part of a collection but the user has not provided the collection
     // metadata account, we cannot burn it because we need to decrement the collection size.
-    if !collection_nft_provided && metadata.collection.is_some() {
-        if metadata.collection.as_ref().unwrap().verified {
-            return Err(MetadataError::MissingCollectionMetadata.into());
-        }
+    if !collection_nft_provided
+        && metadata.collection.is_some()
+        && metadata.collection.as_ref().unwrap().verified
+    {
+        return Err(MetadataError::MissingCollectionMetadata.into());
     }
 
     // Checks:
@@ -1777,6 +1774,45 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         // Update collection size.
         increment_collection_size(&mut collection_metadata, collection_metadata_info)?;
     }
+
+    Ok(())
+}
+
+pub fn set_collection_status(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    status: CollectionStatus,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let update_authority_account_info = next_account_info(account_info_iter)?;
+
+    // Owned by token-metadata program.
+    assert_owned_by(metadata_account_info, program_id)?;
+
+    // Update authority is a signer
+    assert_signer(update_authority_account_info)?;
+
+    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+
+    match metadata.item_details {
+        ItemDetails::None => {
+            return Err(MetadataError::NotACollectionParent.into());
+        }
+        ItemDetails::CollectionInfo {
+            status: _current_status,
+            size,
+        } => {
+            metadata.item_details = ItemDetails::CollectionInfo { status, size };
+        }
+    }
+
+    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
+    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
+    metadata_account_info_data[0..].fill(0);
+
+    metadata.serialize(&mut *metadata_account_info_data)?;
 
     Ok(())
 }

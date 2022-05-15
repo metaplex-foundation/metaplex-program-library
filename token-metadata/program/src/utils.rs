@@ -1,6 +1,7 @@
 use crate::{
     assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
     error::MetadataError,
+    instruction::CollectionStatus,
     state::{
         get_reservation_list, Data, DataV2, EditionMarker, ItemDetails, Key, MasterEditionV1,
         Metadata, TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT,
@@ -962,7 +963,7 @@ pub fn process_create_metadata_accounts_logic(
 
     if is_collection_parent {
         metadata.item_details = ItemDetails::CollectionInfo {
-            tradeable: false,
+            status: CollectionStatus::None,
             size: 0,
         };
     } else {
@@ -1248,11 +1249,11 @@ pub fn increment_collection_size(
     match metadata.item_details {
         ItemDetails::None => {
             msg!("No collection details found. Cannot increment collection size.");
-            return Err(MetadataError::UnsizedCollection.into());
+            Err(MetadataError::UnsizedCollection.into())
         }
-        ItemDetails::CollectionInfo { tradeable, size } => {
+        ItemDetails::CollectionInfo { status, size } => {
             metadata.item_details = ItemDetails::CollectionInfo {
-                tradeable,
+                status,
                 size: size + 1,
             };
             metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
@@ -1268,11 +1269,11 @@ pub fn decrement_collection_size(
     match metadata.item_details {
         ItemDetails::None => {
             msg!("No collection details found. Cannot increment collection size.");
-            return Err(MetadataError::UnsizedCollection.into());
+            Err(MetadataError::UnsizedCollection.into())
         }
-        ItemDetails::CollectionInfo { tradeable, size } => {
+        ItemDetails::CollectionInfo { status, size } => {
             metadata.item_details = ItemDetails::CollectionInfo {
-                tradeable,
+                status,
                 size: size - 1,
             };
             metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;

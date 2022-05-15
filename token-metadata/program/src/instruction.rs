@@ -86,6 +86,15 @@ pub struct UtilizeArgs {
     pub number_of_uses: u64,
 }
 
+#[derive(BorshSerialize, BorshDeserialize, Copy, PartialEq, Debug, Clone)]
+pub enum CollectionStatus {
+    None,
+    Announced,
+    Preminting,
+    Minting,
+    Tradeable,
+}
+
 /// Instructions supported by the Metadata program.
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 #[rustfmt::skip]
@@ -465,6 +474,11 @@ pub enum MetadataInstruction {
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
     CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
+
+    /// Set Collection Status.
+    #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    SetCollectionStatus(CollectionStatus),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1583,5 +1597,23 @@ pub fn create_metadata_accounts_v3(
         })
         .try_to_vec()
         .unwrap(),
+    }
+}
+
+pub fn set_collection_status(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    update_authority: Pubkey,
+    status: CollectionStatus,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata_account, false),
+            AccountMeta::new_readonly(update_authority, true),
+        ],
+        data: MetadataInstruction::SetCollectionStatus(status)
+            .try_to_vec()
+            .unwrap(),
     }
 }

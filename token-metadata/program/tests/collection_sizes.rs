@@ -555,7 +555,7 @@ mod size_tracking {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        if let ItemDetails::CollectionInfo { tradeable: _, size } = parent_metadata.item_details {
+        if let ItemDetails::CollectionInfo { status: _, size } = parent_metadata.item_details {
             assert_eq!(size, 0);
         } else {
             panic!("ItemDetails is not a CollectionDetails");
@@ -578,7 +578,7 @@ mod size_tracking {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        if let ItemDetails::CollectionInfo { tradeable: _, size } = parent_metadata.item_details {
+        if let ItemDetails::CollectionInfo { status: _, size } = parent_metadata.item_details {
             assert_eq!(size, 1);
         } else {
             panic!("ItemDetails is not a CollectionDetails");
