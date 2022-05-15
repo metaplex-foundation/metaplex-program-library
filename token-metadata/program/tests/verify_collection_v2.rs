@@ -31,7 +31,7 @@ mod verify_collection_v2 {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -42,6 +42,7 @@ mod verify_collection_v2 {
                 None,
                 None,
                 None,
+                true, // is collection parent NFT
             )
             .await
             .unwrap();
@@ -66,7 +67,7 @@ mod verify_collection_v2 {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -80,6 +81,7 @@ mod verify_collection_v2 {
                     verified: false,
                 }),
                 uses.to_owned(),
+                false, // is not collection parent NFT
             )
             .await
             .unwrap();
@@ -549,7 +551,7 @@ mod verify_collection_v2 {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -560,6 +562,7 @@ mod verify_collection_v2 {
                 None,
                 None,
                 None,
+                true,
             )
             .await
             .unwrap();
@@ -650,7 +653,7 @@ mod verify_collection_v2 {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -661,6 +664,7 @@ mod verify_collection_v2 {
                 None,
                 None,
                 None,
+                true,
             )
             .await
             .unwrap();
@@ -767,7 +771,7 @@ mod verify_collection_v2 {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -778,6 +782,7 @@ mod verify_collection_v2 {
                 None,
                 None,
                 None,
+                true,
             )
             .await
             .unwrap();
@@ -883,7 +888,7 @@ mod verify_collection_v2 {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -894,6 +899,7 @@ mod verify_collection_v2 {
                 None,
                 None,
                 None,
+                true,
             )
             .await
             .unwrap();
@@ -1146,7 +1152,7 @@ mod verify_collection_v2 {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -1157,6 +1163,7 @@ mod verify_collection_v2 {
                 None,
                 None,
                 None,
+                true,
             )
             .await
             .unwrap();
