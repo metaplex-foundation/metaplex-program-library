@@ -7,6 +7,8 @@ import { keyBeet } from '../generated/types/Key';
 import { tokenStandardBeet } from '../generated/types/TokenStandard';
 import { usesBeet } from '../generated/types/Uses';
 
+const NONE_BYTE_SIZE = beet.coptionNone('').byteSize;
+
 /**
  * This is a custom deserializer for TokenMetadata in order to mitigate acounts with corrupted
  * data on chain.
@@ -53,17 +55,31 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
   // Possibly corrupted section
   // -----------------
 
+  // NOTE: that we avoid trying to deserialize any subsequent fields if a
+  // previous one was found to be corrupted just to save work
+
   // tokenStandard
-  const [tokenStandard, tokenDelta] = tryReadOption(beet.coption(tokenStandardBeet), buf, cursor);
+  const [tokenStandard, tokenDelta, tokenCorrupted] = tryReadOption(
+    beet.coption(tokenStandardBeet),
+    buf,
+    cursor,
+  );
   cursor += tokenDelta;
 
   // collection
-  const [collection, collectionDelta] = tryReadOption(beet.coption(collectionBeet), buf, cursor);
+  const [collection, collectionDelta, collectionCorrupted] = tokenCorrupted
+    ? [null, NONE_BYTE_SIZE, true]
+    : tryReadOption(beet.coption(collectionBeet), buf, cursor);
   cursor += collectionDelta;
 
   // uses
-  const [uses, usesDelta] = tryReadOption(beet.coption(usesBeet), buf, cursor);
+  const [uses, usesDelta, usesCorrupted] =
+    tokenCorrupted || collectionCorrupted
+      ? [null, NONE_BYTE_SIZE, true]
+      : tryReadOption(beet.coption(usesBeet), buf, cursor);
   cursor += usesDelta;
+
+  const anyCorrupted = tokenCorrupted || collectionCorrupted || usesCorrupted;
 
   const args = {
     key,
@@ -73,9 +89,9 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     primarySaleHappened,
     isMutable,
     editionNonce,
-    tokenStandard,
-    collection,
-    uses,
+    tokenStandard: anyCorrupted ? null : tokenStandard,
+    collection: anyCorrupted ? null : collection,
+    uses: anyCorrupted ? null : uses,
   };
 
   return [Metadata.fromArgs(args), cursor];
@@ -85,12 +101,12 @@ function tryReadOption<T>(
   optionBeet: beet.FixableBeet<T, Partial<T>>,
   buf: Buffer,
   offset: number,
-): [T | null, number] {
+): [T | null, number, boolean] {
   try {
     const fixed = optionBeet.toFixedFromData(buf, offset);
     const value = fixed.read(buf, offset);
-    return [value, fixed.byteSize];
+    return [value, fixed.byteSize, false];
   } catch (err) {
-    return [null, optionBeet.toFixedFromValue(null).byteSize];
+    return [null, NONE_BYTE_SIZE, true];
   }
 }
