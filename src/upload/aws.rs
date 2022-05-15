@@ -24,6 +24,7 @@ struct ObjectInfo {
     data_type: DataType,
     content_type: String,
     bucket: String,
+    animation_link: Option<String>,
 }
 
 pub struct AWSHandler {
@@ -54,7 +55,8 @@ impl AWSHandler {
             DataType::Metadata => {
                 // replaces the media link without modifying the original file to avoid
                 // changing the hash of the metadata file
-                get_updated_metadata(&info.file_path, &info.media_link)?.into_bytes()
+                get_updated_metadata(&info.file_path, &info.media_link, info.animation_link)?
+                    .into_bytes()
             }
             DataType::Movie => todo!(),
         };
@@ -83,6 +85,7 @@ impl UploadHandler for AWSHandler {
         _assets: &HashMap<usize, AssetPair>,
         _media_indices: &[usize],
         _metadata_indices: &[usize],
+        _animation_indices: &[usize],
     ) -> Result<()> {
         Ok(())
     }
@@ -129,7 +132,7 @@ impl UploadHandler for AWSHandler {
         let content_type = match data_type {
             DataType::Img => format!("image/{}", extension),
             DataType::Metadata => "application/json".to_string(),
-            DataType::Movie => todo!(),
+            DataType::Movie => format!("video/{}", extension),
         };
 
         println!("\nSending data: (Ctrl+C to abort)");
@@ -165,6 +168,7 @@ impl UploadHandler for AWSHandler {
                 data_type: data_type.clone(),
                 content_type: content_type.clone(),
                 bucket: self.bucket.clone(),
+                animation_link: cache_item.animation_link.clone(),
             });
         }
 

@@ -39,6 +39,7 @@ struct TxInfo {
     asset_id: String,
     file_path: String,
     media_link: String,
+    animation_link: Option<String>,
     data_type: DataType,
     tag: Vec<Tag>,
 }
@@ -203,9 +204,14 @@ impl BundlrHandler {
             DataType::Metadata => {
                 // replaces the media link without modifying the original file to avoid
                 // changing the hash of the metadata file
-                get_updated_metadata(&tx_info.file_path, &tx_info.media_link)?.into_bytes()
+                get_updated_metadata(
+                    &tx_info.file_path,
+                    &tx_info.media_link,
+                    tx_info.animation_link,
+                )?
+                .into_bytes()
             }
-            DataType::Movie => todo!(),
+            DataType::Movie => fs::read(&tx_info.file_path)?,
         };
 
         let tx = bundlr_client.create_transaction_with_tags(data, tx_info.tag);
@@ -229,6 +235,7 @@ impl UploadHandler for BundlrHandler {
         assets: &HashMap<usize, AssetPair>,
         media_indices: &[usize],
         metadata_indices: &[usize],
+        animation_indices: &[usize],
     ) -> Result<()> {
         // calculates the size of the files to upload
         let mut total_size = 0;
@@ -241,13 +248,24 @@ impl UploadHandler for BundlrHandler {
 
         let mock_uri = "x".repeat(MOCK_URI_SIZE);
 
+        let mut mock_animation_uri = None;
+        if !animation_indices.is_empty() {
+            for index in animation_indices {
+                let item = assets.get(index).unwrap();
+                let path = Path::new(item.animation.as_ref().unwrap());
+                total_size += HEADER_SIZE + cmp::max(MINIMUM_SIZE, std::fs::metadata(path)?.len());
+            }
+
+            mock_animation_uri = Some("x".repeat(MOCK_URI_SIZE));
+        }
+
         for index in metadata_indices {
             let item = assets.get(index).unwrap();
 
             total_size += HEADER_SIZE
                 + cmp::max(
                     MINIMUM_SIZE,
-                    get_updated_metadata(&item.metadata, &mock_uri)
+                    get_updated_metadata(&item.metadata, &mock_uri, mock_animation_uri.clone())
                         .expect("Failed to get updated metadata.")
                         .into_bytes()
                         .len() as u64,
@@ -342,7 +360,7 @@ impl UploadHandler for BundlrHandler {
             let file_path = match data_type {
                 DataType::Img => item.media.clone(),
                 DataType::Metadata => item.metadata.clone(),
-                DataType::Movie => todo!(),
+                DataType::Movie => item.animation.clone().unwrap(),
             };
 
             let path = Path::new(&file_path);
@@ -367,7 +385,7 @@ impl UploadHandler for BundlrHandler {
         let media_tag = match data_type {
             DataType::Img => Tag::new("Content-Type".into(), format!("image/{extension}")),
             DataType::Metadata => Tag::new("Content-Type".into(), "application/json".to_string()),
-            DataType::Movie => todo!(),
+            DataType::Movie => Tag::new("Content-Type".into(), format!("video/{extension}")),
         };
 
         // upload data to bundlr
@@ -399,6 +417,7 @@ impl UploadHandler for BundlrHandler {
                 media_link: cache_item.media_link.clone(),
                 data_type: data_type.clone(),
                 tag: vec![sugar_tag.clone(), media_tag.clone()],
+                animation_link: cache_item.animation_link.clone(),
             });
         }
 
@@ -429,7 +448,7 @@ impl UploadHandler for BundlrHandler {
                         match data_type {
                             DataType::Img => item.media_link = link,
                             DataType::Metadata => item.metadata_link = link,
-                            DataType::Movie => todo!(),
+                            DataType::Movie => item.animation_link = Some(link),
                         }
                         // updates the progress bar
                         pb.inc(1);

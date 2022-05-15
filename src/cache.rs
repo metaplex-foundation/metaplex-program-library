@@ -100,6 +100,8 @@ pub struct CacheItem {
     pub metadata_link: String,
     #[serde(rename = "onChain")]
     pub on_chain: bool,
+    pub animation_hash: Option<String>,
+    pub animation_link: Option<String>,
 }
 
 impl CacheItem {

@@ -26,6 +26,7 @@ pub trait UploadHandler {
         assets: &HashMap<usize, AssetPair>,
         media_indices: &[usize],
         metadata_indices: &[usize],
+        animation_indices: &[usize],
     ) -> Result<()>;
 
     /// Upload the data to a (permanent) storage.
@@ -52,6 +53,7 @@ pub struct UploadArgs {
 pub struct AssetType {
     pub image: Vec<usize>,
     pub metadata: Vec<usize>,
+    pub animation: Vec<usize>,
 }
 
 pub async fn process_upload(args: UploadArgs) -> Result<()> {
@@ -79,14 +81,16 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     let mut indices = AssetType {
         image: Vec::new(),
         metadata: Vec::new(),
+        animation: Vec::new(),
     };
 
     for (index, pair) in &asset_pairs {
         match cache.items.0.get_mut(&index.to_string()) {
             Some(item) => {
                 // has the media file changed?
-                if !item.media_hash.eq(&pair.media_hash) || item.media_link.is_empty() {
+                if !&item.media_hash.eq(&pair.media_hash) || item.media_link.is_empty() {
                     // we replace the entire item to trigger the media and metadata upload
+                    let item_clone = item.clone();
                     cache
                         .items
                         .0
@@ -94,6 +98,24 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                     // we need to upload both media/metadata
                     indices.image.push(*index);
                     indices.metadata.push(*index);
+
+                    if item_clone.animation_hash.is_some() || item_clone.animation_link.is_some() {
+                        indices.animation.push(*index);
+                    }
+                } else if item.animation_hash.is_some() || item.animation_link.as_ref().is_some() {
+                    if !item.animation_hash.eq(&pair.animation_hash)
+                        || item.animation_link.as_ref().unwrap().is_empty()
+                    {
+                        // we replace the entire item to trigger the media and metadata upload
+                        cache
+                            .items
+                            .0
+                            .insert(index.to_string(), pair.clone().into_cache_item());
+                        // we need to upload both media/metadata
+                        indices.animation.push(*index);
+                        indices.image.push(*index);
+                        indices.metadata.push(*index);
+                    }
                 } else if !item.metadata_hash.eq(&pair.metadata_hash)
                     || item.metadata_link.is_empty()
                 {
@@ -113,6 +135,10 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                 // we need to upload both media/metadata
                 indices.image.push(*index);
                 indices.metadata.push(*index);
+
+                if pair.animation_hash.clone().is_some() {
+                    indices.animation.push(*index);
+                };
             }
         }
         // sanity check: verifies that both symbol and seller-fee-basis-points are the
@@ -171,7 +197,8 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         )));
     }
 
-    let need_upload = !indices.image.is_empty() || !indices.metadata.is_empty();
+    let need_upload =
+        !indices.image.is_empty() || !indices.metadata.is_empty() || !indices.animation.is_empty();
 
     // ready to upload data
 
@@ -205,6 +232,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                 &asset_pairs,
                 &indices.image,
                 &indices.metadata,
+                &indices.animation,
             )
             .await?;
 
@@ -250,6 +278,34 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             }
         }
 
+        if !indices.animation.is_empty() {
+            errors.extend(
+                handler
+                    .upload_data(
+                        &sugar_config,
+                        &asset_pairs,
+                        &mut cache,
+                        &indices.animation,
+                        DataType::Movie,
+                        args.interrupted.clone(),
+                    )
+                    .await?,
+            );
+
+            // updates the list of metadata indices since the media upload
+            // might fail - removes any index that the media upload failed
+            if !indices.metadata.is_empty() {
+                for index in indices.animation {
+                    let item = cache.items.0.get(&index.to_string()).unwrap();
+
+                    if item.animation_link.as_ref().unwrap().is_empty() {
+                        // no media link, not ready for metadata upload
+                        indices.metadata.retain(|&x| x != index);
+                    }
+                }
+            }
+        }
+
         println!(
             "\n{} {}Uploading metadata files {}",
             style("[4/4]").bold().dim(),
@@ -287,7 +343,10 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     let mut count = 0;
 
     for (_index, item) in cache.items.0 {
-        if !(item.media_link.is_empty() || item.metadata_link.is_empty()) {
+        if !(item.media_link.is_empty()
+            || item.metadata_link.is_empty()
+            || item.animation_link.unwrap().is_empty())
+        {
             count += 1;
         }
     }

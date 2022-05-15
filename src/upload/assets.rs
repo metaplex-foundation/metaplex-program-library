@@ -48,6 +48,8 @@ impl AssetPair {
             metadata_hash: self.metadata_hash,
             metadata_link: String::new(),
             on_chain: false,
+            animation_hash: self.animation_hash,
+            animation_link: self.animation,
         }
     }
 }
@@ -219,7 +221,11 @@ fn encode(file: &str) -> Result<String> {
     Ok(HEXLOWER.encode(context.finish().as_ref()))
 }
 
-pub fn get_updated_metadata(metadata_file: &str, media_link: &str) -> Result<String> {
+pub fn get_updated_metadata(
+    metadata_file: &str,
+    media_link: &str,
+    animation_link: Option<String>,
+) -> Result<String> {
     let mut metadata: Metadata = {
         let m = OpenOptions::new().read(true).open(metadata_file)?;
         serde_json::from_reader(&m)?
@@ -227,6 +233,11 @@ pub fn get_updated_metadata(metadata_file: &str, media_link: &str) -> Result<Str
 
     metadata.image = media_link.to_string();
     metadata.properties.files[0].uri = media_link.to_string();
+
+    if animation_link.is_some() {
+        metadata.animation_url = animation_link.clone();
+        metadata.properties.files[1].uri = animation_link.clone().unwrap();
+    }
 
     Ok(serde_json::to_string(&metadata).unwrap())
 }
