@@ -141,7 +141,16 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             .filter(|p| img_regex.is_match(p))
             .collect::<Vec<String>>();
 
-        let img_filename = &img_filenames[0];
+        let img_filename = if img_filenames.is_empty() {
+            let error = anyhow!(
+                "Couldn't parse image filename at index {} to a valid index number.",
+                i.parse::<usize>().unwrap()
+            );
+            error!("{:?}", error);
+            return Err(error);
+        } else {
+            &img_filenames[0]
+        };
 
         let animation_pattern = format!("^{}\\.((mp4)|(mov)|(webm))$", i);
         let animation_regex = RegexBuilder::new(&animation_pattern)
@@ -170,7 +179,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             .expect("Failed to convert media path from unicode.")
             .to_string();
 
-        let filename_of_animation_file = if !animation_filenames.is_empty() {
+        let animation_filename = if !animation_filenames.is_empty() {
             let animation_filepath = Path::new(assets_dir)
                 .join(&animation_filenames[0])
                 .to_str()
@@ -182,7 +191,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             None
         };
 
-        let animation_hash = if let Some(animation_file) = &filename_of_animation_file {
+        let animation_hash = if let Some(animation_file) = &animation_filename {
             let encoded_filename = encode(animation_file)?;
             Some(encoded_filename)
         } else {
@@ -196,7 +205,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             media: img_filepath.clone(),
             media_hash: encode(&img_filepath)?,
             animation_hash,
-            animation: filename_of_animation_file,
+            animation: animation_filename,
         };
 
         asset_pairs.insert(i.parse::<usize>().unwrap(), asset_pair);
