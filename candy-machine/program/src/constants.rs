@@ -4,6 +4,8 @@ use mpl_token_metadata::state::{
 use solana_program::pubkey::Pubkey;
 
 pub const EXPIRE_OFFSET: i64 = 10 * 60;
+pub const BLOCK_HASHES: Pubkey =
+    solana_program::pubkey!("SysvarRecentB1ockHashes11111111111111111111");
 pub const BOT_FEE: u64 = 10000000;
 pub const PREFIX: &str = "candy_machine";
 pub const COLLECTIONS_FEATURE_INDEX: usize = 0;

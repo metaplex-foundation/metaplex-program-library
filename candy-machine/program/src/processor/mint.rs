@@ -1,7 +1,7 @@
 use crate::{
     constants::{
-        A_TOKEN, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START, CONFIG_LINE_SIZE,
-        EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+        A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
+        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
     },
     utils::*,
     CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
@@ -25,7 +25,7 @@ use solana_program::{
     program::{invoke, invoke_signed},
     serialize_utils::{read_pubkey, read_u16},
     system_instruction, sysvar,
-    sysvar::instructions::get_instruction_relative,
+    sysvar::{instructions::get_instruction_relative, SysvarId},
 };
 use std::{cell::RefMut, ops::Deref};
 
@@ -67,7 +67,7 @@ pub struct MintNFT<'info> {
     /// Account not actually used.
     clock: Sysvar<'info, Clock>,
     // Leaving the name the same for IDL backward compatability
-    /// CHECK: account not actually used.
+    /// CHECK: checked in program.
     recent_blockhashes: UncheckedAccount<'info>,
     /// CHECK: account constraints checked in account trait
     #[account(address = sysvar::instructions::id())]
@@ -98,12 +98,22 @@ pub fn handle_mint_nft<'info>(
     let payer = &ctx.accounts.payer;
     let token_program = &ctx.accounts.token_program;
     let clock = Clock::get()?;
+    //Account name the same for IDL compatability
+    let recent_slothashes = &ctx.accounts.recent_blockhashes;
     let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
     let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
     let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
     let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
     if !ctx.accounts.metadata.data_is_empty() {
         return err!(CandyError::MetadataAccountMustBeEmpty);
+    }
+    if cmp_pubkeys(&recent_slothashes.key(), &BLOCK_HASHES) {
+        msg!("recent_blockhashes is deprecated and will break soon");
+    }
+    if !cmp_pubkeys(&recent_slothashes.key(), &SlotHashes::id())
+        && !cmp_pubkeys(&recent_slothashes.key(), &BLOCK_HASHES)
+    {
+        return err!(CandyError::IncorrectSlotHashesPubkey);
     }
     // Restrict Who can call Candy Machine via CPI
     if !cmp_pubkeys(&current_ix.program_id, &crate::id())
@@ -480,12 +490,8 @@ pub fn handle_mint_nft<'info>(
         )?;
     }
 
-    let recent_slothashes = <SlotHashes as sysvar::Sysvar>::get()?;
-    let (_most_recent, hash) = recent_slothashes
-        .first()
-        .ok_or(CandyError::SlotHashesEmpty)?;
-
-    let most_recent = array_ref![hash.as_ref(), 0, 8];
+    let data = recent_slothashes.data.borrow();
+    let most_recent = array_ref![data, 12, 8];
 
     let index = u64::from_le_bytes(*most_recent);
     let modded: usize = index
@@ -669,7 +675,6 @@ pub fn get_good_index(
 
             match taken {
                 x if x > 0 => {
-                    //msg!("Index to use {} is taken", index_to_use);
                     if pos {
                         index_to_use += 1;
                     } else {
@@ -680,7 +685,6 @@ pub fn get_good_index(
                     }
                 }
                 0 => {
-                    //msg!("Index to use {} is not taken, exiting", index_to_use);
                     found = true;
                     arr[my_position_in_vec] |= mask;
                 }
@@ -729,8 +733,8 @@ pub fn get_config_line(
     let data_array = &mut arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)
         ..CONFIG_ARRAY_START + 4 + (index_to_use + 1) * (CONFIG_LINE_SIZE)];
 
-    let mut name_vec = vec![];
-    let mut uri_vec = vec![];
+    let mut name_vec = Vec::with_capacity(MAX_NAME_LENGTH);
+    let mut uri_vec = Vec::with_capacity(MAX_URI_LENGTH);
 
     #[allow(clippy::needless_range_loop)]
     for i in 4..4 + MAX_NAME_LENGTH {

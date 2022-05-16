@@ -24,7 +24,7 @@ pub fn handle_add_config_lines(
     let account = candy_machine.to_account_info();
     let current_count = get_config_count(&account.data.borrow_mut())?;
     let mut data = account.data.borrow_mut();
-    let mut fixed_config_lines = vec![];
+    let mut fixed_config_lines = Vec::with_capacity(config_lines.len());
     // No risk overflow because you literally cant store this many in an account
     // going beyond u32 only happens with the hidden store candies, which dont use this.
     if index > (candy_machine.data.items_available as u32) - 1 {
@@ -34,16 +34,10 @@ pub fn handle_add_config_lines(
         return err!(CandyError::HiddenSettingsConfigsDoNotHaveConfigLines);
     }
     for line in &config_lines {
-        let mut array_of_zeroes = vec![];
-        while array_of_zeroes.len() < MAX_NAME_LENGTH - line.name.len() {
-            array_of_zeroes.push(0u8);
-        }
+        let array_of_zeroes = vec![0u8; MAX_NAME_LENGTH - line.name.len()];
         let name = line.name.clone() + std::str::from_utf8(&array_of_zeroes).unwrap();
 
-        let mut array_of_zeroes = vec![];
-        while array_of_zeroes.len() < MAX_URI_LENGTH - line.uri.len() {
-            array_of_zeroes.push(0u8);
-        }
+        let array_of_zeroes = vec![0u8; MAX_URI_LENGTH - line.uri.len()];
         let uri = line.uri.clone() + std::str::from_utf8(&array_of_zeroes).unwrap();
         fixed_config_lines.push(ConfigLine { name, uri })
     }
