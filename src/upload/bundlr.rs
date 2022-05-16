@@ -248,19 +248,22 @@ impl UploadHandler for BundlrHandler {
 
         let mock_uri = "x".repeat(MOCK_URI_SIZE);
 
-        let mut mock_animation_uri = None;
         if !animation_indices.is_empty() {
             for index in animation_indices {
                 let item = assets.get(index).unwrap();
                 let path = Path::new(item.animation.as_ref().unwrap());
                 total_size += HEADER_SIZE + cmp::max(MINIMUM_SIZE, std::fs::metadata(path)?.len());
             }
-
-            mock_animation_uri = Some("x".repeat(MOCK_URI_SIZE));
         }
 
         for index in metadata_indices {
             let item = assets.get(index).unwrap();
+
+            let mock_animation_uri = if item.animation.is_some() {
+                Some("x".repeat(MOCK_URI_SIZE))
+            } else {
+                None
+            };
 
             total_size += HEADER_SIZE
                 + cmp::max(

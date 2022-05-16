@@ -84,6 +84,8 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         animation: Vec::new(),
     };
 
+    // todo: add general 'has_animation' var for whole process??
+
     for (index, pair) in &asset_pairs {
         match cache.items.0.get_mut(&index.to_string()) {
             Some(item) => {
@@ -279,6 +281,19 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         }
 
         if !indices.animation.is_empty() {
+            println!(
+                "\n{} {}Uploading animation files {}",
+                style("[4/5]").bold().dim(),
+                UPLOAD_EMOJI,
+                if indices.animation.is_empty() {
+                    "(skipping)"
+                } else {
+                    ""
+                }
+            );
+        }
+
+        if !indices.animation.is_empty() {
             errors.extend(
                 handler
                     .upload_data(
@@ -343,10 +358,13 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     let mut count = 0;
 
     for (_index, item) in cache.items.0 {
-        if !(item.media_link.is_empty()
-            || item.metadata_link.is_empty()
-            || item.animation_link.unwrap().is_empty())
-        {
+        let has_animation = if let Some(animation_link) = item.animation_link {
+            animation_link.is_empty()
+        } else {
+            false
+        };
+
+        if !(item.media_link.is_empty() || item.metadata_link.is_empty() || has_animation) {
             count += 1;
         }
     }
