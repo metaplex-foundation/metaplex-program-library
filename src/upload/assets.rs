@@ -117,10 +117,16 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
         .collect::<Vec<String>>();
 
     for metadata_filename in metadata_filenames {
-        // TODO: parse i here first to verify that is an integer
-        // add error for invlid filename if i doesn't parse to integer
-
         let i = metadata_filename.split('.').next().unwrap();
+
+        if i.parse::<usize>().is_err() {
+            let error = anyhow!(
+                "Couldn't parse filename '{}' to a valid index number.",
+                metadata_filename
+            );
+            error!("{:?}", error);
+            return Err(error);
+        };
 
         let img_pattern = format!("^{}\\.((jpg)|(gif)|(png))$", i);
 
@@ -193,10 +199,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             animation: filename_of_animation_file,
         };
 
-        asset_pairs.insert(
-            i.parse::<usize>().expect("Failed to parse filename number"),
-            asset_pair,
-        );
+        asset_pairs.insert(i.parse::<usize>().unwrap(), asset_pair);
     }
 
     Ok(asset_pairs)
