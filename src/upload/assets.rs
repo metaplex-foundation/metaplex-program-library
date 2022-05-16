@@ -181,8 +181,13 @@ pub fn get_updated_metadata(metadata_file: &str, media_link: &str) -> Result<Str
         serde_json::from_reader(&m)?
     };
 
+    for file in &mut metadata.properties.files {
+        if file.uri.eq(&metadata.image) {
+            file.uri = media_link.to_string();
+        }
+    }
+
     metadata.image = media_link.to_string();
-    metadata.properties.files[0].uri = media_link.to_string();
 
     Ok(serde_json::to_string(&metadata).unwrap())
 }
