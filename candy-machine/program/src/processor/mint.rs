@@ -696,7 +696,6 @@ pub fn get_config_line(
             uri: hs.uri.clone(),
         });
     }
-    msg!("Index is set to {:?}", index);
     let a_info = a.to_account_info();
 
     let mut arr = a_info.data.borrow_mut();
@@ -712,10 +711,6 @@ pub fn get_config_line(
         }
     }
 
-    msg!(
-        "Index actually ends up due to used bools {:?}",
-        index_to_use
-    );
     if arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)] == 1 {
         return err!(CandyError::CannotFindUsableConfigLine);
     }
