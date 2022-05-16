@@ -636,19 +636,12 @@ pub fn get_good_index(
             + index_to_use
                 .checked_div(8)
                 .ok_or(CandyError::NumericalOverflowError)?;
-        /*msg!(
-            "My position is {} and value there is {}",
-            my_position_in_vec,
-            arr[my_position_in_vec]
-        );*/
         if arr[my_position_in_vec] == 255 {
-            //msg!("We are screwed here, move on");
             let eight_remainder = 8 - index_to_use
                 .checked_rem(8)
                 .ok_or(CandyError::NumericalOverflowError)?;
             let reversed = 8 - eight_remainder + 1;
             if (eight_remainder != 0 && pos) || (reversed != 0 && !pos) {
-                //msg!("Moving by {}", eight_remainder);
                 if pos {
                     index_to_use += eight_remainder;
                 } else {
@@ -657,13 +650,10 @@ pub fn get_good_index(
                     }
                     index_to_use -= reversed;
                 }
+            } else if pos {
+                index_to_use += 8;
             } else {
-                //msg!("Moving by 8");
-                if pos {
-                    index_to_use += 8;
-                } else {
-                    index_to_use -= 8;
-                }
+                index_to_use -= 8;
             }
         } else {
             let position_from_right = 7 - index_to_use
