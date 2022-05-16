@@ -479,6 +479,12 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
     #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
     SetCollectionStatus(CollectionStatus),
+
+    /// Set size of an existing collection.
+    #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, signer, writable, name="Metaplex signer", desc="Metaplex signer")]
+    SetCollectionSize(u64),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1613,6 +1619,26 @@ pub fn set_collection_status(
             AccountMeta::new_readonly(update_authority, true),
         ],
         data: MetadataInstruction::SetCollectionStatus(status)
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+pub fn set_collection_size(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    update_authority: Pubkey,
+    metaplex_signer: Pubkey,
+    size: u64,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(metadata_account, false),
+            AccountMeta::new_readonly(update_authority, true),
+            AccountMeta::new_readonly(metaplex_signer, true),
+        ],
+        data: MetadataInstruction::SetCollectionSize(size)
             .try_to_vec()
             .unwrap(),
     }
