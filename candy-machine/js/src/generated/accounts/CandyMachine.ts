@@ -140,7 +140,17 @@ export class CandyMachine implements CandyMachineArgs {
       authority: this.authority.toBase58(),
       wallet: this.wallet.toBase58(),
       tokenMint: this.tokenMint,
-      itemsRedeemed: this.itemsRedeemed,
+      itemsRedeemed: (() => {
+        const x = <{ toNumber: () => number }>this.itemsRedeemed;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       data: this.data,
     };
   }
