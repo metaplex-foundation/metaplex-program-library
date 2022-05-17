@@ -150,7 +150,7 @@ pub fn public_bid_with_auctioneer(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
-    auction_bid_logic(
+    auctioneer_bid_logic(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
@@ -346,7 +346,7 @@ pub fn private_bid_with_auctioneer<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
-    auction_bid_logic(
+    auctioneer_bid_logic(
         ctx.accounts.wallet.to_owned(),
         ctx.accounts.payment_account.to_owned(),
         ctx.accounts.transfer_authority.to_owned(),
@@ -557,7 +557,7 @@ pub fn bid_logic<'info>(
 }
 
 // Handles the bid logic for both private and public auctioneer bids.
-pub fn auction_bid_logic<'info>(
+pub fn auctioneer_bid_logic<'info>(
     wallet: Signer<'info>,
     payment_account: UncheckedAccount<'info>,
     transfer_authority: UncheckedAccount<'info>,

@@ -272,7 +272,7 @@ pub fn execute_sale_with_auctioneer<'info>(
     )?;
 
     // Duplicate the logic methods to avoid going over the compute limit.
-    execute_auction_sale_logic(
+    auctioneer_execute_sale_logic(
         ctx,
         escrow_payment_bump,
         free_trade_state_bump,
@@ -284,7 +284,7 @@ pub fn execute_sale_with_auctioneer<'info>(
 
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
 #[inline(never)]
-fn execute_auction_sale_logic<'info>(
+fn auctioneer_execute_sale_logic<'info>(
     ctx: Context<'_, '_, '_, 'info, ExecuteSaleWithAuctioneer<'info>>,
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,

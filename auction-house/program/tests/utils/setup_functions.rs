@@ -1237,41 +1237,6 @@ pub async fn delegate_auctioneer(
     context.banks_client.process_transaction(tx).await
 }
 
-pub async fn update_auctioneer(
-    context: &mut ProgramTestContext,
-    auction_house: Pubkey,
-    authority: &Keypair,
-    auctioneer_authority: Pubkey,
-    ah_auctioneer_pda: Pubkey,
-    scopes: Vec<AuthorityScope>,
-) -> StdResult<(), TransportError> {
-    let accounts = mpl_auction_house::accounts::UpdateAuctioneer {
-        auction_house,
-        authority: authority.pubkey(),
-        auctioneer_authority,
-        ah_auctioneer_pda,
-        system_program: system_program::id(),
-    }
-    .to_account_metas(None);
-
-    let data = mpl_auction_house::instruction::UpdateAuctioneer { scopes }.data();
-
-    let instruction = Instruction {
-        program_id: mpl_auction_house::id(),
-        data,
-        accounts,
-    };
-
-    let tx = Transaction::new_signed_with_payer(
-        &[instruction],
-        Some(&authority.pubkey()),
-        &[authority],
-        context.last_blockhash,
-    );
-
-    context.banks_client.process_transaction(tx).await
-}
-
 pub fn withdraw(
     context: &mut ProgramTestContext,
     buyer: &Keypair,
