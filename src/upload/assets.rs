@@ -1,12 +1,12 @@
 use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
 use data_encoding::HEXLOWER;
 use glob::glob;
-use regex::RegexBuilder;
+use regex::{Regex, RegexBuilder};
 use ring::digest::{Context, SHA256};
 use serde_json;
 use std::{
     fs::{self, DirEntry, File, OpenOptions},
-    io::{BufReader, Read},
+    io::{stdout, BufReader, Read},
     sync::Arc,
 };
 
@@ -109,6 +109,20 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
     let mut asset_pairs: HashMap<usize, AssetPair> = HashMap::new();
 
     let paths_ref = &paths;
+
+    let animation_exists_regex =
+        Regex::new("^(.+)\\.((mp4)|(mov)|(webm))$").expect("Failed to create regex.");
+
+    // since there doesn't have to be video for each image/json pair, need to get rid of invalid file names before entering metadata filename loop
+    for x in paths_ref {
+        if let Some(captures) = animation_exists_regex.captures(x) {
+            if &captures[1].parse::<usize>().is_err() {
+                let error = anyhow!("Couldn't parse filename '{}' to a valid index  number.", x);
+                error!("{:?}", error);
+                return Err(error);
+            }
+        }
+    }
 
     let metadata_filenames = paths_ref
         .clone()
