@@ -692,17 +692,17 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
 
 /// TokenBurnParams
 pub struct TokenBurnParams<'a: 'b, 'b> {
-    /// mint
+    /// CHECK: mint
     pub mint: AccountInfo<'a>,
-    /// source
+    /// CHECK: source
     pub source: AccountInfo<'a>,
-    /// amount
+    /// CHECK: amount
     pub amount: u64,
-    /// authority
+    /// CHECK: authority
     pub authority: AccountInfo<'a>,
-    /// authority_signer_seeds
+    /// CHECK: authority_signer_seeds
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
-    /// token_program
+    /// CHECK: token_program
     pub token_program: AccountInfo<'a>,
 }
 
@@ -736,17 +736,17 @@ pub fn spl_token_mint_to(params: TokenMintToParams<'_, '_>) -> ProgramResult {
 
 /// TokenMintToParams
 pub struct TokenMintToParams<'a: 'b, 'b> {
-    /// mint
+    /// CHECK: mint
     pub mint: AccountInfo<'a>,
-    /// destination
+    /// CHECK: destination
     pub destination: AccountInfo<'a>,
-    /// amount
+    /// CHECK: amount
     pub amount: u64,
-    /// authority
+    /// CHECK: authority
     pub authority: AccountInfo<'a>,
-    /// authority_signer_seeds
+    /// CHECK: authority_signer_seeds
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
-    /// token_program
+    /// CHECK: token_program
     pub token_program: AccountInfo<'a>,
 }
 
