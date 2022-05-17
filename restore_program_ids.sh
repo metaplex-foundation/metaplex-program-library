@@ -1,12 +1,6 @@
 #!/bin/bash
 
-# Deploy ALL Metaplex Programs
-# Comment out any lines with programs you dont want to deploy.
-
-# IMPORTANT! Make sure to follow instructions in LocalDev.md
-
-# MPL_SO_PATH=/sol/metaplex/program-library/target/deploy
-# MPL_WALLET=/wallet/metaplex.key.json
+# Use this script before running `git add .` to avoid comitting lib.rs files with non-default public keys.
 
 MPL_ROOT=/sol/metaplex/program-library
 
@@ -46,41 +40,3 @@ for elm1 in "${arr[@]}"; do
       replace_pubkey ${elm2[2]} ${elm2[1]} ${MPL_ROOT}${elm2[0]}/src/lib.rs
   done
 done
-
-
-
-# path_pubkey[/token-metadata/program]=metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s
-
-# for key in "${!path_pubkey[@]}"; do
-#   echo "$key ${path_pubkey[$key][0]}"
-# done
-
-# auction
-# auctxRXPeJoc4817jDhf4HbjnhEcr1cCXenosMhK5R8
-
-# auction-house
-# hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk
-
-# candy machine
-# cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ
-
-# fixed-price-sale
-# SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo
-
-# gumdrop
-# // declare_id!("gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"); // original
-
-# metaplex
-# // solana_program::declare_id!("p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98"); // original
-
-# nft-packs
-# // solana_program::declare_id!("packFeFNZzMfD9aVWL7QbGz1WcU7R9zpf6pvNsw2BLu") // original;
-
-# token-entangler
-# // anchor_lang::declare_id!("qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd"); // original
-
-# token-metadata
-# // solana_program::declare_id!("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"); // original
-
-# token-vault
-# // solana_program::declare_id!("vau1zxA2LbssAUEF7Gpw91zMM1LvXrvpzJtmZ58rPsn"); // original

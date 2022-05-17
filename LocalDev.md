@@ -60,6 +60,11 @@ Installing Solana programs:
 9. Deploy smart contracts using `./deploy-contracts.sh` shell script.
 
 
+# Git comitting changes after development.
+
+1. Run `./restore_program_ids.sh`. This will restore public keys in `lib.rs` files to default values.
+
+2. Then run `git status`, `git add .` etc.
 
 <!-- 9. run ./anchor-predeploy.sh to copy all keys and compiled files into `./target/deploy` directory
 
