@@ -7,31 +7,31 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct ExecuteSale<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer user wallet account.
     #[account(mut)]
     pub buyer: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Seller user wallet account.
     #[account(mut)]
     pub seller: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     // cannot mark these as real Accounts or else we blow stack size limit
     ///Token account where the SPL token is stored.
     #[account(mut)]
     pub token_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Token mint account for the SPL token.
     pub token_mint: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     // cannot mark these as real Accounts or else we blow stack size limit
     /// Auction House treasury mint account.
     pub treasury_mint: UncheckedAccount<'info>,
@@ -41,17 +41,17 @@ pub struct ExecuteSale<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Seller SOL or SPL account to receive payment at.
     #[account(mut)]
     pub seller_payment_receipt_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer SPL token account to receive purchased item at.
     #[account(mut)]
     pub buyer_receipt_token_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Auction House instance authority.
     pub authority: UncheckedAccount<'info>,
 
@@ -69,7 +69,7 @@ pub struct ExecuteSale<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer trade state PDA account encoding the buy order.
     #[account(mut)]
     pub buyer_trade_state: UncheckedAccount<'info>,
@@ -151,31 +151,31 @@ pub fn execute_sale<'info>(
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct ExecuteSaleWithAuctioneer<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer user wallet account.
     #[account(mut)]
     pub buyer: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Seller user wallet account.
     #[account(mut)]
     pub seller: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     // cannot mark these as real Accounts or else we blow stack size limit
     ///Token account where the SPL token is stored.
     #[account(mut)]
     pub token_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Token mint account for the SPL token.
     pub token_mint: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     // cannot mark these as real Accounts or else we blow stack size limit
     /// Auction House treasury mint account.
     pub treasury_mint: UncheckedAccount<'info>,
@@ -185,17 +185,17 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Seller SOL or SPL account to receive payment at.
     #[account(mut)]
     pub seller_payment_receipt_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer SPL token account to receive purchased item at.
     #[account(mut)]
     pub buyer_receipt_token_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Auction House instance authority.
     pub authority: UncheckedAccount<'info>,
 
@@ -213,7 +213,7 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer trade state PDA account encoding the buy order.
     #[account(mut)]
     pub buyer_trade_state: UncheckedAccount<'info>,
@@ -228,7 +228,7 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
     pub free_trade_state: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 

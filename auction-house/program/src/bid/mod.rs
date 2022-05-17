@@ -20,17 +20,17 @@ use crate::{
 pub struct PublicBuy<'info> {
     wallet: Signer<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in public_bid_logic.
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in public_bid_logic.
     transfer_authority: UncheckedAccount<'info>,
 
     treasury_mint: Box<Account<'info, Mint>>,
     token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in public_bid_logic.
     metadata: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -95,18 +95,18 @@ pub fn public_bid(
 pub struct PublicBuyWithAuctioneer<'info> {
     wallet: Signer<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in public_bid_logic.
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in public_bid_logic.
     transfer_authority: UncheckedAccount<'info>,
 
     treasury_mint: Box<Account<'info, Mint>>,
 
     token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in public_bid_logic.
     metadata: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -127,7 +127,7 @@ pub struct PublicBuyWithAuctioneer<'info> {
     #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
     buyer_trade_state: UncheckedAccount<'info>,
 
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
@@ -182,12 +182,12 @@ pub struct Buy<'info> {
     /// User wallet account.
     wallet: Signer<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in bid_logic.
     /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in bid_logic.
     /// SPL token account transfer authority.
     transfer_authority: UncheckedAccount<'info>,
 
@@ -197,7 +197,7 @@ pub struct Buy<'info> {
     /// SPL token account.
     token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in bid_logic.
     /// SPL token account metadata.
     metadata: UncheckedAccount<'info>,
 
@@ -206,7 +206,7 @@ pub struct Buy<'info> {
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
     escrow_payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in bid_logic.
     /// Auction House instance authority account.
     authority: UncheckedAccount<'info>,
 
@@ -267,12 +267,12 @@ pub struct BuyWithAuctioneer<'info> {
     /// User wallet account.
     wallet: Signer<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in bid_logic.
     /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
 
-    /// CHECK:
+    /// CHECK: Validated in bid_logic.
     /// SPL token account transfer authority.
     transfer_authority: UncheckedAccount<'info>,
 
@@ -282,7 +282,7 @@ pub struct BuyWithAuctioneer<'info> {
     /// SPL token account.
     token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in bid_logic.
     /// SPL token account metadata.
     metadata: UncheckedAccount<'info>,
 

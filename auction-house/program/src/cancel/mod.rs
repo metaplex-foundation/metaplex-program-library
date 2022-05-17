@@ -7,7 +7,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 #[derive(Accounts)]
 #[instruction(buyer_price: u64, token_size: u64)]
 pub struct Cancel<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: Verified in cancel_logic.
     /// User wallet account.
     #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
@@ -19,7 +19,7 @@ pub struct Cancel<'info> {
     /// Token mint account of SPL token.
     pub token_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated as a signer in cancel_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -32,7 +32,7 @@ pub struct Cancel<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in cancel_logic.
     /// Trade state PDA account representing the bid or ask to be canceled.
     #[account(mut)]
     pub trade_state: UncheckedAccount<'info>,
@@ -59,7 +59,7 @@ impl<'info> From<CancelWithAuctioneer<'info>> for Cancel<'info> {
 #[derive(Accounts, Clone)]
 #[instruction(buyer_price: u64, token_size: u64)]
 pub struct CancelWithAuctioneer<'info> {
-    /// CHECK: TODO
+    /// CHECK: Wallet validated as owner in cancel logic.
     /// User wallet account.
     #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
@@ -71,7 +71,7 @@ pub struct CancelWithAuctioneer<'info> {
     /// Token mint account of SPL token.
     pub token_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated as a signer in cancel_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -79,21 +79,21 @@ pub struct CancelWithAuctioneer<'info> {
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated in cancel_logic.
     /// Auction House instance fee account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated in cancel_logic.
     /// Trade state PDA account representing the bid or ask to be canceled.
     #[account(mut)]
     pub trade_state: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated in cancel_logic.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated in cancel_logic.
     /// The auctioneer PDA owned by Auction House storing scopes.
     #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,

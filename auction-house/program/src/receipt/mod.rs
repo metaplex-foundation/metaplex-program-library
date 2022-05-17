@@ -102,7 +102,7 @@ pub struct PurchaseReceipt {
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintListingReceipt<'info> {
-    /// CHECK: TODO
+    /// CHECK: Receipt seeds are checked in print_listing_receipt handler.
     #[account(mut)]
     pub receipt: UncheckedAccount<'info>,
 
@@ -112,7 +112,7 @@ pub struct PrintListingReceipt<'info> {
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated by the address constraint.
     #[account(address = sysvar::instructions::id())]
     pub instruction: UncheckedAccount<'info>,
 }
@@ -203,13 +203,13 @@ pub fn print_listing_receipt<'info>(
 /// Accounts for the [`cancel_listing_receipt` handler](fn.cancel_listing_receipt.html).
 #[derive(Accounts)]
 pub struct CancelListingReceipt<'info> {
-    /// CHECK: TODO
+    /// CHECK: Receipt seeds are checked in the handler.
     #[account(mut)]
     pub receipt: UncheckedAccount<'info>,
 
     pub system_program: Program<'info, System>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated by the address constraint.
     #[account(address = sysvar::instructions::id())]
     pub instruction: UncheckedAccount<'info>,
 }
@@ -257,7 +257,7 @@ pub fn cancel_listing_receipt<'info>(
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintBidReceipt<'info> {
-    /// CHECK: TODO
+    /// CHECK: Receipt seeds are checked in the handler.
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
 
@@ -267,7 +267,7 @@ pub struct PrintBidReceipt<'info> {
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated by the address constraint.
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -369,13 +369,13 @@ pub fn print_bid_receipt<'info>(
 /// Accounts for the [`cancel_bid_receipt` handler](fn.cancel_bid_receipt.html).
 #[derive(Accounts)]
 pub struct CancelBidReceipt<'info> {
-    /// CHECK: TODO
+    /// CHECK: Receipt seeds are checked in the handler.
     #[account(mut)]
     receipt: UncheckedAccount<'info>,
 
     system_program: Program<'info, System>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated by the address constraint.
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }
@@ -423,15 +423,15 @@ pub fn cancel_bid_receipt<'info>(
 #[derive(Accounts)]
 #[instruction(receipt_bump: u8)]
 pub struct PrintPurchaseReceipt<'info> {
-    /// CHECK: TODO
+    /// CHECK: Receipt seeds are checked in the handler.
     #[account(mut)]
     purchase_receipt: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Receipt seeds are checked in the handler.
     #[account(mut)]
     listing_receipt: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Receipt seeds are checked in the handler.
     #[account(mut)]
     bid_receipt: UncheckedAccount<'info>,
 
@@ -441,7 +441,7 @@ pub struct PrintPurchaseReceipt<'info> {
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated by the address constraint.
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
 }

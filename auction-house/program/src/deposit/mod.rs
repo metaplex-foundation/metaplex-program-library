@@ -9,12 +9,12 @@ pub struct Deposit<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     pub payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// SPL token account transfer authority.
     pub transfer_authority: UncheckedAccount<'info>,
 
@@ -26,7 +26,7 @@ pub struct Deposit<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -84,12 +84,12 @@ pub struct DepositWithAuctioneer<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     pub payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// SPL token account transfer authority.
     pub transfer_authority: UncheckedAccount<'info>,
 
@@ -101,7 +101,7 @@ pub struct DepositWithAuctioneer<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -114,7 +114,7 @@ pub struct DepositWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 

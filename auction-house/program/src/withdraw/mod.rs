@@ -6,11 +6,11 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8)]
 pub struct Withdraw<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
     #[account(mut)]
     pub receipt_account: UncheckedAccount<'info>,
@@ -23,7 +23,7 @@ pub struct Withdraw<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -80,11 +80,11 @@ pub fn withdraw<'info>(
 #[derive(Accounts, Clone)]
 #[instruction(escrow_payment_bump: u8)]
 pub struct WithdrawWithAuctioneer<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
     #[account(mut)]
     pub receipt_account: UncheckedAccount<'info>,
@@ -97,7 +97,7 @@ pub struct WithdrawWithAuctioneer<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -110,7 +110,7 @@ pub struct WithdrawWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
