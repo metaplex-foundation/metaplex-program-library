@@ -84,11 +84,23 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         animation: Vec::new(),
     };
 
-    // todo: add general 'has_animation' var for whole process??
-
     for (index, pair) in &asset_pairs {
         match cache.items.0.get_mut(&index.to_string()) {
             Some(item) => {
+                // determining animation condition
+                let animation_conditon =
+                    if item.animation_hash.is_some() || item.animation_link.as_ref().is_some() {
+                        if !item.animation_hash.eq(&pair.animation_hash)
+                            || item.animation_link.as_ref().unwrap().is_empty()
+                        {
+                            true
+                        } else {
+                            false
+                        }
+                    } else {
+                        false
+                    };
+
                 // has the media file changed?
                 if !&item.media_hash.eq(&pair.media_hash) || item.media_link.is_empty() {
                     // we replace the entire item to trigger the media and metadata upload
@@ -104,20 +116,16 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                     if item_clone.animation_hash.is_some() || item_clone.animation_link.is_some() {
                         indices.animation.push(*index);
                     }
-                } else if item.animation_hash.is_some() || item.animation_link.as_ref().is_some() {
-                    if !item.animation_hash.eq(&pair.animation_hash)
-                        || item.animation_link.as_ref().unwrap().is_empty()
-                    {
-                        // we replace the entire item to trigger the media and metadata upload
-                        cache
-                            .items
-                            .0
-                            .insert(index.to_string(), pair.clone().into_cache_item());
-                        // we need to upload both media/metadata
-                        indices.animation.push(*index);
-                        indices.image.push(*index);
-                        indices.metadata.push(*index);
-                    }
+                } else if animation_conditon {
+                    // we replace the entire item to trigger the media and metadata upload
+                    cache
+                        .items
+                        .0
+                        .insert(index.to_string(), pair.clone().into_cache_item());
+                    // we need to upload both media/metadata
+                    indices.animation.push(*index);
+                    indices.image.push(*index);
+                    indices.metadata.push(*index);
                 } else if !item.metadata_hash.eq(&pair.metadata_hash)
                     || item.metadata_link.is_empty()
                 {
@@ -185,8 +193,11 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         asset_pairs.len()
     );
     println!("+--------------------+");
-    println!("| media     | {:>6} |", indices.image.len());
-    println!("| metadata  | {:>6} |", indices.metadata.len());
+    println!("| images     | {:>6} |", indices.image.len());
+    println!("| metadata   | {:>6} |", indices.metadata.len());
+    if !indices.animation.is_empty() {
+        println!("| animation  | {:>6} |", indices.animation.len());
+    }
     println!("+--------------------+");
 
     // this should never happen, since every time we update the media file we
@@ -209,7 +220,11 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     if need_upload {
         println!(
             "\n{} {}Initializing upload",
-            style("[2/4]").bold().dim(),
+            if !indices.animation.is_empty() {
+                style("[2/5]").bold().dim()
+            } else {
+                style("[2/4]").bold().dim()
+            },
             COMPUTER_EMOJI
         );
 
@@ -243,7 +258,11 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
         println!(
             "\n{} {}Uploading media files {}",
-            style("[3/4]").bold().dim(),
+            if !indices.animation.is_empty() {
+                style("[3/5]").bold().dim()
+            } else {
+                style("[3/4]").bold().dim()
+            },
             UPLOAD_EMOJI,
             if indices.image.is_empty() {
                 "(skipping)"
@@ -310,7 +329,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             // updates the list of metadata indices since the media upload
             // might fail - removes any index that the media upload failed
             if !indices.metadata.is_empty() {
-                for index in indices.animation {
+                for index in indices.animation.clone() {
                     let item = cache.items.0.get(&index.to_string()).unwrap();
 
                     if item.animation_link.as_ref().unwrap().is_empty() {
@@ -323,7 +342,11 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
         println!(
             "\n{} {}Uploading metadata files {}",
-            style("[4/4]").bold().dim(),
+            if !indices.animation.is_empty() {
+                style("[5/5]").bold().dim()
+            } else {
+                style("[4/4]").bold().dim()
+            },
             UPLOAD_EMOJI,
             if indices.metadata.is_empty() {
                 "(skipping)"
@@ -371,12 +394,21 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     println!(
         "\n{}",
-        style(format!(
-            "{}/{} media/metadata pair(s) uploaded.",
-            count,
-            asset_pairs.len()
-        ))
-        .bold()
+        if !indices.animation.is_empty() {
+            style(format!(
+                "{}/{} image/animation/metadata pair(s) uploaded.",
+                count,
+                asset_pairs.len()
+            ))
+            .bold()
+        } else {
+            style(format!(
+                "{}/{} image/metadata pair(s) uploaded.",
+                count,
+                asset_pairs.len()
+            ))
+            .bold()
+        }
     );
 
     if count != asset_pairs.len() {

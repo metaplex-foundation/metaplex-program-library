@@ -6,7 +6,7 @@ use ring::digest::{Context, SHA256};
 use serde_json;
 use std::{
     fs::{self, DirEntry, File, OpenOptions},
-    io::{stdout, BufReader, Read},
+    io::{BufReader, Read},
     sync::Arc,
 };
 
@@ -35,6 +35,11 @@ pub struct AssetPair {
     pub metadata_hash: String,
     pub media: String,
     pub media_hash: String,
+    pub animation: Option<Animation>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Animation {
     pub animation: Option<String>,
     pub animation_hash: Option<String>,
 }
@@ -116,7 +121,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
     // since there doesn't have to be video for each image/json pair, need to get rid of invalid file names before entering metadata filename loop
     for x in paths_ref {
         if let Some(captures) = animation_exists_regex.captures(x) {
-            if &captures[1].parse::<usize>().is_err() {
+            if captures[1].parse::<usize>().is_err() {
                 let error = anyhow!("Couldn't parse filename '{}' to a valid index  number.", x);
                 error!("{:?}", error);
                 return Err(error);
@@ -166,6 +171,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             &img_filenames[0]
         };
 
+        // need a similar check for animation as above, this one checking if there is animation on specific index
         let animation_pattern = format!("^{}\\.((mp4)|(mov)|(webm))$", i);
         let animation_regex = RegexBuilder::new(&animation_pattern)
             .case_insensitive(true)
@@ -212,14 +218,22 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             None
         };
 
+        let animation = if let Some(animation_hash) = animation_hash {
+            Some(Animation {
+                animation: animation_filename.clone(),
+                animation_hash,
+            })
+        } else {
+            None
+        };
+
         let asset_pair = AssetPair {
             name,
             metadata: metadata_filepath.clone(),
             metadata_hash: encode(&metadata_filepath)?,
             media: img_filepath.clone(),
             media_hash: encode(&img_filepath)?,
-            animation_hash,
-            animation: animation_filename,
+            animation,
         };
 
         asset_pairs.insert(i.parse::<usize>().unwrap(), asset_pair);
@@ -260,6 +274,7 @@ pub fn get_updated_metadata(
 
     if animation_link.is_some() {
         metadata.animation_url = animation_link.clone();
+        // todo: add error here for if metadata is missing these fields
         metadata.properties.files[1].uri = animation_link.unwrap();
     }
 
