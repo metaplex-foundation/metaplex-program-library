@@ -119,7 +119,17 @@ export class Edition implements EditionArgs {
     return {
       key: 'Key.' + Key[this.key],
       parent: this.parent.toBase58(),
-      edition: this.edition,
+      edition: (() => {
+        const x = <{ toNumber: () => number }>this.edition;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
     };
   }
 }

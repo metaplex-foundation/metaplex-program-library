@@ -35,4 +35,4 @@ jobs:
         with: 
           cache_id: sdk-token-metadata
           working_dir: ./token-metadata/js
-          skip_test: true
+          skip_test: false

@@ -45,7 +45,6 @@ const unverifyCollectionInstructionDiscriminator = 22;
  * Creates a _UnverifyCollection_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category UnverifyCollection
  * @category generated

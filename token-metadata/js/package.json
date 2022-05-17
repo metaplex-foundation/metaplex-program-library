@@ -3,8 +3,8 @@
   "version": "2.1.1",
   "contractVersion": "1.2.5",
   "description": "MPL Token Metadata JavaScript API.",
-  "main": "dist/mpl-token-metadata.js",
-  "types": "dist/mpl-token-metadata.d.ts",
+  "main": "dist/src/mpl-token-metadata.js",
+  "types": "dist/src/mpl-token-metadata.d.ts",
   "scripts": {
     "check:publish-ready": "yarn build && yarn lint",
     "preversion": "yarn check:publish-ready",
@@ -14,7 +14,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
-    "test": "echo 'Not testing generated code, please run program tests instead'",
+    "test": "cpr test/fixtures dist/test/fixtures && tape dist/test/*.js",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
@@ -22,7 +22,7 @@
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
-    "/dist"
+    "/dist/src"
   ],
   "publishConfig": {
     "access": "public",
@@ -48,12 +48,16 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.5.0",
+    "@metaplex-foundation/solita": "^0.8.1",
     "@types/bn.js": "^5.1.0",
     "@types/debug": "^4.1.7",
+    "@types/tape": "^4.13.2",
+    "cpr": "^3.0.1",
     "eslint": "^8.3.0",
     "rimraf": "^3.0.2",
+    "spok": "^1.4.3",
     "supports-color": "^9.2.1",
+    "tape": "^5.5.3",
     "typescript": "^4.6.2"
   }
 }
