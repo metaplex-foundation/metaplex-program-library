@@ -4,7 +4,7 @@ use crate::{
             assert_collection_update_is_valid, assert_collection_verify_is_valid,
             assert_has_collection_authority,
         },
-        uses::process_use_authority_validation,
+        uses::{assert_valid_use, process_use_authority_validation},
     },
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
@@ -225,7 +225,7 @@ pub fn process_create_metadata_accounts_v2<'a>(
     let rent_info = next_account_info(account_info_iter)?;
 
     process_create_metadata_accounts_logic(
-        &program_id,
+        program_id,
         CreateMetadataAccountsLogicArgs {
             metadata_account_info,
             mint_info,
@@ -275,6 +275,8 @@ pub fn process_update_metadata_accounts_v2(
             metadata.data = compatible_data;
             assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
             metadata.collection = data.collection;
+            assert_valid_use(&data.uses, &metadata.uses)?;
+            metadata.uses = data.uses;
         } else {
             return Err(MetadataError::DataIsImmutable.into());
         }
@@ -285,7 +287,8 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     if let Some(val) = primary_sale_happened {
-        if val {
+        // If received val is true, flip to true.
+        if val || !metadata.primary_sale_happened {
             metadata.primary_sale_happened = val
         } else {
             return Err(MetadataError::PrimarySaleCanOnlyBeFlippedToTrue.into());
@@ -293,7 +296,8 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     if let Some(val) = is_mutable {
-        if !val {
+        // If received value is false, flip to false.
+        if !val || metadata.is_mutable {
             metadata.is_mutable = val
         } else {
             return Err(MetadataError::IsMutableCanOnlyBeFlippedToFalse.into());
@@ -302,7 +306,11 @@ pub fn process_update_metadata_accounts_v2(
 
     puff_out_data_fields(&mut metadata);
 
-    metadata.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
+    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
+    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
+    metadata_account_info_data[0..].fill(0);
+
+    metadata.serialize(&mut *metadata_account_info_data)?;
     Ok(())
 }
 
@@ -436,7 +444,7 @@ pub fn process_create_master_edition(
         &[
             PREFIX.as_bytes(),
             program_id.as_ref(),
-            &mint_info.key.as_ref(),
+            mint_info.key.as_ref(),
             EDITION.as_bytes(),
         ],
     )?;
@@ -463,7 +471,7 @@ pub fn process_create_master_edition(
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint_info.key.as_ref(),
+        mint_info.key.as_ref(),
         EDITION.as_bytes(),
         &[bump_seed],
     ];
@@ -527,7 +535,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
     let rent_info = next_account_info(account_info_iter)?;
 
     process_mint_new_edition_from_master_edition_via_token_logic(
-        &program_id,
+        program_id,
         MintNewEditionFromMasterEditionViaTokenLogicArgs {
             new_metadata_account_info,
             new_edition_account_info,
@@ -853,8 +861,8 @@ pub fn process_approve_use_authority(
     if *token_program_account_info.key != spl_token::id() {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
-    assert_signer(&owner_info)?;
-    assert_signer(&payer)?;
+    assert_signer(owner_info)?;
+    assert_signer(payer)?;
     assert_currently_holding(
         program_id,
         owner_info,
@@ -873,9 +881,9 @@ pub fn process_approve_use_authority(
     let use_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint_info.key.as_ref(),
+        mint_info.key.as_ref(),
         USER.as_bytes(),
-        &user_info.key.as_ref(),
+        user_info.key.as_ref(),
         &[bump_seed],
     ];
     process_use_authority_validation(use_authority_record_info.data_len(), true)?;
@@ -895,10 +903,10 @@ pub fn process_approve_use_authority(
         assert_burner(program_as_burner.key)?;
         invoke(
             &approve(
-                &token_program_account_info.key,
-                &token_account_info.key,
-                &program_as_burner.key,
-                &owner_info.key,
+                token_program_account_info.key,
+                token_account_info.key,
+                program_as_burner.key,
+                owner_info.key,
                 &[],
                 1,
             )
@@ -939,7 +947,7 @@ pub fn process_revoke_use_authority(
     if *token_program_account_info.key != spl_token::id() {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
-    assert_signer(&owner_info)?;
+    assert_signer(owner_info)?;
     assert_currently_holding(
         program_id,
         owner_info,
@@ -966,9 +974,9 @@ pub fn process_revoke_use_authority(
     if metadata_uses.use_method == UseMethod::Burn {
         invoke(
             &revoke(
-                &token_program_account_info.key,
-                &token_account_info.key,
-                &owner_info.key,
+                token_program_account_info.key,
+                token_account_info.key,
+                owner_info.key,
                 &[],
             )
             .unwrap(),
@@ -1012,7 +1020,7 @@ pub fn process_utilize(
     if *token_program_account_info.key != spl_token::id() {
         return Err(MetadataError::InvalidTokenProgram.into());
     }
-    assert_signer(&user_info)?;
+    assert_signer(user_info)?;
     assert_currently_holding(
         program_id,
         owner_info,
@@ -1058,13 +1066,11 @@ pub fn process_utilize(
             .checked_sub(number_of_uses)
             .ok_or(MetadataError::NotEnoughUses)?;
         record.serialize(data)?;
-    } else {
-        if user_info.key != owner_info.key {
-            return Err(MetadataError::InvalidUser.into());
-        }
+    } else if user_info.key != owner_info.key {
+        return Err(MetadataError::InvalidUser.into());
     }
     metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
-    if remaining_uses <= 0 && must_burn {
+    if remaining_uses == 0 && must_burn {
         if approved_authority_is_using {
             let burn_authority_info = next_account_info(account_info_iter)?;
             let seed = assert_burner(burn_authority_info.key)?;
@@ -1113,8 +1119,8 @@ pub fn process_approve_collection_authority(
     let metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::id())?;
-    assert_signer(&update_authority)?;
-    assert_signer(&payer)?;
+    assert_signer(update_authority)?;
+    assert_signer(payer)?;
     if metadata.update_authority != *update_authority.key {
         return Err(MetadataError::UpdateAuthorityIncorrect.into());
     }
@@ -1128,9 +1134,9 @@ pub fn process_approve_collection_authority(
     let collection_authority_path = Vec::from([
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint_info.key.as_ref(),
+        mint_info.key.as_ref(),
         COLLECTION_AUTHORITY.as_bytes(),
-        &new_collection_authority.key.as_ref(),
+        new_collection_authority.key.as_ref(),
     ]);
     let collection_authority_bump_seed = &[assert_derivation(
         program_id,
@@ -1163,15 +1169,17 @@ pub fn process_revoke_collection_authority(
     let account_info_iter = &mut accounts.iter();
     let collection_authority_record = next_account_info(account_info_iter)?;
     let delegate_authority = next_account_info(account_info_iter)?;
-    let update_authority = next_account_info(account_info_iter)?;
+    let revoke_authority = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
     let metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::id())?;
-    assert_signer(&update_authority)?;
-    if metadata.update_authority != *update_authority.key {
-        return Err(MetadataError::UpdateAuthorityIncorrect.into());
+    assert_signer(revoke_authority)?;
+    if metadata.update_authority != *revoke_authority.key
+        && *delegate_authority.key != *revoke_authority.key
+    {
+        return Err(MetadataError::RevokeCollectionAuthoritySignerIncorrect.into());
     }
     if metadata.mint != *mint_info.key {
         return Err(MetadataError::MintMismatch.into());
@@ -1183,12 +1191,12 @@ pub fn process_revoke_collection_authority(
     assert_has_collection_authority(
         delegate_authority,
         &metadata,
-        &mint_info.key,
+        mint_info.key,
         Some(collection_authority_record),
     )?;
     let lamports = collection_authority_record.lamports();
     **collection_authority_record.try_borrow_mut_lamports()? = 0;
-    **update_authority.try_borrow_mut_lamports()? = update_authority
+    **revoke_authority.try_borrow_mut_lamports()? = revoke_authority
         .lamports()
         .checked_add(lamports)
         .ok_or(MetadataError::NumericalOverflowError)?;
@@ -1278,13 +1286,13 @@ pub fn process_freeze_delegated_account(
     assert_freeze_authority_matches_mint(&mint.freeze_authority, edition_info)?;
 
     // assert delegate is signer and delegated tokens
-    assert_signer(&delegate_info)?;
+    assert_signer(delegate_info)?;
     assert_delegated_tokens(delegate_info, mint_info, token_account_info)?;
 
     let edition_info_path = Vec::from([
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint_info.key.as_ref(),
+        mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
     let edition_info_path_bump_seed = &[assert_derivation(
@@ -1296,10 +1304,10 @@ pub fn process_freeze_delegated_account(
     edition_info_seeds.push(edition_info_path_bump_seed);
     invoke_signed(
         &freeze_account(
-            &token_program_account_info.key,
-            &token_account_info.key,
-            &mint_info.key,
-            &edition_info.key,
+            token_program_account_info.key,
+            token_account_info.key,
+            mint_info.key,
+            edition_info.key,
             &[],
         )
         .unwrap(),
@@ -1333,13 +1341,13 @@ pub fn process_thaw_delegated_account(
     assert_freeze_authority_matches_mint(&mint.freeze_authority, edition_info)?;
 
     // assert delegate is signer and delegated tokens
-    assert_signer(&delegate_info)?;
+    assert_signer(delegate_info)?;
     assert_delegated_tokens(delegate_info, mint_info, token_account_info)?;
 
     let edition_info_path = Vec::from([
         PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint_info.key.as_ref(),
+        mint_info.key.as_ref(),
         EDITION.as_bytes(),
     ]);
     let edition_info_path_bump_seed = &[assert_derivation(
@@ -1351,10 +1359,10 @@ pub fn process_thaw_delegated_account(
     edition_info_seeds.push(edition_info_path_bump_seed);
     invoke_signed(
         &thaw_account(
-            &token_program_account_info.key,
-            &token_account_info.key,
-            &mint_info.key,
-            &edition_info.key,
+            token_program_account_info.key,
+            token_account_info.key,
+            mint_info.key,
+            edition_info.key,
             &[],
         )
         .unwrap(),

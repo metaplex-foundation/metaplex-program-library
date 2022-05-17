@@ -1,4 +1,4 @@
-use crate::{error::MetadataError, utils::try_from_slice_checked};
+use crate::{deser::meta_deser, error::MetadataError, utils::try_from_slice_checked};
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{
@@ -25,17 +25,16 @@ pub const MAX_SYMBOL_LENGTH: usize = 10;
 
 pub const MAX_URI_LENGTH: usize = 200;
 
-pub const MAX_METADATA_LEN: usize = 
-1 //key 
+pub const MAX_METADATA_LEN: usize = 1 //key 
 + 32 // update auth pubkey
 + 32 // mint pubkey
-+ MAX_DATA_SIZE 
++ MAX_DATA_SIZE
 + 1 // primary sale
 + 1 // mutable
 + 9 // nonce (pretty sure this only needs to be 2)
++ 2 // token standard
 + 34 // collection
 + 18 // uses
-+ 2 // token standard
 + 118; // Padding
 
 pub const MAX_DATA_SIZE: usize = 4
@@ -76,7 +75,6 @@ pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
-
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
 pub enum Key {
@@ -89,7 +87,7 @@ pub enum Key {
     MasterEditionV2,
     EditionMarker,
     UseAuthorityRecord,
-    CollectionAuthorityRecord
+    CollectionAuthorityRecord,
 }
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -148,64 +146,75 @@ pub enum UseMethod {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub struct Uses { // 17 bytes + Option byte
+pub struct Uses {
+    // 17 bytes + Option byte
     pub use_method: UseMethod, //1
-    pub remaining: u64, //8
-    pub total: u64, //8
+    pub remaining: u64,        //8
+    pub total: u64,            //8
 }
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum TokenStandard {
-    NonFungible,  // This is a master edition
-    FungibleAsset, // A token with metadata that can also have attrributes
-    Fungible,     // A token with simple metadata
-    NonFungibleEdition,      // This is a limited edition
+    NonFungible,        // This is a master edition
+    FungibleAsset,      // A token with metadata that can also have attrributes
+    Fungible,           // A token with simple metadata
+    NonFungibleEdition, // This is a limited edition
 }
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct UseAuthorityRecord {
-    pub key: Key, //1
+    pub key: Key,          //1
     pub allowed_uses: u64, //8
-    pub bump: u8
+    pub bump: u8,
 }
 
 impl UseAuthorityRecord {
     pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
-        let ua: UseAuthorityRecord =
-            try_from_slice_checked(&a.data.borrow_mut(), Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+        let ua: UseAuthorityRecord = try_from_slice_checked(
+            &a.data.borrow_mut(),
+            Key::UseAuthorityRecord,
+            USE_AUTHORITY_RECORD_SIZE,
+        )?;
         Ok(ua)
     }
 
     pub fn from_bytes(b: &[u8]) -> Result<UseAuthorityRecord, ProgramError> {
-        let ua: UseAuthorityRecord = try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
+        let ua: UseAuthorityRecord =
+            try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
         Ok(ua)
     }
 
     pub fn bump_empty(&self) -> bool {
-       return self.bump == 0 && self.key == Key::UseAuthorityRecord;
+        self.bump == 0 && self.key == Key::UseAuthorityRecord
     }
 }
-
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct CollectionAuthorityRecord {
     pub key: Key, //1
-    pub bump: u8 //1
+    pub bump: u8, //1
 }
 
 impl CollectionAuthorityRecord {
     pub fn from_account_info(a: &AccountInfo) -> Result<CollectionAuthorityRecord, ProgramError> {
-        let ua: CollectionAuthorityRecord =
-            try_from_slice_checked(&a.data.borrow_mut(), Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
+        let ua: CollectionAuthorityRecord = try_from_slice_checked(
+            &a.data.borrow_mut(),
+            Key::CollectionAuthorityRecord,
+            COLLECTION_AUTHORITY_RECORD_SIZE,
+        )?;
 
         Ok(ua)
     }
 
     pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
-        let ca: CollectionAuthorityRecord = try_from_slice_checked(b, Key::CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE)?;
+        let ca: CollectionAuthorityRecord = try_from_slice_checked(
+            b,
+            Key::CollectionAuthorityRecord,
+            COLLECTION_AUTHORITY_RECORD_SIZE,
+        )?;
         Ok(ca)
     }
 }
@@ -218,7 +227,7 @@ pub struct Collection {
 }
 
 #[repr(C)]
-#[derive(Clone, BorshSerialize, BorshDeserialize, Debug, ShankAccount)]
+#[derive(Clone, BorshSerialize, Debug, PartialEq, ShankAccount)]
 pub struct Metadata {
     pub key: Key,
     pub update_authority: Pubkey,
@@ -240,9 +249,15 @@ pub struct Metadata {
 
 impl Metadata {
     pub fn from_account_info(a: &AccountInfo) -> Result<Metadata, ProgramError> {
-        let md: Metadata =
-            try_from_slice_checked(&a.data.borrow_mut(), Key::MetadataV1, MAX_METADATA_LEN)?;
+        let md: Metadata = meta_deser(&mut a.data.borrow_mut().as_ref())?;
 
+        Ok(md)
+    }
+}
+
+impl borsh::de::BorshDeserialize for Metadata {
+    fn deserialize(buf: &mut &[u8]) -> ::core::result::Result<Self, borsh::maybestd::io::Error> {
+        let md = meta_deser(buf)?;
         Ok(md)
     }
 }
@@ -259,11 +274,13 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
     let version = account.data.borrow()[0];
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
-    match version {
-        2 => return Ok(Box::new(MasterEditionV1::from_account_info(account)?)),
-        6 => return Ok(Box::new(MasterEditionV2::from_account_info(account)?)),
-        _ => return Err(MetadataError::DataTypeMismatch.into()),
+    let master_edition_result: Result<Box<dyn MasterEdition>, ProgramError> = match version {
+        2 => Ok(Box::new(MasterEditionV1::from_account_info(account)?)),
+        6 => Ok(Box::new(MasterEditionV2::from_account_info(account)?)),
+        _ => Err(MetadataError::DataTypeMismatch.into()),
     };
+
+    master_edition_result
 }
 
 #[repr(C)]
@@ -431,11 +448,13 @@ pub fn get_reservation_list(
     let version = account.data.borrow()[0];
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
-    match version {
-        3 => return Ok(Box::new(ReservationListV1::from_account_info(account)?)),
-        5 => return Ok(Box::new(ReservationListV2::from_account_info(account)?)),
-        _ => return Err(MetadataError::DataTypeMismatch.into()),
+    let reservation_list_result: Result<Box<dyn ReservationList>, ProgramError> = match version {
+        3 => Ok(Box::new(ReservationListV1::from_account_info(account)?)),
+        5 => Ok(Box::new(ReservationListV2::from_account_info(account)?)),
+        _ => Err(MetadataError::DataTypeMismatch.into()),
     };
+
+    reservation_list_result
 }
 
 #[repr(C)]
@@ -745,7 +764,7 @@ impl EditionMarker {
     pub fn insert_edition(&mut self, edition: u64) -> ProgramResult {
         let (index, mask) = EditionMarker::get_index_and_mask(edition)?;
         // bitwise or a 1 into our position in that position
-        self.ledger[index] = self.ledger[index] | mask;
+        self.ledger[index] |= mask;
         Ok(())
     }
 }

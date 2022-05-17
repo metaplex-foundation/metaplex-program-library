@@ -596,6 +596,29 @@ createErrorFromCodeLookup.set(0x178b, () => new InstructionMismatchError());
 createErrorFromNameLookup.set('InstructionMismatch', () => new InstructionMismatchError());
 
 /**
+ * EscrowUnderRentExemption: 'The instruction would drain the escrow below rent exemption threshold'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class EscrowUnderRentExemptionError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'EscrowUnderRentExemption';
+  constructor() {
+    super('The instruction would drain the escrow below rent exemption threshold');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, EscrowUnderRentExemptionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new EscrowUnderRentExemptionError());
+createErrorFromNameLookup.set(
+  'EscrowUnderRentExemption',
+  () => new EscrowUnderRentExemptionError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

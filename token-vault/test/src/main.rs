@@ -124,7 +124,7 @@ fn initialize_vault(app_matches: &ArgMatches, payer: Keypair, client: RpcClient)
         ),
     ];
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
     let signers = vec![
         &payer,
         &redeem_treasury,
@@ -206,7 +206,7 @@ fn rewrite_price_account(app_matches: &ArgMatches, payer: Keypair, client: RpcCl
     ));
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -326,7 +326,7 @@ fn add_token_to_vault(app_matches: &ArgMatches, payer: Keypair, client: RpcClien
     ];
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
     let signers = vec![
         &payer,
         &token_mint,
@@ -374,7 +374,7 @@ fn activate_vault(app_matches: &ArgMatches, payer: Keypair, client: RpcClient) -
     )];
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
     let signers = vec![&payer, &vault_authority];
 
     transaction.sign(&signers, recent_blockhash);
@@ -529,7 +529,7 @@ fn combine_vault(app_matches: &ArgMatches, payer: Keypair, client: RpcClient) ->
     ));
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -624,7 +624,7 @@ fn redeem_shares(app_matches: &ArgMatches, payer: Keypair, client: RpcClient) ->
     ));
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -698,7 +698,7 @@ fn withdraw_tokens(app_matches: &ArgMatches, payer: Keypair, client: RpcClient) 
     ));
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -741,7 +741,7 @@ fn mint_shares(app_matches: &ArgMatches, payer: Keypair, client: RpcClient) -> P
     )];
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -813,7 +813,7 @@ fn withdraw_shares(app_matches: &ArgMatches, payer: Keypair, client: RpcClient) 
     ));
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();
@@ -868,7 +868,7 @@ fn add_shares(app_matches: &ArgMatches, payer: Keypair, client: RpcClient) -> Pu
     ];
 
     let mut transaction = Transaction::new_with_payer(&instructions, Some(&payer.pubkey()));
-    let recent_blockhash = client.get_recent_blockhash().unwrap().0;
+    let recent_blockhash = client.get_latest_blockhash().unwrap();
 
     transaction.sign(&signers, recent_blockhash);
     client.send_and_confirm_transaction(&transaction).unwrap();

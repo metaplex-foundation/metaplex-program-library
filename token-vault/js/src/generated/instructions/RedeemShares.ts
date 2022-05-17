@@ -14,9 +14,10 @@ import * as web3 from '@solana/web3.js';
  * @category RedeemShares
  * @category generated
  */
-const RedeemSharesStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'RedeemSharesInstructionArgs');
+const RedeemSharesStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'RedeemSharesInstructionArgs',
+);
 /**
  * Accounts required by the _RedeemShares_ instruction
  *

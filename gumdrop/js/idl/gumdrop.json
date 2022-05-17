@@ -1,6 +1,6 @@
 {
-  "version": "0.0.1",
-  "name": "merkle_distributor",
+  "version": "0.1.0",
+  "name": "gumdrop",
   "instructions": [
     {
       "name": "newDistributor",
@@ -17,7 +17,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -138,6 +138,77 @@
       ]
     },
     {
+      "name": "proveClaim",
+      "accounts": [
+        {
+          "name": "distributor",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "claimProof",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "temporal",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "claimPrefix",
+          "type": "bytes"
+        },
+        {
+          "name": "claimBump",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "claimantSecret",
+          "type": "publicKey"
+        },
+        {
+          "name": "resource",
+          "type": "publicKey"
+        },
+        {
+          "name": "resourceNonce",
+          "type": "bytes"
+        },
+        {
+          "name": "proof",
+          "type": {
+            "vec": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "claim",
       "accounts": [
         {
@@ -167,7 +238,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -183,7 +254,7 @@
       ],
       "args": [
         {
-          "name": "bump",
+          "name": "claimBump",
           "type": "u8"
         },
         {
@@ -461,6 +532,155 @@
           }
         }
       ]
+    },
+    {
+      "name": "claimCandyProven",
+      "accounts": [
+        {
+          "name": "distributor",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "distributorWallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "claimProof",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "candyMachineConfig",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineWallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineMint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineMetadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineMasterEdition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "walletBump",
+          "type": "u8"
+        },
+        {
+          "name": "claimBump",
+          "type": "u8"
+        },
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "recoverUpdateAuthority",
+      "accounts": [
+        {
+          "name": "base",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "distributor",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "distributorWallet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "newUpdateAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "bump",
+          "type": "u8"
+        },
+        {
+          "name": "walletBump",
+          "type": "u8"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -534,6 +754,34 @@
       }
     },
     {
+      "name": "ClaimProof",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "count",
+            "type": "u64"
+          },
+          {
+            "name": "claimant",
+            "type": "publicKey"
+          },
+          {
+            "name": "resource",
+            "type": "publicKey"
+          },
+          {
+            "name": "resourceNonce",
+            "type": "bytes"
+          }
+        ]
+      }
+    },
+    {
       "name": "CandyMachine",
       "type": {
         "kind": "struct",
@@ -572,9 +820,91 @@
           }
         ]
       }
+    },
+    {
+      "name": "Config",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "data",
+            "type": {
+              "defined": "ConfigData"
+            }
+          }
+        ]
+      }
     }
   ],
   "types": [
+    {
+      "name": "ConfigData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "uuid",
+            "type": "string"
+          },
+          {
+            "name": "symbol",
+            "type": "string"
+          },
+          {
+            "name": "sellerFeeBasisPoints",
+            "type": "u16"
+          },
+          {
+            "name": "creators",
+            "type": {
+              "vec": {
+                "defined": "Creator"
+              }
+            }
+          },
+          {
+            "name": "maxSupply",
+            "type": "u64"
+          },
+          {
+            "name": "isMutable",
+            "type": "bool"
+          },
+          {
+            "name": "retainAuthority",
+            "type": "bool"
+          },
+          {
+            "name": "maxNumberOfLines",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Creator",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "type": "publicKey"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "share",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "CandyMachineData",
       "type": {
@@ -649,9 +979,21 @@
       "code": 6004,
       "name": "TemporalMismatch",
       "msg": "Temporal signer did not match distributor"
+    },
+    {
+      "code": 6005,
+      "name": "NumericalOverflow",
+      "msg": "Numerical Overflow"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidClaimBump",
+      "msg": "Invalid Claim Bump"
+    },
+    {
+      "code": 6007,
+      "name": "MustUseOfficialCandyMachine",
+      "msg": "Gumdrop only supports the official Metaplex Candy machine contracts"
     }
-  ],
-  "metadata": {
-    "address": "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
-  }
+  ]
 }

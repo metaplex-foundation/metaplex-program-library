@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as accounts from '../accounts';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { ExternalPriceAccount, externalPriceAccountBeet } from '../accounts/ExternalPriceAccount';
 
 /**
  * @category Instructions
@@ -15,7 +15,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type UpdateExternalPriceAccountInstructionArgs = {
-  externalPriceAccount: accounts.ExternalPriceAccount;
+  externalPriceAccount: ExternalPriceAccount;
 };
 /**
  * @category Instructions
@@ -29,7 +29,7 @@ const UpdateExternalPriceAccountStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['externalPriceAccount', accounts.externalPriceAccountBeet],
+    ['externalPriceAccount', externalPriceAccountBeet],
   ],
   'UpdateExternalPriceAccountInstructionArgs',
 );

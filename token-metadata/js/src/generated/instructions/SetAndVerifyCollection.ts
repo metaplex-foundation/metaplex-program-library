@@ -13,15 +13,16 @@ import * as web3 from '@solana/web3.js';
  * @category SetAndVerifyCollection
  * @category generated
  */
-const SetAndVerifyCollectionStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'SetAndVerifyCollectionInstructionArgs');
+const SetAndVerifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'SetAndVerifyCollectionInstructionArgs',
+);
 /**
  * Accounts required by the _SetAndVerifyCollection_ instruction
  *
  * @property [_writable_] metadata Metadata account
- * @property [**signer**] collectionAuthority Collection Update authority
- * @property [**signer**] payer Payer
+ * @property [_writable_, **signer**] collectionAuthority Collection Update authority
+ * @property [_writable_, **signer**] payer Payer
  * @property [] updateAuthority Update Authority of Collection NFT and NFT
  * @property [] collectionMint Mint of the Collection
  * @property [] collection Metadata Account of the Collection
@@ -78,12 +79,12 @@ export function createSetAndVerifyCollectionInstruction(
     },
     {
       pubkey: collectionAuthority,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

@@ -13,7 +13,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "test": "tape dist/test/*.js",
-    "api:gen": "node scripts/api-gen-ts.js && prettier --write ./src/**/*.ts",
+    "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
@@ -43,7 +43,7 @@
     "@solana/web3.js": "^1.35.1"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.2.0",
+    "@metaplex-foundation/solita": "^0.5.0",
     "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
     "rimraf": "^3.0.2",

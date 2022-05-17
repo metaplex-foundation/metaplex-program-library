@@ -1,10 +1,13 @@
 use anchor_lang::prelude::{Signer, Sysvar};
+use solana_program::program::invoke;
+use solana_program::system_instruction;
 
 use {
     crate::{CandyMachine, ErrorCode},
     anchor_lang::{
         prelude::{Account, AccountInfo, Clock, ProgramError, ProgramResult, Pubkey},
         solana_program::{
+            msg,
             program::invoke_signed,
             program_pack::{IsInitialized, Pack},
         },
@@ -69,6 +72,26 @@ pub struct TokenTransferParams<'a: 'b, 'b> {
     /// token_program
     /// CHECK: account checked in CPI
     pub token_program: AccountInfo<'a>,
+}
+
+pub fn punish_bots<'a>(
+    err: ErrorCode,
+    bot_account: AccountInfo<'a>,
+    payment_account: AccountInfo<'a>,
+    system_program: AccountInfo<'a>,
+    fee: u64,
+) -> Result<(), ProgramError> {
+    msg!(
+        "{}, Candy Machine Botting is taxed at {:?} lamports",
+        err.to_string(),
+        fee
+    );
+    let final_fee = fee.min(bot_account.lamports());
+    invoke(
+        &system_instruction::transfer(&bot_account.key, &payment_account.key, final_fee),
+        &[bot_account, payment_account, system_program],
+    )?;
+    Ok(())
 }
 
 #[inline(always)]
