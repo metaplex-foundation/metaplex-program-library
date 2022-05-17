@@ -52,8 +52,8 @@ pub struct Sell<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<SellWithAuctioneer<'info>> for Sell<'info> {
-    fn from(a: SellWithAuctioneer<'info>) -> Sell<'info> {
+impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
+    fn from(a: AuctioneerSell<'info>) -> Sell<'info> {
         Sell {
             wallet: a.wallet,
             token_account: a.token_account,
@@ -71,10 +71,10 @@ impl<'info> From<SellWithAuctioneer<'info>> for Sell<'info> {
     }
 }
 
-/// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
+/// Accounts for the [`auctioneer_sell` handler](auction_house/fn.auctioneer_sell.html).
 #[derive(Accounts, Clone)]
 #[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct SellWithAuctioneer<'info> {
+pub struct AuctioneerSell<'info> {
     /// CHECK: Wallet is validated as a signer in sell_logic.
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
@@ -138,7 +138,7 @@ pub fn sell<'info>(
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
@@ -155,8 +155,8 @@ pub fn sell<'info>(
 }
 
 /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
-pub fn sell_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, SellWithAuctioneer<'info>>,
+pub fn auctioneer_sell<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerSell<'info>>,
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,

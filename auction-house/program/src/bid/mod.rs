@@ -89,10 +89,10 @@ pub fn public_bid(
     )
 }
 
-/// Accounts for the [`public_bid_with_auctioneer` handler](fn.public_bid_with_auctioneer.html).
+/// Accounts for the [`auctioneer_public_bid` handler](fn.auctioneer_public_bid.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct PublicBuyWithAuctioneer<'info> {
+pub struct AuctioneerPublicBuy<'info> {
     wallet: Signer<'info>,
 
     /// CHECK: Validated in public_bid_logic.
@@ -143,8 +143,8 @@ pub struct PublicBuyWithAuctioneer<'info> {
 
 /// Create a bid on a specific SPL token.
 /// Public bids are specific to the token itself, rather than the auction, and remain open indefinitely until either the user closes it or the requirements for the bid are met and it is matched with a counter bid and closed as a transaction.
-pub fn public_bid_with_auctioneer(
-    ctx: Context<PublicBuyWithAuctioneer>,
+pub fn auctioneer_public_bid(
+    ctx: Context<AuctioneerPublicBuy>,
     trade_state_bump: u8,
     escrow_payment_bump: u8,
     buyer_price: u64,
@@ -260,10 +260,10 @@ pub fn private_bid<'info>(
     )
 }
 
-/// Accounts for the [`private_bid_with_auctioneer` handler](fn.private_bid_with_auctioneer.html).
+/// Accounts for the [`auctioneer_private_bid` handler](fn.auctioneer_private_bid.html).
 #[derive(Accounts)]
 #[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct BuyWithAuctioneer<'info> {
+pub struct AuctioneerBuy<'info> {
     /// User wallet account.
     wallet: Signer<'info>,
 
@@ -339,8 +339,8 @@ pub struct BuyWithAuctioneer<'info> {
 }
 
 /// Create a private bid on a specific SPL token that is *held by a specific wallet*.
-pub fn private_bid_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
+pub fn auctioneer_private_bid<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
     trade_state_bump: u8,
     escrow_payment_bump: u8,
     buyer_price: u64,
@@ -393,7 +393,7 @@ pub fn bid_logic<'info>(
     token_size: u64,
     public: bool,
 ) -> Result<()> {
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }

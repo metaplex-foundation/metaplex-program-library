@@ -326,14 +326,14 @@ pub mod auction_house {
         )
     }
 
-    pub fn buy_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
+    pub fn auctioneer_buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
         trade_state_bump: u8,
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        bid::private_bid_with_auctioneer(
+        bid::auctioneer_private_bid(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -360,14 +360,14 @@ pub mod auction_house {
     }
 
     /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn public_buy_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, PublicBuyWithAuctioneer<'info>>,
+    pub fn auctioneer_public_buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerPublicBuy<'info>>,
         trade_state_bump: u8,
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        bid::public_bid_with_auctioneer(
+        bid::auctioneer_public_bid(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -386,12 +386,12 @@ pub mod auction_house {
     }
 
     /// Cancel, but with an auctioneer
-    pub fn cancel_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
+    pub fn auctioneer_cancel<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerCancel<'info>>,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        cancel::cancel_with_auctioneer(ctx, buyer_price, token_size)
+        cancel::auctioneer_cancel(ctx, buyer_price, token_size)
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
@@ -404,12 +404,12 @@ pub mod auction_house {
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
-    pub fn deposit_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
+    pub fn auctioneer_deposit<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerDeposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        deposit::deposit_with_auctioneer(ctx, escrow_payment_bump, amount)
+        deposit::auctioneer_deposit(ctx, escrow_payment_bump, amount)
     }
 
     pub fn execute_sale<'info>(
@@ -430,15 +430,15 @@ pub mod auction_house {
         )
     }
 
-    pub fn execute_sale_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecuteSaleWithAuctioneer<'info>>,
+    pub fn auctioneer_execute_sale<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        execute_sale::execute_sale_with_auctioneer(
+        execute_sale::auctioneer_execute_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -466,15 +466,15 @@ pub mod auction_house {
         )
     }
 
-    pub fn sell_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, SellWithAuctioneer<'info>>,
+    pub fn auctioneer_sell<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerSell<'info>>,
         trade_state_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        sell::sell_with_auctioneer(
+        sell::auctioneer_sell(
             ctx,
             trade_state_bump,
             free_trade_state_bump,
@@ -494,12 +494,12 @@ pub mod auction_house {
     }
 
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
-    pub fn withdraw_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
+    pub fn auctioneer_withdraw<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerWithdraw<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        withdraw::withdraw_with_auctioneer(ctx, escrow_payment_bump, amount)
+        withdraw::auctioneer_withdraw(ctx, escrow_payment_bump, amount)
     }
 
     /// Close the escrow account of the user.

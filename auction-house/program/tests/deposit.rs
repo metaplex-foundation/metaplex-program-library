@@ -58,7 +58,7 @@ async fn deposit_success() {
 }
 
 #[tokio::test]
-async fn auction_deposit_success() {
+async fn auctioneer_deposit_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -102,7 +102,7 @@ async fn auction_deposit_success() {
     airdrop(&mut context, &buyer.pubkey(), deposit_amount * 2)
         .await
         .unwrap();
-    let (acc, deposit_tx) = auction_deposit(
+    let (acc, deposit_tx) = auctioneer_deposit(
         &mut context,
         &ahkey,
         &ah,
@@ -132,7 +132,7 @@ async fn auction_deposit_success() {
 }
 
 #[tokio::test]
-async fn auction_deposit_missing_scope_fails() {
+async fn auctioneer_deposit_missing_scope_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -177,7 +177,7 @@ async fn auction_deposit_missing_scope_fails() {
     airdrop(&mut context, &buyer.pubkey(), 2000000000)
         .await
         .unwrap();
-    let (_, deposit_tx) = auction_deposit(
+    let (_, deposit_tx) = auctioneer_deposit(
         &mut context,
         &ahkey,
         &ah,
@@ -196,7 +196,7 @@ async fn auction_deposit_missing_scope_fails() {
 }
 
 #[tokio::test]
-async fn auction_deposit_no_delegate_fails() {
+async fn auctioneer_deposit_no_delegate_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
@@ -226,7 +226,7 @@ async fn auction_deposit_no_delegate_fails() {
     airdrop(&mut context, &buyer.pubkey(), 2000000000)
         .await
         .unwrap();
-    let (_acc, deposit_tx) = auction_deposit(
+    let (_acc, deposit_tx) = auctioneer_deposit(
         &mut context,
         &ahkey,
         &ah,

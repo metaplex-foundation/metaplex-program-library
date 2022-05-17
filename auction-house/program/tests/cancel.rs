@@ -153,7 +153,7 @@ async fn auction_cancel_listing() {
 
     context.warp_to_slot(100).unwrap();
     // Derive Auction House Key
-    let ((acc, _), sell_tx) = auction_sell(
+    let ((acc, _), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
@@ -168,7 +168,7 @@ async fn auction_cancel_listing() {
         .unwrap();
     let token =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let accounts = mpl_auction_house::accounts::CancelWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerCancel {
         auction_house: ahkey,
         wallet: test_metadata.token.pubkey(),
         token_account: token,
@@ -183,7 +183,7 @@ async fn auction_cancel_listing() {
     .to_account_metas(None);
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::CancelWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerCancel {
             buyer_price: 10,
             token_size: 1,
         }
@@ -283,7 +283,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
 
     context.warp_to_slot(100).unwrap();
     // Derive Auction House Key
-    let ((acc, _), sell_tx) = auction_sell(
+    let ((acc, _), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
@@ -298,7 +298,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
         .unwrap();
     let token =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let accounts = mpl_auction_house::accounts::CancelWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerCancel {
         auction_house: ahkey,
         wallet: test_metadata.token.pubkey(),
         token_account: token,
@@ -313,7 +313,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
     .to_account_metas(None);
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::CancelWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerCancel {
             buyer_price: 10,
             token_size: 1,
         }
@@ -393,7 +393,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
         .await
         .unwrap();
 
-    let accounts = mpl_auction_house::accounts::CancelWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerCancel {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
@@ -408,7 +408,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
     .to_account_metas(None);
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::CancelWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerCancel {
             buyer_price: price,
             token_size: 1,
         }
@@ -561,7 +561,7 @@ async fn auction_cancel_bid() {
         .unwrap();
 
     let test_metadata = Metadata::new();
-    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+    airdrop(&mut context, &test_metadata.token.pubkey(), ONE_SOL)
         .await
         .unwrap();
     test_metadata
@@ -599,7 +599,7 @@ async fn auction_cancel_bid() {
         .await
         .unwrap();
 
-    let ((acc, _), buy_tx) = auction_buy(
+    let ((acc, _), buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
@@ -616,7 +616,7 @@ async fn auction_cancel_bid() {
         .await
         .unwrap();
 
-    let accounts = mpl_auction_house::accounts::CancelWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerCancel {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
@@ -631,7 +631,7 @@ async fn auction_cancel_bid() {
     .to_account_metas(None);
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::CancelWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerCancel {
             buyer_price: price,
             token_size: 1,
         }
@@ -689,7 +689,7 @@ async fn auction_cancel_bid_missing_scope_fails() {
         .unwrap();
 
     let test_metadata = Metadata::new();
-    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+    airdrop(&mut context, &test_metadata.token.pubkey(), ONE_SOL)
         .await
         .unwrap();
     test_metadata
@@ -725,12 +725,12 @@ async fn auction_cancel_bid_missing_scope_fails() {
 
     context.warp_to_slot(100).unwrap();
     let buyer = Keypair::new();
-    let price = 1000000000;
-    airdrop(&mut context, &buyer.pubkey(), 2000000000)
+    let price = ONE_SOL;
+    airdrop(&mut context, &buyer.pubkey(), 2 * ONE_SOL)
         .await
         .unwrap();
 
-    let ((acc, _), buy_tx) = auction_buy(
+    let ((acc, _), buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
@@ -747,7 +747,7 @@ async fn auction_cancel_bid_missing_scope_fails() {
         .await
         .unwrap();
 
-    let accounts = mpl_auction_house::accounts::CancelWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerCancel {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
@@ -762,7 +762,7 @@ async fn auction_cancel_bid_missing_scope_fails() {
     .to_account_metas(None);
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::CancelWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerCancel {
             buyer_price: price,
             token_size: 1,
         }
@@ -807,7 +807,7 @@ async fn auction_cancel_bid_no_delegate_fails() {
         .unwrap();
 
     let test_metadata = Metadata::new();
-    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+    airdrop(&mut context, &test_metadata.token.pubkey(), ONE_SOL)
         .await
         .unwrap();
     test_metadata
@@ -829,8 +829,8 @@ async fn auction_cancel_bid_no_delegate_fails() {
 
     context.warp_to_slot(100).unwrap();
     let buyer = Keypair::new();
-    let price = 1000000000;
-    airdrop(&mut context, &buyer.pubkey(), 2000000000)
+    let price = ONE_SOL;
+    airdrop(&mut context, &buyer.pubkey(), 2 * ONE_SOL)
         .await
         .unwrap();
 
@@ -850,7 +850,7 @@ async fn auction_cancel_bid_no_delegate_fails() {
         .await
         .unwrap();
 
-    let accounts = mpl_auction_house::accounts::CancelWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerCancel {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
@@ -865,7 +865,7 @@ async fn auction_cancel_bid_no_delegate_fails() {
     .to_account_metas(None);
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::CancelWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerCancel {
             buyer_price: price,
             token_size: 1,
         }

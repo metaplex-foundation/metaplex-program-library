@@ -106,7 +106,7 @@ async fn withdraw_success() {
     ()
 }
 #[tokio::test]
-async fn auction_withdraw_success() {
+async fn auctioneer_withdraw_success() {
     // Setup program test context and a new auction house.
     let mut context = auction_house_program_test().start_with_context().await;
 
@@ -166,7 +166,7 @@ async fn auction_withdraw_success() {
     .await
     .unwrap();
 
-    let (acc, deposit_tx) = auction_deposit(
+    let (acc, deposit_tx) = auctioneer_deposit(
         &mut context,
         &ahkey,
         &ah,
@@ -189,7 +189,7 @@ async fn auction_withdraw_success() {
         .expect("Trade State Escrow")
         .lamports;
 
-    let (_, withdraw_tx) = auction_withdraw(
+    let (_, withdraw_tx) = auctioneer_withdraw(
         &mut context,
         &buyer,
         &ahkey,
@@ -218,7 +218,7 @@ async fn auction_withdraw_success() {
 }
 
 #[tokio::test]
-async fn auction_withdraw_missing_scope_fails() {
+async fn auctioneer_withdraw_missing_scope_fails() {
     // Setup program test context and a new auction house.
     let mut context = auction_house_program_test().start_with_context().await;
 
@@ -277,7 +277,7 @@ async fn auction_withdraw_missing_scope_fails() {
     .await
     .unwrap();
 
-    let (_, deposit_tx) = auction_deposit(
+    let (_, deposit_tx) = auctioneer_deposit(
         &mut context,
         &ahkey,
         &ah,
@@ -292,7 +292,7 @@ async fn auction_withdraw_missing_scope_fails() {
         .await
         .unwrap();
 
-    let (_, withdraw_tx) = auction_withdraw(
+    let (_, withdraw_tx) = auctioneer_withdraw(
         &mut context,
         &buyer,
         &ahkey,
@@ -311,7 +311,7 @@ async fn auction_withdraw_missing_scope_fails() {
 }
 
 #[tokio::test]
-async fn auction_withdraw_no_delegate_fails() {
+async fn auctioneer_withdraw_no_delegate_fails() {
     // Setup program test context and a new auction house.
     let mut context = auction_house_program_test().start_with_context().await;
 
@@ -370,7 +370,7 @@ async fn auction_withdraw_no_delegate_fails() {
         .await
         .unwrap();
 
-    let (_, withdraw_tx) = auction_withdraw(
+    let (_, withdraw_tx) = auctioneer_withdraw(
         &mut context,
         &buyer,
         &ahkey,

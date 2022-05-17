@@ -465,7 +465,7 @@ async fn execute_sale_success() {
 }
 
 #[tokio::test]
-async fn auction_execute_sale_success() {
+async fn auctioneer_execute_sale_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -503,7 +503,7 @@ async fn auction_execute_sale_success() {
     .await
     .unwrap();
 
-    let ((sell_acc, _), sell_tx) = auction_sell(
+    let ((sell_acc, _), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
@@ -522,7 +522,7 @@ async fn auction_execute_sale_success() {
         .await
         .unwrap();
 
-    let ((bid_acc, _), buy_tx) = auction_buy(
+    let ((bid_acc, _), buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
@@ -540,7 +540,7 @@ async fn auction_execute_sale_success() {
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
 
-    let accounts = mpl_auction_house::accounts::ExecuteSaleWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerExecuteSale {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
         auction_house: ahkey,
@@ -580,7 +580,7 @@ async fn auction_execute_sale_success() {
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSaleWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerExecuteSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -638,7 +638,7 @@ async fn auction_execute_sale_success() {
 }
 
 #[tokio::test]
-async fn auction_execute_sale_missing_scope_fails() {
+async fn auctioneer_execute_sale_missing_scope_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -678,7 +678,7 @@ async fn auction_execute_sale_missing_scope_fails() {
     .await
     .unwrap();
 
-    let ((sell_acc, _), sell_tx) = auction_sell(
+    let ((sell_acc, _), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
@@ -697,7 +697,7 @@ async fn auction_execute_sale_missing_scope_fails() {
         .await
         .unwrap();
 
-    let ((bid_acc, _), buy_tx) = auction_buy(
+    let ((bid_acc, _), buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
@@ -715,7 +715,7 @@ async fn auction_execute_sale_missing_scope_fails() {
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
 
-    let accounts = mpl_auction_house::accounts::ExecuteSaleWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerExecuteSale {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
         auction_house: ahkey,
@@ -755,7 +755,7 @@ async fn auction_execute_sale_missing_scope_fails() {
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSaleWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerExecuteSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -784,7 +784,7 @@ async fn auction_execute_sale_missing_scope_fails() {
 }
 
 #[tokio::test]
-pub async fn auction_execute_sale_no_delegate_fails() {
+pub async fn auctioneer_execute_sale_no_delegate_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -840,7 +840,7 @@ pub async fn auction_execute_sale_no_delegate_fails() {
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
 
-    let accounts = mpl_auction_house::accounts::ExecuteSaleWithAuctioneer {
+    let accounts = mpl_auction_house::accounts::AuctioneerExecuteSale {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
         auction_house: ahkey,
@@ -880,7 +880,7 @@ pub async fn auction_execute_sale_no_delegate_fails() {
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSaleWithAuctioneer {
+        data: mpl_auction_house::instruction::AuctioneerExecuteSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -1211,7 +1211,7 @@ async fn execute_auction_public_sale_success() {
     let price = 100_000_000;
     let fee_minus: u64 = price - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     // Create Listing
-    let ((sell_acc, _), sell_tx) = auction_sell(
+    let ((sell_acc, _), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
@@ -1230,7 +1230,7 @@ async fn execute_auction_public_sale_success() {
         .await
         .unwrap();
 
-    let ((public_bid_acc, _print_bid_receipt_acc), public_bid_tx) = auction_public_buy(
+    let ((public_bid_acc, _print_bid_receipt_acc), public_bid_tx) = auctioneer_public_buy(
         &mut context,
         &ahkey,
         &ah,
@@ -1250,7 +1250,7 @@ async fn execute_auction_public_sale_success() {
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((bid_acc, _), buy_tx) = auction_buy(
+    let ((bid_acc, _), buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
@@ -1267,7 +1267,7 @@ async fn execute_auction_public_sale_success() {
         .unwrap();
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
-    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auction_execute_sale(
+    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auctioneer_execute_sale(
         &mut context,
         &ahkey,
         &ah,
@@ -1338,7 +1338,7 @@ async fn execute_auction_public_sale_success() {
         .await
         .unwrap();
     assert_eq!(public_bidder_token_before.is_none(), true);
-    let ((second_sell_acc, _), second_sell_tx) = auction_sell_mint(
+    let ((second_sell_acc, _), second_sell_tx) = auctioneer_sell_mint(
         &mut context,
         &ahkey,
         &ah,
@@ -1353,7 +1353,7 @@ async fn execute_auction_public_sale_success() {
         .await
         .unwrap();
 
-    let ((public_sale_acc, purchase_receipt_acc), public_sale_tx) = auction_execute_sale(
+    let ((public_sale_acc, purchase_receipt_acc), public_sale_tx) = auctioneer_execute_sale(
         &mut context,
         &ahkey,
         &ah,
@@ -1499,7 +1499,7 @@ async fn execute_auction_public_sale_missing_scope_fails() {
     let price = 100_000_000;
 
     // Create Listing
-    let ((sell_acc, _), sell_tx) = auction_sell(
+    let ((sell_acc, _), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
@@ -1518,7 +1518,7 @@ async fn execute_auction_public_sale_missing_scope_fails() {
         .await
         .unwrap();
 
-    let ((_, _print_bid_receipt_acc), public_bid_tx) = auction_public_buy(
+    let ((_, _print_bid_receipt_acc), public_bid_tx) = auctioneer_public_buy(
         &mut context,
         &ahkey,
         &ah,
@@ -1538,7 +1538,7 @@ async fn execute_auction_public_sale_missing_scope_fails() {
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((bid_acc, _), buy_tx) = auction_buy(
+    let ((bid_acc, _), buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
@@ -1555,7 +1555,7 @@ async fn execute_auction_public_sale_missing_scope_fails() {
         .unwrap();
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
-    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auction_execute_sale(
+    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auctioneer_execute_sale(
         &mut context,
         &ahkey,
         &ah,
@@ -1663,7 +1663,7 @@ async fn execute_auction_public_sale_no_delegate_fails() {
         .process_transaction(buy_tx)
         .await
         .unwrap();
-    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auction_execute_sale(
+    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auctioneer_execute_sale(
         &mut context,
         &ahkey,
         &ah,

@@ -95,8 +95,8 @@ pub struct ExecuteSale<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<ExecuteSaleWithAuctioneer<'info>> for ExecuteSale<'info> {
-    fn from(a: ExecuteSaleWithAuctioneer<'info>) -> ExecuteSale<'info> {
+impl<'info> From<AuctioneerExecuteSale<'info>> for ExecuteSale<'info> {
+    fn from(a: AuctioneerExecuteSale<'info>) -> ExecuteSale<'info> {
         ExecuteSale {
             buyer: a.buyer,
             seller: a.seller,
@@ -133,7 +133,7 @@ pub fn execute_sale<'info>(
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
@@ -150,7 +150,7 @@ pub fn execute_sale<'info>(
 
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct ExecuteSaleWithAuctioneer<'info> {
+pub struct AuctioneerExecuteSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
     /// Buyer user wallet account.
     #[account(mut)]
@@ -248,8 +248,8 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn execute_sale_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSaleWithAuctioneer<'info>>,
+pub fn auctioneer_execute_sale<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -285,7 +285,7 @@ pub fn execute_sale_with_auctioneer<'info>(
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
 #[inline(never)]
 fn auctioneer_execute_sale_logic<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSaleWithAuctioneer<'info>>,
+    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,
     program_as_signer_bump: u8,

@@ -308,9 +308,9 @@ pub fn print_bid_receipt<'info>(
 
     let token_account = match bid_type {
         BidType::PrivateSale => Some(token_account.pubkey),
-        BidType::AuctionPrivateSale => Some(token_account.pubkey),
+        BidType::AuctioneerPrivateSale => Some(token_account.pubkey),
         BidType::PublicSale => None,
-        BidType::AuctionPublicSale => None,
+        BidType::AuctioneerPublicSale => None,
     };
 
     assert_derivation(

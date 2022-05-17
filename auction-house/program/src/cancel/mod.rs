@@ -40,8 +40,8 @@ pub struct Cancel<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-impl<'info> From<CancelWithAuctioneer<'info>> for Cancel<'info> {
-    fn from(a: CancelWithAuctioneer<'info>) -> Cancel<'info> {
+impl<'info> From<AuctioneerCancel<'info>> for Cancel<'info> {
+    fn from(a: AuctioneerCancel<'info>) -> Cancel<'info> {
         Cancel {
             wallet: a.wallet,
             token_account: a.token_account,
@@ -55,10 +55,10 @@ impl<'info> From<CancelWithAuctioneer<'info>> for Cancel<'info> {
     }
 }
 
-/// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
+/// Accounts for the [`auctioneer_cancel` handler](auction_house/fn.auctioneer_cancel.html).
 #[derive(Accounts, Clone)]
 #[instruction(buyer_price: u64, token_size: u64)]
-pub struct CancelWithAuctioneer<'info> {
+pub struct AuctioneerCancel<'info> {
     /// CHECK: Wallet validated as owner in cancel logic.
     /// User wallet account.
     #[account(mut)]
@@ -109,7 +109,7 @@ pub fn cancel<'info>(
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
@@ -117,8 +117,8 @@ pub fn cancel<'info>(
     cancel_logic(&mut ctx.accounts, buyer_price, token_size)
 }
 
-pub fn cancel_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
+pub fn auctioneer_cancel<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerCancel<'info>>,
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {

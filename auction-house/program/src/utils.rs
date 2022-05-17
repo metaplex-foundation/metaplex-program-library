@@ -171,40 +171,37 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
 }
 
 #[derive(Debug, Clone)]
-
 pub enum BidType {
     PublicSale,
     PrivateSale,
-    AuctionPublicSale,
-    AuctionPrivateSale,
+    AuctioneerPublicSale,
+    AuctioneerPrivateSale,
 }
 
 #[derive(Debug, Clone)]
 pub enum ListingType {
     Sell,
-    AuctionSell,
+    AuctioneerSell,
 }
 
 #[derive(Debug, Clone)]
-
 pub enum PurchaseType {
     ExecuteSale,
-    AuctionExecuteSale,
+    AuctioneerExecuteSale,
 }
 
 #[derive(Debug, Clone)]
-
 pub enum CancelType {
     Cancel,
-    AuctionCancel,
+    AuctioneerCancel,
 }
 
 pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType> {
     match sighash {
         [169, 84, 218, 35, 42, 206, 16, 171] => Ok(BidType::PublicSale),
         [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::PrivateSale),
-        [182, 20, 132, 26, 44, 72, 50, 164] => Ok(BidType::AuctionPublicSale),
-        [144, 84, 193, 191, 59, 251, 45, 20] => Ok(BidType::AuctionPrivateSale),
+        [221, 239, 99, 240, 86, 46, 213, 126] => Ok(BidType::AuctioneerPublicSale),
+        [17, 106, 133, 46, 229, 48, 45, 208] => Ok(BidType::AuctioneerPrivateSale),
         _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
@@ -212,7 +209,7 @@ pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType> {
 pub fn assert_program_listing_instruction(sighash: &[u8]) -> Result<ListingType> {
     match sighash {
         [51, 230, 133, 164, 1, 127, 131, 173] => Ok(ListingType::Sell),
-        [62, 168, 106, 144, 69, 91, 134, 249] => Ok(ListingType::AuctionSell),
+        [251, 60, 142, 195, 121, 203, 26, 183] => Ok(ListingType::AuctioneerSell),
         _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
@@ -220,7 +217,7 @@ pub fn assert_program_listing_instruction(sighash: &[u8]) -> Result<ListingType>
 pub fn assert_program_purchase_instruction(sighash: &[u8]) -> Result<PurchaseType> {
     match sighash {
         [37, 74, 217, 157, 79, 49, 35, 6] => Ok(PurchaseType::ExecuteSale),
-        [190, 10, 82, 149, 46, 143, 189, 76] => Ok(PurchaseType::AuctionExecuteSale),
+        [68, 125, 32, 65, 251, 43, 35, 53] => Ok(PurchaseType::AuctioneerExecuteSale),
         _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
@@ -228,7 +225,7 @@ pub fn assert_program_purchase_instruction(sighash: &[u8]) -> Result<PurchaseTyp
 pub fn assert_program_cancel_instruction(sighash: &[u8]) -> Result<CancelType> {
     match sighash {
         [232, 219, 223, 41, 219, 236, 220, 190] => Ok(CancelType::Cancel),
-        [129, 238, 39, 166, 81, 89, 216, 151] => Ok(CancelType::AuctionCancel),
+        [197, 97, 152, 196, 115, 204, 64, 215] => Ok(CancelType::AuctioneerCancel),
         _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }

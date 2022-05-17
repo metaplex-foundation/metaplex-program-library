@@ -44,8 +44,8 @@ pub struct Deposit<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<DepositWithAuctioneer<'info>> for Deposit<'info> {
-    fn from(a: DepositWithAuctioneer<'info>) -> Deposit<'info> {
+impl<'info> From<AuctioneerDeposit<'info>> for Deposit<'info> {
+    fn from(a: AuctioneerDeposit<'info>) -> Deposit<'info> {
         Deposit {
             wallet: a.wallet,
             payment_account: a.payment_account,
@@ -69,7 +69,7 @@ pub fn deposit<'info>(
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
@@ -80,7 +80,7 @@ pub fn deposit<'info>(
 /// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
 #[derive(Accounts, Clone)]
 #[instruction(escrow_payment_bump: u8)]
-pub struct DepositWithAuctioneer<'info> {
+pub struct AuctioneerDeposit<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
 
@@ -128,8 +128,8 @@ pub struct DepositWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn deposit_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
+pub fn auctioneer_deposit<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerDeposit<'info>>,
     escrow_payment_bump: u8,
     amount: u64,
 ) -> Result<()> {

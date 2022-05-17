@@ -80,7 +80,7 @@ async fn sell_success() {
 }
 
 #[tokio::test]
-async fn auction_sell_success() {
+async fn auctioneer_sell_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -119,7 +119,7 @@ async fn auction_sell_success() {
     .await
     .unwrap();
 
-    let ((acc, listing_receipt_acc), sell_tx) = auction_sell(
+    let ((acc, listing_receipt_acc), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
@@ -172,7 +172,7 @@ async fn auction_sell_success() {
 }
 
 #[tokio::test]
-async fn auction_sell_missing_scope_fails() {
+async fn auctioneer_sell_missing_scope_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -213,7 +213,7 @@ async fn auction_sell_missing_scope_fails() {
     .await
     .unwrap();
 
-    let ((_, _), sell_tx) = auction_sell(
+    let ((_, _), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
@@ -231,7 +231,7 @@ async fn auction_sell_missing_scope_fails() {
 }
 
 #[tokio::test]
-async fn auction_sell_no_delegate_fails() {
+async fn auctioneer_sell_no_delegate_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
@@ -258,7 +258,7 @@ async fn auction_sell_no_delegate_fails() {
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
 
-    let ((_acc, _listing_receipt_acc), sell_tx) = auction_sell(
+    let ((_acc, _listing_receipt_acc), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
