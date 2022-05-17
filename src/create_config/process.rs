@@ -348,7 +348,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                     .with_prompt("What is your SPL token mint address?")
                     .validate_with(pubkey_validator)
                     .validate_with(|input: &String| -> Result<()> {
-                        check_spl_token(&program, input)
+                        check_spl_token(&program, input)?;
+                        Ok(())
                     })
                     .interact()
                     .unwrap(),

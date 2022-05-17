@@ -8,8 +8,8 @@ use std::str::FromStr;
 use mpl_candy_machine::instruction as nft_instruction;
 use mpl_candy_machine::{accounts as nft_accounts, CandyMachineData};
 
-use crate::candy_machine::get_candy_machine_state;
 use crate::candy_machine::ID as CANDY_MACHINE_ID;
+use crate::candy_machine::{get_candy_machine_state, parse_config_price};
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
 use crate::utils::{check_spl_token, check_spl_token_account, spinner_with_style};
@@ -59,7 +59,8 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
     pb.set_message("Connecting...");
 
     let candy_machine_state = get_candy_machine_state(&sugar_config, &candy_pubkey)?;
-    let candy_machine_data = create_candy_machine_data(&config_data, candy_machine_state.data)?;
+    let candy_machine_data =
+        create_candy_machine_data(&client, &config_data, candy_machine_state.data)?;
 
     pb.finish_with_message("Done");
 
@@ -170,6 +171,7 @@ pub fn process_update(args: UpdateArgs) -> Result<()> {
 }
 
 fn create_candy_machine_data(
+    client: &Client,
     config: &ConfigData,
     candy_machine: CandyMachineData,
 ) -> Result<CandyMachineData> {
@@ -190,9 +192,11 @@ fn create_candy_machine_data(
 
     let gatekeeper = config.gatekeeper.as_ref().map(|g| g.into_candy_format());
 
+    let price = parse_config_price(client, config)?;
+
     let data = CandyMachineData {
         uuid: candy_machine.uuid,
-        price: price_as_lamports(config.price),
+        price,
         symbol: candy_machine.symbol,
         seller_fee_basis_points: candy_machine.seller_fee_basis_points,
         max_supply: 0,
