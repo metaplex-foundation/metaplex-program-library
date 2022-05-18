@@ -1,5 +1,6 @@
-use crate::{CandyError, CandyMachine, CandyMachineData};
 use anchor_lang::prelude::*;
+
+use crate::{CandyError, CandyMachine, CandyMachineData};
 
 /// Update the candy machine state.
 #[derive(Accounts)]

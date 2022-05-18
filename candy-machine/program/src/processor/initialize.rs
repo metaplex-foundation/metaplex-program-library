@@ -1,11 +1,12 @@
+use anchor_lang::{prelude::*, Discriminator};
+use mpl_token_metadata::state::{MAX_CREATOR_LIMIT, MAX_SYMBOL_LENGTH};
+use spl_token::state::Mint;
+
 use crate::{
     assert_initialized, assert_owned_by, cmp_pubkeys,
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
     CandyError, CandyMachine, CandyMachineData,
 };
-use anchor_lang::{prelude::*, Discriminator};
-use mpl_token_metadata::state::{MAX_CREATOR_LIMIT, MAX_SYMBOL_LENGTH};
-use spl_token::state::Mint;
 
 /// Create a new candy machine.
 #[derive(Accounts)]

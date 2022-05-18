@@ -1,4 +1,5 @@
-use crate::{CandyError, CandyMachine};
+use std::str::from_utf8_unchecked;
+
 use anchor_lang::prelude::*;
 use solana_program::{
     account_info::AccountInfo,
@@ -10,7 +11,8 @@ use solana_program::{
     system_instruction,
 };
 use spl_associated_token_account::get_associated_token_address;
-use std::str::from_utf8_unchecked;
+
+use crate::{CandyError, CandyMachine};
 
 pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;

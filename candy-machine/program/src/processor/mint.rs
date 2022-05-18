@@ -1,12 +1,5 @@
-use crate::{
-    constants::{
-        A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
-        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
-    },
-    utils::*,
-    CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
-    WhitelistMintSettings,
-};
+use std::{cell::RefMut, ops::Deref};
+
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
 use arrayref::array_ref;
@@ -27,7 +20,16 @@ use solana_program::{
     system_instruction, sysvar,
     sysvar::{instructions::get_instruction_relative, SysvarId},
 };
-use std::{cell::RefMut, ops::Deref};
+
+use crate::{
+    constants::{
+        A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
+        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+    },
+    utils::*,
+    CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
+    WhitelistMintSettings,
+};
 
 /// Mint a new NFT pseudo-randomly from the config array.
 #[derive(Accounts)]

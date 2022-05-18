@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct WhitelistMintSettings {
     pub mode: WhitelistMintMode,
     pub mint: Pubkey,
@@ -9,7 +9,7 @@ pub struct WhitelistMintSettings {
 }
 
 /// Candy machine settings data.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct CandyMachineData {
     pub uuid: String,
     pub price: u64,
@@ -31,7 +31,7 @@ pub struct CandyMachineData {
 }
 
 /// Configurations options for the gatekeeper.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct GatekeeperConfig {
     /// The network for the gateway token required
     pub gatekeeper_network: Pubkey,
@@ -40,14 +40,14 @@ pub struct GatekeeperConfig {
     pub expire_on_use: bool,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct EndSettings {
     pub end_setting_type: EndSettingType,
     pub number: u64,
 }
 
 /// Hidden Settings for large mints used with offline data.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct HiddenSettings {
     pub name: String,
     pub uri: String,
@@ -63,7 +63,7 @@ pub struct ConfigLine {
 }
 
 // Unfortunate duplication of token metadata so that IDL picks it up.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct Creator {
     pub address: Pubkey,
     pub verified: bool,
@@ -71,7 +71,7 @@ pub struct Creator {
     pub share: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
 pub enum WhitelistMintMode {
     // Only captcha uses the bytes, the others just need to have same length
     // for front end borsh to not crap itself
@@ -80,7 +80,7 @@ pub enum WhitelistMintMode {
     NeverBurn,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub enum EndSettingType {
     Date,
     Amount,
@@ -88,7 +88,7 @@ pub enum EndSettingType {
 
 /// Candy machine state and config data.
 #[account]
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct CandyMachine {
     pub authority: Pubkey,
     pub wallet: Pubkey,

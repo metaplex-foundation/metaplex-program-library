@@ -1,11 +1,13 @@
+use std::cell::RefMut;
+
+use anchor_lang::prelude::*;
+use arrayref::array_ref;
+use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_URI_LENGTH};
+
 use crate::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
     CandyError, CandyMachine, ConfigLine,
 };
-use anchor_lang::prelude::*;
-use arrayref::array_ref;
-use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_URI_LENGTH};
-use std::cell::RefMut;
 
 /// Add multiple config lines to the candy machine.
 #[derive(Accounts)]

@@ -1,9 +1,10 @@
-use crate::{cmp_pubkeys, CandyMachine, CollectionPDA};
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{instruction::set_and_verify_collection, utils::assert_derivation};
 use solana_program::{
     program::invoke_signed, sysvar, sysvar::instructions::get_instruction_relative,
 };
+
+use crate::{cmp_pubkeys, CandyMachine, CollectionPDA};
 
 /// Sets and verifies the collection during a candy machine mint
 #[derive(Accounts)]

@@ -1,14 +1,15 @@
-use crate::{
-    cmp_pubkeys,
-    constants::{COLLECTIONS_FEATURE_INDEX, COLLECTION_PDA_SIZE},
-    set_feature_flag, CandyError, CandyMachine, CollectionPDA,
-};
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
     assertions::collection::assert_master_edition, instruction::approve_collection_authority,
     state::Metadata, utils::create_or_allocate_account_raw,
 };
 use solana_program::program::invoke;
+
+use crate::{
+    cmp_pubkeys,
+    constants::{COLLECTIONS_FEATURE_INDEX, COLLECTION_PDA_SIZE},
+    set_feature_flag, CandyError, CandyMachine, CollectionPDA,
+};
 
 /// Set the collection PDA for the candy machine
 #[derive(Accounts)]

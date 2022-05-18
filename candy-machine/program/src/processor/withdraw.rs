@@ -1,5 +1,6 @@
-use crate::{cmp_pubkeys, CandyError, CandyMachine};
 use anchor_lang::prelude::*;
+
+use crate::{cmp_pubkeys, CandyError, CandyMachine};
 
 /// Withdraw SOL from candy machine account.
 #[derive(Accounts)]
