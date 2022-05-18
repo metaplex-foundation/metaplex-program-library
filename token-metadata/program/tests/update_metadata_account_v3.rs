@@ -182,7 +182,7 @@ mod update_metadata_account_v3 {
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
         test_collection
-            .create_v3(
+            .create_v2(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),

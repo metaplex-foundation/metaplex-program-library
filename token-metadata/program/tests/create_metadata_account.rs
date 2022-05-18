@@ -109,59 +109,6 @@ mod create_meta_accounts {
         assert_eq!(metadata.key, Key::MetadataV1);
     }
 
-    // #[tokio::test]
-    // async fn success_v3() {
-    //     let mut context = program_test().start_with_context().await;
-    //     let test_metadata = Metadata::new();
-    //     let name = "Test".to_string();
-    //     let symbol = "TST".to_string();
-    //     let uri = "uri".to_string();
-
-    //     let puffed_name = puffed_out_string(&name, MAX_NAME_LENGTH);
-    //     let puffed_symbol = puffed_out_string(&symbol, MAX_SYMBOL_LENGTH);
-    //     let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
-
-    //     let uses = Some(Uses {
-    //         total: 1,
-    //         remaining: 1,
-    //         use_method: UseMethod::Single,
-    //     });
-    //     test_metadata
-    //         .create_v3(
-    //             &mut context,
-    //             name,
-    //             symbol,
-    //             uri,
-    //             None,
-    //             10,
-    //             false,
-    //             None,
-    //             None,
-    //             uses.to_owned(),
-    //         )
-    //         .await
-    //         .unwrap();
-
-    //     let metadata = test_metadata.get_data(&mut context).await;
-
-    //     assert_eq!(metadata.data.name, puffed_name);
-    //     assert_eq!(metadata.data.symbol, puffed_symbol);
-    //     assert_eq!(metadata.data.uri, puffed_uri);
-    //     assert_eq!(metadata.data.seller_fee_basis_points, 10);
-    //     assert_eq!(metadata.data.creators, None);
-    //     assert_eq!(metadata.uses, uses.to_owned());
-
-    //     assert!(!metadata.primary_sale_happened);
-    //     assert!(!metadata.is_mutable);
-    //     assert_eq!(metadata.mint, test_metadata.mint.pubkey());
-    //     assert_eq!(metadata.update_authority, context.payer.pubkey());
-    //     assert_eq!(metadata.key, Key::MetadataV1);
-    //     assert_eq!(
-    //         metadata.token_standard.unwrap(),
-    //         TokenStandard::FungibleAsset
-    //     );
-    // }
-
     #[tokio::test]
     async fn fail_invalid_mint_authority() {
         let mut context = program_test().start_with_context().await;

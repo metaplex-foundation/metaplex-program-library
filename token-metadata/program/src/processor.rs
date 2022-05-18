@@ -24,11 +24,10 @@ use crate::{
         assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
         check_token_standard, create_or_allocate_account_raw, get_owner_from_token_account,
-        process_create_metadata_accounts_logic, process_create_metadata_accounts_v3_logic,
+        process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
-        CreateMetadataAccountsV3LogicArgs, MintNewEditionFromMasterEditionViaTokenLogicArgs,
-        TokenBurnParams,
+        MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams,
     },
 };
 use arrayref::array_ref;
@@ -206,16 +205,6 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Thaw Delegated Account");
             process_thaw_delegated_account(program_id, accounts)
         }
-        MetadataInstruction::CreateMetadataAccountV3(args) => {
-            msg!("Instruction: Create Metadata Accounts v3");
-            process_create_metadata_accounts_v3(
-                program_id,
-                accounts,
-                args.data,
-                false,
-                args.is_mutable,
-            )
-        }
         MetadataInstruction::UpdateMetadataAccountV3(args) => {
             msg!("Instruction: Update Metadata Accounts v3");
             process_update_metadata_accounts_v3(
@@ -262,41 +251,6 @@ pub fn process_create_metadata_accounts_v2<'a>(
         is_mutable,
         false,
         true,
-    )
-}
-
-pub fn process_create_metadata_accounts_v3<'a>(
-    program_id: &'a Pubkey,
-    accounts: &'a [AccountInfo<'a>],
-    data: DataV2,
-    allow_direct_creator_writes: bool,
-    is_mutable: bool,
-) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-    let metadata_account_info = next_account_info(account_info_iter)?;
-    let mint_info = next_account_info(account_info_iter)?;
-    let mint_authority_info = next_account_info(account_info_iter)?;
-    let payer_account_info = next_account_info(account_info_iter)?;
-    let update_authority_info = next_account_info(account_info_iter)?;
-    let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
-    let edition_account_info = next_account_info(account_info_iter)?;
-
-    process_create_metadata_accounts_v3_logic(
-        program_id,
-        CreateMetadataAccountsV3LogicArgs {
-            metadata_account_info,
-            mint_info,
-            mint_authority_info,
-            payer_account_info,
-            update_authority_info,
-            system_account_info,
-            rent_info,
-            edition_account_info,
-        },
-        data,
-        allow_direct_creator_writes,
-        is_mutable,
     )
 }
 

@@ -61,16 +61,6 @@ pub struct CreateMetadataAccountArgsV2 {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-/// Args for create call
-pub struct CreateMetadataAccountArgsV3 {
-    /// Note that unique metadatas are disabled for now.
-    pub data: DataV2,
-    /// Whether you want your metadata to be updateable in the future.
-    pub is_mutable: bool,
-}
-
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct CreateMasterEditionArgs {
     /// If set, means that no more than this number of editions can ever be minted. This is immutable.
     pub max_supply: Option<u64>,
@@ -422,23 +412,14 @@ pub enum MetadataInstruction {
     #[account(1, signer, name="creator", desc="Creator")]
     RemoveCreatorVerification,
 
-       /// Update a Metadata with is_mutable as a parameter
-       #[account(0, writable, name="metadata", desc="Metadata account")]
-       #[account(1, signer, name="update_authority", desc="Update authority key")]
-       #[account(2, name="mint", desc="Mint of token asset")]
-       #[account(3, optional, writable, name="edition",  desc="Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']")]
-       UpdateMetadataAccountV3(UpdateMetadataAccountArgsV3),
+    /// Update a Metadata with is_mutable as a parameter
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, name="update_authority", desc="Update authority key")]
+    #[account(2, name="mint", desc="Mint of token asset")]
+    #[account(3, optional, writable, name="edition",  desc="Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']")]
+    UpdateMetadataAccountV3(UpdateMetadataAccountArgsV3),
 
-         /// Create Metadata object.
-      #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
-      #[account(1, name="mint", desc="Mint of token asset")]
-      #[account(2, signer, name="mint_authority", desc="Mint authority")]
-      #[account(3, signer, writable, name="payer", desc="payer")]
-      #[account(4, name="update_authority", desc="update authority info")]
-      #[account(5, name="system_program", desc="System program")]
-      #[account(6, name="rent", desc="Rent info")]
-      #[account(7, optional, writable, name="edition",  desc="Unallocated edition V2 account with address as pda of ['metadata', program id, mint, 'edition']")]
-      CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
+  
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -516,59 +497,6 @@ pub fn create_metadata_accounts_v2(
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::CreateMetadataAccountV2(CreateMetadataAccountArgsV2 {
-            data: DataV2 {
-                name,
-                symbol,
-                uri,
-                seller_fee_basis_points,
-                creators,
-                collection,
-                uses,
-            },
-            is_mutable,
-        })
-        .try_to_vec()
-        .unwrap(),
-    }
-}
-
-/// Creates an CreateMetadataAccounts instruction
-#[allow(clippy::too_many_arguments)]
-pub fn create_metadata_accounts_v3(
-    program_id: Pubkey,
-    metadata_account: Pubkey,
-    mint: Pubkey,
-    mint_authority: Pubkey,
-    payer: Pubkey,
-    update_authority: Pubkey,
-    edition: Option<Pubkey>,
-    name: String,
-    symbol: String,
-    uri: String,
-    creators: Option<Vec<Creator>>,
-    seller_fee_basis_points: u16,
-    update_authority_is_signer: bool,
-    is_mutable: bool,
-    collection: Option<Collection>,
-    uses: Option<Uses>,
-) -> Instruction {
-    let mut accounts = vec![
-        AccountMeta::new(metadata_account, false),
-        AccountMeta::new_readonly(mint, false),
-        AccountMeta::new_readonly(mint_authority, true),
-        AccountMeta::new(payer, true),
-        AccountMeta::new_readonly(update_authority, update_authority_is_signer),
-        AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
-    ];
-    if let Some(edition) = edition {
-        accounts.push(AccountMeta::new(edition, false));
-    }
-
-    Instruction {
-        program_id,
-        accounts,
-        data: MetadataInstruction::CreateMetadataAccountV3(CreateMetadataAccountArgsV3 {
             data: DataV2 {
                 name,
                 symbol,
