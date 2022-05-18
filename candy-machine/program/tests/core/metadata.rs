@@ -1,6 +1,6 @@
 use mpl_token_metadata::{
-    id, instruction,
-    state::{Collection, Creator, Data, DataV2, Uses, PREFIX},
+    instruction,
+    state::{Collection, Creator, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{
@@ -8,20 +8,22 @@ use solana_sdk::{
     transport,
 };
 
+use crate::core::create_associated_token_account;
 use crate::{
-    core::{create_mint, create_token_account, get_account, mint_tokens},
+    core::{create_mint, get_account, mint_tokens},
     *,
 };
 
 #[derive(Debug)]
 pub struct Metadata {
+    pub authority: Keypair,
     pub mint: Keypair,
     pub pubkey: Pubkey,
-    pub token: Keypair,
+    pub token: Pubkey,
 }
 
 impl Metadata {
-    pub fn new() -> Self {
+    pub fn new(authority: Keypair) -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
         let program_id = mpl_token_metadata::id();
@@ -30,9 +32,13 @@ impl Metadata {
         let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &program_id);
 
         Metadata {
-            mint,
+            authority: clone_keypair(&authority),
+            mint: clone_keypair(&mint),
             pubkey,
-            token: Keypair::new(),
+            token: spl_associated_token_account::get_associated_token_address(
+                &authority.pubkey(),
+                &mint.pubkey(),
+            ),
         }
     }
 
@@ -41,6 +47,14 @@ impl Metadata {
         context: &mut ProgramTestContext,
     ) -> mpl_token_metadata::state::Metadata {
         let account = get_account(context, &self.pubkey).await;
+        try_from_slice_unchecked(&account.data).unwrap()
+    }
+
+    pub async fn get_data_from_account(
+        context: &mut ProgramTestContext,
+        pubkey: &Pubkey,
+    ) -> mpl_token_metadata::state::Metadata {
+        let account = get_account(context, pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
@@ -60,24 +74,20 @@ impl Metadata {
         create_mint(
             context,
             &self.mint,
-            &context.payer.pubkey(),
+            &self.authority.pubkey(),
             freeze_authority,
             0,
         )
         .await?;
-        create_token_account(
-            context,
-            &self.token,
-            &self.mint.pubkey(),
-            &context.payer.pubkey(),
-        )
-        .await?;
+        create_associated_token_account(context, &self.authority.pubkey(), &self.mint.pubkey())
+            .await?;
         mint_tokens(
             context,
+            &self.authority,
             &self.mint.pubkey(),
-            &self.token.pubkey(),
+            &self.token,
             1,
-            &context.payer.pubkey(),
+            &self.authority.pubkey(),
             None,
         )
         .await?;
@@ -87,9 +97,9 @@ impl Metadata {
                 mpl_token_metadata::id(),
                 self.pubkey,
                 self.mint.pubkey(),
-                context.payer.pubkey(),
-                context.payer.pubkey(),
-                context.payer.pubkey(),
+                self.authority.pubkey(),
+                self.authority.pubkey(),
+                self.authority.pubkey(),
                 name,
                 symbol,
                 uri,
@@ -100,8 +110,8 @@ impl Metadata {
                 collection,
                 uses,
             )],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
+            Some(&self.authority.pubkey()),
+            &[&self.authority],
             context.last_blockhash,
         );
 
@@ -111,6 +121,6 @@ impl Metadata {
 
 impl Default for Metadata {
     fn default() -> Self {
-        Self::new()
+        Self::new(Keypair::new())
     }
 }

@@ -1,12 +1,14 @@
+use std::str::FromStr;
+
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
-    account::Account, program_pack::Pack, pubkey, pubkey::Pubkey, signature::Keypair,
-    signer::Signer, system_instruction, transaction::Transaction, transport::TransportError,
+    account::Account, program_pack::Pack, pubkey::Pubkey, signature::Keypair, signer::Signer,
+    system_instruction, transaction::Transaction, transport::TransportError,
 };
 use spl_token::state::Mint;
 
-mod master_edition_v2;
-mod metadata;
+pub mod master_edition_v2;
+pub mod metadata;
 
 /// Perform native lamports transfer.
 pub async fn transfer_lamports(
@@ -87,6 +89,10 @@ pub fn clone_keypair(keypair: &Keypair) -> Keypair {
     Keypair::from_bytes(&keypair.to_bytes()).unwrap()
 }
 
+pub fn clone_pubkey(pubkey: &Pubkey) -> Pubkey {
+    Pubkey::from_str(&pubkey.to_string()).unwrap()
+}
+
 pub async fn get_account(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Account {
     context
         .banks_client
@@ -103,13 +109,14 @@ pub async fn get_mint(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Mint
 
 pub async fn mint_tokens(
     context: &mut ProgramTestContext,
+    authority: &Keypair,
     mint: &Pubkey,
     account: &Pubkey,
     amount: u64,
     owner: &Pubkey,
     additional_signer: Option<&Keypair>,
 ) -> Result<(), TransportError> {
-    let mut signing_keypairs = vec![&context.payer];
+    let mut signing_keypairs = vec![authority];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
     }
@@ -119,7 +126,7 @@ pub async fn mint_tokens(
             spl_token::instruction::mint_to(&spl_token::id(), mint, account, owner, &[], amount)
                 .unwrap(),
         ],
-        Some(&context.payer.pubkey()),
+        Some(&authority.pubkey()),
         &signing_keypairs,
         context.last_blockhash,
     );
@@ -205,7 +212,8 @@ pub async fn new_mint(
     mint: &Keypair,
     authority: &Keypair,
     decimals: u8,
-    allocation: TokenAllocation,
+    amount: u64,
+    owner: &Pubkey,
 ) -> Result<Pubkey, TransportError> {
     create_mint(
         context,
@@ -216,27 +224,21 @@ pub async fn new_mint(
     )
     .await?;
     let mint_pubkey = mint.pubkey();
-    let ata = create_associated_token_account(context, &allocation.pubkey, &mint_pubkey).await?;
-    mint_tokens(
-        context,
-        &mint_pubkey,
-        &ata,
-        allocation.amount,
-        &allocation.pubkey,
-        None,
-    )
-    .await?;
+    let ata = create_associated_token_account(context, owner, &mint_pubkey).await?;
+    mint_tokens(context, authority, &mint_pubkey, &ata, amount, owner, None).await?;
     Ok(ata)
 }
 
 pub async fn ata_and_mint(
     context: &mut ProgramTestContext,
+    authority: &Keypair,
     mint_pubkey: &Pubkey,
     allocation: TokenAllocation,
 ) -> Result<Pubkey, TransportError> {
     let ata = create_associated_token_account(context, &allocation.pubkey, mint_pubkey).await?;
     mint_tokens(
         context,
+        authority,
         mint_pubkey,
         &ata,
         allocation.amount,

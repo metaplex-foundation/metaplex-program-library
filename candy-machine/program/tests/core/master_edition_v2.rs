@@ -12,6 +12,7 @@ use crate::{
 
 #[derive(Debug)]
 pub struct MasterEditionV2 {
+    pub authority: Keypair,
     pub pubkey: Pubkey,
     pub metadata_pubkey: Pubkey,
     pub mint_pubkey: Pubkey,
@@ -32,6 +33,7 @@ impl MasterEditionV2 {
             Pubkey::find_program_address(master_edition_seeds, &mpl_token_metadata::id());
 
         MasterEditionV2 {
+            authority: clone_keypair(&metadata.authority),
             pubkey,
             metadata_pubkey: metadata.pubkey,
             mint_pubkey,
@@ -64,14 +66,14 @@ impl MasterEditionV2 {
                 mpl_token_metadata::id(),
                 self.pubkey,
                 self.mint_pubkey,
-                context.payer.pubkey(),
-                context.payer.pubkey(),
+                self.authority.pubkey(),
+                self.authority.pubkey(),
                 self.metadata_pubkey,
-                context.payer.pubkey(),
+                self.authority.pubkey(),
                 max_supply,
             )],
-            Some(&context.payer.pubkey()),
-            &[&context.payer],
+            Some(&self.authority.pubkey()),
+            &[&self.authority],
             context.last_blockhash,
         );
 
