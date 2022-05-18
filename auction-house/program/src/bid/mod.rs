@@ -19,7 +19,8 @@ use crate::{
 #[instruction(
     trade_state_bump: u8,
     escrow_payment_bump: u8,
-    buyer_price: u64, token_size: u64
+    buyer_price: u64,
+    token_size: u64
 )]
 pub struct PublicBuy<'info> {
     wallet: Signer<'info>,
@@ -169,7 +170,7 @@ pub struct AuctioneerPublicBuy<'info> {
     escrow_payment_account: UncheckedAccount<'info>,
 
     /// CHECK: Verified in ah_auctioneer_pda seeds and in bid logic.
-    /// The auctioneer authority - typically a PDA of the program running this auction.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     auctioneer_authority: UncheckedAccount<'info>,
 
     #[account(
@@ -264,7 +265,12 @@ pub fn auctioneer_public_bid(
 
 /// Accounts for the [`private_bid` handler](fn.private_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(
+    trade_state_bump: u8, 
+    escrow_payment_bump: u8, 
+    buyer_price: u64, 
+    token_size: u64
+)]
 pub struct Buy<'info> {
     /// User wallet account.
     wallet: Signer<'info>,
@@ -388,7 +394,12 @@ pub fn private_bid<'info>(
 
 /// Accounts for the [`auctioneer_private_bid` handler](fn.auctioneer_private_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(
+    trade_state_bump: u8, 
+    escrow_payment_bump: u8, 
+    buyer_price: u64, 
+    token_size: u64
+)]
 pub struct AuctioneerBuy<'info> {
     /// User wallet account.
     wallet: Signer<'info>,
@@ -426,7 +437,7 @@ pub struct AuctioneerBuy<'info> {
     escrow_payment_account: UncheckedAccount<'info>,
 
     /// CHECK: Verified in ah_auctioneer_pda seeds check.
-    /// The auctioneer authority - typically a PDA of the program running this auction.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     auctioneer_authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.

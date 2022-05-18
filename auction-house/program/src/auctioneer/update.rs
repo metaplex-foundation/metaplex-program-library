@@ -21,7 +21,7 @@ pub struct UpdateAuctioneer<'info> {
     pub authority: Signer<'info>,
 
     /// CHECK: The auction house authority can set this to whatever external address they wish.
-    /// The auctioneer authority - typically a PDA of the program running this auction.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// The auctioneer PDA owned by Auction House storing scopes.
@@ -58,7 +58,7 @@ pub fn update_auctioneer<'info>(
     auctioneer.auction_house = ctx.accounts.auction_house.key();
 
     // Set all scopes false and then update as true the ones passed into the handler.
-    auctioneer.scopes = [false; 7];
+    auctioneer.scopes = [false; MAX_NUM_SCOPES];
     for scope in *scopes {
         auctioneer.scopes[scope as usize] = true;
     }

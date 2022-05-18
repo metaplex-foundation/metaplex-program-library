@@ -132,7 +132,7 @@ pub struct AuctioneerWithdraw<'info> {
     pub treasury_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: Validated in withdraw_logic.
-    /// The auctioneer authority - typically a PDA of the program running this auction.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     #[account(mut)]
     pub auctioneer_authority: UncheckedAccount<'info>,
 

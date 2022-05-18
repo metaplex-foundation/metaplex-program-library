@@ -596,7 +596,7 @@ async fn auctioneer_execute_sale_success() {
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
         Some(&ah_auth.pubkey()),
-        &[&ah_auth],
+        &[&auctioneer_authority],
         context.last_blockhash,
     );
     let seller_before = context
@@ -1167,7 +1167,7 @@ async fn execute_public_sale_success() {
 }
 
 #[tokio::test]
-async fn execute_auction_public_sale_success() {
+async fn execute_auctioneer_public_sale_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)

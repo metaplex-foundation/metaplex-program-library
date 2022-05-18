@@ -9,7 +9,8 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     escrow_payment_bump: u8, 
     free_trade_state_bump: u8, 
     program_as_signer_bump: u8, 
-    buyer_price: u64, token_size: u64
+    buyer_price: u64, 
+    token_size: u64
 )]
 pub struct ExecuteSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
@@ -276,7 +277,7 @@ pub struct AuctioneerExecuteSale<'info> {
     pub buyer_receipt_token_account: UncheckedAccount<'info>,
 
     /// CHECK: Validated in ah_auctioneer_pda seeds and execute_sale_logic.
-    /// The auctioneer authority - typically a PDA of the program running this auction.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.

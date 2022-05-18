@@ -638,14 +638,14 @@ pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
 
 pub fn assert_valid_auctioneer_and_scope(
     auction_house_instance: &Pubkey,
-    auctioneer_program_id: &Pubkey,
+    auctioneer_authority: &Pubkey,
     auctioneer_pda: &AccountInfo,
     scope: AuthorityScope,
 ) -> Result<()> {
     let sale_authority_seeds = [
         AUCTIONEER.as_bytes(),
         auction_house_instance.as_ref(),
-        auctioneer_program_id.as_ref(),
+        auctioneer_authority.as_ref(),
     ];
 
     // Assert we're given the correctly derived account.
@@ -661,7 +661,7 @@ pub fn assert_valid_auctioneer_and_scope(
         return Err(AuctionHouseError::InvalidAuctioneer.into());
     }
 
-    if auctioneer.auctioneer_authority != *auctioneer_program_id {
+    if auctioneer.auctioneer_authority != *auctioneer_authority {
         return Err(AuctionHouseError::InvalidAuctioneer.into());
     }
 

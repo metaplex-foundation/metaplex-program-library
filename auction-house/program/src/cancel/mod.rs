@@ -89,7 +89,7 @@ pub struct AuctioneerCancel<'info> {
     pub token_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: Validated in ah_auctioneer_pda seeds anbd as a signer in cancel_logic.
-    /// The auctioneer authority - typically a PDA of the program running this auction.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.

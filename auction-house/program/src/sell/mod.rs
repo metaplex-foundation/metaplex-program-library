@@ -9,15 +9,17 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64, token_size: u64
+    buyer_price: u64,
+    token_size: u64
 )]
 pub struct Sell<'info> {
     /// CHECK: Validated in sell_logic.
     /// User wallet account.
-    pub wallet: UncheckedAccount<'info>,
     #[account(mut)]
+    pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing token for sale.
+    #[account(mut)]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Validated by assert_metadata_valid.
@@ -125,11 +127,13 @@ impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64, token_size: u64
+    buyer_price: u64, 
+    token_size: u64
 )]
 pub struct AuctioneerSell<'info> {
     /// CHECK: Wallet is validated as a signer in sell_logic.
     /// User wallet account.
+    #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing token for sale.
@@ -141,7 +145,7 @@ pub struct AuctioneerSell<'info> {
     pub metadata: UncheckedAccount<'info>,
 
     /// CHECK: Validated in ah_auctioneer_pda seeds and as a signer in sell_logic.
-    /// The auctioneer authority - typically a PDA of the program running this auction.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
