@@ -3,6 +3,9 @@
 use crate::utils::{DESCRIPTION_DEFAULT_SIZE, MAX_PRIMARY_CREATORS_LEN, NAME_DEFAULT_SIZE};
 use anchor_lang::prelude::*;
 
+// by system acc I mean account to hold only native SOL
+pub const MINIMUM_BALANCE_FOR_SYSTEM_ACCS: u64 = 890880;
+
 #[account]
 pub struct Store {
     pub admin: Pubkey,
@@ -119,4 +122,14 @@ pub struct PrimaryMetadataCreators {
 
 impl PrimaryMetadataCreators {
     pub const LEN: usize = 8 + ((32 + 1 + 1) * MAX_PRIMARY_CREATORS_LEN + 1);
+}
+
+#[account]
+#[derive(Default)]
+pub struct PayoutTicket {
+    pub used: bool,
+}
+
+impl PayoutTicket {
+    pub const LEN: usize = 1;
 }

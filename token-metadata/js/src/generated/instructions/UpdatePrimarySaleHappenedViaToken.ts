@@ -38,7 +38,6 @@ const updatePrimarySaleHappenedViaTokenInstructionDiscriminator = 4;
  * Creates a _UpdatePrimarySaleHappenedViaToken_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category UpdatePrimarySaleHappenedViaToken
  * @category generated
