@@ -3,7 +3,7 @@ use crate::{
     error::MetadataError,
     instruction::CollectionStatus,
     state::{
-        get_reservation_list, Data, DataV2, EditionMarker, ItemDetails, Key, MasterEditionV1,
+        get_reservation_list, CollectionDetails, Data, DataV2, EditionMarker, Key, MasterEditionV1,
         MasterEditionV2, Metadata, TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE,
         MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN,
         MAX_METADATA_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
@@ -962,12 +962,12 @@ pub fn process_create_metadata_accounts_logic(
     metadata.collection = data.collection;
 
     if is_collection_parent {
-        metadata.item_details = ItemDetails::CollectionInfo {
+        metadata.collection_details = CollectionDetails::CollectionDetailsV1 {
             status: CollectionStatus::None,
             size: 0,
         };
     } else {
-        metadata.item_details = ItemDetails::None;
+        metadata.collection_details = CollectionDetails::None;
     }
 
     if add_token_standard {
@@ -1246,13 +1246,13 @@ pub fn increment_collection_size(
     metadata: &mut Metadata,
     metadata_info: &AccountInfo,
 ) -> ProgramResult {
-    match metadata.item_details {
-        ItemDetails::None => {
+    match metadata.collection_details {
+        CollectionDetails::None => {
             msg!("No collection details found. Cannot increment collection size.");
             Err(MetadataError::UnsizedCollection.into())
         }
-        ItemDetails::CollectionInfo { status, size } => {
-            metadata.item_details = ItemDetails::CollectionInfo {
+        CollectionDetails::CollectionDetailsV1 { status, size } => {
+            metadata.collection_details = CollectionDetails::CollectionDetailsV1 {
                 status,
                 size: size + 1,
             };
@@ -1266,13 +1266,13 @@ pub fn decrement_collection_size(
     metadata: &mut Metadata,
     metadata_info: &AccountInfo,
 ) -> ProgramResult {
-    match metadata.item_details {
-        ItemDetails::None => {
+    match metadata.collection_details {
+        CollectionDetails::None => {
             msg!("No collection details found. Cannot increment collection size.");
             Err(MetadataError::UnsizedCollection.into())
         }
-        ItemDetails::CollectionInfo { status, size } => {
-            metadata.item_details = ItemDetails::CollectionInfo {
+        CollectionDetails::CollectionDetailsV1 { status, size } => {
+            metadata.collection_details = CollectionDetails::CollectionDetailsV1 {
                 status,
                 size: size - 1,
             };

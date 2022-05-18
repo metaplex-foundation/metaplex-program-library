@@ -14,7 +14,7 @@ use crate::{
     instruction::{CollectionStatus, MetadataInstruction},
     solana_program::program_memory::sol_memset,
     state::{
-        Collection, CollectionAuthorityRecord, DataV2, ItemDetails, Key, MasterEditionV1,
+        Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
         MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN,
         COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN,
         MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
@@ -865,7 +865,9 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     }
 
     // This handler can only verify non-sized NFTs
-    if let ItemDetails::CollectionInfo { status: _, size: _ } = collection_metadata.item_details {
+    if let CollectionDetails::CollectionDetailsV1 { status: _, size: _ } =
+        collection_metadata.collection_details
+    {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -976,7 +978,9 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     }
 
     // This handler can only unverify non-sized NFTs
-    if let ItemDetails::CollectionInfo { status: _, size: _ } = collection_data.item_details {
+    if let CollectionDetails::CollectionDetailsV1 { status: _, size: _ } =
+        collection_data.collection_details
+    {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -1469,16 +1473,18 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     )?;
 
     // This handler can only verify non-sized NFTs
-    if let ItemDetails::CollectionInfo { status: _, size: _ } = collection_data.item_details {
+    if let CollectionDetails::CollectionDetailsV1 { status: _, size: _ } =
+        collection_data.collection_details
+    {
         return Err(MetadataError::SizedCollection.into());
     }
 
     // If the NFT has collection data, we set it to be unverified and then update the collection
     // size on the Collection Parent.
-    match collection_data.item_details {
-        ItemDetails::None => (),
-        ItemDetails::CollectionInfo { status, size } => {
-            collection_data.item_details = ItemDetails::CollectionInfo {
+    match collection_data.collection_details {
+        CollectionDetails::None => (),
+        CollectionDetails::CollectionDetailsV1 { status, size } => {
+            collection_data.collection_details = CollectionDetails::CollectionDetailsV1 {
                 status,
                 size: size + 1,
             };
@@ -1802,15 +1808,15 @@ pub fn set_collection_status(
     // Update authority is a signer and matches update authority on metadata.
     assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
 
-    match metadata.item_details {
-        ItemDetails::None => {
+    match metadata.collection_details {
+        CollectionDetails::None => {
             return Err(MetadataError::NotACollectionParent.into());
         }
-        ItemDetails::CollectionInfo {
+        CollectionDetails::CollectionDetailsV1 {
             status: _current_status,
             size,
         } => {
-            metadata.item_details = ItemDetails::CollectionInfo { status, size };
+            metadata.collection_details = CollectionDetails::CollectionDetailsV1 { status, size };
         }
     }
 
@@ -1844,15 +1850,15 @@ pub fn set_collection_size(
     // Update authority is a signer and matches update authority on metadata.
     assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
 
-    match metadata.item_details {
-        ItemDetails::None => {
+    match metadata.collection_details {
+        CollectionDetails::None => {
             return Err(MetadataError::NotACollectionParent.into());
         }
-        ItemDetails::CollectionInfo {
+        CollectionDetails::CollectionDetailsV1 {
             status,
             size: _current_size,
         } => {
-            metadata.item_details = ItemDetails::CollectionInfo { status, size };
+            metadata.collection_details = CollectionDetails::CollectionDetailsV1 { status, size };
         }
     }
 

@@ -4,7 +4,7 @@ pub mod utils;
 use borsh::BorshDeserialize;
 use mpl_token_metadata::{
     error::MetadataError, instruction::set_collection_status, instruction::CollectionStatus,
-    state::ItemDetails, state::Metadata as ProgramMetadata, ID as PROGRAM_ID,
+    state::CollectionDetails, state::Metadata as ProgramMetadata, ID as PROGRAM_ID,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
@@ -24,7 +24,7 @@ mod set_collection_status {
     async fn successfully_update_status() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the ItemDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -59,12 +59,13 @@ mod set_collection_status {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_status =
-            if let ItemDetails::CollectionInfo { status, size: _ } = metadata.item_details {
-                status
-            } else {
-                panic!("Expected ItemDetails::CollectionInfo");
-            };
+        let retrieved_status = if let CollectionDetails::CollectionDetailsV1 { status, size: _ } =
+            metadata.collection_details
+        {
+            status
+        } else {
+            panic!("Expected CollectionDetails::CollectionDetailsV1");
+        };
 
         assert_eq!(retrieved_status, current_status);
 
@@ -91,12 +92,13 @@ mod set_collection_status {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_status =
-            if let ItemDetails::CollectionInfo { status, size: _ } = metadata.item_details {
-                status
-            } else {
-                panic!("Expected ItemDetails::CollectionInfo");
-            };
+        let retrieved_status = if let CollectionDetails::CollectionDetailsV1 { status, size: _ } =
+            metadata.collection_details
+        {
+            status
+        } else {
+            panic!("Expected CollectionDetails::CollectionDetailsV1");
+        };
 
         assert_eq!(retrieved_status, new_status);
     }
@@ -115,7 +117,7 @@ mod set_collection_status {
         .await
         .unwrap();
 
-        // Create a Collection Parent NFT with the ItemDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -150,12 +152,13 @@ mod set_collection_status {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_status =
-            if let ItemDetails::CollectionInfo { status, size: _ } = metadata.item_details {
-                status
-            } else {
-                panic!("Expected ItemDetails::CollectionInfo");
-            };
+        let retrieved_status = if let CollectionDetails::CollectionDetailsV1 { status, size: _ } =
+            metadata.collection_details
+        {
+            status
+        } else {
+            panic!("Expected CollectionDetails::CollectionDetailsV1");
+        };
 
         assert_eq!(retrieved_status, current_status);
 
@@ -194,7 +197,7 @@ mod set_collection_status {
     //     // This keypair is used to make the correct number of signers and get around that pre-flight error.
     //     let additional_signer = Keypair::new();
 
-    //     // Create a Collection Parent NFT with the ItemDetails struct populated
+    //     // Create a Collection Parent NFT with the CollectionDetails struct populated
     //     let collection_parent_nft = Metadata::new();
     //     collection_parent_nft
     //         .create_v3(
@@ -230,10 +233,10 @@ mod set_collection_status {
 
     //     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
     //     let retrieved_status =
-    //         if let ItemDetails::CollectionInfo { status, size: _ } = metadata.item_details {
+    //         if let CollectionDetails::CollectionDetailsV1 { status, size: _ } = metadata.collection_details {
     //             status
     //         } else {
-    //             panic!("Expected ItemDetails::CollectionInfo");
+    //             panic!("Expected CollectionDetails::CollectionDetailsV1");
     //         };
 
     //     assert_eq!(retrieved_status, current_status);

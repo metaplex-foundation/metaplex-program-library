@@ -149,9 +149,9 @@ pub enum UseMethod {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub enum ItemDetails {
+pub enum CollectionDetails {
     None,
-    CollectionInfo { status: CollectionStatus, size: u64 },
+    CollectionDetailsV1 { status: CollectionStatus, size: u64 },
 }
 
 #[repr(C)]
@@ -256,7 +256,7 @@ pub struct Metadata {
     /// Uses
     pub uses: Option<Uses>,
     /// Item Details
-    pub item_details: ItemDetails,
+    pub collection_details: CollectionDetails,
 }
 
 impl Metadata {

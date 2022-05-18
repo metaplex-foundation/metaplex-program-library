@@ -23,7 +23,7 @@ mod unsized_collection_handlers {
         // Create a Collection Item NFT belonging to the collection parent
         // Try to verify the collection item NFT w/ old verify handler
 
-        // Create a Collection Parent NFT with the ItemDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -98,7 +98,7 @@ mod unsized_collection_handlers {
     async fn old_unverify_cant_change_size() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the ItemDetails field populated
+        // Create a Collection Parent NFT with the CollectionDetails field populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -187,7 +187,7 @@ mod unsized_collection_handlers {
     async fn old_set_and_verify_cant_change_size() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the ItemDetails field populated
+        // Create a Collection Parent NFT with the CollectionDetails field populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -263,7 +263,7 @@ mod sized_collection_handlers {
     async fn new_verify_cant_verify_unsized() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT without the ItemDetails struct populated
+        // Create a Collection Parent NFT without the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v2(
@@ -336,7 +336,7 @@ mod sized_collection_handlers {
     async fn new_unverify_cant_unverify_unsized() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT without the ItemDetails field populated
+        // Create a Collection Parent NFT without the CollectionDetails field populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v2(
@@ -421,7 +421,7 @@ mod sized_collection_handlers {
     async fn new_set_and_verify_cant_change_unsized() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT without the ItemDetails field populated
+        // Create a Collection Parent NFT without the CollectionDetails field populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v2(
@@ -488,7 +488,7 @@ mod sized_collection_handlers {
 
 mod size_tracking {
     use borsh::BorshDeserialize;
-    use mpl_token_metadata::state::{Collection, ItemDetails};
+    use mpl_token_metadata::state::{Collection, CollectionDetails};
     use solana_sdk::{signature::Keypair, signer::Signer};
 
     use super::*;
@@ -496,7 +496,7 @@ mod size_tracking {
     async fn increment_and_decrement_successfully() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT without the ItemDetails struct populated
+        // Create a Collection Parent NFT without the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -555,10 +555,12 @@ mod size_tracking {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        if let ItemDetails::CollectionInfo { status: _, size } = parent_metadata.item_details {
+        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
+            parent_metadata.collection_details
+        {
             assert_eq!(size, 0);
         } else {
-            panic!("ItemDetails is not a CollectionDetails");
+            panic!("CollectionDetails is not a CollectionDetails");
         }
 
         // Verifying increments the size.
@@ -578,10 +580,12 @@ mod size_tracking {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        if let ItemDetails::CollectionInfo { status: _, size } = parent_metadata.item_details {
+        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
+            parent_metadata.collection_details
+        {
             assert_eq!(size, 1);
         } else {
-            panic!("ItemDetails is not a CollectionDetails");
+            panic!("CollectionDetails is not a CollectionDetails");
         }
     }
 }

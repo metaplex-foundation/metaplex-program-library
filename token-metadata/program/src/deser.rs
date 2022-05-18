@@ -1,4 +1,4 @@
-use crate::state::{Collection, Data, ItemDetails, Key, Metadata, TokenStandard, Uses};
+use crate::state::{Collection, CollectionDetails, Data, Key, Metadata, TokenStandard, Uses};
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 
@@ -20,7 +20,8 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
     let uses_res: Result<Option<Uses>, BorshError> = BorshDeserialize::deserialize(buf);
 
     // V1.3
-    let item_details_res: Result<ItemDetails, BorshError> = BorshDeserialize::deserialize(buf);
+    let collection_details_res: Result<CollectionDetails, BorshError> =
+        BorshDeserialize::deserialize(buf);
 
     /* We can have accidentally valid, but corrupted data, particularly on the Collection struct,
     so to increase probability of catching errors If any of these deserializations fail, set all values to None.
@@ -36,11 +37,11 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
     };
 
     // Handle v1.3 separately
-    let item_details = match item_details_res {
+    let collection_details = match collection_details_res {
         Ok(item_details) => item_details,
         Err(_) => {
             msg!("Corrupted v1.3 metadata discovered: setting value to None");
-            ItemDetails::None
+            CollectionDetails::None
         }
     };
 
@@ -55,7 +56,7 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
         token_standard,
         collection,
         uses,
-        item_details,
+        collection_details,
     };
 
     Ok(metadata)
@@ -155,7 +156,7 @@ mod tests {
             token_standard: None,
             collection: None,
             uses: None,
-            item_details: ItemDetails::None,
+            collection_details: CollectionDetails::None,
         };
 
         puff_out_data_fields(&mut metadata);
