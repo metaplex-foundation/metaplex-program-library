@@ -4,9 +4,9 @@ use crate::{
     instruction::CollectionStatus,
     state::{
         get_reservation_list, Data, DataV2, EditionMarker, ItemDetails, Key, MasterEditionV1,
-        Metadata, TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT,
-        MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN,
-        MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
+        MasterEditionV2, Metadata, TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE,
+        MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN,
+        MAX_METADATA_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -1295,4 +1295,51 @@ pub fn assert_member_of_collection(
     }
 
     Ok(())
+}
+
+pub fn check_token_standard(
+    mint_info: &AccountInfo,
+    edition_account_info: Option<&AccountInfo>,
+) -> Result<TokenStandard, ProgramError> {
+    let mint_decimals = get_mint_decimals(mint_info)?;
+    let mint_supply = get_mint_supply(mint_info)?;
+
+    match edition_account_info {
+        Some(edition) => {
+            if is_master_edition(edition, mint_decimals, mint_supply) {
+                Ok(TokenStandard::NonFungible)
+            } else if is_print_edition(edition, mint_decimals, mint_supply) {
+                Ok(TokenStandard::NonFungibleEdition)
+            } else {
+                Err(MetadataError::CouldNotDetermineTokenStandard.into())
+            }
+        }
+        None => {
+            if mint_decimals == 0 {
+                Ok(TokenStandard::FungibleAsset)
+            } else {
+                Ok(TokenStandard::Fungible)
+            }
+        }
+    }
+}
+
+pub fn is_master_edition(
+    edition_account_info: &AccountInfo,
+    mint_decimals: u8,
+    mint_supply: u64,
+) -> bool {
+    let is_correct_type = MasterEditionV2::from_account_info(edition_account_info).is_ok();
+
+    is_correct_type && mint_decimals == 0 && mint_supply == 1
+}
+
+pub fn is_print_edition(
+    edition_account_info: &AccountInfo,
+    mint_decimals: u8,
+    mint_supply: u64,
+) -> bool {
+    let is_correct_type = MasterEditionV2::from_account_info(edition_account_info).is_ok();
+
+    is_correct_type && mint_decimals == 0 && mint_supply == 1
 }

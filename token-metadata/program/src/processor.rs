@@ -9,6 +9,7 @@ use crate::{
     deprecated_processor::{
         process_deprecated_create_metadata_accounts, process_deprecated_update_metadata_accounts,
     },
+    deser::clean_write_metadata,
     error::MetadataError,
     instruction::{CollectionStatus, MetadataInstruction},
     solana_program::program_memory::sol_memset,
@@ -23,8 +24,9 @@ use crate::{
         assert_freeze_authority_matches_mint, assert_initialized, assert_member_of_collection,
         assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
-        create_or_allocate_account_raw, decrement_collection_size, get_owner_from_token_account,
-        increment_collection_size, process_create_metadata_accounts_logic,
+        check_token_standard, create_or_allocate_account_raw, decrement_collection_size,
+        get_owner_from_token_account, increment_collection_size,
+        process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
@@ -241,6 +243,10 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Set Collection Size");
             set_collection_size(program_id, accounts, size)
         }
+        MetadataInstruction::SetTokenStandard => {
+            msg!("Instruction: Set Token Standard");
+            set_token_standard(program_id, accounts)
+        }
     }
 }
 
@@ -382,12 +388,7 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     puff_out_data_fields(&mut metadata);
-
-    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
-    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
-    metadata_account_info_data[0..].fill(0);
-
-    metadata.serialize(&mut *metadata_account_info_data)?;
+    clean_write_metadata(metadata, metadata_account_info)?;
     Ok(())
 }
 
@@ -1799,7 +1800,7 @@ pub fn set_collection_status(
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
 
     // Update authority is a signer and matches update authority on metadata.
-    assert_update_authority_is_correct(&metadata, &update_authority_account_info)?;
+    assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
 
     match metadata.item_details {
         ItemDetails::None => {
@@ -1813,11 +1814,7 @@ pub fn set_collection_status(
         }
     }
 
-    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
-    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
-    metadata_account_info_data[0..].fill(0);
-
-    metadata.serialize(&mut *metadata_account_info_data)?;
+    clean_write_metadata(metadata, metadata_account_info)?;
 
     Ok(())
 }
@@ -1845,7 +1842,7 @@ pub fn set_collection_size(
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
 
     // Update authority is a signer and matches update authority on metadata.
-    assert_update_authority_is_correct(&metadata, &update_authority_account_info)?;
+    assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
 
     match metadata.item_details {
         ItemDetails::None => {
@@ -1859,11 +1856,34 @@ pub fn set_collection_size(
         }
     }
 
-    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
-    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
-    metadata_account_info_data[0..].fill(0);
+    clean_write_metadata(metadata, metadata_account_info)?;
+    Ok(())
+}
 
-    metadata.serialize(&mut *metadata_account_info_data)?;
+pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
 
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let update_authority_account_info = next_account_info(account_info_iter)?;
+    let mint_account_info = next_account_info(account_info_iter)?;
+
+    // Owned by token-metadata program.
+    assert_owned_by(metadata_account_info, program_id)?;
+    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+
+    // Update authority is a signer and matches update authority on metadata.
+    assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
+
+    // Edition account provided.
+    let token_standard = if accounts.len() == 4 {
+        let edition_account_info = next_account_info(account_info_iter)?;
+
+        check_token_standard(mint_account_info, Some(edition_account_info))?
+    } else {
+        check_token_standard(mint_account_info, None)?
+    };
+
+    metadata.token_standard = Some(token_standard);
+    clean_write_metadata(metadata, metadata_account_info)?;
     Ok(())
 }

@@ -1,6 +1,6 @@
 use crate::state::{Collection, Data, ItemDetails, Key, Metadata, TokenStandard, Uses};
-use borsh::{maybestd::io::Error as BorshError, BorshDeserialize};
-use solana_program::{msg, pubkey::Pubkey};
+use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 
 // Custom deserialization function to handle NFTs with corrupted data.
 pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Error> {
@@ -59,6 +59,19 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
     };
 
     Ok(metadata)
+}
+
+pub fn clean_write_metadata(
+    metadata: Metadata,
+    metadata_account_info: &AccountInfo,
+) -> ProgramResult {
+    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
+    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
+    metadata_account_info_data[0..].fill(0);
+
+    metadata.serialize(&mut *metadata_account_info_data)?;
+
+    Ok(())
 }
 
 #[cfg(test)]

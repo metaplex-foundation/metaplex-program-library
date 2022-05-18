@@ -485,6 +485,13 @@ pub enum MetadataInstruction {
     #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
     #[account(2, signer, writable, name="Metaplex signer", desc="Metaplex signer")]
     SetCollectionSize(u64),
+
+    /// Set the token standard of the asset.
+    #[account(0, writable, name="metadata", desc="Metadata account")]
+    #[account(1, signer, writable, name="update_authority", desc="Metadata update authority")]
+    #[account(2, name="mint", desc="Mint account")]
+    #[account(3, optional, name="edition", desc="Edition account")]
+    SetTokenStandard,
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1641,5 +1648,30 @@ pub fn set_collection_size(
         data: MetadataInstruction::SetCollectionSize(size)
             .try_to_vec()
             .unwrap(),
+    }
+}
+
+pub fn set_token_standard(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    update_authority: Pubkey,
+    mint_account: Pubkey,
+    edition_account: Option<Pubkey>,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new(update_authority, true),
+        AccountMeta::new_readonly(mint_account, false),
+    ];
+    let data = MetadataInstruction::SetTokenStandard.try_to_vec().unwrap();
+
+    if let Some(edition_account) = edition_account {
+        accounts.push(AccountMeta::new_readonly(edition_account, false));
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
     }
 }

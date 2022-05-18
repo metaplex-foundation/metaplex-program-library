@@ -51,7 +51,7 @@ pub enum MetadataError {
     #[error("You must be the mint authority and signer on this transaction")]
     NotMintAuthority,
 
-    /// Mint authority provided does not match the authority on the mint
+    /// 10 - Mint authority provided does not match the authority on the mint
     #[error("Mint authority provided does not match the authority on the mint")]
     InvalidMintAuthority,
 
@@ -395,23 +395,27 @@ pub enum MetadataError {
     #[error("Can't use this function on unsized collection")]
     UnsizedCollection,
 
-    /// Calling v1.2 function on a sized collection
+    /// 102 - Calling v1.2 function on a sized collection
     #[error("Can't use this function on a sized collection")]
     SizedCollection,
 
-    /// Can't burn a verified member of a collection w/o providing collection metadata account
+    /// 103 - Can't burn a verified member of a collection w/o providing collection metadata account
     #[error(
         "Can't burn a verified member of a collection w/o providing collection metadata account"
     )]
     MissingCollectionMetadata,
 
-    /// This NFT is not a member of the specified collection.
+    /// 104 - This NFT is not a member of the specified collection.
     #[error("This NFT is not a member of the specified collection.")]
     NotAMemberOfCollection,
 
-    /// This NFT is not a collection parent NFT.
+    /// 105 - This NFT is not a collection parent NFT.
     #[error("This NFT is not a collection parent NFT.")]
     NotACollectionParent,
+
+    /// 106 - Could not determine a TokenStandard type.
+    #[error("Could not determine a TokenStandard type.")]
+    CouldNotDetermineTokenStandard,
 }
 
 impl PrintProgramError for MetadataError {
