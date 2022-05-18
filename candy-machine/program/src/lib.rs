@@ -15,15 +15,11 @@ declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 pub mod candy_machine {
     use super::*;
 
-    pub fn mint_nft<'info>(
-        ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
-        creator_bump: u8,
+    pub fn initialize_candy_machine(
+        ctx: Context<InitializeCandyMachine>,
+        data: CandyMachineData,
     ) -> Result<()> {
-        handle_mint_nft(ctx, creator_bump)
-    }
-
-    pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> Result<()> {
-        handle_set_collection_during_mint(ctx)
+        handle_initialize_candy_machine(ctx, data)
     }
 
     pub fn update_candy_machine(
@@ -31,6 +27,13 @@ pub mod candy_machine {
         data: CandyMachineData,
     ) -> Result<()> {
         handle_update_candy_machine(ctx, data)
+    }
+
+    pub fn update_authority(
+        ctx: Context<UpdateCandyMachine>,
+        new_authority: Option<Pubkey>,
+    ) -> Result<()> {
+        handle_update_authority(ctx, new_authority)
     }
 
     pub fn add_config_lines(
@@ -41,13 +44,6 @@ pub mod candy_machine {
         handle_add_config_lines(ctx, index, config_lines)
     }
 
-    pub fn initialize_candy_machine(
-        ctx: Context<InitializeCandyMachine>,
-        data: CandyMachineData,
-    ) -> Result<()> {
-        handle_initialize_candy_machine(ctx, data)
-    }
-
     pub fn set_collection(ctx: Context<SetCollection>) -> Result<()> {
         handle_set_collection(ctx)
     }
@@ -56,11 +52,15 @@ pub mod candy_machine {
         handle_remove_collection(ctx)
     }
 
-    pub fn update_authority(
-        ctx: Context<UpdateCandyMachine>,
-        new_authority: Option<Pubkey>,
+    pub fn mint_nft<'info>(
+        ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
+        creator_bump: u8,
     ) -> Result<()> {
-        handle_update_authority(ctx, new_authority)
+        handle_mint_nft(ctx, creator_bump)
+    }
+
+    pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> Result<()> {
+        handle_set_collection_during_mint(ctx)
     }
 
     pub fn withdraw_funds<'info>(ctx: Context<WithdrawFunds<'info>>) -> Result<()> {
