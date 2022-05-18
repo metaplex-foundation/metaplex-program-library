@@ -193,49 +193,32 @@ impl<'info> Buy<'info> {
                 }
             }
 
-            if remaining_accounts.len() != 3 {
-                return Err(ErrorCode::GatingTokenMissing.into());
-            }
+            let user_token_acc;
+            let token_acc_mint;
 
-            let user_token_acc = &remaining_accounts[0];
-            let token_acc_mint = &remaining_accounts[1];
+            if remaining_accounts.len() == 2 {
+                user_token_acc = &remaining_accounts[0];
+                token_acc_mint = &remaining_accounts[1];
 
-            if user_token_acc.owner != &spl_token::id() {
-                return Err(ErrorCode::InvalidOwnerForGatingToken.into());
-            }
-            let user_token_acc_data = spl_token::state::Account::unpack_from_slice(
-                user_token_acc.try_borrow_data()?.as_ref(),
-            )?;
+                Self::verify_spl_gating_token(
+                    user_token_acc,
+                    &user_wallet.key(),
+                    &gatekeeper.collection,
+                )?;
+            } else if remaining_accounts.len() == 3 {
+                user_token_acc = &remaining_accounts[0];
+                token_acc_mint = &remaining_accounts[1];
 
-            let metadata = &remaining_accounts[2];
-            let metadata_data = Metadata::from_account_info(metadata)?;
+                let metadata = &remaining_accounts[2];
 
-            let token_metadata_program_key = mpl_token_metadata::id();
-            let metadata_seeds = &[
-                mpl_token_metadata::state::PREFIX.as_bytes(),
-                token_metadata_program_key.as_ref(),
-                user_token_acc_data.mint.as_ref(),
-            ];
-            let (metadata_key, _metadata_bump_seed) =
-                Pubkey::find_program_address(metadata_seeds, &mpl_token_metadata::id());
-
-            if metadata.key() != metadata_key {
-                return Err(ErrorCode::WrongGatingMetadataAccount.into());
-            }
-
-            if user_token_acc_data.owner != user_wallet.key() {
-                return Err(ErrorCode::WrongOwnerInTokenGatingAcc.into());
-            }
-
-            if let Some(collection) = metadata_data.collection {
-                if !collection.verified {
-                    return Err(ErrorCode::WrongGatingMetadataAccount.into());
-                }
-                if collection.key != gatekeeper.collection {
-                    return Err(ErrorCode::WrongGatingMetadataAccount.into());
-                }
+                Self::verify_collection_gating_token(
+                    user_token_acc,
+                    metadata,
+                    &user_wallet.key(),
+                    &gatekeeper.collection,
+                )?;
             } else {
-                return Err(ErrorCode::WrongGatingMetadataAccount.into());
+                return Err(ErrorCode::GatingTokenMissing.into());
             }
 
             if gatekeeper.expire_on_use {
@@ -255,9 +238,80 @@ impl<'info> Buy<'info> {
                     ],
                 )?;
             }
+
             Ok(())
         } else {
             Ok(())
         }
+    }
+
+    fn verify_spl_gating_token(
+        user_token_acc: &AccountInfo,
+        user_wallet: &Pubkey,
+        collection: &Pubkey,
+    ) -> Result<()> {
+        if user_token_acc.owner != &spl_token::id() {
+            return Err(ErrorCode::InvalidOwnerForGatingToken.into());
+        }
+
+        let user_token_acc_data = spl_token::state::Account::unpack_from_slice(
+            user_token_acc.try_borrow_data()?.as_ref(),
+        )?;
+
+        if user_token_acc_data.owner != *user_wallet {
+            return Err(ErrorCode::WrongOwnerInTokenGatingAcc.into());
+        }
+
+        if user_token_acc_data.mint != *collection {
+            return Err(ErrorCode::WrongGatingToken.into());
+        }
+
+        Ok(())
+    }
+
+    fn verify_collection_gating_token(
+        user_token_acc: &AccountInfo,
+        metadata: &AccountInfo,
+        user_wallet: &Pubkey,
+        collection_key: &Pubkey,
+    ) -> Result<()> {
+        if user_token_acc.owner != &spl_token::id() {
+            return Err(ErrorCode::InvalidOwnerForGatingToken.into());
+        }
+        let user_token_acc_data = spl_token::state::Account::unpack_from_slice(
+            user_token_acc.try_borrow_data()?.as_ref(),
+        )?;
+
+        let metadata_data = Metadata::from_account_info(metadata)?;
+
+        let token_metadata_program_key = mpl_token_metadata::id();
+        let metadata_seeds = &[
+            mpl_token_metadata::state::PREFIX.as_bytes(),
+            token_metadata_program_key.as_ref(),
+            user_token_acc_data.mint.as_ref(),
+        ];
+        let (metadata_key, _metadata_bump_seed) =
+            Pubkey::find_program_address(metadata_seeds, &mpl_token_metadata::id());
+
+        if metadata.key() != metadata_key {
+            return Err(ErrorCode::WrongGatingMetadataAccount.into());
+        }
+
+        if user_token_acc_data.owner != *user_wallet {
+            return Err(ErrorCode::WrongOwnerInTokenGatingAcc.into());
+        }
+
+        if let Some(collection) = metadata_data.collection {
+            if !collection.verified {
+                return Err(ErrorCode::WrongGatingMetadataAccount.into());
+            }
+            if collection.key != *collection_key {
+                return Err(ErrorCode::WrongGatingMetadataAccount.into());
+            }
+        } else {
+            return Err(ErrorCode::WrongGatingMetadataAccount.into());
+        }
+
+        Ok(())
     }
 }

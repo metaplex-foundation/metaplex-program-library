@@ -119,7 +119,17 @@ export class MasterEditionV2 implements MasterEditionV2Args {
   pretty() {
     return {
       key: 'Key.' + Key[this.key],
-      supply: this.supply,
+      supply: (() => {
+        const x = <{ toNumber: () => number }>this.supply;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       maxSupply: this.maxSupply,
     };
   }

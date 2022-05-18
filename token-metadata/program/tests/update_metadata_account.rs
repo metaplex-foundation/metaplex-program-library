@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
@@ -60,8 +60,8 @@ mod update_metadata_account {
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
         assert_eq!(metadata.data.creators, None);
 
-        assert_eq!(metadata.primary_sale_happened, false);
-        assert_eq!(metadata.is_mutable, true);
+        assert!(!metadata.primary_sale_happened);
+        assert!(metadata.is_mutable);
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);

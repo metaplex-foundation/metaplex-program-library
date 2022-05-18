@@ -60,6 +60,11 @@ jobs:
             ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
             env.RUSTC_HASH }}
 
+      # Run lint checks
+      - uses: ./.github/actions/verify-rust
+        with: 
+          working-directory: ./token-metadata/program
+
       # Build deps
       - uses: ./.github/actions/build-token-vault
 

@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::{error::MetadataError, id, instruction, state::Key};
 use mpl_token_vault::state::PREFIX;
@@ -357,14 +357,14 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
 
         let seeds = &[
             PREFIX.as_bytes(),
-            &vault_pubkey.as_ref(),
-            &token_mint_pubkey.as_ref(),
+            vault_pubkey.as_ref(),
+            token_mint_pubkey.as_ref(),
         ];
         let (_, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
         let seeds = &[
             PREFIX.as_bytes(),
-            &metaplex_token_vault_id.as_ref(),
-            &vault_pubkey.as_ref(),
+            metaplex_token_vault_id.as_ref(),
+            vault_pubkey.as_ref(),
         ];
         let (authority, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
         create_token_account(&mut context, &store, &token_mint_pubkey, &authority)

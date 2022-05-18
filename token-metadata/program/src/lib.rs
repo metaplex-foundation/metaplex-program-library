@@ -3,6 +3,7 @@
 pub mod assertions;
 pub mod deprecated_instruction;
 pub mod deprecated_processor;
+pub mod deser;
 pub mod entrypoint;
 pub mod error;
 pub mod instruction;

@@ -1,6 +1,6 @@
 [package]
 name = "mpl-fixed-price-sale"
-version = "0.1.0"
+version = "0.2.0"
 description = "Created with Anchor"
 edition = "2018"
 license = "AGPL-3.0"

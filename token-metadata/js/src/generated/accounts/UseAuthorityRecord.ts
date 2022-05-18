@@ -120,7 +120,17 @@ export class UseAuthorityRecord implements UseAuthorityRecordArgs {
   pretty() {
     return {
       key: 'Key.' + Key[this.key],
-      allowedUses: this.allowedUses,
+      allowedUses: (() => {
+        const x = <{ toNumber: () => number }>this.allowedUses;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       bump: this.bump,
     };
   }

@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::state::{UseMethod, Uses};
 use num_traits::FromPrimitive;
@@ -53,7 +53,7 @@ mod uses {
 
         let ix = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
-            test_metadata.pubkey.clone(),
+            test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             None,
@@ -71,7 +71,11 @@ mod uses {
             context.last_blockhash,
         );
 
-        let err = context.banks_client.process_transaction(tx).await.unwrap_err();
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
         assert_custom_error!(err, MetadataError::InvalidUser);
         let metadata = test_metadata.get_data(&mut context).await;
         let metadata_uses = metadata.uses.unwrap();
@@ -109,7 +113,7 @@ mod uses {
 
         let ix = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
-            test_metadata.pubkey.clone(),
+            test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             None,
@@ -165,7 +169,7 @@ mod uses {
 
         let ix = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
-            test_metadata.pubkey.clone(),
+            test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             None,
@@ -252,7 +256,7 @@ mod uses {
 
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
-            test_metadata.pubkey.clone(),
+            test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             Some(record),
@@ -338,7 +342,7 @@ mod uses {
 
         let utilize_with_use_authority = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
-            test_metadata.pubkey.clone(),
+            test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             Some(record),
@@ -387,7 +391,7 @@ mod uses {
         context.warp_to_slot(100).unwrap();
         let utilize_with_use_authority_fail = mpl_token_metadata::instruction::utilize(
             mpl_token_metadata::id(),
-            test_metadata.pubkey.clone(),
+            test_metadata.pubkey,
             test_metadata.token.pubkey(),
             test_metadata.mint.pubkey(),
             Some(record),

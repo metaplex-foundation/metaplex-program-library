@@ -21,7 +21,7 @@ const UnverifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscrimina
  * Accounts required by the _UnverifyCollection_ instruction
  *
  * @property [_writable_] metadata Metadata account
- * @property [**signer**] collectionAuthority Collection Authority
+ * @property [_writable_, **signer**] collectionAuthority Collection Authority
  * @property [] collectionMint Mint of the Collection
  * @property [] collection Metadata Account of the Collection
  * @property [] collectionMasterEditionAccount MasterEdition2 Account of the Collection Token
@@ -45,7 +45,6 @@ const unverifyCollectionInstructionDiscriminator = 22;
  * Creates a _UnverifyCollection_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category UnverifyCollection
  * @category generated
@@ -73,7 +72,7 @@ export function createUnverifyCollectionInstruction(
     },
     {
       pubkey: collectionAuthority,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

@@ -8,10 +8,18 @@ use crate::{
 
 pub fn assert_collection_update_is_valid(
     edition: bool,
-    _existing: &Option<Collection>,
+    existing: &Option<Collection>,
     incoming: &Option<Collection>,
 ) -> Result<(), ProgramError> {
-    if incoming.is_some() && incoming.as_ref().unwrap().verified == true && !edition {
+    let is_incoming_verified_true = incoming.is_some() && incoming.as_ref().unwrap().verified;
+
+    // If incoming verified is true. Confirm incoming and existing are identical
+    let is_incoming_data_valid = !is_incoming_verified_true
+        || (existing.is_some()
+            && incoming.as_ref().unwrap().verified == existing.as_ref().unwrap().verified
+            && incoming.as_ref().unwrap().key == existing.as_ref().unwrap().key);
+
+    if !is_incoming_data_valid && !edition {
         // Never allow a collection to be verified outside of verify_collection instruction
         return Err(MetadataError::CollectionCannotBeVerifiedInThisInstruction.into());
     }
@@ -42,8 +50,7 @@ pub fn assert_has_collection_authority(
             collection_authority_info.key,
             mint,
         )?;
-        let data = collection_authority_record
-            .try_borrow_data()?;
+        let data = collection_authority_record.try_borrow_data()?;
         if data.len() == 0 {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }
@@ -51,10 +58,8 @@ pub fn assert_has_collection_authority(
         if bump_match.bump != bump {
             return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
         }
-    } else {
-        if collection_data.update_authority != *collection_authority_info.key {
-            return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
-        }
+    } else if collection_data.update_authority != *collection_authority_info.key {
+        return Err(MetadataError::InvalidCollectionUpdateAuthority.into());
     }
     Ok(())
 }
