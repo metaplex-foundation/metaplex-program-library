@@ -1,5 +1,5 @@
 {
-  "version": "1.2.7",
+  "version": "1.2.10",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -1452,10 +1452,16 @@
           "desc": "Collection Authority Record PDA"
         },
         {
-          "name": "updateAuthority",
+          "name": "delegateAuthority",
           "isMut": true,
           "isSigner": true,
-          "desc": "Update Authority of Collection NFT"
+          "desc": "Delegated Collection Authority"
+        },
+        {
+          "name": "revokeAuthority",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Update Authority, or Delegated Authority, of Collection NFT"
         },
         {
           "name": "metadata",
@@ -2863,6 +2869,11 @@
       "code": 98,
       "name": "InvalidUser",
       "msg": "Invalid User"
+    },
+    {
+      "code": 99,
+      "name": "RevokeCollectionAuthoritySignerIncorrect",
+      "msg": "Revoke Collection Authority signer is incorrect"
     }
   ],
   "metadata": {

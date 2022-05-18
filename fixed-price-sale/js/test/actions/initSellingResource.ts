@@ -38,7 +38,7 @@ export const initSellingResource = async ({
   vaultOwnerBump: number;
   resourceMint: Keypair;
   metadata: PublicKey;
-  primaryMetadataCreators: PublicKey;
+  primaryMetadataCreators: PublicKey[];
 }> => {
   const secondaryCreator: Creator = {
     address: payer.publicKey,
@@ -135,6 +135,6 @@ export const initSellingResource = async ({
     vaultOwnerBump,
     resourceMint,
     metadata,
-    primaryMetadataCreators,
+    primaryMetadataCreators: [primaryMetadataCreators],
   };
 };

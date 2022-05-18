@@ -49,7 +49,6 @@ const setAndVerifyCollectionInstructionDiscriminator = 25;
  * Creates a _SetAndVerifyCollection_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category SetAndVerifyCollection
  * @category generated
