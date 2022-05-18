@@ -38,7 +38,6 @@ const convertMasterEditionV1ToV2InstructionDiscriminator = 12;
  * Creates a _ConvertMasterEditionV1ToV2_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category ConvertMasterEditionV1ToV2
  * @category generated

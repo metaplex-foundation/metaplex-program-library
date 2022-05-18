@@ -12,4 +12,7 @@ module.exports = {
   sdkDir,
   binaryInstallDir,
   programDir,
+  serializers: {
+    Metadata: './src/custom/metadata-deserializer.ts',
+  },
 };

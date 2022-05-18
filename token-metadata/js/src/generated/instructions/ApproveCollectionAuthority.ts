@@ -44,7 +44,6 @@ const approveCollectionAuthorityInstructionDiscriminator = 23;
  * Creates a _ApproveCollectionAuthority_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category ApproveCollectionAuthority
  * @category generated

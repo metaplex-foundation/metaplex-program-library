@@ -42,7 +42,6 @@ const thawDelegatedAccountInstructionDiscriminator = 27;
  * Creates a _ThawDelegatedAccount_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category ThawDelegatedAccount
  * @category generated

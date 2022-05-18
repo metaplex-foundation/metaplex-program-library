@@ -45,7 +45,6 @@ const verifyCollectionInstructionDiscriminator = 18;
  * Creates a _VerifyCollection_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category VerifyCollection
  * @category generated

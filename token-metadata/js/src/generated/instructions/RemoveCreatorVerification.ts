@@ -36,7 +36,6 @@ const removeCreatorVerificationInstructionDiscriminator = 28;
  * Creates a _RemoveCreatorVerification_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category RemoveCreatorVerification
  * @category generated
