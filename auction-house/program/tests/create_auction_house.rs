@@ -12,7 +12,7 @@ use solana_sdk::{
     instruction::InstructionError, signature::Keypair, signer::Signer,
     transaction::TransactionError, transport::TransportError,
 };
-use spl_token;
+
 use std::assert_eq;
 use utils::setup_functions;
 #[tokio::test]

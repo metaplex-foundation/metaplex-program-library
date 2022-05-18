@@ -136,8 +136,8 @@ pub fn public_bid(
 #[derive(Accounts)]
 #[instruction(
     trade_state_bump: u8,
-    escrow_payment_bump: u8, 
-    buyer_price: u64, 
+    escrow_payment_bump: u8,
+    buyer_price: u64,
     token_size: u64
 )]
 pub struct AuctioneerPublicBuy<'info> {
@@ -266,9 +266,9 @@ pub fn auctioneer_public_bid(
 /// Accounts for the [`private_bid` handler](fn.private_bid.html).
 #[derive(Accounts)]
 #[instruction(
-    trade_state_bump: u8, 
-    escrow_payment_bump: u8, 
-    buyer_price: u64, 
+    trade_state_bump: u8,
+    escrow_payment_bump: u8,
+    buyer_price: u64,
     token_size: u64
 )]
 pub struct Buy<'info> {
@@ -395,9 +395,9 @@ pub fn private_bid<'info>(
 /// Accounts for the [`auctioneer_private_bid` handler](fn.auctioneer_private_bid.html).
 #[derive(Accounts)]
 #[instruction(
-    trade_state_bump: u8, 
-    escrow_payment_bump: u8, 
-    buyer_price: u64, 
+    trade_state_bump: u8,
+    escrow_payment_bump: u8,
+    buyer_price: u64,
     token_size: u64
 )]
 pub struct AuctioneerBuy<'info> {
@@ -756,7 +756,7 @@ pub fn auctioneer_bid_logic<'info>(
 
     assert_valid_trade_state(
         &wallet.key(),
-        &auction_house,
+        auction_house,
         buyer_price,
         token_size,
         &buyer_trade_state,
@@ -773,7 +773,7 @@ pub fn auctioneer_bid_logic<'info>(
     ];
     let (fee_payer, fee_seeds) = get_fee_payer(
         &auctioneer_authority,
-        &auction_house,
+        auction_house,
         wallet.to_account_info(),
         auction_house_fee_account.to_account_info(),
         &seeds,

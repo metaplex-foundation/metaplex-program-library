@@ -269,7 +269,7 @@ pub mod auction_house {
         create_program_token_account_if_not_present(
             auction_house_treasury,
             system_program,
-            &payer,
+            payer,
             token_program,
             treasury_mint,
             &auction_house.to_account_info(),

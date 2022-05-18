@@ -164,7 +164,7 @@ async fn execute_sale_existing_token_account_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -448,7 +448,7 @@ async fn execute_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -620,7 +620,7 @@ async fn auctioneer_execute_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -1021,7 +1021,7 @@ async fn execute_public_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -1092,7 +1092,7 @@ async fn execute_public_sale_success() {
         .unwrap()
         .unwrap();
     let public_bidder_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(public_bidder_token_account)
             .await
@@ -1306,7 +1306,7 @@ async fn execute_auctioneer_public_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -1379,7 +1379,7 @@ async fn execute_auctioneer_public_sale_success() {
         .unwrap()
         .unwrap();
     let public_bidder_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(public_bidder_token_account)
             .await

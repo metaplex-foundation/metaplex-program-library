@@ -7,13 +7,13 @@ use crate::{constants::*, errors::AuctionHouseError, AuctionHouse, Auctioneer, A
 pub struct DelegateAuctioneer<'info> {
     // Auction House instance PDA account.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.creator.as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-        ], 
-        bump=auction_house.bump, 
+        ],
+        bump=auction_house.bump,
         has_one=authority
     )]
     pub auction_house: Account<'info, AuctionHouse>,
