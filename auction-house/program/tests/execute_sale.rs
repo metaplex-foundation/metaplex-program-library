@@ -1304,7 +1304,6 @@ async fn auctioneer_execute_public_sale_success() {
         .unwrap();
 
     assert!(buyer_token_before.is_none());
-
     context
         .banks_client
         .process_transaction(first_sale_tx)
