@@ -703,14 +703,13 @@ pub fn auctioneer_execute_sale(
     context: &mut ProgramTestContext,
     ahkey: &Pubkey,
     ah: &AuctionHouse,
-    authority: &Keypair,
+    auctioneer_authority: &Keypair,
     test_metadata: &Metadata,
     buyer: &Pubkey,
     seller: &Pubkey,
     token_account: &Pubkey,
     seller_trade_state: &Pubkey,
     buyer_trade_state: &Pubkey,
-    auctioneer_authority: Pubkey,
     token_size: u64,
     buyer_price: u64,
 ) -> (
@@ -735,7 +734,7 @@ pub fn auctioneer_execute_sale(
         token_size,
     );
 
-    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
     let (escrow_payment_account, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer);
     let (purchase_receipt, purchase_receipt_bump) =
         find_purchase_receipt_address(seller_trade_state, buyer_trade_state);
@@ -750,7 +749,7 @@ pub fn auctioneer_execute_sale(
         token_mint: test_metadata.mint.pubkey(),
         treasury_mint: ah.treasury_mint,
         metadata: test_metadata.pubkey,
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority: auctioneer_authority.pubkey(),
         seller_trade_state: *seller_trade_state,
         buyer_trade_state: *buyer_trade_state,
         free_trade_state,
@@ -786,7 +785,7 @@ pub fn auctioneer_execute_sale(
         purchase_receipt,
         listing_receipt,
         bid_receipt,
-        bookkeeper: authority.pubkey(),
+        bookkeeper: auctioneer_authority.pubkey(),
         system_program: system_program::id(),
         rent: sysvar::rent::id(),
         instruction: sysvar::instructions::id(),
@@ -803,8 +802,8 @@ pub fn auctioneer_execute_sale(
 
     let tx = Transaction::new_signed_with_payer(
         &[execute_sale_instruction, print_purchase_receipt_instruction],
-        Some(&authority.pubkey()),
-        &[authority],
+        Some(&auctioneer_authority.pubkey()),
+        &[auctioneer_authority],
         context.last_blockhash,
     );
 
