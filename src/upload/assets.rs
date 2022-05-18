@@ -186,7 +186,9 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             .to_string();
 
         let m = File::open(&metadata_filepath)?;
-        let metadata: Metadata = serde_json::from_reader(m)?;
+        let metadata: Metadata = serde_json::from_reader(m).map_err(|e| {
+            anyhow!("Failed to read metadata file '{metadata_filepath}' with error: {e}")
+        })?;
         let name = metadata.name.clone();
 
         let img_filepath = Path::new(assets_dir)
@@ -253,12 +255,22 @@ pub fn get_updated_metadata(
     animation_link: Option<String>,
 ) -> Result<String> {
     let mut metadata: Metadata = {
-        let m = OpenOptions::new().read(true).open(metadata_file)?;
+        let m = OpenOptions::new()
+            .read(true)
+            .open(metadata_file)
+            .map_err(|e| {
+                anyhow!("Failed to read metadata file '{metadata_file}' with error: {e}")
+            })?;
         serde_json::from_reader(&m)?
     };
 
+    for file in &mut metadata.properties.files {
+        if file.uri.eq(&metadata.image) {
+            file.uri = media_link.to_string();
+        }
+    }
+
     metadata.image = media_link.to_string();
-    metadata.properties.files[0].uri = media_link.to_string();
 
     if animation_link.is_some() {
         metadata.animation_url = animation_link.clone();

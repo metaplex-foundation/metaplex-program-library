@@ -1,13 +1,18 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
+use anchor_client::Client;
 use anchor_lang::AccountDeserialize;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 
 use mpl_candy_machine::{CandyMachine, CandyMachineData, WhitelistMintMode, WhitelistMintSettings};
 
 use crate::config::data::SugarConfig;
+use crate::config::{price_as_lamports, ConfigData};
 use crate::setup::setup_client;
 
+use crate::utils::check_spl_token;
+
 pub use mpl_candy_machine::ID;
+use spl_token::id as token_program_id;
 // To test a custom candy machine program, comment the line above and use the
 // following lines to declare the id to use:
 //use solana_program::declare_id;
@@ -17,6 +22,22 @@ pub use mpl_candy_machine::ID;
 pub struct ConfigStatus {
     pub index: u32,
     pub on_chain: bool,
+}
+
+pub fn parse_config_price(client: &Client, config: &ConfigData) -> Result<u64> {
+    let parsed_price = if let Some(spl_token) = config.spl_token {
+        let token_program = client.program(token_program_id());
+        let token_mint = check_spl_token(&token_program, &spl_token.to_string())?;
+
+        match (config.price as u64).checked_mul(10u64.pow(token_mint.decimals.into())) {
+            Some(price) => price,
+            None => return Err(anyhow!("Price math overflow")),
+        }
+    } else {
+        price_as_lamports(config.price)
+    };
+
+    Ok(parsed_price)
 }
 
 pub fn get_candy_machine_state(

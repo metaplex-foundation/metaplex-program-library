@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    tags:
+      - "v*.*.*"
 
 jobs:
   build:
@@ -33,7 +35,8 @@ jobs:
         run: |
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             echo "Installing libudev-dev"
-            sudo apt install libudev-dev
+            sudo apt-get update
+            sudo apt-get install libudev-dev
           fi
           
           cargo build --all --release --locked

@@ -26,7 +26,6 @@ pub use mpl_token_metadata::state::{
     MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
 
-use crate::cache::*;
 use crate::candy_machine::uuid_from_pubkey;
 use crate::candy_machine::ID as CANDY_MACHINE_ID;
 use crate::common::*;
@@ -36,6 +35,7 @@ use crate::deploy::errors::*;
 use crate::setup::{setup_client, sugar_setup};
 use crate::utils::*;
 use crate::validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url};
+use crate::{cache::*, candy_machine::parse_config_price};
 
 /// The maximum config line bytes per transaction.
 const MAX_TRANSACTION_BYTES: usize = 1000;
@@ -120,7 +120,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         let candy_pubkey = candy_keypair.pubkey();
 
         let uuid = uuid_from_pubkey(&candy_pubkey);
-        let candy_data = create_candy_machine_data(&config_data, uuid)?;
+        let candy_data = create_candy_machine_data(&client, &config_data, uuid)?;
         let program = client.program(CANDY_MACHINE_ID);
 
         let treasury_wallet = match config_data.spl_token {
@@ -253,7 +253,11 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 }
 
 /// Create the candy machine data struct.
-fn create_candy_machine_data(config: &ConfigData, uuid: String) -> Result<CandyMachineData> {
+fn create_candy_machine_data(
+    client: &Client,
+    config: &ConfigData,
+    uuid: String,
+) -> Result<CandyMachineData> {
     let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
 
     let end_settings = config.end_settings.as_ref().map(|s| s.into_candy_format());
@@ -297,9 +301,11 @@ fn create_candy_machine_data(config: &ConfigData, uuid: String) -> Result<CandyM
         ));
     }
 
+    let price = parse_config_price(client, config)?;
+
     let data = CandyMachineData {
         uuid,
-        price: price_as_lamports(config.price),
+        price,
         symbol: config.symbol.clone(),
         seller_fee_basis_points: config.seller_fee_basis_points,
         max_supply: 0,

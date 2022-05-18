@@ -39,7 +39,7 @@ pub fn get_cluster(rpc_client: RpcClient) -> Result<Cluster> {
 }
 
 /// Check that the mint token is a valid address.
-pub fn check_spl_token(program: &Program, input: &str) -> Result<()> {
+pub fn check_spl_token(program: &Program, input: &str) -> Result<Mint> {
     let pubkey = Pubkey::from_str(input)?;
     let token_data = program.rpc().get_account_data(&pubkey)?;
     if token_data.len() != 82 {
@@ -48,7 +48,7 @@ pub fn check_spl_token(program: &Program, input: &str) -> Result<()> {
     let token_mint = Mint::unpack_from_slice(&token_data)?;
 
     if token_mint.is_initialized {
-        Ok(())
+        Ok(token_mint)
     } else {
         Err(anyhow!(format!(
             "The specified spl-token is not initialized: {}",

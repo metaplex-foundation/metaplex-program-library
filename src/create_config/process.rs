@@ -1,5 +1,5 @@
 use anchor_lang::prelude::Pubkey;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use chrono::DateTime;
 use console::{style, Style};
 use dialoguer::Confirm;
@@ -125,20 +125,6 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         CANDY_EMOJI
     );
 
-    println!(
-        "\n{}",
-        style("Check out our Candy Machine config docs to learn about the options:")
-            .bold()
-            .dim()
-    );
-    println!(
-        "  -> {}\n",
-        style("https://docs.metaplex.com/candy-machine-v2/configuration")
-            .bold()
-            .magenta()
-            .underlined()
-    );
-
     // checks if we have an assets dir and count the number of files
     // assumes 0 in case of error since assets_dir is optional
     let num_files = match count_files(&args.assets_dir) {
@@ -150,6 +136,9 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     let mut seller_fee = INVALID_SELLER_FEE;
 
     if num_files > 0 {
+        println!("\nFound metadata file(s) in folder '{}':", args.assets_dir);
+        println!("  -> Loading values from file '{}'", DEFAULT_METADATA);
+
         // loads the default values from the first metadata file
         let metadata_file = PathBuf::from(&args.assets_dir)
             .join(DEFAULT_METADATA)
@@ -158,11 +147,22 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .to_string();
 
         let m = File::open(&metadata_file)?;
-        let metadata: Metadata = serde_json::from_reader(m)?;
+        let metadata: Metadata = serde_json::from_reader(m).map_err(|e| {
+            anyhow!("Failed to read metadata file '{metadata_file}' with error: {e}")
+        })?;
 
         symbol = metadata.symbol;
         seller_fee = metadata.seller_fee_basis_points;
     }
+
+    println!("\nCheck out our Candy Machine config docs to learn about the options:");
+    println!(
+        "  -> {}\n",
+        style("https://docs.metaplex.com/candy-machine-v2/configuration")
+            .bold()
+            .magenta()
+            .underlined()
+    );
 
     // price
 
@@ -348,7 +348,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                     .with_prompt("What is your SPL token mint address?")
                     .validate_with(pubkey_validator)
                     .validate_with(|input: &String| -> Result<()> {
-                        check_spl_token(&program, input)
+                        check_spl_token(&program, input)?;
+                        Ok(())
                     })
                     .interact()
                     .unwrap(),
