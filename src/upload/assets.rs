@@ -11,7 +11,7 @@ use std::{
     sync::Arc,
 };
 
-use crate::common::*;
+use crate::{common::*, upload::UploadError};
 use crate::validate::format::Metadata;
 
 pub struct UploadDataArgs<'a> {
@@ -274,8 +274,13 @@ pub fn get_updated_metadata(
 
     if animation_link.is_some() {
         metadata.animation_url = animation_link.clone();
-        // todo: add error here for if metadata is missing these fields
-        metadata.properties.files[1].uri = animation_link.unwrap();
+        if metadata.properties.files.len() == 1 {
+            let error = UploadError::AnimationFileError(metadata_file.to_string()).into();
+            error!("{error}");
+            return Err(error);
+        }else {
+            metadata.properties.files[1].uri = animation_link.unwrap();
+        }
     }
 
     Ok(serde_json::to_string(&metadata).unwrap())

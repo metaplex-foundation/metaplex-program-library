@@ -89,7 +89,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             Some(item) => {
                 // determining animation condition
                 let animation_conditon =
-                    if item.animation_hash.is_some() || item.animation_link.as_ref().is_some() {
+                    if item.animation_hash.is_some() && item.animation_link.as_ref().is_some() {
                         !item.animation_hash.eq(&pair.animation_hash)
                             || item.animation_link.as_ref().unwrap().is_empty()
                     } else {

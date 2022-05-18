@@ -265,13 +265,16 @@ impl UploadHandler for BundlrHandler {
                 None
             };
 
+            let updated_metadata = match get_updated_metadata(&item.metadata, &mock_uri, mock_animation_uri.clone()){
+                Ok(metadata) => metadata.into_bytes()
+                .len() as u64,
+                Err(err) => return Err(err),
+            };
+
             total_size += HEADER_SIZE
                 + cmp::max(
                     MINIMUM_SIZE,
-                    get_updated_metadata(&item.metadata, &mock_uri, mock_animation_uri.clone())
-                        .expect("Failed to get updated metadata.")
-                        .into_bytes()
-                        .len() as u64,
+                    updated_metadata
                 );
         }
 
@@ -415,6 +418,8 @@ impl UploadHandler for BundlrHandler {
                 Some(item) => item,
                 None => return Err(anyhow!("Failed to get config item at index {}", asset_id)),
             };
+
+            // todo make sure if failure it should be empty string, this makes it able to be reuploaded if animation present
 
             transactions.push(TxInfo {
                 asset_id: asset_id.to_string(),
