@@ -140,8 +140,28 @@ export class ReservationListV2 implements ReservationListV2Args {
       masterEdition: this.masterEdition.toBase58(),
       supplySnapshot: this.supplySnapshot,
       reservations: this.reservations,
-      totalReservationSpots: this.totalReservationSpots,
-      currentReservationSpots: this.currentReservationSpots,
+      totalReservationSpots: (() => {
+        const x = <{ toNumber: () => number }>this.totalReservationSpots;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
+      currentReservationSpots: (() => {
+        const x = <{ toNumber: () => number }>this.currentReservationSpots;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
     };
   }
 }

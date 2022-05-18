@@ -62,7 +62,6 @@ const deprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructionDiscri
  * Creates a _DeprecatedMintNewEditionFromMasterEditionViaPrintingToken_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category DeprecatedMintNewEditionFromMasterEditionViaPrintingToken
  * @category generated

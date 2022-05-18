@@ -86,8 +86,8 @@ pub enum ErrorCode {
     #[msg("Treasury is not empty")]
     TreasuryIsNotEmpty,
     // 6027
-    #[msg("Selling resource in invalid state")]
-    SellingResourceInInvalidState,
+    #[msg("Selling resource already taken by other market")]
+    SellingResourceAlreadyTaken,
     // 6028
     #[msg("Metadata creators is empty")]
     MetadataCreatorsIsEmpty,

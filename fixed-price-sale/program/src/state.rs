@@ -120,3 +120,13 @@ pub struct PrimaryMetadataCreators {
 impl PrimaryMetadataCreators {
     pub const LEN: usize = 8 + ((32 + 1 + 1) * MAX_PRIMARY_CREATORS_LEN + 1);
 }
+
+#[account]
+#[derive(Default)]
+pub struct PayoutTicket {
+    pub used: bool,
+}
+
+impl PayoutTicket {
+    pub const LEN: usize = 1;
+}

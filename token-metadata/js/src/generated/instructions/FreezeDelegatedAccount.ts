@@ -42,7 +42,6 @@ const freezeDelegatedAccountInstructionDiscriminator = 26;
  * Creates a _FreezeDelegatedAccount_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category FreezeDelegatedAccount
  * @category generated
