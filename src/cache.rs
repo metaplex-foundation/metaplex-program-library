@@ -100,7 +100,9 @@ pub struct CacheItem {
     pub metadata_link: String,
     #[serde(rename = "onChain")]
     pub on_chain: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub animation_hash: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub animation_link: Option<String>,
 }
 

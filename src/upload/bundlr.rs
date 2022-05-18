@@ -279,8 +279,10 @@ impl UploadHandler for BundlrHandler {
 
         let http_client = reqwest::Client::new();
 
-        let lamports_fee =
-            BundlrHandler::get_bundlr_fee(&http_client, &self.node, total_size).await?;
+        let lamports_fee = BundlrHandler::get_bundlr_fee(&http_client, &self.node, total_size)
+            .await?
+            * (1.1 as u64);
+
         let address = sugar_config.keypair.pubkey().to_string();
         let mut balance =
             BundlrHandler::get_bundlr_balance(&http_client, &address, &self.node).await?;

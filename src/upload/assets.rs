@@ -3,6 +3,7 @@ use data_encoding::HEXLOWER;
 use glob::glob;
 use regex::{Regex, RegexBuilder};
 use ring::digest::{Context, SHA256};
+use serde::Serialize;
 use serde_json;
 use std::{
     fs::{self, DirEntry, File, OpenOptions},
@@ -28,18 +29,13 @@ pub enum DataType {
     Movie,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct AssetPair {
     pub name: String,
     pub metadata: String,
     pub metadata_hash: String,
     pub media: String,
     pub media_hash: String,
-    pub animation: Option<Animation>,
-}
-
-#[derive(Debug, Clone)]
-pub struct Animation {
     pub animation: Option<String>,
     pub animation_hash: Option<String>,
 }
@@ -218,22 +214,14 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             None
         };
 
-        let animation = if let Some(animation_hash) = animation_hash {
-            Some(Animation {
-                animation: animation_filename.clone(),
-                animation_hash,
-            })
-        } else {
-            None
-        };
-
         let asset_pair = AssetPair {
             name,
             metadata: metadata_filepath.clone(),
             metadata_hash: encode(&metadata_filepath)?,
             media: img_filepath.clone(),
             media_hash: encode(&img_filepath)?,
-            animation,
+            animation_hash,
+            animation: animation_filename,
         };
 
         asset_pairs.insert(i.parse::<usize>().unwrap(), asset_pair);
