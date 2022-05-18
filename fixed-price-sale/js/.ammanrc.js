@@ -1,9 +1,8 @@
 'use strict';
 // @ts-check
-const base = require('../../.ammanrc.js');
-
+const base = require('../../.base-ammanrc.js');
 const validator = {
-  ...base.validator,
-  programs: [base.programs.metadata, base.programs.fixedPriceSaleToken],
+    ...base.validator,
+    programs: [base.programs.metadata, base.programs.token_sale],
 };
-module.exports = { validator };
+module.exports = {validator};

@@ -5,7 +5,10 @@ pub mod utils;
 
 use crate::{
     error::ErrorCode,
-    state::{GatingConfig, Market, PrimaryMetadataCreators, SellingResource, Store, TradeHistory, PayoutTicket},
+    state::{
+        GatingConfig, Market, PayoutTicket, PrimaryMetadataCreators, SellingResource, Store,
+        TradeHistory,
+    },
     utils::*,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize, System};
@@ -157,17 +160,22 @@ pub struct InitSellingResource<'info> {
     admin: Signer<'info>,
     #[account(init, payer=admin, space=SellingResource::LEN)]
     selling_resource: Box<Account<'info, SellingResource>>,
+    /// CHECK: checked in program
     selling_resource_owner: UncheckedAccount<'info>,
     resource_mint: Box<Account<'info, Mint>>,
     #[account(owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
     master_edition: UncheckedAccount<'info>,
     #[account(owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
     metadata: UncheckedAccount<'info>,
     #[account(mut, has_one=owner)]
     vault: Box<Account<'info, TokenAccount>>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), resource_mint.key().as_ref(), store.key().as_ref()], bump=vault_owner_bump)]
+    /// CHECK: checked in program
     owner: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: checked in program
     resource_token: UncheckedAccount<'info>,
     rent: Sysvar<'info, Rent>,
     token_program: Program<'info, Token>,
@@ -184,10 +192,13 @@ pub struct CreateMarket<'info> {
     selling_resource_owner: Signer<'info>,
     #[account(mut, has_one=store)]
     selling_resource: Box<Account<'info, SellingResource>>,
+    /// CHECK: checked in program
     mint: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: checked in program
     treasury_holder: UncheckedAccount<'info>,
     #[account(seeds=[HOLDER_PREFIX.as_bytes(), mint.key().as_ref(), selling_resource.key().as_ref()], bump=treasury_owner_bump)]
+    /// CHECK: checked in program
     owner: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
     // if gating config is set collection mint key should be passed
@@ -202,36 +213,45 @@ pub struct Buy<'info> {
     #[account(mut)]
     selling_resource: Box<Account<'info, SellingResource>>,
     #[account(mut)]
+    /// CHECK: checked in program
     user_token_account: UncheckedAccount<'info>,
     #[account(mut)]
     user_wallet: Signer<'info>,
     #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump, payer=user_wallet)]
     trade_history: Box<Account<'info, TradeHistory>>,
     #[account(mut)]
+    /// CHECK: checked in program
     treasury_holder: UncheckedAccount<'info>,
     // Will be created by `mpl_token_metadata`
     #[account(mut)]
+    /// CHECK: checked in program
     new_metadata: UncheckedAccount<'info>,
     // Will be created by `mpl_token_metadata`
     #[account(mut)]
+    /// CHECK: checked in program
     new_edition: UncheckedAccount<'info>,
     #[account(mut, owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
     master_edition: UncheckedAccount<'info>,
     #[account(mut)]
     new_mint: Box<Account<'info, Mint>>,
     // Will be created by `mpl_token_metadata`
     #[account(mut)]
+    /// CHECK: checked in program
     edition_marker: UncheckedAccount<'info>,
     #[account(mut, has_one=owner)]
     vault: Box<Account<'info, TokenAccount>>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
+    /// CHECK: checked in program
     owner: UncheckedAccount<'info>,
     #[account(mut, constraint = new_token_account.owner == user_wallet.key())]
     new_token_account: Box<Account<'info, TokenAccount>>,
     #[account(mut, owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
     master_edition_metadata: UncheckedAccount<'info>,
     clock: Sysvar<'info, Clock>,
     rent: Sysvar<'info, Rent>,
+    /// CHECK: checked in program
     token_metadata_program: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -249,14 +269,20 @@ pub struct Withdraw<'info> {
     market: Box<Account<'info, Market>>,
     selling_resource: Box<Account<'info, SellingResource>>,
     #[account(owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
     metadata: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: checked in program
     treasury_holder: UncheckedAccount<'info>,
+    /// CHECK: checked in program
     treasury_mint: UncheckedAccount<'info>,
     #[account(seeds=[HOLDER_PREFIX.as_bytes(), market.treasury_mint.as_ref(), market.selling_resource.as_ref()], bump=treasury_owner_bump)]
+    /// CHECK: checked in program
     owner: UncheckedAccount<'info>,
     #[account(mut)]
+    /// CHECK: checked in program
     destination: UncheckedAccount<'info>,
+    /// CHECK: checked in program
     funder: UncheckedAccount<'info>,
     #[account(mut)]
     payer: Signer<'info>,
@@ -274,6 +300,7 @@ pub struct Withdraw<'info> {
 pub struct ClaimResource<'info> {
     #[account(has_one=selling_resource, has_one=treasury_holder)]
     market: Account<'info, Market>,
+    /// CHECK: checked in program
     treasury_holder: UncheckedAccount<'info>,
     #[account(has_one=vault, constraint = selling_resource.owner == selling_resource_owner.key())]
     selling_resource: Account<'info, SellingResource>,
@@ -281,13 +308,16 @@ pub struct ClaimResource<'info> {
     #[account(mut, has_one=owner)]
     vault: Box<Account<'info, TokenAccount>>,
     #[account(mut, owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
     metadata: UncheckedAccount<'info>,
     #[account(seeds=[VAULT_OWNER_PREFIX.as_bytes(), selling_resource.resource.as_ref(), selling_resource.store.as_ref()], bump=vault_owner_bump)]
+    /// CHECK: checked in program
     owner: UncheckedAccount<'info>,
     #[account(mut)]
     destination: Box<Account<'info, TokenAccount>>,
     clock: Sysvar<'info, Clock>,
     token_program: Program<'info, Token>,
+    /// CHECK: checked in program
     token_metadata_program: UncheckedAccount<'info>,
     system_program: Program<'info, System>,
 }
@@ -334,6 +364,7 @@ pub struct SavePrimaryMetadataCreators<'info> {
     #[account(mut)]
     admin: Signer<'info>,
     #[account(mut, owner=mpl_token_metadata::id())]
+    /// CHECK: checked in program
     metadata: UncheckedAccount<'info>,
     #[account(init, space=PrimaryMetadataCreators::LEN, payer=admin, seeds=[PRIMARY_METADATA_CREATORS_PREFIX.as_bytes(), metadata.key.as_ref()], bump)]
     primary_metadata_creators: Box<Account<'info, PrimaryMetadataCreators>>,
