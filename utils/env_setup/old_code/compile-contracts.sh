@@ -6,7 +6,7 @@
 # Also if some package fails - delete `[package]/program/target directory``
 # from package path and try again.
 
-MPL_ROOT=/sol/metaplex/program-library
+MPL_ROOT=$PROGRAM_ROOT
 MPL_DEPLOY=/target/deploy
 
 replace_pubkey () {

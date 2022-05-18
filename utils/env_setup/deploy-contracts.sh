@@ -6,7 +6,7 @@
 # IMPORTANT! Make sure to follow instructions in LocalDev.md
 MPL_WALLET=/wallet/metaplex.key.json
 
-BASE_PATH=/sol/metaplex/program-library
+BASE_PATH=$PROGRAM_ROOT
 MPL_SO_PATH=${BASE_PATH}/target/deploy
 POSTFIX_PATH=/program/target/deploy
 
