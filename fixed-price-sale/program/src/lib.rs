@@ -5,7 +5,7 @@ pub mod utils;
 
 use crate::{
     error::ErrorCode,
-    state::{GatingConfig, Market, PrimaryMetadataCreators, SellingResource, Store, TradeHistory},
+    state::{GatingConfig, Market, PrimaryMetadataCreators, SellingResource, Store, TradeHistory, PayoutTicket},
     utils::*,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize, System};
@@ -205,7 +205,7 @@ pub struct CreateMarket<'info> {
 #[derive(Accounts)]
 #[instruction(trade_history:u8, vault_owner_bump: u8)]
 pub struct Buy<'info> {
-    #[account(mut, has_one=treasury_holder)]
+    #[account(mut, has_one=treasury_holder, has_one=selling_resource)]
     market: Box<Account<'info, Market>>,
     #[account(mut)]
     selling_resource: Box<Account<'info, SellingResource>>,
@@ -281,6 +281,7 @@ pub struct Withdraw<'info> {
     destination: UncheckedAccount<'info>,
     /// CHECK: checked in program
     funder: UncheckedAccount<'info>,
+    #[account(mut)]
     payer: Signer<'info>,
     #[account(mut, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump=payout_ticket_bump)]
     /// CHECK: checked in program
