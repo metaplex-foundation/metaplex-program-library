@@ -35,6 +35,7 @@ keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_token_metadata-keypair.json
 pwd
 replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
 cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+#anchor build
 
 # Compile Auction program ------------------------------------------------------------------
 source_path=/auction/program
@@ -44,24 +45,7 @@ keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_auction-keypair.json
 pwd
 replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
 cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
-
-# Compile Auction House program ----------------------------------------------------------
-source_path=/auction-house/program
-cd ${MPL_ROOT}${source_path}
-replace_prefix="anchor_lang::declare_id!(\""
-keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_auction_house-keypair.json
-pwd
-replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
-cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
-
-# Compile Candy Machine program
-source_path=/candy-machine/program
-cd ${MPL_ROOT}${source_path}
-replace_prefix="anchor_lang::declare_id!(\""
-keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_candy_machine-keypair.json
-pwd
-replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
-cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+#anchor build
 
 # Compile Fixed Price Sale program
 source_path=/fixed-price-sale/program
@@ -70,7 +54,8 @@ replace_prefix="declare_id!(\""
 keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_fixed_price_sale-keypair.json
 pwd
 replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
-cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+#cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+anchor build
 
 # Compile Metaplex
 source_path=/metaplex/program
@@ -80,6 +65,7 @@ keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_metaplex-keypair.json
 pwd
 replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
 cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+#anchor build
 
 # Compile NFT-Packs program
 source_path=/nft-packs/program
@@ -89,6 +75,7 @@ keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_nft_packs-keypair.json
 pwd
 replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
 cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+# anchor build
 
 # Compile Entangler program
 source_path=/token-entangler/program
@@ -97,16 +84,8 @@ replace_prefix="anchor_lang::declare_id!(\""
 keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_token_entangler-keypair.json
 pwd
 replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
-cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
-
-# Compile Gumdrop program
-source_path=/gumdrop/program
-cd ${MPL_ROOT}${source_path}
-replace_prefix="declare_id!(\""
-keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_gumdrop-keypair.json
-pwd
-replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
-cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+#cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+anchor build
 
 # Compile token-vault program
 source_path=/token-vault/program
@@ -116,3 +95,41 @@ keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_token_vault-keypair.json
 pwd
 replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
 cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+# anchor build
+
+
+#### PACKAGES WITH THEIR OWN target directories: -----------------------------------------
+
+# Compile Auction House program ----------------------------------------------------------
+source_path=/auction-house/program
+cd ${MPL_ROOT}${source_path}
+replace_prefix="anchor_lang::declare_id!(\""
+#keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_auction_house-keypair.json
+keypath=${MPL_ROOT}${source_path}/target/deploy/mpl_auction_house-keypair.json
+pwd
+replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
+#cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+anchor build
+
+# Compile Candy Machine program
+# HAS OWN TARGET DIRECTORY
+source_path=/candy-machine/program
+cd ${MPL_ROOT}${source_path}
+replace_prefix="anchor_lang::declare_id!(\""
+#keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_candy_machine-keypair.json
+keypath=${MPL_ROOT}${source_path}/target/deploy/mpl_candy_machine-keypair.json
+pwd
+replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
+#cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+anchor build
+
+# Compile Gumdrop program
+source_path=/gumdrop/program
+cd ${MPL_ROOT}${source_path}
+replace_prefix="declare_id!(\""
+#keypath=${MPL_ROOT}${MPL_DEPLOY}/mpl_gumdrop-keypair.json
+keypath=${MPL_ROOT}${source_path}/target/deploy/mpl_gumdrop-keypair.json
+pwd
+replace_pubkey $keypath $replace_prefix ${MPL_ROOT}${source_path}/src/lib.rs
+#cargo build-bpf --bpf-out-dir ${MPL_ROOT}${MPL_DEPLOY}
+anchor build
