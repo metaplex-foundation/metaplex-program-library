@@ -24,7 +24,7 @@ use solana_program_test::*;
 use solana_sdk::{instruction::Instruction, transaction::Transaction, transport::TransportError};
 use spl_associated_token_account::get_associated_token_address;
 
-pub fn auction_house_program_test<'a>() -> ProgramTest {
+pub fn auction_house_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_auction_house", mpl_auction_house::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
     program
@@ -734,8 +734,8 @@ pub fn auctioneer_execute_sale(
         token_size,
     );
 
-    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
-    let (escrow_payment_account, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer);
+    let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &auctioneer_authority.pubkey());
+    let (escrow_payment_account, escrow_bump) = find_escrow_payment_address(ahkey, buyer);
     let (purchase_receipt, purchase_receipt_bump) =
         find_purchase_receipt_address(seller_trade_state, buyer_trade_state);
     let (listing_receipt, _listing_receipt_bump) = find_listing_receipt_address(seller_trade_state);

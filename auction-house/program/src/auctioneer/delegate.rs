@@ -44,7 +44,7 @@ pub struct DelegateAuctioneer<'info> {
 
 pub fn delegate_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, DelegateAuctioneer<'info>>,
-    scopes: Box<Vec<AuthorityScope>>,
+    scopes: Vec<AuthorityScope>,
 ) -> Result<()> {
     if scopes.len() > MAX_NUM_SCOPES {
         return Err(AuctionHouseError::TooManyScopes.into());
@@ -63,7 +63,7 @@ pub fn delegate_auctioneer<'info>(
 
     // Set all scopes false and then update as true the ones passed into the handler.
     auctioneer.scopes = [false; 7];
-    for scope in *scopes {
+    for scope in scopes {
         auctioneer.scopes[scope as usize] = true;
     }
 

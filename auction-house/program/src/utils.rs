@@ -39,14 +39,14 @@ pub fn make_ata<'a>(
     rent: AccountInfo<'a>,
     fee_payer_seeds: &[&[u8]],
 ) -> Result<()> {
-    let seeds: &[&[&[u8]]];
+    let _seeds: &[&[&[u8]]];
     let as_arr = [fee_payer_seeds];
 
-    if !fee_payer_seeds.is_empty() {
-        seeds = &as_arr;
+    let seeds: &[&[&[u8]]] = if !fee_payer_seeds.is_empty() {
+        &as_arr
     } else {
-        seeds = &[];
-    }
+        &[]
+    };
 
     invoke_signed(
         &spl_associated_token_account::create_associated_token_account(
@@ -504,14 +504,14 @@ pub fn create_or_allocate_account_raw<'a>(
 
     if required_lamports > 0 {
         msg!("Transfer {} lamports to the new account", required_lamports);
-        let seeds: &[&[&[u8]]];
-        let as_arr = [signer_seeds];
 
-        if !signer_seeds.is_empty() {
-            seeds = &as_arr;
+        let as_arr = [signer_seeds];
+        let seeds: &[&[&[u8]]] = if !signer_seeds.is_empty() {
+            &as_arr
         } else {
-            seeds = &[];
-        }
+            &[]
+        };
+
         invoke_signed(
             &system_instruction::transfer(payer_info.key, new_account_info.key, required_lamports),
             &[
@@ -554,7 +554,7 @@ pub fn assert_derivation(program_id: &Pubkey, account: &AccountInfo, path: &[&[u
     Ok(bump)
 }
 
-pub fn assert_valid_trade_state<'a>(
+pub fn assert_valid_trade_state(
     wallet: &Pubkey,
     auction_house: &Account<AuctionHouse>,
     buyer_price: u64,

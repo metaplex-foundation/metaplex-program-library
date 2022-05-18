@@ -207,6 +207,7 @@ pub fn auctioneer_deposit<'info>(
     deposit_logic(&mut accounts, escrow_payment_bump, amount)
 }
 
+#[allow(clippy::needless_lifetimes)]
 /// Deposit `amount` into the escrow payment account for your specific wallet.
 fn deposit_logic<'info>(
     accounts: &mut Deposit<'info>,

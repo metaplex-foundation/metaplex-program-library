@@ -178,6 +178,7 @@ pub fn auctioneer_cancel<'info>(
     cancel_logic(&mut accounts, buyer_price, token_size)
 }
 
+#[allow(clippy::needless_lifetimes)]
 fn cancel_logic<'info>(
     accounts: &mut Cancel<'info>,
     buyer_price: u64,
@@ -249,5 +250,6 @@ fn cancel_logic<'info>(
         .checked_add(curr_lamp)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
     sol_memset(*trade_state.try_borrow_mut_data()?, 0, TRADE_STATE_SIZE);
+
     Ok(())
 }

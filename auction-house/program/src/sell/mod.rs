@@ -316,16 +316,13 @@ fn sell_logic<'info>(
     let program_as_signer = &accounts.program_as_signer;
     let rent = &accounts.rent;
 
-    if !wallet.to_account_info().is_signer {
-        if buyer_price == 0 {
-            return Err(AuctionHouseError::SaleRequiresSigner.into());
-        } else if free_seller_trade_state.data_is_empty() {
-            return Err(AuctionHouseError::SaleRequiresSigner.into());
-        } else if !free_seller_trade_state.data_is_empty()
-            && (!authority.to_account_info().is_signer || !auction_house.can_change_sale_price)
-        {
-            return Err(AuctionHouseError::SaleRequiresSigner.into());
-        }
+    if !wallet.to_account_info().is_signer
+        && (buyer_price == 0
+            || free_seller_trade_state.data_is_empty()
+            || !authority.to_account_info().is_signer
+            || !auction_house.can_change_sale_price)
+    {
+        return Err(AuctionHouseError::SaleRequiresSigner.into());
     }
 
     let auction_house_key = auction_house.key();

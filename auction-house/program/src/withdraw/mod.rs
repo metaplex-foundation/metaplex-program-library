@@ -206,6 +206,7 @@ pub fn auctioneer_withdraw<'info>(
     withdraw_logic(&mut accounts, escrow_payment_bump, amount)
 }
 
+#[allow(clippy::needless_lifetimes)]
 fn withdraw_logic<'info>(
     accounts: &mut Withdraw<'info>,
     escrow_payment_bump: u8,

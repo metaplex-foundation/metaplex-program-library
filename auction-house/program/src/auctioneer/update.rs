@@ -42,7 +42,7 @@ pub struct UpdateAuctioneer<'info> {
 
 pub fn update_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, UpdateAuctioneer<'info>>,
-    scopes: Box<Vec<AuthorityScope>>,
+    scopes: Vec<AuthorityScope>,
 ) -> Result<()> {
     if scopes.len() > MAX_NUM_SCOPES {
         return Err(AuctionHouseError::TooManyScopes.into());
@@ -59,7 +59,7 @@ pub fn update_auctioneer<'info>(
 
     // Set all scopes false and then update as true the ones passed into the handler.
     auctioneer.scopes = [false; MAX_NUM_SCOPES];
-    for scope in *scopes {
+    for scope in scopes {
         auctioneer.scopes[scope as usize] = true;
     }
 
