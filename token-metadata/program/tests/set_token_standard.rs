@@ -93,13 +93,11 @@ async fn successfully_update_nonfungible_edition() {
     let mut md_account = get_account(&mut context, &edition.new_metadata_pubkey).await;
     let mut metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
 
-    // println!("{:?}", md_account.data);
+    println!("{:?}", md_account.data.to_vec()[327]);
 
     // Modify token standard to be None and then inject account back into ProgramTestContext.
     metadata.token_standard = None;
     metadata.serialize(&mut md_account.data).unwrap();
-
-    // println!("{:?}", md_account.data);
 
     let md_account_shared_data: AccountSharedData = md_account.into();
     context.set_account(&new_md.pubkey(), &md_account_shared_data);
@@ -107,7 +105,7 @@ async fn successfully_update_nonfungible_edition() {
     let new_md_account = get_account(&mut context, &new_md.pubkey()).await;
     let new_metadata = ProgramMetadata::deserialize(&mut new_md_account.data.as_slice()).unwrap();
 
-    // println!("{:?}", new_md_account.data);
+    println!("{:?}", new_md_account.data.to_vec()[327]);
 
     // Check that token standard is not set.
     assert_eq!(new_metadata.token_standard, None);
