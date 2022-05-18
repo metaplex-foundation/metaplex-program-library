@@ -126,3 +126,14 @@ pub fn find_purchase_receipt_address(
         &id(),
     )
 }
+
+pub fn find_auctioneer_pda(auction_house: &Pubkey, auctioneer_authority: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            AUCTIONEER.as_bytes(),
+            auction_house.as_ref(),
+            auctioneer_authority.as_ref(),
+        ],
+        &id(),
+    )
+}

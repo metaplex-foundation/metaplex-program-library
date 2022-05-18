@@ -45,6 +45,11 @@ impl<'info> CreateMarket<'info> {
             return Err(ErrorCode::PiecesInOneWalletIsTooMuch.into());
         }
 
+        // Only new just created selling resource can be used to create market
+        if selling_resource.state != SellingResourceState::Created {
+            return Err(ErrorCode::SellingResourceAlreadyTaken.into());
+        }
+
         // start_date cannot be in the past
         if start_date < Clock::get().unwrap().unix_timestamp as u64 {
             return Err(ErrorCode::StartDateIsInPast.into());

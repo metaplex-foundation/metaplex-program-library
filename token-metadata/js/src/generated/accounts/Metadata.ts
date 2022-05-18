@@ -13,6 +13,7 @@ import { Data, dataBeet } from '../types/Data';
 import { TokenStandard, tokenStandardBeet } from '../types/TokenStandard';
 import { Collection, collectionBeet } from '../types/Collection';
 import { Uses, usesBeet } from '../types/Uses';
+import * as customSerializer from '../../custom/metadata-deserializer';
 
 /**
  * Arguments used to create {@link Metadata}
@@ -100,7 +101,7 @@ export class Metadata implements MetadataArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [Metadata, number] {
-    return metadataBeet.deserialize(buf, offset);
+    return resolvedDeserialize(buf, offset);
   }
 
   /**
@@ -108,7 +109,7 @@ export class Metadata implements MetadataArgs {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return metadataBeet.serialize(this);
+    return resolvedSerialize(this);
   }
 
   /**
@@ -179,3 +180,17 @@ export const metadataBeet = new beet.FixableBeetStruct<Metadata, MetadataArgs>(
   Metadata.fromArgs,
   'Metadata',
 );
+
+const serializer = customSerializer as unknown as {
+  serialize: typeof metadataBeet.serialize;
+  deserialize: typeof metadataBeet.deserialize;
+};
+
+const resolvedSerialize =
+  typeof serializer.serialize === 'function'
+    ? serializer.serialize.bind(serializer)
+    : metadataBeet.serialize.bind(metadataBeet);
+const resolvedDeserialize =
+  typeof serializer.deserialize === 'function'
+    ? serializer.deserialize.bind(serializer)
+    : metadataBeet.deserialize.bind(metadataBeet);

@@ -5,7 +5,7 @@ pub mod utils;
 
 use crate::{
     error::ErrorCode,
-    state::{GatingConfig, Market, PrimaryMetadataCreators, SellingResource, Store, TradeHistory},
+    state::{GatingConfig, Market, PrimaryMetadataCreators, SellingResource, Store, TradeHistory, PayoutTicket},
     utils::*,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize, System};
@@ -197,7 +197,7 @@ pub struct CreateMarket<'info> {
 #[derive(Accounts)]
 #[instruction(trade_history:u8, vault_owner_bump: u8)]
 pub struct Buy<'info> {
-    #[account(mut, has_one=treasury_holder)]
+    #[account(mut, has_one=treasury_holder, has_one=selling_resource)]
     market: Box<Account<'info, Market>>,
     #[account(mut)]
     selling_resource: Box<Account<'info, SellingResource>>,
@@ -258,9 +258,10 @@ pub struct Withdraw<'info> {
     #[account(mut)]
     destination: UncheckedAccount<'info>,
     funder: UncheckedAccount<'info>,
+    #[account(mut)]
     payer: Signer<'info>,
-    #[account(mut, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump=payout_ticket_bump)]
-    payout_ticket: UncheckedAccount<'info>,
+    #[account(init_if_needed, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump, payer=payer)]
+    payout_ticket: Box<Account<'info, PayoutTicket>>,
     rent: Sysvar<'info, Rent>,
     clock: Sysvar<'info, Clock>,
     token_program: Program<'info, Token>,
