@@ -5,7 +5,10 @@ pub mod utils;
 
 use crate::{
     error::ErrorCode,
-    state::{GatingConfig, Market, PrimaryMetadataCreators, SellingResource, Store, TradeHistory, PayoutTicket},
+    state::{
+        GatingConfig, Market, PayoutTicket, PrimaryMetadataCreators, SellingResource, Store,
+        TradeHistory,
+    },
     utils::*,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize, System};
@@ -283,9 +286,8 @@ pub struct Withdraw<'info> {
     funder: UncheckedAccount<'info>,
     #[account(mut)]
     payer: Signer<'info>,
-    #[account(mut, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump=payout_ticket_bump)]
-    /// CHECK: checked in program
-    payout_ticket: UncheckedAccount<'info>,
+    #[account(init_if_needed, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump, payer=payer)]
+    payout_ticket: Box<Account<'info, PayoutTicket>>,
     rent: Sysvar<'info, Rent>,
     clock: Sysvar<'info, Clock>,
     token_program: Program<'info, Token>,
