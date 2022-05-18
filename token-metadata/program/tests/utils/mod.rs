@@ -87,7 +87,7 @@ pub async fn burn(
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    context.banks_client.process_transaction(tx).await?;
 
     Ok(())
 }

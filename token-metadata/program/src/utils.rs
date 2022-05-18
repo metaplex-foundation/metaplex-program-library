@@ -1282,13 +1282,16 @@ pub fn decrement_collection_size(
     }
 }
 
-pub fn assert_member_of_collection(
+pub fn assert_verified_member_of_collection(
     item_metadata: &Metadata,
     collection_metadata: &Metadata,
 ) -> ProgramResult {
     if let Some(ref collection) = item_metadata.collection {
         if collection_metadata.mint != collection.key {
             return Err(MetadataError::NotAMemberOfCollection.into());
+        }
+        if !collection.verified {
+            return Err(MetadataError::NotVerifiedMemberOfCollection.into());
         }
     } else {
         return Err(MetadataError::NotAMemberOfCollection.into());

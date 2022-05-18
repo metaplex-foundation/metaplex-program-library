@@ -1,10 +1,22 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
+use mpl_token_metadata::state::Metadata as ProgramMetadata;
+use num_traits::FromPrimitive;
 use solana_program_test::*;
-use solana_sdk::signature::Signer;
+use solana_sdk::{
+    instruction::InstructionError, signer::Signer, transaction::TransactionError,
+    transport::TransportError,
+};
 use utils::*;
 mod burn_nft {
+
+    use borsh::BorshDeserialize;
+    use mpl_token_metadata::{
+        error::MetadataError,
+        state::{Collection, CollectionDetails},
+    };
+    use solana_sdk::signature::Keypair;
 
     use super::*;
     #[tokio::test]
@@ -170,5 +182,237 @@ mod burn_nft {
         assert!(md_account.is_none());
         assert!(token_account.is_none());
         assert!(print_edition_account.is_none());
+    }
+
+    #[tokio::test]
+    async fn require_md_account_to_burn_collection_nft() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a Collection Parent NFT without the CollectionDetails struct populated
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+                true, // Collection Parent
+            )
+            .await
+            .unwrap();
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let collection = Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: false,
+        };
+
+        let collection_item_nft = Metadata::new();
+        collection_item_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                Some(collection),
+                None,
+                false, // Collection Item
+            )
+            .await
+            .unwrap();
+        let item_master_edition_account = MasterEditionV2::new(&collection_item_nft);
+        item_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
+            parent_metadata.collection_details
+        {
+            assert_eq!(size, 0);
+        } else {
+            panic!("CollectionDetails is not a CollectionDetails");
+        }
+
+        // Verifying increments the size.
+        collection_item_nft
+            .verify_collection_v2(
+                &mut context,
+                collection_parent_nft.pubkey,
+                &payer,
+                collection_parent_nft.mint.pubkey(),
+                parent_master_edition_account.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
+            parent_metadata.collection_details
+        {
+            assert_eq!(size, 1);
+        } else {
+            panic!("CollectionDetails is not a CollectionDetails");
+        }
+
+        // Burn the NFT w/o passing in collection metadata. This should fail.
+        let err = burn(
+            &mut context,
+            collection_item_nft.pubkey,
+            collection_item_nft.mint.pubkey(),
+            collection_item_nft.token.pubkey(),
+            item_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::MissingCollectionMetadata);
+    }
+
+    #[tokio::test]
+    async fn burning_decrements_collection_size() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a Collection Parent NFT without the CollectionDetails struct populated
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+                true, // Collection Parent
+            )
+            .await
+            .unwrap();
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let collection = Collection {
+            key: collection_parent_nft.mint.pubkey(),
+            verified: false,
+        };
+
+        let collection_item_nft = Metadata::new();
+        collection_item_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                Some(collection),
+                None,
+                false, // Collection Item
+            )
+            .await
+            .unwrap();
+        let item_master_edition_account = MasterEditionV2::new(&collection_item_nft);
+        item_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
+            parent_metadata.collection_details
+        {
+            assert_eq!(size, 0);
+        } else {
+            panic!("CollectionDetails is not a CollectionDetails");
+        }
+
+        // Verifying increments the size.
+        collection_item_nft
+            .verify_collection_v2(
+                &mut context,
+                collection_parent_nft.pubkey,
+                &payer,
+                collection_parent_nft.mint.pubkey(),
+                parent_master_edition_account.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
+            parent_metadata.collection_details
+        {
+            assert_eq!(size, 1);
+        } else {
+            panic!("CollectionDetails is not a CollectionDetails");
+        }
+
+        // Burn the NFT
+        burn(
+            &mut context,
+            collection_item_nft.pubkey,
+            collection_item_nft.mint.pubkey(),
+            collection_item_nft.token.pubkey(),
+            item_master_edition_account.pubkey,
+            Some(collection_parent_nft.pubkey),
+        )
+        .await
+        .unwrap();
+
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
+            parent_metadata.collection_details
+        {
+            assert_eq!(size, 0);
+        } else {
+            panic!("CollectionDetails is not a CollectionDetails");
+        }
     }
 }

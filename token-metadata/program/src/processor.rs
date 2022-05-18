@@ -21,11 +21,11 @@ use crate::{
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
-        assert_freeze_authority_matches_mint, assert_initialized, assert_member_of_collection,
+        assert_freeze_authority_matches_mint, assert_initialized,
         assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
-        check_token_standard, create_or_allocate_account_raw, decrement_collection_size,
-        get_owner_from_token_account, increment_collection_size,
+        assert_verified_member_of_collection, check_token_standard, create_or_allocate_account_raw,
+        decrement_collection_size, get_owner_from_token_account, increment_collection_size,
         process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
@@ -1780,11 +1780,11 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         // Owned by token metadata program.
         assert_owned_by(collection_metadata_info, program_id)?;
 
-        // NFT is actually part of the specified collection.
-        assert_member_of_collection(&metadata, &collection_metadata)?;
+        // NFT is actually a verified member of the specified collection.
+        assert_verified_member_of_collection(&metadata, &collection_metadata)?;
 
         // Update collection size.
-        increment_collection_size(&mut collection_metadata, collection_metadata_info)?;
+        decrement_collection_size(&mut collection_metadata, collection_metadata_info)?;
     }
 
     Ok(())

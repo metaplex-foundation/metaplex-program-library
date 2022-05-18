@@ -409,11 +409,15 @@ pub enum MetadataError {
     #[error("This NFT is not a member of the specified collection.")]
     NotAMemberOfCollection,
 
-    /// 105 - This NFT is not a collection parent NFT.
+    /// 105 - This NFT is not a verified member of the specified collection.
+    #[error("This NFT is not a verified member of the specified collection.")]
+    NotVerifiedMemberOfCollection,
+
+    /// 107 - This NFT is not a collection parent NFT.
     #[error("This NFT is not a collection parent NFT.")]
     NotACollectionParent,
 
-    /// 106 - Could not determine a TokenStandard type.
+    /// 108 - Could not determine a TokenStandard type.
     #[error("Could not determine a TokenStandard type.")]
     CouldNotDetermineTokenStandard,
 }

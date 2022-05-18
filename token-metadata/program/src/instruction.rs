@@ -425,7 +425,7 @@ pub enum MetadataInstruction {
 
     /// Completely burn a NFT, including closing the metadata account.
     #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(1, signer, name="creator", desc="Creator")]
+    #[account(1, signer, name="owner", desc="NFT owner")]
     #[account(2, name="mint", desc="Mint of the NFT")]
     #[account(3, name="token_account", desc="Token account to close")]
     #[account(4, name="edition_account", desc="MasterEdition2 or Edition Account of the NFT")]
