@@ -269,7 +269,7 @@ pub mod auction_house {
         create_program_token_account_if_not_present(
             auction_house_treasury,
             system_program,
-            &payer,
+            payer,
             token_program,
             treasury_mint,
             &auction_house.to_account_info(),
@@ -537,14 +537,14 @@ pub mod auction_house {
         ctx: Context<'_, '_, '_, 'info, DelegateAuctioneer<'info>>,
         scopes: Vec<AuthorityScope>,
     ) -> Result<()> {
-        auctioneer::delegate_auctioneer(ctx, Box::new(scopes))
+        auctioneer::delegate_auctioneer(ctx, scopes)
     }
 
     pub fn update_auctioneer<'info>(
         ctx: Context<'_, '_, '_, 'info, UpdateAuctioneer<'info>>,
         scopes: Vec<AuthorityScope>,
     ) -> Result<()> {
-        auctioneer::update_auctioneer(ctx, Box::new(scopes))
+        auctioneer::update_auctioneer(ctx, scopes)
     }
 
     /// Create a listing receipt by creating a `listing_receipt` account.

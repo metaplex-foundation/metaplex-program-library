@@ -154,7 +154,7 @@ async fn execute_sale_existing_token_account_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), false);
+    assert!(!buyer_token_before.is_none());
     context.banks_client.process_transaction(tx).await.unwrap();
 
     let seller_after = context
@@ -164,7 +164,7 @@ async fn execute_sale_existing_token_account_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -176,7 +176,7 @@ async fn execute_sale_existing_token_account_success() {
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 }
 
@@ -315,7 +315,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
             0,
             InstructionError::Custom(6000),
         )) => (),
-        _ => assert!(false, "Expected custom error"),
+        _ => panic!("Expected custom error"),
     }
 }
 
@@ -438,7 +438,7 @@ async fn execute_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
     context.banks_client.process_transaction(tx).await.unwrap();
 
     let seller_after = context
@@ -448,7 +448,7 @@ async fn execute_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -460,7 +460,7 @@ async fn execute_sale_success() {
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 }
 
@@ -614,7 +614,7 @@ async fn auctioneer_execute_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
     context.banks_client.process_transaction(tx).await.unwrap();
 
     let seller_after = context
@@ -624,7 +624,7 @@ async fn auctioneer_execute_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -636,7 +636,7 @@ async fn auctioneer_execute_sale_success() {
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 }
 
@@ -1013,7 +1013,7 @@ async fn execute_public_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
     context
         .banks_client
         .process_transaction(first_sale_tx)
@@ -1026,7 +1026,7 @@ async fn execute_public_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -1038,7 +1038,7 @@ async fn execute_public_sale_success() {
     .unwrap();
 
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
     let new_seller = buyer;
     let public_bidder_token_account =
@@ -1054,7 +1054,7 @@ async fn execute_public_sale_success() {
         .get_account(public_bidder_token_account)
         .await
         .unwrap();
-    assert_eq!(public_bidder_token_before.is_none(), true);
+    assert!(public_bidder_token_before.is_none());
     let ((second_sell_acc, _), second_sell_tx) = sell_mint(
         &mut context,
         &ahkey,
@@ -1097,7 +1097,7 @@ async fn execute_public_sale_success() {
         .unwrap()
         .unwrap();
     let public_bidder_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(public_bidder_token_account)
             .await
@@ -1107,7 +1107,7 @@ async fn execute_public_sale_success() {
             .as_slice(),
     )
     .unwrap();
-    assert_eq!(new_seller_before.lamports < new_seller_after.lamports, true);
+    assert!(new_seller_before.lamports < new_seller_after.lamports);
     assert_eq!(public_bidder_token_after.amount, 1);
 
     let timestamp = context
@@ -1303,8 +1303,7 @@ async fn auctioneer_execute_public_sale_success() {
         .await
         .unwrap();
 
-    assert_eq!(buyer_token_before.is_none(), true);
-
+    assert!(buyer_token_before.is_none());
     context
         .banks_client
         .process_transaction(first_sale_tx)
@@ -1318,7 +1317,7 @@ async fn auctioneer_execute_public_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -1330,7 +1329,7 @@ async fn auctioneer_execute_public_sale_success() {
     .unwrap();
 
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
     let new_seller = buyer;
     let public_bidder_token_account =
@@ -1346,7 +1345,7 @@ async fn auctioneer_execute_public_sale_success() {
         .get_account(public_bidder_token_account)
         .await
         .unwrap();
-    assert_eq!(public_bidder_token_before.is_none(), true);
+    assert!(public_bidder_token_before.is_none());
     let ((second_sell_acc, _), second_sell_tx) = auctioneer_sell_mint(
         &mut context,
         &ahkey,
@@ -1390,7 +1389,7 @@ async fn auctioneer_execute_public_sale_success() {
         .unwrap()
         .unwrap();
     let public_bidder_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(public_bidder_token_account)
             .await
@@ -1400,7 +1399,7 @@ async fn auctioneer_execute_public_sale_success() {
             .as_slice(),
     )
     .unwrap();
-    assert_eq!(new_seller_before.lamports < new_seller_after.lamports, true);
+    assert!(new_seller_before.lamports < new_seller_after.lamports);
     assert_eq!(public_bidder_token_after.amount, 1);
 
     let timestamp = context
@@ -1589,7 +1588,7 @@ async fn auctioneer_execute_public_sale_missing_scope_fails() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
 
     let error = context
         .banks_client

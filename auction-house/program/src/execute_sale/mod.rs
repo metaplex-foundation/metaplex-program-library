@@ -6,10 +6,10 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
 #[derive(Accounts)]
 #[instruction(
-    escrow_payment_bump: u8, 
-    free_trade_state_bump: u8, 
-    program_as_signer_bump: u8, 
-    buyer_price: u64, 
+    escrow_payment_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
+    buyer_price: u64,
     token_size: u64
 )]
 pub struct ExecuteSale<'info> {
@@ -175,7 +175,7 @@ impl<'info> From<AuctioneerExecuteSale<'info>> for ExecuteSale<'info> {
             seller_payment_receipt_account: a.seller_payment_receipt_account,
             buyer_receipt_token_account: a.buyer_receipt_token_account,
             authority: a.auctioneer_authority,
-            auction_house: a.auction_house.into(),
+            auction_house: a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             auction_house_treasury: a.auction_house_treasury,
             buyer_trade_state: a.buyer_trade_state,
@@ -217,10 +217,10 @@ pub fn execute_sale<'info>(
 
 #[derive(Accounts)]
 #[instruction(
-    escrow_payment_bump: u8, 
-    free_trade_state_bump: u8, 
-    program_as_signer_bump: u8, 
-    buyer_price: u64, 
+    escrow_payment_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
+    buyer_price: u64,
     token_size: u64
 )]
 pub struct AuctioneerExecuteSale<'info> {
@@ -286,10 +286,10 @@ pub struct AuctioneerExecuteSale<'info> {
             PREFIX.as_bytes(),
             auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-        ], 
-        bump=auction_house.bump, 
-        has_one=treasury_mint, 
-        has_one=auction_house_treasury, 
+        ],
+        bump=auction_house.bump,
+        has_one=treasury_mint,
+        has_one=auction_house_treasury,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
@@ -299,8 +299,8 @@ pub struct AuctioneerExecuteSale<'info> {
     #[account(
         mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.key().as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
         ],
         bump=auction_house.fee_payer_bump
@@ -333,12 +333,12 @@ pub struct AuctioneerExecuteSale<'info> {
             PREFIX.as_bytes(),
             seller.key().as_ref(),
             auction_house.key().as_ref(),
-            token_account.key().as_ref(), 
-            auction_house.treasury_mint.as_ref(), 
-            token_mint.key().as_ref(), 
-            &buyer_price.to_le_bytes(), 
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &buyer_price.to_le_bytes(),
             &token_size.to_le_bytes()
-        ], 
+        ],
         bump=seller_trade_state.to_account_info().data.borrow()[0]
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
@@ -346,17 +346,17 @@ pub struct AuctioneerExecuteSale<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Free seller trade state PDA account encoding a free sell order.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            seller.key().as_ref(), 
-            auction_house.key().as_ref(), 
-            token_account.key().as_ref(), 
-            auction_house.treasury_mint.as_ref(), 
-            token_mint.key().as_ref(), 
-            &0u64.to_le_bytes(), 
+            PREFIX.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
-        ], 
+        ],
         bump=free_trade_state_bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
@@ -365,10 +365,10 @@ pub struct AuctioneerExecuteSale<'info> {
     /// The auctioneer PDA owned by Auction House storing scopes.
     #[account(
         seeds = [
-            AUCTIONEER.as_bytes(), 
-            auction_house.key().as_ref(), 
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
-        ], 
+        ],
         bump = auction_house.auctioneer_pda_bump
     )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
@@ -545,17 +545,13 @@ fn auctioneer_execute_sale_logic<'info>(
                 rent.minimum_balance(escrow_payment_account.data_len()),
             );
             invoke_signed(
-                &system_instruction::transfer(
-                    &fee_payer.key,
-                    &escrow_payment_account.key,
-                    shortfall,
-                ),
+                &system_instruction::transfer(fee_payer.key, escrow_payment_account.key, shortfall),
                 &[
                     fee_payer.to_account_info(),
                     escrow_payment_account.to_account_info(),
                     system_program.to_account_info(),
                 ],
-                &[&fee_payer_seeds],
+                &[fee_payer_seeds],
             )?;
         }
     }
@@ -600,13 +596,13 @@ fn auctioneer_execute_sale_logic<'info>(
         &sys_clone,
         &rent_clone,
         &signer_seeds_for_royalties,
-        &fee_payer_seeds,
+        fee_payer_seeds,
         buyer_price,
         is_native,
     )?;
 
     let auction_house_fee_paid = pay_auction_house_fees(
-        &auction_house,
+        auction_house,
         &treasury_clone,
         &escrow_clone,
         &token_clone,
@@ -631,7 +627,7 @@ fn auctioneer_execute_sale_logic<'info>(
                 token_program.to_account_info(),
                 system_program.to_account_info(),
                 rent.to_account_info(),
-                &fee_payer_seeds,
+                fee_payer_seeds,
             )?;
         }
 
@@ -667,7 +663,7 @@ fn auctioneer_execute_sale_logic<'info>(
         assert_keys_equal(seller_payment_receipt_account.key(), seller.key())?;
         invoke_signed(
             &system_instruction::transfer(
-                &escrow_payment_account.key,
+                escrow_payment_account.key,
                 seller_payment_receipt_account.key,
                 buyer_leftover_after_royalties_and_house_fee,
             ),
@@ -690,7 +686,7 @@ fn auctioneer_execute_sale_logic<'info>(
             token_program.to_account_info(),
             system_program.to_account_info(),
             rent.to_account_info(),
-            &fee_payer_seeds,
+            fee_payer_seeds,
         )?;
     } else {
         let data = buyer_receipt_token_account.try_borrow_data()?;
@@ -892,17 +888,13 @@ fn execute_sale_logic<'info>(
                 rent.minimum_balance(escrow_payment_account.data_len()),
             );
             invoke_signed(
-                &system_instruction::transfer(
-                    &fee_payer.key,
-                    &escrow_payment_account.key,
-                    shortfall,
-                ),
+                &system_instruction::transfer(fee_payer.key, escrow_payment_account.key, shortfall),
                 &[
                     fee_payer.to_account_info(),
                     escrow_payment_account.to_account_info(),
                     system_program.to_account_info(),
                 ],
-                &[&fee_payer_seeds],
+                &[fee_payer_seeds],
             )?;
         }
     }
@@ -947,13 +939,13 @@ fn execute_sale_logic<'info>(
         &sys_clone,
         &rent_clone,
         &signer_seeds_for_royalties,
-        &fee_payer_seeds,
+        fee_payer_seeds,
         buyer_price,
         is_native,
     )?;
 
     let auction_house_fee_paid = pay_auction_house_fees(
-        &auction_house,
+        auction_house,
         &treasury_clone,
         &escrow_clone,
         &token_clone,
@@ -978,7 +970,7 @@ fn execute_sale_logic<'info>(
                 token_program.to_account_info(),
                 system_program.to_account_info(),
                 rent.to_account_info(),
-                &fee_payer_seeds,
+                fee_payer_seeds,
             )?;
         }
 
@@ -1014,7 +1006,7 @@ fn execute_sale_logic<'info>(
         assert_keys_equal(seller_payment_receipt_account.key(), seller.key())?;
         invoke_signed(
             &system_instruction::transfer(
-                &escrow_payment_account.key,
+                escrow_payment_account.key,
                 seller_payment_receipt_account.key,
                 buyer_leftover_after_royalties_and_house_fee,
             ),
@@ -1037,7 +1029,7 @@ fn execute_sale_logic<'info>(
             token_program.to_account_info(),
             system_program.to_account_info(),
             rent.to_account_info(),
-            &fee_payer_seeds,
+            fee_payer_seeds,
         )?;
     }
 

@@ -34,11 +34,11 @@ pub struct Sell<'info> {
     #[account(
         seeds = [
             PREFIX.as_bytes(),
-            auction_house.creator.as_ref(), 
+            auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-        ], 
-        bump=auction_house.bump, 
-        has_one=authority, 
+        ],
+        bump=auction_house.bump,
+        has_one=authority,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Account<'info, AuctionHouse>,
@@ -46,12 +46,12 @@ pub struct Sell<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.key().as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
-        ], 
+        ],
         bump=auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -59,17 +59,17 @@ pub struct Sell<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            wallet.key().as_ref(), 
-            auction_house.key().as_ref(), 
-            token_account.key().as_ref(), 
-            auction_house.treasury_mint.as_ref(), 
-            token_account.mint.as_ref(), 
-            &buyer_price.to_le_bytes(), 
+            PREFIX.as_bytes(),
+            wallet.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_account.mint.as_ref(),
+            &buyer_price.to_le_bytes(),
             &token_size.to_le_bytes()
-        ], 
+        ],
         bump=trade_state_bump
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
@@ -127,7 +127,7 @@ impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64, 
+    buyer_price: u64,
     token_size: u64
 )]
 pub struct AuctioneerSell<'info> {
@@ -152,10 +152,10 @@ pub struct AuctioneerSell<'info> {
     #[account(
         seeds = [
             PREFIX.as_bytes(),
-            auction_house.creator.as_ref(), 
+            auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-        ], 
-        bump=auction_house.bump, 
+        ],
+        bump=auction_house.bump,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
@@ -163,12 +163,12 @@ pub struct AuctioneerSell<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.key().as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
-        ], 
+        ],
         bump=auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -176,17 +176,17 @@ pub struct AuctioneerSell<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            wallet.key().as_ref(), 
-            auction_house.key().as_ref(), 
-            token_account.key().as_ref(), 
-            auction_house.treasury_mint.as_ref(), 
-            token_account.mint.as_ref(), 
-            &buyer_price.to_le_bytes(), 
+            PREFIX.as_bytes(),
+            wallet.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_account.mint.as_ref(),
+            &buyer_price.to_le_bytes(),
             &token_size.to_le_bytes()
-        ], 
+        ],
         bump=trade_state_bump
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
@@ -194,7 +194,7 @@ pub struct AuctioneerSell<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Free seller trade state PDA account encoding a free sell order.
     #[account(
-        mut, 
+        mut,
         seeds = [
             PREFIX.as_bytes(),
             wallet.key().as_ref(),
@@ -204,7 +204,7 @@ pub struct AuctioneerSell<'info> {
             token_account.mint.as_ref(),
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
-        ], 
+        ],
         bump=free_trade_state_bump
     )]
     pub free_seller_trade_state: UncheckedAccount<'info>,
@@ -216,7 +216,7 @@ pub struct AuctioneerSell<'info> {
             AUCTIONEER.as_bytes(),
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
-        ], 
+        ],
         bump = auction_house.auctioneer_pda_bump
     )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
@@ -316,18 +316,13 @@ fn sell_logic<'info>(
     let program_as_signer = &accounts.program_as_signer;
     let rent = &accounts.rent;
 
-    if !wallet.to_account_info().is_signer {
-        if buyer_price == 0 {
-            return Err(AuctionHouseError::SaleRequiresSigner.into());
-        } else {
-            if free_seller_trade_state.data_is_empty() {
-                return Err(AuctionHouseError::SaleRequiresSigner.into());
-            } else if !free_seller_trade_state.data_is_empty()
-                && (!authority.to_account_info().is_signer || !auction_house.can_change_sale_price)
-            {
-                return Err(AuctionHouseError::SaleRequiresSigner.into());
-            }
-        }
+    if !wallet.to_account_info().is_signer
+        && (buyer_price == 0
+            || free_seller_trade_state.data_is_empty()
+            || !authority.to_account_info().is_signer
+            || !auction_house.can_change_sale_price)
+    {
+        return Err(AuctionHouseError::SaleRequiresSigner.into());
     }
 
     let auction_house_key = auction_house.key();
@@ -397,7 +392,7 @@ fn sell_logic<'info>(
             *program_id,
             &ts_info,
             &rent.to_account_info(),
-            &system_program,
+            system_program,
             &fee_payer,
             TRADE_STATE_SIZE,
             fee_seeds,

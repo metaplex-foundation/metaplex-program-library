@@ -7,13 +7,13 @@ use crate::{constants::*, errors::AuctionHouseError, AuctionHouse, Auctioneer, A
 pub struct DelegateAuctioneer<'info> {
     // Auction House instance PDA account.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.creator.as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-        ], 
-        bump=auction_house.bump, 
+        ],
+        bump=auction_house.bump,
         has_one=authority
     )]
     pub auction_house: Account<'info, AuctionHouse>,
@@ -44,7 +44,7 @@ pub struct DelegateAuctioneer<'info> {
 
 pub fn delegate_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, DelegateAuctioneer<'info>>,
-    scopes: Box<Vec<AuthorityScope>>,
+    scopes: Vec<AuthorityScope>,
 ) -> Result<()> {
     if scopes.len() > MAX_NUM_SCOPES {
         return Err(AuctionHouseError::TooManyScopes.into());
@@ -63,7 +63,7 @@ pub fn delegate_auctioneer<'info>(
 
     // Set all scopes false and then update as true the ones passed into the handler.
     auctioneer.scopes = [false; 7];
-    for scope in *scopes {
+    for scope in scopes {
         auctioneer.scopes[scope as usize] = true;
     }
 

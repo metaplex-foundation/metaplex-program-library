@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION_STABLE: 1.9.17
+  SOLANA_VERSION_STABLE: 1.9.22
   SOLANA_VERSION_UNSTABLE: 1.10.5
   RUST_TOOLCHAIN: stable
 
@@ -60,7 +60,15 @@ jobs:
           key:
             ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
             env.RUSTC_HASH }}
+
+      # Run lint checks
+      - uses: ./.github/actions/verify-rust
+        with:
+          working-directory: ./auction-house/program
+
+      # Build deps
       - uses: ./.github/actions/build-token-metadata
+
       # Run test
       - name: test-auction-house-program
         id: run_test
@@ -100,7 +108,15 @@ jobs:
           key:
             ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
             env.RUSTC_HASH }}
+
+      # Run lint checks
+      - uses: ./.github/actions/verify-rust
+        with:
+          working-directory: ./auction-house/program
+
+      # Build deps
       - uses: ./.github/actions/build-token-metadata
+
       # Run test
       - name: test-auction-house-program
         id: run_test
