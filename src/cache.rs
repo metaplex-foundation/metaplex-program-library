@@ -94,8 +94,8 @@ impl Default for CacheItems {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CacheItem {
     pub name: String,
-    pub media_hash: String,
-    pub media_link: String,
+    pub image_hash: String,
+    pub image_link: String,
     pub metadata_hash: String,
     pub metadata_link: String,
     #[serde(rename = "onChain")]
