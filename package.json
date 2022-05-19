@@ -12,11 +12,10 @@
     "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
     "fix": "lerna run --parallel fix",
-    "build_dev_env": "node ./utils/env_setup/set_dev_addr.js && cargo build",
-    "reset_dev_env": "node ./utils/env_setup/set_dev_addr.js reset",
-    "compile_contracts": "./utils/env_setup/compile_contracts.sh",
-    "deploy_all_contracts": "./utils/env_setup/deploy_contracts.sh",
-    "who": "whoami"
+    "build.dev.env": "node ./utils/env_setup/set-dev_addr.js && cargo build",
+    "reset.dev.env": "node ./utils/env_setup/set-dev-addr.js reset",
+    "compile.contracts": "./utils/env_setup/compile_contracts.sh",
+    "deploy.all.contracts": "./utils/env_setup/deploy_contracts.sh"
   },
   "workspaces": [
     "core/js",
