@@ -278,7 +278,7 @@ pub fn get_updated_metadata(
             let error = UploadError::AnimationFileError(metadata_file.to_string()).into();
             error!("{error}");
             return Err(error);
-        }else {
+        } else {
             metadata.properties.files[1].uri = animation;
         }
     }
