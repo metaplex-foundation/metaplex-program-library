@@ -272,14 +272,14 @@ pub fn get_updated_metadata(
 
     metadata.image = media_link.to_string();
 
-    if animation_link.is_some() {
-        metadata.animation_url = animation_link.clone();
+    if let Some(animation) = animation_link.clone() {
+        metadata.animation_url = animation_link;
         if metadata.properties.files.len() == 1 {
             let error = UploadError::AnimationFileError(metadata_file.to_string()).into();
             error!("{error}");
             return Err(error);
         }else {
-            metadata.properties.files[1].uri = animation_link.unwrap();
+            metadata.properties.files[1].uri = animation;
         }
     }
 
