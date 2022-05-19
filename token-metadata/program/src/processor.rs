@@ -11,13 +11,13 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction::{CollectionStatus, MetadataInstruction},
+    instruction::MetadataInstruction,
     solana_program::program_memory::sol_memset,
     state::{
-        Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
-        MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN,
-        COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN,
-        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        Collection, CollectionAuthorityRecord, CollectionDetails, CollectionStatus, DataV2, Key,
+        MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord, UseMethod,
+        Uses, BURN, COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION,
+        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,

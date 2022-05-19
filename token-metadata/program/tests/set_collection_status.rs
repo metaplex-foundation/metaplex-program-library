@@ -3,8 +3,11 @@ pub mod utils;
 
 use borsh::BorshDeserialize;
 use mpl_token_metadata::{
-    error::MetadataError, instruction::set_collection_status, instruction::CollectionStatus,
-    state::CollectionDetails, state::Metadata as ProgramMetadata, ID as PROGRAM_ID,
+    error::MetadataError,
+    instruction::set_collection_status,
+    state::Metadata as ProgramMetadata,
+    state::{CollectionDetails, CollectionStatus},
+    ID as PROGRAM_ID,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
@@ -184,84 +187,85 @@ mod set_collection_status {
         assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
     }
 
-    // #[tokio::test]
-    // async fn update_authority_not_a_signer() {
-    //     let mut context = program_test().start_with_context().await;
+    #[tokio::test]
+    async fn update_authority_not_a_signer() {
+        let mut context = program_test().start_with_context().await;
 
-    //     // This key will pay for the transaction, but is not the update authority.
-    //     let payer = Keypair::new();
-    //     airdrop(&mut context, &payer.pubkey(), 1_000_000_000)
-    //         .await
-    //         .unwrap();
+        // This key will pay for the transaction, but is not the update authority.
+        let payer = Keypair::new();
+        airdrop(&mut context, &payer.pubkey(), 1_000_000_000)
+            .await
+            .unwrap();
 
-    //     // This keypair is used to make the correct number of signers and get around that pre-flight error.
-    //     let additional_signer = Keypair::new();
+        // This keypair is used to make the correct number of signers and get around that pre-flight error.
+        let additional_signer = Keypair::new();
 
-    //     // Create a Collection Parent NFT with the CollectionDetails struct populated
-    //     let collection_parent_nft = Metadata::new();
-    //     collection_parent_nft
-    //         .create_v3(
-    //             &mut context,
-    //             "Test".to_string(),
-    //             "TST".to_string(),
-    //             "uri".to_string(),
-    //             None,
-    //             10,
-    //             false,
-    //             None,
-    //             None,
-    //             None,
-    //             true, // is collection parent
-    //         )
-    //         .await
-    //         .unwrap();
-    //     let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
-    //     parent_master_edition_account
-    //         .create_v3(&mut context, Some(0))
-    //         .await
-    //         .unwrap();
+        // Create a Collection Parent NFT with the CollectionDetails struct populated
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+                true, // is collection parent
+            )
+            .await
+            .unwrap();
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
 
-    //     let current_status = CollectionStatus::None;
-    //     let new_status = CollectionStatus::Announced;
+        let current_status = CollectionStatus::None;
+        let new_status = CollectionStatus::Announced;
 
-    //     let md_account = context
-    //         .banks_client
-    //         .get_account(collection_parent_nft.pubkey)
-    //         .await
-    //         .unwrap()
-    //         .unwrap();
+        let md_account = context
+            .banks_client
+            .get_account(collection_parent_nft.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
 
-    //     let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-    //     let retrieved_status =
-    //         if let CollectionDetails::CollectionDetailsV1 { status, size: _ } = metadata.collection_details {
-    //             status
-    //         } else {
-    //             panic!("Expected CollectionDetails::CollectionDetailsV1");
-    //         };
+        let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+        let retrieved_status = if let CollectionDetails::CollectionDetailsV1 { status, size: _ } =
+            metadata.collection_details
+        {
+            status
+        } else {
+            panic!("Expected CollectionDetails::CollectionDetailsV1");
+        };
 
-    //     assert_eq!(retrieved_status, current_status);
+        assert_eq!(retrieved_status, current_status);
 
-    //     let ix = set_collection_status(
-    //         PROGRAM_ID,
-    //         collection_parent_nft.pubkey,
-    //         context.payer.pubkey(),
-    //         new_status,
-    //     );
-    //     let tx = Transaction::new_signed_with_payer(
-    //         &[ix],
-    //         Some(&payer.pubkey()),
-    //         &[&payer, &additional_signer],
-    //         context.last_blockhash,
-    //     );
+        let ix = set_collection_status(
+            PROGRAM_ID,
+            collection_parent_nft.pubkey,
+            context.payer.pubkey(),
+            new_status,
+        );
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&payer.pubkey()),
+            &[&payer, &additional_signer],
+            context.last_blockhash,
+        );
 
-    //     let err = context
-    //         .banks_client
-    //         .process_transaction(tx)
-    //         .await
-    //         .unwrap_err();
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
 
-    //     assert_custom_error!(err, MetadataError::UpdateAuthorityIsNotSigner);
-    // }
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIsNotSigner);
+    }
 
     #[tokio::test]
     async fn invalid_metadata_account() {

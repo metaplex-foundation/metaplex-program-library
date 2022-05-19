@@ -1,7 +1,4 @@
-use crate::{
-    deser::meta_deser, error::MetadataError, instruction::CollectionStatus,
-    utils::try_from_slice_checked,
-};
+use crate::{deser::meta_deser, error::MetadataError, utils::try_from_slice_checked};
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{
@@ -147,11 +144,19 @@ pub enum UseMethod {
     Single,
 }
 
-#[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum CollectionDetails {
     None,
     CollectionDetailsV1 { status: CollectionStatus, size: u64 },
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Copy, PartialEq, Debug, Clone)]
+pub enum CollectionStatus {
+    None,
+    Announced,
+    Preminting,
+    Minting,
+    Tradeable,
 }
 
 #[repr(C)]

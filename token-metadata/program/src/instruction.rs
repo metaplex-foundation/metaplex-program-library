@@ -1,6 +1,9 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
-    state::{Collection, Creator, Data, DataV2, Uses, EDITION, EDITION_MARKER_BIT_SIZE, PREFIX},
+    state::{
+        Collection, CollectionStatus, Creator, Data, DataV2, Uses, EDITION,
+        EDITION_MARKER_BIT_SIZE, PREFIX,
+    },
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
@@ -84,15 +87,6 @@ pub struct ApproveUseAuthorityArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct UtilizeArgs {
     pub number_of_uses: u64,
-}
-
-#[derive(BorshSerialize, BorshDeserialize, Copy, PartialEq, Debug, Clone)]
-pub enum CollectionStatus {
-    None,
-    Announced,
-    Preminting,
-    Minting,
-    Tradeable,
 }
 
 /// Instructions supported by the Metadata program.
@@ -433,7 +427,7 @@ pub enum MetadataInstruction {
     #[account(6, name="spl token program", desc="SPL Token Program")]
     BurnNFT,
 
-    /// Verify Collection v1.3--supports Collection Details.
+    /// Verify Collection V2, new in v1.3--supports Collection Details.
     /// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection.
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
@@ -443,7 +437,7 @@ pub enum MetadataInstruction {
     #[account(5, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
     VerifyCollectionV2,
 
-    /// Unverify Collection v1.3--supports Collection Details.
+    /// Unverify Collection V2, new in v1.3--supports Collection Details.
     /// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection.
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, writable, name="collection_authority", desc="Collection Authority")]
@@ -453,6 +447,7 @@ pub enum MetadataInstruction {
     #[account(5, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     UnverifyCollectionV2,
 
+    // Set And Verify V2, new in v1.3--supports Collection Details.
     /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
     /// with collection and [verify_collection] on the NFT/Collection in one instruction.
     #[account(0, writable, name="metadata", desc="Metadata account")]
