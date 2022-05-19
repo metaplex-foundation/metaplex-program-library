@@ -50,9 +50,14 @@ const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
     const dnc_matches = [
       "default_keyring.json",
       "restore_program_ids.sh",
-      "utils/env_setup"
+      "utils/env_setup",
+      "target"
     ]
-    let { stdout, stderr } = await exec(`grep -rl "${keyring[k][srch_addr]}" ${PROGRAM_ROOT}/.`);
+    if (!keyring[k][srch_addr]) {
+      console.log("Skipping pubkey search: ", keyring[k][srch_addr]);
+      return;
+    }
+    let { stdout, stderr } = await exec(`grep -rl ${keyring[k][srch_addr]} ${PROGRAM_ROOT}/.`);
     if (!!stderr) {
       throw Error("Error on grep");
     }
@@ -63,8 +68,9 @@ const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
 }
 
 const replaceNpmRegistry = async (search, replacement) => {
-  const dnc_matches = ['node_modules']
-  let { stdout, stderr } = await exec(`grep -rl "${search}" ${PROGRAM_ROOT}/.`);
+  console.log("NpmReg: ", search);
+  const dnc_matches = ['node_modules', 'utils/env_setup', 'target'];
+  let { stdout, stderr } = await exec(`grep -rl \"${search}\" ${PROGRAM_ROOT}/.`);
   if (!!stderr) {
     throw Error("Error on grep: ", stderr);
   }
