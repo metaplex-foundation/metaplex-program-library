@@ -146,7 +146,6 @@ pub fn load_cache(cache_file_path: &str, create: bool) -> Result<Cache> {
             }
         };
 
-        // todo: if animation_link should be present and gets deleted, should throw error instead of panic
         let mut cache: Cache = match serde_json::from_reader(file) {
             Ok(cache) => cache,
             Err(err) => {
