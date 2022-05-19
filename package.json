@@ -11,7 +11,8 @@
     "build": "yarn build:core && yarn build:auction && yarn build:parallel && yarn build:metaplex",
     "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
-    "fix": "lerna run --parallel fix"
+    "fix": "lerna run --parallel fix",
+    "postinstall": "husky install"
   },
   "workspaces": [
     "core/js",
@@ -30,6 +31,8 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
     "@project-serum/anchor": "^0.19.0",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
@@ -37,6 +40,7 @@
     "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "husky": "^8.0.0",
     "lerna": "^4.0.0",
     "prettier": "^2.4.1"
   }

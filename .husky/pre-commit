@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+if [[ -z "$LINT_RUST" || "$LINT_RUST" = false ]]; then
+  echo "Skipping Rust lint since LINT_RUST is undefined or false"
+else
+  if [ -z "$(git diff --name-only --cached | grep '.*/program/src/.*/*.rs')" ]; then
+    echo "No Rust changes to lint"
+  else
+    echo "Linting Rust changes"
+  fi
+fi
+
+if [ -z "$(git diff --name-only --cached | grep '.*/js/src/.*/*.ts')" ]; then
+  echo "No TS changes to lint"
+else
+  echo "Linting TS changes"
+fi
