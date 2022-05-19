@@ -7,5 +7,5 @@ then
   yarn config set unsafeHttpWhitelist --json '[]'
 else
   yarn config set npmRegistryServer http://$NPM_LOCAL_REGISTRY
-  yarn config set unsafeHttpWhitelist --json '["${NPM_LOCAL_REGISTRY}"]'
+  yarn config set unsafeHttpWhitelist --json "[\"${NPM_LOCAL_REGISTRY}\"]"
 fi

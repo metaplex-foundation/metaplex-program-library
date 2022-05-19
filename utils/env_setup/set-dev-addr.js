@@ -8,7 +8,7 @@ const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const args = process.argv.slice(2);
 
-const LIVE_REGISTRY_SRCH = `https\?:\\/\\/${process.env.NPM_LIVE_REGISTRY}`;
+const LIVE_REGISTRY_SRCH = `https\\?:\\/\\/${process.env.NPM_LIVE_REGISTRY}`;
 const LOCAL_REGISTRY_SRCH = `http:\\/\\/${process.env.NPM_LOCAL_REGISTRY}`;
 
 const LOCAL_REGISTRY_REPL = `http:\\/\\/${process.env.NPM_LOCAL_REGISTRY}`;
@@ -52,7 +52,7 @@ const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
       "restore_program_ids.sh",
       "utils/env_setup"
     ]
-    let { stdout, stderr } = await exec(`grep -rl ${keyring[k][srch_addr]} ${PROGRAM_ROOT}/.`);
+    let { stdout, stderr } = await exec(`grep -rl "${keyring[k][srch_addr]}" ${PROGRAM_ROOT}/.`);
     if (!!stderr) {
       throw Error("Error on grep");
     }
@@ -64,7 +64,7 @@ const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
 
 const replaceNpmRegistry = async (search, replacement) => {
   const dnc_matches = ['node_modules']
-  let { stdout, stderr } = await exec(`grep -rl ${search} ${PROGRAM_ROOT}/.`);
+  let { stdout, stderr } = await exec(`grep -rl "${search}" ${PROGRAM_ROOT}/.`);
   if (!!stderr) {
     throw Error("Error on grep: ", stderr);
   }
@@ -108,7 +108,6 @@ const searchFileMatch = (file, match_strings) => {
     await replaceNpmRegistry(LOCAL_REGISTRY_SRCH, LIVE_REGISTRY_REPL);
     await exec(`/bin/bash ${ENV_SETUP_PATH}/helpers/set-yarn-registry.sh reset`);
     await exec(`cat ${ENV_SETUP_PATH}/default_keyring.json.backup > ${ENV_SETUP_PATH}/default_keyring.json`);
-    console.log("STDOUT: ", stdout, stderr);
   } else {
     await replacePubkeys( keyring, srch_addr, repl_addr );
     await replaceNpmRegistry(LIVE_REGISTRY_SRCH, LOCAL_REGISTRY_REPL);
