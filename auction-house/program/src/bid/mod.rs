@@ -16,7 +16,12 @@ use crate::{
 
 /// Accounts for the [`public_bid` handler](fn.public_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(
+    trade_state_bump: u8,
+    escrow_payment_bump: u8,
+    buyer_price: u64,
+    token_size: u64
+)]
 pub struct PublicBuy<'info> {
     wallet: Signer<'info>,
 
@@ -34,22 +39,60 @@ pub struct PublicBuy<'info> {
     metadata: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            wallet.key().as_ref()
+        ],
+        bump = escrow_payment_bump
+    )]
     escrow_payment_account: UncheckedAccount<'info>,
 
     /// CHECK: Verified with has_one constraint on auction house account.
     authority: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
+    #[account(
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
+            auction_house.treasury_mint.as_ref()
+        ],
+        bump = auction_house.bump,
+        has_one = authority,
+        has_one = treasury_mint,
+        has_one = auction_house_fee_account
+    )]
     auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            FEE_PAYER.as_bytes()
+        ],
+        bump = auction_house.fee_payer_bump
+    )]
     auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            wallet.key().as_ref(),
+            auction_house.key().as_ref(),
+            treasury_mint.key().as_ref(),
+            token_account.mint.as_ref(),
+            buyer_price.to_le_bytes().as_ref(),
+            token_size.to_le_bytes().as_ref()
+        ],
+        bump = trade_state_bump
+    )]
     buyer_trade_state: UncheckedAccount<'info>,
 
     token_program: Program<'info, Token>,
@@ -91,7 +134,12 @@ pub fn public_bid(
 
 /// Accounts for the [`auctioneer_public_bid` handler](fn.auctioneer_public_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(
+    trade_state_bump: u8,
+    escrow_payment_bump: u8, 
+    buyer_price: u64, 
+    token_size: u64
+)]
 pub struct AuctioneerPublicBuy<'info> {
     wallet: Signer<'info>,
 
@@ -110,30 +158,71 @@ pub struct AuctioneerPublicBuy<'info> {
     metadata: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            wallet.key().as_ref()
+        ],
+        bump = escrow_payment_bump
+    )]
     escrow_payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified with has_one constraint on auction house account.
-    authority: UncheckedAccount<'info>,
+    /// CHECK: Verified in ah_auctioneer_pda seeds and in bid logic.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
+    auctioneer_authority: UncheckedAccount<'info>,
 
-    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
+    #[account(
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
+            auction_house.treasury_mint.as_ref()
+        ],
+        bump = auction_house.bump,
+        has_one = treasury_mint,
+        has_one = auction_house_fee_account
+    )]
     auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            FEE_PAYER.as_bytes()
+        ],
+        bump = auction_house.fee_payer_bump
+    )]
     auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            wallet.key().as_ref(),
+            auction_house.key().as_ref(),
+            treasury_mint.key().as_ref(),
+            token_account.mint.as_ref(),
+            buyer_price.to_le_bytes().as_ref(),
+            token_size.to_le_bytes().as_ref()
+        ],
+        bump = trade_state_bump
+    )]
     buyer_trade_state: UncheckedAccount<'info>,
-
-    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
-    /// The auctioneer program PDA running this auction.
-    pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
+    #[account(
+        seeds = [
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
+            auctioneer_authority.key().as_ref()
+        ],
+        bump = auction_house.auctioneer_pda_bump
+    )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     token_program: Program<'info, Token>,
@@ -158,7 +247,6 @@ pub fn auctioneer_public_bid(
         *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
-        ctx.accounts.authority.to_owned(),
         &mut ctx.accounts.auction_house,
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
@@ -177,7 +265,12 @@ pub fn auctioneer_public_bid(
 
 /// Accounts for the [`private_bid` handler](fn.private_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(
+    trade_state_bump: u8, 
+    escrow_payment_bump: u8, 
+    buyer_price: u64, 
+    token_size: u64
+)]
 pub struct Buy<'info> {
     /// User wallet account.
     wallet: Signer<'info>,
@@ -203,7 +296,15 @@ pub struct Buy<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            wallet.key().as_ref()
+        ],
+        bump = escrow_payment_bump
+    )]
     escrow_payment_account: UncheckedAccount<'info>,
 
     /// CHECK: Validated in bid_logic.
@@ -211,17 +312,48 @@ pub struct Buy<'info> {
     authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
-    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
+    #[account(
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
+            auction_house.treasury_mint.as_ref()
+        ],
+        bump = auction_house.bump,
+        has_one = authority,
+        has_one = treasury_mint,
+        has_one = auction_house_fee_account
+    )]
     auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            FEE_PAYER.as_bytes()
+        ],
+        bump = auction_house.fee_payer_bump
+    )]
     auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer trade state PDA.
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            wallet.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            treasury_mint.key().as_ref(),
+            token_account.mint.as_ref(),
+            buyer_price.to_le_bytes().as_ref(),
+            token_size.to_le_bytes().as_ref()
+        ],
+        bump = trade_state_bump
+    )]
     buyer_trade_state: UncheckedAccount<'info>,
 
     token_program: Program<'info, Token>,
@@ -262,7 +394,12 @@ pub fn private_bid<'info>(
 
 /// Accounts for the [`auctioneer_private_bid` handler](fn.auctioneer_private_bid.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(
+    trade_state_bump: u8, 
+    escrow_payment_bump: u8, 
+    buyer_price: u64, 
+    token_size: u64
+)]
 pub struct AuctioneerBuy<'info> {
     /// User wallet account.
     wallet: Signer<'info>,
@@ -299,27 +436,53 @@ pub struct AuctioneerBuy<'info> {
     )]
     escrow_payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified with has_one constraint on auction house account.
-    /// Auction House instance authority account.
-    authority: UncheckedAccount<'info>,
+    /// CHECK: Verified in ah_auctioneer_pda seeds check.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
+    auctioneer_authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
-    #[account(seeds = [PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump = auction_house.bump, has_one = authority, has_one = treasury_mint, has_one = auction_house_fee_account)]
+    #[account(
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
+            auction_house.treasury_mint.as_ref()
+            ],
+        bump = auction_house.bump,
+        has_one = treasury_mint,
+        has_one = auction_house_fee_account
+    )]
     auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            FEE_PAYER.as_bytes()
+        ],
+        bump = auction_house.fee_payer_bump
+    )]
     auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer trade state PDA.
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            wallet.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            treasury_mint.key().as_ref(),
+            token_account.mint.as_ref(),
+            buyer_price.to_le_bytes().as_ref(),
+            token_size.to_le_bytes().as_ref()
+        ],
+        bump = trade_state_bump
+    )]
     buyer_trade_state: UncheckedAccount<'info>,
-
-    /// CHECK: Is used as a seed for ah_auctioneer_pda.
-    /// The auctioneer program PDA running this auction.
-    pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
@@ -354,7 +517,6 @@ pub fn auctioneer_private_bid<'info>(
         *ctx.accounts.token_account.to_owned(),
         ctx.accounts.metadata.to_owned(),
         ctx.accounts.escrow_payment_account.to_owned(),
-        ctx.accounts.authority.to_owned(),
         &mut ctx.accounts.auction_house,
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
@@ -565,7 +727,6 @@ pub fn auctioneer_bid_logic<'info>(
     token_account: Account<'info, TokenAccount>,
     metadata: UncheckedAccount<'info>,
     escrow_payment_account: UncheckedAccount<'info>,
-    authority: UncheckedAccount<'info>,
     auction_house: &mut Box<Account<'info, AuctionHouse>>,
     auction_house_fee_account: UncheckedAccount<'info>,
     buyer_trade_state: UncheckedAccount<'info>,
@@ -611,7 +772,7 @@ pub fn auctioneer_bid_logic<'info>(
         &[auction_house.fee_payer_bump],
     ];
     let (fee_payer, fee_seeds) = get_fee_payer(
-        &authority,
+        &auctioneer_authority,
         &auction_house,
         wallet.to_account_info(),
         auction_house_fee_account.to_account_info(),

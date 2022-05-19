@@ -540,6 +540,13 @@ pub mod auction_house {
         auctioneer::delegate_auctioneer(ctx, Box::new(scopes))
     }
 
+    pub fn update_auctioneer<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdateAuctioneer<'info>>,
+        scopes: Vec<AuthorityScope>,
+    ) -> Result<()> {
+        auctioneer::update_auctioneer(ctx, Box::new(scopes))
+    }
+
     /// Create a listing receipt by creating a `listing_receipt` account.
     pub fn print_listing_receipt<'info>(
         ctx: Context<'_, '_, '_, 'info, PrintListingReceipt<'info>>,
