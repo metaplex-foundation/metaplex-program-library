@@ -104,14 +104,14 @@ const searchFileMatch = (file, match_strings) => {
   let repl_addr = "devpubkey";
   
   if (args[0] === 'reset') {
-    // await replacePubkeys( keyring, repl_addr, srch_addr );
+    await replacePubkeys( keyring, repl_addr, srch_addr );
     await replaceNpmRegistry(LOCAL_REGISTRY_SRCH, LIVE_REGISTRY_REPL);
-    let {stdout, stderr} = await exec(`/bin/bash ${ENV_SETUP_PATH}/helpers/set-yarn-registry.sh reset`);
-    // await exec(`cat ${ENV_SETUP_PATH}/default_keyring.json.backup > ${ENV_SETUP_PATH}/default_keyring.json`);
+    await exec(`/bin/bash ${ENV_SETUP_PATH}/helpers/set-yarn-registry.sh reset`);
+    await exec(`cat ${ENV_SETUP_PATH}/default_keyring.json.backup > ${ENV_SETUP_PATH}/default_keyring.json`);
     console.log("STDOUT: ", stdout, stderr);
   } else {
-    // await replacePubkeys( keyring, srch_addr, repl_addr );
-    // await replaceNpmRegistry(LIVE_REGISTRY_SRCH, LOCAL_REGISTRY_REPL);
+    await replacePubkeys( keyring, srch_addr, repl_addr );
+    await replaceNpmRegistry(LIVE_REGISTRY_SRCH, LOCAL_REGISTRY_REPL);
     await exec(`/bin/bash ${ENV_SETUP_PATH}/helpers/set-yarn-registry.sh`);
   }
 } )();
