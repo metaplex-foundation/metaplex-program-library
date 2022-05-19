@@ -80,7 +80,7 @@ async fn sell_success() {
 }
 
 #[tokio::test]
-async fn auction_sell_success() {
+async fn auctioneer_sell_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -119,11 +119,12 @@ async fn auction_sell_success() {
     .await
     .unwrap();
 
-    let ((acc, listing_receipt_acc), sell_tx) = auction_sell(
+    let ((acc, listing_receipt_acc), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
+        sale_price,
         &auctioneer_authority.pubkey(),
     );
 
@@ -148,30 +149,30 @@ async fn auction_sell_success() {
         .unwrap()
         .unix_timestamp;
 
-    // let listing_receipt_account = context
-    //     .banks_client
-    //     .get_account(listing_receipt_acc.receipt)
-    //     .await
-    //     .expect("getting listing receipt")
-    //     .expect("empty listing receipt data");
+    let listing_receipt_account = context
+        .banks_client
+        .get_account(listing_receipt_acc.receipt)
+        .await
+        .expect("getting listing receipt")
+        .expect("empty listing receipt data");
 
-    // let listing_receipt =
-    //     ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
+    let listing_receipt =
+        ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
 
-    // assert_eq!(listing_receipt.auction_house, acc.auction_house);
-    // assert_eq!(listing_receipt.metadata, acc.metadata);
-    // assert_eq!(listing_receipt.seller, acc.wallet);
-    // assert_eq!(listing_receipt.created_at, timestamp);
-    // assert_eq!(listing_receipt.purchase_receipt, None);
-    // assert_eq!(listing_receipt.canceled_at, None);
-    // assert_eq!(listing_receipt.bookkeeper, *owner_pubkey);
-    // assert_eq!(listing_receipt.seller, *owner_pubkey);
-    // assert_eq!(listing_receipt.price, sale_price);
-    // assert_eq!(listing_receipt.token_size, 1);
+    assert_eq!(listing_receipt.auction_house, acc.auction_house);
+    assert_eq!(listing_receipt.metadata, acc.metadata);
+    assert_eq!(listing_receipt.seller, acc.wallet);
+    assert_eq!(listing_receipt.created_at, timestamp);
+    assert_eq!(listing_receipt.purchase_receipt, None);
+    assert_eq!(listing_receipt.canceled_at, None);
+    assert_eq!(listing_receipt.bookkeeper, *owner_pubkey);
+    assert_eq!(listing_receipt.seller, *owner_pubkey);
+    assert_eq!(listing_receipt.price, sale_price);
+    assert_eq!(listing_receipt.token_size, 1);
 }
 
 #[tokio::test]
-async fn auction_sell_missing_scope_fails() {
+async fn auctioneer_sell_missing_scope_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -193,6 +194,8 @@ async fn auction_sell_missing_scope_fails() {
         .await
         .unwrap();
 
+    let sale_price = ONE_SOL;
+
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
@@ -210,11 +213,12 @@ async fn auction_sell_missing_scope_fails() {
     .await
     .unwrap();
 
-    let ((_, _), sell_tx) = auction_sell(
+    let ((_, _), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
+        sale_price,
         &auctioneer_authority.pubkey(),
     );
 
@@ -227,7 +231,7 @@ async fn auction_sell_missing_scope_fails() {
 }
 
 #[tokio::test]
-async fn auction_sell_no_delegate_fails() {
+async fn auctioneer_sell_no_delegate_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
@@ -249,14 +253,17 @@ async fn auction_sell_no_delegate_fails() {
         .await
         .unwrap();
 
+    let sale_price = ONE_SOL;
+
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
 
-    let ((_acc, _listing_receipt_acc), sell_tx) = auction_sell(
+    let ((_acc, _listing_receipt_acc), sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
+        sale_price,
         &auctioneer_authority.pubkey(),
     );
 

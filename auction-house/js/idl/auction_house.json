@@ -1,5 +1,5 @@
 {
-  "version": "1.0.2",
+  "version": "1.1.6",
   "name": "auction_house",
   "instructions": [
     {
@@ -179,7 +179,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -866,6 +866,37 @@
       ]
     },
     {
+      "name": "closeEscrowAccount",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "escrowPaymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "escrowPaymentBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "printListingReceipt",
       "accounts": [
         {
@@ -1027,66 +1058,6 @@
     }
   ],
   "accounts": [
-    {
-      "name": "AuctionHouse",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "auctionHouseFeeAccount",
-            "type": "publicKey"
-          },
-          {
-            "name": "auctionHouseTreasury",
-            "type": "publicKey"
-          },
-          {
-            "name": "treasuryWithdrawalDestination",
-            "type": "publicKey"
-          },
-          {
-            "name": "feeWithdrawalDestination",
-            "type": "publicKey"
-          },
-          {
-            "name": "treasuryMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
-          {
-            "name": "creator",
-            "type": "publicKey"
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "treasuryBump",
-            "type": "u8"
-          },
-          {
-            "name": "feePayerBump",
-            "type": "u8"
-          },
-          {
-            "name": "sellerFeeBasisPoints",
-            "type": "u16"
-          },
-          {
-            "name": "requiresSignOff",
-            "type": "bool"
-          },
-          {
-            "name": "canChangeSalePrice",
-            "type": "bool"
-          }
-        ]
-      }
-    },
     {
       "name": "BidReceipt",
       "type": {
@@ -1256,6 +1227,66 @@
           }
         ]
       }
+    },
+    {
+      "name": "AuctionHouse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auctionHouseFeeAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "auctionHouseTreasury",
+            "type": "publicKey"
+          },
+          {
+            "name": "treasuryWithdrawalDestination",
+            "type": "publicKey"
+          },
+          {
+            "name": "feeWithdrawalDestination",
+            "type": "publicKey"
+          },
+          {
+            "name": "treasuryMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "treasuryBump",
+            "type": "u8"
+          },
+          {
+            "name": "feePayerBump",
+            "type": "u8"
+          },
+          {
+            "name": "sellerFeeBasisPoints",
+            "type": "u16"
+          },
+          {
+            "name": "requiresSignOff",
+            "type": "bool"
+          },
+          {
+            "name": "canChangeSalePrice",
+            "type": "bool"
+          }
+        ]
+      }
     }
   ],
   "types": [
@@ -1414,9 +1445,17 @@
       "code": 6027,
       "name": "InstructionMismatch",
       "msg": "The instruction does not match"
+    },
+    {
+      "code": 6028,
+      "name": "EscrowUnderRentExemption",
+      "msg": "The instruction would drain the escrow below rent exemption threshold"
     }
   ],
   "metadata": {
-    "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
+    "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
+    "origin": "anchor",
+    "binaryVersion": "0.24.2",
+    "libVersion": "~0.24.1"
   }
 }

@@ -6,9 +6,9 @@
  */
 
 import * as splToken from '@solana/spl-token';
-import * as definedTypes from '../types';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { AmountArgs, amountArgsBeet } from '../types/AmountArgs';
 
 /**
  * @category Instructions
@@ -16,7 +16,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type WithdrawTokenFromSafetyDepositBoxInstructionArgs = {
-  amountArgs: definedTypes.AmountArgs;
+  amountArgs: AmountArgs;
 };
 /**
  * @category Instructions
@@ -30,7 +30,7 @@ const WithdrawTokenFromSafetyDepositBoxStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['amountArgs', definedTypes.amountArgsBeet],
+    ['amountArgs', amountArgsBeet],
   ],
   'WithdrawTokenFromSafetyDepositBoxInstructionArgs',
 );

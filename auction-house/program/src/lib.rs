@@ -326,14 +326,14 @@ pub mod auction_house {
         )
     }
 
-    pub fn buy_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, BuyWithAuctioneer<'info>>,
+    pub fn auctioneer_buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
         trade_state_bump: u8,
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        bid::private_bid_with_auctioneer(
+        bid::auctioneer_private_bid(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -360,14 +360,14 @@ pub mod auction_house {
     }
 
     /// Create a public buy bid by creating a `public_buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn public_buy_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, PublicBuyWithAuctioneer<'info>>,
+    pub fn auctioneer_public_buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerPublicBuy<'info>>,
         trade_state_bump: u8,
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        bid::public_bid_with_auctioneer(
+        bid::auctioneer_public_bid(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -386,12 +386,12 @@ pub mod auction_house {
     }
 
     /// Cancel, but with an auctioneer
-    pub fn cancel_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, CancelWithAuctioneer<'info>>,
+    pub fn auctioneer_cancel<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerCancel<'info>>,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        cancel::cancel_with_auctioneer(ctx, buyer_price, token_size)
+        cancel::auctioneer_cancel(ctx, buyer_price, token_size)
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
@@ -404,12 +404,12 @@ pub mod auction_house {
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
-    pub fn deposit_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
+    pub fn auctioneer_deposit<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerDeposit<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        deposit::deposit_with_auctioneer(ctx, escrow_payment_bump, amount)
+        deposit::auctioneer_deposit(ctx, escrow_payment_bump, amount)
     }
 
     pub fn execute_sale<'info>(
@@ -430,15 +430,15 @@ pub mod auction_house {
         )
     }
 
-    pub fn execute_sale_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecuteSaleWithAuctioneer<'info>>,
+    pub fn auctioneer_execute_sale<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        execute_sale::execute_sale_with_auctioneer(
+        execute_sale::auctioneer_execute_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -466,18 +466,20 @@ pub mod auction_house {
         )
     }
 
-    pub fn sell_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, SellWithAuctioneer<'info>>,
+    pub fn auctioneer_sell<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerSell<'info>>,
         trade_state_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
+        buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        sell::sell_with_auctioneer(
+        sell::auctioneer_sell(
             ctx,
             trade_state_bump,
             free_trade_state_bump,
             program_as_signer_bump,
+            buyer_price,
             token_size,
         )
     }
@@ -492,12 +494,12 @@ pub mod auction_house {
     }
 
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
-    pub fn withdraw_with_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
+    pub fn auctioneer_withdraw<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerWithdraw<'info>>,
         escrow_payment_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        withdraw::withdraw_with_auctioneer(ctx, escrow_payment_bump, amount)
+        withdraw::auctioneer_withdraw(ctx, escrow_payment_bump, amount)
     }
 
     /// Close the escrow account of the user.
@@ -536,13 +538,6 @@ pub mod auction_house {
         scopes: Vec<AuthorityScope>,
     ) -> Result<()> {
         auctioneer::delegate_auctioneer(ctx, Box::new(scopes))
-    }
-
-    pub fn update_auctioneer<'info>(
-        ctx: Context<'_, '_, '_, 'info, UpdateAuctioneer<'info>>,
-        scopes: Vec<AuthorityScope>,
-    ) -> Result<()> {
-        auctioneer::update_auctioneer(ctx, Box::new(scopes))
     }
 
     /// Create a listing receipt by creating a `listing_receipt` account.
@@ -590,34 +585,43 @@ pub mod auction_house {
 pub struct CreateAuctionHouse<'info> {
     /// Treasury mint account, either native SOL mint or a SPL token mint.
     pub treasury_mint: Account<'info, Mint>,
+
     /// Key paying SOL fees for setting up the Auction House.
     #[account(mut)]
     pub payer: Signer<'info>,
+
+    /// CHECK: User can use whatever they want for intialization.
     // Authority key for the Auction House.
-    /// CHECK: Verified through CPI
     pub authority: UncheckedAccount<'info>,
+
+    /// CHECK: User can use whatever they want for intialization.
     /// Account that pays for fees if the marketplace executes sales.
-    /// CHECK: Verified through CPI
     #[account(mut)]
     pub fee_withdrawal_destination: UncheckedAccount<'info>,
+
+    /// CHECK: User can use whatever they want for intialization.
     /// SOL or SPL token account to receive Auction House fees. If treasury mint is native this will be the same as the `treasury_withdrawl_destination_owner`.
-    /// CHECK: Verified through CPI
     #[account(mut)]
     pub treasury_withdrawal_destination: UncheckedAccount<'info>,
+
+    /// CHECK: User can use whatever they want for intialization.
     /// Owner of the `treasury_withdrawal_destination` account or the same address if the `treasury_mint` is native.
-    /// CHECK: Verified through CPI
     pub treasury_withdrawal_destination_owner: UncheckedAccount<'info>,
+
     /// Auction House instance PDA account.
     #[account(init, seeds=[PREFIX.as_bytes(), authority.key().as_ref(), treasury_mint.key().as_ref()], bump, space=AUCTION_HOUSE_SIZE, payer=payer)]
     pub auction_house: Account<'info, AuctionHouse>,
+
     /// Auction House instance fee account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
+
     /// Auction House instance treasury PDA account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=treasury_bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
+
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub ata_program: Program<'info, AssociatedToken>,
@@ -629,27 +633,35 @@ pub struct CreateAuctionHouse<'info> {
 pub struct UpdateAuctionHouse<'info> {
     /// Treasury mint account, either native SOL mint or a SPL token mint.
     pub treasury_mint: Account<'info, Mint>,
+
     /// Key paying SOL fees for setting up the Auction House.
     pub payer: Signer<'info>,
+
     /// Authority key for the Auction House.
     pub authority: Signer<'info>,
+
+    /// CHECK: User can use whatever they want for updating this.
     /// New authority key for the Auction House.
-    /// CHECK: Verified through CPI
     pub new_authority: UncheckedAccount<'info>,
+
+    /// CHECK: User can use whatever they want for updating this.
     /// Account that pays for fees if the marketplace executes sales.
-    /// CHECK: Verified through CPI
     #[account(mut)]
     pub fee_withdrawal_destination: UncheckedAccount<'info>,
+
+    /// CHECK: User can use whatever they want for updating this.
     /// SOL or SPL token account to receive Auction House fees. If treasury mint is native this will be the same as the `treasury_withdrawl_destination_owner`.
-    /// CHECK: Verified through CPI
     #[account(mut)]
     pub treasury_withdrawal_destination: UncheckedAccount<'info>,
+
+    /// CHECK: User can use whatever they want for updating this.
     /// Owner of the `treasury_withdrawal_destination` account or the same address if the `treasury_mint` is native.
-    /// CHECK: Verified through CPI
     pub treasury_withdrawal_destination_owner: UncheckedAccount<'info>,
+
     /// Auction House instance PDA account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), treasury_mint.key().as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint)]
     pub auction_house: Account<'info, AuctionHouse>,
+
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub ata_program: Program<'info, AssociatedToken>,
@@ -661,19 +673,24 @@ pub struct UpdateAuctionHouse<'info> {
 pub struct WithdrawFromTreasury<'info> {
     /// Treasury mint account, either native SOL mint or a SPL token mint.
     pub treasury_mint: Account<'info, Mint>,
+
     /// Authority key for the Auction House.
     pub authority: Signer<'info>,
+
     /// SOL or SPL token account to receive Auction House fees. If treasury mint is native this will be the same as the `treasury_withdrawl_destination_owner`.
-    /// CHECK: Verified through CPI
+    /// CHECK: User can withdraw wherever they want as long as they sign as authority.
     #[account(mut)]
     pub treasury_withdrawal_destination: UncheckedAccount<'info>,
+
     /// Auction House treasury PDA account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
+
     /// Auction House instance PDA account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), treasury_mint.key().as_ref()], bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=treasury_withdrawal_destination, has_one=auction_house_treasury)]
     pub auction_house: Account<'info, AuctionHouse>,
+
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
@@ -683,17 +700,21 @@ pub struct WithdrawFromTreasury<'info> {
 pub struct WithdrawFromFee<'info> {
     /// Authority key for the Auction House.
     pub authority: Signer<'info>,
+
     /// Account that pays for fees if the marketplace executes sales.
-    /// CHECK: Verified through CPI
+    /// CHECK: User can withdraw wherever as long as they sign as authority.
     #[account(mut)]
     pub fee_withdrawal_destination: UncheckedAccount<'info>,
+
     /// Auction House instance fee account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
+
     /// Auction House instance PDA account.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.key().as_ref()], bump=auction_house.bump, has_one=authority, has_one=fee_withdrawal_destination, has_one=auction_house_fee_account)]
     pub auction_house: Account<'info, AuctionHouse>,
+
     pub system_program: Program<'info, System>,
 }
 
@@ -702,10 +723,12 @@ pub struct WithdrawFromFee<'info> {
 pub struct CloseEscrowAccount<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
+
     /// CHECK: Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
+
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
     pub auction_house: Account<'info, AuctionHouse>,

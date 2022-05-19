@@ -42,7 +42,7 @@ const CreateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] metadata Metadata key (pda of ['metadata', program id, mint id])
  * @property [] mint Mint of token asset
  * @property [**signer**] mintAuthority Mint authority
- * @property [**signer**] payer payer
+ * @property [_writable_, **signer**] payer payer
  * @property [] updateAuthority update authority info
  * @category Instructions
  * @category CreateMetadataAccountV2
@@ -96,7 +96,7 @@ export function createCreateMetadataAccountV2Instruction(
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "mpl-auction-house"
-version = "1.1.4"
+version = "1.1.6"
 edition = "2021"
 description = "Decentralized Sales Protocol for Solana Tokens"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
@@ -36,7 +36,7 @@ anchor-client = "~0.24.2"
 shellexpand = "~2.1.0"
 serde_json = "~1.0"
 solana-program = "~1.9.15"
-mpl-testing-utils= {path="../../core/rust/testing-utils", version="0.0.2"}
+mpl-testing-utils= {path="../../core/rust/testing-utils" }
 solana-program-test = "~1.9.15"
 solana-sdk = "~1.9.15"
 env_logger="~0.9.0"

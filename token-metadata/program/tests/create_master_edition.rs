@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::{error::MetadataError, id, instruction, state::Key};
 use num_traits::FromPrimitive;
@@ -213,7 +213,7 @@ mod create_master_edition {
 
         let test_master_edition = MasterEditionV2::new(&Metadata {
             mint: fake_mint,
-            pubkey: test_metadata.pubkey.clone(),
+            pubkey: test_metadata.pubkey,
             token: fake_account,
         });
 
@@ -367,7 +367,7 @@ mod create_master_edition {
 
         let test_master_edition = MasterEditionV2::new(&Metadata {
             mint: fake_mint,
-            pubkey: test_metadata.pubkey.clone(),
+            pubkey: test_metadata.pubkey,
             token: fake_account,
         });
 

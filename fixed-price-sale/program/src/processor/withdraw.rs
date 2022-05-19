@@ -1,6 +1,5 @@
 use crate::{
     error::ErrorCode,
-    id,
     state::{MarketState, PrimaryMetadataCreators},
     utils::*,
     Withdraw,
@@ -15,7 +14,7 @@ impl<'info> Withdraw<'info> {
     pub fn process(
         &mut self,
         treasury_owner_bump: u8,
-        payout_ticket_bump: u8,
+        _payout_ticket_bump: u8,
         remaining_accounts: &[AccountInfo<'info>],
     ) -> Result<()> {
         let market = &self.market;
@@ -29,7 +28,7 @@ impl<'info> Withdraw<'info> {
         let selling_resource = &self.selling_resource;
         let funder = &self.funder;
         let payer = &self.payer;
-        let payout_ticket = &self.payout_ticket;
+        let payout_ticket = &mut self.payout_ticket;
         let rent = &self.rent;
         let clock = &self.clock;
         let metadata = &self.metadata.to_account_info();
@@ -93,8 +92,10 @@ impl<'info> Withdraw<'info> {
         };
 
         // Check, that user can withdraw funds(first time)
-        if payout_ticket.lamports() > 0 && !payout_ticket.data_is_empty() {
+        if payout_ticket.used {
             return Err(ErrorCode::PayoutTicketExists.into());
+        } else {
+            payout_ticket.used = true;
         }
 
         let is_native = market.treasury_mint == System::id();
@@ -203,21 +204,6 @@ impl<'info> Withdraw<'info> {
             let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
             token::transfer(cpi_ctx, amount)?;
         }
-
-        // Create ticket account to prevent twice withdrawal
-        sys_create_account(
-            &payer.to_account_info(),
-            &payout_ticket.to_account_info(),
-            rent.minimum_balance(FLAG_ACCOUNT_SIZE),
-            FLAG_ACCOUNT_SIZE,
-            &id(),
-            &[
-                PAYOUT_TICKET_PREFIX.as_bytes(),
-                market.key().as_ref(),
-                funder_key.as_ref(),
-                &[payout_ticket_bump],
-            ],
-        )?;
 
         Ok(())
     }

@@ -13,9 +13,10 @@ import * as web3 from '@solana/web3.js';
  * @category PuffMetadata
  * @category generated
  */
-const PuffMetadataStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'PuffMetadataInstructionArgs');
+const PuffMetadataStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'PuffMetadataInstructionArgs',
+);
 /**
  * Accounts required by the _PuffMetadata_ instruction
  *
@@ -34,7 +35,6 @@ const puffMetadataInstructionDiscriminator = 14;
  * Creates a _PuffMetadata_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category PuffMetadata
  * @category generated

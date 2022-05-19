@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as definedTypes from '../types';
 import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 import * as beet from '@metaplex-foundation/beet';
+import { Key, keyBeet } from '../types/Key';
 
 /**
  * Arguments used to create {@link SafetyDepositBox}
@@ -16,7 +16,7 @@ import * as beet from '@metaplex-foundation/beet';
  * @category generated
  */
 export type SafetyDepositBoxArgs = {
-  key: definedTypes.Key;
+  key: Key;
   vault: web3.PublicKey;
   tokenMint: web3.PublicKey;
   store: web3.PublicKey;
@@ -31,7 +31,7 @@ export type SafetyDepositBoxArgs = {
  */
 export class SafetyDepositBox implements SafetyDepositBoxArgs {
   private constructor(
-    readonly key: definedTypes.Key,
+    readonly key: Key,
     readonly vault: web3.PublicKey,
     readonly tokenMint: web3.PublicKey,
     readonly store: web3.PublicKey,
@@ -124,7 +124,7 @@ export class SafetyDepositBox implements SafetyDepositBoxArgs {
    */
   pretty() {
     return {
-      key: 'Key.' + definedTypes.Key[this.key],
+      key: 'Key.' + Key[this.key],
       vault: this.vault.toBase58(),
       tokenMint: this.tokenMint.toBase58(),
       store: this.store.toBase58(),
@@ -139,7 +139,7 @@ export class SafetyDepositBox implements SafetyDepositBoxArgs {
  */
 export const safetyDepositBoxBeet = new beet.BeetStruct<SafetyDepositBox, SafetyDepositBoxArgs>(
   [
-    ['key', definedTypes.keyBeet],
+    ['key', keyBeet],
     ['vault', beetSolana.publicKey],
     ['tokenMint', beetSolana.publicKey],
     ['store', beetSolana.publicKey],

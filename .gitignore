@@ -19,6 +19,7 @@ yarn-error.log*
 .vscode
 .idea
 .anchor
+.crates/
 
 .pnp.*
 .yarn/*

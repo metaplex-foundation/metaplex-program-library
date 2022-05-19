@@ -21,8 +21,8 @@ const ApproveCollectionAuthorityStruct = new beet.BeetArgsStruct<{
  *
  * @property [_writable_] collectionAuthorityRecord Collection Authority Record PDA
  * @property [] newCollectionAuthority A Collection Authority
- * @property [**signer**] updateAuthority Update Authority of Collection NFT
- * @property [**signer**] payer Payer
+ * @property [_writable_, **signer**] updateAuthority Update Authority of Collection NFT
+ * @property [_writable_, **signer**] payer Payer
  * @property [] metadata Collection Metadata account
  * @property [] mint Mint of Collection Metadata
  * @category Instructions
@@ -44,7 +44,6 @@ const approveCollectionAuthorityInstructionDiscriminator = 23;
  * Creates a _ApproveCollectionAuthority_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category ApproveCollectionAuthority
  * @category generated
@@ -77,12 +76,12 @@ export function createApproveCollectionAuthorityInstruction(
     },
     {
       pubkey: updateAuthority,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

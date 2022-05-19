@@ -6,11 +6,11 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8)]
 pub struct Withdraw<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
     #[account(mut)]
     pub receipt_account: UncheckedAccount<'info>,
@@ -23,7 +23,7 @@ pub struct Withdraw<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -42,8 +42,8 @@ pub struct Withdraw<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<WithdrawWithAuctioneer<'info>> for Withdraw<'info> {
-    fn from(a: WithdrawWithAuctioneer<'info>) -> Withdraw<'info> {
+impl<'info> From<AuctioneerWithdraw<'info>> for Withdraw<'info> {
+    fn from(a: AuctioneerWithdraw<'info>) -> Withdraw<'info> {
         Withdraw {
             wallet: a.wallet,
             receipt_account: a.receipt_account,
@@ -68,7 +68,7 @@ pub fn withdraw<'info>(
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
@@ -76,15 +76,15 @@ pub fn withdraw<'info>(
     withdraw_logic(ctx.accounts, escrow_payment_bump, amount)
 }
 
-/// Accounts for the [`withdraw_with_auctioneer` handler](auction_house/fn.withdraw_with_auctioneer.html).
+/// Accounts for the [`auctioneer_withdraw` handler](auction_house/fn.auctioneer_withdraw.html).
 #[derive(Accounts, Clone)]
 #[instruction(escrow_payment_bump: u8)]
-pub struct WithdrawWithAuctioneer<'info> {
-    /// CHECK: Verified through CPI
+pub struct AuctioneerWithdraw<'info> {
+    /// CHECK: Validated in withdraw_logic.
     /// User wallet account.
     pub wallet: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// SPL token account or native SOL account to transfer funds to. If the account is a native SOL account, this is the same as the wallet address.
     #[account(mut)]
     pub receipt_account: UncheckedAccount<'info>,
@@ -97,7 +97,7 @@ pub struct WithdrawWithAuctioneer<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in withdraw_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -110,7 +110,7 @@ pub struct WithdrawWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
@@ -126,8 +126,8 @@ pub struct WithdrawWithAuctioneer<'info> {
 }
 
 /// Withdraw but with an auctioneer.
-pub fn withdraw_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, WithdrawWithAuctioneer<'info>>,
+pub fn auctioneer_withdraw<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerWithdraw<'info>>,
     escrow_payment_bump: u8,
     amount: u64,
 ) -> Result<()> {

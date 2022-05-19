@@ -14,13 +14,14 @@ import * as web3 from '@solana/web3.js';
  * @category ThawDelegatedAccount
  * @category generated
  */
-const ThawDelegatedAccountStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'ThawDelegatedAccountInstructionArgs');
+const ThawDelegatedAccountStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'ThawDelegatedAccountInstructionArgs',
+);
 /**
  * Accounts required by the _ThawDelegatedAccount_ instruction
  *
- * @property [**signer**] delegate Delegate
+ * @property [_writable_, **signer**] delegate Delegate
  * @property [_writable_] tokenAccount Token account to thaw
  * @property [] edition Edition
  * @property [] mint Token mint
@@ -41,7 +42,6 @@ const thawDelegatedAccountInstructionDiscriminator = 27;
  * Creates a _ThawDelegatedAccount_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category ThawDelegatedAccount
  * @category generated
@@ -57,7 +57,7 @@ export function createThawDelegatedAccountInstruction(
   const keys: web3.AccountMeta[] = [
     {
       pubkey: delegate,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

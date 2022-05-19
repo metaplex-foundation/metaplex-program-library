@@ -7,31 +7,31 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct ExecuteSale<'info> {
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer user wallet account.
     #[account(mut)]
     pub buyer: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Seller user wallet account.
     #[account(mut)]
     pub seller: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     // cannot mark these as real Accounts or else we blow stack size limit
     ///Token account where the SPL token is stored.
     #[account(mut)]
     pub token_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Token mint account for the SPL token.
     pub token_mint: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     // cannot mark these as real Accounts or else we blow stack size limit
     /// Auction House treasury mint account.
     pub treasury_mint: UncheckedAccount<'info>,
@@ -41,17 +41,17 @@ pub struct ExecuteSale<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Seller SOL or SPL account to receive payment at.
     #[account(mut)]
     pub seller_payment_receipt_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer SPL token account to receive purchased item at.
     #[account(mut)]
     pub buyer_receipt_token_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Auction House instance authority.
     pub authority: UncheckedAccount<'info>,
 
@@ -69,7 +69,7 @@ pub struct ExecuteSale<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer trade state PDA account encoding the buy order.
     #[account(mut)]
     pub buyer_trade_state: UncheckedAccount<'info>,
@@ -95,8 +95,8 @@ pub struct ExecuteSale<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<ExecuteSaleWithAuctioneer<'info>> for ExecuteSale<'info> {
-    fn from(a: ExecuteSaleWithAuctioneer<'info>) -> ExecuteSale<'info> {
+impl<'info> From<AuctioneerExecuteSale<'info>> for ExecuteSale<'info> {
+    fn from(a: AuctioneerExecuteSale<'info>) -> ExecuteSale<'info> {
         ExecuteSale {
             buyer: a.buyer,
             seller: a.seller,
@@ -133,7 +133,7 @@ pub fn execute_sale<'info>(
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
@@ -150,32 +150,32 @@ pub fn execute_sale<'info>(
 
 #[derive(Accounts)]
 #[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
-pub struct ExecuteSaleWithAuctioneer<'info> {
-    /// CHECK: Verified through CPI
+pub struct AuctioneerExecuteSale<'info> {
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer user wallet account.
     #[account(mut)]
     pub buyer: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Seller user wallet account.
     #[account(mut)]
     pub seller: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     // cannot mark these as real Accounts or else we blow stack size limit
     ///Token account where the SPL token is stored.
     #[account(mut)]
     pub token_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Token mint account for the SPL token.
     pub token_mint: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     // cannot mark these as real Accounts or else we blow stack size limit
     /// Auction House treasury mint account.
     pub treasury_mint: UncheckedAccount<'info>,
@@ -185,17 +185,17 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Seller SOL or SPL account to receive payment at.
     #[account(mut)]
     pub seller_payment_receipt_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer SPL token account to receive purchased item at.
     #[account(mut)]
     pub buyer_receipt_token_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Auction House instance authority.
     pub authority: UncheckedAccount<'info>,
 
@@ -213,7 +213,7 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=auction_house.treasury_bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in execute_sale_logic.
     /// Buyer trade state PDA account encoding the buy order.
     #[account(mut)]
     pub buyer_trade_state: UncheckedAccount<'info>,
@@ -228,7 +228,7 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), seller.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_mint.key().as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
     pub free_trade_state: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
@@ -248,8 +248,8 @@ pub struct ExecuteSaleWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn execute_sale_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSaleWithAuctioneer<'info>>,
+pub fn auctioneer_execute_sale<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -272,7 +272,7 @@ pub fn execute_sale_with_auctioneer<'info>(
     )?;
 
     // Duplicate the logic methods to avoid going over the compute limit.
-    execute_auction_sale_logic(
+    auctioneer_execute_sale_logic(
         ctx,
         escrow_payment_bump,
         free_trade_state_bump,
@@ -284,8 +284,8 @@ pub fn execute_sale_with_auctioneer<'info>(
 
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
 #[inline(never)]
-fn execute_auction_sale_logic<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSaleWithAuctioneer<'info>>,
+fn auctioneer_execute_sale_logic<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -394,6 +394,35 @@ fn execute_auction_sale_logic<'info>(
             token_account_mint.as_ref(),
         ],
     )?;
+
+    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the token.
+    // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
+    // The fee payer makes up the shortfall up to the amount of rent for an empty account.
+    if is_native {
+        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), buyer_price)?;
+        if diff != buyer_price {
+            // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
+            let shortfall = std::cmp::min(
+                buyer_price
+                    .checked_sub(diff)
+                    .ok_or(AuctionHouseError::NumericalOverflow)?,
+                rent.minimum_balance(escrow_payment_account.data_len()),
+            );
+            invoke_signed(
+                &system_instruction::transfer(
+                    &fee_payer.key,
+                    &escrow_payment_account.key,
+                    shortfall,
+                ),
+                &[
+                    fee_payer.to_account_info(),
+                    escrow_payment_account.to_account_info(),
+                    system_program.to_account_info(),
+                ],
+                &[&fee_payer_seeds],
+            )?;
+        }
+    }
 
     if metadata.data_is_empty() {
         return Err(AuctionHouseError::MetadataDoesntExist.into());
@@ -527,6 +556,12 @@ fn execute_auction_sale_logic<'info>(
             rent.to_account_info(),
             &fee_payer_seeds,
         )?;
+    } else {
+        let data = buyer_receipt_token_account.try_borrow_data()?;
+        let token_account = TokenAccount::try_deserialize(&mut data.as_ref())?;
+        if &token_account.owner != buyer.key {
+            return Err(AuctionHouseError::IncorrectOwner.into());
+        }
     }
 
     let buyer_rec_acct = assert_is_ata(&buyer_receipt_clone, &buyer.key(), &token_mint.key())?;
@@ -706,6 +741,35 @@ fn execute_sale_logic<'info>(
             token_account_mint.as_ref(),
         ],
     )?;
+
+    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the token.
+    // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
+    // The fee payer makes up the shortfall up to the amount of rent for an empty account.
+    if is_native {
+        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), buyer_price)?;
+        if diff != buyer_price {
+            // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
+            let shortfall = std::cmp::min(
+                buyer_price
+                    .checked_sub(diff)
+                    .ok_or(AuctionHouseError::NumericalOverflow)?,
+                rent.minimum_balance(escrow_payment_account.data_len()),
+            );
+            invoke_signed(
+                &system_instruction::transfer(
+                    &fee_payer.key,
+                    &escrow_payment_account.key,
+                    shortfall,
+                ),
+                &[
+                    fee_payer.to_account_info(),
+                    escrow_payment_account.to_account_info(),
+                    system_program.to_account_info(),
+                ],
+                &[&fee_payer_seeds],
+            )?;
+        }
+    }
 
     if metadata.data_is_empty() {
         return Err(AuctionHouseError::MetadataDoesntExist.into());

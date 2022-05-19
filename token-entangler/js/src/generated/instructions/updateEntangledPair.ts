@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,9 +14,9 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export type UpdateEntangledPairInstructionArgs = {
-  price: beet.bignum
-  paysEveryTime: boolean
-}
+  price: beet.bignum;
+  paysEveryTime: boolean;
+};
 /**
  * @category Instructions
  * @category UpdateEntangledPair
@@ -24,7 +24,7 @@ export type UpdateEntangledPairInstructionArgs = {
  */
 const updateEntangledPairStruct = new beet.BeetArgsStruct<
   UpdateEntangledPairInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -32,8 +32,8 @@ const updateEntangledPairStruct = new beet.BeetArgsStruct<
     ['price', beet.u64],
     ['paysEveryTime', beet.bool],
   ],
-  'UpdateEntangledPairInstructionArgs'
-)
+  'UpdateEntangledPairInstructionArgs',
+);
 /**
  * Accounts required by the _updateEntangledPair_ instruction
  * @category Instructions
@@ -41,14 +41,12 @@ const updateEntangledPairStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type UpdateEntangledPairInstructionAccounts = {
-  authority: web3.PublicKey
-  newAuthority: web3.PublicKey
-  entangledPair: web3.PublicKey
-}
+  authority: web3.PublicKey;
+  newAuthority: web3.PublicKey;
+  entangledPair: web3.PublicKey;
+};
 
-const updateEntangledPairInstructionDiscriminator = [
-  41, 97, 247, 218, 98, 162, 75, 244,
-]
+const updateEntangledPairInstructionDiscriminator = [41, 97, 247, 218, 98, 162, 75, 244];
 
 /**
  * Creates a _UpdateEntangledPair_ instruction.
@@ -62,14 +60,14 @@ const updateEntangledPairInstructionDiscriminator = [
  */
 export function createUpdateEntangledPairInstruction(
   accounts: UpdateEntangledPairInstructionAccounts,
-  args: UpdateEntangledPairInstructionArgs
+  args: UpdateEntangledPairInstructionArgs,
 ) {
-  const { authority, newAuthority, entangledPair } = accounts
+  const { authority, newAuthority, entangledPair } = accounts;
 
   const [data] = updateEntangledPairStruct.serialize({
     instructionDiscriminator: updateEntangledPairInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: authority,
@@ -86,14 +84,12 @@ export function createUpdateEntangledPairInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey(
-      'qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd'
-    ),
+    programId: new web3.PublicKey('qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd'),
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

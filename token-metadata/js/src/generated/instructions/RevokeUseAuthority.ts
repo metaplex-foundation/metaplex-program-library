@@ -14,14 +14,15 @@ import * as web3 from '@solana/web3.js';
  * @category RevokeUseAuthority
  * @category generated
  */
-const RevokeUseAuthorityStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'RevokeUseAuthorityInstructionArgs');
+const RevokeUseAuthorityStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+  [['instructionDiscriminator', beet.u8]],
+  'RevokeUseAuthorityInstructionArgs',
+);
 /**
  * Accounts required by the _RevokeUseAuthority_ instruction
  *
  * @property [_writable_] useAuthorityRecord Use Authority Record PDA
- * @property [**signer**] owner Owner
+ * @property [_writable_, **signer**] owner Owner
  * @property [] user A Use Authority
  * @property [_writable_] ownerTokenAccount Owned Token Account Of Mint
  * @property [] mint Mint of Metadata
@@ -45,7 +46,6 @@ const revokeUseAuthorityInstructionDiscriminator = 21;
  * Creates a _RevokeUseAuthority_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category RevokeUseAuthority
  * @category generated
@@ -66,7 +66,7 @@ export function createRevokeUseAuthorityInstruction(
     },
     {
       pubkey: owner,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {

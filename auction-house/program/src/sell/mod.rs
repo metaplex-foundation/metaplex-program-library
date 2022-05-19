@@ -53,8 +53,8 @@ pub struct Sell<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<SellWithAuctioneer<'info>> for Sell<'info> {
-    fn from(a: SellWithAuctioneer<'info>) -> Sell<'info> {
+impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
+    fn from(a: AuctioneerSell<'info>) -> Sell<'info> {
         Sell {
             wallet: a.wallet,
             token_account: a.token_account,
@@ -72,11 +72,11 @@ impl<'info> From<SellWithAuctioneer<'info>> for Sell<'info> {
     }
 }
 
-/// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
+/// Accounts for the [`auctioneer_sell` handler](auction_house/fn.auctioneer_sell.html).
 #[derive(Accounts, Clone)]
-#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, token_size: u64)]
-pub struct SellWithAuctioneer<'info> {
-    /// CHECK: TODO
+#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
+pub struct AuctioneerSell<'info> {
+    /// CHECK: Wallet is validated as a signer in sell_logic.
     /// User wallet account.
     #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
@@ -85,11 +85,11 @@ pub struct SellWithAuctioneer<'info> {
     #[account(mut)]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated by assert_metadata_valid.
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated as a signer in sell_logic.
     /// Auction House authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -112,7 +112,7 @@ pub struct SellWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
     pub free_seller_trade_state: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
@@ -140,7 +140,7 @@ pub fn sell<'info>(
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
@@ -157,11 +157,12 @@ pub fn sell<'info>(
 }
 
 /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
-pub fn sell_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, SellWithAuctioneer<'info>>,
+pub fn auctioneer_sell<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerSell<'info>>,
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
+    buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
@@ -215,7 +216,6 @@ fn sell_logic<'info>(
     let program_as_signer = &accounts.program_as_signer;
     let rent = &accounts.rent;
 
-    // Wallet has to be a signer but there are different kinds of errors when it's not.
     if !wallet.to_account_info().is_signer {
         if buyer_price == 0 {
             return Err(AuctionHouseError::SaleRequiresSigner.into());

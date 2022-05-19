@@ -9,12 +9,12 @@ pub struct Deposit<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     pub payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// SPL token account transfer authority.
     pub transfer_authority: UncheckedAccount<'info>,
 
@@ -26,7 +26,7 @@ pub struct Deposit<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -44,8 +44,8 @@ pub struct Deposit<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<DepositWithAuctioneer<'info>> for Deposit<'info> {
-    fn from(a: DepositWithAuctioneer<'info>) -> Deposit<'info> {
+impl<'info> From<AuctioneerDeposit<'info>> for Deposit<'info> {
+    fn from(a: AuctioneerDeposit<'info>) -> Deposit<'info> {
         Deposit {
             wallet: a.wallet,
             payment_account: a.payment_account,
@@ -69,7 +69,7 @@ pub fn deposit<'info>(
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
-    // If it has an auctioneer authority delegated must use *_with_auctioneer handler.
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
@@ -80,16 +80,16 @@ pub fn deposit<'info>(
 /// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
 #[derive(Accounts, Clone)]
 #[instruction(escrow_payment_bump: u8)]
-pub struct DepositWithAuctioneer<'info> {
+pub struct AuctioneerDeposit<'info> {
     /// User wallet account.
     pub wallet: Signer<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// User SOL or SPL account to transfer funds from.
     #[account(mut)]
     pub payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// SPL token account transfer authority.
     pub transfer_authority: UncheckedAccount<'info>,
 
@@ -101,7 +101,7 @@ pub struct DepositWithAuctioneer<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Verified through CPI
+    /// CHECK: Validated in deposit_logic.
     /// Auction House instance authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -114,7 +114,7 @@ pub struct DepositWithAuctioneer<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated in assert_valid_auctioneer_and_scope.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
@@ -128,8 +128,8 @@ pub struct DepositWithAuctioneer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn deposit_with_auctioneer<'info>(
-    ctx: Context<'_, '_, '_, 'info, DepositWithAuctioneer<'info>>,
+pub fn auctioneer_deposit<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerDeposit<'info>>,
     escrow_payment_bump: u8,
     amount: u64,
 ) -> Result<()> {
