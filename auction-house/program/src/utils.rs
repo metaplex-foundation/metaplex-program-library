@@ -39,7 +39,6 @@ pub fn make_ata<'a>(
     rent: AccountInfo<'a>,
     fee_payer_seeds: &[&[u8]],
 ) -> Result<()> {
-    let _seeds: &[&[&[u8]]];
     let as_arr = [fee_payer_seeds];
 
     let seeds: &[&[&[u8]]] = if !fee_payer_seeds.is_empty() {
