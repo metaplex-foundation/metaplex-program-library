@@ -20,7 +20,7 @@ use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*
 struct ObjectInfo {
     asset_id: String,
     file_path: String,
-    media_link: String,
+    image_link: String,
     data_type: DataType,
     content_type: String,
     bucket: String,
@@ -53,9 +53,9 @@ impl AWSHandler {
         let data = match info.data_type {
             DataType::Img => fs::read(&info.file_path)?,
             DataType::Metadata => {
-                // replaces the media link without modifying the original file to avoid
+                // replaces the image link without modifying the original file to avoid
                 // changing the hash of the metadata file
-                get_updated_metadata(&info.file_path, &info.media_link, info.animation_link)?
+                get_updated_metadata(&info.file_path, &info.image_link, info.animation_link)?
                     .into_bytes()
             }
             DataType::Movie => fs::read(&info.file_path)?,
@@ -83,7 +83,7 @@ impl UploadHandler for AWSHandler {
         &self,
         _sugar_config: &SugarConfig,
         _assets: &HashMap<usize, AssetPair>,
-        _media_indices: &[usize],
+        _image_indices: &[usize],
         _metadata_indices: &[usize],
         _animation_indices: &[usize],
     ) -> Result<()> {
@@ -107,7 +107,7 @@ impl UploadHandler for AWSHandler {
             let item = assets.get(index).unwrap();
             // chooses the file path based on the data type
             let file_path = match data_type {
-                DataType::Img => item.media.clone(),
+                DataType::Img => item.image.clone(),
                 DataType::Metadata => item.metadata.clone(),
                 DataType::Movie => item.animation.clone().unwrap(),
             };
@@ -141,7 +141,7 @@ impl UploadHandler for AWSHandler {
         let mut objects = Vec::new();
 
         for file_path in paths {
-            // path to the media/metadata file
+            // path to the image/metadata file
             let path = Path::new(&file_path);
             // id of the asset (to be used to update the cache link)
             let asset_id = String::from(
@@ -164,7 +164,7 @@ impl UploadHandler for AWSHandler {
                 file_path: String::from(
                     path.to_str().expect("Failed to convert path from unicode."),
                 ),
-                media_link: cache_item.media_link.clone(),
+                image_link: cache_item.image_link.clone(),
                 data_type: data_type.clone(),
                 content_type: content_type.clone(),
                 bucket: self.bucket.clone(),
@@ -197,7 +197,7 @@ impl UploadHandler for AWSHandler {
                         let item = cache.items.0.get_mut(&val.0).unwrap();
 
                         match data_type {
-                            DataType::Img => item.media_link = link,
+                            DataType::Img => item.image_link = link,
                             DataType::Metadata => item.metadata_link = link,
                             DataType::Movie => item.animation_link = Some(link),
                         }

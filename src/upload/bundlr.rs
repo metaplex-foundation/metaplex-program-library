@@ -32,13 +32,13 @@ const HEADER_SIZE: u64 = 2000;
 /// Minimum file size for cost calculation
 const MINIMUM_SIZE: u64 = 10000;
 
-/// Size of the mock media URI for cost calculation
+/// Size of the mock image URI for cost calculation
 const MOCK_URI_SIZE: usize = 100;
 
 struct TxInfo {
     asset_id: String,
     file_path: String,
-    media_link: String,
+    image_link: String,
     animation_link: Option<String>,
     data_type: DataType,
     tag: Vec<Tag>,
@@ -202,11 +202,11 @@ impl BundlrHandler {
         let data = match tx_info.data_type {
             DataType::Img => fs::read(&tx_info.file_path)?,
             DataType::Metadata => {
-                // replaces the media link without modifying the original file to avoid
+                // replaces the image link without modifying the original file to avoid
                 // changing the hash of the metadata file
                 get_updated_metadata(
                     &tx_info.file_path,
-                    &tx_info.media_link,
+                    &tx_info.image_link,
                     tx_info.animation_link,
                 )?
                 .into_bytes()
@@ -233,16 +233,16 @@ impl UploadHandler for BundlrHandler {
         &self,
         sugar_config: &SugarConfig,
         assets: &HashMap<usize, AssetPair>,
-        media_indices: &[usize],
+        image_indices: &[usize],
         metadata_indices: &[usize],
         animation_indices: &[usize],
     ) -> Result<()> {
         // calculates the size of the files to upload
         let mut total_size = 0;
 
-        for index in media_indices {
+        for index in image_indices {
             let item = assets.get(index).unwrap();
-            let path = Path::new(&item.media);
+            let path = Path::new(&item.image);
             total_size += HEADER_SIZE + cmp::max(MINIMUM_SIZE, std::fs::metadata(path)?.len());
         }
 
@@ -265,17 +265,13 @@ impl UploadHandler for BundlrHandler {
                 None
             };
 
-            let updated_metadata = match get_updated_metadata(&item.metadata, &mock_uri, mock_animation_uri.clone()){
-                Ok(metadata) => metadata.into_bytes()
-                .len() as u64,
-                Err(err) => return Err(err),
-            };
+            let updated_metadata =
+                match get_updated_metadata(&item.metadata, &mock_uri, mock_animation_uri.clone()) {
+                    Ok(metadata) => metadata.into_bytes().len() as u64,
+                    Err(err) => return Err(err),
+                };
 
-            total_size += HEADER_SIZE
-                + cmp::max(
-                    MINIMUM_SIZE,
-                    updated_metadata
-                );
+            total_size += HEADER_SIZE + cmp::max(MINIMUM_SIZE, updated_metadata);
         }
 
         info!("Total upload size: {}", total_size);
@@ -295,7 +291,7 @@ impl UploadHandler for BundlrHandler {
             balance, lamports_fee
         );
 
-        // funds the bundlr wallet for media upload
+        // funds the bundlr wallet for image upload
 
         let client = setup_client(sugar_config)?;
         let program = client.program(CANDY_MACHINE_ID);
@@ -366,7 +362,7 @@ impl UploadHandler for BundlrHandler {
             };
             // chooses the file path based on the data type
             let file_path = match data_type {
-                DataType::Img => item.media.clone(),
+                DataType::Img => item.image.clone(),
                 DataType::Metadata => item.metadata.clone(),
                 DataType::Movie => item.animation.clone().unwrap(),
             };
@@ -390,7 +386,7 @@ impl UploadHandler for BundlrHandler {
 
         let sugar_tag = Tag::new("App-Name".into(), format!("Sugar {}", crate_version!()));
 
-        let media_tag = match data_type {
+        let image_tag = match data_type {
             DataType::Img => Tag::new("Content-Type".into(), format!("image/{extension}")),
             DataType::Metadata => Tag::new("Content-Type".into(), "application/json".to_string()),
             DataType::Movie => Tag::new("Content-Type".into(), format!("video/{extension}")),
@@ -404,7 +400,7 @@ impl UploadHandler for BundlrHandler {
         let mut transactions = Vec::new();
 
         for file_path in paths {
-            // path to the media/metadata file
+            // path to the image/metadata file
             let path = Path::new(&file_path);
 
             // id of the asset (to be used to update the cache link)
@@ -424,9 +420,9 @@ impl UploadHandler for BundlrHandler {
             transactions.push(TxInfo {
                 asset_id: asset_id.to_string(),
                 file_path: String::from(path.to_str().expect("Failed to parse path from unicode.")),
-                media_link: cache_item.media_link.clone(),
+                image_link: cache_item.image_link.clone(),
                 data_type: data_type.clone(),
-                tag: vec![sugar_tag.clone(), media_tag.clone()],
+                tag: vec![sugar_tag.clone(), image_tag.clone()],
                 animation_link: cache_item.animation_link.clone(),
             });
         }
@@ -456,7 +452,7 @@ impl UploadHandler for BundlrHandler {
                         let item = cache.items.0.get_mut(&val.0).unwrap();
 
                         match data_type {
-                            DataType::Img => item.media_link = link,
+                            DataType::Img => item.image_link = link,
                             DataType::Metadata => item.metadata_link = link,
                             DataType::Movie => item.animation_link = Some(link),
                         }

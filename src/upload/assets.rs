@@ -11,8 +11,8 @@ use std::{
     sync::Arc,
 };
 
-use crate::{common::*, upload::UploadError};
 use crate::validate::format::Metadata;
+use crate::{common::*, upload::UploadError};
 
 pub struct UploadDataArgs<'a> {
     pub bundlr_client: Arc<Bundlr<SolanaSigner>>,
@@ -34,8 +34,8 @@ pub struct AssetPair {
     pub name: String,
     pub metadata: String,
     pub metadata_hash: String,
-    pub media: String,
-    pub media_hash: String,
+    pub image: String,
+    pub image_hash: String,
     pub animation: Option<String>,
     pub animation_hash: Option<String>,
 }
@@ -44,8 +44,8 @@ impl AssetPair {
     pub fn into_cache_item(self) -> CacheItem {
         CacheItem {
             name: self.name,
-            media_hash: self.media_hash,
-            media_link: String::new(),
+            image_hash: self.image_hash,
+            image_link: String::new(),
             metadata_hash: self.metadata_hash,
             metadata_link: String::new(),
             on_chain: false,
@@ -194,14 +194,14 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
         let img_filepath = Path::new(assets_dir)
             .join(img_filename)
             .to_str()
-            .expect("Failed to convert media path from unicode.")
+            .expect("Failed to convert image path from unicode.")
             .to_string();
 
         let animation_filename = if !animation_filenames.is_empty() {
             let animation_filepath = Path::new(assets_dir)
                 .join(&animation_filenames[0])
                 .to_str()
-                .expect("Failed to convert media path from unicode.")
+                .expect("Failed to convert image path from unicode.")
                 .to_string();
 
             Some(animation_filepath)
@@ -220,8 +220,8 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             name,
             metadata: metadata_filepath.clone(),
             metadata_hash: encode(&metadata_filepath)?,
-            media: img_filepath.clone(),
-            media_hash: encode(&img_filepath)?,
+            image: img_filepath.clone(),
+            image_hash: encode(&img_filepath)?,
             animation_hash,
             animation: animation_filename,
         };
@@ -251,7 +251,7 @@ fn encode(file: &str) -> Result<String> {
 
 pub fn get_updated_metadata(
     metadata_file: &str,
-    media_link: &str,
+    image_link: &str,
     animation_link: Option<String>,
 ) -> Result<String> {
     let mut metadata: Metadata = {
@@ -266,11 +266,11 @@ pub fn get_updated_metadata(
 
     for file in &mut metadata.properties.files {
         if file.uri.eq(&metadata.image) {
-            file.uri = media_link.to_string();
+            file.uri = image_link.to_string();
         }
     }
 
-    metadata.image = media_link.to_string();
+    metadata.image = image_link.to_string();
 
     if animation_link.is_some() {
         metadata.animation_url = animation_link.clone();
@@ -278,7 +278,7 @@ pub fn get_updated_metadata(
             let error = UploadError::AnimationFileError(metadata_file.to_string()).into();
             error!("{error}");
             return Err(error);
-        }else {
+        } else {
             metadata.properties.files[1].uri = animation_link.unwrap();
         }
     }
