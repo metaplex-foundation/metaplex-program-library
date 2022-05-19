@@ -23,8 +23,6 @@ const processAndGetKeyring = async () => {
   let keyring_data = await fs.readFile(KEYRING_FILE);
   const keyring = JSON.parse(keyring_data);
 
-  // console.log(keyring);
-
   // Set up new keypair.json files, if not set.
   // Do not generate new keys on reset
   if (args[0] !== 'reset') {
@@ -51,6 +49,7 @@ const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
       "default_keyring.json",
       "restore_program_ids.sh",
       "utils/env_setup",
+      'node_modules',
       "target"
     ]
     if (!keyring[k][srch_addr]) {
@@ -68,7 +67,6 @@ const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
 }
 
 const replaceNpmRegistry = async (search, replacement) => {
-  console.log("NpmReg: ", search);
   const dnc_matches = ['node_modules', 'utils/env_setup', 'target'];
   let { stdout, stderr } = await exec(`grep -rl \"${search}\" ${PROGRAM_ROOT}/.`);
   if (!!stderr) {
@@ -82,7 +80,6 @@ const replaceNpmRegistry = async (search, replacement) => {
 const sedReplace = async (stdout, search, replacement, dnc_matches = []) => {
   // 'stdout' - a string on files each on new line
   const files = stdout.split(/\r?\n/);
-  //console.log(lines);
   for ( const file of files ) {
     if ( searchFileMatch(file, dnc_matches) ){
       console.log(`Do not change: ${file}`);
