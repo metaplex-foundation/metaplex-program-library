@@ -12,8 +12,8 @@
     "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
     "fix": "lerna run --parallel fix",
-    "build.dev.env": "node ./utils/env_setup/set-dev-env.js && cargo build",
-    "reset.dev.env": "node ./utils/env_setup/set-dev-env.js reset",
+    "set.dev.env": "node ./utils/env_setup/set-dev-env.js && cargo build",
+    "unset.dev.env": "node ./utils/env_setup/set-dev-env.js reset",
     "publish.all.npmjs": "node ./utils/env_setup/publish-npm-packs.js reset",
     "compile.contracts": "./utils/env_setup/compile_contracts.sh",
     "deploy.all.contracts": "./utils/env_setup/deploy_contracts.sh"
