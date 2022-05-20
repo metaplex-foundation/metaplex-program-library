@@ -70,4 +70,6 @@ pub enum CandyError {
     MissingSetCollectionDuringMint,
     #[msg("Can't change collection settings after items have begun to be minted")]
     NoChangingCollectionDuringMint,
+    #[msg("Retain authority must be true for Candy Machines with a collection set")]
+    CandyCollectionRequiresRetainAuthority,
 }

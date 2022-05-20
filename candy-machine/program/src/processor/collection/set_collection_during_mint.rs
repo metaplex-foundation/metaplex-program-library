@@ -46,7 +46,7 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
     }
     // Check if the metadata account has data if not bot fee
     if !cmp_pubkeys(ctx.accounts.metadata.owner, &mpl_token_metadata::id())
-        || ctx.accounts.token_metadata_program.data_len() == 0
+        || ctx.accounts.metadata.data_len() == 0
     {
         return Ok(());
     }
@@ -108,7 +108,7 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
         ctx.accounts.collection_master_edition.to_account_info(),
         ctx.accounts.collection_authority_record.to_account_info(),
     ];
-    let set = invoke_signed(
+    invoke_signed(
         &set_and_verify_collection(
             ctx.accounts.token_metadata_program.key(),
             ctx.accounts.metadata.key(),
@@ -122,10 +122,6 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
         ),
         set_collection_infos.as_slice(),
         &[&signer_seeds],
-    );
-    // Set will only fail if the above IX fails
-    if set.is_err() {
-        return Ok(());
-    }
+    )?;
     Ok(())
 }

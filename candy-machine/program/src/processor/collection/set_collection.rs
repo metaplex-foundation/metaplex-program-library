@@ -53,6 +53,9 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     if candy_machine.items_redeemed > 0 {
         return err!(CandyError::NoChangingCollectionDuringMint);
     }
+    if !candy_machine.data.retain_authority {
+        return err!(CandyError::CandyCollectionRequiresRetainAuthority);
+    }
     assert_master_edition(&metadata, &edition)?;
     if authority_record.data_is_empty() {
         let approve_collection_infos = vec![

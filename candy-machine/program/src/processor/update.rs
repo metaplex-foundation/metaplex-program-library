@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
-use crate::{CandyError, CandyMachine, CandyMachineData};
+use crate::constants::COLLECTIONS_FEATURE_INDEX;
+use crate::{is_feature_active, CandyError, CandyMachine, CandyMachineData};
 
 /// Update the candy machine state.
 #[derive(Accounts)]
@@ -49,6 +50,9 @@ pub fn handle_update_candy_machine(
 
     let old_uuid = candy_machine.data.uuid.clone();
     candy_machine.wallet = ctx.accounts.wallet.key();
+    if is_feature_active(&old_uuid, COLLECTIONS_FEATURE_INDEX) && !data.retain_authority {
+        return err!(CandyError::CandyCollectionRequiresRetainAuthority);
+    }
     candy_machine.data = data;
     candy_machine.data.uuid = old_uuid;
 
