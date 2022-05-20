@@ -10,6 +10,8 @@ BASE_PATH=$PROGRAM_ROOT
 MPL_SO_PATH=${BASE_PATH}/target/deploy
 POSTFIX_PATH=/program/target/deploy
 
+solana airdrop 100 -k ${MPL_WALLET}
+
 solana program deploy -k ${MPL_WALLET} ${MPL_SO_PATH}/mpl_token_metadata.so
 solana program deploy -k ${MPL_WALLET} ${MPL_SO_PATH}/mpl_auction.so
 solana program deploy -k ${MPL_WALLET} ${MPL_SO_PATH}/mpl_fixed_price_sale.so
