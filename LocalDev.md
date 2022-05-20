@@ -71,3 +71,34 @@ Installing Solana programs:
 10. `anchor deploy` to deploy packages in `./target/deploy`
 
 These are required to complete full metaplex smart-comtract ecosystem setup. -->
+
+# NPM and YARN
+
+Sometimes to set up js packages will have to clear cache.
+```
+yarn cache clean --all
+yarn install
+```
+
+# Verdacio Yarn issue Workaround
+
+Temporary workaround:
+
+Login with NPM
+Copy-paste generated token from `~/.npmrc to ~/.yarnrc.yml.`
+
+npm adduser --registry https://registry.npmjs.org/
+
+```
+cat ~/.npmrc
+npm.my-project.pro/:_authToken="GAOEuaeouaoEUo+u3=="
+
+cat ~/.yarnrc.yml
+npmRegistries:
+  "https://npm.my-project.pro":
+    npmAuthToken: GAOEuaeouaoEUo+u3==
+```
+
+Then yarn npm publish for verdaccio works fine.
+Make sure to either delete packages from verdacio storage, or update package versions in
+package.json files to update packages. 

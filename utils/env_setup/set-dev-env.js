@@ -18,6 +18,16 @@ const PROGRAM_ROOT = process.env.PROGRAM_ROOT; // "/sol/metaplex/program-library
 const ENV_SETUP_PATH = `${PROGRAM_ROOT}/utils/env_setup`
 const KEYRING_FILE = `${ENV_SETUP_PATH}/default_keyring.json`;
 
+const DNC_MATCHES = [
+  "default_keyring.json",
+  "restore_program_ids.sh",
+  "utils/env_setup",
+  'node_modules',
+  "target",
+  "js/dist",  
+  ".yarnrc.yml"
+]
+
 // Open and parse default keys JSON
 const processAndGetKeyring = async () => {
   let keyring_data = await fs.readFile(KEYRING_FILE);
@@ -45,13 +55,6 @@ const processAndGetKeyring = async () => {
 
 const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
   for (const k in keyring) {
-    const dnc_matches = [
-      "default_keyring.json",
-      "restore_program_ids.sh",
-      "utils/env_setup",
-      'node_modules',
-      "target"
-    ]
     if (!keyring[k][srch_addr]) {
       console.log("Skipping pubkey search: ", keyring[k][srch_addr]);
       return;
@@ -62,19 +65,18 @@ const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
     }
     stdout = stdout.trim();
     if (!stdout) return;
-    sedReplace( stdout, keyring[k][srch_addr], keyring[k][repl_addr], dnc_matches );
+    sedReplace( stdout, keyring[k][srch_addr], keyring[k][repl_addr], DNC_MATCHES );
   }
 }
 
 const replaceNpmRegistry = async (search, replacement) => {
-  const dnc_matches = ['node_modules', 'utils/env_setup', 'target'];
   let { stdout, stderr } = await exec(`grep -rl \"${search}\" ${PROGRAM_ROOT}/.`);
   if (!!stderr) {
     throw Error("Error on grep: ", stderr);
   }
   stdout= stdout.trim();
   if (!stdout) return;
-  await sedReplace(stdout, search, replacement, dnc_matches);
+  await sedReplace(stdout, search, replacement, DNC_MATCHES);
 }
 
 const sedReplace = async (stdout, search, replacement, dnc_matches = []) => {
