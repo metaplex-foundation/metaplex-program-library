@@ -2,11 +2,11 @@ use crate::{
     assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
     error::MetadataError,
     state::{
-        get_reservation_list, CollectionDetails, CollectionStatus, Data, DataV2, EditionMarker,
-        Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, Uses, EDITION,
-        EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
-        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-        MAX_URI_LENGTH, PREFIX,
+        get_reservation_list, CollectionDetails, CollectionStatus, Data, DataV2, Edition,
+        EditionMarker, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, Uses,
+        EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
+        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -1342,7 +1342,7 @@ pub fn is_print_edition(
     mint_decimals: u8,
     mint_supply: u64,
 ) -> bool {
-    let is_correct_type = MasterEditionV2::from_account_info(edition_account_info).is_ok();
+    let is_correct_type = Edition::from_account_info(edition_account_info).is_ok();
 
     is_correct_type && mint_decimals == 0 && mint_supply == 1
 }

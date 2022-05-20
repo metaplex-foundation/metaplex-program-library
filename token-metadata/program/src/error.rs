@@ -387,37 +387,36 @@ pub enum MetadataError {
     #[error("Revoke Collection Authority signer is incorrect")]
     RevokeCollectionAuthoritySignerIncorrect,
 
-    /// 100 - Token close failed
     #[error("Token close failed")]
     TokenCloseFailed,
 
-    /// 101 - Calling v1.3 function on unsized collection
+    /// 100 - Calling v1.3 function on unsized collection
     #[error("Can't use this function on unsized collection")]
     UnsizedCollection,
 
-    /// 102 - Calling v1.2 function on a sized collection
+    /// 101 - Calling v1.2 function on a sized collection
     #[error("Can't use this function on a sized collection")]
     SizedCollection,
 
-    /// 103 - Can't burn a verified member of a collection w/o providing collection metadata account
+    /// 102 - Can't burn a verified member of a collection w/o providing collection metadata account
     #[error(
         "Can't burn a verified member of a collection w/o providing collection metadata account"
     )]
     MissingCollectionMetadata,
 
-    /// 104 - This NFT is not a member of the specified collection.
+    /// 103 - This NFT is not a member of the specified collection.
     #[error("This NFT is not a member of the specified collection.")]
     NotAMemberOfCollection,
 
-    /// 105 - This NFT is not a verified member of the specified collection.
+    /// 104 - This NFT is not a verified member of the specified collection.
     #[error("This NFT is not a verified member of the specified collection.")]
     NotVerifiedMemberOfCollection,
 
-    /// 107 - This NFT is not a collection parent NFT.
+    /// 106 - This NFT is not a collection parent NFT.
     #[error("This NFT is not a collection parent NFT.")]
     NotACollectionParent,
 
-    /// 108 - Could not determine a TokenStandard type.
+    /// 107 - Could not determine a TokenStandard type.
     #[error("Could not determine a TokenStandard type.")]
     CouldNotDetermineTokenStandard,
 }
