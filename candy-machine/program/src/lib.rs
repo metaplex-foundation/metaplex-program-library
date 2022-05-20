@@ -1418,10 +1418,10 @@ pub fn get_config_line<'info>(
     let mut arr = a_info.data.borrow_mut();
 
     let (mut index_to_use, good) =
-        get_good_index(&mut arr, a.data.items_available as usize, index, true)?;
+        get_good_index(&mut arr, a.data.items_available as usize, index, index % 2 == 0)?;
     if !good {
         let (index_to_use_new, good_new) =
-            get_good_index(&mut arr, a.data.items_available as usize, index, false)?;
+            get_good_index(&mut arr, a.data.items_available as usize, index, index % 2 != 0)?;
         index_to_use = index_to_use_new;
         if !good_new {
             return Err(ErrorCode::CannotFindUsableConfigLine.into());
