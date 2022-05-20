@@ -20,7 +20,7 @@ test('set-store', async (t) => {
       isPublic: true,
     },
   );
-  tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   const txId = await transactionHandler.sendAndConfirmTransaction(tx, [payer], {
     skipPreflight: true,
   });
