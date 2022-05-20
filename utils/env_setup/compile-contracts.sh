@@ -15,6 +15,7 @@ MPL_DEPLOY=${MPL_ROOT}/target/deploy
 source_path=/token-metadata/program
 cd ${MPL_ROOT}${source_path}
 cargo build-bpf --bpf-out-dir ${MPL_DEPLOY}
+# cargo build-bpf --bpf-out-dir ${PROGRAM_ROOT}/target/deploy
 #anchor build
 
 # Compile Auction program ------------------------------------------------------------------
