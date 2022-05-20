@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::COLLECTIONS_FEATURE_INDEX;
-use crate::{is_feature_active, CandyError, CandyMachine, CandyMachineData};
+use crate::{
+    constants::COLLECTIONS_FEATURE_INDEX, is_feature_active, CandyError, CandyMachine,
+    CandyMachineData,
+};
 
 /// Update the candy machine state.
 #[derive(Accounts)]
