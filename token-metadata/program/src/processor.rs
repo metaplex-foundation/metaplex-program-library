@@ -340,12 +340,15 @@ pub fn process_update_metadata_accounts_v3(
     let update_authority_info = next_account_info(account_info_iter)?;
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
 
+    let mint_info = match next_account_info(account_info_iter) {
+        Ok(mint_info) => Some(mint_info),
+        Err(_) => None,
+    };
+
     let edition_account_info = match next_account_info(account_info_iter) {
         Ok(edition_account_info) => Some(edition_account_info),
         Err(_) => None,
     };
-
-    let mint_info = next_account_info(account_info_iter)?;
 
     assert_owned_by(metadata_account_info, program_id)?;
     assert_update_authority_is_correct(&metadata, update_authority_info)?;
@@ -369,6 +372,7 @@ pub fn process_update_metadata_accounts_v3(
         }
     }
 
+    msg!("here {:?}", metadata);
     if let Some(val) = update_authority {
         metadata.update_authority = val;
     }

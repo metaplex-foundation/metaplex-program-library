@@ -256,7 +256,7 @@ impl Metadata {
         is_mutable: bool,
         collection: Option<Collection>,
         uses: Option<Uses>,
-        mint: Pubkey,
+        mint: Option<Pubkey>,
         edition: Option<Pubkey>,
     ) -> transport::Result<()> {
         let tx = Transaction::new_signed_with_payer(

@@ -1065,6 +1065,8 @@ pub fn process_create_metadata_accounts_logic(
         metadata.token_standard = None;
     }
 
+    msg!("token v2 {:?}", metadata.token_standard);
+
     puff_out_data_fields(&mut metadata);
 
     let edition_seeds = &[
@@ -1082,20 +1084,26 @@ pub fn process_create_metadata_accounts_logic(
 
 pub fn check_token_standard(
     edition_account_info: Option<&AccountInfo>,
-    mint_info: &AccountInfo,
+    mint_info: Option<&AccountInfo>,
 ) -> Option<TokenStandard> {
-    let mint_decimals = get_mint_decimals(mint_info).ok()?;
+    let mint_decimals = if let Some(mint) = mint_info {
+        get_mint_decimals(mint).ok()?
+    } else {
+        0
+    };
 
-    let token_standard =
-        if assert_master_edition(edition_account_info.unwrap(), mint_decimals).is_ok() {
-            TokenStandard::NonFungible
-        } else if assert_edition(mint_decimals, mint_info).is_ok() {
-            TokenStandard::NonFungibleEdition
-        } else if mint_decimals == 0 {
-            TokenStandard::FungibleAsset
-        } else {
-            TokenStandard::Fungible
-        };
+    let token_standard = if let Some(edition_account) = edition_account_info {
+        assert_master_edition(edition_account, mint_decimals).ok()?;
+        TokenStandard::NonFungible
+    } else if let Some(mint) = mint_info {
+        assert_edition(mint_decimals, mint).ok()?;
+        TokenStandard::NonFungibleEdition
+    } else if mint_decimals == 0 {
+        TokenStandard::FungibleAsset
+    } else {
+        TokenStandard::Fungible
+    };
+
     Some(token_standard)
 }
 

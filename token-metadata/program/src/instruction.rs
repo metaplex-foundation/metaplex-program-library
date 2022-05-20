@@ -6,6 +6,7 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
 use solana_program::{
     instruction::{AccountMeta, Instruction},
+    msg,
     pubkey::Pubkey,
     sysvar,
 };
@@ -415,11 +416,9 @@ pub enum MetadataInstruction {
     /// Update a Metadata with is_mutable as a parameter
     #[account(0, writable, name="metadata", desc="Metadata account")]
     #[account(1, signer, name="update_authority", desc="Update authority key")]
-    #[account(2, name="mint", desc="Mint of token asset")]
-    #[account(3, optional, writable, name="edition",  desc="Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']")]
+    #[account(2, optional, name="mint", desc="Mint of token asset")]
+    #[account(3, optional, name="edition",  desc="Unallocated edition V3 account with address as pda of ['metadata', program id, mint, 'edition']")]
     UpdateMetadataAccountV3(UpdateMetadataAccountArgsV3),
-
-  
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -572,7 +571,7 @@ pub fn update_metadata_accounts_v3(
     metadata_account: Pubkey,
     update_authority: Pubkey,
     new_update_authority: Option<Pubkey>,
-    mint: Pubkey,
+    mint: Option<Pubkey>,
     edition: Option<Pubkey>,
     data: Option<DataV2>,
     primary_sale_happened: Option<bool>,
@@ -581,11 +580,14 @@ pub fn update_metadata_accounts_v3(
     let mut accounts = vec![
         AccountMeta::new(metadata_account, false),
         AccountMeta::new_readonly(update_authority, true),
-        AccountMeta::new_readonly(mint, false),
     ];
 
+    if let Some(mint) = mint {
+        accounts.push(AccountMeta::new_readonly(mint, false));
+    }
+
     if let Some(edition) = edition {
-        accounts.push(AccountMeta::new(edition, false));
+        accounts.push(AccountMeta::new_readonly(edition, false));
     }
 
     Instruction {
