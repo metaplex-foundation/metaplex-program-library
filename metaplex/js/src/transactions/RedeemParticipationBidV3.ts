@@ -7,7 +7,8 @@
  */
 import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
-import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+// import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+import { PROGRAM_ID as MetadataProgramPubkey } from '@metaplex-foundation/mpl-token-metadata';
 import { ParamsWithStore, VaultProgram } from './vault';
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
@@ -162,7 +163,8 @@ export class RedeemParticipationBidV3 extends Transaction {
             isWritable: false,
           },
           {
-            pubkey: MetadataProgram.PUBKEY,
+            // pubkey: MetadataProgram.PUBKEY,
+            pubkey: MetadataProgramPubkey,
             isSigner: false,
             isWritable: false,
           },

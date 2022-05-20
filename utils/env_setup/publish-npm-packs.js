@@ -6,15 +6,15 @@ const ENV_SETUP_PATH = `${PROGRAM_ROOT}/utils/env_setup`
 
 const PACK_DIRS = [
   "core/js",
-  "token-vault/js",
-  "token-metadata/js",
-  "token-entangler/js",
   "auction/js",
-  "metaplex/js",
   "auction-house/js",
-  "gumdrop/js",
   "candy-machine/js",
-  "fixed-price-sale/js"
+  "token-metadata/js",
+  "token-vault/js",
+  "token-entangler/js",
+  "gumdrop/js",
+  "fixed-price-sale/js",
+  "metaplex/js"
 ];
 
 (async () => {

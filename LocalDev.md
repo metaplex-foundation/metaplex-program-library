@@ -72,6 +72,13 @@ Installing Solana programs:
 
 These are required to complete full metaplex smart-comtract ecosystem setup. -->
 
+Sometimes when building - have to clear registry and rebuild packages
+rm -rf /root/.cargo/registry/src/*
+rm -rf target/debug
+rm -rf target/release
+rm -rf /opt/solana/bin/sdk/bpf
+
+
 # NPM and YARN
 
 Sometimes to set up js packages will have to clear cache.

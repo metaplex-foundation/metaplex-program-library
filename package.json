@@ -14,9 +14,9 @@
     "fix": "lerna run --parallel fix",
     "set.dev.env": "node ./utils/env_setup/set-dev-env.js && cargo build",
     "unset.dev.env": "node ./utils/env_setup/set-dev-env.js reset",
-    "publish.all.npmjs": "node ./utils/env_setup/publish-npm-packs.js reset",
-    "compile.contracts": "./utils/env_setup/compile_contracts.sh",
-    "deploy.all.contracts": "./utils/env_setup/deploy_contracts.sh"
+    "compile.contracts": "./utils/env_setup/compile-contracts.sh",
+    "deploy.all.contracts": "./utils/env_setup/deploy-contracts.sh",
+    "publish.all.npmjs": "node ./utils/env_setup/publish-npm-packs.js reset"
   },
   "workspaces": [
     "core/js",

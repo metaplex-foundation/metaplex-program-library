@@ -14,7 +14,8 @@ import {
   TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+// import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+import { PROGRAM_ID as MetadataProgramPubkey } from '@metaplex-foundation/mpl-token-metadata';
 import { VaultProgram, ParamsWithStore } from './vault';
 import { MetaplexProgram } from '../MetaplexProgram';
 import { strict as assert } from 'assert';
@@ -173,7 +174,8 @@ export class RedeemBid extends Transaction {
             isWritable: false,
           },
           {
-            pubkey: MetadataProgram.PUBKEY,
+            // pubkey: MetadataProgram.PUBKEY,
+            pubkey: MetadataProgramPubkey,
             isSigner: false,
             isWritable: false,
           },

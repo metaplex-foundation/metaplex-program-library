@@ -16,7 +16,8 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 
-import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+// import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+import { PROGRAM_ID as MetadataProgramPubkey } from '@metaplex-foundation/mpl-token-metadata';
 import { VaultProgram, ParamsWithStore } from './vault';
 import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
@@ -72,7 +73,8 @@ export class SetStore extends Transaction {
             isWritable: false,
           },
           {
-            pubkey: MetadataProgram.PUBKEY,
+            // pubkey: MetadataProgram.PUBKEY,
+            pubkey: MetadataProgramPubkey,
             isSigner: false,
             isWritable: false,
           },

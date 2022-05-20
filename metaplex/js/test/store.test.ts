@@ -12,6 +12,7 @@ test('set-store', async (t) => {
   await airdrop(connection, payer.publicKey, 2);
 
   const storeId = await Store.getPDA(payer.publicKey);
+  console.log("storeID: ", storeId.toString());
   const tx = new SetStore(
     { feePayer: payer.publicKey },
     {
@@ -21,8 +22,11 @@ test('set-store', async (t) => {
     },
   );
   tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+  console.log("Blockhash: ", tx);
+  console.log("payer: ", payer);
   const txId = await transactionHandler.sendAndConfirmTransaction(tx, [payer], {
     skipPreflight: true,
   });
+  console.log("payer: ", payer);
   t.ok(txId, 'a txId should be returned');
 });
