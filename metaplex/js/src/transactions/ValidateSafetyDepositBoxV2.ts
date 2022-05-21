@@ -7,8 +7,7 @@
  */
 import { strict as assert } from 'assert';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
-// import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
-import { PROGRAM_ID as MetadataProgramPubkey } from '@metaplex-foundation/mpl-token-metadata';
+import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { ParamsWithStore } from './vault';
 import {
   PublicKey,
@@ -164,8 +163,7 @@ export class ValidateSafetyDepositBoxV2 extends Transaction {
             isWritable: false,
           },
           {
-            // pubkey: MetadataProgram.PUBKEY,
-            pubkey: MetadataProgramPubkey,
+            pubkey: MetadataProgram.PUBKEY,
             isSigner: false,
             isWritable: false,
           },
