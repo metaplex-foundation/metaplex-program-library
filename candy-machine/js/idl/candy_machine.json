@@ -860,6 +860,11 @@
       "code": 6033,
       "name": "NoChangingCollectionDuringMint",
       "msg": "Can't change collection settings after items have begun to be minted"
+    },
+    {
+      "code": 6034,
+      "name": "CandyCollectionRequiresRetainAuthority",
+      "msg": "Retain authority must be true for Candy Machines with a collection set"
     }
   ],
   "metadata": {
