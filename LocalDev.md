@@ -19,45 +19,54 @@ Installing Metaplex Development Environment:
 
 2. Git clone metaplex program library: `git clone https://github.com/dmitryr117/metaplex-program-library.git`
 
-3. Change back to previous directory `cd ..`
+3. Go inside cloned directory and switch git branch and pull for changes:
+```
+cd metaplex-program-library
+git checkout local-dev-env
+git pull
+```
 
-4. Check that you are inside same directory as `docker-compose.yml` file using `ls` command.
+4. then run `yarn install`
 
-5. Start cocker containers using `cocker-compose up -d` command. Can take a few minutes to load 
+5. Go up two directory levels `cd ../..`
+
+6. Check that you are inside same directory as `docker-compose.yml` file using `ls` command.
+
+7. Start docker containers using `docker-compose up -d` command. Can take a few minutes to load 
 container images if this is your first time running this command.
 
-6. Sign into docker container from your terminal using: `docker exec -ti soldev /bin/bash` command.
+8. Sign into docker container from your terminal using: `docker exec -ti soldev /bin/bash` command.
 Your terminal look should might change to signify that you are inside container.
 
-7. cd into `cd /appdev/metaplex-program-library`
+9. cd into `cd /appdev/metaplex-program-library`
 
-8. Now time to transform original environment into development environment. `yarn set.dev.env`
+10. Now time to transform original environment into development environment. `yarn set.dev.env`
 Wait for command to complete. Sometimes had compilation failure when compiling RUST packages.
 `yarn set.dev.env` command calls `cargo build` in the end. So if it fails when compiling RUST
 pacjages - run `cargo build` again.
 
-9. Compile Smart Contracts `yarn compile.contracs`. Same compilation issues happen here sometimes
+11. Compile Smart Contracts `yarn compile.contracs`. Same compilation issues happen here sometimes
 as well. If something gets a compilation error - juist rerun the `yarn compile.contracs` again.
 
-10. Need to start a Solana Test Validator now, so open another terminal and log into same docker
+12. Need to start a Solana Test Validator now, so open another terminal and log into same docker
 container again. `docker exec -ti soldev /bin/bash`. Make sure you are in root directory with `pwd`,
 and run `solana-test-validator` should see validator starting chowing blockchain information with
 number of blocks increasing.
 
-11. Switch to first terminal window, make sure you are still in `/appdev/metaplex-program-library`,
+13. Switch to first terminal window, make sure you are still in `/appdev/metaplex-program-library`,
 and run `yarn deploy.contracts`. This will fund a generic `/wallets/metaplex.key.json` wallet with
 100 SOL, and upload all 10 Solana programs / smart contracts to your local solana test network.
 
-12. Build and upload NPM packages. When working with NPM packages same as working with smart contracts
+14. Build and upload NPM packages. When working with NPM packages same as working with smart contracts
 developers need a local repository for testing and local development. Hence Verdaccio. We have
 Verdaccio running in a separatte container already configured to store `@metaplex-foundattion/*` packages
 locally. Run `yarn publish.npms` command to process and publish your packages to verdaccio.
 
-13. If you ever need to remove these packages - open a terminal, go to directory where you have
+15. If you ever need to remove these packages - open a terminal, go to directory where you have
 the `docker-compose.yml` file, and run `sudo rm -rf /verdaccio/storage/@metaplex-foundation`. This
 will remove your local @metaplex-foundation packages.
 
-14. After you are done developing, and want to push your code updates - make sure to transform your workspace
+16. After you are done developing, and want to push your code updates - make sure to transform your workspace
 back to original. Make sure you are inside your `soldev` container inside `/appdev/metaplex-program-library` 
 And run `yarn unset.dev.env`. After it completes - you can do `git status`, `git add .`
 and other commands without your public keys trying to overwrite original keys in repository. 
