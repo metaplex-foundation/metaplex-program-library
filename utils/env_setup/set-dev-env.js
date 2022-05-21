@@ -38,7 +38,8 @@ const processAndGetKeyring = async () => {
   if (args[0] !== 'reset') {
     for ( const k in keyring ) {
       keypairPath = PROGRAM_ROOT + keyring[k].keypairPath;
-      const { stdout, stderr } = await exec(`${ENV_SETUP_PATH}/helpers/gen-keypair.sh ${keypairPath}`);
+      const { stdo, stderr } = await exec(`${ENV_SETUP_PATH}/helpers/gen-keypair.sh ${keypairPath}`);
+      const { stdout, stde } = await exec(`${ENV_SETUP_PATH}/helpers/get-pubkey.sh ${keypairPath}`);
       if (stderr) {
         console.log("Warning: ", stderr.trim());
       }
@@ -65,6 +66,7 @@ const replacePubkeys = async ( keyring, srch_addr, repl_addr ) => {
     }
     stdout = stdout.trim();
     if (!stdout) return;
+
     sedReplace( stdout, keyring[k][srch_addr], keyring[k][repl_addr], DNC_MATCHES );
   }
 }

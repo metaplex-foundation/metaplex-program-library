@@ -11,5 +11,3 @@ else
   # echo "Already has key: $keypath"
   >&2 echo "Already has key: $1"
 fi
-pubkey=$(solana address -k $1)
-echo $pubkey
