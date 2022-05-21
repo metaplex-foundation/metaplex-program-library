@@ -1,6 +1,5 @@
 use anchor_client::solana_sdk::{signature::Signer, system_program, sysvar};
 use anchor_lang::*;
-
 use solana_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
@@ -14,9 +13,13 @@ use mpl_candy_machine::{
     CandyMachine, CandyMachineData, ConfigLine,
 };
 
-use crate::core::master_edition_v2::MasterEditionV2;
-use crate::utils::candy_manager::{CollectionInfo, WhitelistInfo};
-use crate::utils::make_config_lines;
+use crate::{
+    core::master_edition_v2::MasterEditionV2,
+    utils::{
+        candy_manager::{CollectionInfo, TokenInfo, WhitelistInfo},
+        make_config_lines,
+    },
+};
 
 pub fn candy_machine_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_candy_machine", mpl_candy_machine::id(), None);
@@ -30,7 +33,7 @@ pub async fn initialize_candy_machine(
     payer: &Keypair,
     wallet: &Pubkey,
     candy_data: CandyMachineData,
-    token_mint: Option<Pubkey>,
+    token_info: TokenInfo,
 ) -> transport::Result<()> {
     let items_available = candy_data.items_available;
     let candy_account_size = if candy_data.hidden_settings.is_some() {
@@ -63,8 +66,8 @@ pub async fn initialize_candy_machine(
     }
     .to_account_metas(None);
 
-    if let Some(token_mint) = token_mint {
-        accounts.push(AccountMeta::new_readonly(token_mint, false));
+    if token_info.set {
+        accounts.push(AccountMeta::new_readonly(token_info.mint, false));
     }
 
     let data = mpl_candy_machine::instruction::InitializeCandyMachine { data: candy_data }.data();
@@ -259,9 +262,9 @@ pub async fn mint_nft(
     authority: &Pubkey,
     payer: &Keypair,
     new_nft: &MasterEditionV2,
-    token_account: Option<Pubkey>,
-    whitelist_info: Option<WhitelistInfo>,
-    collection_info: Option<CollectionInfo>,
+    token_info: TokenInfo,
+    whitelist_info: WhitelistInfo,
+    collection_info: CollectionInfo,
 ) -> transport::Result<()> {
     let metadata = new_nft.metadata_pubkey;
     let master_edition = new_nft.pubkey;
@@ -287,16 +290,16 @@ pub async fn mint_nft(
     }
     .to_account_metas(None);
 
-    if let Some(whitelist_info) = whitelist_info {
-        accounts.push(AccountMeta::new(whitelist_info.whitelist_token, false));
-        if let Some(burn_info) = whitelist_info.whitelist_burn_info {
-            accounts.push(AccountMeta::new(burn_info.0, false));
-            accounts.push(AccountMeta::new_readonly(burn_info.1, true));
+    if whitelist_info.set {
+        accounts.push(AccountMeta::new(whitelist_info.minter_account, false));
+        if whitelist_info.burn {
+            accounts.push(AccountMeta::new(whitelist_info.mint, false));
+            accounts.push(AccountMeta::new_readonly(payer.pubkey(), true));
         }
     }
 
-    if let Some(token_account) = token_account {
-        accounts.push(AccountMeta::new(token_account, false));
+    if token_info.set {
+        accounts.push(AccountMeta::new(token_info.minter_account, false));
         accounts.push(AccountMeta::new_readonly(payer.pubkey(), false));
     }
 
@@ -313,7 +316,7 @@ pub async fn mint_nft(
     instructions.push(mint_ix);
     signers.push(payer);
 
-    if let Some(collection_info) = collection_info {
+    if collection_info.set {
         let accounts = mpl_candy_machine::accounts::SetCollectionDuringMint {
             candy_machine: *candy_machine,
             metadata,

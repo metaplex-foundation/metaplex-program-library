@@ -8,9 +8,8 @@ use solana_sdk::{
     transport,
 };
 
-use crate::core::create_associated_token_account;
 use crate::{
-    core::{create_mint, get_account, mint_tokens},
+    core::{create_mint, get_account, mint_to_wallets},
     *,
 };
 
@@ -23,7 +22,7 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    pub fn new(authority: Keypair) -> Self {
+    pub fn new(authority: &Keypair) -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
         let program_id = mpl_token_metadata::id();
@@ -32,7 +31,7 @@ impl Metadata {
         let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &program_id);
 
         Metadata {
-            authority: clone_keypair(&authority),
+            authority: clone_keypair(authority),
             mint: clone_keypair(&mint),
             pubkey,
             token: spl_associated_token_account::get_associated_token_address(
@@ -73,25 +72,19 @@ impl Metadata {
     ) -> transport::Result<()> {
         create_mint(
             context,
-            &self.mint,
             &self.authority.pubkey(),
             freeze_authority,
             0,
-        )
-        .await?;
-        create_associated_token_account(context, &self.authority.pubkey(), &self.mint.pubkey())
-            .await?;
-        mint_tokens(
-            context,
-            &self.authority,
-            &self.mint.pubkey(),
-            &self.token,
-            1,
-            &self.authority.pubkey(),
-            None,
+            Some(clone_keypair(&self.mint)),
         )
         .await?;
 
+        mint_to_wallets(
+            context,
+            &self.mint.pubkey(),
+            vec![(self.authority.pubkey(), 1)],
+        )
+        .await?;
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v2(
                 mpl_token_metadata::id(),
@@ -121,6 +114,6 @@ impl Metadata {
 
 impl Default for Metadata {
     fn default() -> Self {
-        Self::new(Keypair::new())
+        Self::new(&Keypair::new())
     }
 }

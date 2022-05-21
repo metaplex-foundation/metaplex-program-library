@@ -1,5 +1,4 @@
-use solana_program::native_token::LAMPORTS_PER_SOL;
-use solana_program::pubkey::Pubkey;
+use solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 
 use mpl_candy_machine::{constants::PREFIX as CANDY_PREFIX, ConfigLine};
 
