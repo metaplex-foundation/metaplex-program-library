@@ -2142,6 +2142,29 @@ createErrorFromCodeLookup.set(0x62, () => new InvalidUserError());
 createErrorFromNameLookup.set('InvalidUser', () => new InvalidUserError());
 
 /**
+ * RevokeCollectionAuthoritySignerIncorrect: 'Revoke Collection Authority signer is incorrect'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class RevokeCollectionAuthoritySignerIncorrectError extends Error {
+  readonly code: number = 0x63;
+  readonly name: string = 'RevokeCollectionAuthoritySignerIncorrect';
+  constructor() {
+    super('Revoke Collection Authority signer is incorrect');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, RevokeCollectionAuthoritySignerIncorrectError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x63, () => new RevokeCollectionAuthoritySignerIncorrectError());
+createErrorFromNameLookup.set(
+  'RevokeCollectionAuthoritySignerIncorrect',
+  () => new RevokeCollectionAuthoritySignerIncorrectError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
