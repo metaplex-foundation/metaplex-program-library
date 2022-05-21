@@ -733,6 +733,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * CandyCollectionRequiresRetainAuthority: 'Retain authority must be true for Candy Machines with a collection set'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CandyCollectionRequiresRetainAuthorityError extends Error {
+  readonly code: number = 0x1792;
+  readonly name: string = 'CandyCollectionRequiresRetainAuthority';
+  constructor() {
+    super('Retain authority must be true for Candy Machines with a collection set');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CandyCollectionRequiresRetainAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1792, () => new CandyCollectionRequiresRetainAuthorityError());
+createErrorFromNameLookup.set(
+  'CandyCollectionRequiresRetainAuthority',
+  () => new CandyCollectionRequiresRetainAuthorityError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
