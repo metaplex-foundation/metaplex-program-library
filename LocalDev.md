@@ -26,27 +26,27 @@ git checkout local-dev-env
 git pull
 ```
 
-4. then run `yarn install`
+4. Go up two directory levels `cd ../..`
 
-5. Go up two directory levels `cd ../..`
+5. Check that you are inside same directory as `docker-compose.yml` file using `ls` command.
 
-6. Check that you are inside same directory as `docker-compose.yml` file using `ls` command.
-
-7. Start docker containers using `docker-compose up -d` command. Can take a few minutes to load 
+6. Start docker containers using `docker-compose up -d` command. Can take a few minutes to load 
 container images if this is your first time running this command.
 
-8. Sign into docker container from your terminal using: `docker exec -ti soldev /bin/bash` command.
+7. Sign into docker container from your terminal using: `docker exec -ti soldev /bin/bash` command.
 Your terminal look should might change to signify that you are inside container.
 
-9. cd into `cd /appdev/metaplex-program-library`
+8. cd into `cd /appdev/metaplex-program-library`
+
+9. Run `yarn install`
 
 10. Now time to transform original environment into development environment. `yarn set.dev.env`
 Wait for command to complete. Sometimes had compilation failure when compiling RUST packages.
 `yarn set.dev.env` command calls `cargo build` in the end. So if it fails when compiling RUST
 pacjages - run `cargo build` again.
 
-11. Compile Smart Contracts `yarn compile.contracs`. Same compilation issues happen here sometimes
-as well. If something gets a compilation error - juist rerun the `yarn compile.contracs` again.
+11. Compile Smart Contracts `yarn compile.contracts`. Same compilation issues happen here sometimes
+as well. If something gets a compilation error - juist rerun the `yarn compile.contracts` again.
 
 12. Need to start a Solana Test Validator now, so open another terminal and log into same docker
 container again. `docker exec -ti soldev /bin/bash`. Make sure you are in root directory with `pwd`,
