@@ -7,70 +7,66 @@ If you don't want to build your own dev container - you can use this one I built
 deployed on DockerHub if not have an AVX2 enabled CPU. NOT A PRODUCTION CONTAINER.
 `dmitryr117/anchor-noavx2:0.24.2`
 
-Using the following docker-compose configuration:
+# Steps to Install
 
-```
-version: "3"
-
-services:
-  soldev:
-    # IMPORTANT!: for local development make sure to turn on  
-    image: dmitryr117/anchor-noavx2:0.24.2
-    container_name: soldev
-    restart: on-failure
-    working_dir: /
-    volumes:
-      - ./appdev:/sol
-      - ./devenv/wallet:/wallet
-      - ./devenv/config/validator.yml:/root/.config/solana/cli/config.yml
-      - ./devenv/validator/test-ledger:/test-ledger
-    ports:
-      - 8899:8899
-```
-
-Installing Solana programs:
-
-1. `docker exec -ti soldev /bin/bash` into deployed Docker container
-
-2. run `cd /sol/metaplex/program-library`
-
-3. run `cargo build` This step is very important. Otherwise required packages will be missing.
-
-4. run `./compile-contracts.sh` This will assign ...-keypair.json files to all smart 
-   contracts if not exists, update `declare_id!()` values inside corresponding their **lib.rs** files 
-   with new publick keys extracted from these keypairs, compile all contracts, and store them all and 
-   their kaypairs in `./target/deploy`
-   **IMPORTANT!** Script will not overwrite any **...keypair.json** files if they already exist in `./target/deploy`
-   **Troubleshooting** Sometimes a build can fail complaining about some package missing. So for example if
-   a package is missing or corrupted in `./gumdrop/program/target` - the package will not compile.
-   In this case delete `./gumdrop/program/target` directory and its contents, go back to `/sol/metaplex/program-library`,
-   and re-run `./compile-contracts.sh`
-
-5. Create and fund wallet for uploading smart contracts.
-   Inside container run `solana-keygen new --outfile /wallet/metaplex.key.json`
-
-6. Open another terminal and log into same docker instance again using step **1** and **2**.
-
-7. run `solana-test-validator` to start a local solana validator instance. Naw this trerminal will be showing block production, 
-   and will remain blocked until `Ctrl-C` input.
-
-8. Return to 1st terminal logged inside `soldev` container and fund the wallet with 100 SOL:
-   `solana airdrop -k /wallet/metaplex.key.json 100`
-
-9. Deploy smart contracts using `./deploy-contracts.sh` shell script.
+IMPORTANT. Make sure to fallow first setup instructions in: https://github.com/dmitryr117/solana-local-env
+Readme.md file to set up docker solana development environment.
 
 
-# Git comitting changes after development.
+Installing Metaplex Development Environment:
 
-1. Run `./restore_program_ids.sh`. This will restore public keys in `lib.rs` files to default values.
+1. Have to be inside `appdev` directory `cd appdev`.
 
-2. Then run `git status`, `git add .` etc.
+2. Git clone metaplex program library: `git clone https://github.com/dmitryr117/metaplex-program-library.git`
 
-<!-- 9. run ./anchor-predeploy.sh to copy all keys and compiled files into `./target/deploy` directory
+3. Change back to previous directory `cd ..`
 
-10. `anchor deploy` to deploy packages in `./target/deploy`
+4. Check that you are inside same directory as `docker-compose.yml` file using `ls` command.
 
-These are required to complete full metaplex smart-comtract ecosystem setup. -->
+5. Start cocker containers using `cocker-compose up -d` command. Can take a few minutes to load 
+container images if this is your first time running this command.
+
+6. Sign into docker container from your terminal using: `docker exec -ti soldev /bin/bash` command.
+Your terminal look should might change to signify that you are inside container.
+
+7. cd into `cd /appdev/metaplex-program-library`
+
+8. Now time to transform original environment into development environment. `yarn set.dev.env`
+Wait for command to complete. Sometimes had compilation failure when compiling RUST packages.
+`yarn set.dev.env` command calls `cargo build` in the end. So if it fails when compiling RUST
+pacjages - run `cargo build` again.
+
+9. Compile Smart Contracts `yarn compile.contracs`. Same compilation issues happen here sometimes
+as well. If something gets a compilation error - juist rerun the `yarn compile.contracs` again.
+
+10. Need to start a Solana Test Validator now, so open another terminal and log into same docker
+container again. `docker exec -ti soldev /bin/bash`. Make sure you are in root directory with `pwd`,
+and run `solana-test-validator` should see validator starting chowing blockchain information with
+number of blocks increasing.
+
+11. Switch to first terminal window, make sure you are still in `/appdev/metaplex-program-library`,
+and run `yarn deploy.contracts`. This will fund a generic `/wallets/metaplex.key.json` wallet with
+100 SOL, and upload all 10 Solana programs / smart contracts to your local solana test network.
+
+12. Build and upload NPM packages. When working with NPM packages same as working with smart contracts
+developers need a local repository for testing and local development. Hence Verdaccio. We have
+Verdaccio running in a separatte container already configured to store `@metaplex-foundattion/*` packages
+locally. Run `yarn publish.npms` command to process and publish your packages to verdaccio.
+
+13. If you ever need to remove these packages - open a terminal, go to directory where you have
+the `docker-compose.yml` file, and run `sudo rm -rf /verdaccio/storage/@metaplex-foundation`. This
+will remove your local @metaplex-foundation packages.
+
+14. After you are done developing, and want to push your code updates - make sure to transform your workspace
+back to original. Make sure you are inside your `soldev` container inside `/appdev/metaplex-program-library` 
+And run `yarn unset.dev.env`. After it completes - you can do `git status`, `git add .`
+and other commands without your public keys trying to overwrite original keys in repository. 
+
+That's it. Don't forget to turn off your `solana-test-validator` in another terminal with Ctrl-C when you are 
+done with it.
+
+
+# Known Issues
 
 Sometimes when building - have to clear registry and rebuild packages
 rm -rf /root/.cargo/registry/src/*
