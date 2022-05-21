@@ -12,6 +12,7 @@ deployed on DockerHub if not have an AVX2 enabled CPU. NOT A PRODUCTION CONTAINE
 IMPORTANT. Make sure to fallow first setup instructions in: https://github.com/dmitryr117/solana-local-env
 Readme.md file to set up docker solana development environment.
 
+Usage introduction video link: https://youtu.be/R2A4KbDA24g
 
 Installing Metaplex Development Environment:
 
