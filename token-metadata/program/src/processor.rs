@@ -30,7 +30,6 @@ use crate::{
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
-        SEED_AUTHORITY,
     },
 };
 use arrayref::array_ref;
@@ -1832,23 +1831,35 @@ pub fn set_collection_size(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
-    let metadata_account_info = next_account_info(account_info_iter)?;
-    let update_authority_account_info = next_account_info(account_info_iter)?;
-    let metaplex_signer_account_info = next_account_info(account_info_iter)?;
+    let parent_nft_metadata_account_info = next_account_info(account_info_iter)?;
+    let collection_update_authority_account_info = next_account_info(account_info_iter)?;
+    let collection_mint_account_info = next_account_info(account_info_iter)?;
+
+    let using_delegated_collection_authority = accounts.len() == 4;
 
     // Owned by token-metadata program.
-    assert_owned_by(metadata_account_info, program_id)?;
-
-    // Metaplex signer is a signer
-    assert_signer(metaplex_signer_account_info)?;
-
-    // Metaplex signer is the correct signer.
-    assert_eq!(metaplex_signer_account_info.key, &SEED_AUTHORITY);
-
-    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+    assert_owned_by(parent_nft_metadata_account_info, program_id)?;
+    let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
     // Update authority is a signer and matches update authority on metadata.
-    assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
+    assert_update_authority_is_correct(&metadata, collection_update_authority_account_info)?;
+
+    if using_delegated_collection_authority {
+        let collection_authority_record = next_account_info(account_info_iter)?;
+        assert_has_collection_authority(
+            collection_update_authority_account_info,
+            &metadata,
+            collection_mint_account_info.key,
+            Some(collection_authority_record),
+        )?;
+    } else {
+        assert_has_collection_authority(
+            collection_update_authority_account_info,
+            &metadata,
+            collection_mint_account_info.key,
+            None,
+        )?;
+    }
 
     match metadata.collection_details {
         CollectionDetails::None => {
@@ -1862,7 +1873,7 @@ pub fn set_collection_size(
         }
     }
 
-    clean_write_metadata(metadata, metadata_account_info)?;
+    clean_write_metadata(metadata, parent_nft_metadata_account_info)?;
     Ok(())
 }
 
