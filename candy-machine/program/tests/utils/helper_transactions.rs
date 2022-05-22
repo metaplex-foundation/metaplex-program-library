@@ -6,15 +6,18 @@ use solana_program::{
     system_instruction,
 };
 use solana_program_test::*;
-use solana_sdk::{signature::Keypair, transaction::Transaction, transport};
+use solana_sdk::{
+    commitment_config::CommitmentLevel, signature::Keypair, transaction::Transaction, transport,
+};
 
 use mpl_candy_machine::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
     CandyMachine, CandyMachineData, ConfigLine,
+    WhitelistMintMode::BurnEveryTime,
 };
 
 use crate::{
-    core::master_edition_v2::MasterEditionV2,
+    core::{get_balance, master_edition_v2::MasterEditionV2},
     utils::{
         candy_manager::{CollectionInfo, TokenInfo, WhitelistInfo},
         make_config_lines,
@@ -24,6 +27,7 @@ use crate::{
 pub fn candy_machine_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_candy_machine", mpl_candy_machine::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    // program.add_program("solana_gateway_program", solana_gateway::id(), None);
     program
 }
 
@@ -94,13 +98,17 @@ pub async fn update_candy_machine(
     authority: &Keypair,
     data: CandyMachineData,
     wallet: &Pubkey,
+    token_mint: Option<Pubkey>,
 ) -> transport::Result<()> {
-    let accounts = mpl_candy_machine::accounts::UpdateCandyMachine {
+    let mut accounts = mpl_candy_machine::accounts::UpdateCandyMachine {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
         wallet: *wallet,
     }
     .to_account_metas(None);
+    if let Some(token_mint) = token_mint {
+        accounts.push(AccountMeta::new_readonly(token_mint, false));
+    }
 
     let data = mpl_candy_machine::instruction::UpdateCandyMachine { data }.data();
     let update_ix = Instruction {
@@ -292,7 +300,7 @@ pub async fn mint_nft(
 
     if whitelist_info.set {
         accounts.push(AccountMeta::new(whitelist_info.minter_account, false));
-        if whitelist_info.burn {
+        if whitelist_info.whitelist_config.burn == BurnEveryTime {
             accounts.push(AccountMeta::new(whitelist_info.mint, false));
             accounts.push(AccountMeta::new_readonly(payer.pubkey(), true));
         }

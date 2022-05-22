@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{cmp::min, fmt::Debug, thread::sleep, time::Duration};
 
 use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
@@ -9,17 +9,22 @@ use solana_sdk::{
     transport,
 };
 
-use mpl_candy_machine::{constants::BOT_FEE, CandyMachine, CandyMachineData};
+use mpl_candy_machine::{
+    constants::BOT_FEE,
+    CandyMachine, CandyMachineData, WhitelistMintMode,
+    WhitelistMintMode::{BurnEveryTime, NeverBurn},
+};
 
 use crate::{
-    add_all_config_lines, clone_keypair,
+    add_all_config_lines, airdrop, clone_keypair,
     core::{
-        assert_acount_empty, clone_pubkey, create_mint, get_balance, get_token_balance,
-        master_edition_v2::MasterEditionV2 as MasterEditionManager, metadata, mint_to_wallets,
-        prepare_nft,
+        assert_acount_empty, clone_pubkey, create_mint, get_balance, get_mint, get_token_account,
+        get_token_balance, master_edition_v2::MasterEditionV2 as MasterEditionManager, metadata,
+        mint_to_wallets, prepare_nft,
     },
     get_account,
     helper_transactions::{remove_collection, set_collection},
+    sol,
     utils::{
         find_candy_creator, find_collection_pda, initialize_candy_machine, mint_nft,
         update_candy_machine,
@@ -103,6 +108,7 @@ impl CollectionInfo {
         candy_machine: &Pubkey,
         authority: Keypair,
     ) -> Self {
+        println!("Init Collection Info");
         let metadata_info = metadata::Metadata::new(&authority);
         metadata_info
             .create_v2(
@@ -145,15 +151,23 @@ impl CollectionInfo {
 pub struct TokenInfo {
     pub set: bool,
     pub mint: Pubkey,
+    pub authority: Keypair,
     pub auth_account: Pubkey,
     pub minter_account: Pubkey,
 }
 
 impl TokenInfo {
-    pub fn new(set: bool, mint: Pubkey, auth_account: Pubkey, minter_account: Pubkey) -> Self {
+    pub fn new(
+        set: bool,
+        mint: Pubkey,
+        authority: Keypair,
+        auth_account: Pubkey,
+        minter_account: Pubkey,
+    ) -> Self {
         TokenInfo {
             set,
             mint,
+            authority,
             auth_account,
             minter_account,
         }
@@ -162,19 +176,27 @@ impl TokenInfo {
     pub async fn init(
         context: &mut ProgramTestContext,
         set: bool,
-        authority: (Pubkey, u64),
+        authority: &Keypair,
+        authority_alloc: (Pubkey, u64),
         minter: (Pubkey, u64),
     ) -> Self {
-        let mint = create_mint(context, &authority.0, Some(&authority.0), 0, None)
+        println!("Init token");
+        let mint = create_mint(context, &authority.pubkey(), None, 0, None)
             .await
             .unwrap();
-        let atas = mint_to_wallets(context, &mint.pubkey(), vec![authority, minter])
-            .await
-            .unwrap();
+        let atas = mint_to_wallets(
+            context,
+            &mint.pubkey(),
+            authority,
+            vec![authority_alloc, minter],
+        )
+        .await
+        .unwrap();
 
         TokenInfo {
             set,
             mint: mint.pubkey(),
+            authority: clone_keypair(authority),
             auth_account: atas[0],
             minter_account: atas[1],
         }
@@ -186,6 +208,7 @@ impl Clone for TokenInfo {
         TokenInfo {
             set: self.set,
             mint: clone_pubkey(&self.mint),
+            authority: clone_keypair(&self.authority),
             auth_account: clone_pubkey(&self.auth_account),
             minter_account: clone_pubkey(&self.minter_account),
         }
@@ -198,7 +221,34 @@ pub struct WhitelistInfo {
     pub mint: Pubkey,
     pub auth_account: Pubkey,
     pub minter_account: Pubkey,
-    pub burn: bool,
+    pub whitelist_config: WhitelistConfig,
+}
+
+#[derive(Debug, Clone)]
+pub struct WhitelistConfig {
+    pub burn: WhitelistMintMode,
+    pub presale: bool,
+    pub discount_price: Option<u64>,
+}
+
+impl WhitelistConfig {
+    pub fn new(burn: WhitelistMintMode, presale: bool, discount_price: Option<u64>) -> Self {
+        WhitelistConfig {
+            burn,
+            presale,
+            discount_price,
+        }
+    }
+}
+
+impl Default for WhitelistConfig {
+    fn default() -> Self {
+        WhitelistConfig {
+            burn: NeverBurn,
+            presale: false,
+            discount_price: None,
+        }
+    }
 }
 
 impl WhitelistInfo {
@@ -207,35 +257,48 @@ impl WhitelistInfo {
         mint: Pubkey,
         auth_account: Pubkey,
         minter_account: Pubkey,
-        burn: bool,
+        whitelist_config: WhitelistConfig,
     ) -> Self {
         WhitelistInfo {
             set,
             mint,
             auth_account,
             minter_account,
-            burn,
+            whitelist_config,
         }
     }
 
     pub async fn init(
         context: &mut ProgramTestContext,
         set: bool,
-        burn: bool,
-        authority: (Pubkey, u64),
+        authority: &Keypair,
+        whitelist_config: WhitelistConfig,
+        authority_alloc: (Pubkey, u64),
         minter: (Pubkey, u64),
     ) -> Self {
-        let mint = create_mint(context, &authority.0, Some(&authority.0), 0, None)
-            .await
-            .unwrap();
-        let atas = mint_to_wallets(context, &mint.pubkey(), vec![authority, minter])
-            .await
-            .unwrap();
+        println!("Init whitelist");
+        let mint = create_mint(
+            context,
+            &authority.pubkey(),
+            Some(&authority.pubkey()),
+            0,
+            None,
+        )
+        .await
+        .unwrap();
+        let atas = mint_to_wallets(
+            context,
+            &mint.pubkey(),
+            authority,
+            vec![authority_alloc, minter],
+        )
+        .await
+        .unwrap();
 
         WhitelistInfo {
             set,
             mint: mint.pubkey(),
-            burn,
+            whitelist_config,
             auth_account: atas[0],
             minter_account: atas[1],
         }
@@ -249,7 +312,7 @@ impl Clone for WhitelistInfo {
             mint: clone_pubkey(&self.mint),
             minter_account: clone_pubkey(&self.minter_account),
             auth_account: clone_pubkey(&self.auth_account),
-            burn: self.burn,
+            whitelist_config: self.whitelist_config.clone(),
         }
     }
 }
@@ -279,12 +342,16 @@ impl CandyManager {
         context: &mut ProgramTestContext,
         collection: bool,
         token: bool,
-        whitelist: bool,
-        burn: bool,
+        whitelist: Option<WhitelistConfig>,
     ) -> Self {
+        println!("Init Candy Machine Manager");
         let candy_machine = Keypair::new();
         let authority = Keypair::new();
         let minter = Keypair::new();
+
+        airdrop(context, &authority.pubkey(), sol(10.0))
+            .await
+            .unwrap();
 
         let collection_info = CollectionInfo::init(
             context,
@@ -293,24 +360,43 @@ impl CandyManager {
             clone_keypair(&authority),
         )
         .await;
+
         let token_info = TokenInfo::init(
             context,
             token,
-            (authority.pubkey(), 10),
-            (minter.pubkey(), 1),
-        )
-        .await;
-        let whitelist_info = WhitelistInfo::init(
-            context,
-            whitelist,
-            burn,
+            &authority,
             (authority.pubkey(), 10),
             (minter.pubkey(), 1),
         )
         .await;
 
+        let whitelist_info = match whitelist {
+            Some(config) => {
+                WhitelistInfo::init(
+                    context,
+                    true,
+                    &authority,
+                    config,
+                    (authority.pubkey(), 10),
+                    (minter.pubkey(), 1),
+                )
+                .await
+            }
+            None => {
+                WhitelistInfo::init(
+                    context,
+                    false,
+                    &authority,
+                    WhitelistConfig::default(),
+                    (authority.pubkey(), 10),
+                    (minter.pubkey(), 1),
+                )
+                .await
+            }
+        };
+
         let wallet = match &token_info.set {
-            true => token_info.minter_account,
+            true => token_info.auth_account,
             false => authority.pubkey(),
         };
 
@@ -335,6 +421,7 @@ impl CandyManager {
         context: &mut ProgramTestContext,
         candy_data: CandyMachineData,
     ) -> transport::Result<()> {
+        println!("Create");
         initialize_candy_machine(
             context,
             &self.candy_machine,
@@ -350,6 +437,7 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
+        println!("Set collection");
         set_collection(
             context,
             &self.candy_machine.pubkey(),
@@ -365,6 +453,7 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
+        println!("Remove collection");
         remove_collection(
             context,
             &self.candy_machine.pubkey(),
@@ -380,6 +469,7 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
+        println!("Fill config lines");
         add_all_config_lines(context, &self.candy_machine.pubkey(), &self.authority).await
     }
 
@@ -389,15 +479,22 @@ impl CandyManager {
         new_wallet: Option<Pubkey>,
         new_data: CandyMachineData,
     ) -> transport::Result<()> {
+        println!("Update");
         if let Some(wallet) = new_wallet {
             self.wallet = wallet;
         }
+        let token_info = if self.token_info.set {
+            Some(self.token_info.mint)
+        } else {
+            None
+        };
         update_candy_machine(
             context,
             &self.candy_machine.pubkey(),
             &self.authority,
             new_data,
             &self.wallet,
+            token_info,
         )
         .await
     }
@@ -405,9 +502,8 @@ impl CandyManager {
     pub async fn mint_nft(
         &mut self,
         context: &mut ProgramTestContext,
-        minter: &Keypair,
     ) -> transport::Result<MasterEditionManager> {
-        let nft_info = prepare_nft(context, minter).await;
+        let nft_info = prepare_nft(context, &self.minter).await;
         let (candy_machine_creator, creator_bump) =
             find_candy_creator(&self.candy_machine.pubkey());
         mint_nft(
@@ -417,7 +513,7 @@ impl CandyManager {
             creator_bump,
             &self.wallet,
             &self.authority.pubkey(),
-            minter,
+            &self.minter,
             &nft_info,
             self.token_info.clone(),
             self.whitelist_info.clone(),
@@ -427,44 +523,143 @@ impl CandyManager {
         Ok(nft_info)
     }
 
-    pub async fn assert_mint_successful(
+    pub async fn mint_and_assert_successful(
         &mut self,
         context: &mut ProgramTestContext,
-        minter: &Keypair,
+        balance_change: Option<u64>,
+        auto_whitelist: bool,
     ) {
+        println!("Mint and assert successful");
         let candy_start = self.get_candy(context).await;
-        let new_nft = self.mint_nft(context, minter).await.unwrap();
+        let start_balance = get_balance(context, &self.minter.pubkey()).await;
+        let start_wallet_balance = if self.token_info.set {
+            get_token_balance(context, &self.wallet).await
+        } else {
+            get_balance(context, &self.wallet).await
+        };
+        let start_token_balance = get_token_balance(context, &self.token_info.minter_account).await;
+        let start_whitelist_balance =
+            get_token_balance(context, &self.whitelist_info.minter_account).await;
+        let new_nft = self.mint_nft(context).await.unwrap();
         let candy_end = self.get_candy(context).await;
-        assert_eq!(candy_start.items_redeemed, candy_end.items_redeemed - 1);
+        let end_balance = get_balance(context, &self.minter.pubkey()).await;
+        let end_wallet_balance = if self.token_info.set {
+            get_token_balance(context, &self.wallet).await
+        } else {
+            get_balance(context, &self.wallet).await
+        };
+        let end_token_balance = get_token_balance(context, &self.token_info.minter_account).await;
+        let end_whitelist_balance =
+            get_token_balance(context, &self.whitelist_info.minter_account).await;
         let metadata =
             metadata::Metadata::get_data_from_account(context, &new_nft.metadata_pubkey).await;
+        assert_eq!(
+            candy_start.items_redeemed,
+            candy_end.items_redeemed - 1,
+            "Items redeemed wasn't 1"
+        );
         if self.collection_info.set {
             assert_eq!(
                 &metadata.collection.as_ref().unwrap().key,
-                &self.collection_info.mint.pubkey()
+                &self.collection_info.mint.pubkey(),
+                "Collection key wasn't set correctly!"
             );
-            assert!(&metadata.collection.as_ref().unwrap().verified);
+            assert!(
+                &metadata.collection.as_ref().unwrap().verified,
+                "Collection wasn't verified!"
+            );
         } else {
-            assert!(&metadata.collection.is_none());
+            assert!(
+                &metadata.collection.is_none(),
+                "Collection was set when it shouldn't be!"
+            );
+        }
+        let sol_fees = 5000 + 5616720 + 2853600;
+        if let Some(change) = balance_change {
+            assert_eq!(
+                end_wallet_balance - start_wallet_balance,
+                change,
+                "CM wallet balance changed in a weird way!"
+            );
+
+            if self.token_info.set {
+                assert_eq!(
+                    start_token_balance - end_token_balance,
+                    change,
+                    "Token balance changed in a weird way!"
+                );
+                assert_eq!(
+                    start_balance - end_balance,
+                    sol_fees,
+                    "Sol balance changed in a different way than it should have!"
+                );
+            } else {
+                assert_eq!(
+                    start_token_balance - end_token_balance,
+                    0,
+                    "Token balance changed when it shouldn't have!"
+                );
+                assert_eq!(
+                    start_balance - end_balance,
+                    sol_fees + change,
+                    "Sol balance changed in a different way than it should have!"
+                );
+            }
+        }
+        if auto_whitelist {
+            if self.whitelist_info.set
+                && self.whitelist_info.whitelist_config.burn == BurnEveryTime
+                && start_whitelist_balance > 0
+            {
+                assert_eq!(
+                    start_whitelist_balance - end_whitelist_balance,
+                    1,
+                    "Whitelist token balance didn't decrease by 1!"
+                );
+            } else {
+                assert_eq!(
+                    start_whitelist_balance - end_whitelist_balance,
+                    0,
+                    "Whitelist token balance changed when it shouldn't have!"
+                );
+            }
         }
     }
 
-    pub async fn assert_bot_tax(&mut self, context: &mut ProgramTestContext, minter: &Keypair) {
-        let start_balance = get_balance(context, &minter.pubkey()).await;
+    pub async fn mint_and_assert_bot_tax(
+        &mut self,
+        context: &mut ProgramTestContext,
+    ) -> transport::Result<()> {
+        println!("Mint and assert bot tax");
+        let start_balance = get_balance(context, &self.minter.pubkey()).await;
         let start_token_balance = get_token_balance(context, &self.token_info.minter_account).await;
         let start_whitelist_balance =
             get_token_balance(context, &self.whitelist_info.minter_account).await;
         let candy_start = self.get_candy(context).await;
-        let new_nft = self.mint_nft(context, minter).await.unwrap();
+        let new_nft = self.mint_nft(context).await?;
         let candy_end = self.get_candy(context).await;
-        let end_balance = get_balance(context, &minter.pubkey()).await;
+        let end_balance = get_balance(context, &self.minter.pubkey()).await;
         let end_token_balance = get_token_balance(context, &self.token_info.minter_account).await;
         let end_whitelist_balance =
             get_token_balance(context, &self.whitelist_info.minter_account).await;
-        assert_eq!(start_balance - end_balance, BOT_FEE + 5000);
-        assert_eq!(start_token_balance, end_token_balance);
-        assert_eq!(start_whitelist_balance, end_whitelist_balance);
-        assert_eq!(candy_start.items_redeemed, candy_end.items_redeemed);
+        assert_eq!(
+            start_balance - end_balance,
+            BOT_FEE + 5000,
+            "Balance changed in an unexpected way for this bot tax!"
+        );
+        assert_eq!(
+            start_token_balance, end_token_balance,
+            "SPL token balance changed!!"
+        );
+        assert_eq!(
+            start_whitelist_balance, end_whitelist_balance,
+            "Whitelist token balance changed!"
+        );
+        assert_eq!(
+            candy_start.items_redeemed, candy_end.items_redeemed,
+            "Items redeemed was not 0!"
+        );
         assert_acount_empty(context, &new_nft.metadata_pubkey).await;
+        Ok(())
     }
 }

@@ -2,8 +2,13 @@ use std::str::FromStr;
 
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
-    account::Account, program_pack::Pack, pubkey::Pubkey, signature::Keypair, signer::Signer,
-    system_instruction, transaction::Transaction, transport,
+    account::Account,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    signer::{keypair::Keypair, Signer},
+    system_instruction,
+    transaction::Transaction,
+    transport,
 };
 use spl_token::state::Mint;
 
@@ -153,8 +158,6 @@ pub async fn create_associated_token_account(
         &[&context.payer],
         recent_blockhash,
     );
-
-    // connection.send_and_confirm_transaction(&tx)?;
     context.banks_client.process_transaction(tx).await.unwrap();
 
     Ok(spl_associated_token_account::get_associated_token_address(
@@ -202,18 +205,24 @@ pub async fn create_mint(
 pub async fn mint_to_wallets(
     context: &mut ProgramTestContext,
     mint_pubkey: &Pubkey,
+    authority: &Keypair,
     allocations: Vec<(Pubkey, u64)>,
 ) -> transport::Result<Vec<Pubkey>> {
     let mut atas = Vec::with_capacity(allocations.len());
 
     for i in 0..allocations.len() {
         let ata = create_associated_token_account(context, &allocations[i].0, mint_pubkey).await?;
+        // println!("Minting to wallet {}", i);
+        // println!(
+        //     "Token account ATA: {:#?}",
+        //     get_token_account(context, &ata).await.unwrap()
+        // );
         mint_tokens(
             context,
+            authority,
             mint_pubkey,
             &ata,
             allocations[i].1,
-            &allocations[i].0,
             None,
         )
         .await?;
@@ -224,28 +233,33 @@ pub async fn mint_to_wallets(
 
 pub async fn mint_tokens(
     context: &mut ProgramTestContext,
+    authority: &Keypair,
     mint: &Pubkey,
     account: &Pubkey,
     amount: u64,
-    owner: &Pubkey,
     additional_signer: Option<&Keypair>,
 ) -> transport::Result<()> {
-    let payer = clone_keypair(&context.payer);
-    let mut signing_keypairs = vec![&payer];
+    let mut signing_keypairs = vec![authority, &context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
     }
 
+    let ix = spl_token::instruction::mint_to(
+        &spl_token::id(),
+        mint,
+        account,
+        &authority.pubkey(),
+        &[],
+        amount,
+    )
+    .unwrap();
+
     let tx = Transaction::new_signed_with_payer(
-        &[
-            spl_token::instruction::mint_to(&spl_token::id(), mint, account, owner, &[], amount)
-                .unwrap(),
-        ],
-        Some(&payer.pubkey()),
+        &[ix],
+        Some(&context.payer.pubkey()),
         &signing_keypairs,
         context.last_blockhash,
     );
-
     context.banks_client.process_transaction(tx).await
 }
 
@@ -282,6 +296,14 @@ pub async fn prepare_nft(context: &mut ProgramTestContext, minter: &Keypair) -> 
         Some(&minter.pubkey()),
         0,
         Some(clone_keypair(&nft_info.mint)),
+    )
+    .await
+    .unwrap();
+    mint_to_wallets(
+        context,
+        &nft_info.mint.pubkey(),
+        minter,
+        vec![(nft_info.token, 1)],
     )
     .await
     .unwrap();

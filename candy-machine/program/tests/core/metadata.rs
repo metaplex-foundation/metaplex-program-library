@@ -78,13 +78,14 @@ impl Metadata {
             Some(clone_keypair(&self.mint)),
         )
         .await?;
-
         mint_to_wallets(
             context,
             &self.mint.pubkey(),
+            &self.authority,
             vec![(self.authority.pubkey(), 1)],
         )
         .await?;
+
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v2(
                 mpl_token_metadata::id(),
@@ -107,7 +108,6 @@ impl Metadata {
             &[&self.authority],
             context.last_blockhash,
         );
-
         context.banks_client.process_transaction(tx).await
     }
 }
