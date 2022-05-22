@@ -342,12 +342,8 @@ pub fn handle_mint_nft<'info>(
                         remaining_accounts_counter += 1;
 
                         let key_check = assert_keys_equal(whitelist_token_mint.key(), ws.mint);
-                        let owner_check = assert_keys_equal(
-                            whitelist_burn_authority.key(),
-                            *whitelist_token_account.owner,
-                        );
 
-                        if key_check.is_err() || owner_check.is_err() {
+                        if key_check.is_err() {
                             punish_bots(
                                 CandyError::IncorrectOwner,
                                 payer.to_account_info(),
