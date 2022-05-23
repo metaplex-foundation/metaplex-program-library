@@ -362,9 +362,9 @@ impl UploadHandler for BundlrHandler {
             };
             // chooses the file path based on the data type
             let file_path = match data_type {
-                DataType::Img => item.image.clone(),
+                DataType::Image => item.image.clone(),
                 DataType::Metadata => item.metadata.clone(),
-                DataType::Movie => item.animation.clone().unwrap(),
+                DataType::Animation => item.animation.clone().unwrap(),
             };
 
             let path = Path::new(&file_path);
