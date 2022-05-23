@@ -1,6 +1,7 @@
 use crate::{
     assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
     error::MetadataError,
+    pda::find_master_edition_account,
     state::{
         get_reservation_list, CollectionDetails, CollectionStatus, Data, DataV2, Edition,
         EditionMarker, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, Uses,
@@ -1318,6 +1319,7 @@ pub fn check_token_standard(
             }
         }
         None => {
+            assert_edition_is_not_mint_authority(mint_info)?;
             if mint_decimals == 0 {
                 Ok(TokenStandard::FungibleAsset)
             } else {
@@ -1345,4 +1347,16 @@ pub fn is_print_edition(
     let is_correct_type = Edition::from_account_info(edition_account_info).is_ok();
 
     is_correct_type && mint_decimals == 0 && mint_supply == 1
+}
+
+pub fn assert_edition_is_not_mint_authority(mint_account_info: &AccountInfo) -> ProgramResult {
+    let mint = Mint::unpack_from_slice(*mint_account_info.try_borrow_mut_data()?)?;
+
+    let (edition_pda, _) = find_master_edition_account(mint_account_info.key);
+
+    if mint.mint_authority == COption::Some(edition_pda) {
+        return Err(MetadataError::MissingEditionAccount.into());
+    }
+
+    Ok(())
 }

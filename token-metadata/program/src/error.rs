@@ -419,6 +419,10 @@ pub enum MetadataError {
     /// 107 - Could not determine a TokenStandard type.
     #[error("Could not determine a TokenStandard type.")]
     CouldNotDetermineTokenStandard,
+
+    /// 108 - Missing edition account for a non-fungible token type.
+    #[error("This mint account has an edition but none was provided.")]
+    MissingEditionAccount,
 }
 
 impl PrintProgramError for MetadataError {
