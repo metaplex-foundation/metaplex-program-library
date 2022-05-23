@@ -24,9 +24,9 @@ pub struct UploadDataArgs<'a> {
 
 #[derive(Debug, Clone)]
 pub enum DataType {
-    Img,
+    Image,
     Metadata,
-    Movie,
+    Animation,
 }
 
 #[derive(Debug, Clone, Serialize)]
