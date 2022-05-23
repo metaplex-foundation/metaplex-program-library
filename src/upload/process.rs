@@ -315,7 +315,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                         &asset_pairs,
                         &mut cache,
                         &indices.animation,
-                        DataType::Movie,
+                        DataType::Animation,
                         args.interrupted.clone(),
                     )
                     .await?,
