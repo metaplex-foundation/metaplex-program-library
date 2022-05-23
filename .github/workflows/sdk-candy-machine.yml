@@ -24,7 +24,7 @@ jobs:
             - 'core/**'
           package:
             - 'candy-machine/**'
-  build-lint-and-test-auction:
+  build-lint-and-test-candy-machine:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest

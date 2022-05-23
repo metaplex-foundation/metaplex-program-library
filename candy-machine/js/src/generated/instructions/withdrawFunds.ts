@@ -21,6 +21,9 @@ const withdrawFundsStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _withdrawFunds_ instruction
+ *
+ * @property [_writable_] candyMachine
+ * @property [**signer**] authority
  * @category Instructions
  * @category WithdrawFunds
  * @category generated
@@ -36,7 +39,6 @@ const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 2
  * Creates a _WithdrawFunds_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category WithdrawFunds
  * @category generated
