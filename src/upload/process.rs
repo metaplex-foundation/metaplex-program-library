@@ -274,7 +274,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                         &asset_pairs,
                         &mut cache,
                         &indices.image,
-                        DataType::Img,
+                        DataType::Image,
                         args.interrupted.clone(),
                     )
                     .await?,
