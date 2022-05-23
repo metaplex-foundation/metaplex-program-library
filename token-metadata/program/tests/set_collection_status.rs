@@ -188,7 +188,7 @@ mod set_collection_status {
     }
 
     #[tokio::test]
-    async fn update_authority_not_a_signer() {
+    async fn incorrect_update_authority() {
         let mut context = program_test().start_with_context().await;
 
         // This key will pay for the transaction, but is not the update authority.
@@ -248,7 +248,8 @@ mod set_collection_status {
         let ix = set_collection_status(
             PROGRAM_ID,
             collection_parent_nft.pubkey,
-            context.payer.pubkey(),
+            // context.payer.pubkey(),
+            additional_signer.pubkey(),
             new_status,
         );
         let tx = Transaction::new_signed_with_payer(
@@ -264,7 +265,7 @@ mod set_collection_status {
             .await
             .unwrap_err();
 
-        assert_custom_error!(err, MetadataError::UpdateAuthorityIsNotSigner);
+        assert_custom_error!(err, MetadataError::UpdateAuthorityIncorrect);
     }
 
     #[tokio::test]
