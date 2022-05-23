@@ -188,10 +188,10 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         asset_pairs.len()
     );
     println!("+--------------------+");
-    println!("| images     | {:>6} |", indices.image.len());
-    println!("| metadata   | {:>6} |", indices.metadata.len());
+    println!("| images    | {:>6} |", indices.image.len());
+    println!("| metadata  | {:>6} |", indices.metadata.len());
     if !indices.animation.is_empty() {
-        println!("| animation  | {:>6} |", indices.animation.len());
+        println!("| animation | {:>6} |", indices.animation.len());
     }
     println!("+--------------------+");
 
