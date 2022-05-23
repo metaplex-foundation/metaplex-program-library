@@ -211,7 +211,7 @@ impl BundlrHandler {
                 )?
                 .into_bytes()
             }
-            DataType::Movie => fs::read(&tx_info.file_path)?,
+            DataType::Animation => fs::read(&tx_info.file_path)?,
         };
 
         let tx = bundlr_client.create_transaction_with_tags(data, tx_info.tag);
