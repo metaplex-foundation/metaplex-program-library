@@ -30,6 +30,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -112,6 +113,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -156,6 +158,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -185,11 +188,12 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(
@@ -241,6 +245,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -343,7 +348,7 @@ mod create_master_edition {
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(

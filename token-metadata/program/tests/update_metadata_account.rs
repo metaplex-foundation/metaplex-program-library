@@ -41,6 +41,7 @@ mod update_metadata_account {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();
@@ -82,6 +83,7 @@ mod update_metadata_account {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();

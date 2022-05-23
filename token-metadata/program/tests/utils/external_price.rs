@@ -60,6 +60,7 @@ impl ExternalPrice {
             &self.price_mint,
             &context.payer.pubkey(),
             Some(&context.payer.pubkey()),
+            0,
         )
         .await?;
 

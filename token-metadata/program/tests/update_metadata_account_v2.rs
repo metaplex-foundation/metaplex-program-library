@@ -45,6 +45,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();
@@ -311,6 +312,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();
@@ -357,6 +359,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();
@@ -423,6 +426,7 @@ mod update_metadata_account_v2 {
                 None,
                 10,
                 is_mutable,
+                0,
             )
             .await
             .unwrap();

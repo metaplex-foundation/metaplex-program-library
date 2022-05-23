@@ -26,6 +26,7 @@ async fn successfully_update_nonfungible() {
             None,
             10,
             false,
+            0,
         )
         .await
         .unwrap();
@@ -82,6 +83,7 @@ async fn successfully_update_nonfungible_edition() {
             Some(vec![creator]),
             10,
             false,
+            0,
         )
         .await
         .unwrap();
@@ -134,4 +136,98 @@ async fn successfully_update_nonfungible_edition() {
         metadata.token_standard,
         Some(TokenStandard::NonFungibleEdition)
     );
+}
+
+#[tokio::test]
+async fn successfully_update_fungible_asset() {
+    let mut context = program_test().start_with_context().await;
+
+    let test_nft = Metadata::new();
+    test_nft
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            0,
+            false,
+            0,
+        )
+        .await
+        .unwrap();
+
+    let md_account = get_account(&mut context, &test_nft.pubkey).await;
+    let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+
+    // Check that token standard is not set.
+    assert_eq!(metadata.token_standard, None);
+
+    let ix = set_token_standard(
+        PROGRAM_ID,
+        test_nft.pubkey,
+        context.payer.pubkey(),
+        test_nft.mint.pubkey(),
+        None,
+    );
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    let md_account = get_account(&mut context, &test_nft.pubkey).await;
+    let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+
+    // Check that token standard has been updated successfully.
+    assert_eq!(metadata.token_standard, Some(TokenStandard::FungibleAsset));
+}
+
+#[tokio::test]
+async fn successfully_update_fungible() {
+    let mut context = program_test().start_with_context().await;
+
+    let test_nft = Metadata::new();
+    test_nft
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            0,
+            false,
+            9,
+        )
+        .await
+        .unwrap();
+
+    let md_account = get_account(&mut context, &test_nft.pubkey).await;
+    let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+
+    // Check that token standard is not set.
+    assert_eq!(metadata.token_standard, None);
+
+    let ix = set_token_standard(
+        PROGRAM_ID,
+        test_nft.pubkey,
+        context.payer.pubkey(),
+        test_nft.mint.pubkey(),
+        None,
+    );
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    let md_account = get_account(&mut context, &test_nft.pubkey).await;
+    let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+
+    // Check that token standard has been updated successfully.
+    assert_eq!(metadata.token_standard, Some(TokenStandard::Fungible));
 }

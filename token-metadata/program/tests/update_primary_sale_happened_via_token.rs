@@ -33,7 +33,7 @@ mod update_primary_sale_happened_via_token {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(&mut context, name, symbol, uri, None, 10, false)
+            .create(&mut context, name, symbol, uri, None, 10, false, 0)
             .await
             .unwrap();
 
@@ -65,7 +65,7 @@ mod update_primary_sale_happened_via_token {
         let fake_mint = Keypair::new();
         let fake_token_account = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(
@@ -96,6 +96,7 @@ mod update_primary_sale_happened_via_token {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();

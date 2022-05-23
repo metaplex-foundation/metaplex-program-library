@@ -101,7 +101,7 @@ impl EditionMarker {
         let (_authority, _) =
             Pubkey::find_program_address(vault_mint_seeds, &metaplex_token_vault_id);
 
-        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
         create_token_account(
             context,
             &self.token,
@@ -150,7 +150,7 @@ impl EditionMarker {
     }
 
     pub async fn create(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
         create_token_account(
             context,
             &self.token,

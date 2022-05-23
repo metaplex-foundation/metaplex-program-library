@@ -176,7 +176,7 @@ impl Vault {
         ];
         let (authority, _) = Pubkey::find_program_address(seeds, &metaplex_token_vault_id);
 
-        create_mint(context, &self.mint, &authority, Some(&authority)).await?;
+        create_mint(context, &self.mint, &authority, Some(&authority), 0).await?;
         create_token_account(
             context,
             &self.redeem_treasury,

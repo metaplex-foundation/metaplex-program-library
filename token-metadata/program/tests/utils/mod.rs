@@ -156,6 +156,7 @@ pub async fn create_mint(
     mint: &Keypair,
     manager: &Pubkey,
     freeze_authority: Option<&Pubkey>,
+    decimals: u8,
 ) -> transport::Result<()> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
@@ -173,7 +174,7 @@ pub async fn create_mint(
                 &mint.pubkey(),
                 manager,
                 freeze_authority,
-                0,
+                decimals,
             )
             .unwrap(),
         ],

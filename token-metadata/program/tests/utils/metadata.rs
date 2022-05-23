@@ -50,8 +50,9 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
+        decimals: u8,
     ) -> transport::Result<()> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+        create_mint(context, &self.mint, &context.payer.pubkey(), None, decimals).await?;
         create_token_account(
             context,
             &self.token,
@@ -111,6 +112,7 @@ impl Metadata {
             &self.mint,
             &context.payer.pubkey(),
             freeze_authority,
+            0,
         )
         .await?;
         create_token_account(
@@ -175,6 +177,7 @@ impl Metadata {
             &self.mint,
             &context.payer.pubkey(),
             freeze_authority,
+            0,
         )
         .await?;
         create_token_account(
