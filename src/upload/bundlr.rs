@@ -387,9 +387,9 @@ impl UploadHandler for BundlrHandler {
         let sugar_tag = Tag::new("App-Name".into(), format!("Sugar {}", crate_version!()));
 
         let image_tag = match data_type {
-            DataType::Img => Tag::new("Content-Type".into(), format!("image/{extension}")),
+            DataType::Image => Tag::new("Content-Type".into(), format!("image/{extension}")),
             DataType::Metadata => Tag::new("Content-Type".into(), "application/json".to_string()),
-            DataType::Movie => Tag::new("Content-Type".into(), format!("video/{extension}")),
+            DataType::Animation => Tag::new("Content-Type".into(), format!("video/{extension}")),
         };
 
         // upload data to bundlr
