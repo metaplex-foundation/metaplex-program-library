@@ -980,6 +980,9 @@
           },
           {
             "name": "WrongCollectionMintKey"
+          },
+          {
+            "name": "WrongGatingToken"
           }
         ]
       }

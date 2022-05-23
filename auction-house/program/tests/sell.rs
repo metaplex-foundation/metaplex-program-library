@@ -75,8 +75,6 @@ async fn sell_success() {
     assert_eq!(listing_receipt.seller, *owner_pubkey);
     assert_eq!(listing_receipt.price, 1);
     assert_eq!(listing_receipt.token_size, 1);
-
-    ()
 }
 
 #[tokio::test]

@@ -6,7 +6,7 @@ import { verifyCollection } from './actions/verifyCollection';
 
 killStuckProcess();
 
-test('buy: successful purchase for newly minted treasury mint', async (t) => {
+test('buy: successful purchase for newly minted treasury mint', async () => {
   const { payer, connection, transactionHandler } = await createPrerequisites();
 
   const {

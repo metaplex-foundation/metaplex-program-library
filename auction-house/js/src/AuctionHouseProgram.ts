@@ -10,7 +10,7 @@ export class AuctionHouseProgram extends Program {
   static readonly FEE_PAYER = 'fee_payer';
   static readonly TREASURY = 'treasury';
   static readonly SIGNER = 'signer';
-  static readonly LISTINE_RECEIPT = 'listing_receipt';
+  static readonly LISTING_RECEIPT = 'listing_receipt';
   static readonly BID_RECEIPT = 'bid_receipt';
   static readonly PURCHASE_RECEIPT = 'purchase_receipt';
 
@@ -140,7 +140,7 @@ export class AuctionHouseProgram extends Program {
 
   static async findListingReceiptAddress(sellerTradeState: PublicKey) {
     return PublicKey.findProgramAddress(
-      [Buffer.from(AuctionHouseProgram.LISTINE_RECEIPT, 'utf8'), sellerTradeState.toBuffer()],
+      [Buffer.from(AuctionHouseProgram.LISTING_RECEIPT, 'utf8'), sellerTradeState.toBuffer()],
       AuctionHouseProgram.PUBKEY,
     );
   }
