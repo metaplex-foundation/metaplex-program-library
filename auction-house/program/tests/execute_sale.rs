@@ -154,7 +154,7 @@ async fn execute_sale_existing_token_account_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), false);
+    assert!(!buyer_token_before.is_none());
     context.banks_client.process_transaction(tx).await.unwrap();
 
     let seller_after = context
@@ -164,7 +164,7 @@ async fn execute_sale_existing_token_account_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -176,7 +176,7 @@ async fn execute_sale_existing_token_account_success() {
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 }
 
@@ -315,7 +315,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
             0,
             InstructionError::Custom(6000),
         )) => (),
-        _ => assert!(false, "Expected custom error"),
+        _ => panic!("Expected custom error"),
     }
 }
 
@@ -438,7 +438,7 @@ async fn execute_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
     context.banks_client.process_transaction(tx).await.unwrap();
 
     let seller_after = context
@@ -448,7 +448,7 @@ async fn execute_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -460,7 +460,7 @@ async fn execute_sale_success() {
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 }
 
@@ -490,6 +490,10 @@ async fn auctioneer_execute_sale_success() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
+    airdrop(&mut context, &auctioneer_authority.pubkey(), ONE_SOL)
+        .await
+        .unwrap();
+
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     delegate_auctioneer(
@@ -546,7 +550,7 @@ async fn auctioneer_execute_sale_success() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
-        authority: ah.authority,
+        auctioneer_authority: auctioneer_authority.pubkey(),
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -557,7 +561,6 @@ async fn auctioneer_execute_sale_success() {
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
         auction_house_treasury: ah.auction_house_treasury,
-        auctioneer_authority: auctioneer_authority.pubkey(),
         ah_auctioneer_pda: auctioneer_pda,
         treasury_mint: ah.treasury_mint,
         program_as_signer: sell_acc.program_as_signer,
@@ -596,8 +599,8 @@ async fn auctioneer_execute_sale_success() {
 
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
-        Some(&ah_auth.pubkey()),
-        &[&ah_auth],
+        Some(&auctioneer_authority.pubkey()),
+        &[&auctioneer_authority],
         context.last_blockhash,
     );
     let seller_before = context
@@ -611,7 +614,7 @@ async fn auctioneer_execute_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
     context.banks_client.process_transaction(tx).await.unwrap();
 
     let seller_after = context
@@ -621,7 +624,7 @@ async fn auctioneer_execute_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -633,7 +636,7 @@ async fn auctioneer_execute_sale_success() {
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 }
 
@@ -712,6 +715,7 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
         .process_transaction(buy_tx)
         .await
         .unwrap();
+
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
 
@@ -721,7 +725,7 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
-        authority: ah.authority,
+        auctioneer_authority: auctioneer_authority.pubkey(),
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -732,7 +736,6 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
         auction_house_treasury: ah.auction_house_treasury,
-        auctioneer_authority: auctioneer_authority.pubkey(),
         ah_auctioneer_pda: auctioneer_pda,
         treasury_mint: ah.treasury_mint,
         program_as_signer: sell_acc.program_as_signer,
@@ -846,7 +849,7 @@ pub async fn auctioneer_execute_sale_no_delegate_fails() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
-        authority: ah.authority,
+        auctioneer_authority: auctioneer_authority.pubkey(),
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -857,7 +860,6 @@ pub async fn auctioneer_execute_sale_no_delegate_fails() {
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
         auction_house_treasury: ah.auction_house_treasury,
-        auctioneer_authority: auctioneer_authority.pubkey(),
         ah_auctioneer_pda: auctioneer_pda,
         treasury_mint: ah.treasury_mint,
         program_as_signer: sell_acc.program_as_signer,
@@ -1011,7 +1013,7 @@ async fn execute_public_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
     context
         .banks_client
         .process_transaction(first_sale_tx)
@@ -1024,7 +1026,7 @@ async fn execute_public_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -1036,7 +1038,7 @@ async fn execute_public_sale_success() {
     .unwrap();
 
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
     let new_seller = buyer;
     let public_bidder_token_account =
@@ -1052,7 +1054,7 @@ async fn execute_public_sale_success() {
         .get_account(public_bidder_token_account)
         .await
         .unwrap();
-    assert_eq!(public_bidder_token_before.is_none(), true);
+    assert!(public_bidder_token_before.is_none());
     let ((second_sell_acc, _), second_sell_tx) = sell_mint(
         &mut context,
         &ahkey,
@@ -1095,7 +1097,7 @@ async fn execute_public_sale_success() {
         .unwrap()
         .unwrap();
     let public_bidder_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(public_bidder_token_account)
             .await
@@ -1105,7 +1107,7 @@ async fn execute_public_sale_success() {
             .as_slice(),
     )
     .unwrap();
-    assert_eq!(new_seller_before.lamports < new_seller_after.lamports, true);
+    assert!(new_seller_before.lamports < new_seller_after.lamports);
     assert_eq!(public_bidder_token_after.amount, 1);
 
     let timestamp = context
@@ -1170,7 +1172,7 @@ async fn execute_public_sale_success() {
 }
 
 #[tokio::test]
-async fn execute_auction_public_sale_success() {
+async fn auctioneer_execute_public_sale_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -1195,6 +1197,10 @@ async fn execute_auction_public_sale_success() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
+    airdrop(&mut context, &auctioneer_authority.pubkey(), ONE_SOL * 2)
+        .await
+        .unwrap();
+
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     delegate_auctioneer(
@@ -1271,20 +1277,20 @@ async fn execute_auction_public_sale_success() {
         &mut context,
         &ahkey,
         &ah,
-        &ah_auth,
+        &auctioneer_authority,
         &test_metadata,
         &buyer.pubkey(),
         &test_metadata.token.pubkey(),
         &sell_acc.token_account,
         &sell_acc.seller_trade_state,
         &bid_acc.buyer_trade_state,
-        auctioneer_authority.pubkey(),
         1,
         price,
     );
-    airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
+    airdrop(&mut context, &ah.auction_house_fee_account, ONE_SOL * 10)
         .await
         .unwrap();
+
     let seller_before = context
         .banks_client
         .get_account(test_metadata.token.pubkey())
@@ -1296,12 +1302,14 @@ async fn execute_auction_public_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+
+    assert!(buyer_token_before.is_none());
     context
         .banks_client
         .process_transaction(first_sale_tx)
         .await
         .unwrap();
+
     let seller_after = context
         .banks_client
         .get_account(test_metadata.token.pubkey())
@@ -1309,7 +1317,7 @@ async fn execute_auction_public_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -1321,7 +1329,7 @@ async fn execute_auction_public_sale_success() {
     .unwrap();
 
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
     let new_seller = buyer;
     let public_bidder_token_account =
@@ -1337,7 +1345,7 @@ async fn execute_auction_public_sale_success() {
         .get_account(public_bidder_token_account)
         .await
         .unwrap();
-    assert_eq!(public_bidder_token_before.is_none(), true);
+    assert!(public_bidder_token_before.is_none());
     let ((second_sell_acc, _), second_sell_tx) = auctioneer_sell_mint(
         &mut context,
         &ahkey,
@@ -1357,14 +1365,13 @@ async fn execute_auction_public_sale_success() {
         &mut context,
         &ahkey,
         &ah,
-        &ah_auth,
+        &auctioneer_authority,
         &test_metadata,
         &public_bidder.pubkey(),
         &new_seller.pubkey(),
         &second_sell_acc.token_account,
         &second_sell_acc.seller_trade_state,
         &public_bid_acc.buyer_trade_state,
-        auctioneer_authority.pubkey(),
         1,
         price.to_owned(),
     );
@@ -1382,7 +1389,7 @@ async fn execute_auction_public_sale_success() {
         .unwrap()
         .unwrap();
     let public_bidder_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(public_bidder_token_account)
             .await
@@ -1392,7 +1399,7 @@ async fn execute_auction_public_sale_success() {
             .as_slice(),
     )
     .unwrap();
-    assert_eq!(new_seller_before.lamports < new_seller_after.lamports, true);
+    assert!(new_seller_before.lamports < new_seller_after.lamports);
     assert_eq!(public_bidder_token_after.amount, 1);
 
     let timestamp = context
@@ -1414,7 +1421,7 @@ async fn execute_auction_public_sale_success() {
 
     assert_eq!(purchase_receipt.buyer, public_bidder.pubkey());
     assert_eq!(purchase_receipt.seller, new_seller.pubkey());
-    assert_eq!(purchase_receipt.bookkeeper, ah_auth.pubkey());
+    assert_eq!(purchase_receipt.bookkeeper, auctioneer_authority.pubkey());
     assert_eq!(purchase_receipt.price, price);
     assert_eq!(purchase_receipt.created_at, timestamp);
     assert_eq!(purchase_receipt.metadata, public_sale_acc.metadata);
@@ -1457,7 +1464,7 @@ async fn execute_auction_public_sale_success() {
 }
 
 #[tokio::test]
-async fn execute_auction_public_sale_missing_scope_fails() {
+async fn auctioneer_execute_public_sale_missing_scope_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
@@ -1482,6 +1489,10 @@ async fn execute_auction_public_sale_missing_scope_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
+    airdrop(&mut context, &auctioneer_authority.pubkey(), ONE_SOL)
+        .await
+        .unwrap();
+
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
     let scopes = vec![AuthorityScope::Sell, AuthorityScope::Buy];
@@ -1559,14 +1570,13 @@ async fn execute_auction_public_sale_missing_scope_fails() {
         &mut context,
         &ahkey,
         &ah,
-        &ah_auth,
+        &auctioneer_authority,
         &test_metadata,
         &buyer.pubkey(),
         &test_metadata.token.pubkey(),
         &sell_acc.token_account,
         &sell_acc.seller_trade_state,
         &bid_acc.buyer_trade_state,
-        auctioneer_authority.pubkey(),
         1,
         price,
     );
@@ -1578,7 +1588,7 @@ async fn execute_auction_public_sale_missing_scope_fails() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
 
     let error = context
         .banks_client
@@ -1589,10 +1599,10 @@ async fn execute_auction_public_sale_missing_scope_fails() {
 }
 
 #[tokio::test]
-async fn execute_auction_public_sale_no_delegate_fails() {
+async fn auctioneer_execute_public_sale_no_delegate_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
-    let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
+    let (ah, ahkey, _ah_auth) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
     let test_metadata = Metadata::new();
@@ -1614,6 +1624,9 @@ async fn execute_auction_public_sale_no_delegate_fails() {
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
+    airdrop(&mut context, &auctioneer_authority.pubkey(), ONE_SOL)
+        .await
+        .unwrap();
 
     let price = 100_000_000;
     // Create Listing
@@ -1667,14 +1680,13 @@ async fn execute_auction_public_sale_no_delegate_fails() {
         &mut context,
         &ahkey,
         &ah,
-        &ah_auth,
+        &auctioneer_authority,
         &test_metadata,
         &buyer.pubkey(),
         &test_metadata.token.pubkey(),
         &sell_acc.token_account,
         &sell_acc.seller_trade_state,
         &bid_acc.buyer_trade_state,
-        auctioneer_authority.pubkey(),
         1,
         price,
     );

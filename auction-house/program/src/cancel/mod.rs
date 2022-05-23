@@ -24,12 +24,29 @@ pub struct Cancel<'info> {
     pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
+    #[account(
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
+            auction_house.treasury_mint.as_ref()
+        ],
+        bump=auction_house.bump,
+        has_one=authority,
+        has_one=auction_house_fee_account
+    )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            FEE_PAYER.as_bytes()
+        ],
+        bump=auction_house.fee_payer_bump
+    )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Validated in cancel_logic.
@@ -46,7 +63,7 @@ impl<'info> From<AuctioneerCancel<'info>> for Cancel<'info> {
             wallet: a.wallet,
             token_account: a.token_account,
             token_mint: a.token_mint,
-            authority: a.authority,
+            authority: a.auctioneer_authority,
             auction_house: a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             trade_state: a.trade_state,
@@ -71,17 +88,33 @@ pub struct AuctioneerCancel<'info> {
     /// Token mint account of SPL token.
     pub token_mint: Box<Account<'info, Mint>>,
 
-    /// CHECK: Validated as a signer in cancel_logic.
-    /// Auction House instance authority account.
-    pub authority: UncheckedAccount<'info>,
+    /// CHECK: Validated in ah_auctioneer_pda seeds anbd as a signer in cancel_logic.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
+    pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
+    #[account(
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
+            auction_house.treasury_mint.as_ref()
+        ],
+        bump=auction_house.bump,
+        has_one=auction_house_fee_account
+    )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Validated in cancel_logic.
     /// Auction House instance fee account.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=auction_house.fee_payer_bump)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            FEE_PAYER.as_bytes()
+        ],
+        bump=auction_house.fee_payer_bump
+    )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Validated in cancel_logic.
@@ -90,12 +123,15 @@ pub struct AuctioneerCancel<'info> {
     pub trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Validated in cancel_logic.
-    /// The auctioneer program PDA running this auction.
-    pub auctioneer_authority: UncheckedAccount<'info>,
-
-    /// CHECK: Validated in cancel_logic.
     /// The auctioneer PDA owned by Auction House storing scopes.
-    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], bump = auction_house.auctioneer_pda_bump)]
+    #[account(
+        seeds = [
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
+            auctioneer_authority.key().as_ref()
+        ],
+        bump = auction_house.auctioneer_pda_bump
+    )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -103,7 +139,7 @@ pub struct AuctioneerCancel<'info> {
 
 // Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
 pub fn cancel<'info>(
-    mut ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
+    ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
@@ -114,7 +150,7 @@ pub fn cancel<'info>(
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
-    cancel_logic(&mut ctx.accounts, buyer_price, token_size)
+    cancel_logic(ctx.accounts, buyer_price, token_size)
 }
 
 pub fn auctioneer_cancel<'info>(
@@ -142,6 +178,7 @@ pub fn auctioneer_cancel<'info>(
     cancel_logic(&mut accounts, buyer_price, token_size)
 }
 
+#[allow(clippy::needless_lifetimes)]
 fn cancel_logic<'info>(
     accounts: &mut Cancel<'info>,
     buyer_price: u64,
@@ -213,5 +250,6 @@ fn cancel_logic<'info>(
         .checked_add(curr_lamp)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
     sol_memset(*trade_state.try_borrow_mut_data()?, 0, TRADE_STATE_SIZE);
+
     Ok(())
 }
