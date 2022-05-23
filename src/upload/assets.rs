@@ -11,8 +11,8 @@ use std::{
     sync::Arc,
 };
 
+use crate::common::*;
 use crate::validate::format::Metadata;
-use crate::{common::*, upload::UploadError};
 
 pub struct UploadDataArgs<'a> {
     pub bundlr_client: Arc<Bundlr<SolanaSigner>>,
@@ -75,7 +75,7 @@ pub fn get_data_size(assets_dir: &Path, extension: &str) -> Result<u64> {
     Ok(total_size)
 }
 
-pub fn count_files(assets_dir: &str) -> Result<Vec<DirEntry>> {
+pub fn list_files(assets_dir: &str) -> Result<Vec<DirEntry>> {
     let files = fs::read_dir(assets_dir)
         .map_err(|_| anyhow!("Failed to read assets directory"))?
         .filter_map(|entry| entry.ok())
@@ -96,7 +96,7 @@ pub fn count_files(assets_dir: &str) -> Result<Vec<DirEntry>> {
 
 pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
     // filters out directories and hidden files
-    let filtered_files = count_files(assets_dir)?;
+    let filtered_files = list_files(assets_dir)?;
 
     let paths = filtered_files
         .into_iter()
@@ -268,19 +268,17 @@ pub fn get_updated_metadata(
         if file.uri.eq(&metadata.image) {
             file.uri = image_link.to_string();
         }
+        if metadata.animation_url.clone().is_some()
+            && file.uri.eq(&metadata.animation_url.clone().unwrap())
+        {
+            file.uri = animation_link.clone().unwrap().to_string();
+        }
     }
 
     metadata.image = image_link.to_string();
 
-    if let Some(animation) = animation_link.clone() {
+    if animation_link.is_some() {
         metadata.animation_url = animation_link;
-        if metadata.properties.files.len() == 1 {
-            let error = UploadError::AnimationFileError(metadata_file.to_string()).into();
-            error!("{error}");
-            return Err(error);
-        } else {
-            metadata.properties.files[1].uri = animation;
-        }
     }
 
     Ok(serde_json::to_string(&metadata).unwrap())
