@@ -58,7 +58,7 @@ impl AWSHandler {
                 get_updated_metadata(&info.file_path, &info.image_link, info.animation_link)?
                     .into_bytes()
             }
-            DataType::Movie => fs::read(&info.file_path)?,
+            DataType::Animation => fs::read(&info.file_path)?,
         };
 
         let key = bs58::encode(&info.file_path).into_string();
