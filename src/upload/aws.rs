@@ -130,9 +130,9 @@ impl UploadHandler for AWSHandler {
         };
 
         let content_type = match data_type {
-            DataType::Img => format!("image/{}", extension),
+            DataType::Image => format!("image/{}", extension),
             DataType::Metadata => "application/json".to_string(),
-            DataType::Movie => format!("video/{}", extension),
+            DataType::Animation => format!("video/{}", extension),
         };
 
         println!("\nSending data: (Ctrl+C to abort)");
