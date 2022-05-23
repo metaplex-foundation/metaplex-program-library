@@ -5,19 +5,19 @@ use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER, TREASURY},
     //auction_house::{
-    cpi::accounts::ExecuteSaleWithAuctioneer as AHExecuteSale,
+    cpi::accounts::AuctioneerExecuteSale as AHExecuteSale,
     program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
     //program::auction_house,
     //},
     AuctionHouse,
 };
 
-use crate::{constants::*, sell::config::*, utils::*};
+use crate::{authorize::*, constants::*, sell::config::*, utils::*};
 
-use solana_program::program::invoke;
+use solana_program::program::invoke_signed;
 
 #[derive(Accounts)]
-#[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(escrow_payment_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, auctioneer_authority_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct AuctioneerExecuteSale<'info> {
     /// Auction House Program
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
@@ -85,10 +85,10 @@ pub struct AuctioneerExecuteSale<'info> {
 
     /// CHECK: Verified through CPI
     /// Auction House instance authority.
-    pub authority: UncheckedAccount<'info>,
+    //pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -118,7 +118,8 @@ pub struct AuctioneerExecuteSale<'info> {
 
     /// CHECK: Verified through CPI
     /// The auctioneer program PDA running this auction.
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref()], bump=auctioneer_authority_bump)]
+    pub auctioneer_authority: Account<'info, AuctioneerAuthority>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
@@ -141,6 +142,7 @@ pub fn auctioneer_execute_sale<'info>(
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
+    auctioneer_authority_bump: u8,
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
@@ -160,7 +162,7 @@ pub fn auctioneer_execute_sale<'info>(
             .seller_payment_receipt_account
             .to_account_info(),
         buyer_receipt_token_account: ctx.accounts.buyer_receipt_token_account.to_account_info(),
-        authority: ctx.accounts.authority.to_account_info(),
+        //authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         auction_house_treasury: ctx.accounts.auction_house_treasury.to_account_info(),
@@ -176,7 +178,7 @@ pub fn auctioneer_execute_sale<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
 
-    let execute_sale_data = mpl_auction_house::instruction::ExecuteSaleWithAuctioneer {
+    let execute_sale_data = mpl_auction_house::instruction::AuctioneerExecuteSale {
         escrow_payment_bump,
         _free_trade_state_bump: free_trade_state_bump,
         program_as_signer_bump,
@@ -195,10 +197,39 @@ pub fn auctioneer_execute_sale<'info>(
                 pair.0
             })
             .collect(),
+        //accounts: cpi_accounts.to_account_metas(None),
         data: execute_sale_data.data(),
     };
 
-    invoke(&ix, &cpi_accounts.to_account_infos())?;
+    let auction_house = &ctx.accounts.auction_house;
+    let ah_key = auction_house.key();
+    let auctioneer_authority = &ctx.accounts.auctioneer_authority;
+    let aa_key = auctioneer_authority.key();
+
+    // let auctioneer_seeds = [
+    //     AUCTIONEER.as_bytes(),
+    //     ah_key.as_ref(),
+    //     aa_key.as_ref(),
+    //     &[auction_house.auctioneer_pda_bump],
+    // ];
+
+    let auctioneer_seeds = [
+        AUCTIONEER.as_bytes(),
+        ah_key.as_ref(),
+        &[auctioneer_authority.bump],
+    ];
+
+    invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
+    //let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
+    // mpl_auction_house::cpi::auctioneer_execute_sale(
+    //     cpi_ctx.with_signer(&[&auctioneer_seeds]),
+    //     escrow_payment_bump,
+    //     free_trade_state_bump,
+    //     program_as_signer_bump,
+    //     buyer_price,
+    //     token_size,
+    // )
 
     Ok(())
 }

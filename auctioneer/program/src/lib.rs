@@ -1,3 +1,4 @@
+pub mod authorize;
 pub mod bid;
 pub mod cancel;
 pub mod constants;
@@ -9,7 +10,7 @@ pub mod sell;
 pub mod utils;
 pub mod withdraw;
 
-use crate::{bid::*, cancel::*, deposit::*, execute_sale::*, sell::*, withdraw::*};
+use crate::{authorize::*, bid::*, cancel::*, deposit::*, execute_sale::*, sell::*, withdraw::*};
 
 use anchor_lang::prelude::*;
 
@@ -22,6 +23,13 @@ declare_id!("neer8g6yJq2mQM6KbnViEDAD4gr3gRZyMMf4F2p3MEh");
 #[program]
 pub mod auctioneer {
     use super::*;
+
+    /// Authorize the Auctioneer to manage an Auction House.
+    pub fn authorize<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerAuthorize<'info>>,
+    ) -> Result<()> {
+        auctioneer_authorize(ctx)
+    }
 
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
     pub fn withdraw<'info>(
@@ -57,6 +65,7 @@ pub mod auctioneer {
         escrow_payment_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
+        auctioneer_authority_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
@@ -65,6 +74,7 @@ pub mod auctioneer {
             escrow_payment_bump,
             free_trade_state_bump,
             program_as_signer_bump,
+            auctioneer_authority_bump,
             buyer_price,
             token_size,
         )

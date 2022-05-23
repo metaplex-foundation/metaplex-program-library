@@ -3,6 +3,7 @@ pub mod common;
 pub mod utils;
 
 use common::*;
+use mpl_auctioneer::pda::*;
 use solana_sdk::{clock::UnixTimestamp, signature::Keypair, sysvar};
 use std::time::SystemTime;
 use utils::{helpers::default_scopes, setup_functions::*};
@@ -59,7 +60,8 @@ async fn cancel_listing() {
         .unwrap();
     let token =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &mpl_auctioneer::id());
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerCancel {
         auction_house_program: mpl_auction_house::id(),
         auction_house: ahkey,
@@ -70,7 +72,7 @@ async fn cancel_listing() {
         token_program: spl_token::id(),
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
-        auctioneer_authority: mpl_auctioneer::id(),
+        auctioneer_authority: auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -200,7 +202,8 @@ async fn cancel_bid() {
         .process_transaction(buy_tx)
         .await
         .unwrap();
-    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &mpl_auctioneer::id());
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerCancel {
         auction_house_program: mpl_auction_house::id(),
         auction_house: ahkey,
@@ -211,7 +214,7 @@ async fn cancel_bid() {
         token_program: spl_token::id(),
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
-        auctioneer_authority: mpl_auctioneer::id(),
+        auctioneer_authority: auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);

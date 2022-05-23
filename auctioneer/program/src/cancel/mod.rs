@@ -5,7 +5,7 @@ use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
     //auction_house::{
-    cpi::accounts::CancelWithAuctioneer as AHCancel,
+    cpi::accounts::AuctioneerCancel as AHCancel,
     program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
     //program::auction_house,
     //},
@@ -74,7 +74,7 @@ pub fn auctioneer_cancel<'info>(
         wallet: ctx.accounts.wallet.to_account_info(),
         token_account: ctx.accounts.token_account.to_account_info(),
         token_mint: ctx.accounts.token_mint.to_account_info(),
-        authority: ctx.accounts.authority.to_account_info(),
+        //authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         trade_state: ctx.accounts.trade_state.to_account_info(),
@@ -83,7 +83,7 @@ pub fn auctioneer_cancel<'info>(
         token_program: ctx.accounts.token_program.to_account_info(),
     };
 
-    let cancel_data = mpl_auction_house::instruction::CancelWithAuctioneer {
+    let cancel_data = mpl_auction_house::instruction::AuctioneerCancel {
         buyer_price,
         token_size,
     };

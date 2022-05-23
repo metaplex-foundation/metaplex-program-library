@@ -72,24 +72,64 @@ createErrorFromCodeLookup.set(0x1772, () => new AuctionEndedError());
 createErrorFromNameLookup.set('AuctionEnded', () => new AuctionEndedError());
 
 /**
- * BidTooLow: 'The bid was lower than the highest bid.'
+ * AuctionActive: 'Auction has not ended yet'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AuctionActiveError extends Error {
+  readonly code: number = 0x1773;
+  readonly name: string = 'AuctionActive';
+  constructor() {
+    super('Auction has not ended yet');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AuctionActiveError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1773, () => new AuctionActiveError());
+createErrorFromNameLookup.set('AuctionActive', () => new AuctionActiveError());
+
+/**
+ * BidTooLow: 'The bid was lower than the highest bid'
  *
  * @category Errors
  * @category generated
  */
 export class BidTooLowError extends Error {
-  readonly code: number = 0x1773;
+  readonly code: number = 0x1774;
   readonly name: string = 'BidTooLow';
   constructor() {
-    super('The bid was lower than the highest bid.');
+    super('The bid was lower than the highest bid');
     if (typeof Error.captureStackTrace === 'function') {
       Error.captureStackTrace(this, BidTooLowError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1773, () => new BidTooLowError());
+createErrorFromCodeLookup.set(0x1774, () => new BidTooLowError());
 createErrorFromNameLookup.set('BidTooLow', () => new BidTooLowError());
+
+/**
+ * SignerNotAuth: 'The signer must be the Auction House authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SignerNotAuthError extends Error {
+  readonly code: number = 0x1775;
+  readonly name: string = 'SignerNotAuth';
+  constructor() {
+    super('The signer must be the Auction House authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SignerNotAuthError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1775, () => new SignerNotAuthError());
+createErrorFromNameLookup.set('SignerNotAuth', () => new SignerNotAuthError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::Pubkey;
-use mpl_auction_house::constants::PREFIX;
+use mpl_auction_house::constants::{AUCTIONEER, PREFIX};
 
 use crate::{constants::*, id};
 
@@ -23,4 +23,8 @@ pub fn find_listing_config_address(
         ],
         &id(),
     )
+}
+
+pub fn find_auctioneer_authority_seeds(auction_house: &Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(&[AUCTIONEER.as_bytes(), auction_house.as_ref()], &id())
 }

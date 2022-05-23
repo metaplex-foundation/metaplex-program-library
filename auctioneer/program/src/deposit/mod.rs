@@ -5,7 +5,7 @@ use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
     //auction_house::{
-    cpi::accounts::DepositWithAuctioneer as AHDeposit,
+    cpi::accounts::AuctioneerDeposit as AHDeposit,
     program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
     //program::auction_house,
     //},
@@ -78,7 +78,7 @@ pub fn auctioneer_deposit<'info>(
         transfer_authority: ctx.accounts.transfer_authority.to_account_info(),
         escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
         treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-        authority: ctx.accounts.authority.to_account_info(),
+        //authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),
@@ -89,5 +89,5 @@ pub fn auctioneer_deposit<'info>(
     };
 
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    mpl_auction_house::cpi::deposit_with_auctioneer(cpi_ctx, escrow_payment_bump, amount)
+    mpl_auction_house::cpi::auctioneer_deposit(cpi_ctx, escrow_payment_bump, amount)
 }

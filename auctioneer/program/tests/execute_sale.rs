@@ -6,7 +6,6 @@ use common::*;
 use utils::{helpers::default_scopes, setup_functions::*};
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
-use mpl_auction_house::pda::find_auctioneer_pda;
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_sdk::signer::Signer;
 
@@ -17,8 +16,10 @@ use solana_program::{instruction::Instruction, system_program, sysvar};
 use solana_program::program_pack::Pack;
 
 use mpl_auction_house::pda::{
-    find_escrow_payment_address, find_program_as_signer_address, find_trade_state_address,
+    find_auctioneer_pda, find_escrow_payment_address, find_program_as_signer_address,
+    find_trade_state_address,
 };
+use mpl_auctioneer::pda::find_auctioneer_authority_seeds;
 use solana_sdk::{clock::UnixTimestamp, signature::Keypair, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::state::Account;
@@ -93,7 +94,8 @@ async fn execute_sale_early_failure() {
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
 
-    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &mpl_auctioneer::id());
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerExecuteSale {
         auction_house_program: mpl_auction_house::id(),
         listing_config: listing_config_address,
@@ -102,7 +104,7 @@ async fn execute_sale_early_failure() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
-        authority: ah.authority,
+        //authority: ah.authority,
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -118,7 +120,7 @@ async fn execute_sale_early_failure() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: mpl_auctioneer::id(),
+        auctioneer_authority: auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -140,6 +142,7 @@ async fn execute_sale_early_failure() {
             escrow_payment_bump: escrow_bump,
             free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
+            auctioneer_authority_bump: aa_bump,
             token_size: 1,
             buyer_price: 100_000_000,
         }
@@ -270,7 +273,8 @@ async fn execute_sale_success() {
 
     context.warp_to_slot(120 * 400).unwrap();
 
-    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &mpl_auctioneer::id());
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerExecuteSale {
         auction_house_program: mpl_auction_house::id(),
         listing_config: listing_config_address,
@@ -279,7 +283,7 @@ async fn execute_sale_success() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
-        authority: ah.authority,
+        //authority: ah.authority,
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -295,7 +299,7 @@ async fn execute_sale_success() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: mpl_auctioneer::id(),
+        auctioneer_authority: auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -310,6 +314,7 @@ async fn execute_sale_success() {
     );
     let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (_, pas_bump) = find_program_as_signer_address();
+    let (_, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
 
     let instruction = Instruction {
         program_id: mpl_auctioneer::id(),
@@ -317,6 +322,7 @@ async fn execute_sale_success() {
             escrow_payment_bump: escrow_bump,
             free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
+            auctioneer_authority_bump: aa_bump,
             token_size: 1,
             buyer_price: 100_000_000,
         }
@@ -465,7 +471,8 @@ async fn execute_sale_two_bids_success() {
 
     context.warp_to_slot(120 * 400).unwrap();
 
-    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &mpl_auctioneer::id());
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerExecuteSale {
         auction_house_program: mpl_auction_house::id(),
         listing_config: listing_config_address,
@@ -474,7 +481,7 @@ async fn execute_sale_two_bids_success() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
-        authority: ah.authority,
+        //authority: ah.authority,
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid1_acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -490,7 +497,7 @@ async fn execute_sale_two_bids_success() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: mpl_auctioneer::id(),
+        auctioneer_authority: auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -512,6 +519,7 @@ async fn execute_sale_two_bids_success() {
             escrow_payment_bump: escrow_bump,
             free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
+            auctioneer_authority_bump: aa_bump,
             token_size: 1,
             buyer_price: 100_000_001,
         }

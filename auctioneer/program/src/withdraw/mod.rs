@@ -8,7 +8,7 @@ use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
     //auction_house::{
-    cpi::accounts::WithdrawWithAuctioneer as AHWithdraw,
+    cpi::accounts::AuctioneerWithdraw as AHWithdraw,
     program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
     //program::auction_house,
     //},
@@ -81,7 +81,7 @@ pub fn auctioneer_withdraw<'info>(
         receipt_account: ctx.accounts.receipt_account.to_account_info(),
         escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
         treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-        authority: ctx.accounts.authority.to_account_info(),
+        //authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),
@@ -92,7 +92,7 @@ pub fn auctioneer_withdraw<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
 
-    let withdraw_data = mpl_auction_house::instruction::WithdrawWithAuctioneer {
+    let withdraw_data = mpl_auction_house::instruction::AuctioneerWithdraw {
         escrow_payment_bump,
         amount,
     };

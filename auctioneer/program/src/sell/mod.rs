@@ -9,7 +9,7 @@ use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
     //auction_house::{
-    cpi::accounts::SellWithAuctioneer as AHSell,
+    cpi::accounts::AuctioneerSell as AHSell,
     program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
     //program::auction_house,
     //},
@@ -121,7 +121,7 @@ pub fn auctioneer_sell<'info>(
         wallet: ctx.accounts.wallet.to_account_info(),
         token_account: ctx.accounts.token_account.to_account_info(),
         metadata: ctx.accounts.metadata.to_account_info(),
-        authority: ctx.accounts.authority.to_account_info(),
+        //authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         seller_trade_state: ctx.accounts.seller_trade_state.to_account_info(),
@@ -134,10 +134,12 @@ pub fn auctioneer_sell<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
 
-    let sell_data = mpl_auction_house::instruction::SellWithAuctioneer {
+    let sell_data = mpl_auction_house::instruction::AuctioneerSell {
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
+        // NOTE: Meaningless field that is ignored for AuctioneerSell
+        buyer_price: 1,
         token_size,
     };
 

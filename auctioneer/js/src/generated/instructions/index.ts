@@ -1,3 +1,4 @@
+export * from './authorize';
 export * from './buy';
 export * from './cancel';
 export * from './deposit';

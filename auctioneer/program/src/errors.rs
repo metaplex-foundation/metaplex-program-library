@@ -19,6 +19,10 @@ pub enum AuctioneerError {
     AuctionActive,
 
     // 6003
-    #[msg("The bid was lower than the highest bid.")]
+    #[msg("The bid was lower than the highest bid")]
     BidTooLow,
+
+    // 6004
+    #[msg("The signer must be the Auction House authority")]
+    SignerNotAuth,
 }
