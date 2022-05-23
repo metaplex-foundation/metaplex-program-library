@@ -452,9 +452,9 @@ impl UploadHandler for BundlrHandler {
                         let item = cache.items.0.get_mut(&val.0).unwrap();
 
                         match data_type {
-                            DataType::Img => item.image_link = link,
+                            DataType::Image => item.image_link = link,
                             DataType::Metadata => item.metadata_link = link,
-                            DataType::Movie => item.animation_link = Some(link),
+                            DataType::Animation => item.animation_link = Some(link),
                         }
                         // updates the progress bar
                         pb.inc(1);
