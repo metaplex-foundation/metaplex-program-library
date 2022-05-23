@@ -51,7 +51,7 @@ impl AWSHandler {
     /// Send an object to AWS and wait for a response.
     async fn send_to_aws(aws_client: Arc<Client>, info: ObjectInfo) -> Result<(String, String)> {
         let data = match info.data_type {
-            DataType::Img => fs::read(&info.file_path)?,
+            DataType::Image => fs::read(&info.file_path)?,
             DataType::Metadata => {
                 // replaces the image link without modifying the original file to avoid
                 // changing the hash of the metadata file
