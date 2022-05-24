@@ -20,7 +20,7 @@ use crate::config::{
 };
 use crate::constants::*;
 use crate::setup::{setup_client, sugar_setup};
-use crate::upload::count_files;
+use crate::upload::list_files;
 use crate::utils::{check_spl_token, check_spl_token_account};
 use crate::validate::Metadata;
 
@@ -127,8 +127,8 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // checks if we have an assets dir and count the number of files
     // assumes 0 in case of error since assets_dir is optional
-    let num_files = match count_files(&args.assets_dir) {
-        Ok(number) => number,
+    let num_files = match list_files(&args.assets_dir) {
+        Ok(number) => number.len(),
         _ => 0,
     };
 

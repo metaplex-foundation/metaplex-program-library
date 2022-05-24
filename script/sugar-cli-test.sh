@@ -493,7 +493,7 @@ if [ $RESUME -eq 0 ]; then
             fi
             NAME=$(($i + 1))
             METADATA_HASH=`sha256sum "$ASSETS_DIR/$i.json" | cut -d ' ' -f 1`
-            echo -n "\"$i\":{\"name\":\"[$TIMESTAMP] Test #$NAME\",\"media_hash\":\"$MEDIA_HASH\",\"media_link\":\"$PNG\",\"metadata_hash\":\"$METADATA_HASH\",\"metadata_link\":\"$METADATA_URL\",\"onChain\":false}" >> $CACHE_FILE
+            echo -n "\"$i\":{\"name\":\"[$TIMESTAMP] Test #$NAME\",\"image_hash\":\"$MEDIA_HASH\",\"image_link\":\"$PNG\",\"metadata_hash\":\"$METADATA_HASH\",\"metadata_link\":\"$METADATA_URL\",\"onChain\":false}" >> $CACHE_FILE
         done
 
         echo -n "}}" >> $CACHE_FILE

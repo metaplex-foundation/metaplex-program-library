@@ -6,14 +6,11 @@
 [![Build and Release](https://github.com/metaplex-foundation/sugar/actions/workflows/build.yml/badge.svg)](https://github.com/metaplex-foundation/sugar/actions/workflows/build.yml)
 [![License](https://img.shields.io/crates/l/sugar-cli)](https://github.com/metaplex-foundation/sugar/blob/main/LICENSE)
 
-
 # Sugar: A Candy Machine CLI
 
 <p align="center">
   <img src="animation.gif">
 </p>
-
-
 
 Sugar is an alternative to the current Metaplex Candy Machine CLI. It has been written from the ground up and includes several improvements:
 
@@ -31,10 +28,13 @@ To install, either download a binary, install from Crates.io, or install from so
 
 > **Dependencies:**
 > When installing on Ubuntu or WSL (Windows Subsystem Linux), you may need to install some additional dependencies:
+>
 > ```bash
 > sudo apt install libssl-dev libudev-dev pkg-config
 > ```
+>
 > macOS users may need to install the OpenSSL library, which can be done using [Homebrew](https://brew.sh):
+>
 > ```bash
 > brew install openssl@3
 > ```
@@ -42,6 +42,7 @@ To install, either download a binary, install from Crates.io, or install from so
 ### Binaries
 
 Binaries for the supported OS can be found at:
+
 - [Sugar Releases](https://github.com/metaplex-foundation/sugar/releases)
 
 To install Sugar pre-built binary on a supported OS, run the following in your terminal:

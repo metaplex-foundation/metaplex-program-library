@@ -30,4 +30,7 @@ pub enum UploadError {
         "Mismatch value for \"{0}\" property in file \"{1}\": expected \"{2}\", found \"{3}\""
     )]
     MismatchValue(String, String, String, String),
+
+    #[error("Metadata file {0} is not formatted correctly for animations.")]
+    AnimationFileError(String),
 }
