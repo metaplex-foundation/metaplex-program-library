@@ -52,7 +52,7 @@ mod set_collection_status {
             .unwrap();
 
         let current_status = CollectionStatus::None;
-        let new_status = CollectionStatus::Announced;
+        let new_status = CollectionStatus::Tradeable;
 
         let md_account = context
             .banks_client
@@ -145,7 +145,7 @@ mod set_collection_status {
             .unwrap();
 
         let current_status = CollectionStatus::None;
-        let new_status = CollectionStatus::Announced;
+        let new_status = CollectionStatus::Tradeable;
 
         let md_account = context
             .banks_client
@@ -225,7 +225,7 @@ mod set_collection_status {
             .unwrap();
 
         let current_status = CollectionStatus::None;
-        let new_status = CollectionStatus::Announced;
+        let new_status = CollectionStatus::Tradeable;
 
         let md_account = context
             .banks_client
@@ -277,7 +277,7 @@ mod set_collection_status {
 
         let fake_metadata = Keypair::new();
 
-        let new_status = CollectionStatus::Announced;
+        let new_status = CollectionStatus::Tradeable;
 
         let ix = set_collection_status(
             PROGRAM_ID,

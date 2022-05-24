@@ -153,9 +153,6 @@ pub enum CollectionDetails {
 #[derive(BorshSerialize, BorshDeserialize, Copy, PartialEq, Debug, Clone)]
 pub enum CollectionStatus {
     None,
-    Announced,
-    Preminting,
-    Minting,
     Tradeable,
 }
 
