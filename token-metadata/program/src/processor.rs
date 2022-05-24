@@ -864,9 +864,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     }
 
     // This handler can only verify non-sized NFTs
-    if let CollectionDetails::CollectionDetailsV1 { status: _, size: _ } =
-        collection_metadata.collection_details
-    {
+    if let CollectionDetails::V1 { status: _, size: _ } = collection_metadata.collection_details {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -977,9 +975,7 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     }
 
     // This handler can only unverify non-sized NFTs
-    if let CollectionDetails::CollectionDetailsV1 { status: _, size: _ } =
-        collection_data.collection_details
-    {
+    if let CollectionDetails::V1 { status: _, size: _ } = collection_data.collection_details {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -1472,9 +1468,7 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     )?;
 
     // This handler can only verify non-sized NFTs
-    if let CollectionDetails::CollectionDetailsV1 { status: _, size: _ } =
-        collection_data.collection_details
-    {
+    if let CollectionDetails::V1 { status: _, size: _ } = collection_data.collection_details {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -1482,8 +1476,8 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     // size on the Collection Parent.
     match collection_data.collection_details {
         CollectionDetails::None => (),
-        CollectionDetails::CollectionDetailsV1 { status, size } => {
-            collection_data.collection_details = CollectionDetails::CollectionDetailsV1 {
+        CollectionDetails::V1 { status, size } => {
+            collection_data.collection_details = CollectionDetails::V1 {
                 status,
                 size: size + 1,
             };
@@ -1811,11 +1805,11 @@ pub fn set_collection_status(
         CollectionDetails::None => {
             return Err(MetadataError::NotACollectionParent.into());
         }
-        CollectionDetails::CollectionDetailsV1 {
+        CollectionDetails::V1 {
             status: _current_status,
             size,
         } => {
-            metadata.collection_details = CollectionDetails::CollectionDetailsV1 { status, size };
+            metadata.collection_details = CollectionDetails::V1 { status, size };
         }
     }
 
@@ -1865,11 +1859,11 @@ pub fn set_collection_size(
         CollectionDetails::None => {
             return Err(MetadataError::NotACollectionParent.into());
         }
-        CollectionDetails::CollectionDetailsV1 {
+        CollectionDetails::V1 {
             status,
             size: _current_size,
         } => {
-            metadata.collection_details = CollectionDetails::CollectionDetailsV1 { status, size };
+            metadata.collection_details = CollectionDetails::V1 { status, size };
         }
     }
 

@@ -147,7 +147,7 @@ pub enum UseMethod {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum CollectionDetails {
     None,
-    CollectionDetailsV1 { status: CollectionStatus, size: u64 },
+    V1 { status: CollectionStatus, size: u64 },
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Copy, PartialEq, Debug, Clone)]

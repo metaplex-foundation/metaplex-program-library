@@ -555,9 +555,7 @@ mod size_tracking {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
-            parent_metadata.collection_details
-        {
+        if let CollectionDetails::V1 { status: _, size } = parent_metadata.collection_details {
             assert_eq!(size, 0);
         } else {
             panic!("CollectionDetails is not a CollectionDetails");
@@ -580,9 +578,7 @@ mod size_tracking {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        if let CollectionDetails::CollectionDetailsV1 { status: _, size } =
-            parent_metadata.collection_details
-        {
+        if let CollectionDetails::V1 { status: _, size } = parent_metadata.collection_details {
             assert_eq!(size, 1);
         } else {
             panic!("CollectionDetails is not a CollectionDetails");

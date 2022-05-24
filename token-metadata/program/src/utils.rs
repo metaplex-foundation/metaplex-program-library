@@ -963,7 +963,7 @@ pub fn process_create_metadata_accounts_logic(
     metadata.collection = data.collection;
 
     if is_collection_parent {
-        metadata.collection_details = CollectionDetails::CollectionDetailsV1 {
+        metadata.collection_details = CollectionDetails::V1 {
             status: CollectionStatus::None,
             size: 0,
         };
@@ -1252,8 +1252,8 @@ pub fn increment_collection_size(
             msg!("No collection details found. Cannot increment collection size.");
             Err(MetadataError::UnsizedCollection.into())
         }
-        CollectionDetails::CollectionDetailsV1 { status, size } => {
-            metadata.collection_details = CollectionDetails::CollectionDetailsV1 {
+        CollectionDetails::V1 { status, size } => {
+            metadata.collection_details = CollectionDetails::V1 {
                 status,
                 size: size + 1,
             };
@@ -1272,8 +1272,8 @@ pub fn decrement_collection_size(
             msg!("No collection details found. Cannot increment collection size.");
             Err(MetadataError::UnsizedCollection.into())
         }
-        CollectionDetails::CollectionDetailsV1 { status, size } => {
-            metadata.collection_details = CollectionDetails::CollectionDetailsV1 {
+        CollectionDetails::V1 { status, size } => {
+            metadata.collection_details = CollectionDetails::V1 {
                 status,
                 size: size - 1,
             };
