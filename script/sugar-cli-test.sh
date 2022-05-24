@@ -77,6 +77,7 @@ function default_settings() {
 
 function max_settings() {
     MANUAL_CACHE="Y"
+    MULTIPLE=1
 
     RESET="Y"
     EXT="png"
@@ -116,17 +117,18 @@ CYN "----------------------------------------"
 echo ""
 CYN "Test template:"
 echo "1. interactive"
-echo "2. devnet (default)"
-echo "3. mainnet-beta"
-echo "4. devnet [manual cache]"
-echo "5. devnet [hidden settings]"
-echo "6. devnet [launch]"
+echo "2. mainnet-beta"
+echo "3. devnet (default)"
+echo "4. manual cache"
+echo "5. hidden settings"
+echo "6. animation"
+echo "7. sugar launch"
 
 if [ -f "$RESUME_FILE" ]; then
-    echo "7. previous run ($(RED "resume"))"
-    echo -n "$(CYN "Select test template [1-6]") (default 'devnet'): "
+    echo "8. previous run ($(RED "resume"))"
+    echo -n "$(CYN "Select test template [1-8]") (default 3): "
 else
-    echo -n "$(CYN "Select test template [1-5]") (default 'devnet'): "
+    echo -n "$(CYN "Select test template [1-7]") (default 3): "
 fi
 
 read Template
@@ -135,7 +137,7 @@ case "$Template" in
         echo ""
         echo "[$(date "+%T")] Starting interactive test"
     ;;
-    3)
+    2)
         mainnet_env
         default_settings
     ;;
@@ -151,9 +153,16 @@ case "$Template" in
     6)
         devnet_env
         max_settings
-        LAUNCH="Y"
+        MANUAL_CACHE="n"
+        EXT="mp4"
     ;;
     7)
+        devnet_env
+        max_settings
+        MANUAL_CACHE="n"
+        LAUNCH="Y"
+    ;;
+    8)
         source $RESUME_FILE
         RESUME=1
         RESET="n"
@@ -173,7 +182,7 @@ if [ -z ${ENV_URL+x} ]; then
     CYN "Environment:"
     echo "1. devnet (default)"
     echo "2. mainnet-beta"
-    echo -n "$(CYN "Select the environment [1-2]") (default 'devnet'): "
+    echo -n "$(CYN "Select the environment [1-2]") (default 1): "
     read Input
     case "$Input" in
         1) ENV_URL="devnet" ;;
@@ -428,7 +437,7 @@ read -r -d $'\0' METADATA <<-EOM
         {
             "uri": "%s",
             "type": "%s"
-        }],
+        }%b
         "category": "Sugar Test"
     }
 }
@@ -472,12 +481,14 @@ if [ $RESUME -eq 0 ]; then
             MEDIA_NAME="$INDEX.$EXT"
             MEDIA_TYPE="image/$EXT"
             ANIMATION_URL=","
+            ANIMATION_FILE="],"
             cp "$ASSETS_DIR/template_image.$EXT" "$ASSETS_DIR/$i.$EXT"
             if [ "$ANIMATION" = 1 ]; then
                 cp "$ASSETS_DIR/template_animation.mp4" "$ASSETS_DIR/$i.mp4"
                 ANIMATION_URL=",\n\t\"animation_url\": \"$i.mp4\","
+                ANIMATION_FILE=",\n\t\t{\n\t\t\t\"uri\": \"$i.mp4\",\n\t\t\t\"type\": \"application/mp4\"\n\t\t}],"
             fi
-            printf "$METADATA" $NAME $NAME $MEDIA_NAME $ANIMATION_URL $MEDIA_NAME $MEDIA_TYPE >"$ASSETS_DIR/$i.json"
+            printf "$METADATA" "$NAME" "$NAME" "$MEDIA_NAME" "$ANIMATION_URL" "$MEDIA_NAME" "$MEDIA_TYPE" "$ANIMATION_FILE" > "$ASSETS_DIR/$i.json"
         done
         rm "$ASSETS_DIR/template_image.$EXT"
         # quietly removes the animation template (it might not exist)
