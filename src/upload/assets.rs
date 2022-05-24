@@ -268,18 +268,17 @@ pub fn get_updated_metadata(
         if file.uri.eq(&metadata.image) {
             file.uri = image_link.to_string();
         }
-        if metadata.animation_url.clone().is_some()
-            && file.uri.eq(&metadata.animation_url.clone().unwrap())
-        {
-            file.uri = animation_link.clone().unwrap().to_string();
+        if let Some(ref animation_link) = animation_link {
+            if let Some(ref animation_url) = metadata.animation_url {
+                if file.uri.eq(animation_url) {
+                    file.uri = animation_link.to_string();
+                }
+            }
         }
     }
 
     metadata.image = image_link.to_string();
-
-    if animation_link.is_some() {
-        metadata.animation_url = animation_link;
-    }
+    metadata.animation_url = animation_link;
 
     Ok(serde_json::to_string(&metadata).unwrap())
 }
