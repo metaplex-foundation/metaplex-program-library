@@ -62,12 +62,13 @@ mod set_collection_status {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_status =
-            if let CollectionDetails::V1 { status, size: _ } = metadata.collection_details {
-                status
-            } else {
-                panic!("Expected CollectionDetails::V1");
-            };
+        let retrieved_status = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status, size: _ } => status,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
 
         assert_eq!(retrieved_status, current_status);
 
@@ -94,12 +95,13 @@ mod set_collection_status {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_status =
-            if let CollectionDetails::V1 { status, size: _ } = metadata.collection_details {
-                status
-            } else {
-                panic!("Expected CollectionDetails::V1");
-            };
+        let retrieved_status = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status, size: _ } => status,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
 
         assert_eq!(retrieved_status, new_status);
     }
@@ -153,12 +155,13 @@ mod set_collection_status {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_status =
-            if let CollectionDetails::V1 { status, size: _ } = metadata.collection_details {
-                status
-            } else {
-                panic!("Expected CollectionDetails::V1");
-            };
+        let retrieved_status = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status, size: _ } => status,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
 
         assert_eq!(retrieved_status, current_status);
 
@@ -232,12 +235,13 @@ mod set_collection_status {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_status =
-            if let CollectionDetails::V1 { status, size: _ } = metadata.collection_details {
-                status
-            } else {
-                panic!("Expected CollectionDetails::V1");
-            };
+        let retrieved_status = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status, size: _ } => status,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
 
         assert_eq!(retrieved_status, current_status);
 

@@ -864,7 +864,7 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     }
 
     // This handler can only verify non-sized NFTs
-    if let CollectionDetails::V1 { status: _, size: _ } = collection_metadata.collection_details {
+    if collection_metadata.collection_details.is_some() {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -975,7 +975,7 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     }
 
     // This handler can only unverify non-sized NFTs
-    if let CollectionDetails::V1 { status: _, size: _ } = collection_data.collection_details {
+    if collection_data.collection_details.is_some() {
         return Err(MetadataError::SizedCollection.into());
     }
 
@@ -1468,20 +1468,21 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     )?;
 
     // This handler can only verify non-sized NFTs
-    if let CollectionDetails::V1 { status: _, size: _ } = collection_data.collection_details {
+    if collection_data.collection_details.is_some() {
         return Err(MetadataError::SizedCollection.into());
     }
 
     // If the NFT has collection data, we set it to be unverified and then update the collection
     // size on the Collection Parent.
-    match collection_data.collection_details {
-        CollectionDetails::None => (),
-        CollectionDetails::V1 { status, size } => {
-            collection_data.collection_details = CollectionDetails::V1 {
-                status,
-                size: size + 1,
-            };
-            collection_data.serialize(&mut *collection_info.try_borrow_mut_data()?)?;
+    if let Some(details) = collection_data.collection_details {
+        match details {
+            CollectionDetails::V1 { status, size } => {
+                collection_data.collection_details = Some(CollectionDetails::V1 {
+                    status,
+                    size: size + 1,
+                });
+                collection_data.serialize(&mut *collection_info.try_borrow_mut_data()?)?;
+            }
         }
     }
     metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
@@ -1801,16 +1802,17 @@ pub fn set_collection_status(
     // Update authority is a signer and matches update authority on metadata.
     assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
 
-    match metadata.collection_details {
-        CollectionDetails::None => {
-            return Err(MetadataError::NotACollectionParent.into());
+    if let Some(details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 {
+                status: _current_status,
+                size,
+            } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { status, size });
+            }
         }
-        CollectionDetails::V1 {
-            status: _current_status,
-            size,
-        } => {
-            metadata.collection_details = CollectionDetails::V1 { status, size };
-        }
+    } else {
+        return Err(MetadataError::NotACollectionParent.into());
     }
 
     clean_write_metadata(metadata, metadata_account_info)?;
@@ -1855,16 +1857,17 @@ pub fn set_collection_size(
         )?;
     }
 
-    match metadata.collection_details {
-        CollectionDetails::None => {
-            return Err(MetadataError::NotACollectionParent.into());
+    if let Some(details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 {
+                status,
+                size: _current_size,
+            } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { status, size });
+            }
         }
-        CollectionDetails::V1 {
-            status,
-            size: _current_size,
-        } => {
-            metadata.collection_details = CollectionDetails::V1 { status, size };
-        }
+    } else {
+        return Err(MetadataError::NotACollectionParent.into());
     }
 
     clean_write_metadata(metadata, parent_nft_metadata_account_info)?;

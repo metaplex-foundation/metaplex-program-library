@@ -64,12 +64,13 @@ mod set_collection_size {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_size =
-            if let CollectionDetails::V1 { status: _, size } = metadata.collection_details {
-                size
-            } else {
-                panic!("Expected CollectionDetails::V1");
-            };
+        let retrieved_size = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status: _, size } => size,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
 
         assert_eq!(retrieved_size, current_size);
 
@@ -98,12 +99,13 @@ mod set_collection_size {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_size =
-            if let CollectionDetails::V1 { status: _, size } = metadata.collection_details {
-                size
-            } else {
-                panic!("Expected CollectionDetails::V1");
-            };
+        let retrieved_size = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status: _, size } => size,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
 
         assert_eq!(retrieved_size, new_size);
     }
@@ -175,12 +177,13 @@ mod set_collection_size {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_size =
-            if let CollectionDetails::V1 { status: _, size } = metadata.collection_details {
-                size
-            } else {
-                panic!("Expected CollectionDetails::V1");
-            };
+        let retrieved_size = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status: _, size } => size,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
 
         assert_eq!(retrieved_size, current_size);
 
@@ -209,12 +212,13 @@ mod set_collection_size {
             .unwrap();
 
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_size =
-            if let CollectionDetails::V1 { status: _, size } = metadata.collection_details {
-                size
-            } else {
-                panic!("Expected CollectionDetails::V1");
-            };
+        let retrieved_size = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status: _, size } => size,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
 
         assert_eq!(retrieved_size, new_size);
     }

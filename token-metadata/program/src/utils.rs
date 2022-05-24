@@ -963,12 +963,12 @@ pub fn process_create_metadata_accounts_logic(
     metadata.collection = data.collection;
 
     if is_collection_parent {
-        metadata.collection_details = CollectionDetails::V1 {
+        metadata.collection_details = Some(CollectionDetails::V1 {
             status: CollectionStatus::None,
             size: 0,
-        };
+        });
     } else {
-        metadata.collection_details = CollectionDetails::None;
+        metadata.collection_details = None;
     }
 
     if add_token_standard {
@@ -1247,19 +1247,20 @@ pub fn increment_collection_size(
     metadata: &mut Metadata,
     metadata_info: &AccountInfo,
 ) -> ProgramResult {
-    match metadata.collection_details {
-        CollectionDetails::None => {
-            msg!("No collection details found. Cannot increment collection size.");
-            Err(MetadataError::UnsizedCollection.into())
+    if let Some(ref details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 { status, size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 {
+                    status: *status,
+                    size: size + 1,
+                });
+                metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+                Ok(())
+            }
         }
-        CollectionDetails::V1 { status, size } => {
-            metadata.collection_details = CollectionDetails::V1 {
-                status,
-                size: size + 1,
-            };
-            metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
-            Ok(())
-        }
+    } else {
+        msg!("No collection details found. Cannot increment collection size.");
+        Err(MetadataError::UnsizedCollection.into())
     }
 }
 
@@ -1267,19 +1268,20 @@ pub fn decrement_collection_size(
     metadata: &mut Metadata,
     metadata_info: &AccountInfo,
 ) -> ProgramResult {
-    match metadata.collection_details {
-        CollectionDetails::None => {
-            msg!("No collection details found. Cannot increment collection size.");
-            Err(MetadataError::UnsizedCollection.into())
+    if let Some(ref details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 { status, size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 {
+                    status: *status,
+                    size: size - 1,
+                });
+                metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+                Ok(())
+            }
         }
-        CollectionDetails::V1 { status, size } => {
-            metadata.collection_details = CollectionDetails::V1 {
-                status,
-                size: size - 1,
-            };
-            metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
-            Ok(())
-        }
+    } else {
+        msg!("No collection details found. Cannot increment collection size.");
+        Err(MetadataError::UnsizedCollection.into())
     }
 }
 

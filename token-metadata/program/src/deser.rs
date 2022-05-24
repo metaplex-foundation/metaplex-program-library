@@ -38,10 +38,10 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
 
     // Handle v1.3 separately
     let collection_details = match collection_details_res {
-        Ok(item_details) => item_details,
+        Ok(item_details) => Some(item_details),
         Err(_) => {
             msg!("Corrupted v1.3 metadata discovered: setting value to None");
-            CollectionDetails::None
+            None
         }
     };
 
@@ -156,7 +156,7 @@ mod tests {
             token_standard: None,
             collection: None,
             uses: None,
-            collection_details: CollectionDetails::None,
+            collection_details: None,
         };
 
         puff_out_data_fields(&mut metadata);
