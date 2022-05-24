@@ -2091,7 +2091,7 @@ version = "1.2.10"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault 0.1.1",
  "num-derive",
  "num-traits",
  "shank",

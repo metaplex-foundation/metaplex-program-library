@@ -1508,13 +1508,12 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-vault"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ade4ef15bc06a6033076c4ff28cba9b42521df5ec61211d6f419415ace2746a"
+version = "0.1.1"
 dependencies = [
  "borsh",
  "num-derive",
  "num-traits",
+ "shank",
  "solana-program",
  "spl-token",
  "thiserror",
