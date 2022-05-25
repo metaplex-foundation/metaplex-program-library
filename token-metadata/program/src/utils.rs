@@ -469,7 +469,7 @@ fn get_max_supply_off_master_edition(
     if data[9] == 0 {
         Ok(None)
     } else {
-        let amount_data = array_ref![data, 10, 8];
+        let amount_data = array_ref![data, 9, 8];
         Ok(Some(u64::from_le_bytes(*amount_data)))
     }
 }
@@ -478,9 +478,9 @@ pub fn get_supply_off_master_edition(
     master_edition_account_info: &AccountInfo,
 ) -> Result<u64, ProgramError> {
     let data = master_edition_account_info.try_borrow_data()?;
-    // this is an option, 9 bytes, first is 0 means is none
 
-    let amount_data = array_ref![data, 1, 8];
+    // Supply is stored as a u64
+    let amount_data = array_ref![data, 0, 8];
     Ok(u64::from_le_bytes(*amount_data))
 }
 
