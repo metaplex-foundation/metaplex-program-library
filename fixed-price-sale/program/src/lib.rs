@@ -217,7 +217,7 @@ pub struct Buy<'info> {
     user_token_account: UncheckedAccount<'info>,
     #[account(mut)]
     user_wallet: Signer<'info>,
-    #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump, payer=user_wallet)]
+    #[account(init_if_needed, space=TradeHistory::LEN, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump, payer=user_wallet)]
     trade_history: Box<Account<'info, TradeHistory>>,
     #[account(mut)]
     /// CHECK: checked in program
@@ -286,7 +286,7 @@ pub struct Withdraw<'info> {
     funder: UncheckedAccount<'info>,
     #[account(mut)]
     payer: Signer<'info>,
-    #[account(init_if_needed, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump, payer=payer)]
+    #[account(init_if_needed, space=PayoutTicket::LEN, seeds=[PAYOUT_TICKET_PREFIX.as_bytes(), market.key().as_ref(), funder.key().as_ref()], bump, payer=payer)]
     payout_ticket: Box<Account<'info, PayoutTicket>>,
     rent: Sysvar<'info, Rent>,
     clock: Sysvar<'info, Clock>,
