@@ -46,7 +46,6 @@ const revokeUseAuthorityInstructionDiscriminator = 21;
  * Creates a _RevokeUseAuthority_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category RevokeUseAuthority
  * @category generated

@@ -93,6 +93,7 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     masterEditionMetadata,
     clock,
     tokenMetadataProgram,
+    additionalKeys,
   } = accounts;
 
   const [data] = buyStruct.serialize({
@@ -202,8 +203,10 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     },
   ];
 
-  if (accounts.additionalKeys) {
-    keys.push(...accounts.additionalKeys);
+  if (additionalKeys && additionalKeys.length > 0) {
+    additionalKeys.forEach((account) => {
+      keys.push(account);
+    });
   }
 
   const ix = new web3.TransactionInstruction({

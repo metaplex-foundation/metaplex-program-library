@@ -35,7 +35,6 @@ const puffMetadataInstructionDiscriminator = 14;
  * Creates a _PuffMetadata_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category PuffMetadata
  * @category generated

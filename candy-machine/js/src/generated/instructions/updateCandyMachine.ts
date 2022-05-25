@@ -35,6 +35,10 @@ const updateCandyMachineStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _updateCandyMachine_ instruction
+ *
+ * @property [_writable_] candyMachine
+ * @property [**signer**] authority
+ * @property [] wallet
  * @category Instructions
  * @category UpdateCandyMachine
  * @category generated

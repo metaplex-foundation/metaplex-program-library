@@ -12,7 +12,7 @@ use solana_sdk::{
     instruction::InstructionError, signature::Keypair, signer::Signer,
     transaction::TransactionError, transport::TransportError,
 };
-use spl_token;
+
 use std::assert_eq;
 use utils::setup_functions;
 #[tokio::test]
@@ -94,8 +94,8 @@ async fn init_native_success() {
         seller_fee_basis_points,
         auction_house_data.seller_fee_basis_points
     );
-    assert_eq!(false, auction_house_data.requires_sign_off);
-    assert_eq!(false, auction_house_data.can_change_sale_price);
+    assert!(!auction_house_data.requires_sign_off);
+    assert!(!auction_house_data.can_change_sale_price);
 }
 
 #[tokio::test]
@@ -180,7 +180,7 @@ async fn init_native_success_reinitialize_fail() {
             0,
             InstructionError::Custom(0),
         )) => (),
-        _ => assert!(false, "Expected custom error"),
+        _ => panic!("Expected custom error"),
     }
 }
 
@@ -269,8 +269,8 @@ async fn init_mint_success() {
         seller_fee_basis_points,
         auction_house_data.seller_fee_basis_points
     );
-    assert_eq!(false, auction_house_data.requires_sign_off);
-    assert_eq!(false, auction_house_data.can_change_sale_price);
+    assert!(!auction_house_data.requires_sign_off);
+    assert!(!auction_house_data.can_change_sale_price);
 }
 
 #[tokio::test]

@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.15
+  SOLANA_VERSION: 1.9.22
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -62,7 +62,7 @@ jobs:
 
       # Run lint checks
       - uses: ./.github/actions/verify-rust
-        with: 
+        with:
           working-directory: ./token-metadata/program
 
       # Build deps

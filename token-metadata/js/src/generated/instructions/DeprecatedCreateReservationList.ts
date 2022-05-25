@@ -44,7 +44,6 @@ const deprecatedCreateReservationListInstructionDiscriminator = 6;
  * Creates a _DeprecatedCreateReservationList_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category DeprecatedCreateReservationList
  * @category generated

@@ -37,6 +37,9 @@ const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _addConfigLines_ instruction
+ *
+ * @property [_writable_] candyMachine
+ * @property [**signer**] authority
  * @category Instructions
  * @category AddConfigLines
  * @category generated
