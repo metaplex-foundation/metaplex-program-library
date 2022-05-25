@@ -133,7 +133,7 @@ pub struct AuctioneerWithdraw<'info> {
 
     /// CHECK: Validated in withdraw_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    #[account(mut)]
+    //#[account(mut)]
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.

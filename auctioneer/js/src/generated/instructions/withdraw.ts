@@ -16,6 +16,7 @@ import * as web3 from '@solana/web3.js';
  */
 export type WithdrawInstructionArgs = {
   escrowPaymentBump: number;
+  auctioneerAuthorityBump: number;
   amount: beet.bignum;
 };
 /**
@@ -31,6 +32,7 @@ const withdrawStruct = new beet.BeetArgsStruct<
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['escrowPaymentBump', beet.u8],
+    ['auctioneerAuthorityBump', beet.u8],
     ['amount', beet.u64],
   ],
   'WithdrawInstructionArgs',
@@ -43,7 +45,6 @@ const withdrawStruct = new beet.BeetArgsStruct<
  * @property [_writable_] receiptAccount
  * @property [_writable_] escrowPaymentAccount
  * @property [] treasuryMint
- * @property [] authority
  * @property [] auctionHouse
  * @property [_writable_] auctionHouseFeeAccount
  * @property [] auctioneerAuthority
@@ -58,7 +59,6 @@ export type WithdrawInstructionAccounts = {
   receiptAccount: web3.PublicKey;
   escrowPaymentAccount: web3.PublicKey;
   treasuryMint: web3.PublicKey;
-  authority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
   auctioneerAuthority: web3.PublicKey;
@@ -87,7 +87,6 @@ export function createWithdrawInstruction(
     receiptAccount,
     escrowPaymentAccount,
     treasuryMint,
-    authority,
     auctionHouse,
     auctionHouseFeeAccount,
     auctioneerAuthority,
@@ -121,11 +120,6 @@ export function createWithdrawInstruction(
     },
     {
       pubkey: treasuryMint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: authority,
       isWritable: false,
       isSigner: false,
     },

@@ -35,9 +35,10 @@ pub mod auctioneer {
     pub fn withdraw<'info>(
         ctx: Context<'_, '_, '_, 'info, AuctioneerWithdraw<'info>>,
         escrow_payment_bump: u8,
+        auctioneer_authority_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        auctioneer_withdraw(ctx, escrow_payment_bump, amount)
+        auctioneer_withdraw(ctx, escrow_payment_bump, auctioneer_authority_bump, amount)
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.

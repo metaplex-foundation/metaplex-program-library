@@ -11,6 +11,16 @@ pub fn find_listing_config_address(
     token_mint: &Pubkey,
     token_size: u64,
 ) -> (Pubkey, u8) {
+    println!(
+        "{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n",
+        LISTING_CONFIG,
+        wallet.to_string(),
+        auction_house.to_string(),
+        token_account.to_string(),
+        treasury_mint.to_string(),
+        token_mint.to_string(),
+        token_size
+    );
     Pubkey::find_program_address(
         &[
             LISTING_CONFIG.as_bytes(),

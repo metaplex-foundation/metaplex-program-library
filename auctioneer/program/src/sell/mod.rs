@@ -116,6 +116,22 @@ pub fn auctioneer_sell<'info>(
         .get("listing_config")
         .ok_or(AuctioneerError::BumpSeedNotInHashMap)?;
 
+    msg!(
+        "DEBUG:\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}",
+        LISTING_CONFIG,
+        ctx.accounts.wallet.key().to_string(),
+        ctx.accounts.auction_house.key().to_string(),
+        ctx.accounts.token_account.key().to_string(),
+        ctx.accounts.auction_house.treasury_mint.to_string(),
+        ctx.accounts.token_account.mint.to_string(),
+        token_size,
+        ctx.accounts.listing_config.bump
+    );
+    msg!(
+        "DEBUG:\n{:?}",
+        ctx.accounts.listing_config.key().to_string()
+    );
+
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHSell {
         wallet: ctx.accounts.wallet.to_account_info(),

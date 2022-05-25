@@ -64,6 +64,7 @@ async fn execute_sale_early_failure() {
             .as_secs()
             + 60) as i64,
     );
+    println!("DEBUG: {:?}", listing_config_address.to_string());
     context
         .banks_client
         .process_transaction(sell_tx)
@@ -242,6 +243,7 @@ async fn execute_sale_success() {
             .as_secs()
             + 60) as i64,
     );
+    println!("DEBUG: {:?}", listing_config_address.to_string());
     context
         .banks_client
         .process_transaction(sell_tx)
@@ -417,6 +419,7 @@ async fn execute_sale_two_bids_success() {
             .as_secs()
             + 60) as i64,
     );
+    println!("DEBUG: {:?}", listing_config_address.to_string());
     context
         .banks_client
         .process_transaction(sell_tx)

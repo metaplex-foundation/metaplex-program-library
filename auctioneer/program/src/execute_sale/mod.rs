@@ -36,7 +36,7 @@ pub struct AuctioneerExecuteSale<'info> {
         ],
         bump=listing_config.bump,
     )]
-    pub listing_config: Account<'info, ListingConfig>,
+    pub listing_config: Box<Account<'info, ListingConfig>>,
 
     // Accounts passed into Auction House CPI call
     /// CHECK: Verified through CPI
@@ -119,7 +119,7 @@ pub struct AuctioneerExecuteSale<'info> {
     /// CHECK: Verified through CPI
     /// The auctioneer program PDA running this auction.
     #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref()], bump=auctioneer_authority_bump)]
-    pub auctioneer_authority: Account<'info, AuctioneerAuthority>,
+    pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
@@ -146,6 +146,17 @@ pub fn auctioneer_execute_sale<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
+    // msg!(
+    //     "DEBUG:\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}",
+    //     LISTING_CONFIG,
+    //     ctx.accounts.seller.key().to_string(),
+    //     ctx.accounts.auction_house.key().to_string(),
+    //     ctx.accounts.token_account.key().to_string(),
+    //     ctx.accounts.auction_house.treasury_mint.to_string(),
+    //     ctx.accounts.token_mint.key().to_string(),
+    //     token_size,
+    //     ctx.accounts.listing_config.bump
+    // );
     assert_auction_over(&ctx.accounts.listing_config)?;
 
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
@@ -194,6 +205,9 @@ pub fn auctioneer_execute_sale<'info>(
             .zip(cpi_accounts.to_account_infos())
             .map(|mut pair| {
                 pair.0.is_signer = pair.1.is_signer;
+                if pair.0.pubkey == ctx.accounts.auctioneer_authority.key() {
+                    pair.0.is_signer = true;
+                }
                 pair.0
             })
             .collect(),
@@ -216,14 +230,14 @@ pub fn auctioneer_execute_sale<'info>(
     let auctioneer_seeds = [
         AUCTIONEER.as_bytes(),
         ah_key.as_ref(),
-        &[auctioneer_authority.bump],
+        &[auctioneer_authority_bump],
     ];
 
     invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
     //let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
     // mpl_auction_house::cpi::auctioneer_execute_sale(
-    //     cpi_ctx.with_signer(&[&auctioneer_seeds]),
+    //     cpi_ctx, //.with_signer(&[&auctioneer_seeds]),
     //     escrow_payment_bump,
     //     free_trade_state_bump,
     //     program_as_signer_bump,

@@ -15,11 +15,11 @@ use mpl_auction_house::{
     AuctionHouse,
 };
 
-use solana_program::program::invoke;
+use solana_program::program::invoke_signed;
 
 /// Accounts for the [`withdraw_with_auctioneer` handler](auction_house/fn.withdraw_with_auctioneer.html).
 #[derive(Accounts, Clone)]
-#[instruction(escrow_payment_bump: u8)]
+#[instruction(escrow_payment_bump: u8, auctioneer_authority_bump: u8)]
 pub struct AuctioneerWithdraw<'info> {
     /// Auction House Program
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
@@ -43,10 +43,10 @@ pub struct AuctioneerWithdraw<'info> {
 
     /// CHECK: Verified through CPI
     /// Auction House instance authority account.
-    pub authority: UncheckedAccount<'info>,
+    //pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=authority, has_one=treasury_mint, has_one=auction_house_fee_account)]
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=treasury_mint, has_one=auction_house_fee_account)]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -56,6 +56,7 @@ pub struct AuctioneerWithdraw<'info> {
 
     /// CHECK: Verified through CPI
     /// The auctioneer program PDA running this auction.
+    #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref()], bump=auctioneer_authority_bump)]
     pub auctioneer_authority: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -73,6 +74,7 @@ pub struct AuctioneerWithdraw<'info> {
 pub fn auctioneer_withdraw<'info>(
     ctx: Context<'_, '_, '_, 'info, AuctioneerWithdraw<'info>>,
     escrow_payment_bump: u8,
+    auctioneer_authority_bump: u8,
     amount: u64,
 ) -> Result<()> {
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
@@ -105,13 +107,34 @@ pub fn auctioneer_withdraw<'info>(
             .zip(cpi_accounts.to_account_infos())
             .map(|mut pair| {
                 pair.0.is_signer = pair.1.is_signer;
+                if pair.0.pubkey == ctx.accounts.auctioneer_authority.key() {
+                    pair.0.is_signer = true;
+                }
                 pair.0
             })
             .collect(),
         data: withdraw_data.data(),
     };
+    
+    let auction_house = &ctx.accounts.auction_house;
+    let ah_key = auction_house.key();
+    let auctioneer_authority = &ctx.accounts.auctioneer_authority;
+    let aa_key = auctioneer_authority.key();
 
-    invoke(&ix, &cpi_accounts.to_account_infos())?;
+    // let auctioneer_seeds = [
+    //     AUCTIONEER.as_bytes(),
+    //     ah_key.as_ref(),
+    //     aa_key.as_ref(),
+    //     &[auction_house.auctioneer_pda_bump],
+    // ];
+
+    let auctioneer_seeds = [
+        AUCTIONEER.as_bytes(),
+        ah_key.as_ref(),
+        &[auctioneer_authority_bump],
+    ];
+
+    invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
 
     Ok(())
 }

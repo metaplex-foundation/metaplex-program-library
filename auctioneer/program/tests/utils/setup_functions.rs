@@ -692,7 +692,7 @@ pub fn withdraw(
         escrow_payment_account,
         receipt_account: buyer.pubkey(),
         treasury_mint: ah.treasury_mint,
-        authority: ah.authority,
+        //authority: ah.authority,
         auction_house: *ahkey,
         auction_house_fee_account: ah.auction_house_fee_account,
         token_program: spl_token::id(),
@@ -707,6 +707,7 @@ pub fn withdraw(
 
     let data = mpl_auctioneer::instruction::Withdraw {
         escrow_payment_bump: escrow_bump,
+        auctioneer_authority_bump: aa_bump,
         amount: withdraw_amount,
     }
     .data();
