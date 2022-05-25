@@ -1,10 +1,13 @@
 use crate::{
     error::ErrorCode,
-    state::{GatingConfig, MarketState, SellingResourceState},
+    state::{GatingConfig, MarketState, SellingResourceState, MINIMUM_BALANCE_FOR_SYSTEM_ACCS},
     utils::*,
     CreateMarket,
 };
-use anchor_lang::prelude::*;
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program::invoke, system_instruction},
+};
 use anchor_spl::token::accessor;
 
 impl<'info> CreateMarket<'info> {
@@ -45,6 +48,11 @@ impl<'info> CreateMarket<'info> {
             return Err(ErrorCode::PiecesInOneWalletIsTooMuch.into());
         }
 
+        // Only new just created selling resource can be used to create market
+        if selling_resource.state != SellingResourceState::Created {
+            return Err(ErrorCode::SellingResourceAlreadyTaken.into());
+        }
+
         // start_date cannot be in the past
         if start_date < Clock::get().unwrap().unix_timestamp as u64 {
             return Err(ErrorCode::StartDateIsInPast.into());
@@ -73,7 +81,9 @@ impl<'info> CreateMarket<'info> {
 
             let collection_mint = &remaining_accounts[0];
 
-            if collection_mint.key != &gating_data.collection || collection_mint.owner != &spl_token::id() {
+            if collection_mint.key != &gating_data.collection
+                || collection_mint.owner != &spl_token::id()
+            {
                 return Err(ErrorCode::WrongCollectionMintKey.into());
             }
         }
@@ -100,6 +110,19 @@ impl<'info> CreateMarket<'info> {
             if treasury_holder.key != owner.key {
                 return Err(ProgramError::InvalidAccountData.into());
             }
+
+            // we need fund treasury holder account such as it will hold some metadata with SOL balance
+            invoke(
+                &system_instruction::transfer(
+                    &selling_resource_owner.key(),
+                    &treasury_holder.key(),
+                    MINIMUM_BALANCE_FOR_SYSTEM_ACCS,
+                ),
+                &[
+                    selling_resource_owner.to_account_info(),
+                    treasury_holder.to_account_info(),
+                ],
+            )?;
         }
 
         // Check selling resource ownership

@@ -21,6 +21,16 @@ const setCollectionStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _setCollection_ instruction
+ *
+ * @property [_writable_] candyMachine
+ * @property [**signer**] authority
+ * @property [_writable_] collectionPda
+ * @property [**signer**] payer
+ * @property [] metadata
+ * @property [] mint
+ * @property [] edition
+ * @property [_writable_] collectionAuthorityRecord
+ * @property [] tokenMetadataProgram
  * @category Instructions
  * @category SetCollection
  * @category generated
@@ -43,7 +53,6 @@ const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 
  * Creates a _SetCollection_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category SetCollection
  * @category generated
@@ -67,7 +76,7 @@ export function createSetCollectionInstruction(accounts: SetCollectionInstructio
   const keys: web3.AccountMeta[] = [
     {
       pubkey: candyMachine,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

@@ -37,7 +37,6 @@ const signMetadataInstructionDiscriminator = 7;
  * Creates a _SignMetadata_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category SignMetadata
  * @category generated
