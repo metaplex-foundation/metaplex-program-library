@@ -706,15 +706,11 @@ impl EditionMarker {
     }
 
     fn get_edition_offset_from_starting_index(edition: u64) -> Result<usize, ProgramError> {
-        Ok(edition
-            .checked_rem(EDITION_MARKER_BIT_SIZE)
-            .ok_or(MetadataError::NumericalOverflowError)? as usize)
+        Ok((edition % EDITION_MARKER_BIT_SIZE) as usize)
     }
 
     fn get_index(offset_from_start: usize) -> Result<usize, ProgramError> {
-        let index = offset_from_start
-            .checked_div(8)
-            .ok_or(MetadataError::NumericalOverflowError)?;
+        let index = offset_from_start / 8;
 
         // With only EDITION_MARKER_BIT_SIZE bits, or 31 bytes, we have a max constraint here.
         if index > 30 {
@@ -729,9 +725,7 @@ impl EditionMarker {
         // you need to shift a 1 over 8 spots from the right hand side. To do that you actually
         // need not 00000001 but 10000000 which you can get by simply multiplying 1 by 2^7, 128 and then ORing
         // it with the current value.
-        Ok(7 - offset_from_start
-            .checked_rem(8)
-            .ok_or(MetadataError::NumericalOverflowError)? as u32)
+        Ok(7 - (offset_from_start % 8) as u32)
     }
 
     fn get_index_and_mask(edition: u64) -> Result<(usize, u8), ProgramError> {

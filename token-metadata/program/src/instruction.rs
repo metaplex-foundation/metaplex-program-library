@@ -661,7 +661,7 @@ pub fn mint_new_edition_from_master_edition_via_token(
     metadata_mint: Pubkey,
     edition: u64,
 ) -> Instruction {
-    let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+    let edition_number = edition / EDITION_MARKER_BIT_SIZE;
     let as_string = edition_number.to_string();
     let (edition_mark_pda, _) = Pubkey::find_program_address(
         &[

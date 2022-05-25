@@ -41,7 +41,7 @@ impl TestEditionMarker {
         let metadata_mint_pubkey = metadata.mint.pubkey();
         let program_id = id();
 
-        let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+        let edition_number = edition / EDITION_MARKER_BIT_SIZE;
         let as_string = edition_number.to_string();
         let (pubkey, _) = Pubkey::find_program_address(
             &[
@@ -198,7 +198,7 @@ impl TestEditionMarker {
         let fake_token_program = Keypair::new();
         let program_id = mpl_token_metadata::id();
 
-        let edition_number = self.edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+        let edition_number = self.edition / EDITION_MARKER_BIT_SIZE;
         let as_string = edition_number.to_string();
         let (edition_mark_pda, _) = Pubkey::find_program_address(
             &[

@@ -65,13 +65,8 @@ pub fn handle_add_config_lines(
         let position = (index as usize)
             .checked_add(i)
             .ok_or(CandyError::NumericalOverflowError)?;
-        let my_position_in_vec = bit_mask_vec_start
-            + position
-                .checked_div(8)
-                .ok_or(CandyError::NumericalOverflowError)?;
-        let position_from_right = 7 - position
-            .checked_rem(8)
-            .ok_or(CandyError::NumericalOverflowError)?;
+        let my_position_in_vec = bit_mask_vec_start + position / 8;
+        let position_from_right = 7 - position % 8;
         let mask = u8::pow(2, position_from_right as u32);
 
         let old_value_in_vec = data[my_position_in_vec];

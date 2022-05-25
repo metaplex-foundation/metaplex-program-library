@@ -525,12 +525,10 @@ impl BidState {
     ) -> ProgramResult {
         // Use u128 to avoid potential overflow due to temporary mult of 100x since
         // we haven't divided yet.
-        let mut minimum_bid_amount: u128 = (beaten_bid.1 as u128)
+        let minimum_bid_amount: u128 = (beaten_bid.1 as u128)
             .checked_mul((100 + gap_tick) as u128)
-            .ok_or(AuctionError::NumericalOverflowError)?;
-        minimum_bid_amount = minimum_bid_amount
-            .checked_div(100u128)
-            .ok_or(AuctionError::NumericalOverflowError)?;
+            .ok_or(AuctionError::NumericalOverflowError)?
+            / 100;
 
         if minimum_bid_amount > beating_bid.1 as u128 {
             msg!("Rejecting inserting this bid due to gap tick size of {:?} which causes min bid of {:?} from {:?} which is the bid it is trying to beat", gap_tick, minimum_bid_amount.to_string(), beaten_bid.1);

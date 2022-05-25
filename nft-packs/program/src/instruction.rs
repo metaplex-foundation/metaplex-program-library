@@ -464,9 +464,7 @@ pub fn claim_pack(
     let (pack_card, _) = find_pack_card_program_address(program_id, pack_set, index);
     let (program_authority, _) = find_program_authority(program_id);
 
-    let edition_number = (index as u64)
-        .checked_div(mpl_token_metadata::state::EDITION_MARKER_BIT_SIZE)
-        .unwrap();
+    let edition_number = index as u64 / mpl_token_metadata::state::EDITION_MARKER_BIT_SIZE;
     let as_string = edition_number.to_string();
     let (edition_mark_pda, _) = Pubkey::find_program_address(
         &[

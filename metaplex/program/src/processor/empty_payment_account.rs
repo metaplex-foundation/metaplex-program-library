@@ -196,9 +196,7 @@ fn calculate_owed_amount(
     // whittling there (auctioneer shares with nobody) but for the artist they may be sharing
     // with another artist, say a 70/30 split, so we need to further multiply the amount available by
     // 7/10ths or something.
-    let final_amount_available_to_split = proportional_amount_available_to_split
-        .checked_div(10000 * 10000)
-        .ok_or(MetaplexError::NumericalOverflowError)?;
+    let final_amount_available_to_split = proportional_amount_available_to_split / (10000 * 10000);
     msg!("Final amount mult {:?}", final_amount_available_to_split);
 
     Ok(final_amount_available_to_split as u64)

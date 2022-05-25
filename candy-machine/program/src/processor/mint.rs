@@ -619,24 +619,13 @@ pub fn get_good_index(
     let mut index_to_use = index;
     let mut taken = 1;
     let mut found = false;
-    let bit_mask_vec_start = CONFIG_ARRAY_START
-        + 4
-        + (items_available) * CONFIG_LINE_SIZE
-        + 4
-        + items_available
-            .checked_div(8)
-            .ok_or(CandyError::NumericalOverflowError)?
-        + 4;
+    let bit_mask_vec_start =
+        CONFIG_ARRAY_START + 4 + items_available * CONFIG_LINE_SIZE + 4 + items_available / 8 + 4;
 
     while taken > 0 && index_to_use < items_available {
-        let my_position_in_vec = bit_mask_vec_start
-            + index_to_use
-                .checked_div(8)
-                .ok_or(CandyError::NumericalOverflowError)?;
+        let my_position_in_vec = bit_mask_vec_start + index_to_use / 8;
         if arr[my_position_in_vec] == 255 {
-            let eight_remainder = 8 - index_to_use
-                .checked_rem(8)
-                .ok_or(CandyError::NumericalOverflowError)?;
+            let eight_remainder = 8 - index_to_use % 8;
             let reversed = 8 - eight_remainder + 1;
             if (eight_remainder != 0 && pos) || (reversed != 0 && !pos) {
                 if pos {
@@ -653,9 +642,7 @@ pub fn get_good_index(
                 index_to_use -= 8;
             }
         } else {
-            let position_from_right = 7 - index_to_use
-                .checked_rem(8)
-                .ok_or(CandyError::NumericalOverflowError)?;
+            let position_from_right = 7 - index_to_use % 8;
             let mask = u8::pow(2, position_from_right as u32);
 
             taken = mask & arr[my_position_in_vec];

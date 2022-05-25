@@ -1295,9 +1295,7 @@ async fn fail_wrong_user_wallet() {
     );
     let (program_authority, _) = find_program_authority(&mpl_nft_packs::id());
 
-    let edition_number = (index as u64)
-        .checked_div(mpl_token_metadata::state::EDITION_MARKER_BIT_SIZE)
-        .unwrap();
+    let edition_number = index as u64 / mpl_token_metadata::state::EDITION_MARKER_BIT_SIZE;
     let as_string = edition_number.to_string();
     let (edition_mark_pda, _) = Pubkey::find_program_address(
         &[

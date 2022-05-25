@@ -1269,8 +1269,8 @@ pub fn create_redeem_printing_v2_bid_instruction(
         &program_id,
     );
 
-    let edition_offset = edition.checked_rem(EDITION_MARKER_BIT_SIZE).unwrap();
-    let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+    let edition_offset = edition % EDITION_MARKER_BIT_SIZE;
+    let edition_number = edition / EDITION_MARKER_BIT_SIZE;
 
     let (edition_mark_pda, _) = Pubkey::find_program_address(
         &[
@@ -1464,9 +1464,7 @@ pub fn create_redeem_participation_bid_v3_instruction(
         &program_id,
     );
 
-    let edition_number = desired_edition
-        .checked_div(EDITION_MARKER_BIT_SIZE)
-        .unwrap();
+    let edition_number = desired_edition / EDITION_MARKER_BIT_SIZE;
 
     let (edition_mark_pda, _) = Pubkey::find_program_address(
         &[

@@ -1044,7 +1044,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         return Err(MetadataError::AlreadyInitialized.into());
     }
 
-    let edition_number = edition.checked_div(EDITION_MARKER_BIT_SIZE).unwrap();
+    let edition_number = edition / EDITION_MARKER_BIT_SIZE;
     let as_string = edition_number.to_string();
 
     let bump = assert_derivation(

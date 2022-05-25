@@ -197,11 +197,10 @@ pub fn pay_creator_fees<'a>(
         Some(creators) => {
             for creator in creators {
                 let pct = creator.share as u128;
-                let creator_fee = pct
+                let creator_fee = (pct
                     .checked_mul(total_fee)
                     .ok_or(ErrorCode::NumericalOverflow)?
-                    .checked_div(100)
-                    .ok_or(ErrorCode::NumericalOverflow)? as u64;
+                    / 100) as u64;
                 let current_creator_info = next_account_info(remaining_accounts)?;
                 assert_keys_equal(creator.address, *current_creator_info.key)?;
                 if !is_native {

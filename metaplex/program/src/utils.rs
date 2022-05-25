@@ -732,9 +732,7 @@ pub fn common_redeem_finish(args: CommonRedeemFinishArgs) -> ProgramResult {
             &[redemption_bump_seed],
         ];
 
-        let token_type_count = Vault::get_token_type_count(vault_info)
-            .checked_div(8)
-            .ok_or(MetaplexError::NumericalOverflowError)?;
+        let token_type_count = Vault::get_token_type_count(vault_info) / 8;
 
         if bid_redemption_info.data_is_empty() {
             create_or_allocate_account_raw(

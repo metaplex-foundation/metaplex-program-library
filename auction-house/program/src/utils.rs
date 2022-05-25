@@ -266,11 +266,10 @@ pub fn pay_auction_house_fees<'a>(
     is_native: bool,
 ) -> Result<u64> {
     let fees = auction_house.seller_fee_basis_points;
-    let total_fee = (fees as u128)
+    let total_fee = ((fees as u128)
         .checked_mul(size as u128)
         .ok_or(AuctionHouseError::NumericalOverflow)?
-        .checked_div(10000)
-        .ok_or(AuctionHouseError::NumericalOverflow)? as u64;
+        / 10000) as u64;
     if !is_native {
         invoke_signed(
             &spl_token::instruction::transfer(
@@ -372,11 +371,10 @@ pub fn pay_creator_fees<'a>(
 ) -> Result<u64> {
     let metadata = Metadata::from_account_info(metadata_info)?;
     let fees = metadata.data.seller_fee_basis_points;
-    let total_fee = (fees as u128)
+    let total_fee = ((fees as u128)
         .checked_mul(size as u128)
         .ok_or(AuctionHouseError::NumericalOverflow)?
-        .checked_div(10000)
-        .ok_or(AuctionHouseError::NumericalOverflow)? as u64;
+        / 10000) as u64;
     let mut remaining_fee = total_fee;
     let remaining_size = size
         .checked_sub(total_fee)
@@ -385,11 +383,10 @@ pub fn pay_creator_fees<'a>(
         Some(creators) => {
             for creator in creators {
                 let pct = creator.share as u128;
-                let creator_fee =
-                    pct.checked_mul(total_fee as u128)
-                        .ok_or(AuctionHouseError::NumericalOverflow)?
-                        .checked_div(100)
-                        .ok_or(AuctionHouseError::NumericalOverflow)? as u64;
+                let creator_fee = (pct
+                    .checked_mul(total_fee as u128)
+                    .ok_or(AuctionHouseError::NumericalOverflow)?
+                    / 100) as u64;
                 remaining_fee = remaining_fee
                     .checked_sub(creator_fee)
                     .ok_or(AuctionHouseError::NumericalOverflow)?;

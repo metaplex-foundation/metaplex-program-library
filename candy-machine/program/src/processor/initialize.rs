@@ -81,12 +81,7 @@ pub fn handle_initialize_candy_machine(
         let vec_start = CONFIG_ARRAY_START
             + 4
             + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE;
-        let as_bytes = (candy_machine
-            .data
-            .items_available
-            .checked_div(8)
-            .ok_or(CandyError::NumericalOverflowError)? as u32)
-            .to_le_bytes();
+        let as_bytes = (candy_machine.data.items_available / 8).to_le_bytes();
         for i in 0..4 {
             data[vec_start + i] = as_bytes[i]
         }
@@ -103,11 +98,7 @@ fn get_space_for_candy(data: CandyMachineData) -> Result<usize> {
             + 4
             + (data.items_available as usize) * CONFIG_LINE_SIZE
             + 8
-            + 2 * ((data
-                .items_available
-                .checked_div(8)
-                .ok_or(CandyError::NumericalOverflowError)?
-                + 1) as usize)
+            + 2 * (data.items_available / 8 + 1) as usize
     };
 
     Ok(num)

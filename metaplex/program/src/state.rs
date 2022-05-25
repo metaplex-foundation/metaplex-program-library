@@ -1530,14 +1530,10 @@ impl BidRedemptionTicket {
             offset -= 8;
         }
 
-        let u8_position = order
-            .checked_div(8)
-            .ok_or(MetaplexError::NumericalOverflowError)?
+        let u8_position = (order / 8)
             .checked_add(offset)
             .ok_or(MetaplexError::NumericalOverflowError)?;
-        let position_from_right = 7 - order
-            .checked_rem(8)
-            .ok_or(MetaplexError::NumericalOverflowError)?;
+        let position_from_right = 7 - order % 8;
         let mask = u8::pow(2, position_from_right as u32);
 
         Ok((u8_position as usize, mask))
