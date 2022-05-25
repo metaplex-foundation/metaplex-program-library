@@ -35,6 +35,20 @@ const mintNftStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _mintNft_ instruction
+ *
+ * @property [_writable_] candyMachine
+ * @property [] candyMachineCreator
+ * @property [**signer**] payer
+ * @property [_writable_] wallet
+ * @property [_writable_] metadata
+ * @property [_writable_] mint
+ * @property [**signer**] mintAuthority
+ * @property [**signer**] updateAuthority
+ * @property [_writable_] masterEdition
+ * @property [] tokenMetadataProgram
+ * @property [] clock
+ * @property [] recentBlockhashes
+ * @property [] instructionSysvarAccount
  * @category Instructions
  * @category MintNft
  * @category generated

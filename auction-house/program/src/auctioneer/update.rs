@@ -11,8 +11,8 @@ pub struct UpdateAuctioneer<'info> {
             PREFIX.as_bytes(),
             auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-        ], 
-        bump=auction_house.bump, 
+        ],
+        bump=auction_house.bump,
         has_one=authority
     )]
     pub auction_house: Account<'info, AuctionHouse>,
@@ -28,11 +28,11 @@ pub struct UpdateAuctioneer<'info> {
     #[account(
         mut,
         seeds = [
-            AUCTIONEER.as_bytes(), 
-            auction_house.key().as_ref(), 
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
-        ], 
-        bump=auction_house.auctioneer_pda_bump, 
+        ],
+        bump=auction_house.auctioneer_pda_bump,
         has_one=auctioneer_authority
     )]
     pub ah_auctioneer_pda: Account<'info, Auctioneer>,
@@ -42,7 +42,7 @@ pub struct UpdateAuctioneer<'info> {
 
 pub fn update_auctioneer<'info>(
     ctx: Context<'_, '_, '_, 'info, UpdateAuctioneer<'info>>,
-    scopes: Box<Vec<AuthorityScope>>,
+    scopes: Vec<AuthorityScope>,
 ) -> Result<()> {
     if scopes.len() > MAX_NUM_SCOPES {
         return Err(AuctionHouseError::TooManyScopes.into());
@@ -59,7 +59,7 @@ pub fn update_auctioneer<'info>(
 
     // Set all scopes false and then update as true the ones passed into the handler.
     auctioneer.scopes = [false; MAX_NUM_SCOPES];
-    for scope in *scopes {
+    for scope in scopes {
         auctioneer.scopes[scope as usize] = true;
     }
 

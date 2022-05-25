@@ -20,10 +20,10 @@ pub struct Withdraw<'info> {
     #[account(
         mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.key().as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
             wallet.key().as_ref()
-        ], 
+        ],
         bump=escrow_payment_bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
@@ -38,13 +38,13 @@ pub struct Withdraw<'info> {
     /// Auction House instance PDA account.
     #[account(
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.creator.as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-        ], 
-        bump=auction_house.bump, 
-        has_one=authority, 
-        has_one=treasury_mint, 
+        ],
+        bump=auction_house.bump,
+        has_one=authority,
+        has_one=treasury_mint,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
@@ -52,12 +52,12 @@ pub struct Withdraw<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.key().as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
-        ], 
+        ],
         bump=auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -118,12 +118,12 @@ pub struct AuctioneerWithdraw<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.key().as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
             wallet.key().as_ref()
-        ], 
+        ],
         bump=escrow_payment_bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
@@ -140,11 +140,11 @@ pub struct AuctioneerWithdraw<'info> {
     #[account(
         seeds = [
             PREFIX.as_bytes(),
-            auction_house.creator.as_ref(), 
+            auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-        ], 
-        bump=auction_house.bump, 
-        has_one=treasury_mint, 
+        ],
+        bump=auction_house.bump,
+        has_one=treasury_mint,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
@@ -152,12 +152,12 @@ pub struct AuctioneerWithdraw<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(
-        mut, 
+        mut,
         seeds = [
-            PREFIX.as_bytes(), 
-            auction_house.key().as_ref(), 
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
-        ], 
+        ],
         bump=auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -167,9 +167,9 @@ pub struct AuctioneerWithdraw<'info> {
     #[account(
         seeds = [
             AUCTIONEER.as_bytes(),
-            auction_house.key().as_ref(), 
+            auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
-        ], 
+        ],
         bump = auction_house.auctioneer_pda_bump
     )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
@@ -206,6 +206,7 @@ pub fn auctioneer_withdraw<'info>(
     withdraw_logic(&mut accounts, escrow_payment_bump, amount)
 }
 
+#[allow(clippy::needless_lifetimes)]
 fn withdraw_logic<'info>(
     accounts: &mut Withdraw<'info>,
     escrow_payment_bump: u8,
@@ -273,7 +274,7 @@ fn withdraw_logic<'info>(
                 token_program.to_account_info(),
                 system_program.to_account_info(),
                 rent.to_account_info(),
-                &fee_seeds,
+                fee_seeds,
             )?;
         }
 

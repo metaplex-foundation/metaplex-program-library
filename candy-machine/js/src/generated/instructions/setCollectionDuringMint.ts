@@ -21,6 +21,18 @@ const setCollectionDuringMintStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _setCollectionDuringMint_ instruction
+ *
+ * @property [] candyMachine
+ * @property [] metadata
+ * @property [**signer**] payer
+ * @property [_writable_] collectionPda
+ * @property [] tokenMetadataProgram
+ * @property [] instructions
+ * @property [] collectionMint
+ * @property [] collectionMetadata
+ * @property [] collectionMasterEdition
+ * @property [] authority
+ * @property [] collectionAuthorityRecord
  * @category Instructions
  * @category SetCollectionDuringMint
  * @category generated
@@ -45,7 +57,6 @@ const setCollectionDuringMintInstructionDiscriminator = [103, 17, 200, 25, 118, 
  * Creates a _SetCollectionDuringMint_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category SetCollectionDuringMint
  * @category generated

@@ -644,6 +644,118 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * SlotHashesEmpty: 'Slot hashes Sysvar is empty'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SlotHashesEmptyError extends Error {
+  readonly code: number = 0x178e;
+  readonly name: string = 'SlotHashesEmpty';
+  constructor() {
+    super('Slot hashes Sysvar is empty');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SlotHashesEmptyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178e, () => new SlotHashesEmptyError());
+createErrorFromNameLookup.set('SlotHashesEmpty', () => new SlotHashesEmptyError());
+
+/**
+ * MetadataAccountMustBeEmpty: 'The metadata account has data in it, and this must be empty to mint a new NFT'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MetadataAccountMustBeEmptyError extends Error {
+  readonly code: number = 0x178f;
+  readonly name: string = 'MetadataAccountMustBeEmpty';
+  constructor() {
+    super('The metadata account has data in it, and this must be empty to mint a new NFT');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MetadataAccountMustBeEmptyError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178f, () => new MetadataAccountMustBeEmptyError());
+createErrorFromNameLookup.set(
+  'MetadataAccountMustBeEmpty',
+  () => new MetadataAccountMustBeEmptyError(),
+);
+
+/**
+ * MissingSetCollectionDuringMint: 'Missing set collection during mint IX for Candy Machine with collection set'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingSetCollectionDuringMintError extends Error {
+  readonly code: number = 0x1790;
+  readonly name: string = 'MissingSetCollectionDuringMint';
+  constructor() {
+    super('Missing set collection during mint IX for Candy Machine with collection set');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingSetCollectionDuringMintError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1790, () => new MissingSetCollectionDuringMintError());
+createErrorFromNameLookup.set(
+  'MissingSetCollectionDuringMint',
+  () => new MissingSetCollectionDuringMintError(),
+);
+
+/**
+ * NoChangingCollectionDuringMint: 'Can't change collection settings after items have begun to be minted'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoChangingCollectionDuringMintError extends Error {
+  readonly code: number = 0x1791;
+  readonly name: string = 'NoChangingCollectionDuringMint';
+  constructor() {
+    super("Can't change collection settings after items have begun to be minted");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoChangingCollectionDuringMintError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1791, () => new NoChangingCollectionDuringMintError());
+createErrorFromNameLookup.set(
+  'NoChangingCollectionDuringMint',
+  () => new NoChangingCollectionDuringMintError(),
+);
+
+/**
+ * CandyCollectionRequiresRetainAuthority: 'Retain authority must be true for Candy Machines with a collection set'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CandyCollectionRequiresRetainAuthorityError extends Error {
+  readonly code: number = 0x1792;
+  readonly name: string = 'CandyCollectionRequiresRetainAuthority';
+  constructor() {
+    super('Retain authority must be true for Candy Machines with a collection set');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CandyCollectionRequiresRetainAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1792, () => new CandyCollectionRequiresRetainAuthorityError());
+createErrorFromNameLookup.set(
+  'CandyCollectionRequiresRetainAuthority',
+  () => new CandyCollectionRequiresRetainAuthorityError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

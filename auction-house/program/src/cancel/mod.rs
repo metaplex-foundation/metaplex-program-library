@@ -108,7 +108,7 @@ pub struct AuctioneerCancel<'info> {
     /// Auction House instance fee account.
     #[account(
         mut,
-        seeds = [ 
+        seeds = [
             PREFIX.as_bytes(),
             auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
@@ -139,7 +139,7 @@ pub struct AuctioneerCancel<'info> {
 
 // Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
 pub fn cancel<'info>(
-    mut ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
+    ctx: Context<'_, '_, '_, 'info, Cancel<'info>>,
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
@@ -150,7 +150,7 @@ pub fn cancel<'info>(
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
-    cancel_logic(&mut ctx.accounts, buyer_price, token_size)
+    cancel_logic(ctx.accounts, buyer_price, token_size)
 }
 
 pub fn auctioneer_cancel<'info>(
@@ -178,6 +178,7 @@ pub fn auctioneer_cancel<'info>(
     cancel_logic(&mut accounts, buyer_price, token_size)
 }
 
+#[allow(clippy::needless_lifetimes)]
 fn cancel_logic<'info>(
     accounts: &mut Cancel<'info>,
     buyer_price: u64,
@@ -249,5 +250,6 @@ fn cancel_logic<'info>(
         .checked_add(curr_lamp)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
     sol_memset(*trade_state.try_borrow_mut_data()?, 0, TRADE_STATE_SIZE);
+
     Ok(())
 }

@@ -89,7 +89,7 @@ impl<'info> From<AuctioneerDeposit<'info>> for Deposit<'info> {
 }
 
 pub fn deposit<'info>(
-    mut ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
+    ctx: Context<'_, '_, '_, 'info, Deposit<'info>>,
     escrow_payment_bump: u8,
     amount: u64,
 ) -> Result<()> {
@@ -100,7 +100,7 @@ pub fn deposit<'info>(
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
-    deposit_logic(&mut ctx.accounts, escrow_payment_bump, amount)
+    deposit_logic(ctx.accounts, escrow_payment_bump, amount)
 }
 
 /// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
@@ -158,9 +158,9 @@ pub struct AuctioneerDeposit<'info> {
         mut,
         seeds = [
             PREFIX.as_bytes(),
-            auction_house.key().as_ref(), 
+            auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
-        ], 
+        ],
         bump=auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -169,10 +169,10 @@ pub struct AuctioneerDeposit<'info> {
     /// The auctioneer PDA owned by Auction House storing scopes.
     #[account(
         seeds = [
-            AUCTIONEER.as_bytes(), 
-            auction_house.key().as_ref(), 
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
-        ], 
+        ],
         bump = auction_house.auctioneer_pda_bump
     )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
@@ -207,6 +207,7 @@ pub fn auctioneer_deposit<'info>(
     deposit_logic(&mut accounts, escrow_payment_bump, amount)
 }
 
+#[allow(clippy::needless_lifetimes)]
 /// Deposit `amount` into the escrow payment account for your specific wallet.
 fn deposit_logic<'info>(
     accounts: &mut Deposit<'info>,
