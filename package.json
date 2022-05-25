@@ -11,7 +11,12 @@
     "build": "yarn build:core && yarn build:auction && yarn build:parallel && yarn build:metaplex",
     "test": "lerna run --parallel test",
     "lint": "lerna run --parallel lint",
-    "fix": "lerna run --parallel fix"
+    "fix": "lerna run --parallel fix",
+    "set.dev.env": "node ./utils/env_setup/set-dev-env.js && cargo build",
+    "unset.dev.env": "node ./utils/env_setup/set-dev-env.js reset",
+    "compile.contracts": "./utils/env_setup/compile-contracts.sh",
+    "deploy.contracts": "./utils/env_setup/deploy-contracts.sh",
+    "publish.npms": "node ./utils/env_setup/publish-npm-packs.js reset"
   },
   "workspaces": [
     "core/js",
