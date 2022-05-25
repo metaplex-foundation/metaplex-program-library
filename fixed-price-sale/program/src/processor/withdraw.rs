@@ -33,8 +33,8 @@ impl<'info> Withdraw<'info> {
         let clock = &self.clock;
         let metadata = &self.metadata.to_account_info();
 
-        let selling_resource_key = selling_resource.key().clone();
-        let treasury_mint_key = market.treasury_mint.clone();
+        let selling_resource_key = selling_resource.key();
+        let treasury_mint_key = market.treasury_mint;
         let funder_key = funder.key();
 
         // Check, that `Market` is `Ended`
@@ -42,10 +42,8 @@ impl<'info> Withdraw<'info> {
             if clock.unix_timestamp as u64 <= end_date {
                 return Err(ErrorCode::MarketInInvalidState.into());
             }
-        } else {
-            if market.state != MarketState::Ended {
-                return Err(ErrorCode::MarketInInvalidState.into());
-            }
+        } else if market.state != MarketState::Ended {
+            return Err(ErrorCode::MarketInInvalidState.into());
         }
 
         // Check, that provided metadata is correct
@@ -60,9 +58,9 @@ impl<'info> Withdraw<'info> {
         )?;
 
         // Obtain right creators according to sale type
-        let metadata = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
+        let metadata = mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
         let actual_creators = if !metadata.primary_sale_happened {
-            if remaining_accounts.len() == 0 {
+            if remaining_accounts.is_empty() {
                 return Err(ErrorCode::PrimaryMetadataCreatorsNotProvided.into());
             }
 
@@ -132,15 +130,13 @@ impl<'info> Withdraw<'info> {
                     metadata.data.seller_fee_basis_points as u64,
                 )?
             }
+        } else if let Some(funder_creator) = funder_creator {
+            calculate_primary_shares_for_creator(
+                market.funds_collected,
+                funder_creator.share as u64,
+            )?
         } else {
-            if let Some(funder_creator) = funder_creator {
-                calculate_primary_shares_for_creator(
-                    market.funds_collected,
-                    funder_creator.share as u64,
-                )?
-            } else {
-                return Err(ErrorCode::MarketOwnerDoesntHaveShares.into());
-            }
+            return Err(ErrorCode::MarketOwnerDoesntHaveShares.into());
         };
 
         // Transfer royalties

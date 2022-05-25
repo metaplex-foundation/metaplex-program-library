@@ -214,10 +214,10 @@ pub fn get_auction_manager(account: &AccountInfo) -> Result<Box<dyn AuctionManag
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     match version {
-        7 => return Ok(Box::new(AuctionManagerV1::from_account_info(account)?)),
-        10 => return Ok(Box::new(AuctionManagerV2::from_account_info(account)?)),
-        _ => return Err(MetaplexError::DataTypeMismatch.into()),
-    };
+        7 => Ok(Box::new(AuctionManagerV1::from_account_info(account)?)),
+        10 => Ok(Box::new(AuctionManagerV2::from_account_info(account)?)),
+        _ => Err(MetaplexError::DataTypeMismatch.into()),
+    }
 }
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
@@ -300,7 +300,7 @@ impl AuctionManager for AuctionManagerV2 {
                 winning_config_item_index: Some(0),
             })
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -343,7 +343,7 @@ impl AuctionManager for AuctionManagerV2 {
                 winning_config_item_index: Some(0),
             })
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -372,7 +372,7 @@ impl AuctionManager for AuctionManagerV2 {
         if let Some(p_config) = safety_config.participation_config {
             Ok(p_config)
         } else {
-            return Err(MetaplexError::NotEligibleForParticipation.into());
+            Err(MetaplexError::NotEligibleForParticipation.into())
         }
     }
 
@@ -399,9 +399,9 @@ impl AuctionManager for AuctionManagerV2 {
     }
 
     fn assert_legacy_printing_token_match(&self, _account: &AccountInfo) -> ProgramResult {
-        // You cannot use MEV1s with auth tokens with V2 auction managers, so if somehow this is called,
-        // throw an error.
-        return Err(MetaplexError::PrintingAuthorizationTokenAccountMismatch.into());
+        // You cannot use MEV1s with auth tokens with V2 auction managers,
+        // so if somehow this is called, throw an error.
+        Err(MetaplexError::PrintingAuthorizationTokenAccountMismatch.into())
     }
 
     fn get_max_bids_allowed_before_removal_is_stopped(
@@ -424,7 +424,7 @@ impl AuctionManager for AuctionManagerV2 {
 
             Ok(0)
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -444,7 +444,7 @@ impl AuctionManager for AuctionManagerV2 {
 
             Ok(())
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -485,9 +485,9 @@ impl AuctionManager for AuctionManagerV2 {
                 }
             }
 
-            return Err(MetaplexError::NoTokensForThisWinner.into());
+            Err(MetaplexError::NoTokensForThisWinner.into())
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -503,7 +503,7 @@ impl AuctionManager for AuctionManagerV2 {
                 Ok(0)
             }
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -860,13 +860,13 @@ const AMOUNT_RANGE_SIZE_POSITION: usize = 44;
 const AMOUNT_RANGE_FIRST_EL_POSITION: usize = 48;
 
 fn get_number_from_data(data: &Ref<&mut [u8]>, data_type: TupleNumericType, offset: usize) -> u64 {
-    return match data_type {
+    match data_type {
         TupleNumericType::U8 => data[offset] as u64,
         TupleNumericType::U16 => u16::from_le_bytes(*array_ref![data, offset, 2]) as u64,
         TupleNumericType::U32 => u32::from_le_bytes(*array_ref![data, offset, 4]) as u64,
         TupleNumericType::U64 => u64::from_le_bytes(*array_ref![data, offset, 8]),
         _ => 0,
-    };
+    }
 }
 
 fn write_amount_type(
@@ -902,23 +902,22 @@ fn write_length_type(
 impl SafetyDepositConfig {
     /// Size of account with padding included
     pub fn created_size(&self) -> usize {
-        return BASE_SAFETY_CONFIG_SIZE
-            + (self.amount_type as usize + self.length_type as usize) * self.amount_ranges.len();
+        BASE_SAFETY_CONFIG_SIZE
+            + (self.amount_type as usize + self.length_type as usize) * self.amount_ranges.len()
     }
 
     pub fn get_order(a: &AccountInfo) -> u64 {
         let data = a.data.borrow();
-        return u64::from_le_bytes(*array_ref![data, ORDER_POSITION, 8]);
+        u64::from_le_bytes(*array_ref![data, ORDER_POSITION, 8])
     }
 
     pub fn get_auction_manager(a: &AccountInfo) -> Pubkey {
         let data = a.data.borrow();
-        return Pubkey::new_from_array(*array_ref![data, AUCTION_MANAGER_POSITION, 32]);
+        Pubkey::new_from_array(*array_ref![data, AUCTION_MANAGER_POSITION, 32])
     }
 
     pub fn get_amount_type(a: &AccountInfo) -> Result<TupleNumericType, ProgramError> {
         let data = &a.data.borrow();
-
         Ok(match data[AMOUNT_POSITION] {
             1 => TupleNumericType::U8,
             2 => TupleNumericType::U16,
@@ -930,7 +929,6 @@ impl SafetyDepositConfig {
 
     pub fn get_length_type(a: &AccountInfo) -> Result<TupleNumericType, ProgramError> {
         let data = &a.data.borrow();
-
         Ok(match data[LENGTH_POSITION] {
             1 => TupleNumericType::U8,
             2 => TupleNumericType::U16,
@@ -941,14 +939,12 @@ impl SafetyDepositConfig {
     }
 
     pub fn get_amount_range_len(a: &AccountInfo) -> u32 {
-        let data = &a.data.borrow();
-
-        return u32::from_le_bytes(*array_ref![data, AMOUNT_RANGE_SIZE_POSITION, 4]);
+        let data = a.data.borrow();
+        u32::from_le_bytes(*array_ref![data, AMOUNT_RANGE_SIZE_POSITION, 4])
     }
 
     pub fn get_winning_config_type(a: &AccountInfo) -> Result<WinningConfigType, ProgramError> {
-        let data = &a.data.borrow();
-
+        let data = a.data.borrow();
         Ok(match data[WINNING_CONFIG_POSITION] {
             0 => WinningConfigType::TokenOnlyTransfer,
             1 => WinningConfigType::FullRightsTransfer,
@@ -1274,8 +1270,8 @@ pub struct AuctionWinnerTokenTypeTracker {
 
 impl AuctionWinnerTokenTypeTracker {
     pub fn created_size(&self, range_size: u64) -> usize {
-        return BASE_TRACKER_SIZE
-            + (self.amount_type as usize + self.length_type as usize) * range_size as usize;
+        BASE_TRACKER_SIZE
+            + (self.amount_type as usize + self.length_type as usize) * range_size as usize
     }
     pub fn from_account_info(
         a: &AccountInfo,
@@ -1359,19 +1355,19 @@ impl AuctionWinnerTokenTypeTracker {
     ) -> ProgramResult {
         let mut new_range: Vec<AmountRange> = vec![];
 
-        if self.amount_ranges.len() == 0 {
+        if self.amount_ranges.is_empty() {
             self.amount_ranges = amount_ranges
                 .iter()
                 .map(|x| {
                     if x.0 > 0 {
-                        return AmountRange(1, x.1);
+                        AmountRange(1, x.1)
                     } else {
-                        return AmountRange(0, x.1);
+                        AmountRange(0, x.1)
                     }
                 })
                 .collect();
             return Ok(());
-        } else if amount_ranges.len() == 0 {
+        } else if amount_ranges.is_empty() {
             return Ok(());
         }
 
@@ -1585,7 +1581,7 @@ impl BidRedemptionTicket {
                     let order = SafetyDepositConfig::get_order(config);
 
                     let (position, mask) = BidRedemptionTicket::get_index_and_mask(data, order)?;
-                    data[position] = data[position] | mask;
+                    data[position] |= mask;
                 }
                 None => return Err(MetaplexError::InvalidOperation.into()),
             }

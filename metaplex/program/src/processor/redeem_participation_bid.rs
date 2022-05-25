@@ -40,7 +40,7 @@ struct V2Accounts<'a> {
 
 fn legacy_validation(
     token_program_info: &AccountInfo,
-    auction_manager: &Box<dyn AuctionManager>,
+    auction_manager: &dyn AuctionManager,
     accounts: &LegacyAccounts,
 ) -> ProgramResult {
     assert_owned_by(
@@ -187,7 +187,6 @@ fn charge_for_participation<'a>(
     config: &ParticipationConfigV2,
     auction_manager_bump: u8,
     auction_manager: &mut Box<dyn AuctionManager>,
-    bidder_token: &Account,
     bidder_metadata: &BidderMetadata,
 ) -> ProgramResult {
     let auction_key = auction_manager.auction();
@@ -204,10 +203,6 @@ fn charge_for_participation<'a>(
         } else if config.non_winning_constraint == NonWinningConstraint::GivenForBidPrice {
             price = bidder_metadata.last_bid;
         }
-    }
-
-    if bidder_token.amount.saturating_sub(price) < 0 as u64 {
-        return Err(MetaplexError::NotEnoughBalanceForParticipation.into());
     }
 
     if price > 0 {
@@ -307,10 +302,7 @@ pub fn process_redeem_participation_bid<'a>(
         store_info,
         safety_deposit_config_info: Some(safety_deposit_config_info),
         is_participation: true,
-        user_provided_win_index: Some(match user_provided_win_index {
-            Some(val) => Some(val as usize),
-            None => None,
-        }),
+        user_provided_win_index: Some(user_provided_win_index.map(|val| val as usize)),
         overwrite_win_index: None,
         assert_bidder_signer: legacy,
         ignore_bid_redeemed_item_check: false,
@@ -337,18 +329,15 @@ pub fn process_redeem_participation_bid<'a>(
     let mut gets_participation =
         config.non_winning_constraint != NonWinningConstraint::NoParticipationPrize;
 
-    if !cancelled {
-        if AuctionData::get_is_winner(auction_info, bidder_info.key).is_some() {
-            // Okay, so they placed in the auction winning prizes section!
-            gets_participation =
-                config.winner_constraint == WinningConstraint::ParticipationPrizeGiven;
-        }
+    if !cancelled && AuctionData::get_is_winner(auction_info, bidder_info.key).is_some() {
+        // Okay, so they placed in the auction winning prizes section!
+        gets_participation = config.winner_constraint == WinningConstraint::ParticipationPrizeGiven;
     }
 
     let bump_seed = assert_derivation(
         program_id,
         auction_manager_info,
-        &[PREFIX.as_bytes(), &auction_manager.auction().as_ref()],
+        &[PREFIX.as_bytes(), auction_manager.auction().as_ref()],
     )?;
 
     if gets_participation {
@@ -356,7 +345,7 @@ pub fn process_redeem_participation_bid<'a>(
             let auction_key = auction_manager.auction();
             let mint_seeds = &[PREFIX.as_bytes(), auction_key.as_ref(), &[bump_seed]];
 
-            legacy_validation(token_program_info, &auction_manager, &accounts)?;
+            legacy_validation(token_program_info, auction_manager.as_ref(), &accounts)?;
             spl_token_transfer(
                 accounts.participation_printing_holding_account_info.clone(),
                 destination_info.clone(),
@@ -413,7 +402,6 @@ pub fn process_redeem_participation_bid<'a>(
             &config,
             bump_seed,
             &mut auction_manager,
-            &bidder_token,
             &bidder_metadata,
         )?;
     } else {

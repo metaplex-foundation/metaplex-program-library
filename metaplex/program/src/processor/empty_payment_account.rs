@@ -28,7 +28,7 @@ use solana_program::{
 use spl_token::state::Account;
 
 fn assert_destination_ownership_validity(
-    auction_manager: &Box<dyn AuctionManager>,
+    auction_manager: &dyn AuctionManager,
     metadata: &Metadata,
     destination_info: &AccountInfo,
     destination: &Account,
@@ -70,7 +70,7 @@ fn assert_destination_ownership_validity(
 fn calculate_owed_amount(
     auction_token_tracker_info: Option<&AccountInfo>,
     safety_deposit_config_info: Option<&AccountInfo>,
-    auction_manager: &Box<dyn AuctionManager>,
+    auction_manager: &dyn AuctionManager,
     auction: &AuctionData,
     metadata: &Metadata,
     winning_config_index: &Option<u8>,
@@ -231,14 +231,14 @@ pub fn process_empty_payment_account(
             tracker_info,
             &[
                 PREFIX.as_bytes(),
-                &program_id.as_ref(),
+                program_id.as_ref(),
                 auction_manager_info.key.as_ref(),
                 TOTALS.as_bytes(),
             ],
         )?;
     }
 
-    let rent = &Rent::from_account_info(&rent_info)?;
+    let rent = &Rent::from_account_info(rent_info)?;
 
     let auction_manager = get_auction_manager(auction_manager_info)?;
     let store = Store::from_account_info(store_info)?;
@@ -300,7 +300,7 @@ pub fn process_empty_payment_account(
     // assert the destination account matches the ownership expected to creator or auction manager authority
     // given in the argument's creator index
     assert_destination_ownership_validity(
-        &auction_manager,
+        auction_manager.as_ref(),
         &metadata,
         destination_info,
         &destination,
@@ -372,8 +372,8 @@ pub fn process_empty_payment_account(
             winning_config_index_key.as_bytes(),
             winning_config_item_index_key.as_bytes(),
             creator_index_key.as_bytes(),
-            &safety_deposit_info.key.as_ref(),
-            &destination.owner.as_ref(),
+            safety_deposit_info.key.as_ref(),
+            destination.owner.as_ref(),
         ],
     )?;
 
@@ -383,8 +383,8 @@ pub fn process_empty_payment_account(
         winning_config_index_key.as_bytes(),
         winning_config_item_index_key.as_bytes(),
         creator_index_key.as_bytes(),
-        &safety_deposit_info.key.as_ref(),
-        &destination.owner.as_ref(),
+        safety_deposit_info.key.as_ref(),
+        destination.owner.as_ref(),
         &[payout_bump],
     ];
 
@@ -407,7 +407,7 @@ pub fn process_empty_payment_account(
     let amount = calculate_owed_amount(
         auction_token_tracker_info,
         safety_deposit_config_info,
-        &auction_manager,
+        auction_manager.as_ref(),
         &auction,
         &metadata,
         &args.winning_config_index,

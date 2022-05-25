@@ -92,14 +92,14 @@ pub enum NFTPacksInstruction {
     /// - read                           whitelisted_creator. Optional key
     ///
     /// Parameters:
-    /// - name	[u8; 32]
-    /// - description String
-    /// - URI String
-    /// - mutable	bool
-    /// - distribution_type    DistributionType
-    /// - allowed_amount_to_redeem    u32
-    /// - redeem_start_date    Option<u64>
-    /// - redeem_end_date    Option<u64>
+    /// - name                           [u8; 32]
+    /// - description                    String
+    /// - URI                            String
+    /// - mutable                        bool
+    /// - distribution_type              DistributionType
+    /// - allowed_amount_to_redeem       u32
+    /// - redeem_start_date              Option<u64>
+    /// - redeem_end_date                Option<u64>
     InitPack(InitPackSetArgs),
 
     /// AddCardToPack
@@ -124,9 +124,9 @@ pub enum NFTPacksInstruction {
     /// - read                          spl_token program
     ///
     /// Parameters:
-    /// - max_supply	Option<u32>
-    /// - probability_type	enum[fixed number, probability based]
-    /// - probability	u64
+    /// - max_supply                    Option<u32>
+    /// - probability_type              enum[fixed number, probability based]
+    /// - probability                   u64
     AddCardToPack(AddCardToPackArgs),
 
     /// AddVoucherToPack
@@ -262,10 +262,10 @@ pub enum NFTPacksInstruction {
     /// - signer           authority
     ///
     /// Parameters:
-    /// - name Option<[u8; 32]>
-    /// - description Option<String>
-    /// - URI Option<String>
-    /// - mutable	Option<bool> (only can be changed from true to false)
+    /// - name             Option<[u8; 32]>
+    /// - description      Option<String>
+    /// - URI              Option<String>
+    /// - mutable          Option<bool> (only can be changed from true to false)
     EditPack(EditPackSetArgs),
 
     /// RequestCardForRedeem

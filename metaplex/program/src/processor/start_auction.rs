@@ -29,7 +29,7 @@ pub fn issue_start_auction<'a>(
             StartAuctionArgs { resource: vault },
         ),
         &[auction_program, authority, auction, clock],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -75,7 +75,7 @@ pub fn process_start_auction(program_id: &Pubkey, accounts: &[AccountInfo]) -> P
 
     let auction_key = auction_manager.auction();
     let seeds = &[PREFIX.as_bytes(), auction_key.as_ref()];
-    let (_, bump_seed) = Pubkey::find_program_address(seeds, &program_id);
+    let (_, bump_seed) = Pubkey::find_program_address(seeds, program_id);
     let authority_seeds = &[PREFIX.as_bytes(), auction_key.as_ref(), &[bump_seed]];
 
     issue_start_auction(

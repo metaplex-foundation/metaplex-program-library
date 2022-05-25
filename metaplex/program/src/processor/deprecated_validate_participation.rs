@@ -38,7 +38,7 @@ pub fn process_deprecated_validate_participation(
     let safety_deposit_box_token_store_info = next_account_info(account_info_iter)?;
     let vault_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
-    let rent = &Rent::from_account_info(&rent_info)?;
+    let rent = &Rent::from_account_info(rent_info)?;
 
     let mut auction_manager = AuctionManagerV1::from_account_info(auction_manager_info)?;
     let store = Store::from_account_info(store_info)?;
@@ -77,7 +77,7 @@ pub fn process_deprecated_validate_participation(
     // is it the right vault, safety deposit, and token store?
     assert_store_safety_vault_manager_match(
         &auction_manager.vault,
-        &safety_deposit_box_info,
+        safety_deposit_box_info,
         vault_info,
         &store.token_vault_program,
     )?;
@@ -106,7 +106,7 @@ pub fn process_deprecated_validate_participation(
         &[
             mpl_token_metadata::state::PREFIX.as_bytes(),
             store.token_metadata_program.as_ref(),
-            &open_edition_metadata.mint.as_ref(),
+            open_edition_metadata.mint.as_ref(),
             mpl_token_metadata::state::EDITION.as_bytes(),
         ],
     )?;

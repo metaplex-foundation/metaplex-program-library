@@ -106,7 +106,7 @@ pub fn process_full_rights_transfer_bid<'a>(
 
             let auction_key = auction_manager.auction();
             let auction_seeds = &[PREFIX.as_bytes(), auction_key.as_ref()];
-            let (_, auction_bump_seed) = Pubkey::find_program_address(auction_seeds, &program_id);
+            let (_, auction_bump_seed) = Pubkey::find_program_address(auction_seeds, program_id);
             let auction_authority_seeds = &[
                 PREFIX.as_bytes(),
                 auction_key.as_ref(),

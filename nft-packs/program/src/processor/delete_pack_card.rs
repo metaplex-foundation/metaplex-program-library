@@ -29,7 +29,7 @@ pub fn delete_pack_card(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     assert_owned_by(pack_set_account, program_id)?;
     assert_owned_by(pack_card_account, program_id)?;
 
-    assert_signer(&authority_account)?;
+    assert_signer(authority_account)?;
 
     let (valid_program_authority, bump_seed) = find_program_authority(program_id);
     assert_account_key(program_authority_account, &valid_program_authority)?;

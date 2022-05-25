@@ -34,7 +34,7 @@ pub fn issue_end_auction<'a>(
             },
         ),
         &[auction_program, authority, auction, clock],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -46,7 +46,7 @@ pub fn process_end_auction(
     args: MetaplexEndAuctionArgs,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
-    let mut auction_manager_info = next_account_info(account_info_iter)?;
+    let auction_manager_info = next_account_info(account_info_iter)?;
     let auction_info = next_account_info(account_info_iter)?;
     let auction_data_extended_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
@@ -85,9 +85,9 @@ pub fn process_end_auction(
     }
 
     let auction_key = auction_manager.auction();
-    let seeds = &[PREFIX.as_bytes(), &auction_key.as_ref()];
-    let (_, bump_seed) = Pubkey::find_program_address(seeds, &program_id);
-    let authority_seeds = &[PREFIX.as_bytes(), &auction_key.as_ref(), &[bump_seed]];
+    let seeds = &[PREFIX.as_bytes(), auction_key.as_ref()];
+    let (_, bump_seed) = Pubkey::find_program_address(seeds, program_id);
+    let authority_seeds = &[PREFIX.as_bytes(), auction_key.as_ref(), &[bump_seed]];
 
     issue_end_auction(
         auction_program_info.clone(),
@@ -112,7 +112,7 @@ pub fn process_end_auction(
         auction_manager.set_status(AuctionManagerStatus::Disbursing);
     }
 
-    auction_manager.save(&mut auction_manager_info)?;
+    auction_manager.save(auction_manager_info)?;
 
     Ok(())
 }

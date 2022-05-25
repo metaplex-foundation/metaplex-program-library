@@ -49,7 +49,7 @@ fn set_reservation_list_wrapper<'a>(
             reservation_list_info.clone(),
             auction_manager_info.clone(),
         ],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -80,8 +80,6 @@ pub fn reserve_list_if_needed<'a>(
     safety_deposit_token_store_info: &AccountInfo<'a>,
     signer_seeds: &[&[u8]],
 ) -> ProgramResult {
-    let total_reservation_spot_opt: Option<u64>;
-
     // This math will explicitly be off in custom cases where you are giving away multiple editions to a single
     // person. However these are rare. This optimization will literally break this case because
     // there will be fewer reservation spots than those available. However I'm switching to it
@@ -90,14 +88,15 @@ pub fn reserve_list_if_needed<'a>(
 
     let total_spot_offset: u64 = winning_index as u64;
 
-    if get_supply_snapshot_off_reservation_list(reservation_list_info)?.is_none() {
-        total_reservation_spot_opt = Some(std::cmp::min(
-            get_amount_from_token_account(safety_deposit_token_store_info)?,
-            AuctionData::get_num_winners(auction_info) as u64,
-        ));
-    } else {
-        total_reservation_spot_opt = None
-    }
+    let total_reservation_spot_opt =
+        if get_supply_snapshot_off_reservation_list(reservation_list_info)?.is_none() {
+            Some(std::cmp::min(
+                get_amount_from_token_account(safety_deposit_token_store_info)?,
+                AuctionData::get_num_winners(auction_info) as u64,
+            ))
+        } else {
+            None
+        };
 
     let my_spots: u64 = 1;
 
@@ -212,7 +211,7 @@ pub fn process_redeem_bid<'a>(
             let auction_bump_seed = assert_derivation(
                 program_id,
                 auction_manager_info,
-                &[PREFIX.as_bytes(), &auction_manager.auction().as_ref()],
+                &[PREFIX.as_bytes(), auction_manager.auction().as_ref()],
             )?;
 
             let auction_key = auction_manager.auction();

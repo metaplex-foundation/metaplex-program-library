@@ -300,7 +300,7 @@ impl AuctionManager for AuctionManagerV1 {
                 fixed_price: part_config.fixed_price,
             })
         } else {
-            return Err(MetaplexError::NotEligibleForParticipation.into());
+            Err(MetaplexError::NotEligibleForParticipation.into())
         }
     }
 
@@ -349,8 +349,7 @@ impl AuctionManager for AuctionManagerV1 {
             if self.settings.winning_configs[n]
                 .items
                 .iter()
-                .find(|i| i.safety_deposit_box_index == u8_order)
-                .is_some()
+                .any(|i| i.safety_deposit_box_index == u8_order)
             {
                 // This means at least n bids must exist for there to be at least one bidder that will be eligible for this prize.
                 max_bids_allowed_before_removal_is_stopped = n;
@@ -358,7 +357,7 @@ impl AuctionManager for AuctionManagerV1 {
             }
         }
 
-        return Ok(max_bids_allowed_before_removal_is_stopped);
+        Ok(max_bids_allowed_before_removal_is_stopped)
     }
 
     fn assert_is_valid_master_edition_v2_safety_deposit(
@@ -367,20 +366,12 @@ impl AuctionManager for AuctionManagerV1 {
         _safety_deposit_config_info: Option<&AccountInfo>,
     ) -> ProgramResult {
         let u8_order = safety_deposit_box_order as u8;
-        let atleast_one_matching = self
-            .settings
-            .winning_configs
-            .iter()
-            .find(|c| {
-                c.items
-                    .iter()
-                    .find(|i| {
-                        i.safety_deposit_box_index == u8_order
-                            && i.winning_config_type == WinningConfigType::PrintingV2
-                    })
-                    .is_some()
+        let atleast_one_matching = self.settings.winning_configs.iter().any(|c| {
+            c.items.iter().any(|i| {
+                i.safety_deposit_box_index == u8_order
+                    && i.winning_config_type == WinningConfigType::PrintingV2
             })
-            .is_some();
+        });
 
         if !atleast_one_matching {
             if let Some(config) = &self.settings.participation_config {
@@ -445,7 +436,7 @@ impl AuctionManager for AuctionManagerV1 {
                             .primary_sale_happened,
                     )
                 } else {
-                    return Err(MetaplexError::InvalidWinningConfigItemIndex.into());
+                    Err(MetaplexError::InvalidWinningConfigItemIndex.into())
                 }
             }
             None => {
@@ -511,20 +502,16 @@ impl AuctionManagerV1 {
 }
 
 fn count_item_amount_by_safety_deposit_order(
-    items: &Vec<WinningConfigItem>,
+    items: &[WinningConfigItem],
     safety_deposit_index: u8,
 ) -> u64 {
-    let item = items.iter().find_map(|i| {
-        if i.safety_deposit_box_index == safety_deposit_index {
-            Some(i)
-        } else {
-            None
-        }
-    });
+    let item = items
+        .iter()
+        .find(|i| i.safety_deposit_box_index == safety_deposit_index);
 
     match item {
         Some(item) => item.amount as u64,
-        None => 0u64,
+        None => 0,
     }
 }
 

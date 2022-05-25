@@ -148,14 +148,14 @@ pub fn assert_common_checks(args: CommonCheckArgs) -> ProgramResult {
     assert_authority_correct(&auction_manager.authority(), authority_info)?;
     assert_store_safety_vault_manager_match(
         &auction_manager.vault(),
-        &safety_deposit_info,
+        safety_deposit_info,
         vault_info,
         &store.token_vault_program,
     )?;
     assert_at_least_one_creator_matches_or_store_public_and_all_verified(
         program_id,
         auction_manager,
-        &metadata,
+        metadata,
         whitelisted_creator_info,
         auction_manager_store_info,
     )?;
@@ -228,7 +228,7 @@ pub fn assert_supply_logic_check(args: SupplyLogicCheckArgs) -> ProgramResult {
     let edition_seeds = &[
         mpl_token_metadata::state::PREFIX.as_bytes(),
         store.token_metadata_program.as_ref(),
-        &metadata.mint.as_ref(),
+        metadata.mint.as_ref(),
         mpl_token_metadata::state::EDITION.as_bytes(),
     ];
 
@@ -237,12 +237,12 @@ pub fn assert_supply_logic_check(args: SupplyLogicCheckArgs) -> ProgramResult {
 
     let auction_key = auction_manager.auction();
     let seeds = &[PREFIX.as_bytes(), auction_key.as_ref()];
-    let (_, bump_seed) = Pubkey::find_program_address(seeds, &program_id);
+    let (_, bump_seed) = Pubkey::find_program_address(seeds, program_id);
     let authority_seeds = &[PREFIX.as_bytes(), auction_key.as_ref(), &[bump_seed]];
     // Supply logic check
     match winning_config_type {
         WinningConfigType::FullRightsTransfer => {
-            assert_update_authority_is_correct(&metadata, metadata_authority_info)?;
+            assert_update_authority_is_correct(metadata, metadata_authority_info)?;
 
             if safety_deposit.token_mint != metadata.mint {
                 return Err(MetaplexError::SafetyDepositBoxMetadataMismatch.into());
@@ -268,7 +268,7 @@ pub fn assert_supply_logic_check(args: SupplyLogicCheckArgs) -> ProgramResult {
             ];
 
             let (expected_key, original_bump_seed) =
-                Pubkey::find_program_address(original_authority_lookup_seeds, &program_id);
+                Pubkey::find_program_address(original_authority_lookup_seeds, program_id);
             let original_authority_seeds = &[
                 PREFIX.as_bytes(),
                 auction_key.as_ref(),
@@ -388,7 +388,7 @@ pub fn process_validate_safety_deposit_box_v2<'a>(
     let account_info_iter = &mut accounts.iter();
     let safety_deposit_config_info = next_account_info(account_info_iter)?;
     let auction_token_tracker_info = next_account_info(account_info_iter)?;
-    let mut auction_manager_info = next_account_info(account_info_iter)?;
+    let auction_manager_info = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
     let original_authority_lookup_info = next_account_info(account_info_iter)?;
     let whitelisted_creator_info = next_account_info(account_info_iter)?;
@@ -414,7 +414,7 @@ pub fn process_validate_safety_deposit_box_v2<'a>(
         auction_token_tracker_info,
         &[
             PREFIX.as_bytes(),
-            &program_id.as_ref(),
+            program_id.as_ref(),
             auction_manager_info.key.as_ref(),
             TOTALS.as_bytes(),
         ],
@@ -510,7 +510,7 @@ pub fn process_validate_safety_deposit_box_v2<'a>(
         auction_manager.state.status = AuctionManagerStatus::Validated
     }
 
-    auction_manager.save(&mut auction_manager_info)?;
+    auction_manager.save(auction_manager_info)?;
 
     if safety_deposit_config.winning_config_type != WinningConfigType::Participation {
         auction_token_tracker.add_one_where_positive_ranges_occur(

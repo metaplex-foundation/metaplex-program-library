@@ -1,5 +1,5 @@
 use crate::{
-    deprecated_state::{AuctionManagerV1, ParticipationConfigV1},
+    deprecated_state::AuctionManagerV1,
     error::MetaplexError,
     state::{NonWinningConstraint, Store, WinningConstraint, PREFIX},
     utils::{
@@ -94,7 +94,7 @@ pub fn process_deprecated_populate_participation_printing_account<'a>(
 
     let auction_manager = AuctionManagerV1::from_account_info(auction_manager_info)?;
     let safety_deposit = SafetyDepositBox::from_account_info(safety_deposit_info)?;
-    let safety_deposit_token_store: Account = assert_initialized(&safety_deposit_token_store_info)?;
+    let safety_deposit_token_store: Account = assert_initialized(safety_deposit_token_store_info)?;
     let auction = AuctionData::from_account_info(auction_info)?;
     let auction_extended = AuctionDataExtended::from_account_info(auction_extended_info)?;
     let master_edition = MasterEditionV1::from_account_info(master_edition_info)?;
@@ -104,12 +104,11 @@ pub fn process_deprecated_populate_participation_printing_account<'a>(
         assert_initialized(participation_printing_holding_account_info)?;
     let store = Store::from_account_info(store_info)?;
 
-    let config: &ParticipationConfigV1;
-    if let Some(part_config) = &auction_manager.settings.participation_config {
-        config = part_config
+    let config = if let Some(part_config) = &auction_manager.settings.participation_config {
+        part_config
     } else {
         return Err(MetaplexError::NotEligibleForParticipation.into());
-    }
+    };
 
     if auction_manager.auction != *auction_info.key {
         return Err(MetaplexError::AuctionManagerAuctionMismatch.into());
@@ -121,8 +120,8 @@ pub fn process_deprecated_populate_participation_printing_account<'a>(
 
     assert_store_safety_vault_manager_match(
         &auction_manager.authority,
-        &safety_deposit_info,
-        &vault_info,
+        safety_deposit_info,
+        vault_info,
         &store.token_vault_program,
     )?;
 
@@ -206,12 +205,12 @@ pub fn process_deprecated_populate_participation_printing_account<'a>(
         let auction_bump_seed = assert_derivation(
             program_id,
             auction_manager_info,
-            &[PREFIX.as_bytes(), &auction_manager.auction.as_ref()],
+            &[PREFIX.as_bytes(), auction_manager.auction.as_ref()],
         )?;
 
         let auction_auth_seeds = &[
             PREFIX.as_bytes(),
-            &auction_manager.auction.as_ref(),
+            auction_manager.auction.as_ref(),
             &[auction_bump_seed],
         ];
 

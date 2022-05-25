@@ -98,7 +98,7 @@ pub fn sys_create_account<'a>(
     invoke_signed(
         &system_instruction::create_account(from.key, to.key, lamports, space as u64, owner),
         &[from.clone(), to.clone()],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -115,7 +115,7 @@ pub fn sys_transfer<'a>(
     invoke_signed(
         &system_instruction::transfer(from.key, to.key, lamports),
         &[from.clone(), to.clone()],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -175,7 +175,7 @@ pub fn mpl_mint_new_edition_from_master_edition_via_token<'a>(
             system_program.clone(),
             rent.clone(),
         ],
-        &[&signers_seeds],
+        &[signers_seeds],
     )?;
 
     Ok(())
@@ -199,7 +199,7 @@ pub fn mpl_update_primary_sale_happened_via_token<'a>(
     invoke_signed(
         &tx,
         &[metadata.clone(), owner.clone(), token.clone()],
-        &[&signers_seeds],
+        &[signers_seeds],
     )?;
 
     Ok(())
@@ -229,7 +229,7 @@ pub fn mpl_update_metadata_accounts_v2<'a>(
     invoke_signed(
         &tx,
         &[metadata.clone(), update_authority.clone()],
-        &[&signers_seeds],
+        &[signers_seeds],
     )?;
 
     Ok(())

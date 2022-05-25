@@ -62,7 +62,7 @@ pub fn issue_claim_bid<'a>(
             ClaimBidArgs { resource: vault },
         ),
         account_infos.as_ref(),
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -73,7 +73,7 @@ pub fn process_claim_bid(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let accept_payment_info = next_account_info(account_info_iter)?;
     let bidder_pot_token_info = next_account_info(account_info_iter)?;
     let bidder_pot_info = next_account_info(account_info_iter)?;
-    let mut auction_manager_info = next_account_info(account_info_iter)?;
+    let auction_manager_info = next_account_info(account_info_iter)?;
     let auction_info = next_account_info(account_info_iter)?;
     let bidder_info = next_account_info(account_info_iter)?;
     let token_mint_info = next_account_info(account_info_iter)?;
@@ -130,10 +130,8 @@ pub fn process_claim_bid(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
         instant_sale_price =
             AuctionDataExtended::get_instant_sale_price(&auction_extended.data.borrow());
     }
-    if !instant_sale_price.is_some() {
-        if auction.state != AuctionState::Ended {
-            return Err(MetaplexError::AuctionHasNotEnded.into());
-        }
+    if instant_sale_price.is_none() && auction.state != AuctionState::Ended {
+        return Err(MetaplexError::AuctionHasNotEnded.into());
     }
 
     if auction_manager.status() != AuctionManagerStatus::Disbursing
@@ -151,7 +149,7 @@ pub fn process_claim_bid(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     let bump_seed = assert_derivation(
         program_id,
         auction_manager_info,
-        &[PREFIX.as_bytes(), &auction_manager.auction().as_ref()],
+        &[PREFIX.as_bytes(), auction_manager.auction().as_ref()],
     )?;
     let auction_key = auction_manager.auction();
     let authority_seeds = &[PREFIX.as_bytes(), auction_key.as_ref(), &[bump_seed]];
@@ -159,7 +157,7 @@ pub fn process_claim_bid(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     issue_claim_bid(
         auction_program_info.clone(),
         auction_info.clone(),
-        auction_extended_info.map_or(None, |acc| Some(acc.clone())),
+        auction_extended_info.cloned(),
         accept_payment_info.clone(),
         auction_manager_info.clone(),
         bidder_info.clone(),
@@ -174,6 +172,6 @@ pub fn process_claim_bid(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
 
     // Note do not move this above the assert_derivation ... it does something to auction manager
     // that causes assert_derivation to get caught in infinite loop...borsh sucks.
-    auction_manager.save(&mut auction_manager_info)?;
+    auction_manager.save(auction_manager_info)?;
     Ok(())
 }
