@@ -58,7 +58,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     }
     assert_master_edition(&metadata, &edition)?;
     if authority_record.data_is_empty() {
-        let approve_collection_infos = vec![
+        let approve_collection_infos = &[
             authority_record.clone(),
             ctx.accounts.collection_pda.to_account_info(),
             ctx.accounts.authority.to_account_info(),
@@ -83,7 +83,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
                 ctx.accounts.metadata.key(),
                 *mint.key,
             ),
-            approve_collection_infos.as_slice(),
+            approve_collection_infos,
         )?;
         msg!(
             "Successfully approved collection authority. Now setting PDA mint to {}.",

@@ -506,12 +506,11 @@ pub fn handle_mint_nft<'info>(
     let cm_key = candy_machine.key();
     let authority_seeds = [PREFIX.as_bytes(), cm_key.as_ref(), &[creator_bump]];
 
-    let mut creators: Vec<mpl_token_metadata::state::Creator> =
-        vec![mpl_token_metadata::state::Creator {
-            address: candy_machine_creator.key(),
-            verified: true,
-            share: 0,
-        }];
+    let mut creators = vec![mpl_token_metadata::state::Creator {
+        address: candy_machine_creator.key(),
+        verified: true,
+        share: 0,
+    }];
 
     for c in &candy_machine.data.creators {
         creators.push(mpl_token_metadata::state::Creator {
@@ -521,7 +520,7 @@ pub fn handle_mint_nft<'info>(
         });
     }
 
-    let metadata_infos = vec![
+    let metadata_infos = &[
         ctx.accounts.metadata.to_account_info(),
         ctx.accounts.mint.to_account_info(),
         ctx.accounts.mint_authority.to_account_info(),
@@ -533,7 +532,7 @@ pub fn handle_mint_nft<'info>(
         candy_machine_creator.to_account_info(),
     ];
 
-    let master_edition_infos = vec![
+    let master_edition_infos = &[
         ctx.accounts.master_edition.to_account_info(),
         ctx.accounts.mint.to_account_info(),
         ctx.accounts.mint_authority.to_account_info(),
@@ -563,7 +562,7 @@ pub fn handle_mint_nft<'info>(
             None,
             None,
         ),
-        metadata_infos.as_slice(),
+        metadata_infos,
         &[&authority_seeds],
     )?;
     invoke_signed(
@@ -577,7 +576,7 @@ pub fn handle_mint_nft<'info>(
             ctx.accounts.payer.key(),
             Some(candy_machine.data.max_supply),
         ),
-        master_edition_infos.as_slice(),
+        master_edition_infos,
         &[&authority_seeds],
     )?;
 

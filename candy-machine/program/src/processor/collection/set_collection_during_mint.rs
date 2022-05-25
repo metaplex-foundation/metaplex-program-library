@@ -98,7 +98,7 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
     let seeds = [b"collection".as_ref(), candy_key.as_ref()];
     let bump = assert_derivation(&crate::id(), &collection_pda.to_account_info(), &seeds)?;
     let signer_seeds = [b"collection".as_ref(), candy_key.as_ref(), &[bump]];
-    let set_collection_infos = vec![
+    let set_collection_infos = &[
         ctx.accounts.metadata.to_account_info(),
         collection_pda.to_account_info(),
         ctx.accounts.payer.to_account_info(),
@@ -120,7 +120,7 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
             ctx.accounts.collection_master_edition.key(),
             Some(ctx.accounts.collection_authority_record.key()),
         ),
-        set_collection_infos.as_slice(),
+        set_collection_infos,
         &[&signer_seeds],
     )?;
     Ok(())

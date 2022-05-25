@@ -57,10 +57,7 @@ pub fn handle_initialize_candy_machine(
         candy_machine.token_mint = Some(*token_mint_info.key);
     }
 
-    let mut array_of_zeroes = vec![];
-    while array_of_zeroes.len() < MAX_SYMBOL_LENGTH - candy_machine.data.symbol.len() {
-        array_of_zeroes.push(0u8);
-    }
+    let array_of_zeroes = vec![0u8; MAX_SYMBOL_LENGTH - candy_machine.data.symbol.len()];
     let new_symbol =
         candy_machine.data.symbol.clone() + std::str::from_utf8(&array_of_zeroes).unwrap();
     candy_machine.data.symbol = new_symbol;

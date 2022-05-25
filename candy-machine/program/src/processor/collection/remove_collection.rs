@@ -41,7 +41,7 @@ pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
         return err!(CandyError::MintMismatch);
     }
     let authority_record = ctx.accounts.collection_authority_record.to_account_info();
-    let revoke_collection_infos = vec![
+    let revoke_collection_infos = &[
         authority_record.clone(),
         ctx.accounts.collection_pda.to_account_info(),
         ctx.accounts.authority.to_account_info(),
@@ -61,7 +61,7 @@ pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
             ctx.accounts.metadata.key(),
             mint.key(),
         ),
-        revoke_collection_infos.as_slice(),
+        revoke_collection_infos,
     )?;
     remove_feature_flag(&mut candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX);
     Ok(())
