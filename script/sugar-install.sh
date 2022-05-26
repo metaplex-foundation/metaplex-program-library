@@ -74,7 +74,6 @@ echo ""
 
 # downloads the distribution file
 REMOTE="https://github.com/metaplex-foundation/sugar/releases/latest/download/"
-echo "$REMOTE$BIN"-"$DIST"
 curl -L $REMOTE$BIN"-"$DIST --output "$SOURCE/$DIST"
 abort_on_error $?
 
