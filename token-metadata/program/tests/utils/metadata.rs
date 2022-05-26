@@ -1,7 +1,7 @@
 use crate::*;
 use mpl_token_metadata::{
     id, instruction,
-    state::{Collection, Creator, Data, DataV2, Uses, PREFIX},
+    state::{Collection, CollectionDetails, Creator, Data, DataV2, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 
@@ -170,7 +170,7 @@ impl Metadata {
         freeze_authority: Option<&Pubkey>,
         collection: Option<Collection>,
         uses: Option<Uses>,
-        is_collection_parent: bool,
+        collection_details: Option<CollectionDetails>,
     ) -> transport::Result<()> {
         create_mint(
             context,
@@ -214,7 +214,7 @@ impl Metadata {
                 is_mutable,
                 collection,
                 uses,
-                is_collection_parent,
+                collection_details,
             )],
             Some(&context.payer.pubkey()),
             &[&context.payer],

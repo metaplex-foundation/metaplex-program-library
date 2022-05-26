@@ -216,7 +216,7 @@ mod burn_nft {
                 None,
                 None,
                 None,
-                true, // Collection Parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -244,7 +244,7 @@ mod burn_nft {
                 None,
                 Some(collection),
                 None,
-                false, // Collection Item
+                None, // Collection Item
             )
             .await
             .unwrap();
@@ -343,7 +343,7 @@ mod burn_nft {
                 None,
                 None,
                 None,
-                true, // Collection Parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -372,7 +372,7 @@ mod burn_nft {
                 None,
                 Some(collection),
                 None,
-                false, // Collection Item
+                None, // Collection Item
             )
             .await
             .unwrap();

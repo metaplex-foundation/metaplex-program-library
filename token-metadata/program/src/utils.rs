@@ -4,11 +4,11 @@ use crate::{
     error::MetadataError,
     pda::find_master_edition_account,
     state::{
-        get_reservation_list, CollectionDetails, CollectionStatus, Data, DataV2, Edition,
-        EditionMarker, Key, MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, Uses,
-        EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
-        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
-        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
+        get_reservation_list, CollectionDetails, Data, DataV2, Edition, EditionMarker, Key,
+        MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, Uses, EDITION,
+        EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
+        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
+        MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -601,8 +601,6 @@ pub fn mint_limited_edition<'a>(
     };
     // create the metadata the normal way...
 
-    let is_collection_parent = false;
-
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -619,7 +617,7 @@ pub fn mint_limited_edition<'a>(
         false,
         true,
         true,
-        is_collection_parent,
+        None, // Not a collection parent
     )?;
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),
@@ -877,7 +875,7 @@ pub fn process_create_metadata_accounts_logic(
     mut is_mutable: bool,
     is_edition: bool,
     add_token_standard: bool,
-    is_collection_parent: bool,
+    collection_details: Option<CollectionDetails>,
 ) -> ProgramResult {
     let CreateMetadataAccountsLogicArgs {
         metadata_account_info,
@@ -963,11 +961,18 @@ pub fn process_create_metadata_accounts_logic(
     assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
 
-    if is_collection_parent {
-        metadata.collection_details = Some(CollectionDetails::V1 {
-            status: CollectionStatus::None,
-            size: 0,
-        });
+    // We want to create new collections with a size of zero but we use the
+    // collection details enum for forward compatibility, so we allow setting
+    // the status but not size.
+    if let Some(details) = collection_details {
+        match details {
+            CollectionDetails::V1 {
+                size: _size,
+                status,
+            } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { status, size: 0 });
+            }
+        }
     } else {
         metadata.collection_details = None;
     }

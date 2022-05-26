@@ -1,7 +1,7 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
     state::{
-        Collection, CollectionStatus, Creator, Data, DataV2, Uses, EDITION,
+        Collection, CollectionDetails, CollectionStatus, Creator, Data, DataV2, Uses, EDITION,
         EDITION_MARKER_BIT_SIZE, PREFIX,
     },
 };
@@ -61,7 +61,7 @@ pub struct CreateMetadataAccountArgsV3 {
     /// Whether you want your metadata to be updateable in the future.
     pub is_mutable: bool,
     /// If this is a collection parent NFT.
-    pub is_collection_parent: bool,
+    pub collection_details: Option<CollectionDetails>,
 }
 
 #[repr(C)]
@@ -1578,7 +1578,7 @@ pub fn create_metadata_accounts_v3(
     is_mutable: bool,
     collection: Option<Collection>,
     uses: Option<Uses>,
-    is_collection_parent: bool,
+    collection_details: Option<CollectionDetails>,
 ) -> Instruction {
     Instruction {
         program_id,
@@ -1602,7 +1602,7 @@ pub fn create_metadata_accounts_v3(
                 uses,
             },
             is_mutable,
-            is_collection_parent,
+            collection_details,
         })
         .try_to_vec()
         .unwrap(),

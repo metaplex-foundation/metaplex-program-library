@@ -41,7 +41,7 @@ mod set_collection_status {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -134,7 +134,7 @@ mod set_collection_status {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -191,7 +191,6 @@ mod set_collection_status {
     async fn incorrect_update_authority() {
         let mut context = program_test().start_with_context().await;
 
-        // This key will pay for the transaction, but is not the update authority.
         let payer = Keypair::new();
         airdrop(&mut context, &payer.pubkey(), 1_000_000_000)
             .await
@@ -214,7 +213,7 @@ mod set_collection_status {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();

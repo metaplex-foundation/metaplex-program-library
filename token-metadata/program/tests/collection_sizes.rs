@@ -37,7 +37,7 @@ mod unsized_collection_handlers {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -65,7 +65,7 @@ mod unsized_collection_handlers {
                 None,
                 Some(collection),
                 None,
-                false, // is not collection parent
+                None, // is not collection parent
             )
             .await
             .unwrap();
@@ -112,7 +112,7 @@ mod unsized_collection_handlers {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // is collection parent
             )
             .await
             .unwrap();
@@ -140,7 +140,7 @@ mod unsized_collection_handlers {
                 None,
                 Some(collection),
                 None,
-                false, // is not collection parent
+                None, // is not collection parent
             )
             .await
             .unwrap();
@@ -201,7 +201,7 @@ mod unsized_collection_handlers {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // is collection parent
             )
             .await
             .unwrap();
@@ -227,7 +227,7 @@ mod unsized_collection_handlers {
                 None,
                 None,
                 None,
-                false, // is not collection parent
+                None, // is not collection parent
             )
             .await
             .unwrap();
@@ -510,7 +510,7 @@ mod size_tracking {
                 None,
                 None,
                 None,
-                true, // Collection Parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -538,7 +538,7 @@ mod size_tracking {
                 None,
                 Some(collection),
                 None,
-                false, // Collection Item
+                None, // Collection Item
             )
             .await
             .unwrap();

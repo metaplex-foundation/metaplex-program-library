@@ -95,7 +95,7 @@ pub fn process_instruction<'a>(
                 args.data,
                 false,
                 args.is_mutable,
-                args.is_collection_parent,
+                args.collection_details,
             )
         }
         MetadataInstruction::UpdateMetadataAccountV2(args) => {
@@ -265,9 +265,6 @@ pub fn process_create_metadata_accounts_v2<'a>(
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
-    // V2 does not suport collection parents.
-    let is_collection_parent = false;
-
     process_create_metadata_accounts_logic(
         program_id,
         CreateMetadataAccountsLogicArgs {
@@ -284,7 +281,7 @@ pub fn process_create_metadata_accounts_v2<'a>(
         is_mutable,
         false,
         true,
-        is_collection_parent,
+        None, // V2 does not suport collection parents.
     )
 }
 
@@ -294,7 +291,7 @@ pub fn process_create_metadata_accounts_v3<'a>(
     data: DataV2,
     allow_direct_creator_writes: bool,
     is_mutable: bool,
-    is_collection_parent: bool,
+    collection_details: Option<CollectionDetails>,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let metadata_account_info = next_account_info(account_info_iter)?;
@@ -321,7 +318,7 @@ pub fn process_create_metadata_accounts_v3<'a>(
         is_mutable,
         false,
         true,
-        is_collection_parent,
+        collection_details,
     )
 }
 

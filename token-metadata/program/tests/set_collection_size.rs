@@ -2,10 +2,10 @@
 pub mod utils;
 
 use borsh::BorshDeserialize;
-use mpl_token_metadata::{error::MetadataError, state::CollectionDetails};
 use mpl_token_metadata::{
+    error::MetadataError,
     instruction::{approve_collection_authority, set_collection_size},
-    state::Metadata as ProgramMetadata,
+    state::{CollectionDetails, Metadata as ProgramMetadata},
     ID as PROGRAM_ID,
 };
 use num_traits::FromPrimitive;
@@ -43,7 +43,7 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -128,7 +128,7 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -243,7 +243,7 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                true, // is collection parent
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();

@@ -42,7 +42,7 @@ mod verify_sized_collection_item {
                 None,
                 None,
                 None,
-                true, // is collection parent NFT
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -81,7 +81,7 @@ mod verify_sized_collection_item {
                     verified: false,
                 }),
                 uses.to_owned(),
-                false, // is not collection parent NFT
+                None, // is not collection parent NFT
             )
             .await
             .unwrap();
@@ -562,7 +562,7 @@ mod verify_sized_collection_item {
                 None,
                 None,
                 None,
-                true,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -651,6 +651,7 @@ mod verify_sized_collection_item {
     async fn success_verify_collection_with_authority() {
         let mut context = program_test().start_with_context().await;
         let new_collection_authority = Keypair::new();
+
         let test_collection = Metadata::new();
         test_collection
             .create_v3(
@@ -664,7 +665,7 @@ mod verify_sized_collection_item {
                 None,
                 None,
                 None,
-                true,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -770,6 +771,7 @@ mod verify_sized_collection_item {
         let mut context = program_test().start_with_context().await;
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
+
         test_collection
             .create_v3(
                 &mut context,
@@ -782,7 +784,7 @@ mod verify_sized_collection_item {
                 None,
                 None,
                 None,
-                true,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -899,7 +901,7 @@ mod verify_sized_collection_item {
                 None,
                 None,
                 None,
-                true,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -1163,7 +1165,7 @@ mod verify_sized_collection_item {
                 None,
                 None,
                 None,
-                true,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
