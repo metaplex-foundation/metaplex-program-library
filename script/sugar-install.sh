@@ -64,11 +64,7 @@ if [ "$OS_FLAVOUR" = Darwin ]; then
     esac
 fi
 
-DIST="$VERSION.zip"
-
-if [ "$VERSION" = "macos-intel-latest" ]; then
-    DIST="macos-latest.zip"
-fi
+DIST="$VERSION"
 
 # creates a temporary directory to save the distribution file
 SOURCE="$(mktemp -d)"
@@ -78,7 +74,8 @@ echo ""
 
 # downloads the distribution file
 REMOTE="https://github.com/metaplex-foundation/sugar/releases/latest/download/"
-curl -L $REMOTE$DIST --output "$SOURCE/$DIST"
+echo "$REMOTE$BIN"-"$DIST"
+curl -L $REMOTE$BIN"-"$DIST --output "$SOURCE/$DIST"
 abort_on_error $?
 
 SIZE=$(wc -c "$SOURCE/$DIST" | grep -oE "[0-9]+" | head -n 1)
@@ -88,24 +85,12 @@ if [ $SIZE -eq 0 ]; then
     exit 1
 fi
 
-if [ "$(command -v unzip)" = "" ]; then
-    RED "Aborting: required 'unzip' command could not be found"
-    exit 1
-fi
-
-echo ""
-echo "$(CYN "2.") 🗂  $(CYN "Extracting")"
-echo ""
-
-unzip "$SOURCE/$DIST" -d "$SOURCE"
-abort_on_error $?
-
 # makes sure the binary will be executable
-chmod u+x "$SOURCE/$BIN-$VERSION"
+chmod u+x "$SOURCE/$DIST"
 abort_on_error $?
 
 echo ""
-echo "$(CYN "3.") 📤 $(CYN "Moving binary into place")"
+echo "$(CYN "2.") 📤 $(CYN "Moving binary into place")"
 echo ""
 
 if [ ! "$(command -v $BIN)" = "" ]; then
@@ -127,7 +112,7 @@ if [ ! "$(command -v $BIN)" = "" ]; then
         echo ""
         echo "'$BIN' binary will be moved to '$(dirname "$EXISTING")'."
 
-        mv "$SOURCE/$BIN-$VERSION" "$EXISTING"
+        mv "$SOURCE/$DIST" "$EXISTING"
         abort_on_error $?
     else
         # nothing else to do, replacement was cancelled
@@ -150,7 +135,7 @@ else
 
     echo "'$BIN' binary will be moved to '$TARGET'."
 
-    mv "$SOURCE/$BIN-$VERSION" "$TARGET/$BIN"
+    mv "$SOURCE/$DIST" "$TARGET/$BIN"
     abort_on_error $?
 
     if [ "$(command -v $BIN)" = "" ]; then
