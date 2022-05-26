@@ -16,8 +16,8 @@ use crate::core::master_edition_v2::MasterEditionV2;
 
 pub mod master_edition_v2;
 pub mod metadata;
-
 /// Perform native lamports transfer.
+#[allow(dead_code)]
 pub async fn transfer_lamports(
     client: &mut ProgramTestContext,
     wallet: &Keypair,
@@ -101,11 +101,13 @@ pub async fn assert_acount_empty(context: &mut ProgramTestContext, pubkey: &Pubk
     assert_eq!(account, None);
 }
 
+#[allow(dead_code)]
 pub async fn get_mint(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Mint {
     let account = get_account(context, pubkey).await;
     Mint::unpack(&account.data).unwrap()
 }
 
+#[allow(dead_code)]
 pub async fn create_token_account(
     context: &mut ProgramTestContext,
     account: &Keypair,
@@ -210,6 +212,7 @@ pub async fn mint_to_wallets(
 ) -> transport::Result<Vec<Pubkey>> {
     let mut atas = Vec::with_capacity(allocations.len());
 
+    #[allow(clippy::needless_range_loop)]
     for i in 0..allocations.len() {
         let ata = create_associated_token_account(context, &allocations[i].0, mint_pubkey).await?;
         // println!("Minting to wallet {}", i);
@@ -263,6 +266,7 @@ pub async fn mint_tokens(
     context.banks_client.process_transaction(tx).await
 }
 
+#[allow(dead_code)]
 pub async fn transfer(
     context: &mut ProgramTestContext,
     mint: &Pubkey,

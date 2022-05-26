@@ -1,4 +1,4 @@
-use std::{cmp::min, fmt::Debug, thread::sleep, time::Duration};
+use std::fmt::Debug;
 
 use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
@@ -18,9 +18,9 @@ use mpl_candy_machine::{
 use crate::{
     add_all_config_lines, airdrop, clone_keypair,
     core::{
-        assert_acount_empty, clone_pubkey, create_mint, get_balance, get_mint, get_token_account,
-        get_token_balance, master_edition_v2::MasterEditionV2 as MasterEditionManager, metadata,
-        mint_to_wallets, prepare_nft,
+        assert_acount_empty, clone_pubkey, create_mint, get_balance, get_token_balance,
+        master_edition_v2::MasterEditionV2 as MasterEditionManager, metadata, mint_to_wallets,
+        prepare_nft,
     },
     get_account,
     helper_transactions::{remove_collection, set_collection},
@@ -82,6 +82,7 @@ impl Clone for CollectionInfo {
 }
 
 impl CollectionInfo {
+    #[allow(dead_code)]
     pub fn new(
         set: bool,
         pda: Pubkey,
@@ -157,6 +158,7 @@ pub struct TokenInfo {
 }
 
 impl TokenInfo {
+    #[allow(dead_code)]
     pub fn new(
         set: bool,
         mint: Pubkey,
@@ -252,6 +254,7 @@ impl Default for WhitelistConfig {
 }
 
 impl WhitelistInfo {
+    #[allow(dead_code)]
     pub fn new(
         set: bool,
         mint: Pubkey,
@@ -449,6 +452,7 @@ impl CandyManager {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub async fn remove_collection(
         &mut self,
         context: &mut ProgramTestContext,

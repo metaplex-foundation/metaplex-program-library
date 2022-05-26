@@ -41,6 +41,7 @@ impl Metadata {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,

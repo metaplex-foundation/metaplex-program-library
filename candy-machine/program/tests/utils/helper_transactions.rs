@@ -6,9 +6,7 @@ use solana_program::{
     system_instruction,
 };
 use solana_program_test::*;
-use solana_sdk::{
-    commitment_config::CommitmentLevel, signature::Keypair, transaction::Transaction, transport,
-};
+use solana_sdk::{signature::Keypair, transaction::Transaction, transport};
 
 use mpl_candy_machine::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
@@ -17,7 +15,7 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    core::{get_balance, master_edition_v2::MasterEditionV2},
+    core::master_edition_v2::MasterEditionV2,
     utils::{
         candy_manager::{CollectionInfo, TokenInfo, WhitelistInfo},
         make_config_lines,

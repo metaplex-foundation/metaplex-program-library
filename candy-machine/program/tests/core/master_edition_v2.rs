@@ -40,6 +40,7 @@ impl MasterEditionV2 {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,
@@ -48,6 +49,7 @@ impl MasterEditionV2 {
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
+    #[allow(dead_code)]
     pub async fn get_data_from_account(
         context: &mut ProgramTestContext,
         pubkey: &Pubkey,

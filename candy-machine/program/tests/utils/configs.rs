@@ -10,6 +10,7 @@ pub const DEFAULT_PRICE: u64 = 1e9 as u64;
 pub const ITEMS_AVAILABLE: u64 = 11;
 pub const DEFAULT_SYMBOL: &str = "SYMBOL";
 
+#[allow(dead_code)]
 pub fn quick_config(creator: Pubkey) -> CandyMachineData {
     custom_config(creator, None, true, true, None, None, None, None)
 }
