@@ -435,7 +435,8 @@ pub enum MetadataInstruction {
     #[account(3, name="collection_mint", desc="Mint of the Collection")]
     #[account(4, writable, name="collection", desc="Metadata Account of the Collection")]
     #[account(5, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
-    VerifyCollectionV2,
+    #[account(6, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    VerifySizedCollectionItem,
 
     /// Unverify Collection V2, new in v1.3--supports Collection Details.
     /// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection.
@@ -445,7 +446,7 @@ pub enum MetadataInstruction {
     #[account(3, writable, name="collection", desc="Metadata Account of the Collection")]
     #[account(4, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
     #[account(5, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
-    UnverifyCollectionV2,
+    UnverifySizedCollectionItem,
 
     // Set And Verify V2, new in v1.3--supports Collection Details.
     /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
@@ -458,7 +459,7 @@ pub enum MetadataInstruction {
     #[account(5, writable, name="collection", desc="Metadata Account of the Collection")]
     #[account(6, writable, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
     #[account(7, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
-    SetAndVerifyCollectionV2,
+    SetAndVerifySizedCollectionItem,
 
     /// Create Metadata object.
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]
@@ -1404,7 +1405,7 @@ pub fn burn_nft(
 ///   4. `[writable]` Metadata Account of the Collection
 ///   5. `[]` MasterEdition2 Account of the Collection Token
 #[allow(clippy::too_many_arguments)]
-pub fn verify_collection_v2(
+pub fn verify_sized_collection_item(
     program_id: Pubkey,
     metadata: Pubkey,
     collection_authority: Pubkey,
@@ -1436,7 +1437,7 @@ pub fn verify_collection_v2(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::VerifyCollectionV2
+        data: MetadataInstruction::VerifySizedCollectionItem
             .try_to_vec()
             .unwrap(),
     }
@@ -1455,7 +1456,7 @@ pub fn verify_collection_v2(
 ///   4. `[writable]` Metadata Account of the Collection
 ///   5. `[]` MasterEdition2 Account of the Collection Token
 #[allow(clippy::too_many_arguments)]
-pub fn unverify_collection_v2(
+pub fn unverify_sized_collection_item(
     program_id: Pubkey,
     metadata: Pubkey,
     collection_authority: Pubkey,
@@ -1485,7 +1486,7 @@ pub fn unverify_collection_v2(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::UnverifyCollectionV2
+        data: MetadataInstruction::UnverifySizedCollectionItem
             .try_to_vec()
             .unwrap(),
     }
@@ -1505,7 +1506,7 @@ pub fn unverify_collection_v2(
 ///   4. `[writable]` Metadata Account of the Collection
 ///   5. `[]` MasterEdition2 Account of the Collection Token
 #[allow(clippy::too_many_arguments)]
-pub fn set_and_verify_collection_v2(
+pub fn set_and_verify_sized_collection_item(
     program_id: Pubkey,
     metadata: Pubkey,
     collection_authority: Pubkey,
@@ -1539,7 +1540,7 @@ pub fn set_and_verify_collection_v2(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::SetAndVerifyCollectionV2
+        data: MetadataInstruction::SetAndVerifySizedCollectionItem
             .try_to_vec()
             .unwrap(),
     }

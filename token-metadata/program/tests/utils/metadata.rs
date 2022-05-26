@@ -341,7 +341,7 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn verify_collection_v2(
+    pub async fn verify_sized_collection_item(
         &self,
         context: &mut ProgramTestContext,
         collection: Pubkey,
@@ -351,7 +351,7 @@ impl Metadata {
         collection_authority_record: Option<Pubkey>,
     ) -> transport::Result<()> {
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::verify_collection_v2(
+            &[instruction::verify_sized_collection_item(
                 id(),
                 self.pubkey,
                 collection_authority.pubkey(),
@@ -398,7 +398,7 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn set_and_verify_collection_v2(
+    pub async fn set_and_verify_sized_collection_item(
         &self,
         context: &mut ProgramTestContext,
         collection: Pubkey,
@@ -409,7 +409,7 @@ impl Metadata {
         collection_authority_record: Option<Pubkey>,
     ) -> transport::Result<()> {
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::set_and_verify_collection_v2(
+            &[instruction::set_and_verify_sized_collection_item(
                 id(),
                 self.pubkey,
                 collection_authority.pubkey(),
@@ -454,7 +454,7 @@ impl Metadata {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn unverify_collection_v2(
+    pub async fn unverify_sized_collection_item(
         &self,
         context: &mut ProgramTestContext,
         collection: Pubkey,
@@ -464,7 +464,7 @@ impl Metadata {
         collection_authority_record: Option<Pubkey>,
     ) -> transport::Result<()> {
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::unverify_collection_v2(
+            &[instruction::unverify_sized_collection_item(
                 id(),
                 self.pubkey,
                 collection_authority.pubkey(),

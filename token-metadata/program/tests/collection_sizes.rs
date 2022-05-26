@@ -155,7 +155,7 @@ mod unsized_collection_handlers {
 
         // Verify the item so we can try to unverify it.
         collection_item_nft
-            .verify_collection_v2(
+            .verify_sized_collection_item(
                 &mut context,
                 collection_parent_nft.pubkey,
                 &payer,
@@ -318,7 +318,7 @@ mod sized_collection_handlers {
 
         // Try to verify the item with the old handler.
         let err = collection_item_nft
-            .verify_collection_v2(
+            .verify_sized_collection_item(
                 &mut context,
                 collection_parent_nft.pubkey,
                 &payer,
@@ -403,7 +403,7 @@ mod sized_collection_handlers {
             .unwrap();
 
         let err = collection_item_nft
-            .unverify_collection_v2(
+            .unverify_sized_collection_item(
                 &mut context,
                 collection_parent_nft.pubkey,
                 &payer,
@@ -470,7 +470,7 @@ mod sized_collection_handlers {
             .unwrap();
 
         let err = collection_item_nft
-            .set_and_verify_collection_v2(
+            .set_and_verify_sized_collection_item(
                 &mut context,
                 collection_parent_nft.pubkey,
                 &payer,
@@ -567,7 +567,7 @@ mod size_tracking {
 
         // Verifying increments the size.
         collection_item_nft
-            .verify_collection_v2(
+            .verify_sized_collection_item(
                 &mut context,
                 collection_parent_nft.pubkey,
                 &payer,

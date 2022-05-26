@@ -247,6 +247,11 @@ mod burn_nft {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
+        println!(
+            "Collection details: {:?}",
+            parent_metadata.collection_details
+        );
+
         if let Some(details) = parent_metadata.collection_details {
             match details {
                 CollectionDetails::V1 { status: _, size } => {
@@ -254,12 +259,12 @@ mod burn_nft {
                 }
             }
         } else {
-            panic!("CollectionDetails is not a CollectionDetails");
+            panic!("CollectionDetails is not set!");
         }
 
         // Verifying increments the size.
         collection_item_nft
-            .verify_collection_v2(
+            .verify_sized_collection_item(
                 &mut context,
                 collection_parent_nft.pubkey,
                 &payer,
@@ -271,8 +276,14 @@ mod burn_nft {
             .unwrap();
 
         let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        // println!("Collection details: {:?}", parent_nft_account.data);
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        println!(
+            "Collection details: {:?}",
+            parent_metadata.collection_details
+        );
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
@@ -281,7 +292,7 @@ mod burn_nft {
                 }
             }
         } else {
-            panic!("CollectionDetails is not a CollectionDetails");
+            panic!("CollectionDetails is not set");
         }
 
         // Burn the NFT w/o passing in collection metadata. This should fail.
@@ -376,7 +387,7 @@ mod burn_nft {
 
         // Verifying increments the size.
         collection_item_nft
-            .verify_collection_v2(
+            .verify_sized_collection_item(
                 &mut context,
                 collection_parent_nft.pubkey,
                 &payer,
@@ -392,40 +403,40 @@ mod burn_nft {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        // if let Some(details) = parent_metadata.collection_details {
-        //     match details {
-        //         CollectionDetails::V1 { status: _, size } => {
-        //             assert_eq!(size, 1);
-        //         }
-        //     }
-        // } else {
-        //     panic!("CollectionDetails is not set!");
-        // }
+        if let Some(details) = parent_metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status: _, size } => {
+                    assert_eq!(size, 1);
+                }
+            }
+        } else {
+            panic!("CollectionDetails is not set!");
+        }
 
-        // // Burn the NFT
-        // burn(
-        //     &mut context,
-        //     collection_item_nft.pubkey,
-        //     collection_item_nft.mint.pubkey(),
-        //     collection_item_nft.token.pubkey(),
-        //     item_master_edition_account.pubkey,
-        //     Some(collection_parent_nft.pubkey),
-        // )
-        // .await
-        // .unwrap();
+        // Burn the NFT
+        burn(
+            &mut context,
+            collection_item_nft.pubkey,
+            collection_item_nft.mint.pubkey(),
+            collection_item_nft.token.pubkey(),
+            item_master_edition_account.pubkey,
+            Some(collection_parent_nft.pubkey),
+        )
+        .await
+        .unwrap();
 
-        // let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
-        // let parent_metadata =
-        //     ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        // if let Some(details) = parent_metadata.collection_details {
-        //     match details {
-        //         CollectionDetails::V1 { status: _, size } => {
-        //             assert_eq!(size, 0);
-        //         }
-        //     }
-        // } else {
-        //     panic!("CollectionDetails is not set!");
-        // }
+        if let Some(details) = parent_metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { status: _, size } => {
+                    assert_eq!(size, 0);
+                }
+            }
+        } else {
+            panic!("CollectionDetails is not set!");
+        }
     }
 }

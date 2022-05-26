@@ -1,5 +1,6 @@
 use crate::{
     assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
+    deser::clean_write_metadata,
     error::MetadataError,
     pda::find_master_edition_account,
     state::{
@@ -1254,7 +1255,12 @@ pub fn increment_collection_size(
                     status: *status,
                     size: size + 1,
                 });
-                metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+                msg!(
+                    "metadata.collection_details: {:?}",
+                    metadata.collection_details
+                );
+                msg!("Clean writing metadata {:?}", metadata);
+                clean_write_metadata(metadata, metadata_info)?;
                 Ok(())
             }
         }
@@ -1275,7 +1281,7 @@ pub fn decrement_collection_size(
                     status: *status,
                     size: size - 1,
                 });
-                metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+                clean_write_metadata(metadata, metadata_info)?;
                 Ok(())
             }
         }

@@ -1,8 +1,11 @@
 use crate::state::{Collection, CollectionDetails, Data, Key, Metadata, TokenStandard, Uses};
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
 // Custom deserialization function to handle NFTs with corrupted data.
+// This function is used in a custom deserialization implementation for the
+// `Metadata` struct, so should never have `msg` macros used in it as it may be used client side
+// either in tests or client code.
 pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Error> {
     // Metadata corruption shouldn't appear until after edition_nonce.
     let key: Key = BorshDeserialize::deserialize(buf)?;
@@ -20,7 +23,7 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
     let uses_res: Result<Option<Uses>, BorshError> = BorshDeserialize::deserialize(buf);
 
     // V1.3
-    let collection_details_res: Result<CollectionDetails, BorshError> =
+    let collection_details_res: Result<Option<CollectionDetails>, BorshError> =
         BorshDeserialize::deserialize(buf);
 
     /* We can have accidentally valid, but corrupted data, particularly on the Collection struct,
@@ -30,17 +33,14 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
         (Ok(token_standard_res), Ok(collection_res), Ok(uses_res)) => {
             (token_standard_res, collection_res, uses_res)
         }
-        _ => {
-            msg!("Corrupted metadata discovered: setting values to None");
-            (None, None, None)
-        }
+        _ => (None, None, None),
     };
 
     // Handle v1.3 separately
     let collection_details = match collection_details_res {
-        Ok(item_details) => Some(item_details),
+        Ok(item_details) => item_details,
         Err(_) => {
-            msg!("Corrupted v1.3 metadata discovered: setting value to None");
+            println!("no collection details found");
             None
         }
     };
@@ -63,7 +63,7 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
 }
 
 pub fn clean_write_metadata(
-    metadata: Metadata,
+    metadata: &mut Metadata,
     metadata_account_info: &AccountInfo,
 ) -> ProgramResult {
     // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.

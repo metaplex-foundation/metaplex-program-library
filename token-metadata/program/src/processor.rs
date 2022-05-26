@@ -222,17 +222,17 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Burn NFT");
             process_burn_nft(program_id, accounts)
         }
-        MetadataInstruction::VerifyCollectionV2 => {
+        MetadataInstruction::VerifySizedCollectionItem => {
             msg!("Instruction: Verify Collection V2");
-            verify_collection_v2(program_id, accounts)
+            verify_sized_collection_item(program_id, accounts)
         }
-        MetadataInstruction::SetAndVerifyCollectionV2 => {
+        MetadataInstruction::SetAndVerifySizedCollectionItem => {
             msg!("Instruction: Set and Verify Collection");
-            set_and_verify_collection_v2(program_id, accounts)
+            set_and_verify_sized_collection_item(program_id, accounts)
         }
-        MetadataInstruction::UnverifyCollectionV2 => {
+        MetadataInstruction::UnverifySizedCollectionItem => {
             msg!("Instruction: Unverify Collection");
-            unverify_collection_v2(program_id, accounts)
+            unverify_sized_collection_item(program_id, accounts)
         }
         MetadataInstruction::SetCollectionStatus(status) => {
             msg!("Instruction: Set Collection Status");
@@ -387,7 +387,7 @@ pub fn process_update_metadata_accounts_v2(
     }
 
     puff_out_data_fields(&mut metadata);
-    clean_write_metadata(metadata, metadata_account_info)?;
+    clean_write_metadata(&mut metadata, metadata_account_info)?;
     Ok(())
 }
 
@@ -876,7 +876,10 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     Ok(())
 }
 
-pub fn verify_collection_v2(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn verify_sized_collection_item(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
@@ -884,7 +887,9 @@ pub fn verify_collection_v2(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pr
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
+
     let using_delegated_collection_authority = accounts.len() == 7;
+
     assert_signer(collection_authority_info)?;
     assert_signer(payer_info)?;
 
@@ -923,10 +928,11 @@ pub fn verify_collection_v2(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pr
     // If the NFT has collection data, we set it to be verified and then update the collection
     // size on the Collection Parent.
     if let Some(collection) = &mut metadata.collection {
-        collection.verified = true;
-        metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
-
+        msg!("Verifying sized collection item");
         increment_collection_size(&mut collection_metadata, collection_info)?;
+
+        collection.verified = true;
+        clean_write_metadata(&mut metadata, metadata_info)?;
     } else {
         return Err(MetadataError::CollectionNotFound.into());
     }
@@ -988,7 +994,10 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     Ok(())
 }
 
-pub fn unverify_collection_v2(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+pub fn unverify_sized_collection_item(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
@@ -1032,10 +1041,10 @@ pub fn unverify_collection_v2(program_id: &Pubkey, accounts: &[AccountInfo]) -> 
     // If the NFT has collection data, we set it to be unverified and then update the collection
     // size on the Collection Parent.
     if let Some(collection) = &mut metadata.collection {
-        collection.verified = false;
-        metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
-
         decrement_collection_size(&mut collection_metadata, collection_info)?;
+
+        collection.verified = false;
+        clean_write_metadata(&mut metadata, metadata_info)?;
     } else {
         return Err(MetadataError::CollectionNotFound.into());
     }
@@ -1489,7 +1498,7 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     Ok(())
 }
 
-pub fn set_and_verify_collection_v2(
+pub fn set_and_verify_sized_collection_item(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
 ) -> ProgramResult {
@@ -1815,7 +1824,7 @@ pub fn set_collection_status(
         return Err(MetadataError::NotACollectionParent.into());
     }
 
-    clean_write_metadata(metadata, metadata_account_info)?;
+    clean_write_metadata(&mut metadata, metadata_account_info)?;
 
     Ok(())
 }
@@ -1870,7 +1879,7 @@ pub fn set_collection_size(
         return Err(MetadataError::NotACollectionParent.into());
     }
 
-    clean_write_metadata(metadata, parent_nft_metadata_account_info)?;
+    clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)?;
     Ok(())
 }
 
@@ -1898,6 +1907,6 @@ pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
     };
 
     metadata.token_standard = Some(token_standard);
-    clean_write_metadata(metadata, metadata_account_info)?;
+    clean_write_metadata(&mut metadata, metadata_account_info)?;
     Ok(())
 }
