@@ -1894,6 +1894,11 @@ pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
     assert_owned_by(metadata_account_info, program_id)?;
     let mut metadata = Metadata::from_account_info(metadata_account_info)?;
 
+    // Mint account passed in must be the mint of the metadata account passed in.
+    if &metadata.mint != mint_account_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
     // Update authority is a signer and matches update authority on metadata.
     assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
 

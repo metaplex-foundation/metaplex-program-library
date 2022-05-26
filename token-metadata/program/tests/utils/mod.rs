@@ -66,6 +66,7 @@ pub async fn airdrop(
 pub async fn burn(
     context: &mut ProgramTestContext,
     metadata: Pubkey,
+    owner: &Keypair,
     mint: Pubkey,
     token: Pubkey,
     edition: Pubkey,
@@ -75,15 +76,15 @@ pub async fn burn(
         &[instruction::burn_nft(
             mpl_token_metadata::ID,
             metadata,
-            context.payer.pubkey(),
+            owner.pubkey(),
             mint,
             token,
             edition,
             spl_token::ID,
             collection_metadata,
         )],
-        Some(&context.payer.pubkey()),
-        &[&context.payer],
+        Some(&owner.pubkey()),
+        &[owner],
         context.last_blockhash,
     );
 

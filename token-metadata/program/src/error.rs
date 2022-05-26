@@ -11,7 +11,7 @@ use thiserror::Error;
 /// Errors that may be returned by the Metadata program.
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum MetadataError {
-    /// Failed to unpack instruction data
+    /// 0 Failed to unpack instruction data
     #[error("Failed to unpack instruction data")]
     InstructionUnpackError,
 
@@ -91,7 +91,7 @@ pub enum MetadataError {
     #[error("The master edition record passed must match the master record on the edition given")]
     MasterRecordMismatch,
 
-    /// The destination account does not have the right mint
+    /// 20 - The destination account does not have the right mint
     #[error("The destination account does not have the right mint")]
     DestinationMintMismatch,
 
@@ -131,7 +131,7 @@ pub enum MetadataError {
     #[error("The One Time Printing Auth mint does not match that on the master edition!")]
     OneTimePrintingAuthMintMismatch,
 
-    /// The mint of the token account does not match the Printing mint!
+    /// 30 - The mint of the token account does not match the Printing mint!
     #[error("The mint of the token account does not match the Printing mint!")]
     TokenAccountMintMismatch,
 
@@ -173,7 +173,7 @@ pub enum MetadataError {
     #[error("This metadata does not have creators")]
     NoCreatorsPresentOnMetadata,
 
-    /// This creator address was not found
+    /// 40 - This creator address was not found
     #[error("This creator address was not found")]
     CreatorNotFound,
 
@@ -213,7 +213,7 @@ pub enum MetadataError {
     #[error("This reservation list has already been set!")]
     ReservationAlreadyMade,
 
-    /// Provided more addresses than max allowed in single reservation
+    /// 50 - Provided more addresses than max allowed in single reservation
     #[error("Provided more addresses than max allowed in single reservation")]
     BeyondMaxAddressSize,
 
@@ -253,7 +253,7 @@ pub enum MetadataError {
     #[error("Data is immutable")]
     DataIsImmutable,
 
-    /// No duplicate creator addresses
+    /// 60 - No duplicate creator addresses
     #[error("No duplicate creator addresses")]
     DuplicateCreatorAddress,
 
