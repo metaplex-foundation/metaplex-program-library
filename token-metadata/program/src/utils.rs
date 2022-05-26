@@ -1260,11 +1260,7 @@ pub fn increment_collection_size(
                     status: *status,
                     size: size + 1,
                 });
-                msg!(
-                    "metadata.collection_details: {:?}",
-                    metadata.collection_details
-                );
-                msg!("Clean writing metadata {:?}", metadata);
+                msg!("Clean writing metadata");
                 clean_write_metadata(metadata, metadata_info)?;
                 Ok(())
             }

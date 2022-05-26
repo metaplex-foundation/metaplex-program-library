@@ -14,7 +14,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -233,7 +232,7 @@ mod create_meta_accounts {
     async fn fail_creators(
         mut context: ProgramTestContext,
         creators: Vec<Creator>,
-    ) -> TransportError {
+    ) -> BanksClientError {
         Metadata::new()
             .create_v2(
                 &mut context,

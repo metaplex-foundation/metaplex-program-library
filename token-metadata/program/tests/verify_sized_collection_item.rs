@@ -15,7 +15,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::TransactionError,
-    transport::TransportError,
 };
 use utils::*;
 mod verify_sized_collection_item {

@@ -4,9 +4,7 @@ pub mod utils;
 use mpl_token_metadata::state::Metadata as ProgramMetadata;
 use num_traits::FromPrimitive;
 use solana_program_test::*;
-use solana_sdk::{
-    instruction::InstructionError, transaction::TransactionError, transport::TransportError,
-};
+use solana_sdk::{instruction::InstructionError, transaction::TransactionError};
 use utils::*;
 
 mod unsized_collection_handlers {

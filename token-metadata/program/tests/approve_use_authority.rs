@@ -11,7 +11,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 mod approve_use_authority {
@@ -198,6 +197,7 @@ mod approve_use_authority {
             .process_transaction(tx)
             .await
             .unwrap_err();
+
         assert_custom_error!(err, MetadataError::Unusable);
     }
 

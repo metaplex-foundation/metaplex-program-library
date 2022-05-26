@@ -12,7 +12,6 @@ use solana_sdk::{
     signature::Keypair,
     signer::Signer,
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 mod burn_nft {
@@ -290,14 +289,8 @@ mod burn_nft {
             .unwrap();
 
         let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
-        // println!("Collection details: {:?}", parent_nft_account.data);
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
-
-        println!(
-            "Collection details: {:?}",
-            parent_metadata.collection_details
-        );
 
         if let Some(details) = parent_metadata.collection_details {
             match details {

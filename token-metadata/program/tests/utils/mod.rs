@@ -14,14 +14,8 @@ pub use mpl_token_metadata::instruction;
 use mpl_token_metadata::state::{CollectionDetails, CollectionStatus};
 use solana_program_test::*;
 use solana_sdk::{
-    account::Account,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    signature::Signer,
-    signer::keypair::Keypair,
-    system_instruction,
-    transaction::Transaction,
-    transport::{self, TransportError},
+    account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
+    signer::keypair::Keypair, system_instruction, transaction::Transaction,
 };
 use spl_token::state::Mint;
 pub use vault::Vault;
@@ -53,7 +47,7 @@ pub async fn airdrop(
     context: &mut ProgramTestContext,
     receiver: &Pubkey,
     amount: u64,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(
             &context.payer.pubkey(),
@@ -77,7 +71,7 @@ pub async fn burn(
     token: Pubkey,
     edition: Pubkey,
     collection_metadata: Option<Pubkey>,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[instruction::burn_nft(
             mpl_token_metadata::ID,
@@ -106,7 +100,7 @@ pub async fn mint_tokens(
     amount: u64,
     owner: &Pubkey,
     additional_signer: Option<&Keypair>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut signing_keypairs = vec![&context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
@@ -130,7 +124,7 @@ pub async fn create_token_account(
     account: &Keypair,
     mint: &Pubkey,
     manager: &Pubkey,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -164,7 +158,7 @@ pub async fn create_mint(
     manager: &Pubkey,
     freeze_authority: Option<&Pubkey>,
     decimals: u8,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
