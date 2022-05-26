@@ -1,0 +1,72 @@
+name: 'Upload File to S3'
+description: 'Uploads a file to S3 bucket with a specific prefix'
+inputs:
+  path-to-file:
+    description: 'Path to the file to upload'
+    required: true
+  name:
+    description: 'The file name that will be exist in S3'
+    required: true
+  account-id:
+    description: 'AWS account ID'
+    required: true
+  region:
+    description: 'AWS region'
+    required: true
+  role:
+    description: 'AWS role with permissions to perform desired action'
+    required: true
+  bucket:
+    description: 'S3 bucket to which file will upload'
+    required: true
+  prefix:
+    description: 'Prefix in the bucket to which the file will upload'
+    required: true
+
+outputs:
+  uploaded-file-path:
+    description: Path of the uploaded file
+    value: ${{ steps.set-output-for-uploaded-file.outputs.uploaded-file-path }}
+
+permissions:
+  id-token: write
+  contents: read
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: arn:aws:iam::${{ inputs.account-id }}:role/${{ inputs.role }}
+        # not strictly required since s3 buckets are global, but this is the pattern I noticed other places
+        aws-region: ${{ inputs.region }}
+
+    - uses: actions/download-artifact@v2
+      with:
+        name: ${{ inputs.path-to-file }}
+        path: .
+
+    - name: Upload file to S3
+      run: aws s3 cp $FILE_PATH s3://$BUCKET/$PREFIX/$NAME
+      shell: bash
+      env:
+        BUCKET: ${{ inputs.bucket }}
+        PREFIX: ${{ inputs.prefix }}
+        NAME: ${{ inputs.name }}
+        FILE_PATH: ${{ inputs.path-to-file }}
+
+    - name: Set output path to uploaded file
+      id: set-output-for-uploaded-file
+      run:
+        echo "::set-output name=uploaded-file-path::https://$BUCKET.s3.amazonaws.com/$PREFIX/$NAME"
+      shell: bash
+      env:
+        BUCKET: ${{ inputs.bucket }}
+        PREFIX: ${{ inputs.prefix }}
+        NAME: ${{ inputs.name }}
+        FILE_PATH: ${{ inputs.path-to-file }}
