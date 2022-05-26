@@ -7,11 +7,8 @@ use anchor_spl::{
 use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
-    //auction_house::{
     cpi::accounts::AuctioneerWithdraw as AHWithdraw,
-    program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
-    //program::auction_house,
-    //},
+    program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
 
@@ -115,18 +112,11 @@ pub fn auctioneer_withdraw<'info>(
             .collect(),
         data: withdraw_data.data(),
     };
-    
+
     let auction_house = &ctx.accounts.auction_house;
     let ah_key = auction_house.key();
     let auctioneer_authority = &ctx.accounts.auctioneer_authority;
-    let aa_key = auctioneer_authority.key();
-
-    // let auctioneer_seeds = [
-    //     AUCTIONEER.as_bytes(),
-    //     ah_key.as_ref(),
-    //     aa_key.as_ref(),
-    //     &[auction_house.auctioneer_pda_bump],
-    // ];
+    let _aa_key = auctioneer_authority.key();
 
     let auctioneer_seeds = [
         AUCTIONEER.as_bytes(),

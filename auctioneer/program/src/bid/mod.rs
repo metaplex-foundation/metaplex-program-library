@@ -1,5 +1,4 @@
-//! Create both private and public bids.
-//! A private bid is a bid on a specific NFT *held by a specific person*. A public bid is a bid on a specific NFT *regardless of who holds it*.
+//! Create a private bids.
 
 use anchor_lang::{prelude::*, AnchorDeserialize};
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -7,11 +6,8 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
-    //auction_house::{
     cpi::accounts::AuctioneerBuy as AHBuy,
-    program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
-    //program::auction_house,
-    //},
+    program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
 
@@ -143,7 +139,6 @@ pub fn auctioneer_buy<'info>(
         token_account: ctx.accounts.token_account.to_account_info(),
         metadata: ctx.accounts.metadata.to_account_info(),
         escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
-        //authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),

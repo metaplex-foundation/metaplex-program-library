@@ -3,9 +3,9 @@ pub mod common;
 pub mod utils;
 
 use common::*;
-use utils::{helpers::default_scopes, setup_functions::*};
+use utils::setup_functions::*;
 
-use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
+use anchor_lang::{InstructionData, ToAccountMetas};
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_sdk::signer::Signer;
 
@@ -20,7 +20,7 @@ use mpl_auction_house::pda::{
     find_trade_state_address,
 };
 use mpl_auctioneer::pda::find_auctioneer_authority_seeds;
-use solana_sdk::{clock::UnixTimestamp, signature::Keypair, transaction::Transaction};
+use solana_sdk::{signature::Keypair, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::state::Account;
 
@@ -47,12 +47,11 @@ async fn execute_sale_early_failure() {
         )
         .await
         .unwrap();
-    let ((sell_acc, listing_config_address, _), sell_tx) = sell(
+    let ((sell_acc, listing_config_address), sell_tx) = sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        100_000_000,
         (SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Time went backwards")
@@ -75,7 +74,7 @@ async fn execute_sale_early_failure() {
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((bid_acc, _), buy_tx) = buy(
+    let (bid_acc, buy_tx) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -160,12 +159,6 @@ async fn execute_sale_early_failure() {
         &[&authority],
         context.last_blockhash,
     );
-    let seller_before = context
-        .banks_client
-        .get_account(test_metadata.token.pubkey())
-        .await
-        .unwrap()
-        .unwrap();
     let buyer_token_before = &context
         .banks_client
         .get_account(buyer_token_account)
@@ -179,28 +172,6 @@ async fn execute_sale_early_failure() {
         .await
         .unwrap_err();
     assert_error!(result, AUCTION_ACTIVE);
-
-    // let seller_after = context
-    //     .banks_client
-    //     .get_account(test_metadata.token.pubkey())
-    //     .await
-    //     .unwrap()
-    //     .unwrap();
-    // let buyer_token_after = Account::unpack_from_slice(
-    //     &context
-    //         .banks_client
-    //         .get_account(buyer_token_account)
-    //         .await
-    //         .unwrap()
-    //         .unwrap()
-    //         .data
-    //         .as_slice(),
-    // )
-    // .unwrap();
-    // let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
-    // assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    // assert_eq!(seller_before.lamports < seller_after.lamports, true);
-    // assert_eq!(buyer_token_after.amount, 1);
 }
 
 #[tokio::test]
@@ -226,12 +197,11 @@ async fn execute_sale_success() {
         )
         .await
         .unwrap();
-    let ((sell_acc, listing_config_address, _), sell_tx) = sell(
+    let ((sell_acc, listing_config_address), sell_tx) = sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        100_000_000,
         (SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Time went backwards")
@@ -254,7 +224,7 @@ async fn execute_sale_success() {
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((bid_acc, _), buy_tx) = buy(
+    let (bid_acc, buy_tx) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -275,7 +245,7 @@ async fn execute_sale_success() {
 
     context.warp_to_slot(120 * 400).unwrap();
 
-    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
+    let (auctioneer_authority, _aa_bump) = find_auctioneer_authority_seeds(&ahkey);
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerExecuteSale {
         auction_house_program: mpl_auction_house::id(),
@@ -285,7 +255,6 @@ async fn execute_sale_success() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
-        //authority: ah.authority,
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -354,7 +323,7 @@ async fn execute_sale_success() {
         .unwrap();
     assert_eq!(buyer_token_before.is_none(), true);
 
-    let result = context.banks_client.process_transaction(tx).await.unwrap();
+    context.banks_client.process_transaction(tx).await.unwrap();
 
     let seller_after = context
         .banks_client
@@ -402,12 +371,11 @@ async fn execute_sale_two_bids_success() {
         )
         .await
         .unwrap();
-    let ((sell_acc, listing_config_address, _), sell_tx) = sell(
+    let ((sell_acc, listing_config_address), sell_tx) = sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        100_000_000,
         (SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Time went backwards")
@@ -430,7 +398,7 @@ async fn execute_sale_two_bids_success() {
     airdrop(&mut context, &buyer0.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((bid0_acc, _), buy0_tx) = buy(
+    let (_bid0_acc, buy0_tx) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -446,14 +414,14 @@ async fn execute_sale_two_bids_success() {
         .process_transaction(buy0_tx)
         .await
         .unwrap();
-    let buyer0_token_account =
+    let _buyer0_token_account =
         get_associated_token_address(&buyer0.pubkey(), &test_metadata.mint.pubkey());
 
     let buyer1 = Keypair::new();
     airdrop(&mut context, &buyer1.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((bid1_acc, _), buy1_tx) = buy(
+    let (bid1_acc, buy1_tx) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -484,7 +452,6 @@ async fn execute_sale_two_bids_success() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
-        //authority: ah.authority,
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid1_acc.buyer_trade_state,
         token_program: spl_token::id(),
@@ -552,7 +519,7 @@ async fn execute_sale_two_bids_success() {
         .unwrap();
     assert_eq!(buyer1_token_before.is_none(), true);
 
-    let result = context.banks_client.process_transaction(tx).await.unwrap();
+    context.banks_client.process_transaction(tx).await.unwrap();
 
     let seller_after = context
         .banks_client

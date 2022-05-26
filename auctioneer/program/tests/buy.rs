@@ -4,8 +4,7 @@ pub mod utils;
 
 use common::*;
 use mpl_auctioneer::sell::config::ListingConfig;
-use solana_sdk::clock::UnixTimestamp;
-use std::{assert_eq, thread, time, time::SystemTime};
+use std::{assert_eq, time::SystemTime};
 use utils::setup_functions::*;
 
 #[tokio::test]
@@ -33,12 +32,11 @@ async fn buy_success() {
         .await
         .unwrap();
 
-    let ((sell_acc, listing_config_address, _), sell_tx) = sell(
+    let ((sell_acc, listing_config_address), sell_tx) = sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        1000000000,
         (SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Time went backwards")
@@ -74,7 +72,7 @@ async fn buy_success() {
         .await
         .unwrap();
 
-    let ((acc/*, print_bid_acc*/), buy_tx) = buy(
+    let (_acc, buy_tx) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -90,32 +88,6 @@ async fn buy_success() {
         .process_transaction(buy_tx)
         .await
         .unwrap();
-    // let bts = context
-    //     .banks_client
-    //     .get_account(acc.buyer_trade_state)
-    //     .await
-    //     .expect("Error Getting Trade State")
-    //     .expect("Trade State Empty");
-    // assert_eq!(bts.data.len(), 1);
-
-    // let bid_receipt_account = context
-    //     .banks_client
-    //     .get_account(print_bid_acc.receipt)
-    //     .await
-    //     .expect("Error Getting Public Bid Receipt")
-    //     .expect("Public Bid Empty");
-
-    // let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
-
-    // assert_eq!(bid_receipt.price, 1000000000);
-    // assert_eq!(bid_receipt.auction_house, acc.auction_house);
-    // assert_eq!(bid_receipt.metadata, acc.metadata);
-    // assert_eq!(bid_receipt.token_account, Some(acc.token_account));
-    // assert_eq!(bid_receipt.buyer, acc.wallet);
-    // assert_eq!(bid_receipt.trade_state, acc.buyer_trade_state);
-    // assert_eq!(bid_receipt.token_size, 1);
-    // assert_eq!(bid_receipt.purchase_receipt, None);
-    // assert_eq!(bid_receipt.bookkeeper, buyer.pubkey());
 }
 
 #[tokio::test]
@@ -143,12 +115,11 @@ async fn multiple_bids() {
         .await
         .unwrap();
 
-    let ((sell_acc, listing_config_address, _), sell_tx) = sell(
+    let ((sell_acc, listing_config_address), sell_tx) = sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        1000000000,
         (SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Time went backwards")
@@ -184,7 +155,7 @@ async fn multiple_bids() {
         .await
         .unwrap();
 
-    let ((acc0/*, print_bid_acc*/), buy_tx0) = buy(
+    let (_acc0, buy_tx0) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -219,17 +190,17 @@ async fn multiple_bids() {
         .await
         .unwrap();
 
-    let ((acc1/*, print_bid_acc*/), buy_tx1) = buy(
-            &mut context,
-            &ahkey,
-            &ah,
-            &test_metadata,
-            &test_metadata.token.pubkey(),
-            &buyer1,
-            &sell_acc.wallet,
-            &listing_config_address,
-            10000000000,
-        );
+    let (_acc1, buy_tx1) = buy(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &test_metadata.token.pubkey(),
+        &buyer1,
+        &sell_acc.wallet,
+        &listing_config_address,
+        10000000000,
+    );
     context
         .banks_client
         .process_transaction(buy_tx1)
@@ -245,31 +216,4 @@ async fn multiple_bids() {
         .data;
     let config = ListingConfig::try_deserialize(&mut listing.as_ref()).unwrap();
     assert_eq!(config.highest_bid.amount, 10000000000);
-
-    // let bts = context
-    //     .banks_client
-    //     .get_account(acc.buyer_trade_state)
-    //     .await
-    //     .expect("Error Getting Trade State")
-    //     .expect("Trade State Empty");
-    // assert_eq!(bts.data.len(), 1);
-
-    // let bid_receipt_account = context
-    //     .banks_client
-    //     .get_account(print_bid_acc.receipt)
-    //     .await
-    //     .expect("Error Getting Public Bid Receipt")
-    //     .expect("Public Bid Empty");
-
-    // let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
-
-    // assert_eq!(bid_receipt.price, 1000000000);
-    // assert_eq!(bid_receipt.auction_house, acc.auction_house);
-    // assert_eq!(bid_receipt.metadata, acc.metadata);
-    // assert_eq!(bid_receipt.token_account, Some(acc.token_account));
-    // assert_eq!(bid_receipt.buyer, acc.wallet);
-    // assert_eq!(bid_receipt.trade_state, acc.buyer_trade_state);
-    // assert_eq!(bid_receipt.token_size, 1);
-    // assert_eq!(bid_receipt.purchase_receipt, None);
-    // assert_eq!(bid_receipt.bookkeeper, buyer.pubkey());
 }

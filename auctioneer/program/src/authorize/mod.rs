@@ -1,22 +1,15 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
-use anchor_spl::token::{Mint, Token};
 
-use crate::{constants::*, errors::*};
+use crate::errors::*;
 
 use mpl_auction_house::{
     self,
-    constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
-    //auction_house::{
-    cpi::accounts::AuctioneerSell as AHSell,
-    program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
-    //program::auction_house,
-    //},
+    constants::{AUCTIONEER, PREFIX},
     AuctionHouse,
 };
 
-/// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
+/// Accounts for the [`auctioneer_authorize` handler](auction_house/fn.auctioneer_authorize.html).
 #[derive(Accounts, Clone)]
-//#[instruction()]
 pub struct AuctioneerAuthorize<'info> {
     /// User wallet account.
     #[account(mut)]

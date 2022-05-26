@@ -3,7 +3,7 @@ pub mod common;
 pub mod utils;
 
 use common::*;
-use utils::{helpers::*, setup_functions::*};
+use utils::setup_functions::*;
 
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
 use solana_sdk::signer::Signer;

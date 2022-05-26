@@ -2,13 +2,11 @@
 pub mod common;
 pub mod utils;
 
-// use anchor_lang::AccountDeserialize;
 use common::*;
 use utils::setup_functions::*;
 
-use mpl_auction_house::receipt::ListingReceipt;
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
-use solana_sdk::{clock::UnixTimestamp, signer::Signer, sysvar::clock::Clock};
+use solana_sdk::signer::Signer;
 use std::{assert_eq, time::SystemTime};
 
 #[tokio::test]
@@ -33,12 +31,11 @@ async fn sell_success() {
         )
         .await
         .unwrap();
-    let ((acc, listing_config_address, listing_receipt_acc), sell_tx) = sell(
+    let ((acc, _listing_config_address), sell_tx) = sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        1,
         (SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .expect("Time went backwards")
@@ -62,34 +59,6 @@ async fn sell_success() {
         .expect("Error Getting Trade State")
         .expect("Trade State Empty");
     assert_eq!(sts.data.len(), 1);
-
-    let timestamp = context
-        .banks_client
-        .get_sysvar::<Clock>()
-        .await
-        .unwrap()
-        .unix_timestamp;
-
-    // let listing_receipt_account = context
-    //     .banks_client
-    //     .get_account(listing_receipt_acc.receipt)
-    //     .await
-    //     .expect("getting listing receipt")
-    //     .expect("empty listing receipt data");
-
-    // let listing_receipt =
-    //     ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
-
-    // assert_eq!(listing_receipt.auction_house, acc.auction_house);
-    // assert_eq!(listing_receipt.metadata, acc.metadata);
-    // assert_eq!(listing_receipt.seller, acc.wallet);
-    // assert_eq!(listing_receipt.created_at, timestamp);
-    // assert_eq!(listing_receipt.purchase_receipt, None);
-    // assert_eq!(listing_receipt.canceled_at, None);
-    // assert_eq!(listing_receipt.bookkeeper, *owner_pubkey);
-    // assert_eq!(listing_receipt.seller, *owner_pubkey);
-    // assert_eq!(listing_receipt.price, 1);
-    // assert_eq!(listing_receipt.token_size, 1);
 
     ()
 }

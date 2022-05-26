@@ -4,15 +4,12 @@ use anchor_spl::{associated_token::AssociatedToken, token::Token};
 use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER, TREASURY},
-    //auction_house::{
     cpi::accounts::AuctioneerExecuteSale as AHExecuteSale,
-    program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
-    //program::auction_house,
-    //},
+    program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
 
-use crate::{authorize::*, constants::*, sell::config::*, utils::*};
+use crate::{constants::*, sell::config::*, utils::*};
 
 use solana_program::program::invoke_signed;
 
@@ -146,17 +143,6 @@ pub fn auctioneer_execute_sale<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
-    // msg!(
-    //     "DEBUG:\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}",
-    //     LISTING_CONFIG,
-    //     ctx.accounts.seller.key().to_string(),
-    //     ctx.accounts.auction_house.key().to_string(),
-    //     ctx.accounts.token_account.key().to_string(),
-    //     ctx.accounts.auction_house.treasury_mint.to_string(),
-    //     ctx.accounts.token_mint.key().to_string(),
-    //     token_size,
-    //     ctx.accounts.listing_config.bump
-    // );
     assert_auction_over(&ctx.accounts.listing_config)?;
 
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
@@ -173,7 +159,6 @@ pub fn auctioneer_execute_sale<'info>(
             .seller_payment_receipt_account
             .to_account_info(),
         buyer_receipt_token_account: ctx.accounts.buyer_receipt_token_account.to_account_info(),
-        //authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         auction_house_treasury: ctx.accounts.auction_house_treasury.to_account_info(),
@@ -211,21 +196,13 @@ pub fn auctioneer_execute_sale<'info>(
                 pair.0
             })
             .collect(),
-        //accounts: cpi_accounts.to_account_metas(None),
         data: execute_sale_data.data(),
     };
 
     let auction_house = &ctx.accounts.auction_house;
     let ah_key = auction_house.key();
     let auctioneer_authority = &ctx.accounts.auctioneer_authority;
-    let aa_key = auctioneer_authority.key();
-
-    // let auctioneer_seeds = [
-    //     AUCTIONEER.as_bytes(),
-    //     ah_key.as_ref(),
-    //     aa_key.as_ref(),
-    //     &[auction_house.auctioneer_pda_bump],
-    // ];
+    let _aa_key = auctioneer_authority.key();
 
     let auctioneer_seeds = [
         AUCTIONEER.as_bytes(),
@@ -234,16 +211,6 @@ pub fn auctioneer_execute_sale<'info>(
     ];
 
     invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
-    //let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-
-    // mpl_auction_house::cpi::auctioneer_execute_sale(
-    //     cpi_ctx, //.with_signer(&[&auctioneer_seeds]),
-    //     escrow_payment_bump,
-    //     free_trade_state_bump,
-    //     program_as_signer_bump,
-    //     buyer_price,
-    //     token_size,
-    // )
 
     Ok(())
 }

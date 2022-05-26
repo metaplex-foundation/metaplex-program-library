@@ -127,7 +127,6 @@ impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64,
     token_size: u64
 )]
 pub struct AuctioneerSell<'info> {
@@ -262,7 +261,6 @@ pub fn auctioneer_sell<'info>(
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;

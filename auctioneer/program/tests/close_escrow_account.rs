@@ -41,24 +41,13 @@ async fn close_escrow_account_success() {
         &buyer,
         1000000000,
     );
-    // let (acc, withdraw_tx) = withdraw(
-    //     &mut context,
-    //     &ahkey,
-    //     &ah,
-    //     &test_metadata,
-    //     &buyer,
-    //     1000000000,
-    // );
+
     context
         .banks_client
         .process_transaction(deposit_tx)
         .await
         .unwrap();
-    // context
-    //     .banks_client
-    //     .process_transaction(withdraw_tx)
-    //     .await
-    //     .unwrap();
+
     let escrow = context
         .banks_client
         .get_account(acc.escrow_payment_account)

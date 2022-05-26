@@ -8,11 +8,8 @@ use anchor_spl::token::{Token, TokenAccount};
 use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
-    //auction_house::{
     cpi::accounts::AuctioneerSell as AHSell,
-    program::AuctionHouse as AuctionHouseProgram, //program::auction_house as AuctionHouseProgram,
-    //program::auction_house,
-    //},
+    program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
 
@@ -58,12 +55,8 @@ pub struct AuctioneerSell<'info> {
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Verified through CPI
-    /// Auction House authority account.
-    pub authority: UncheckedAccount<'info>,
-
     /// Auction House instance PDA account.
-    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=authority, has_one=auction_house_fee_account)]
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=auction_house_fee_account)]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -116,28 +109,11 @@ pub fn auctioneer_sell<'info>(
         .get("listing_config")
         .ok_or(AuctioneerError::BumpSeedNotInHashMap)?;
 
-    msg!(
-        "DEBUG:\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}\n{:?}",
-        LISTING_CONFIG,
-        ctx.accounts.wallet.key().to_string(),
-        ctx.accounts.auction_house.key().to_string(),
-        ctx.accounts.token_account.key().to_string(),
-        ctx.accounts.auction_house.treasury_mint.to_string(),
-        ctx.accounts.token_account.mint.to_string(),
-        token_size,
-        ctx.accounts.listing_config.bump
-    );
-    msg!(
-        "DEBUG:\n{:?}",
-        ctx.accounts.listing_config.key().to_string()
-    );
-
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHSell {
         wallet: ctx.accounts.wallet.to_account_info(),
         token_account: ctx.accounts.token_account.to_account_info(),
         metadata: ctx.accounts.metadata.to_account_info(),
-        //authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         seller_trade_state: ctx.accounts.seller_trade_state.to_account_info(),
@@ -154,8 +130,6 @@ pub fn auctioneer_sell<'info>(
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
-        // NOTE: Meaningless field that is ignored for AuctioneerSell
-        buyer_price: 1,
         token_size,
     };
 

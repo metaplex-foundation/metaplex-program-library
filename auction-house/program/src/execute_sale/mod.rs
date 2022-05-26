@@ -472,9 +472,11 @@ fn auctioneer_execute_sale_logic<'info>(
 
     let token_account_mint = get_mint_from_token_account(&token_account_clone)?;
 
+    msg!("Here 0");
     assert_keys_equal(token_mint.key(), token_account_mint)?;
     let delegate = get_delegate_from_token_account(&token_account_clone)?;
     if let Some(d) = delegate {
+        msg!("Here 1");
         assert_keys_equal(program_as_signer.key(), d)?;
     } else {
         msg!("No delegate detected on token account.");
@@ -660,6 +662,7 @@ fn auctioneer_execute_sale_logic<'info>(
             &[&ah_seeds],
         )?;
     } else {
+        msg!("Here 2");
         assert_keys_equal(seller_payment_receipt_account.key(), seller.key())?;
         invoke_signed(
             &system_instruction::transfer(
