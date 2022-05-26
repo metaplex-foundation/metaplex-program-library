@@ -8,4 +8,8 @@ pub enum DeployError {
     MissingName(String),
     #[error("{0}")]
     AddConfigLineFailed(String),
+    #[error(
+        "Your current wallet balance of {0} SOL is not enough. {1} SOL is needed to deploy the candy machine."
+    )]
+    BalanceTooLow(String, String),
 }

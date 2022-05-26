@@ -8,6 +8,7 @@ use anyhow::Result;
 use console::style;
 use futures::future::select_all;
 use rand::rngs::OsRng;
+use solana_program::native_token::LAMPORTS_PER_SOL;
 use spl_associated_token_account::get_associated_token_address;
 use std::{
     cmp,
@@ -400,14 +401,26 @@ fn initialize_candy_machine(
         candy_account.pubkey().to_string()
     );
 
+    let lamports = program
+        .rpc()
+        .get_minimum_balance_for_rent_exemption(candy_account_size)?;
+
+    let balance = program.rpc().get_account(&payer)?.lamports;
+
+    if lamports > balance {
+        return Err(DeployError::BalanceTooLow(
+            format!("{:.3}", (balance as f64 / LAMPORTS_PER_SOL as f64)),
+            format!("{:.3}", (lamports as f64 / LAMPORTS_PER_SOL as f64)),
+        )
+        .into());
+    }
+
     let mut tx = program
         .request()
         .instruction(system_instruction::create_account(
             &payer,
             &candy_account.pubkey(),
-            program
-                .rpc()
-                .get_minimum_balance_for_rent_exemption(candy_account_size)?,
+            lamports,
             candy_account_size as u64,
             &program.id(),
         ))
