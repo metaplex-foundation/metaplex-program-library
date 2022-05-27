@@ -21,6 +21,14 @@ const removeCollectionStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _removeCollection_ instruction
+ *
+ * @property [_writable_] candyMachine
+ * @property [**signer**] authority
+ * @property [_writable_] collectionPda
+ * @property [] metadata
+ * @property [] mint
+ * @property [_writable_] collectionAuthorityRecord
+ * @property [] tokenMetadataProgram
  * @category Instructions
  * @category RemoveCollection
  * @category generated
@@ -41,7 +49,6 @@ const removeCollectionInstructionDiscriminator = [223, 52, 106, 217, 61, 220, 36
  * Creates a _RemoveCollection_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category RemoveCollection
  * @category generated
@@ -63,7 +70,7 @@ export function createRemoveCollectionInstruction(accounts: RemoveCollectionInst
   const keys: web3.AccountMeta[] = [
     {
       pubkey: candyMachine,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

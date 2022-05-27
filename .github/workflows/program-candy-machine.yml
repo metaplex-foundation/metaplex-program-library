@@ -8,7 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.14
+  SOLANA_VERSION: 1.9.18
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -57,10 +57,7 @@ jobs:
             ~/.cargo/git/db/
             ./rust/target
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
-
-      # Build deps
-      - uses: ./.github/actions/build-token-vault
-
+      - uses: ./.github/actions/build-token-metadata
       # Run test
       - name: test-candy-machine
         id: run_test
