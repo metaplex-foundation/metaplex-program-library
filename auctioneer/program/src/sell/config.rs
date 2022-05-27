@@ -2,7 +2,12 @@ use anchor_lang::prelude::*;
 use solana_program::clock::UnixTimestamp;
 
 pub const BID_SIZE: usize = 8 + 32;
-pub const LISTING_CONFIG_SIZE: usize = 8 + 8 + 8 + BID_SIZE + 1;
+pub const LISTING_CONFIG_SIZE: usize = 8 + 1 + 8 + 8 + BID_SIZE + 1;
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub enum ListingConfigVersion {
+    V0,
+}
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct Bid {
@@ -12,6 +17,7 @@ pub struct Bid {
 
 #[account]
 pub struct ListingConfig {
+    pub version: ListingConfigVersion,
     pub start_time: UnixTimestamp,
     pub end_time: UnixTimestamp,
     pub highest_bid: Bid,

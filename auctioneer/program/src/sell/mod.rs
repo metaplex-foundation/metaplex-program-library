@@ -102,6 +102,7 @@ pub fn auctioneer_sell<'info>(
     start_time: UnixTimestamp,
     end_time: UnixTimestamp,
 ) -> Result<()> {
+    ctx.accounts.listing_config.version = ListingConfigVersion::V0;
     ctx.accounts.listing_config.start_time = start_time;
     ctx.accounts.listing_config.end_time = end_time;
     ctx.accounts.listing_config.bump = *ctx

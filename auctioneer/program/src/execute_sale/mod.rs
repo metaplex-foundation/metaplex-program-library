@@ -144,6 +144,10 @@ pub fn auctioneer_execute_sale<'info>(
     token_size: u64,
 ) -> Result<()> {
     assert_auction_over(&ctx.accounts.listing_config)?;
+    assert_highest_bidder(
+        &ctx.accounts.listing_config,
+        ctx.accounts.buyer_trade_state.key(),
+    )?;
 
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHExecuteSale {

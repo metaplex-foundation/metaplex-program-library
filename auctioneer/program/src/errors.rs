@@ -14,15 +14,19 @@ pub enum AuctioneerError {
     #[msg("Auction has ended")]
     AuctionEnded,
 
-    // 6002
+    // 6003
     #[msg("Auction has not ended yet")]
     AuctionActive,
 
-    // 6003
+    // 6004
     #[msg("The bid was lower than the highest bid")]
     BidTooLow,
 
-    // 6004
+    // 6005
     #[msg("The signer must be the Auction House authority")]
     SignerNotAuth,
+
+    // 6006
+    #[msg("Execute Sale must be run on the highest bidder")]
+    NotHighestBidder,
 }
