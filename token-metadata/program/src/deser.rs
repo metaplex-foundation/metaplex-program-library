@@ -78,10 +78,11 @@ pub fn clean_write_metadata(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{state::Creator, utils::puff_out_data_fields};
+    pub use crate::{state::Creator, utils::puff_out_data_fields};
     use std::str::FromStr;
 
     // Pesky Penguins #8060 (NOOT!)
+    #[allow(dead_code)]
     fn pesky_data() -> &'static [u8] {
         &[
             4, 12, 25, 250, 103, 242, 3, 129, 143, 173, 110, 204, 157, 11, 1, 247, 211, 138, 199,
@@ -117,6 +118,7 @@ mod tests {
         ]
     }
 
+    #[allow(dead_code)]
     fn expected_pesky_metadata() -> Metadata {
         let creators = vec![
             Creator {

@@ -542,7 +542,7 @@ async fn update_authority_cannot_burn() {
             creators.clone(),
             seller_fee_basis_points,
             is_mutable,
-            freeze_authority.clone(),
+            freeze_authority,
             collection.clone(),
             uses.clone(),
         )
