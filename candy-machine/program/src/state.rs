@@ -23,6 +23,13 @@ pub struct CollectionPDA {
     pub candy_machine: Pubkey,
 }
 
+/// Collection PDA account
+#[account]
+#[derive(Default, Debug)]
+pub struct FreezePDA {
+    pub candy_machine: Pubkey,
+}
+
 /// Candy machine settings data.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct CandyMachineData {
