@@ -1,9 +1,11 @@
-use crate::CandyManager;
+use solana_program::pubkey::Pubkey;
+use solana_sdk::signer::Signer;
+
 use mpl_candy_machine::{
     CandyMachineData, Creator, EndSettings, GatekeeperConfig, HiddenSettings, WhitelistMintSettings,
 };
-use solana_program::pubkey::Pubkey;
-use solana_sdk::signer::Signer;
+
+use crate::CandyManager;
 
 pub const DEFAULT_UUID: &str = "ABCDEF";
 pub const DEFAULT_PRICE: u64 = 1e9 as u64;

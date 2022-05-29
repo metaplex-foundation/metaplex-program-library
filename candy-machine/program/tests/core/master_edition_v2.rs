@@ -6,7 +6,10 @@ use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction, transport};
 
 use crate::{
-    core::{get_account, metadata::Metadata},
+    core::{
+        helpers::{clone_keypair, get_account},
+        metadata::Metadata,
+    },
     *,
 };
 

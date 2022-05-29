@@ -16,17 +16,18 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    add_all_config_lines, airdrop, clone_keypair,
+    airdrop,
     core::{
-        assert_acount_empty, clone_pubkey, create_mint, get_balance, get_token_balance,
-        master_edition_v2::MasterEditionV2 as MasterEditionManager, metadata, mint_to_wallets,
-        prepare_nft,
+        helpers::{
+            assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
+            get_balance, get_token_balance, mint_to_wallets, prepare_nft,
+        },
+        MasterEditionV2 as MasterEditionManager, Metadata as MetadataManager,
     },
-    get_account,
-    helper_transactions::{remove_collection, set_collection},
-    sol,
     utils::{
-        find_candy_creator, find_collection_pda, initialize_candy_machine, mint_nft,
+        add_all_config_lines,
+        helpers::{find_candy_creator, find_collection_pda, sol},
+        initialize_candy_machine, mint_nft, remove_collection, set_collection,
         update_candy_machine,
     },
 };
@@ -82,8 +83,7 @@ impl Clone for CollectionInfo {
 }
 
 impl CollectionInfo {
-    #[allow(dead_code)]
-    pub fn new(
+    pub fn _new(
         set: bool,
         pda: Pubkey,
         mint: Keypair,
@@ -110,7 +110,7 @@ impl CollectionInfo {
         authority: Keypair,
     ) -> Self {
         println!("Init Collection Info");
-        let metadata_info = metadata::Metadata::new(&authority);
+        let metadata_info = MetadataManager::new(&authority);
         metadata_info
             .create_v2(
                 context,
@@ -158,8 +158,7 @@ pub struct TokenInfo {
 }
 
 impl TokenInfo {
-    #[allow(dead_code)]
-    pub fn new(
+    pub fn _new(
         set: bool,
         mint: Pubkey,
         authority: Keypair,
@@ -254,8 +253,7 @@ impl Default for WhitelistConfig {
 }
 
 impl WhitelistInfo {
-    #[allow(dead_code)]
-    pub fn new(
+    pub fn _new(
         set: bool,
         mint: Pubkey,
         auth_account: Pubkey,
@@ -452,8 +450,7 @@ impl CandyManager {
         Ok(())
     }
 
-    #[allow(dead_code)]
-    pub async fn remove_collection(
+    pub async fn _remove_collection(
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
@@ -556,7 +553,7 @@ impl CandyManager {
         let end_whitelist_balance =
             get_token_balance(context, &self.whitelist_info.minter_account).await;
         let metadata =
-            metadata::Metadata::get_data_from_account(context, &new_nft.metadata_pubkey).await;
+            MetadataManager::get_data_from_account(context, &new_nft.metadata_pubkey).await;
         assert_eq!(
             candy_start.items_redeemed,
             candy_end.items_redeemed - 1,
@@ -663,7 +660,7 @@ impl CandyManager {
             candy_start.items_redeemed, candy_end.items_redeemed,
             "Items redeemed was not 0!"
         );
-        assert_acount_empty(context, &new_nft.metadata_pubkey).await;
+        assert_account_empty(context, &new_nft.metadata_pubkey).await;
         Ok(())
     }
 }

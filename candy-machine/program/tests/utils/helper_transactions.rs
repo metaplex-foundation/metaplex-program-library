@@ -15,10 +15,10 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    core::master_edition_v2::MasterEditionV2,
+    core::MasterEditionV2,
     utils::{
         candy_manager::{CollectionInfo, TokenInfo, WhitelistInfo},
-        make_config_lines,
+        helpers::make_config_lines,
     },
 };
 
@@ -225,6 +225,7 @@ pub async fn set_collection(
     context.banks_client.process_transaction(tx).await
 }
 
+#[allow(dead_code)]
 pub async fn remove_collection(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
