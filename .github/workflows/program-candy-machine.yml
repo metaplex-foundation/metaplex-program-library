@@ -57,7 +57,15 @@ jobs:
             ~/.cargo/git/db/
             ./rust/target
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+
+      # Run lint checks
+      - uses: ./.github/actions/verify-rust
+        with:
+          working-directory: ./candy-machine/program
+
+      # Build deps
       - uses: ./.github/actions/build-token-metadata
+
       # Run test
       - name: test-candy-machine
         id: run_test

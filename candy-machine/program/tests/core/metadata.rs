@@ -3,15 +3,13 @@ use mpl_token_metadata::{
     state::{Collection, Creator, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
+use solana_program_test::ProgramTestContext;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
     transport,
 };
 
-use crate::{
-    core::{create_mint, get_account, mint_to_wallets},
-    *,
-};
+use crate::core::helpers::{clone_keypair, create_mint, get_account, mint_to_wallets};
 
 #[derive(Debug)]
 pub struct Metadata {
@@ -41,7 +39,7 @@ impl Metadata {
         }
     }
 
-    pub async fn get_data(
+    pub async fn _get_data(
         &self,
         context: &mut ProgramTestContext,
     ) -> mpl_token_metadata::state::Metadata {
