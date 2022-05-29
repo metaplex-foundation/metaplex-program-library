@@ -11,7 +11,7 @@ use mpl_auction_house::{
 
 /// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).
 #[derive(Accounts, Clone)]
-#[instruction(escrow_payment_bump: u8)]
+#[instruction(escrow_payment_bump: u8, auctioneer_authority_bump: u8)]
 pub struct AuctioneerDeposit<'info> {
     /// Auction House Program
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
@@ -49,7 +49,7 @@ pub struct AuctioneerDeposit<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], seeds::program=auction_house_program, bump=auction_house.fee_payer_bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Validated in deposit_logic.
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
@@ -66,6 +66,7 @@ pub struct AuctioneerDeposit<'info> {
 pub fn auctioneer_deposit<'info>(
     ctx: Context<'_, '_, '_, 'info, AuctioneerDeposit<'info>>,
     escrow_payment_bump: u8,
+    auctioneer_authority_bump: u8,
     amount: u64,
 ) -> Result<()> {
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
@@ -77,6 +78,7 @@ pub fn auctioneer_deposit<'info>(
         treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
         auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),
         ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
@@ -84,6 +86,21 @@ pub fn auctioneer_deposit<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
 
+    let auction_house = &ctx.accounts.auction_house;
+    let ah_key = auction_house.key();
+    let auctioneer_authority = &ctx.accounts.auctioneer_authority;
+    let _aa_key = auctioneer_authority.key();
+
+    let auctioneer_seeds = [
+        AUCTIONEER.as_bytes(),
+        ah_key.as_ref(),
+        &[auctioneer_authority_bump],
+    ];
+
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    mpl_auction_house::cpi::auctioneer_deposit(cpi_ctx, escrow_payment_bump, amount)
+    mpl_auction_house::cpi::auctioneer_deposit(
+        cpi_ctx.with_signer(&[&auctioneer_seeds]),
+        escrow_payment_bump,
+        amount,
+    )
 }

@@ -158,7 +158,7 @@ async fn auction_cancel_listing() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
     context
         .banks_client
@@ -171,6 +171,7 @@ async fn auction_cancel_listing() {
         auction_house: ahkey,
         wallet: test_metadata.token.pubkey(),
         token_account: token,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         trade_state: acc.seller_trade_state,
         ah_auctioneer_pda: auctioneer_pda,
@@ -193,7 +194,7 @@ async fn auction_cancel_listing() {
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
         Some(&test_metadata.token.pubkey()),
-        &[&test_metadata.token],
+        &[&test_metadata.token, &auctioneer_authority],
         context.last_blockhash,
     );
 
@@ -253,7 +254,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
     context
         .banks_client
@@ -266,6 +267,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
         auction_house: ahkey,
         wallet: test_metadata.token.pubkey(),
         token_account: token,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         trade_state: acc.seller_trade_state,
         ah_auctioneer_pda: auctioneer_pda,
@@ -301,7 +303,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
     let tx = Transaction::new_signed_with_payer(
         &[instruction, cancel_listing_receipt_instruction],
         Some(&test_metadata.token.pubkey()),
-        &[&test_metadata.token],
+        &[&test_metadata.token, &auctioneer_authority],
         context.last_blockhash,
     );
 
@@ -360,6 +362,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         trade_state: acc.seller_trade_state,
         ah_auctioneer_pda: auctioneer_pda,
@@ -395,7 +398,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
     let tx = Transaction::new_signed_with_payer(
         &[instruction, cancel_bid_receipt_instruction],
         Some(&buyer.pubkey()),
-        &[&buyer],
+        &[&buyer, &auctioneer_authority],
         context.last_blockhash,
     );
     let error = context
@@ -561,14 +564,14 @@ async fn auction_cancel_bid() {
         .await
         .unwrap();
 
-    let ((acc, _), buy_tx) = auctioneer_buy(
+    let (acc, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         price,
     );
 
@@ -582,6 +585,7 @@ async fn auction_cancel_bid() {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         trade_state: acc.buyer_trade_state,
         ah_auctioneer_pda: auctioneer_pda,
@@ -600,46 +604,13 @@ async fn auction_cancel_bid() {
         accounts,
     };
 
-    let (bid_receipt, _) = find_bid_receipt_address(&acc.buyer_trade_state);
-
-    let accounts = mpl_auction_house::accounts::CancelBidReceipt {
-        receipt: bid_receipt,
-        system_program: solana_program::system_program::id(),
-        instruction: sysvar::instructions::id(),
-    }
-    .to_account_metas(None);
-    let cancel_bid_receipt_instruction = Instruction {
-        program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::CancelBidReceipt {}.data(),
-        accounts,
-    };
-
     let tx = Transaction::new_signed_with_payer(
-        &[instruction, cancel_bid_receipt_instruction],
+        &[instruction],
         Some(&buyer.pubkey()),
-        &[&buyer],
+        &[&buyer, &auctioneer_authority],
         context.last_blockhash,
     );
     context.banks_client.process_transaction(tx).await.unwrap();
-
-    let timestamp = context
-        .banks_client
-        .get_sysvar::<Clock>()
-        .await
-        .unwrap()
-        .unix_timestamp;
-
-    let bid_receipt_account = context
-        .banks_client
-        .get_account(bid_receipt)
-        .await
-        .expect("getting bid receipt")
-        .expect("empty bid receipt data");
-
-    let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
-
-    assert_eq!(bid_receipt.canceled_at, Some(timestamp));
-    assert_eq!(bid_receipt.purchase_receipt, None);
 }
 
 #[tokio::test]
@@ -691,14 +662,14 @@ async fn auction_cancel_bid_missing_scope_fails() {
         .await
         .unwrap();
 
-    let ((acc, _), buy_tx) = auctioneer_buy(
+    let (acc, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         price,
     );
 
@@ -712,6 +683,7 @@ async fn auction_cancel_bid_missing_scope_fails() {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         trade_state: acc.buyer_trade_state,
         ah_auctioneer_pda: auctioneer_pda,
@@ -747,7 +719,7 @@ async fn auction_cancel_bid_missing_scope_fails() {
     let tx = Transaction::new_signed_with_payer(
         &[instruction, cancel_bid_receipt_instruction],
         Some(&buyer.pubkey()),
-        &[&buyer],
+        &[&buyer, &auctioneer_authority],
         context.last_blockhash,
     );
     let error = context
@@ -814,6 +786,7 @@ async fn auction_cancel_bid_no_delegate_fails() {
         auction_house: ahkey,
         wallet: buyer.pubkey(),
         token_account: acc.token_account,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         trade_state: acc.buyer_trade_state,
         ah_auctioneer_pda: auctioneer_pda,
@@ -849,7 +822,7 @@ async fn auction_cancel_bid_no_delegate_fails() {
     let tx = Transaction::new_signed_with_payer(
         &[instruction, cancel_bid_receipt_instruction],
         Some(&buyer.pubkey()),
-        &[&buyer],
+        &[&buyer, &auctioneer_authority],
         context.last_blockhash,
     );
     let error = context

@@ -161,7 +161,7 @@ pub fn deposit(
         1,
     );
     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
-    let (auctioneer_authority, _aa_bump) = find_auctioneer_authority_seeds(ahkey);
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(ahkey);
     let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerDeposit {
         auction_house_program: mpl_auction_house::id(),
@@ -184,6 +184,7 @@ pub fn deposit(
     let data = mpl_auctioneer::instruction::Deposit {
         amount: sale_price,
         escrow_payment_bump: escrow_bump,
+        auctioneer_authority_bump: aa_bump,
     }
     .data();
 
@@ -225,7 +226,7 @@ pub fn buy(
         sale_price,
         1,
     );
-    let (auctioneer_authority, _aa_bump) = find_auctioneer_authority_seeds(ahkey);
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(ahkey);
     let (escrow, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &auctioneer_authority);
     let (bts, bts_bump) = trade_state;
@@ -256,6 +257,7 @@ pub fn buy(
     let buy_ix = mpl_auctioneer::instruction::Buy {
         trade_state_bump: bts_bump,
         escrow_payment_bump: escrow_bump,
+        auctioneer_authority_bump: aa_bump,
         token_size: 1,
         buyer_price: sale_price,
     };
@@ -333,6 +335,7 @@ pub fn execute_sale(
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
+        authority: authority.pubkey(),
         auctioneer_authority: auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     };
@@ -405,7 +408,7 @@ pub fn sell_mint(
     );
 
     let (pas, pas_bump) = find_program_as_signer_address();
-    let (auctioneer_authority, _aa_bump) = find_auctioneer_authority_seeds(ahkey);
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(ahkey);
     let (auctioneer_pda, _) = find_auctioneer_pda(ahkey, &auctioneer_authority);
 
     let accounts = mpl_auctioneer::accounts::AuctioneerSell {
@@ -414,6 +417,7 @@ pub fn sell_mint(
         wallet: seller.pubkey(),
         token_account: token,
         metadata,
+        authority: ah.authority,
         auction_house: *ahkey,
         auction_house_fee_account: ah.auction_house_fee_account,
         seller_trade_state,
@@ -431,6 +435,7 @@ pub fn sell_mint(
         trade_state_bump: sts_bump,
         free_trade_state_bump: free_sts_bump,
         program_as_signer_bump: pas_bump,
+        auctioneer_authority_bump: aa_bump,
         token_size: 1,
         start_time,
         end_time,
@@ -496,7 +501,7 @@ pub fn sell(
     );
 
     let (pas, pas_bump) = find_program_as_signer_address();
-    let (auctioneer_authority, _aa_bump) = find_auctioneer_authority_seeds(ahkey);
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(ahkey);
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
 
     let accounts = mpl_auctioneer::accounts::AuctioneerSell {
@@ -505,6 +510,7 @@ pub fn sell(
         wallet: test_metadata.token.pubkey(),
         token_account: token,
         metadata: test_metadata.pubkey,
+        authority: ah.authority,
         auction_house: *ahkey,
         auction_house_fee_account: ah.auction_house_fee_account,
         seller_trade_state,
@@ -522,6 +528,7 @@ pub fn sell(
         trade_state_bump: sts_bump,
         free_trade_state_bump: free_sts_bump,
         program_as_signer_bump: pas_bump,
+        auctioneer_authority_bump: aa_bump,
         token_size: 1,
         start_time,
         end_time,
@@ -576,6 +583,7 @@ pub fn withdraw(
         escrow_payment_account,
         receipt_account: buyer.pubkey(),
         treasury_mint: ah.treasury_mint,
+        authority: ah.authority,
         auction_house: *ahkey,
         auction_house_fee_account: ah.auction_house_fee_account,
         token_program: spl_token::id(),

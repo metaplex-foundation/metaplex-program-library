@@ -40,7 +40,7 @@ pub struct AuctioneerWithdraw<'info> {
 
     /// CHECK: Verified through CPI
     /// Auction House instance authority account.
-    //pub authority: UncheckedAccount<'info>,
+    pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=treasury_mint, has_one=auction_house_fee_account)]
@@ -80,7 +80,7 @@ pub fn auctioneer_withdraw<'info>(
         receipt_account: ctx.accounts.receipt_account.to_account_info(),
         escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
         treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-        //authority: ctx.accounts.authority.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),

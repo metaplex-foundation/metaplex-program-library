@@ -43,18 +43,20 @@ pub mod auctioneer {
     pub fn deposit<'info>(
         ctx: Context<'_, '_, '_, 'info, AuctioneerDeposit<'info>>,
         escrow_payment_bump: u8,
+        auctioneer_authority_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        auctioneer_deposit(ctx, escrow_payment_bump, amount)
+        auctioneer_deposit(ctx, escrow_payment_bump, auctioneer_authority_bump, amount)
     }
 
     /// Cancel a bid or ask by revoking the token delegate, transferring all lamports from the trade state account to the fee payer, and setting the trade state account data to zero so it can be garbage collected.
     pub fn cancel<'info>(
         ctx: Context<'_, '_, '_, 'info, AuctioneerCancel<'info>>,
+        auctioneer_authority_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        auctioneer_cancel(ctx, buyer_price, token_size)
+        auctioneer_cancel(ctx, auctioneer_authority_bump, buyer_price, token_size)
     }
 
     /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
@@ -85,6 +87,7 @@ pub mod auctioneer {
         trade_state_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
+        auctioneer_authority_bump: u8,
         token_size: u64,
         start_time: UnixTimestamp,
         end_time: UnixTimestamp,
@@ -94,6 +97,7 @@ pub mod auctioneer {
             trade_state_bump,
             free_trade_state_bump,
             program_as_signer_bump,
+            auctioneer_authority_bump,
             token_size,
             start_time,
             end_time,
@@ -105,6 +109,7 @@ pub mod auctioneer {
         ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
         trade_state_bump: u8,
         escrow_payment_bump: u8,
+        auctioneer_authority_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
@@ -112,6 +117,7 @@ pub mod auctioneer {
             ctx,
             trade_state_bump,
             escrow_payment_bump,
+            auctioneer_authority_bump,
             buyer_price,
             token_size,
         )

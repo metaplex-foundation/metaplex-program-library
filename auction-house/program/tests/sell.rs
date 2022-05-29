@@ -120,7 +120,7 @@ async fn auctioneer_sell_success() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
 
     context
@@ -183,7 +183,7 @@ async fn auctioneer_sell_missing_scope_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
 
     let error = context
@@ -225,7 +225,7 @@ async fn auctioneer_sell_no_delegate_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
 
     let error = context

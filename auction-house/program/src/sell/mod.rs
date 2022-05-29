@@ -108,7 +108,7 @@ impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
             wallet: a.wallet,
             token_account: a.token_account,
             metadata: a.metadata,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: *a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             seller_trade_state: a.seller_trade_state,
@@ -143,9 +143,13 @@ pub struct AuctioneerSell<'info> {
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
+    /// Auction House authority account.
+    pub authority: UncheckedAccount<'info>,
+
     /// CHECK: Validated in ah_auctioneer_pda seeds and as a signer in sell_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -155,6 +159,7 @@ pub struct AuctioneerSell<'info> {
             auction_house.treasury_mint.as_ref()
         ],
         bump=auction_house.bump,
+        has_one=authority,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,

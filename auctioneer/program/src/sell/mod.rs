@@ -13,11 +13,11 @@ use mpl_auction_house::{
     AuctionHouse,
 };
 
-use solana_program::{clock::UnixTimestamp, program::invoke};
+use solana_program::{clock::UnixTimestamp, program::invoke_signed};
 
 /// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
 #[derive(Accounts, Clone)]
-#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, token_size: u64)]
+#[instruction(trade_state_bump: u8, free_trade_state_bump: u8, program_as_signer_bump: u8, auctioneer_authority_bump: u8, token_size: u64)]
 pub struct AuctioneerSell<'info> {
     /// Auction House Program used for CPI call
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
@@ -42,7 +42,7 @@ pub struct AuctioneerSell<'info> {
     pub listing_config: Account<'info, ListingConfig>,
 
     // Accounts passed into Auction House CPI call
-    /// CHECK: TODO
+    /// CHECK: Verified through CPI
     /// User wallet account.
     #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
@@ -54,6 +54,10 @@ pub struct AuctioneerSell<'info> {
     /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
+
+    /// CHECK: Verified through CPI
+    /// Auction House authority account.
+    pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=auction_house_fee_account)]
@@ -74,7 +78,7 @@ pub struct AuctioneerSell<'info> {
     #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], seeds::program=auction_house_program, bump=free_trade_state_bump)]
     pub free_seller_trade_state: UncheckedAccount<'info>,
 
-    /// CHECK: TODO
+    /// CHECK: Verified through CPI
     /// The auctioneer program PDA running this auction.
     pub auctioneer_authority: UncheckedAccount<'info>,
 
@@ -98,6 +102,7 @@ pub fn auctioneer_sell<'info>(
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
+    auctioneer_authority_bump: u8,
     token_size: u64,
     start_time: UnixTimestamp,
     end_time: UnixTimestamp,
@@ -119,6 +124,7 @@ pub fn auctioneer_sell<'info>(
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         seller_trade_state: ctx.accounts.seller_trade_state.to_account_info(),
         free_seller_trade_state: ctx.accounts.free_seller_trade_state.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
         auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),
         ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
@@ -142,13 +148,27 @@ pub fn auctioneer_sell<'info>(
             .zip(cpi_accounts.to_account_infos())
             .map(|mut pair| {
                 pair.0.is_signer = pair.1.is_signer;
+                if pair.0.pubkey == ctx.accounts.auctioneer_authority.key() {
+                    pair.0.is_signer = true;
+                }
                 pair.0
             })
             .collect(),
         data: sell_data.data(),
     };
 
-    invoke(&ix, &cpi_accounts.to_account_infos())?;
+    let auction_house = &ctx.accounts.auction_house;
+    let ah_key = auction_house.key();
+    let auctioneer_authority = &ctx.accounts.auctioneer_authority;
+    let _aa_key = auctioneer_authority.key();
+
+    let auctioneer_seeds = [
+        AUCTIONEER.as_bytes(),
+        ah_key.as_ref(),
+        &[auctioneer_authority_bump],
+    ];
+
+    invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
 
     Ok(())
 }

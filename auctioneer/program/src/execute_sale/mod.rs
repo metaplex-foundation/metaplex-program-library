@@ -82,7 +82,7 @@ pub struct AuctioneerExecuteSale<'info> {
 
     /// CHECK: Verified through CPI
     /// Auction House instance authority.
-    //pub authority: UncheckedAccount<'info>,
+    pub authority: UncheckedAccount<'info>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=auction_house_program, bump=auction_house.bump, has_one=treasury_mint, has_one=auction_house_treasury, has_one=auction_house_fee_account)]
@@ -169,6 +169,7 @@ pub fn auctioneer_execute_sale<'info>(
         buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),
         seller_trade_state: ctx.accounts.seller_trade_state.to_account_info(),
         free_trade_state: ctx.accounts.free_trade_state.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
         auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),
         ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),

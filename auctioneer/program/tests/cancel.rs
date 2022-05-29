@@ -59,7 +59,7 @@ async fn cancel_listing() {
         .unwrap();
     let token =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
-    let (auctioneer_authority, _aa_bump) = find_auctioneer_authority_seeds(&ahkey);
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerCancel {
         auction_house_program: mpl_auction_house::id(),
@@ -78,6 +78,7 @@ async fn cancel_listing() {
     let instruction = Instruction {
         program_id: mpl_auctioneer::id(),
         data: mpl_auctioneer::instruction::Cancel {
+            auctioneer_authority_bump: aa_bump,
             buyer_price: u64::MAX,
             token_size: 1,
         }
@@ -166,7 +167,7 @@ async fn cancel_bid() {
         .process_transaction(buy_tx)
         .await
         .unwrap();
-    let (auctioneer_authority, _aa_bump) = find_auctioneer_authority_seeds(&ahkey);
+    let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts = mpl_auctioneer::accounts::AuctioneerCancel {
         auction_house_program: mpl_auction_house::id(),
@@ -184,7 +185,8 @@ async fn cancel_bid() {
     .to_account_metas(None);
     let instruction = Instruction {
         program_id: mpl_auctioneer::id(),
-        data: mpl_auction_house::instruction::Cancel {
+        data: mpl_auctioneer::instruction::Cancel {
+            auctioneer_authority_bump: aa_bump,
             buyer_price: price,
             token_size: 1,
         }

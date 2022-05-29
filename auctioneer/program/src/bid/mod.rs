@@ -15,7 +15,7 @@ use crate::{constants::*, sell::config::*, utils::*};
 
 /// Accounts for the [`private_bid_with_auctioneer` handler](fn.private_bid_with_auctioneer.html).
 #[derive(Accounts)]
-#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, buyer_price: u64, token_size: u64)]
+#[instruction(trade_state_bump: u8, escrow_payment_bump: u8, auctioneer_authority_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct AuctioneerBuy<'info> {
     /// Auction House Program
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
@@ -121,6 +121,7 @@ pub fn auctioneer_buy<'info>(
     ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
     trade_state_bump: u8,
     escrow_payment_bump: u8,
+    auctioneer_authority_bump: u8,
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
@@ -142,6 +143,7 @@ pub fn auctioneer_buy<'info>(
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
         auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),
         ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
         token_program: ctx.accounts.token_program.to_account_info(),
@@ -149,9 +151,20 @@ pub fn auctioneer_buy<'info>(
         rent: ctx.accounts.rent.to_account_info(),
     };
 
+    let auction_house = &ctx.accounts.auction_house;
+    let ah_key = auction_house.key();
+    let auctioneer_authority = &ctx.accounts.auctioneer_authority;
+    let _aa_key = auctioneer_authority.key();
+
+    let auctioneer_seeds = [
+        AUCTIONEER.as_bytes(),
+        ah_key.as_ref(),
+        &[auctioneer_authority_bump],
+    ];
+
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
     mpl_auction_house::cpi::auctioneer_buy(
-        cpi_ctx,
+        cpi_ctx.with_signer(&[&auctioneer_seeds]),
         trade_state_bump,
         escrow_payment_bump,
         buyer_price,
