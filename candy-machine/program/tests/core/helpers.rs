@@ -15,7 +15,8 @@ use spl_token::state::Mint;
 use crate::core::{master_edition_v2::MasterEditionV2, metadata};
 
 /// Perform native lamports transfer.
-pub async fn _transfer_lamports(
+#[allow(dead_code)]
+pub async fn transfer_lamports(
     client: &mut ProgramTestContext,
     wallet: &Keypair,
     to: &Pubkey,
@@ -98,12 +99,14 @@ pub async fn assert_account_empty(context: &mut ProgramTestContext, pubkey: &Pub
     assert_eq!(account, None);
 }
 
-pub async fn _get_mint(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Mint {
+#[allow(dead_code)]
+pub async fn get_mint(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Mint {
     let account = get_account(context, pubkey).await;
     Mint::unpack(&account.data).unwrap()
 }
 
-pub async fn _create_token_account(
+#[allow(dead_code)]
+pub async fn create_token_account(
     context: &mut ProgramTestContext,
     account: &Keypair,
     mint: &Pubkey,
@@ -261,7 +264,8 @@ pub async fn mint_tokens(
     context.banks_client.process_transaction(tx).await
 }
 
-pub async fn _transfer(
+#[allow(dead_code)]
+pub async fn transfer(
     context: &mut ProgramTestContext,
     mint: &Pubkey,
     from: &Keypair,

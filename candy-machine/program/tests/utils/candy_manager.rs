@@ -83,7 +83,8 @@ impl Clone for CollectionInfo {
 }
 
 impl CollectionInfo {
-    pub fn _new(
+    #[allow(dead_code)]
+    pub fn new(
         set: bool,
         pda: Pubkey,
         mint: Keypair,
@@ -158,7 +159,8 @@ pub struct TokenInfo {
 }
 
 impl TokenInfo {
-    pub fn _new(
+    #[allow(dead_code)]
+    pub fn new(
         set: bool,
         mint: Pubkey,
         authority: Keypair,
@@ -253,7 +255,8 @@ impl Default for WhitelistConfig {
 }
 
 impl WhitelistInfo {
-    pub fn _new(
+    #[allow(dead_code)]
+    pub fn new(
         set: bool,
         mint: Pubkey,
         auth_account: Pubkey,
@@ -450,7 +453,8 @@ impl CandyManager {
         Ok(())
     }
 
-    pub async fn _remove_collection(
+    #[allow(dead_code)]
+    pub async fn remove_collection(
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
