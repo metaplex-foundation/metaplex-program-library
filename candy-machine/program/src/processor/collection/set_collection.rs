@@ -7,7 +7,7 @@ use solana_program::program::invoke;
 
 use crate::{
     cmp_pubkeys,
-    constants::{COLLECTIONS_FEATURE_INDEX, COLLECTION_PDA_SIZE},
+    constants::{COLLECTION, COLLECTIONS_FEATURE_INDEX, COLLECTION_PDA_SIZE},
     set_feature_flag, CandyError, CandyMachine, CollectionPDA,
 };
 
@@ -18,7 +18,7 @@ pub struct SetCollection<'info> {
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
     /// CHECK: account constraints checked in account trait
-    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
+    #[account(mut, seeds = [COLLECTION.as_bytes(), candy_machine.to_account_info().key.as_ref()], bump)]
     collection_pda: UncheckedAccount<'info>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
@@ -99,7 +99,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
             &ctx.accounts.authority.to_account_info(),
             COLLECTION_PDA_SIZE,
             &[
-                b"collection".as_ref(),
+                COLLECTION.as_bytes(),
                 candy_machine.key().as_ref(),
                 &[*ctx.bumps.get("collection_pda").unwrap()],
             ],

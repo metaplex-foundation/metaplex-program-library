@@ -52,6 +52,14 @@ pub mod candy_machine {
         handle_remove_collection(ctx)
     }
 
+    pub fn set_freeze(ctx: Context<SetFreeze>) -> Result<()> {
+        handle_set_freeze(ctx)
+    }
+
+    pub fn remove_freeze(ctx: Context<RemoveFreeze>) -> Result<()> {
+        handle_remove_freeze(ctx)
+    }
+
     pub fn mint_nft<'info>(
         ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
         creator_bump: u8,
@@ -61,6 +69,10 @@ pub mod candy_machine {
 
     pub fn set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) -> Result<()> {
         handle_set_collection_during_mint(ctx)
+    }
+
+    pub fn thaw_nft(ctx: Context<ThawNFT>) -> Result<()> {
+        handle_thaw_nft(ctx)
     }
 
     pub fn withdraw_funds<'info>(ctx: Context<WithdrawFunds<'info>>) -> Result<()> {

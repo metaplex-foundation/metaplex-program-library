@@ -72,4 +72,6 @@ pub enum CandyError {
     NoChangingCollectionDuringMint,
     #[msg("Retain authority must be true for Candy Machines with a collection set")]
     CandyCollectionRequiresRetainAuthority,
+    #[msg("Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing")]
+    InvalidThawNFT,
 }

@@ -28,6 +28,7 @@ pub struct CollectionPDA {
 #[derive(Default, Debug)]
 pub struct FreezePDA {
     pub candy_machine: Pubkey,
+    pub allow_thaw: bool,
 }
 
 /// Candy machine settings data.
