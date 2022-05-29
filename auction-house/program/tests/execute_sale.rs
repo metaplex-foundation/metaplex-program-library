@@ -1777,7 +1777,7 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
     assert_eq!(seller_token_after.amount, 0);
     assert_eq!(buyer_token_after.amount, 1);
 
-    let ((bid_acc, _), buy_tx) = buy(
+    let ((bid_acc, _), _) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -1786,11 +1786,6 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
         &buyer,
         100_000_000,
     );
-    context
-        .banks_client
-        .process_transaction(buy_tx)
-        .await
-        .unwrap();
 
     let accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: buyer.pubkey(),
@@ -1842,7 +1837,7 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
         .data(),
         accounts,
     };
-    
+
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
         .await
         .unwrap();
@@ -1854,5 +1849,11 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    let error = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
+
+    assert_error!(error, BUYER_TRADE_STATE_NOT_VALID);
 }
