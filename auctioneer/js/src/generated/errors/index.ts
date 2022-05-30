@@ -132,6 +132,26 @@ createErrorFromCodeLookup.set(0x1775, () => new SignerNotAuthError());
 createErrorFromNameLookup.set('SignerNotAuth', () => new SignerNotAuthError());
 
 /**
+ * NotHighestBidder: 'Execute Sale must be run on the highest bidder'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotHighestBidderError extends Error {
+  readonly code: number = 0x1776;
+  readonly name: string = 'NotHighestBidder';
+  constructor() {
+    super('Execute Sale must be run on the highest bidder');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotHighestBidderError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1776, () => new NotHighestBidderError());
+createErrorFromNameLookup.set('NotHighestBidder', () => new NotHighestBidderError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

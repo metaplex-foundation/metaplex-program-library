@@ -57,6 +57,11 @@
           "isSigner": false
         },
         {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "auctionHouse",
           "isMut": false,
           "isSigner": false
@@ -192,6 +197,10 @@
           "type": "u8"
         },
         {
+          "name": "auctioneerAuthorityBump",
+          "type": "u8"
+        },
+        {
           "name": "amount",
           "type": "u64"
         }
@@ -258,6 +267,10 @@
       ],
       "args": [
         {
+          "name": "auctioneerAuthorityBump",
+          "type": "u8"
+        },
+        {
           "name": "buyerPrice",
           "type": "u64"
         },
@@ -323,6 +336,11 @@
         {
           "name": "buyerReceiptTokenAccount",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -516,6 +534,10 @@
           "type": "u8"
         },
         {
+          "name": "auctioneerAuthorityBump",
+          "type": "u8"
+        },
+        {
           "name": "tokenSize",
           "type": "u64"
         },
@@ -642,6 +664,10 @@
           "type": "u8"
         },
         {
+          "name": "auctioneerAuthorityBump",
+          "type": "u8"
+        },
+        {
           "name": "buyerPrice",
           "type": "u64"
         },
@@ -670,6 +696,12 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "version",
+            "type": {
+              "defined": "ListingConfigVersion"
+            }
+          },
           {
             "name": "startTime",
             "type": {
@@ -712,6 +744,17 @@
           }
         ]
       }
+    },
+    {
+      "name": "ListingConfigVersion",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "V0"
+          }
+        ]
+      }
     }
   ],
   "errors": [
@@ -744,6 +787,11 @@
       "code": 6005,
       "name": "SignerNotAuth",
       "msg": "The signer must be the Auction House authority"
+    },
+    {
+      "code": 6006,
+      "name": "NotHighestBidder",
+      "msg": "Execute Sale must be run on the highest bidder"
     }
   ],
   "metadata": {

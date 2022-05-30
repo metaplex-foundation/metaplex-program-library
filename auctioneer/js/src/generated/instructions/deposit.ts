@@ -16,6 +16,7 @@ import * as web3 from '@solana/web3.js';
  */
 export type DepositInstructionArgs = {
   escrowPaymentBump: number;
+  auctioneerAuthorityBump: number;
   amount: beet.bignum;
 };
 /**
@@ -31,6 +32,7 @@ const depositStruct = new beet.BeetArgsStruct<
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['escrowPaymentBump', beet.u8],
+    ['auctioneerAuthorityBump', beet.u8],
     ['amount', beet.u64],
   ],
   'DepositInstructionArgs',

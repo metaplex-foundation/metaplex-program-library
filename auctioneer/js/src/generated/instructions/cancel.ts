@@ -15,6 +15,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type CancelInstructionArgs = {
+  auctioneerAuthorityBump: number;
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
 };
@@ -30,6 +31,7 @@ const cancelStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['auctioneerAuthorityBump', beet.u8],
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
   ],

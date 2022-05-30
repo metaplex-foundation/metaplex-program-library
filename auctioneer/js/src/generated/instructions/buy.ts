@@ -17,6 +17,7 @@ import * as web3 from '@solana/web3.js';
 export type BuyInstructionArgs = {
   tradeStateBump: number;
   escrowPaymentBump: number;
+  auctioneerAuthorityBump: number;
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
 };
@@ -34,6 +35,7 @@ const buyStruct = new beet.BeetArgsStruct<
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['tradeStateBump', beet.u8],
     ['escrowPaymentBump', beet.u8],
+    ['auctioneerAuthorityBump', beet.u8],
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
   ],

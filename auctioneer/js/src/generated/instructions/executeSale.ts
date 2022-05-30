@@ -57,6 +57,7 @@ const executeSaleStruct = new beet.BeetArgsStruct<
  * @property [_writable_] escrowPaymentAccount
  * @property [_writable_] sellerPaymentReceiptAccount
  * @property [_writable_] buyerReceiptTokenAccount
+ * @property [] authority
  * @property [] auctionHouse
  * @property [_writable_] auctionHouseFeeAccount
  * @property [_writable_] auctionHouseTreasury
@@ -82,6 +83,7 @@ export type ExecuteSaleInstructionAccounts = {
   escrowPaymentAccount: web3.PublicKey;
   sellerPaymentReceiptAccount: web3.PublicKey;
   buyerReceiptTokenAccount: web3.PublicKey;
+  authority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
   auctionHouseTreasury: web3.PublicKey;
@@ -121,6 +123,7 @@ export function createExecuteSaleInstruction(
     escrowPaymentAccount,
     sellerPaymentReceiptAccount,
     buyerReceiptTokenAccount,
+    authority,
     auctionHouse,
     auctionHouseFeeAccount,
     auctionHouseTreasury,
@@ -190,6 +193,11 @@ export function createExecuteSaleInstruction(
     {
       pubkey: buyerReceiptTokenAccount,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: authority,
+      isWritable: false,
       isSigner: false,
     },
     {

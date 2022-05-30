@@ -7,6 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { ListingConfigVersion, listingConfigVersionBeet } from '../types/ListingConfigVersion';
 import { Bid, bidBeet } from '../types/Bid';
 
 /**
@@ -15,6 +16,7 @@ import { Bid, bidBeet } from '../types/Bid';
  * @category generated
  */
 export type ListingConfigArgs = {
+  version: ListingConfigVersion;
   startTime: beet.bignum;
   endTime: beet.bignum;
   highestBid: Bid;
@@ -31,6 +33,7 @@ const listingConfigDiscriminator = [183, 196, 26, 41, 131, 46, 184, 115];
  */
 export class ListingConfig implements ListingConfigArgs {
   private constructor(
+    readonly version: ListingConfigVersion,
     readonly startTime: beet.bignum,
     readonly endTime: beet.bignum,
     readonly highestBid: Bid,
@@ -41,7 +44,13 @@ export class ListingConfig implements ListingConfigArgs {
    * Creates a {@link ListingConfig} instance from the provided args.
    */
   static fromArgs(args: ListingConfigArgs) {
-    return new ListingConfig(args.startTime, args.endTime, args.highestBid, args.bump);
+    return new ListingConfig(
+      args.version,
+      args.startTime,
+      args.endTime,
+      args.highestBid,
+      args.bump,
+    );
   }
 
   /**
@@ -126,6 +135,7 @@ export class ListingConfig implements ListingConfigArgs {
    */
   pretty() {
     return {
+      version: 'ListingConfigVersion.' + ListingConfigVersion[this.version],
       startTime: this.startTime,
       endTime: this.endTime,
       highestBid: this.highestBid,
@@ -146,6 +156,7 @@ export const listingConfigBeet = new beet.BeetStruct<
 >(
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['version', listingConfigVersionBeet],
     ['startTime', beet.i64],
     ['endTime', beet.i64],
     ['highestBid', bidBeet],
