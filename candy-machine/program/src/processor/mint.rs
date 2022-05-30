@@ -111,6 +111,16 @@ pub fn handle_mint_nft<'info>(
     let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
     let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
     let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
+    if get_expected_remaining_accounts_count(candy_machine) != ctx.remaining_accounts.len() {
+        punish_bots(
+            CandyError::IncorrectRemainingAccountsLen,
+            payer.to_account_info(),
+            ctx.accounts.candy_machine.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            BOT_FEE,
+        )?;
+        return Ok(());
+    }
     if !ctx.accounts.metadata.data_is_empty() {
         return err!(CandyError::MetadataAccountMustBeEmpty);
     }
@@ -231,16 +241,6 @@ pub fn handle_mint_nft<'info>(
     }
     let mut remaining_accounts_counter: usize = 0;
     if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
-        if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-            punish_bots(
-                CandyError::GatewayTokenMissing,
-                payer.to_account_info(),
-                ctx.accounts.candy_machine.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-                BOT_FEE,
-            )?;
-            return Ok(());
-        }
         let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
         remaining_accounts_counter += 1;
 
@@ -266,14 +266,8 @@ pub fn handle_mint_nft<'info>(
             };
 
         if gatekeeper.expire_on_use {
-            if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-                return err!(CandyError::GatewayAppMissing);
-            }
             let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-            if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-                return err!(CandyError::NetworkExpireFeatureMissing);
-            }
             let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
             Gateway::verify_and_expire_token_with_eval(
@@ -799,4 +793,28 @@ pub fn get_config_line(
     };
 
     Ok(config_line)
+}
+
+pub fn get_expected_remaining_accounts_count(candy: &CandyMachine) -> usize {
+    let mut expected_count = 0;
+    if let Some(gatekeeper) = &candy.data.gatekeeper {
+        expected_count += 1;
+        if gatekeeper.expire_on_use {
+            expected_count += 2;
+        }
+    }
+    if let Some(whitelist) = &candy.data.whitelist_mint_settings {
+        expected_count += 1;
+        if whitelist.mode == WhitelistMintMode::BurnEveryTime {
+            expected_count += 2;
+        }
+    }
+    if candy.token_mint.is_some() {
+        expected_count += 2;
+    }
+
+    if is_feature_active(&candy.data.uuid, FREEZE_FEATURE_INDEX) {
+        expected_count += 2;
+    }
+    expected_count
 }

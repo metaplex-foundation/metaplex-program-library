@@ -74,4 +74,6 @@ pub enum CandyError {
     CandyCollectionRequiresRetainAuthority,
     #[msg("Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing")]
     InvalidThawNFT,
+    #[msg("The number of remaining accounts passed in doesn't match the Candy Machine settings")]
+    IncorrectRemainingAccountsLen,
 }
