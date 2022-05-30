@@ -85,7 +85,11 @@ pub async fn initialize_candy_machine(
         &[create_ix, init_ix],
         Some(&payer.pubkey()),
         &[candy_account, payer],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -119,7 +123,11 @@ pub async fn update_candy_machine(
         &[update_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -153,7 +161,11 @@ pub async fn add_config_lines(
         &[add_config_line_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -220,7 +232,11 @@ pub async fn set_collection(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -253,13 +269,16 @@ pub async fn remove_collection(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
 }
 
-#[allow(dead_code)]
 pub async fn set_freeze(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
@@ -285,13 +304,16 @@ pub async fn set_freeze(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
 }
 
-#[allow(dead_code)]
 pub async fn remove_freeze(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
@@ -315,7 +337,11 @@ pub async fn remove_freeze(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -422,13 +448,16 @@ pub async fn mint_nft(
         &instructions,
         Some(&payer.pubkey()),
         &signers,
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
 }
 
-#[allow(dead_code)]
 pub async fn thaw_nft(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
@@ -460,7 +489,11 @@ pub async fn thaw_nft(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await

@@ -64,13 +64,11 @@ impl MasterEditionManager {
         }
     }
 
-    #[allow(dead_code)]
     pub async fn get_data(&self, context: &mut ProgramTestContext) -> MasterEditionV2 {
         let account = get_account(context, &self.edition_pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
-    #[allow(dead_code)]
     pub async fn get_data_from_account(
         context: &mut ProgramTestContext,
         pubkey: &Pubkey,
@@ -97,7 +95,11 @@ impl MasterEditionManager {
             )],
             Some(&self.authority.pubkey()),
             &[&self.authority],
-            context.last_blockhash,
+            context
+                .banks_client
+                .clone()
+                .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+                .await?,
         );
 
         context.banks_client.process_transaction(tx).await

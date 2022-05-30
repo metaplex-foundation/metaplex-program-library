@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-
+#![allow(dead_code)]
 use solana_program::program_option::COption;
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};

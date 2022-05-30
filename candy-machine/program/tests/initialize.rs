@@ -1,12 +1,12 @@
 #![cfg(feature = "test-bpf")]
-
+#![allow(dead_code)]
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
 
-use mpl_candy_machine::{CandyMachineData, WhitelistMintMode::BurnEveryTime};
+use mpl_candy_machine::WhitelistMintMode::BurnEveryTime;
 
 use crate::{
-    core::helpers::{airdrop, assert_account_empty, clone_keypair, get_token_account},
+    core::helpers::{airdrop, assert_account_empty},
     utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager, WhitelistConfig},
 };
 
@@ -43,9 +43,13 @@ async fn init_everything() {
     assert_account_empty(context, &candy_manager.freeze_info.pda).await;
     candy_manager.set_freeze(context).await.unwrap();
     let freeze_pda_account = candy_manager.get_freeze_pda(context).await;
+    assert!(!freeze_pda_account.allow_thaw, "allow thaw isn't false!");
     println!("Freeze PDA: {:#?}", freeze_pda_account);
     candy_manager.remove_freeze(context).await.unwrap();
-    assert_account_empty(context, &candy_manager.freeze_info.pda).await;
+    assert!(
+        candy_manager.get_freeze_pda(context).await.allow_thaw,
+        "allow thaw isn't true!"
+    );
     candy_manager.remove_collection(context).await.unwrap();
     assert_account_empty(context, &candy_manager.collection_info.pda).await;
 }

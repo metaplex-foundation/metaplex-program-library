@@ -85,7 +85,6 @@ impl Clone for CollectionInfo {
 }
 
 impl CollectionInfo {
-    #[allow(dead_code)]
     pub fn new(
         set: bool,
         pda: Pubkey,
@@ -161,7 +160,6 @@ pub struct TokenInfo {
 }
 
 impl TokenInfo {
-    #[allow(dead_code)]
     pub fn new(
         set: bool,
         mint: Pubkey,
@@ -280,7 +278,6 @@ impl Default for WhitelistConfig {
 }
 
 impl WhitelistInfo {
-    #[allow(dead_code)]
     pub fn new(
         set: bool,
         mint: Pubkey,

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{ProgramTestBanksClientExt, ProgramTestContext};
 use solana_sdk::{
     account::Account,
     program_pack::Pack,
@@ -15,7 +15,6 @@ use spl_token::state::Mint;
 use crate::core::{master_edition_v2::MasterEditionManager, metadata};
 
 /// Perform native lamports transfer.
-#[allow(dead_code)]
 pub async fn transfer_lamports(
     client: &mut ProgramTestContext,
     wallet: &Keypair,
@@ -26,7 +25,10 @@ pub async fn transfer_lamports(
         &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
         Some(&wallet.pubkey()),
         &[wallet],
-        client.last_blockhash,
+        client
+            .banks_client
+            .get_new_latest_blockhash(&client.last_blockhash)
+            .await?,
     );
 
     client.banks_client.process_transaction(tx).await?;
@@ -66,7 +68,11 @@ pub async fn airdrop(
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await.unwrap();
@@ -99,13 +105,11 @@ pub async fn assert_account_empty(context: &mut ProgramTestContext, pubkey: &Pub
     assert_eq!(account, None, "Account {} not empty", &pubkey.to_string());
 }
 
-#[allow(dead_code)]
 pub async fn get_mint(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Mint {
     let account = get_account(context, pubkey).await;
     Mint::unpack(&account.data).unwrap()
 }
 
-#[allow(dead_code)]
 pub async fn create_token_account(
     context: &mut ProgramTestContext,
     account: &Keypair,
@@ -133,7 +137,11 @@ pub async fn create_token_account(
         ],
         Some(&context.payer.pubkey()),
         &[&context.payer, account],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -144,7 +152,11 @@ pub async fn create_associated_token_account(
     wallet: &Pubkey,
     token_mint: &Pubkey,
 ) -> transport::Result<Pubkey> {
-    let recent_blockhash = context.last_blockhash;
+    let recent_blockhash = context
+        .banks_client
+        .clone()
+        .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+        .await?;
 
     let tx = Transaction::new_signed_with_payer(
         &[
@@ -195,7 +207,11 @@ pub async fn create_mint(
         ],
         Some(&context.payer.pubkey()),
         &[&context.payer, &mint],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await.unwrap();
@@ -259,12 +275,15 @@ pub async fn mint_tokens(
         &[ix],
         Some(&context.payer.pubkey()),
         &signing_keypairs,
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
     context.banks_client.process_transaction(tx).await
 }
 
-#[allow(dead_code)]
 pub async fn transfer(
     context: &mut ProgramTestContext,
     mint: &Pubkey,
@@ -284,7 +303,11 @@ pub async fn transfer(
         .unwrap()],
         Some(&from.pubkey()),
         &[from],
-        context.last_blockhash,
+        context
+            .banks_client
+            .clone()
+            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+            .await?,
     );
 
     context.banks_client.process_transaction(tx).await

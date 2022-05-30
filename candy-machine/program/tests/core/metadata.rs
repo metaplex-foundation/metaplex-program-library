@@ -3,7 +3,7 @@ use mpl_token_metadata::{
     state::{Collection, Creator, Metadata, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{ProgramTestBanksClientExt, ProgramTestContext};
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
     transport,
@@ -98,7 +98,11 @@ impl MetadataManager {
             )],
             Some(&self.authority.pubkey()),
             &[&self.authority],
-            context.last_blockhash,
+            context
+                .banks_client
+                .clone()
+                .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
+                .await?,
         );
         context.banks_client.process_transaction(tx).await
     }
