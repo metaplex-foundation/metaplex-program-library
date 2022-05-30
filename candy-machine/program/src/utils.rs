@@ -114,14 +114,14 @@ pub fn assert_is_ata(
 ) -> core::result::Result<spl_token::state::Account, ProgramError> {
     assert_owned_by(ata, &spl_token::id())?;
     let ata_account: spl_token::state::Account = assert_initialized(ata)?;
-    assert_keys_equal(ata_account.owner, *wallet)?;
-    assert_keys_equal(ata_account.mint, *mint)?;
-    assert_keys_equal(get_associated_token_address(wallet, mint), *ata.key)?;
+    assert_keys_equal(&ata_account.owner, wallet)?;
+    assert_keys_equal(&ata_account.mint, mint)?;
+    assert_keys_equal(&get_associated_token_address(wallet, mint), ata.key)?;
     Ok(ata_account)
 }
 
-pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
-    if !cmp_pubkeys(&key1, &key2) {
+pub fn assert_keys_equal(key1: &Pubkey, key2: &Pubkey) -> Result<()> {
+    if !cmp_pubkeys(key1, key2) {
         err!(CandyError::PublicKeyMismatch)
     } else {
         Ok(())
