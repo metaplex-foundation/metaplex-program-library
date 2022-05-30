@@ -12,7 +12,7 @@ use solana_sdk::{
 };
 use spl_token::state::Mint;
 
-use crate::core::{master_edition_v2::MasterEditionV2, metadata};
+use crate::core::{master_edition_v2::MasterEditionManager, metadata};
 
 /// Perform native lamports transfer.
 #[allow(dead_code)]
@@ -96,7 +96,7 @@ pub async fn assert_account_empty(context: &mut ProgramTestContext, pubkey: &Pub
         .get_account(*pubkey)
         .await
         .expect("Could not get account!");
-    assert_eq!(account, None);
+    assert_eq!(account, None, "Account {} not empty", &pubkey.to_string());
 }
 
 #[allow(dead_code)]
@@ -290,8 +290,11 @@ pub async fn transfer(
     context.banks_client.process_transaction(tx).await
 }
 
-pub async fn prepare_nft(context: &mut ProgramTestContext, minter: &Keypair) -> MasterEditionV2 {
-    let nft_info = metadata::Metadata::new(minter);
+pub async fn prepare_nft(
+    context: &mut ProgramTestContext,
+    minter: &Keypair,
+) -> MasterEditionManager {
+    let nft_info = metadata::MetadataManager::new(minter);
     create_mint(
         context,
         &minter.pubkey(),
@@ -305,9 +308,9 @@ pub async fn prepare_nft(context: &mut ProgramTestContext, minter: &Keypair) -> 
         context,
         &nft_info.mint.pubkey(),
         minter,
-        vec![(nft_info.token, 1)],
+        vec![(nft_info.owner.pubkey(), 1)],
     )
     .await
     .unwrap();
-    MasterEditionV2::new(&nft_info)
+    MasterEditionManager::new(&nft_info)
 }

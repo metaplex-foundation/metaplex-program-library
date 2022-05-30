@@ -1,6 +1,6 @@
 use mpl_token_metadata::{
     instruction,
-    state::{Collection, Creator, Uses, PREFIX},
+    state::{Collection, Creator, Metadata, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::ProgramTestContext;
@@ -12,14 +12,14 @@ use solana_sdk::{
 use crate::core::helpers::{clone_keypair, create_mint, get_account, mint_to_wallets};
 
 #[derive(Debug)]
-pub struct Metadata {
+pub struct MetadataManager {
     pub authority: Keypair,
     pub mint: Keypair,
     pub pubkey: Pubkey,
-    pub token: Pubkey,
+    pub owner: Keypair,
 }
 
-impl Metadata {
+impl MetadataManager {
     pub fn new(authority: &Keypair) -> Self {
         let mint = Keypair::new();
         let mint_pubkey = mint.pubkey();
@@ -28,21 +28,15 @@ impl Metadata {
         let metadata_seeds = &[PREFIX.as_bytes(), program_id.as_ref(), mint_pubkey.as_ref()];
         let (pubkey, _) = Pubkey::find_program_address(metadata_seeds, &program_id);
 
-        Metadata {
+        Self {
             authority: clone_keypair(authority),
             mint: clone_keypair(&mint),
             pubkey,
-            token: spl_associated_token_account::get_associated_token_address(
-                &authority.pubkey(),
-                &mint.pubkey(),
-            ),
+            owner: clone_keypair(authority),
         }
     }
 
-    pub async fn _get_data(
-        &self,
-        context: &mut ProgramTestContext,
-    ) -> mpl_token_metadata::state::Metadata {
+    pub async fn _get_data(&self, context: &mut ProgramTestContext) -> Metadata {
         let account = get_account(context, &self.pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
@@ -50,7 +44,7 @@ impl Metadata {
     pub async fn get_data_from_account(
         context: &mut ProgramTestContext,
         pubkey: &Pubkey,
-    ) -> mpl_token_metadata::state::Metadata {
+    ) -> Metadata {
         let account = get_account(context, pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
@@ -80,7 +74,7 @@ impl Metadata {
             context,
             &self.mint.pubkey(),
             &self.authority,
-            vec![(self.authority.pubkey(), 1)],
+            vec![(self.owner.pubkey(), 1)],
         )
         .await?;
 
@@ -108,9 +102,16 @@ impl Metadata {
         );
         context.banks_client.process_transaction(tx).await
     }
+
+    pub fn get_ata(&self) -> Pubkey {
+        spl_associated_token_account::get_associated_token_address(
+            &self.owner.pubkey(),
+            &self.mint.pubkey(),
+        )
+    }
 }
 
-impl Default for Metadata {
+impl Default for MetadataManager {
     fn default() -> Self {
         Self::new(&Keypair::new())
     }

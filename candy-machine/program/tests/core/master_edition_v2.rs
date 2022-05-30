@@ -1,28 +1,44 @@
 use mpl_token_metadata::{
     instruction::{self},
-    state::{EDITION, PREFIX},
+    state::{MasterEditionV2, EDITION, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction, transport};
+use spl_associated_token_account::get_associated_token_address;
 
 use crate::{
     core::{
-        helpers::{clone_keypair, get_account},
-        metadata::Metadata,
+        helpers::{clone_keypair, clone_pubkey, get_account},
+        MetadataManager,
     },
     *,
 };
 
 #[derive(Debug)]
-pub struct MasterEditionV2 {
+pub struct MasterEditionManager {
     pub authority: Keypair,
-    pub pubkey: Pubkey,
+    pub edition_pubkey: Pubkey,
     pub metadata_pubkey: Pubkey,
     pub mint_pubkey: Pubkey,
+    pub token_account: Pubkey,
+    pub owner: Keypair,
 }
 
-impl MasterEditionV2 {
-    pub fn new(metadata: &Metadata) -> Self {
+impl Clone for MasterEditionManager {
+    fn clone(&self) -> Self {
+        Self {
+            authority: clone_keypair(&self.authority),
+            edition_pubkey: clone_pubkey(&self.edition_pubkey),
+            metadata_pubkey: clone_pubkey(&self.metadata_pubkey),
+            mint_pubkey: clone_pubkey(&self.mint_pubkey),
+            token_account: clone_pubkey(&self.token_account),
+            owner: clone_keypair(&self.owner),
+        }
+    }
+}
+
+impl MasterEditionManager {
+    pub fn new(metadata: &MetadataManager) -> Self {
         let program_id = mpl_token_metadata::id();
         let mint_pubkey = metadata.mint.pubkey();
 
@@ -32,23 +48,25 @@ impl MasterEditionV2 {
             mint_pubkey.as_ref(),
             EDITION.as_bytes(),
         ];
-        let (pubkey, _) =
-            Pubkey::find_program_address(master_edition_seeds, &mpl_token_metadata::id());
+        let edition_pubkey =
+            Pubkey::find_program_address(master_edition_seeds, &mpl_token_metadata::id()).0;
 
-        MasterEditionV2 {
+        Self {
             authority: clone_keypair(&metadata.authority),
-            pubkey,
+            edition_pubkey,
             metadata_pubkey: metadata.pubkey,
             mint_pubkey,
+            token_account: get_associated_token_address(
+                &metadata.owner.pubkey(),
+                &metadata.mint.pubkey(),
+            ),
+            owner: clone_keypair(&metadata.owner),
         }
     }
 
     #[allow(dead_code)]
-    pub async fn get_data(
-        &self,
-        context: &mut ProgramTestContext,
-    ) -> mpl_token_metadata::state::MasterEditionV2 {
-        let account = get_account(context, &self.pubkey).await;
+    pub async fn get_data(&self, context: &mut ProgramTestContext) -> MasterEditionV2 {
+        let account = get_account(context, &self.edition_pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
@@ -56,7 +74,7 @@ impl MasterEditionV2 {
     pub async fn get_data_from_account(
         context: &mut ProgramTestContext,
         pubkey: &Pubkey,
-    ) -> mpl_token_metadata::state::MasterEditionV2 {
+    ) -> MasterEditionV2 {
         let account = get_account(context, pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
@@ -69,7 +87,7 @@ impl MasterEditionV2 {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
                 mpl_token_metadata::id(),
-                self.pubkey,
+                self.edition_pubkey,
                 self.mint_pubkey,
                 self.authority.pubkey(),
                 self.authority.pubkey(),
