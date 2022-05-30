@@ -989,6 +989,11 @@
       "code": 6035,
       "name": "InvalidThawNFT",
       "msg": "Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing"
+    },
+    {
+      "code": 6036,
+      "name": "IncorrectRemainingAccountsLen",
+      "msg": "The number of remaining accounts passed in doesn't match the Candy Machine settings"
     }
   ],
   "metadata": {

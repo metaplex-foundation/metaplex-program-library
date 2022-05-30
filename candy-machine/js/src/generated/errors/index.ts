@@ -776,6 +776,29 @@ createErrorFromCodeLookup.set(0x1793, () => new InvalidThawNFTError());
 createErrorFromNameLookup.set('InvalidThawNFT', () => new InvalidThawNFTError());
 
 /**
+ * IncorrectRemainingAccountsLen: 'The number of remaining accounts passed in doesn't match the Candy Machine settings'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectRemainingAccountsLenError extends Error {
+  readonly code: number = 0x1794;
+  readonly name: string = 'IncorrectRemainingAccountsLen';
+  constructor() {
+    super("The number of remaining accounts passed in doesn't match the Candy Machine settings");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectRemainingAccountsLenError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1794, () => new IncorrectRemainingAccountsLenError());
+createErrorFromNameLookup.set(
+  'IncorrectRemainingAccountsLen',
+  () => new IncorrectRemainingAccountsLenError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
