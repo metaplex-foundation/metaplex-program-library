@@ -233,6 +233,58 @@
       "args": []
     },
     {
+      "name": "setFreeze",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "freezePda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "removeFreeze",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "freezePda",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "mintNft",
       "accounts": [
         {
@@ -385,6 +437,57 @@
       "args": []
     },
     {
+      "name": "thawNft",
+      "accounts": [
+        {
+          "name": "freezePda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "withdrawFunds",
       "accounts": [
         {
@@ -446,6 +549,22 @@
           {
             "name": "candyMachine",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FreezePDA",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "candyMachine",
+            "type": "publicKey"
+          },
+          {
+            "name": "allowThaw",
+            "type": "bool"
           }
         ]
       }
@@ -865,6 +984,11 @@
       "code": 6034,
       "name": "CandyCollectionRequiresRetainAuthority",
       "msg": "Retain authority must be true for Candy Machines with a collection set"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidThawNFT",
+      "msg": "Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing"
     }
   ],
   "metadata": {

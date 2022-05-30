@@ -756,6 +756,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidThawNFT: 'Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidThawNFTError extends Error {
+  readonly code: number = 0x1793;
+  readonly name: string = 'InvalidThawNFT';
+  constructor() {
+    super('Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidThawNFTError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1793, () => new InvalidThawNFTError());
+createErrorFromNameLookup.set('InvalidThawNFT', () => new InvalidThawNFTError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

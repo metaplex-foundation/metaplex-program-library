@@ -43,7 +43,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let metadata: Metadata = Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
     if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {
         return err!(CandyError::IncorrectCollectionAuthority);
-    };
+    }
     if !cmp_pubkeys(&metadata.mint, &mint.key()) {
         return err!(CandyError::MintMismatch);
     }

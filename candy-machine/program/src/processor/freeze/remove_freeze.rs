@@ -11,7 +11,7 @@ pub struct RemoveFreeze<'info> {
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
-    #[account(seeds = [FREEZE.as_bytes(), candy_machine.to_account_info().key.as_ref()], bump)]
+    #[account(mut, seeds = [FREEZE.as_bytes(), candy_machine.to_account_info().key.as_ref()], bump)]
     freeze_pda: Account<'info, FreezePDA>,
 }
 

@@ -17,7 +17,6 @@ use solana_gateway::{
 use solana_program::{
     clock::Clock,
     program::{invoke, invoke_signed},
-    program_pack::Pack,
     serialize_utils::{read_pubkey, read_u16},
     system_instruction, sysvar,
     sysvar::{instructions::get_instruction_relative, SysvarId},
@@ -91,8 +90,8 @@ pub struct MintNFT<'info> {
     // token_account_info
     // transfer_authority_info
     // > Only needed if freeze token until after mint is set to true
-    // Token account
-    // FreezePDA account
+    // token account (writable)
+    // FreezePDA account (writable for some reason)
 }
 
 pub fn handle_mint_nft<'info>(
@@ -614,6 +613,7 @@ pub fn handle_mint_nft<'info>(
     )?;
 
     if is_feature_active(&candy_machine.data.uuid, FREEZE_FEATURE_INDEX) {
+        msg!("About to freeze nft");
         let mint_pubkey = ctx.accounts.mint.key();
         let candy_pubkey = ctx.accounts.candy_machine.key();
         let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
@@ -621,11 +621,7 @@ pub fn handle_mint_nft<'info>(
         let freeze_pda_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
         // If we add more extra accounts later on we need to uncomment the following line out.
         // remaining_accounts_counter += 1;
-        assert_owned_by(token_account_info, &spl_token::ID)?;
-        let token_account =
-            spl_token::state::Account::unpack_from_slice(*token_account_info.data.borrow())?;
-        assert_keys_equal(&token_account.owner, &payer.key())?;
-        assert_keys_equal(&token_account.mint, &mint_pubkey)?;
+        let _token_account = assert_is_ata(token_account_info, &payer.key(), &mint_pubkey)?;
         let seeds: &[&[u8]] = &[FREEZE.as_bytes(), candy_pubkey.as_ref()];
         let (expected_freeze_key, freeze_bump) = Pubkey::find_program_address(seeds, &crate::id());
         assert_keys_equal(&expected_freeze_key, &freeze_pda_account_info.key())?;
@@ -646,7 +642,6 @@ pub fn handle_mint_nft<'info>(
                     payer.to_account_info(),
                 ],
             )?;
-
             invoke_signed(
                 &freeze_delegated_account(
                     mpl_token_metadata::ID,
