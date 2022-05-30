@@ -213,4 +213,26 @@ pub enum Commands {
         /// Address of candy machine
         candy_machine: Option<String>,
     },
+
+    /// Interact with the bundlr network
+    Bundlr {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        #[clap(subcommand)]
+        action: BundlrAction,
+    },
+}
+
+#[derive(clap::Subcommand)]
+pub enum BundlrAction {
+    /// Retrieve the balance on bundlr
+    Balance,
+    /// Withdraw funds from bundlr
+    Withdraw,
 }

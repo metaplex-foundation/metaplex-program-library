@@ -14,6 +14,7 @@ use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
 
+use sugar_cli::bundlr::{process_bundlr, BundlrArgs};
 use sugar_cli::cli::{Cli, Commands};
 use sugar_cli::constants::{COMPLETE_EMOJI, ERROR_EMOJI};
 use sugar_cli::create_config::{process_create_config, CreateConfigArgs};
@@ -244,6 +245,18 @@ async fn run() -> Result<()> {
             cache,
             candy_machine,
         })?,
+        Commands::Bundlr {
+            keypair,
+            rpc_url,
+            action,
+        } => {
+            process_bundlr(BundlrArgs {
+                keypair,
+                rpc_url,
+                action,
+            })
+            .await?
+        }
     }
 
     Ok(())
