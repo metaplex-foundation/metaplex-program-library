@@ -1,0 +1,44 @@
+{
+  "auction": { 
+    "pubkey": "auctxRXPeJoc4817jDhf4HbjnhEcr1cCXenosMhK5R8",
+    "keypairPath": "/target/deploy/mpl_auction-keypair.json"
+  },
+  "fixedPriceSale": {
+    "pubkey": "SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo",
+    "keypairPath": "/target/deploy/mpl_fixed_price_sale-keypair.json"
+  },
+  "metaplex": {
+    "pubkey": "p1exdMJcjVao65QdewkaZRUnU6VPSXhus9n2GzWfh98",
+    "keypairPath": "/target/deploy/mpl_metaplex-keypair.json"
+  },
+  "nftPacks": {
+    "pubkey": "packFeFNZzMfD9aVWL7QbGz1WcU7R9zpf6pvNsw2BLu",
+    "keypairPath": "/target/deploy/mpl_nft_packs-keypair.json"
+  },
+  "tokenEntangler": {
+    "pubkey": "qntmGodpGkrM42mN68VCZHXnKqDCT8rdY23wFcXCLPd",
+    "keypairPath": "/target/deploy/mpl_token_entangler-keypair.json"
+  },
+  "tokenMetadata": {
+    "pubkey": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
+    "keypairPath": "/target/deploy/mpl_token_metadata-keypair.json"
+  },
+  "tokenVault":  {
+    "pubkey": "vau1zxA2LbssAUEF7Gpw91zMM1LvXrvpzJtmZ58rPsn",
+    "keypairPath": "/target/deploy/mpl_token_vault-keypair.json"
+  },
+
+  "auctionHouse": {
+    "pubkey": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
+    "keypairPath": "/auction-house/program/target/deploy/mpl_auction_house-keypair.json"
+  },
+  "candyMachine": {
+    "pubkey": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
+    "keypairPath": "/candy-machine/program/target/deploy/mpl_candy_machine-keypair.json"
+  },
+  "gumdrop":  {
+    "pubkey": "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a",
+    "keypairPath": "/gumdrop/program/target/deploy/mpl_gumdrop-keypair.json"
+  }
+}
+

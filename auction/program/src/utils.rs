@@ -134,17 +134,17 @@ pub fn create_or_allocate_account_raw<'a>(
 
 ///TokenTransferParams
 pub struct TokenTransferParams<'a: 'b, 'b> {
-    /// source
+    /// CHECK: source
     pub source: AccountInfo<'a>,
-    /// destination
+    /// CHECK: destination
     pub destination: AccountInfo<'a>,
     /// amount
     pub amount: u64,
-    /// authority
+    /// CHECK: authority
     pub authority: AccountInfo<'a>,
     /// authority_signer_seeds
     pub authority_signer_seeds: &'b [&'b [u8]],
-    /// token_program
+    /// CHECK: token_program
     pub token_program: AccountInfo<'a>,
 }
 
@@ -194,20 +194,21 @@ pub fn close_token_account<'a>(
 
 /// TokenMintToParams
 pub struct TokenCreateAccount<'a: 'b, 'b> {
-    /// payer
+    /// CHECK: payer
     pub payer: AccountInfo<'a>,
-    /// mint
+    /// CHECK: mint
     pub mint: AccountInfo<'a>,
-    /// account
+    /// CHECK: account
     pub account: AccountInfo<'a>,
-    /// authority
+    /// CHECK: authority
     pub authority: AccountInfo<'a>,
     /// authority seeds
     pub authority_seeds: &'b [&'b [u8]],
-    /// token_program
+    /// CHECK: token_program
     pub token_program: AccountInfo<'a>,
+    /// CHECK: system_program
     pub system_program: AccountInfo<'a>,
-    /// rent information
+    /// CHECK: rent information
     pub rent: AccountInfo<'a>,
 }
 

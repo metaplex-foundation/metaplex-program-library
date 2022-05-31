@@ -217,7 +217,16 @@ pub struct Buy<'info> {
     user_token_account: UncheckedAccount<'info>,
     #[account(mut)]
     user_wallet: Signer<'info>,
-    #[account(init_if_needed, seeds=[HISTORY_PREFIX.as_bytes(), user_wallet.key().as_ref(), market.key().as_ref()], bump, payer=user_wallet)]
+    #[account(
+        init_if_needed, 
+        space=TradeHistory::LEN, // <------Added this line
+        seeds=[
+            HISTORY_PREFIX.as_bytes(), 
+            user_wallet.key().as_ref(), 
+            market.key().as_ref()
+        ], 
+        bump, payer=user_wallet
+    )]
     trade_history: Box<Account<'info, TradeHistory>>,
     #[account(mut)]
     /// CHECK: checked in program
