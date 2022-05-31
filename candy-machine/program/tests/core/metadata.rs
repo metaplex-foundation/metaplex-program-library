@@ -3,13 +3,15 @@ use mpl_token_metadata::{
     state::{Collection, Creator, Metadata, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-use solana_program_test::{ProgramTestBanksClientExt, ProgramTestContext};
+use solana_program_test::ProgramTestContext;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
     transport,
 };
 
-use crate::core::helpers::{clone_keypair, create_mint, get_account, mint_to_wallets};
+use crate::core::helpers::{
+    clone_keypair, create_mint, get_account, mint_to_wallets, update_blockhash,
+};
 
 #[derive(Debug)]
 pub struct MetadataManager {
@@ -77,6 +79,7 @@ impl MetadataManager {
             vec![(self.owner.pubkey(), 1)],
         )
         .await?;
+        let new_blockhash = update_blockhash(context).await?;
 
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v2(
@@ -98,11 +101,7 @@ impl MetadataManager {
             )],
             Some(&self.authority.pubkey()),
             &[&self.authority],
-            context
-                .banks_client
-                .clone()
-                .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-                .await?,
+            new_blockhash,
         );
         context.banks_client.process_transaction(tx).await
     }

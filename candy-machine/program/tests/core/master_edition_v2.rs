@@ -8,7 +8,7 @@ use spl_associated_token_account::get_associated_token_address;
 
 use crate::{
     core::{
-        helpers::{clone_keypair, clone_pubkey, get_account},
+        helpers::{clone_keypair, clone_pubkey, get_account, update_blockhash},
         MetadataManager,
     },
     *,
@@ -82,6 +82,8 @@ impl MasterEditionManager {
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
     ) -> transport::Result<()> {
+        let new_blockhash = update_blockhash(context).await?;
+
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
                 mpl_token_metadata::id(),
@@ -95,11 +97,7 @@ impl MasterEditionManager {
             )],
             Some(&self.authority.pubkey()),
             &[&self.authority],
-            context
-                .banks_client
-                .clone()
-                .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-                .await?,
+            new_blockhash,
         );
 
         context.banks_client.process_transaction(tx).await

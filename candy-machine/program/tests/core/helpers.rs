@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use solana_program::hash::Hash;
 use solana_program_test::{ProgramTestBanksClientExt, ProgramTestContext};
 use solana_sdk::{
     account::Account,
@@ -14,24 +15,32 @@ use spl_token::state::Mint;
 
 use crate::core::{master_edition_v2::MasterEditionManager, metadata};
 
+pub async fn update_blockhash(context: &mut ProgramTestContext) -> transport::Result<Hash> {
+    let latest_blockhash = &context.banks_client.get_latest_blockhash().await?;
+    let new_blockhash = context
+        .banks_client
+        .get_new_latest_blockhash(latest_blockhash)
+        .await?;
+    Ok(new_blockhash)
+}
+
 /// Perform native lamports transfer.
 pub async fn transfer_lamports(
-    client: &mut ProgramTestContext,
+    context: &mut ProgramTestContext,
     wallet: &Keypair,
     to: &Pubkey,
     amount: u64,
 ) -> transport::Result<()> {
+    let new_blockhash = update_blockhash(context).await?;
+
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
         Some(&wallet.pubkey()),
         &[wallet],
-        client
-            .banks_client
-            .get_new_latest_blockhash(&client.last_blockhash)
-            .await?,
+        new_blockhash,
     );
 
-    client.banks_client.process_transaction(tx).await?;
+    context.banks_client.process_transaction(tx).await?;
 
     Ok(())
 }
@@ -60,6 +69,8 @@ pub async fn airdrop(
     receiver: &Pubkey,
     amount: u64,
 ) -> transport::Result<()> {
+    let new_blockhash = update_blockhash(context).await?;
+
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(
             &context.payer.pubkey(),
@@ -68,11 +79,7 @@ pub async fn airdrop(
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await.unwrap();
@@ -118,6 +125,8 @@ pub async fn create_token_account(
 ) -> transport::Result<()> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
+    let new_blockhash = update_blockhash(context).await?;
+
     let tx = Transaction::new_signed_with_payer(
         &[
             system_instruction::create_account(
@@ -137,11 +146,7 @@ pub async fn create_token_account(
         ],
         Some(&context.payer.pubkey()),
         &[&context.payer, account],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -152,11 +157,7 @@ pub async fn create_associated_token_account(
     wallet: &Pubkey,
     token_mint: &Pubkey,
 ) -> transport::Result<Pubkey> {
-    let recent_blockhash = context
-        .banks_client
-        .clone()
-        .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-        .await?;
+    let new_blockhash = update_blockhash(context).await?;
 
     let tx = Transaction::new_signed_with_payer(
         &[
@@ -168,7 +169,7 @@ pub async fn create_associated_token_account(
         ],
         Some(&context.payer.pubkey()),
         &[&context.payer],
-        recent_blockhash,
+        new_blockhash,
     );
     context.banks_client.process_transaction(tx).await.unwrap();
 
@@ -187,6 +188,7 @@ pub async fn create_mint(
     let mint = mint.unwrap_or_else(Keypair::new);
     let rent = context.banks_client.get_rent().await.unwrap();
 
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[
             system_instruction::create_account(
@@ -207,11 +209,7 @@ pub async fn create_mint(
         ],
         Some(&context.payer.pubkey()),
         &[&context.payer, &mint],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await.unwrap();
@@ -256,6 +254,8 @@ pub async fn mint_tokens(
     amount: u64,
     additional_signer: Option<&Keypair>,
 ) -> transport::Result<()> {
+    let new_blockhash = update_blockhash(context).await?;
+
     let mut signing_keypairs = vec![authority, &context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
@@ -275,11 +275,7 @@ pub async fn mint_tokens(
         &[ix],
         Some(&context.payer.pubkey()),
         &signing_keypairs,
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
     context.banks_client.process_transaction(tx).await
 }
@@ -291,6 +287,8 @@ pub async fn transfer(
     to: &Keypair,
 ) -> transport::Result<()> {
     create_associated_token_account(context, &to.pubkey(), mint).await?;
+    let new_blockhash = update_blockhash(context).await?;
+
     let tx = Transaction::new_signed_with_payer(
         &[spl_token::instruction::transfer(
             &spl_token::id(),
@@ -303,11 +301,7 @@ pub async fn transfer(
         .unwrap()],
         Some(&from.pubkey()),
         &[from],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await

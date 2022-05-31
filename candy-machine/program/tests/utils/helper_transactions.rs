@@ -15,7 +15,7 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    core::MasterEditionManager,
+    core::{helpers::update_blockhash, MasterEditionManager},
     utils::{
         candy_manager::{CollectionInfo, TokenInfo, WhitelistInfo},
         helpers::make_config_lines,
@@ -81,15 +81,12 @@ pub async fn initialize_candy_machine(
         accounts,
     };
 
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[create_ix, init_ix],
         Some(&payer.pubkey()),
         &[candy_account, payer],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -119,15 +116,12 @@ pub async fn update_candy_machine(
         data,
         accounts,
     };
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[update_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -157,15 +151,12 @@ pub async fn add_config_lines(
         data,
         accounts,
     };
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[add_config_line_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -228,15 +219,12 @@ pub async fn set_collection(
         data,
         accounts,
     };
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -265,15 +253,12 @@ pub async fn remove_collection(
         data,
         accounts,
     };
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -300,15 +285,12 @@ pub async fn set_freeze(
         data,
         accounts,
     };
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -333,15 +315,12 @@ pub async fn remove_freeze(
         data,
         accounts,
     };
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -444,15 +423,12 @@ pub async fn mint_nft(
         instructions.push(collection_ix);
     }
 
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &instructions,
         Some(&payer.pubkey()),
         &signers,
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
@@ -485,15 +461,12 @@ pub async fn thaw_nft(
         data,
         accounts,
     };
+    let new_blockhash = update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[set_ix],
         Some(&authority.pubkey()),
         &[authority],
-        context
-            .banks_client
-            .clone()
-            .get_new_latest_blockhash(&context.banks_client.get_latest_blockhash().await?)
-            .await?,
+        new_blockhash,
     );
 
     context.banks_client.process_transaction(tx).await
