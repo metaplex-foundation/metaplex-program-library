@@ -305,7 +305,7 @@ pub async fn prepare_nft(context: &mut ProgramTestContext, minter: &Keypair) -> 
         context,
         &nft_info.mint.pubkey(),
         minter,
-        vec![(nft_info.token, 1)],
+        vec![(minter.pubkey(), 1)],
     )
     .await
     .unwrap();
