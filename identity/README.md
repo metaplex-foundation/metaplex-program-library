@@ -14,7 +14,7 @@ The core concepts are inspired by many of the current auth-n/auth-z protocols to
 * Users must feel absolutely safe and secure, with low risk for mis-sharing or losing information.
 
 ### Core Concepts
-![img.png](img.png)
+https://www.figma.com/file/UlBasITUl21Y05p0IXrpFg/Identity?node-id=0%3A1
 
 #### Owned Identity
 An NFT represent an “owned” identity. The user is in complete control of who they represent themselves as, they can change the image, name, and any other attributes. They can self custody this asset forever.
