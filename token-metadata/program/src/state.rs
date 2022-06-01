@@ -147,14 +147,7 @@ pub enum UseMethod {
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum CollectionDetails {
-    V1 { status: CollectionStatus, size: u64 },
-}
-
-#[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, Copy, PartialEq, Debug, Clone)]
-pub enum CollectionStatus {
-    None,
-    Tradeable,
+    V1 { size: u64 },
 }
 
 #[repr(C)]

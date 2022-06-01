@@ -962,15 +962,11 @@ pub fn process_create_metadata_accounts_logic(
     metadata.collection = data.collection;
 
     // We want to create new collections with a size of zero but we use the
-    // collection details enum for forward compatibility, so we allow setting
-    // the status but not size.
+    // collection details enum for forward compatibility.
     if let Some(details) = collection_details {
         match details {
-            CollectionDetails::V1 {
-                size: _size,
-                status,
-            } => {
-                metadata.collection_details = Some(CollectionDetails::V1 { status, size: 0 });
+            CollectionDetails::V1 { size: _size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { size: 0 });
             }
         }
     } else {
@@ -1255,11 +1251,8 @@ pub fn increment_collection_size(
 ) -> ProgramResult {
     if let Some(ref details) = metadata.collection_details {
         match details {
-            CollectionDetails::V1 { status, size } => {
-                metadata.collection_details = Some(CollectionDetails::V1 {
-                    status: *status,
-                    size: size + 1,
-                });
+            CollectionDetails::V1 { size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { size: size + 1 });
                 msg!("Clean writing metadata");
                 clean_write_metadata(metadata, metadata_info)?;
                 Ok(())
@@ -1277,11 +1270,8 @@ pub fn decrement_collection_size(
 ) -> ProgramResult {
     if let Some(ref details) = metadata.collection_details {
         match details {
-            CollectionDetails::V1 { status, size } => {
-                metadata.collection_details = Some(CollectionDetails::V1 {
-                    status: *status,
-                    size: size - 1,
-                });
+            CollectionDetails::V1 { size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { size: size - 1 });
                 clean_write_metadata(metadata, metadata_info)?;
                 Ok(())
             }

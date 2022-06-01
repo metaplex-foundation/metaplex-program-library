@@ -11,7 +11,7 @@ pub use external_price::ExternalPrice;
 pub use master_edition_v2::MasterEditionV2;
 pub use metadata::Metadata;
 pub use mpl_token_metadata::instruction;
-use mpl_token_metadata::state::{CollectionDetails, CollectionStatus};
+use mpl_token_metadata::state::CollectionDetails;
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
@@ -20,10 +20,8 @@ use solana_sdk::{
 use spl_token::state::Mint;
 pub use vault::Vault;
 
-pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> = Some(CollectionDetails::V1 {
-    status: CollectionStatus::None,
-    size: 0,
-});
+pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
+    Some(CollectionDetails::V1 { size: 0 });
 
 pub fn program_test() -> ProgramTest {
     ProgramTest::new("mpl_token_metadata", mpl_token_metadata::id(), None)

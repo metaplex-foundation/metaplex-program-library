@@ -555,7 +555,7 @@ mod size_tracking {
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
-                CollectionDetails::V1 { status: _, size } => {
+                CollectionDetails::V1 { size } => {
                     assert_eq!(size, 0);
                 }
             }
@@ -582,7 +582,7 @@ mod size_tracking {
 
         if let Some(details) = parent_metadata.collection_details {
             match details {
-                CollectionDetails::V1 { status: _, size } => assert_eq!(size, 1),
+                CollectionDetails::V1 { size } => assert_eq!(size, 1),
             }
         } else {
             panic!("CollectionDetails is not a CollectionDetails");

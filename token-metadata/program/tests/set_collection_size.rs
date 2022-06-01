@@ -65,7 +65,7 @@ mod set_collection_size {
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
         let retrieved_size = if let Some(details) = metadata.collection_details {
             match details {
-                CollectionDetails::V1 { status: _, size } => size,
+                CollectionDetails::V1 { size } => size,
             }
         } else {
             panic!("Expected CollectionDetails::V1");
@@ -100,7 +100,7 @@ mod set_collection_size {
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
         let retrieved_size = if let Some(details) = metadata.collection_details {
             match details {
-                CollectionDetails::V1 { status: _, size } => size,
+                CollectionDetails::V1 { size } => size,
             }
         } else {
             panic!("Expected CollectionDetails::V1");
@@ -178,7 +178,7 @@ mod set_collection_size {
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
         let retrieved_size = if let Some(details) = metadata.collection_details {
             match details {
-                CollectionDetails::V1 { status: _, size } => size,
+                CollectionDetails::V1 { size } => size,
             }
         } else {
             panic!("Expected CollectionDetails::V1");
@@ -213,7 +213,7 @@ mod set_collection_size {
         let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
         let retrieved_size = if let Some(details) = metadata.collection_details {
             match details {
-                CollectionDetails::V1 { status: _, size } => size,
+                CollectionDetails::V1 { size } => size,
             }
         } else {
             panic!("Expected CollectionDetails::V1");

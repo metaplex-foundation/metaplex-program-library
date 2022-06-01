@@ -14,10 +14,10 @@ use crate::{
     instruction::MetadataInstruction,
     solana_program::program_memory::sol_memset,
     state::{
-        Collection, CollectionAuthorityRecord, CollectionDetails, CollectionStatus, DataV2, Key,
-        MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord, UseMethod,
-        Uses, BURN, COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION,
-        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
+        MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN,
+        COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN,
+        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
@@ -233,10 +233,6 @@ pub fn process_instruction<'a>(
         MetadataInstruction::UnverifySizedCollectionItem => {
             msg!("Instruction: Unverify Collection");
             unverify_sized_collection_item(program_id, accounts)
-        }
-        MetadataInstruction::SetCollectionStatus(status) => {
-            msg!("Instruction: Set Collection Status");
-            set_collection_status(program_id, accounts, status)
         }
         MetadataInstruction::SetCollectionSize(size) => {
             msg!("Instruction: Set Collection Size");
@@ -1482,11 +1478,8 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     // size on the Collection Parent.
     if let Some(details) = collection_data.collection_details {
         match details {
-            CollectionDetails::V1 { status, size } => {
-                collection_data.collection_details = Some(CollectionDetails::V1 {
-                    status,
-                    size: size + 1,
-                });
+            CollectionDetails::V1 { size } => {
+                collection_data.collection_details = Some(CollectionDetails::V1 { size: size + 1 });
                 collection_data.serialize(&mut *collection_info.try_borrow_mut_data()?)?;
             }
         }
@@ -1790,42 +1783,6 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     Ok(())
 }
 
-pub fn set_collection_status(
-    program_id: &Pubkey,
-    accounts: &[AccountInfo],
-    status: CollectionStatus,
-) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
-
-    let metadata_account_info = next_account_info(account_info_iter)?;
-    let update_authority_account_info = next_account_info(account_info_iter)?;
-
-    // Owned by token-metadata program.
-    assert_owned_by(metadata_account_info, program_id)?;
-
-    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
-
-    // Update authority is a signer and matches update authority on metadata.
-    assert_update_authority_is_correct(&metadata, update_authority_account_info)?;
-
-    if let Some(details) = metadata.collection_details {
-        match details {
-            CollectionDetails::V1 {
-                status: _current_status,
-                size,
-            } => {
-                metadata.collection_details = Some(CollectionDetails::V1 { status, size });
-            }
-        }
-    } else {
-        return Err(MetadataError::NotACollectionParent.into());
-    }
-
-    clean_write_metadata(&mut metadata, metadata_account_info)?;
-
-    Ok(())
-}
-
 pub fn set_collection_size(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -1866,10 +1823,9 @@ pub fn set_collection_size(
     if let Some(details) = metadata.collection_details {
         match details {
             CollectionDetails::V1 {
-                status,
                 size: _current_size,
             } => {
-                metadata.collection_details = Some(CollectionDetails::V1 { status, size });
+                metadata.collection_details = Some(CollectionDetails::V1 { size });
             }
         }
     } else {
