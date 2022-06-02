@@ -12,7 +12,6 @@ import {
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import { AuctionProgram } from '../AuctionProgram';
@@ -47,7 +46,7 @@ type PlaceBidParams = {
 };
 
 export class PlaceBid extends Transaction {
-  constructor(options: TransactionCtorFields, params: PlaceBidParams) {
+  constructor(options: ConstructorParameters<typeof Transaction>[0], params: PlaceBidParams) {
     super(options);
     const { feePayer } = options;
     assert(feePayer != null, 'feePayer expected');

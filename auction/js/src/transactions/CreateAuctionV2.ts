@@ -10,7 +10,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
@@ -77,7 +76,10 @@ type CreateAuctionV2Params = {
 };
 
 export class CreateAuctionV2 extends Transaction {
-  constructor(options: TransactionCtorFields, params: CreateAuctionV2Params) {
+  constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: CreateAuctionV2Params,
+  ) {
     super(options);
     const { args, auction, auctionExtended, creator } = params;
 
