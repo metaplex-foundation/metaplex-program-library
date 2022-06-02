@@ -326,6 +326,23 @@ pub mod auction_house {
         )
     }
 
+    /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    pub fn partial_order_buy<'info>(
+        ctx: Context<'_, '_, '_, 'info, PartialOrderBuy<'info>>,
+        trade_state_bump: u8,
+        escrow_payment_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        bid::partial_order_buy(
+            ctx,
+            trade_state_bump,
+            escrow_payment_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
     pub fn auctioneer_buy<'info>(
         ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
         trade_state_bump: u8,
@@ -419,6 +436,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        partial_order_size: u64,
     ) -> Result<()> {
         execute_sale::execute_sale(
             ctx,
@@ -427,6 +445,7 @@ pub mod auction_house {
             program_as_signer_bump,
             buyer_price,
             token_size,
+            partial_order_size,
         )
     }
 

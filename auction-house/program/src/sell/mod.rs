@@ -394,7 +394,7 @@ fn sell_logic<'info>(
             &rent.to_account_info(),
             system_program,
             &fee_payer,
-            TRADE_STATE_SIZE,
+            token_size.try_into().unwrap(),
             fee_seeds,
             &ts_seeds,
         )?;

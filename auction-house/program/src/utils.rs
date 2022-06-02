@@ -175,6 +175,7 @@ pub enum BidType {
     PrivateSale,
     AuctioneerPublicSale,
     AuctioneerPrivateSale,
+    PartialOrderBuy,
 }
 
 #[derive(Debug, Clone)]
@@ -201,6 +202,7 @@ pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType> {
         [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::PrivateSale),
         [221, 239, 99, 240, 86, 46, 213, 126] => Ok(BidType::AuctioneerPublicSale),
         [17, 106, 133, 46, 229, 48, 45, 208] => Ok(BidType::AuctioneerPrivateSale),
+        [9, 64, 177, 133, 233, 41, 122, 55] => Ok(BidType::PartialOrderBuy),
         _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }

@@ -10,7 +10,8 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
     buyer_price: u64,
-    token_size: u64
+    token_size: u64,
+    partial_order_size: u64
 )]
 pub struct ExecuteSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
@@ -197,6 +198,7 @@ pub fn execute_sale<'info>(
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    partial_order_size: u64,
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
@@ -212,6 +214,7 @@ pub fn execute_sale<'info>(
         program_as_signer_bump,
         buyer_price,
         token_size,
+        partial_order_size,
     )
 }
 
@@ -770,6 +773,7 @@ fn execute_sale_logic<'info>(
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    partial_order_size: u64,
 ) -> Result<()> {
     let buyer = &ctx.accounts.buyer;
     let seller = &ctx.accounts.seller;
@@ -823,19 +827,34 @@ fn execute_sale_logic<'info>(
         msg!("No delegate detected on token account.");
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
+
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
     let ts_bump = buyer_ts_data[0];
-    assert_valid_trade_state(
-        &buyer.key(),
-        auction_house,
-        buyer_price,
-        token_size,
-        buyer_trade_state,
-        &token_mint.key(),
-        &token_account.key(),
-        ts_bump,
-    )?;
+    if partial_order_size > 0 {
+        assert_valid_trade_state(
+            &buyer.key(),
+            auction_house,
+            buyer_price,
+            partial_order_size,
+            buyer_trade_state,
+            &token_mint.key(),
+            &token_account.key(),
+            ts_bump,
+        )?;
+    } else {
+        assert_valid_trade_state(
+            &buyer.key(),
+            auction_house,
+            buyer_price,
+            token_size,
+            buyer_trade_state,
+            &token_mint.key(),
+            &token_account.key(),
+            ts_bump,
+        )?;
+    }
+
     if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
@@ -1046,23 +1065,43 @@ fn execute_sale_logic<'info>(
         &[program_as_signer_bump],
     ];
 
-    invoke_signed(
-        &spl_token::instruction::transfer(
-            token_program.key,
-            &token_account.key(),
-            &buyer_receipt_token_account.key(),
-            &program_as_signer.key(),
-            &[],
-            token_size,
-        )?,
-        &[
-            token_account.to_account_info(),
-            buyer_receipt_clone,
-            program_as_signer.to_account_info(),
-            token_clone,
-        ],
-        &[&program_as_signer_seeds],
-    )?;
+    if partial_order_size > 0 {
+        invoke_signed(
+            &spl_token::instruction::transfer(
+                token_program.key,
+                &token_account.key(),
+                &buyer_receipt_token_account.key(),
+                &program_as_signer.key(),
+                &[],
+                partial_order_size,
+            )?,
+            &[
+                token_account.to_account_info(),
+                buyer_receipt_clone,
+                program_as_signer.to_account_info(),
+                token_clone,
+            ],
+            &[&program_as_signer_seeds],
+        )?;
+    } else {
+        invoke_signed(
+            &spl_token::instruction::transfer(
+                token_program.key,
+                &token_account.key(),
+                &buyer_receipt_token_account.key(),
+                &program_as_signer.key(),
+                &[],
+                token_size,
+            )?,
+            &[
+                token_account.to_account_info(),
+                buyer_receipt_clone,
+                program_as_signer.to_account_info(),
+                token_clone,
+            ],
+            &[&program_as_signer_seeds],
+        )?;
+    }
 
     let curr_seller_lamp = seller_trade_state.lamports();
     **seller_trade_state.lamports.borrow_mut() = 0;
