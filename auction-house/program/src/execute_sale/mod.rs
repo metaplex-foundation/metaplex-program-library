@@ -1102,16 +1102,41 @@ fn execute_sale_logic<'info>(
             &[&program_as_signer_seeds],
         )?;
     }
-// todo: add logic here when token amount gets to 0 then close it
 
-    // let curr_seller_lamp = seller_trade_state.lamports();
-    // **seller_trade_state.lamports.borrow_mut() = 0;
-    // sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
+    // todo: add logic here when token amount gets to 0 then close it
+    // let data = token_account.try_borrow_data()?;
+    // let token_account_data = TokenAccount::try_deserialize(&mut data.as_ref())?;
+    // let remaining_tokens = token_account_data.amount - partial_order_size;
 
-    // **fee_payer.lamports.borrow_mut() = fee_payer
-    //     .lamports()
-    //     .checked_add(curr_seller_lamp)
-    //     .ok_or(AuctionHouseError::NumericalOverflow)?;
+    // msg!("partial order size {:?}", partial_order_size);
+    // msg!("remaining tokens {:?}", remaining_tokens);
+
+    // if partial_order_size == 0 || remaining_tokens == 0 {
+    //     msg!("hello");
+    //     let curr_seller_lamp = seller_trade_state.lamports();
+    //     **seller_trade_state.lamports.borrow_mut() = 0;
+    //     sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
+
+    //     **fee_payer.lamports.borrow_mut() = fee_payer
+    //         .lamports()
+    //         .checked_add(curr_seller_lamp)
+    //         .ok_or(AuctionHouseError::NumericalOverflow)?;
+
+    //     if free_trade_state.lamports() > 0 {
+    //         let curr_buyer_lamp = free_trade_state.lamports();
+    //         **free_trade_state.lamports.borrow_mut() = 0;
+
+    //         **fee_payer.lamports.borrow_mut() = fee_payer
+    //             .lamports()
+    //             .checked_add(curr_buyer_lamp)
+    //             .ok_or(AuctionHouseError::NumericalOverflow)?;
+    //         sol_memset(
+    //             *free_trade_state.try_borrow_mut_data()?,
+    //             0,
+    //             TRADE_STATE_SIZE,
+    //         );
+    //     }
+    // }
 
     let curr_buyer_lamp = buyer_trade_state.lamports();
     **buyer_trade_state.lamports.borrow_mut() = 0;
@@ -1121,19 +1146,5 @@ fn execute_sale_logic<'info>(
         .checked_add(curr_buyer_lamp)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
 
-    if free_trade_state.lamports() > 0 {
-        let curr_buyer_lamp = free_trade_state.lamports();
-        **free_trade_state.lamports.borrow_mut() = 0;
-
-        **fee_payer.lamports.borrow_mut() = fee_payer
-            .lamports()
-            .checked_add(curr_buyer_lamp)
-            .ok_or(AuctionHouseError::NumericalOverflow)?;
-        sol_memset(
-            *free_trade_state.try_borrow_mut_data()?,
-            0,
-            TRADE_STATE_SIZE,
-        );
-    }
     Ok(())
 }
