@@ -9,7 +9,9 @@ mod claim_resource {
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
-    use anchor_lang::{AccountDeserialize, Id, InstructionData, System, ToAccountMetas};
+    use anchor_lang::{
+        system_program::System, AccountDeserialize, Id, InstructionData, ToAccountMetas,
+    };
     use mpl_fixed_price_sale::{
         accounts as mpl_fixed_price_sale_accounts, instruction as mpl_fixed_price_sale_instruction,
         state::SellingResource,

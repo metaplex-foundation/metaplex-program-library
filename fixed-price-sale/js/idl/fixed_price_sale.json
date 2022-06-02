@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "fixed_price_sale",
   "instructions": [
     {
@@ -393,7 +393,7 @@
         },
         {
           "name": "payer",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
         },
         {
@@ -633,7 +633,7 @@
           "name": "creators",
           "type": {
             "vec": {
-              "defined": "Creator"
+              "defined": "mpl_token_metadata::state::Creator"
             }
           }
         }
@@ -816,9 +816,21 @@
             "name": "creators",
             "type": {
               "vec": {
-                "defined": "Creator"
+                "defined": "mpl_token_metadata::state::Creator"
               }
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PayoutTicket",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "used",
+            "type": "bool"
           }
         ]
       }
@@ -843,146 +855,6 @@
             "type": {
               "option": "u64"
             }
-          }
-        ]
-      }
-    },
-    {
-      "name": "ErrorCode",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "NoValidSignerPresent"
-          },
-          {
-            "name": "StringIsTooLong"
-          },
-          {
-            "name": "NameIsTooLong"
-          },
-          {
-            "name": "DescriptionIsTooLong"
-          },
-          {
-            "name": "SupplyIsGtThanAvailable"
-          },
-          {
-            "name": "SupplyIsNotProvided"
-          },
-          {
-            "name": "DerivedKeyInvalid"
-          },
-          {
-            "name": "SellingResourceOwnerInvalid"
-          },
-          {
-            "name": "PublicKeyMismatch"
-          },
-          {
-            "name": "PiecesInOneWalletIsTooMuch"
-          },
-          {
-            "name": "StartDateIsInPast"
-          },
-          {
-            "name": "EndDateIsEarlierThanBeginDate"
-          },
-          {
-            "name": "IncorrectOwner"
-          },
-          {
-            "name": "MarketIsNotStarted"
-          },
-          {
-            "name": "MarketIsEnded"
-          },
-          {
-            "name": "UserReachBuyLimit"
-          },
-          {
-            "name": "MathOverflow"
-          },
-          {
-            "name": "SupplyIsGtThanMaxSupply"
-          },
-          {
-            "name": "MarketDurationIsNotUnlimited"
-          },
-          {
-            "name": "MarketIsSuspended"
-          },
-          {
-            "name": "MarketIsImmutable"
-          },
-          {
-            "name": "MarketInInvalidState"
-          },
-          {
-            "name": "PriceIsZero"
-          },
-          {
-            "name": "FunderIsInvalid"
-          },
-          {
-            "name": "PayoutTicketExists"
-          },
-          {
-            "name": "InvalidFunderDestination"
-          },
-          {
-            "name": "TreasuryIsNotEmpty"
-          },
-          {
-            "name": "SellingResourceInInvalidState"
-          },
-          {
-            "name": "MetadataCreatorsIsEmpty"
-          },
-          {
-            "name": "UserWalletMustMatchUserTokenAccount"
-          },
-          {
-            "name": "MetadataShouldBeMutable"
-          },
-          {
-            "name": "PrimarySaleIsNotAllowed"
-          },
-          {
-            "name": "CreatorsIsGtThanAvailable"
-          },
-          {
-            "name": "CreatorsIsEmpty"
-          },
-          {
-            "name": "MarketOwnerDoesntHaveShares"
-          },
-          {
-            "name": "PrimaryMetadataCreatorsNotProvided"
-          },
-          {
-            "name": "GatingTokenMissing"
-          },
-          {
-            "name": "InvalidOwnerForGatingToken"
-          },
-          {
-            "name": "WrongGatingMetadataAccount"
-          },
-          {
-            "name": "WrongOwnerInTokenGatingAcc"
-          },
-          {
-            "name": "WrongGatingDate"
-          },
-          {
-            "name": "CollectionMintMissing"
-          },
-          {
-            "name": "WrongCollectionMintKey"
-          },
-          {
-            "name": "WrongGatingToken"
           }
         ]
       }
@@ -1032,32 +904,234 @@
           }
         ]
       }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "NoValidSignerPresent",
+      "msg": "No valid signer present"
     },
     {
-      "name": "Creator",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "address",
-            "type": "publicKey"
-          },
-          {
-            "name": "verified",
-            "type": "bool"
-          },
-          {
-            "name": "share",
-            "type": "u8"
-          }
-        ]
-      }
+      "code": 6001,
+      "name": "StringIsTooLong",
+      "msg": "Some string variable is longer than allowed"
+    },
+    {
+      "code": 6002,
+      "name": "NameIsTooLong",
+      "msg": "Name string variable is longer than allowed"
+    },
+    {
+      "code": 6003,
+      "name": "DescriptionIsTooLong",
+      "msg": "Description string variable is longer than allowed"
+    },
+    {
+      "code": 6004,
+      "name": "SupplyIsGtThanAvailable",
+      "msg": "Provided supply is gt than available"
+    },
+    {
+      "code": 6005,
+      "name": "SupplyIsNotProvided",
+      "msg": "Supply is not provided"
+    },
+    {
+      "code": 6006,
+      "name": "DerivedKeyInvalid",
+      "msg": "Derived key invalid"
+    },
+    {
+      "code": 6007,
+      "name": "SellingResourceOwnerInvalid",
+      "msg": "Invalid selling resource owner provided"
+    },
+    {
+      "code": 6008,
+      "name": "PublicKeyMismatch",
+      "msg": "PublicKeyMismatch"
+    },
+    {
+      "code": 6009,
+      "name": "PiecesInOneWalletIsTooMuch",
+      "msg": "Pieces in one wallet cannot be greater than Max Supply value"
+    },
+    {
+      "code": 6010,
+      "name": "StartDateIsInPast",
+      "msg": "StartDate cannot be in the past"
+    },
+    {
+      "code": 6011,
+      "name": "EndDateIsEarlierThanBeginDate",
+      "msg": "EndDate should not be earlier than StartDate"
+    },
+    {
+      "code": 6012,
+      "name": "IncorrectOwner",
+      "msg": "Incorrect account owner"
+    },
+    {
+      "code": 6013,
+      "name": "MarketIsNotStarted",
+      "msg": "Market is not started"
+    },
+    {
+      "code": 6014,
+      "name": "MarketIsEnded",
+      "msg": "Market is ended"
+    },
+    {
+      "code": 6015,
+      "name": "UserReachBuyLimit",
+      "msg": "User reach buy limit"
+    },
+    {
+      "code": 6016,
+      "name": "MathOverflow",
+      "msg": "Math overflow"
+    },
+    {
+      "code": 6017,
+      "name": "SupplyIsGtThanMaxSupply",
+      "msg": "Supply is gt than max supply"
+    },
+    {
+      "code": 6018,
+      "name": "MarketDurationIsNotUnlimited",
+      "msg": "Market duration is not unlimited"
+    },
+    {
+      "code": 6019,
+      "name": "MarketIsSuspended",
+      "msg": "Market is suspended"
+    },
+    {
+      "code": 6020,
+      "name": "MarketIsImmutable",
+      "msg": "Market is immutable"
+    },
+    {
+      "code": 6021,
+      "name": "MarketInInvalidState",
+      "msg": "Market in invalid state"
+    },
+    {
+      "code": 6022,
+      "name": "PriceIsZero",
+      "msg": "Price is zero"
+    },
+    {
+      "code": 6023,
+      "name": "FunderIsInvalid",
+      "msg": "Funder is invalid"
+    },
+    {
+      "code": 6024,
+      "name": "PayoutTicketExists",
+      "msg": "Payout ticket exists"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidFunderDestination",
+      "msg": "Funder provide invalid destination"
+    },
+    {
+      "code": 6026,
+      "name": "TreasuryIsNotEmpty",
+      "msg": "Treasury is not empty"
+    },
+    {
+      "code": 6027,
+      "name": "SellingResourceAlreadyTaken",
+      "msg": "Selling resource already taken by other market"
+    },
+    {
+      "code": 6028,
+      "name": "MetadataCreatorsIsEmpty",
+      "msg": "Metadata creators is empty"
+    },
+    {
+      "code": 6029,
+      "name": "UserWalletMustMatchUserTokenAccount",
+      "msg": "User wallet must match user token account"
+    },
+    {
+      "code": 6030,
+      "name": "MetadataShouldBeMutable",
+      "msg": "Metadata should be mutable"
+    },
+    {
+      "code": 6031,
+      "name": "PrimarySaleIsNotAllowed",
+      "msg": "Primary sale is not allowed"
+    },
+    {
+      "code": 6032,
+      "name": "CreatorsIsGtThanAvailable",
+      "msg": "Creators is gt than allowed"
+    },
+    {
+      "code": 6033,
+      "name": "CreatorsIsEmpty",
+      "msg": "Creators is empty"
+    },
+    {
+      "code": 6034,
+      "name": "MarketOwnerDoesntHaveShares",
+      "msg": "Market owner doesn't receive shares at primary sale"
+    },
+    {
+      "code": 6035,
+      "name": "PrimaryMetadataCreatorsNotProvided",
+      "msg": "PrimaryMetadataCreatorsNotProvided"
+    },
+    {
+      "code": 6036,
+      "name": "GatingTokenMissing",
+      "msg": "Gating token is missing"
+    },
+    {
+      "code": 6037,
+      "name": "InvalidOwnerForGatingToken",
+      "msg": "Invalid program owner for the gating token account"
+    },
+    {
+      "code": 6038,
+      "name": "WrongGatingMetadataAccount",
+      "msg": "Wrong Metadata account for the gating token"
+    },
+    {
+      "code": 6039,
+      "name": "WrongOwnerInTokenGatingAcc",
+      "msg": "Wrong owner in token gating account"
+    },
+    {
+      "code": 6040,
+      "name": "WrongGatingDate",
+      "msg": "Wrong gating date send"
+    },
+    {
+      "code": 6041,
+      "name": "CollectionMintMissing",
+      "msg": "Collection mint is missing"
+    },
+    {
+      "code": 6042,
+      "name": "WrongCollectionMintKey",
+      "msg": "Wrong collection mint key"
+    },
+    {
+      "code": 6043,
+      "name": "WrongGatingToken",
+      "msg": "Wrong gating token"
     }
   ],
   "metadata": {
     "address": "SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo",
     "origin": "anchor",
     "binaryVersion": "0.24.2",
-    "libVersion": "~0.22"
+    "libVersion": "~0.24.2"
   }
 }
