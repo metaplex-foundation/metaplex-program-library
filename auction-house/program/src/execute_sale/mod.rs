@@ -1102,15 +1102,16 @@ fn execute_sale_logic<'info>(
             &[&program_as_signer_seeds],
         )?;
     }
+// todo: add logic here when token amount gets to 0 then close it
 
-    let curr_seller_lamp = seller_trade_state.lamports();
-    **seller_trade_state.lamports.borrow_mut() = 0;
-    sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
+    // let curr_seller_lamp = seller_trade_state.lamports();
+    // **seller_trade_state.lamports.borrow_mut() = 0;
+    // sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
 
-    **fee_payer.lamports.borrow_mut() = fee_payer
-        .lamports()
-        .checked_add(curr_seller_lamp)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+    // **fee_payer.lamports.borrow_mut() = fee_payer
+    //     .lamports()
+    //     .checked_add(curr_seller_lamp)
+    //     .ok_or(AuctionHouseError::NumericalOverflow)?;
 
     let curr_buyer_lamp = buyer_trade_state.lamports();
     **buyer_trade_state.lamports.borrow_mut() = 0;
