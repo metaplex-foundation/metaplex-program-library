@@ -93,6 +93,7 @@ pub fn handle_initialize_candy_machine(
         for i in 0..4 {
             data[vec_start + i] = as_bytes[i]
         }
+        set_feature_flag(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX);
     }
 
     Ok(())
@@ -105,12 +106,14 @@ fn get_space_for_candy(data: CandyMachineData) -> Result<usize> {
         CONFIG_ARRAY_START
             + 4
             + (data.items_available as usize) * CONFIG_LINE_SIZE
-            + 8
-            + 2 * ((data
+            + 4
+            + ((data
                 .items_available
                 .checked_div(8)
                 .ok_or(CandyError::NumericalOverflowError)?
                 + 1) as usize)
+            + 4
+            + (data.items_available as usize) * 4
     };
 
     Ok(num)

@@ -59,6 +59,21 @@ pub fn handle_add_config_lines(
         + 4
         + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE
         + 4;
+    // (unordered) indices for the mint
+    let indices_vec_start =
+        if is_feature_active(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+            bit_mask_vec_start
+                + (candy_machine
+                    .data
+                    .items_available
+                    .checked_div(8)
+                    .ok_or(ErrorCode::NumericalOverflowError)?
+                    + 1) as usize
+                + 4
+        } else {
+            // we are not going to use this value
+            0
+        };
 
     let mut new_count = current_count;
     for i in 0..fixed_config_lines.len() {
@@ -92,6 +107,12 @@ pub fn handle_add_config_lines(
             new_count = new_count
                 .checked_add(1)
                 .ok_or(CandyError::NumericalOverflowError)?;
+
+            if is_feature_active(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+                let mint_index = indices_vec_start + (position as usize) * 4;
+                data[mint_index..mint_index + 4]
+                    .copy_from_slice(&u32::to_le_bytes(position as u32));
+            }
         }
     }
 

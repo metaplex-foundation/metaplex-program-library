@@ -9,6 +9,7 @@ pub const BLOCK_HASHES: Pubkey =
 pub const BOT_FEE: u64 = 10000000;
 pub const PREFIX: &str = "candy_machine";
 pub const COLLECTIONS_FEATURE_INDEX: usize = 0;
+pub const SWAP_REMOVE_FEATURE_INDEX: usize = 1;
 pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
 pub const COLLECTION_PDA_SIZE: usize = 8 + 64;
 pub const GUMDROP_ID: Pubkey =
