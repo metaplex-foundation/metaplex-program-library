@@ -1,6 +1,8 @@
 import { programs } from '@cardinal/token-manager';
+import { utils } from '@project-serum/anchor';
 import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
+import { PROGRAM_ID } from './generated';
 
 export const CONFIG_LINE_SIZE = 4 + 32 + 4 + 200;
 export const MAX_NAME_LENGTH = 32;
@@ -18,7 +20,7 @@ export const CONFIG_ARRAY_START =
   8 + // price
   8 + // items available
   9 + // go live
-  16 + // end settings
+  10 + // end settings
   4 +
   MAX_SYMBOL_LENGTH + // u32 len + symbol
   2 + // seller fee basis points
@@ -42,13 +44,24 @@ export const CONFIG_ARRAY_START =
   32 + // mint key for whitelist
   1 +
   32 +
-  1 + // gatekeeper
-  16; // lockup settings
+  1; // gatekeeper
+
+const LOCKUP_SETTINGS_SEED = 'lockup_settings';
+export const findLockupSettingsId = async (
+  candyMachineId: PublicKey,
+): Promise<[PublicKey, number]> => {
+  return await PublicKey.findProgramAddress(
+    [utils.bytes.utf8.encode(LOCKUP_SETTINGS_SEED), candyMachineId.toBuffer()],
+    PROGRAM_ID,
+  );
+};
 
 export const remainingAccountsForLockup = async (
+  candyMachineId: PublicKey,
   mintId: PublicKey,
   userTokenAccountId: PublicKey,
 ) => {
+  const [lockupSettingsId] = await findLockupSettingsId(candyMachineId);
   const [tokenManagerId] = await programs.tokenManager.pda.findTokenManagerAddress(mintId);
   const tokenManagerTokenAccountId = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -62,6 +75,11 @@ export const remainingAccountsForLockup = async (
     tokenManagerId,
   );
   return [
+    {
+      pubkey: lockupSettingsId,
+      isSigner: false,
+      isWritable: true,
+    },
     {
       pubkey: tokenManagerId,
       isSigner: false,
@@ -83,17 +101,17 @@ export const remainingAccountsForLockup = async (
       isWritable: true,
     },
     {
+      pubkey: programs.tokenManager.TOKEN_MANAGER_ADDRESS,
+      isSigner: false,
+      isWritable: false,
+    },
+    {
       pubkey: timeInvalidatorId,
       isSigner: false,
       isWritable: true,
     },
     {
       pubkey: programs.timeInvalidator.TIME_INVALIDATOR_ADDRESS,
-      isSigner: false,
-      isWritable: false,
-    },
-    {
-      pubkey: programs.tokenManager.TOKEN_MANAGER_ADDRESS,
       isSigner: false,
       isWritable: false,
     },

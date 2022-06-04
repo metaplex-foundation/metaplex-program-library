@@ -95,7 +95,8 @@ pub struct MintNFT<'info> {
     // > Only needed if candy machine has token mint
     // token_account_info
     // transfer_authority_info
-    // > Only needed if candy machine has lockup
+    // > Only needed if candy machine has lockup feature flag enabled
+    // lockup_settings
     // token_manager
     // token_manager_token_account
     // mint_counter
@@ -631,11 +632,12 @@ pub fn handle_mint_nft<'info>(
             return err!(CandyError::LockupSettingsAccountMissing);
         }
         let lockup_settings_info = &ctx.remaining_accounts[remaining_accounts_counter];
+        remaining_accounts_counter += 1;
         let lockup_settings = Account::<LockupSettings>::try_from(lockup_settings_info)?;
         if lockup_settings.candy_machine != candy_machine.key() {
             return err!(CandyError::LockupSettingsAccountInvalid);
         }
-        handle_lockup_settings(ctx, &mut remaining_accounts_counter, lockup_settings)?;
+        handle_lockup_settings(&ctx, &mut remaining_accounts_counter, lockup_settings)?;
     }
 
     Ok(())
@@ -780,7 +782,7 @@ pub fn get_config_line(
 
 #[inline(never)]
 fn handle_lockup_settings<'info>(
-    ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
+    ctx: &Context<'_, '_, '_, 'info, MintNFT<'info>>,
     remaining_accounts_counter: &mut usize,
     lockup_settings: Account<LockupSettings>,
 ) -> Result<()> {
@@ -799,41 +801,26 @@ fn handle_lockup_settings<'info>(
         return err!(CandyError::LockupSettingsMissingTokenManager);
     }
     let token_manager = &ctx.remaining_accounts[*remaining_accounts_counter];
-
     *remaining_accounts_counter += 1;
+
     if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
         return err!(CandyError::LockupSettingsMissingTokenManagerTokenAccount);
     }
     let token_manager_token_account = &ctx.remaining_accounts[*remaining_accounts_counter];
-
     *remaining_accounts_counter += 1;
+
     if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
         return err!(CandyError::LockupSettingsMissingMintCounter);
     }
     let mint_counter = &ctx.remaining_accounts[*remaining_accounts_counter];
-
     *remaining_accounts_counter += 1;
+
     if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
         return err!(CandyError::LockupSettingsMissingRecipientTokenAccount);
     }
     let recipient_token_account = &ctx.remaining_accounts[*remaining_accounts_counter];
-
     *remaining_accounts_counter += 1;
-    if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
-        return err!(CandyError::LockupSettingsMissingTimeInvalidator);
-    }
-    let time_invalidator = &ctx.remaining_accounts[*remaining_accounts_counter];
 
-    *remaining_accounts_counter += 1;
-    if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
-        return err!(CandyError::LockupSettingsMissingTimeInvalidatorProgram);
-    }
-    let time_invalidator_program = &ctx.remaining_accounts[*remaining_accounts_counter];
-    if time_invalidator_program.key() != cardinal_time_invalidator::id() {
-        return err!(CandyError::LockupSettingsInvalidTimeInvalidatorProgram);
-    }
-
-    *remaining_accounts_counter += 1;
     if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
         return err!(CandyError::LockupSettingsMissingTokenManagerProgram);
     }
@@ -841,8 +828,7 @@ fn handle_lockup_settings<'info>(
     if token_manager_program.key() != cardinal_token_manager::id() {
         return err!(CandyError::LockupSettingsInvalidTokenManagerProgram);
     }
-    // If we add more extra accounts later on we need to uncomment the following line out.
-    // remaining_accounts_counter += 1;
+    *remaining_accounts_counter += 1;
 
     // token manager init
     let init_ix = cardinal_token_manager::instructions::InitIx {
@@ -862,6 +848,64 @@ fn handle_lockup_settings<'info>(
     };
     let cpi_ctx = CpiContext::new(token_manager_program.to_account_info(), cpi_accounts);
     cardinal_token_manager::cpi::init(cpi_ctx, init_ix)?;
+
+    handle_time_invalidator(
+        ctx,
+        remaining_accounts_counter,
+        lockup_settings,
+        token_manager,
+        token_manager_program,
+        token_manager_token_account,
+        recipient_token_account,
+    )?;
+
+    // token manager claim
+    let cpi_accounts = cardinal_token_manager::cpi::accounts::ClaimCtx {
+        token_manager: token_manager.to_account_info(),
+        token_manager_token_account: token_manager_token_account.to_account_info(),
+        mint: ctx.accounts.mint.to_account_info(),
+        recipient: ctx.accounts.payer.to_account_info(),
+        recipient_token_account: recipient_token_account.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+    };
+    // let remaining_accounts = ctx.remaining_accounts.to_vec();
+    let cpi_ctx = CpiContext::new(token_manager_program.to_account_info(), cpi_accounts)
+        .with_remaining_accounts(
+            [
+                ctx.accounts.master_edition.to_account_info(),
+                ctx.accounts.token_metadata_program.to_account_info(),
+            ]
+            .to_vec(),
+        );
+    cardinal_token_manager::cpi::claim(cpi_ctx)?;
+    Ok(())
+}
+
+#[inline(never)]
+fn handle_time_invalidator<'info>(
+    ctx: &Context<'_, '_, '_, 'info, MintNFT<'info>>,
+    remaining_accounts_counter: &mut usize,
+    lockup_settings: Account<LockupSettings>,
+    token_manager: &AccountInfo<'info>,
+    token_manager_program: &AccountInfo<'info>,
+    token_manager_token_account: &AccountInfo<'info>,
+    recipient_token_account: &AccountInfo<'info>,
+) -> Result<()> {
+    if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
+        return err!(CandyError::LockupSettingsMissingTimeInvalidator);
+    }
+    let time_invalidator = &ctx.remaining_accounts[*remaining_accounts_counter];
+    *remaining_accounts_counter += 1;
+
+    if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
+        return err!(CandyError::LockupSettingsMissingTimeInvalidatorProgram);
+    }
+    let time_invalidator_program = &ctx.remaining_accounts[*remaining_accounts_counter];
+    if time_invalidator_program.key() != cardinal_time_invalidator::id() {
+        return err!(CandyError::LockupSettingsInvalidTimeInvalidatorProgram);
+    }
+    *remaining_accounts_counter += 1;
 
     // init time invalidator
     let time_invalidator_init_ix = cardinal_time_invalidator::instructions::InitIx {
@@ -914,25 +958,5 @@ fn handle_lockup_settings<'info>(
     let cpi_ctx = CpiContext::new(token_manager_program.to_account_info(), cpi_accounts);
     cardinal_token_manager::cpi::issue(cpi_ctx)?;
 
-    // token manager claim
-    let cpi_accounts = cardinal_token_manager::cpi::accounts::ClaimCtx {
-        token_manager: token_manager.to_account_info(),
-        token_manager_token_account: token_manager_token_account.to_account_info(),
-        mint: ctx.accounts.mint.to_account_info(),
-        recipient: ctx.accounts.payer.to_account_info(),
-        recipient_token_account: recipient_token_account.to_account_info(),
-        token_program: ctx.accounts.token_program.to_account_info(),
-        system_program: ctx.accounts.system_program.to_account_info(),
-    };
-    // let remaining_accounts = ctx.remaining_accounts.to_vec();
-    let cpi_ctx = CpiContext::new(token_manager_program.to_account_info(), cpi_accounts)
-        .with_remaining_accounts(
-            [
-                ctx.accounts.master_edition.to_account_info(),
-                ctx.accounts.token_metadata_program.to_account_info(),
-            ]
-            .to_vec(),
-        );
-    cardinal_token_manager::cpi::claim(cpi_ctx)?;
     Ok(())
 }

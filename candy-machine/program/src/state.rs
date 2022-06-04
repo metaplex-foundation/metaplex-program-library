@@ -1,5 +1,3 @@
-use std::mem;
-
 use anchor_lang::prelude::*;
 
 /// Candy machine state and config data.
@@ -81,8 +79,8 @@ pub struct LockupSettings {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum LockupType {
-    Expiration = 1,
-    Duration = 2,
+    Expiration = 0,
+    Duration = 1,
 }
 
 // Unfortunate duplication of token metadata so that IDL picks it up.

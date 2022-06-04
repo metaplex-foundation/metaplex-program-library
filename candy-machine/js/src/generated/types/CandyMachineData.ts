@@ -11,7 +11,6 @@ import { Creator, creatorBeet } from './Creator';
 import { HiddenSettings, hiddenSettingsBeet } from './HiddenSettings';
 import { WhitelistMintSettings, whitelistMintSettingsBeet } from './WhitelistMintSettings';
 import { GatekeeperConfig, gatekeeperConfigBeet } from './GatekeeperConfig';
-import { LockupSettings, lockupSettingsBeet } from './LockupSettings';
 export type CandyMachineData = {
   uuid: string;
   price: beet.bignum;
@@ -27,7 +26,6 @@ export type CandyMachineData = {
   whitelistMintSettings: beet.COption<WhitelistMintSettings>;
   itemsAvailable: beet.bignum;
   gatekeeper: beet.COption<GatekeeperConfig>;
-  lockupSettings: beet.COption<LockupSettings>;
 };
 
 /**
@@ -50,7 +48,6 @@ export const candyMachineDataBeet = new beet.FixableBeetArgsStruct<CandyMachineD
     ['whitelistMintSettings', beet.coption(whitelistMintSettingsBeet)],
     ['itemsAvailable', beet.u64],
     ['gatekeeper', beet.coption(gatekeeperConfigBeet)],
-    ['lockupSettings', beet.coption(lockupSettingsBeet)],
   ],
   'CandyMachineData',
 );

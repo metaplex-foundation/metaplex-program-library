@@ -10,9 +10,10 @@ import {
   Transaction,
 } from '@solana/web3.js';
 import {
-  CandyMachine,
   createInitializeCandyMachineInstruction,
   createMintNftInstruction,
+  createSetLockupSettingsInstruction,
+  LockupSettings,
   LockupType,
   PROGRAM_ID,
 } from '../src/generated';
@@ -26,7 +27,12 @@ import {
 } from '@solana/spl-token';
 import { Edition, Metadata, MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { programs } from '@cardinal/token-manager';
-import { CONFIG_ARRAY_START, CONFIG_LINE_SIZE, remainingAccountsForLockup } from '../src/utils';
+import {
+  CONFIG_ARRAY_START,
+  CONFIG_LINE_SIZE,
+  findLockupSettingsId,
+  remainingAccountsForLockup,
+} from '../src/utils';
 import { amman } from './utils';
 import { BN } from '@project-serum/anchor';
 
@@ -43,6 +49,7 @@ const uuidFromConfigPubkey = (configAccount: PublicKey) => {
 
 test('Candy machine initialize with lockup settings', async (t) => {
   await amman.airdrop(connection, walletKeypair.publicKey, 30);
+  const [lockupSettingsId] = await findLockupSettingsId(candyMachineKeypair.publicKey);
 
   const initIx = createInitializeCandyMachineInstruction(
     {
@@ -73,13 +80,23 @@ test('Candy machine initialize with lockup settings', async (t) => {
         whitelistMintSettings: null,
         itemsAvailable: new BN(ITEMS_AVAILABLE),
         gatekeeper: null,
-        lockupSettings: {
-          lockupType: LockupType.Duration,
-          number: new BN(5), // seconds
-        },
       },
     },
   );
+
+  const lockupInitIx = createSetLockupSettingsInstruction(
+    {
+      candyMachine: candyMachineKeypair.publicKey,
+      authority: walletKeypair.publicKey,
+      lockupSettings: lockupSettingsId,
+      payer: walletKeypair.publicKey,
+    },
+    {
+      lockupType: Number(LockupType.Duration),
+      number: new BN(5),
+    },
+  );
+
   const tx = new Transaction();
   const size =
     CONFIG_ARRAY_START +
@@ -97,18 +114,16 @@ test('Candy machine initialize with lockup settings', async (t) => {
       programId: PROGRAM_ID,
     }),
     initIx,
+    lockupInitIx,
   ];
   tx.feePayer = walletKeypair.publicKey;
   tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
   tx.sign(walletKeypair, candyMachineKeypair);
   await sendAndConfirmRawTransaction(connection, tx.serialize());
 
-  const candyMachine = await CandyMachine.fromAccountAddress(
-    connection,
-    candyMachineKeypair.publicKey,
-  );
-  t.assert(candyMachine.data.lockupSettings?.lockupType === LockupType.Duration);
-  t.assert(Number(candyMachine.data.lockupSettings?.number) === 5);
+  const lockupSettings = await LockupSettings.fromAccountAddress(connection, lockupSettingsId);
+  t.assert(lockupSettings.lockupType === LockupType.Duration);
+  t.assert(Number(lockupSettings.number) === 5);
 });
 
 test('Mint with lockup', async (t) => {
@@ -205,7 +220,11 @@ test('Mint with lockup', async (t) => {
       keys: [
         ...mintIx.keys,
         // remaining accounts for locking
-        ...(await remainingAccountsForLockup(nftToMintKeypair.publicKey, tokenAccountToReceive)),
+        ...(await remainingAccountsForLockup(
+          candyMachineKeypair.publicKey,
+          nftToMintKeypair.publicKey,
+          tokenAccountToReceive,
+        )),
       ],
     },
   ];

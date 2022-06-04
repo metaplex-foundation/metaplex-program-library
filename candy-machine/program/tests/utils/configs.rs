@@ -44,7 +44,6 @@ pub fn auto_config(
         hidden_settings,
         wl_settings,
         None,
-        None,
     )
 }
 
