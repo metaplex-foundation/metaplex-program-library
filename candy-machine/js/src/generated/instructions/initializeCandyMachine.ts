@@ -22,7 +22,7 @@ export type InitializeCandyMachineInstructionArgs = {
  * @category InitializeCandyMachine
  * @category generated
  */
-const initializeCandyMachineStruct = new beet.FixableBeetArgsStruct<
+export const initializeCandyMachineStruct = new beet.FixableBeetArgsStruct<
   InitializeCandyMachineInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -51,7 +51,9 @@ export type InitializeCandyMachineInstructionAccounts = {
   payer: web3.PublicKey;
 };
 
-const initializeCandyMachineInstructionDiscriminator = [142, 137, 167, 107, 47, 39, 240, 124];
+export const initializeCandyMachineInstructionDiscriminator = [
+  142, 137, 167, 107, 47, 39, 240, 124,
+];
 
 /**
  * Creates a _InitializeCandyMachine_ instruction.

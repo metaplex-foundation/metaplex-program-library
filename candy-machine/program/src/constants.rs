@@ -22,7 +22,7 @@ pub const CONFIG_ARRAY_START: usize = 8 + // key
     8 + // price
     8 + // items available
     9 + // go live
-    10 + // end settings
+    16 + // end settings
     4 + MAX_SYMBOL_LENGTH + // u32 len + symbol
     2 + // seller fee basis points
     4 + MAX_CREATOR_LIMIT*MAX_CREATOR_LEN + // optional + u32 len + actual vec
@@ -40,4 +40,5 @@ pub const CONFIG_ARRAY_START: usize = 8 + // key
     1 + // allow presale
     9 + // discount price
     32 + // mint key for whitelist
-    1 + 32 + 1; // gatekeeper
+    1 + 32 + 1 + // gatekeeper
+    16; // lockup settings

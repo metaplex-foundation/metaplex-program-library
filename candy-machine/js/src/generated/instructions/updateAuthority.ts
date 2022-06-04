@@ -22,7 +22,7 @@ export type UpdateAuthorityInstructionArgs = {
  * @category UpdateAuthority
  * @category generated
  */
-const updateAuthorityStruct = new beet.FixableBeetArgsStruct<
+export const updateAuthorityStruct = new beet.FixableBeetArgsStruct<
   UpdateAuthorityInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -49,7 +49,7 @@ export type UpdateAuthorityInstructionAccounts = {
   wallet: web3.PublicKey;
 };
 
-const updateAuthorityInstructionDiscriminator = [32, 46, 64, 28, 149, 75, 243, 88];
+export const updateAuthorityInstructionDiscriminator = [32, 46, 64, 28, 149, 75, 243, 88];
 
 /**
  * Creates a _UpdateAuthority_ instruction.

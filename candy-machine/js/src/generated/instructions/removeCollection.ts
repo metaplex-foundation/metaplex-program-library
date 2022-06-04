@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category RemoveCollection
  * @category generated
  */
-const removeCollectionStruct = new beet.BeetArgsStruct<{
+export const removeCollectionStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -43,7 +43,7 @@ export type RemoveCollectionInstructionAccounts = {
   tokenMetadataProgram: web3.PublicKey;
 };
 
-const removeCollectionInstructionDiscriminator = [223, 52, 106, 217, 61, 220, 36, 160];
+export const removeCollectionInstructionDiscriminator = [223, 52, 106, 217, 61, 220, 36, 160];
 
 /**
  * Creates a _RemoveCollection_ instruction.

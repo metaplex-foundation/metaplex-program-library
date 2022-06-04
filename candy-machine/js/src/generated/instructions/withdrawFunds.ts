@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category WithdrawFunds
  * @category generated
  */
-const withdrawFundsStruct = new beet.BeetArgsStruct<{
+export const withdrawFundsStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -33,7 +33,7 @@ export type WithdrawFundsInstructionAccounts = {
   authority: web3.PublicKey;
 };
 
-const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 217];
+export const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 217];
 
 /**
  * Creates a _WithdrawFunds_ instruction.

@@ -5,5 +5,7 @@ export * from './EndSettingType';
 export * from './EndSettings';
 export * from './GatekeeperConfig';
 export * from './HiddenSettings';
+export * from './LockupSettings';
+export * from './LockupType';
 export * from './WhitelistMintMode';
 export * from './WhitelistMintSettings';

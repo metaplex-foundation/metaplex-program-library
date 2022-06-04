@@ -534,6 +534,14 @@
                 "defined": "GatekeeperConfig"
               }
             }
+          },
+          {
+            "name": "lockupSettings",
+            "type": {
+              "option": {
+                "defined": "LockupSettings"
+              }
+            }
           }
         ]
       }
@@ -568,6 +576,24 @@
           {
             "name": "number",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockupSettings",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lockupType",
+            "type": {
+              "defined": "LockupType"
+            }
+          },
+          {
+            "name": "number",
+            "type": "i64"
           }
         ]
       }
@@ -671,6 +697,20 @@
           },
           {
             "name": "Amount"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockupType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Expiration"
+          },
+          {
+            "name": "Duration"
           }
         ]
       }
@@ -865,6 +905,46 @@
       "code": 6034,
       "name": "CandyCollectionRequiresRetainAuthority",
       "msg": "Retain authority must be true for Candy Machines with a collection set"
+    },
+    {
+      "code": 6035,
+      "name": "LockupSettingsMissingAccounts",
+      "msg": "Lockup settings missing accounts"
+    },
+    {
+      "code": 6036,
+      "name": "LockupSettingsMissingTokenManager",
+      "msg": "Lockup settings missing token manager"
+    },
+    {
+      "code": 6037,
+      "name": "LockupSettingsMissingTokenManagerTokenAccount",
+      "msg": "Lockup settings missing token managertoken account"
+    },
+    {
+      "code": 6038,
+      "name": "LockupSettingsMissingMintCounter",
+      "msg": "Lockup settings missing mint counter"
+    },
+    {
+      "code": 6039,
+      "name": "LockupSettingsMissingRecipientTokenAccount",
+      "msg": "Lockup settings missing recipient token account"
+    },
+    {
+      "code": 6040,
+      "name": "LockupSettingsMissingTimeInvalidator",
+      "msg": "Lockup settings missing time invalidator"
+    },
+    {
+      "code": 6041,
+      "name": "LockupSettingsMissingTimeInvalidatorProgram",
+      "msg": "Lockup settings missing time invalidator program"
+    },
+    {
+      "code": 6042,
+      "name": "LockupSettingsMissingTokenManagerProgram",
+      "msg": "Lockup settings missing token manager program"
     }
   ],
   "metadata": {

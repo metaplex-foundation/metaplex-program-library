@@ -22,7 +22,7 @@ export type MintNftInstructionArgs = {
  * @category MintNft
  * @category generated
  */
-const mintNftStruct = new beet.BeetArgsStruct<
+export const mintNftStruct = new beet.BeetArgsStruct<
   MintNftInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -69,7 +69,7 @@ export type MintNftInstructionAccounts = {
   instructionSysvarAccount: web3.PublicKey;
 };
 
-const mintNftInstructionDiscriminator = [211, 57, 6, 167, 15, 219, 35, 251];
+export const mintNftInstructionDiscriminator = [211, 57, 6, 167, 15, 219, 35, 251];
 
 /**
  * Creates a _MintNft_ instruction.
