@@ -26,7 +26,8 @@ import {
 } from '@solana/spl-token';
 import { Edition, Metadata, MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
 import { programs } from '@cardinal/token-manager';
-import { amman, CONFIG_ARRAY_START, CONFIG_LINE_SIZE, remainingAccountsForLockup } from './utils';
+import { CONFIG_ARRAY_START, CONFIG_LINE_SIZE, remainingAccountsForLockup } from '../src/utils';
+import { amman } from './utils';
 import { BN } from '@project-serum/anchor';
 
 const walletKeypair = Keypair.generate();
