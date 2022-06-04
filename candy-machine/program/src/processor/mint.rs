@@ -20,12 +20,14 @@ use solana_program::{
     system_instruction, sysvar,
     sysvar::{instructions::get_instruction_relative, SysvarId},
 };
+use std::convert::TryInto;
 
 use crate::{
     constants::{
         A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
-        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX, SWAP_REMOVE_FEATURE_INDEX,
     },
+    is_feature_active,
     utils::*,
     CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
     WhitelistMintSettings,
@@ -697,24 +699,24 @@ pub fn get_config_line(
     let a_info = candy_machine.to_account_info();
     let mut arr = a_info.data.borrow_mut();
 
-    let index_to_use = if is_feature_active(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
-        let items_available = candy_machine.data.items_available as usize;
+    let index_to_use = if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX)
+    {
+        let items_available = candy_machine.data.items_available as u64;
         let indices_vec_start = CONFIG_ARRAY_START
             + 4
             + (items_available as usize) * CONFIG_LINE_SIZE
             + 4
             + ((items_available
                 .checked_div(8)
-                .ok_or(ErrorCode::NumericalOverflowError)?
+                .ok_or(CandyError::NumericalOverflowError)?
                 + 1) as usize)
             + 4;
-    
         // calculates the mint index and retrieves the value at that position
         let mint_index = indices_vec_start + index * 4;
         let index_to_use =
             u32::from_le_bytes(arr[mint_index..mint_index + 4].try_into().unwrap()) as usize;
         // calculates the last available index and retrieves the value at that position
-        let last_index = indices_vec_start + (items_available - mint_number - 1) * 4;
+        let last_index = indices_vec_start + ((items_available - mint_number - 1) * 4) as usize;
         let last_value = u32::from_le_bytes(arr[last_index..last_index + 4].try_into().unwrap());
         // swap_remove: this guarantees that we remove the used mint index from the available array
         // in a constant time O(1) no matter how big the indices array is
@@ -723,10 +725,10 @@ pub fn get_config_line(
         index_to_use
     } else {
         let (mut index_to_use, good) =
-            get_good_index(&mut arr, a.data.items_available as usize, index, true)?;
+            get_good_index(&mut arr, candy_machine.data.items_available as usize, index, true)?;
         if !good {
             let (index_to_use_new, good_new) =
-                get_good_index(&mut arr, a.data.items_available as usize, index, false)?;
+                get_good_index(&mut arr, candy_machine.data.items_available as usize, index, false)?;
             index_to_use = index_to_use_new;
             if !good_new {
                 return err!(CandyError::CannotFindUsableConfigLine);

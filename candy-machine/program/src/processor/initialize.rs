@@ -4,8 +4,8 @@ use spl_token::state::Mint;
 
 use crate::{
     assert_initialized, assert_owned_by, cmp_pubkeys,
-    constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
-    CandyError, CandyMachine, CandyMachineData,
+    constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE, SWAP_REMOVE_FEATURE_INDEX},
+    set_feature_flag, CandyError, CandyMachine, CandyMachineData,
 };
 
 /// Create a new candy machine.

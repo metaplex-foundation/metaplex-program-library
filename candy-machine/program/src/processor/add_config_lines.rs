@@ -5,8 +5,8 @@ use arrayref::array_ref;
 use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_URI_LENGTH};
 
 use crate::{
-    constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
-    CandyError, CandyMachine, ConfigLine,
+    constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE, SWAP_REMOVE_FEATURE_INDEX},
+    is_feature_active, CandyError, CandyMachine, ConfigLine,
 };
 
 /// Add multiple config lines to the candy machine.
@@ -67,7 +67,7 @@ pub fn handle_add_config_lines(
                     .data
                     .items_available
                     .checked_div(8)
-                    .ok_or(ErrorCode::NumericalOverflowError)?
+                    .ok_or(CandyError::NumericalOverflowError)?
                     + 1) as usize
                 + 4
         } else {
