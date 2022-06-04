@@ -699,8 +699,7 @@ pub fn get_config_line(
     let a_info = candy_machine.to_account_info();
     let mut arr = a_info.data.borrow_mut();
 
-    let index_to_use = if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX)
-    {
+    let index_to_use = if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
         let items_available = candy_machine.data.items_available as u64;
         let indices_vec_start = CONFIG_ARRAY_START
             + 4
@@ -724,11 +723,19 @@ pub fn get_config_line(
 
         index_to_use
     } else {
-        let (mut index_to_use, good) =
-            get_good_index(&mut arr, candy_machine.data.items_available as usize, index, true)?;
+        let (mut index_to_use, good) = get_good_index(
+            &mut arr,
+            candy_machine.data.items_available as usize,
+            index,
+            true,
+        )?;
         if !good {
-            let (index_to_use_new, good_new) =
-                get_good_index(&mut arr, candy_machine.data.items_available as usize, index, false)?;
+            let (index_to_use_new, good_new) = get_good_index(
+                &mut arr,
+                candy_machine.data.items_available as usize,
+                index,
+                false,
+            )?;
             index_to_use = index_to_use_new;
             if !good_new {
                 return err!(CandyError::CannotFindUsableConfigLine);

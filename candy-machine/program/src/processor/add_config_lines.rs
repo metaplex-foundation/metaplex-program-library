@@ -61,7 +61,7 @@ pub fn handle_add_config_lines(
         + 4;
     // (unordered) indices for the mint
     let indices_vec_start =
-        if is_feature_active(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+        if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
             bit_mask_vec_start
                 + (candy_machine
                     .data
@@ -108,7 +108,7 @@ pub fn handle_add_config_lines(
                 .checked_add(1)
                 .ok_or(CandyError::NumericalOverflowError)?;
 
-            if is_feature_active(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+            if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
                 let mint_index = indices_vec_start + (position as usize) * 4;
                 data[mint_index..mint_index + 4]
                     .copy_from_slice(&u32::to_le_bytes(position as u32));
