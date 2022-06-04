@@ -2,7 +2,8 @@ use solana_program::pubkey::Pubkey;
 use solana_sdk::signer::Signer;
 
 use mpl_candy_machine::{
-    CandyMachineData, Creator, EndSettings, GatekeeperConfig, HiddenSettings, WhitelistMintSettings,
+    CandyMachineData, Creator, EndSettings, GatekeeperConfig, HiddenSettings, LockupSettings,
+    WhitelistMintSettings,
 };
 
 use crate::CandyManager;
@@ -14,7 +15,7 @@ pub const DEFAULT_SYMBOL: &str = "SYMBOL";
 
 #[allow(dead_code)]
 pub fn quick_config(creator: Pubkey) -> CandyMachineData {
-    custom_config(creator, None, true, true, None, None, None, None)
+    custom_config(creator, None, true, true, None, None, None, None, None)
 }
 
 pub fn auto_config(
@@ -44,6 +45,7 @@ pub fn auto_config(
         hidden_settings,
         wl_settings,
         None,
+        None,
     )
 }
 
@@ -56,6 +58,7 @@ pub fn custom_config(
     hidden_settings: Option<HiddenSettings>,
     whitelist_mint_settings: Option<WhitelistMintSettings>,
     gatekeeper: Option<GatekeeperConfig>,
+    lockup_settings: Option<LockupSettings>,
 ) -> CandyMachineData {
     CandyMachineData {
         uuid: DEFAULT_UUID.to_string(),
@@ -76,5 +79,6 @@ pub fn custom_config(
         hidden_settings,
         whitelist_mint_settings,
         gatekeeper,
+        lockup_settings,
     }
 }

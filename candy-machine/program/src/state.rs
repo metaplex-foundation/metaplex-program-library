@@ -43,6 +43,7 @@ pub struct CandyMachineData {
     pub items_available: u64,
     /// If [`Some`] requires gateway tokens on mint
     pub gatekeeper: Option<GatekeeperConfig>,
+    pub lockup_settings: Option<LockupSettings>,
 }
 
 /// Individual config line for storing NFT data pre-mint.
@@ -63,6 +64,18 @@ pub struct EndSettings {
 pub enum EndSettingType {
     Date,
     Amount,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct LockupSettings {
+    pub lockup_type: LockupType,
+    pub number: i64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+pub enum LockupType {
+    Expiration,
+    Duration,
 }
 
 // Unfortunate duplication of token metadata so that IDL picks it up.
