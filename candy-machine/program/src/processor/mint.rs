@@ -24,7 +24,7 @@ use solana_program::{
 use crate::{
     constants::{
         A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
-        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, LOCKUP_SETTINGS_FEATURE_INDEX, PREFIX,
     },
     state::LockupSettings,
     utils::*,
@@ -625,8 +625,16 @@ pub fn handle_mint_nft<'info>(
     )?;
 
     let candy_machine_data = &candy_machine.data;
-    let lockup_settings = candy_machine_data.lockup_settings.clone();
-    if let Some(lockup_settings) = lockup_settings {
+    let uuid = candy_machine_data.uuid.clone();
+    if is_feature_active(&uuid, LOCKUP_SETTINGS_FEATURE_INDEX) {
+        if ctx.remaining_accounts.len() <= remaining_accounts_counter {
+            return err!(CandyError::LockupSettingsAccountMissing);
+        }
+        let lockup_settings_info = &ctx.remaining_accounts[remaining_accounts_counter];
+        let lockup_settings = Account::<LockupSettings>::try_from(lockup_settings_info)?;
+        if lockup_settings.candy_machine != candy_machine.key() {
+            return err!(CandyError::LockupSettingsAccountInvalid);
+        }
         handle_lockup_settings(ctx, &mut remaining_accounts_counter, lockup_settings)?;
     }
 
@@ -774,7 +782,7 @@ pub fn get_config_line(
 fn handle_lockup_settings<'info>(
     ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
     remaining_accounts_counter: &mut usize,
-    lockup_settings: LockupSettings,
+    lockup_settings: Account<LockupSettings>,
 ) -> Result<()> {
     if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
         punish_bots(
@@ -860,7 +868,7 @@ fn handle_lockup_settings<'info>(
         collector: ctx.accounts.payer.key(),
         // no fees
         payment_manager: Pubkey::default(),
-        duration_seconds: if lockup_settings.lockup_type == LockupType::Duration {
+        duration_seconds: if lockup_settings.lockup_type == LockupType::Duration as u8 {
             Some(lockup_settings.number)
         } else {
             None
@@ -868,7 +876,7 @@ fn handle_lockup_settings<'info>(
         extension_payment_amount: None,
         extension_duration_seconds: None,
         extension_payment_mint: None,
-        max_expiration: if lockup_settings.lockup_type == LockupType::Expiration {
+        max_expiration: if lockup_settings.lockup_type == LockupType::Expiration as u8 {
             Some(lockup_settings.number)
         } else {
             None

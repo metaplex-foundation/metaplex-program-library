@@ -72,6 +72,14 @@ pub enum CandyError {
     NoChangingCollectionDuringMint,
     #[msg("Retain authority must be true for Candy Machines with a collection set")]
     CandyCollectionRequiresRetainAuthority,
+    #[msg("Invalid candy machine authority")]
+    InvalidCandyMachineAuthority,
+    #[msg("Lockup settings lockup type is invalid")]
+    InvalidLockupType,
+    #[msg("Lockup settings account missing")]
+    LockupSettingsAccountMissing,
+    #[msg("Lockup settings account invalid")]
+    LockupSettingsAccountInvalid,
     #[msg("Lockup settings missing accounts")]
     LockupSettingsMissingAccounts,
     #[msg("Lockup settings missing token manager")]

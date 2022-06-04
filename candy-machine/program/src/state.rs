@@ -1,3 +1,5 @@
+use std::mem;
+
 use anchor_lang::prelude::*;
 
 /// Candy machine state and config data.
@@ -43,7 +45,6 @@ pub struct CandyMachineData {
     pub items_available: u64,
     /// If [`Some`] requires gateway tokens on mint
     pub gatekeeper: Option<GatekeeperConfig>,
-    pub lockup_settings: Option<LockupSettings>,
 }
 
 /// Individual config line for storing NFT data pre-mint.
@@ -66,16 +67,22 @@ pub enum EndSettingType {
     Amount,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub const LOCKUP_SETTINGS_SIZE: usize = 8 + std::mem::size_of::<LockupSettings>() + 8;
+pub const LOCKUP_SETTINGS_SEED: &str = "lockup_settings";
+
+#[account]
+#[derive(Default, Debug)]
 pub struct LockupSettings {
-    pub lockup_type: LockupType,
+    pub candy_machine: Pubkey,
+    pub lockup_type: u8,
     pub number: i64,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+#[repr(u8)]
 pub enum LockupType {
-    Expiration,
-    Duration,
+    Expiration = 1,
+    Duration = 2,
 }
 
 // Unfortunate duplication of token metadata so that IDL picks it up.
