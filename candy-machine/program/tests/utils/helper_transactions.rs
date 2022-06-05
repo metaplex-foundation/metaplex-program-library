@@ -10,7 +10,7 @@ use solana_sdk::{signature::Keypair, transaction::Transaction, transport};
 
 use mpl_candy_machine::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
-    CandyError, CandyMachine, CandyMachineData, ConfigLine,
+    CandyMachine, CandyMachineData, ConfigLine,
     WhitelistMintMode::BurnEveryTime,
 };
 
@@ -47,7 +47,7 @@ pub async fn initialize_candy_machine(
             + 4
             + ((items_available
                 .checked_div(8)
-                .ok_or(CandyError::NumericalOverflowError)?
+                .expect("numerical overflow error")
                 + 1) as usize)
             + 4
             + (items_available as usize) * 4
