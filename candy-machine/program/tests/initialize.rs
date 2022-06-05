@@ -1,19 +1,13 @@
 #![cfg(feature = "test-bpf")]
 
-use mpl_candy_machine::{CandyMachineData, WhitelistMintMode::BurnEveryTime};
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
 
-use utils::helper_transactions;
+use mpl_candy_machine::{CandyMachineData, WhitelistMintMode::BurnEveryTime};
 
 use crate::{
-    core::{airdrop, clone_keypair, get_account},
-    utils::{
-        add_all_config_lines,
-        candy_manager::{CandyManager, WhitelistConfig},
-        configs::auto_config,
-        sol,
-    },
+    core::helpers::airdrop,
+    utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager, WhitelistConfig},
 };
 
 mod core;
@@ -21,9 +15,7 @@ mod utils;
 
 #[tokio::test]
 async fn init_default_success() {
-    let mut context = helper_transactions::candy_machine_program_test()
-        .start_with_context()
-        .await;
+    let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
 
     let mut candy_manager = CandyManager::init(

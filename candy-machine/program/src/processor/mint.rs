@@ -341,7 +341,7 @@ pub fn handle_mint_nft<'info>(
                             &ctx.remaining_accounts[remaining_accounts_counter];
                         remaining_accounts_counter += 1;
 
-                        let key_check = assert_keys_equal(whitelist_token_mint.key(), ws.mint);
+                        let key_check = assert_keys_equal(&whitelist_token_mint.key(), &ws.mint);
 
                         if key_check.is_err() {
                             punish_bots(
