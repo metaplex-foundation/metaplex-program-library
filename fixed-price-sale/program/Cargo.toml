@@ -1,6 +1,6 @@
 [package]
 name = "mpl-fixed-price-sale"
-version = "0.2.0"
+version = "0.2.1"
 description = "Created with Anchor"
 edition = "2018"
 license = "AGPL-3.0"
@@ -24,7 +24,7 @@ mpl-token-metadata = { features = [ "no-entrypoint" ], version="~1.1.0" }
 
 [dev-dependencies]
 anchor-client = "~0.22"
-solana-program-test = "~1.9.5"
-solana-program = "~1.9.5"
-solana-sdk = "~1.9.5"
+solana-program-test = "~1.9.28"
+solana-program = "~1.9.28"
+solana-sdk = "~1.9.28"
 spl-associated-token-account = "~1.0.3"
