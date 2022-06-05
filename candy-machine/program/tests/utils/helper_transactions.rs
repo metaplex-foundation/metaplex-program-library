@@ -10,7 +10,7 @@ use solana_sdk::{signature::Keypair, transaction::Transaction, transport};
 
 use mpl_candy_machine::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
-    CandyMachine, CandyMachineData, ConfigLine,
+    CandyError, CandyMachine, CandyMachineData, ConfigLine,
     WhitelistMintMode::BurnEveryTime,
 };
 
