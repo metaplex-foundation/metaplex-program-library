@@ -430,6 +430,24 @@ pub mod auction_house {
         )
     }
 
+    pub fn execute_sale_permissionless<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecuteSalePermissionless<'info>>,
+        escrow_payment_bump: u8,
+        _free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+    ) -> Result<()> {
+        execute_sale::execute_sale_permissionless(
+            ctx,
+            escrow_payment_bump,
+            _free_trade_state_bump,
+            program_as_signer_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
     pub fn auctioneer_execute_sale<'info>(
         ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
         escrow_payment_bump: u8,
