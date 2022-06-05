@@ -44,8 +44,13 @@ pub async fn initialize_candy_machine(
         CONFIG_ARRAY_START
             + 4
             + items_available as usize * CONFIG_LINE_SIZE
-            + 8
-            + 2 * (items_available as usize / 8 + 1)
+            + 4
+            + ((items_available
+                .checked_div(8)
+                .ok_or(CandyError::NumericalOverflowError)?
+                + 1) as usize)
+            + 4
+            + (items_available as usize) * 4
     };
 
     let rent = context.banks_client.get_rent().await?;
