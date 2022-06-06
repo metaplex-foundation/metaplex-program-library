@@ -215,31 +215,6 @@ pub fn execute_sale<'info>(
     )
 }
 
-pub fn execute_sale_permissionless<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSalePermissionless<'info>>,
-    escrow_payment_bump: u8,
-    free_trade_state_bump: u8,
-    program_as_signer_bump: u8,
-    buyer_price: u64,
-    token_size: u64,
-) -> Result<()> {
-    let auction_house = &ctx.accounts.auction_house;
-
-    // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
-        return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
-    }
-
-    execute_sale_permissionless_logic(
-        ctx,
-        escrow_payment_bump,
-        free_trade_state_bump,
-        program_as_signer_bump,
-        buyer_price,
-        token_size,
-    )
-}
-
 #[derive(Accounts)]
 #[instruction(
     escrow_payment_bump: u8,
@@ -1272,10 +1247,7 @@ pub struct ExecuteSalePermissionless<'info> {
     pub free_trade_state: UncheckedAccount<'info>,
 
     #[account(mut)]
-    pub wallet: Signer<'info>,
-
-    #[account(init, payer = wallet, space = 32)]
-    pub fee_payer_account: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -1286,6 +1258,31 @@ pub struct ExecuteSalePermissionless<'info> {
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
+}
+
+pub fn execute_sale_permissionless<'info>(
+    ctx: Context<'_, '_, '_, 'info, ExecuteSalePermissionless<'info>>,
+    escrow_payment_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
+    buyer_price: u64,
+    token_size: u64,
+) -> Result<()> {
+    let auction_house = &ctx.accounts.auction_house;
+
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
+    if auction_house.has_auctioneer {
+        return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    execute_sale_permissionless_logic(
+        ctx,
+        escrow_payment_bump,
+        free_trade_state_bump,
+        program_as_signer_bump,
+        buyer_price,
+        token_size,
+    )
 }
 
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
@@ -1319,9 +1316,7 @@ fn execute_sale_permissionless_logic<'info>(
     let ata_program = &ctx.accounts.ata_program;
     let program_as_signer = &ctx.accounts.program_as_signer;
     let rent = &ctx.accounts.rent;
-    let fee_payer_account = &ctx.accounts.fee_payer_account;
-    let wallet = &ctx.accounts.wallet;
-
+    let payer = &ctx.accounts.payer;
     let metadata_clone = metadata.to_account_info();
     let escrow_clone = escrow_payment_account.to_account_info();
     let auction_house_clone = auction_house.to_account_info();
@@ -1333,20 +1328,7 @@ fn execute_sale_permissionless_logic<'info>(
     let authority_clone = authority.to_account_info();
     let buyer_receipt_clone = buyer_receipt_token_account.to_account_info();
     let token_account_clone = token_account.to_account_info();
-    let wallet_clone = wallet.to_account_info();
-
-    if !wallet_clone.data_is_empty() {
-        create_or_allocate_account_raw(
-            *ctx.program_id,
-            &fee_payer_account,
-            &rent.to_account_info(),
-            system_program,
-            &wallet,
-            32,
-            &[],
-            &[],
-        )?;
-    }
+    let payer_clone = payer.to_account_info();
 
     let is_native = treasury_mint.key() == spl_token::native_mint::id();
 
@@ -1391,24 +1373,13 @@ fn execute_sale_permissionless_logic<'info>(
         &[auction_house.fee_payer_bump],
     ];
 
-    let wallet_to_use = if !fee_payer_account.data_is_empty() {
-        fee_payer_account
-    } else {
-        if buyer.is_signer {
-            buyer
-        } else {
-            seller
-        }
-    };
-
     let (fee_payer, fee_payer_seeds) = get_fee_payer(
         authority,
         auction_house,
-        wallet_to_use.to_account_info(),
+        payer_clone,
         auction_house_fee_account.to_account_info(),
         &seeds,
     )?;
-    let fee_payer_clone = fee_payer.to_account_info();
 
     assert_is_ata(
         &token_account.to_account_info(),
@@ -1483,7 +1454,7 @@ fn execute_sale_permissionless_logic<'info>(
         &metadata_clone,
         &escrow_clone,
         &auction_house_clone,
-        &fee_payer_clone,
+        &fee_payer,
         treasury_mint,
         &ata_clone,
         &token_clone,

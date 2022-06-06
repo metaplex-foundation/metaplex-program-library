@@ -1702,6 +1702,9 @@ async fn auctioneer_execute_public_sale_no_delegate_fails() {
 
 #[tokio::test]
 async fn execute_sale_permissionless_existing_token_account_success() {
+    println!("HELLO");
+    println!("HELLO");
+    println!("HELLO");
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
@@ -1758,7 +1761,7 @@ async fn execute_sale_permissionless_existing_token_account_success() {
         .await
         .unwrap();
 
-    let accounts = mpl_auction_house::accounts::ExecuteSale {
+    let accounts = mpl_auction_house::accounts::ExecuteSalePermissionless {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
         auction_house: ahkey,
@@ -1769,7 +1772,7 @@ async fn execute_sale_permissionless_existing_token_account_success() {
         buyer_trade_state: bid_acc.buyer_trade_state,
         token_program: spl_token::id(),
         free_trade_state: sell_acc.free_seller_trade_state,
-        wallet: payer_wallet.pubkey(),
+        payer: payer_wallet.pubkey(),
         seller_payment_receipt_account: test_metadata.token.pubkey(),
         buyer_receipt_token_account: buyer_token_account,
         escrow_payment_account: bid_acc.escrow_payment_account,
@@ -1783,6 +1786,7 @@ async fn execute_sale_permissionless_existing_token_account_success() {
         rent: sysvar::rent::id(),
     }
     .to_account_metas(None);
+
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -1794,10 +1798,13 @@ async fn execute_sale_permissionless_existing_token_account_success() {
     );
     let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (_, pas_bump) = find_program_as_signer_address();
+    println!("HELLO");
+    println!("HELLO");
+    println!("HELLO");
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecuteSalePermissionless {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -1810,11 +1817,10 @@ async fn execute_sale_permissionless_existing_token_account_success() {
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
         .await
         .unwrap();
-
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
-        Some(&authority.pubkey()),
-        &[&authority],
+        Some(&payer_wallet.pubkey()),
+        &[&payer_wallet],
         context.last_blockhash,
     );
     let seller_before = context
