@@ -93,7 +93,7 @@ export const createBuyTransaction = async ({
 
   const tx = new Transaction();
   tx.add(instruction);
-  tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+  tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
   tx.feePayer = buyer;
 
   return { tx };
