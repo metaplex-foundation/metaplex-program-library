@@ -88,7 +88,7 @@ impl<'info> Withdraw<'info> {
         // `Some` mean funder is `Creator`
         // `None` mean funder is `Market` owner
         let funder_creator = if let Some(creators) = *actual_creators {
-            let funder_creator = creators.iter().find(|&c| c.address == funder_key).cloned();
+            let funder_creator = creators.iter().find(|c| c.address == funder_key).cloned();
             if funder_creator.is_none() && funder_key != market.owner {
                 return Err(ErrorCode::FunderIsInvalid.into());
             }

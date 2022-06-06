@@ -1,6 +1,5 @@
 use crate::{error::ErrorCode, state::Creator, utils::*, SavePrimaryMetadataCreators};
 use anchor_lang::prelude::*;
-use crate::state::{Creator, from_mpl_creators};
 
 impl<'info> SavePrimaryMetadataCreators<'info> {
     pub fn process(
@@ -31,7 +30,7 @@ impl<'info> SavePrimaryMetadataCreators<'info> {
 
         assert_keys_equal(metadata_state.update_authority, *admin.key)?;
 
-        secondary_metadata_creators.creators = from_mpl_creators(creators);
+        secondary_metadata_creators.creators = creators;
 
         Ok(())
     }
