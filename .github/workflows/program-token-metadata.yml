@@ -30,7 +30,7 @@ jobs:
               - 'core/**'
             package:
               - 'token-metadata/**'
-  build-and-test-token-metadata-stable:
+  build-and-test-token-metadata:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
@@ -43,55 +43,7 @@ jobs:
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
         with:
-          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
-      - uses: ./.github/actions/install-rust
-        with:
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-
-      # Restore Cache from previous build/test
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./rust/target
-          key:
-            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
-            env.RUSTC_HASH }}
-
-      # Run lint checks
-      - uses: ./.github/actions/verify-rust
-        with:
-          working-directory: ./token-metadata/program
-
-      # Build deps
-      - uses: ./.github/actions/build-token-vault
-
-      # Run test
-      - name: test-token-metadata-program
-        id: run_test
-        working-directory: ./token-metadata/program
-        run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
-
-  build-and-test-token-metadata-unstable:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
-    runs-on: ubuntu-latest
-    env:
-      cache_id: program-token-metadata
-
-    steps:
-      # Setup Deps
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/install-linux-build-deps
-      - uses: ./.github/actions/install-solana
-        with:
-          solana_version: ${{ env.SOLANA_VERSION_UNSTABLE }}
+          solana_version: ${{ env.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
