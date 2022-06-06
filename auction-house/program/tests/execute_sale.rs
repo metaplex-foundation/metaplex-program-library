@@ -1702,9 +1702,6 @@ async fn auctioneer_execute_public_sale_no_delegate_fails() {
 
 #[tokio::test]
 async fn execute_sale_permissionless_existing_token_account_success() {
-    println!("HELLO");
-    println!("HELLO");
-    println!("HELLO");
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
     let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
@@ -1798,9 +1795,6 @@ async fn execute_sale_permissionless_existing_token_account_success() {
     );
     let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (_, pas_bump) = find_program_as_signer_address();
-    println!("HELLO");
-    println!("HELLO");
-    println!("HELLO");
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
