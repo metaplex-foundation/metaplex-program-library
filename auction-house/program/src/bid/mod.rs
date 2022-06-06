@@ -729,6 +729,7 @@ pub fn bid_logic<'info>(
 }
 
 // Handles the bid logic for both private and public auctioneer bids.
+#[allow(clippy::too_many_arguments)]
 pub fn auctioneer_bid_logic<'info>(
     wallet: Signer<'info>,
     payment_account: UncheckedAccount<'info>,
