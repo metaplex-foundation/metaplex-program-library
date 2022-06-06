@@ -29,7 +29,7 @@ pub fn save_primary_metadata_creators(
     payer: &Keypair,
     admin: &Keypair,
     metadata: &Pubkey,
-    creators: &Vec<mpl_token_metadata::state::Creator>,
+    creators: &Vec<mpl_fixed_price_sale::state::Creator>,
 ) -> Result<(Transaction, Box<dyn UiTransactionInfo>), error::Error> {
     let (primary_metadata_creators, primary_metadata_creators_bump) =
         mpl_fixed_price_sale::utils::find_primary_metadata_creators(&metadata);

@@ -633,7 +633,7 @@
           "name": "creators",
           "type": {
             "vec": {
-              "defined": "mpl_token_metadata::state::Creator"
+              "defined": "Creator"
             }
           }
         }
@@ -816,7 +816,7 @@
             "name": "creators",
             "type": {
               "vec": {
-                "defined": "mpl_token_metadata::state::Creator"
+                "defined": "Creator"
               }
             }
           }
@@ -855,6 +855,26 @@
             "type": {
               "option": "u64"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Creator",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "type": "publicKey"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "share",
+            "type": "u8"
           }
         ]
       }

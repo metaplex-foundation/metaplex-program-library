@@ -54,7 +54,6 @@ export type WithdrawInstructionAccounts = {
   payoutTicket: web3.PublicKey;
   clock: web3.PublicKey;
   associatedTokenProgram: web3.PublicKey;
-  primaryMetadataCreators?: web3.PublicKey[];
 };
 
 const withdrawInstructionDiscriminator = [183, 18, 70, 156, 148, 109, 161, 34];
@@ -86,7 +85,6 @@ export function createWithdrawInstruction(
     payoutTicket,
     clock,
     associatedTokenProgram,
-    primaryMetadataCreators,
   } = accounts;
 
   const [data] = withdrawStruct.serialize({
@@ -136,7 +134,7 @@ export function createWithdrawInstruction(
     },
     {
       pubkey: payer,
-      isWritable: false,
+      isWritable: true,
       isSigner: true,
     },
     {
@@ -170,16 +168,6 @@ export function createWithdrawInstruction(
       isSigner: false,
     },
   ];
-
-  if (primaryMetadataCreators && primaryMetadataCreators.length > 0) {
-    primaryMetadataCreators.forEach((pubkey) => {
-      keys.push({
-        pubkey,
-        isWritable: false,
-        isSigner: false,
-      });
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),

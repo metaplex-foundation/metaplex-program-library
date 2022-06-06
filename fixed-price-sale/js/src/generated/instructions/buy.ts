@@ -59,7 +59,6 @@ export type BuyInstructionAccounts = {
   masterEditionMetadata: web3.PublicKey;
   clock: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
-  additionalKeys?: web3.AccountMeta[];
 };
 
 const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];
@@ -93,7 +92,6 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     masterEditionMetadata,
     clock,
     tokenMetadataProgram,
-    additionalKeys,
   } = accounts;
 
   const [data] = buyStruct.serialize({
@@ -202,12 +200,6 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
       isSigner: false,
     },
   ];
-
-  if (additionalKeys && additionalKeys.length > 0) {
-    additionalKeys.forEach((account) => {
-      keys.push(account);
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),

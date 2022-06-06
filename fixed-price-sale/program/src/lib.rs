@@ -6,8 +6,8 @@ pub mod utils;
 use crate::{
     error::ErrorCode,
     state::{
-        GatingConfig, Market, PayoutTicket, PrimaryMetadataCreators, SellingResource, Store,
-        TradeHistory,
+        Creator, GatingConfig, Market, PayoutTicket, PrimaryMetadataCreators, SellingResource,
+        Store, TradeHistory,
     },
     utils::*,
 };
@@ -134,7 +134,7 @@ pub mod fixed_price_sale {
     pub fn save_primary_metadata_creators<'info>(
         ctx: Context<'_, '_, '_, 'info, SavePrimaryMetadataCreators<'info>>,
         primary_metadata_creators_bump: u8,
-        creators: Vec<mpl_token_metadata::state::Creator>,
+        creators: Vec<Creator>,
     ) -> Result<()> {
         ctx.accounts
             .process(primary_metadata_creators_bump, creators)

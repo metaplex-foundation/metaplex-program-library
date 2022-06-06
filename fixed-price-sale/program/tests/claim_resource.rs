@@ -266,7 +266,7 @@ mod claim_resource {
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
                 share: 100,
@@ -670,7 +670,7 @@ mod claim_resource {
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_receiver.pubkey(),
                 verified: false,
                 share: 100,
@@ -1100,7 +1100,7 @@ mod claim_resource {
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: context.payer.pubkey(),
                 verified: false,
                 share: 100,
