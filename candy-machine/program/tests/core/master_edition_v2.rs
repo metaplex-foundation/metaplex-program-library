@@ -6,7 +6,10 @@ use solana_program::borsh::try_from_slice_unchecked;
 use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction, transport};
 
 use crate::{
-    core::{get_account, metadata::Metadata},
+    core::{
+        helpers::{clone_keypair, get_account},
+        metadata::Metadata,
+    },
     *,
 };
 
@@ -40,6 +43,7 @@ impl MasterEditionV2 {
         }
     }
 
+    #[allow(dead_code)]
     pub async fn get_data(
         &self,
         context: &mut ProgramTestContext,
@@ -48,6 +52,7 @@ impl MasterEditionV2 {
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
+    #[allow(dead_code)]
     pub async fn get_data_from_account(
         context: &mut ProgramTestContext,
         pubkey: &Pubkey,

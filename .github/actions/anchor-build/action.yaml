@@ -1,0 +1,12 @@
+name: 'Anchor Publish'
+description: 'Perform a verifiable build for a Solana program in a given directory'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+    - uses: ./.github/actions/install-anchor/
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    - run: ~/.cargo/bin/anchor build --verifiable
+      shell: bash

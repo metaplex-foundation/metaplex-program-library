@@ -3,6 +3,236 @@
   "name": "candy_machine",
   "instructions": [
     {
+      "name": "initializeCandyMachine",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": "CandyMachineData"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateCandyMachine",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": "CandyMachineData"
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateAuthority",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "newAuthority",
+          "type": {
+            "option": "publicKey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "addConfigLines",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "configLines",
+          "type": {
+            "vec": {
+              "defined": "ConfigLine"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "setCollection",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "removeCollection",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "mintNft",
       "accounts": [
         {
@@ -155,236 +385,6 @@
       "args": []
     },
     {
-      "name": "updateCandyMachine",
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "wallet",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "data",
-          "type": {
-            "defined": "CandyMachineData"
-          }
-        }
-      ]
-    },
-    {
-      "name": "addConfigLines",
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        }
-      ],
-      "args": [
-        {
-          "name": "index",
-          "type": "u32"
-        },
-        {
-          "name": "configLines",
-          "type": {
-            "vec": {
-              "defined": "ConfigLine"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "initializeCandyMachine",
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "wallet",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "data",
-          "type": {
-            "defined": "CandyMachineData"
-          }
-        }
-      ]
-    },
-    {
-      "name": "setCollection",
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "collectionPda",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "edition",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionAuthorityRecord",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "removeCollection",
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "collectionPda",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collectionAuthorityRecord",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "updateAuthority",
-      "accounts": [
-        {
-          "name": "candyMachine",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "wallet",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "newAuthority",
-          "type": {
-            "option": "publicKey"
-          }
-        }
-      ]
-    },
-    {
       "name": "withdrawFunds",
       "accounts": [
         {
@@ -452,34 +452,6 @@
     }
   ],
   "types": [
-    {
-      "name": "WhitelistMintSettings",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "mode",
-            "type": {
-              "defined": "WhitelistMintMode"
-            }
-          },
-          {
-            "name": "mint",
-            "type": "publicKey"
-          },
-          {
-            "name": "presale",
-            "type": "bool"
-          },
-          {
-            "name": "discountPrice",
-            "type": {
-              "option": "u64"
-            }
-          }
-        ]
-      }
-    },
     {
       "name": "CandyMachineData",
       "type": {
@@ -567,17 +539,17 @@
       }
     },
     {
-      "name": "GatekeeperConfig",
+      "name": "ConfigLine",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "gatekeeperNetwork",
-            "type": "publicKey"
+            "name": "name",
+            "type": "string"
           },
           {
-            "name": "expireOnUse",
-            "type": "bool"
+            "name": "uri",
+            "type": "string"
           }
         ]
       }
@@ -596,6 +568,26 @@
           {
             "name": "number",
             "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Creator",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "address",
+            "type": "publicKey"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "share",
+            "type": "u8"
           }
         ]
       }
@@ -626,51 +618,45 @@
       }
     },
     {
-      "name": "ConfigLine",
+      "name": "WhitelistMintSettings",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "name",
-            "type": "string"
+            "name": "mode",
+            "type": {
+              "defined": "WhitelistMintMode"
+            }
           },
           {
-            "name": "uri",
-            "type": "string"
-          }
-        ]
-      }
-    },
-    {
-      "name": "Creator",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "address",
+            "name": "mint",
             "type": "publicKey"
           },
           {
-            "name": "verified",
+            "name": "presale",
             "type": "bool"
           },
           {
-            "name": "share",
-            "type": "u8"
+            "name": "discountPrice",
+            "type": {
+              "option": "u64"
+            }
           }
         ]
       }
     },
     {
-      "name": "WhitelistMintMode",
+      "name": "GatekeeperConfig",
       "type": {
-        "kind": "enum",
-        "variants": [
+        "kind": "struct",
+        "fields": [
           {
-            "name": "BurnEveryTime"
+            "name": "gatekeeperNetwork",
+            "type": "publicKey"
           },
           {
-            "name": "NeverBurn"
+            "name": "expireOnUse",
+            "type": "bool"
           }
         ]
       }
@@ -685,6 +671,20 @@
           },
           {
             "name": "Amount"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WhitelistMintMode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "BurnEveryTime"
+          },
+          {
+            "name": "NeverBurn"
           }
         ]
       }
