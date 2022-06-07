@@ -316,7 +316,8 @@ fn sell_logic<'info>(
     let program_as_signer = &accounts.program_as_signer;
     let rent = &accounts.rent;
 
-    // 1. if wallet is signer is the only condition in which an NFT can sell at 0
+    // 1. if wallet is signer is the only condition in which an NFT can sell at 0.
+    // if the user does list at 0 then auction house can change the sale price if the can change sale price option is true.
     // 2. if the trade is not priced at 0, the wallet holder has to be a signer since auction house cannot sign if listing over 0
     // 3. ensuring that there is at least one signer, and that there can never be zero signers or two signers
     // 4. auction house should be the signer for changing the price instead of user wallet for cases when seller lists at 0
