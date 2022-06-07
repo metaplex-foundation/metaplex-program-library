@@ -2,6 +2,7 @@
 
 use crate::utils::{DESCRIPTION_DEFAULT_SIZE, MAX_PRIMARY_CREATORS_LEN, NAME_DEFAULT_SIZE};
 use anchor_lang::prelude::*;
+use borsh::{BorshDeserialize, BorshSerialize};
 
 // by system acc I mean account to hold only native SOL
 pub const MINIMUM_BALANCE_FOR_SYSTEM_ACCS: u64 = 890880;
@@ -115,10 +116,30 @@ impl TradeHistory {
     pub const LEN: usize = 8 + 32 + 32 + 8;
 }
 
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct Creator {
+    pub address: Pubkey,
+    pub verified: bool,
+    // In percentages, NOT basis points ;) Watch out!
+    pub share: u8,
+}
+
 #[account]
 pub struct PrimaryMetadataCreators {
-    pub creators: Vec<mpl_token_metadata::state::Creator>,
+    pub creators: Vec<Creator>,
 }
+
+pub fn from_mpl_creators(creators: Vec<mpl_token_metadata::state::Creator>) -> Vec<Creator> {
+    creators.iter().map(|e| {
+        Creator {
+            address: e.address,
+            share: e.share,
+            verified: e.verified,
+        }
+    })
+        .collect()
+}
+
 
 impl PrimaryMetadataCreators {
     pub const LEN: usize = 8 + ((32 + 1 + 1) * MAX_PRIMARY_CREATORS_LEN + 1);

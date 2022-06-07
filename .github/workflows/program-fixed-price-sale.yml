@@ -8,9 +8,8 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.14
+  SOLANA_VERSION: 1.9.22
   RUST_TOOLCHAIN: stable
-
 jobs:
   changes:
     runs-on: ubuntu-latest
