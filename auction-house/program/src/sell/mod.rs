@@ -15,7 +15,6 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
 pub struct Sell<'info> {
     /// CHECK: Verified through CPI
     /// User wallet account.
-    #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing token for sale.
