@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category SetCollection
  * @category generated
  */
-const setCollectionStruct = new beet.BeetArgsStruct<{
+export const setCollectionStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -47,7 +47,7 @@ export type SetCollectionInstructionAccounts = {
   tokenMetadataProgram: web3.PublicKey;
 };
 
-const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 223];
+export const setCollectionInstructionDiscriminator = [192, 254, 206, 76, 168, 182, 59, 223];
 
 /**
  * Creates a _SetCollection_ instruction.

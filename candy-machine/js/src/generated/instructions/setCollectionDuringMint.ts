@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category SetCollectionDuringMint
  * @category generated
  */
-const setCollectionDuringMintStruct = new beet.BeetArgsStruct<{
+export const setCollectionDuringMintStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
@@ -51,7 +51,7 @@ export type SetCollectionDuringMintInstructionAccounts = {
   collectionAuthorityRecord: web3.PublicKey;
 };
 
-const setCollectionDuringMintInstructionDiscriminator = [103, 17, 200, 25, 118, 95, 125, 61];
+export const setCollectionDuringMintInstructionDiscriminator = [103, 17, 200, 25, 118, 95, 125, 61];
 
 /**
  * Creates a _SetCollectionDuringMint_ instruction.

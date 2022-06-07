@@ -385,6 +385,72 @@
       "args": []
     },
     {
+      "name": "setLockupSettings",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "lockupSettings",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "lockupType",
+          "type": "u8"
+        },
+        {
+          "name": "number",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "closeLockupSettings",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "lockupSettings",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "withdrawFunds",
       "accounts": [
         {
@@ -446,6 +512,26 @@
           {
             "name": "candyMachine",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LockupSettings",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "candyMachine",
+            "type": "publicKey"
+          },
+          {
+            "name": "lockupType",
+            "type": "u8"
+          },
+          {
+            "name": "number",
+            "type": "i64"
           }
         ]
       }
@@ -676,6 +762,20 @@
       }
     },
     {
+      "name": "LockupType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Expiration"
+          },
+          {
+            "name": "Duration"
+          }
+        ]
+      }
+    },
+    {
       "name": "WhitelistMintMode",
       "type": {
         "kind": "enum",
@@ -865,6 +965,76 @@
       "code": 6034,
       "name": "CandyCollectionRequiresRetainAuthority",
       "msg": "Retain authority must be true for Candy Machines with a collection set"
+    },
+    {
+      "code": 6035,
+      "name": "InvalidCandyMachineAuthority",
+      "msg": "Invalid candy machine authority"
+    },
+    {
+      "code": 6036,
+      "name": "InvalidLockupType",
+      "msg": "Lockup settings lockup type is invalid"
+    },
+    {
+      "code": 6037,
+      "name": "LockupSettingsAccountMissing",
+      "msg": "Lockup settings account missing"
+    },
+    {
+      "code": 6038,
+      "name": "LockupSettingsAccountInvalid",
+      "msg": "Lockup settings account invalid"
+    },
+    {
+      "code": 6039,
+      "name": "LockupSettingsMissingAccounts",
+      "msg": "Lockup settings missing accounts"
+    },
+    {
+      "code": 6040,
+      "name": "LockupSettingsMissingTokenManager",
+      "msg": "Lockup settings missing token manager"
+    },
+    {
+      "code": 6041,
+      "name": "LockupSettingsMissingTokenManagerTokenAccount",
+      "msg": "Lockup settings missing token managertoken account"
+    },
+    {
+      "code": 6042,
+      "name": "LockupSettingsMissingMintCounter",
+      "msg": "Lockup settings missing mint counter"
+    },
+    {
+      "code": 6043,
+      "name": "LockupSettingsMissingRecipientTokenAccount",
+      "msg": "Lockup settings missing recipient token account"
+    },
+    {
+      "code": 6044,
+      "name": "LockupSettingsMissingTimeInvalidator",
+      "msg": "Lockup settings missing time invalidator"
+    },
+    {
+      "code": 6045,
+      "name": "LockupSettingsMissingTimeInvalidatorProgram",
+      "msg": "Lockup settings missing time invalidator program"
+    },
+    {
+      "code": 6046,
+      "name": "LockupSettingsInvalidTimeInvalidatorProgram",
+      "msg": "Lockup settings invalid time invalidator program"
+    },
+    {
+      "code": 6047,
+      "name": "LockupSettingsMissingTokenManagerProgram",
+      "msg": "Lockup settings missing token manager program"
+    },
+    {
+      "code": 6048,
+      "name": "LockupSettingsInvalidTokenManagerProgram",
+      "msg": "Lockup settings invalid token manager program"
     }
   ],
   "metadata": {

@@ -23,7 +23,7 @@ export type AddConfigLinesInstructionArgs = {
  * @category AddConfigLines
  * @category generated
  */
-const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
+export const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
   AddConfigLinesInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -49,7 +49,7 @@ export type AddConfigLinesInstructionAccounts = {
   authority: web3.PublicKey;
 };
 
-const addConfigLinesInstructionDiscriminator = [223, 50, 224, 227, 151, 8, 115, 106];
+export const addConfigLinesInstructionDiscriminator = [223, 50, 224, 227, 151, 8, 115, 106];
 
 /**
  * Creates a _AddConfigLines_ instruction.

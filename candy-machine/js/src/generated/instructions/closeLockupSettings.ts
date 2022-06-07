@@ -10,44 +10,48 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category WithdrawFunds
+ * @category CloseLockupSettings
  * @category generated
  */
-export const withdrawFundsStruct = new beet.BeetArgsStruct<{
+export const closeLockupSettingsStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'WithdrawFundsInstructionArgs',
+  'CloseLockupSettingsInstructionArgs',
 );
 /**
- * Accounts required by the _withdrawFunds_ instruction
+ * Accounts required by the _closeLockupSettings_ instruction
  *
  * @property [_writable_] candyMachine
  * @property [**signer**] authority
+ * @property [_writable_] lockupSettings
  * @category Instructions
- * @category WithdrawFunds
+ * @category CloseLockupSettings
  * @category generated
  */
-export type WithdrawFundsInstructionAccounts = {
+export type CloseLockupSettingsInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
+  lockupSettings: web3.PublicKey;
 };
 
-export const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 217];
+export const closeLockupSettingsInstructionDiscriminator = [111, 166, 221, 21, 169, 96, 201, 123];
 
 /**
- * Creates a _WithdrawFunds_ instruction.
+ * Creates a _CloseLockupSettings_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category WithdrawFunds
+ * @category CloseLockupSettings
  * @category generated
  */
-export function createWithdrawFundsInstruction(accounts: WithdrawFundsInstructionAccounts) {
-  const { candyMachine, authority } = accounts;
+export function createCloseLockupSettingsInstruction(
+  accounts: CloseLockupSettingsInstructionAccounts,
+) {
+  const { candyMachine, authority, lockupSettings } = accounts;
 
-  const [data] = withdrawFundsStruct.serialize({
-    instructionDiscriminator: withdrawFundsInstructionDiscriminator,
+  const [data] = closeLockupSettingsStruct.serialize({
+    instructionDiscriminator: closeLockupSettingsInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
@@ -59,6 +63,16 @@ export function createWithdrawFundsInstruction(accounts: WithdrawFundsInstructio
       pubkey: authority,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: lockupSettings,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: web3.SystemProgram.programId,
+      isWritable: false,
+      isSigner: false,
     },
   ];
 

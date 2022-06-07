@@ -9,6 +9,7 @@ pub const BLOCK_HASHES: Pubkey =
 pub const BOT_FEE: u64 = 10000000;
 pub const PREFIX: &str = "candy_machine";
 pub const COLLECTIONS_FEATURE_INDEX: usize = 0;
+pub const LOCKUP_SETTINGS_FEATURE_INDEX: usize = 3;
 pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
 pub const COLLECTION_PDA_SIZE: usize = 8 + 64;
 pub const GUMDROP_ID: Pubkey =
@@ -16,7 +17,7 @@ pub const GUMDROP_ID: Pubkey =
 pub const A_TOKEN: Pubkey = solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 pub const CONFIG_ARRAY_START: usize = 8 + // key
     32 + // authority
-    32 + //wallet
+    32 + // wallet
     33 + // token mint
     4 + 6 + // uuid
     8 + // price

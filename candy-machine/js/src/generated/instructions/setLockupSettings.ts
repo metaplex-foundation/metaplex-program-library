@@ -7,72 +7,71 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
-import { CandyMachineData, candyMachineDataBeet } from '../types/CandyMachineData';
 
 /**
  * @category Instructions
- * @category InitializeCandyMachine
+ * @category SetLockupSettings
  * @category generated
  */
-export type InitializeCandyMachineInstructionArgs = {
-  data: CandyMachineData;
+export type SetLockupSettingsInstructionArgs = {
+  lockupType: number;
+  number: beet.bignum;
 };
 /**
  * @category Instructions
- * @category InitializeCandyMachine
+ * @category SetLockupSettings
  * @category generated
  */
-export const initializeCandyMachineStruct = new beet.FixableBeetArgsStruct<
-  InitializeCandyMachineInstructionArgs & {
+export const setLockupSettingsStruct = new beet.BeetArgsStruct<
+  SetLockupSettingsInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['data', candyMachineDataBeet],
+    ['lockupType', beet.u8],
+    ['number', beet.i64],
   ],
-  'InitializeCandyMachineInstructionArgs',
+  'SetLockupSettingsInstructionArgs',
 );
 /**
- * Accounts required by the _initializeCandyMachine_ instruction
+ * Accounts required by the _setLockupSettings_ instruction
  *
  * @property [_writable_] candyMachine
- * @property [] wallet
- * @property [] authority
- * @property [**signer**] payer
+ * @property [**signer**] authority
+ * @property [_writable_] lockupSettings
+ * @property [_writable_, **signer**] payer
  * @category Instructions
- * @category InitializeCandyMachine
+ * @category SetLockupSettings
  * @category generated
  */
-export type InitializeCandyMachineInstructionAccounts = {
+export type SetLockupSettingsInstructionAccounts = {
   candyMachine: web3.PublicKey;
-  wallet: web3.PublicKey;
   authority: web3.PublicKey;
+  lockupSettings: web3.PublicKey;
   payer: web3.PublicKey;
 };
 
-export const initializeCandyMachineInstructionDiscriminator = [
-  142, 137, 167, 107, 47, 39, 240, 124,
-];
+export const setLockupSettingsInstructionDiscriminator = [124, 128, 161, 215, 10, 153, 211, 196];
 
 /**
- * Creates a _InitializeCandyMachine_ instruction.
+ * Creates a _SetLockupSettings_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category InitializeCandyMachine
+ * @category SetLockupSettings
  * @category generated
  */
-export function createInitializeCandyMachineInstruction(
-  accounts: InitializeCandyMachineInstructionAccounts,
-  args: InitializeCandyMachineInstructionArgs,
+export function createSetLockupSettingsInstruction(
+  accounts: SetLockupSettingsInstructionAccounts,
+  args: SetLockupSettingsInstructionArgs,
 ) {
-  const { candyMachine, wallet, authority, payer } = accounts;
+  const { candyMachine, authority, lockupSettings, payer } = accounts;
 
-  const [data] = initializeCandyMachineStruct.serialize({
-    instructionDiscriminator: initializeCandyMachineInstructionDiscriminator,
+  const [data] = setLockupSettingsStruct.serialize({
+    instructionDiscriminator: setLockupSettingsInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -82,27 +81,22 @@ export function createInitializeCandyMachineInstruction(
       isSigner: false,
     },
     {
-      pubkey: wallet,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
       pubkey: authority,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: web3.SystemProgram.programId,
-      isWritable: false,
+      pubkey: lockupSettings,
+      isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: payer,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },

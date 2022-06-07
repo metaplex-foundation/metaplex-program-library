@@ -22,7 +22,7 @@ export type UpdateCandyMachineInstructionArgs = {
  * @category UpdateCandyMachine
  * @category generated
  */
-const updateCandyMachineStruct = new beet.FixableBeetArgsStruct<
+export const updateCandyMachineStruct = new beet.FixableBeetArgsStruct<
   UpdateCandyMachineInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -49,7 +49,7 @@ export type UpdateCandyMachineInstructionAccounts = {
   wallet: web3.PublicKey;
 };
 
-const updateCandyMachineInstructionDiscriminator = [243, 251, 124, 156, 211, 211, 118, 239];
+export const updateCandyMachineInstructionDiscriminator = [243, 251, 124, 156, 211, 211, 118, 239];
 
 /**
  * Creates a _UpdateCandyMachine_ instruction.
