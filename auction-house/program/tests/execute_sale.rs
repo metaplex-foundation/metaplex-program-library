@@ -1704,7 +1704,7 @@ async fn auctioneer_execute_public_sale_no_delegate_fails() {
 async fn execute_sale_permissionless_existing_token_account_success() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
-    let (ah, ahkey, authority) = existing_auction_house_test_context(&mut context)
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
     let test_metadata = Metadata::new();
