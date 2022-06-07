@@ -10,15 +10,21 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum BidType {
-  PublicSale,
-  PrivateSale,
-  AuctioneerPublicSale,
-  AuctioneerPrivateSale,
+export enum AuthorityScope {
+  Deposit,
+  Buy,
+  PublicBuy,
+  ExecuteSale,
+  Sell,
+  Cancel,
+  Withdraw,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const bidTypeBeet = beet.fixedScalarEnum(BidType) as beet.FixedSizeBeet<BidType, BidType>;
+export const authorityScopeBeet = beet.fixedScalarEnum(AuthorityScope) as beet.FixedSizeBeet<
+  AuthorityScope,
+  AuthorityScope
+>;

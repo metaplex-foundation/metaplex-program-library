@@ -10,15 +10,16 @@ import * as beet from '@metaplex-foundation/beet';
  * @category enums
  * @category generated
  */
-export enum BidType {
-  PublicSale,
-  PrivateSale,
-  AuctioneerPublicSale,
-  AuctioneerPrivateSale,
+export enum CancelType {
+  Cancel,
+  AuctioneerCancel,
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const bidTypeBeet = beet.fixedScalarEnum(BidType) as beet.FixedSizeBeet<BidType, BidType>;
+export const cancelTypeBeet = beet.fixedScalarEnum(CancelType) as beet.FixedSizeBeet<
+  CancelType,
+  CancelType
+>;

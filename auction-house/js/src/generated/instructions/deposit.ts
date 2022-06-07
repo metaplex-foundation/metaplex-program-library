@@ -37,6 +37,15 @@ const depositStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _deposit_ instruction
+ *
+ * @property [**signer**] wallet
+ * @property [_writable_] paymentAccount
+ * @property [] transferAuthority
+ * @property [_writable_] escrowPaymentAccount
+ * @property [] treasuryMint
+ * @property [] authority
+ * @property [] auctionHouse
+ * @property [_writable_] auctionHouseFeeAccount
  * @category Instructions
  * @category Deposit
  * @category generated

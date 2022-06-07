@@ -11,10 +11,10 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category Buy
+ * @category AuctioneerPublicBuy
  * @category generated
  */
-export type BuyInstructionArgs = {
+export type AuctioneerPublicBuyInstructionArgs = {
   tradeStateBump: number;
   escrowPaymentBump: number;
   buyerPrice: beet.bignum;
@@ -22,11 +22,11 @@ export type BuyInstructionArgs = {
 };
 /**
  * @category Instructions
- * @category Buy
+ * @category AuctioneerPublicBuy
  * @category generated
  */
-const buyStruct = new beet.BeetArgsStruct<
-  BuyInstructionArgs & {
+const auctioneerPublicBuyStruct = new beet.BeetArgsStruct<
+  AuctioneerPublicBuyInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
@@ -37,10 +37,10 @@ const buyStruct = new beet.BeetArgsStruct<
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
   ],
-  'BuyInstructionArgs',
+  'AuctioneerPublicBuyInstructionArgs',
 );
 /**
- * Accounts required by the _buy_ instruction
+ * Accounts required by the _auctioneerPublicBuy_ instruction
  *
  * @property [**signer**] wallet
  * @property [_writable_] paymentAccount
@@ -50,14 +50,16 @@ const buyStruct = new beet.BeetArgsStruct<
  * @property [] metadata
  * @property [_writable_] escrowPaymentAccount
  * @property [] authority
+ * @property [**signer**] auctioneerAuthority
  * @property [] auctionHouse
  * @property [_writable_] auctionHouseFeeAccount
  * @property [_writable_] buyerTradeState
+ * @property [] ahAuctioneerPda
  * @category Instructions
- * @category Buy
+ * @category AuctioneerPublicBuy
  * @category generated
  */
-export type BuyInstructionAccounts = {
+export type AuctioneerPublicBuyInstructionAccounts = {
   wallet: web3.PublicKey;
   paymentAccount: web3.PublicKey;
   transferAuthority: web3.PublicKey;
@@ -66,24 +68,29 @@ export type BuyInstructionAccounts = {
   metadata: web3.PublicKey;
   escrowPaymentAccount: web3.PublicKey;
   authority: web3.PublicKey;
+  auctioneerAuthority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
   buyerTradeState: web3.PublicKey;
+  ahAuctioneerPda: web3.PublicKey;
 };
 
-const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];
+const auctioneerPublicBuyInstructionDiscriminator = [221, 239, 99, 240, 86, 46, 213, 126];
 
 /**
- * Creates a _Buy_ instruction.
+ * Creates a _AuctioneerPublicBuy_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Buy
+ * @category AuctioneerPublicBuy
  * @category generated
  */
-export function createBuyInstruction(accounts: BuyInstructionAccounts, args: BuyInstructionArgs) {
+export function createAuctioneerPublicBuyInstruction(
+  accounts: AuctioneerPublicBuyInstructionAccounts,
+  args: AuctioneerPublicBuyInstructionArgs,
+) {
   const {
     wallet,
     paymentAccount,
@@ -93,13 +100,15 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     metadata,
     escrowPaymentAccount,
     authority,
+    auctioneerAuthority,
     auctionHouse,
     auctionHouseFeeAccount,
     buyerTradeState,
+    ahAuctioneerPda,
   } = accounts;
 
-  const [data] = buyStruct.serialize({
-    instructionDiscriminator: buyInstructionDiscriminator,
+  const [data] = auctioneerPublicBuyStruct.serialize({
+    instructionDiscriminator: auctioneerPublicBuyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -144,6 +153,11 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
       isSigner: false,
     },
     {
+      pubkey: auctioneerAuthority,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
       pubkey: auctionHouse,
       isWritable: false,
       isSigner: false,
@@ -156,6 +170,11 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
     {
       pubkey: buyerTradeState,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: ahAuctioneerPda,
+      isWritable: false,
       isSigner: false,
     },
     {

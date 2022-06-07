@@ -11,98 +11,120 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category Withdraw
+ * @category AuctioneerBuy
  * @category generated
  */
-export type WithdrawInstructionArgs = {
+export type AuctioneerBuyInstructionArgs = {
+  tradeStateBump: number;
   escrowPaymentBump: number;
-  amount: beet.bignum;
+  buyerPrice: beet.bignum;
+  tokenSize: beet.bignum;
 };
 /**
  * @category Instructions
- * @category Withdraw
+ * @category AuctioneerBuy
  * @category generated
  */
-const withdrawStruct = new beet.BeetArgsStruct<
-  WithdrawInstructionArgs & {
+const auctioneerBuyStruct = new beet.BeetArgsStruct<
+  AuctioneerBuyInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
+    ['tradeStateBump', beet.u8],
     ['escrowPaymentBump', beet.u8],
-    ['amount', beet.u64],
+    ['buyerPrice', beet.u64],
+    ['tokenSize', beet.u64],
   ],
-  'WithdrawInstructionArgs',
+  'AuctioneerBuyInstructionArgs',
 );
 /**
- * Accounts required by the _withdraw_ instruction
+ * Accounts required by the _auctioneerBuy_ instruction
  *
- * @property [] wallet
- * @property [_writable_] receiptAccount
- * @property [_writable_] escrowPaymentAccount
+ * @property [**signer**] wallet
+ * @property [_writable_] paymentAccount
+ * @property [] transferAuthority
  * @property [] treasuryMint
+ * @property [] tokenAccount
+ * @property [] metadata
+ * @property [_writable_] escrowPaymentAccount
  * @property [] authority
+ * @property [**signer**] auctioneerAuthority
  * @property [] auctionHouse
  * @property [_writable_] auctionHouseFeeAccount
+ * @property [_writable_] buyerTradeState
+ * @property [] ahAuctioneerPda
  * @category Instructions
- * @category Withdraw
+ * @category AuctioneerBuy
  * @category generated
  */
-export type WithdrawInstructionAccounts = {
+export type AuctioneerBuyInstructionAccounts = {
   wallet: web3.PublicKey;
-  receiptAccount: web3.PublicKey;
-  escrowPaymentAccount: web3.PublicKey;
+  paymentAccount: web3.PublicKey;
+  transferAuthority: web3.PublicKey;
   treasuryMint: web3.PublicKey;
+  tokenAccount: web3.PublicKey;
+  metadata: web3.PublicKey;
+  escrowPaymentAccount: web3.PublicKey;
   authority: web3.PublicKey;
+  auctioneerAuthority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
+  buyerTradeState: web3.PublicKey;
+  ahAuctioneerPda: web3.PublicKey;
 };
 
-const withdrawInstructionDiscriminator = [183, 18, 70, 156, 148, 109, 161, 34];
+const auctioneerBuyInstructionDiscriminator = [17, 106, 133, 46, 229, 48, 45, 208];
 
 /**
- * Creates a _Withdraw_ instruction.
+ * Creates a _AuctioneerBuy_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Withdraw
+ * @category AuctioneerBuy
  * @category generated
  */
-export function createWithdrawInstruction(
-  accounts: WithdrawInstructionAccounts,
-  args: WithdrawInstructionArgs,
+export function createAuctioneerBuyInstruction(
+  accounts: AuctioneerBuyInstructionAccounts,
+  args: AuctioneerBuyInstructionArgs,
 ) {
   const {
     wallet,
-    receiptAccount,
-    escrowPaymentAccount,
+    paymentAccount,
+    transferAuthority,
     treasuryMint,
+    tokenAccount,
+    metadata,
+    escrowPaymentAccount,
     authority,
+    auctioneerAuthority,
     auctionHouse,
     auctionHouseFeeAccount,
+    buyerTradeState,
+    ahAuctioneerPda,
   } = accounts;
 
-  const [data] = withdrawStruct.serialize({
-    instructionDiscriminator: withdrawInstructionDiscriminator,
+  const [data] = auctioneerBuyStruct.serialize({
+    instructionDiscriminator: auctioneerBuyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: wallet,
       isWritable: false,
-      isSigner: false,
+      isSigner: true,
     },
     {
-      pubkey: receiptAccount,
+      pubkey: paymentAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: escrowPaymentAccount,
-      isWritable: true,
+      pubkey: transferAuthority,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -111,9 +133,29 @@ export function createWithdrawInstruction(
       isSigner: false,
     },
     {
+      pubkey: tokenAccount,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: metadata,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: escrowPaymentAccount,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
       pubkey: authority,
       isWritable: false,
       isSigner: false,
+    },
+    {
+      pubkey: auctioneerAuthority,
+      isWritable: false,
+      isSigner: true,
     },
     {
       pubkey: auctionHouse,
@@ -126,17 +168,22 @@ export function createWithdrawInstruction(
       isSigner: false,
     },
     {
+      pubkey: buyerTradeState,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: ahAuctioneerPda,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: web3.SystemProgram.programId,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },

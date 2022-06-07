@@ -11,10 +11,10 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category ExecuteSale
+ * @category AuctioneerExecuteSale
  * @category generated
  */
-export type ExecuteSaleInstructionArgs = {
+export type AuctioneerExecuteSaleInstructionArgs = {
   escrowPaymentBump: number;
   freeTradeStateBump: number;
   programAsSignerBump: number;
@@ -23,11 +23,11 @@ export type ExecuteSaleInstructionArgs = {
 };
 /**
  * @category Instructions
- * @category ExecuteSale
+ * @category AuctioneerExecuteSale
  * @category generated
  */
-const executeSaleStruct = new beet.BeetArgsStruct<
-  ExecuteSaleInstructionArgs & {
+const auctioneerExecuteSaleStruct = new beet.BeetArgsStruct<
+  AuctioneerExecuteSaleInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
@@ -39,10 +39,10 @@ const executeSaleStruct = new beet.BeetArgsStruct<
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
   ],
-  'ExecuteSaleInstructionArgs',
+  'AuctioneerExecuteSaleInstructionArgs',
 );
 /**
- * Accounts required by the _executeSale_ instruction
+ * Accounts required by the _auctioneerExecuteSale_ instruction
  *
  * @property [_writable_] buyer
  * @property [_writable_] seller
@@ -54,18 +54,20 @@ const executeSaleStruct = new beet.BeetArgsStruct<
  * @property [_writable_] sellerPaymentReceiptAccount
  * @property [_writable_] buyerReceiptTokenAccount
  * @property [] authority
+ * @property [**signer**] auctioneerAuthority
  * @property [] auctionHouse
  * @property [_writable_] auctionHouseFeeAccount
  * @property [_writable_] auctionHouseTreasury
  * @property [_writable_] buyerTradeState
  * @property [_writable_] sellerTradeState
  * @property [_writable_] freeTradeState
+ * @property [] ahAuctioneerPda
  * @property [] programAsSigner
  * @category Instructions
- * @category ExecuteSale
+ * @category AuctioneerExecuteSale
  * @category generated
  */
-export type ExecuteSaleInstructionAccounts = {
+export type AuctioneerExecuteSaleInstructionAccounts = {
   buyer: web3.PublicKey;
   seller: web3.PublicKey;
   tokenAccount: web3.PublicKey;
@@ -76,30 +78,32 @@ export type ExecuteSaleInstructionAccounts = {
   sellerPaymentReceiptAccount: web3.PublicKey;
   buyerReceiptTokenAccount: web3.PublicKey;
   authority: web3.PublicKey;
+  auctioneerAuthority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
   auctionHouseTreasury: web3.PublicKey;
   buyerTradeState: web3.PublicKey;
   sellerTradeState: web3.PublicKey;
   freeTradeState: web3.PublicKey;
+  ahAuctioneerPda: web3.PublicKey;
   programAsSigner: web3.PublicKey;
 };
 
-const executeSaleInstructionDiscriminator = [37, 74, 217, 157, 79, 49, 35, 6];
+const auctioneerExecuteSaleInstructionDiscriminator = [68, 125, 32, 65, 251, 43, 35, 53];
 
 /**
- * Creates a _ExecuteSale_ instruction.
+ * Creates a _AuctioneerExecuteSale_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category ExecuteSale
+ * @category AuctioneerExecuteSale
  * @category generated
  */
-export function createExecuteSaleInstruction(
-  accounts: ExecuteSaleInstructionAccounts,
-  args: ExecuteSaleInstructionArgs,
+export function createAuctioneerExecuteSaleInstruction(
+  accounts: AuctioneerExecuteSaleInstructionAccounts,
+  args: AuctioneerExecuteSaleInstructionArgs,
 ) {
   const {
     buyer,
@@ -112,17 +116,19 @@ export function createExecuteSaleInstruction(
     sellerPaymentReceiptAccount,
     buyerReceiptTokenAccount,
     authority,
+    auctioneerAuthority,
     auctionHouse,
     auctionHouseFeeAccount,
     auctionHouseTreasury,
     buyerTradeState,
     sellerTradeState,
     freeTradeState,
+    ahAuctioneerPda,
     programAsSigner,
   } = accounts;
 
-  const [data] = executeSaleStruct.serialize({
-    instructionDiscriminator: executeSaleInstructionDiscriminator,
+  const [data] = auctioneerExecuteSaleStruct.serialize({
+    instructionDiscriminator: auctioneerExecuteSaleInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -177,6 +183,11 @@ export function createExecuteSaleInstruction(
       isSigner: false,
     },
     {
+      pubkey: auctioneerAuthority,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
       pubkey: auctionHouse,
       isWritable: false,
       isSigner: false,
@@ -204,6 +215,11 @@ export function createExecuteSaleInstruction(
     {
       pubkey: freeTradeState,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: ahAuctioneerPda,
+      isWritable: false,
       isSigner: false,
     },
     {

@@ -37,6 +37,14 @@ const cancelStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _cancel_ instruction
+ *
+ * @property [_writable_] wallet
+ * @property [_writable_] tokenAccount
+ * @property [] tokenMint
+ * @property [] authority
+ * @property [] auctionHouse
+ * @property [_writable_] auctionHouseFeeAccount
+ * @property [_writable_] tradeState
  * @category Instructions
  * @category Cancel
  * @category generated

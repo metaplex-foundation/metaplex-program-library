@@ -11,121 +11,109 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category Buy
+ * @category AuctioneerSell
  * @category generated
  */
-export type BuyInstructionArgs = {
+export type AuctioneerSellInstructionArgs = {
   tradeStateBump: number;
-  escrowPaymentBump: number;
-  buyerPrice: beet.bignum;
+  freeTradeStateBump: number;
+  programAsSignerBump: number;
   tokenSize: beet.bignum;
 };
 /**
  * @category Instructions
- * @category Buy
+ * @category AuctioneerSell
  * @category generated
  */
-const buyStruct = new beet.BeetArgsStruct<
-  BuyInstructionArgs & {
+const auctioneerSellStruct = new beet.BeetArgsStruct<
+  AuctioneerSellInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['tradeStateBump', beet.u8],
-    ['escrowPaymentBump', beet.u8],
-    ['buyerPrice', beet.u64],
+    ['freeTradeStateBump', beet.u8],
+    ['programAsSignerBump', beet.u8],
     ['tokenSize', beet.u64],
   ],
-  'BuyInstructionArgs',
+  'AuctioneerSellInstructionArgs',
 );
 /**
- * Accounts required by the _buy_ instruction
+ * Accounts required by the _auctioneerSell_ instruction
  *
- * @property [**signer**] wallet
- * @property [_writable_] paymentAccount
- * @property [] transferAuthority
- * @property [] treasuryMint
- * @property [] tokenAccount
+ * @property [_writable_] wallet
+ * @property [_writable_] tokenAccount
  * @property [] metadata
- * @property [_writable_] escrowPaymentAccount
  * @property [] authority
+ * @property [**signer**] auctioneerAuthority
  * @property [] auctionHouse
  * @property [_writable_] auctionHouseFeeAccount
- * @property [_writable_] buyerTradeState
+ * @property [_writable_] sellerTradeState
+ * @property [_writable_] freeSellerTradeState
+ * @property [] ahAuctioneerPda
+ * @property [] programAsSigner
  * @category Instructions
- * @category Buy
+ * @category AuctioneerSell
  * @category generated
  */
-export type BuyInstructionAccounts = {
+export type AuctioneerSellInstructionAccounts = {
   wallet: web3.PublicKey;
-  paymentAccount: web3.PublicKey;
-  transferAuthority: web3.PublicKey;
-  treasuryMint: web3.PublicKey;
   tokenAccount: web3.PublicKey;
   metadata: web3.PublicKey;
-  escrowPaymentAccount: web3.PublicKey;
   authority: web3.PublicKey;
+  auctioneerAuthority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
-  buyerTradeState: web3.PublicKey;
+  sellerTradeState: web3.PublicKey;
+  freeSellerTradeState: web3.PublicKey;
+  ahAuctioneerPda: web3.PublicKey;
+  programAsSigner: web3.PublicKey;
 };
 
-const buyInstructionDiscriminator = [102, 6, 61, 18, 1, 218, 235, 234];
+const auctioneerSellInstructionDiscriminator = [251, 60, 142, 195, 121, 203, 26, 183];
 
 /**
- * Creates a _Buy_ instruction.
+ * Creates a _AuctioneerSell_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Buy
+ * @category AuctioneerSell
  * @category generated
  */
-export function createBuyInstruction(accounts: BuyInstructionAccounts, args: BuyInstructionArgs) {
+export function createAuctioneerSellInstruction(
+  accounts: AuctioneerSellInstructionAccounts,
+  args: AuctioneerSellInstructionArgs,
+) {
   const {
     wallet,
-    paymentAccount,
-    transferAuthority,
-    treasuryMint,
     tokenAccount,
     metadata,
-    escrowPaymentAccount,
     authority,
+    auctioneerAuthority,
     auctionHouse,
     auctionHouseFeeAccount,
-    buyerTradeState,
+    sellerTradeState,
+    freeSellerTradeState,
+    ahAuctioneerPda,
+    programAsSigner,
   } = accounts;
 
-  const [data] = buyStruct.serialize({
-    instructionDiscriminator: buyInstructionDiscriminator,
+  const [data] = auctioneerSellStruct.serialize({
+    instructionDiscriminator: auctioneerSellInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: wallet,
-      isWritable: false,
-      isSigner: true,
-    },
-    {
-      pubkey: paymentAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: transferAuthority,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: treasuryMint,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
       pubkey: tokenAccount,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
@@ -134,14 +122,14 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
       isSigner: false,
     },
     {
-      pubkey: escrowPaymentAccount,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
       pubkey: authority,
       isWritable: false,
       isSigner: false,
+    },
+    {
+      pubkey: auctioneerAuthority,
+      isWritable: false,
+      isSigner: true,
     },
     {
       pubkey: auctionHouse,
@@ -154,8 +142,23 @@ export function createBuyInstruction(accounts: BuyInstructionAccounts, args: Buy
       isSigner: false,
     },
     {
-      pubkey: buyerTradeState,
+      pubkey: sellerTradeState,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: freeSellerTradeState,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: ahAuctioneerPda,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: programAsSigner,
+      isWritable: false,
       isSigner: false,
     },
     {

@@ -11,20 +11,20 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category Withdraw
+ * @category AuctioneerWithdraw
  * @category generated
  */
-export type WithdrawInstructionArgs = {
+export type AuctioneerWithdrawInstructionArgs = {
   escrowPaymentBump: number;
   amount: beet.bignum;
 };
 /**
  * @category Instructions
- * @category Withdraw
+ * @category AuctioneerWithdraw
  * @category generated
  */
-const withdrawStruct = new beet.BeetArgsStruct<
-  WithdrawInstructionArgs & {
+const auctioneerWithdrawStruct = new beet.BeetArgsStruct<
+  AuctioneerWithdrawInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
@@ -33,47 +33,51 @@ const withdrawStruct = new beet.BeetArgsStruct<
     ['escrowPaymentBump', beet.u8],
     ['amount', beet.u64],
   ],
-  'WithdrawInstructionArgs',
+  'AuctioneerWithdrawInstructionArgs',
 );
 /**
- * Accounts required by the _withdraw_ instruction
+ * Accounts required by the _auctioneerWithdraw_ instruction
  *
  * @property [] wallet
  * @property [_writable_] receiptAccount
  * @property [_writable_] escrowPaymentAccount
  * @property [] treasuryMint
  * @property [] authority
+ * @property [**signer**] auctioneerAuthority
  * @property [] auctionHouse
  * @property [_writable_] auctionHouseFeeAccount
+ * @property [] ahAuctioneerPda
  * @category Instructions
- * @category Withdraw
+ * @category AuctioneerWithdraw
  * @category generated
  */
-export type WithdrawInstructionAccounts = {
+export type AuctioneerWithdrawInstructionAccounts = {
   wallet: web3.PublicKey;
   receiptAccount: web3.PublicKey;
   escrowPaymentAccount: web3.PublicKey;
   treasuryMint: web3.PublicKey;
   authority: web3.PublicKey;
+  auctioneerAuthority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
   auctionHouseFeeAccount: web3.PublicKey;
+  ahAuctioneerPda: web3.PublicKey;
 };
 
-const withdrawInstructionDiscriminator = [183, 18, 70, 156, 148, 109, 161, 34];
+const auctioneerWithdrawInstructionDiscriminator = [85, 166, 219, 110, 168, 143, 180, 236];
 
 /**
- * Creates a _Withdraw_ instruction.
+ * Creates a _AuctioneerWithdraw_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category Withdraw
+ * @category AuctioneerWithdraw
  * @category generated
  */
-export function createWithdrawInstruction(
-  accounts: WithdrawInstructionAccounts,
-  args: WithdrawInstructionArgs,
+export function createAuctioneerWithdrawInstruction(
+  accounts: AuctioneerWithdrawInstructionAccounts,
+  args: AuctioneerWithdrawInstructionArgs,
 ) {
   const {
     wallet,
@@ -81,12 +85,14 @@ export function createWithdrawInstruction(
     escrowPaymentAccount,
     treasuryMint,
     authority,
+    auctioneerAuthority,
     auctionHouse,
     auctionHouseFeeAccount,
+    ahAuctioneerPda,
   } = accounts;
 
-  const [data] = withdrawStruct.serialize({
-    instructionDiscriminator: withdrawInstructionDiscriminator,
+  const [data] = auctioneerWithdrawStruct.serialize({
+    instructionDiscriminator: auctioneerWithdrawInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -116,6 +122,11 @@ export function createWithdrawInstruction(
       isSigner: false,
     },
     {
+      pubkey: auctioneerAuthority,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
       pubkey: auctionHouse,
       isWritable: false,
       isSigner: false,
@@ -123,6 +134,11 @@ export function createWithdrawInstruction(
     {
       pubkey: auctionHouseFeeAccount,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: ahAuctioneerPda,
+      isWritable: false,
       isSigner: false,
     },
     {
