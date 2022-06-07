@@ -1224,7 +1224,7 @@ pub fn auctioneer_withdraw(
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
         Some(&buyer.pubkey()),
-        &[buyer, &auctioneer_authority],
+        &[buyer, auctioneer_authority],
         context.last_blockhash,
     );
 
