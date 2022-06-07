@@ -34,6 +34,11 @@ const withdrawFromFeeStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _withdrawFromFee_ instruction
+ *
+ * @property [**signer**] authority
+ * @property [_writable_] feeWithdrawalDestination
+ * @property [_writable_] auctionHouseFeeAccount
+ * @property [_writable_] auctionHouse
  * @category Instructions
  * @category WithdrawFromFee
  * @category generated
