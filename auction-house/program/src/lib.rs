@@ -436,7 +436,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
-        partial_order_size: u64,
+        partial_order_size: Option<u64>,
     ) -> Result<()> {
         execute_sale::execute_sale(
             ctx,

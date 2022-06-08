@@ -653,7 +653,7 @@ pub fn execute_sale(
     buyer_trade_state: &Pubkey,
     token_size: u64,
     buyer_price: u64,
-    partial_order_size: u64,
+    partial_order_size: Option<u64>,
 ) -> (
     (
         mpl_auction_house::accounts::ExecuteSale,

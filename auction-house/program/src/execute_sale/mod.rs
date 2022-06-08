@@ -198,7 +198,7 @@ pub fn execute_sale<'info>(
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    partial_order_size: u64,
+    partial_order_size: Option<u64>,
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
@@ -778,7 +778,7 @@ fn execute_sale_logic<'info>(
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    partial_order_size: u64,
+    partial_order_size: Option<u64>,
 ) -> Result<()> {
     let buyer = &ctx.accounts.buyer;
     let seller = &ctx.accounts.seller;
@@ -833,15 +833,21 @@ fn execute_sale_logic<'info>(
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
 
+    let calc_buyer_price = if let Some(partial_order) = partial_order_size {
+        partial_order * buyer_price
+    } else {
+        buyer_price
+    };
+
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
     let ts_bump = buyer_ts_data[0];
-    if partial_order_size > 0 {
+    if let Some(partial_order) = partial_order_size {
         assert_valid_trade_state(
             &buyer.key(),
             auction_house,
-            buyer_price,
-            partial_order_size,
+            calc_buyer_price,
+            partial_order,
             buyer_trade_state,
             &token_mint.key(),
             &token_account.key(),
@@ -851,7 +857,7 @@ fn execute_sale_logic<'info>(
         assert_valid_trade_state(
             &buyer.key(),
             auction_house,
-            buyer_price,
+            calc_buyer_price,
             token_size,
             buyer_trade_state,
             &token_mint.key(),
@@ -902,11 +908,11 @@ fn execute_sale_logic<'info>(
     // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
     // The fee payer makes up the shortfall up to the amount of rent for an empty account.
     if is_native {
-        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), buyer_price)?;
+        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), calc_buyer_price)?;
         if diff != buyer_price {
             // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
             let shortfall = std::cmp::min(
-                buyer_price
+                calc_buyer_price
                     .checked_sub(diff)
                     .ok_or(AuctionHouseError::NumericalOverflow)?,
                 rent.minimum_balance(escrow_payment_account.data_len()),
@@ -964,7 +970,7 @@ fn execute_sale_logic<'info>(
         &rent_clone,
         &signer_seeds_for_royalties,
         fee_payer_seeds,
-        buyer_price,
+        calc_buyer_price,
         is_native,
     )?;
 
@@ -975,7 +981,7 @@ fn execute_sale_logic<'info>(
         &token_clone,
         &sys_clone,
         &signer_seeds_for_royalties,
-        buyer_price,
+        calc_buyer_price,
         is_native,
     )?;
 
@@ -1070,7 +1076,7 @@ fn execute_sale_logic<'info>(
         &[program_as_signer_bump],
     ];
 
-    if partial_order_size > 0 {
+    if let Some(partial_order) = partial_order_size {
         invoke_signed(
             &spl_token::instruction::transfer(
                 token_program.key,
@@ -1078,7 +1084,7 @@ fn execute_sale_logic<'info>(
                 &buyer_receipt_token_account.key(),
                 &program_as_signer.key(),
                 &[],
-                partial_order_size,
+                partial_order,
             )?,
             &[
                 token_account.to_account_info(),
@@ -1108,48 +1114,42 @@ fn execute_sale_logic<'info>(
         )?;
     }
 
-    // todo: add logic here when token amount gets to 0 then close it
-    // let data = token_account.try_borrow_data()?;
-    // let token_account_data = TokenAccount::try_deserialize(&mut data.as_ref())?;
-    // let remaining_tokens = token_account_data.amount - partial_order_size;
+    let data = token_account.try_borrow_data()?;
+    let token_account_data = TokenAccount::try_deserialize(&mut data.as_ref())?;
 
-    // msg!("partial order size {:?}", partial_order_size);
-    // msg!("remaining tokens {:?}", remaining_tokens);
+    if token_account_data.amount == 0 {
+        let curr_seller_lamp = seller_trade_state.lamports();
+        **seller_trade_state.lamports.borrow_mut() = 0;
+        sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
 
-    // if partial_order_size == 0 || remaining_tokens == 0 {
-    //     msg!("hello");
-    //     let curr_seller_lamp = seller_trade_state.lamports();
-    //     **seller_trade_state.lamports.borrow_mut() = 0;
-    //     sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
+        **fee_payer.lamports.borrow_mut() = fee_payer
+            .lamports()
+            .checked_add(curr_seller_lamp)
+            .ok_or(AuctionHouseError::NumericalOverflow)?;
 
-    //     **fee_payer.lamports.borrow_mut() = fee_payer
-    //         .lamports()
-    //         .checked_add(curr_seller_lamp)
-    //         .ok_or(AuctionHouseError::NumericalOverflow)?;
+        if free_trade_state.lamports() > 0 {
+            let curr_buyer_lamp = free_trade_state.lamports();
+            **free_trade_state.lamports.borrow_mut() = 0;
 
-    //     if free_trade_state.lamports() > 0 {
-    //         let curr_buyer_lamp = free_trade_state.lamports();
-    //         **free_trade_state.lamports.borrow_mut() = 0;
+            **fee_payer.lamports.borrow_mut() = fee_payer
+                .lamports()
+                .checked_add(curr_buyer_lamp)
+                .ok_or(AuctionHouseError::NumericalOverflow)?;
+            sol_memset(
+                *free_trade_state.try_borrow_mut_data()?,
+                0,
+                TRADE_STATE_SIZE,
+            );
+        }
 
-    //         **fee_payer.lamports.borrow_mut() = fee_payer
-    //             .lamports()
-    //             .checked_add(curr_buyer_lamp)
-    //             .ok_or(AuctionHouseError::NumericalOverflow)?;
-    //         sol_memset(
-    //             *free_trade_state.try_borrow_mut_data()?,
-    //             0,
-    //             TRADE_STATE_SIZE,
-    //         );
-    //     }
-    // }
-
-    let curr_buyer_lamp = buyer_trade_state.lamports();
-    **buyer_trade_state.lamports.borrow_mut() = 0;
-    sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
-    **fee_payer.lamports.borrow_mut() = fee_payer
-        .lamports()
-        .checked_add(curr_buyer_lamp)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+        let curr_buyer_lamp = buyer_trade_state.lamports();
+        **buyer_trade_state.lamports.borrow_mut() = 0;
+        sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
+        **fee_payer.lamports.borrow_mut() = fee_payer
+            .lamports()
+            .checked_add(curr_buyer_lamp)
+            .ok_or(AuctionHouseError::NumericalOverflow)?;
+    }
 
     Ok(())
 }

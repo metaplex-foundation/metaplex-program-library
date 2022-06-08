@@ -575,10 +575,16 @@ pub fn bid_logic<'info>(
 
     // todo: add error if partial_order and not more than one token
 
+    let calc_buyer_price = if partial_order == true {
+        token_size * buyer_price
+    } else {
+        buyer_price
+    };
+
     assert_valid_trade_state(
         &wallet.key(),
         &auction_house,
-        buyer_price,
+        calc_buyer_price,
         token_size,
         &buyer_trade_state,
         &token_account.mint.key(),
@@ -626,11 +632,11 @@ pub fn bid_logic<'info>(
         assert_keys_equal(wallet.key(), payment_account.key())?;
 
         if escrow_payment_account.lamports()
-            < buyer_price
+            < calc_buyer_price
                 .checked_add(rent.minimum_balance(escrow_payment_account.data_len()))
                 .ok_or(AuctionHouseError::NumericalOverflow)?
         {
-            let diff = buyer_price
+            let diff = calc_buyer_price
                 .checked_add(rent.minimum_balance(escrow_payment_account.data_len()))
                 .ok_or(AuctionHouseError::NumericalOverflow)?
                 .checked_sub(escrow_payment_account.lamports())
@@ -653,8 +659,8 @@ pub fn bid_logic<'info>(
         let escrow_payment_loaded: spl_token::state::Account =
             assert_initialized(&escrow_payment_account)?;
 
-        if escrow_payment_loaded.amount < buyer_price {
-            let diff = buyer_price
+        if escrow_payment_loaded.amount < calc_buyer_price {
+            let diff = calc_buyer_price
                 .checked_sub(escrow_payment_loaded.amount)
                 .ok_or(AuctionHouseError::NumericalOverflow)?;
             invoke(
