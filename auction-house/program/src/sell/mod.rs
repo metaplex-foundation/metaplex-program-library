@@ -13,20 +13,19 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     token_size: u64
 )]
 pub struct Sell<'info> {
-    /// CHECK: Validated in sell_logic.
+    /// CHECK: Verified through CPI
     /// User wallet account.
-    #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing token for sale.
     #[account(mut)]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Validated by assert_metadata_valid.
+    /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Validated as a signer in sell_logic.
+    /// CHECK: Verified through CPI
     /// Auction House authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -108,7 +107,7 @@ impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
             wallet: a.wallet,
             token_account: a.token_account,
             metadata: a.metadata,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: *a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             seller_trade_state: a.seller_trade_state,
@@ -127,7 +126,6 @@ impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64,
     token_size: u64
 )]
 pub struct AuctioneerSell<'info> {
@@ -144,9 +142,13 @@ pub struct AuctioneerSell<'info> {
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
+    /// Auction House authority account.
+    pub authority: UncheckedAccount<'info>,
+
     /// CHECK: Validated in ah_auctioneer_pda seeds and as a signer in sell_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -156,6 +158,7 @@ pub struct AuctioneerSell<'info> {
             auction_house.treasury_mint.as_ref()
         ],
         bump=auction_house.bump,
+        has_one=authority,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
@@ -184,7 +187,7 @@ pub struct AuctioneerSell<'info> {
             token_account.key().as_ref(),
             auction_house.treasury_mint.as_ref(),
             token_account.mint.as_ref(),
-            &buyer_price.to_le_bytes(),
+            &u64::MAX.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
         bump=trade_state_bump
@@ -262,7 +265,6 @@ pub fn auctioneer_sell<'info>(
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
@@ -288,7 +290,7 @@ pub fn auctioneer_sell<'info>(
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
-        buyer_price,
+        u64::MAX,
         token_size,
     )
 }

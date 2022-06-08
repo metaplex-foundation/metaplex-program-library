@@ -266,16 +266,36 @@
       ]
     },
     {
-      "name": "withdraw",
+      "name": "buy",
       "accounts": [
         {
           "name": "wallet",
           "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "paymentAccount",
+          "isMut": true,
           "isSigner": false
         },
         {
-          "name": "receiptAccount",
-          "isMut": true,
+          "name": "transferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -284,7 +304,374 @@
           "isSigner": false
         },
         {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tradeStateBump",
+          "type": "u8"
+        },
+        {
+          "name": "escrowPaymentBump",
+          "type": "u8"
+        },
+        {
+          "name": "buyerPrice",
+          "type": "u64"
+        },
+        {
+          "name": "tokenSize",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "auctioneerBuy",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "paymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrowPaymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tradeStateBump",
+          "type": "u8"
+        },
+        {
+          "name": "escrowPaymentBump",
+          "type": "u8"
+        },
+        {
+          "name": "buyerPrice",
+          "type": "u64"
+        },
+        {
+          "name": "tokenSize",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "publicBuy",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "paymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrowPaymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tradeStateBump",
+          "type": "u8"
+        },
+        {
+          "name": "escrowPaymentBump",
+          "type": "u8"
+        },
+        {
+          "name": "buyerPrice",
+          "type": "u64"
+        },
+        {
+          "name": "tokenSize",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "auctioneerPublicBuy",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "paymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrowPaymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "tradeStateBump",
+          "type": "u8"
+        },
+        {
+          "name": "escrowPaymentBump",
+          "type": "u8"
+        },
+        {
+          "name": "buyerPrice",
+          "type": "u64"
+        },
+        {
+          "name": "tokenSize",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "cancel",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
           "isMut": false,
           "isSigner": false
         },
@@ -304,33 +691,88 @@
           "isSigner": false
         },
         {
+          "name": "tradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "ataProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
           "isMut": false,
           "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "escrowPaymentBump",
-          "type": "u8"
+          "name": "buyerPrice",
+          "type": "u64"
         },
         {
-          "name": "amount",
+          "name": "tokenSize",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "auctioneerCancel",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "buyerPrice",
+          "type": "u64"
+        },
+        {
+          "name": "tokenSize",
           "type": "u64"
         }
       ]
@@ -406,20 +848,30 @@
       ]
     },
     {
-      "name": "cancel",
+      "name": "auctioneerDeposit",
       "accounts": [
         {
           "name": "wallet",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "paymentAccount",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "tokenAccount",
+          "name": "transferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrowPaymentAccount",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "tokenMint",
+          "name": "treasuryMint",
           "isMut": false,
           "isSigner": false
         },
@@ -427,6 +879,11 @@
           "name": "authority",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": true
         },
         {
           "name": "auctionHouse",
@@ -439,23 +896,33 @@
           "isSigner": false
         },
         {
-          "name": "tradeState",
-          "isMut": true,
+          "name": "ahAuctioneerPda",
+          "isMut": false,
           "isSigner": false
         },
         {
           "name": "tokenProgram",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": [
         {
-          "name": "buyerPrice",
-          "type": "u64"
+          "name": "escrowPaymentBump",
+          "type": "u8"
         },
         {
-          "name": "tokenSize",
+          "name": "amount",
           "type": "u64"
         }
       ]
@@ -541,6 +1008,148 @@
         {
           "name": "freeTradeState",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "programAsSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "escrowPaymentBump",
+          "type": "u8"
+        },
+        {
+          "name": "freeTradeStateBump",
+          "type": "u8"
+        },
+        {
+          "name": "programAsSignerBump",
+          "type": "u8"
+        },
+        {
+          "name": "buyerPrice",
+          "type": "u64"
+        },
+        {
+          "name": "tokenSize",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "auctioneerExecuteSale",
+      "accounts": [
+        {
+          "name": "buyer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "seller",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrowPaymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sellerPaymentReceiptAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerReceiptTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseTreasury",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sellerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "freeTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -680,31 +1289,16 @@
       ]
     },
     {
-      "name": "buy",
+      "name": "auctioneerSell",
       "accounts": [
         {
           "name": "wallet",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "paymentAccount",
           "isMut": true,
           "isSigner": false
         },
         {
-          "name": "transferAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "treasuryMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "tokenAccount",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -713,14 +1307,14 @@
           "isSigner": false
         },
         {
-          "name": "escrowPaymentAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "authority",
           "isMut": false,
           "isSigner": false
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": true
         },
         {
           "name": "auctionHouse",
@@ -733,8 +1327,23 @@
           "isSigner": false
         },
         {
-          "name": "buyerTradeState",
+          "name": "sellerTradeState",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "freeSellerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "programAsSigner",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -759,12 +1368,12 @@
           "type": "u8"
         },
         {
-          "name": "escrowPaymentBump",
+          "name": "freeTradeStateBump",
           "type": "u8"
         },
         {
-          "name": "buyerPrice",
-          "type": "u64"
+          "name": "programAsSignerBump",
+          "type": "u8"
         },
         {
           "name": "tokenSize",
@@ -773,41 +1382,26 @@
       ]
     },
     {
-      "name": "publicBuy",
+      "name": "withdraw",
       "accounts": [
         {
           "name": "wallet",
           "isMut": false,
-          "isSigner": true
+          "isSigner": false
         },
         {
-          "name": "paymentAccount",
+          "name": "receiptAccount",
           "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "transferAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "treasuryMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": false,
           "isSigner": false
         },
         {
           "name": "escrowPaymentAccount",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -826,8 +1420,83 @@
           "isSigner": false
         },
         {
-          "name": "buyerTradeState",
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "escrowPaymentBump",
+          "type": "u8"
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "auctioneerWithdraw",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "receiptAccount",
           "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowPaymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -841,6 +1510,11 @@
           "isSigner": false
         },
         {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "rent",
           "isMut": false,
           "isSigner": false
@@ -848,19 +1522,11 @@
       ],
       "args": [
         {
-          "name": "tradeStateBump",
-          "type": "u8"
-        },
-        {
           "name": "escrowPaymentBump",
           "type": "u8"
         },
         {
-          "name": "buyerPrice",
-          "type": "u64"
-        },
-        {
-          "name": "tokenSize",
+          "name": "amount",
           "type": "u64"
         }
       ]
@@ -893,6 +1559,86 @@
         {
           "name": "escrowPaymentBump",
           "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "delegateAuctioneer",
+      "accounts": [
+        {
+          "name": "auctionHouse",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "scopes",
+          "type": {
+            "vec": {
+              "defined": "AuthorityScope"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "updateAuctioneer",
+      "accounts": [
+        {
+          "name": "auctionHouse",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "auctioneerAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "scopes",
+          "type": {
+            "vec": {
+              "defined": "AuthorityScope"
+            }
+          }
         }
       ]
     },
@@ -1284,12 +2030,78 @@
           {
             "name": "canChangeSalePrice",
             "type": "bool"
+          },
+          {
+            "name": "escrowPaymentBump",
+            "type": "u8"
+          },
+          {
+            "name": "hasAuctioneer",
+            "type": "bool"
+          },
+          {
+            "name": "auctioneerPdaBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Auctioneer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "auctioneerAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "auctionHouse",
+            "type": "publicKey"
+          },
+          {
+            "name": "scopes",
+            "type": {
+              "array": [
+                "bool",
+                7
+              ]
+            }
           }
         ]
       }
     }
   ],
   "types": [
+    {
+      "name": "AuthorityScope",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Deposit"
+          },
+          {
+            "name": "Buy"
+          },
+          {
+            "name": "PublicBuy"
+          },
+          {
+            "name": "ExecuteSale"
+          },
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "Cancel"
+          },
+          {
+            "name": "Withdraw"
+          }
+        ]
+      }
+    },
     {
       "name": "BidType",
       "type": {
@@ -1300,6 +2112,54 @@
           },
           {
             "name": "PrivateSale"
+          },
+          {
+            "name": "AuctioneerPublicSale"
+          },
+          {
+            "name": "AuctioneerPrivateSale"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Sell"
+          },
+          {
+            "name": "AuctioneerSell"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PurchaseType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "ExecuteSale"
+          },
+          {
+            "name": "AuctioneerExecuteSale"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CancelType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Cancel"
+          },
+          {
+            "name": "AuctioneerCancel"
           }
         ]
       }
@@ -1448,14 +2308,54 @@
     },
     {
       "code": 6028,
+      "name": "InvalidAuctioneer",
+      "msg": "Invalid Auctioneer for this Auction House instance."
+    },
+    {
+      "code": 6029,
+      "name": "MissingAuctioneerScope",
+      "msg": "The Auctioneer does not have the correct scope for this action."
+    },
+    {
+      "code": 6030,
+      "name": "MustUseAuctioneerHandler",
+      "msg": "Must use auctioneer handler."
+    },
+    {
+      "code": 6031,
+      "name": "NoAuctioneerProgramSet",
+      "msg": "No Auctioneer program set."
+    },
+    {
+      "code": 6032,
+      "name": "TooManyScopes",
+      "msg": "Too many scopes."
+    },
+    {
+      "code": 6033,
+      "name": "AuctionHouseNotDelegated",
+      "msg": "Auction House not delegated."
+    },
+    {
+      "code": 6034,
+      "name": "BumpSeedNotInHashMap",
+      "msg": "Bump seed not in hash map."
+    },
+    {
+      "code": 6035,
       "name": "EscrowUnderRentExemption",
       "msg": "The instruction would drain the escrow below rent exemption threshold"
+    },
+    {
+      "code": 6036,
+      "name": "InvalidSeedsOrAuctionHouseNotDelegated",
+      "msg": "Invalid seeds or Auction House not delegated"
     }
   ],
   "metadata": {
     "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
     "origin": "anchor",
     "binaryVersion": "0.24.2",
-    "libVersion": "~0.24.1"
+    "libVersion": "~0.24.2"
   }
 }

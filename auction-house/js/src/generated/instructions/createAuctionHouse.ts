@@ -45,6 +45,16 @@ const createAuctionHouseStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _createAuctionHouse_ instruction
+ *
+ * @property [] treasuryMint
+ * @property [_writable_, **signer**] payer
+ * @property [] authority
+ * @property [_writable_] feeWithdrawalDestination
+ * @property [_writable_] treasuryWithdrawalDestination
+ * @property [] treasuryWithdrawalDestinationOwner
+ * @property [_writable_] auctionHouse
+ * @property [_writable_] auctionHouseFeeAccount
+ * @property [_writable_] auctionHouseTreasury
  * @category Instructions
  * @category CreateAuctionHouse
  * @category generated

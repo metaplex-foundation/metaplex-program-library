@@ -43,6 +43,16 @@ const sellStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _sell_ instruction
+ *
+ * @property [] wallet
+ * @property [_writable_] tokenAccount
+ * @property [] metadata
+ * @property [] authority
+ * @property [] auctionHouse
+ * @property [_writable_] auctionHouseFeeAccount
+ * @property [_writable_] sellerTradeState
+ * @property [_writable_] freeSellerTradeState
+ * @property [] programAsSigner
  * @category Instructions
  * @category Sell
  * @category generated

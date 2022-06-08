@@ -170,9 +170,12 @@ pub struct AuctioneerPublicBuy<'info> {
     )]
     escrow_payment_account: UncheckedAccount<'info>,
 
+    /// CHECK: Verified with has_one constraint on auction house account.
+    authority: UncheckedAccount<'info>,
+
     /// CHECK: Verified in ah_auctioneer_pda seeds and in bid logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    auctioneer_authority: UncheckedAccount<'info>,
+    auctioneer_authority: Signer<'info>,
 
     #[account(
         seeds = [
@@ -181,6 +184,7 @@ pub struct AuctioneerPublicBuy<'info> {
             auction_house.treasury_mint.as_ref()
         ],
         bump = auction_house.bump,
+        has_one = authority,
         has_one = treasury_mint,
         has_one = auction_house_fee_account
     )]
@@ -251,6 +255,7 @@ pub fn auctioneer_public_bid(
         &mut ctx.accounts.auction_house,
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
+        ctx.accounts.authority.to_owned(),
         ctx.accounts.auctioneer_authority.to_owned(),
         ctx.accounts.ah_auctioneer_pda.to_owned(),
         ctx.accounts.token_program.to_owned(),
@@ -438,9 +443,12 @@ pub struct AuctioneerBuy<'info> {
     )]
     escrow_payment_account: UncheckedAccount<'info>,
 
+    /// CHECK: Verified with has_one constraint on auction house account.
+    authority: UncheckedAccount<'info>,
+
     /// CHECK: Verified in ah_auctioneer_pda seeds check.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    auctioneer_authority: UncheckedAccount<'info>,
+    auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -450,6 +458,7 @@ pub struct AuctioneerBuy<'info> {
             auction_house.treasury_mint.as_ref()
             ],
         bump = auction_house.bump,
+        has_one = authority,
         has_one = treasury_mint,
         has_one = auction_house_fee_account
     )]
@@ -522,6 +531,7 @@ pub fn auctioneer_private_bid<'info>(
         &mut ctx.accounts.auction_house,
         ctx.accounts.auction_house_fee_account.to_owned(),
         ctx.accounts.buyer_trade_state.to_owned(),
+        ctx.accounts.authority.to_owned(),
         ctx.accounts.auctioneer_authority.to_owned(),
         ctx.accounts.ah_auctioneer_pda.to_owned(),
         ctx.accounts.token_program.to_owned(),
@@ -747,6 +757,7 @@ pub fn bid_logic<'info>(
 }
 
 // Handles the bid logic for both private and public auctioneer bids.
+#[allow(clippy::too_many_arguments)]
 pub fn auctioneer_bid_logic<'info>(
     wallet: Signer<'info>,
     payment_account: UncheckedAccount<'info>,
@@ -758,7 +769,8 @@ pub fn auctioneer_bid_logic<'info>(
     auction_house: &mut Box<Account<'info, AuctionHouse>>,
     auction_house_fee_account: UncheckedAccount<'info>,
     buyer_trade_state: UncheckedAccount<'info>,
-    auctioneer_authority: UncheckedAccount<'info>,
+    authority: UncheckedAccount<'info>,
+    auctioneer_authority: Signer<'info>,
     ah_auctioneer_pda: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -800,7 +812,7 @@ pub fn auctioneer_bid_logic<'info>(
         &[auction_house.fee_payer_bump],
     ];
     let (fee_payer, fee_seeds) = get_fee_payer(
-        &auctioneer_authority,
+        &authority,
         auction_house,
         wallet.to_account_info(),
         auction_house_fee_account.to_account_info(),
