@@ -13,6 +13,8 @@ import * as beet from '@metaplex-foundation/beet';
 export enum BidType {
   PublicSale,
   PrivateSale,
+  AuctioneerPublicSale,
+  AuctioneerPrivateSale,
 }
 
 /**

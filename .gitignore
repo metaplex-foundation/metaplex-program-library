@@ -3,6 +3,7 @@ target/
 .DS_Store
 **/.DS_Store
 .anchor/
+.crates/
 
 node_modules/
 **/*.rs.bk

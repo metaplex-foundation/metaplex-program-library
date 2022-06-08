@@ -21,6 +21,9 @@ const cancelListingReceiptStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _cancelListingReceipt_ instruction
+ *
+ * @property [_writable_] receipt
+ * @property [] instruction
  * @category Instructions
  * @category CancelListingReceipt
  * @category generated
@@ -36,7 +39,6 @@ const cancelListingReceiptInstructionDiscriminator = [171, 59, 138, 126, 246, 18
  * Creates a _CancelListingReceipt_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category CancelListingReceipt
  * @category generated

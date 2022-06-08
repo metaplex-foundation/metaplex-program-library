@@ -62,7 +62,7 @@ pub fn delegate_auctioneer<'info>(
     auctioneer.auction_house = ctx.accounts.auction_house.key();
 
     // Set all scopes false and then update as true the ones passed into the handler.
-    auctioneer.scopes = [false; 7];
+    auctioneer.scopes = [false; MAX_NUM_SCOPES];
     for scope in scopes {
         auctioneer.scopes[scope as usize] = true;
     }
