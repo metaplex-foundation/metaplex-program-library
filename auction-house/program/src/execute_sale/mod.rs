@@ -174,7 +174,7 @@ impl<'info> From<AuctioneerExecuteSale<'info>> for ExecuteSale<'info> {
             escrow_payment_account: a.escrow_payment_account,
             seller_payment_receipt_account: a.seller_payment_receipt_account,
             buyer_receipt_token_account: a.buyer_receipt_token_account,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             auction_house_treasury: a.auction_house_treasury,
@@ -276,9 +276,13 @@ pub struct AuctioneerExecuteSale<'info> {
     #[account(mut)]
     pub buyer_receipt_token_account: UncheckedAccount<'info>,
 
+    /// CHECK: Validated in execute_sale_logic.
+    /// Auction House instance authority.
+    pub authority: UncheckedAccount<'info>,
+
     /// CHECK: Validated in ah_auctioneer_pda seeds and execute_sale_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -288,6 +292,7 @@ pub struct AuctioneerExecuteSale<'info> {
             auction_house.treasury_mint.as_ref()
         ],
         bump=auction_house.bump,
+        has_one=authority,
         has_one=treasury_mint,
         has_one=auction_house_treasury,
         has_one=auction_house_fee_account
@@ -336,7 +341,7 @@ pub struct AuctioneerExecuteSale<'info> {
             token_account.key().as_ref(),
             auction_house.treasury_mint.as_ref(),
             token_mint.key().as_ref(),
-            &buyer_price.to_le_bytes(),
+            &u64::MAX.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
         bump=seller_trade_state.to_account_info().data.borrow()[0]
@@ -437,7 +442,7 @@ fn auctioneer_execute_sale_logic<'info>(
     let seller_payment_receipt_account = &ctx.accounts.seller_payment_receipt_account;
     let buyer_receipt_token_account = &ctx.accounts.buyer_receipt_token_account;
     let escrow_payment_account = &ctx.accounts.escrow_payment_account;
-    let authority = &ctx.accounts.auctioneer_authority;
+    let authority = &ctx.accounts.authority;
     let auction_house = &ctx.accounts.auction_house;
     let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
     let auction_house_treasury = &ctx.accounts.auction_house_treasury;

@@ -164,11 +164,41 @@ export class BidReceipt implements BidReceiptArgs {
       metadata: this.metadata.toBase58(),
       tokenAccount: this.tokenAccount,
       purchaseReceipt: this.purchaseReceipt,
-      price: this.price,
-      tokenSize: this.tokenSize,
+      price: (() => {
+        const x = <{ toNumber: () => number }>this.price;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
+      tokenSize: (() => {
+        const x = <{ toNumber: () => number }>this.tokenSize;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       bump: this.bump,
       tradeStateBump: this.tradeStateBump,
-      createdAt: this.createdAt,
+      createdAt: (() => {
+        const x = <{ toNumber: () => number }>this.createdAt;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       canceledAt: this.canceledAt,
     };
   }

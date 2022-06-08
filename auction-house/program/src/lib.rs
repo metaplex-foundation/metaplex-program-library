@@ -471,7 +471,6 @@ pub mod auction_house {
         trade_state_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
-        buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
         sell::auctioneer_sell(
@@ -479,7 +478,6 @@ pub mod auction_house {
             trade_state_bump,
             free_trade_state_bump,
             program_as_signer_bump,
-            buyer_price,
             token_size,
         )
     }

@@ -37,6 +37,14 @@ const withdrawStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _withdraw_ instruction
+ *
+ * @property [] wallet
+ * @property [_writable_] receiptAccount
+ * @property [_writable_] escrowPaymentAccount
+ * @property [] treasuryMint
+ * @property [] authority
+ * @property [] auctionHouse
+ * @property [_writable_] auctionHouseFeeAccount
  * @category Instructions
  * @category Withdraw
  * @category generated
