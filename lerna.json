@@ -8,6 +8,7 @@
     "token-metadata/js",
     "metaplex/js",
     "auction-house/js",
+    "auctioneer/js",
     "fixed-price-sale/js"
   ],
   "useWorkspaces": true,
