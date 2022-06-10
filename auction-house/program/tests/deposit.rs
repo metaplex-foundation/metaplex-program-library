@@ -108,7 +108,7 @@ async fn auctioneer_deposit_success() {
         &ah,
         &test_metadata,
         &buyer,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         deposit_amount,
     );
 
@@ -183,7 +183,7 @@ async fn auctioneer_deposit_missing_scope_fails() {
         &ah,
         &test_metadata,
         &buyer,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         1000000000,
     );
 
@@ -232,7 +232,7 @@ async fn auctioneer_deposit_no_delegate_fails() {
         &ah,
         &test_metadata,
         &buyer,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         1000000000,
     );
 

@@ -34,6 +34,10 @@ const closeEscrowAccountStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _closeEscrowAccount_ instruction
+ *
+ * @property [**signer**] wallet
+ * @property [_writable_] escrowPaymentAccount
+ * @property [] auctionHouse
  * @category Instructions
  * @category CloseEscrowAccount
  * @category generated
