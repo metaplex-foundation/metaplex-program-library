@@ -42,6 +42,8 @@ pub fn handle_initialize_candy_machine(
         items_redeemed: 0,
     };
 
+    candy_machine.data.uuid = "000000".to_string();
+
     if !ctx.remaining_accounts.is_empty() {
         let token_mint_info = &ctx.remaining_accounts[0];
         let _token_mint: Mint = assert_initialized(token_mint_info)?;
