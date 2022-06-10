@@ -10,8 +10,11 @@ import {
   Transaction,
 } from '@solana/web3.js';
 import {
+  CollectionPDA,
   createInitializeCandyMachineInstruction,
   createMintNftInstruction,
+  createSetCollectionDuringMintInstruction,
+  createSetCollectionInstruction,
   createSetLockupSettingsInstruction,
   LockupSettings,
   LockupType,
@@ -21,11 +24,20 @@ import test from 'tape';
 import { LOCALHOST } from '@metaplex-foundation/amman-client';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  MintLayout,
+  // MintLayout,
   Token,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import { Edition, Metadata, MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
+import {
+  CreateMasterEditionV3,
+  CreateMetadataV2,
+  Creator,
+  DataV2,
+  Edition,
+  MasterEdition,
+  Metadata,
+  MetadataProgram,
+} from '@metaplex-foundation/mpl-token-metadata';
 import { programs } from '@cardinal/token-manager';
 import {
   CONFIG_ARRAY_START,
@@ -33,12 +45,13 @@ import {
   findLockupSettingsId,
   remainingAccountsForLockup,
 } from '../src/utils';
-import { amman } from './utils';
+import { amman, createMintTransaction } from './utils';
 import { BN } from '@project-serum/anchor';
 
 const walletKeypair = Keypair.generate();
 const connection = new Connection(LOCALHOST, 'confirmed');
 const candyMachineKeypair = Keypair.generate();
+const collectionMintKeypair = Keypair.generate();
 const nftToMintKeypair = Keypair.generate();
 const ITEMS_AVAILABLE = 10;
 let tokenAccountToReceive: PublicKey;
@@ -118,12 +131,113 @@ test('Candy machine initialize with lockup settings', async (t) => {
   ];
   tx.feePayer = walletKeypair.publicKey;
   tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-  tx.sign(walletKeypair, candyMachineKeypair);
+  tx.sign(walletKeypair, candyMachineKeypair, candyMachineKeypair);
   await sendAndConfirmRawTransaction(connection, tx.serialize());
 
   const lockupSettings = await LockupSettings.fromAccountAddress(connection, lockupSettingsId);
   t.assert(lockupSettings.lockupType === LockupType.Duration);
   t.assert(Number(lockupSettings.number) === 5);
+});
+
+test('Candy machine set collections', async (t) => {
+  //// Collections
+  const [collectionPdaId, _collectionPdaBump] = await PublicKey.findProgramAddress(
+    [Buffer.from('collection'), candyMachineKeypair.publicKey.toBuffer()],
+    PROGRAM_ID,
+  );
+  const createCollectionMintTx = new Transaction();
+  await createMintTransaction(
+    createCollectionMintTx,
+    connection,
+    {
+      signTransaction: async (tx) => tx,
+      signAllTransactions: async (tx) => tx,
+      publicKey: walletKeypair.publicKey,
+    },
+    walletKeypair.publicKey,
+    collectionMintKeypair.publicKey,
+    1,
+  );
+
+  const collectionMintMetadataId = await Metadata.getPDA(collectionMintKeypair.publicKey);
+  const collectionMetadataTx = new CreateMetadataV2(
+    { feePayer: walletKeypair.publicKey },
+    {
+      metadata: collectionMintMetadataId,
+      metadataData: new DataV2({
+        name: 'COLLECTION',
+        symbol: 'COLL',
+        uri: '',
+        sellerFeeBasisPoints: 10,
+        creators: [
+          new Creator({
+            address: walletKeypair.publicKey.toString(),
+            verified: true,
+            share: 100,
+          }),
+        ],
+        collection: null,
+        uses: null,
+      }),
+      updateAuthority: walletKeypair.publicKey,
+      mint: collectionMintKeypair.publicKey,
+      mintAuthority: walletKeypair.publicKey,
+    },
+  );
+
+  const collectionMasterEditionId = await MasterEdition.getPDA(collectionMintKeypair.publicKey);
+  const masterEditionTx = new CreateMasterEditionV3(
+    {
+      feePayer: walletKeypair.publicKey,
+      recentBlockhash: (await connection.getRecentBlockhash('max')).blockhash,
+    },
+    {
+      edition: collectionMasterEditionId,
+      metadata: collectionMintMetadataId,
+      updateAuthority: walletKeypair.publicKey,
+      mint: collectionMintKeypair.publicKey,
+      mintAuthority: walletKeypair.publicKey,
+      maxSupply: new BN(0),
+    },
+  );
+
+  const [collectionAuthorityRecordId] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from('metadata'),
+      MetadataProgram.PUBKEY.toBuffer(),
+      collectionMintKeypair.publicKey.toBuffer(),
+      Buffer.from('collection_authority'),
+      collectionPdaId.toBuffer(),
+    ],
+    MetadataProgram.PUBKEY,
+  );
+
+  const setCollectionIx = createSetCollectionInstruction({
+    candyMachine: candyMachineKeypair.publicKey,
+    authority: walletKeypair.publicKey,
+    collectionPda: collectionPdaId,
+    payer: walletKeypair.publicKey,
+    metadata: collectionMintMetadataId,
+    mint: collectionMintKeypair.publicKey,
+    edition: collectionMasterEditionId,
+    collectionAuthorityRecord: collectionAuthorityRecordId,
+    tokenMetadataProgram: MetadataProgram.PUBKEY,
+  });
+
+  const tx = new Transaction();
+  tx.instructions = [
+    ...createCollectionMintTx.instructions,
+    ...collectionMetadataTx.instructions,
+    ...masterEditionTx.instructions,
+    setCollectionIx,
+  ];
+  tx.feePayer = walletKeypair.publicKey;
+  tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+  tx.sign(walletKeypair, collectionMintKeypair);
+  await sendAndConfirmRawTransaction(connection, tx.serialize());
+
+  const collectionPdaData = await CollectionPDA.fromAccountAddress(connection, collectionPdaId);
+  t.assert(collectionPdaData.candyMachine.toString() === candyMachineKeypair.publicKey.toString());
 });
 
 test('Mint with lockup', async (t) => {
@@ -169,42 +283,49 @@ test('Mint with lockup', async (t) => {
     },
   );
 
+  const [collectionPdaId, _collectionPdaBump] = await PublicKey.findProgramAddress(
+    [Buffer.from('collection'), candyMachineKeypair.publicKey.toBuffer()],
+    PROGRAM_ID,
+  );
+  const collectionMintMetadataId = await Metadata.getPDA(collectionMintKeypair.publicKey);
+  const collectionMasterEditionId = await MasterEdition.getPDA(collectionMintKeypair.publicKey);
+
+  const [collectionAuthorityRecordId] = await PublicKey.findProgramAddress(
+    [
+      Buffer.from('metadata'),
+      MetadataProgram.PUBKEY.toBuffer(),
+      collectionMintKeypair.publicKey.toBuffer(),
+      Buffer.from('collection_authority'),
+      collectionPdaId.toBuffer(),
+    ],
+    MetadataProgram.PUBKEY,
+  );
+
+  const setCollectionDuringMintIx = createSetCollectionDuringMintInstruction({
+    candyMachine: candyMachineKeypair.publicKey,
+    metadata: metadataId,
+    payer: walletKeypair.publicKey,
+    collectionPda: collectionPdaId,
+    tokenMetadataProgram: MetadataProgram.PUBKEY,
+    instructions: SYSVAR_INSTRUCTIONS_PUBKEY,
+    collectionMint: collectionMintKeypair.publicKey,
+    collectionMasterEdition: collectionMasterEditionId,
+    collectionMetadata: collectionMintMetadataId,
+    authority: walletKeypair.publicKey,
+    collectionAuthorityRecord: collectionAuthorityRecordId,
+  });
+
   const instructions = [
-    SystemProgram.createAccount({
-      fromPubkey: walletKeypair.publicKey,
-      newAccountPubkey: nftToMintKeypair.publicKey,
-      space: MintLayout.span,
-      lamports: await connection.getMinimumBalanceForRentExemption(MintLayout.span),
-      programId: TOKEN_PROGRAM_ID,
-    }),
-    Token.createInitMintInstruction(
-      TOKEN_PROGRAM_ID,
-      nftToMintKeypair.publicKey,
-      0,
-      walletKeypair.publicKey,
-      walletKeypair.publicKey,
-    ),
-    Token.createAssociatedTokenAccountInstruction(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
-      nftToMintKeypair.publicKey,
-      tokenAccountToReceive,
-      walletKeypair.publicKey,
-      walletKeypair.publicKey,
-    ),
-    Token.createMintToInstruction(
-      TOKEN_PROGRAM_ID,
-      nftToMintKeypair.publicKey,
-      tokenAccountToReceive,
-      walletKeypair.publicKey,
-      [],
-      1,
-    ),
     {
       ...mintIx,
       keys: [
         ...mintIx.keys,
         // remaining accounts for locking
+        {
+          pubkey: tokenAccountToReceive,
+          isSigner: false,
+          isWritable: true,
+        },
         ...(await remainingAccountsForLockup(
           candyMachineKeypair.publicKey,
           nftToMintKeypair.publicKey,
@@ -212,6 +333,7 @@ test('Mint with lockup', async (t) => {
         )),
       ],
     },
+    setCollectionDuringMintIx,
   ];
   const tx = new Transaction();
   tx.instructions = instructions;

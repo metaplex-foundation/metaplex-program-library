@@ -115,5 +115,10 @@ export const remainingAccountsForLockup = async (
       isSigner: false,
       isWritable: false,
     },
+    {
+      pubkey: ASSOCIATED_TOKEN_PROGRAM_ID,
+      isSigner: false,
+      isWritable: false,
+    },
   ];
 };

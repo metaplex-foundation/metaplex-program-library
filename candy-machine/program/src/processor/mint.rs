@@ -1,7 +1,10 @@
 use std::{cell::RefMut, ops::Deref};
 
 use anchor_lang::prelude::*;
-use anchor_spl::token::Token;
+use anchor_spl::{
+    associated_token,
+    token::{self, Token},
+};
 use arrayref::array_ref;
 use mpl_token_metadata::{
     instruction::{
@@ -16,6 +19,7 @@ use solana_gateway::{
 use solana_program::{
     clock::Clock,
     program::{invoke, invoke_signed},
+    program_pack::Pack,
     serialize_utils::{read_pubkey, read_u16},
     system_instruction, sysvar,
     sysvar::{instructions::get_instruction_relative, SysvarId},
@@ -538,6 +542,69 @@ pub fn handle_mint_nft<'info>(
         });
     }
 
+    if ctx.accounts.mint.data_is_empty() {
+        // create account for mint
+        invoke(
+            &system_instruction::create_account(
+                ctx.accounts.payer.key,
+                ctx.accounts.mint.key,
+                ctx.accounts
+                    .rent
+                    .minimum_balance(spl_token::state::Mint::LEN),
+                spl_token::state::Mint::LEN as u64,
+                &spl_token::id(),
+            ),
+            &[
+                ctx.accounts.payer.to_account_info(),
+                ctx.accounts.mint.to_account_info(),
+            ],
+        )?;
+
+        // Initialize mint
+        token::initialize_mint(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                token::InitializeMint {
+                    mint: ctx.accounts.mint.to_account_info(),
+                    rent: ctx.accounts.rent.to_account_info(),
+                },
+            ),
+            0,
+            &ctx.accounts.payer.key(),
+            Some(&ctx.accounts.payer.key()),
+        )?;
+
+        let recipient_token_account = &ctx.remaining_accounts[remaining_accounts_counter];
+        remaining_accounts_counter += 1;
+
+        // create associated token account for recipient
+        associated_token::create(CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            associated_token::Create {
+                payer: ctx.accounts.payer.to_account_info(),
+                associated_token: recipient_token_account.to_account_info(),
+                authority: ctx.accounts.payer.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                token_program: ctx.accounts.token_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            },
+        ))?;
+
+        // mint stake_entry.amount tokens to token manager mint token account
+        token::mint_to(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                token::MintTo {
+                    mint: ctx.accounts.mint.to_account_info(),
+                    to: recipient_token_account.to_account_info(),
+                    authority: ctx.accounts.payer.to_account_info(),
+                },
+            ),
+            1,
+        )?;
+    }
+
     let metadata_infos = vec![
         ctx.accounts.metadata.to_account_info(),
         ctx.accounts.mint.to_account_info(),
@@ -855,9 +922,33 @@ fn handle_lockup_settings<'info>(
         lockup_settings,
         token_manager,
         token_manager_program,
-        token_manager_token_account,
-        recipient_token_account,
     )?;
+
+    // create associated token account for recipient
+    let cpi_accounts = associated_token::Create {
+        payer: ctx.accounts.payer.to_account_info(),
+        associated_token: token_manager_token_account.to_account_info(),
+        authority: token_manager.to_account_info(),
+        mint: ctx.accounts.mint.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+        rent: ctx.accounts.rent.to_account_info(),
+    };
+    let cpi_context = CpiContext::new(ctx.accounts.token_program.to_account_info(), cpi_accounts);
+    associated_token::create(cpi_context)?;
+
+    // token manager issue
+    let cpi_accounts = cardinal_token_manager::cpi::accounts::IssueCtx {
+        token_manager: token_manager.to_account_info(),
+        token_manager_token_account: token_manager_token_account.to_account_info(),
+        issuer: ctx.accounts.payer.to_account_info(),
+        issuer_token_account: recipient_token_account.to_account_info(),
+        payer: ctx.accounts.payer.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+    };
+    let cpi_ctx = CpiContext::new(token_manager_program.to_account_info(), cpi_accounts);
+    cardinal_token_manager::cpi::issue(cpi_ctx)?;
 
     // token manager claim
     let cpi_accounts = cardinal_token_manager::cpi::accounts::ClaimCtx {
@@ -889,8 +980,6 @@ fn handle_time_invalidator<'info>(
     lockup_settings: Account<LockupSettings>,
     token_manager: &AccountInfo<'info>,
     token_manager_program: &AccountInfo<'info>,
-    token_manager_token_account: &AccountInfo<'info>,
-    recipient_token_account: &AccountInfo<'info>,
 ) -> Result<()> {
     if ctx.remaining_accounts.len() <= *remaining_accounts_counter {
         return err!(CandyError::LockupSettingsMissingTimeInvalidator);
@@ -944,19 +1033,5 @@ fn handle_time_invalidator<'info>(
     };
     let cpi_ctx = CpiContext::new(token_manager_program.to_account_info(), cpi_accounts);
     cardinal_token_manager::cpi::add_invalidator(cpi_ctx, time_invalidator.key())?;
-
-    // token manager issue
-    let cpi_accounts = cardinal_token_manager::cpi::accounts::IssueCtx {
-        token_manager: token_manager.to_account_info(),
-        token_manager_token_account: token_manager_token_account.to_account_info(),
-        issuer: ctx.accounts.payer.to_account_info(),
-        issuer_token_account: recipient_token_account.to_account_info(),
-        payer: ctx.accounts.payer.to_account_info(),
-        token_program: ctx.accounts.token_program.to_account_info(),
-        system_program: ctx.accounts.system_program.to_account_info(),
-    };
-    let cpi_ctx = CpiContext::new(token_manager_program.to_account_info(), cpi_accounts);
-    cardinal_token_manager::cpi::issue(cpi_ctx)?;
-
     Ok(())
 }
