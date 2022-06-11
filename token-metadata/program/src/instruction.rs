@@ -419,13 +419,13 @@ pub enum MetadataInstruction {
 
     /// Completely burn a NFT, including closing the metadata account.
     #[account(0, writable, name="metadata", desc="Metadata (pda of ['metadata', program id, mint id])")]
-    #[account(1, signer, name="owner", desc="NFT owner")]
-    #[account(2, name="mint", desc="Mint of the NFT")]
-    #[account(3, name="token_account", desc="Token account to close")]
-    #[account(4, name="edition_account", desc="MasterEdition2 or Edition Account of the NFT")]
-    #[account(5, writable, name="collection_metadata", desc="Metadata of the Collection")]
-    #[account(6, name="spl token program", desc="SPL Token Program")]
-    BurnNFT,
+    #[account(1, writable, signer, name="owner", desc="NFT owner")]
+    #[account(2, writable, name="mint", desc="Mint of the NFT")]
+    #[account(3, writable, name="token_account", desc="Token account to close")]
+    #[account(4, writable, name="edition_account", desc="MasterEdition2 or Edition Account of the NFT")]
+    #[account(5, name="spl token program", desc="SPL Token Program")]
+    #[account(6, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
+    BurnNft,
 
     /// Verify Collection V2, new in v1.3--supports Collection Details.
     /// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection.
@@ -1351,12 +1351,12 @@ pub fn thaw_delegated_account(
 /// Burn an NFT, closing its token, metadata and edition accounts.
 ///
 /// 0. `[writable]` NFT metadata
-/// 1. `[signer]` Owner of NFT
-/// 2. `[]` Mint of NFT
-/// 3. `[]` NFT token account
-/// 4. `[]` NFT edition account
+/// 1. `[writable, signer]` Owner of NFT
+/// 2. `[writable]` Mint of NFT
+/// 3. `[writable]` NFT token account
+/// 4. `[writable]` NFT edition account
 /// 5. `[]` SPL Token program.
-/// 6. Optional `[]` Collection metadata account
+/// 6. Optional `[writable]` Collection metadata account
 pub fn burn_nft(
     program_id: Pubkey,
     metadata: Pubkey,
@@ -1383,7 +1383,7 @@ pub fn burn_nft(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::BurnNFT.try_to_vec().unwrap(),
+        data: MetadataInstruction::BurnNft.try_to_vec().unwrap(),
     }
 }
 

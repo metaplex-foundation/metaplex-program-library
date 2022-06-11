@@ -201,7 +201,7 @@ mod burn_nft {
     async fn require_md_account_to_burn_collection_nft() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT without the CollectionDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -260,11 +260,6 @@ mod burn_nft {
         let parent_metadata =
             ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
 
-        println!(
-            "Collection details: {:?}",
-            parent_metadata.collection_details
-        );
-
         if let Some(details) = parent_metadata.collection_details {
             match details {
                 CollectionDetails::V1 { size } => {
@@ -322,7 +317,7 @@ mod burn_nft {
     async fn burning_decrements_collection_size() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT without the CollectionDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails struct populated
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(

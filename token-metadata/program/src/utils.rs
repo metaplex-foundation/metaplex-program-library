@@ -1277,7 +1277,7 @@ pub fn decrement_collection_size(
             }
         }
     } else {
-        msg!("No collection details found. Cannot increment collection size.");
+        msg!("No collection details found. Cannot decrement collection size.");
         Err(MetadataError::UnsizedCollection.into())
     }
 }

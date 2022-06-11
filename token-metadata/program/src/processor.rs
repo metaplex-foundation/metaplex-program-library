@@ -218,7 +218,7 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Thaw Delegated Account");
             process_thaw_delegated_account(program_id, accounts)
         }
-        MetadataInstruction::BurnNFT => {
+        MetadataInstruction::BurnNft => {
             msg!("Instruction: Burn NFT");
             process_burn_nft(program_id, accounts)
         }
