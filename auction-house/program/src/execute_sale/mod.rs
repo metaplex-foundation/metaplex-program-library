@@ -834,7 +834,7 @@ fn execute_sale_logic<'info>(
     }
 
     let calc_buyer_price = if let Some(partial_order) = partial_order_size {
-        (buyer_price / partial_order) * partial_order
+        (buyer_price / token_size) * partial_order
     } else {
         buyer_price
     };
@@ -898,7 +898,7 @@ fn execute_sale_logic<'info>(
     // The fee payer makes up the shortfall up to the amount of rent for an empty account.
     if is_native {
         let diff = rent_checked_sub(escrow_payment_account.to_account_info(), calc_buyer_price)?;
-        if diff != buyer_price {
+        if diff != calc_buyer_price {
             // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
             let shortfall = std::cmp::min(
                 calc_buyer_price

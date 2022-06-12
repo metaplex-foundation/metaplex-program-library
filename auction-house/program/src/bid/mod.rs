@@ -584,7 +584,7 @@ pub fn bid_logic<'info>(
     // todo: add error if partial_order and not more than one token
 
     let calc_buyer_price = if let Some(partial_order) = partial_order_size {
-        (buyer_price / partial_order) * partial_order
+        (buyer_price / token_size) * partial_order
     } else {
         buyer_price
     };

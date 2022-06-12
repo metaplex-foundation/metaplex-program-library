@@ -1936,10 +1936,7 @@ async fn execute_sale_partial_order_success() {
     )
     .unwrap();
 
-    println!("seller before {:?}", seller_before.lamports);
-    println!("seller after {:?}", seller_after.lamports);
-
-    let fee_minus: u64 = 600_000_000 - ((ah.seller_fee_basis_points as u64 * 300_000_000) / 10000);
+    let fee_minus: u64 = 300_000_000 - ((ah.seller_fee_basis_points as u64 * 300_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 3);
