@@ -1667,6 +1667,7 @@ async fn execute_sale_partial_order_success() {
             None,
             10,
             false,
+            6,
         )
         .await
         .unwrap();
@@ -1680,7 +1681,7 @@ async fn execute_sale_partial_order_success() {
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((partial_order_acc, _), buy_tx) = partial_order_buy(
+    let ((partial_order_acc, _), buy_tx) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -1688,8 +1689,10 @@ async fn execute_sale_partial_order_success() {
         &test_metadata.token.pubkey(),
         &buyer,
         600_000_000,
-        3,
+        6,
+        Some(3),
     );
+
     context
         .banks_client
         .process_transaction(buy_tx)
@@ -1815,7 +1818,7 @@ async fn execute_sale_partial_order_success() {
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((partial_order_acc, _), buy_tx) = partial_order_buy(
+    let ((partial_order_acc, _), buy_tx) = buy(
         &mut context,
         &ahkey,
         &ah,
@@ -1823,7 +1826,8 @@ async fn execute_sale_partial_order_success() {
         &test_metadata.token.pubkey(),
         &buyer,
         600_000_000,
-        3,
+        6,
+        Some(3),
     );
     context
         .banks_client

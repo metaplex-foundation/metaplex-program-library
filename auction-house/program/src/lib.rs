@@ -316,6 +316,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        partial_order_size: Option<u64>,
     ) -> Result<()> {
         private_bid(
             ctx,
@@ -323,23 +324,7 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
-        )
-    }
-
-    /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn partial_order_buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, PartialOrderBuy<'info>>,
-        trade_state_bump: u8,
-        escrow_payment_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> Result<()> {
-        bid::partial_order_buy(
-            ctx,
-            trade_state_bump,
-            escrow_payment_bump,
-            buyer_price,
-            token_size,
+            partial_order_size,
         )
     }
 
@@ -349,6 +334,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        partial_order_size: Option<u64>,
     ) -> Result<()> {
         bid::auctioneer_private_bid(
             ctx,
@@ -356,6 +342,7 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
+            partial_order_size,
         )
     }
 
@@ -366,6 +353,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        partial_order_size: Option<u64>,
     ) -> Result<()> {
         public_bid(
             ctx,
@@ -373,6 +361,7 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
+            partial_order_size,
         )
     }
 
@@ -383,6 +372,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        partial_order_size: Option<u64>,
     ) -> Result<()> {
         bid::auctioneer_public_bid(
             ctx,
@@ -390,6 +380,7 @@ pub mod auction_house {
             escrow_payment_bump,
             buyer_price,
             token_size,
+            partial_order_size,
         )
     }
 
