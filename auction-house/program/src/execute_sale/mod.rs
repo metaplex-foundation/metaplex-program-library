@@ -842,29 +842,18 @@ fn execute_sale_logic<'info>(
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
     let ts_bump = buyer_ts_data[0];
-    if let Some(partial_order) = partial_order_size {
-        assert_valid_trade_state(
-            &buyer.key(),
-            auction_house,
-            buyer_price,
-            partial_order,
-            buyer_trade_state,
-            &token_mint.key(),
-            &token_account.key(),
-            ts_bump,
-        )?;
-    } else {
-        assert_valid_trade_state(
-            &buyer.key(),
-            auction_house,
-            buyer_price,
-            token_size,
-            buyer_trade_state,
-            &token_mint.key(),
-            &token_account.key(),
-            ts_bump,
-        )?;
-    }
+
+    assert_partial_buy_valid_trade_state(
+        &buyer.key(),
+        auction_house,
+        buyer_price,
+        token_size,
+        buyer_trade_state,
+        &token_mint.key(),
+        &token_account.key(),
+        ts_bump,
+        partial_order_size,
+    )?;
 
     if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());

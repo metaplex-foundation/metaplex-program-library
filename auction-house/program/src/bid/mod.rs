@@ -278,7 +278,8 @@ pub fn auctioneer_public_bid(
     trade_state_bump: u8,
     escrow_payment_bump: u8,
     buyer_price: u64,
-    token_size: u64
+    token_size: u64,
+    partial_order_size: Option<u64>
 )]
 pub struct Buy<'info> {
     /// User wallet account.
@@ -359,7 +360,8 @@ pub struct Buy<'info> {
             treasury_mint.key().as_ref(),
             token_account.mint.as_ref(),
             buyer_price.to_le_bytes().as_ref(),
-            token_size.to_le_bytes().as_ref()
+            token_size.to_le_bytes().as_ref(),
+            partial_order_size.unwrap_or(0u64).to_le_bytes().as_ref()
         ],
         bump = trade_state_bump
     )]
@@ -587,29 +589,17 @@ pub fn bid_logic<'info>(
         buyer_price
     };
 
-    if let Some(partial_order) = partial_order_size {
-        assert_valid_trade_state(
-            &wallet.key(),
-            &auction_house,
-            buyer_price,
-            partial_order,
-            &buyer_trade_state,
-            &token_account.mint.key(),
-            &token_account.key(),
-            trade_state_bump,
-        )?;
-    } else {
-        assert_valid_trade_state(
-            &wallet.key(),
-            &auction_house,
-            buyer_price,
-            token_size,
-            &buyer_trade_state,
-            &token_account.mint.key(),
-            &token_account.key(),
-            trade_state_bump,
-        )?;
-    }
+    assert_partial_buy_valid_trade_state(
+        &wallet.key(),
+        &auction_house,
+        buyer_price,
+        token_size,
+        &buyer_trade_state,
+        &token_account.mint.key(),
+        &token_account.key(),
+        trade_state_bump,
+        partial_order_size,
+    )?;
 
     let auction_house_key = auction_house.key();
     let seeds = [
@@ -745,6 +735,7 @@ pub fn bid_logic<'info>(
                     token_account.mint.as_ref(),
                     &buyer_price.to_le_bytes(),
                     &token_size.to_le_bytes(),
+                    &partial_order_size.unwrap_or(0u64).to_le_bytes(),
                     &[trade_state_bump],
                 ],
             )?;

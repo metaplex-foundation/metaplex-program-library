@@ -549,10 +549,71 @@ pub fn create_or_allocate_account_raw<'a>(
 /// Returns the bump seed.
 pub fn assert_derivation(program_id: &Pubkey, account: &AccountInfo, path: &[&[u8]]) -> Result<u8> {
     let (key, bump) = Pubkey::find_program_address(path, program_id);
+    msg!("key {:?}", key);
     if key != *account.key {
+        msg!("account {:?}", account.key);
         return Err(AuctionHouseError::DerivedKeyInvalid.into());
     }
     Ok(bump)
+}
+
+pub fn assert_partial_buy_valid_trade_state(
+    wallet: &Pubkey,
+    auction_house: &Account<AuctionHouse>,
+    buyer_price: u64,
+    token_size: u64,
+    trade_state: &AccountInfo,
+    mint: &Pubkey,
+    token_holder: &Pubkey,
+    ts_bump: u8,
+    partial_order_size: Option<u64>,
+) -> Result<u8> {
+    let ah_pubkey = &auction_house.key();
+    let mint_bytes = mint.as_ref();
+    let treasury_mint_bytes = auction_house.treasury_mint.as_ref();
+    let buyer_price_bytes = buyer_price.to_le_bytes();
+    let token_size_bytes = token_size.to_le_bytes();
+    let wallet_bytes = wallet.as_ref();
+    let auction_house_key_bytes = ah_pubkey.as_ref();
+    let pfix = PREFIX.as_bytes();
+    let token_holder_bytes = token_holder.as_ref();
+
+    let canonical_partial_bump = assert_derivation(
+        &crate::id(),
+        trade_state,
+        &[
+            pfix,
+            wallet_bytes,
+            auction_house_key_bytes,
+            token_holder_bytes,
+            treasury_mint_bytes,
+            mint_bytes,
+            &buyer_price_bytes,
+            &token_size_bytes,
+            &partial_order_size.unwrap_or(0u64).to_le_bytes(),
+        ],
+    );
+
+    let canonical_partial_public_bump = assert_derivation(
+        &crate::id(),
+        trade_state,
+        &[
+            pfix,
+            wallet_bytes,
+            auction_house_key_bytes,
+            treasury_mint_bytes,
+            mint_bytes,
+            &buyer_price_bytes,
+            &token_size_bytes,
+            &partial_order_size.unwrap_or(0u64).to_le_bytes(),
+        ],
+    );
+
+    match (canonical_partial_public_bump, canonical_partial_bump) {
+        (Ok(public), Err(_)) if public == ts_bump => Ok(public),
+        (Err(_), Ok(bump)) if bump == ts_bump => Ok(bump),
+        _ => Err(AuctionHouseError::DerivedKeyInvalid.into()),
+    }
 }
 
 pub fn assert_valid_trade_state(
@@ -588,6 +649,7 @@ pub fn assert_valid_trade_state(
             &token_size_bytes,
         ],
     );
+
     let canonical_public_bump = assert_derivation(
         &crate::id(),
         trade_state,

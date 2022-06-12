@@ -11,9 +11,9 @@ use mpl_auction_house::{
         find_auction_house_address, find_auction_house_fee_account_address,
         find_auction_house_treasury_address, find_auctioneer_pda,
         find_auctioneer_trade_state_address, find_bid_receipt_address, find_escrow_payment_address,
-        find_listing_receipt_address, find_program_as_signer_address,
-        find_public_bid_trade_state_address, find_purchase_receipt_address,
-        find_trade_state_address,
+        find_listing_receipt_address, find_partial_order_trade_state_address,
+        find_program_as_signer_address, find_public_bid_trade_state_address,
+        find_purchase_receipt_address, find_trade_state_address,
     },
     AuctionHouse, AuthorityScope,
 };
@@ -235,27 +235,17 @@ pub fn buy(
     Transaction,
 ) {
     let seller_token_account = get_associated_token_address(owner, &test_metadata.mint.pubkey());
-    let trade_state = if let Some(partial_order) = partial_order_size {
-        find_trade_state_address(
-            &buyer.pubkey(),
-            ahkey,
-            &seller_token_account,
-            &ah.treasury_mint,
-            &test_metadata.mint.pubkey(),
-            sale_price,
-            partial_order,
-        )
-    } else {
-        find_trade_state_address(
-            &buyer.pubkey(),
-            ahkey,
-            &seller_token_account,
-            &ah.treasury_mint,
-            &test_metadata.mint.pubkey(),
-            sale_price,
-            token_size,
-        )
-    };
+    let trade_state = find_partial_order_trade_state_address(
+        &buyer.pubkey(),
+        ahkey,
+        &seller_token_account,
+        &ah.treasury_mint,
+        &test_metadata.mint.pubkey(),
+        sale_price,
+        token_size,
+        partial_order_size,
+    );
+
     let (escrow, escrow_bump) = find_escrow_payment_address(ahkey, &buyer.pubkey());
     let (bts, bts_bump) = trade_state;
     let accounts = mpl_auction_house::accounts::Buy {
