@@ -708,54 +708,31 @@ pub fn bid_logic<'info>(
                 ],
             )?;
         } else {
-            if partial_order {
-                create_or_allocate_account_raw(
-                    crate::id(),
-                    &ts_info,
-                    &rent.to_account_info(),
-                    &system_program,
-                    &fee_payer,
-                    token_size.try_into().unwrap(),
-                    fee_seeds,
-                    &[
-                        PREFIX.as_bytes(),
-                        wallet_key.as_ref(),
-                        auction_house_key.as_ref(),
-                        token_account_key.as_ref(),
-                        auction_house.treasury_mint.as_ref(),
-                        token_account.mint.as_ref(),
-                        &buyer_price.to_le_bytes(),
-                        &token_size.to_le_bytes(),
-                        &[trade_state_bump],
-                    ],
-                )?;
-            } else {
-                create_or_allocate_account_raw(
-                    crate::id(),
-                    &ts_info,
-                    &rent.to_account_info(),
-                    &system_program,
-                    &fee_payer,
-                    TRADE_STATE_SIZE,
-                    fee_seeds,
-                    &[
-                        PREFIX.as_bytes(),
-                        wallet_key.as_ref(),
-                        auction_house_key.as_ref(),
-                        token_account_key.as_ref(),
-                        auction_house.treasury_mint.as_ref(),
-                        token_account.mint.as_ref(),
-                        &buyer_price.to_le_bytes(),
-                        &token_size.to_le_bytes(),
-                        &[trade_state_bump],
-                    ],
-                )?;
-            }
+            create_or_allocate_account_raw(
+                crate::id(),
+                &ts_info,
+                &rent.to_account_info(),
+                &system_program,
+                &fee_payer,
+                TRADE_STATE_SIZE,
+                fee_seeds,
+                &[
+                    PREFIX.as_bytes(),
+                    wallet_key.as_ref(),
+                    auction_house_key.as_ref(),
+                    token_account_key.as_ref(),
+                    auction_house.treasury_mint.as_ref(),
+                    token_account.mint.as_ref(),
+                    &buyer_price.to_le_bytes(),
+                    &token_size.to_le_bytes(),
+                    &[trade_state_bump],
+                ],
+            )?;
         }
         sol_memset(
             *ts_info.try_borrow_mut_data()?,
             trade_state_bump,
-            token_size.try_into().unwrap(),
+            TRADE_STATE_SIZE,
         );
     }
     // Allow The same bid to be sent with no issues
