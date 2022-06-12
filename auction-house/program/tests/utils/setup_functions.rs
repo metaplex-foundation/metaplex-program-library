@@ -225,7 +225,6 @@ pub fn buy(
     owner: &Pubkey,
     buyer: &Keypair,
     sale_price: u64,
-    token_size: u64,
 ) -> (
     (
         mpl_auction_house::accounts::Buy,
@@ -241,7 +240,7 @@ pub fn buy(
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
         sale_price,
-        token_size,
+        1,
     );
     let (escrow, escrow_bump) = find_escrow_payment_address(ahkey, &buyer.pubkey());
     let (bts, bts_bump) = trade_state;
@@ -267,7 +266,7 @@ pub fn buy(
     let buy_ix = mpl_auction_house::instruction::Buy {
         trade_state_bump: bts_bump,
         escrow_payment_bump: escrow_bump,
-        token_size,
+        token_size: 1,
         buyer_price: sale_price,
     };
     let data = buy_ix.data();

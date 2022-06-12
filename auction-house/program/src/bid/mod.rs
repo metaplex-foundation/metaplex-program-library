@@ -576,7 +576,7 @@ pub fn bid_logic<'info>(
     // todo: add error if partial_order and not more than one token
 
     let calc_buyer_price = if partial_order == true {
-        token_size * buyer_price
+        (buyer_price / token_size) * token_size
     } else {
         buyer_price
     };
@@ -584,7 +584,7 @@ pub fn bid_logic<'info>(
     assert_valid_trade_state(
         &wallet.key(),
         &auction_house,
-        calc_buyer_price,
+        buyer_price,
         token_size,
         &buyer_trade_state,
         &token_account.mint.key(),

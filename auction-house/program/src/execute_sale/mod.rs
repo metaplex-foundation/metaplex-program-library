@@ -11,7 +11,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    partial_order_size: u64
+    partial_order_size: Option<u64>
 )]
 pub struct ExecuteSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
@@ -834,7 +834,7 @@ fn execute_sale_logic<'info>(
     }
 
     let calc_buyer_price = if let Some(partial_order) = partial_order_size {
-        partial_order * buyer_price
+        (buyer_price / partial_order) * partial_order
     } else {
         buyer_price
     };
@@ -846,7 +846,7 @@ fn execute_sale_logic<'info>(
         assert_valid_trade_state(
             &buyer.key(),
             auction_house,
-            calc_buyer_price,
+            buyer_price,
             partial_order,
             buyer_trade_state,
             &token_mint.key(),
@@ -857,7 +857,7 @@ fn execute_sale_logic<'info>(
         assert_valid_trade_state(
             &buyer.key(),
             auction_house,
-            calc_buyer_price,
+            buyer_price,
             token_size,
             buyer_trade_state,
             &token_mint.key(),
@@ -1149,7 +1149,7 @@ fn execute_sale_logic<'info>(
             .lamports()
             .checked_add(curr_buyer_lamp)
             .ok_or(AuctionHouseError::NumericalOverflow)?;
-    }
+    };
 
     Ok(())
 }
