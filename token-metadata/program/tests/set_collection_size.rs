@@ -137,6 +137,15 @@ mod set_collection_size {
             .await
             .unwrap();
 
+        // NFT is created with context payer as the update authority so we need to update this so we don't automatically
+        // get the update authority to sign the transaction.
+        let new_update_authority = Keypair::new();
+
+        collection_parent_nft
+            .change_update_authority(&mut context, new_update_authority.pubkey())
+            .await
+            .unwrap();
+
         // Approve a delegate collection authority.
         let delegate = Keypair::new();
 
@@ -150,7 +159,7 @@ mod set_collection_size {
             PROGRAM_ID,
             collection_authority_record,
             delegate.pubkey(),
-            context.payer.pubkey(),
+            new_update_authority.pubkey(),
             context.payer.pubkey(),
             collection_parent_nft.pubkey,
             collection_parent_nft.mint.pubkey(),
@@ -159,7 +168,7 @@ mod set_collection_size {
         let tx = Transaction::new_signed_with_payer(
             &[ix],
             Some(&context.payer.pubkey()),
-            &[&context.payer],
+            &[&context.payer, &new_update_authority],
             context.last_blockhash,
         );
 
@@ -189,16 +198,16 @@ mod set_collection_size {
         let ix = set_collection_size(
             PROGRAM_ID,
             collection_parent_nft.pubkey,
-            context.payer.pubkey(),
+            delegate.pubkey(),
             collection_parent_nft.mint.pubkey(),
-            None,
+            Some(collection_authority_record),
             new_size,
         );
 
         let tx = Transaction::new_signed_with_payer(
             &[ix],
             Some(&context.payer.pubkey()),
-            &[&context.payer],
+            &[&context.payer, &delegate],
             context.last_blockhash,
         );
 

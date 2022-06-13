@@ -479,6 +479,33 @@ impl Metadata {
 
         context.banks_client.process_transaction(tx).await
     }
+
+    pub async fn change_update_authority(
+        &self,
+        context: &mut ProgramTestContext,
+        new_update_authority: Pubkey,
+    ) -> Result<(), BanksClientError> {
+        airdrop(context, &new_update_authority, 1_000_000_000)
+            .await
+            .unwrap();
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                mpl_token_metadata::id(),
+                self.pubkey,
+                context.payer.pubkey(),
+                Some(new_update_authority),
+                None,
+                None,
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await
+    }
 }
 
 impl Default for Metadata {

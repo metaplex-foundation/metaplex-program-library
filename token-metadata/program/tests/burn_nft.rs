@@ -1,17 +1,12 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use mpl_token_metadata::{
-    error::MetadataError,
-    state::{DataV2, Metadata as ProgramMetadata},
-};
+use mpl_token_metadata::{error::MetadataError, state::Metadata as ProgramMetadata};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
-    instruction::InstructionError,
-    signature::Keypair,
-    signer::Signer,
-    transaction::{Transaction, TransactionError},
+    instruction::InstructionError, signature::Keypair, signer::Signer,
+    transaction::TransactionError,
 };
 use utils::*;
 mod burn_nft {
@@ -573,34 +568,11 @@ async fn update_authority_cannot_burn() {
 
     // NFT is created with context payer as the update authority so we need to update this first.
     let new_update_authority = Keypair::new();
-    airdrop(&mut context, &new_update_authority.pubkey(), 1_000_000_000)
+
+    test_metadata
+        .change_update_authority(&mut context, new_update_authority.pubkey())
         .await
         .unwrap();
-
-    let tx = Transaction::new_signed_with_payer(
-        &[instruction::update_metadata_accounts_v2(
-            mpl_token_metadata::id(),
-            test_metadata.pubkey,
-            context.payer.pubkey(),
-            Some(new_update_authority.pubkey()),
-            Some(DataV2 {
-                name,
-                symbol,
-                uri,
-                creators,
-                seller_fee_basis_points,
-                collection,
-                uses,
-            }),
-            None,
-            Some(is_mutable),
-        )],
-        Some(&context.payer.pubkey()),
-        &[&context.payer],
-        context.last_blockhash,
-    );
-
-    context.banks_client.process_transaction(tx).await.unwrap();
 
     let err = burn(
         &mut context,

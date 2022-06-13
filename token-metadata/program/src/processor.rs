@@ -1800,9 +1800,6 @@ pub fn set_collection_size(
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
     let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
-    // Update authority is a signer and matches update authority on metadata.
-    assert_update_authority_is_correct(&metadata, collection_update_authority_account_info)?;
-
     if using_delegated_collection_authority {
         let collection_authority_record = next_account_info(account_info_iter)?;
         assert_has_collection_authority(
@@ -1818,6 +1815,9 @@ pub fn set_collection_size(
             collection_mint_account_info.key,
             None,
         )?;
+
+        // Update authority is a signer and matches update authority on metadata.
+        assert_update_authority_is_correct(&metadata, collection_update_authority_account_info)?;
     }
 
     if let Some(details) = metadata.collection_details {
