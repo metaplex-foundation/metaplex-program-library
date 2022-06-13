@@ -175,7 +175,6 @@ pub enum BidType {
     PrivateSale,
     AuctioneerPublicSale,
     AuctioneerPrivateSale,
-    PartialOrderBuy,
 }
 
 #[derive(Debug, Clone)]
@@ -202,7 +201,6 @@ pub fn assert_program_bid_instruction(sighash: &[u8]) -> Result<BidType> {
         [102, 6, 61, 18, 1, 218, 235, 234] => Ok(BidType::PrivateSale),
         [221, 239, 99, 240, 86, 46, 213, 126] => Ok(BidType::AuctioneerPublicSale),
         [17, 106, 133, 46, 229, 48, 45, 208] => Ok(BidType::AuctioneerPrivateSale),
-        [9, 64, 177, 133, 233, 41, 122, 55] => Ok(BidType::PartialOrderBuy),
         _ => Err(AuctionHouseError::InstructionMismatch.into()),
     }
 }
@@ -566,7 +564,8 @@ pub fn assert_partial_buy_valid_trade_state(
     mint: &Pubkey,
     token_holder: &Pubkey,
     ts_bump: u8,
-    partial_order_size: Option<u64>,
+    partial_order_size: u64,
+    partial_order_price: u64,
 ) -> Result<u8> {
     let ah_pubkey = &auction_house.key();
     let mint_bytes = mint.as_ref();
@@ -590,7 +589,8 @@ pub fn assert_partial_buy_valid_trade_state(
             mint_bytes,
             &buyer_price_bytes,
             &token_size_bytes,
-            &partial_order_size.unwrap_or(0u64).to_le_bytes(),
+            &partial_order_size.to_le_bytes(),
+            &partial_order_price.to_le_bytes(),
         ],
     );
 
@@ -605,7 +605,8 @@ pub fn assert_partial_buy_valid_trade_state(
             mint_bytes,
             &buyer_price_bytes,
             &token_size_bytes,
-            &partial_order_size.unwrap_or(0u64).to_le_bytes(),
+            &partial_order_size.to_le_bytes(),
+            &partial_order_price.to_le_bytes(),
         ],
     );
 

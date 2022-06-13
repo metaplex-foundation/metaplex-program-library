@@ -309,7 +309,6 @@ pub fn print_bid_receipt<'info>(
     let token_account = match bid_type {
         BidType::PrivateSale => Some(token_account.pubkey),
         BidType::AuctioneerPrivateSale => Some(token_account.pubkey),
-        BidType::PartialOrderBuy => Some(token_account.pubkey),
         BidType::PublicSale => None,
         BidType::AuctioneerPublicSale => None,
     };

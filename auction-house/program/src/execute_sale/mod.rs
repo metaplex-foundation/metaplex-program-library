@@ -1,4 +1,4 @@
-use anchor_lang::{prelude::*, AnchorDeserialize};
+use anchor_lang::{prelude::*, solana_program::program::invoke, AnchorDeserialize};
 use solana_program::program_memory::sol_memset;
 
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
@@ -11,7 +11,8 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    partial_order_size: Option<u64>
+    partial_order_size: Option<u64>, 
+    partial_order_price: Option<u64>
 )]
 pub struct ExecuteSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
@@ -118,20 +119,6 @@ pub struct ExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
-    #[account(
-        mut,
-        seeds = [
-            PREFIX.as_bytes(),
-            seller.key().as_ref(),
-            auction_house.key().as_ref(),
-            token_account.key().as_ref(),
-            auction_house.treasury_mint.as_ref(),
-            token_mint.key().as_ref(),
-            &buyer_price.to_le_bytes(),
-            &token_size.to_le_bytes()
-        ],
-        bump=seller_trade_state.to_account_info().data.borrow()[0]
-    )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -199,6 +186,7 @@ pub fn execute_sale<'info>(
     buyer_price: u64,
     token_size: u64,
     partial_order_size: Option<u64>,
+    partial_order_price: Option<u64>,
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
@@ -215,6 +203,7 @@ pub fn execute_sale<'info>(
         buyer_price,
         token_size,
         partial_order_size,
+        partial_order_price,
     )
 }
 
@@ -779,6 +768,7 @@ fn execute_sale_logic<'info>(
     buyer_price: u64,
     token_size: u64,
     partial_order_size: Option<u64>,
+    partial_order_price: Option<u64>,
 ) -> Result<()> {
     let buyer = &ctx.accounts.buyer;
     let seller = &ctx.accounts.seller;
@@ -831,29 +821,64 @@ fn execute_sale_logic<'info>(
     } else {
         msg!("No delegate detected on token account.");
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
-    }
-
-    let calc_buyer_price = if let Some(partial_order) = partial_order_size {
-        (buyer_price / token_size) * partial_order
-    } else {
-        buyer_price
     };
 
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
     let ts_bump = buyer_ts_data[0];
 
-    assert_partial_buy_valid_trade_state(
-        &buyer.key(),
-        auction_house,
-        buyer_price,
-        token_size,
-        buyer_trade_state,
-        &token_mint.key(),
-        &token_account.key(),
-        ts_bump,
-        partial_order_size,
-    )?;
+    let data = &token_account_clone.try_borrow_data()?;
+    let token_account_data = TokenAccount::try_deserialize(&mut data.as_ref())?;
+
+    let (size, price): (u64, u64) = match (partial_order_size, partial_order_price) {
+        (Some(size), Some(price)) => {
+            assert_valid_trade_state(
+                &buyer.key(),
+                auction_house,
+                price,
+                size,
+                buyer_trade_state,
+                &token_mint.key(),
+                &token_account.key(),
+                ts_bump,
+            )?;
+
+            if ((buyer_price / token_size) * size) != price {
+                return Err(AuctionHouseError::PartialPriceMismatch.into());
+            }
+
+            if &token_account_data.amount < &size {
+                return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
+            };
+
+            if &token_account_data.delegated_amount < &size {
+                return Err(ProgramError::InvalidAccountData.into());
+            };
+
+            (size, price)
+        }
+        (None, None) => {
+            assert_valid_trade_state(
+                &buyer.key(),
+                auction_house,
+                buyer_price,
+                token_size,
+                buyer_trade_state,
+                &token_mint.key(),
+                &token_account.key(),
+                ts_bump,
+            )?;
+
+            if &token_account_data.amount < &token_size {
+                return Err(AuctionHouseError::PartialBuyInputsNeeded.into());
+            };
+
+            (token_size, buyer_price)
+        }
+        _ => {
+            return Err(AuctionHouseError::MissingElementForPartialOrder.into());
+        }
+    };
 
     if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
@@ -897,11 +922,11 @@ fn execute_sale_logic<'info>(
     // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
     // The fee payer makes up the shortfall up to the amount of rent for an empty account.
     if is_native {
-        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), calc_buyer_price)?;
-        if diff != calc_buyer_price {
+        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), price)?;
+        if diff != price {
             // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
             let shortfall = std::cmp::min(
-                calc_buyer_price
+                price
                     .checked_sub(diff)
                     .ok_or(AuctionHouseError::NumericalOverflow)?,
                 rent.minimum_balance(escrow_payment_account.data_len()),
@@ -959,7 +984,7 @@ fn execute_sale_logic<'info>(
         &rent_clone,
         &signer_seeds_for_royalties,
         fee_payer_seeds,
-        calc_buyer_price,
+        price,
         is_native,
     )?;
 
@@ -970,7 +995,7 @@ fn execute_sale_logic<'info>(
         &token_clone,
         &sys_clone,
         &signer_seeds_for_royalties,
-        calc_buyer_price,
+        price,
         is_native,
     )?;
 
@@ -1065,48 +1090,40 @@ fn execute_sale_logic<'info>(
         &[program_as_signer_bump],
     ];
 
-    if let Some(partial_order) = partial_order_size {
-        invoke_signed(
-            &spl_token::instruction::transfer(
-                token_program.key,
-                &token_account.key(),
-                &buyer_receipt_token_account.key(),
-                &program_as_signer.key(),
-                &[],
-                partial_order,
-            )?,
-            &[
-                token_account.to_account_info(),
-                buyer_receipt_clone,
-                program_as_signer.to_account_info(),
-                token_clone,
-            ],
-            &[&program_as_signer_seeds],
-        )?;
-    } else {
-        invoke_signed(
-            &spl_token::instruction::transfer(
-                token_program.key,
-                &token_account.key(),
-                &buyer_receipt_token_account.key(),
-                &program_as_signer.key(),
-                &[],
-                token_size,
-            )?,
-            &[
-                token_account.to_account_info(),
-                buyer_receipt_clone,
-                program_as_signer.to_account_info(),
-                token_clone,
-            ],
-            &[&program_as_signer_seeds],
-        )?;
-    }
-
-    let data = token_account.try_borrow_data()?;
-    let token_account_data = TokenAccount::try_deserialize(&mut data.as_ref())?;
+    invoke_signed(
+        &spl_token::instruction::transfer(
+            token_program.key,
+            &token_account.key(),
+            &buyer_receipt_token_account.key(),
+            &program_as_signer.key(),
+            &[],
+            size,
+        )?,
+        &[
+            token_account.to_account_info(),
+            buyer_receipt_clone,
+            program_as_signer.to_account_info(),
+            token_clone,
+        ],
+        &[&program_as_signer_seeds],
+    )?;
 
     if token_account_data.amount == 0 {
+        invoke(
+            &revoke(
+                &token_program.key(),
+                &token_account.key(),
+                &seller.key(),
+                &[],
+            )
+            .unwrap(),
+            &[
+                token_program.to_account_info(),
+                token_account.to_account_info(),
+                seller.to_account_info(),
+            ],
+        )?;
+
         let curr_seller_lamp = seller_trade_state.lamports();
         **seller_trade_state.lamports.borrow_mut() = 0;
         sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);

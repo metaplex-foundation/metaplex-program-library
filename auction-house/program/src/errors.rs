@@ -149,4 +149,20 @@ pub enum AuctionHouseError {
     // 6036
     #[msg("Invalid seeds or Auction House not delegated")]
     InvalidSeedsOrAuctionHouseNotDelegated,
+
+    // 6037
+    #[msg("Calculated partial price does not not partial price that was provided.")]
+    PartialPriceMismatch,
+
+    // 6038
+    #[msg("Partial order size and price must both be provided in a partial buy.")]
+    MissingElementForPartialOrder,
+
+    // 6039
+    #[msg("Amount of tokens available for purchase is less than the partial order amount.")]
+    NotEnoughTokensAvailableForPurchase,
+
+    // 6040
+    #[msg("Amount of tokens available is less than original sell order. Partial buy inputs need to be provided.")]
+    PartialBuyInputsNeeded,
 }
