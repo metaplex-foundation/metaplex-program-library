@@ -1,3 +1,4 @@
+use crate::state::from_mpl_creators;
 use crate::{
     error::ErrorCode,
     state::{MarketState, PrimaryMetadataCreators},
@@ -9,7 +10,6 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address},
     token,
 };
-use crate::state::from_mpl_creators;
 
 impl<'info> Withdraw<'info> {
     pub fn process(

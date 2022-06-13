@@ -149,4 +149,8 @@ pub enum AuctionHouseError {
     // 6036
     #[msg("Invalid seeds or Auction House not delegated")]
     InvalidSeedsOrAuctionHouseNotDelegated,
+
+    // 6037
+    #[msg("The buyer trade state was unable to be initialized.")]
+    BuyerTradeStateNotValid,
 }

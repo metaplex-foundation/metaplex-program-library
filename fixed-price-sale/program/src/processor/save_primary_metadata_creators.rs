@@ -1,6 +1,6 @@
+use crate::state::{from_mpl_creators, Creator};
 use crate::{error::ErrorCode, utils::*, SavePrimaryMetadataCreators};
 use anchor_lang::prelude::*;
-use crate::state::{Creator, from_mpl_creators};
 
 impl<'info> SavePrimaryMetadataCreators<'info> {
     pub fn process(
