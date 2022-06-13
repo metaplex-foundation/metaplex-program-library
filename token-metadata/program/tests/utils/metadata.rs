@@ -467,6 +467,7 @@ impl Metadata {
                 id(),
                 self.pubkey,
                 collection_authority.pubkey(),
+                context.payer.pubkey(),
                 collection_mint,
                 collection,
                 collection_master_edition_account,

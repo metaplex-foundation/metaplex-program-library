@@ -314,7 +314,7 @@ mod sized_collection_handlers {
         let kpbytes = &context.payer;
         let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
 
-        // Try to verify the item with the old handler.
+        // Try to verify the item with the new handler.
         let err = collection_item_nft
             .verify_sized_collection_item(
                 &mut context,
@@ -560,7 +560,7 @@ mod size_tracking {
                 }
             }
         } else {
-            panic!("CollectionDetails is not a CollectionDetails");
+            panic!("CollectionDetails is not populated!");
         }
 
         // Verifying increments the size.
@@ -585,7 +585,83 @@ mod size_tracking {
                 CollectionDetails::V1 { size } => assert_eq!(size, 1),
             }
         } else {
-            panic!("CollectionDetails is not a CollectionDetails");
+            panic!("CollectionDetails is not populated!");
+        }
+
+        // Unverifying decrements the size.
+        collection_item_nft
+            .unverify_sized_collection_item(
+                &mut context,
+                collection_parent_nft.pubkey,
+                &payer,
+                collection_parent_nft.mint.pubkey(),
+                parent_master_edition_account.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        if let Some(details) = parent_metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { size } => assert_eq!(size, 0),
+            }
+        } else {
+            panic!("CollectionDetails is not populated!");
+        }
+
+        // Set-and-verify increments the size.
+        collection_item_nft
+            .set_and_verify_sized_collection_item(
+                &mut context,
+                collection_parent_nft.pubkey,
+                &payer,
+                payer.pubkey(),
+                collection_parent_nft.mint.pubkey(),
+                parent_master_edition_account.pubkey,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        if let Some(details) = parent_metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { size } => assert_eq!(size, 1),
+            }
+        } else {
+            panic!("CollectionDetails is not populated!");
+        }
+
+        // Burning decrements the size.
+        burn(
+            &mut context,
+            collection_item_nft.pubkey,
+            &payer,
+            collection_item_nft.mint.pubkey(),
+            collection_item_nft.token.pubkey(),
+            item_master_edition_account.pubkey,
+            Some(collection_parent_nft.pubkey),
+        )
+        .await
+        .unwrap();
+
+        let parent_nft_account = get_account(&mut context, &collection_parent_nft.pubkey).await;
+        let parent_metadata =
+            ProgramMetadata::deserialize(&mut parent_nft_account.data.as_slice()).unwrap();
+
+        if let Some(details) = parent_metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { size } => assert_eq!(size, 0),
+            }
+        } else {
+            panic!("CollectionDetails is not populated!");
         }
     }
 }

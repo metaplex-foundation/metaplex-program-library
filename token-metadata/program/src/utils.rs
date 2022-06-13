@@ -1253,7 +1253,7 @@ pub fn increment_collection_size(
         match details {
             CollectionDetails::V1 { size } => {
                 metadata.collection_details = Some(CollectionDetails::V1 { size: size + 1 });
-                msg!("Clean writing metadata");
+                msg!("Clean writing collection parent metadata");
                 clean_write_metadata(metadata, metadata_info)?;
                 Ok(())
             }

@@ -293,7 +293,7 @@ pub enum MetadataError {
     #[error("Printing mint supply must be zero for conversion")]
     PrintingMintSupplyMustBeZeroForConversion,
 
-    /// One Time Auth mint supply must be zero for conversion
+    /// 70 - One Time Auth mint supply must be zero for conversion
     #[error("One Time Auth mint supply must be zero for conversion")]
     OneTimeAuthMintSupplyMustBeZeroForConversion,
 
@@ -320,12 +320,14 @@ pub enum MetadataError {
 
     #[error("This use method is invalid")]
     InvalidUseMethod,
+
     #[error("Cannot Change Use Method after the first use")]
     CannotChangeUseMethodAfterFirstUse,
 
     #[error("Cannot Change Remaining or Available uses after the first use")]
     CannotChangeUsesAfterFirstUse,
 
+    // 80
     #[error("Collection Not Found on Metadata")]
     CollectionNotFound,
 
@@ -356,11 +358,13 @@ pub enum MetadataError {
     #[error("This Use Authority Record is invalid.")]
     InvalidUseAuthorityRecord,
 
+    // 90
     #[error("This Collection Authority Record is invalid.")]
     InvalidCollectionAuthorityRecord,
 
     #[error("Metadata does not match the freeze authority on the mint")]
     InvalidFreezeAuthority,
+
     #[error("All tokens in this account have not been delegated to this user.")]
     InvalidDelegate,
 
@@ -387,28 +391,29 @@ pub enum MetadataError {
     #[error("Revoke Collection Authority signer is incorrect")]
     RevokeCollectionAuthoritySignerIncorrect,
 
+    // 100
     #[error("Token close failed")]
     TokenCloseFailed,
 
-    /// 100 - Calling v1.3 function on unsized collection
+    /// 101 - Calling v1.3 function on unsized collection
     #[error("Can't use this function on unsized collection")]
     UnsizedCollection,
 
-    /// 101 - Calling v1.2 function on a sized collection
+    /// 102 - Calling v1.2 function on a sized collection
     #[error("Can't use this function on a sized collection")]
     SizedCollection,
 
-    /// 102 - Can't burn a verified member of a collection w/o providing collection metadata account
+    /// 103 - Can't burn a verified member of a collection w/o providing collection metadata account
     #[error(
         "Can't burn a verified member of a collection w/o providing collection metadata account"
     )]
     MissingCollectionMetadata,
 
-    /// 103 - This NFT is not a member of the specified collection.
+    /// 104 - This NFT is not a member of the specified collection.
     #[error("This NFT is not a member of the specified collection.")]
     NotAMemberOfCollection,
 
-    /// 104 - This NFT is not a verified member of the specified collection.
+    /// 105 - This NFT is not a verified member of the specified collection.
     #[error("This NFT is not a verified member of the specified collection.")]
     NotVerifiedMemberOfCollection,
 

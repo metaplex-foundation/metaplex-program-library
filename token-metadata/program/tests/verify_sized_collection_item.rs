@@ -25,7 +25,7 @@ mod verify_sized_collection_item {
 
     use super::*;
     #[tokio::test]
-    async fn success_verify_sized_collection_item() {
+    async fn successfully_verify_sized_collection_item() {
         let mut context = program_test().start_with_context().await;
 
         let test_collection = Metadata::new();

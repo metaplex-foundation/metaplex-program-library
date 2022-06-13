@@ -430,7 +430,7 @@ pub enum MetadataInstruction {
     /// Verify Collection V2, new in v1.3--supports Collection Details.
     /// If a MetadataAccount Has a Collection allow the UpdateAuthority of the Collection to Verify the NFT Belongs in the Collection.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(1, signer, name="collection_authority", desc="Collection Update authority")]
     #[account(2, signer, writable, name="payer", desc="payer")]
     #[account(3, name="collection_mint", desc="Mint of the Collection")]
     #[account(4, writable, name="collection", desc="Metadata Account of the Collection")]
@@ -441,19 +441,20 @@ pub enum MetadataInstruction {
     /// Unverify Collection V2, new in v1.3--supports Collection Details.
     /// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, writable, name="collection_authority", desc="Collection Authority")]
-    #[account(2, name="collection_mint", desc="Mint of the Collection")]
-    #[account(3, writable, name="collection", desc="Metadata Account of the Collection")]
-    #[account(4, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
-    #[account(5, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    #[account(1, signer, name="collection_authority", desc="Collection Authority")]
+    #[account(2, signer, writable, name="payer", desc="payer")]
+    #[account(3, name="collection_mint", desc="Mint of the Collection")]
+    #[account(4, writable, name="collection", desc="Metadata Account of the Collection")]
+    #[account(5, name="collection_master_edition_account", desc="MasterEdition2 Account of the Collection Token")]
+    #[account(6, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     UnverifySizedCollectionItem,
 
     // Set And Verify V2, new in v1.3--supports Collection Details.
     /// Allows the same Update Authority (Or Delegated Authority) on an NFT and Collection to perform [update_metadata_accounts_v2] 
     /// with collection and [verify_collection] on the NFT/Collection in one instruction.
     #[account(0, writable, name="metadata", desc="Metadata account")]
-    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
-    #[account(2, signer, writable, name="payer", desc="Payer")]
+    #[account(1, signer, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, signer, writable, name="payer", desc="payer")]
     #[account(3, name="update_authority", desc="Update Authority of Collection NFT and NFT")]
     #[account(4, name="collection_mint", desc="Mint of the Collection")]
     #[account(5, writable, name="collection", desc="Metadata Account of the Collection")]
@@ -1412,21 +1413,15 @@ pub fn verify_sized_collection_item(
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(metadata, false),
-        AccountMeta::new(collection_authority, true),
+        AccountMeta::new_readonly(collection_authority, true),
         AccountMeta::new(payer, true),
         AccountMeta::new_readonly(collection_mint, false),
         AccountMeta::new(collection, false),
         AccountMeta::new_readonly(collection_master_edition_account, false),
     ];
 
-    match collection_authority_record {
-        Some(collection_authority_record) => {
-            accounts.push(AccountMeta::new_readonly(
-                collection_authority_record,
-                false,
-            ));
-        }
-        None => (),
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
     }
 
     Instruction {
@@ -1455,6 +1450,7 @@ pub fn unverify_sized_collection_item(
     program_id: Pubkey,
     metadata: Pubkey,
     collection_authority: Pubkey,
+    payer: Pubkey,
     collection_mint: Pubkey,
     collection: Pubkey,
     collection_master_edition_account: Pubkey,
@@ -1462,7 +1458,8 @@ pub fn unverify_sized_collection_item(
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(metadata, false),
-        AccountMeta::new(collection_authority, true),
+        AccountMeta::new_readonly(collection_authority, true),
+        AccountMeta::new(payer, true),
         AccountMeta::new_readonly(collection_mint, false),
         AccountMeta::new(collection, false),
         AccountMeta::new_readonly(collection_master_edition_account, false),

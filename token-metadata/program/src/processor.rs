@@ -994,12 +994,16 @@ pub fn unverify_sized_collection_item(
     let account_info_iter = &mut accounts.iter();
     let metadata_info = next_account_info(account_info_iter)?;
     let collection_authority_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
     let collection_mint = next_account_info(account_info_iter)?;
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
-    let using_delegated_collection_authority = accounts.len() == 6;
+
+    let using_delegated_collection_authority = accounts.len() == 7;
 
     assert_signer(collection_authority_info)?;
+    assert_signer(payer_info)?;
+
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(collection_info, program_id)?;
     assert_owned_by(collection_mint, &spl_token::id())?;
@@ -1501,6 +1505,7 @@ pub fn set_and_verify_sized_collection_item(
     let collection_info = next_account_info(account_info_iter)?;
     let edition_account_info = next_account_info(account_info_iter)?;
     let using_delegated_collection_authority = accounts.len() == 8;
+
     assert_signer(collection_authority_info)?;
     assert_signer(payer_info)?;
 
