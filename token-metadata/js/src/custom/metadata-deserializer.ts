@@ -1,5 +1,6 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { collectionDetailsBeet } from 'src/generated';
 import { Metadata } from '../generated/accounts/Metadata';
 import { collectionBeet } from '../generated/types/Collection';
 import { dataBeet } from '../generated/types/Data';
@@ -79,7 +80,15 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
       : tryReadOption(beet.coption(usesBeet), buf, cursor);
   cursor += usesDelta;
 
-  const anyCorrupted = tokenCorrupted || collectionCorrupted || usesCorrupted;
+  // collection_details
+  const [collectionDetails, collectionDetailsDelta, collectionDetailsCorrupted] =
+    tokenCorrupted || collectionCorrupted || usesCorrupted
+      ? [null, NONE_BYTE_SIZE, true]
+      : tryReadOption(beet.coption(collectionDetailsBeet), buf, cursor);
+  cursor += collectionDetailsDelta;
+
+  const anyCorrupted =
+    tokenCorrupted || collectionCorrupted || usesCorrupted || collectionDetailsCorrupted;
 
   const args = {
     key,
@@ -92,6 +101,7 @@ export function deserialize(buf: Buffer, offset = 0): [Metadata, number] {
     tokenStandard: anyCorrupted ? null : tokenStandard,
     collection: anyCorrupted ? null : collection,
     uses: anyCorrupted ? null : uses,
+    collectionDetails: anyCorrupted ? null : collectionDetails,
   };
 
   return [Metadata.fromArgs(args), cursor];

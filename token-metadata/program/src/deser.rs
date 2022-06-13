@@ -38,7 +38,7 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
 
     // Handle v1.3 separately
     let collection_details = match collection_details_res {
-        Ok(item_details) => item_details,
+        Ok(details) => details,
         Err(_) => {
             println!("no collection details found");
             None
