@@ -583,7 +583,7 @@ pub fn assert_valid_trade_state(
             treasury_mint_bytes,
             mint_bytes,
             &buyer_price_bytes,
-            &token_size_bytes,
+            &token_size_bytes
         ],
     );
     let canonical_public_bump = assert_derivation(
@@ -596,7 +596,7 @@ pub fn assert_valid_trade_state(
             treasury_mint_bytes,
             mint_bytes,
             &buyer_price_bytes,
-            &token_size_bytes,
+            &token_size_bytes
         ],
     );
 

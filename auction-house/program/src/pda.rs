@@ -164,25 +164,23 @@ pub fn find_auctioneer_trade_state_address(
 #[cfg(test)]
 mod tests {
     use super::find_public_bid_trade_state_address;
-    use solana_program::pubkey::{Pubkey, ParsePubkeyError};
+    use solana_program::pubkey::Pubkey;
     use std::str::FromStr;
 
     #[test]
-    fn test_assert_find_public_trade_state() -> Result<(), ParsePubkeyError>{
-        let auction_house = Pubkey::from_str("BeAgRZwvRrDnfsEtAdFd9BkpgNGhP5ERg56DGym9KfJL")?;
-        let wallet = Pubkey::from_str("JDKex5xSPp7skRdTVJbahDhQBhMLjoCYg6R2a9exs1ob")?;
-        let trade_state = Pubkey::from_str("AtWnhkgLb8CYmAeAwzdFWfDaiypPpz32xeFGLwkNMPLf")?;
-        let price = 1800000000;
+    fn test_assert_find_public_trade_state() {
+        let auction_house = Pubkey::from_str("BeAgRZwvRrDnfsEtAdFd9BkpgNGhP5ERg56DGym9KfJL").unwrap();
+        let wallet = Pubkey::from_str("JDKex5xSPp7skRdTVJbahDhQBhMLjoCYg6R2a9exs1ob").unwrap();
+        let trade_state = Pubkey::from_str("AtWnhkgLb8CYmAeAwzdFWfDaiypPpz32xeFGLwkNMPLf").unwrap();
+        let price = 1_800_000_000;
         let token_size = 1;
         let treasury_mint = spl_token::native_mint::id();
-        let token_mint = spl_token::native_mint::id();
+        let token_mint = Pubkey::from_str("ApxbCyUaj1wTHnK4Umq7xxYeHkFE1XA67RfDi6aiym9w").unwrap();
         let ts_bump = 255;
 
         let (address, bump) = find_public_bid_trade_state_address(&wallet, &auction_house, &treasury_mint, &token_mint, price, token_size);
 
-        assert_eq!(ts_bump, bump);
         assert_eq!(trade_state, address);
-
-        Ok(())
+        assert_eq!(ts_bump, bump);
     }
 }
