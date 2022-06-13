@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category PuffMetadata
  * @category generated
  */
-const PuffMetadataStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+export const PuffMetadataStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
   [['instructionDiscriminator', beet.u8]],
   'PuffMetadataInstructionArgs',
 );
@@ -29,7 +29,7 @@ export type PuffMetadataInstructionAccounts = {
   metadata: web3.PublicKey;
 };
 
-const puffMetadataInstructionDiscriminator = 14;
+export const puffMetadataInstructionDiscriminator = 14;
 
 /**
  * Creates a _PuffMetadata_ instruction.

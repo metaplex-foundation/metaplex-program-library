@@ -26,7 +26,7 @@ export type ApproveUseAuthorityInstructionArgs = {
  * @category ApproveUseAuthority
  * @category generated
  */
-const ApproveUseAuthorityStruct = new beet.BeetArgsStruct<
+export const ApproveUseAuthorityStruct = new beet.BeetArgsStruct<
   ApproveUseAuthorityInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -63,7 +63,7 @@ export type ApproveUseAuthorityInstructionAccounts = {
   burner: web3.PublicKey;
 };
 
-const approveUseAuthorityInstructionDiscriminator = 20;
+export const approveUseAuthorityInstructionDiscriminator = 20;
 
 /**
  * Creates a _ApproveUseAuthority_ instruction.

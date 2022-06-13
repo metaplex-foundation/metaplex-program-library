@@ -14,12 +14,11 @@ import * as web3 from '@solana/web3.js';
  * @category DeprecatedMintNewEditionFromMasterEditionViaPrintingToken
  * @category generated
  */
-const DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number;
-}>(
-  [['instructionDiscriminator', beet.u8]],
-  'DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructionArgs',
-);
+export const DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenStruct =
+  new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+    [['instructionDiscriminator', beet.u8]],
+    'DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructionArgs',
+  );
 /**
  * Accounts required by the _DeprecatedMintNewEditionFromMasterEditionViaPrintingToken_ instruction
  *
@@ -56,7 +55,7 @@ export type DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstruction
   reservationList?: web3.PublicKey;
 };
 
-const deprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructionDiscriminator = 3;
+export const deprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructionDiscriminator = 3;
 
 /**
  * Creates a _DeprecatedMintNewEditionFromMasterEditionViaPrintingToken_ instruction.

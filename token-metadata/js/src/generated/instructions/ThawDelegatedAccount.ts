@@ -14,10 +14,9 @@ import * as web3 from '@solana/web3.js';
  * @category ThawDelegatedAccount
  * @category generated
  */
-const ThawDelegatedAccountStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
-  [['instructionDiscriminator', beet.u8]],
-  'ThawDelegatedAccountInstructionArgs',
-);
+export const ThawDelegatedAccountStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'ThawDelegatedAccountInstructionArgs');
 /**
  * Accounts required by the _ThawDelegatedAccount_ instruction
  *
@@ -36,7 +35,7 @@ export type ThawDelegatedAccountInstructionAccounts = {
   mint: web3.PublicKey;
 };
 
-const thawDelegatedAccountInstructionDiscriminator = 27;
+export const thawDelegatedAccountInstructionDiscriminator = 27;
 
 /**
  * Creates a _ThawDelegatedAccount_ instruction.

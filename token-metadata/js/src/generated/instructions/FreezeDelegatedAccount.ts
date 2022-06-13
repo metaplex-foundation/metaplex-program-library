@@ -14,10 +14,9 @@ import * as web3 from '@solana/web3.js';
  * @category FreezeDelegatedAccount
  * @category generated
  */
-const FreezeDelegatedAccountStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
-  [['instructionDiscriminator', beet.u8]],
-  'FreezeDelegatedAccountInstructionArgs',
-);
+export const FreezeDelegatedAccountStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'FreezeDelegatedAccountInstructionArgs');
 /**
  * Accounts required by the _FreezeDelegatedAccount_ instruction
  *
@@ -36,7 +35,7 @@ export type FreezeDelegatedAccountInstructionAccounts = {
   mint: web3.PublicKey;
 };
 
-const freezeDelegatedAccountInstructionDiscriminator = 26;
+export const freezeDelegatedAccountInstructionDiscriminator = 26;
 
 /**
  * Creates a _FreezeDelegatedAccount_ instruction.
