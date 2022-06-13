@@ -1,0 +1,45 @@
+name: 'Update crate version'
+description: 'Update crate version based on semvar version bump'
+inputs:
+  semvar:
+    description: 'Semvar version update to make'
+    required: true
+  cargo-path:
+    description: 'Path to Cargo.toml'
+    required: true
+
+outputs:
+  version:
+    description: Updated version based on semvar convention
+    value: ${{ steps.set-output.outputs.version }}
+  update-ok:
+    description: Updated status indicating whether update was successful or not
+    value: ${{ steps.set-output.outputs.update_ok }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependency packages for script
+      run: |
+        yarn init --yes
+        yarn add @iarna/toml
+      shell: bash
+
+    - name: Update cargo version
+      uses: actions/github-script@v4
+      id: update-cargo-version
+      with:
+        script: |
+          const toml = require('@iarna/toml')
+          const script = require('.github/actions/update-cargo-version/script.js')
+          script({core, toml}, '${{ inputs.cargo-path }}', ${{ inputs.semvar }})
+
+    - name: Set outputs
+      id: set-output
+      # env.UPDATED_VERSION and env.UPDATE_OK exported from script.js
+      run: |
+        echo "::set-output name=version::${{ env.UPDATED_VERSION }}"
+        echo "::set-output name=update_ok::${{ env.UPDATE_OK }}"
+      shell: bash

@@ -507,13 +507,12 @@ async fn auctioneer_execute_sale_success() {
     .await
     .unwrap();
 
-    let ((sell_acc, _), sell_tx) = auctioneer_sell(
+    let (sell_acc, sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        100_000_000,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
     context
         .banks_client
@@ -526,14 +525,14 @@ async fn auctioneer_execute_sale_success() {
         .await
         .unwrap();
 
-    let ((bid_acc, _), buy_tx) = auctioneer_buy(
+    let (bid_acc, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         100_000_000,
     );
     context
@@ -550,6 +549,7 @@ async fn auctioneer_execute_sale_success() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
@@ -599,8 +599,8 @@ async fn auctioneer_execute_sale_success() {
 
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
-        Some(&auctioneer_authority.pubkey()),
-        &[&auctioneer_authority],
+        Some(&ah_auth.pubkey()),
+        &[&ah_auth, &auctioneer_authority],
         context.last_blockhash,
     );
     let seller_before = context
@@ -681,13 +681,12 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
     .await
     .unwrap();
 
-    let ((sell_acc, _), sell_tx) = auctioneer_sell(
+    let (sell_acc, sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        100_000_000,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
     context
         .banks_client
@@ -700,14 +699,14 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
         .await
         .unwrap();
 
-    let ((bid_acc, _), buy_tx) = auctioneer_buy(
+    let (bid_acc, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         100_000_000,
     );
     context
@@ -725,6 +724,7 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
@@ -775,7 +775,7 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
         Some(&ah_auth.pubkey()),
-        &[&ah_auth],
+        &[&ah_auth, &auctioneer_authority],
         context.last_blockhash,
     );
     let error = context
@@ -849,6 +849,7 @@ pub async fn auctioneer_execute_sale_no_delegate_fails() {
         auction_house: ahkey,
         metadata: test_metadata.pubkey,
         token_account: sell_acc.token_account,
+        authority: ah.authority,
         auctioneer_authority: auctioneer_authority.pubkey(),
         seller_trade_state: sell_acc.seller_trade_state,
         buyer_trade_state: bid_acc.buyer_trade_state,
@@ -899,7 +900,7 @@ pub async fn auctioneer_execute_sale_no_delegate_fails() {
     let tx = Transaction::new_signed_with_payer(
         &[instruction],
         Some(&ah_auth.pubkey()),
-        &[&ah_auth],
+        &[&ah_auth, &auctioneer_authority],
         context.last_blockhash,
     );
 
@@ -1217,13 +1218,12 @@ async fn auctioneer_execute_public_sale_success() {
     let price = 100_000_000;
     let fee_minus: u64 = price - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     // Create Listing
-    let ((sell_acc, _), sell_tx) = auctioneer_sell(
+    let (sell_acc, sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        price,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
     context
         .banks_client
@@ -1236,14 +1236,14 @@ async fn auctioneer_execute_public_sale_success() {
         .await
         .unwrap();
 
-    let ((public_bid_acc, _print_bid_receipt_acc), public_bid_tx) = auctioneer_public_buy(
+    let (public_bid_acc, public_bid_tx) = auctioneer_public_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &public_bidder,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         price,
     );
     context
@@ -1256,14 +1256,14 @@ async fn auctioneer_execute_public_sale_success() {
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((bid_acc, _), buy_tx) = auctioneer_buy(
+    let (bid_acc, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         price,
     );
     context
@@ -1273,10 +1273,11 @@ async fn auctioneer_execute_public_sale_success() {
         .unwrap();
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
-    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auctioneer_execute_sale(
+    let (_es_acc, first_sale_tx) = auctioneer_execute_sale(
         &mut context,
         &ahkey,
         &ah,
+        &ah_auth,
         &auctioneer_authority,
         &test_metadata,
         &buyer.pubkey(),
@@ -1346,14 +1347,13 @@ async fn auctioneer_execute_public_sale_success() {
         .await
         .unwrap();
     assert!(public_bidder_token_before.is_none());
-    let ((second_sell_acc, _), second_sell_tx) = auctioneer_sell_mint(
+    let (second_sell_acc, second_sell_tx) = auctioneer_sell_mint(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata.mint.pubkey(),
         &new_seller,
-        auctioneer_authority.pubkey(),
-        price,
+        &auctioneer_authority,
     );
     context
         .banks_client
@@ -1361,10 +1361,11 @@ async fn auctioneer_execute_public_sale_success() {
         .await
         .unwrap();
 
-    let ((public_sale_acc, purchase_receipt_acc), public_sale_tx) = auctioneer_execute_sale(
+    let (_public_sale_acc, public_sale_tx) = auctioneer_execute_sale(
         &mut context,
         &ahkey,
         &ah,
+        &ah_auth,
         &auctioneer_authority,
         &test_metadata,
         &public_bidder.pubkey(),
@@ -1401,66 +1402,6 @@ async fn auctioneer_execute_public_sale_success() {
     .unwrap();
     assert!(new_seller_before.lamports < new_seller_after.lamports);
     assert_eq!(public_bidder_token_after.amount, 1);
-
-    let timestamp = context
-        .banks_client
-        .get_sysvar::<Clock>()
-        .await
-        .unwrap()
-        .unix_timestamp;
-
-    let purchase_receipt_account = context
-        .banks_client
-        .get_account(purchase_receipt_acc.purchase_receipt)
-        .await
-        .expect("no purchase receipt")
-        .expect("purchase receipt empty");
-
-    let purchase_receipt =
-        PurchaseReceipt::try_deserialize(&mut purchase_receipt_account.data.as_ref()).unwrap();
-
-    assert_eq!(purchase_receipt.buyer, public_bidder.pubkey());
-    assert_eq!(purchase_receipt.seller, new_seller.pubkey());
-    assert_eq!(purchase_receipt.bookkeeper, auctioneer_authority.pubkey());
-    assert_eq!(purchase_receipt.price, price);
-    assert_eq!(purchase_receipt.created_at, timestamp);
-    assert_eq!(purchase_receipt.metadata, public_sale_acc.metadata);
-    assert_eq!(
-        purchase_receipt.auction_house,
-        public_sale_acc.auction_house
-    );
-
-    let bid_receipt_account = context
-        .banks_client
-        .get_account(purchase_receipt_acc.bid_receipt)
-        .await
-        .expect("no bid receipt")
-        .expect("bid receipt empty");
-
-    let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
-
-    assert_eq!(
-        bid_receipt.purchase_receipt,
-        Some(purchase_receipt_acc.purchase_receipt)
-    );
-    assert_eq!(bid_receipt.canceled_at, None);
-    assert_eq!(bid_receipt.token_account, None);
-
-    let listing_receipt_account = context
-        .banks_client
-        .get_account(purchase_receipt_acc.listing_receipt)
-        .await
-        .expect("no listing receipt")
-        .expect("listing receipt empty");
-
-    let listing_receipt =
-        ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
-
-    assert_eq!(
-        listing_receipt.purchase_receipt,
-        Some(purchase_receipt_acc.purchase_receipt)
-    );
-    assert_eq!(listing_receipt.canceled_at, None);
 }
 
 #[tokio::test]
@@ -1510,13 +1451,12 @@ async fn auctioneer_execute_public_sale_missing_scope_fails() {
     let price = 100_000_000;
 
     // Create Listing
-    let ((sell_acc, _), sell_tx) = auctioneer_sell(
+    let (sell_acc, sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        price,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
     context
         .banks_client
@@ -1529,14 +1469,14 @@ async fn auctioneer_execute_public_sale_missing_scope_fails() {
         .await
         .unwrap();
 
-    let ((_, _print_bid_receipt_acc), public_bid_tx) = auctioneer_public_buy(
+    let (_, public_bid_tx) = auctioneer_public_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &public_bidder,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         price,
     );
     context
@@ -1549,14 +1489,14 @@ async fn auctioneer_execute_public_sale_missing_scope_fails() {
     airdrop(&mut context, &buyer.pubkey(), 10_000_000_000)
         .await
         .unwrap();
-    let ((bid_acc, _), buy_tx) = auctioneer_buy(
+    let (bid_acc, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         price,
     );
     context
@@ -1566,10 +1506,11 @@ async fn auctioneer_execute_public_sale_missing_scope_fails() {
         .unwrap();
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
-    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auctioneer_execute_sale(
+    let (_es_acc, first_sale_tx) = auctioneer_execute_sale(
         &mut context,
         &ahkey,
         &ah,
+        &ah_auth,
         &auctioneer_authority,
         &test_metadata,
         &buyer.pubkey(),
@@ -1602,7 +1543,7 @@ async fn auctioneer_execute_public_sale_missing_scope_fails() {
 async fn auctioneer_execute_public_sale_no_delegate_fails() {
     let mut context = auction_house_program_test().start_with_context().await;
     // Payer Wallet
-    let (ah, ahkey, _ah_auth) = existing_auction_house_test_context(&mut context)
+    let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
         .await
         .unwrap();
     let test_metadata = Metadata::new();
@@ -1676,10 +1617,11 @@ async fn auctioneer_execute_public_sale_no_delegate_fails() {
         .process_transaction(buy_tx)
         .await
         .unwrap();
-    let ((_es_acc, _purchase_receipt_acc), first_sale_tx) = auctioneer_execute_sale(
+    let (_es_acc, first_sale_tx) = auctioneer_execute_sale(
         &mut context,
         &ahkey,
         &ah,
+        &ah_auth,
         &auctioneer_authority,
         &test_metadata,
         &buyer.pubkey(),

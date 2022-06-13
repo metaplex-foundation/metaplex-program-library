@@ -78,7 +78,7 @@ impl<'info> From<AuctioneerDeposit<'info>> for Deposit<'info> {
             transfer_authority: a.transfer_authority,
             escrow_payment_account: a.escrow_payment_account,
             treasury_mint: a.treasury_mint,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             token_program: a.token_program,
@@ -135,9 +135,13 @@ pub struct AuctioneerDeposit<'info> {
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: Validated in deposit_logic.
+    /// Auction House instance authority account.
+    pub authority: UncheckedAccount<'info>,
+
     /// CHECK: Validated in ah_auctioneer_pda seeds and deposit_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -147,6 +151,7 @@ pub struct AuctioneerDeposit<'info> {
             auction_house.treasury_mint.as_ref()
         ],
         bump=auction_house.bump,
+        has_one=authority,
         has_one=treasury_mint,
         has_one=auction_house_fee_account
     )]

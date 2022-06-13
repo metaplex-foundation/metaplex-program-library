@@ -39,6 +39,15 @@ const updateAuctionHouseStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _updateAuctionHouse_ instruction
+ *
+ * @property [] treasuryMint
+ * @property [**signer**] payer
+ * @property [**signer**] authority
+ * @property [] newAuthority
+ * @property [_writable_] feeWithdrawalDestination
+ * @property [_writable_] treasuryWithdrawalDestination
+ * @property [] treasuryWithdrawalDestinationOwner
+ * @property [_writable_] auctionHouse
  * @category Instructions
  * @category UpdateAuctionHouse
  * @category generated
