@@ -1553,7 +1553,8 @@ pub fn set_and_verify_sized_collection_item(
     // Update the collection size if this is a valid parent collection NFT.
     increment_collection_size(&mut collection_metadata, collection_info)?;
 
-    metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
+    clean_write_metadata(&mut metadata, metadata_info)?;
+
     Ok(())
 }
 
