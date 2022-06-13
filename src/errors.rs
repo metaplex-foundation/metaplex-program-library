@@ -37,6 +37,12 @@ pub enum ReadFilesError {
     FileOpenErrors,
 }
 
+#[derive(Debug, Error)]
+pub enum CustomCandyError {
+    #[error("Payer key '{0}' does not equal the Candy Machine authority pubkey '{1}'")]
+    AuthorityMismatch(String, String),
+}
+
 #[derive(Debug)]
 pub struct DeserializeError<'a> {
     pub path: &'a PathBuf,

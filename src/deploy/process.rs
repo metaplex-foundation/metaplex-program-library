@@ -27,8 +27,8 @@ pub use mpl_token_metadata::state::{
     MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
 
-use crate::candy_machine::uuid_from_pubkey;
-use crate::candy_machine::ID as CANDY_MACHINE_ID;
+use crate::cache::*;
+use crate::candy_machine::{parse_config_price, CANDY_MACHINE_ID};
 use crate::common::*;
 use crate::config::{data::*, parser::get_config_data};
 use crate::deploy::data::*;
@@ -36,7 +36,6 @@ use crate::deploy::errors::*;
 use crate::setup::{setup_client, sugar_setup};
 use crate::utils::*;
 use crate::validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url};
-use crate::{cache::*, candy_machine::parse_config_price};
 
 /// The maximum config line bytes per transaction.
 const MAX_TRANSACTION_BYTES: usize = 1000;
@@ -84,8 +83,8 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         }
     }
 
-    let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
-    let client = Arc::new(setup_client(&sugar_config)?);
+    let sugar_config = Arc::new(sugar_setup(args.keypair, args.rpc_url)?);
+    let client = setup_client(&sugar_config)?;
     let config_data = get_config_data(&args.config)?;
 
     let candy_machine_address = &cache.program.candy_machine;
@@ -120,7 +119,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         let candy_keypair = Keypair::generate(&mut OsRng);
         let candy_pubkey = candy_keypair.pubkey();
 
-        let uuid = uuid_from_pubkey(&candy_pubkey);
+        let uuid = DEFAULT_UUID.to_string();
         let candy_data = create_candy_machine_data(&client, &config_data, uuid)?;
         let program = client.program(CANDY_MACHINE_ID);
 
@@ -216,8 +215,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
             args.interrupted.store(false, Ordering::SeqCst);
 
             let errors = upload_config_lines(
-                client,
-                &sugar_config,
+                sugar_config,
                 candy_pubkey,
                 &mut cache,
                 config_lines,
@@ -452,8 +450,7 @@ fn initialize_candy_machine(
 
 /// Send the config lines to the candy machine program.
 async fn upload_config_lines(
-    client: Arc<Client>,
-    sugar_config: &SugarConfig,
+    sugar_config: Arc<SugarConfig>,
     candy_pubkey: Pubkey,
     cache: &mut Cache,
     config_lines: Vec<Vec<(u32, ConfigLine)>>,
@@ -485,10 +482,10 @@ async fn upload_config_lines(
     let mut handles = Vec::new();
 
     for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT)) {
-        let tx_client = client.clone();
-        handles.push(tokio::spawn(async move {
-            add_config_lines(tx_client, tx).await
-        }));
+        let config = sugar_config.clone();
+        handles.push(tokio::spawn(
+            async move { add_config_lines(config, tx).await },
+        ));
     }
 
     let mut errors = Vec::new();
@@ -535,10 +532,10 @@ async fn upload_config_lines(
                 cache.sync_file()?;
 
                 for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT / 2)) {
-                    let tx_client = client.clone();
-                    handles.push(tokio::spawn(async move {
-                        add_config_lines(tx_client, tx).await
-                    }));
+                    let config = sugar_config.clone();
+                    handles.push(tokio::spawn(
+                        async move { add_config_lines(config, tx).await },
+                    ));
                 }
             }
         }
@@ -563,7 +560,8 @@ async fn upload_config_lines(
 }
 
 /// Send the `add_config_lines` instruction to the candy machine program.
-async fn add_config_lines(client: Arc<Client>, tx_info: TxInfo) -> Result<Vec<u32>> {
+async fn add_config_lines(config: Arc<SugarConfig>, tx_info: TxInfo) -> Result<Vec<u32>> {
+    let client = setup_client(&config)?;
     let program = client.program(CANDY_MACHINE_ID);
 
     // this will be used to update the cache

@@ -539,7 +539,7 @@ cat >$CONFIG_FILE <<-EOM
     "ipfsInfuraProjectId": "${INFURA_ID}",
     "ipfsInfuraSecret": "${INFURA_SECRET}",
     "awsS3Bucket": "${AWS_BUCKET}",
-    "retainAuthority": false,
+    "retainAuthority": true,
     "isMutable": true,
     "creators": [
     {

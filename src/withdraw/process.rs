@@ -24,7 +24,7 @@ use std::{
 use mpl_candy_machine::accounts as nft_accounts;
 use mpl_candy_machine::instruction as nft_instruction;
 
-use crate::candy_machine::ID as CANDY_MACHINE_ID;
+use crate::candy_machine::CANDY_MACHINE_ID;
 use crate::common::*;
 use crate::setup::{setup_client, sugar_setup};
 use crate::utils::*;

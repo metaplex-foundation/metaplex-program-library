@@ -32,7 +32,7 @@ pub fn get_cluster(rpc_client: RpcClient) -> Result<Cluster> {
         Ok(Cluster::Mainnet)
     } else {
         Err(anyhow!(format!(
-            "Genesis hash '{}' doesn't match supported Solana clusters for Bundlr",
+            "Genesis hash '{}' doesn't match supported Solana clusters for Candy Machine",
             genesis_hash
         )))
     }

@@ -5,7 +5,7 @@ use std::{thread, time::Duration};
 use mpl_candy_machine::CandyMachine;
 
 use crate::cache::*;
-use crate::candy_machine::ID as CANDY_MACHINE_ID;
+use crate::candy_machine::CANDY_MACHINE_ID;
 use crate::common::*;
 use crate::config::Cluster;
 use crate::constants::{CANDY_EMOJI, PAPER_EMOJI};

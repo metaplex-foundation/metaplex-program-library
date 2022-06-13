@@ -1,13 +1,15 @@
+use std::str::FromStr;
+
 use anchor_client::solana_sdk::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use console::style;
 use mpl_candy_machine::{EndSettingType, WhitelistMintMode};
-use std::str::FromStr;
 
 use crate::cache::load_cache;
 use crate::candy_machine::*;
 use crate::common::*;
+use crate::pdas::get_collection_pda;
 use crate::utils::*;
 
 pub struct ShowArgs {
@@ -37,6 +39,8 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
     };
 
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
+    let client = setup_client(&sugar_config)?;
+    let program = client.program(CANDY_MACHINE_ID);
 
     let candy_machine_id = match Pubkey::from_str(&candy_machine_id) {
         Ok(candy_machine_id) => candy_machine_id,
@@ -46,6 +50,13 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
             return Err(error);
         }
     };
+
+    let collection_mint =
+        if let Ok((_, collection_pda)) = get_collection_pda(&candy_machine_id, &program) {
+            Some(collection_pda.mint)
+        } else {
+            None
+        };
 
     let cndy_state = get_candy_machine_state(&sugar_config, &candy_machine_id)?;
     let cndy_data = cndy_state.data;
@@ -64,6 +75,12 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
     println!(" {}", style(":").dim());
     print_with_style("", "authority", cndy_state.authority.to_string());
     print_with_style("", "wallet", cndy_state.wallet.to_string());
+    match collection_mint {
+        Some(collection_mint) => {
+            print_with_style("", "collection mint", collection_mint.to_string())
+        }
+        None => print_with_style("", "collection mint", "none".to_string()),
+    };
 
     if let Some(token_mint) = cndy_state.token_mint {
         print_with_style("", "spl token", token_mint.to_string());

@@ -1,18 +1,15 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
-use anchor_client::Client;
-use anchor_lang::AccountDeserialize;
+use anchor_client::{Client, ClientError};
 use anyhow::{anyhow, Result};
-
+pub use mpl_candy_machine::ID as CANDY_MACHINE_ID;
 use mpl_candy_machine::{CandyMachine, CandyMachineData, WhitelistMintMode, WhitelistMintSettings};
+use spl_token::id as token_program_id;
 
 use crate::config::data::SugarConfig;
 use crate::config::{price_as_lamports, ConfigData};
 use crate::setup::setup_client;
-
 use crate::utils::check_spl_token;
 
-pub use mpl_candy_machine::ID;
-use spl_token::id as token_program_id;
 // To test a custom candy machine program, comment the line above and use the
 // following lines to declare the id to use:
 //use solana_program::declare_id;
@@ -45,12 +42,15 @@ pub fn get_candy_machine_state(
     candy_machine_id: &Pubkey,
 ) -> Result<CandyMachine> {
     let client = setup_client(sugar_config)?;
-    let program = client.program(ID);
+    let program = client.program(CANDY_MACHINE_ID);
 
-    let data = program.rpc().get_account_data(candy_machine_id)?;
-    let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
-
-    Ok(candy_machine)
+    program.account(*candy_machine_id).map_err(|e| match e {
+        ClientError::AccountNotFound => anyhow!("Candy Machine does not exist!"),
+        _ => anyhow!(
+            "Failed to deserialize Candy Machine account: {}",
+            candy_machine_id.to_string()
+        ),
+    })
 }
 
 pub fn get_candy_machine_data(
@@ -59,10 +59,6 @@ pub fn get_candy_machine_data(
 ) -> Result<CandyMachineData> {
     let candy_machine = get_candy_machine_state(sugar_config, candy_machine_id)?;
     Ok(candy_machine.data)
-}
-
-pub fn uuid_from_pubkey(pubkey: &Pubkey) -> String {
-    pubkey.to_string()[0..6].to_string()
 }
 
 pub fn print_candy_machine_state(state: CandyMachine) {

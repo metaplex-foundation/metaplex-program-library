@@ -1,3 +1,5 @@
+use std::{str::FromStr, sync::Arc};
+
 use anchor_client::{
     solana_sdk::{
         program_pack::Pack,
@@ -11,23 +13,24 @@ use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 use chrono::Utc;
 use console::style;
+use mpl_candy_machine::instruction as nft_instruction;
+use mpl_candy_machine::{accounts as nft_accounts, CollectionPDA};
+use mpl_candy_machine::{CandyError, CandyMachine, EndSettingType, WhitelistMintMode};
+use mpl_token_metadata::pda::find_collection_authority_account;
+use solana_client::rpc_response::Response;
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
     instruction::{initialize_mint, mint_to},
     state::Account,
     ID as TOKEN_PROGRAM_ID,
 };
-use std::{str::FromStr, sync::Arc};
-
-use mpl_candy_machine::accounts as nft_accounts;
-use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{CandyMachine, EndSettingType, ErrorCode, WhitelistMintMode};
 
 use crate::cache::load_cache;
-use crate::candy_machine::ID as CANDY_MACHINE_ID;
+use crate::candy_machine::CANDY_MACHINE_ID;
 use crate::candy_machine::*;
 use crate::common::*;
-use crate::mint::pdas::*;
+use crate::config::Cluster;
+use crate::pdas::*;
 use crate::utils::*;
 
 pub struct MintArgs {
@@ -62,13 +65,29 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
     };
 
     println!(
+        "{} {}Loading candy machine",
+        style("[1/2]").bold().dim(),
+        LOOKING_GLASS_EMOJI
+    );
+    println!("{} {}", style("Candy machine ID:").bold(), candy_machine_id);
+
+    let pb = spinner_with_style();
+    pb.set_message("Connecting...");
+
+    let candy_machine_state = Arc::new(get_candy_machine_state(&sugar_config, &candy_pubkey)?);
+
+    let collection_pda_info =
+        Arc::new(get_collection_pda(&candy_pubkey, &client.program(CANDY_MACHINE_ID)).ok());
+
+    pb.finish_with_message("Done");
+
+    println!(
         "{} {}Minting from candy machine",
-        style("[1/1]").bold().dim(),
+        style("[2/2]").bold().dim(),
         CANDY_EMOJI
     );
     println!("Candy machine ID: {}", &candy_machine_id);
 
-    let candy_machine_state = Arc::new(get_candy_machine_state(&sugar_config, &candy_pubkey)?);
     let number = args.number.unwrap_or(1);
     let available = candy_machine_state.data.items_available - candy_machine_state.items_redeemed;
 
@@ -92,6 +111,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
             Arc::clone(&client),
             candy_pubkey,
             Arc::clone(&candy_machine_state),
+            Arc::clone(&collection_pda_info),
         ) {
             Ok(signature) => format!("{} {}", style("Signature:").bold(), signature),
             Err(err) => {
@@ -110,6 +130,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
                 Arc::clone(&client),
                 candy_pubkey,
                 Arc::clone(&candy_machine_state),
+                Arc::clone(&collection_pda_info),
             ) {
                 pb.abandon_with_message(format!("{}", style("Mint failed ").red().bold()));
                 error!("{:?}", err);
@@ -129,6 +150,7 @@ pub fn mint(
     client: Arc<Client>,
     candy_machine_id: Pubkey,
     candy_machine_state: Arc<CandyMachine>,
+    collection_pda_info: Arc<Option<PdaInfo<CollectionPDA>>>,
 ) -> Result<Signature> {
     let program = client.program(CANDY_MACHINE_ID);
     let payer = program.payer();
@@ -141,7 +163,7 @@ pub fn mint(
             "Command-line mint disabled (gatekeeper settings in use)"
         ));
     } else if candy_machine_state.items_redeemed >= candy_machine_data.items_available {
-        return Err(anyhow!(ErrorCode::CandyMachineEmpty));
+        return Err(anyhow!(CandyError::CandyMachineEmpty));
     }
 
     if candy_machine_state.authority != payer {
@@ -165,21 +187,21 @@ pub fn mint(
                 // has the wl token when creating the transaction
                 mint_enabled = true;
             } else if !mint_enabled {
-                return Err(anyhow!(ErrorCode::CandyMachineNotLive));
+                return Err(anyhow!(CandyError::CandyMachineNotLive));
             }
         }
 
         if !mint_enabled {
             // no whitelist mint settings (or no presale) and we are earlier than
             // go live date
-            return Err(anyhow!(ErrorCode::CandyMachineNotLive));
+            return Err(anyhow!(CandyError::CandyMachineNotLive));
         }
 
         if let Some(end_settings) = &candy_machine_data.end_settings {
             match end_settings.end_setting_type {
                 EndSettingType::Date => {
                     if (end_settings.number as i64) < mint_date {
-                        return Err(anyhow!(ErrorCode::CandyMachineNotLive));
+                        return Err(anyhow!(CandyError::CandyMachineNotLive));
                     }
                 }
                 EndSettingType::Amount => {
@@ -240,7 +262,7 @@ pub fn mint(
 
     // Check whitelist mint settings
     if let Some(wl_mint_settings) = &candy_machine_data.whitelist_mint_settings {
-        let whitelist_token_account = get_ata_for_mint(&wl_mint_settings.mint, &payer);
+        let whitelist_token_account = get_associated_token_address(&payer, &wl_mint_settings.mint);
 
         additional_accounts.push(AccountMeta {
             pubkey: whitelist_token_account,
@@ -277,13 +299,13 @@ pub fn mint(
             }
 
             if !token_found {
-                return Err(anyhow!(ErrorCode::NoWhitelistToken));
+                return Err(anyhow!(CandyError::NoWhitelistToken));
             }
         }
     }
 
     if let Some(token_mint) = candy_machine_state.token_mint {
-        let user_token_account_info = get_ata_for_mint(&token_mint, &payer);
+        let user_token_account_info = get_associated_token_address(&payer, &token_mint);
 
         additional_accounts.push(AccountMeta {
             pubkey: user_token_account_info,
@@ -298,18 +320,13 @@ pub fn mint(
         })
     }
 
-    let metadata_pda = get_metadata_pda(&nft_mint.pubkey());
-    let master_edition_pda = get_master_edition_pda(&nft_mint.pubkey());
+    let metadata_pda = find_metadata_pda(&nft_mint.pubkey());
+    let master_edition_pda = find_master_edition_pda(&nft_mint.pubkey());
     let (candy_machine_creator_pda, creator_bump) =
-        get_candy_machine_creator_pda(&candy_machine_id);
+        find_candy_machine_creator_pda(&candy_machine_id);
 
-    let mut builder = program
+    let mint_ix = program
         .request()
-        .instruction(create_mint_account_ix)
-        .instruction(init_mint_ix)
-        .instruction(create_assoc_account_ix)
-        .instruction(mint_to_ix)
-        .signer(&nft_mint)
         .accounts(nft_accounts::MintNFT {
             candy_machine: candy_machine_id,
             candy_machine_creator: candy_machine_creator_pda,
@@ -328,7 +345,17 @@ pub fn mint(
             recent_blockhashes: sysvar::recent_blockhashes::ID,
             instruction_sysvar_account: sysvar::instructions::ID,
         })
-        .args(nft_instruction::MintNft { creator_bump });
+        .args(nft_instruction::MintNft { creator_bump })
+        .instructions()?;
+
+    let mut builder = program
+        .request()
+        .instruction(create_mint_account_ix)
+        .instruction(init_mint_ix)
+        .instruction(create_assoc_account_ix)
+        .instruction(mint_to_ix)
+        .signer(&nft_mint)
+        .instruction(mint_ix[0].clone());
 
     if !additional_accounts.is_empty() {
         for account in additional_accounts {
@@ -336,7 +363,42 @@ pub fn mint(
         }
     }
 
+    if let Some((collection_pda_pubkey, collection_pda)) = collection_pda_info.as_ref() {
+        let collection_authority_record =
+            find_collection_authority_account(&collection_pda.mint, collection_pda_pubkey).0;
+        builder = builder
+            .accounts(nft_accounts::SetCollectionDuringMint {
+                candy_machine: candy_machine_id,
+                metadata: metadata_pda,
+                payer,
+                collection_pda: *collection_pda_pubkey,
+                token_metadata_program: mpl_token_metadata::ID,
+                instructions: sysvar::instructions::ID,
+                collection_mint: collection_pda.mint,
+                collection_metadata: find_metadata_pda(&collection_pda.mint),
+                collection_master_edition: find_master_edition_pda(&collection_pda.mint),
+                authority: payer,
+                collection_authority_record,
+            })
+            .args(nft_instruction::SetCollectionDuringMint {});
+    }
+
     let sig = builder.send()?;
+
+    if let Err(_) | Ok(Response { value: None, .. }) = program
+        .rpc()
+        .get_account_with_commitment(&metadata_pda, CommitmentConfig::processed())
+    {
+        let cluster_param = match get_cluster(program.rpc()).unwrap_or(Cluster::Mainnet) {
+            Cluster::Devnet => "?devnet",
+            Cluster::Mainnet => "",
+        };
+        return Err(anyhow!(
+            "Minting most likely failed with a bot tax. Check the transaction link for more details: https://explorer.solana.com/tx/{}{}",
+            sig.to_string(),
+            cluster_param,
+        ));
+    }
 
     info!("Minted! TxId: {}", sig);
 

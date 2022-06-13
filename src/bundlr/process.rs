@@ -3,7 +3,7 @@ use bundlr_sdk::{deep_hash::deep_hash, deep_hash::DeepHashChunk};
 use console::style;
 use data_encoding::BASE64URL;
 
-use crate::candy_machine::ID as CANDY_MACHINE_ID;
+use crate::candy_machine::CANDY_MACHINE_ID;
 use crate::{cli::BundlrAction, common::*, config::*, upload::BundlrHandler, utils::*};
 
 // The minimum amount required for withdraw.

@@ -1,6 +1,6 @@
 [package]
 name = "sugar-cli"
-version = "0.2.3"
+version = "0.3.0"
 edition = "2021"
 description = "Command line tool for creating and managing Metaplex Candy Machines."
 license = "Apache-2.0"
@@ -12,9 +12,9 @@ name = "sugar"
 path = "src/main.rs"
 
 [dependencies]
-anchor-client = "0.19.0"
-anchor-lang = "0.19.0"
-anchor-spl = "0.19.0"
+anchor-client = "0.24.2"
+anchor-lang = "0.24.2"
+anchor-spl = "0.24.2"
 anyhow = "1.0.52"
 async-trait = "0.1.52"
 aws-config = "0.9.0"
@@ -30,8 +30,8 @@ futures = "0.3.19"
 glob = "0.3.0"
 indexmap = { version = "1.8.0", features = ["serde"] }
 indicatif = { version = "0.16.2", features = ["rayon"] }
-mpl-token-metadata = "1.1.0"
-mpl-candy-machine = { version = "2.0.1", features = ["no-entrypoint"] }
+mpl-token-metadata = "1.2.7"
+mpl-candy-machine = { version = "4.0.0", features = ["no-entrypoint"] }
 num_cpus = "1.13.1"
 par-stream = { version = "0.10.0", features = ["runtime-tokio"] }
 rand = "0.7.0"

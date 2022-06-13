@@ -1,12 +1,10 @@
+use crate::common::*;
+use crate::pdas::find_candy_machine_creator_pda;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
+use mpl_candy_machine::ConfigLine;
 use serde::{Deserialize, Serialize};
 use std::{fs, io::Write, path::Path};
-
-use mpl_candy_machine::ConfigLine;
-
-use crate::common::*;
-use crate::mint::pdas::get_candy_machine_creator_pda;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cache {
@@ -63,7 +61,7 @@ impl CacheProgram {
 
     pub fn new_from_cm(candy_machine: &Pubkey) -> Self {
         let (candy_machine_creator_pda, _creator_bump) =
-            get_candy_machine_creator_pda(candy_machine);
+            find_candy_machine_creator_pda(candy_machine);
         CacheProgram {
             candy_machine: candy_machine.to_string(),
             candy_machine_creator: candy_machine_creator_pda.to_string(),
@@ -94,8 +92,10 @@ impl Default for CacheItems {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct CacheItem {
     pub name: String,
+    #[serde(default = "String::default")]
     pub image_hash: String,
     pub image_link: String,
+    #[serde(default = "String::default")]
     pub metadata_hash: String,
     pub metadata_link: String,
     #[serde(rename = "onChain")]
