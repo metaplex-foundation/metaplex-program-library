@@ -288,4 +288,89 @@ mod set_collection_size {
 
         assert_custom_error!(err, MetadataError::IncorrectOwner);
     }
+
+    #[tokio::test]
+    async fn invalid_update_authority_fails() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a Collection Parent NFT with the CollectionDetails struct populated
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
+            )
+            .await
+            .unwrap();
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        // NFT is created with context payer as the update authority so we need to update this so we don't automatically
+        // get the update authority to sign the transaction.
+        let new_update_authority = Keypair::new();
+
+        collection_parent_nft
+            .change_update_authority(&mut context, new_update_authority.pubkey())
+            .await
+            .unwrap();
+
+        let invalid_update_authorty = Keypair::new();
+
+        let current_size = 0;
+        let new_size = 11235;
+
+        let md_account = context
+            .banks_client
+            .get_account(collection_parent_nft.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+        let retrieved_size = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { size } => size,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
+
+        assert_eq!(retrieved_size, current_size);
+
+        let ix = set_collection_size(
+            PROGRAM_ID,
+            collection_parent_nft.pubkey,
+            invalid_update_authorty.pubkey(),
+            collection_parent_nft.mint.pubkey(),
+            None,
+            new_size,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &invalid_update_authorty],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidCollectionUpdateAuthority);
+    }
 }

@@ -1816,8 +1816,9 @@ pub fn set_collection_size(
             None,
         )?;
 
-        // Update authority is a signer and matches update authority on metadata.
-        assert_update_authority_is_correct(&metadata, collection_update_authority_account_info)?;
+        if !collection_update_authority_account_info.is_signer {
+            return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
+        }
     }
 
     if let Some(details) = metadata.collection_details {
