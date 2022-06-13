@@ -1,0 +1,83 @@
+# required permissions:
+#   id-token: write for writing to github
+#   contents: write for updating package contents
+
+name: 'Publish to updated package artifacts'
+description: 'Publish to NPM registry and push updates to Github'
+inputs:
+  # cannot load token directly in action, so we need to pass it in
+  npm-token:
+    description: 'NPM token for authenticated requests'
+    required: true
+  github-token:
+    description: 'Github token for authenticated requests'
+    required: true
+  package-name:
+    description: 'Package name to update'
+    required: true
+  path-to-package-dir:
+    description: "Path to the package to update's directory"
+    required: true
+  pull-number:
+    description: 'Pull request numeric ID'
+    required: true
+  branch:
+    description: 'Branch to update'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Map PR review to version update
+      uses: ./.github/actions/map-pr-review-to-version
+      id: map-pr-review-to-version
+      with:
+        pull-number: ${{ inputs.pull-number }}
+
+    - name: Print updated package version
+      shell: bash
+      run: |
+        echo "Updated version: ${{ steps.map-pr-review-to-version.outputs.version }}"
+
+    - name: Install dependencies && upgrade package version
+      if: steps.map-pr-review-to-version.outputs.version != 'none'
+      id: update-package-version
+      shell: bash
+      run: |
+        cd $PATH_TO_PACKAGE_DIR
+        yarn install
+        git config user.name github-actions[bot]
+        git config user.email github-actions[bot]@users.noreply.github.com
+        npm version ${{ steps.map-pr-review-to-version.outputs.version }}
+        echo "\n\nLog after update"
+        git log
+        echo "\n\n"
+      env:
+        PATH_TO_PACKAGE_DIR: ${{ inputs.path-to-package-dir }}
+
+    - name: NPM login
+      if: steps.map-pr-review-to-version.outputs.version != 'none'
+      shell: bash
+      run: |
+        echo "//registry.npmjs.org/:_authToken=${NPM_PUBLISH_TOKEN}" > ~/.npmrc
+      env:
+        NPM_PUBLISH_TOKEN: ${{ inputs.npm-token }}
+
+    - name: Publish artifacts to NPM
+      if: steps.map-pr-review-to-version.outputs.version != 'none'
+      run: npm publish $PATH_TO_PACKAGE_DIR
+      shell: bash
+      env:
+        NPM_PUBLISH_TOKEN: ${{ inputs.npm-token }}
+        PATH_TO_PACKAGE_DIR: ${{ inputs.path-to-package-dir }}
+
+    - name: Push changes to Github
+      if: steps.map-pr-review-to-version.outputs.version != 'none'
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ inputs.github-token }}
+        branch: ${{ inputs.branch }}

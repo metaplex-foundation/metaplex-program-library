@@ -35,6 +35,12 @@ const withdrawFromTreasuryStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _withdrawFromTreasury_ instruction
+ *
+ * @property [] treasuryMint
+ * @property [**signer**] authority
+ * @property [_writable_] treasuryWithdrawalDestination
+ * @property [_writable_] auctionHouseTreasury
+ * @property [_writable_] auctionHouse
  * @category Instructions
  * @category WithdrawFromTreasury
  * @category generated
