@@ -122,6 +122,18 @@ pub struct PrimaryMetadataCreators {
     pub creators: Vec<Creator>,
 }
 
+
+pub fn from_mpl_creators(creators: Vec<mpl_token_metadata::state::Creator>) -> Vec<Creator> {
+    creators
+        .iter()
+        .map(|e| Creator {
+            address: e.address,
+            share: e.share,
+            verified: e.verified,
+        })
+        .collect()
+}
+
 impl PrimaryMetadataCreators {
     pub const LEN: usize = 8 + ((32 + 1 + 1) * MAX_PRIMARY_CREATORS_LEN + 1);
 }
