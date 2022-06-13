@@ -1,8 +1,8 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
-import { collectionDetailsBeet } from 'src/generated';
 import { Metadata } from '../generated/accounts/Metadata';
 import { collectionBeet } from '../generated/types/Collection';
+import { collectionDetailsBeet } from '../generated/types/CollectionDetails';
 import { dataBeet } from '../generated/types/Data';
 import { keyBeet } from '../generated/types/Key';
 import { tokenStandardBeet } from '../generated/types/TokenStandard';
