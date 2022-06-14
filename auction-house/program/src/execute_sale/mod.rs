@@ -828,9 +828,15 @@ fn execute_sale_logic<'info>(
         msg!("No delegate detected on token account.");
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
+
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
-    let ts_bump = buyer_ts_data[0];
+    let ts_bump = if buyer_ts_data.len() > 0 {
+        buyer_ts_data[0]
+    } else {
+        return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
+    };
+
     assert_valid_trade_state(
         &buyer.key(),
         auction_house,

@@ -67,13 +67,4 @@ jobs:
         id: run_test
         working-directory: ./fixed-price-sale/program
         run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test buy -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test change_market -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test claim_resource -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test close_market -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test create_store -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test init_selling_resource -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test resume_market -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test save_primary_metadata_creators -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test suspend_market -- --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test withdraw -- --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --test-threads 1

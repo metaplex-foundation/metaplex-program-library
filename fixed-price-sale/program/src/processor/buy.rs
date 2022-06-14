@@ -7,7 +7,7 @@ use crate::{
 use anchor_lang::prelude::*;
 use anchor_lang::{
     solana_program::{program::invoke, program_pack::Pack, system_instruction},
-    System,
+    system_program::System,
 };
 use anchor_spl::token;
 use mpl_token_metadata::{state::Metadata, utils::get_supply_off_master_edition};

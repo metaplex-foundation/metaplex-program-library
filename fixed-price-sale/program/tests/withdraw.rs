@@ -9,7 +9,9 @@ mod withdraw {
             setup_functions::{setup_selling_resource, setup_store},
         },
     };
-    use anchor_lang::{AccountDeserialize, Id, InstructionData, System, ToAccountMetas};
+    use anchor_lang::{
+        system_program::System, AccountDeserialize, Id, InstructionData, ToAccountMetas,
+    };
     use mpl_fixed_price_sale::{
         accounts as mpl_fixed_price_sale_accounts, instruction as mpl_fixed_price_sale_instruction,
         state::SellingResource,
@@ -266,7 +268,7 @@ mod withdraw {
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
                 share: 100,
@@ -645,7 +647,7 @@ mod withdraw {
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
                 share: 100,
@@ -1769,7 +1771,7 @@ mod withdraw {
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: primary_royalties_holder.pubkey(),
                 verified: false,
                 share: 100,

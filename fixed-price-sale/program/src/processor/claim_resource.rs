@@ -4,7 +4,7 @@ use crate::{
     utils::*,
     ClaimResource,
 };
-use anchor_lang::{prelude::*, solana_program::program_pack::Pack, System};
+use anchor_lang::{prelude::*, solana_program::program_pack::Pack, system_program::System};
 use anchor_spl::token;
 
 impl<'info> ClaimResource<'info> {

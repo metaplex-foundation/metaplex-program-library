@@ -1,0 +1,43 @@
+name: 'Fetch PR labels'
+description: 'Fetch all label names assigned to a PR'
+inputs:
+  pull-number:
+    description: 'Pull request number'
+    required: true
+
+outputs:
+  labels:
+    description: Label names
+    value: ${{ steps.set-output.outputs.labels }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+    - name: Parse PR data for label names
+      uses: actions/github-script@v4
+      id: fetch-labels
+      with:
+        script: |
+          const request = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: ${{ inputs.pull-number }}
+          }
+          core.info(`Getting PR #${request.pull_number} from ${request.owner}/${request.repo}`)
+          try {
+            const { data } = await github.pulls.get(request)
+            core.info(`Got PR data: ${JSON.stringify(data)}`)
+            const labels = data.labels.length > 0 ? data.labels.map((label) => label.name) : []
+            core.info(`Found ${labels.length} labels: ${labels}`)
+            return labels
+          } catch (err) {
+            core.setFailed(`Request failed with error ${err}`)
+          }
+
+    - name: Set labels as output
+      id: set-output
+      run: echo "::set-output name=labels::$LABELS"
+      shell: bash
+      env:
+        LABELS: ${{steps.fetch-labels.outputs.result}}
