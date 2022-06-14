@@ -1794,7 +1794,7 @@ dependencies = [
  "anchor-client",
  "anchor-lang",
  "anchor-spl",
- "mpl-token-metadata 1.1.0",
+ "mpl-token-metadata",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
