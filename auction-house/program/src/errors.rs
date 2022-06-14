@@ -151,8 +151,8 @@ pub enum AuctionHouseError {
     InvalidSeedsOrAuctionHouseNotDelegated,
 
     // 6037
-    #[msg("Calculated partial price does not not partial price that was provided.")]
-    PartialPriceMismatch,
+    #[msg("The buyer trade state was unable to be initialized.")]
+    BuyerTradeStateNotValid,
 
     // 6038
     #[msg("Partial order size and price must both be provided in a partial buy.")]
@@ -165,4 +165,8 @@ pub enum AuctionHouseError {
     // 6040
     #[msg("Amount of tokens available is less than original sell order. Partial buy inputs need to be provided.")]
     PartialBuyInputsNeeded,
+
+    // 6041
+    #[msg("Calculated partial price does not not partial price that was provided.")]
+    PartialPriceMismatch,
 }

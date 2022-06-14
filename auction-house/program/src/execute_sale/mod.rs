@@ -11,7 +11,7 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
-    partial_order_size: Option<u64>, 
+    partial_order_size: Option<u64>,
     partial_order_price: Option<u64>
 )]
 pub struct ExecuteSale<'info> {
@@ -825,7 +825,11 @@ fn execute_sale_logic<'info>(
 
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
-    let ts_bump = buyer_ts_data[0];
+    let ts_bump = if buyer_ts_data.len() > 0 {
+        buyer_ts_data[0]
+    } else {
+        return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
+    };
 
     let data = token_account.try_borrow_data()?;
     let token_account_data = TokenAccount::try_deserialize(&mut data.as_ref())?;
@@ -843,17 +847,17 @@ fn execute_sale_logic<'info>(
                 ts_bump,
             )?;
 
-            if ((buyer_price / token_size) * size) != price {
-                return Err(AuctionHouseError::PartialPriceMismatch.into());
-            }
+            // if ((buyer_price / token_size) * size) != price {
+            //     return Err(AuctionHouseError::PartialPriceMismatch.into());
+            // }
 
-            if token_account_data.amount < size {
-                return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
-            };
+            // if token_account_data.amount < size {
+            //     return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
+            // };
 
-            if token_account_data.delegated_amount < size {
-                return Err(ProgramError::InvalidAccountData.into());
-            };
+            // if token_account_data.delegated_amount < size {
+            //     return Err(ProgramError::InvalidAccountData.into());
+            // };
 
             (size, price)
         }
@@ -869,9 +873,9 @@ fn execute_sale_logic<'info>(
                 ts_bump,
             )?;
 
-            if token_account_data.amount < token_size {
-                return Err(AuctionHouseError::PartialBuyInputsNeeded.into());
-            };
+            // if token_account_data.amount < token_size {
+            //     return Err(AuctionHouseError::PartialBuyInputsNeeded.into());
+            // };
 
             (token_size, buyer_price)
         }
@@ -880,7 +884,7 @@ fn execute_sale_logic<'info>(
         }
     };
 
-        if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
+    if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
 
