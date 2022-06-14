@@ -42,7 +42,7 @@ type ValidateSafetyDepositBoxV2Params = {
   metadataAuthority: PublicKey;
   originalAuthorityLookup: PublicKey;
   tokenTracker: PublicKey;
-  tokenAccount: PublicKey;
+  metadata: PublicKey;
   tokenMint: PublicKey;
   edition: PublicKey;
   whitelistedCreator: PublicKey;
@@ -69,7 +69,7 @@ export class ValidateSafetyDepositBoxV2 extends Transaction {
       metadataAuthority,
       originalAuthorityLookup,
       tokenTracker,
-      tokenAccount,
+      metadata,
       tokenMint,
       edition,
       whitelistedCreator,
@@ -102,7 +102,7 @@ export class ValidateSafetyDepositBoxV2 extends Transaction {
             isWritable: true,
           },
           {
-            pubkey: tokenAccount,
+            pubkey: metadata,
             isSigner: false,
             isWritable: true,
           },
