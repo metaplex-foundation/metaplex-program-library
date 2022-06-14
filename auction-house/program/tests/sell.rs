@@ -8,8 +8,7 @@ use utils::{helpers::default_scopes, setup_functions::*};
 
 use mpl_auction_house::receipt::ListingReceipt;
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
-use solana_sdk::{program_pack::Pack, signer::Signer, sysvar::clock::Clock};
-use spl_token::state::Account;
+use solana_sdk::{sysvar::clock::Clock, Signer::Signer};
 use std::assert_eq;
 
 #[tokio::test]
