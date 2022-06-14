@@ -547,9 +547,7 @@ pub fn create_or_allocate_account_raw<'a>(
 /// Returns the bump seed.
 pub fn assert_derivation(program_id: &Pubkey, account: &AccountInfo, path: &[&[u8]]) -> Result<u8> {
     let (key, bump) = Pubkey::find_program_address(path, program_id);
-    msg!("key {:?}", key);
     if key != *account.key {
-        msg!("account {:?}", account.key);
         return Err(AuctionHouseError::DerivedKeyInvalid.into());
     }
     Ok(bump)
