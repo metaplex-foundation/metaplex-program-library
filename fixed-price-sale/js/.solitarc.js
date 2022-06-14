@@ -13,10 +13,4 @@ module.exports = {
   sdkDir,
   binaryInstallDir,
   programDir,
-  rustbin: {
-    // NOTE: this is a workaround for missing anchor-cli version matching ~0.22
-    // It should be removed as soon as 'anchor-lang' is upgraded and a matching anchor-cli
-    // version exists.
-    versionRangeFallback: '~0.24.2',
-  },
 };

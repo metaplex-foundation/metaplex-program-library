@@ -170,7 +170,7 @@ async fn auctioneer_withdraw_success() {
         &ah,
         &test_metadata,
         &buyer,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         sale_price,
     );
     context
@@ -193,7 +193,7 @@ async fn auctioneer_withdraw_success() {
         &ahkey,
         &ah,
         &test_metadata,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         sale_price,
         sale_price,
     );
@@ -281,7 +281,7 @@ async fn auctioneer_withdraw_missing_scope_fails() {
         &ah,
         &test_metadata,
         &buyer,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         sale_price,
     );
     context
@@ -296,7 +296,7 @@ async fn auctioneer_withdraw_missing_scope_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         sale_price,
         withdraw_price,
     );
@@ -374,7 +374,7 @@ async fn auctioneer_withdraw_no_delegate_fails() {
         &ahkey,
         &ah,
         &test_metadata,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         sale_price,
         withdraw_price,
     );

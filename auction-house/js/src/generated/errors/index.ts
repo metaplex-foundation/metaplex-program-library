@@ -596,13 +596,159 @@ createErrorFromCodeLookup.set(0x178b, () => new InstructionMismatchError());
 createErrorFromNameLookup.set('InstructionMismatch', () => new InstructionMismatchError());
 
 /**
+ * InvalidAuctioneer: 'Invalid Auctioneer for this Auction House instance.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAuctioneerError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'InvalidAuctioneer';
+  constructor() {
+    super('Invalid Auctioneer for this Auction House instance.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAuctioneerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new InvalidAuctioneerError());
+createErrorFromNameLookup.set('InvalidAuctioneer', () => new InvalidAuctioneerError());
+
+/**
+ * MissingAuctioneerScope: 'The Auctioneer does not have the correct scope for this action.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAuctioneerScopeError extends Error {
+  readonly code: number = 0x178d;
+  readonly name: string = 'MissingAuctioneerScope';
+  constructor() {
+    super('The Auctioneer does not have the correct scope for this action.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAuctioneerScopeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178d, () => new MissingAuctioneerScopeError());
+createErrorFromNameLookup.set('MissingAuctioneerScope', () => new MissingAuctioneerScopeError());
+
+/**
+ * MustUseAuctioneerHandler: 'Must use auctioneer handler.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustUseAuctioneerHandlerError extends Error {
+  readonly code: number = 0x178e;
+  readonly name: string = 'MustUseAuctioneerHandler';
+  constructor() {
+    super('Must use auctioneer handler.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustUseAuctioneerHandlerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178e, () => new MustUseAuctioneerHandlerError());
+createErrorFromNameLookup.set(
+  'MustUseAuctioneerHandler',
+  () => new MustUseAuctioneerHandlerError(),
+);
+
+/**
+ * NoAuctioneerProgramSet: 'No Auctioneer program set.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoAuctioneerProgramSetError extends Error {
+  readonly code: number = 0x178f;
+  readonly name: string = 'NoAuctioneerProgramSet';
+  constructor() {
+    super('No Auctioneer program set.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoAuctioneerProgramSetError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178f, () => new NoAuctioneerProgramSetError());
+createErrorFromNameLookup.set('NoAuctioneerProgramSet', () => new NoAuctioneerProgramSetError());
+
+/**
+ * TooManyScopes: 'Too many scopes.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TooManyScopesError extends Error {
+  readonly code: number = 0x1790;
+  readonly name: string = 'TooManyScopes';
+  constructor() {
+    super('Too many scopes.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TooManyScopesError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1790, () => new TooManyScopesError());
+createErrorFromNameLookup.set('TooManyScopes', () => new TooManyScopesError());
+
+/**
+ * AuctionHouseNotDelegated: 'Auction House not delegated.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AuctionHouseNotDelegatedError extends Error {
+  readonly code: number = 0x1791;
+  readonly name: string = 'AuctionHouseNotDelegated';
+  constructor() {
+    super('Auction House not delegated.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AuctionHouseNotDelegatedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1791, () => new AuctionHouseNotDelegatedError());
+createErrorFromNameLookup.set(
+  'AuctionHouseNotDelegated',
+  () => new AuctionHouseNotDelegatedError(),
+);
+
+/**
+ * BumpSeedNotInHashMap: 'Bump seed not in hash map.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BumpSeedNotInHashMapError extends Error {
+  readonly code: number = 0x1792;
+  readonly name: string = 'BumpSeedNotInHashMap';
+  constructor() {
+    super('Bump seed not in hash map.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BumpSeedNotInHashMapError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1792, () => new BumpSeedNotInHashMapError());
+createErrorFromNameLookup.set('BumpSeedNotInHashMap', () => new BumpSeedNotInHashMapError());
+
+/**
  * EscrowUnderRentExemption: 'The instruction would drain the escrow below rent exemption threshold'
  *
  * @category Errors
  * @category generated
  */
 export class EscrowUnderRentExemptionError extends Error {
-  readonly code: number = 0x178c;
+  readonly code: number = 0x1793;
   readonly name: string = 'EscrowUnderRentExemption';
   constructor() {
     super('The instruction would drain the escrow below rent exemption threshold');
@@ -612,10 +758,33 @@ export class EscrowUnderRentExemptionError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x178c, () => new EscrowUnderRentExemptionError());
+createErrorFromCodeLookup.set(0x1793, () => new EscrowUnderRentExemptionError());
 createErrorFromNameLookup.set(
   'EscrowUnderRentExemption',
   () => new EscrowUnderRentExemptionError(),
+);
+
+/**
+ * InvalidSeedsOrAuctionHouseNotDelegated: 'Invalid seeds or Auction House not delegated'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidSeedsOrAuctionHouseNotDelegatedError extends Error {
+  readonly code: number = 0x1794;
+  readonly name: string = 'InvalidSeedsOrAuctionHouseNotDelegated';
+  constructor() {
+    super('Invalid seeds or Auction House not delegated');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidSeedsOrAuctionHouseNotDelegatedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1794, () => new InvalidSeedsOrAuctionHouseNotDelegatedError());
+createErrorFromNameLookup.set(
+  'InvalidSeedsOrAuctionHouseNotDelegated',
+  () => new InvalidSeedsOrAuctionHouseNotDelegatedError(),
 );
 
 /**
