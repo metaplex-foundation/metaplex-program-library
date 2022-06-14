@@ -3,3 +3,4 @@ sugar.log
 /assets
 *.json
 test_item
+/.idea
