@@ -163,10 +163,6 @@ pub enum AuctionHouseError {
     NotEnoughTokensAvailableForPurchase,
 
     // 6040
-    #[msg("Amount of tokens available is less than original sell order. Partial buy inputs need to be provided.")]
-    PartialBuyInputsNeeded,
-
-    // 6041
     #[msg("Calculated partial price does not not partial price that was provided.")]
     PartialPriceMismatch,
 }

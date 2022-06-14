@@ -1,7 +1,11 @@
-use anchor_lang::{prelude::*, solana_program::program::invoke, AnchorDeserialize};
-use solana_program::program_memory::sol_memset;
-
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program::invoke, program_pack::Pack},
+    AnchorDeserialize,
+};
+use solana_program::program_memory::sol_memset;
+use spl_token::state::Account as SplAccount;
 
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
 #[derive(Accounts)]
@@ -831,8 +835,7 @@ fn execute_sale_logic<'info>(
         return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
     };
 
-    let data = token_account.try_borrow_data()?;
-    let token_account_data = TokenAccount::try_deserialize(&mut data.as_ref())?;
+    let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
 
     let (size, price): (u64, u64) = match (partial_order_size, partial_order_price) {
         (Some(size), Some(price)) => {
@@ -847,17 +850,17 @@ fn execute_sale_logic<'info>(
                 ts_bump,
             )?;
 
-            // if ((buyer_price / token_size) * size) != price {
-            //     return Err(AuctionHouseError::PartialPriceMismatch.into());
-            // }
+            if ((buyer_price / token_size) * size) != price {
+                return Err(AuctionHouseError::PartialPriceMismatch.into());
+            }
 
-            // if token_account_data.amount < size {
-            //     return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
-            // };
+            if token_account_data.amount < size {
+                return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
+            };
 
-            // if token_account_data.delegated_amount < size {
-            //     return Err(ProgramError::InvalidAccountData.into());
-            // };
+            if token_account_data.delegated_amount < size {
+                return Err(ProgramError::InvalidAccountData.into());
+            };
 
             (size, price)
         }
@@ -873,9 +876,9 @@ fn execute_sale_logic<'info>(
                 ts_bump,
             )?;
 
-            // if token_account_data.amount < token_size {
-            //     return Err(AuctionHouseError::PartialBuyInputsNeeded.into());
-            // };
+            if token_account_data.amount < token_size {
+                return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
+            };
 
             (token_size, buyer_price)
         }
