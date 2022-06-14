@@ -26,6 +26,7 @@ async fn buy_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -48,6 +49,7 @@ async fn buy_success() {
         &test_metadata.token.pubkey(),
         &buyer,
         ONE_SOL,
+        1,
     );
     context
         .banks_client
@@ -105,6 +107,7 @@ async fn auctioneer_buy_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -196,6 +199,7 @@ async fn auctioneer_buy_no_delegate_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -254,6 +258,7 @@ async fn auctioneer_buy_invalid_scope_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();

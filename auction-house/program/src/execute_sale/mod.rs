@@ -827,7 +827,7 @@ fn execute_sale_logic<'info>(
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
     let ts_bump = buyer_ts_data[0];
 
-    let data = &token_account_clone.try_borrow_data()?;
+    let data = token_account.try_borrow_data()?;
     let token_account_data = TokenAccount::try_deserialize(&mut data.as_ref())?;
 
     let (size, price): (u64, u64) = match (partial_order_size, partial_order_price) {
@@ -847,11 +847,11 @@ fn execute_sale_logic<'info>(
                 return Err(AuctionHouseError::PartialPriceMismatch.into());
             }
 
-            if &token_account_data.amount < &size {
+            if token_account_data.amount < size {
                 return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
             };
 
-            if &token_account_data.delegated_amount < &size {
+            if token_account_data.delegated_amount < size {
                 return Err(ProgramError::InvalidAccountData.into());
             };
 
@@ -869,7 +869,7 @@ fn execute_sale_logic<'info>(
                 ts_bump,
             )?;
 
-            if &token_account_data.amount < &token_size {
+            if token_account_data.amount < token_size {
                 return Err(AuctionHouseError::PartialBuyInputsNeeded.into());
             };
 
@@ -880,7 +880,7 @@ fn execute_sale_logic<'info>(
         }
     };
 
-    if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
+        if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
 
