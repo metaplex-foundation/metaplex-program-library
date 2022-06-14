@@ -14,7 +14,7 @@ mpl-fixed-price-sale = { path = "../program", features = [ "no-entrypoint" ] }
 mpl-token-metadata = { features = [ "no-entrypoint" ], version="~1.1.0" }
 borsh = "0.9.1"
 spl-token = { version = "3.2.0", features = [ "no-entrypoint" ] }
-anchor-lang = "0.22.1"
+anchor-lang = "0.24.2"
 chrono = "0.4.19"
 spl-associated-token-account = "1.0.3"
 serde_json = "1.0.79"

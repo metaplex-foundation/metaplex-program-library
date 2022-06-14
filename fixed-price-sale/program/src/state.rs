@@ -2,7 +2,8 @@
 
 use crate::utils::{DESCRIPTION_DEFAULT_SIZE, MAX_PRIMARY_CREATORS_LEN, NAME_DEFAULT_SIZE};
 use anchor_lang::prelude::*;
-use borsh::{BorshDeserialize, BorshSerialize};
+use mpl_token_metadata::state::Creator as MPL_Creator;
+use std::convert::From;
 
 // by system acc I mean account to hold only native SOL
 pub const MINIMUM_BALANCE_FOR_SYSTEM_ACCS: u64 = 890880;
@@ -116,18 +117,11 @@ impl TradeHistory {
     pub const LEN: usize = 8 + 32 + 32 + 8;
 }
 
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub struct Creator {
-    pub address: Pubkey,
-    pub verified: bool,
-    // In percentages, NOT basis points ;) Watch out!
-    pub share: u8,
-}
-
 #[account]
 pub struct PrimaryMetadataCreators {
     pub creators: Vec<Creator>,
 }
+
 
 pub fn from_mpl_creators(creators: Vec<mpl_token_metadata::state::Creator>) -> Vec<Creator> {
     creators
@@ -151,5 +145,24 @@ pub struct PayoutTicket {
 }
 
 impl PayoutTicket {
-    pub const LEN: usize = 1;
+    pub const LEN: usize = 9;
+}
+
+// Unfortunate duplication of token metadata so that IDL picks it up.
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct Creator {
+    pub address: Pubkey,
+    pub verified: bool,
+    // In percentages, NOT basis points ;) Watch out!
+    pub share: u8,
+}
+
+impl From<MPL_Creator> for Creator {
+    fn from(item: MPL_Creator) -> Self {
+        Creator {
+            address: item.address,
+            verified: item.verified,
+            share: item.share,
+        }
+    }
 }

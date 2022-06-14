@@ -1,12 +1,11 @@
-use crate::state::{from_mpl_creators, Creator};
-use crate::{error::ErrorCode, utils::*, SavePrimaryMetadataCreators};
+use crate::{error::ErrorCode, state::Creator, utils::*, SavePrimaryMetadataCreators};
 use anchor_lang::prelude::*;
 
 impl<'info> SavePrimaryMetadataCreators<'info> {
     pub fn process(
         &mut self,
         _primary_metadata_creators_bump: u8,
-        creators: Vec<mpl_token_metadata::state::Creator>,
+        creators: Vec<Creator>,
     ) -> Result<()> {
         let metadata = &self.metadata;
         let admin = &self.admin;
@@ -31,7 +30,7 @@ impl<'info> SavePrimaryMetadataCreators<'info> {
 
         assert_keys_equal(metadata_state.update_authority, *admin.key)?;
 
-        secondary_metadata_creators.creators = from_mpl_creators(creators);
+        secondary_metadata_creators.creators = creators;
 
         Ok(())
     }
