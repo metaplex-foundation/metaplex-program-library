@@ -178,7 +178,6 @@ pub fn handle_mint_nft<'info>(
                 &anchor_lang::solana_program::system_program::ID,
             )
             && !cmp_pubkeys(&program_id, &A_TOKEN)
-            && !cmp_pubkeys(&program_id, &CUPCAKE_ID)
         {
             msg!("Transaction had ix with program id {}", program_id);
             punish_bots(
