@@ -37,6 +37,17 @@ pub fn assert_higher_bid(
     Ok(())
 }
 
+pub fn assert_exceeds_reserve_price(
+    listing_config: &Account<ListingConfig>,
+    new_bid_price: u64,
+) -> Result<()> {
+    if new_bid_price < listing_config.reserve_price {
+        return err!(AuctioneerError::BelowReservePrice);
+    }
+
+    Ok(())
+}
+
 pub fn assert_highest_bidder(
     listing_config: &Account<ListingConfig>,
     buyer_trade_state: Pubkey,
