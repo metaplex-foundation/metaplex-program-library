@@ -10,58 +10,61 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category UnverifyCollection
+ * @category VerifySizedCollectionItem
  * @category generated
  */
-export const UnverifyCollectionStruct = new beet.BeetArgsStruct<{
+export const VerifySizedCollectionItemStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
-}>([['instructionDiscriminator', beet.u8]], 'UnverifyCollectionInstructionArgs');
+}>([['instructionDiscriminator', beet.u8]], 'VerifySizedCollectionItemInstructionArgs');
 /**
- * Accounts required by the _UnverifyCollection_ instruction
+ * Accounts required by the _VerifySizedCollectionItem_ instruction
  *
  * @property [_writable_] metadata Metadata account
- * @property [_writable_, **signer**] collectionAuthority Collection Authority
+ * @property [**signer**] collectionAuthority Collection Update authority
+ * @property [_writable_, **signer**] payer payer
  * @property [] collectionMint Mint of the Collection
- * @property [] collection Metadata Account of the Collection
+ * @property [_writable_] collection Metadata Account of the Collection
  * @property [] collectionMasterEditionAccount MasterEdition2 Account of the Collection Token
  * @property [] collectionAuthorityRecord (optional) Collection Authority Record PDA
  * @category Instructions
- * @category UnverifyCollection
+ * @category VerifySizedCollectionItem
  * @category generated
  */
-export type UnverifyCollectionInstructionAccounts = {
+export type VerifySizedCollectionItemInstructionAccounts = {
   metadata: web3.PublicKey;
   collectionAuthority: web3.PublicKey;
+  payer: web3.PublicKey;
   collectionMint: web3.PublicKey;
   collection: web3.PublicKey;
   collectionMasterEditionAccount: web3.PublicKey;
   collectionAuthorityRecord?: web3.PublicKey;
 };
 
-export const unverifyCollectionInstructionDiscriminator = 22;
+export const verifySizedCollectionItemInstructionDiscriminator = 30;
 
 /**
- * Creates a _UnverifyCollection_ instruction.
+ * Creates a _VerifySizedCollectionItem_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category UnverifyCollection
+ * @category VerifySizedCollectionItem
  * @category generated
  */
-export function createUnverifyCollectionInstruction(
-  accounts: UnverifyCollectionInstructionAccounts,
+export function createVerifySizedCollectionItemInstruction(
+  accounts: VerifySizedCollectionItemInstructionAccounts,
 ) {
   const {
     metadata,
     collectionAuthority,
+    payer,
     collectionMint,
     collection,
     collectionMasterEditionAccount,
     collectionAuthorityRecord,
   } = accounts;
 
-  const [data] = UnverifyCollectionStruct.serialize({
-    instructionDiscriminator: unverifyCollectionInstructionDiscriminator,
+  const [data] = VerifySizedCollectionItemStruct.serialize({
+    instructionDiscriminator: verifySizedCollectionItemInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
@@ -71,6 +74,11 @@ export function createUnverifyCollectionInstruction(
     },
     {
       pubkey: collectionAuthority,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: payer,
       isWritable: true,
       isSigner: true,
     },
@@ -81,7 +89,7 @@ export function createUnverifyCollectionInstruction(
     },
     {
       pubkey: collection,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {

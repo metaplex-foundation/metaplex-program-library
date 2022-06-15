@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category UpdatePrimarySaleHappenedViaToken
  * @category generated
  */
-const UpdatePrimarySaleHappenedViaTokenStruct = new beet.BeetArgsStruct<{
+export const UpdatePrimarySaleHappenedViaTokenStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
 }>([['instructionDiscriminator', beet.u8]], 'UpdatePrimarySaleHappenedViaTokenInstructionArgs');
 /**
@@ -32,7 +32,7 @@ export type UpdatePrimarySaleHappenedViaTokenInstructionAccounts = {
   token: web3.PublicKey;
 };
 
-const updatePrimarySaleHappenedViaTokenInstructionDiscriminator = 4;
+export const updatePrimarySaleHappenedViaTokenInstructionDiscriminator = 4;
 
 /**
  * Creates a _UpdatePrimarySaleHappenedViaToken_ instruction.

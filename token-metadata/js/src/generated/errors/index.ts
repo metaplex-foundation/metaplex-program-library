@@ -2165,6 +2165,195 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * TokenCloseFailed: 'Token close failed'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TokenCloseFailedError extends Error {
+  readonly code: number = 0x64;
+  readonly name: string = 'TokenCloseFailed';
+  constructor() {
+    super('Token close failed');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TokenCloseFailedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x64, () => new TokenCloseFailedError());
+createErrorFromNameLookup.set('TokenCloseFailed', () => new TokenCloseFailedError());
+
+/**
+ * UnsizedCollection: 'Can't use this function on unsized collection'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class UnsizedCollectionError extends Error {
+  readonly code: number = 0x65;
+  readonly name: string = 'UnsizedCollection';
+  constructor() {
+    super("Can't use this function on unsized collection");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UnsizedCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x65, () => new UnsizedCollectionError());
+createErrorFromNameLookup.set('UnsizedCollection', () => new UnsizedCollectionError());
+
+/**
+ * SizedCollection: 'Can't use this function on a sized collection'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SizedCollectionError extends Error {
+  readonly code: number = 0x66;
+  readonly name: string = 'SizedCollection';
+  constructor() {
+    super("Can't use this function on a sized collection");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SizedCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x66, () => new SizedCollectionError());
+createErrorFromNameLookup.set('SizedCollection', () => new SizedCollectionError());
+
+/**
+ * MissingCollectionMetadata: 'Can't burn a verified member of a collection w/o providing collection metadata account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingCollectionMetadataError extends Error {
+  readonly code: number = 0x67;
+  readonly name: string = 'MissingCollectionMetadata';
+  constructor() {
+    super("Can't burn a verified member of a collection w/o providing collection metadata account");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingCollectionMetadataError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x67, () => new MissingCollectionMetadataError());
+createErrorFromNameLookup.set(
+  'MissingCollectionMetadata',
+  () => new MissingCollectionMetadataError(),
+);
+
+/**
+ * NotAMemberOfCollection: 'This NFT is not a member of the specified collection.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotAMemberOfCollectionError extends Error {
+  readonly code: number = 0x68;
+  readonly name: string = 'NotAMemberOfCollection';
+  constructor() {
+    super('This NFT is not a member of the specified collection.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotAMemberOfCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x68, () => new NotAMemberOfCollectionError());
+createErrorFromNameLookup.set('NotAMemberOfCollection', () => new NotAMemberOfCollectionError());
+
+/**
+ * NotVerifiedMemberOfCollection: 'This NFT is not a verified member of the specified collection.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotVerifiedMemberOfCollectionError extends Error {
+  readonly code: number = 0x69;
+  readonly name: string = 'NotVerifiedMemberOfCollection';
+  constructor() {
+    super('This NFT is not a verified member of the specified collection.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotVerifiedMemberOfCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x69, () => new NotVerifiedMemberOfCollectionError());
+createErrorFromNameLookup.set(
+  'NotVerifiedMemberOfCollection',
+  () => new NotVerifiedMemberOfCollectionError(),
+);
+
+/**
+ * NotACollectionParent: 'This NFT is not a collection parent NFT.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotACollectionParentError extends Error {
+  readonly code: number = 0x6a;
+  readonly name: string = 'NotACollectionParent';
+  constructor() {
+    super('This NFT is not a collection parent NFT.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotACollectionParentError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6a, () => new NotACollectionParentError());
+createErrorFromNameLookup.set('NotACollectionParent', () => new NotACollectionParentError());
+
+/**
+ * CouldNotDetermineTokenStandard: 'Could not determine a TokenStandard type.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CouldNotDetermineTokenStandardError extends Error {
+  readonly code: number = 0x6b;
+  readonly name: string = 'CouldNotDetermineTokenStandard';
+  constructor() {
+    super('Could not determine a TokenStandard type.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CouldNotDetermineTokenStandardError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6b, () => new CouldNotDetermineTokenStandardError());
+createErrorFromNameLookup.set(
+  'CouldNotDetermineTokenStandard',
+  () => new CouldNotDetermineTokenStandardError(),
+);
+
+/**
+ * MissingEditionAccount: 'This mint account has an edition but none was provided.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingEditionAccountError extends Error {
+  readonly code: number = 0x6c;
+  readonly name: string = 'MissingEditionAccount';
+  constructor() {
+    super('This mint account has an edition but none was provided.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingEditionAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6c, () => new MissingEditionAccountError());
+createErrorFromNameLookup.set('MissingEditionAccount', () => new MissingEditionAccountError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

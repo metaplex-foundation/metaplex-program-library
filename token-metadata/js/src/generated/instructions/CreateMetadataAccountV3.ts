@@ -8,36 +8,36 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import {
-  CreateMetadataAccountArgsV2,
-  createMetadataAccountArgsV2Beet,
-} from '../types/CreateMetadataAccountArgsV2';
+  CreateMetadataAccountArgsV3,
+  createMetadataAccountArgsV3Beet,
+} from '../types/CreateMetadataAccountArgsV3';
 
 /**
  * @category Instructions
- * @category CreateMetadataAccountV2
+ * @category CreateMetadataAccountV3
  * @category generated
  */
-export type CreateMetadataAccountV2InstructionArgs = {
-  createMetadataAccountArgsV2: CreateMetadataAccountArgsV2;
+export type CreateMetadataAccountV3InstructionArgs = {
+  createMetadataAccountArgsV3: CreateMetadataAccountArgsV3;
 };
 /**
  * @category Instructions
- * @category CreateMetadataAccountV2
+ * @category CreateMetadataAccountV3
  * @category generated
  */
-export const CreateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
-  CreateMetadataAccountV2InstructionArgs & {
+export const CreateMetadataAccountV3Struct = new beet.FixableBeetArgsStruct<
+  CreateMetadataAccountV3InstructionArgs & {
     instructionDiscriminator: number;
   }
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['createMetadataAccountArgsV2', createMetadataAccountArgsV2Beet],
+    ['createMetadataAccountArgsV3', createMetadataAccountArgsV3Beet],
   ],
-  'CreateMetadataAccountV2InstructionArgs',
+  'CreateMetadataAccountV3InstructionArgs',
 );
 /**
- * Accounts required by the _CreateMetadataAccountV2_ instruction
+ * Accounts required by the _CreateMetadataAccountV3_ instruction
  *
  * @property [_writable_] metadata Metadata key (pda of ['metadata', program id, mint id])
  * @property [] mint Mint of token asset
@@ -45,10 +45,10 @@ export const CreateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
  * @property [_writable_, **signer**] payer payer
  * @property [] updateAuthority update authority info
  * @category Instructions
- * @category CreateMetadataAccountV2
+ * @category CreateMetadataAccountV3
  * @category generated
  */
-export type CreateMetadataAccountV2InstructionAccounts = {
+export type CreateMetadataAccountV3InstructionAccounts = {
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
   mintAuthority: web3.PublicKey;
@@ -56,26 +56,26 @@ export type CreateMetadataAccountV2InstructionAccounts = {
   updateAuthority: web3.PublicKey;
 };
 
-export const createMetadataAccountV2InstructionDiscriminator = 16;
+export const createMetadataAccountV3InstructionDiscriminator = 33;
 
 /**
- * Creates a _CreateMetadataAccountV2_ instruction.
+ * Creates a _CreateMetadataAccountV3_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category CreateMetadataAccountV2
+ * @category CreateMetadataAccountV3
  * @category generated
  */
-export function createCreateMetadataAccountV2Instruction(
-  accounts: CreateMetadataAccountV2InstructionAccounts,
-  args: CreateMetadataAccountV2InstructionArgs,
+export function createCreateMetadataAccountV3Instruction(
+  accounts: CreateMetadataAccountV3InstructionAccounts,
+  args: CreateMetadataAccountV3InstructionArgs,
 ) {
   const { metadata, mint, mintAuthority, payer, updateAuthority } = accounts;
 
-  const [data] = CreateMetadataAccountV2Struct.serialize({
-    instructionDiscriminator: createMetadataAccountV2InstructionDiscriminator,
+  const [data] = CreateMetadataAccountV3Struct.serialize({
+    instructionDiscriminator: createMetadataAccountV3InstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [

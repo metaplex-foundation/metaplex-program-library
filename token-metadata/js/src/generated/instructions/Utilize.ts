@@ -23,7 +23,7 @@ export type UtilizeInstructionArgs = {
  * @category Utilize
  * @category generated
  */
-const UtilizeStruct = new beet.BeetArgsStruct<
+export const UtilizeStruct = new beet.BeetArgsStruct<
   UtilizeInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -58,7 +58,7 @@ export type UtilizeInstructionAccounts = {
   burner?: web3.PublicKey;
 };
 
-const utilizeInstructionDiscriminator = 19;
+export const utilizeInstructionDiscriminator = 19;
 
 /**
  * Creates a _Utilize_ instruction.

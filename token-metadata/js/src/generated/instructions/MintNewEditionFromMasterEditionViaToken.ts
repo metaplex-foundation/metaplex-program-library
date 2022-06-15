@@ -26,7 +26,7 @@ export type MintNewEditionFromMasterEditionViaTokenInstructionArgs = {
  * @category MintNewEditionFromMasterEditionViaToken
  * @category generated
  */
-const MintNewEditionFromMasterEditionViaTokenStruct = new beet.BeetArgsStruct<
+export const MintNewEditionFromMasterEditionViaTokenStruct = new beet.BeetArgsStruct<
   MintNewEditionFromMasterEditionViaTokenInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -72,7 +72,7 @@ export type MintNewEditionFromMasterEditionViaTokenInstructionAccounts = {
   metadata: web3.PublicKey;
 };
 
-const mintNewEditionFromMasterEditionViaTokenInstructionDiscriminator = 11;
+export const mintNewEditionFromMasterEditionViaTokenInstructionDiscriminator = 11;
 
 /**
  * Creates a _MintNewEditionFromMasterEditionViaToken_ instruction.

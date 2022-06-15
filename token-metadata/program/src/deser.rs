@@ -1,8 +1,11 @@
-use crate::state::{Collection, Data, Key, Metadata, TokenStandard, Uses};
-use borsh::{maybestd::io::Error as BorshError, BorshDeserialize};
-use solana_program::{msg, pubkey::Pubkey};
+use crate::state::{Collection, CollectionDetails, Data, Key, Metadata, TokenStandard, Uses};
+use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
 // Custom deserialization function to handle NFTs with corrupted data.
+// This function is used in a custom deserialization implementation for the
+// `Metadata` struct, so should never have `msg` macros used in it as it may be used client side
+// either in tests or client code.
 pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Error> {
     // Metadata corruption shouldn't appear until after edition_nonce.
     let key: Key = BorshDeserialize::deserialize(buf)?;
@@ -13,10 +16,15 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
     let is_mutable: bool = BorshDeserialize::deserialize(buf)?;
     let edition_nonce: Option<u8> = BorshDeserialize::deserialize(buf)?;
 
+    // V1.2
     let token_standard_res: Result<Option<TokenStandard>, BorshError> =
         BorshDeserialize::deserialize(buf);
     let collection_res: Result<Option<Collection>, BorshError> = BorshDeserialize::deserialize(buf);
     let uses_res: Result<Option<Uses>, BorshError> = BorshDeserialize::deserialize(buf);
+
+    // V1.3
+    let collection_details_res: Result<Option<CollectionDetails>, BorshError> =
+        BorshDeserialize::deserialize(buf);
 
     /* We can have accidentally valid, but corrupted data, particularly on the Collection struct,
     so to increase probability of catching errors If any of these deserializations fail, set all values to None.
@@ -25,9 +33,15 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
         (Ok(token_standard_res), Ok(collection_res), Ok(uses_res)) => {
             (token_standard_res, collection_res, uses_res)
         }
-        _ => {
-            msg!("Corrupted metadata discovered: setting values to None");
-            (None, None, None)
+        _ => (None, None, None),
+    };
+
+    // Handle v1.3 separately
+    let collection_details = match collection_details_res {
+        Ok(details) => details,
+        Err(_) => {
+            println!("no collection details found");
+            None
         }
     };
 
@@ -42,18 +56,33 @@ pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Erro
         token_standard,
         collection,
         uses,
+        collection_details,
     };
 
     Ok(metadata)
 }
 
+pub fn clean_write_metadata(
+    metadata: &mut Metadata,
+    metadata_account_info: &AccountInfo,
+) -> ProgramResult {
+    // Clear all data to ensure it is serialized cleanly with no trailing data due to creators array resizing.
+    let mut metadata_account_info_data = metadata_account_info.try_borrow_mut_data()?;
+    metadata_account_info_data[0..].fill(0);
+
+    metadata.serialize(&mut *metadata_account_info_data)?;
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{state::Creator, utils::puff_out_data_fields};
+    pub use crate::{state::Creator, utils::puff_out_data_fields};
     use std::str::FromStr;
 
     // Pesky Penguins #8060 (NOOT!)
+    #[allow(dead_code)]
     fn pesky_data() -> &'static [u8] {
         &[
             4, 12, 25, 250, 103, 242, 3, 129, 143, 173, 110, 204, 157, 11, 1, 247, 211, 138, 199,
@@ -89,6 +118,7 @@ mod tests {
         ]
     }
 
+    #[allow(dead_code)]
     fn expected_pesky_metadata() -> Metadata {
         let creators = vec![
             Creator {
@@ -128,6 +158,7 @@ mod tests {
             token_standard: None,
             collection: None,
             uses: None,
+            collection_details: None,
         };
 
         puff_out_data_fields(&mut metadata);

@@ -8,7 +8,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -33,6 +32,7 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -137,6 +137,7 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -172,6 +173,7 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -181,7 +183,7 @@ mod mint_new_edition_from_master_edition_via_token {
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
 
@@ -252,6 +254,7 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -282,6 +285,7 @@ mod mint_new_edition_from_master_edition_via_token {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();

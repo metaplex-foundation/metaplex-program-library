@@ -17,7 +17,7 @@ use solana_sdk::{
     transaction::TransactionError,
 };
 use utils::*;
-mod verify_collection {
+mod verify_sized_collection_item {
 
     use mpl_token_metadata::state::{CollectionAuthorityRecord, COLLECTION_AUTHORITY_RECORD_SIZE};
     use solana_program::borsh::try_from_slice_unchecked;
@@ -25,12 +25,12 @@ mod verify_collection {
 
     use super::*;
     #[tokio::test]
-    async fn success_verify_collection() {
+    async fn successfully_verify_sized_collection_item() {
         let mut context = program_test().start_with_context().await;
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -41,6 +41,7 @@ mod verify_collection {
                 None,
                 None,
                 None,
+                DEFAULT_COLLECTION_DETAILS, // Collection Parent
             )
             .await
             .unwrap();
@@ -65,7 +66,7 @@ mod verify_collection {
             use_method: UseMethod::Single,
         });
         test_metadata
-            .create_v2(
+            .create_v3(
                 &mut context,
                 name,
                 symbol,
@@ -79,6 +80,7 @@ mod verify_collection {
                     verified: false,
                 }),
                 uses.to_owned(),
+                None, // is not collection parent NFT
             )
             .await
             .unwrap();
@@ -106,7 +108,7 @@ mod verify_collection {
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
         test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &kp,
@@ -229,7 +231,7 @@ mod verify_collection {
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
         let err = test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &kp,
@@ -299,7 +301,7 @@ mod verify_collection {
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
         let err = test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &kp,
@@ -375,7 +377,7 @@ mod verify_collection {
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
         let err = test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &kp,
@@ -447,7 +449,7 @@ mod verify_collection {
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
         let err = test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &kp,
@@ -523,7 +525,7 @@ mod verify_collection {
             .unwrap();
 
         let err = test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &collection_authority,
@@ -548,7 +550,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -559,6 +561,7 @@ mod verify_collection {
                 None,
                 None,
                 None,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -624,7 +627,7 @@ mod verify_collection {
         let kpbytes = &context.payer;
         let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
         test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &kp,
@@ -647,9 +650,10 @@ mod verify_collection {
     async fn success_verify_collection_with_authority() {
         let mut context = program_test().start_with_context().await;
         let new_collection_authority = Keypair::new();
+
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -660,6 +664,7 @@ mod verify_collection {
                 None,
                 None,
                 None,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -727,7 +732,7 @@ mod verify_collection {
         assert_eq!(record_data.key, Key::CollectionAuthorityRecord);
 
         test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &new_collection_authority,
@@ -746,7 +751,7 @@ mod verify_collection {
         assert!(metadata_after.collection.unwrap().verified);
 
         test_metadata
-            .unverify_collection(
+            .unverify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &new_collection_authority,
@@ -765,8 +770,9 @@ mod verify_collection {
         let mut context = program_test().start_with_context().await;
         let new_collection_authority = Keypair::new();
         let test_collection = Metadata::new();
+
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -777,6 +783,7 @@ mod verify_collection {
                 None,
                 None,
                 None,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -838,7 +845,7 @@ mod verify_collection {
         assert_eq!(record_data.key, Key::CollectionAuthorityRecord);
 
         test_metadata
-            .set_and_verify_collection(
+            .set_and_verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &new_collection_authority,
@@ -858,7 +865,7 @@ mod verify_collection {
         assert!(metadata_after.collection.unwrap().verified);
 
         test_metadata
-            .unverify_collection(
+            .unverify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &new_collection_authority,
@@ -882,7 +889,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -893,6 +900,7 @@ mod verify_collection {
                 None,
                 None,
                 None,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -954,7 +962,7 @@ mod verify_collection {
         assert_eq!(record_data.key, Key::CollectionAuthorityRecord);
 
         test_metadata
-            .set_and_verify_collection(
+            .set_and_verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &new_collection_authority,
@@ -1118,7 +1126,7 @@ mod verify_collection {
         assert!(account_after_none);
 
         let err = test_metadata
-            .verify_collection(
+            .verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &new_collection_authority,
@@ -1145,7 +1153,7 @@ mod verify_collection {
 
         let test_collection = Metadata::new();
         test_collection
-            .create_v2(
+            .create_v3(
                 &mut context,
                 "Test".to_string(),
                 "TST".to_string(),
@@ -1156,6 +1164,7 @@ mod verify_collection {
                 None,
                 None,
                 None,
+                DEFAULT_COLLECTION_DETAILS,
             )
             .await
             .unwrap();
@@ -1217,7 +1226,7 @@ mod verify_collection {
         assert_eq!(record_data.key, Key::CollectionAuthorityRecord);
 
         test_metadata
-            .set_and_verify_collection(
+            .set_and_verify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &new_collection_authority,
@@ -1237,7 +1246,7 @@ mod verify_collection {
         assert!(metadata_after.collection.unwrap().verified);
 
         test_metadata
-            .unverify_collection(
+            .unverify_sized_collection_item(
                 &mut context,
                 test_collection.pubkey,
                 &new_collection_authority,

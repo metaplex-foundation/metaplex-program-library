@@ -4,7 +4,6 @@ use solana_program::{borsh::try_from_slice_unchecked, system_instruction};
 
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -35,7 +34,7 @@ impl ExternalPrice {
         price_per_share: u64,
         price_mint: &Pubkey,
         allowed_to_combine: bool,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[
                 instruction::create_update_external_price_account_instruction(
@@ -54,12 +53,13 @@ impl ExternalPrice {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn create(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
+    pub async fn create(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
         create_mint(
             context,
             &self.price_mint,
             &context.payer.pubkey(),
             Some(&context.payer.pubkey()),
+            0,
         )
         .await?;
 

@@ -26,7 +26,7 @@ export type CreateMasterEditionV3InstructionArgs = {
  * @category CreateMasterEditionV3
  * @category generated
  */
-const CreateMasterEditionV3Struct = new beet.FixableBeetArgsStruct<
+export const CreateMasterEditionV3Struct = new beet.FixableBeetArgsStruct<
   CreateMasterEditionV3InstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -59,7 +59,7 @@ export type CreateMasterEditionV3InstructionAccounts = {
   metadata: web3.PublicKey;
 };
 
-const createMasterEditionV3InstructionDiscriminator = 17;
+export const createMasterEditionV3InstructionDiscriminator = 17;
 
 /**
  * Creates a _CreateMasterEditionV3_ instruction.
