@@ -382,7 +382,7 @@ async fn buy_above_reserve_success() {
         &listing_config_address,
         1000000000,
     );
-    let result = context
+    context
         .banks_client
         .process_transaction(buy_tx)
         .await
