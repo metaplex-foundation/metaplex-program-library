@@ -89,6 +89,12 @@ pub struct UtilizeArgs {
     pub number_of_uses: u64,
 }
 
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct SetCollectionSizeArgs {
+    pub size: u64,
+}
+
 /// Instructions supported by the Metadata program.
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
 #[rustfmt::skip]
@@ -476,7 +482,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
     #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
     #[account(2, name="collection_mint", desc="Mint of the Collection")]
-    SetCollectionSize(u64),
+    SetCollectionSize(SetCollectionSizeArgs),
 
     /// Set the token standard of the asset.
     #[account(0, writable, name="metadata", desc="Metadata account")]
@@ -1622,7 +1628,7 @@ pub fn set_collection_size(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::SetCollectionSize(size)
+        data: MetadataInstruction::SetCollectionSize(SetCollectionSizeArgs { size })
             .try_to_vec()
             .unwrap(),
     }

@@ -11,7 +11,7 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction::MetadataInstruction,
+    instruction::{MetadataInstruction, SetCollectionSizeArgs},
     solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
@@ -234,9 +234,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Unverify Collection");
             unverify_sized_collection_item(program_id, accounts)
         }
-        MetadataInstruction::SetCollectionSize(size) => {
+        MetadataInstruction::SetCollectionSize(args) => {
             msg!("Instruction: Set Collection Size");
-            set_collection_size(program_id, accounts, size)
+            set_collection_size(program_id, accounts, args)
         }
         MetadataInstruction::SetTokenStandard => {
             msg!("Instruction: Set Token Standard");
@@ -1792,8 +1792,10 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
 pub fn set_collection_size(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
-    size: u64,
+    args: SetCollectionSizeArgs,
 ) -> ProgramResult {
+    let size = args.size;
+
     let account_info_iter = &mut accounts.iter();
 
     let parent_nft_metadata_account_info = next_account_info(account_info_iter)?;
