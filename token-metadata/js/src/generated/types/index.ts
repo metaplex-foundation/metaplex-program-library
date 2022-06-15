@@ -13,6 +13,7 @@ export * from './MintNewEditionFromMasterEditionViaTokenArgs';
 export * from './MintPrintingTokensViaTokenArgs';
 export * from './Reservation';
 export * from './ReservationV1';
+export * from './SetCollectionSizeArgs';
 export * from './SetReservationListArgs';
 export * from './TokenStandard';
 export * from './UpdateMetadataAccountArgs';
