@@ -1724,7 +1724,7 @@ dependencies = [
  "env_logger",
  "metaplex-token-metadata",
  "mpl-testing-utils",
- "mpl-token-metadata 1.2.10",
+ "mpl-token-metadata",
  "serde_json",
  "shellexpand",
  "solana-program",
@@ -1741,7 +1741,7 @@ version = "0.0.2"
 dependencies = [
  "anchor-client",
  "borsh",
- "mpl-token-metadata 1.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mpl-token-metadata",
  "mpl-token-vault 0.1.1",
  "num",
  "num-derive",
@@ -1754,22 +1754,6 @@ dependencies = [
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
-]
-
-[[package]]
-name = "mpl-token-metadata"
-version = "1.2.10"
-dependencies = [
- "arrayref",
- "borsh",
- "mpl-token-vault 0.1.0",
- "num-derive",
- "num-traits",
- "shank",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
 ]
 
 [[package]]
