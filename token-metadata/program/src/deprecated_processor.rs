@@ -54,6 +54,7 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
         is_mutable,
         false,
         false,
+        None, // Does not support collection parents.
     )
 }
 

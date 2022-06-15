@@ -26,7 +26,7 @@ export type MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs = {
  * @category MintNewEditionFromMasterEditionViaVaultProxy
  * @category generated
  */
-const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStruct<
+export const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStruct<
   MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -78,7 +78,7 @@ export type MintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts = {
   tokenVaultProgram: web3.PublicKey;
 };
 
-const mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator = 13;
+export const mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator = 13;
 
 /**
  * Creates a _MintNewEditionFromMasterEditionViaVaultProxy_ instruction.

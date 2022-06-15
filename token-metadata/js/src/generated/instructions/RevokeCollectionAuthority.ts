@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category RevokeCollectionAuthority
  * @category generated
  */
-const RevokeCollectionAuthorityStruct = new beet.BeetArgsStruct<{
+export const RevokeCollectionAuthorityStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
 }>([['instructionDiscriminator', beet.u8]], 'RevokeCollectionAuthorityInstructionArgs');
 /**
@@ -36,7 +36,7 @@ export type RevokeCollectionAuthorityInstructionAccounts = {
   mint: web3.PublicKey;
 };
 
-const revokeCollectionAuthorityInstructionDiscriminator = 24;
+export const revokeCollectionAuthorityInstructionDiscriminator = 24;
 
 /**
  * Creates a _RevokeCollectionAuthority_ instruction.
