@@ -91,6 +91,7 @@ pub mod auctioneer {
         token_size: u64,
         start_time: UnixTimestamp,
         end_time: UnixTimestamp,
+        reserve_price: u64,
     ) -> Result<()> {
         auctioneer_sell(
             ctx,
@@ -101,6 +102,7 @@ pub mod auctioneer {
             token_size,
             start_time,
             end_time,
+            reserve_price,
         )
     }
 
