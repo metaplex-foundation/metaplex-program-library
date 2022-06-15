@@ -22,6 +22,7 @@ export type SellInstructionArgs = {
   tokenSize: beet.bignum;
   startTime: beet.bignum;
   endTime: beet.bignum;
+  reservePrice: beet.bignum;
 };
 /**
  * @category Instructions
@@ -42,6 +43,7 @@ const sellStruct = new beet.BeetArgsStruct<
     ['tokenSize', beet.u64],
     ['startTime', beet.i64],
     ['endTime', beet.i64],
+    ['reservePrice', beet.u64],
   ],
   'SellInstructionArgs',
 );

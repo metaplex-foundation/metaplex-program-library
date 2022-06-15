@@ -36,5 +36,5 @@ solana-program-test = "~1.9.15"
 solana-sdk = "~1.9.15"
 env_logger="~0.9.0"
 spl-associated-token-account = {version = "~1.0.3", features = ["no-entrypoint"]}
-mpl-token-metadata = { version="~1.2.7", features = [ "no-entrypoint" ], path="../../token-metadata/program" }
+mpl-token-metadata = { version="~1.2.7", features = [ "no-entrypoint" ] }
 spl-token = { version = "~3.2",  features = ["no-entrypoint"] }

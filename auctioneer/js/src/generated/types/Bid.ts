@@ -8,7 +8,9 @@
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { ListingConfigVersion, listingConfigVersionBeet } from './ListingConfigVersion';
 export type Bid = {
+  version: ListingConfigVersion;
   amount: beet.bignum;
   buyerTradeState: web3.PublicKey;
 };
@@ -19,6 +21,7 @@ export type Bid = {
  */
 export const bidBeet = new beet.BeetArgsStruct<Bid>(
   [
+    ['version', listingConfigVersionBeet],
     ['amount', beet.u64],
     ['buyerTradeState', beetSolana.publicKey],
   ],
