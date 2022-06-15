@@ -7,6 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { SetCollectionSizeArgs, setCollectionSizeArgsBeet } from '../types/SetCollectionSizeArgs';
 
 /**
  * @category Instructions
@@ -14,7 +15,7 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type SetCollectionSizeInstructionArgs = {
-  instructionArgs: beet.bignum;
+  setCollectionSizeArgs: SetCollectionSizeArgs;
 };
 /**
  * @category Instructions
@@ -28,7 +29,7 @@ export const SetCollectionSizeStruct = new beet.BeetArgsStruct<
 >(
   [
     ['instructionDiscriminator', beet.u8],
-    ['instructionArgs', beet.u64],
+    ['setCollectionSizeArgs', setCollectionSizeArgsBeet],
   ],
   'SetCollectionSizeInstructionArgs',
 );
