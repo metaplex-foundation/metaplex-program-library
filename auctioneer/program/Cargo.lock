@@ -1728,7 +1728,7 @@ dependencies = [
  "env_logger",
  "mpl-auction-house",
  "mpl-testing-utils",
- "mpl-token-metadata 1.2.10",
+ "mpl-token-metadata 1.2.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json",
  "shellexpand",
  "solana-program",
