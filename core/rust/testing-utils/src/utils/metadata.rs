@@ -50,6 +50,7 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
+        amount: u64,
     ) -> transport::Result<()> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
 
@@ -60,7 +61,7 @@ impl Metadata {
             context,
             &self.mint.pubkey(),
             &token,
-            1,
+            amount,
             &context.payer.pubkey(),
             None,
         )

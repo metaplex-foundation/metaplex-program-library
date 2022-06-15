@@ -1,7 +1,11 @@
-use anchor_lang::{prelude::*, AnchorDeserialize};
-use solana_program::program_memory::sol_memset;
-
 use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{program::invoke, program_pack::Pack},
+    AnchorDeserialize,
+};
+use solana_program::program_memory::sol_memset;
+use spl_token::state::Account as SplAccount;
 
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
 #[derive(Accounts)]
@@ -10,7 +14,9 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
     buyer_price: u64,
-    token_size: u64
+    token_size: u64,
+    partial_order_size: Option<u64>,
+    partial_order_price: Option<u64>
 )]
 pub struct ExecuteSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
@@ -117,20 +123,6 @@ pub struct ExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
-    #[account(
-        mut,
-        seeds = [
-            PREFIX.as_bytes(),
-            seller.key().as_ref(),
-            auction_house.key().as_ref(),
-            token_account.key().as_ref(),
-            auction_house.treasury_mint.as_ref(),
-            token_mint.key().as_ref(),
-            &buyer_price.to_le_bytes(),
-            &token_size.to_le_bytes()
-        ],
-        bump=seller_trade_state.to_account_info().data.borrow()[0]
-    )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -197,6 +189,8 @@ pub fn execute_sale<'info>(
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    partial_order_size: Option<u64>,
+    partial_order_price: Option<u64>,
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
 
@@ -212,6 +206,8 @@ pub fn execute_sale<'info>(
         program_as_signer_bump,
         buyer_price,
         token_size,
+        partial_order_size,
+        partial_order_price,
     )
 }
 
@@ -775,6 +771,8 @@ fn execute_sale_logic<'info>(
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    partial_order_size: Option<u64>,
+    partial_order_price: Option<u64>,
 ) -> Result<()> {
     let buyer = &ctx.accounts.buyer;
     let seller = &ctx.accounts.seller;
@@ -827,7 +825,7 @@ fn execute_sale_logic<'info>(
     } else {
         msg!("No delegate detected on token account.");
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
-    }
+    };
 
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
@@ -837,16 +835,58 @@ fn execute_sale_logic<'info>(
         return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
     };
 
-    assert_valid_trade_state(
-        &buyer.key(),
-        auction_house,
-        buyer_price,
-        token_size,
-        buyer_trade_state,
-        &token_mint.key(),
-        &token_account.key(),
-        ts_bump,
-    )?;
+    let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
+
+    let (size, price): (u64, u64) = match (partial_order_size, partial_order_price) {
+        (Some(size), Some(price)) => {
+            assert_valid_trade_state(
+                &buyer.key(),
+                auction_house,
+                price,
+                size,
+                buyer_trade_state,
+                &token_mint.key(),
+                &token_account.key(),
+                ts_bump,
+            )?;
+
+            if ((buyer_price / token_size) * size) != price {
+                return Err(AuctionHouseError::PartialPriceMismatch.into());
+            }
+
+            if token_account_data.amount < size {
+                return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
+            };
+
+            if token_account_data.delegated_amount < size {
+                return Err(ProgramError::InvalidAccountData.into());
+            };
+
+            (size, price)
+        }
+        (None, None) => {
+            assert_valid_trade_state(
+                &buyer.key(),
+                auction_house,
+                buyer_price,
+                token_size,
+                buyer_trade_state,
+                &token_mint.key(),
+                &token_account.key(),
+                ts_bump,
+            )?;
+
+            if token_account_data.amount < token_size {
+                return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
+            };
+
+            (token_size, buyer_price)
+        }
+        _ => {
+            return Err(AuctionHouseError::MissingElementForPartialOrder.into());
+        }
+    };
+
     if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
@@ -889,11 +929,11 @@ fn execute_sale_logic<'info>(
     // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
     // The fee payer makes up the shortfall up to the amount of rent for an empty account.
     if is_native {
-        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), buyer_price)?;
-        if diff != buyer_price {
+        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), price)?;
+        if diff != price {
             // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
             let shortfall = std::cmp::min(
-                buyer_price
+                price
                     .checked_sub(diff)
                     .ok_or(AuctionHouseError::NumericalOverflow)?,
                 rent.minimum_balance(escrow_payment_account.data_len()),
@@ -951,7 +991,7 @@ fn execute_sale_logic<'info>(
         &rent_clone,
         &signer_seeds_for_royalties,
         fee_payer_seeds,
-        buyer_price,
+        price,
         is_native,
     )?;
 
@@ -962,7 +1002,7 @@ fn execute_sale_logic<'info>(
         &token_clone,
         &sys_clone,
         &signer_seeds_for_royalties,
-        buyer_price,
+        price,
         is_native,
     )?;
 
@@ -1064,7 +1104,7 @@ fn execute_sale_logic<'info>(
             &buyer_receipt_token_account.key(),
             &program_as_signer.key(),
             &[],
-            token_size,
+            size,
         )?,
         &[
             token_account.to_account_info(),
@@ -1075,36 +1115,54 @@ fn execute_sale_logic<'info>(
         &[&program_as_signer_seeds],
     )?;
 
-    let curr_seller_lamp = seller_trade_state.lamports();
-    **seller_trade_state.lamports.borrow_mut() = 0;
-    sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
+    if token_account_data.amount == 0 {
+        invoke(
+            &revoke(
+                &token_program.key(),
+                &token_account.key(),
+                &seller.key(),
+                &[],
+            )
+            .unwrap(),
+            &[
+                token_program.to_account_info(),
+                token_account.to_account_info(),
+                seller.to_account_info(),
+            ],
+        )?;
 
-    **fee_payer.lamports.borrow_mut() = fee_payer
-        .lamports()
-        .checked_add(curr_seller_lamp)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+        let curr_seller_lamp = seller_trade_state.lamports();
+        **seller_trade_state.lamports.borrow_mut() = 0;
+        sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
 
-    let curr_buyer_lamp = buyer_trade_state.lamports();
-    **buyer_trade_state.lamports.borrow_mut() = 0;
-    sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
-    **fee_payer.lamports.borrow_mut() = fee_payer
-        .lamports()
-        .checked_add(curr_buyer_lamp)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+        **fee_payer.lamports.borrow_mut() = fee_payer
+            .lamports()
+            .checked_add(curr_seller_lamp)
+            .ok_or(AuctionHouseError::NumericalOverflow)?;
 
-    if free_trade_state.lamports() > 0 {
-        let curr_buyer_lamp = free_trade_state.lamports();
-        **free_trade_state.lamports.borrow_mut() = 0;
+        if free_trade_state.lamports() > 0 {
+            let curr_buyer_lamp = free_trade_state.lamports();
+            **free_trade_state.lamports.borrow_mut() = 0;
 
+            **fee_payer.lamports.borrow_mut() = fee_payer
+                .lamports()
+                .checked_add(curr_buyer_lamp)
+                .ok_or(AuctionHouseError::NumericalOverflow)?;
+            sol_memset(
+                *free_trade_state.try_borrow_mut_data()?,
+                0,
+                TRADE_STATE_SIZE,
+            );
+        }
+
+        let curr_buyer_lamp = buyer_trade_state.lamports();
+        **buyer_trade_state.lamports.borrow_mut() = 0;
+        sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
         **fee_payer.lamports.borrow_mut() = fee_payer
             .lamports()
             .checked_add(curr_buyer_lamp)
             .ok_or(AuctionHouseError::NumericalOverflow)?;
-        sol_memset(
-            *free_trade_state.try_borrow_mut_data()?,
-            0,
-            TRADE_STATE_SIZE,
-        );
-    }
+    };
+
     Ok(())
 }

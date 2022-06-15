@@ -45,6 +45,7 @@ async fn withdraw_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -139,6 +140,7 @@ async fn auctioneer_withdraw_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -248,6 +250,7 @@ async fn auctioneer_withdraw_missing_scope_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -341,6 +344,7 @@ async fn auctioneer_withdraw_no_delegate_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
