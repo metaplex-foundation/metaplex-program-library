@@ -552,6 +552,10 @@
           "type": {
             "defined": "UnixTimestamp"
           }
+        },
+        {
+          "name": "reservePrice",
+          "type": "u64"
         }
       ]
     },
@@ -723,6 +727,10 @@
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "reservePrice",
+            "type": "u64"
           }
         ]
       }
@@ -734,6 +742,12 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "version",
+            "type": {
+              "defined": "ListingConfigVersion"
+            }
+          },
           {
             "name": "amount",
             "type": "u64"
@@ -792,6 +806,11 @@
       "code": 6006,
       "name": "NotHighestBidder",
       "msg": "Execute Sale must be run on the highest bidder"
+    },
+    {
+      "code": 6007,
+      "name": "BelowReservePrice",
+      "msg": "The bid price must be greater than the reserve price"
     }
   ],
   "metadata": {

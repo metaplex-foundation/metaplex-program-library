@@ -21,6 +21,7 @@ export type ListingConfigArgs = {
   endTime: beet.bignum;
   highestBid: Bid;
   bump: number;
+  reservePrice: beet.bignum;
 };
 
 const listingConfigDiscriminator = [183, 196, 26, 41, 131, 46, 184, 115];
@@ -38,6 +39,7 @@ export class ListingConfig implements ListingConfigArgs {
     readonly endTime: beet.bignum,
     readonly highestBid: Bid,
     readonly bump: number,
+    readonly reservePrice: beet.bignum,
   ) {}
 
   /**
@@ -50,6 +52,7 @@ export class ListingConfig implements ListingConfigArgs {
       args.endTime,
       args.highestBid,
       args.bump,
+      args.reservePrice,
     );
   }
 
@@ -140,6 +143,17 @@ export class ListingConfig implements ListingConfigArgs {
       endTime: this.endTime,
       highestBid: this.highestBid,
       bump: this.bump,
+      reservePrice: (() => {
+        const x = <{ toNumber: () => number }>this.reservePrice;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
     };
   }
 }
@@ -161,6 +175,7 @@ export const listingConfigBeet = new beet.BeetStruct<
     ['endTime', beet.i64],
     ['highestBid', bidBeet],
     ['bump', beet.u8],
+    ['reservePrice', beet.u64],
   ],
   ListingConfig.fromArgs,
   'ListingConfig',

@@ -152,6 +152,26 @@ createErrorFromCodeLookup.set(0x1776, () => new NotHighestBidderError());
 createErrorFromNameLookup.set('NotHighestBidder', () => new NotHighestBidderError());
 
 /**
+ * BelowReservePrice: 'The bid price must be greater than the reserve price'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BelowReservePriceError extends Error {
+  readonly code: number = 0x1777;
+  readonly name: string = 'BelowReservePrice';
+  constructor() {
+    super('The bid price must be greater than the reserve price');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BelowReservePriceError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1777, () => new BelowReservePriceError());
+createErrorFromNameLookup.set('BelowReservePrice', () => new BelowReservePriceError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
