@@ -3,7 +3,6 @@ description: "Export AWS environment variables to GH context"
 runs:
   using: "composite"
   steps:
-    # move to a secret?
     - run: echo "BINARY_STORAGE_ACCOUNT_ID=813125037859" >> $GITHUB_ENV
       shell: bash
     - run: echo "BINARY_STORAGE_REGION=us-east-1" >> $GITHUB_ENV
