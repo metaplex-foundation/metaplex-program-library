@@ -88,7 +88,6 @@ runs:
       run: npm publish $PATH_TO_PACKAGE_DIR
       shell: bash
       env:
-        NPM_PUBLISH_TOKEN: ${{ inputs.npm-token }}
         PATH_TO_PACKAGE_DIR: ${{ inputs.path-to-package-dir }}
 
     - name: Push changes to Github

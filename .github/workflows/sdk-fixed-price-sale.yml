@@ -57,7 +57,7 @@ jobs:
         uses: ./.github/actions/publish-to-npm
         id: publish-to-npm
         with:
-          npm-token: ${{ secrets.NPM_PUBLISH_TOKEN }}
+          npm-token: ${{ secrets.NPM_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-package-dir: ./fixed-price-sale/js
           commit-sha: ${{ github.sha }}
