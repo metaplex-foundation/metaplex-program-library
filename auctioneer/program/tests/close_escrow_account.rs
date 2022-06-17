@@ -26,6 +26,7 @@ async fn close_escrow_account_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();

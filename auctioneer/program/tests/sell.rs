@@ -28,6 +28,7 @@ async fn sell_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -45,6 +46,7 @@ async fn sell_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
         0,
     );
 
