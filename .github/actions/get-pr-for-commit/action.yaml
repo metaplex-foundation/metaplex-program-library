@@ -1,0 +1,38 @@
+name: 'Get pull_request number for commit, if any'
+description: 'Returns pull_request number or -1 if no pull_request associated with commit'
+inputs:
+  commit-sha:
+    description: 'Commit SHA'
+    required: true
+
+outputs:
+  pull-number:
+    description: Pull request number
+    value: ${{ steps.set-output.outputs.pull-number }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Fetch pull_request data associated with commit SHA
+      uses: actions/github-script@v4
+      id: fetch-pull-number-for-commit
+      # assummption: we only care about the latest PR associated with the commit?
+      with:
+        script: |
+          const { data } = await github.request(
+            "GET /repos/{owner}/{repo}/commits/{commit_sha}/pulls",
+            {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: '${{ inputs.commit-sha }}'
+            })
+          return data.length === 0 ? -1 : data[data.length-1].number
+
+    - name: Set output
+      id: set-output
+      run: echo "::set-output name=pull-number::$PR_NUMBER"
+      shell: bash
+      env:
+        PR_NUMBER: ${{ steps.fetch-pull-number-for-commit.outputs.result }}

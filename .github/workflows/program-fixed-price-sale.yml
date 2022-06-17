@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  id-token: write
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.9.22
@@ -68,3 +72,35 @@ jobs:
         working-directory: ./fixed-price-sale/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --test-threads 1
+
+  upgrade-version-and-publish-binary:
+    needs: changes
+    if: ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-fixed-price-sale
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish updated artifacts to Crates and Github
+        uses: ./.github/actions/publish-to-crates
+        id: publish-to-crates
+        with:
+          cargo-token: ${{ secrets.CARGO_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          package-name: fixed-price-sale
+          path-to-cargo: ./fixed-price-sale/program/Cargo.toml
+          commit-sha: ${{ github.sha }}
+          branch: ${{ github.ref }}
+
+      - uses: ./.github/actions/setup-aws-env/
+      - name: Build and upload
+        uses: ./.github/actions/build-and-upload/
+        id: upload-binary-metadata
+        with:
+          program-binary: mpl_fixed_price_sale.so
+          account-id: ${{ env.BINARY_STORAGE_ACCOUNT_ID }}
+          region: ${{ env.BINARY_STORAGE_REGION }}
+          role: ${{ env.BINARY_STORAGE_ROLE }}
+          bucket: ${{ env.BINARY_STORAGE_BUCKET }}
+          prefix: fixed-price-sale
