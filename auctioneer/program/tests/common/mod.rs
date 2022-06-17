@@ -36,3 +36,4 @@ pub const AUCTION_ENDED: u32 = 6002;
 pub const AUCTION_ACTIVE: u32 = 6003;
 pub const NOT_HIGH_BIDDER: u32 = 6006;
 pub const BELOW_RESERVE_PRICE: u32 = 6007;
+pub const BELOW_BID_INCREMENT: u32 = 6008;

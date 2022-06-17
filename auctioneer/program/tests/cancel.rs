@@ -32,6 +32,7 @@ async fn cancel_listing() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -51,6 +52,7 @@ async fn cancel_listing() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
         0,
     );
     context
@@ -117,6 +119,7 @@ async fn cancel_bid() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -138,6 +141,7 @@ async fn cancel_bid() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
         0,
     );
     context

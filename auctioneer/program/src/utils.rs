@@ -32,6 +32,10 @@ pub fn assert_higher_bid(
 ) -> Result<()> {
     if new_bid_price <= listing_config.highest_bid.amount {
         return err!(AuctioneerError::BidTooLow);
+    } else if (listing_config.highest_bid.amount > 0)
+        && (new_bid_price < (listing_config.highest_bid.amount + listing_config.min_bid_increment))
+    {
+        return err!(AuctioneerError::BelowBidIncrement);
     }
 
     Ok(())

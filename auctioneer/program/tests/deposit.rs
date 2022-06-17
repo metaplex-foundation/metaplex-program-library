@@ -28,6 +28,7 @@ async fn deposit_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();

@@ -44,6 +44,7 @@ async fn execute_sale_early_failure() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -62,6 +63,7 @@ async fn execute_sale_early_failure() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
         0,
     );
     context
@@ -194,6 +196,7 @@ async fn execute_sale_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -212,6 +215,7 @@ async fn execute_sale_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
         0,
     );
     context
@@ -369,6 +373,7 @@ async fn execute_sale_two_bids_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -387,6 +392,7 @@ async fn execute_sale_two_bids_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
         0,
     );
     context
@@ -566,6 +572,7 @@ async fn execute_sale_two_bids_failure() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -584,6 +591,7 @@ async fn execute_sale_two_bids_failure() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
         0,
     );
     context
