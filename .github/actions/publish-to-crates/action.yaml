@@ -5,11 +5,10 @@
 name: 'Publish to updated package artifacts'
 description: 'Publish to Crates registry and push updates to Github'
 inputs:
-  # cannot load token directly in action, so we need to pass it in
+  # cannot load tokens directly in action, so we need to pass it in
   cargo-token:
     description: 'Cargo token for authenticated requests'
     required: true
-  # cannot load token directly in action, so we need to pass it in
   github-token:
     description: 'Github token for authenticated requests'
     required: true
@@ -20,8 +19,11 @@ inputs:
     description: "Path to the package to update's Cargo.toml"
     required: true
   pull-number:
-    description: 'Pull request numeric ID'
-    required: true
+    description: 'Pull request numeric ID. If this is empty, expect a commit-sha with an associated PR.'
+    required: false
+  commit-sha:
+    description: 'Commit SHA of code to publish'
+    required: false
   branch:
     description: 'Branch to update'
     required: true
@@ -33,11 +35,30 @@ runs:
       with:
         node-version: ${{ env.NODE_VERSION }}
 
+    - name: Get PR for push event HEAD commit
+      if: ${{ inputs.pull-number == '' }}
+      uses: ./.github/actions/get-pr-for-commit
+      id: get-pr-for-commit
+      with:
+        commit-sha: ${{ inputs.commit-sha }}
+
+    - name: Decide the value of pull-number
+      id: set-pull-number
+      shell: bash
+      run: |
+        if [[ '${{ inputs.pull-number }}' != '' ]]
+        then
+            echo "::set-output name=pull-number::${{ inputs.pull-number }}"
+        else
+            echo "::set-output name=pull-number::${{ steps.get-pr-for-commit.outputs.pull-number }}"
+        fi
+
     - name: Map PR review to version update
+      if: steps.set-pull-number.outputs.pull-number > 0
       uses: ./.github/actions/map-pr-review-to-version
       id: map-pr-review-to-version
       with:
-        pull-number: ${{ inputs.pull-number }}
+        pull-number: ${{ steps.set-pull-number.outputs.pull-number }}
 
     - name: Update version in Cargo.toml
       if: steps.map-pr-review-to-version.outputs.version != 'none'
@@ -55,8 +76,7 @@ runs:
 
     - name: Commit and tag version changes
       if:
-        steps.map-pr-review-to-version.outputs.version != 'none' &&
-        steps.update-cargo-version.outputs.update-ok == 'true'
+        steps.map-pr-review-to-version.outputs.version != 'none' && steps.update-cargo-version.outputs.update-ok == 'true'
       id: upgrade-program-version
       shell: bash
       run: |
@@ -70,8 +90,7 @@ runs:
 
     - name: Cargo login
       if:
-        steps.map-pr-review-to-version.outputs.version != 'none' &&
-        steps.update-cargo-version.outputs.update-ok == 'true'
+        steps.map-pr-review-to-version.outputs.version != 'none' && steps.update-cargo-version.outputs.update-ok == 'true'
       run: cargo login $CARGO_TOKEN
       shell: bash
       env:
@@ -79,8 +98,7 @@ runs:
 
     - name: Publish to crates registry
       if:
-        steps.map-pr-review-to-version.outputs.version != 'none' &&
-        steps.update-cargo-version.outputs.update-ok == 'true'
+        steps.map-pr-review-to-version.outputs.version != 'none' && steps.update-cargo-version.outputs.update-ok == 'true'
       run: cargo publish --token $CARGO_TOKEN -p $PACKAGE_NAME
       shell: bash
       env:
@@ -89,8 +107,7 @@ runs:
 
     - name: Push changes to Github
       if:
-        steps.map-pr-review-to-version.outputs.version != 'none' &&
-        steps.update-cargo-version.outputs.update-ok == 'true'
+        steps.map-pr-review-to-version.outputs.version != 'none' && steps.update-cargo-version.outputs.update-ok == 'true'
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ inputs.github-token }}

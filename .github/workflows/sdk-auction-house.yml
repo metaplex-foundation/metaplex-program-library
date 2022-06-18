@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -24,6 +28,7 @@ jobs:
             - 'core/**'
           package:
             - 'auction-house/**'
+
   build-lint-and-test-auction-house:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
@@ -33,6 +38,26 @@ jobs:
       - uses: actions/checkout@v1
       - uses: ./.github/actions/yarn-install-and-verify
         with: 
-          cache_id: sdk-auction  
-          working_dir: ./auction/js
+          cache_id: sdk-auction-house
+          working_dir: ./auction-house/js
           skip_test: true
+
+  upgrade-version-and-publish-binary:
+    needs: changes
+    if:
+      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-auction-house
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish updated artifacts to NPM and Github
+        uses: ./.github/actions/publish-to-npm
+        id: publish-to-npm
+        with:
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-package-dir: ./auction-house/js
+          commit-sha: ${{ github.sha }}
+          branch: ${{ github.ref }}
