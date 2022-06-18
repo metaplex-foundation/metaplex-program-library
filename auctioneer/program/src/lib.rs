@@ -93,6 +93,8 @@ pub mod auctioneer {
         end_time: UnixTimestamp,
         reserve_price: u64,
         min_bid_increment: u64,
+        time_ext_period: u32,
+        time_ext_delta: u32,
     ) -> Result<()> {
         auctioneer_sell(
             ctx,
@@ -105,6 +107,8 @@ pub mod auctioneer {
             end_time,
             reserve_price,
             min_bid_increment,
+            time_ext_period,
+            time_ext_delta,
         )
     }
 

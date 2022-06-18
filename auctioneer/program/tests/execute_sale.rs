@@ -65,6 +65,8 @@ async fn execute_sale_early_failure() {
             + 60) as i64,
         0,
         0,
+        0,
+        0,
     );
     context
         .banks_client
@@ -216,6 +218,8 @@ async fn execute_sale_success() {
             .as_secs()
             + 60) as i64,
         0,
+        0,
+        8,
         0,
     );
     context
@@ -392,6 +396,8 @@ async fn execute_sale_two_bids_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
+        0,
         0,
         0,
     );
@@ -591,6 +597,8 @@ async fn execute_sale_two_bids_failure() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
+        0,
         0,
         0,
     );

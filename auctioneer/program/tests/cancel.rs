@@ -54,6 +54,8 @@ async fn cancel_listing() {
             + 60) as i64,
         0,
         0,
+        0,
+        0,
     );
     context
         .banks_client
@@ -141,6 +143,8 @@ async fn cancel_bid() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        0,
+        0,
         0,
         0,
     );

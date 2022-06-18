@@ -48,6 +48,8 @@ async fn sell_success() {
             + 60) as i64,
         0,
         0,
+        0,
+        0,
     );
 
     context
