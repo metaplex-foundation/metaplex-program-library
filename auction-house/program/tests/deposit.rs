@@ -29,6 +29,7 @@ async fn deposit_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -77,6 +78,7 @@ async fn auctioneer_deposit_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -151,6 +153,7 @@ async fn auctioneer_deposit_missing_scope_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -215,6 +218,7 @@ async fn auctioneer_deposit_no_delegate_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();

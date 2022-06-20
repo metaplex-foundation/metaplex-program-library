@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category VerifyCollection
  * @category generated
  */
-const VerifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+export const VerifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
   [['instructionDiscriminator', beet.u8]],
   'VerifyCollectionInstructionArgs',
 );
@@ -39,7 +39,7 @@ export type VerifyCollectionInstructionAccounts = {
   collectionMasterEditionAccount: web3.PublicKey;
 };
 
-const verifyCollectionInstructionDiscriminator = 18;
+export const verifyCollectionInstructionDiscriminator = 18;
 
 /**
  * Creates a _VerifyCollection_ instruction.

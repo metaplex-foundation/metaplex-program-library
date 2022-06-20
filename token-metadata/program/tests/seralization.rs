@@ -25,6 +25,7 @@ mod serialization {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();

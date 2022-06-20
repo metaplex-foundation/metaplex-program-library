@@ -788,6 +788,92 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * BuyerTradeStateNotValid: 'The buyer trade state was unable to be initialized.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BuyerTradeStateNotValidError extends Error {
+  readonly code: number = 0x1795;
+  readonly name: string = 'BuyerTradeStateNotValid';
+  constructor() {
+    super('The buyer trade state was unable to be initialized.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BuyerTradeStateNotValidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1795, () => new BuyerTradeStateNotValidError());
+createErrorFromNameLookup.set('BuyerTradeStateNotValid', () => new BuyerTradeStateNotValidError());
+
+/**
+ * MissingElementForPartialOrder: 'Partial order size and price must both be provided in a partial buy.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingElementForPartialOrderError extends Error {
+  readonly code: number = 0x1796;
+  readonly name: string = 'MissingElementForPartialOrder';
+  constructor() {
+    super('Partial order size and price must both be provided in a partial buy.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingElementForPartialOrderError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1796, () => new MissingElementForPartialOrderError());
+createErrorFromNameLookup.set(
+  'MissingElementForPartialOrder',
+  () => new MissingElementForPartialOrderError(),
+);
+
+/**
+ * NotEnoughTokensAvailableForPurchase: 'Amount of tokens available for purchase is less than the partial order amount.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotEnoughTokensAvailableForPurchaseError extends Error {
+  readonly code: number = 0x1797;
+  readonly name: string = 'NotEnoughTokensAvailableForPurchase';
+  constructor() {
+    super('Amount of tokens available for purchase is less than the partial order amount.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotEnoughTokensAvailableForPurchaseError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1797, () => new NotEnoughTokensAvailableForPurchaseError());
+createErrorFromNameLookup.set(
+  'NotEnoughTokensAvailableForPurchase',
+  () => new NotEnoughTokensAvailableForPurchaseError(),
+);
+
+/**
+ * PartialPriceMismatch: 'Calculated partial price does not not partial price that was provided.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PartialPriceMismatchError extends Error {
+  readonly code: number = 0x1798;
+  readonly name: string = 'PartialPriceMismatch';
+  constructor() {
+    super('Calculated partial price does not not partial price that was provided.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PartialPriceMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1798, () => new PartialPriceMismatchError());
+createErrorFromNameLookup.set('PartialPriceMismatch', () => new PartialPriceMismatchError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

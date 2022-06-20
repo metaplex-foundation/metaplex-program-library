@@ -25,7 +25,7 @@ export type DeprecatedSetReservationListInstructionArgs = {
  * @category DeprecatedSetReservationList
  * @category generated
  */
-const DeprecatedSetReservationListStruct = new beet.FixableBeetArgsStruct<
+export const DeprecatedSetReservationListStruct = new beet.FixableBeetArgsStruct<
   DeprecatedSetReservationListInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -52,7 +52,7 @@ export type DeprecatedSetReservationListInstructionAccounts = {
   resource: web3.PublicKey;
 };
 
-const deprecatedSetReservationListInstructionDiscriminator = 5;
+export const deprecatedSetReservationListInstructionDiscriminator = 5;
 
 /**
  * Creates a _DeprecatedSetReservationList_ instruction.

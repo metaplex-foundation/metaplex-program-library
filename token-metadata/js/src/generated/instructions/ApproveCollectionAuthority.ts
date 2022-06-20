@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category ApproveCollectionAuthority
  * @category generated
  */
-const ApproveCollectionAuthorityStruct = new beet.BeetArgsStruct<{
+export const ApproveCollectionAuthorityStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
 }>([['instructionDiscriminator', beet.u8]], 'ApproveCollectionAuthorityInstructionArgs');
 /**
@@ -38,7 +38,7 @@ export type ApproveCollectionAuthorityInstructionAccounts = {
   mint: web3.PublicKey;
 };
 
-const approveCollectionAuthorityInstructionDiscriminator = 23;
+export const approveCollectionAuthorityInstructionDiscriminator = 23;
 
 /**
  * Creates a _ApproveCollectionAuthority_ instruction.

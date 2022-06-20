@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  id-token: write
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.9.15
@@ -68,3 +72,36 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1
+
+  upgrade-version-and-publish-binary:
+    needs: changes
+    if: ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-auction
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish updated artifacts to Crates and Github
+        uses: ./.github/actions/publish-to-crates
+        id: publish-to-crates
+        with:
+          cargo-token: ${{ secrets.CARGO_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          package-name: auction
+          path-to-cargo: ./auction/program/Cargo.toml
+          commit-sha: ${{ github.sha }}
+          branch: ${{ github.ref }}
+
+      - uses: ./.github/actions/setup-aws-env/
+      - name: Build and upload
+        uses: ./.github/actions/build-and-upload/
+        id: upload-binary-metadata
+        with:
+          # based on Cargo.toml package name
+          program-binary: mpl_auction.so
+          account-id: ${{ env.BINARY_STORAGE_ACCOUNT_ID }}
+          region: ${{ env.BINARY_STORAGE_REGION }}
+          role: ${{ env.BINARY_STORAGE_ROLE }}
+          bucket: ${{ env.BINARY_STORAGE_BUCKET }}
+          prefix: auction

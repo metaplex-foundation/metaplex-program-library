@@ -1,5 +1,5 @@
 {
-  "version": "1.1.6",
+  "version": "1.2.0",
   "name": "auction_house",
   "instructions": [
     {
@@ -1002,7 +1002,7 @@
         },
         {
           "name": "sellerTradeState",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -1056,6 +1056,18 @@
         {
           "name": "tokenSize",
           "type": "u64"
+        },
+        {
+          "name": "partialOrderSize",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "partialOrderPrice",
+          "type": {
+            "option": "u64"
+          }
         }
       ]
     },
@@ -2350,6 +2362,26 @@
       "code": 6036,
       "name": "InvalidSeedsOrAuctionHouseNotDelegated",
       "msg": "Invalid seeds or Auction House not delegated"
+    },
+    {
+      "code": 6037,
+      "name": "BuyerTradeStateNotValid",
+      "msg": "The buyer trade state was unable to be initialized."
+    },
+    {
+      "code": 6038,
+      "name": "MissingElementForPartialOrder",
+      "msg": "Partial order size and price must both be provided in a partial buy."
+    },
+    {
+      "code": 6039,
+      "name": "NotEnoughTokensAvailableForPurchase",
+      "msg": "Amount of tokens available for purchase is less than the partial order amount."
+    },
+    {
+      "code": 6040,
+      "name": "PartialPriceMismatch",
+      "msg": "Calculated partial price does not not partial price that was provided."
     }
   ],
   "metadata": {

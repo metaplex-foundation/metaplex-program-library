@@ -225,6 +225,7 @@ pub fn buy(
     owner: &Pubkey,
     buyer: &Keypair,
     sale_price: u64,
+    token_size: u64,
 ) -> (
     (
         mpl_auction_house::accounts::Buy,
@@ -240,8 +241,9 @@ pub fn buy(
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
         sale_price,
-        1,
+        token_size,
     );
+
     let (escrow, escrow_bump) = find_escrow_payment_address(ahkey, &buyer.pubkey());
     let (bts, bts_bump) = trade_state;
     let accounts = mpl_auction_house::accounts::Buy {
@@ -266,7 +268,7 @@ pub fn buy(
     let buy_ix = mpl_auction_house::instruction::Buy {
         trade_state_bump: bts_bump,
         escrow_payment_bump: escrow_bump,
-        token_size: 1,
+        token_size,
         buyer_price: sale_price,
     };
     let data = buy_ix.data();
@@ -557,6 +559,8 @@ pub fn execute_sale(
     buyer_trade_state: &Pubkey,
     token_size: u64,
     buyer_price: u64,
+    partial_order_size: Option<u64>,
+    partial_order_price: Option<u64>,
 ) -> (
     (
         mpl_auction_house::accounts::ExecuteSale,
@@ -617,6 +621,8 @@ pub fn execute_sale(
             program_as_signer_bump: pas_bump,
             token_size,
             buyer_price,
+            partial_order_size,
+            partial_order_price,
         }
         .data(),
         accounts: execute_sale_account_metas,
@@ -911,6 +917,7 @@ pub fn sell(
     ah: &AuctionHouse,
     test_metadata: &Metadata,
     sale_price: u64,
+    token_size: u64,
 ) -> (
     (
         mpl_auction_house::accounts::Sell,
@@ -928,7 +935,7 @@ pub fn sell(
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
         sale_price,
-        1,
+        token_size,
     );
     let (listing_receipt, receipt_bump) = find_listing_receipt_address(&seller_trade_state);
 
@@ -939,7 +946,7 @@ pub fn sell(
         &ah.treasury_mint,
         &test_metadata.mint.pubkey(),
         0,
-        1,
+        token_size,
     );
     let (pas, pas_bump) = find_program_as_signer_address();
 
@@ -963,7 +970,7 @@ pub fn sell(
         trade_state_bump: sts_bump,
         free_trade_state_bump: free_sts_bump,
         program_as_signer_bump: pas_bump,
-        token_size: 1,
+        token_size,
         buyer_price: sale_price,
     }
     .data();

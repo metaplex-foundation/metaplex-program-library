@@ -374,6 +374,8 @@ pub fn sell_mint(
     seller: &Keypair,
     start_time: UnixTimestamp,
     end_time: UnixTimestamp,
+    reserve_price: u64,
+    min_bid_increment: u64,
 ) -> (
     (mpl_auctioneer::accounts::AuctioneerSell, Pubkey),
     Transaction,
@@ -439,6 +441,8 @@ pub fn sell_mint(
         token_size: 1,
         start_time,
         end_time,
+        reserve_price,
+        min_bid_increment,
     }
     .data();
 
@@ -466,6 +470,8 @@ pub fn sell(
     test_metadata: &Metadata,
     start_time: UnixTimestamp,
     end_time: UnixTimestamp,
+    reserve_price: u64,
+    min_bid_increment: u64,
 ) -> (
     (mpl_auctioneer::accounts::AuctioneerSell, Pubkey),
     Transaction,
@@ -532,6 +538,8 @@ pub fn sell(
         token_size: 1,
         start_time,
         end_time,
+        reserve_price,
+        min_bid_increment,
     }
     .data();
 

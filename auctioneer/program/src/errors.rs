@@ -29,4 +29,12 @@ pub enum AuctioneerError {
     // 6006
     #[msg("Execute Sale must be run on the highest bidder")]
     NotHighestBidder,
+
+    // 6007
+    #[msg("The bid price must be greater than the reserve price")]
+    BelowReservePrice,
+
+    // 6008
+    #[msg("The bid must match the highest bid plus the minimum bid increment")]
+    BelowBidIncrement,
 }

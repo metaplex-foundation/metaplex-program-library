@@ -17,13 +17,13 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = {version="~0.22", features=["init-if-needed"]}
-anchor-spl = {version="~0.22"}
+anchor-lang = {version="~0.24.2", features=["init-if-needed"]}
+anchor-spl = {version="~0.24.2"}
 spl-token = "~3.2.0"
 mpl-token-metadata = { features = [ "no-entrypoint" ], version="~1.2.10" }
 
 [dev-dependencies]
-anchor-client = "~0.22"
+anchor-client = "~0.24.2"
 solana-program-test = "~1.9.28"
 solana-program = "~1.9.28"
 solana-sdk = "~1.9.28"

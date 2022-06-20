@@ -26,7 +26,7 @@ export type DeprecatedMintPrintingTokensInstructionArgs = {
  * @category DeprecatedMintPrintingTokens
  * @category generated
  */
-const DeprecatedMintPrintingTokensStruct = new beet.BeetArgsStruct<
+export const DeprecatedMintPrintingTokensStruct = new beet.BeetArgsStruct<
   DeprecatedMintPrintingTokensInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -57,7 +57,7 @@ export type DeprecatedMintPrintingTokensInstructionAccounts = {
   masterEdition: web3.PublicKey;
 };
 
-const deprecatedMintPrintingTokensInstructionDiscriminator = 9;
+export const deprecatedMintPrintingTokensInstructionDiscriminator = 9;
 
 /**
  * Creates a _DeprecatedMintPrintingTokens_ instruction.

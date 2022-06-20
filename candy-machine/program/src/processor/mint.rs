@@ -24,7 +24,7 @@ use solana_program::{
 use crate::{
     constants::{
         A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
-        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+        CONFIG_LINE_SIZE, CUPCAKE_ID, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
     },
     utils::*,
     CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
@@ -120,6 +120,7 @@ pub fn handle_mint_nft<'info>(
     // Restrict Who can call Candy Machine via CPI
     if !cmp_pubkeys(&current_ix.program_id, &crate::id())
         && !cmp_pubkeys(&current_ix.program_id, &GUMDROP_ID)
+        && !cmp_pubkeys(&current_ix.program_id, &CUPCAKE_ID)
     {
         punish_bots(
             CandyError::SuspiciousTransaction,
@@ -459,6 +460,7 @@ pub fn handle_mint_nft<'info>(
         let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
         // If we add more extra accounts later on we need to uncomment the following line out.
         // remaining_accounts_counter += 1;
+
         let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
         if token_account.amount < price {

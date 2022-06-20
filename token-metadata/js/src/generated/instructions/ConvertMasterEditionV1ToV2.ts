@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category ConvertMasterEditionV1ToV2
  * @category generated
  */
-const ConvertMasterEditionV1ToV2Struct = new beet.BeetArgsStruct<{
+export const ConvertMasterEditionV1ToV2Struct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
 }>([['instructionDiscriminator', beet.u8]], 'ConvertMasterEditionV1ToV2InstructionArgs');
 /**
@@ -32,7 +32,7 @@ export type ConvertMasterEditionV1ToV2InstructionAccounts = {
   printingMint: web3.PublicKey;
 };
 
-const convertMasterEditionV1ToV2InstructionDiscriminator = 12;
+export const convertMasterEditionV1ToV2InstructionDiscriminator = 12;
 
 /**
  * Creates a _ConvertMasterEditionV1ToV2_ instruction.

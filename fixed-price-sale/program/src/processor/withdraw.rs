@@ -1,6 +1,7 @@
+use crate::state::from_mpl_creators;
 use crate::{
     error::ErrorCode,
-    state::{MarketState, PrimaryMetadataCreators},
+    state::{Creator, MarketState, PrimaryMetadataCreators},
     utils::*,
     Withdraw,
 };
@@ -9,7 +10,6 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address},
     token,
 };
-use crate::state::from_mpl_creators;
 
 impl<'info> Withdraw<'info> {
     pub fn process(
@@ -73,14 +73,23 @@ impl<'info> Withdraw<'info> {
             )?;
             Box::new(Some(primary_metadata_creators.creators))
         } else {
-            Box::new(metadata.data.creators.map(from_mpl_creators))
+            if let Some(creators) = metadata.data.creators {
+                Box::new(Some(
+                    creators
+                        .iter()
+                        .map(|item| Creator::from(item.clone()))
+                        .collect(),
+                ))
+            } else {
+                Box::new(None)
+            }
         };
 
         // Check, that funder is `Creator` or `Market` owner
         // `Some` mean funder is `Creator`
         // `None` mean funder is `Market` owner
         let funder_creator = if let Some(creators) = *actual_creators {
-            let funder_creator = creators.iter().find(|&c| c.address == funder_key).cloned();
+            let funder_creator = creators.iter().find(|c| c.address == funder_key).cloned();
             if funder_creator.is_none() && funder_key != market.owner {
                 return Err(ErrorCode::FunderIsInvalid.into());
             }

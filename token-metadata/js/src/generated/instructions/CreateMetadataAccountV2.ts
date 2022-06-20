@@ -25,7 +25,7 @@ export type CreateMetadataAccountV2InstructionArgs = {
  * @category CreateMetadataAccountV2
  * @category generated
  */
-const CreateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
+export const CreateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
   CreateMetadataAccountV2InstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -56,7 +56,7 @@ export type CreateMetadataAccountV2InstructionAccounts = {
   updateAuthority: web3.PublicKey;
 };
 
-const createMetadataAccountV2InstructionDiscriminator = 16;
+export const createMetadataAccountV2InstructionDiscriminator = 16;
 
 /**
  * Creates a _CreateMetadataAccountV2_ instruction.

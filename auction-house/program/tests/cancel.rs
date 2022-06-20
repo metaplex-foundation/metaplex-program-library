@@ -30,12 +30,13 @@ async fn cancel_listing() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
     context.warp_to_slot(100).unwrap();
     // Derive Auction House Key
-    let ((acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 10);
+    let ((acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 10, 1);
     context
         .banks_client
         .process_transaction(sell_tx)
@@ -132,6 +133,7 @@ async fn auction_cancel_listing() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -225,6 +227,7 @@ async fn auction_cancel_listing_missing_scope_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -336,6 +339,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -350,7 +354,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
         .await
         .unwrap();
 
-    let ((acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 10);
+    let ((acc, _), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 10, 1);
 
     context
         .banks_client
@@ -430,6 +434,7 @@ async fn cancel_bid() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -448,6 +453,7 @@ async fn cancel_bid() {
         &test_metadata.token.pubkey(),
         &buyer,
         price,
+        1,
     );
 
     context
@@ -538,6 +544,7 @@ async fn auction_cancel_bid() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -633,6 +640,7 @@ async fn auction_cancel_bid_missing_scope_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -751,6 +759,7 @@ async fn auction_cancel_bid_no_delegate_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -774,6 +783,7 @@ async fn auction_cancel_bid_no_delegate_fails() {
         &test_metadata.token.pubkey(),
         &buyer,
         price,
+        1,
     );
 
     context

@@ -10,19 +10,18 @@ pub use edition_marker::EditionMarker;
 pub use external_price::ExternalPrice;
 pub use master_edition_v2::MasterEditionV2;
 pub use metadata::Metadata;
+pub use mpl_token_metadata::instruction;
+use mpl_token_metadata::state::CollectionDetails;
 use solana_program_test::*;
 use solana_sdk::{
-    account::Account,
-    program_pack::Pack,
-    pubkey::Pubkey,
-    signature::Signer,
-    signer::keypair::Keypair,
-    system_instruction,
-    transaction::Transaction,
-    transport::{self, TransportError},
+    account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
+    signer::keypair::Keypair, system_instruction, transaction::Transaction,
 };
 use spl_token::state::Mint;
 pub use vault::Vault;
+
+pub const DEFAULT_COLLECTION_DETAILS: Option<CollectionDetails> =
+    Some(CollectionDetails::V1 { size: 0 });
 
 pub fn program_test() -> ProgramTest {
     ProgramTest::new("mpl_token_metadata", mpl_token_metadata::id(), None)
@@ -46,7 +45,7 @@ pub async fn airdrop(
     context: &mut ProgramTestContext,
     receiver: &Pubkey,
     amount: u64,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(
             &context.payer.pubkey(),
@@ -62,6 +61,36 @@ pub async fn airdrop(
     Ok(())
 }
 
+pub async fn burn(
+    context: &mut ProgramTestContext,
+    metadata: Pubkey,
+    owner: &Keypair,
+    mint: Pubkey,
+    token: Pubkey,
+    edition: Pubkey,
+    collection_metadata: Option<Pubkey>,
+) -> Result<(), BanksClientError> {
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction::burn_nft(
+            mpl_token_metadata::ID,
+            metadata,
+            owner.pubkey(),
+            mint,
+            token,
+            edition,
+            spl_token::ID,
+            collection_metadata,
+        )],
+        Some(&owner.pubkey()),
+        &[owner],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await?;
+
+    Ok(())
+}
+
 pub async fn mint_tokens(
     context: &mut ProgramTestContext,
     mint: &Pubkey,
@@ -69,7 +98,7 @@ pub async fn mint_tokens(
     amount: u64,
     owner: &Pubkey,
     additional_signer: Option<&Keypair>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut signing_keypairs = vec![&context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
@@ -93,7 +122,7 @@ pub async fn create_token_account(
     account: &Keypair,
     mint: &Pubkey,
     manager: &Pubkey,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -126,7 +155,8 @@ pub async fn create_mint(
     mint: &Keypair,
     manager: &Pubkey,
     freeze_authority: Option<&Pubkey>,
-) -> transport::Result<()> {
+    decimals: u8,
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -143,7 +173,7 @@ pub async fn create_mint(
                 &mint.pubkey(),
                 manager,
                 freeze_authority,
-                0,
+                decimals,
             )
             .unwrap(),
         ],

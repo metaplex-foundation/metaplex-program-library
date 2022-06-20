@@ -586,6 +586,7 @@ pub fn assert_valid_trade_state(
             &token_size_bytes,
         ],
     );
+
     let canonical_public_bump = assert_derivation(
         &crate::id(),
         trade_state,

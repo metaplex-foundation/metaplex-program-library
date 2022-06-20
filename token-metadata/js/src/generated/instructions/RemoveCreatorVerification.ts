@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category RemoveCreatorVerification
  * @category generated
  */
-const RemoveCreatorVerificationStruct = new beet.BeetArgsStruct<{
+export const RemoveCreatorVerificationStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
 }>([['instructionDiscriminator', beet.u8]], 'RemoveCreatorVerificationInstructionArgs');
 /**
@@ -30,7 +30,7 @@ export type RemoveCreatorVerificationInstructionAccounts = {
   creator: web3.PublicKey;
 };
 
-const removeCreatorVerificationInstructionDiscriminator = 28;
+export const removeCreatorVerificationInstructionDiscriminator = 28;
 
 /**
  * Creates a _RemoveCreatorVerification_ instruction.

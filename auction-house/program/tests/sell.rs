@@ -30,10 +30,12 @@ async fn sell_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
-    let ((acc, listing_receipt_acc), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 1);
+    let ((acc, listing_receipt_acc), sell_tx) =
+        sell(&mut context, &ahkey, &ah, &test_metadata, 1, 1);
 
     context
         .banks_client
@@ -96,6 +98,7 @@ async fn auctioneer_sell_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -157,6 +160,7 @@ async fn auctioneer_sell_missing_scope_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -213,6 +217,7 @@ async fn auctioneer_sell_no_delegate_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();

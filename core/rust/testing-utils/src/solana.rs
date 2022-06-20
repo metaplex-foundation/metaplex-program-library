@@ -200,15 +200,19 @@ pub async fn transfer(
     from: &Keypair,
     to: &Keypair,
 ) -> Result<(), TransportError> {
-    create_associated_token_account(context, to, mint).await?;
+    let to_token_account = create_associated_token_account(context, to, mint).await?;
+
+    let from_token_account =
+        spl_associated_token_account::get_associated_token_address(&from.pubkey(), mint);
+
     let tx = Transaction::new_signed_with_payer(
         &[spl_token::instruction::transfer(
             &spl_token::id(),
-            &from.pubkey(),
-            &to.pubkey(),
+            &from_token_account,
+            &to_token_account,
             &from.pubkey(),
             &[&from.pubkey()],
-            0,
+            1,
         )
         .unwrap()],
         Some(&from.pubkey()),
