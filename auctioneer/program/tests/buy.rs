@@ -52,6 +52,7 @@ async fn buy_success() {
         None,
         None,
         None,
+        None,
     );
     context
         .banks_client
@@ -136,6 +137,7 @@ async fn multiple_bids() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
+        None,
         None,
         None,
         None,
@@ -273,6 +275,7 @@ async fn buy_below_reserve_failure() {
         None,
         None,
         None,
+        None,
     );
     context
         .banks_client
@@ -362,6 +365,7 @@ async fn buy_above_reserve_success() {
         None,
         None,
         None,
+        None,
     );
     context
         .banks_client
@@ -448,6 +452,7 @@ async fn multiple_bids_increment_failure() {
             + 60) as i64,
         None,
         Some(2000000000),
+        None,
         None,
         None,
     );
@@ -584,6 +589,7 @@ async fn multiple_bids_increment_success() {
         Some(2000000000),
         None,
         None,
+        None,
     );
     context
         .banks_client
@@ -717,6 +723,7 @@ async fn multiple_bids_time_ext_success() {
         None,
         Some(60),
         Some(60),
+        None,
     );
     context
         .banks_client
