@@ -91,10 +91,10 @@ pub mod auctioneer {
         token_size: u64,
         start_time: UnixTimestamp,
         end_time: UnixTimestamp,
-        reserve_price: u64,
-        min_bid_increment: u64,
-        time_ext_period: u32,
-        time_ext_delta: u32,
+        reserve_price: Option<u64>,
+        min_bid_increment: Option<u64>,
+        time_ext_period: Option<u32>,
+        time_ext_delta: Option<u32>,
     ) -> Result<()> {
         auctioneer_sell(
             ctx,

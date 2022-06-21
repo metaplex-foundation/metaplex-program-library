@@ -48,10 +48,10 @@ async fn buy_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
-        0,
-        0,
-        0,
-        0,
+        None,
+        None,
+        None,
+        None,
     );
     context
         .banks_client
@@ -136,10 +136,10 @@ async fn multiple_bids() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
-        0,
-        0,
-        0,
-        0,
+        None,
+        None,
+        None,
+        None,
     );
     context
         .banks_client
@@ -269,10 +269,10 @@ async fn buy_below_reserve_failure() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
-        1000000001,
-        0,
-        0,
-        0,
+        Some(1000000001),
+        None,
+        None,
+        None,
     );
     context
         .banks_client
@@ -358,10 +358,10 @@ async fn buy_above_reserve_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
-        1000000000,
-        0,
-        0,
-        0,
+        Some(1000000000),
+        None,
+        None,
+        None,
     );
     context
         .banks_client
@@ -446,10 +446,10 @@ async fn multiple_bids_increment_failure() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
-        0,
-        2000000000,
-        0,
-        0,
+        None,
+        Some(2000000000),
+        None,
+        None,
     );
     context
         .banks_client
@@ -580,10 +580,10 @@ async fn multiple_bids_increment_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
-        0,
-        2000000000,
-        0,
-        0,
+        None,
+        Some(2000000000),
+        None,
+        None,
     );
     context
         .banks_client
@@ -713,10 +713,10 @@ async fn multiple_bids_time_ext_success() {
             .expect("Time went backwards")
             .as_secs()
             + 60) as i64,
-        0,
-        0,
-        60,
-        60,
+        None,
+        None,
+        Some(60),
+        Some(60),
     );
     context
         .banks_client
