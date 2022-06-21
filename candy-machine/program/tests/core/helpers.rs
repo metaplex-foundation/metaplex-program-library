@@ -311,3 +311,28 @@ pub async fn prepare_nft(context: &mut ProgramTestContext, minter: &Keypair) -> 
     .unwrap();
     MasterEditionV2::new(&nft_info)
 }
+
+#[allow(dead_code)]
+pub fn get_network_token(
+    payer: &Pubkey,
+    gatekeeper_network: &Pubkey,
+    program_id: Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            payer.as_ref(),
+            b"gateway".as_ref(),
+            [0, 0, 0, 0, 0, 0, 0, 0].as_ref(),
+            gatekeeper_network.as_ref(),
+        ],
+        &program_id,
+    )
+}
+
+#[allow(dead_code)]
+pub fn get_network_expire(gatekeeper_network: &Pubkey, program_id: Pubkey) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[gatekeeper_network.as_ref(), b"expire".as_ref()],
+        &program_id,
+    )
+}

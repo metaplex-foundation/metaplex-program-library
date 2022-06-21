@@ -220,6 +220,38 @@ impl Clone for TokenInfo {
 }
 
 #[derive(Debug)]
+pub struct GatekeeperInfo {
+    pub network_expire_feature_account: Option<Pubkey>,
+    pub gateway_app_account: Option<Pubkey>,
+    pub gateway_token_info_account: Pubkey,
+}
+
+impl GatekeeperInfo {
+    #[allow(dead_code)]
+    pub fn new(
+        network_expire_feature_account: Option<Pubkey>,
+        gateway_app_account: Option<Pubkey>,
+        gateway_token_info_account: Pubkey,
+    ) -> Self {
+        GatekeeperInfo {
+            network_expire_feature_account,
+            gateway_app_account,
+            gateway_token_info_account,
+        }
+    }
+}
+
+impl Clone for GatekeeperInfo {
+    fn clone(&self) -> Self {
+        GatekeeperInfo {
+            network_expire_feature_account: self.network_expire_feature_account,
+            gateway_app_account: self.gateway_app_account,
+            gateway_token_info_account: clone_pubkey(&self.gateway_token_info_account),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct WhitelistInfo {
     pub set: bool,
     pub mint: Pubkey,

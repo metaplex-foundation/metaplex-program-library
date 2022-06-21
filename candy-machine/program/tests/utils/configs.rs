@@ -18,6 +18,7 @@ pub fn quick_config(creator: Pubkey) -> CandyMachineData {
     custom_config(creator, None, true, true, None, None, None, None)
 }
 
+#[allow(dead_code)]
 pub fn auto_config(
     candy_manager: &CandyManager,
     go_live_date: Option<i64>,

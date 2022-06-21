@@ -2852,9 +2852,9 @@ dependencies = [
 
 [[package]]
 name = "solana-gateway"
-version = "0.2.0"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "282ce1447f4b73c83dea4daef0011381e1b769d6a64ed5cd19f0b9f2dc32458b"
+checksum = "243daaf437dff89891d520c3e9be7b4a6940c30a1bda2ac094e621046f303eda"
 dependencies = [
  "bitflags",
  "borsh",

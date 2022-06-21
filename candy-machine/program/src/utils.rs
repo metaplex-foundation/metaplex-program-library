@@ -245,7 +245,7 @@ pub fn punish_bots<'a>(
             fee
         );
     }
-    
+
     let final_fee = fee.min(bot_account.lamports());
     invoke(
         &system_instruction::transfer(bot_account.key, payment_account.key, final_fee),
