@@ -234,6 +234,10 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                 Box::new(AWSHandler::initialize(&get_config_data(&args.config)?).await?)
                     as Box<dyn UploadHandler>
             }
+            UploadMethod::NftStorage => {
+                Box::new(NftStorageHandler::initialize(&get_config_data(&args.config)?).await?)
+                    as Box<dyn UploadHandler>
+            }
         };
 
         pb.finish_with_message("Connected");

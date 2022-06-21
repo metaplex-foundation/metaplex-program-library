@@ -414,7 +414,12 @@ impl UploadHandler for BundlrHandler {
 
             let cache_item = match cache.items.0.get(&asset_id) {
                 Some(item) => item,
-                None => return Err(anyhow!("Failed to get config item at index {}", asset_id)),
+                None => {
+                    return Err(anyhow::anyhow!(
+                        "Failed to get config item at index: {}",
+                        asset_id
+                    ))
+                }
             };
 
             // todo make sure if failure it should be empty string, this makes it able to be reuploaded if animation present

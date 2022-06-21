@@ -554,7 +554,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // upload method
 
-    let upload_options = vec!["Bundlr", "AWS"];
+    let upload_options = vec!["Bundlr", "AWS", "NFT Storage"];
     config_data.upload_method = match Select::with_theme(&theme)
         .with_prompt("What upload method do you want to use?")
         .items(&upload_options)
@@ -564,6 +564,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     {
         0 => UploadMethod::Bundlr,
         1 => UploadMethod::AWS,
+        2 => UploadMethod::NftStorage,
         _ => UploadMethod::Bundlr,
     };
 
@@ -571,6 +572,15 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         config_data.aws_s3_bucket = Some(
             Input::with_theme(&theme)
                 .with_prompt("What is the AWS S3 bucket name?")
+                .interact()
+                .unwrap(),
+        );
+    }
+
+    if config_data.upload_method == UploadMethod::NftStorage {
+        config_data.nft_storage_auth_token = Some(
+            Input::with_theme(&theme)
+                .with_prompt("What is the NFT Storage authentication token?")
                 .interact()
                 .unwrap(),
         );

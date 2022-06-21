@@ -1,8 +1,7 @@
 use async_trait::async_trait;
-use aws_sdk_s3::{types::ByteStream, Client};
-use bs58;
 use console::style;
 use futures::future::select_all;
+use reqwest::{header, Client};
 use std::{
     cmp,
     collections::HashSet,
@@ -17,39 +16,71 @@ use std::{
 
 use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*};
 
-struct ObjectInfo {
+const NFT_STORAGE_API_URL: &str = "https://api.nft.storage";
+const NFT_STORAGE_GATEWAY_URL: &str = "https://nftstorage.link/ipfs";
+
+pub enum NftStorageError {
+    ApiError(Value),
+}
+
+/// response after an nft was stored
+#[derive(Debug, Deserialize, Default)]
+pub struct StoreNftResponse {
+    /// status of the request
+    pub ok: bool,
+    /// stored nft data
+    pub value: NftValue,
+}
+
+/// main obj that hold all the response data
+#[derive(Debug, Deserialize, Default)]
+#[serde(default)]
+pub struct NftValue {
+    /// ipfs cid (file hash)
+    pub cid: String,
+}
+
+struct UploadInfo {
     asset_id: String,
     file_path: String,
     image_link: String,
     data_type: DataType,
-    content_type: String,
-    bucket: String,
     animation_link: Option<String>,
 }
 
-pub struct AWSHandler {
+pub struct NftStorageHandler {
     client: Arc<Client>,
-    bucket: String,
 }
 
-impl AWSHandler {
-    /// Initialize a new AWSHandler.
-    pub async fn initialize(config_data: &ConfigData) -> Result<AWSHandler> {
-        let shared_config = aws_config::load_from_env().await;
-        let client = Client::new(&shared_config);
+impl NftStorageHandler {
+    /// Initialize a new NftStorageHandler.
+    pub async fn initialize(config_data: &ConfigData) -> Result<NftStorageHandler> {
+        if let Some(auth_token) = &config_data.nft_storage_auth_token {
+            let client_builder = Client::builder();
 
-        if let Some(aws_s3_bucket) = &config_data.aws_s3_bucket {
-            Ok(AWSHandler {
+            let mut headers = header::HeaderMap::new();
+            let bearer_value = format!("Bearer {}", auth_token);
+            let mut auth_value = header::HeaderValue::from_str(&bearer_value)?;
+            auth_value.set_sensitive(true);
+            headers.insert(header::AUTHORIZATION, auth_value);
+
+            let client = client_builder.default_headers(headers).build()?;
+
+            Ok(NftStorageHandler {
                 client: Arc::new(client),
-                bucket: aws_s3_bucket.to_string(),
             })
         } else {
-            Err(anyhow!("Missing 'awsS3Bucket' value in config file."))
+            Err(anyhow!(
+                "Missing 'nftStorageAuthToken' value in config file."
+            ))
         }
     }
 
-    /// Send an object to AWS and wait for a response.
-    async fn send_to_aws(aws_client: Arc<Client>, info: ObjectInfo) -> Result<(String, String)> {
+    /// Send an file to Nft Storage and wait for a response.
+    async fn send_to_nft_storage(
+        client: Arc<Client>,
+        info: UploadInfo,
+    ) -> Result<(String, String)> {
         let data = match info.data_type {
             DataType::Image => fs::read(&info.file_path)?,
             DataType::Metadata => {
@@ -61,24 +92,31 @@ impl AWSHandler {
             DataType::Animation => fs::read(&info.file_path)?,
         };
 
-        let key = bs58::encode(&info.file_path).into_string();
+        let url = format!("{}/upload", NFT_STORAGE_API_URL);
+        let response = client.post(url).body(data).send().await?;
+        let status = response.status().is_success();
+        let body = response.json::<Value>().await?;
 
-        aws_client
-            .put_object()
-            .bucket(info.bucket)
-            .key(&key)
-            .body(ByteStream::from(data))
-            .content_type(info.content_type)
-            .send()
-            .await?;
+        match status {
+            true => {
+                let StoreNftResponse {
+                    value: NftValue { cid },
+                    ..
+                }: StoreNftResponse = serde_json::from_value(body)?;
 
-        Ok((info.asset_id, key))
+                Ok((info.asset_id, cid))
+            }
+            false => Err(anyhow!(
+                "File upload to NFT Storage Failed: {}",
+                info.asset_id
+            )),
+        }
     }
 }
 
 #[async_trait]
-impl UploadHandler for AWSHandler {
-    /// Nothing to do, AWS client ready for the upload.
+impl UploadHandler for NftStorageHandler {
+    /// Nothing to do, Nft Storage ready for the upload.
     async fn prepare(
         &self,
         _sugar_config: &SugarConfig,
@@ -90,7 +128,7 @@ impl UploadHandler for AWSHandler {
         Ok(())
     }
 
-    /// Upload the data to AWS S3.
+    /// Upload the data to Nft Storage
     async fn upload_data(
         &self,
         _sugar_config: &SugarConfig,
@@ -125,19 +163,6 @@ impl UploadHandler for AWSHandler {
             paths.push(file_path);
         }
 
-        // validates that all files have the same extension
-        let extension = if extension.len() == 1 {
-            extension.iter().next().unwrap()
-        } else {
-            return Err(anyhow!("Invalid file extension: {:?}", extension));
-        };
-
-        let content_type = match data_type {
-            DataType::Image => format!("image/{}", extension),
-            DataType::Metadata => "application/json".to_string(),
-            DataType::Animation => format!("video/{}", extension),
-        };
-
         println!("\nSending data: (Ctrl+C to abort)");
 
         let pb = progress_bar_with_style(paths.len() as u64);
@@ -152,6 +177,7 @@ impl UploadHandler for AWSHandler {
                     .and_then(OsStr::to_str)
                     .expect("Failed to get convert path file ext to valid unicode."),
             );
+
             let cache_item = match cache.items.0.get(&asset_id) {
                 Some(item) => item,
                 None => {
@@ -162,15 +188,13 @@ impl UploadHandler for AWSHandler {
                 }
             };
 
-            objects.push(ObjectInfo {
+            objects.push(UploadInfo {
                 asset_id: asset_id.to_string(),
                 file_path: String::from(
                     path.to_str().expect("Failed to convert path from unicode."),
                 ),
                 image_link: cache_item.image_link.clone(),
                 data_type: data_type.clone(),
-                content_type: content_type.clone(),
-                bucket: self.bucket.clone(),
                 animation_link: cache_item.animation_link.clone(),
             });
         }
@@ -178,9 +202,9 @@ impl UploadHandler for AWSHandler {
         let mut handles = Vec::new();
 
         for object in objects.drain(0..cmp::min(objects.len(), PARALLEL_LIMIT)) {
-            let aws_client = self.client.clone();
+            let client = self.client.clone();
             handles.push(tokio::spawn(async move {
-                AWSHandler::send_to_aws(aws_client, object).await
+                NftStorageHandler::send_to_nft_storage(client, object).await
             }));
         }
 
@@ -195,7 +219,7 @@ impl UploadHandler for AWSHandler {
 
                     if res.is_ok() {
                         let val = res?;
-                        let link = format!("https://{}.s3.amazonaws.com/{}", self.bucket, val.1);
+                        let link = format!("{}/{}", NFT_STORAGE_GATEWAY_URL, val.1);
                         // cache item to update
                         let item = cache.items.0.get_mut(&val.0).unwrap();
 
@@ -209,14 +233,14 @@ impl UploadHandler for AWSHandler {
                     } else {
                         // user will need to retry the upload
                         errors.push(UploadError::SendDataFailed(format!(
-                            "AWS upload error: {:?}",
+                            "Nft Storage upload error: {:?}",
                             res.err().unwrap()
                         )));
                     }
                 }
                 (Err(err), _index, remaining) => {
                     errors.push(UploadError::SendDataFailed(format!(
-                        "AWS upload error: {:?}",
+                        "Nft Storage upload error: {:?}",
                         err
                     )));
                     // ignoring all errors
@@ -231,9 +255,9 @@ impl UploadHandler for AWSHandler {
                     cache.sync_file()?;
 
                     for object in objects.drain(0..cmp::min(objects.len(), PARALLEL_LIMIT / 2)) {
-                        let aws_client = self.client.clone();
+                        let client = self.client.clone();
                         handles.push(tokio::spawn(async move {
-                            AWSHandler::send_to_aws(aws_client, object).await
+                            NftStorageHandler::send_to_nft_storage(client, object).await
                         }));
                     }
                 }
