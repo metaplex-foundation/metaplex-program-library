@@ -1692,6 +1692,10 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         return Err(MetadataError::MissingCollectionMetadata.into());
     }
 
+    // Ensure this is a Master Edition and not a Print.
+    let _master_edition = MasterEditionV2::from_account_info(edition_info)
+        .map_err(|_err: ProgramError| MetadataError::NotAMasterEdition)?;
+
     // Checks:
     // * Metadata is owned by the token-metadata program
     // * Mint is owned by the spl-token program
