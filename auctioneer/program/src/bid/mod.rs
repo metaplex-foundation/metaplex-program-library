@@ -128,6 +128,7 @@ pub fn auctioneer_buy<'info>(
     assert_auction_active(&ctx.accounts.listing_config)?;
     assert_higher_bid(&ctx.accounts.listing_config, buyer_price)?;
     assert_exceeds_reserve_price(&ctx.accounts.listing_config, buyer_price)?;
+    process_time_extension(&mut ctx.accounts.listing_config)?;
     ctx.accounts.listing_config.highest_bid.amount = buyer_price;
     ctx.accounts.listing_config.highest_bid.buyer_trade_state =
         ctx.accounts.buyer_trade_state.key();
