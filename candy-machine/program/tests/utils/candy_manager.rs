@@ -569,6 +569,9 @@ impl CandyManager {
             associated_token_account.amount, 1,
             "Minter is not the owner"
         );
+
+        println!("here1 {:?}", candy_start.items_redeemed,);
+        println!("here2 {:?}", candy_end.items_redeemed);
         assert_eq!(
             candy_start.items_redeemed,
             candy_end.items_redeemed - 1,

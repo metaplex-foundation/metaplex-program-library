@@ -93,7 +93,7 @@ pub fn handle_mint_nft<'info>(
     ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
     creator_bump: u8,
 ) -> Result<()> {
-    let candy_machine = &mut ctx.accounts.candy_machine;
+    let mut candy_machine = ctx.accounts.candy_machine.clone();
     let candy_machine_creator = &ctx.accounts.candy_machine_creator;
     // Note this is the wallet of the Candy machine
     let wallet = &ctx.accounts.wallet;
@@ -123,11 +123,12 @@ pub fn handle_mint_nft<'info>(
         && !cmp_pubkeys(&current_ix.program_id, &CUPCAKE_ID)
     {
         punish_bots(
-            CandyError::SuspiciousTransaction,
+            Some(CandyError::SuspiciousTransaction),
             payer.to_account_info(),
             ctx.accounts.candy_machine.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
             BOT_FEE,
+            None,
         )?;
         return Ok(());
     }
@@ -148,11 +149,12 @@ pub fn handle_mint_nft<'info>(
         Err(_) => {
             if is_feature_active(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX) {
                 punish_bots(
-                    CandyError::MissingSetCollectionDuringMint,
+                    Some(CandyError::MissingSetCollectionDuringMint),
                     payer.to_account_info(),
                     ctx.accounts.candy_machine.to_account_info(),
                     ctx.accounts.system_program.to_account_info(),
                     BOT_FEE,
+                    None,
                 )?;
                 return Ok(());
             }
@@ -181,11 +183,12 @@ pub fn handle_mint_nft<'info>(
         {
             msg!("Transaction had ix with program id {}", program_id);
             punish_bots(
-                CandyError::SuspiciousTransaction,
+                Some(CandyError::SuspiciousTransaction),
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
                 BOT_FEE,
+                None,
             )?;
             return Ok(());
         }
@@ -199,11 +202,12 @@ pub fn handle_mint_nft<'info>(
                     && !cmp_pubkeys(&ctx.accounts.payer.key(), &candy_machine.authority)
                 {
                     punish_bots(
-                        CandyError::CandyMachineNotLive,
+                        Some(CandyError::CandyMachineNotLive),
                         payer.to_account_info(),
                         ctx.accounts.candy_machine.to_account_info(),
                         ctx.accounts.system_program.to_account_info(),
                         BOT_FEE,
+                        None,
                     )?;
                     return Ok(());
                 }
@@ -212,11 +216,12 @@ pub fn handle_mint_nft<'info>(
                 if candy_machine.items_redeemed >= es.number {
                     if !cmp_pubkeys(&ctx.accounts.payer.key(), &candy_machine.authority) {
                         punish_bots(
-                            CandyError::CandyMachineEmpty,
+                            Some(CandyError::CandyMachineEmpty),
                             payer.to_account_info(),
                             ctx.accounts.candy_machine.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
                             BOT_FEE,
+                            None,
                         )?;
                         return Ok(());
                     }
@@ -229,15 +234,17 @@ pub fn handle_mint_nft<'info>(
     if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
         if ctx.remaining_accounts.len() <= remaining_accounts_counter {
             punish_bots(
-                CandyError::GatewayTokenMissing,
+                Some(CandyError::GatewayTokenMissing),
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
                 BOT_FEE,
+                None,
             )?;
             return Ok(());
         }
         let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
+
         remaining_accounts_counter += 1;
 
         // Eval function used in the gateway CPI
@@ -279,7 +286,18 @@ pub fn handle_mint_nft<'info>(
                 &gatekeeper.gatekeeper_network,
                 network_expire_feature.clone(),
                 eval_function,
-            )?;
+            )
+            .unwrap_or_else(|err| {
+                punish_bots(
+                    None,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                    Some(err),
+                )
+                .unwrap();
+            });
         } else {
             Gateway::verify_gateway_token_with_eval(
                 gateway_token_info,
@@ -287,7 +305,18 @@ pub fn handle_mint_nft<'info>(
                 &gatekeeper.gatekeeper_network,
                 None,
                 eval_function,
-            )?;
+            )
+            .unwrap_or_else(|err| {
+                punish_bots(
+                    None,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                    Some(err),
+                )
+                .unwrap();
+            });
         }
     }
 
@@ -307,11 +336,12 @@ pub fn handle_mint_nft<'info>(
                                 && !ws.presale
                             {
                                 punish_bots(
-                                    CandyError::CandyMachineNotLive,
+                                    Some(CandyError::CandyMachineNotLive),
                                     payer.to_account_info(),
                                     ctx.accounts.candy_machine.to_account_info(),
                                     ctx.accounts.system_program.to_account_info(),
                                     BOT_FEE,
+                                    None,
                                 )?;
                                 return Ok(());
                             }
@@ -322,11 +352,12 @@ pub fn handle_mint_nft<'info>(
                                 && !ws.presale
                             {
                                 punish_bots(
-                                    CandyError::CandyMachineNotLive,
+                                    Some(CandyError::CandyMachineNotLive),
                                     payer.to_account_info(),
                                     ctx.accounts.candy_machine.to_account_info(),
                                     ctx.accounts.system_program.to_account_info(),
                                     BOT_FEE,
+                                    None,
                                 )?;
                                 return Ok(());
                             }
@@ -346,11 +377,12 @@ pub fn handle_mint_nft<'info>(
 
                         if key_check.is_err() {
                             punish_bots(
-                                CandyError::IncorrectOwner,
+                                Some(CandyError::IncorrectOwner),
                                 payer.to_account_info(),
                                 ctx.accounts.candy_machine.to_account_info(),
                                 ctx.accounts.system_program.to_account_info(),
                                 BOT_FEE,
+                                None,
                             )?;
                             return Ok(());
                         }
@@ -374,22 +406,24 @@ pub fn handle_mint_nft<'info>(
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
                         punish_bots(
-                            CandyError::NoWhitelistToken,
+                            Some(CandyError::NoWhitelistToken),
                             payer.to_account_info(),
                             ctx.accounts.candy_machine.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
                             BOT_FEE,
+                            None,
                         )?;
                         return Ok(());
                     }
-                    let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                    let go_live = assert_valid_go_live(payer, clock, &candy_machine);
                     if go_live.is_err() {
                         punish_bots(
-                            CandyError::CandyMachineNotLive,
+                            Some(CandyError::CandyMachineNotLive),
                             payer.to_account_info(),
                             ctx.accounts.candy_machine.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
                             BOT_FEE,
+                            None,
                         )?;
                         return Ok(());
                     }
@@ -404,25 +438,27 @@ pub fn handle_mint_nft<'info>(
                     // If a pre-sale has no discount, its no issue, because the "discount"
                     // is minting first - a presale whitelist always has an open post sale.
                     punish_bots(
-                        CandyError::NoWhitelistToken,
+                        Some(CandyError::NoWhitelistToken),
                         payer.to_account_info(),
                         ctx.accounts.candy_machine.to_account_info(),
                         ctx.accounts.system_program.to_account_info(),
                         BOT_FEE,
+                        None,
                     )?;
                     return Ok(());
                 }
                 if ws.mode == WhitelistMintMode::BurnEveryTime {
                     remaining_accounts_counter += 2;
                 }
-                let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                let go_live = assert_valid_go_live(payer, clock, &candy_machine);
                 if go_live.is_err() {
                     punish_bots(
-                        CandyError::CandyMachineNotLive,
+                        Some(CandyError::CandyMachineNotLive),
                         payer.to_account_info(),
                         ctx.accounts.candy_machine.to_account_info(),
                         ctx.accounts.system_program.to_account_info(),
                         BOT_FEE,
+                        None,
                     )?;
                     return Ok(());
                 }
@@ -430,14 +466,15 @@ pub fn handle_mint_nft<'info>(
         }
     } else {
         // no whitelist means normal datecheck
-        let go_live = assert_valid_go_live(payer, clock, candy_machine);
+        let go_live = assert_valid_go_live(payer, clock, &candy_machine);
         if go_live.is_err() {
             punish_bots(
-                CandyError::CandyMachineNotLive,
+                Some(CandyError::CandyMachineNotLive),
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
                 BOT_FEE,
+                None,
             )?;
             return Ok(());
         }
@@ -445,11 +482,12 @@ pub fn handle_mint_nft<'info>(
 
     if candy_machine.items_redeemed >= candy_machine.data.items_available {
         punish_bots(
-            CandyError::CandyMachineEmpty,
+            Some(CandyError::CandyMachineEmpty),
             payer.to_account_info(),
             ctx.accounts.candy_machine.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
             BOT_FEE,
+            None,
         )?;
         return Ok(());
     }
@@ -498,7 +536,7 @@ pub fn handle_mint_nft<'info>(
         .checked_rem(candy_machine.data.items_available)
         .ok_or(CandyError::NumericalOverflowError)? as usize;
 
-    let config_line = get_config_line(candy_machine, modded, candy_machine.items_redeemed)?;
+    let config_line = get_config_line(&candy_machine, modded, candy_machine.items_redeemed)?;
 
     candy_machine.items_redeemed = candy_machine
         .items_redeemed
