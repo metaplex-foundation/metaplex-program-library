@@ -95,6 +95,7 @@ pub mod auctioneer {
         min_bid_increment: Option<u64>,
         time_ext_period: Option<u32>,
         time_ext_delta: Option<u32>,
+        allow_high_bid_cancel: Option<bool>,
     ) -> Result<()> {
         auctioneer_sell(
             ctx,
@@ -109,6 +110,7 @@ pub mod auctioneer {
             min_bid_increment,
             time_ext_period,
             time_ext_delta,
+            allow_high_bid_cancel,
         )
     }
 
