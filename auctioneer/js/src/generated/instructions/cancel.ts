@@ -41,6 +41,8 @@ const cancelStruct = new beet.BeetArgsStruct<
  * Accounts required by the _cancel_ instruction
  *
  * @property [] auctionHouseProgram
+ * @property [_writable_] listingConfig
+ * @property [] seller
  * @property [_writable_] wallet
  * @property [_writable_] tokenAccount
  * @property [] tokenMint
@@ -56,6 +58,8 @@ const cancelStruct = new beet.BeetArgsStruct<
  */
 export type CancelInstructionAccounts = {
   auctionHouseProgram: web3.PublicKey;
+  listingConfig: web3.PublicKey;
+  seller: web3.PublicKey;
   wallet: web3.PublicKey;
   tokenAccount: web3.PublicKey;
   tokenMint: web3.PublicKey;
@@ -85,6 +89,8 @@ export function createCancelInstruction(
 ) {
   const {
     auctionHouseProgram,
+    listingConfig,
+    seller,
     wallet,
     tokenAccount,
     tokenMint,
@@ -103,6 +109,16 @@ export function createCancelInstruction(
   const keys: web3.AccountMeta[] = [
     {
       pubkey: auctionHouseProgram,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: listingConfig,
+      isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: seller,
       isWritable: false,
       isSigner: false,
     },
