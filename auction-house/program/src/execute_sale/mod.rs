@@ -14,9 +14,7 @@ use spl_token::state::Account as SplAccount;
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
     buyer_price: u64,
-    token_size: u64,
-    partial_order_size: Option<u64>,
-    partial_order_price: Option<u64>
+    token_size: u64
 )]
 pub struct ExecuteSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
@@ -123,6 +121,7 @@ pub struct ExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
+    #[account(mut)]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
