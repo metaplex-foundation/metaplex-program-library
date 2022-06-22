@@ -8,7 +8,7 @@ use solana_sdk::signature::Keypair;
 use std::time::SystemTime;
 use utils::setup_functions::*;
 
-//#[tokio::test]
+#[tokio::test]
 async fn cancel_listing() {
     let mut context = auctioneer_program_test().start_with_context().await;
     // Payer Wallet
@@ -104,7 +104,7 @@ async fn cancel_listing() {
     context.banks_client.process_transaction(tx).await.unwrap();
 }
 
-//#[tokio::test]
+#[tokio::test]
 async fn cancel_bid() {
     let mut context = auctioneer_program_test().start_with_context().await;
     // Payer Wallet
@@ -296,7 +296,9 @@ async fn cancel_highest_bid() {
         .process_transaction(buy_tx0)
         .await
         .unwrap();
-    println!("Buy 0");
+
+    context.warp_to_slot(200).unwrap();
+
     let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts0 = mpl_auctioneer::accounts::AuctioneerCancel {
@@ -332,13 +334,14 @@ async fn cancel_highest_bid() {
         &[&buyer0],
         context.last_blockhash,
     );
-    println!("Cancel 0: {}", acc0.buyer_trade_state);
     let result0 = context
         .banks_client
         .process_transaction(tx0)
         .await
         .unwrap_err();
     assert_error!(result0, CANNOT_CANCEL_HIGHEST_BID);
+
+    context.warp_to_slot(300).unwrap();
 
     // Buyer 1 bids higher and should now be the highest bidder.
     let buyer1 = Keypair::new();
@@ -363,7 +366,8 @@ async fn cancel_highest_bid() {
         .process_transaction(buy_tx1)
         .await
         .unwrap();
-    println!("Buy 1");
+    context.warp_to_slot(400).unwrap();
+
     let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
     let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority);
     let accounts1 = mpl_auctioneer::accounts::AuctioneerCancel {
@@ -400,13 +404,13 @@ async fn cancel_highest_bid() {
         context.last_blockhash,
     );
 
-    println!("Cancel 1: {}", acc1.buyer_trade_state);
     let result1 = context
         .banks_client
         .process_transaction(tx1)
         .await
         .unwrap_err();
     assert_error!(result1, CANNOT_CANCEL_HIGHEST_BID);
+    context.warp_to_slot(500).unwrap();
 
     // Rerun the cancel on the lower bid to verify it now succeeds.
     let (auctioneer_authority, aa_bump) = find_auctioneer_authority_seeds(&ahkey);
@@ -444,6 +448,5 @@ async fn cancel_highest_bid() {
         &[&buyer0],
         context.last_blockhash,
     );
-    println!("Cancel 2: {}", acc0.buyer_trade_state);
-    let result2 = context.banks_client.process_transaction(tx2).await.unwrap();
+    context.banks_client.process_transaction(tx2).await.unwrap();
 }

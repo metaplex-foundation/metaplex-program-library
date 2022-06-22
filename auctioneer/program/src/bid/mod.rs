@@ -132,14 +132,6 @@ pub fn auctioneer_buy<'info>(
     ctx.accounts.listing_config.highest_bid.amount = buyer_price;
     ctx.accounts.listing_config.highest_bid.buyer_trade_state =
         ctx.accounts.buyer_trade_state.key();
-    msg!(
-        "Highest bid: {}",
-        ctx.accounts
-            .listing_config
-            .highest_bid
-            .buyer_trade_state
-            .key()
-    );
 
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHBuy {
