@@ -24,7 +24,7 @@ export const BurnNftStruct = new beet.BeetArgsStruct<{ instructionDiscriminator:
  * @property [_writable_, **signer**] owner NFT owner
  * @property [_writable_] mint Mint of the NFT
  * @property [_writable_] tokenAccount Token account to close
- * @property [_writable_] editionAccount MasterEdition2 or Edition Account of the NFT
+ * @property [_writable_] masterEditionAccount MasterEdition2 of the NFT
  * @property [] splTokenProgram SPL Token Program
  * @property [_writable_] collectionMetadata (optional) Metadata of the Collection
  * @category Instructions
@@ -36,7 +36,7 @@ export type BurnNftInstructionAccounts = {
   owner: web3.PublicKey;
   mint: web3.PublicKey;
   tokenAccount: web3.PublicKey;
-  editionAccount: web3.PublicKey;
+  masterEditionAccount: web3.PublicKey;
   splTokenProgram: web3.PublicKey;
   collectionMetadata?: web3.PublicKey;
 };
@@ -57,7 +57,7 @@ export function createBurnNftInstruction(accounts: BurnNftInstructionAccounts) {
     owner,
     mint,
     tokenAccount,
-    editionAccount,
+    masterEditionAccount,
     splTokenProgram,
     collectionMetadata,
   } = accounts;
@@ -87,7 +87,7 @@ export function createBurnNftInstruction(accounts: BurnNftInstructionAccounts) {
       isSigner: false,
     },
     {
-      pubkey: editionAccount,
+      pubkey: masterEditionAccount,
       isWritable: true,
       isSigner: false,
     },

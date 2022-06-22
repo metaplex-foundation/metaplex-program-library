@@ -1671,10 +1671,10 @@
           "desc": "Token account to close"
         },
         {
-          "name": "editionAccount",
+          "name": "masterEditionAccount",
           "isMut": true,
           "isSigner": false,
-          "desc": "MasterEdition2 or Edition Account of the NFT"
+          "desc": "MasterEdition2 of the NFT"
         },
         {
           "name": "splTokenProgram",
@@ -3326,6 +3326,16 @@
       "code": 108,
       "name": "MissingEditionAccount",
       "msg": "This mint account has an edition but none was provided."
+    },
+    {
+      "code": 109,
+      "name": "NotAMasterEdition",
+      "msg": "This edition is not a Master Edition"
+    },
+    {
+      "code": 110,
+      "name": "MasterEditionHasPrints",
+      "msg": "This Master Edition has existing prints"
     }
   ],
   "metadata": {
