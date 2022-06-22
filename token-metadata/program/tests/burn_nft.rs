@@ -174,7 +174,7 @@ mod burn_nft {
     }
 
     #[tokio::test]
-    async fn successfully_burn_master_edition_with_existing_prints() {
+    async fn fail_to_burn_master_edition_with_existing_prints() {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
