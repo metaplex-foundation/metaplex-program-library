@@ -1693,8 +1693,13 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     }
 
     // Ensure this is a Master Edition and not a Print.
-    let _master_edition = MasterEditionV2::from_account_info(edition_info)
+    let master_edition = MasterEditionV2::from_account_info(edition_info)
         .map_err(|_err: ProgramError| MetadataError::NotAMasterEdition)?;
+
+    // Cannot burn Master Editions with existing prints, for now.
+    if master_edition.supply > 0 {
+        return Err(MetadataError::MasterEditionHasPrints.into());
+    }
 
     // Checks:
     // * Metadata is owned by the token-metadata program

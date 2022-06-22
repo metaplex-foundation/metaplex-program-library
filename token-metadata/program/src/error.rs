@@ -432,6 +432,10 @@ pub enum MetadataError {
     /// 109 - Not a Master Edition
     #[error("This edition is not a Master Edition")]
     NotAMasterEdition,
+
+    /// 110 - Master Edition has prints.
+    #[error("This Master Edition has existing prints")]
+    MasterEditionHasPrints,
 }
 
 impl PrintProgramError for MetadataError {

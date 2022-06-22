@@ -105,7 +105,7 @@ mod burn_nft {
     }
 
     #[tokio::test]
-    async fn successfully_burn_print_edition_nft() {
+    async fn fail_to_burn_print_edition() {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
@@ -158,7 +158,7 @@ mod burn_nft {
         let kpbytes = &context.payer;
         let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
 
-        burn(
+        let error = burn(
             &mut context,
             print_edition.new_metadata_pubkey,
             &payer,
@@ -168,9 +168,42 @@ mod burn_nft {
             None,
         )
         .await
-        .unwrap();
+        .unwrap_err();
 
-        // Metadata, Master Edition and token account are burned.
+        assert_custom_error!(error, MetadataError::NotAMasterEdition);
+    }
+
+    #[tokio::test]
+    async fn successfully_burn_master_edition_with_existing_prints() {
+        let mut context = program_test().start_with_context().await;
+
+        let original_nft = Metadata::new();
+        original_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new(&original_nft);
+        master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+
+        // Metadata, Print Edition and token account exist.
         let md_account = context
             .banks_client
             .get_account(print_edition.new_metadata_pubkey)
@@ -187,9 +220,26 @@ mod burn_nft {
             .await
             .unwrap();
 
-        assert!(md_account.is_none());
-        assert!(token_account.is_none());
-        assert!(print_edition_account.is_none());
+        assert!(md_account.is_some());
+        assert!(token_account.is_some());
+        assert!(print_edition_account.is_some());
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        let error = burn(
+            &mut context,
+            original_nft.pubkey,
+            &payer,
+            original_nft.mint.pubkey(),
+            original_nft.token.pubkey(),
+            master_edition.pubkey,
+            None,
+        )
+        .await
+        .unwrap_err();
+
+        assert_custom_error!(error, MetadataError::MasterEditionHasPrints);
     }
 
     #[tokio::test]
