@@ -62,3 +62,14 @@ pub fn assert_highest_bidder(
 
     Ok(())
 }
+
+pub fn process_time_extension(listing_config: &mut Account<ListingConfig>) -> Result<()> {
+    let clock = Clock::get()?;
+    let current_timestamp = clock.unix_timestamp;
+
+    if current_timestamp >= (listing_config.end_time - i64::from(listing_config.time_ext_period)) {
+        listing_config.end_time += i64::from(listing_config.time_ext_delta);
+    }
+
+    Ok(())
+}
