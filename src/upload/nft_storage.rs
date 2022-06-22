@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use console::style;
 use futures::future::select_all;
-use reqwest::{header, Client};
+use reqwest::{header, Client, StatusCode};
 use std::{
     cmp,
     collections::HashSet,
@@ -13,11 +13,18 @@ use std::{
         Arc,
     },
 };
+use tokio::time::{sleep, Duration};
 
-use crate::{common::*, config::*, constants::PARALLEL_LIMIT, upload::*, utils::*};
+use crate::{common::*, config::*, upload::*, utils::*};
 
 const NFT_STORAGE_API_URL: &str = "https://api.nft.storage";
 const NFT_STORAGE_GATEWAY_URL: &str = "https://nftstorage.link/ipfs";
+// Request time window (ms) to avoid the rate limit.
+const REQUEST_WAIT: u64 = 1000;
+// Number of concurrent requests.
+const LIMIT: usize = 1;
+// Response timeout (seconds).
+const TIMEOUT: u64 = 20;
 
 pub enum NftStorageError {
     ApiError(Value),
@@ -64,11 +71,23 @@ impl NftStorageHandler {
             auth_value.set_sensitive(true);
             headers.insert(header::AUTHORIZATION, auth_value);
 
-            let client = client_builder.default_headers(headers).build()?;
+            let client = client_builder
+                .default_headers(headers)
+                .timeout(Duration::from_secs(TIMEOUT))
+                .build()?;
 
-            Ok(NftStorageHandler {
-                client: Arc::new(client),
-            })
+            let url = format!("{}/", NFT_STORAGE_API_URL);
+            let response = client.get(url).send().await?;
+
+            match response.status() {
+                StatusCode::OK => Ok(NftStorageHandler {
+                    client: Arc::new(client),
+                }),
+                StatusCode::UNAUTHORIZED => {
+                    Err(anyhow!("Invalid nft.storage authentication token."))
+                }
+                code => Err(anyhow!("Could not initialize nft.storage client: {code}")),
+            }
         } else {
             Err(anyhow!(
                 "Missing 'nftStorageAuthToken' value in config file."
@@ -201,7 +220,7 @@ impl UploadHandler for NftStorageHandler {
 
         let mut handles = Vec::new();
 
-        for object in objects.drain(0..cmp::min(objects.len(), PARALLEL_LIMIT)) {
+        for object in objects.drain(0..cmp::min(objects.len(), LIMIT)) {
             let client = self.client.clone();
             handles.push(tokio::spawn(async move {
                 NftStorageHandler::send_to_nft_storage(client, object).await
@@ -249,12 +268,14 @@ impl UploadHandler for NftStorageHandler {
             }
 
             if !objects.is_empty() {
-                // if we are half way through, let spawn more transactions
-                if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
+                // if we are done, let spawn more transactions
+                if handles.is_empty() {
                     // syncs cache (checkpoint)
                     cache.sync_file()?;
+                    // minimum gap between request
+                    sleep(Duration::from_millis(REQUEST_WAIT)).await;
 
-                    for object in objects.drain(0..cmp::min(objects.len(), PARALLEL_LIMIT / 2)) {
+                    for object in objects.drain(0..cmp::min(objects.len(), LIMIT)) {
                         let client = self.client.clone();
                         handles.push(tokio::spawn(async move {
                             NftStorageHandler::send_to_nft_storage(client, object).await

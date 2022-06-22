@@ -73,6 +73,7 @@ function default_settings() {
     INFURA_ID="null"
     INFURA_SECRET="null"
     AWS_BUCKET="null"
+    NFT_STORAGE_TOKEN="null"
 }
 
 function max_settings() {
@@ -90,6 +91,7 @@ function max_settings() {
     INFURA_ID="null"
     INFURA_SECRET="null"
     AWS_BUCKET="null"
+    NFT_STORAGE_TOKEN="null"
 }
 
 function mainnet_env() {
@@ -212,11 +214,13 @@ if [ -z ${STORAGE+x} ]; then
     CYN "Storage type:"
     echo "1. bundlr (default)"
     echo "2. aws"
-    echo  -n "$(CYN "Select the storage type [1-2]") (default 1): "
+    echo "3. NFT Storage"
+    echo  -n "$(CYN "Select the storage type [1-3]") (default 1): "
     read Input
     case "$Input" in
         1) STORAGE="bundlr" ;;
         2) STORAGE="aws" ;;
+        3) STORAGE="nft_storage"
     esac
 fi
 
@@ -247,6 +251,15 @@ if [ -z ${AWS_BUCKET+x} ]; then
     if [ "$STORAGE" = "aws" ]; then
         echo -n $(CYN "AWS bucket name: ")
         read AWS_BUCKET
+    fi
+fi
+
+if [ -z ${NFT_STORAGE_TOKEN+x} ]; then
+    NFT_STORAGE_TOKEN="null"
+
+    if [ "$STORAGE" = "nft_storage" ]; then
+        echo -n $(CYN "Authentication token: ")
+        read NFT_STORAGE_TOKEN
     fi
 fi
 
@@ -539,6 +552,7 @@ cat >$CONFIG_FILE <<-EOM
     "ipfsInfuraProjectId": "${INFURA_ID}",
     "ipfsInfuraSecret": "${INFURA_SECRET}",
     "awsS3Bucket": "${AWS_BUCKET}",
+    "nftStorageAuthToken": "${NFT_STORAGE_TOKEN}",
     "retainAuthority": true,
     "isMutable": true,
     "creators": [
@@ -570,6 +584,7 @@ ARWEAVE_JWK="$ARWEAVE_JWK"
 INFURA_ID="$INFURA_ID"
 INFURA_SECRET="$INFURA_SECRET"
 AWS_BUCKET="$AWS_BUCKET"
+NFT_STORAGE_TOKEN="$NFT_STORAGE_TOKEN"
 
 ENV_URL="$ENV_URL"
 RPC="$RPC"
