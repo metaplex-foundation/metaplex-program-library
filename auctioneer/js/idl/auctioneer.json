@@ -556,6 +556,18 @@
         {
           "name": "reservePrice",
           "type": "u64"
+        },
+        {
+          "name": "minBidIncrement",
+          "type": "u64"
+        },
+        {
+          "name": "timeExtPeriod",
+          "type": "u32"
+        },
+        {
+          "name": "timeExtDelta",
+          "type": "u32"
         }
       ]
     },
@@ -731,6 +743,18 @@
           {
             "name": "reservePrice",
             "type": "u64"
+          },
+          {
+            "name": "minBidIncrement",
+            "type": "u64"
+          },
+          {
+            "name": "timeExtPeriod",
+            "type": "u32"
+          },
+          {
+            "name": "timeExtDelta",
+            "type": "u32"
           }
         ]
       }
@@ -811,6 +835,11 @@
       "code": 6007,
       "name": "BelowReservePrice",
       "msg": "The bid price must be greater than the reserve price"
+    },
+    {
+      "code": 6008,
+      "name": "BelowBidIncrement",
+      "msg": "The bid must match the highest bid plus the minimum bid increment"
     }
   ],
   "metadata": {

@@ -106,15 +106,19 @@ pub fn auctioneer_sell<'info>(
     token_size: u64,
     start_time: UnixTimestamp,
     end_time: UnixTimestamp,
-    reserve_price: u64,
-    min_bid_increment: u64,
+    reserve_price: Option<u64>,
+    min_bid_increment: Option<u64>,
+    time_ext_period: Option<u32>,
+    time_ext_delta: Option<u32>,
 ) -> Result<()> {
     ctx.accounts.listing_config.version = ListingConfigVersion::V0;
     ctx.accounts.listing_config.highest_bid.version = ListingConfigVersion::V0;
     ctx.accounts.listing_config.start_time = start_time;
     ctx.accounts.listing_config.end_time = end_time;
-    ctx.accounts.listing_config.reserve_price = reserve_price;
-    ctx.accounts.listing_config.min_bid_increment = min_bid_increment;
+    ctx.accounts.listing_config.reserve_price = reserve_price.unwrap_or(0);
+    ctx.accounts.listing_config.min_bid_increment = min_bid_increment.unwrap_or(0);
+    ctx.accounts.listing_config.time_ext_period = time_ext_period.unwrap_or(0);
+    ctx.accounts.listing_config.time_ext_delta = time_ext_delta.unwrap_or(0);
     ctx.accounts.listing_config.bump = *ctx
         .bumps
         .get("listing_config")

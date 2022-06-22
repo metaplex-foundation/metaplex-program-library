@@ -23,6 +23,9 @@ export type SellInstructionArgs = {
   startTime: beet.bignum;
   endTime: beet.bignum;
   reservePrice: beet.bignum;
+  minBidIncrement: beet.bignum;
+  timeExtPeriod: number;
+  timeExtDelta: number;
 };
 /**
  * @category Instructions
@@ -44,6 +47,9 @@ const sellStruct = new beet.BeetArgsStruct<
     ['startTime', beet.i64],
     ['endTime', beet.i64],
     ['reservePrice', beet.u64],
+    ['minBidIncrement', beet.u64],
+    ['timeExtPeriod', beet.u32],
+    ['timeExtDelta', beet.u32],
   ],
   'SellInstructionArgs',
 );
