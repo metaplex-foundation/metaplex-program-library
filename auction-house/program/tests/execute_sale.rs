@@ -111,7 +111,7 @@ async fn execute_sale_existing_token_account_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -132,10 +132,8 @@ async fn execute_sale_existing_token_account_success() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            partial_order_size: None,
-            partial_order_price: None,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -178,7 +176,7 @@ async fn execute_sale_existing_token_account_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert!(seller_before.lamports < seller_after.lamports);
@@ -273,7 +271,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -294,10 +292,8 @@ async fn execute_sale_wrong_token_account_owner_success() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            partial_order_size: None,
-            partial_order_price: None,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -321,9 +317,9 @@ async fn execute_sale_wrong_token_account_owner_success() {
 
     match err {
         TransportError::TransactionError(TransactionError::InstructionError(
-                                             0,
-                                             InstructionError::Custom(6000),
-                                         )) => (),
+            0,
+            InstructionError::Custom(6000),
+        )) => (),
         _ => panic!("Expected custom error"),
     }
 }
@@ -403,7 +399,7 @@ async fn execute_sale_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -424,10 +420,8 @@ async fn execute_sale_success() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            partial_order_size: None,
-            partial_order_price: None,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -470,7 +464,7 @@ async fn execute_sale_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert!(seller_before.lamports < seller_after.lamports);
@@ -518,8 +512,8 @@ async fn auctioneer_execute_sale_success() {
         auctioneer_pda,
         default_scopes(),
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
 
     let (sell_acc, sell_tx) = auctioneer_sell(
         &mut context,
@@ -582,7 +576,7 @@ async fn auctioneer_execute_sale_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -604,7 +598,7 @@ async fn auctioneer_execute_sale_success() {
             token_size: 1,
             buyer_price: 100_000_000,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -647,7 +641,7 @@ async fn auctioneer_execute_sale_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert!(seller_before.lamports < seller_after.lamports);
@@ -693,8 +687,8 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
         auctioneer_pda,
         scopes.clone(),
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
 
     let (sell_acc, sell_tx) = auctioneer_sell(
         &mut context,
@@ -758,7 +752,7 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -780,7 +774,7 @@ async fn auctioneer_execute_sale_missing_scope_fails() {
             token_size: 1,
             buyer_price: 100_000_000,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -885,7 +879,7 @@ pub async fn auctioneer_execute_sale_no_delegate_fails() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -907,7 +901,7 @@ pub async fn auctioneer_execute_sale_no_delegate_fails() {
             token_size: 1,
             buyer_price: 100_000_000,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -1018,8 +1012,6 @@ async fn execute_public_sale_success() {
         &bid_acc.buyer_trade_state,
         1,
         price,
-        None,
-        None,
     );
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
         .await
@@ -1057,7 +1049,7 @@ async fn execute_public_sale_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert!(seller_before.lamports < seller_after.lamports);
@@ -1104,8 +1096,6 @@ async fn execute_public_sale_success() {
         &public_bid_acc.buyer_trade_state,
         1,
         price.to_owned(),
-        None,
-        None,
     );
 
     context
@@ -1130,7 +1120,7 @@ async fn execute_public_sale_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
     assert!(new_seller_before.lamports < new_seller_after.lamports);
     assert_eq!(public_bidder_token_after.amount, 1);
 
@@ -1236,8 +1226,8 @@ async fn auctioneer_execute_public_sale_success() {
         auctioneer_pda,
         default_scopes(),
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
 
     let price = 100_000_000;
     let fee_minus: u64 = price - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
@@ -1351,7 +1341,7 @@ async fn auctioneer_execute_public_sale_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert!(seller_before.lamports < seller_after.lamports);
@@ -1423,7 +1413,7 @@ async fn auctioneer_execute_public_sale_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
     assert!(new_seller_before.lamports < new_seller_after.lamports);
     assert_eq!(public_bidder_token_after.amount, 1);
 }
@@ -1470,8 +1460,8 @@ async fn auctioneer_execute_public_sale_missing_scope_fails() {
         auctioneer_pda,
         scopes.clone(),
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
 
     let price = 100_000_000;
 
@@ -1748,7 +1738,7 @@ async fn execute_sale_partial_order_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -1763,7 +1753,7 @@ async fn execute_sale_partial_order_success() {
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecutePartialSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -1772,7 +1762,7 @@ async fn execute_sale_partial_order_success() {
             partial_order_size: Some(3),
             partial_order_price: Some(300_000_000),
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -1816,7 +1806,7 @@ async fn execute_sale_partial_order_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let buyer_token_after = Account::unpack_from_slice(
         context
@@ -1828,7 +1818,7 @@ async fn execute_sale_partial_order_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let fee_minus: u64 = 300_000_000 - ((ah.seller_fee_basis_points as u64 * 300_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
@@ -1884,14 +1874,14 @@ async fn execute_sale_partial_order_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
 
     let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (_, pas_bump) = find_program_as_signer_address();
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecutePartialSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -1900,7 +1890,7 @@ async fn execute_sale_partial_order_success() {
             partial_order_size: Some(3),
             partial_order_price: Some(300_000_000),
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -1944,7 +1934,7 @@ async fn execute_sale_partial_order_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let buyer_token_after = Account::unpack_from_slice(
         context
@@ -1956,7 +1946,7 @@ async fn execute_sale_partial_order_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let fee_minus: u64 = 300_000_000 - ((ah.seller_fee_basis_points as u64 * 300_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
@@ -2007,8 +1997,8 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
         &test_metadata.token,
         &buyer,
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
 
     let seller_token_account =
         get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
@@ -2023,7 +2013,7 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
@@ -2038,7 +2028,7 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     assert_eq!(seller_token_after.amount, 0);
     assert_eq!(buyer_token_after.amount, 1);
@@ -2077,7 +2067,7 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
 
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
@@ -2100,10 +2090,8 @@ async fn execute_sale_fail_buyer_trade_state_does_not_exist() {
             program_as_signer_bump: pas_bump,
             token_size: 1,
             buyer_price: 100_000_000,
-            partial_order_size: None,
-            partial_order_price: None,
         }
-            .data(),
+        .data(),
         accounts,
     };
 
@@ -2206,7 +2194,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -2221,7 +2209,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecutePartialSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -2230,7 +2218,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
             partial_order_size: Some(3),
             partial_order_price: Some(300_000_000),
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -2274,7 +2262,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let buyer_token_after = Account::unpack_from_slice(
         context
@@ -2286,7 +2274,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let fee_minus: u64 = 300_000_000 - ((ah.seller_fee_basis_points as u64 * 300_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
@@ -2342,14 +2330,14 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
 
     let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (_, pas_bump) = find_program_as_signer_address();
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecutePartialSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -2358,7 +2346,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
             partial_order_size: Some(4),
             partial_order_price: Some(400_000_000),
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -2459,7 +2447,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -2474,7 +2462,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecutePartialSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -2483,7 +2471,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
             partial_order_size: Some(3),
             partial_order_price: Some(300_000_000),
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -2527,7 +2515,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let buyer_token_after = Account::unpack_from_slice(
         context
@@ -2539,7 +2527,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
 
     let fee_minus: u64 = 300_000_000 - ((ah.seller_fee_basis_points as u64 * 300_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
@@ -2595,14 +2583,14 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
 
     let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (_, pas_bump) = find_program_as_signer_address();
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecutePartialSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -2611,7 +2599,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
             partial_order_size: Some(3),
             partial_order_price: Some(400_000_000),
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -2712,7 +2700,7 @@ async fn execute_sale_partial_order_fail_missing_elements() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -2727,7 +2715,7 @@ async fn execute_sale_partial_order_fail_missing_elements() {
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
-        data: mpl_auction_house::instruction::ExecuteSale {
+        data: mpl_auction_house::instruction::ExecutePartialSale {
             escrow_payment_bump: escrow_bump,
             _free_trade_state_bump: free_sts_bump,
             program_as_signer_bump: pas_bump,
@@ -2736,7 +2724,7 @@ async fn execute_sale_partial_order_fail_missing_elements() {
             partial_order_size: Some(3),
             partial_order_price: None,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -2833,7 +2821,7 @@ async fn execute_sale_pre_partial_bid() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -2846,16 +2834,14 @@ async fn execute_sale_pre_partial_bid() {
     let (_, escrow_bump) = find_escrow_payment_address(&ahkey, &buyer.pubkey());
     let (_, pas_bump) = find_program_as_signer_address();
 
-    let mut data: Vec<u8> = mpl_auction_house::instruction::ExecuteSale {
+    let data: Vec<u8> = mpl_auction_house::instruction::ExecuteSale {
         escrow_payment_bump: escrow_bump,
         _free_trade_state_bump: free_sts_bump,
         program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: 100_000_000,
-        partial_order_size: None,
-        partial_order_price: None,
     }
-        .data();
+    .data();
 
     let instruction = Instruction {
         program_id: mpl_auction_house::id(),
@@ -2903,7 +2889,7 @@ async fn execute_sale_pre_partial_bid() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert!(seller_before.lamports < seller_after.lamports);
