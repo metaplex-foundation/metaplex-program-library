@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use anchor_client::solana_sdk::{signature::Signer, system_program, sysvar};
 use anchor_lang::*;
 use solana_program::{
@@ -15,7 +17,10 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    core::MasterEditionV2,
+    core::{
+        helpers::{get_network_expire, get_network_token},
+        MasterEditionV2,
+    },
     utils::{
         candy_manager::{CollectionInfo, TokenInfo, WhitelistInfo},
         helpers::make_config_lines,

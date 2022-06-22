@@ -10,6 +10,7 @@ use mpl_token_metadata::{
     state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
 };
 use solana_gateway::{
+    error::GatewayError,
     state::{GatewayTokenAccess, InPlaceGatewayToken},
     Gateway,
 };
@@ -247,6 +248,17 @@ pub fn handle_mint_nft<'info>(
 
         remaining_accounts_counter += 1;
 
+        let gateway_verification_result = {
+            Gateway::verify_gateway_token_account_info(
+                &gateway_token_info,
+                payer.deref().clone().key,
+                &gatekeeper.gatekeeper_network,
+                None,
+            )
+        };
+
+        msg!("gateway results {:?}", gateway_verification_result);
+
         // Eval function used in the gateway CPI
         let eval_function =
             |token: &InPlaceGatewayToken<&[u8]>| match (&candy_machine.data, token.expire_time()) {
@@ -268,17 +280,28 @@ pub fn handle_mint_nft<'info>(
                 _ => Ok(()),
             };
 
+        let borrow = gateway_token_info.data.borrow();
+        msg!("eval before{:?}", gateway_token_info);
+        let gateway_token = InPlaceGatewayToken::new(&**borrow)?;
+        msg!("eval before");
+
+        msg!("eval before");
+        let eval = eval_function(&gateway_token)?;
+        msg!("eval after {:?}", eval);
         if gatekeeper.expire_on_use {
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::GatewayAppMissing);
             }
+
             let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
+
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::NetworkExpireFeatureMissing);
             }
             let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
+
             Gateway::verify_and_expire_token_with_eval(
                 gateway_app.clone(),
                 gateway_token_info.clone(),

@@ -5,7 +5,8 @@ use mpl_token_metadata::pda::find_collection_authority_account;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
-    signature::{Keypair, Signer},
+    msg,
+    signature::{read_keypair_file, Keypair, Signer},
     transport,
 };
 use spl_associated_token_account::get_associated_token_address;
@@ -384,7 +385,7 @@ impl CandyManager {
         println!("Init Candy Machine Manager");
         let candy_machine = Keypair::new();
         let authority = Keypair::new();
-        let minter = Keypair::new();
+        let minter = read_keypair_file("/Users/stranzhay/Programming/development.json").unwrap();
 
         airdrop(context, &authority.pubkey(), sol(10.0))
             .await

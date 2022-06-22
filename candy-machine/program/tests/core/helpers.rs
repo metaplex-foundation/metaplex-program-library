@@ -321,8 +321,8 @@ pub fn get_network_token(
     Pubkey::find_program_address(
         &[
             payer.as_ref(),
-            b"gateway".as_ref(),
-            [0, 0, 0, 0, 0, 0, 0, 0].as_ref(),
+            "gateway".as_bytes(),
+            &[0, 0, 0, 0, 0, 0, 0, 0],
             gatekeeper_network.as_ref(),
         ],
         &program_id,
