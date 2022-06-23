@@ -5,6 +5,8 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
+use serde::{Serialize, Deserialize};
+use serde_with::{serde_as, DisplayFromStr};
 /// prefix used for PDAs to avoid certain collision attacks (https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack)
 pub const PREFIX: &str = "metadata";
 
@@ -76,7 +78,7 @@ pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum Key {
     Uninitialized,
     EditionV1,
@@ -90,7 +92,7 @@ pub enum Key {
     CollectionAuthorityRecord,
 }
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct Data {
     /// The name of the asset
     pub name: String,
@@ -105,7 +107,7 @@ pub struct Data {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct DataV2 {
     /// The name of the asset
     pub name: String,
@@ -137,7 +139,7 @@ impl DataV2 {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum UseMethod {
     Burn,
     Multiple,
@@ -145,13 +147,13 @@ pub enum UseMethod {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum CollectionDetails {
     V1 { size: u64 },
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct Uses {
     // 17 bytes + Option byte
     pub use_method: UseMethod, //1
@@ -160,7 +162,7 @@ pub struct Uses {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum TokenStandard {
     NonFungible,        // This is a master edition
     FungibleAsset,      // A token with metadata that can also have attrributes
@@ -169,7 +171,7 @@ pub enum TokenStandard {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount, Serialize, Deserialize)]
 pub struct UseAuthorityRecord {
     pub key: Key,          //1
     pub allowed_uses: u64, //8
@@ -226,7 +228,7 @@ impl CollectionAuthorityRecord {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct Collection {
     pub verified: bool,
     pub key: Pubkey,
@@ -422,8 +424,11 @@ impl Edition {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[serde_as]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
+
 pub struct Creator {
+    #[serde_as(as = "DisplayFromStr")]
     pub address: Pubkey,
     pub verified: bool,
     // In percentages, NOT basis points ;) Watch out!
@@ -587,7 +592,7 @@ impl ReservationListV2 {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct Reservation {
     pub address: Pubkey,
     pub spots_remaining: u64,

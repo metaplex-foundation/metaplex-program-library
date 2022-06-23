@@ -12,28 +12,36 @@ use solana_program::{
     pubkey::Pubkey,
     sysvar,
 };
+use serde::{Serialize, Deserialize};
+use serde_with::{serde_as, DisplayFromStr};
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[serde_as]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 /// Args for update call
 pub struct UpdateMetadataAccountArgs {
     pub data: Option<Data>,
+
+    #[serde_as(as = "Option<DisplayFromStr>")]
     pub update_authority: Option<Pubkey>,
     pub primary_sale_happened: Option<bool>,
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[serde_as]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 /// Args for update call
 pub struct UpdateMetadataAccountArgsV2 {
     pub data: Option<DataV2>,
+
+    #[serde_as(as = "Option<DisplayFromStr>")]
     pub update_authority: Option<Pubkey>,
     pub primary_sale_happened: Option<bool>,
     pub is_mutable: Option<bool>,
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 /// Args for create call
 pub struct CreateMetadataAccountArgs {
     /// Note that unique metadatas are disabled for now.
@@ -43,7 +51,7 @@ pub struct CreateMetadataAccountArgs {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 /// Args for create call
 pub struct CreateMetadataAccountArgsV2 {
     /// Note that unique metadatas are disabled for now.
@@ -53,7 +61,7 @@ pub struct CreateMetadataAccountArgsV2 {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 /// Args for create call
 pub struct CreateMetadataAccountArgsV3 {
     /// Note that unique metadatas are disabled for now.
@@ -65,39 +73,40 @@ pub struct CreateMetadataAccountArgsV3 {
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct CreateMasterEditionArgs {
     /// If set, means that no more than this number of editions can ever be minted. This is immutable.
     pub max_supply: Option<u64>,
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct MintNewEditionFromMasterEditionViaTokenArgs {
     pub edition: u64,
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct ApproveUseAuthorityArgs {
     pub number_of_uses: u64,
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct UtilizeArgs {
     pub number_of_uses: u64,
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct SetCollectionSizeArgs {
     pub size: u64,
 }
 
 /// Instructions supported by the Metadata program.
-#[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
+#[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction, Serialize, Deserialize)]
 #[rustfmt::skip]
+
 pub enum MetadataInstruction {
     /// Create Metadata object.
     #[account(0, writable, name="metadata", desc="Metadata key (pda of ['metadata', program id, mint id])")]

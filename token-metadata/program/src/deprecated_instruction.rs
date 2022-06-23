@@ -8,15 +8,16 @@ use solana_program::{
     pubkey::Pubkey,
     sysvar,
 };
+use serde::{Serialize, Deserialize};
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct MintPrintingTokensViaTokenArgs {
     pub supply: u64,
 }
 
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct SetReservationListArgs {
     /// If set, means that no more than this number of editions can ever be minted. This is immutable.
     pub reservations: Vec<Reservation>,
