@@ -1684,12 +1684,35 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
     let metadata = Metadata::from_account_info(metadata_info)?;
 
     // If the NFT is a verified part of a collection but the user has not provided the collection
-    // metadata account, we cannot burn it because we need to decrement the collection size.
+    // metadata account, we cannot burn it because we need to check if we need to decrement the collection size.
     if !collection_nft_provided
         && metadata.collection.is_some()
         && metadata.collection.as_ref().unwrap().verified
     {
         return Err(MetadataError::MissingCollectionMetadata.into());
+    }
+
+    // Ensure this is a Master Edition and not a Print.
+
+    // Scope this so the borrow gets dropped and doesn't conflict with the mut borrow
+    // later in the handler when overwriting data.
+    {
+        let edition_account_data = edition_info.try_borrow_data()?;
+
+        // First byte is the object key.
+        let key = edition_account_data[0];
+        if key != Key::MasterEditionV1 as u8 && key != Key::MasterEditionV2 as u8 {
+            return Err(MetadataError::NotAMasterEdition.into());
+        }
+
+        // Next eight bytes are the supply, which must be converted to a u64.
+        let supply_bytes = array_ref![edition_account_data, 1, 8];
+        let supply = u64::from_le_bytes(*supply_bytes);
+
+        // Cannot burn Master Editions with existing prints in this handler.
+        if supply > 0 {
+            return Err(MetadataError::MasterEditionHasPrints.into());
+        }
     }
 
     // Checks:
@@ -1782,8 +1805,16 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         // NFT is actually a verified member of the specified collection.
         assert_verified_member_of_collection(&metadata, &collection_metadata)?;
 
-        // Update collection size.
-        decrement_collection_size(&mut collection_metadata, collection_metadata_info)?;
+        // Update collection size if it's sized.
+        if let Some(ref details) = collection_metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { size } => {
+                    collection_metadata.collection_details =
+                        Some(CollectionDetails::V1 { size: size - 1 });
+                    clean_write_metadata(&mut collection_metadata, collection_metadata_info)?;
+                }
+            }
+        }
     }
 
     Ok(())

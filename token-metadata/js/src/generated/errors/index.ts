@@ -2354,6 +2354,46 @@ createErrorFromCodeLookup.set(0x6c, () => new MissingEditionAccountError());
 createErrorFromNameLookup.set('MissingEditionAccount', () => new MissingEditionAccountError());
 
 /**
+ * NotAMasterEdition: 'This edition is not a Master Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotAMasterEditionError extends Error {
+  readonly code: number = 0x6d;
+  readonly name: string = 'NotAMasterEdition';
+  constructor() {
+    super('This edition is not a Master Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotAMasterEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6d, () => new NotAMasterEditionError());
+createErrorFromNameLookup.set('NotAMasterEdition', () => new NotAMasterEditionError());
+
+/**
+ * MasterEditionHasPrints: 'This Master Edition has existing prints'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MasterEditionHasPrintsError extends Error {
+  readonly code: number = 0x6e;
+  readonly name: string = 'MasterEditionHasPrints';
+  constructor() {
+    super('This Master Edition has existing prints');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MasterEditionHasPrintsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6e, () => new MasterEditionHasPrintsError());
+createErrorFromNameLookup.set('MasterEditionHasPrints', () => new MasterEditionHasPrintsError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

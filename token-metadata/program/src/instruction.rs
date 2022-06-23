@@ -428,7 +428,7 @@ pub enum MetadataInstruction {
     #[account(1, signer, writable, name="owner", desc="NFT owner")]
     #[account(2, writable, name="mint", desc="Mint of the NFT")]
     #[account(3, writable, name="token_account", desc="Token account to close")]
-    #[account(4, writable, name="edition_account", desc="MasterEdition2 or Edition Account of the NFT")]
+    #[account(4, writable, name="master_edition_account", desc="MasterEdition2 of the NFT")]
     #[account(5, name="spl token program", desc="SPL Token Program")]
     #[account(6, optional, writable, name="collection_metadata", desc="Metadata of the Collection")]
     BurnNft,
