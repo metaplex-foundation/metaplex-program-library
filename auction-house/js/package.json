@@ -41,7 +41,7 @@
   "dependencies": {
     "@metaplex-foundation/beet": "^0.1.0",
     "@metaplex-foundation/beet-solana": "^0.1.1",
-    "@metaplex-foundation/mpl-core": "^0.0.5",
+    "@metaplex-foundation/cusper": "^0.0.2",
     "@solana/web3.js": "^1.35.1",
     "bn.js": "^5.2.0"
   },
