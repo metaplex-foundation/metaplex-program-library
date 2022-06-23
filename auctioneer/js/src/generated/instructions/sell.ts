@@ -22,17 +22,18 @@ export type SellInstructionArgs = {
   tokenSize: beet.bignum;
   startTime: beet.bignum;
   endTime: beet.bignum;
-  reservePrice: beet.bignum;
-  minBidIncrement: beet.bignum;
-  timeExtPeriod: number;
-  timeExtDelta: number;
+  reservePrice: beet.COption<beet.bignum>;
+  minBidIncrement: beet.COption<beet.bignum>;
+  timeExtPeriod: beet.COption<number>;
+  timeExtDelta: beet.COption<number>;
+  allowHighBidCancel: beet.COption<boolean>;
 };
 /**
  * @category Instructions
  * @category Sell
  * @category generated
  */
-const sellStruct = new beet.BeetArgsStruct<
+const sellStruct = new beet.FixableBeetArgsStruct<
   SellInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -46,10 +47,11 @@ const sellStruct = new beet.BeetArgsStruct<
     ['tokenSize', beet.u64],
     ['startTime', beet.i64],
     ['endTime', beet.i64],
-    ['reservePrice', beet.u64],
-    ['minBidIncrement', beet.u64],
-    ['timeExtPeriod', beet.u32],
-    ['timeExtDelta', beet.u32],
+    ['reservePrice', beet.coption(beet.u64)],
+    ['minBidIncrement', beet.coption(beet.u64)],
+    ['timeExtPeriod', beet.coption(beet.u32)],
+    ['timeExtDelta', beet.coption(beet.u32)],
+    ['allowHighBidCancel', beet.coption(beet.bool)],
   ],
   'SellInstructionArgs',
 );

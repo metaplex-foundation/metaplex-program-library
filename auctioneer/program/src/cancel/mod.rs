@@ -10,12 +10,35 @@ use mpl_auction_house::{
 };
 use solana_program::program::invoke_signed;
 
+use crate::{constants::*, errors::*, sell::config::*};
+
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts, Clone)]
 #[instruction(auctioneer_authority_bump: u8, buyer_price: u64, token_size: u64)]
 pub struct AuctioneerCancel<'info> {
     /// Auction House Program
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
+
+    // Accounts used for Auctioneer
+    /// The Listing Config used for listing settings
+    #[account(
+        mut,
+        seeds=[
+            LISTING_CONFIG.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_account.mint.as_ref(),
+            &token_size.to_le_bytes()
+        ],
+        bump,
+    )]
+    pub listing_config: Account<'info, ListingConfig>,
+
+    /// The seller of the NFT
+    /// CHECK: Checked via trade state constraints
+    pub seller: UncheckedAccount<'info>,
 
     /// CHECK: Wallet validated as owner in cancel logic.
     /// User wallet account.
@@ -67,6 +90,13 @@ pub fn auctioneer_cancel<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
+    if !ctx.accounts.listing_config.allow_high_bid_cancel
+        && (ctx.accounts.trade_state.key()
+            == ctx.accounts.listing_config.highest_bid.buyer_trade_state)
+    {
+        return err!(AuctioneerError::CannotCancelHighestBid);
+    }
+
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHCancel {
         wallet: ctx.accounts.wallet.to_account_info(),

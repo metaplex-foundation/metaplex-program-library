@@ -378,6 +378,7 @@ pub fn sell_mint(
     min_bid_increment: Option<u64>,
     time_ext_period: Option<u32>,
     time_ext_delta: Option<u32>,
+    allow_high_bid_cancel: Option<bool>,
 ) -> (
     (mpl_auctioneer::accounts::AuctioneerSell, Pubkey),
     Transaction,
@@ -447,6 +448,7 @@ pub fn sell_mint(
         min_bid_increment,
         time_ext_period,
         time_ext_delta,
+        allow_high_bid_cancel,
     }
     .data();
 
@@ -478,6 +480,7 @@ pub fn sell(
     min_bid_increment: Option<u64>,
     time_ext_period: Option<u32>,
     time_ext_delta: Option<u32>,
+    allow_high_bid_cancel: Option<bool>,
 ) -> (
     (mpl_auctioneer::accounts::AuctioneerSell, Pubkey),
     Transaction,
@@ -548,6 +551,7 @@ pub fn sell(
         min_bid_increment,
         time_ext_period,
         time_ext_delta,
+        allow_high_bid_cancel,
     }
     .data();
 
