@@ -28,7 +28,7 @@ mod set_collection_size {
     async fn collection_authority_successfully_updates_size() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails set to None
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -42,7 +42,7 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                None,
             )
             .await
             .unwrap();
@@ -52,26 +52,7 @@ mod set_collection_size {
             .await
             .unwrap();
 
-        let current_size = 0;
-        let new_size = 11235;
-
-        let md_account = context
-            .banks_client
-            .get_account(collection_parent_nft.pubkey)
-            .await
-            .unwrap()
-            .unwrap();
-
-        let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_size = if let Some(details) = metadata.collection_details {
-            match details {
-                CollectionDetails::V1 { size } => size,
-            }
-        } else {
-            panic!("Expected CollectionDetails::V1");
-        };
-
-        assert_eq!(retrieved_size, current_size);
+        let size = 1123;
 
         let ix = set_collection_size(
             PROGRAM_ID,
@@ -79,7 +60,7 @@ mod set_collection_size {
             context.payer.pubkey(),
             collection_parent_nft.mint.pubkey(),
             None,
-            new_size,
+            size,
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -106,14 +87,14 @@ mod set_collection_size {
             panic!("Expected CollectionDetails::V1");
         };
 
-        assert_eq!(retrieved_size, new_size);
+        assert_eq!(retrieved_size, size);
     }
 
     #[tokio::test]
     async fn delegate_authority_successfully_updates_size() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails set to None
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -127,7 +108,7 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                None,
             )
             .await
             .unwrap();
@@ -174,26 +155,7 @@ mod set_collection_size {
 
         context.banks_client.process_transaction(tx).await.unwrap();
 
-        let current_size = 0;
-        let new_size = 11235;
-
-        let md_account = context
-            .banks_client
-            .get_account(collection_parent_nft.pubkey)
-            .await
-            .unwrap()
-            .unwrap();
-
-        let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
-        let retrieved_size = if let Some(details) = metadata.collection_details {
-            match details {
-                CollectionDetails::V1 { size } => size,
-            }
-        } else {
-            panic!("Expected CollectionDetails::V1");
-        };
-
-        assert_eq!(retrieved_size, current_size);
+        let size = 1123;
 
         let ix = set_collection_size(
             PROGRAM_ID,
@@ -201,7 +163,7 @@ mod set_collection_size {
             delegate.pubkey(),
             collection_parent_nft.mint.pubkey(),
             Some(collection_authority_record),
-            new_size,
+            size,
         );
 
         let tx = Transaction::new_signed_with_payer(
@@ -228,7 +190,7 @@ mod set_collection_size {
             panic!("Expected CollectionDetails::V1");
         };
 
-        assert_eq!(retrieved_size, new_size);
+        assert_eq!(retrieved_size, size);
     }
 
     #[tokio::test]
@@ -237,7 +199,7 @@ mod set_collection_size {
         // This should fail with IncorrectOwner error.
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails set to None
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -251,7 +213,7 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                None,
             )
             .await
             .unwrap();
@@ -261,7 +223,7 @@ mod set_collection_size {
             .await
             .unwrap();
 
-        let new_size = 11235;
+        let new_size = 1123;
 
         let fake_metadata = Keypair::new();
 
@@ -293,7 +255,7 @@ mod set_collection_size {
     async fn invalid_update_authority_fails() {
         let mut context = program_test().start_with_context().await;
 
-        // Create a Collection Parent NFT with the CollectionDetails struct populated
+        // Create a Collection Parent NFT with the CollectionDetails set to None
         let collection_parent_nft = Metadata::new();
         collection_parent_nft
             .create_v3(
@@ -307,7 +269,7 @@ mod set_collection_size {
                 None,
                 None,
                 None,
-                DEFAULT_COLLECTION_DETAILS, // Collection Parent
+                None,
             )
             .await
             .unwrap();
@@ -328,8 +290,86 @@ mod set_collection_size {
 
         let invalid_update_authorty = Keypair::new();
 
-        let current_size = 0;
-        let new_size = 11235;
+        let size = 1123;
+
+        let ix = set_collection_size(
+            PROGRAM_ID,
+            collection_parent_nft.pubkey,
+            invalid_update_authorty.pubkey(),
+            collection_parent_nft.mint.pubkey(),
+            None,
+            size,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &invalid_update_authorty],
+            context.last_blockhash,
+        );
+
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(err, MetadataError::InvalidCollectionUpdateAuthority);
+    }
+
+    #[tokio::test]
+    async fn fail_to_update_sized_collection() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a Collection Parent NFT with the CollectionDetails populated (sized)
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+                DEFAULT_COLLECTION_DETAILS,
+            )
+            .await
+            .unwrap();
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let size = 1123;
+
+        let ix = set_collection_size(
+            PROGRAM_ID,
+            collection_parent_nft.pubkey,
+            context.payer.pubkey(),
+            collection_parent_nft.mint.pubkey(),
+            None,
+            size,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        // This should fail with SizedCollection error.
+        let err = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+        assert_custom_error!(err, MetadataError::SizedCollection);
 
         let md_account = context
             .banks_client
@@ -347,12 +387,83 @@ mod set_collection_size {
             panic!("Expected CollectionDetails::V1");
         };
 
-        assert_eq!(retrieved_size, current_size);
+        // The size should not have changed.
+        assert_eq!(retrieved_size, 0);
+    }
+
+    #[tokio::test]
+    async fn can_only_set_size_once() {
+        let mut context = program_test().start_with_context().await;
+
+        // Create a Collection Parent NFT with the CollectionDetails set to None (unsized)
+        let collection_parent_nft = Metadata::new();
+        collection_parent_nft
+            .create_v3(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+        let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+        parent_master_edition_account
+            .create_v3(&mut context, Some(0))
+            .await
+            .unwrap();
+
+        let size = 1123;
 
         let ix = set_collection_size(
             PROGRAM_ID,
             collection_parent_nft.pubkey,
-            invalid_update_authorty.pubkey(),
+            context.payer.pubkey(),
+            collection_parent_nft.mint.pubkey(),
+            None,
+            size,
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        let md_account = context
+            .banks_client
+            .get_account(collection_parent_nft.pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+        let retrieved_size = if let Some(details) = metadata.collection_details {
+            match details {
+                CollectionDetails::V1 { size } => size,
+            }
+        } else {
+            panic!("Expected CollectionDetails::V1");
+        };
+
+        // First update should work.
+        assert_eq!(retrieved_size, size);
+
+        let new_size = 3211;
+
+        let ix = set_collection_size(
+            PROGRAM_ID,
+            collection_parent_nft.pubkey,
+            context.payer.pubkey(),
             collection_parent_nft.mint.pubkey(),
             None,
             new_size,
@@ -361,16 +472,16 @@ mod set_collection_size {
         let tx = Transaction::new_signed_with_payer(
             &[ix],
             Some(&context.payer.pubkey()),
-            &[&context.payer, &invalid_update_authorty],
+            &[&context.payer],
             context.last_blockhash,
         );
 
+        // This should fail with SizedCollection error.
         let err = context
             .banks_client
             .process_transaction(tx)
             .await
             .unwrap_err();
-
-        assert_custom_error!(err, MetadataError::InvalidCollectionUpdateAuthority);
+        assert_custom_error!(err, MetadataError::SizedCollection);
     }
 }

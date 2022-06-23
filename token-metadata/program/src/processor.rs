@@ -1863,14 +1863,9 @@ pub fn set_collection_size(
         }
     }
 
-    if let Some(details) = metadata.collection_details {
-        match details {
-            CollectionDetails::V1 {
-                size: _current_size,
-            } => {
-                metadata.collection_details = Some(CollectionDetails::V1 { size });
-            }
-        }
+    // Only unsized collections can have the size set, and only once.
+    if metadata.collection_details.is_some() {
+        return Err(MetadataError::SizedCollection.into());
     } else {
         metadata.collection_details = Some(CollectionDetails::V1 { size });
     }
