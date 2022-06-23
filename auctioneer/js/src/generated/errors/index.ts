@@ -192,6 +192,26 @@ createErrorFromCodeLookup.set(0x1778, () => new BelowBidIncrementError());
 createErrorFromNameLookup.set('BelowBidIncrement', () => new BelowBidIncrementError());
 
 /**
+ * CannotCancelHighestBid: 'The highest bidder is not allowed to cancel'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotCancelHighestBidError extends Error {
+  readonly code: number = 0x1779;
+  readonly name: string = 'CannotCancelHighestBid';
+  constructor() {
+    super('The highest bidder is not allowed to cancel');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotCancelHighestBidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1779, () => new CannotCancelHighestBidError());
+createErrorFromNameLookup.set('CannotCancelHighestBid', () => new CannotCancelHighestBidError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -110,6 +110,7 @@ pub fn auctioneer_sell<'info>(
     min_bid_increment: Option<u64>,
     time_ext_period: Option<u32>,
     time_ext_delta: Option<u32>,
+    allow_high_bid_cancel: Option<bool>,
 ) -> Result<()> {
     ctx.accounts.listing_config.version = ListingConfigVersion::V0;
     ctx.accounts.listing_config.highest_bid.version = ListingConfigVersion::V0;
@@ -119,6 +120,7 @@ pub fn auctioneer_sell<'info>(
     ctx.accounts.listing_config.min_bid_increment = min_bid_increment.unwrap_or(0);
     ctx.accounts.listing_config.time_ext_period = time_ext_period.unwrap_or(0);
     ctx.accounts.listing_config.time_ext_delta = time_ext_delta.unwrap_or(0);
+    ctx.accounts.listing_config.allow_high_bid_cancel = allow_high_bid_cancel.unwrap_or(false);
     ctx.accounts.listing_config.bump = *ctx
         .bumps
         .get("listing_config")
