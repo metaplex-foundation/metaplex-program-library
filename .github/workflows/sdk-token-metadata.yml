@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  changes:
+  token-metadata-sdk-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -30,8 +30,8 @@ jobs:
             - 'token-metadata/**'
 
   build-lint-and-test-token-metadata:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: token-metadata-sdk-changes
+    if: ${{ needs.token-metadata-sdk-changes.outputs.core == 'true' || needs.token-metadata-sdk-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -43,9 +43,9 @@ jobs:
           skip_test: false
 
   upgrade-version-and-publish-binary:
-    needs: changes
+    needs: token-metadata-sdk-changes
     if:
-      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+      ${{ (needs.token-metadata-sdk-changes.outputs.core == 'true' || needs.token-metadata-sdk-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-metadata

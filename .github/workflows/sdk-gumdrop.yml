@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  changes:
+  gumdrop-sdk-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -30,8 +30,8 @@ jobs:
             - 'gumdrop/**'
 
   build-lint-and-test-gumdrop:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: gumdrop-sdk-changes
+    if: ${{ needs.gumdrop-sdk-changes.outputs.core == 'true' || needs.gumdrop-sdk-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -43,9 +43,9 @@ jobs:
           build_token_metadata: true
 
   upgrade-version-and-publish-binary:
-    needs: changes
+    needs: gumdrop-sdk-changes
     if:
-      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+      ${{ (needs.gumdrop-sdk-changes.outputs.core == 'true' || needs.gumdrop-sdk-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-gumdrop

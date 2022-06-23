@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  changes:
+  candy-machine-sdk-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -30,8 +30,8 @@ jobs:
             - 'candy-machine/**'
 
   build-lint-and-test-candy-machine:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: candy-machine-sdk-changes
+    if: ${{ needs.candy-machine-sdk-changes.outputs.core == 'true' || needs.candy-machine-sdk-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -42,9 +42,9 @@ jobs:
           working_dir: ./candy-machine/js
 
   upgrade-version-and-publish-binary:
-    needs: changes
+    needs: candy-machine-sdk-changes
     if:
-      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+      ${{ (needs.candy-machine-sdk-changes.outputs.core == 'true' || needs.candy-machine-sdk-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-candy-machine

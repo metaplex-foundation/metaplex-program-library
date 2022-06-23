@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  changes:
+  auction-house-sdk-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -30,8 +30,8 @@ jobs:
             - 'auction-house/**'
 
   build-lint-and-test-auction-house:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: auction-house-sdk-changes
+    if: ${{ needs.auction-house-sdk-changes.outputs.core == 'true' || needs.auction-house-sdk-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -43,9 +43,9 @@ jobs:
           skip_test: true
 
   upgrade-version-and-publish-binary:
-    needs: changes
+    needs: auction-house-sdk-changes
     if:
-      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+      ${{ (needs.auction-house-sdk-changes.outputs.core == 'true' || needs.auction-house-sdk-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction-house

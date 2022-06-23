@@ -12,7 +12,7 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
-  changes:
+  fixed-price-sale-integration-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -36,8 +36,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       cache_id: program-fixed-price-sale
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
+    needs: fixed-price-sale-integration-changes
+    if: ${{ needs.fixed-price-sale-integration-changes.outputs.core == 'true' || needs.fixed-price-sale-integration-changes.outputs.package == 'true' || needs.fixed-price-sale-integration-changes.outputs.workflow == 'true' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2

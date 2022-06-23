@@ -16,7 +16,7 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
-  changes:
+  token-metadata-program-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -35,8 +35,8 @@ jobs:
               - 'token-metadata/**'
 
   build-and-test-token-metadata:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: token-metadata-program-changes
+    if: ${{ needs.token-metadata-program-changes.outputs.core == 'true' || needs.token-metadata-program-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-metadata
@@ -83,8 +83,8 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
 
   upgrade-version-and-publish-binary:
-    needs: changes
-    if: ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    needs: token-metadata-program-changes
+    if: ${{ (needs.token-metadata-program-changes.outputs.core == 'true' || needs.token-metadata-program-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-metadata

@@ -15,7 +15,7 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
-  changes:
+  nft-packs-program-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -34,8 +34,8 @@ jobs:
             - 'nft-packs/**'
 
   build-and-test-nft-packs:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: nft-packs-program-changes
+    if: ${{ needs.nft-packs-program-changes.outputs.core == 'true' || needs.nft-packs-program-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-nft-packs 
@@ -74,8 +74,8 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1
 
   upgrade-version-and-publish-binary:
-    needs: changes
-    if: ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    needs: nft-packs-program-changes
+    if: ${{ (needs.nft-packs-program-changes.outputs.core == 'true' || needs.nft-packs-program-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-nft-packs

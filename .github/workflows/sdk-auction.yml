@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  changes:
+  auction-sdk-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -30,8 +30,8 @@ jobs:
             - 'auction/**'
 
   build-lint-and-test-auction:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: auction-sdk-changes
+    if: ${{ needs.auction-sdk-changes.outputs.core == 'true' || needs.auction-sdk-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -42,9 +42,9 @@ jobs:
           working_dir: ./auction/js
 
   upgrade-version-and-publish-binary:
-    needs: changes
+    needs: auction-sdk-changes
     if:
-      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+      ${{ (needs.auction-sdk-changes.outputs.core == 'true' || needs.auction-sdk-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction

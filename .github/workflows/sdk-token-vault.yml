@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  changes:
+  token-vault-sdk-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -32,8 +32,8 @@ jobs:
           workflow:
             - '.github/workflows/sdk-token-vault.yml'
   build-lint-and-test-token-vault:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
+    needs: token-vault-sdk-changes
+    if: ${{ needs.token-vault-sdk-changes.outputs.core == 'true' || needs.token-vault-sdk-changes.outputs.package == 'true' || needs.token-vault-sdk-changes.outputs.workflow == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -46,9 +46,9 @@ jobs:
 
 
   upgrade-version-and-publish-binary:
-    needs: changes
+    needs: token-vault-sdk-changes
     if:
-      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+      ${{ (needs.token-vault-sdk-changes.outputs.core == 'true' || needs.token-vault-sdk-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-vault

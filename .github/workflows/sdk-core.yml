@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  changes:
+  core-sdk-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -27,8 +27,8 @@ jobs:
             - 'core/**'
 
   build-lint-and-test-core:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' }}
+    needs: core-sdk-changes
+    if: ${{ needs.core-sdk-changes.outputs.core == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -40,9 +40,9 @@ jobs:
           build_core: false
 
   upgrade-version-and-publish-binary:
-    needs: changes
+    needs: core-sdk-changes
     if:
-      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+      ${{ (needs.core-sdk-changes.outputs.core == 'true' || needs.core-sdk-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-core

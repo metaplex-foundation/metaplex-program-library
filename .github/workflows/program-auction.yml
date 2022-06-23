@@ -16,7 +16,7 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
-  changes:
+  auction-program-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -34,8 +34,8 @@ jobs:
             package:
               - 'auction/**'
   build-and-test-auction:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: auction-program-changes
+    if: ${{ needs.auction-program-changes.outputs.core == 'true' || needs.auction-program-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction
@@ -74,8 +74,8 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1
 
   upgrade-version-and-publish-binary:
-    needs: changes
-    if: ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    needs: auction-program-changes
+    if: ${{ (needs.auction-program-changes.outputs.core == 'true' || needs.auction-program-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction

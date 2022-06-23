@@ -17,7 +17,7 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
-  changes:
+  auction-house-program-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -36,8 +36,8 @@ jobs:
               - 'auction-house/**'
 
   build-and-test-auction-house-stable:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: auction-house-program-changes
+    if: ${{ needs.auction-house-program-changes.outputs.core == 'true' || needs.auction-house-program-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction-house
@@ -84,8 +84,8 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
 
   build-and-test-auction-house-unstable:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: auction-house-program-changes
+    if: ${{ needs.auction-house-program-changes.outputs.core == 'true' || needs.auction-house-program-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction-house
@@ -132,8 +132,8 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
 
   upgrade-version-and-publish-binary:
-    needs: changes
-    if: ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    needs: auction-house-program-changes
+    if: ${{ (needs.auction-house-program-changes.outputs.core == 'true' || needs.auction-house-program-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction-house

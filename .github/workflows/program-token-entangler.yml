@@ -16,7 +16,7 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
-  changes:
+  token-entangler-program-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -35,8 +35,8 @@ jobs:
               - 'token-entangler/**'
 
   build-and-test-token-entangler:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: token-entangler-program-changes
+    if: ${{ needs.token-entangler-program-changes.outputs.core == 'true' || needs.token-entangler-program-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-entangler
@@ -79,8 +79,8 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf -- --nocapture --test-threads 1
 
   upgrade-version-and-publish-binary:
-    needs: changes
-    if: ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    needs: token-entangler-program-changes
+    if: ${{ (needs.token-entangler-program-changes.outputs.core == 'true' || needs.token-entangler-program-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-token-entangler

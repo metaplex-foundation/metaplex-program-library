@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  changes:
+  fixed-price-sale-sdk-changes:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -30,8 +30,8 @@ jobs:
               - 'fixed-price-sale/**'
 
   build-lint-and-test-fixed-price-sale:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    needs: fixed-price-sale-sdk-changes
+    if: ${{ needs.fixed-price-sale-sdk-changes.outputs.core == 'true' || needs.fixed-price-sale-sdk-changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -44,9 +44,9 @@ jobs:
           skip_test: true
 
   upgrade-version-and-publish-binary:
-    needs: changes
+    needs: fixed-price-sale-sdk-changes
     if:
-      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+      ${{ (needs.fixed-price-sale-sdk-changes.outputs.core == 'true' || needs.fixed-price-sale-sdk-changes.outputs.package == 'true') && github.event_name == 'push' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-fixed-price-sale
