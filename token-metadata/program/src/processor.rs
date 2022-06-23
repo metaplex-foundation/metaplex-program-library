@@ -1809,8 +1809,11 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         if let Some(ref details) = collection_metadata.collection_details {
             match details {
                 CollectionDetails::V1 { size } => {
-                    collection_metadata.collection_details =
-                        Some(CollectionDetails::V1 { size: size - 1 });
+                    collection_metadata.collection_details = Some(CollectionDetails::V1 {
+                        size: size
+                            .checked_sub(1)
+                            .ok_or(MetadataError::NumericalOverflowError)?,
+                    });
                     clean_write_metadata(&mut collection_metadata, collection_metadata_info)?;
                 }
             }
@@ -1869,7 +1872,7 @@ pub fn set_collection_size(
             }
         }
     } else {
-        return Err(MetadataError::NotACollectionParent.into());
+        metadata.collection_details = Some(CollectionDetails::V1 { size });
     }
 
     clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)?;

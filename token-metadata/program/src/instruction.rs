@@ -482,6 +482,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
     #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
     #[account(2, name="collection_mint", desc="Mint of the Collection")]
+    #[account(3, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     SetCollectionSize(SetCollectionSizeArgs),
 
     /// Set the token standard of the asset.

@@ -8,6 +8,8 @@ license = "AGPL-3.0"
 edition = "2021"
 readme = "README.md"
 
+[profile.release]
+overflow-checks = true
 
 [features]
 no-entrypoint = []
