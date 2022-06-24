@@ -8,7 +8,7 @@ use solana_program::program::invoke;
 use crate::{
     cmp_pubkeys,
     constants::{COLLECTIONS_FEATURE_INDEX, COLLECTION_PDA_SIZE},
-    set_feature_flag, CandyError, CandyMachine, CollectionPDA,
+    set_feature_flag, CandyError, CandyMachine, CollectionPda,
 };
 
 /// Set the collection PDA for the candy machine
@@ -106,7 +106,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
         )?;
     }
     let mut data_ref: &mut [u8] = &mut ctx.accounts.collection_pda.try_borrow_mut_data()?;
-    let mut collection_pda_object: CollectionPDA = AnchorDeserialize::deserialize(&mut &*data_ref)?;
+    let mut collection_pda_object: CollectionPda = AnchorDeserialize::deserialize(&mut &*data_ref)?;
     collection_pda_object.mint = mint.key();
     collection_pda_object.candy_machine = candy_machine.key();
     collection_pda_object.try_serialize(&mut data_ref)?;

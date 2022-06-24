@@ -18,7 +18,7 @@ pub struct CandyMachine {
 /// Collection PDA account
 #[account]
 #[derive(Default, Debug)]
-pub struct CollectionPDA {
+pub struct CollectionPda {
     pub mint: Pubkey,
     pub candy_machine: Pubkey,
 }

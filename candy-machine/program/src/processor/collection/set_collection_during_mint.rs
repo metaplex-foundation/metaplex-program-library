@@ -4,7 +4,7 @@ use solana_program::{
     program::invoke_signed, sysvar, sysvar::instructions::get_instruction_relative,
 };
 
-use crate::{cmp_pubkeys, CandyMachine, CollectionPDA};
+use crate::{cmp_pubkeys, CandyMachine, CollectionPda};
 
 /// Sets and verifies the collection during a candy machine mint
 #[derive(Accounts)]
@@ -15,7 +15,7 @@ pub struct SetCollectionDuringMint<'info> {
     metadata: UncheckedAccount<'info>,
     payer: Signer<'info>,
     #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
-    collection_pda: Account<'info, CollectionPDA>,
+    collection_pda: Account<'info, CollectionPda>,
     /// CHECK: account constraints checked in account trait
     #[account(address = mpl_token_metadata::id())]
     token_metadata_program: UncheckedAccount<'info>,

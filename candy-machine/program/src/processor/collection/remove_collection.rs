@@ -4,7 +4,7 @@ use solana_program::program::invoke;
 
 use crate::{
     cmp_pubkeys, constants::COLLECTIONS_FEATURE_INDEX, remove_feature_flag, CandyError,
-    CandyMachine, CollectionPDA,
+    CandyMachine, CollectionPda,
 };
 
 /// Set the collection PDA for the candy machine
@@ -14,7 +14,7 @@ pub struct RemoveCollection<'info> {
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
     #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close=authority)]
-    collection_pda: Account<'info, CollectionPDA>,
+    collection_pda: Account<'info, CollectionPda>,
     /// CHECK: account checked in CPI
     metadata: UncheckedAccount<'info>,
     /// CHECK: account checked in CPI
