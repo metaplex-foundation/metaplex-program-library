@@ -3,10 +3,12 @@
 use std::str::FromStr;
 
 use anchor_lang::{AnchorDeserialize, InstructionData, ToAccountMetas};
+
+use solana_gateway_program::processor::process_instruction;
 use solana_program_test::*;
 use solana_sdk::{
+    borsh::try_from_slice_unchecked,
     instruction::{AccountMeta, Instruction, InstructionError},
-    msg,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_program, sysvar,
@@ -15,7 +17,7 @@ use solana_sdk::{
 };
 
 use crate::{
-    core::helpers::{airdrop, get_network_expire, get_network_token, prepare_nft},
+    core::helpers::{airdrop, get_account, get_network_expire, get_network_token, prepare_nft},
     utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager, WhitelistConfig},
 };
 use mpl_candy_machine::{CandyMachineData, GatekeeperConfig, WhitelistMintMode::BurnEveryTime};
@@ -68,7 +70,15 @@ mod utils;
 
 #[tokio::test]
 async fn bot_tax_on_gatekeeper() {
-    let mut context = candy_machine_program_test().start_with_context().await;
+    let mut program = ProgramTest::new("mpl_candy_machine", mpl_candy_machine::id(), None);
+    program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.add_program(
+        "solana_gateway_program",
+        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
+        processor!(process_instruction),
+    );
+
+    let mut context = program.start_with_context().await;
     let context = &mut context;
 
     let mut candy_manager = CandyManager::init(context, true, false, None).await;
@@ -118,7 +128,7 @@ async fn bot_tax_on_gatekeeper() {
     );
 
     // inserting incorrect program_id
-    let program_id = Pubkey::from_str("hater74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap();
+    let program_id = Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap();
 
     let mut accounts = mpl_candy_machine::accounts::MintNFT {
         candy_machine: candy_manager.candy_machine.pubkey(),
@@ -140,7 +150,8 @@ async fn bot_tax_on_gatekeeper() {
     }
     .to_account_metas(None);
 
-    accounts.push(AccountMeta::new(network_token.0, false));
+    let network_account = AccountMeta::new(network_token.0, false);
+    accounts.push(network_account);
     accounts.push(AccountMeta::new_readonly(expire_token.0, false));
     accounts.push(AccountMeta::new_readonly(program_id, false));
 
@@ -156,6 +167,14 @@ async fn bot_tax_on_gatekeeper() {
     };
     instructions.push(mint_ix);
     signers.push(&candy_manager.minter);
+
+    let account = context
+        .banks_client
+        .get_account(program_id)
+        .await
+        .unwrap()
+        .unwrap();
+    println!("account {:?}", account);
 
     let tx = Transaction::new_signed_with_payer(
         &instructions,

@@ -5,7 +5,6 @@ use mpl_token_metadata::pda::find_collection_authority_account;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
-    msg,
     signature::{read_keypair_file, Keypair, Signer},
     transport,
 };
@@ -18,11 +17,10 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    airdrop,
     core::{
         helpers::{
             assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
-            get_balance, get_token_account, get_token_balance, mint_to_wallets, prepare_nft,
+            get_balance, get_token_account, get_token_balance, mint_to_wallets, prepare_nft, airdrop,
         },
         MasterEditionV2 as MasterEditionManager, Metadata as MetadataManager,
     },

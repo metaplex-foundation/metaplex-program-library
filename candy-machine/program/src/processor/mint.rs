@@ -10,7 +10,6 @@ use mpl_token_metadata::{
     state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
 };
 use solana_gateway::{
-    error::GatewayError,
     state::{GatewayTokenAccess, InPlaceGatewayToken},
     Gateway,
 };
