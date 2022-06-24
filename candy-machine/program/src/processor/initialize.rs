@@ -93,6 +93,28 @@ pub fn handle_initialize_candy_machine(
         for i in 0..4 {
             data[vec_start + i] = as_bytes[i]
         }
+    } else {
+        let expected_size = CONFIG_ARRAY_START
+            + 4
+            + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE
+            + 4
+            + ((candy_machine
+                .data
+                .items_available
+                .checked_div(8)
+                .ok_or(CandyError::NumericalOverflowError)?
+                + 1) as usize)
+            + 4
+            + (candy_machine.data.items_available as usize) * 4;
+
+        let account_info = candy_machine_account.to_account_info();
+
+        if account_info.data_len() < expected_size
+            && account_info.realloc(expected_size, false).is_err()
+        {
+            return err!(CandyError::CandyMachineReallocFailed);
+        }
+
         set_feature_flag(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX);
     }
 
@@ -103,17 +125,18 @@ fn get_space_for_candy(data: CandyMachineData) -> Result<usize> {
     let num = if data.hidden_settings.is_some() {
         CONFIG_ARRAY_START
     } else {
+        // not enforcing the allocation of the mint index array to maintain
+        // compatibility with existing CLIs - the size will be increased if needed
+        // during the initialization
         CONFIG_ARRAY_START
             + 4
             + (data.items_available as usize) * CONFIG_LINE_SIZE
-            + 4
-            + ((data
+            + 8
+            + 2 * ((data
                 .items_available
                 .checked_div(8)
                 .ok_or(CandyError::NumericalOverflowError)?
                 + 1) as usize)
-            + 4
-            + (data.items_available as usize) * 4
     };
 
     Ok(num)
