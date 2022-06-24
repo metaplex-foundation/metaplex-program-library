@@ -1,5 +1,6 @@
 use anchor_lang::{prelude::*, Discriminator};
 use mpl_token_metadata::state::{MAX_CREATOR_LIMIT, MAX_SYMBOL_LENGTH};
+use solana_program::{program::invoke, system_instruction};
 use spl_token::state::Mint;
 
 use crate::{
@@ -70,16 +71,9 @@ pub fn handle_initialize_candy_machine(
         return err!(CandyError::TooManyCreators);
     }
 
-    let mut new_data = CandyMachine::discriminator().try_to_vec().unwrap();
-    new_data.append(&mut candy_machine.try_to_vec().unwrap());
-    let mut data = candy_machine_account.data.borrow_mut();
-    // god forgive me couldnt think of better way to deal with this
-    for i in 0..new_data.len() {
-        data[i] = new_data[i];
-    }
-
-    // only if we are not using hidden settings we will have space for
-    // the config lines
+    // previous CLIs do not allocate the size needed to store the mint
+    // index array for the swap_remove - in this case the account
+    // size is increased
     if candy_machine.data.hidden_settings.is_none() {
         let expected_size = CONFIG_ARRAY_START
             + 4
@@ -94,14 +88,45 @@ pub fn handle_initialize_candy_machine(
             + 4
             + (candy_machine.data.items_available as usize) * 4;
 
-        let account_info = candy_machine_account.to_account_info();
+        let account = candy_machine_account.to_account_info();
 
-        if account_info.data_len() < expected_size
-            && account_info.realloc(expected_size, false).is_err()
-        {
-            return err!(CandyError::CandyMachineReallocFailed);
+        if account.data_len() < expected_size {
+            let snapshot: u64 = account.lamports();
+            // calculates the additional lamports needed
+            let rent_delta = Rent::get()?
+                .minimum_balance(expected_size)
+                .saturating_sub(snapshot);
+
+            invoke(
+                &system_instruction::transfer(ctx.accounts.payer.key, account.key, rent_delta),
+                &[
+                    ctx.accounts.payer.to_account_info(),
+                    account.clone(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+            )?;
+
+            if account.realloc(expected_size, false).is_err() {
+                return err!(CandyError::CandyMachineReallocFailed);
+            }
         }
 
+        // new candy machines will be using swap_remove
+        set_feature_flag(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX);
+    }
+
+    let mut new_data = CandyMachine::discriminator().try_to_vec().unwrap();
+    new_data.append(&mut candy_machine.try_to_vec().unwrap());
+
+    let mut data = candy_machine_account.data.borrow_mut();
+    // god forgive me couldnt think of better way to deal with this
+    for i in 0..new_data.len() {
+        data[i] = new_data[i];
+    }
+
+    // only if we are not using hidden settings we will have space for
+    // the config lines
+    if candy_machine.data.hidden_settings.is_none() {
         let vec_start = CONFIG_ARRAY_START
             + 4
             + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE;
@@ -111,11 +136,10 @@ pub fn handle_initialize_candy_machine(
             .checked_div(8)
             .ok_or(CandyError::NumericalOverflowError)? as u32)
             .to_le_bytes();
-        for i in 0..4 {
-            data[vec_start + i] = as_bytes[i]
-        }
 
-        set_feature_flag(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX);
+        for i in 0..4 {
+            data[vec_start + i] = as_bytes[i];
+        }
     }
 
     Ok(())
@@ -126,8 +150,8 @@ fn get_space_for_candy(data: CandyMachineData) -> Result<usize> {
         CONFIG_ARRAY_START
     } else {
         // not enforcing the allocation of the mint index array to maintain
-        // compatibility with existing CLIs - the size will be increased if needed
-        // during the initialization
+        // compatibility with previous CLIs (the size will be increased if needed
+        // during the initialization)
         CONFIG_ARRAY_START
             + 4
             + (data.items_available as usize) * CONFIG_LINE_SIZE
