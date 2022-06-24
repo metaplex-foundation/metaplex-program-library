@@ -494,8 +494,13 @@ pub fn handle_mint_nft<'info>(
     let most_recent = array_ref![data, 12, 8];
 
     let index = u64::from_le_bytes(*most_recent);
+    let denominator = if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+        candy_machine.data.items_available - candy_machine.items_redeemed
+    } else {
+        candy_machine.data.items_available
+    };
     let modded: usize = index
-        .checked_rem(candy_machine.data.items_available)
+        .checked_rem(denominator)
         .ok_or(CandyError::NumericalOverflowError)? as usize;
 
     let config_line = get_config_line(candy_machine, modded, candy_machine.items_redeemed)?;
