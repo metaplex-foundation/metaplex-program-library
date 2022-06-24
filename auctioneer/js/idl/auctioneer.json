@@ -215,6 +215,16 @@
           "isSigner": false
         },
         {
+          "name": "listingConfig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "seller",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "wallet",
           "isMut": true,
           "isSigner": false
@@ -555,7 +565,33 @@
         },
         {
           "name": "reservePrice",
-          "type": "u64"
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "minBidIncrement",
+          "type": {
+            "option": "u64"
+          }
+        },
+        {
+          "name": "timeExtPeriod",
+          "type": {
+            "option": "u32"
+          }
+        },
+        {
+          "name": "timeExtDelta",
+          "type": {
+            "option": "u32"
+          }
+        },
+        {
+          "name": "allowHighBidCancel",
+          "type": {
+            "option": "bool"
+          }
         }
       ]
     },
@@ -731,6 +767,22 @@
           {
             "name": "reservePrice",
             "type": "u64"
+          },
+          {
+            "name": "minBidIncrement",
+            "type": "u64"
+          },
+          {
+            "name": "timeExtPeriod",
+            "type": "u32"
+          },
+          {
+            "name": "timeExtDelta",
+            "type": "u32"
+          },
+          {
+            "name": "allowHighBidCancel",
+            "type": "bool"
           }
         ]
       }
@@ -811,6 +863,16 @@
       "code": 6007,
       "name": "BelowReservePrice",
       "msg": "The bid price must be greater than the reserve price"
+    },
+    {
+      "code": 6008,
+      "name": "BelowBidIncrement",
+      "msg": "The bid must match the highest bid plus the minimum bid increment"
+    },
+    {
+      "code": 6009,
+      "name": "CannotCancelHighestBid",
+      "msg": "The highest bidder is not allowed to cancel"
     }
   ],
   "metadata": {

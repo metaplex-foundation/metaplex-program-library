@@ -22,6 +22,10 @@ export type ListingConfigArgs = {
   highestBid: Bid;
   bump: number;
   reservePrice: beet.bignum;
+  minBidIncrement: beet.bignum;
+  timeExtPeriod: number;
+  timeExtDelta: number;
+  allowHighBidCancel: boolean;
 };
 
 const listingConfigDiscriminator = [183, 196, 26, 41, 131, 46, 184, 115];
@@ -40,6 +44,10 @@ export class ListingConfig implements ListingConfigArgs {
     readonly highestBid: Bid,
     readonly bump: number,
     readonly reservePrice: beet.bignum,
+    readonly minBidIncrement: beet.bignum,
+    readonly timeExtPeriod: number,
+    readonly timeExtDelta: number,
+    readonly allowHighBidCancel: boolean,
   ) {}
 
   /**
@@ -53,6 +61,10 @@ export class ListingConfig implements ListingConfigArgs {
       args.highestBid,
       args.bump,
       args.reservePrice,
+      args.minBidIncrement,
+      args.timeExtPeriod,
+      args.timeExtDelta,
+      args.allowHighBidCancel,
     );
   }
 
@@ -154,6 +166,20 @@ export class ListingConfig implements ListingConfigArgs {
         }
         return x;
       })(),
+      minBidIncrement: (() => {
+        const x = <{ toNumber: () => number }>this.minBidIncrement;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
+      timeExtPeriod: this.timeExtPeriod,
+      timeExtDelta: this.timeExtDelta,
+      allowHighBidCancel: this.allowHighBidCancel,
     };
   }
 }
@@ -176,6 +202,10 @@ export const listingConfigBeet = new beet.BeetStruct<
     ['highestBid', bidBeet],
     ['bump', beet.u8],
     ['reservePrice', beet.u64],
+    ['minBidIncrement', beet.u64],
+    ['timeExtPeriod', beet.u32],
+    ['timeExtDelta', beet.u32],
+    ['allowHighBidCancel', beet.bool],
   ],
   ListingConfig.fromArgs,
   'ListingConfig',
