@@ -482,6 +482,7 @@ pub enum MetadataInstruction {
     #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
     #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
     #[account(2, name="collection_mint", desc="Mint of the Collection")]
+    #[account(3, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
     SetCollectionSize(SetCollectionSizeArgs),
 
     /// Set the token standard of the asset.
@@ -493,7 +494,7 @@ pub enum MetadataInstruction {
 }
 
 /// Creates an CreateMetadataAccounts instruction
-/// #[deprecated(since="1.1.0", note="please use `create_metadata_accounts_v2` instead")]
+/// #[deprecated(since="1.1.0", note="please use `create_metadata_accounts_v3` instead")]
 #[allow(clippy::too_many_arguments)]
 pub fn create_metadata_accounts(
     program_id: Pubkey,
@@ -538,6 +539,7 @@ pub fn create_metadata_accounts(
 
 /// Creates an CreateMetadataAccounts instruction
 #[allow(clippy::too_many_arguments)]
+/// #[deprecated(since="1.3.0", note="please use `create_metadata_accounts_v3` instead")]
 pub fn create_metadata_accounts_v2(
     program_id: Pubkey,
     metadata_account: Pubkey,

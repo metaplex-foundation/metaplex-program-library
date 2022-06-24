@@ -8,7 +8,6 @@ license = "AGPL-3.0"
 edition = "2021"
 readme = "README.md"
 
-
 [features]
 no-entrypoint = []
 test-bpf = []
