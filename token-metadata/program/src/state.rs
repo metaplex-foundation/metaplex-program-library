@@ -146,6 +146,12 @@ pub enum UseMethod {
 
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub enum CollectionDetails {
+    V1 { size: u64 },
+}
+
+#[repr(C)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct Uses {
     // 17 bytes + Option byte
     pub use_method: UseMethod, //1
@@ -245,6 +251,8 @@ pub struct Metadata {
     pub collection: Option<Collection>,
     /// Uses
     pub uses: Option<Uses>,
+    /// Item Details
+    pub collection_details: Option<CollectionDetails>,
 }
 
 impl Metadata {

@@ -1,11 +1,14 @@
 use crate::{
     assertions::{collection::assert_collection_update_is_valid, uses::assert_valid_use},
+    deser::clean_write_metadata,
     error::MetadataError,
+    pda::find_master_edition_account,
     state::{
-        get_reservation_list, Data, DataV2, EditionMarker, Key, MasterEditionV1, Metadata,
-        TokenStandard, Uses, EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
-        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
-        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
+        get_reservation_list, CollectionDetails, Data, DataV2, Edition, EditionMarker, Key,
+        MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, Uses, EDITION,
+        EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
+        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
+        MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -614,6 +617,7 @@ pub fn mint_limited_edition<'a>(
         false,
         true,
         true,
+        None, // Not a collection parent
     )?;
     let edition_authority_seeds = &[
         PREFIX.as_bytes(),
@@ -681,13 +685,39 @@ pub fn spl_token_burn(params: TokenBurnParams<'_, '_>) -> ProgramResult {
             source.key,
             mint.key,
             authority.key,
-            &[],
+            &[authority.key],
             amount,
         )?,
-        &[source, mint, authority, token_program],
+        &[source, mint, authority],
         seeds.as_slice(),
     );
     result.map_err(|_| MetadataError::TokenBurnFailed.into())
+}
+
+pub fn spl_token_close(params: TokenCloseParams<'_, '_>) -> ProgramResult {
+    let TokenCloseParams {
+        account,
+        destination,
+        owner,
+        authority_signer_seeds,
+        token_program,
+    } = params;
+    let mut seeds: Vec<&[&[u8]]> = vec![];
+    if let Some(seed) = authority_signer_seeds {
+        seeds.push(seed);
+    }
+    let result = invoke_signed(
+        &spl_token::instruction::close_account(
+            token_program.key,
+            account.key,
+            destination.key,
+            owner.key,
+            &[],
+        )?,
+        &[account, destination, owner, token_program],
+        seeds.as_slice(),
+    );
+    result.map_err(|_| MetadataError::TokenCloseFailed.into())
 }
 
 /// TokenBurnParams
@@ -700,6 +730,20 @@ pub struct TokenBurnParams<'a: 'b, 'b> {
     pub amount: u64,
     /// authority
     pub authority: AccountInfo<'a>,
+    /// authority_signer_seeds
+    pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
+    /// token_program
+    pub token_program: AccountInfo<'a>,
+}
+
+/// TokenCloseParams
+pub struct TokenCloseParams<'a: 'b, 'b> {
+    /// Token account
+    pub account: AccountInfo<'a>,
+    /// Destination for redeemed SOL.
+    pub destination: AccountInfo<'a>,
+    /// Owner of the token account.
+    pub owner: AccountInfo<'a>,
     /// authority_signer_seeds
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
     /// token_program
@@ -818,7 +862,7 @@ pub struct CreateMetadataAccountsLogicArgs<'a> {
 // This allows the upgrade authority of the Token Metadata program to create metadata for SPL tokens.
 // This only allows the upgrade authority to do create general metadata for the SPL token, it does not
 // allow the upgrade authority to add or change creators.
-const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
+pub const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
     0x92, 0x17, 0x2c, 0xc4, 0x72, 0x5d, 0xc0, 0x41, 0xf9, 0xdd, 0x8c, 0x51, 0x52, 0x60, 0x04, 0x26,
     0x00, 0x93, 0xa3, 0x0b, 0x02, 0x73, 0xdc, 0xfa, 0x74, 0x92, 0x17, 0xfc, 0x94, 0xa2, 0x40, 0x49,
 ]);
@@ -831,6 +875,7 @@ pub fn process_create_metadata_accounts_logic(
     mut is_mutable: bool,
     is_edition: bool,
     add_token_standard: bool,
+    collection_details: Option<CollectionDetails>,
 ) -> ProgramResult {
     let CreateMetadataAccountsLogicArgs {
         metadata_account_info,
@@ -909,10 +954,25 @@ pub fn process_create_metadata_accounts_logic(
     metadata.data = data.to_v1();
     metadata.is_mutable = is_mutable;
     metadata.update_authority = update_authority_key;
+
     assert_valid_use(&data.uses, &None)?;
     metadata.uses = data.uses;
+
     assert_collection_update_is_valid(is_edition, &None, &data.collection)?;
     metadata.collection = data.collection;
+
+    // We want to create new collections with a size of zero but we use the
+    // collection details enum for forward compatibility.
+    if let Some(details) = collection_details {
+        match details {
+            CollectionDetails::V1 { size: _size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { size: 0 });
+            }
+        }
+    } else {
+        metadata.collection_details = None;
+    }
+
     if add_token_standard {
         let token_standard = if is_edition {
             TokenStandard::NonFungibleEdition
@@ -1182,5 +1242,120 @@ pub fn assert_delegated_tokens(
     {
         return Err(MetadataError::InvalidDelegate.into());
     }
+    Ok(())
+}
+
+pub fn increment_collection_size(
+    metadata: &mut Metadata,
+    metadata_info: &AccountInfo,
+) -> ProgramResult {
+    if let Some(ref details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { size: size + 1 });
+                msg!("Clean writing collection parent metadata");
+                clean_write_metadata(metadata, metadata_info)?;
+                Ok(())
+            }
+        }
+    } else {
+        msg!("No collection details found. Cannot increment collection size.");
+        Err(MetadataError::UnsizedCollection.into())
+    }
+}
+
+pub fn decrement_collection_size(
+    metadata: &mut Metadata,
+    metadata_info: &AccountInfo,
+) -> ProgramResult {
+    if let Some(ref details) = metadata.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => {
+                metadata.collection_details = Some(CollectionDetails::V1 { size: size - 1 });
+                clean_write_metadata(metadata, metadata_info)?;
+                Ok(())
+            }
+        }
+    } else {
+        msg!("No collection details found. Cannot decrement collection size.");
+        Err(MetadataError::UnsizedCollection.into())
+    }
+}
+
+pub fn assert_verified_member_of_collection(
+    item_metadata: &Metadata,
+    collection_metadata: &Metadata,
+) -> ProgramResult {
+    if let Some(ref collection) = item_metadata.collection {
+        if collection_metadata.mint != collection.key {
+            return Err(MetadataError::NotAMemberOfCollection.into());
+        }
+        if !collection.verified {
+            return Err(MetadataError::NotVerifiedMemberOfCollection.into());
+        }
+    } else {
+        return Err(MetadataError::NotAMemberOfCollection.into());
+    }
+
+    Ok(())
+}
+
+pub fn check_token_standard(
+    mint_info: &AccountInfo,
+    edition_account_info: Option<&AccountInfo>,
+) -> Result<TokenStandard, ProgramError> {
+    let mint_decimals = get_mint_decimals(mint_info)?;
+    let mint_supply = get_mint_supply(mint_info)?;
+
+    match edition_account_info {
+        Some(edition) => {
+            if is_master_edition(edition, mint_decimals, mint_supply) {
+                Ok(TokenStandard::NonFungible)
+            } else if is_print_edition(edition, mint_decimals, mint_supply) {
+                Ok(TokenStandard::NonFungibleEdition)
+            } else {
+                Err(MetadataError::CouldNotDetermineTokenStandard.into())
+            }
+        }
+        None => {
+            assert_edition_is_not_mint_authority(mint_info)?;
+            if mint_decimals == 0 {
+                Ok(TokenStandard::FungibleAsset)
+            } else {
+                Ok(TokenStandard::Fungible)
+            }
+        }
+    }
+}
+
+pub fn is_master_edition(
+    edition_account_info: &AccountInfo,
+    mint_decimals: u8,
+    mint_supply: u64,
+) -> bool {
+    let is_correct_type = MasterEditionV2::from_account_info(edition_account_info).is_ok();
+
+    is_correct_type && mint_decimals == 0 && mint_supply == 1
+}
+
+pub fn is_print_edition(
+    edition_account_info: &AccountInfo,
+    mint_decimals: u8,
+    mint_supply: u64,
+) -> bool {
+    let is_correct_type = Edition::from_account_info(edition_account_info).is_ok();
+
+    is_correct_type && mint_decimals == 0 && mint_supply == 1
+}
+
+pub fn assert_edition_is_not_mint_authority(mint_account_info: &AccountInfo) -> ProgramResult {
+    let mint = Mint::unpack_from_slice(*mint_account_info.try_borrow_mut_data()?)?;
+
+    let (edition_pda, _) = find_master_edition_account(mint_account_info.key);
+
+    if mint.mint_authority == COption::Some(edition_pda) {
+        return Err(MetadataError::MissingEditionAccount.into());
+    }
+
     Ok(())
 }

@@ -30,10 +30,12 @@ async fn sell_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
-    let ((acc, listing_receipt_acc), sell_tx) = sell(&mut context, &ahkey, &ah, &test_metadata, 1);
+    let ((acc, listing_receipt_acc), sell_tx) =
+        sell(&mut context, &ahkey, &ah, &test_metadata, 1, 1);
 
     context
         .banks_client
@@ -96,11 +98,10 @@ async fn auctioneer_sell_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
-
-    let sale_price = ONE_SOL;
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
@@ -117,13 +118,12 @@ async fn auctioneer_sell_success() {
     .await
     .unwrap();
 
-    let ((acc, listing_receipt_acc), sell_tx) = auctioneer_sell(
+    let (acc, sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        sale_price,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
 
     context
@@ -139,34 +139,6 @@ async fn auctioneer_sell_success() {
         .expect("Error Getting Trade State")
         .expect("Trade State Empty");
     assert_eq!(sts.data.len(), 1);
-
-    let timestamp = context
-        .banks_client
-        .get_sysvar::<Clock>()
-        .await
-        .unwrap()
-        .unix_timestamp;
-
-    let listing_receipt_account = context
-        .banks_client
-        .get_account(listing_receipt_acc.receipt)
-        .await
-        .expect("getting listing receipt")
-        .expect("empty listing receipt data");
-
-    let listing_receipt =
-        ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
-
-    assert_eq!(listing_receipt.auction_house, acc.auction_house);
-    assert_eq!(listing_receipt.metadata, acc.metadata);
-    assert_eq!(listing_receipt.seller, acc.wallet);
-    assert_eq!(listing_receipt.created_at, timestamp);
-    assert_eq!(listing_receipt.purchase_receipt, None);
-    assert_eq!(listing_receipt.canceled_at, None);
-    assert_eq!(listing_receipt.bookkeeper, *owner_pubkey);
-    assert_eq!(listing_receipt.seller, *owner_pubkey);
-    assert_eq!(listing_receipt.price, sale_price);
-    assert_eq!(listing_receipt.token_size, 1);
 }
 
 #[tokio::test]
@@ -188,11 +160,10 @@ async fn auctioneer_sell_missing_scope_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
-
-    let sale_price = ONE_SOL;
 
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
@@ -211,13 +182,12 @@ async fn auctioneer_sell_missing_scope_fails() {
     .await
     .unwrap();
 
-    let ((_, _), sell_tx) = auctioneer_sell(
+    let (_, sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        sale_price,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
 
     let error = context
@@ -247,22 +217,20 @@ async fn auctioneer_sell_no_delegate_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
 
-    let sale_price = ONE_SOL;
-
     // Delegate external auctioneer authority.
     let auctioneer_authority = Keypair::new();
 
-    let ((_acc, _listing_receipt_acc), sell_tx) = auctioneer_sell(
+    let (_acc, sell_tx) = auctioneer_sell(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
-        sale_price,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
     );
 
     let error = context

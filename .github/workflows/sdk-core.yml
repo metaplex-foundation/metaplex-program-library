@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -21,6 +25,7 @@ jobs:
         filters: |
           core:
             - 'core/**'
+
   build-lint-and-test-core:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' }}
@@ -33,3 +38,23 @@ jobs:
           cache_id: sdk-core  
           working_dir: ./core/js
           build_core: false
+
+  upgrade-version-and-publish-binary:
+    needs: changes
+    if:
+      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-core
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish updated artifacts to NPM and Github
+        uses: ./.github/actions/publish-to-npm
+        id: publish-to-npm
+        with:
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-package-dir: ./core/js
+          commit-sha: ${{ github.sha }}
+          branch: ${{ github.ref }}

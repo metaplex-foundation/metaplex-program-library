@@ -419,6 +419,8 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
+        partial_order_size: Option<u64>,
+        partial_order_price: Option<u64>,
     ) -> Result<()> {
         execute_sale::execute_sale(
             ctx,
@@ -427,6 +429,8 @@ pub mod auction_house {
             program_as_signer_bump,
             buyer_price,
             token_size,
+            partial_order_size,
+            partial_order_price,
         )
     }
 
@@ -471,7 +475,6 @@ pub mod auction_house {
         trade_state_bump: u8,
         free_trade_state_bump: u8,
         program_as_signer_bump: u8,
-        buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
         sell::auctioneer_sell(
@@ -479,7 +482,6 @@ pub mod auction_house {
             trade_state_bump,
             free_trade_state_bump,
             program_as_signer_bump,
-            buyer_price,
             token_size,
         )
     }

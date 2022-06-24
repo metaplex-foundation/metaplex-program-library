@@ -596,13 +596,159 @@ createErrorFromCodeLookup.set(0x178b, () => new InstructionMismatchError());
 createErrorFromNameLookup.set('InstructionMismatch', () => new InstructionMismatchError());
 
 /**
+ * InvalidAuctioneer: 'Invalid Auctioneer for this Auction House instance.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidAuctioneerError extends Error {
+  readonly code: number = 0x178c;
+  readonly name: string = 'InvalidAuctioneer';
+  constructor() {
+    super('Invalid Auctioneer for this Auction House instance.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidAuctioneerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178c, () => new InvalidAuctioneerError());
+createErrorFromNameLookup.set('InvalidAuctioneer', () => new InvalidAuctioneerError());
+
+/**
+ * MissingAuctioneerScope: 'The Auctioneer does not have the correct scope for this action.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAuctioneerScopeError extends Error {
+  readonly code: number = 0x178d;
+  readonly name: string = 'MissingAuctioneerScope';
+  constructor() {
+    super('The Auctioneer does not have the correct scope for this action.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAuctioneerScopeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178d, () => new MissingAuctioneerScopeError());
+createErrorFromNameLookup.set('MissingAuctioneerScope', () => new MissingAuctioneerScopeError());
+
+/**
+ * MustUseAuctioneerHandler: 'Must use auctioneer handler.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustUseAuctioneerHandlerError extends Error {
+  readonly code: number = 0x178e;
+  readonly name: string = 'MustUseAuctioneerHandler';
+  constructor() {
+    super('Must use auctioneer handler.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustUseAuctioneerHandlerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178e, () => new MustUseAuctioneerHandlerError());
+createErrorFromNameLookup.set(
+  'MustUseAuctioneerHandler',
+  () => new MustUseAuctioneerHandlerError(),
+);
+
+/**
+ * NoAuctioneerProgramSet: 'No Auctioneer program set.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoAuctioneerProgramSetError extends Error {
+  readonly code: number = 0x178f;
+  readonly name: string = 'NoAuctioneerProgramSet';
+  constructor() {
+    super('No Auctioneer program set.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoAuctioneerProgramSetError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178f, () => new NoAuctioneerProgramSetError());
+createErrorFromNameLookup.set('NoAuctioneerProgramSet', () => new NoAuctioneerProgramSetError());
+
+/**
+ * TooManyScopes: 'Too many scopes.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class TooManyScopesError extends Error {
+  readonly code: number = 0x1790;
+  readonly name: string = 'TooManyScopes';
+  constructor() {
+    super('Too many scopes.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, TooManyScopesError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1790, () => new TooManyScopesError());
+createErrorFromNameLookup.set('TooManyScopes', () => new TooManyScopesError());
+
+/**
+ * AuctionHouseNotDelegated: 'Auction House not delegated.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AuctionHouseNotDelegatedError extends Error {
+  readonly code: number = 0x1791;
+  readonly name: string = 'AuctionHouseNotDelegated';
+  constructor() {
+    super('Auction House not delegated.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AuctionHouseNotDelegatedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1791, () => new AuctionHouseNotDelegatedError());
+createErrorFromNameLookup.set(
+  'AuctionHouseNotDelegated',
+  () => new AuctionHouseNotDelegatedError(),
+);
+
+/**
+ * BumpSeedNotInHashMap: 'Bump seed not in hash map.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BumpSeedNotInHashMapError extends Error {
+  readonly code: number = 0x1792;
+  readonly name: string = 'BumpSeedNotInHashMap';
+  constructor() {
+    super('Bump seed not in hash map.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BumpSeedNotInHashMapError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1792, () => new BumpSeedNotInHashMapError());
+createErrorFromNameLookup.set('BumpSeedNotInHashMap', () => new BumpSeedNotInHashMapError());
+
+/**
  * EscrowUnderRentExemption: 'The instruction would drain the escrow below rent exemption threshold'
  *
  * @category Errors
  * @category generated
  */
 export class EscrowUnderRentExemptionError extends Error {
-  readonly code: number = 0x178c;
+  readonly code: number = 0x1793;
   readonly name: string = 'EscrowUnderRentExemption';
   constructor() {
     super('The instruction would drain the escrow below rent exemption threshold');
@@ -612,11 +758,120 @@ export class EscrowUnderRentExemptionError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x178c, () => new EscrowUnderRentExemptionError());
+createErrorFromCodeLookup.set(0x1793, () => new EscrowUnderRentExemptionError());
 createErrorFromNameLookup.set(
   'EscrowUnderRentExemption',
   () => new EscrowUnderRentExemptionError(),
 );
+
+/**
+ * InvalidSeedsOrAuctionHouseNotDelegated: 'Invalid seeds or Auction House not delegated'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidSeedsOrAuctionHouseNotDelegatedError extends Error {
+  readonly code: number = 0x1794;
+  readonly name: string = 'InvalidSeedsOrAuctionHouseNotDelegated';
+  constructor() {
+    super('Invalid seeds or Auction House not delegated');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidSeedsOrAuctionHouseNotDelegatedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1794, () => new InvalidSeedsOrAuctionHouseNotDelegatedError());
+createErrorFromNameLookup.set(
+  'InvalidSeedsOrAuctionHouseNotDelegated',
+  () => new InvalidSeedsOrAuctionHouseNotDelegatedError(),
+);
+
+/**
+ * BuyerTradeStateNotValid: 'The buyer trade state was unable to be initialized.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BuyerTradeStateNotValidError extends Error {
+  readonly code: number = 0x1795;
+  readonly name: string = 'BuyerTradeStateNotValid';
+  constructor() {
+    super('The buyer trade state was unable to be initialized.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BuyerTradeStateNotValidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1795, () => new BuyerTradeStateNotValidError());
+createErrorFromNameLookup.set('BuyerTradeStateNotValid', () => new BuyerTradeStateNotValidError());
+
+/**
+ * MissingElementForPartialOrder: 'Partial order size and price must both be provided in a partial buy.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingElementForPartialOrderError extends Error {
+  readonly code: number = 0x1796;
+  readonly name: string = 'MissingElementForPartialOrder';
+  constructor() {
+    super('Partial order size and price must both be provided in a partial buy.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingElementForPartialOrderError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1796, () => new MissingElementForPartialOrderError());
+createErrorFromNameLookup.set(
+  'MissingElementForPartialOrder',
+  () => new MissingElementForPartialOrderError(),
+);
+
+/**
+ * NotEnoughTokensAvailableForPurchase: 'Amount of tokens available for purchase is less than the partial order amount.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotEnoughTokensAvailableForPurchaseError extends Error {
+  readonly code: number = 0x1797;
+  readonly name: string = 'NotEnoughTokensAvailableForPurchase';
+  constructor() {
+    super('Amount of tokens available for purchase is less than the partial order amount.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotEnoughTokensAvailableForPurchaseError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1797, () => new NotEnoughTokensAvailableForPurchaseError());
+createErrorFromNameLookup.set(
+  'NotEnoughTokensAvailableForPurchase',
+  () => new NotEnoughTokensAvailableForPurchaseError(),
+);
+
+/**
+ * PartialPriceMismatch: 'Calculated partial price does not not partial price that was provided.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PartialPriceMismatchError extends Error {
+  readonly code: number = 0x1798;
+  readonly name: string = 'PartialPriceMismatch';
+  constructor() {
+    super('Calculated partial price does not not partial price that was provided.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PartialPriceMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1798, () => new PartialPriceMismatchError());
+createErrorFromNameLookup.set('PartialPriceMismatch', () => new PartialPriceMismatchError());
 
 /**
  * Attempts to resolve a custom program error from the provided error code.

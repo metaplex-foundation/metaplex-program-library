@@ -20,13 +20,15 @@ export type ExecuteSaleInstructionArgs = {
   programAsSignerBump: number;
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
+  partialOrderSize: beet.COption<beet.bignum>;
+  partialOrderPrice: beet.COption<beet.bignum>;
 };
 /**
  * @category Instructions
  * @category ExecuteSale
  * @category generated
  */
-const executeSaleStruct = new beet.BeetArgsStruct<
+const executeSaleStruct = new beet.FixableBeetArgsStruct<
   ExecuteSaleInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -38,11 +40,31 @@ const executeSaleStruct = new beet.BeetArgsStruct<
     ['programAsSignerBump', beet.u8],
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
+    ['partialOrderSize', beet.coption(beet.u64)],
+    ['partialOrderPrice', beet.coption(beet.u64)],
   ],
   'ExecuteSaleInstructionArgs',
 );
 /**
  * Accounts required by the _executeSale_ instruction
+ *
+ * @property [_writable_] buyer
+ * @property [_writable_] seller
+ * @property [_writable_] tokenAccount
+ * @property [] tokenMint
+ * @property [] metadata
+ * @property [] treasuryMint
+ * @property [_writable_] escrowPaymentAccount
+ * @property [_writable_] sellerPaymentReceiptAccount
+ * @property [_writable_] buyerReceiptTokenAccount
+ * @property [] authority
+ * @property [] auctionHouse
+ * @property [_writable_] auctionHouseFeeAccount
+ * @property [_writable_] auctionHouseTreasury
+ * @property [_writable_] buyerTradeState
+ * @property [] sellerTradeState
+ * @property [_writable_] freeTradeState
+ * @property [] programAsSigner
  * @category Instructions
  * @category ExecuteSale
  * @category generated
@@ -180,7 +202,7 @@ export function createExecuteSaleInstruction(
     },
     {
       pubkey: sellerTradeState,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {

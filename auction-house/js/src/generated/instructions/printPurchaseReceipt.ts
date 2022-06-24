@@ -34,6 +34,12 @@ const printPurchaseReceiptStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _printPurchaseReceipt_ instruction
+ *
+ * @property [_writable_] purchaseReceipt
+ * @property [_writable_] listingReceipt
+ * @property [_writable_] bidReceipt
+ * @property [_writable_, **signer**] bookkeeper
+ * @property [] instruction
  * @category Instructions
  * @category PrintPurchaseReceipt
  * @category generated

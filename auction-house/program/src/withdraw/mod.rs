@@ -75,7 +75,7 @@ impl<'info> From<AuctioneerWithdraw<'info>> for Withdraw<'info> {
             receipt_account: a.receipt_account,
             escrow_payment_account: a.escrow_payment_account,
             treasury_mint: a.treasury_mint,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             token_program: a.token_program,
@@ -132,9 +132,13 @@ pub struct AuctioneerWithdraw<'info> {
     pub treasury_mint: Box<Account<'info, Mint>>,
 
     /// CHECK: Validated in withdraw_logic.
+    /// Auction House instance authority account.
+    pub authority: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in withdraw_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    #[account(mut)]
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    //#[account(mut)]
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(

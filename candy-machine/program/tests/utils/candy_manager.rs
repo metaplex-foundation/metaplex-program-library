@@ -8,6 +8,7 @@ use solana_sdk::{
     signature::{Keypair, Signer},
     transport,
 };
+use spl_associated_token_account::get_associated_token_address;
 
 use mpl_candy_machine::{
     constants::BOT_FEE,
@@ -20,7 +21,7 @@ use crate::{
     core::{
         helpers::{
             assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
-            get_balance, get_token_balance, mint_to_wallets, prepare_nft,
+            get_balance, get_token_account, get_token_balance, mint_to_wallets, prepare_nft,
         },
         MasterEditionV2 as MasterEditionManager, Metadata as MetadataManager,
     },
@@ -558,6 +559,16 @@ impl CandyManager {
             get_token_balance(context, &self.whitelist_info.minter_account).await;
         let metadata =
             MetadataManager::get_data_from_account(context, &new_nft.metadata_pubkey).await;
+        let associated_token_account =
+            get_associated_token_address(&self.minter.pubkey(), &metadata.mint);
+        let associated_token_account = get_token_account(context, &associated_token_account)
+            .await
+            .unwrap();
+
+        assert_eq!(
+            associated_token_account.amount, 1,
+            "Minter is not the owner"
+        );
         assert_eq!(
             candy_start.items_redeemed,
             candy_end.items_redeemed - 1,

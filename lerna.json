@@ -3,6 +3,7 @@
   "packages": [
     "core/js",
     "auction/js",
+    "auctioneer/js",
     "token-vault/js",
     "token-metadata/js",
     "metaplex/js",

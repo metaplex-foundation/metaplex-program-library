@@ -12,7 +12,7 @@ runs:
       uses: actions-rs/cargo@v1
       with:
         command: fmt
-        args: --all --manifest-path ${{ inputs.working-directory }}/Cargo.toml -- --check
+        args: --manifest-path ${{ inputs.working-directory }}/Cargo.toml -- --check
 
     - name: Run cargo clippy
       uses: actions-rs/cargo@v1

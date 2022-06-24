@@ -26,7 +26,7 @@ export type DeprecatedCreateMasterEditionInstructionArgs = {
  * @category DeprecatedCreateMasterEdition
  * @category generated
  */
-const DeprecatedCreateMasterEditionStruct = new beet.FixableBeetArgsStruct<
+export const DeprecatedCreateMasterEditionStruct = new beet.FixableBeetArgsStruct<
   DeprecatedCreateMasterEditionInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -67,7 +67,7 @@ export type DeprecatedCreateMasterEditionInstructionAccounts = {
   oneTimePrintingAuthorizationMintAuthority: web3.PublicKey;
 };
 
-const deprecatedCreateMasterEditionInstructionDiscriminator = 2;
+export const deprecatedCreateMasterEditionInstructionDiscriminator = 2;
 
 /**
  * Creates a _DeprecatedCreateMasterEdition_ instruction.

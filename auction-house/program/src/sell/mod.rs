@@ -13,20 +13,19 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     token_size: u64
 )]
 pub struct Sell<'info> {
-    /// CHECK: Validated in sell_logic.
+    /// CHECK: Verified through CPI
     /// User wallet account.
-    #[account(mut)]
     pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing token for sale.
     #[account(mut)]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Validated by assert_metadata_valid.
+    /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
-    /// CHECK: Validated as a signer in sell_logic.
+    /// CHECK: Verified through CPI
     /// Auction House authority account.
     pub authority: UncheckedAccount<'info>,
 
@@ -108,7 +107,7 @@ impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
             wallet: a.wallet,
             token_account: a.token_account,
             metadata: a.metadata,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: *a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             seller_trade_state: a.seller_trade_state,
@@ -127,7 +126,6 @@ impl<'info> From<AuctioneerSell<'info>> for Sell<'info> {
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64,
     token_size: u64
 )]
 pub struct AuctioneerSell<'info> {
@@ -144,9 +142,13 @@ pub struct AuctioneerSell<'info> {
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: UncheckedAccount<'info>,
 
+    /// CHECK: Verified through CPI
+    /// Auction House authority account.
+    pub authority: UncheckedAccount<'info>,
+
     /// CHECK: Validated in ah_auctioneer_pda seeds and as a signer in sell_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -156,6 +158,7 @@ pub struct AuctioneerSell<'info> {
             auction_house.treasury_mint.as_ref()
         ],
         bump=auction_house.bump,
+        has_one=authority,
         has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
@@ -184,7 +187,7 @@ pub struct AuctioneerSell<'info> {
             token_account.key().as_ref(),
             auction_house.treasury_mint.as_ref(),
             token_account.mint.as_ref(),
-            &buyer_price.to_le_bytes(),
+            &u64::MAX.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
         bump=trade_state_bump
@@ -262,7 +265,6 @@ pub fn auctioneer_sell<'info>(
     trade_state_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
-    buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
     let auction_house = &ctx.accounts.auction_house;
@@ -288,7 +290,7 @@ pub fn auctioneer_sell<'info>(
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
-        buyer_price,
+        u64::MAX,
         token_size,
     )
 }
@@ -316,6 +318,11 @@ fn sell_logic<'info>(
     let program_as_signer = &accounts.program_as_signer;
     let rent = &accounts.rent;
 
+    // 1. The wallet being a signer is the only condition in which an NFT can sell at a price of 0.
+    //    If the user does list at 0 then auction house can change the sale price if the 'can_change_sale_price' option is true.
+    // 2. If the trade is not priced at 0, the wallet holder has to be a signer since auction house cannot sign if listing over 0.
+    // 3. There must be one and only one signer; there can never be zero signers or two signers.
+    // 4. Auction house should be the signer for changing the price instead of user wallet for cases when seller lists at 0.
     if !wallet.to_account_info().is_signer
         && (buyer_price == 0
             || free_seller_trade_state.data_is_empty()

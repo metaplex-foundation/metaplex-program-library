@@ -25,7 +25,7 @@ export type UpdateMetadataAccountInstructionArgs = {
  * @category UpdateMetadataAccount
  * @category generated
  */
-const UpdateMetadataAccountStruct = new beet.FixableBeetArgsStruct<
+export const UpdateMetadataAccountStruct = new beet.FixableBeetArgsStruct<
   UpdateMetadataAccountInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -50,7 +50,7 @@ export type UpdateMetadataAccountInstructionAccounts = {
   updateAuthority: web3.PublicKey;
 };
 
-const updateMetadataAccountInstructionDiscriminator = 1;
+export const updateMetadataAccountInstructionDiscriminator = 1;
 
 /**
  * Creates a _UpdateMetadataAccount_ instruction.

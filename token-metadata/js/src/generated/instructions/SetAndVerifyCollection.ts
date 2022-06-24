@@ -13,10 +13,9 @@ import * as web3 from '@solana/web3.js';
  * @category SetAndVerifyCollection
  * @category generated
  */
-const SetAndVerifyCollectionStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
-  [['instructionDiscriminator', beet.u8]],
-  'SetAndVerifyCollectionInstructionArgs',
-);
+export const SetAndVerifyCollectionStruct = new beet.BeetArgsStruct<{
+  instructionDiscriminator: number;
+}>([['instructionDiscriminator', beet.u8]], 'SetAndVerifyCollectionInstructionArgs');
 /**
  * Accounts required by the _SetAndVerifyCollection_ instruction
  *
@@ -43,7 +42,7 @@ export type SetAndVerifyCollectionInstructionAccounts = {
   collectionAuthorityRecord?: web3.PublicKey;
 };
 
-const setAndVerifyCollectionInstructionDiscriminator = 25;
+export const setAndVerifyCollectionInstructionDiscriminator = 25;
 
 /**
  * Creates a _SetAndVerifyCollection_ instruction.

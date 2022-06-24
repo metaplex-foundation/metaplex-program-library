@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   changes:
     runs-on: ubuntu-latest
@@ -24,6 +28,7 @@ jobs:
               - 'core/**'
             package:
               - 'fixed-price-sale/**'
+
   build-lint-and-test-fixed-price-sale:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
@@ -37,3 +42,23 @@ jobs:
           working_dir: ./fixed-price-sale/js
           build_token_metadata: true
           skip_test: true
+
+  upgrade-version-and-publish-binary:
+    needs: changes
+    if:
+      ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-fixed-price-sale
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish updated artifacts to NPM and Github
+        uses: ./.github/actions/publish-to-npm
+        id: publish-to-npm
+        with:
+          npm-token: ${{ secrets.NPM_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-package-dir: ./fixed-price-sale/js
+          commit-sha: ${{ github.sha }}
+          branch: ${{ github.ref }}

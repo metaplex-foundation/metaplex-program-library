@@ -14,7 +14,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -34,7 +33,7 @@ mod create_meta_accounts {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(&mut context, name, symbol, uri, None, 10, false)
+            .create(&mut context, name, symbol, uri, None, 10, false, 0)
             .await
             .unwrap();
 
@@ -113,7 +112,7 @@ mod create_meta_accounts {
         let fake_mint_authority = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
 
-        create_mint(&mut context, &test_metadata.mint, &payer_pubkey, None)
+        create_mint(&mut context, &test_metadata.mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(
@@ -219,6 +218,7 @@ mod create_meta_accounts {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap_err();
@@ -232,7 +232,7 @@ mod create_meta_accounts {
     async fn fail_creators(
         mut context: ProgramTestContext,
         creators: Vec<Creator>,
-    ) -> TransportError {
+    ) -> BanksClientError {
         Metadata::new()
             .create_v2(
                 &mut context,

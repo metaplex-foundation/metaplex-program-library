@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category DeprecatedCreateReservationList
  * @category generated
  */
-const DeprecatedCreateReservationListStruct = new beet.BeetArgsStruct<{
+export const DeprecatedCreateReservationListStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
 }>([['instructionDiscriminator', beet.u8]], 'DeprecatedCreateReservationListInstructionArgs');
 /**
@@ -38,7 +38,7 @@ export type DeprecatedCreateReservationListInstructionAccounts = {
   metadata: web3.PublicKey;
 };
 
-const deprecatedCreateReservationListInstructionDiscriminator = 6;
+export const deprecatedCreateReservationListInstructionDiscriminator = 6;
 
 /**
  * Creates a _DeprecatedCreateReservationList_ instruction.
