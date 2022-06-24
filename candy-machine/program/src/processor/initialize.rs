@@ -81,19 +81,6 @@ pub fn handle_initialize_candy_machine(
     // only if we are not using hidden settings we will have space for
     // the config lines
     if candy_machine.data.hidden_settings.is_none() {
-        let vec_start = CONFIG_ARRAY_START
-            + 4
-            + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE;
-        let as_bytes = (candy_machine
-            .data
-            .items_available
-            .checked_div(8)
-            .ok_or(CandyError::NumericalOverflowError)? as u32)
-            .to_le_bytes();
-        for i in 0..4 {
-            data[vec_start + i] = as_bytes[i]
-        }
-    } else {
         let expected_size = CONFIG_ARRAY_START
             + 4
             + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE
@@ -113,6 +100,19 @@ pub fn handle_initialize_candy_machine(
             && account_info.realloc(expected_size, false).is_err()
         {
             return err!(CandyError::CandyMachineReallocFailed);
+        }
+
+        let vec_start = CONFIG_ARRAY_START
+            + 4
+            + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE;
+        let as_bytes = (candy_machine
+            .data
+            .items_available
+            .checked_div(8)
+            .ok_or(CandyError::NumericalOverflowError)? as u32)
+            .to_le_bytes();
+        for i in 0..4 {
+            data[vec_start + i] = as_bytes[i]
         }
 
         set_feature_flag(&mut candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX);
