@@ -72,8 +72,9 @@ pub fn handle_initialize_candy_machine(
     }
 
     // previous CLIs do not allocate the size needed to store the mint
-    // index array for the swap_remove - in this case the account
-    // size is increased
+    // index array for the swap_remove - during initialization we fund the
+    // account to have rent for the increased size, which will be done
+    // during the add_config_lines
     if candy_machine.data.hidden_settings.is_none() {
         let expected_size = CONFIG_ARRAY_START
             + 4
@@ -97,6 +98,8 @@ pub fn handle_initialize_candy_machine(
                 .minimum_balance(expected_size)
                 .saturating_sub(snapshot);
 
+            msg!("Adding {} lamports for account realloc", rent_delta);
+
             invoke(
                 &system_instruction::transfer(ctx.accounts.payer.key, account.key, rent_delta),
                 &[
@@ -105,10 +108,6 @@ pub fn handle_initialize_candy_machine(
                     ctx.accounts.system_program.to_account_info(),
                 ],
             )?;
-
-            if account.realloc(expected_size, false).is_err() {
-                return err!(CandyError::CandyMachineReallocFailed);
-            }
         }
 
         // new candy machines will be using swap_remove
@@ -151,7 +150,7 @@ fn get_space_for_candy(data: CandyMachineData) -> Result<usize> {
     } else {
         // not enforcing the allocation of the mint index array to maintain
         // compatibility with previous CLIs (the size will be increased if needed
-        // during the initialization)
+        // when adding config lines)
         CONFIG_ARRAY_START
             + 4
             + (data.items_available as usize) * CONFIG_LINE_SIZE

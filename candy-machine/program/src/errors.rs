@@ -74,4 +74,6 @@ pub enum CandyError {
     CandyCollectionRequiresRetainAuthority,
     #[msg("Could not increase candy machine account data length")]
     CandyMachineReallocFailed,
+    #[msg("Index greater than account length")]
+    IndexGreaterThanAccountLength,
 }

@@ -3,6 +3,7 @@ use std::cell::RefMut;
 use anchor_lang::prelude::*;
 use arrayref::array_ref;
 use mpl_token_metadata::state::{MAX_NAME_LENGTH, MAX_URI_LENGTH};
+use solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE;
 
 use crate::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE, SWAP_REMOVE_FEATURE_INDEX},
@@ -24,9 +25,7 @@ pub fn handle_add_config_lines(
 ) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
     let account = candy_machine.to_account_info();
-    let current_count = get_config_count(&account.data.borrow_mut())?;
-    let mut data = account.data.borrow_mut();
-    let mut fixed_config_lines = Vec::with_capacity(config_lines.len());
+
     // No risk overflow because you literally cant store this many in an account
     // going beyond u32 only happens with the hidden store candies, which dont use this.
     if index > (candy_machine.data.items_available as u32) - 1 {
@@ -34,7 +33,70 @@ pub fn handle_add_config_lines(
     }
     if candy_machine.data.hidden_settings.is_some() {
         return err!(CandyError::HiddenSettingsConfigsDoNotHaveConfigLines);
+    } else if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+        // checking if the account has the expected size
+        let expected_size = CONFIG_ARRAY_START
+            + 4
+            + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE
+            + 4
+            + ((candy_machine
+                .data
+                .items_available
+                .checked_div(8)
+                .ok_or(CandyError::NumericalOverflowError)?
+                + 1) as usize)
+            + 4
+            + (candy_machine.data.items_available as usize) * 4;
+
+        let current_size = account.data_len();
+
+        if current_size < expected_size {
+            // we can only increase the account by a maximum of MAX_PERMITTED_DATA_INCREASE
+            // per call, so we need to divide the increments between multiple calls to
+            // add_config_lines (this only happens when the CLI does not allocate all the
+            // space needed for the swap_remove mint index array
+
+            let increased_size = current_size
+                + std::cmp::min(expected_size - current_size, MAX_PERMITTED_DATA_INCREASE);
+
+            if account.realloc(increased_size, false).is_err() {
+                return err!(CandyError::CandyMachineReallocFailed);
+            }
+
+            msg!("Accoount realloc by {} bytes", increased_size - current_size);
+
+            // sanity check: we need to make sure that we have space to save the indices
+            // of the config lines being added
+
+            let position = (index as usize)
+                .checked_add(config_lines.len())
+                .ok_or(CandyError::NumericalOverflowError)?;
+
+            let needed_size = CONFIG_ARRAY_START
+                + 4
+                + (candy_machine.data.items_available as usize) * CONFIG_LINE_SIZE
+                + 4
+                + ((candy_machine
+                    .data
+                    .items_available
+                    .checked_div(8)
+                    .ok_or(CandyError::NumericalOverflowError)?
+                    + 1) as usize)
+                + 4
+                + position * 4;
+
+            if increased_size < needed_size {
+                // the only situation that this happens is when trying to add config
+                // lines in reverse order (from the last index to the first)
+                return err!(CandyError::IndexGreaterThanAccountLength);
+            }
+        }
     }
+
+    let current_count = get_config_count(&account.data.borrow_mut())?;
+    let mut data = account.data.borrow_mut();
+    let mut fixed_config_lines = Vec::with_capacity(config_lines.len());
+
     for line in &config_lines {
         let array_of_zeroes = vec![0u8; MAX_NAME_LENGTH - line.name.len()];
         let name = line.name.clone() + std::str::from_utf8(&array_of_zeroes).unwrap();
