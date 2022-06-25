@@ -3,6 +3,8 @@ use mpl_token_metadata::state::{
 };
 use solana_program::pubkey::Pubkey;
 
+// Default UUID for features flag.
+pub const DEFAULT_UUID: &str = "000000";
 pub const EXPIRE_OFFSET: i64 = 10 * 60;
 pub const BLOCK_HASHES: Pubkey =
     solana_program::pubkey!("SysvarRecentB1ockHashes11111111111111111111");

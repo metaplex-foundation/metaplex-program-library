@@ -5,7 +5,7 @@ use spl_token::state::Mint;
 
 use crate::{
     assert_initialized, assert_owned_by, cmp_pubkeys,
-    constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE, SWAP_REMOVE_FEATURE_INDEX},
+    constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE, DEFAULT_UUID, SWAP_REMOVE_FEATURE_INDEX},
     set_feature_flag, CandyError, CandyMachine, CandyMachineData,
 };
 
@@ -31,10 +31,6 @@ pub fn handle_initialize_candy_machine(
 ) -> Result<()> {
     let candy_machine_account = &mut ctx.accounts.candy_machine;
 
-    if data.uuid.len() != 6 {
-        return err!(CandyError::UuidMustBeExactly6Length);
-    }
-
     let mut candy_machine = CandyMachine {
         data,
         authority: ctx.accounts.authority.key(),
@@ -42,6 +38,8 @@ pub fn handle_initialize_candy_machine(
         token_mint: None,
         items_redeemed: 0,
     };
+    // default UUID for features flag
+    candy_machine.data.uuid = String::from(DEFAULT_UUID);
 
     if !ctx.remaining_accounts.is_empty() {
         let token_mint_info = &ctx.remaining_accounts[0];
