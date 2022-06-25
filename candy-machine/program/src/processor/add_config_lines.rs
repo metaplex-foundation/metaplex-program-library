@@ -63,7 +63,7 @@ pub fn handle_add_config_lines(
                 return err!(CandyError::CandyMachineReallocFailed);
             }
 
-            msg!("Accoount realloc by {} bytes", increased_size - current_size);
+            msg!("Account realloc by {} bytes", increased_size - current_size);
 
             // sanity check: we need to make sure that we have space to save the indices
             // of the config lines being added
