@@ -59,11 +59,9 @@ pub fn handle_add_config_lines(
             let increased_size = current_size
                 + std::cmp::min(expected_size - current_size, MAX_PERMITTED_DATA_INCREASE);
 
-            if account.realloc(increased_size, false).is_err() {
-                return err!(CandyError::CandyMachineReallocFailed);
-            }
-
             msg!("Account realloc by {} bytes", increased_size - current_size);
+            // increases the account size
+            account.realloc(increased_size, false)?;
 
             // sanity check: we need to make sure that we have space to save the indices
             // of the config lines being added

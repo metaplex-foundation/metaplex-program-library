@@ -89,6 +89,10 @@ pub fn handle_initialize_candy_machine(
             + 4
             + (candy_machine.data.items_available as usize) * 4;
 
+        if (expected_size as u64) > system_instruction::MAX_PERMITTED_DATA_LENGTH {
+            return err!(CandyError::CandyMachineExceedDataLimit);
+        }
+
         let account = candy_machine_account.to_account_info();
 
         if account.data_len() < expected_size {
