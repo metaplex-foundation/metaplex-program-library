@@ -428,6 +428,14 @@ pub enum MetadataError {
     /// 108 - Missing edition account for a non-fungible token type.
     #[error("This mint account has an edition but none was provided.")]
     MissingEditionAccount,
+
+    /// 109 - Not a Master Edition
+    #[error("This edition is not a Master Edition")]
+    NotAMasterEdition,
+
+    /// 110 - Master Edition has prints.
+    #[error("This Master Edition has existing prints")]
+    MasterEditionHasPrints,
 }
 
 impl PrintProgramError for MetadataError {
