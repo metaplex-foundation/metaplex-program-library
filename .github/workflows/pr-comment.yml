@@ -94,7 +94,7 @@ jobs:
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
-      - uses: ./.github/actions/setup-anchor/
+      - uses: ./.github/actions/install-anchor/
       # ====================================
 
       # actually make version updates in packages
