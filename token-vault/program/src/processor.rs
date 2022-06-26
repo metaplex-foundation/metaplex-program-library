@@ -90,26 +90,42 @@ pub fn process_instruction(
 }
 
 pub fn process_update_external_price_account(
-    _: &Pubkey,
+    program_id: &Pubkey,
     accounts: &[AccountInfo],
     price_per_share: u64,
     price_mint: Pubkey,
     allowed_to_combine: bool,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
-    let account = next_account_info(account_info_iter)?;
-    if !account.is_signer {
-        return Err(VaultError::ExternalPriceAccountMustBeSigner.into());
+
+    let external_pricing_info = next_account_info(account_info_iter)?;
+    let vault_authority_info = next_account_info(account_info_iter)?;
+    let vault_info = next_account_info(account_info_iter)?;
+
+    let vault = Vault::from_account_info(vault_info)?;
+    assert_owned_by(vault_info, program_id)?;
+
+    if &vault.pricing_lookup_address != external_pricing_info.key {
+        return Err(VaultError::ExternalPriceAccountMismatch.into());
     }
 
-    let mut external_price_account = ExternalPriceAccount::from_account_info(account)?;
+    if &vault.authority != vault_authority_info.key {
+        return Err(VaultError::VaultAuthorityMismatch.into());
+    }
+
+    if !vault_authority_info.is_signer {
+        return Err(VaultError::VaultAuthorityMustBeSigner.into());
+    }
+
+    let mut external_price_account =
+        ExternalPriceAccount::from_account_info(external_pricing_info)?;
 
     external_price_account.key = Key::ExternalAccountKeyV1;
     external_price_account.price_per_share = price_per_share;
     external_price_account.price_mint = price_mint;
     external_price_account.allowed_to_combine = allowed_to_combine;
 
-    external_price_account.serialize(&mut *account.data.borrow_mut())?;
+    external_price_account.serialize(&mut *external_pricing_info.data.borrow_mut())?;
 
     Ok(())
 }
@@ -457,8 +473,8 @@ pub fn process_withdraw_token_from_safety_deposit_box(
 
                 if fraction_mint.supply == 0 && vault.token_type_count == 0 {
                     vault.state = VaultState::Deactivated;
+                    vault.serialize(&mut *vault_info.data.borrow_mut())?;
                 }
-                vault.serialize(&mut *vault_info.data.borrow_mut())?;
             }
         }
         None => return Err(VaultError::NumericalOverflowError.into()),
@@ -614,6 +630,14 @@ pub fn process_combine_vault(program_id: &Pubkey, accounts: &[AccountInfo]) -> P
     assert_owned_by(redeem_treasury_info, token_program_info.key)?;
 
     assert_vault_authority_correct(&vault, vault_authority_info)?;
+
+    if &vault.pricing_lookup_address != external_pricing_info.key {
+        return Err(VaultError::ExternalPriceAccountMismatch.into());
+    }
+
+    if &vault.authority != vault_authority_info.key {
+        return Err(VaultError::VaultAuthorityMismatch.into());
+    }
 
     if vault.state != VaultState::Active {
         return Err(VaultError::VaultShouldBeActive.into());
