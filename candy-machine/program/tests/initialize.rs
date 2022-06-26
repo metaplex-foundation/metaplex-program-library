@@ -1,99 +1,80 @@
 #![cfg(feature = "test-bpf")]
 
-use anchor_lang::{
-    error, AnchorDeserialize, AnchorSerialize, InstructionData, Key, ToAccountMetas,
-};
-use borsh::BorshDeserialize;
 use std::{
-    convert::TryInto,
     str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
 
 use solana_gateway::{
-    borsh::{self as program_borsh, get_instance_packed_len},
     instruction::{self, NetworkFeature},
-    state::{
-        get_expire_address_with_seed, get_gatekeeper_address_with_seed,
-        get_gateway_token_address_with_seed, GatewayToken, GATEWAY_TOKEN_ADDRESS_SEED,
-    },
-    Gateway,
+    state::get_gatekeeper_address_with_seed,
 };
-use solana_gateway_program::processor::process_instruction;
+
 use solana_program_test::*;
 use solana_sdk::{
-    account_info::AccountInfo,
-    borsh::try_from_slice_unchecked,
     clock::UnixTimestamp,
-    instruction::{AccountMeta, Instruction, InstructionError},
-    msg,
-    program::invoke_signed,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
-    system_instruction, system_program, sysvar,
-    transaction::{Transaction, TransactionError},
-    transport::TransportError,
+    transaction::Transaction,
 };
 
 use crate::{
-    core::helpers::{airdrop, get_account, get_network_expire, get_network_token, prepare_nft},
+    core::helpers::airdrop,
     utils::{
         auto_config, candy_machine_program_test, helpers::sol, CandyManager, GatekeeperConfig,
         WhitelistConfig,
     },
 };
 use mpl_candy_machine::{
-    constants::{BOT_FEE, EXPIRE_OFFSET},
-    punish_bots, CandyError, CandyMachineData, GatekeeperConfig as GKConfig,
-    WhitelistMintMode::BurnEveryTime,
-    WhitelistMintSettings,
+    CandyMachineData, GatekeeperConfig as GKConfig, WhitelistMintMode::BurnEveryTime,
 };
-use utils::{custom_config, helpers::find_candy_creator, GatekeeperInfo};
+use utils::{custom_config, GatekeeperInfo};
 
 mod core;
 mod utils;
 
-// #[tokio::test]
-// async fn init_default_success() {
-//     let mut context = candy_machine_program_test().start_with_context().await;
-//     let context = &mut context;
+#[tokio::test]
+async fn init_default_success() {
+    let mut context = candy_machine_program_test().start_with_context().await;
+    let context = &mut context;
 
-//     let mut &candy_manager = CandyManager::init(
-//         context,
-//         true,
-//         true,
-//         Some(WhitelistConfig::new(BurnEveryTime, false, Some(1))),
-//     )
-//     .await;
+    let mut candy_manager = CandyManager::init(
+        context,
+        true,
+        true,
+        Some(WhitelistConfig::new(BurnEveryTime, false, Some(1))),
+        None,
+    )
+    .await;
 
-//     airdrop(context, &candy_manager.minter.pubkey(), sol(2.0))
-//         .await
-//         .unwrap();
-//     let candy_data = auto_config(&&candy_manager, None, true, true, None, None);
-//     candy_manager
-//         .create(context, candy_data.clone())
-//         .await
-//         .unwrap();
-//     candy_manager.fill_config_lines(context).await.unwrap();
-//     candy_manager.set_collection(context).await.unwrap();
+    airdrop(context, &candy_manager.minter.pubkey(), sol(2.0))
+        .await
+        .unwrap();
+    let candy_data = auto_config(&candy_manager, None, true, true, None, None);
+    candy_manager
+        .create(context, candy_data.clone())
+        .await
+        .unwrap();
+    candy_manager.fill_config_lines(context).await.unwrap();
+    candy_manager.set_collection(context).await.unwrap();
 
-//     let failed = candy_manager.mint_and_assert_bot_tax(context).await;
-//     if failed.is_err() {
-//         println!("Had an error when it potentially should have been bot tax!");
-//     }
-//     let candy_data = CandyMachineData {
-//         go_live_date: Some(0),
-//         price: 1,
-//         ..candy_data
-//     };
-//     candy_manager
-//         .update(context, None, candy_data)
-//         .await
-//         .unwrap();
-//     candy_manager
-//         .mint_and_assert_successful(context, Some(1), true)
-//         .await;
-// }
+    let failed = candy_manager.mint_and_assert_bot_tax(context).await;
+    if failed.is_err() {
+        println!("Had an error when it potentially should have been bot tax!");
+    }
+    let candy_data = CandyMachineData {
+        go_live_date: Some(0),
+        price: 1,
+        ..candy_data
+    };
+    candy_manager
+        .update(context, None, candy_data)
+        .await
+        .unwrap();
+    candy_manager
+        .mint_and_assert_successful(context, Some(1), true)
+        .await;
+}
 
 #[tokio::test]
 async fn bot_tax_on_gatekeeper() {
@@ -219,5 +200,8 @@ async fn bot_tax_on_gatekeeper() {
         .await
         .unwrap();
 
-    candy_manager.mint_and_assert_bot_tax(context).await.unwrap();
+    candy_manager
+        .mint_and_assert_bot_tax(context)
+        .await
+        .unwrap();
 }

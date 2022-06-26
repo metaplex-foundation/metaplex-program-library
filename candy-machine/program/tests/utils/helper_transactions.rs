@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use anchor_client::solana_sdk::{signature::Signer, system_program, sysvar};
 use anchor_lang::*;
 use solana_program::{
@@ -17,10 +15,7 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    core::{
-        helpers::{get_network_expire, get_network_token},
-        MasterEditionV2,
-    },
+    core::MasterEditionV2,
     utils::{
         candy_manager::{CollectionInfo, GatekeeperInfo, TokenInfo, WhitelistInfo},
         helpers::make_config_lines,
@@ -317,10 +312,7 @@ pub async fn mint_nft(
     }
 
     if gateway_info.set {
-        accounts.push(AccountMeta::new(
-            gateway_info.gateway_token_info,
-            false,
-        ));
+        accounts.push(AccountMeta::new(gateway_info.gateway_token_info, false));
 
         if gateway_info.gatekeeper_config.expire_on_use {
             accounts.push(AccountMeta::new_readonly(gateway_info.gateway_app, false));

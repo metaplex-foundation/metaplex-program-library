@@ -1,11 +1,11 @@
 use std::{fmt::Debug, str::FromStr};
 
-use anchor_lang::{accounts::program, AccountDeserialize};
+use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
-    signature::{read_keypair_file, Keypair, Signer},
+    signature::{Keypair, Signer},
     transport,
 };
 use spl_associated_token_account::get_associated_token_address;
@@ -447,7 +447,7 @@ impl CandyManager {
         println!("Init Candy Machine Manager");
         let candy_machine = Keypair::new();
         let authority = Keypair::new();
-        let minter = read_keypair_file("/Users/stranzhay/Programming/development.json").unwrap();
+        let minter = Keypair::new();
 
         airdrop(context, &authority.pubkey(), sol(10.0))
             .await
@@ -690,8 +690,6 @@ impl CandyManager {
             "Minter is not the owner"
         );
 
-        println!("here1 {:?}", candy_start.items_redeemed,);
-        println!("here2 {:?}", candy_end.items_redeemed);
         assert_eq!(
             candy_start.items_redeemed,
             candy_end.items_redeemed - 1,

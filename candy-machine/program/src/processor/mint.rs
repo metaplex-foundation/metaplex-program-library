@@ -1,4 +1,4 @@
-use std::{cell::RefMut, ops::Deref, str::FromStr};
+use std::{cell::RefMut, ops::Deref};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
@@ -8,10 +8,8 @@ use mpl_token_metadata::{
         create_master_edition_v3, create_metadata_accounts_v2, update_metadata_accounts_v2,
     },
     state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
-    utils::create_or_allocate_account_raw,
 };
 use solana_gateway::{
-    instruction::GatewayInstruction,
     state::{GatewayTokenAccess, InPlaceGatewayToken},
     Gateway,
 };
@@ -95,7 +93,7 @@ pub fn handle_mint_nft<'info>(
     ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
     creator_bump: u8,
 ) -> Result<()> {
-    let mut candy_machine = ctx.accounts.candy_machine.clone();
+    let candy_machine = &mut ctx.accounts.candy_machine.clone();
     let candy_machine_creator = &ctx.accounts.candy_machine_creator;
     // Note this is the wallet of the Candy machine
     let wallet = &ctx.accounts.wallet;
@@ -538,7 +536,7 @@ pub fn handle_mint_nft<'info>(
         .checked_rem(candy_machine.data.items_available)
         .ok_or(CandyError::NumericalOverflowError)? as usize;
 
-    let config_line = get_config_line(&candy_machine, modded, candy_machine.items_redeemed)?;
+    let config_line = get_config_line(candy_machine, modded, candy_machine.items_redeemed)?;
 
     candy_machine.items_redeemed = candy_machine
         .items_redeemed
