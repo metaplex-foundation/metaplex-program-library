@@ -4,6 +4,7 @@ import * as instructions from './generated/instructions';
 import * as accounts from './generated/accounts';
 import { PROGRAM_ID } from './generated';
 
+// super important comment
 export class CandyMachineProgram extends Program {
   static readonly PREFIX = 'metaplex';
   static readonly CONFIG = 'config';
