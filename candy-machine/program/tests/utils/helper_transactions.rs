@@ -22,7 +22,7 @@ use crate::{
         MasterEditionV2,
     },
     utils::{
-        candy_manager::{CollectionInfo, TokenInfo, WhitelistInfo},
+        candy_manager::{CollectionInfo, GatekeeperInfo, TokenInfo, WhitelistInfo},
         helpers::make_config_lines,
     },
 };
@@ -277,6 +277,7 @@ pub async fn mint_nft(
     token_info: TokenInfo,
     whitelist_info: WhitelistInfo,
     collection_info: CollectionInfo,
+    gateway_info: GatekeeperInfo,
 ) -> transport::Result<()> {
     let metadata = new_nft.metadata_pubkey;
     let master_edition = new_nft.pubkey;
@@ -313,6 +314,20 @@ pub async fn mint_nft(
     if token_info.set {
         accounts.push(AccountMeta::new(token_info.minter_account, false));
         accounts.push(AccountMeta::new_readonly(payer.pubkey(), false));
+    }
+
+    if gateway_info.set {
+        accounts.push(AccountMeta::new(
+            gateway_info.gateway_token_info,
+            false,
+        ));
+
+        if gateway_info.gatekeeper_config.expire_on_use {
+            accounts.push(AccountMeta::new_readonly(gateway_info.gateway_app, false));
+            if let Some(expire_token) = gateway_info.network_expire_feature {
+                accounts.push(AccountMeta::new_readonly(expire_token, false));
+            }
+        }
     }
 
     let data = mpl_candy_machine::instruction::MintNft { creator_bump }.data();

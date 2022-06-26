@@ -1,4 +1,4 @@
-use std::{cell::RefMut, ops::Deref};
+use std::{cell::RefMut, ops::Deref, str::FromStr};
 
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
@@ -8,8 +8,10 @@ use mpl_token_metadata::{
         create_master_edition_v3, create_metadata_accounts_v2, update_metadata_accounts_v2,
     },
     state::{MAX_NAME_LENGTH, MAX_URI_LENGTH},
+    utils::create_or_allocate_account_raw,
 };
 use solana_gateway::{
+    instruction::GatewayInstruction,
     state::{GatewayTokenAccess, InPlaceGatewayToken},
     Gateway,
 };
@@ -247,17 +249,6 @@ pub fn handle_mint_nft<'info>(
 
         remaining_accounts_counter += 1;
 
-        let gateway_verification_result = {
-            Gateway::verify_gateway_token_account_info(
-                &gateway_token_info,
-                payer.deref().clone().key,
-                &gatekeeper.gatekeeper_network,
-                None,
-            )
-        };
-
-        msg!("gateway results {:?}", gateway_verification_result);
-
         // Eval function used in the gateway CPI
         let eval_function =
             |token: &InPlaceGatewayToken<&[u8]>| match (&candy_machine.data, token.expire_time()) {
@@ -279,21 +270,12 @@ pub fn handle_mint_nft<'info>(
                 _ => Ok(()),
             };
 
-        let borrow = gateway_token_info.data.borrow();
-        msg!("eval before{:?}", gateway_token_info);
-        let gateway_token = InPlaceGatewayToken::new(&**borrow)?;
-        msg!("eval before");
-
-        msg!("eval before");
-        let eval = eval_function(&gateway_token)?;
-        msg!("eval after {:?}", eval);
         if gatekeeper.expire_on_use {
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::GatewayAppMissing);
             }
 
             let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
-            remaining_accounts_counter += 1;
 
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::NetworkExpireFeatureMissing);
@@ -301,15 +283,14 @@ pub fn handle_mint_nft<'info>(
             let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
 
-            Gateway::verify_and_expire_token_with_eval(
+            if let Err(err) = Gateway::verify_and_expire_token_with_eval(
                 gateway_app.clone(),
                 gateway_token_info.clone(),
                 payer.deref().clone(),
                 &gatekeeper.gatekeeper_network,
                 network_expire_feature.clone(),
                 eval_function,
-            )
-            .unwrap_or_else(|err| {
+            ) {
                 punish_bots(
                     None,
                     payer.to_account_info(),
@@ -317,18 +298,17 @@ pub fn handle_mint_nft<'info>(
                     ctx.accounts.system_program.to_account_info(),
                     BOT_FEE,
                     Some(err),
-                )
-                .unwrap();
-            });
+                )?;
+                return Ok(());
+            }
         } else {
-            Gateway::verify_gateway_token_with_eval(
+            if let Err(err) = Gateway::verify_gateway_token_with_eval(
                 gateway_token_info,
                 &payer.key(),
                 &gatekeeper.gatekeeper_network,
                 None,
                 eval_function,
-            )
-            .unwrap_or_else(|err| {
+            ) {
                 punish_bots(
                     None,
                     payer.to_account_info(),
@@ -336,9 +316,9 @@ pub fn handle_mint_nft<'info>(
                     ctx.accounts.system_program.to_account_info(),
                     BOT_FEE,
                     Some(err),
-                )
-                .unwrap();
-            });
+                )?;
+                return Ok(());
+            }
         }
     }
 

@@ -1,27 +1,54 @@
 #![cfg(feature = "test-bpf")]
 
-use std::str::FromStr;
+use anchor_lang::{
+    error, AnchorDeserialize, AnchorSerialize, InstructionData, Key, ToAccountMetas,
+};
+use borsh::BorshDeserialize;
+use std::{
+    convert::TryInto,
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
-use anchor_lang::{AnchorDeserialize, InstructionData, ToAccountMetas};
-
+use solana_gateway::{
+    borsh::{self as program_borsh, get_instance_packed_len},
+    instruction::{self, NetworkFeature},
+    state::{
+        get_expire_address_with_seed, get_gatekeeper_address_with_seed,
+        get_gateway_token_address_with_seed, GatewayToken, GATEWAY_TOKEN_ADDRESS_SEED,
+    },
+    Gateway,
+};
 use solana_gateway_program::processor::process_instruction;
 use solana_program_test::*;
 use solana_sdk::{
+    account_info::AccountInfo,
     borsh::try_from_slice_unchecked,
+    clock::UnixTimestamp,
     instruction::{AccountMeta, Instruction, InstructionError},
+    msg,
+    program::invoke_signed,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
-    system_program, sysvar,
+    system_instruction, system_program, sysvar,
     transaction::{Transaction, TransactionError},
     transport::TransportError,
 };
 
 use crate::{
     core::helpers::{airdrop, get_account, get_network_expire, get_network_token, prepare_nft},
-    utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager, WhitelistConfig},
+    utils::{
+        auto_config, candy_machine_program_test, helpers::sol, CandyManager, GatekeeperConfig,
+        WhitelistConfig,
+    },
 };
-use mpl_candy_machine::{CandyMachineData, GatekeeperConfig, WhitelistMintMode::BurnEveryTime};
-use utils::{custom_config, helpers::find_candy_creator};
+use mpl_candy_machine::{
+    constants::{BOT_FEE, EXPIRE_OFFSET},
+    punish_bots, CandyError, CandyMachineData, GatekeeperConfig as GKConfig,
+    WhitelistMintMode::BurnEveryTime,
+    WhitelistMintSettings,
+};
+use utils::{custom_config, helpers::find_candy_creator, GatekeeperInfo};
 
 mod core;
 mod utils;
@@ -31,7 +58,7 @@ mod utils;
 //     let mut context = candy_machine_program_test().start_with_context().await;
 //     let context = &mut context;
 
-//     let mut candy_manager = CandyManager::init(
+//     let mut &candy_manager = CandyManager::init(
 //         context,
 //         true,
 //         true,
@@ -75,13 +102,32 @@ async fn bot_tax_on_gatekeeper() {
     program.add_program(
         "solana_gateway_program",
         Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
-        processor!(process_instruction),
+        None,
     );
 
     let mut context = program.start_with_context().await;
     let context = &mut context;
 
-    let mut candy_manager = CandyManager::init(context, true, false, None).await;
+    let gatekeeper_network = Keypair::new();
+    let gatekeeper_authority = Keypair::new();
+
+    let mut candy_manager = CandyManager::init(
+        context,
+        false,
+        false,
+        None,
+        Some(GatekeeperInfo {
+            set: true,
+            network_expire_feature: None,
+            gateway_app: Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
+            gateway_token_info: gatekeeper_network.pubkey(),
+            gatekeeper_config: GatekeeperConfig {
+                gatekeeper_network: gatekeeper_network.pubkey(),
+                expire_on_use: true,
+            },
+        }),
+    )
+    .await;
 
     airdrop(context, &candy_manager.minter.pubkey(), sol(2.0))
         .await
@@ -95,9 +141,8 @@ async fn bot_tax_on_gatekeeper() {
         None,
         None,
         None,
-        Some(GatekeeperConfig {
-            gatekeeper_network: Pubkey::from_str("ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6")
-                .unwrap(),
+        Some(GKConfig {
+            gatekeeper_network: gatekeeper_network.pubkey(),
             expire_on_use: true,
         }),
     );
@@ -108,92 +153,71 @@ async fn bot_tax_on_gatekeeper() {
         .unwrap();
     candy_manager.fill_config_lines(context).await.unwrap();
 
-    let nft_info = prepare_nft(context, &candy_manager.minter).await;
-    let (candy_machine_creator, creator_bump) =
-        find_candy_creator(&candy_manager.candy_machine.pubkey());
-
-    let metadata = nft_info.metadata_pubkey;
-    let master_edition = nft_info.pubkey;
-    let mint = nft_info.mint_pubkey;
-
-    let network_token = get_network_token(
-        &candy_manager.minter.pubkey(),
-        &Pubkey::from_str("ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6").unwrap(),
-        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
-    );
-
-    let expire_token = get_network_expire(
-        &Pubkey::from_str("ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6").unwrap(),
-        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
-    );
-
-    // inserting incorrect program_id
-    let program_id = Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap();
-
-    let mut accounts = mpl_candy_machine::accounts::MintNFT {
-        candy_machine: candy_manager.candy_machine.pubkey(),
-        candy_machine_creator: candy_machine_creator,
-        payer: candy_manager.minter.pubkey(),
-        wallet: candy_manager.wallet,
-        metadata,
-        mint,
-        mint_authority: candy_manager.minter.pubkey(),
-        update_authority: candy_manager.minter.pubkey(),
-        master_edition,
-        token_metadata_program: mpl_token_metadata::id(),
-        token_program: spl_token::id(),
-        system_program: system_program::id(),
-        rent: sysvar::rent::id(),
-        clock: sysvar::clock::id(),
-        recent_blockhashes: sysvar::slot_hashes::id(),
-        instruction_sysvar_account: sysvar::instructions::id(),
-    }
-    .to_account_metas(None);
-
-    let network_account = AccountMeta::new(network_token.0, false);
-    accounts.push(network_account);
-    accounts.push(AccountMeta::new_readonly(expire_token.0, false));
-    accounts.push(AccountMeta::new_readonly(program_id, false));
-
-    let data = mpl_candy_machine::instruction::MintNft { creator_bump }.data();
-
-    let mut instructions = Vec::new();
-    let mut signers = Vec::new();
-
-    let mint_ix = Instruction {
-        program_id: mpl_candy_machine::id(),
-        data,
-        accounts,
-    };
-    instructions.push(mint_ix);
-    signers.push(&candy_manager.minter);
-
-    let account = context
-        .banks_client
-        .get_account(program_id)
-        .await
-        .unwrap()
-        .unwrap();
-    println!("account {:?}", account);
-
-    let tx = Transaction::new_signed_with_payer(
-        &instructions,
-        Some(&candy_manager.minter.pubkey()),
-        &signers,
+    let transaction = Transaction::new_signed_with_payer(
+        &[instruction::add_gatekeeper(
+            &context.payer.pubkey(),
+            &gatekeeper_authority.pubkey(),
+            &gatekeeper_network.pubkey(),
+        )],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &gatekeeper_network],
         context.last_blockhash,
     );
 
-    let err = context
+    context
         .banks_client
-        .process_transaction(tx)
+        .process_transaction(transaction)
         .await
-        .unwrap_err();
+        .unwrap();
 
-    // match err {
-    //     TransportError::TransactionError(TransactionError::Error(
-    //         0,
-    //         InstructionError::Custom(6000),
-    //     )) => (),
-    //     _ => panic!("Expected custom error"),
-    // }
+    let (gatekeeper_account, _) = get_gatekeeper_address_with_seed(
+        &gatekeeper_authority.pubkey(),
+        &gatekeeper_network.pubkey(),
+    );
+
+    let start = SystemTime::now();
+    let now = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+
+    // creating with an already expired token to fail the mint
+    let transaction = Transaction::new_signed_with_payer(
+        &[instruction::issue_vanilla(
+            &context.payer.pubkey(),
+            &candy_manager.minter.pubkey(),
+            &gatekeeper_account,
+            &gatekeeper_authority.pubkey(),
+            &gatekeeper_network.pubkey(),
+            None,
+            Some(now.as_secs() as UnixTimestamp - 10),
+        )],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &gatekeeper_authority],
+        context.last_blockhash,
+    );
+
+    context
+        .banks_client
+        .process_transaction(transaction)
+        .await
+        .unwrap();
+
+    let block_hash = context.banks_client.get_latest_blockhash().await.unwrap();
+
+    context
+        .banks_client
+        .process_transaction(Transaction::new_signed_with_payer(
+            &[instruction::add_feature_to_network(
+                context.payer.pubkey(),
+                gatekeeper_network.pubkey(),
+                NetworkFeature::UserTokenExpiry,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &gatekeeper_network],
+            block_hash,
+        ))
+        .await
+        .unwrap();
+
+    candy_manager.mint_and_assert_bot_tax(context).await.unwrap();
 }

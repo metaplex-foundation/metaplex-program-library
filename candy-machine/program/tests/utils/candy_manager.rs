@@ -1,6 +1,6 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, str::FromStr};
 
-use anchor_lang::AccountDeserialize;
+use anchor_lang::{accounts::program, AccountDeserialize};
 use mpl_token_metadata::pda::find_collection_authority_account;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
@@ -19,8 +19,9 @@ use mpl_candy_machine::{
 use crate::{
     core::{
         helpers::{
-            assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
-            get_balance, get_token_account, get_token_balance, mint_to_wallets, prepare_nft, airdrop,
+            airdrop, assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
+            get_balance, get_network_expire, get_network_token, get_token_account,
+            get_token_balance, mint_to_wallets, prepare_nft,
         },
         MasterEditionV2 as MasterEditionManager, Metadata as MetadataManager,
     },
@@ -41,6 +42,7 @@ pub struct CandyManager {
     pub collection_info: CollectionInfo,
     pub token_info: TokenInfo,
     pub whitelist_info: WhitelistInfo,
+    pub gateway_info: GatekeeperInfo,
 }
 
 impl Clone for CandyManager {
@@ -53,6 +55,7 @@ impl Clone for CandyManager {
             collection_info: self.collection_info.clone(),
             token_info: self.token_info.clone(),
             whitelist_info: self.whitelist_info.clone(),
+            gateway_info: self.gateway_info.clone(),
         }
     }
 }
@@ -218,24 +221,80 @@ impl Clone for TokenInfo {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct GatekeeperConfig {
+    pub gatekeeper_network: Pubkey,
+    pub expire_on_use: bool,
+}
+
+impl GatekeeperConfig {
+    pub fn new(gatekeeper_network: Pubkey, expire_on_use: bool) -> Self {
+        GatekeeperConfig {
+            gatekeeper_network,
+            expire_on_use,
+        }
+    }
+}
+
+impl Default for GatekeeperConfig {
+    fn default() -> Self {
+        GatekeeperConfig {
+            gatekeeper_network: Pubkey::from_str("ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6")
+                .unwrap(),
+            expire_on_use: false,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct GatekeeperInfo {
-    pub network_expire_feature_account: Option<Pubkey>,
-    pub gateway_app_account: Option<Pubkey>,
-    pub gateway_token_info_account: Pubkey,
+    pub set: bool,
+    pub network_expire_feature: Option<Pubkey>,
+    pub gateway_app: Pubkey,
+    pub gateway_token_info: Pubkey,
+    pub gatekeeper_config: GatekeeperConfig,
 }
 
 impl GatekeeperInfo {
     #[allow(dead_code)]
     pub fn new(
-        network_expire_feature_account: Option<Pubkey>,
-        gateway_app_account: Option<Pubkey>,
-        gateway_token_info_account: Pubkey,
+        set: bool,
+        network_expire_feature: Option<Pubkey>,
+        gateway_app: Pubkey,
+        gateway_token_info: Pubkey,
+        gatekeeper_config: GatekeeperConfig,
     ) -> Self {
         GatekeeperInfo {
-            network_expire_feature_account,
-            gateway_app_account,
-            gateway_token_info_account,
+            set,
+            network_expire_feature,
+            gateway_app,
+            gateway_token_info,
+            gatekeeper_config,
+        }
+    }
+
+    pub async fn init(
+        set: bool,
+        gateway_app: Pubkey,
+        gateway_token_info: Pubkey,
+        gatekeeper_config: GatekeeperConfig,
+        payer: Pubkey,
+    ) -> Self {
+        let network_token = get_network_token(&payer, &gateway_token_info, gateway_app);
+
+        let expire_token: Option<Pubkey> = if gatekeeper_config.expire_on_use {
+            let expire_token = get_network_expire(&gateway_token_info, gateway_app);
+            Some(expire_token.0)
+        } else {
+            None
+        };
+
+        GatekeeperInfo {
+            set,
+            network_expire_feature: expire_token,
+            gateway_app,
+            gateway_token_info: network_token.0,
+            gatekeeper_config,
         }
     }
 }
@@ -243,9 +302,11 @@ impl GatekeeperInfo {
 impl Clone for GatekeeperInfo {
     fn clone(&self) -> Self {
         GatekeeperInfo {
-            network_expire_feature_account: self.network_expire_feature_account,
-            gateway_app_account: self.gateway_app_account,
-            gateway_token_info_account: clone_pubkey(&self.gateway_token_info_account),
+            set: self.set,
+            network_expire_feature: self.network_expire_feature,
+            gateway_app: clone_pubkey(&self.gateway_app),
+            gateway_token_info: clone_pubkey(&self.gateway_token_info),
+            gatekeeper_config: self.gatekeeper_config.clone(),
         }
     }
 }
@@ -362,6 +423,7 @@ impl CandyManager {
         collection_info: CollectionInfo,
         token_info: TokenInfo,
         whitelist_info: WhitelistInfo,
+        gateway_info: GatekeeperInfo,
     ) -> Self {
         CandyManager {
             candy_machine,
@@ -371,6 +433,7 @@ impl CandyManager {
             collection_info,
             token_info,
             whitelist_info,
+            gateway_info,
         }
     }
 
@@ -379,6 +442,7 @@ impl CandyManager {
         collection: bool,
         token: bool,
         whitelist: Option<WhitelistConfig>,
+        gatekeeper: Option<GatekeeperInfo>,
     ) -> Self {
         println!("Init Candy Machine Manager");
         let candy_machine = Keypair::new();
@@ -431,6 +495,29 @@ impl CandyManager {
             }
         };
 
+        let gateway_info = match gatekeeper {
+            Some(config) => {
+                GatekeeperInfo::init(
+                    true,
+                    config.gateway_app,
+                    config.gateway_token_info,
+                    config.gatekeeper_config,
+                    minter.pubkey(),
+                )
+                .await
+            }
+            None => {
+                GatekeeperInfo::init(
+                    false,
+                    Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
+                    Pubkey::from_str("ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6").unwrap(),
+                    GatekeeperConfig::default(),
+                    minter.pubkey(),
+                )
+                .await
+            }
+        };
+
         let wallet = match &token_info.set {
             true => token_info.auth_account,
             false => authority.pubkey(),
@@ -444,6 +531,7 @@ impl CandyManager {
             collection_info,
             token_info,
             whitelist_info,
+            gateway_info,
         )
     }
 
@@ -555,6 +643,7 @@ impl CandyManager {
             self.token_info.clone(),
             self.whitelist_info.clone(),
             self.collection_info.clone(),
+            self.gateway_info.clone(),
         )
         .await?;
         Ok(nft_info)
