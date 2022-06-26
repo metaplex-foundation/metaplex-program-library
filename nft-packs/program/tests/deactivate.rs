@@ -6,7 +6,7 @@ use mpl_nft_packs::{
     state::{PackDistributionType, PackSetState},
 };
 use num_traits::FromPrimitive;
-use solana_program::{instruction::InstructionError, system_instruction, clock::Clock};
+use solana_program::{clock::Clock, instruction::InstructionError, system_instruction};
 use solana_program_test::*;
 use solana_sdk::{
     signature::Keypair,
@@ -39,9 +39,6 @@ async fn setup() -> (
         .await
         .unwrap();
 
-    let mut test_randomness_oracle = TestRandomnessOracle::new();
-    test_randomness_oracle.init(&mut context).await.unwrap();
-
     let test_pack_set = TestPackSet::new(store_key);
     test_pack_set
         .init(
@@ -56,7 +53,6 @@ async fn setup() -> (
                 redeem_start_date,
                 redeem_end_date,
             },
-            &test_randomness_oracle.keypair.pubkey(),
         )
         .await
         .unwrap();

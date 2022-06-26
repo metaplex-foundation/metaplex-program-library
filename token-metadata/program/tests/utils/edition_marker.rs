@@ -10,10 +10,9 @@ use solana_program::{
     instruction::{AccountMeta, Instruction},
     sysvar,
 };
-use solana_program_test::*;
+use solana_program_test::BanksClientError;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -89,7 +88,7 @@ impl EditionMarker {
         vault: &Vault,
         safety_deposit_box: &Pubkey,
         store: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let metaplex_token_vault_id = mpl_token_vault::id();
         let vault_pubkey = vault.keypair.pubkey();
 
@@ -101,7 +100,7 @@ impl EditionMarker {
         let (_authority, _) =
             Pubkey::find_program_address(vault_mint_seeds, &metaplex_token_vault_id);
 
-        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
         create_token_account(
             context,
             &self.token,
@@ -146,11 +145,11 @@ impl EditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn create(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
-        create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
+    pub async fn create(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
+        create_mint(context, &self.mint, &context.payer.pubkey(), None, 0).await?;
         create_token_account(
             context,
             &self.token,
@@ -189,13 +188,13 @@ impl EditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create_with_invalid_token_program(
         &self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
         let program_id = mpl_token_metadata::id();
 
@@ -248,6 +247,6 @@ impl EditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

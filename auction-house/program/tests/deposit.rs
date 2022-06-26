@@ -1,80 +1,250 @@
-// mod utils;
+#![cfg(feature = "test-bpf")]
+pub mod common;
+pub mod utils;
 
-// #[cfg(test)]
-// mod deposit {
+use common::*;
+use mpl_auction_house::pda::find_auctioneer_pda;
+use mpl_testing_utils::{solana::airdrop, utils::Metadata};
+use solana_sdk::{signature::Keypair, signer::Signer};
+use std::assert_eq;
+use utils::{helpers::default_scopes, setup_functions::*};
 
-//     use super::utils::{
-//         helpers::derive_auction_house_buyer_escrow_account_key,
-//         setup_functions::{setup_auction_house, setup_client, setup_program},
-//     };
-//     use anchor_client::{
-//         solana_sdk::{signature::Keypair, signer::Signer, system_program, sysvar},
-//         ClientError,
-//     };
-//     use mpl_auction_house::{
-//         accounts as mpl_auction_house_accounts, instruction as mpl_auction_house_instruction,
-//         AuctionHouse,
-//     };
+#[tokio::test]
+async fn deposit_success() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            1,
+        )
+        .await
+        .unwrap();
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), ONE_SOL * 2)
+        .await
+        .unwrap();
+    let (acc, deposit_tx) = deposit(&mut context, &ahkey, &ah, &test_metadata, &buyer, ONE_SOL);
 
-//     #[test]
-//     fn success() -> Result<(), ClientError> {
-//         // Payer Wallet
-//         let payer_wallet = Keypair::new();
+    context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap();
 
-//         // Client
-//         let client = setup_client(payer_wallet);
+    let escrow_payment_account_data_len = 0;
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(escrow_payment_account_data_len);
 
-//         // Program
-//         let program = setup_program(client);
+    let escrow = context
+        .banks_client
+        .get_account(acc.escrow_payment_account)
+        .await
+        .expect("Error Getting Escrow")
+        .expect("Trade State Escrow");
+    assert_eq!(escrow.lamports, ONE_SOL + rent_exempt_min);
+}
 
-//         // Airdrop the payer wallet
-//         let signature = program
-//             .rpc()
-//             .request_airdrop(&program.payer(), 10_000_000_000)?;
-//         program.rpc().poll_for_signature(&signature)?;
+#[tokio::test]
+async fn auctioneer_deposit_success() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            1,
+        )
+        .await
+        .unwrap();
 
-//         // Auction house authority
-//         let authority = Keypair::new().pubkey();
+    let deposit_amount = 1_000_000_000;
 
-//         // Treasury mint key
-//         let t_mint_key = spl_token::native_mint::id();
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
 
-//         let auction_house_key = setup_auction_house(&program, &authority, &t_mint_key).unwrap();
-//         let auction_house_account: AuctionHouse = program.account(auction_house_key)?;
-//         let wallet = program.payer();
+    delegate_auctioneer(
+        &mut context,
+        ahkey,
+        &ah_auth,
+        auctioneer_authority.pubkey(),
+        auctioneer_pda,
+        default_scopes(),
+    )
+    .await
+    .unwrap();
 
-//         let (escrow_payment_account, escrow_payment_bump) =
-//             derive_auction_house_buyer_escrow_account_key(
-//                 &auction_house_key,
-//                 &wallet,
-//                 &program.id(),
-//             );
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), deposit_amount * 2)
+        .await
+        .unwrap();
+    let (acc, deposit_tx) = auctioneer_deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        &auctioneer_authority,
+        deposit_amount,
+    );
 
-//         let amount: u64 = 500_000_000;
+    context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap();
 
-//         program
-//             .request()
-//             .accounts(mpl_auction_house_accounts::Deposit {
-//                 wallet,
-//                 payment_account: program.payer(),
-//                 transfer_authority: system_program::id(),
-//                 escrow_payment_account,
-//                 treasury_mint: auction_house_account.treasury_mint,
-//                 authority,
-//                 auction_house: auction_house_key,
-//                 auction_house_fee_account: auction_house_account.auction_house_fee_account,
-//                 token_program: spl_token::id(),
-//                 system_program: system_program::id(),
-//                 rent: sysvar::rent::id(),
-//             })
-//             .args(mpl_auction_house_instruction::Deposit {
-//                 escrow_payment_bump,
-//                 amount,
-//             })
-//             .send()?;
+    let escrow_payment_account_data_len = 0;
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(escrow_payment_account_data_len);
 
-//         let escrow_payment_account_obj = program.rpc().get_account(&escrow_payment_account)?;
-//         assert_eq!(amount, escrow_payment_account_obj.lamports);
-//         Ok(())
-//     }
-// }
+    let escrow = context
+        .banks_client
+        .get_account(acc.escrow_payment_account)
+        .await
+        .expect("Error Getting Escrow")
+        .expect("Trade State Escrow");
+    assert_eq!(escrow.lamports, deposit_amount + rent_exempt_min);
+}
+
+#[tokio::test]
+async fn auctioneer_deposit_missing_scope_fails() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, ah_auth) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            1,
+        )
+        .await
+        .unwrap();
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority.pubkey());
+
+    // Missing Deposit scope, so tx should fail.
+    let scopes = vec![];
+
+    delegate_auctioneer(
+        &mut context,
+        ahkey,
+        &ah_auth,
+        auctioneer_authority.pubkey(),
+        auctioneer_pda,
+        scopes.clone(),
+    )
+    .await
+    .unwrap();
+
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), 2000000000)
+        .await
+        .unwrap();
+    let (_, deposit_tx) = auctioneer_deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        &auctioneer_authority,
+        1000000000,
+    );
+
+    let error = context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap_err();
+    assert_error!(error, MISSING_AUCTIONEER_SCOPE);
+}
+
+#[tokio::test]
+async fn auctioneer_deposit_no_delegate_fails() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    // Payer Wallet
+    let (ah, ahkey, _) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let test_metadata = Metadata::new();
+    airdrop(&mut context, &test_metadata.token.pubkey(), 1000000000)
+        .await
+        .unwrap();
+    test_metadata
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            1,
+        )
+        .await
+        .unwrap();
+
+    // Delegate external auctioneer authority.
+    let auctioneer_authority = Keypair::new();
+
+    let buyer = Keypair::new();
+    airdrop(&mut context, &buyer.pubkey(), 2000000000)
+        .await
+        .unwrap();
+    let (_acc, deposit_tx) = auctioneer_deposit(
+        &mut context,
+        &ahkey,
+        &ah,
+        &test_metadata,
+        &buyer,
+        &auctioneer_authority,
+        1000000000,
+    );
+
+    let error = context
+        .banks_client
+        .process_transaction(deposit_tx)
+        .await
+        .unwrap_err();
+
+    assert_error!(error, INVALID_SEEDS);
+}

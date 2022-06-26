@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::{error::MetadataError, id, instruction, state::Key};
 use num_traits::FromPrimitive;
@@ -8,7 +8,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -30,6 +29,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -69,6 +69,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -111,6 +112,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -155,6 +157,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -184,11 +187,12 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(
@@ -212,7 +216,7 @@ mod create_master_edition {
 
         let test_master_edition = MasterEditionV2::new(&Metadata {
             mint: fake_mint,
-            pubkey: test_metadata.pubkey.clone(),
+            pubkey: test_metadata.pubkey,
             token: fake_account,
         });
 
@@ -240,6 +244,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -285,6 +290,7 @@ mod create_master_edition {
                 None,
                 10,
                 false,
+                None,
                 None,
                 None,
             )
@@ -336,11 +342,12 @@ mod create_master_edition {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
 
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(
@@ -364,7 +371,7 @@ mod create_master_edition {
 
         let test_master_edition = MasterEditionV2::new(&Metadata {
             mint: fake_mint,
-            pubkey: test_metadata.pubkey.clone(),
+            pubkey: test_metadata.pubkey,
             token: fake_account,
         });
 

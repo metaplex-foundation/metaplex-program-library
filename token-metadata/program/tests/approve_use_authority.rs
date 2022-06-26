@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::state::{UseAuthorityRecord, UseMethod, Uses};
 
@@ -11,7 +11,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 mod approve_use_authority {
@@ -36,6 +35,7 @@ mod approve_use_authority {
                 None,
                 10,
                 false,
+                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,
@@ -95,6 +95,7 @@ mod approve_use_authority {
                 10,
                 false,
                 None,
+                None,
                 Some(Uses {
                     use_method: UseMethod::Burn,
                     total: 1,
@@ -153,6 +154,7 @@ mod approve_use_authority {
                 false,
                 None,
                 None,
+                None,
             )
             .await
             .unwrap();
@@ -195,6 +197,7 @@ mod approve_use_authority {
             .process_transaction(tx)
             .await
             .unwrap_err();
+
         assert_custom_error!(err, MetadataError::Unusable);
     }
 
@@ -213,6 +216,7 @@ mod approve_use_authority {
                 None,
                 10,
                 false,
+                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,
@@ -303,6 +307,7 @@ mod approve_use_authority {
                 10,
                 false,
                 None,
+                None,
                 Some(Uses {
                     use_method: UseMethod::Single,
                     total: 1,
@@ -370,6 +375,7 @@ mod approve_use_authority {
                 None,
                 10,
                 false,
+                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,

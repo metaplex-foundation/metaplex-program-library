@@ -3,23 +3,24 @@ use anchor_lang::{
     prelude::*,
     solana_program::{
         program::{invoke, invoke_signed},
+        program_memory::sol_memcmp,
         program_pack::{IsInitialized, Pack},
+        pubkey::PUBKEY_BYTES,
         system_instruction,
     },
 };
 use anchor_spl::token::Token;
+use arrayref::array_ref;
 use mpl_token_metadata::state::Metadata;
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account};
 use std::{convert::TryInto, slice::Iter};
-pub fn assert_is_ata(
-    ata: &AccountInfo,
-    wallet: &Pubkey,
-    mint: &Pubkey,
-) -> Result<Account, ProgramError> {
+
+pub fn assert_is_ata(ata: &AccountInfo, wallet: &Pubkey, mint: &Pubkey) -> Result<Account> {
     assert_owned_by(ata, &spl_token::id())?;
     let ata_account: Account = assert_initialized(ata)?;
     assert_keys_equal(ata_account.owner, *wallet)?;
+    assert_keys_equal(ata_account.mint, *mint)?;
     assert_keys_equal(get_associated_token_address(wallet, mint), *ata.key)?;
     Ok(ata_account)
 }
@@ -34,7 +35,7 @@ pub fn make_ata<'a>(
     system_program: AccountInfo<'a>,
     rent: AccountInfo<'a>,
     fee_payer_seeds: &[&[u8]],
-) -> ProgramResult {
+) -> Result<()> {
     let seeds: &[&[&[u8]]];
     let as_arr = [fee_payer_seeds];
 
@@ -70,7 +71,7 @@ pub fn assert_metadata_valid<'a>(
     metadata: &UncheckedAccount,
     edition: Option<&UncheckedAccount>,
     mint: &Pubkey,
-) -> ProgramResult {
+) -> Result<()> {
     assert_derivation(
         &mpl_token_metadata::id(),
         &metadata.to_account_info(),
@@ -103,17 +104,15 @@ pub fn assert_metadata_valid<'a>(
     Ok(())
 }
 
-pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> ProgramResult {
-    if key1 != key2 {
-        Err(ErrorCode::PublicKeyMismatch.into())
+pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
+    if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
+        return err!(ErrorCode::PublicKeyMismatch);
     } else {
         Ok(())
     }
 }
 
-pub fn assert_initialized<T: Pack + IsInitialized>(
-    account_info: &AccountInfo,
-) -> Result<T, ProgramError> {
+pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
     if !account.is_initialized() {
         Err(ErrorCode::UninitializedAccount.into())
@@ -122,7 +121,7 @@ pub fn assert_initialized<T: Pack + IsInitialized>(
     }
 }
 
-pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> ProgramResult {
+pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
     if account.owner != owner {
         Err(ErrorCode::IncorrectOwner.into())
     } else {
@@ -135,12 +134,12 @@ pub fn create_program_token_account_if_not_present<'a>(
     system_program: &Program<'a, System>,
     fee_payer: &AccountInfo<'a>,
     token_program: &Program<'a, Token>,
-    mint: &UncheckedAccount<'a>,
+    mint: &AccountInfo<'a>,
     owner: &AccountInfo<'a>,
     rent: &Sysvar<'a, Rent>,
     signer_seeds: &[&[u8]],
     fee_seeds: &[&[u8]],
-) -> ProgramResult {
+) -> Result<()> {
     assert_owned_by(mint, &token_program.key())?;
 
     if program_account.data_is_empty() {
@@ -191,7 +190,7 @@ pub fn pay_creator_fees<'a>(
     rent: &AccountInfo<'a>,
     size: u64,
     is_native: bool,
-) -> ProgramResult {
+) -> Result<()> {
     let metadata = Metadata::from_account_info(metadata_info)?;
     let total_fee = size as u128;
     match metadata.data.creators {
@@ -278,7 +277,7 @@ pub fn create_or_allocate_account_raw<'a>(
     size: usize,
     signer_seeds: &[&[u8]],
     new_acct_seeds: &[&[u8]],
-) -> Result<(), ProgramError> {
+) -> Result<()> {
     let rent = &Rent::from_account_info(rent_sysvar_info)?;
     let required_lamports = rent
         .minimum_balance(size)
@@ -326,14 +325,65 @@ pub fn create_or_allocate_account_raw<'a>(
     Ok(())
 }
 
-pub fn assert_derivation(
-    program_id: &Pubkey,
-    account: &AccountInfo,
-    path: &[&[u8]],
-) -> Result<u8, ProgramError> {
+pub fn assert_derivation(program_id: &Pubkey, account: &AccountInfo, path: &[&[u8]]) -> Result<u8> {
     let (key, bump) = Pubkey::find_program_address(&path, program_id);
     if key != *account.key {
         return Err(ErrorCode::DerivedKeyInvalid.into());
     }
     Ok(bump)
+}
+
+/// cheap method to get supply and decimals of a mint without unpacking whole object
+pub fn get_mint_details(account_info: &AccountInfo) -> Result<(u64, u8)> {
+    // In token program, 36, 8, 1, 1 is the layout, where:
+    // - the first 8 is supply u64.
+    // - the next 1 is decimals u8.
+    let data = account_info.try_borrow_data()?;
+    let supply = array_ref![data, 36, 8];
+    let decimals = array_ref![data, 44, 1];
+
+    Ok((u64::from_le_bytes(*supply), u8::from_le_bytes(*decimals)))
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::utils::get_mint_details;
+    use anchor_lang::{
+        prelude::{AccountInfo, Pubkey},
+        solana_program::{program_option::COption, program_pack::Pack},
+    };
+    use spl_token::state::Mint;
+
+    #[test]
+    fn get_mint_details_smoke_test() {
+        let key = Pubkey::new_unique();
+        let mut lamports = 0;
+        let mut data: Vec<u8> = Vec::with_capacity(Mint::LEN);
+        data.resize(Mint::LEN, Default::default());
+        let mint = Mint {
+            mint_authority: COption::None,
+            supply: 1000000000,
+            decimals: 9,
+            is_initialized: true,
+            freeze_authority: COption::None,
+        };
+        spl_token::state::Mint::pack(mint, &mut data).unwrap();
+
+        let owner = Pubkey::new_unique();
+
+        let account_info = AccountInfo::new(
+            &key,
+            false,
+            false,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            0,
+        );
+
+        let (supply, decimals) = get_mint_details(&account_info).unwrap();
+        assert_eq!(mint.supply, supply);
+        assert_eq!(mint.decimals, decimals);
+    }
 }

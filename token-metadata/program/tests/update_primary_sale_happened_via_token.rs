@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::{
     error::MetadataError,
@@ -13,7 +13,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -33,7 +32,7 @@ mod update_primary_sale_happened_via_token {
         let puffed_uri = puffed_out_string(&uri, MAX_URI_LENGTH);
 
         test_metadata
-            .create(&mut context, name, symbol, uri, None, 10, false)
+            .create(&mut context, name, symbol, uri, None, 10, false, 0)
             .await
             .unwrap();
 
@@ -50,8 +49,8 @@ mod update_primary_sale_happened_via_token {
         assert_eq!(metadata.data.seller_fee_basis_points, 10);
         assert_eq!(metadata.data.creators, None);
 
-        assert_eq!(metadata.primary_sale_happened, true);
-        assert_eq!(metadata.is_mutable, false);
+        assert!(metadata.primary_sale_happened);
+        assert!(!metadata.is_mutable,);
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
@@ -65,7 +64,7 @@ mod update_primary_sale_happened_via_token {
         let fake_mint = Keypair::new();
         let fake_token_account = Keypair::new();
         let payer_pubkey = context.payer.pubkey();
-        create_mint(&mut context, &fake_mint, &payer_pubkey, None)
+        create_mint(&mut context, &fake_mint, &payer_pubkey, None, 0)
             .await
             .unwrap();
         create_token_account(
@@ -96,6 +95,7 @@ mod update_primary_sale_happened_via_token {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();

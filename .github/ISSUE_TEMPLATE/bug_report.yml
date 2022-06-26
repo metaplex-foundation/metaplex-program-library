@@ -1,0 +1,68 @@
+name: Bug report
+title: "[Bug]: "
+description: Report incorrect or unexpected behavior
+labels: [bug]
+body:
+  - type: dropdown
+    id: package
+    attributes:
+      label: Which package is this bug report for?
+      options:
+        - auction-house
+        - auction
+        - candy-machine
+        - core
+        - fixed-price-sale
+        - gumdrop
+        - metaplex
+        - nft-packs
+        - token-entangler
+        - token-metadata
+        - token-vault
+    validations:
+      required: true
+  - type: dropdown
+    id: package-type
+    attributes:
+      label: Which Type of Package is this bug report for?
+      options:
+        - Rust Contract
+        - JS SDK
+    validations:
+      required: true    
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue description
+      description: |
+        Describe the issue in as much detail as possible.
+        
+        If this is for a JS SDK, please inclide your package json and any other build systems or package manager information.
+
+        Tip: You can attach images or log files by clicking this area to highlight it and then dragging files into it.
+      placeholder: |
+        Steps to reproduce with:
+        1. do thing
+        2. observe behavior
+        3. see error logs below
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations:
+      required: false
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority this issue should have
+      description: Please be realistic. If you need to elaborate on your reasoning, please use the Issue description field above.
+      options:
+        - Low (slightly annoying)
+        - Medium (should be fixed soon)
+        - High (immediate attention needed)
+    validations:
+      required: true

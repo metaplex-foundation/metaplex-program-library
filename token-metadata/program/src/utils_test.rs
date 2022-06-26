@@ -1,9 +1,9 @@
 #![cfg(test)]
 
 mod puff_out_test {
-    use solana_program::pubkey::Pubkey;
+    pub use solana_program::pubkey::Pubkey;
 
-    use crate::{
+    pub use crate::{
         state::{Data, Key, Metadata},
         utils::{puff_out_data_fields, puffed_out_string},
     };
@@ -21,7 +21,7 @@ mod puff_out_test {
             ),
         ];
         for (s, size, puffed_out) in cases {
-            let result = puffed_out_string(&s.to_string(), *size);
+            let result = puffed_out_string(s, *size);
             assert_eq!(result, puffed_out.to_string(), "s: {:?}, size: {}", s, size,);
         }
     }
@@ -45,6 +45,7 @@ mod puff_out_test {
             collection: None,
             uses: None,
             token_standard: None,
+            collection_details: None,
         };
 
         puff_out_data_fields(&mut metadata);

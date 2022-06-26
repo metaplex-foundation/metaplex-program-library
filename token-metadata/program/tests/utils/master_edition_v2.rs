@@ -10,12 +10,11 @@ use solana_program::{
     instruction::{AccountMeta, Instruction},
     sysvar,
 };
-use solana_program_test::*;
+
 use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -41,7 +40,7 @@ impl MasterEditionV2 {
         MasterEditionV2 {
             pubkey,
             metadata_pubkey: metadata.pubkey,
-            mint_pubkey: mint_pubkey,
+            mint_pubkey,
         }
     }
 
@@ -65,7 +64,7 @@ impl MasterEditionV2 {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
 
         let fake_instruction = Instruction {
@@ -93,14 +92,14 @@ impl MasterEditionV2 {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create(
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition(
                 id(),
@@ -117,14 +116,14 @@ impl MasterEditionV2 {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create_v3(
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
                 id(),
@@ -141,6 +140,6 @@ impl MasterEditionV2 {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

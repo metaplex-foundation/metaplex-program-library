@@ -1,4 +1,5 @@
 # mpl-candy-machine
+#
 
 This package contains the Candy Machine contract SDK code. This MPL package targets the current generation of candy machine on the v2.0.0 release line.
 

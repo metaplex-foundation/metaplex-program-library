@@ -1,5 +1,5 @@
 #![cfg(feature = "test-bpf")]
-mod utils;
+pub mod utils;
 
 use mpl_token_metadata::state::{UseAuthorityRecord, UseMethod, Uses};
 
@@ -12,8 +12,7 @@ use solana_sdk::{
 use utils::*;
 mod revoke_use_authority {
     use mpl_token_metadata::pda::find_program_as_burner_account;
-    use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
-    use spl_token::state::Account;
+    use solana_program::borsh::try_from_slice_unchecked;
 
     use super::*;
     #[tokio::test]
@@ -31,6 +30,7 @@ mod revoke_use_authority {
                 None,
                 10,
                 false,
+                None,
                 None,
                 Some(Uses {
                     use_method: UseMethod::Single,
@@ -105,6 +105,6 @@ mod revoke_use_authority {
             .await
             .expect("account not found");
         println!("{:?}", accountafter);
-        assert_eq!(accountafter.is_none(), true);
+        assert!(accountafter.is_none());
     }
 }

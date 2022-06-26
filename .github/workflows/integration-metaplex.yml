@@ -1,0 +1,83 @@
+name: Integration Metaplex
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+env:
+  CARGO_TERM_COLOR: always
+  SOLANA_VERSION: 1.9.14
+  RUST_TOOLCHAIN: stable
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
+    outputs:
+      core: ${{ steps.filter.outputs.core }}
+      package: ${{ steps.filter.outputs.package }}
+    steps:
+    - uses: actions/checkout@v2
+    # For pull requests it's not necessary to checkout the code
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          core:
+            - 'core/**'
+          package:
+            - 'metaplex/**'
+  build-and-integration-test-metaplex:
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-metaplex 
+    needs: changes
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    steps:
+      # Setup Deps
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-solana
+        with: 
+          solana_version: ${{ env.SOLANA_VERSION }}
+      - uses: ./.github/actions/install-rust
+        with: 
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      # Restore Cache from previous build/test
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./rust/target
+          key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
+
+      # Build Rust Programs
+      - uses: ./.github/actions/build-token-metadata
+      - uses: ./.github/actions/build-token-vault
+      - uses: ./.github/actions/build-auction
+      - uses: ./.github/actions/build-metaplex
+
+      # Install JS SDK deps
+      - uses: ./.github/actions/yarn-install-and-build
+        with: 
+          cache_id: sdk-metaplex
+          working_dir: ./metaplex/js
+          build_token_metadata: true
+          build_token_vault: true
+          build_auction: true
+
+      # Run integration test
+      - name: start-local-test-validator
+        working-directory: ./metaplex/js
+        run: DEBUG=amman* yarn amman:start
+
+      - name: integration-test-metaplex-program
+        id: run_integration_test
+        working-directory: ./metaplex/js
+        run: DEBUG=mpl* yarn test 

@@ -4,7 +4,7 @@ use mpl_metaplex::state::{Key, Store, StoreConfig, CONFIG, PREFIX};
 use mpl_metaplex::{id, instruction};
 use num_traits::FromPrimitive;
 use solana_program::borsh::try_from_slice_unchecked;
-use solana_program::{config, pubkey::Pubkey};
+use solana_program::pubkey::Pubkey;
 use solana_program_test::*;
 use solana_sdk::signature::Signer;
 use solana_sdk::{
@@ -66,7 +66,7 @@ mod create_store {
             &[&context.payer],
             context.last_blockhash,
         );
-        context.banks_client.process_transaction(tx).await;
+        context.banks_client.process_transaction(tx).await.unwrap();
         let store = context
             .banks_client
             .get_account(store_key)

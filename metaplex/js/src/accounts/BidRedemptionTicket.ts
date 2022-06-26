@@ -1,4 +1,5 @@
 import { AccountInfo } from '@solana/web3.js';
+import { strict as assert } from 'assert';
 import BN from 'bn.js';
 import bs58 from 'bs58';
 import { MetaplexKey, MetaplexProgram } from '../MetaplexProgram';
@@ -29,12 +30,13 @@ export class BidRedemptionTicket extends Account<BidRedemptionTicketV2Data> {
       throw ERROR_INVALID_OWNER();
     }
 
+    assert(this.info != null, 'account info needs to be defined');
     if (BidRedemptionTicket.isBidRedemptionTicketV1(this.info.data)) {
       throw ERROR_DEPRECATED_ACCOUNT_DATA();
     } else if (BidRedemptionTicket.isBidRedemptionTicketV2(this.info.data)) {
       const data = this.info.data.toJSON().data;
 
-      const winnerIndex = data[1] !== 0 && new BN(data.slice(1, 9), 'le');
+      const winnerIndex = data[1] !== 0 ? new BN(data.slice(1, 9), 'le') : undefined;
       const offset = WINNER_INDEX_OFFSETS[+!!winnerIndex];
 
       this.data = {
@@ -61,5 +63,23 @@ export class BidRedemptionTicket extends Account<BidRedemptionTicketV2Data> {
 
   static isBidRedemptionTicketV2(data: Buffer) {
     return data[0] === MetaplexKey.BidRedemptionTicketV2;
+  }
+
+  hasBeenRedeemed(order: number): boolean {
+    const data = this.data?.data;
+    if (!data) {
+      return false;
+    }
+
+    let offset = 42;
+    if (data[1] == 0) {
+      offset -= 8;
+    }
+
+    const index = Math.floor(order / 8) + offset;
+    const positionFromRight = 7 - (order % 8);
+    const mask = Math.pow(2, positionFromRight);
+    const appliedMask = data[index] & mask;
+    return appliedMask != 0;
   }
 }

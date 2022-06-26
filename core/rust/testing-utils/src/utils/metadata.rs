@@ -1,7 +1,7 @@
 use crate::{solana::create_associated_token_account, utils::*};
 use mpl_token_metadata::{
     id, instruction,
-    state::{Collection, Creator, Data, DataV2, TokenStandard, Uses, PREFIX},
+    state::{Collection, Creator, Data, DataV2, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
@@ -50,6 +50,7 @@ impl Metadata {
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
         is_mutable: bool,
+        amount: u64,
     ) -> transport::Result<()> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
 
@@ -60,7 +61,7 @@ impl Metadata {
             context,
             &self.mint.pubkey(),
             &token,
-            1,
+            amount,
             &context.payer.pubkey(),
             None,
         )

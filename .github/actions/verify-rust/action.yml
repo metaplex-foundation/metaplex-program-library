@@ -1,0 +1,21 @@
+name: Verify Rust
+
+inputs:
+  working-directory:
+    description: The program directory you're trying to verify
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run cargo fmt
+      uses: actions-rs/cargo@v1
+      with:
+        command: fmt
+        args: --manifest-path ${{ inputs.working-directory }}/Cargo.toml -- --check
+
+    - name: Run cargo clippy
+      uses: actions-rs/cargo@v1
+      with:
+        command: clippy
+        args: --all-targets --all-features --no-deps --manifest-path ${{ inputs.working-directory }}/Cargo.toml -- -D warnings

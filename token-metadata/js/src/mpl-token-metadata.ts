@@ -1,3 +1,2 @@
-export * from './accounts';
-export * from './MetadataProgram';
-export * from './transactions';
+export * from './errors';
+export * from './generated';

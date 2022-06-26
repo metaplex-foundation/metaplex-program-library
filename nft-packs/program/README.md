@@ -30,7 +30,7 @@ Supports creation of "mystery" packages of NFTs that are not revealed until afte
 - Request card for redeem
     - user calls this instruction to receive index of card which he can redeem
     - program burns user's voucher token account
-    - program is using RandomOracle program to count probability to decide which card user will receive
+    - program is using hash of slot, timestamp and recent slothash to count probability to decide which card user will receive
     - probability is calculating using weighted list from PackConfig account
     - index of next card to redeem is written to ProvingProcess account
     - ProvingProcess is a PDA account with seeds [pack, "proving", voucher_mint_key]

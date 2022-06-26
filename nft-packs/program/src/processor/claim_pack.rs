@@ -39,7 +39,6 @@ pub fn claim_pack(
     let metadata_mint_account = next_account_info(account_info_iter)?;
     let edition_marker_account = next_account_info(account_info_iter)?;
     let rent_account = next_account_info(account_info_iter)?;
-    let randomness_oracle_account = next_account_info(account_info_iter)?;
     let _token_metadata_account = next_account_info(account_info_iter)?;
     let token_program_account = next_account_info(account_info_iter)?;
     let system_program_account = next_account_info(account_info_iter)?;
@@ -47,7 +46,6 @@ pub fn claim_pack(
 
     // Validate owners
     assert_owned_by(pack_set_account, program_id)?;
-    assert_owned_by(randomness_oracle_account, &randomness_oracle_program::id())?;
 
     assert_signer(&user_wallet_account)?;
 

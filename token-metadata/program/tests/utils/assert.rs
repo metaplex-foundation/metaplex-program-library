@@ -14,14 +14,25 @@ macro_rules! assert_transport_error {
 macro_rules! assert_custom_error {
     ($error:expr, $matcher:pat) => {
         match $error {
-            TransportError::TransactionError(TransactionError::InstructionError(
+            BanksClientError::TransactionError(TransactionError::InstructionError(
                 0,
                 InstructionError::Custom(x),
             )) => match FromPrimitive::from_i32(x as i32) {
                 Some($matcher) => assert!(true),
-                _ => assert!(false),
+                Some(other) => {
+                    assert!(
+                        false,
+                        "Expected another custom instruction error than '{:#?}'",
+                        other
+                    )
+                }
+                None => assert!(false, "Expected custom instruction error"),
             },
-            _ => assert!(false),
+            err => assert!(
+                false,
+                "Expected custom instruction error but got '{:#?}'",
+                err
+            ),
         };
     };
 }

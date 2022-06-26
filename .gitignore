@@ -3,6 +3,7 @@ target/
 .DS_Store
 **/.DS_Store
 .anchor/
+.crates/
 
 node_modules/
 **/*.rs.bk
@@ -18,6 +19,7 @@ yarn-error.log*
 .vscode
 .idea
 .anchor
+.crates/
 
 .pnp.*
 .yarn/*

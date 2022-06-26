@@ -1,0 +1,114 @@
+# required permissions:
+#   id-token: write for writing to github
+#   contents: write for updating package contents
+
+name: 'Publish to updated package artifacts'
+description: 'Publish to Crates registry and push updates to Github'
+inputs:
+  # cannot load tokens directly in action, so we need to pass it in
+  cargo-token:
+    description: 'Cargo token for authenticated requests'
+    required: true
+  github-token:
+    description: 'Github token for authenticated requests'
+    required: true
+  package-name:
+    description: 'Package name to update'
+    required: true
+  path-to-cargo:
+    description: "Path to the package to update's Cargo.toml"
+    required: true
+  pull-number:
+    description: 'Pull request numeric ID. If this is empty, expect a commit-sha with an associated PR.'
+    required: false
+  commit-sha:
+    description: 'Commit SHA of code to publish'
+    required: false
+  branch:
+    description: 'Branch to update'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Get PR for push event HEAD commit
+      if: ${{ inputs.pull-number == '' }}
+      uses: ./.github/actions/get-pr-for-commit
+      id: get-pr-for-commit
+      with:
+        commit-sha: ${{ inputs.commit-sha }}
+
+    - name: Decide the value of pull-number
+      id: set-pull-number
+      shell: bash
+      run: |
+        if [[ '${{ inputs.pull-number }}' != '' ]]
+        then
+            echo "::set-output name=pull-number::${{ inputs.pull-number }}"
+        else
+            echo "::set-output name=pull-number::${{ steps.get-pr-for-commit.outputs.pull-number }}"
+        fi
+
+    - name: Map PR review to version update
+      if: steps.set-pull-number.outputs.pull-number > 0
+      uses: ./.github/actions/map-pr-review-to-version
+      id: map-pr-review-to-version
+      with:
+        pull-number: ${{ steps.set-pull-number.outputs.pull-number }}
+
+    - name: Update version in Cargo.toml
+      if: steps.map-pr-review-to-version.outputs.version != 'none'
+      uses: ./.github/actions/update-cargo-version
+      id: update-cargo-version
+      with:
+        semvar: ${{ steps.map-pr-review-to-version.outputs.version }}
+        cargo-path: ${{ inputs.path-to-cargo }}
+
+    - name: Print updated package version
+      shell: bash
+      run: |
+        echo "Updated version: ${{ steps.update-cargo-version.outputs.version }}"
+        echo "Updated OK: ${{ steps.update-cargo-version.outputs.update-ok }}"
+
+    - name: Commit and tag version changes
+      if:
+        steps.map-pr-review-to-version.outputs.version != 'none' && steps.update-cargo-version.outputs.update-ok == 'true'
+      id: upgrade-program-version
+      shell: bash
+      run: |
+        git config user.name github-actions[bot]
+        git config user.email github-actions[bot]@users.noreply.github.com
+        git add $PATH_TO_CARGO && git commit -m "chore: update ${PACKAGE_NAME} crate to v${UPDATED_VERSION}" && git tag $PACKAGE_NAME@$UPDATED_VERSION
+      env:
+        PACKAGE_NAME: ${{ inputs.package-name }}
+        UPDATED_VERSION: ${{ steps.update-cargo-version.outputs.version }}
+        PATH_TO_CARGO: ${{ inputs.path-to-cargo }}
+
+    - name: Cargo login
+      if:
+        steps.map-pr-review-to-version.outputs.version != 'none' && steps.update-cargo-version.outputs.update-ok == 'true'
+      run: cargo login $CARGO_TOKEN
+      shell: bash
+      env:
+        CARGO_TOKEN: ${{ inputs.cargo-token }}
+
+    - name: Publish to crates registry
+      if:
+        steps.map-pr-review-to-version.outputs.version != 'none' && steps.update-cargo-version.outputs.update-ok == 'true'
+      run: cargo publish --token $CARGO_TOKEN -p $PACKAGE_NAME
+      shell: bash
+      env:
+        CARGO_TOKEN: ${{ inputs.cargo-token }}
+        PACKAGE_NAME: ${{ inputs.package-name }}
+
+    - name: Push changes to Github
+      if:
+        steps.map-pr-review-to-version.outputs.version != 'none' && steps.update-cargo-version.outputs.update-ok == 'true'
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ inputs.github-token }}
+        branch: ${{ inputs.branch }}
