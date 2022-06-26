@@ -1,0 +1,32 @@
+name: "Get version command from review body"
+description: "Get version command from review body"
+inputs:
+  body:
+    description: "Review body"
+    required: true
+
+outputs:
+  versioning:
+    description: Parsed versioning info
+    value: ${{ steps.set-output.outputs.versioning }}
+  has-versioning:
+    description: Command has versioning info
+    value: ${{ steps.set-output.outputs.has-versioning }}
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+    - name: Parse version commands
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const script = require('.github/actions/parse-version-command/script.js')
+          await script({github, context, core}, '${{ inputs.body }}')
+
+    - name: Set Output
+      id: set-output
+      run: |
+        echo "::set-output name=versioning::${{ env.VERSIONING }}"
+        echo "::set-output name=has-versioning::${{ env.HAS_VERSIONING }}"
+      shell: bash
