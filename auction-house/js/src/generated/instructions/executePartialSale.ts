@@ -11,23 +11,25 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category ExecuteSale
+ * @category ExecutePartialSale
  * @category generated
  */
-export type ExecuteSaleInstructionArgs = {
+export type ExecutePartialSaleInstructionArgs = {
   escrowPaymentBump: number;
   freeTradeStateBump: number;
   programAsSignerBump: number;
   buyerPrice: beet.bignum;
   tokenSize: beet.bignum;
+  partialOrderSize: beet.COption<beet.bignum>;
+  partialOrderPrice: beet.COption<beet.bignum>;
 };
 /**
  * @category Instructions
- * @category ExecuteSale
+ * @category ExecutePartialSale
  * @category generated
  */
-const executeSaleStruct = new beet.BeetArgsStruct<
-  ExecuteSaleInstructionArgs & {
+const executePartialSaleStruct = new beet.FixableBeetArgsStruct<
+  ExecutePartialSaleInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
@@ -38,11 +40,13 @@ const executeSaleStruct = new beet.BeetArgsStruct<
     ['programAsSignerBump', beet.u8],
     ['buyerPrice', beet.u64],
     ['tokenSize', beet.u64],
+    ['partialOrderSize', beet.coption(beet.u64)],
+    ['partialOrderPrice', beet.coption(beet.u64)],
   ],
-  'ExecuteSaleInstructionArgs',
+  'ExecutePartialSaleInstructionArgs',
 );
 /**
- * Accounts required by the _executeSale_ instruction
+ * Accounts required by the _executePartialSale_ instruction
  *
  * @property [_writable_] buyer
  * @property [_writable_] seller
@@ -62,10 +66,10 @@ const executeSaleStruct = new beet.BeetArgsStruct<
  * @property [_writable_] freeTradeState
  * @property [] programAsSigner
  * @category Instructions
- * @category ExecuteSale
+ * @category ExecutePartialSale
  * @category generated
  */
-export type ExecuteSaleInstructionAccounts = {
+export type ExecutePartialSaleInstructionAccounts = {
   buyer: web3.PublicKey;
   seller: web3.PublicKey;
   tokenAccount: web3.PublicKey;
@@ -85,21 +89,21 @@ export type ExecuteSaleInstructionAccounts = {
   programAsSigner: web3.PublicKey;
 };
 
-const executeSaleInstructionDiscriminator = [37, 74, 217, 157, 79, 49, 35, 6];
+const executePartialSaleInstructionDiscriminator = [163, 18, 35, 157, 49, 164, 203, 133];
 
 /**
- * Creates a _ExecuteSale_ instruction.
+ * Creates a _ExecutePartialSale_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category ExecuteSale
+ * @category ExecutePartialSale
  * @category generated
  */
-export function createExecuteSaleInstruction(
-  accounts: ExecuteSaleInstructionAccounts,
-  args: ExecuteSaleInstructionArgs,
+export function createExecutePartialSaleInstruction(
+  accounts: ExecutePartialSaleInstructionAccounts,
+  args: ExecutePartialSaleInstructionArgs,
 ) {
   const {
     buyer,
@@ -121,8 +125,8 @@ export function createExecuteSaleInstruction(
     programAsSigner,
   } = accounts;
 
-  const [data] = executeSaleStruct.serialize({
-    instructionDiscriminator: executeSaleInstructionDiscriminator,
+  const [data] = executePartialSaleStruct.serialize({
+    instructionDiscriminator: executePartialSaleInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
