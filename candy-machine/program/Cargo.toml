@@ -38,5 +38,3 @@ solana-program-test = "1.9.18"
 solana-sdk = "~1.9.18"
 anchor-client = "0.24.2"
 borsh = "~0.9.2"
-solana-gateway-program = {  git = "https://github.com/identity-com/on-chain-identity-gateway", branch = "develop" }
-

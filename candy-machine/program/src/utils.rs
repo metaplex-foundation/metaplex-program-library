@@ -225,26 +225,17 @@ pub fn remove_feature_flag(uuid: &mut String, feature_index: usize) {
 }
 
 pub fn punish_bots<'a>(
-    candy_err: Option<CandyError>,
+    error: ProgramError,
     bot_account: AccountInfo<'a>,
     payment_account: AccountInfo<'a>,
     system_program: AccountInfo<'a>,
     fee: u64,
-    gateway_err: Option<ProgramError>,
 ) -> Result<()> {
-    if let Some(err) = candy_err {
-        msg!(
-            "{}, Candy Machine Botting is taxed at {:?} lamports",
-            err.to_string(),
-            fee
-        );
-    } else {
-        msg!(
-            "{}, Candy Machine Botting is taxed at {:?} lamports",
-            gateway_err.unwrap().to_string(),
-            fee
-        );
-    }
+    msg!(
+        "{}, Candy Machine Botting is taxed at {:?} lamports",
+        error.to_string(),
+        fee
+    );
 
     let final_fee = fee.min(bot_account.lamports());
     invoke(

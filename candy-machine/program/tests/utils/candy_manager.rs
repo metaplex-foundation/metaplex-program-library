@@ -228,6 +228,7 @@ pub struct GatekeeperConfig {
 }
 
 impl GatekeeperConfig {
+    #[allow(dead_code)]
     pub fn new(gatekeeper_network: Pubkey, expire_on_use: bool) -> Self {
         GatekeeperConfig {
             gatekeeper_network,
@@ -691,8 +692,8 @@ impl CandyManager {
         );
 
         assert_eq!(
-            candy_start.items_redeemed,
-            candy_end.items_redeemed - 1,
+            candy_start.items_redeemed + 1,
+            candy_end.items_redeemed,
             "Items redeemed wasn't 1"
         );
         if self.collection_info.set {

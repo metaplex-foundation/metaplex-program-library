@@ -78,15 +78,7 @@ async fn init_default_success() {
 
 #[tokio::test]
 async fn bot_tax_on_gatekeeper() {
-    let mut program = ProgramTest::new("mpl_candy_machine", mpl_candy_machine::id(), None);
-    program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-    program.add_program(
-        "solana_gateway_program",
-        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
-        None,
-    );
-
-    let mut context = program.start_with_context().await;
+    let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
 
     let gatekeeper_network = Keypair::new();

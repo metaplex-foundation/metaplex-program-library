@@ -7,6 +7,7 @@ use solana_program::{
 };
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, transaction::Transaction, transport};
+use std::str::FromStr;
 
 use mpl_candy_machine::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
@@ -25,7 +26,12 @@ use crate::{
 pub fn candy_machine_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_candy_machine", mpl_candy_machine::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-    // program.add_program("solana_gateway_program", solana_gateway::id(), None);
+    program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
+    program.add_program(
+        "solana_gateway_program",
+        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
+        None,
+    );
     program
 }
 
