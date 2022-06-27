@@ -1,0 +1,56 @@
+name: 'Make version changes'
+description: 'Make version changes'
+inputs:
+  changed-packages:
+    description: 'Changed packages - in format of <package>/<type>'
+    required: true
+  versioning:
+    description: 'Versioning command(s)'
+    required: true
+  branch:
+    description: 'Branch to checkout'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.branch }}
+
+    # cache and install cargo release
+    - uses: actions/cache@v2
+      name: Cache Cargo Release
+      id: cache-cargo-release
+      with:
+        path: |
+          ~/.cargo/bin/cargo-release
+        key: cargo-release-${{ runner.os }}
+
+    - name: Install Cargo Release
+      if: steps.cache-cargo-release.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cargo install cargo-release
+
+    # cache and install shank cli
+    - uses: actions/cache@v2
+      name: Cache Shank CLI
+      id: cache-shank-cli
+      with:
+        path: |
+          ~/.cargo/bin/shank
+        key: shank-cli-${{ runner.os }}
+
+    - name: Install Cargo Shank
+      if: steps.cache-shank-cli.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        cargo install shank-cli
+
+    - name: Make version changes
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const script = require('.github/actions/make-version-changes/script.js')
+          await script({github, context, core, glob, io}, ${{ inputs.changed-packages }}, ${{ inputs.versioning }})
