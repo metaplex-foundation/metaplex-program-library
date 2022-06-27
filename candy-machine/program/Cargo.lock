@@ -1688,7 +1688,6 @@ dependencies = [
  "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
- "zeroize",
 ]
 
 [[package]]

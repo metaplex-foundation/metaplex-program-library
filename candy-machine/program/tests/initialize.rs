@@ -5,17 +5,28 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
+use anchor_client::solana_client::rpc_client::RpcClient;
 use solana_gateway::{
     instruction::{self, NetworkFeature},
     state::get_gatekeeper_address_with_seed,
 };
 
-use solana_program_test::*;
+use solana_program::example_mocks::solana_sdk::transaction;
+use solana_program_test::{tokio::task, *};
 use solana_sdk::{
+    account::{AccountSharedData, ReadableAccount},
+    borsh::try_from_slice_unchecked,
     clock::UnixTimestamp,
+    msg,
+    program_pack::Pack,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
+    system_instruction,
     transaction::Transaction,
+};
+use spl_token::{
+    instruction::{approve, initialize_account, initialize_mint, mint_to},
+    state::{Account, Mint},
 };
 
 use crate::{
@@ -76,13 +87,27 @@ async fn init_default_success() {
         .await;
 }
 
-#[tokio::test]
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn bot_tax_on_gatekeeper() {
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
 
     let gatekeeper_network = Keypair::new();
     let gatekeeper_authority = Keypair::new();
+
+    let client = RpcClient::new("https://metaplex.devnet.rpcpool.com".to_string());
+
+    let gateway_account_pubkey =
+        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap();
+    let gateway_executable_pubkey =
+        Pubkey::from_str("D5iXG4Z4hajVFAs8UbmBwdfe7PFqvoT4LNVvt1nKU5bx").unwrap();
+    let gateway_account = client.get_account(&gateway_account_pubkey).unwrap();
+    let gateway_executable_account = client.get_account(&gateway_executable_pubkey).unwrap();
+    context.set_account(&gateway_account_pubkey, &gateway_account.into());
+    context.set_account(
+        &gateway_executable_pubkey,
+        &gateway_executable_account.into(),
+    );
 
     let mut candy_manager = CandyManager::init(
         context,
@@ -126,15 +151,16 @@ async fn bot_tax_on_gatekeeper() {
         .unwrap();
     candy_manager.fill_config_lines(context).await.unwrap();
 
+    let block_hash = context.banks_client.get_latest_blockhash().await.unwrap();
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::add_gatekeeper(
-            &context.payer.pubkey(),
+            &candy_manager.minter.pubkey(),
             &gatekeeper_authority.pubkey(),
             &gatekeeper_network.pubkey(),
         )],
-        Some(&context.payer.pubkey()),
-        &[&context.payer, &gatekeeper_network],
-        context.last_blockhash,
+        Some(&candy_manager.minter.pubkey()),
+        &[&candy_manager.minter, &gatekeeper_network],
+        block_hash,
     );
 
     context
@@ -154,6 +180,7 @@ async fn bot_tax_on_gatekeeper() {
         .expect("Time went backwards");
 
     // creating with an already expired token to fail the mint
+    let block_hash = context.banks_client.get_latest_blockhash().await.unwrap();
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::issue_vanilla(
             &context.payer.pubkey(),
@@ -166,7 +193,7 @@ async fn bot_tax_on_gatekeeper() {
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &gatekeeper_authority],
-        context.last_blockhash,
+        block_hash,
     );
 
     context
@@ -176,7 +203,6 @@ async fn bot_tax_on_gatekeeper() {
         .unwrap();
 
     let block_hash = context.banks_client.get_latest_blockhash().await.unwrap();
-
     context
         .banks_client
         .process_transaction(Transaction::new_signed_with_payer(
