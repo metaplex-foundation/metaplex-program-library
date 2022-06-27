@@ -93,7 +93,7 @@ pub fn handle_mint_nft<'info>(
     ctx: Context<'_, '_, '_, 'info, MintNFT<'info>>,
     creator_bump: u8,
 ) -> Result<()> {
-    let candy_machine = &mut ctx.accounts.candy_machine.clone();
+    let candy_machine = &mut ctx.accounts.candy_machine;
     let candy_machine_creator = &ctx.accounts.candy_machine_creator;
     // Note this is the wallet of the Candy machine
     let wallet = &ctx.accounts.wallet;
