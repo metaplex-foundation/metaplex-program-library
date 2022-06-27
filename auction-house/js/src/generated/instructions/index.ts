@@ -1,6 +1,7 @@
 export * from './auctioneerBuy';
 export * from './auctioneerCancel';
 export * from './auctioneerDeposit';
+export * from './auctioneerExecutePartialSale';
 export * from './auctioneerExecuteSale';
 export * from './auctioneerPublicBuy';
 export * from './auctioneerSell';
@@ -13,6 +14,7 @@ export * from './closeEscrowAccount';
 export * from './createAuctionHouse';
 export * from './delegateAuctioneer';
 export * from './deposit';
+export * from './executePartialSale';
 export * from './executeSale';
 export * from './printBidReceipt';
 export * from './printListingReceipt';

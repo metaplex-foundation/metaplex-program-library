@@ -14,9 +14,7 @@ use spl_token::state::Account as SplAccount;
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
     buyer_price: u64,
-    token_size: u64,
-    partial_order_size: Option<u64>,
-    partial_order_price: Option<u64>
+    token_size: u64
 )]
 pub struct ExecuteSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
@@ -123,6 +121,7 @@ pub struct ExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
+    #[account(mut)]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -183,6 +182,179 @@ impl<'info> From<AuctioneerExecuteSale<'info>> for ExecuteSale<'info> {
 }
 
 pub fn execute_sale<'info>(
+    ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+    escrow_payment_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
+    buyer_price: u64,
+    token_size: u64,
+) -> Result<()> {
+    let auction_house = &ctx.accounts.auction_house;
+
+    // If it has an auctioneer authority delegated must use auctioneer_* handler.
+    if auction_house.has_auctioneer {
+        return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    execute_sale_logic(
+        ctx,
+        escrow_payment_bump,
+        free_trade_state_bump,
+        program_as_signer_bump,
+        buyer_price,
+        token_size,
+        None,
+        None,
+    )
+}
+
+/// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
+#[derive(Accounts)]
+#[instruction(
+escrow_payment_bump: u8,
+free_trade_state_bump: u8,
+program_as_signer_bump: u8,
+buyer_price: u64,
+token_size: u64
+)]
+pub struct ExecutePartialSale<'info> {
+    /// CHECK: Validated in execute_sale_logic.
+    /// Buyer user wallet account.
+    #[account(mut)]
+    pub buyer: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Seller user wallet account.
+    #[account(mut)]
+    pub seller: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    // cannot mark these as real Accounts or else we blow stack size limit
+    ///Token account where the SPL token is stored.
+    #[account(mut)]
+    pub token_account: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Token mint account for the SPL token.
+    pub token_mint: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Metaplex metadata account decorating SPL mint account.
+    pub metadata: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    // cannot mark these as real Accounts or else we blow stack size limit
+    /// Auction House treasury mint account.
+    pub treasury_mint: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Buyer escrow payment account.
+    #[account(
+    mut,
+    seeds = [
+    PREFIX.as_bytes(),
+    auction_house.key().as_ref(),
+    buyer.key().as_ref()
+    ],
+    bump=escrow_payment_bump
+    )]
+    pub escrow_payment_account: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Seller SOL or SPL account to receive payment at.
+    #[account(mut)]
+    pub seller_payment_receipt_account: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Buyer SPL token account to receive purchased item at.
+    #[account(mut)]
+    pub buyer_receipt_token_account: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Auction House instance authority.
+    pub authority: UncheckedAccount<'info>,
+
+    /// Auction House instance PDA account.
+    #[account(
+    seeds = [
+    PREFIX.as_bytes(),
+    auction_house.creator.as_ref(),
+    auction_house.treasury_mint.as_ref()
+    ],
+    bump=auction_house.bump,
+    has_one=authority,
+    has_one=treasury_mint,
+    has_one=auction_house_treasury,
+    has_one=auction_house_fee_account
+    )]
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Auction House instance fee account.
+    #[account(
+    mut,
+    seeds = [
+    PREFIX.as_bytes(),
+    auction_house.key().as_ref(),
+    FEE_PAYER.as_bytes()
+    ],
+    bump=auction_house.fee_payer_bump
+    )]
+    pub auction_house_fee_account: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Auction House instance treasury account.
+    #[account(
+    mut,
+    seeds = [
+    PREFIX.as_bytes(),
+    auction_house.key().as_ref(),
+    TREASURY.as_bytes()
+    ],
+    bump=auction_house.treasury_bump
+    )]
+    pub auction_house_treasury: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Buyer trade state PDA account encoding the buy order.
+    #[account(mut)]
+    pub buyer_trade_state: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Seller trade state PDA account encoding the sell order.
+    #[account(mut)]
+    pub seller_trade_state: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Free seller trade state PDA account encoding a free sell order.
+    #[account(
+    mut,
+    seeds = [
+    PREFIX.as_bytes(),
+    seller.key().as_ref(),
+    auction_house.key().as_ref(),
+    token_account.key().as_ref(),
+    auction_house.treasury_mint.as_ref(),
+    token_mint.key().as_ref(),
+    &0u64.to_le_bytes(),
+    &token_size.to_le_bytes()
+    ],
+    bump=free_trade_state_bump
+    )]
+    pub free_trade_state: UncheckedAccount<'info>,
+
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub ata_program: Program<'info, AssociatedToken>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    pub program_as_signer: UncheckedAccount<'info>,
+
+    pub rent: Sysvar<'info, Rent>,
+}
+
+pub fn execute_partial_sale<'info>(
     ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
@@ -416,6 +588,207 @@ pub fn auctioneer_execute_sale<'info>(
         program_as_signer_bump,
         buyer_price,
         token_size,
+        None,
+        None,
+    )
+}
+
+#[derive(Accounts)]
+#[instruction(
+    escrow_payment_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
+    buyer_price: u64,
+    token_size: u64
+)]
+pub struct AuctioneerExecutePartialSale<'info> {
+    /// CHECK: Validated in execute_sale_logic.
+    /// Buyer user wallet account.
+    #[account(mut)]
+    pub buyer: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Seller user wallet account.
+    #[account(mut)]
+    pub seller: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    // cannot mark these as real Accounts or else we blow stack size limit
+    ///Token account where the SPL token is stored.
+    #[account(mut)]
+    pub token_account: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Token mint account for the SPL token.
+    pub token_mint: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Metaplex metadata account decorating SPL mint account.
+    pub metadata: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    // cannot mark these as real Accounts or else we blow stack size limit
+    /// Auction House treasury mint account.
+    pub treasury_mint: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Buyer escrow payment account.
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            buyer.key().as_ref()
+        ],
+        bump=escrow_payment_bump
+    )]
+    pub escrow_payment_account: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Seller SOL or SPL account to receive payment at.
+    #[account(mut)]
+    pub seller_payment_receipt_account: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Buyer SPL token account to receive purchased item at.
+    #[account(mut)]
+    pub buyer_receipt_token_account: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Auction House instance authority.
+    pub authority: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in ah_auctioneer_pda seeds and execute_sale_logic.
+    /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
+    pub auctioneer_authority: Signer<'info>,
+
+    /// Auction House instance PDA account.
+    #[account(
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
+            auction_house.treasury_mint.as_ref()
+        ],
+        bump=auction_house.bump,
+        has_one=authority,
+        has_one=treasury_mint,
+        has_one=auction_house_treasury,
+        has_one=auction_house_fee_account
+    )]
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Auction House instance fee account.
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            FEE_PAYER.as_bytes()
+        ],
+        bump=auction_house.fee_payer_bump
+    )]
+    pub auction_house_fee_account: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Auction House instance treasury account.
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            TREASURY.as_bytes()
+        ],
+        bump=auction_house.treasury_bump
+    )]
+    pub auction_house_treasury: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    /// Buyer trade state PDA account encoding the buy order.
+    #[account(mut)]
+    pub buyer_trade_state: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Seller trade state PDA account encoding the sell order.
+    #[account(mut)]
+    pub seller_trade_state: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// Free seller trade state PDA account encoding a free sell order.
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &0u64.to_le_bytes(),
+            &token_size.to_le_bytes()
+        ],
+        bump=free_trade_state_bump
+    )]
+    pub free_trade_state: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// The auctioneer PDA owned by Auction House storing scopes.
+    #[account(
+        seeds = [
+            AUCTIONEER.as_bytes(),
+            auction_house.key().as_ref(),
+            auctioneer_authority.key().as_ref()
+        ],
+        bump = auction_house.auctioneer_pda_bump
+    )]
+    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+    pub ata_program: Program<'info, AssociatedToken>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    pub program_as_signer: UncheckedAccount<'info>,
+
+    pub rent: Sysvar<'info, Rent>,
+}
+
+pub fn auctioneer_execute_partial_sale<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
+    escrow_payment_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
+    buyer_price: u64,
+    token_size: u64,
+    partial_order_size: Option<u64>,
+    partial_order_price: Option<u64>,
+) -> Result<()> {
+    let auction_house = &ctx.accounts.auction_house;
+    let auctioneer_authority = &ctx.accounts.auctioneer_authority;
+    let ah_auctioneer_pda = &ctx.accounts.ah_auctioneer_pda;
+
+    if !auction_house.has_auctioneer {
+        return Err(AuctionHouseError::NoAuctioneerProgramSet.into());
+    }
+
+    assert_valid_auctioneer_and_scope(
+        &auction_house.key(),
+        &auctioneer_authority.key(),
+        ah_auctioneer_pda,
+        AuthorityScope::ExecuteSale,
+    )?;
+
+    // Duplicate the logic methods to avoid going over the compute limit.
+    auctioneer_execute_sale_logic(
+        ctx,
+        escrow_payment_bump,
+        free_trade_state_bump,
+        program_as_signer_bump,
+        buyer_price,
+        token_size,
+        partial_order_size,
+        partial_order_price,
     )
 }
 
@@ -428,6 +801,8 @@ fn auctioneer_execute_sale_logic<'info>(
     program_as_signer_bump: u8,
     buyer_price: u64,
     token_size: u64,
+    partial_order_size: Option<u64>,
+    partial_order_price: Option<u64>,
 ) -> Result<()> {
     let buyer = &ctx.accounts.buyer;
     let seller = &ctx.accounts.seller;
@@ -484,16 +859,59 @@ fn auctioneer_execute_sale_logic<'info>(
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
     let ts_bump = buyer_ts_data[0];
-    assert_valid_trade_state(
-        &buyer.key(),
-        auction_house,
-        buyer_price,
-        token_size,
-        buyer_trade_state,
-        &token_mint.key(),
-        &token_account.key(),
-        ts_bump,
-    )?;
+
+    let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
+
+    let (size, price): (u64, u64) = match (partial_order_size, partial_order_price) {
+        (Some(size), Some(price)) => {
+            assert_valid_trade_state(
+                &buyer.key(),
+                auction_house,
+                price,
+                size,
+                buyer_trade_state,
+                &token_mint.key(),
+                &token_account.key(),
+                ts_bump,
+            )?;
+
+            if ((buyer_price / token_size) * size) != price {
+                return Err(AuctionHouseError::PartialPriceMismatch.into());
+            }
+
+            if token_account_data.amount < size {
+                return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
+            };
+
+            if token_account_data.delegated_amount < size {
+                return Err(ProgramError::InvalidAccountData.into());
+            };
+
+            (size, price)
+        }
+        (None, None) => {
+            assert_valid_trade_state(
+                &buyer.key(),
+                auction_house,
+                buyer_price,
+                token_size,
+                buyer_trade_state,
+                &token_mint.key(),
+                &token_account.key(),
+                ts_bump,
+            )?;
+
+            if token_account_data.amount < token_size {
+                return Err(AuctionHouseError::NotEnoughTokensAvailableForPurchase.into());
+            };
+
+            (token_size, buyer_price)
+        }
+        _ => {
+            return Err(AuctionHouseError::MissingElementForPartialOrder.into());
+        }
+    };
+
     if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
@@ -598,7 +1016,7 @@ fn auctioneer_execute_sale_logic<'info>(
         &rent_clone,
         &signer_seeds_for_royalties,
         fee_payer_seeds,
-        buyer_price,
+        price,
         is_native,
     )?;
 
@@ -609,7 +1027,7 @@ fn auctioneer_execute_sale_logic<'info>(
         &token_clone,
         &sys_clone,
         &signer_seeds_for_royalties,
-        buyer_price,
+        price,
         is_native,
     )?;
 
@@ -717,7 +1135,7 @@ fn auctioneer_execute_sale_logic<'info>(
             &buyer_receipt_token_account.key(),
             &program_as_signer.key(),
             &[],
-            token_size,
+            size,
         )?,
         &[
             token_account.to_account_info(),
@@ -728,36 +1146,53 @@ fn auctioneer_execute_sale_logic<'info>(
         &[&program_as_signer_seeds],
     )?;
 
-    let curr_seller_lamp = seller_trade_state.lamports();
-    **seller_trade_state.lamports.borrow_mut() = 0;
-    sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
+    if token_account_data.amount == 0 {
+        invoke(
+            &revoke(
+                &token_program.key(),
+                &token_account.key(),
+                &seller.key(),
+                &[],
+            )
+            .unwrap(),
+            &[
+                token_program.to_account_info(),
+                token_account.to_account_info(),
+                seller.to_account_info(),
+            ],
+        )?;
 
-    **fee_payer.lamports.borrow_mut() = fee_payer
-        .lamports()
-        .checked_add(curr_seller_lamp)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+        let curr_seller_lamp = seller_trade_state.lamports();
+        **seller_trade_state.lamports.borrow_mut() = 0;
+        sol_memset(&mut *seller_ts_data, 0, TRADE_STATE_SIZE);
 
-    let curr_buyer_lamp = buyer_trade_state.lamports();
-    **buyer_trade_state.lamports.borrow_mut() = 0;
-    sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
-    **fee_payer.lamports.borrow_mut() = fee_payer
-        .lamports()
-        .checked_add(curr_buyer_lamp)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+        **fee_payer.lamports.borrow_mut() = fee_payer
+            .lamports()
+            .checked_add(curr_seller_lamp)
+            .ok_or(AuctionHouseError::NumericalOverflow)?;
 
-    if free_trade_state.lamports() > 0 {
-        let curr_buyer_lamp = free_trade_state.lamports();
-        **free_trade_state.lamports.borrow_mut() = 0;
-
+        let curr_buyer_lamp = buyer_trade_state.lamports();
+        **buyer_trade_state.lamports.borrow_mut() = 0;
+        sol_memset(&mut *buyer_ts_data, 0, TRADE_STATE_SIZE);
         **fee_payer.lamports.borrow_mut() = fee_payer
             .lamports()
             .checked_add(curr_buyer_lamp)
             .ok_or(AuctionHouseError::NumericalOverflow)?;
-        sol_memset(
-            *free_trade_state.try_borrow_mut_data()?,
-            0,
-            TRADE_STATE_SIZE,
-        );
+
+        if free_trade_state.lamports() > 0 {
+            let curr_buyer_lamp = free_trade_state.lamports();
+            **free_trade_state.lamports.borrow_mut() = 0;
+
+            **fee_payer.lamports.borrow_mut() = fee_payer
+                .lamports()
+                .checked_add(curr_buyer_lamp)
+                .ok_or(AuctionHouseError::NumericalOverflow)?;
+            sol_memset(
+                *free_trade_state.try_borrow_mut_data()?,
+                0,
+                TRADE_STATE_SIZE,
+            );
+        }
     }
     Ok(())
 }
