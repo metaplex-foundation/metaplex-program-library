@@ -11,22 +11,12 @@ use solana_gateway::{
     state::get_gatekeeper_address_with_seed,
 };
 
-use solana_program::example_mocks::solana_sdk::transaction;
-use solana_program_test::{tokio::task, *};
+use solana_program_test::*;
 use solana_sdk::{
-    account::{AccountSharedData, ReadableAccount},
-    borsh::try_from_slice_unchecked,
     clock::UnixTimestamp,
-    msg,
-    program_pack::Pack,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
-    system_instruction,
     transaction::Transaction,
-};
-use spl_token::{
-    instruction::{approve, initialize_account, initialize_mint, mint_to},
-    state::{Account, Mint},
 };
 
 use crate::{
