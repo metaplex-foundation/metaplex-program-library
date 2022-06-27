@@ -20,6 +20,9 @@ pub enum CacheError {
 
     #[error("Failed to parse cache file with error: {0}")]
     CacheFileWrongFormat(String),
+
+    #[error("Invalid cache state found.")]
+    InvalidState,
 }
 
 #[derive(Debug, Error)]

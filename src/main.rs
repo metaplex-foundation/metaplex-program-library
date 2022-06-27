@@ -143,6 +143,7 @@ async fn run() -> Result<()> {
             rpc_url,
             cache,
             strict,
+            skip_collection_prompt,
         } => {
             process_launch(LaunchArgs {
                 assets_dir,
@@ -151,6 +152,7 @@ async fn run() -> Result<()> {
                 rpc_url,
                 cache,
                 strict,
+                skip_collection_prompt,
                 interrupted: interrupted.clone(),
             })
             .await?
@@ -215,9 +217,15 @@ async fn run() -> Result<()> {
             })
             .await?
         }
-        Commands::Validate { assets_dir, strict } => {
-            process_validate(ValidateArgs { assets_dir, strict })?
-        }
+        Commands::Validate {
+            assets_dir,
+            strict,
+            skip_collection_prompt,
+        } => process_validate(ValidateArgs {
+            assets_dir,
+            strict,
+            skip_collection_prompt,
+        })?,
         Commands::Withdraw {
             candy_machine,
             keypair,
@@ -249,26 +257,23 @@ async fn run() -> Result<()> {
             cache,
             candy_machine,
         })?,
-        Commands::Collection { command } => match command {
-            CollectionSubcommands::Set {
-                collection_mint,
-                keypair,
-                rpc_url,
-                cache,
-                candy_machine,
-            } => process_set_collection(SetCollectionArgs {
-                collection_mint,
-                keypair,
-                rpc_url,
-                cache,
-                candy_machine,
-            })?,
-            CollectionSubcommands::Remove {
-                keypair,
-                rpc_url,
-                cache,
-                candy_machine,
-            } => process_remove_collection(RemoveCollectionArgs {
+        Commands::Collection {
+            keypair,
+            rpc_url,
+            cache,
+            candy_machine,
+            command,
+        } => match command {
+            CollectionSubcommands::Set { collection_mint } => {
+                process_set_collection(SetCollectionArgs {
+                    collection_mint,
+                    keypair,
+                    rpc_url,
+                    cache,
+                    candy_machine,
+                })?
+            }
+            CollectionSubcommands::Remove => process_remove_collection(RemoveCollectionArgs {
                 keypair,
                 rpc_url,
                 cache,

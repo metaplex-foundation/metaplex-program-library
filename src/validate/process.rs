@@ -1,5 +1,7 @@
 use anyhow::Result;
-use console::style;
+use console::{style, Style};
+use dialoguer::theme::ColorfulTheme;
+use dialoguer::Confirm;
 use glob::glob;
 use rayon::prelude::*;
 use std::{
@@ -15,6 +17,7 @@ use crate::validate::*;
 pub struct ValidateArgs {
     pub assets_dir: String,
     pub strict: bool,
+    pub skip_collection_prompt: bool,
 }
 
 pub fn process_validate(args: ValidateArgs) -> Result<()> {
@@ -31,6 +34,39 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
     if !assets_dir.exists() || assets_dir.read_dir()?.next().is_none() {
         info!("Assets directory is missing or empty.");
         return Err(ValidateError::MissingOrEmptyAssetsDirectory.into());
+    }
+
+    if !args.skip_collection_prompt {
+        let collection_path = assets_dir.join("collection.json");
+        if !collection_path.is_file() {
+            let warning = format!(
+                "+----------------------------------------------+\n\
+                 | {} MISSING COLLECTION FILES IN ASSETS FOLDER |\n\
+                 +----------------------------------------------+",
+                WARNING_EMOJI
+            );
+            println!(
+                "\n{}\n{}\n",
+                style(warning).bold().yellow(),
+                style(
+                    "Check https://docs.metaplex.com/sugar/collections for the requirements \
+                    if you want a collection to be set automatically."
+                )
+                .italic()
+                .yellow()
+            );
+
+            let theme = ColorfulTheme {
+                success_prefix: style("✔".to_string()).yellow().force_styling(true),
+                values_style: Style::new().yellow(),
+                ..get_dialoguer_theme()
+            };
+
+            if !Confirm::with_theme(&theme).with_prompt("Do you want to continue without automatically setting the candy machine collection?").interact()? {
+                return Err(anyhow!("Operation aborted"));
+            }
+            println!();
+        }
     }
 
     let path = assets_dir.join("*.json");

@@ -26,12 +26,14 @@ pub fn process_remove_collection(args: RemoveCollectionArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let client = setup_client(&sugar_config)?;
     let program = client.program(CANDY_MACHINE_ID);
+    let cache_option: Option<Cache> = None;
+
     // the candy machine id specified takes precedence over the one from the cache
     let candy_machine_id = match args.candy_machine {
         Some(candy_machine_id) => candy_machine_id,
         None => {
-            let cache = load_cache(&args.cache, false)?;
-            cache.program.candy_machine
+            let cache_option = Some(load_cache(&args.cache, false)?);
+            cache_option.unwrap().program.candy_machine
         }
     };
 
@@ -62,7 +64,7 @@ pub fn process_remove_collection(args: RemoveCollectionArgs) -> Result<()> {
     pb.finish_with_message("Done");
 
     println!(
-        "{} {}Removing collection mint for candy machine",
+        "\n{} {}Removing collection mint for candy machine",
         style("[2/2]").bold().dim(),
         CANDY_EMOJI
     );
@@ -78,6 +80,12 @@ pub fn process_remove_collection(args: RemoveCollectionArgs) -> Result<()> {
         &collection_mint_pubkey,
         &collection_metadata_info,
     )?;
+
+    if let Some(mut cache) = cache_option {
+        cache.items.remove("-1");
+        cache.program.collection_mint = String::new();
+        cache.sync_file()?;
+    }
 
     pb.finish_with_message(format!(
         "{} {}",

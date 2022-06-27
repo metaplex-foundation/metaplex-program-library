@@ -6,11 +6,11 @@
 #
 # ENV_URL="mainnet-beta"
 # RPC="https://ssc-dao.genesysgo.net/"
-# STORAGE="arweave-sol"
+# STORAGE="bundlr"
 #
 # ENV_URL="devnet"
-# RPC="https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/"
-# STORAGE="arweave"
+# RPC="https://devnet.genesysgo.net:/"
+# STORAGE="bundlr"
 #
 # ITEMS=10
 # MULTIPLE=0
@@ -33,7 +33,7 @@ SCRIPT_DIR=$(cd -- $(dirname -- "${BASH_SOURCE[0]}") &>/dev/null && pwd)
 PARENT_DIR="$(dirname "$SCRIPT_DIR")"
 ASSETS_DIR=$CURRENT_DIR/assets
 CACHE_DIR=$CURRENT_DIR
-SUGAR_BIN="cargo run --bin sugar --"
+SUGAR_BIN="cargo run --quiet --bin sugar --"
 SUGAR_LOG="sugar.log"
 RESUME_FILE="$SCRIPT_DIR/.sugar_resume"
 
@@ -43,6 +43,7 @@ PNG="https://arweave.net/yFoNLhe6cBK-wj0n_Wu-XuX7DC75VbMsNKwVbRSz4iQ?ext=png"
 GIF="https://arweave.net/-cksjCg70nWw-NE8F-DDR4FGQNfQQrWONWm5TIGt6e8?ext=gif"
 JPG="https://arweave.net/X5Czkw4R6EAq5kKW0VgX0oVjLlhn3MV2L0LId0PgZPQ?ext=jpg"
 MP4="https://arweave.net/kM6fxv3Qj_Gcn8tcq9dU8wpZAXHNEWvEfVoIpRJzg8c/?ext=mp4"
+COLLECTION_PNG="https://arweave.net/mzXSf1Zqc2Uxd33DYdqLctfGEplrK83cLB7mtfq9rVc?ext=png"
 
 # Metadata URL for large collection tests
 METADATA_URL="https://arweave.net/uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ"
@@ -102,7 +103,7 @@ function mainnet_env() {
 
 function devnet_env() {
     ENV_URL="devnet"
-    RPC="https://psytrbhymqlkfrhudd.dev.genesysgo.net:8899/"
+    RPC="https://devnet.genesysgo.net/"
     STORAGE="bundlr"
 }
 
@@ -199,9 +200,11 @@ if [ -z ${RPC+x} ]; then
     RPC="https://api.${ENV_URL}.solana.com"
 fi
 
-while getopts r: flag; do
+while getopts r:p flag; do
     case "${flag}" in
         r) RPC=${OPTARG} ;;
+        p) SUGAR_BIN="cargo run --release --bin sugar --" ;;
+        *) ;;
     esac
 done
 
@@ -456,6 +459,25 @@ read -r -d $'\0' METADATA <<-EOM
 }
 EOM
 
+read -r -d $'\0' COLLECTION <<-EOM
+{
+    "name": "[$TIMESTAMP] Collection",
+    "symbol": "TEST",
+    "description": "Sugar CLI Collection",
+    "seller_fee_basis_points": 500,
+    "image": "collection.png",
+    "attributes": [{"trait_type": "Flavour", "value": "Sugar"}],
+    "properties": {
+        "files": [
+        {
+            "uri": "collection.png",
+            "type": "image/png"
+        }],
+        "category": "Sugar Test Collection"
+    }
+}
+EOM
+
 if [ $RESUME -eq 0 ]; then
     echo "[$(date "+%T")] Creating assets"
 
@@ -506,6 +528,16 @@ if [ $RESUME -eq 0 ]; then
         rm "$ASSETS_DIR/template_image.$EXT"
         # quietly removes the animation template (it might not exist)
         rm -f "$ASSETS_DIR/template_animation.mp4"
+
+        # creates the collection nft assets
+        curl -L -s $COLLECTION_PNG >"$ASSETS_DIR/collection.png"
+        SIZE=$(wc -c "$ASSETS_DIR/collection.png" | grep -oE '[0-9]+' | head -n 1)
+
+        if [ $SIZE -eq 0 ]; then
+            RED "[$(date "+%T")] Aborting: could not download collection sample image"
+            exit 1
+        fi
+        printf "$COLLECTION" > "$ASSETS_DIR/collection.json"
     fi
 
     if [ "$MANUAL_CACHE" == "Y" ]; then
@@ -639,6 +671,18 @@ function verify {
     fi
 }
 
+# extracts the collection mint from the output of show command
+function collection_mint() {
+    local RESULT=`$SUGAR_BIN show --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC | grep "collection" | cut -d ':' -f 3`
+    EXIT_CODE=$?
+    if [ ! $EXIT_CODE -eq 0 ]; then
+        MAG "<<<"
+        RED "[$(date "+%T")] Aborting: collection mint lookup failed"
+        exit 1
+    fi
+    echo "$RESULT"
+}
+
 #-----------------------------------------------------------------------------#
 # COMMAND EXECUTION                                                           #
 #-----------------------------------------------------------------------------#
@@ -651,7 +695,12 @@ fi
 echo "[$(date "+%T")] Deploying Candy Machine with $ITEMS items"
 echo "[$(date "+%T")] Environment: ${ENV_URL}"
 echo "[$(date "+%T")] RPC URL: ${RPC}"
-echo "[$(date "+%T")] Testing started using ${STORAGE} storage"
+echo "[$(date "+%T")] Testing started using '${STORAGE}' storage"
+echo "[$(date "+%T")] Building sugar binary..."
+
+# builds the binary (cargo run is quiet)
+cargo build
+echo ""
 
 if [ "${HIDDEN}" = "Y" ]; then
     echo "[$(date "+%T")] Config with hidden settings"
@@ -662,7 +711,7 @@ if [ "$LAUNCH" = "Y" ]; then
     CYN "Executing Sugar launch: steps [1, 2, 3, 4]"
     echo ""
     MAG ">>>"
-    $SUGAR_BIN launch -c ${CONFIG_FILE} --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC $ASSETS_DIR
+    $SUGAR_BIN launch -c ${CONFIG_FILE} --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC $ASSETS_DIR --skip-collection-prompt
     EXIT_CODE=$?
     MAG "<<<"
     
@@ -675,7 +724,7 @@ else
     CYN "1. Validating JSON metadata files"
     echo ""
     MAG ">>>"
-    $SUGAR_BIN validate $ASSETS_DIR
+    $SUGAR_BIN validate $ASSETS_DIR --skip-collection-prompt
     EXIT_CODE=$?
     MAG "<<<"
 
@@ -709,8 +758,50 @@ else
 fi
 
 echo ""
+if [ ! "$MANUAL_CACHE" == "Y" ]; then
+    CYN "5. Verifying collection mint"
+    echo ""
+    COLLECTION_PDA=$(collection_mint)
+
+    if [ -z ${COLLECTION_PDA} ]; then
+        RED "[$(date "+%T")] Aborting: collection mint not found"
+        exit 1
+    fi
+
+    echo "Collection mint:$(GRN "$COLLECTION_PDA")"
+    echo ""
+
+    MAG "Removing collection >>>"
+    $SUGAR_BIN collection --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC remove
+    MAG "<<<"
+
+    # checking that the collection PDA was removed
+    NONE=$(collection_mint)
+
+    if [ ! "$NONE" == " none" ]; then
+        RED "[$(date "+%T")] Aborting: collection mint still present"
+        exit 1
+    fi
+
+    echo ""
+    MAG "Setting collection >>>"
+    $SUGAR_BIN collection --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC set --collection-mint $COLLECTION_PDA
+    MAG "<<<"
+
+    # checking that the collection PDA was set
+    COLLECTION_PDA=$(collection_mint)
+
+    if [ -z ${COLLECTION_PDA} ]; then
+        RED "[$(date "+%T")] Aborting: collection mint not found"
+        exit 1
+    fi
+else
+    CYN "5. Verifying collection mint (Skipped)"
+fi
+
+echo ""
 if [ "${CHANGE}" = "Y" ]; then
-    CYN "5. Editing cache and testing re-deploy"
+    CYN "6. Editing cache and testing re-deploy"
     echo ""
     MAG ">>>"
     change_cache
@@ -718,11 +809,11 @@ if [ "${CHANGE}" = "Y" ]; then
     verify
     MAG "<<<"
 else
-    CYN "5. Editing cache and testing re-deploy (Skipped)"
+    CYN "6. Editing cache and testing re-deploy (Skipped)"
 fi
 
 echo ""
-CYN "6. Minting"
+CYN "7. Minting"
 echo ""
 MAG ">>>"
 $SUGAR_BIN mint --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC -n $MULTIPLE
@@ -737,7 +828,7 @@ fi
 if [ "${CLOSE}" = "Y" ]; then
     CANDY_MACHINE_ID=`cat $CACHE_FILE | sed -n -e 's/^\(.*\)\(\"candyMachine\":\"\)\([a-zA-Z0-9]*\)\(.*\)$/\3/p'`
     echo ""
-    CYN "7. Withdrawing Candy Machine funds and clean up"
+    CYN "8. Withdrawing Candy Machine funds and clean up"
     echo ""
     MAG ">>>"
     $SUGAR_BIN withdraw --keypair $WALLET_KEY -r $RPC --candy-machine $CANDY_MACHINE_ID

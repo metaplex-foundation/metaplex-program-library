@@ -1,52 +1,38 @@
-use anchor_client::solana_sdk::{
-    pubkey::Pubkey,
-    signature::{Keypair, Signature, Signer},
-    system_instruction, system_program, sysvar,
-};
-use anchor_lang::prelude::AccountMeta;
-use anyhow::Result;
-use console::style;
-use futures::future::select_all;
-use rand::rngs::OsRng;
-use solana_program::native_token::LAMPORTS_PER_SOL;
-use spl_associated_token_account::get_associated_token_address;
+use std::sync::atomic::AtomicBool;
 use std::{
-    cmp,
     collections::HashSet,
     str::FromStr,
-    sync::{
-        atomic::{AtomicBool, Ordering},
-        Arc,
-    },
+    sync::{atomic::Ordering, Arc},
 };
 
-use mpl_candy_machine::accounts as nft_accounts;
-use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{CandyMachineData, ConfigLine, Creator as CandyCreator};
-pub use mpl_token_metadata::state::{
-    MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
+use anchor_client::solana_sdk::{
+    pubkey::Pubkey,
+    signature::{Keypair, Signer},
 };
+use anyhow::Result;
+use console::style;
+use rand::rngs::OsRng;
+use spl_associated_token_account::get_associated_token_address;
 
 use crate::cache::*;
-use crate::candy_machine::{parse_config_price, CANDY_MACHINE_ID};
+use crate::candy_machine::{get_candy_machine_state, CANDY_MACHINE_ID};
 use crate::common::*;
-use crate::config::{data::*, parser::get_config_data};
-use crate::deploy::data::*;
+use crate::config::parser::get_config_data;
 use crate::deploy::errors::*;
+use crate::deploy::{
+    create_and_set_collection, create_candy_machine_data, generate_config_lines,
+    initialize_candy_machine, upload_config_lines,
+};
 use crate::setup::{setup_client, sugar_setup};
 use crate::utils::*;
 use crate::validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url};
 
-/// The maximum config line bytes per transaction.
-const MAX_TRANSACTION_BYTES: usize = 1000;
-
-/// The maximum number of config lines per transaction.
-const MAX_TRANSACTION_LINES: usize = 17;
-
-struct TxInfo {
-    candy_pubkey: Pubkey,
-    payer: Keypair,
-    chunk: Vec<(u32, ConfigLine)>,
+pub struct DeployArgs {
+    pub config: String,
+    pub cache: String,
+    pub keypair: Option<String>,
+    pub rpc_url: Option<String>,
+    pub interrupted: Arc<AtomicBool>,
 }
 
 pub async fn process_deploy(args: DeployArgs) -> Result<()> {
@@ -54,7 +40,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     // the upload command)
     let mut cache = load_cache(&args.cache, false)?;
 
-    if cache.items.0.is_empty() {
+    if cache.items.is_empty() {
         println!(
             "{}",
             style("No cache items found - run 'upload' to create the cache file first.")
@@ -93,22 +79,26 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
     let num_items = config_data.number;
     let hidden = config_data.hidden_settings.is_some();
+    let collection_in_cache = cache.items.get("-1").is_some();
+    let mut item_redeemed = false;
 
-    if num_items != (cache.items.0.len() as u64) {
+    if num_items != (cache.items.len() as u64) - (collection_in_cache as u64) {
         return Err(anyhow!(
             "Number of items ({}) do not match cache items ({})",
             num_items,
-            cache.items.0.len()
+            cache.items.len()
         ));
     } else {
         check_symbol(&config_data.symbol)?;
         check_seller_fee_basis_points(config_data.seller_fee_basis_points)?;
     }
 
+    let total_steps = 2 + (collection_in_cache as u8) - (hidden as u8);
+
     let candy_pubkey = if candy_machine_address.is_empty() {
         println!(
             "{} {}Creating candy machine",
-            style(if hidden { "[1/1]" } else { "[1/2]" }).bold().dim(),
+            style(format!("[1/{}]", total_steps)).bold().dim(),
             CANDY_EMOJI
         );
         info!("Candy machine address is empty, creating new candy machine...");
@@ -178,11 +168,11 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     } else {
         println!(
             "{} {}Loading candy machine",
-            style(if hidden { "[1/1]" } else { "[1/2]" }).bold().dim(),
+            style(format!("[1/{}]", total_steps)).bold().dim(),
             CANDY_EMOJI
         );
 
-        match Pubkey::from_str(candy_machine_address) {
+        let candy_pubkey = match Pubkey::from_str(candy_machine_address) {
             Ok(pubkey) => pubkey,
             Err(_err) => {
                 error!(
@@ -194,7 +184,20 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
                 )
                 .into());
             }
+        };
+
+        match get_candy_machine_state(&Arc::clone(&sugar_config), &candy_pubkey) {
+            Ok(candy_state) => {
+                if candy_state.items_redeemed > 0 {
+                    item_redeemed = true;
+                }
+            }
+            Err(_) => {
+                return Err(anyhow!("Candy machine from cache does't exist on chain!"));
+            }
         }
+
+        candy_pubkey
     };
 
     println!("{} {}", style("Candy machine ID:").bold(), candy_pubkey);
@@ -202,7 +205,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     if !hidden {
         println!(
             "\n{} {}Writing config lines",
-            style("[2/2]").bold().dim(),
+            style(format!("[2/{}]", total_steps)).bold().dim(),
             PAPER_EMOJI
         );
 
@@ -215,7 +218,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
             args.interrupted.store(false, Ordering::SeqCst);
 
             let errors = upload_config_lines(
-                sugar_config,
+                Arc::clone(&sugar_config),
                 candy_pubkey,
                 &mut cache,
                 config_lines,
@@ -248,350 +251,32 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         println!("\nCandy machine with hidden settings deployed.");
     }
 
-    Ok(())
-}
+    if let Some(collection_item) = cache.items.get_mut("-1") {
+        println!(
+            "\n{} {}Creating and setting the collection NFT for candy machine",
+            style(format!("[3/{}]", total_steps)).bold().dim(),
+            COLLECTION_EMOJI
+        );
 
-/// Create the candy machine data struct.
-fn create_candy_machine_data(
-    client: &Client,
-    config: &ConfigData,
-    uuid: String,
-) -> Result<CandyMachineData> {
-    let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
-
-    let end_settings = config.end_settings.as_ref().map(|s| s.into_candy_format());
-
-    let whitelist_mint_settings = config
-        .whitelist_mint_settings
-        .as_ref()
-        .map(|s| s.into_candy_format());
-
-    let hidden_settings = config
-        .hidden_settings
-        .as_ref()
-        .map(|s| s.into_candy_format());
-
-    let gatekeeper = config
-        .gatekeeper
-        .as_ref()
-        .map(|gatekeeper| gatekeeper.into_candy_format());
-
-    let mut creators: Vec<CandyCreator> = Vec::new();
-    let mut share = 0u32;
-
-    for creator in &config.creators {
-        let c = creator.into_candy_format()?;
-        share += c.share as u32;
-
-        creators.push(c);
-    }
-
-    if creators.is_empty() || creators.len() > (MAX_CREATOR_LIMIT - 1) {
-        return Err(anyhow!(
-            "The number of creators must be between 1 and {}.",
-            MAX_CREATOR_LIMIT - 1,
-        ));
-    }
-
-    if share != 100 {
-        return Err(anyhow!(
-            "Creator(s) share must add up to 100, current total {}.",
-            share,
-        ));
-    }
-
-    let price = parse_config_price(client, config)?;
-
-    let data = CandyMachineData {
-        uuid,
-        price,
-        symbol: config.symbol.clone(),
-        seller_fee_basis_points: config.seller_fee_basis_points,
-        max_supply: 0,
-        is_mutable: config.is_mutable,
-        retain_authority: config.retain_authority,
-        go_live_date,
-        end_settings,
-        creators,
-        whitelist_mint_settings,
-        hidden_settings,
-        items_available: config.number,
-        gatekeeper,
-    };
-
-    Ok(data)
-}
-
-/// Determine the config lines that need to be uploaded.
-fn generate_config_lines(
-    num_items: u64,
-    cache_items: &CacheItems,
-) -> Result<Vec<Vec<(u32, ConfigLine)>>> {
-    let mut config_lines: Vec<Vec<(u32, ConfigLine)>> = Vec::new();
-    let mut current: Vec<(u32, ConfigLine)> = Vec::new();
-    let mut tx_size = 0;
-
-    for i in 0..num_items {
-        let item = match cache_items.0.get(&i.to_string()) {
-            Some(item) => item,
-            None => {
-                return Err(
-                    DeployError::AddConfigLineFailed(format!("Missing cache item {}", i)).into(),
-                );
-            }
-        };
-
-        if item.on_chain {
-            // if the current item is on-chain already, store the previous
-            // items as a transaction since we cannot have gaps in the indices
-            // to write the config lines
-            if !current.is_empty() {
-                config_lines.push(current);
-                current = Vec::new();
-                tx_size = 0;
-            }
+        if item_redeemed {
+            println!("\nAn item has already been minted and thus cannot modify the candy machine collection. Skipping...");
+        } else if collection_item.on_chain {
+            println!("\nCollection mint already deployed.");
         } else {
-            let config_line = item
-                .into_config_line()
-                .expect("Could not convert item to config line");
+            let pb = spinner_with_style();
+            pb.set_message("Sending create and set collection NFT transaction...");
 
-            let size = (2 * STRING_LEN_SIZE) + config_line.name.len() + config_line.uri.len();
+            let (_, collection_mint) =
+                create_and_set_collection(client, candy_pubkey, &mut cache, config_data)?;
 
-            if (tx_size + size) > MAX_TRANSACTION_BYTES || current.len() == MAX_TRANSACTION_LINES {
-                // we need a separate tx to not break the size limit
-                config_lines.push(current);
-                current = Vec::new();
-                tx_size = 0;
-            }
-
-            tx_size += size;
-            current.push((i as u32, config_line));
-        }
-    }
-    // adds the last chunk (if there is one)
-    if !current.is_empty() {
-        config_lines.push(current);
-    }
-
-    Ok(config_lines)
-}
-
-/// Send the `initialize_candy_machine` instruction to the candy machine program.
-fn initialize_candy_machine(
-    config_data: &ConfigData,
-    candy_account: &Keypair,
-    candy_machine_data: CandyMachineData,
-    treasury_wallet: Pubkey,
-    program: Program,
-) -> Result<Signature> {
-    let payer = program.payer();
-    let items_available = candy_machine_data.items_available;
-
-    let candy_account_size = if candy_machine_data.hidden_settings.is_some() {
-        CONFIG_ARRAY_START
-    } else {
-        CONFIG_ARRAY_START
-            + 4
-            + items_available as usize * CONFIG_LINE_SIZE
-            + 8
-            + 2 * (items_available as usize / 8 + 1)
-    };
-
-    info!(
-        "Initializing candy machine with account size of: {} and address of: {}",
-        candy_account_size,
-        candy_account.pubkey().to_string()
-    );
-
-    let lamports = program
-        .rpc()
-        .get_minimum_balance_for_rent_exemption(candy_account_size)?;
-
-    let balance = program.rpc().get_account(&payer)?.lamports;
-
-    if lamports > balance {
-        return Err(DeployError::BalanceTooLow(
-            format!("{:.3}", (balance as f64 / LAMPORTS_PER_SOL as f64)),
-            format!("{:.3}", (lamports as f64 / LAMPORTS_PER_SOL as f64)),
-        )
-        .into());
-    }
-
-    let mut tx = program
-        .request()
-        .instruction(system_instruction::create_account(
-            &payer,
-            &candy_account.pubkey(),
-            lamports,
-            candy_account_size as u64,
-            &program.id(),
-        ))
-        .signer(candy_account)
-        .accounts(nft_accounts::InitializeCandyMachine {
-            candy_machine: candy_account.pubkey(),
-            wallet: treasury_wallet,
-            authority: payer,
-            payer,
-            system_program: system_program::id(),
-            rent: sysvar::rent::ID,
-        })
-        .args(nft_instruction::InitializeCandyMachine {
-            data: candy_machine_data,
-        });
-
-    if let Some(token) = config_data.spl_token {
-        tx = tx.accounts(AccountMeta {
-            pubkey: token,
-            is_signer: false,
-            is_writable: false,
-        });
-    }
-
-    let sig = tx.send()?;
-
-    Ok(sig)
-}
-
-/// Send the config lines to the candy machine program.
-async fn upload_config_lines(
-    sugar_config: Arc<SugarConfig>,
-    candy_pubkey: Pubkey,
-    cache: &mut Cache,
-    config_lines: Vec<Vec<(u32, ConfigLine)>>,
-    interrupted: Arc<AtomicBool>,
-) -> Result<Vec<DeployError>> {
-    println!(
-        "Sending config line(s) in {} transaction(s): (Ctrl+C to abort)",
-        config_lines.len()
-    );
-
-    let pb = progress_bar_with_style(config_lines.len() as u64);
-
-    debug!("Num of config line chunks: {:?}", config_lines.len());
-    info!("Uploading config lines in chunks...");
-
-    let mut transactions = Vec::new();
-
-    for chunk in config_lines {
-        let keypair = bs58::encode(sugar_config.keypair.to_bytes()).into_string();
-        let payer = Keypair::from_base58_string(&keypair);
-
-        transactions.push(TxInfo {
-            candy_pubkey,
-            payer,
-            chunk,
-        });
-    }
-
-    let mut handles = Vec::new();
-
-    for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT)) {
-        let config = sugar_config.clone();
-        handles.push(tokio::spawn(
-            async move { add_config_lines(config, tx).await },
-        ));
-    }
-
-    let mut errors = Vec::new();
-
-    while !interrupted.load(Ordering::SeqCst) && !handles.is_empty() {
-        match select_all(handles).await {
-            (Ok(res), _index, remaining) => {
-                // independently if the upload was successful or not
-                // we continue to try the remaining ones
-                handles = remaining;
-
-                if res.is_ok() {
-                    let indices = res?;
-
-                    for index in indices {
-                        let item = cache.items.0.get_mut(&index.to_string()).unwrap();
-                        item.on_chain = true;
-                    }
-                    // updates the progress bar
-                    pb.inc(1);
-                } else {
-                    // user will need to retry the upload
-                    errors.push(DeployError::AddConfigLineFailed(format!(
-                        "Transaction error: {:?}",
-                        res.err().unwrap()
-                    )));
-                }
-            }
-            (Err(err), _index, remaining) => {
-                // user will need to retry the upload
-                errors.push(DeployError::AddConfigLineFailed(format!(
-                    "Transaction error: {:?}",
-                    err
-                )));
-                // ignoring all errors
-                handles = remaining;
-            }
-        }
-
-        if !transactions.is_empty() {
-            // if we are half way through, let spawn more transactions
-            if (PARALLEL_LIMIT - handles.len()) > (PARALLEL_LIMIT / 2) {
-                // saves the progress to the cache file
-                cache.sync_file()?;
-
-                for tx in transactions.drain(0..cmp::min(transactions.len(), PARALLEL_LIMIT / 2)) {
-                    let config = sugar_config.clone();
-                    handles.push(tokio::spawn(
-                        async move { add_config_lines(config, tx).await },
-                    ));
-                }
-            }
+            pb.finish_and_clear();
+            println!(
+                "{} {}",
+                style("Collection mint ID:").bold(),
+                collection_mint
+            );
         }
     }
 
-    if !errors.is_empty() {
-        pb.abandon_with_message(format!("{}", style("Deploy failed ").red().bold()));
-    } else if !transactions.is_empty() {
-        pb.abandon_with_message(format!("{}", style("Upload aborted ").red().bold()));
-        return Err(DeployError::AddConfigLineFailed(
-            "Not all config lines were deployed.".to_string(),
-        )
-        .into());
-    } else {
-        pb.finish_with_message(format!("{}", style("Deploy successful ").green().bold()));
-    }
-
-    // makes sure the cache file is updated
-    cache.sync_file()?;
-
-    Ok(errors)
-}
-
-/// Send the `add_config_lines` instruction to the candy machine program.
-async fn add_config_lines(config: Arc<SugarConfig>, tx_info: TxInfo) -> Result<Vec<u32>> {
-    let client = setup_client(&config)?;
-    let program = client.program(CANDY_MACHINE_ID);
-
-    // this will be used to update the cache
-    let mut indices: Vec<u32> = Vec::new();
-    // configLine does not implement clone, so we have to do this
-    let mut config_lines: Vec<ConfigLine> = Vec::new();
-    // start index
-    let start_index = tx_info.chunk[0].0;
-
-    for (index, line) in tx_info.chunk {
-        indices.push(index);
-        config_lines.push(line);
-    }
-
-    let _sig = program
-        .request()
-        .accounts(nft_accounts::AddConfigLines {
-            candy_machine: tx_info.candy_pubkey,
-            authority: program.payer(),
-        })
-        .args(nft_instruction::AddConfigLines {
-            index: start_index,
-            config_lines,
-        })
-        .signer(&tx_info.payer)
-        .send()?;
-
-    Ok(indices)
+    Ok(())
 }

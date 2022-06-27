@@ -23,19 +23,19 @@ pub trait UploadHandler {
     async fn prepare(
         &self,
         sugar_config: &SugarConfig,
-        assets: &HashMap<usize, AssetPair>,
-        image_indices: &[usize],
-        metadata_indices: &[usize],
-        animation_indices: &[usize],
+        assets: &HashMap<isize, AssetPair>,
+        image_indices: &[isize],
+        metadata_indices: &[isize],
+        animation_indices: &[isize],
     ) -> Result<()>;
 
     /// Upload the data to a (permanent) storage.
     async fn upload_data(
         &self,
         sugar_config: &SugarConfig,
-        assets: &HashMap<usize, AssetPair>,
+        assets: &HashMap<isize, AssetPair>,
         cache: &mut Cache,
-        indices: &[usize],
+        indices: &[isize],
         data_type: DataType,
         interrupted: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>>;
@@ -51,9 +51,9 @@ pub struct UploadArgs {
 }
 
 pub struct AssetType {
-    pub image: Vec<usize>,
-    pub metadata: Vec<usize>,
-    pub animation: Vec<usize>,
+    pub image: Vec<isize>,
+    pub metadata: Vec<isize>,
+    pub animation: Vec<isize>,
 }
 
 pub async fn process_upload(args: UploadArgs) -> Result<()> {
@@ -70,10 +70,13 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     let pb = spinner_with_style();
     pb.enable_steady_tick(120);
     pb.set_message("Reading files...");
-
     let asset_pairs = get_asset_pairs(&args.assets_dir)?;
+
     // creates/loads the cache
     let mut cache = load_cache(&args.cache, true)?;
+    if asset_pairs.get(&-1).is_none() {
+        cache.items.remove("-1");
+    }
 
     // list of indices to upload
     // 0: image
@@ -85,10 +88,10 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     };
 
     for (index, pair) in &asset_pairs {
-        match cache.items.0.get_mut(&index.to_string()) {
+        match cache.items.get_mut(&index.to_string()) {
             Some(item) => {
                 // determining animation condition
-                let animation_conditon =
+                let animation_condition =
                     if item.animation_hash.is_some() && item.animation_link.as_ref().is_some() {
                         !item.animation_hash.eq(&pair.animation_hash)
                             || item.animation_link.as_ref().unwrap().is_empty()
@@ -102,7 +105,6 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                     let item_clone = item.clone();
                     cache
                         .items
-                        .0
                         .insert(index.to_string(), pair.clone().into_cache_item());
                     // we need to upload both image/metadata
                     indices.image.push(*index);
@@ -111,11 +113,10 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                     if item_clone.animation_hash.is_some() || item_clone.animation_link.is_some() {
                         indices.animation.push(*index);
                     }
-                } else if animation_conditon {
+                } else if animation_condition {
                     // we replace the entire item to trigger the image and metadata upload
                     cache
                         .items
-                        .0
                         .insert(index.to_string(), pair.clone().into_cache_item());
                     // we need to upload both image/metadata
                     indices.animation.push(*index);
@@ -135,7 +136,6 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             None => {
                 cache
                     .items
-                    .0
                     .insert(index.to_string(), pair.clone().into_cache_item());
                 // we need to upload both image/metadata
                 indices.image.push(*index);
@@ -288,7 +288,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             // might fail - removes any index that the image upload failed
             if !indices.metadata.is_empty() {
                 for index in indices.image {
-                    let item = cache.items.0.get(&index.to_string()).unwrap();
+                    let item = cache.items.get(&index.to_string()).unwrap();
 
                     if item.image_link.is_empty() {
                         // no image link, not ready for metadata upload
@@ -329,7 +329,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
             // might fail - removes any index that the image upload failed
             if !indices.metadata.is_empty() {
                 for index in indices.animation.clone() {
-                    let item = cache.items.0.get(&index.to_string()).unwrap();
+                    let item = cache.items.get(&index.to_string()).unwrap();
 
                     if item.animation_link.as_ref().unwrap().is_empty() {
                         // no image link, not ready for metadata upload
@@ -374,7 +374,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     // sanity check
 
-    cache.items.0.sort_keys();
+    cache.items.sort_keys();
     cache.sync_file()?;
 
     let mut count = 0;

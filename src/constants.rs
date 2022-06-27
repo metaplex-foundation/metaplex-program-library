@@ -104,6 +104,10 @@ pub const ASSETS_EMOJI: Emoji<'_, '_> = Emoji("🗂  ", "");
 
 pub const COMPLETE_EMOJI: Emoji<'_, '_> = Emoji("✅ ", "");
 
-pub const LAUNCH_EMOJI: Emoji<'_, '_> = Emoji("💃 ", "");
+pub const LAUNCH_EMOJI: Emoji<'_, '_> = Emoji("🚀 ", "");
+
+pub const COLLECTION_EMOJI: Emoji<'_, '_> = Emoji("📦 ", "");
 
 pub const ERROR_EMOJI: Emoji<'_, '_> = Emoji("🛑 ", "");
+
+pub const WARNING_EMOJI: Emoji<'_, '_> = Emoji("⚠️ ", "");

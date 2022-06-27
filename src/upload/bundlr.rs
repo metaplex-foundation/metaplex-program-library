@@ -231,10 +231,10 @@ impl UploadHandler for BundlrHandler {
     async fn prepare(
         &self,
         sugar_config: &SugarConfig,
-        assets: &HashMap<usize, AssetPair>,
-        image_indices: &[usize],
-        metadata_indices: &[usize],
-        animation_indices: &[usize],
+        assets: &HashMap<isize, AssetPair>,
+        image_indices: &[isize],
+        metadata_indices: &[isize],
+        animation_indices: &[isize],
     ) -> Result<()> {
         // calculates the size of the files to upload
         let mut total_size = 0;
@@ -348,9 +348,9 @@ impl UploadHandler for BundlrHandler {
     async fn upload_data(
         &self,
         _sugar_config: &SugarConfig,
-        assets: &HashMap<usize, AssetPair>,
+        assets: &HashMap<isize, AssetPair>,
         cache: &mut Cache,
-        indices: &[usize],
+        indices: &[isize],
         data_type: DataType,
         interrupted: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>> {
@@ -404,23 +404,7 @@ impl UploadHandler for BundlrHandler {
         for file_path in paths {
             // path to the image/metadata file
             let path = Path::new(&file_path);
-
-            // id of the asset (to be used to update the cache link)
-            let asset_id = String::from(
-                path.file_stem()
-                    .and_then(OsStr::to_str)
-                    .expect("Failed to convert path to unicode."),
-            );
-
-            let cache_item = match cache.items.0.get(&asset_id) {
-                Some(item) => item,
-                None => {
-                    return Err(anyhow::anyhow!(
-                        "Failed to get config item at index: {}",
-                        asset_id
-                    ))
-                }
-            };
+            let (asset_id, cache_item) = get_cache_item(path, cache)?;
 
             // todo make sure if failure it should be empty string, this makes it able to be reuploaded if animation present
 
@@ -456,7 +440,7 @@ impl UploadHandler for BundlrHandler {
                         let val = res?;
                         let link = format!("https://arweave.net/{}", val.clone().1);
                         // cache item to update
-                        let item = cache.items.0.get_mut(&val.0).unwrap();
+                        let item = cache.items.get_mut(&val.0).unwrap();
 
                         match data_type {
                             DataType::Image => item.image_link = link,

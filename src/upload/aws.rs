@@ -82,10 +82,10 @@ impl UploadHandler for AWSHandler {
     async fn prepare(
         &self,
         _sugar_config: &SugarConfig,
-        _assets: &HashMap<usize, AssetPair>,
-        _image_indices: &[usize],
-        _metadata_indices: &[usize],
-        _animation_indices: &[usize],
+        _assets: &HashMap<isize, AssetPair>,
+        _image_indices: &[isize],
+        _metadata_indices: &[isize],
+        _animation_indices: &[isize],
     ) -> Result<()> {
         Ok(())
     }
@@ -94,9 +94,9 @@ impl UploadHandler for AWSHandler {
     async fn upload_data(
         &self,
         _sugar_config: &SugarConfig,
-        assets: &HashMap<usize, AssetPair>,
+        assets: &HashMap<isize, AssetPair>,
         cache: &mut Cache,
-        indices: &[usize],
+        indices: &[isize],
         data_type: DataType,
         interrupted: Arc<AtomicBool>,
     ) -> Result<Vec<UploadError>> {
@@ -146,21 +146,8 @@ impl UploadHandler for AWSHandler {
         for file_path in paths {
             // path to the image/metadata file
             let path = Path::new(&file_path);
-            // id of the asset (to be used to update the cache link)
-            let asset_id = String::from(
-                path.file_stem()
-                    .and_then(OsStr::to_str)
-                    .expect("Failed to get convert path file ext to valid unicode."),
-            );
-            let cache_item = match cache.items.0.get(&asset_id) {
-                Some(item) => item,
-                None => {
-                    return Err(anyhow::anyhow!(
-                        "Failed to get config item at index: {}",
-                        asset_id
-                    ))
-                }
-            };
+
+            let (asset_id, cache_item) = get_cache_item(path, cache)?;
 
             objects.push(ObjectInfo {
                 asset_id: asset_id.to_string(),
@@ -197,7 +184,7 @@ impl UploadHandler for AWSHandler {
                         let val = res?;
                         let link = format!("https://{}.s3.amazonaws.com/{}", self.bucket, val.1);
                         // cache item to update
-                        let item = cache.items.0.get_mut(&val.0).unwrap();
+                        let item = cache.items.get_mut(&val.0).unwrap();
 
                         match data_type {
                             DataType::Image => item.image_link = link,

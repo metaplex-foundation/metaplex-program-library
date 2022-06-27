@@ -7,10 +7,14 @@ use anchor_client::{
     Program,
 };
 pub use anyhow::{anyhow, Result};
+use console::{style, Style};
+use dialoguer::theme::ColorfulTheme;
 pub use indicatif::{ProgressBar, ProgressStyle};
 use solana_client::rpc_client::RpcClient;
 use spl_token::state::{Account, Mint};
 use std::str::FromStr;
+use std::thread::sleep;
+use std::time::Duration;
 
 use crate::config::data::Cluster;
 
@@ -92,6 +96,20 @@ pub fn spinner_with_style() -> ProgressBar {
     pb
 }
 
+pub fn wait_with_spinner_and_countdown(seconds: u64) {
+    let pb = spinner_with_style();
+    pb.enable_steady_tick(120);
+    for i in 0..seconds {
+        pb.set_message(
+            style(format!("Waiting {} seconds...", seconds - i))
+                .dim()
+                .to_string(),
+        );
+        sleep(Duration::from_secs(1));
+    }
+    pb.finish_and_clear();
+}
+
 pub fn progress_bar_with_style(len: u64) -> ProgressBar {
     let pb = ProgressBar::new(len);
     // forces the progress bar to show immediately
@@ -101,4 +119,13 @@ pub fn progress_bar_with_style(len: u64) -> ProgressBar {
         ProgressStyle::default_bar().template("[{elapsed_precise}] {msg}{wide_bar} {pos}/{len}"),
     );
     pb
+}
+
+pub fn get_dialoguer_theme() -> ColorfulTheme {
+    ColorfulTheme {
+        prompt_style: Style::new(),
+        checked_item_prefix: style("✔".to_string()).green().force_styling(true),
+        unchecked_item_prefix: style("✔".to_string()).black().force_styling(true),
+        ..Default::default()
+    }
 }

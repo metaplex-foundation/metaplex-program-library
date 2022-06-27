@@ -1,3 +1,10 @@
+use std::ffi::OsStr;
+use std::{
+    fs::{self, DirEntry, File, OpenOptions},
+    io::{BufReader, Read},
+    sync::Arc,
+};
+
 use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
 use data_encoding::HEXLOWER;
 use glob::glob;
@@ -5,11 +12,6 @@ use regex::{Regex, RegexBuilder};
 use ring::digest::{Context, SHA256};
 use serde::Serialize;
 use serde_json;
-use std::{
-    fs::{self, DirEntry, File, OpenOptions},
-    io::{BufReader, Read},
-    sync::Arc,
-};
 
 use crate::common::*;
 use crate::validate::format::Metadata;
@@ -55,6 +57,28 @@ impl AssetPair {
     }
 }
 
+pub fn get_cache_item<'a>(path: &Path, cache: &'a mut Cache) -> Result<(String, &'a CacheItem)> {
+    let file_stem = String::from(
+        path.file_stem()
+            .and_then(OsStr::to_str)
+            .expect("Failed to get convert path file ext to valid unicode."),
+    );
+
+    // id of the asset (to be used to update the cache link)
+    let asset_id = if file_stem == "collection" {
+        String::from("-1")
+    } else {
+        file_stem
+    };
+
+    let cache_item: &CacheItem = cache
+        .items
+        .get(&asset_id)
+        .ok_or_else(|| anyhow!("Failed to get config item at index: {}", asset_id))?;
+
+    Ok((asset_id, cache_item))
+}
+
 pub fn get_data_size(assets_dir: &Path, extension: &str) -> Result<u64> {
     let path = assets_dir
         .join(format!("*.{extension}"))
@@ -68,35 +92,42 @@ pub fn get_data_size(assets_dir: &Path, extension: &str) -> Result<u64> {
 
     for asset in assets {
         let asset_path = asset?;
-        let size = std::fs::metadata(asset_path)?.len();
+        let size = fs::metadata(asset_path)?.len();
         total_size += size;
     }
 
     Ok(total_size)
 }
 
-pub fn list_files(assets_dir: &str) -> Result<Vec<DirEntry>> {
+pub fn list_files(assets_dir: &str, include_collection: bool) -> Result<Vec<DirEntry>> {
     let files = fs::read_dir(assets_dir)
         .map_err(|_| anyhow!("Failed to read assets directory"))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            !entry
-                .file_name()
+            let is_file = entry
+                .metadata()
+                .expect("Failed to retrieve metadata from file")
+                .is_file();
+
+            let path = entry.path();
+            let file_stem = path
+                .file_stem()
+                .unwrap_or_default()
                 .to_str()
-                .expect("Failed to convert file name to valid unicode.")
-                .starts_with('.')
-                && entry
-                    .metadata()
-                    .expect("Failed to retrieve metadata from file")
-                    .is_file()
+                .expect("Failed to convert file name to valid unicode.");
+
+            let is_collection = include_collection && file_stem == "collection";
+            let is_numeric = file_stem.chars().all(|c| c.is_digit(10));
+
+            is_file && (is_numeric || is_collection)
         });
 
     Ok(files.collect())
 }
 
-pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
+pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
     // filters out directories and hidden files
-    let filtered_files = list_files(assets_dir)?;
+    let filtered_files = list_files(assets_dir, true)?;
 
     let paths = filtered_files
         .into_iter()
@@ -107,7 +138,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
         })
         .collect::<Vec<String>>();
 
-    let mut asset_pairs: HashMap<usize, AssetPair> = HashMap::new();
+    let mut asset_pairs: HashMap<isize, AssetPair> = HashMap::new();
 
     let paths_ref = &paths;
 
@@ -117,8 +148,8 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
     // since there doesn't have to be video for each image/json pair, need to get rid of invalid file names before entering metadata filename loop
     for x in paths_ref {
         if let Some(captures) = animation_exists_regex.captures(x) {
-            if captures[1].parse::<usize>().is_err() {
-                let error = anyhow!("Couldn't parse filename '{}' to a valid index  number.", x);
+            if &captures[1] != "collection" && captures[1].parse::<usize>().is_err() {
+                let error = anyhow!("Couldn't parse filename '{}' to a valid index number.", x);
                 error!("{:?}", error);
                 return Err(error);
             }
@@ -131,10 +162,17 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
         .filter(|p| p.to_lowercase().ends_with(".json"))
         .collect::<Vec<String>>();
 
+    ensure_sequential_files(metadata_filenames.clone())?;
+
     for metadata_filename in metadata_filenames {
         let i = metadata_filename.split('.').next().unwrap();
+        let is_collection_index = i == "collection";
 
-        if i.parse::<usize>().is_err() {
+        let index: isize = if is_collection_index {
+            -1
+        } else if let Ok(index) = i.parse::<isize>() {
+            index
+        } else {
             let error = anyhow!(
                 "Couldn't parse filename '{}' to a valid index number.",
                 metadata_filename
@@ -157,10 +195,14 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             .collect::<Vec<String>>();
 
         let img_filename = if img_filenames.is_empty() {
-            let error = anyhow!(
-                "Couldn't parse image filename at index {} to a valid index number.",
-                i.parse::<usize>().unwrap()
-            );
+            let error = if is_collection_index {
+                anyhow!("Couldn't find the collection image filename.")
+            } else {
+                anyhow!(
+                    "Couldn't find an image filename at index {}.",
+                    i.parse::<isize>().unwrap()
+                )
+            };
             error!("{:?}", error);
             return Err(error);
         } else {
@@ -173,6 +215,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             .case_insensitive(true)
             .build()
             .expect("Failed to create regex.");
+
         let animation_filenames = paths_ref
             .clone()
             .into_iter()
@@ -226,7 +269,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<usize, AssetPair>> {
             animation: animation_filename,
         };
 
-        asset_pairs.insert(i.parse::<usize>().unwrap(), asset_pair);
+        asset_pairs.insert(index, asset_pair);
     }
 
     Ok(asset_pairs)
@@ -247,6 +290,38 @@ fn encode(file: &str) -> Result<String> {
     }
 
     Ok(HEXLOWER.encode(context.finish().as_ref()))
+}
+
+fn ensure_sequential_files(metadata_filenames: Vec<String>) -> Result<()> {
+    let mut metadata_indices = metadata_filenames
+        .into_iter()
+        .filter(|f| !f.starts_with("collection"))
+        .map(|f| {
+            f.split('.')
+                .next()
+                .unwrap()
+                .to_string()
+                .parse::<usize>()
+                .map_err(|_| {
+                    anyhow!(
+                        "Couldn't parse metadata filename '{}' to a valid index number.",
+                        f
+                    )
+                })
+        })
+        .collect::<Result<Vec<usize>>>()?;
+    metadata_indices.sort_unstable();
+
+    metadata_indices
+        .into_iter()
+        .enumerate()
+        .try_for_each(|(i, file_index)| {
+            if i != file_index {
+                Err(anyhow!("Missing metadata file '{}.json'", i))
+            } else {
+                Ok(())
+            }
+        })
 }
 
 pub fn get_updated_metadata(

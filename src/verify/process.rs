@@ -9,6 +9,7 @@ use crate::candy_machine::CANDY_MACHINE_ID;
 use crate::common::*;
 use crate::config::Cluster;
 use crate::constants::{CANDY_EMOJI, PAPER_EMOJI};
+use crate::pdas::get_collection_pda;
 use crate::utils::*;
 use crate::verify::VerifyError;
 
@@ -31,7 +32,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     // the upload command)
     let mut cache = load_cache(&args.cache, false)?;
 
-    if cache.items.0.is_empty() {
+    if cache.items.is_empty() {
         println!(
             "{}",
             style("No cache items found - run 'upload' to create the cache file first.")
@@ -73,6 +74,7 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         }
     };
     let candy_machine: CandyMachine = CandyMachine::try_deserialize(&mut data.as_slice())?;
+    let collection_info = get_collection_pda(&candy_machine_pubkey, &program).ok();
 
     pb.finish_with_message("Completed");
 
@@ -83,8 +85,8 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     );
 
     if candy_machine.data.hidden_settings.is_none() {
-        let num_items = cache.items.0.len();
-        let cache_items = &mut cache.items.0;
+        let num_items = candy_machine.data.items_available;
+        let cache_items = &mut cache.items;
         let mut errors = Vec::new();
 
         println!("Verifying {} config line(s): (Ctrl+C to abort)", num_items);
@@ -131,9 +133,8 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
             thread::sleep(Duration::from_micros(step));
         }
 
-        pb.finish();
-
         if !errors.is_empty() {
+            pb.abandon_with_message(format!("{}", style("Verification failed ").red().bold()));
             cache.sync_file()?;
 
             let total = errors.len();
@@ -143,26 +144,77 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
                 println!("- Item {}: {}", e.0, e.1);
             }
             println!("\nCache updated - re-run `deploy`.");
-
             return Err(anyhow!("{} invalid item(s) found.", total));
+        } else {
+            pb.finish_with_message(format!(
+                "{}",
+                style("Config line verification successful ").green().bold()
+            ));
         }
-
-        let cluster = match get_cluster(program.rpc())? {
-            Cluster::Devnet => "devnet",
-            Cluster::Mainnet => "mainnet",
-        };
-
+    } else {
+        // nothing else to do, there are no config lines in a candy machine
+        // with hidden settings
+        println!("\nHidden settings enabled. No config items to verify.");
+    }
+    if candy_machine.items_redeemed > 0 {
         println!(
-            "\nAll items checked out. You're good to go!\nSee your candy machine at: https://www.solaneyes.com/address/{}?cluster={}",
-            cache.program.candy_machine,
-            cluster
+            "\nAn item has already been minted. Skipping candy machine collection verification..."
         );
     } else {
-        // nothing else todo, there are no config lines in a candy machine
-        // with hidden settings
-        println!("\nHidden settings enabled. You're good to go!");
+        let collection_mint_cache = cache.program.collection_mint.clone();
+        let collection_needs_deploy = if let Some(collection_item) = cache.items.get("-1") {
+            !collection_item.on_chain
+        } else {
+            false
+        };
+        let collection_item = cache.items.get_mut("-1");
+
+        if let Some((_, collection_pda_account)) = collection_info {
+            if collection_pda_account.mint.to_string() != collection_mint_cache {
+                println!("\nInvalid collection state found");
+                cache.program.collection_mint = collection_pda_account.mint.to_string();
+                if let Some(collection_item) = collection_item {
+                    collection_item.on_chain = false;
+                }
+                cache.sync_file()?;
+                println!("Cache updated - re-run `deploy`.");
+                return Err(anyhow!(
+                    "Collection mint in cache {} doesn't match on chain collection mint {}!",
+                    collection_mint_cache,
+                    collection_pda_account.mint.to_string()
+                ));
+            } else if collection_needs_deploy {
+                println!("\nInvalid collection state found - re-run `deploy`.");
+                return Err(CacheError::InvalidState.into());
+            }
+        } else {
+            let mut error_found = false;
+            if collection_mint_cache != String::new() {
+                error_found = true;
+                cache.program.collection_mint = String::new();
+            }
+            if let Some(collection_item) = collection_item {
+                error_found = true;
+                collection_item.on_chain = false;
+            }
+            if error_found {
+                cache.sync_file()?;
+                println!("\nInvalid collection state found - re-run `deploy`.");
+                return Err(CacheError::InvalidState.into());
+            }
+        }
     }
 
+    let cluster = match get_cluster(program.rpc())? {
+        Cluster::Devnet => "devnet",
+        Cluster::Mainnet => "mainnet",
+    };
+
+    println!(
+        "\nVerification successful. You're good to go!\n\nSee your candy machine at:\n  -> https://www.solaneyes.com/address/{}?cluster={}",
+        cache.program.candy_machine,
+        cluster
+    );
     Ok(())
 }
 

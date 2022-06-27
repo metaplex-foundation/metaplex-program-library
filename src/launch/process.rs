@@ -19,6 +19,7 @@ pub struct LaunchArgs {
     pub rpc_url: Option<String>,
     pub cache: String,
     pub strict: bool,
+    pub skip_collection_prompt: bool,
     pub interrupted: Arc<AtomicBool>,
 }
 
@@ -57,6 +58,7 @@ pub async fn process_launch(args: LaunchArgs) -> Result<()> {
     let validate_args = ValidateArgs {
         assets_dir: args.assets_dir.clone(),
         strict: args.strict,
+        skip_collection_prompt: args.skip_collection_prompt,
     };
 
     process_validate(validate_args)?;

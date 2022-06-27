@@ -4,6 +4,7 @@ use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
 use mpl_candy_machine::ConfigLine;
 use serde::{Deserialize, Serialize};
+use std::ops::{Deref, DerefMut};
 use std::{fs, io::Write, path::Path};
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -49,6 +50,8 @@ pub struct CacheProgram {
     pub candy_machine: String,
     #[serde(rename = "candyMachineCreator")]
     pub candy_machine_creator: String,
+    #[serde(rename = "collectionMint")]
+    pub collection_mint: String,
 }
 
 impl CacheProgram {
@@ -56,6 +59,7 @@ impl CacheProgram {
         CacheProgram {
             candy_machine: String::new(),
             candy_machine_creator: String::new(),
+            collection_mint: String::new(),
         }
     }
 
@@ -65,6 +69,7 @@ impl CacheProgram {
         CacheProgram {
             candy_machine: candy_machine.to_string(),
             candy_machine_creator: candy_machine_creator_pda.to_string(),
+            collection_mint: String::new(),
         }
     }
 }
@@ -77,6 +82,19 @@ impl Default for CacheProgram {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CacheItems(pub IndexMap<String, CacheItem>);
+
+impl Deref for CacheItems {
+    type Target = IndexMap<String, CacheItem>; // Our wrapper struct will coerce into Option
+    fn deref(&self) -> &IndexMap<String, CacheItem> {
+        &self.0 // We just extract the inner element
+    }
+}
+
+impl DerefMut for CacheItems {
+    fn deref_mut(&mut self) -> &mut IndexMap<String, CacheItem> {
+        &mut self.0
+    }
+}
 
 impl CacheItems {
     pub fn new() -> Self {
