@@ -419,10 +419,28 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
+    ) -> Result<()> {
+        execute_sale::execute_sale(
+            ctx,
+            escrow_payment_bump,
+            _free_trade_state_bump,
+            program_as_signer_bump,
+            buyer_price,
+            token_size,
+        )
+    }
+
+    pub fn execute_partial_sale<'info>(
+        ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+        escrow_payment_bump: u8,
+        _free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
         partial_order_size: Option<u64>,
         partial_order_price: Option<u64>,
     ) -> Result<()> {
-        execute_sale::execute_sale(
+        execute_sale::execute_partial_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -449,6 +467,28 @@ pub mod auction_house {
             program_as_signer_bump,
             buyer_price,
             token_size,
+        )
+    }
+
+    pub fn auctioneer_execute_partial_sale<'info>(
+        ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
+        escrow_payment_bump: u8,
+        _free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
+        buyer_price: u64,
+        token_size: u64,
+        partial_order_size: Option<u64>,
+        partial_order_price: Option<u64>,
+    ) -> Result<()> {
+        execute_sale::auctioneer_execute_partial_sale(
+            ctx,
+            escrow_payment_bump,
+            _free_trade_state_bump,
+            program_as_signer_bump,
+            buyer_price,
+            token_size,
+            partial_order_size,
+            partial_order_price,
         )
     }
 
