@@ -2,6 +2,7 @@ use std::{fmt::Debug, str::FromStr};
 
 use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
+use solana_gateway::state::{get_expire_address_with_seed, get_gateway_token_address_with_seed};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
@@ -20,8 +21,7 @@ use crate::{
     core::{
         helpers::{
             airdrop, assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
-            get_balance, get_network_expire, get_network_token, get_token_account,
-            get_token_balance, mint_to_wallets, prepare_nft,
+            get_balance, get_token_account, get_token_balance, mint_to_wallets, prepare_nft,
         },
         MasterEditionV2 as MasterEditionManager, Metadata as MetadataManager,
     },
@@ -281,10 +281,10 @@ impl GatekeeperInfo {
         gatekeeper_config: GatekeeperConfig,
         payer: Pubkey,
     ) -> Self {
-        let network_token = get_network_token(&payer, &gateway_token_info, gateway_app);
+        let network_token = get_gateway_token_address_with_seed(&payer, &None, &gateway_token_info);
 
         let expire_token: Option<Pubkey> = if gatekeeper_config.expire_on_use {
-            let expire_token = get_network_expire(&gateway_token_info, gateway_app);
+            let expire_token = get_expire_address_with_seed(&gateway_token_info);
             Some(expire_token.0)
         } else {
             None
