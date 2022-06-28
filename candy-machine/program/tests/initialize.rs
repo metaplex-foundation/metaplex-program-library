@@ -12,7 +12,7 @@ use solana_gateway::{
         get_gatekeeper_address_with_seed, get_gateway_token_address_with_seed, GatewayTokenState,
     },
 };
-
+use solana_program::pubkey;
 use solana_program_test::*;
 use solana_sdk::{
     clock::UnixTimestamp,
@@ -32,6 +32,8 @@ use mpl_candy_machine::{
     CandyMachineData, GatekeeperConfig as GKConfig, WhitelistMintMode::BurnEveryTime,
 };
 use utils::{custom_config, GatekeeperInfo};
+
+const GATEWAY_ACCOUNT_PUBKEY: Pubkey = pubkey!("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs");
 
 mod core;
 mod utils;
@@ -89,8 +91,7 @@ async fn bot_tax_on_gatekeeper_expire_token() {
 
     let client = RpcClient::new("https://metaplex.devnet.rpcpool.com".to_string());
 
-    let gateway_account_pubkey =
-        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap();
+    let gateway_account_pubkey = GATEWAY_ACCOUNT_PUBKEY;
     let gateway_executable_pubkey =
         Pubkey::from_str("D5iXG4Z4hajVFAs8UbmBwdfe7PFqvoT4LNVvt1nKU5bx").unwrap();
     let gateway_account = client.get_account(&gateway_account_pubkey).unwrap();
@@ -109,7 +110,7 @@ async fn bot_tax_on_gatekeeper_expire_token() {
         Some(GatekeeperInfo {
             set: true,
             network_expire_feature: None,
-            gateway_app: Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
+            gateway_app: GATEWAY_ACCOUNT_PUBKEY,
             gateway_token_info: gatekeeper_network.pubkey(),
             gatekeeper_config: GatekeeperConfig {
                 gatekeeper_network: gatekeeper_network.pubkey(),
@@ -226,8 +227,7 @@ async fn bot_tax_on_gatekeeper() {
 
     let client = RpcClient::new("https://metaplex.devnet.rpcpool.com".to_string());
 
-    let gateway_account_pubkey =
-        Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap();
+    let gateway_account_pubkey = GATEWAY_ACCOUNT_PUBKEY;
     let gateway_executable_pubkey =
         Pubkey::from_str("D5iXG4Z4hajVFAs8UbmBwdfe7PFqvoT4LNVvt1nKU5bx").unwrap();
     let gateway_account = client.get_account(&gateway_account_pubkey).unwrap();
@@ -246,7 +246,7 @@ async fn bot_tax_on_gatekeeper() {
         Some(GatekeeperInfo {
             set: true,
             network_expire_feature: None,
-            gateway_app: Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
+            gateway_app: GATEWAY_ACCOUNT_PUBKEY,
             gateway_token_info: gatekeeper_network.pubkey(),
             gatekeeper_config: GatekeeperConfig {
                 gatekeeper_network: gatekeeper_network.pubkey(),
