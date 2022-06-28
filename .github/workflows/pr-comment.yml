@@ -16,6 +16,15 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
+  dump-context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
   get-changes-scope:
     if:
       contains(fromJson('["OWNER", "MEMBER"]'), github.event.review.author_association) == true &&
