@@ -1439,7 +1439,7 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
-    let mut collection_data = Metadata::from_account_info(collection_info)?;
+    let collection_data = Metadata::from_account_info(collection_info)?;
     if metadata.update_authority != *update_authority.key
         || metadata.update_authority != collection_data.update_authority
     {
@@ -1478,16 +1478,6 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         return Err(MetadataError::SizedCollection.into());
     }
 
-    // If the NFT has collection data, we set it to be unverified and then update the collection
-    // size on the Collection Parent.
-    if let Some(details) = collection_data.collection_details {
-        match details {
-            CollectionDetails::V1 { size } => {
-                collection_data.collection_details = Some(CollectionDetails::V1 { size: size + 1 });
-                collection_data.serialize(&mut *collection_info.try_borrow_mut_data()?)?;
-            }
-        }
-    }
     metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     Ok(())
 }
