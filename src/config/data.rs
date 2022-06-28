@@ -3,7 +3,7 @@ use anchor_client::solana_sdk::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 pub use anyhow::{anyhow, Result};
 use chrono::DateTime;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt::Display;
+use std::fmt::{self, Display};
 use std::str::FromStr;
 
 use mpl_candy_machine::{
@@ -286,49 +286,23 @@ impl HiddenSettings {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum UploadMethod {
     Bundlr,
     AWS,
     NftStorage,
 }
 
+impl fmt::Display for UploadMethod {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 impl Default for UploadMethod {
     fn default() -> UploadMethod {
         UploadMethod::Bundlr
-    }
-}
-
-impl FromStr for UploadMethod {
-    type Err = ConfigError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "bundlr" => Ok(UploadMethod::Bundlr),
-            "aws" => Ok(UploadMethod::AWS),
-            "nft_storage" => Ok(UploadMethod::NftStorage),
-            _ => Err(ConfigError::InvalidUploadMethod(s.to_string())),
-        }
-    }
-}
-
-impl ToString for UploadMethod {
-    fn to_string(&self) -> String {
-        match self {
-            UploadMethod::Bundlr => "bundlr".to_string(),
-            UploadMethod::AWS => "aws".to_string(),
-            UploadMethod::NftStorage => "nft_storage".to_string(),
-        }
-    }
-}
-
-impl<'de> Deserialize<'de> for UploadMethod {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let s: String = Deserialize::deserialize(deserializer)?;
-        FromStr::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
