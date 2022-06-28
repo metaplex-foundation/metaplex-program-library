@@ -228,7 +228,6 @@ pub struct GatekeeperConfig {
 }
 
 impl GatekeeperConfig {
-    #[allow(dead_code)]
     pub fn new(gatekeeper_network: Pubkey, expire_on_use: bool) -> Self {
         GatekeeperConfig {
             gatekeeper_network,
@@ -257,7 +256,6 @@ pub struct GatekeeperInfo {
 }
 
 impl GatekeeperInfo {
-    #[allow(dead_code)]
     pub fn new(
         set: bool,
         network_expire_feature: Option<Pubkey>,

@@ -268,6 +268,7 @@ pub fn handle_mint_nft<'info>(
             }
 
             let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
+            remaining_accounts_counter += 1;
 
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::NetworkExpireFeatureMissing);
