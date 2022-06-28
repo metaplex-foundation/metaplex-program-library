@@ -1940,6 +1940,13 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Mint of the Collection"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
         }
       ],
       "args": [

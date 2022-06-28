@@ -1439,7 +1439,7 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     assert_owned_by(edition_account_info, program_id)?;
 
     let mut metadata = Metadata::from_account_info(metadata_info)?;
-    let mut collection_data = Metadata::from_account_info(collection_info)?;
+    let collection_data = Metadata::from_account_info(collection_info)?;
     if metadata.update_authority != *update_authority.key
         || metadata.update_authority != collection_data.update_authority
     {
@@ -1478,16 +1478,6 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         return Err(MetadataError::SizedCollection.into());
     }
 
-    // If the NFT has collection data, we set it to be unverified and then update the collection
-    // size on the Collection Parent.
-    if let Some(details) = collection_data.collection_details {
-        match details {
-            CollectionDetails::V1 { size } => {
-                collection_data.collection_details = Some(CollectionDetails::V1 { size: size + 1 });
-                collection_data.serialize(&mut *collection_info.try_borrow_mut_data()?)?;
-            }
-        }
-    }
     metadata.serialize(&mut *metadata_info.try_borrow_mut_data()?)?;
     Ok(())
 }
@@ -1809,8 +1799,11 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
         if let Some(ref details) = collection_metadata.collection_details {
             match details {
                 CollectionDetails::V1 { size } => {
-                    collection_metadata.collection_details =
-                        Some(CollectionDetails::V1 { size: size - 1 });
+                    collection_metadata.collection_details = Some(CollectionDetails::V1 {
+                        size: size
+                            .checked_sub(1)
+                            .ok_or(MetadataError::NumericalOverflowError)?,
+                    });
                     clean_write_metadata(&mut collection_metadata, collection_metadata_info)?;
                 }
             }
@@ -1860,16 +1853,11 @@ pub fn set_collection_size(
         }
     }
 
-    if let Some(details) = metadata.collection_details {
-        match details {
-            CollectionDetails::V1 {
-                size: _current_size,
-            } => {
-                metadata.collection_details = Some(CollectionDetails::V1 { size });
-            }
-        }
+    // Only unsized collections can have the size set, and only once.
+    if metadata.collection_details.is_some() {
+        return Err(MetadataError::SizedCollection.into());
     } else {
-        return Err(MetadataError::NotACollectionParent.into());
+        metadata.collection_details = Some(CollectionDetails::V1 { size });
     }
 
     clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)?;
