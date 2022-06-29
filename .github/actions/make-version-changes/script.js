@@ -105,7 +105,8 @@ const updateCratesPackage = async (io, cwdArgs, pkg, semvar) => {
 
   // generate IDL
   if (packageHasIdl(pkg)) {
-    let idlName = `${pkg.replace('-', '_')}.json`;
+    // replace all instances of - with _
+    let idlName = `${pkg.replaceAll('-', '_')}.json`;
     if (packageUsesAnchor(pkg)) {
       console.log(
         'generate IDL via anchor',
