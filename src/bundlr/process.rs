@@ -4,7 +4,7 @@ use console::style;
 use data_encoding::BASE64URL;
 
 use crate::candy_machine::CANDY_MACHINE_ID;
-use crate::{cli::BundlrAction, common::*, config::*, upload::BundlrHandler, utils::*};
+use crate::{cli::BundlrAction, common::*, config::*, upload::methods::BundlrMethod, utils::*};
 
 // The minimum amount required for withdraw.
 const LIMIT: u64 = 5000;
@@ -47,7 +47,7 @@ pub async fn process_bundlr(args: BundlrArgs) -> Result<()> {
         Cluster::Mainnet => BUNDLR_MAINNET,
     };
 
-    let balance = BundlrHandler::get_bundlr_balance(&http_client, &address, bundlr_node).await?;
+    let balance = BundlrMethod::get_bundlr_balance(&http_client, &address, bundlr_node).await?;
 
     pb.finish_and_clear();
 

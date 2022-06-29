@@ -1,7 +1,8 @@
-use async_trait::async_trait;
 use console::style;
 use std::{
+    borrow::Borrow,
     collections::HashSet,
+    ffi::OsStr,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
@@ -10,36 +11,10 @@ use std::{
 
 use crate::cache::{load_cache, Cache};
 use crate::common::*;
-use crate::config::{data::SugarConfig, get_config_data, UploadMethod};
-use crate::upload::bundlr::BundlrHandler;
+use crate::config::{get_config_data, SugarConfig};
 use crate::upload::*;
 use crate::utils::*;
 use crate::validate::format::Metadata;
-
-/// A trait for storage upload handlers.
-#[async_trait]
-pub trait UploadHandler {
-    /// Prepares the upload of the specified image/metadata files.
-    async fn prepare(
-        &self,
-        sugar_config: &SugarConfig,
-        assets: &HashMap<isize, AssetPair>,
-        image_indices: &[isize],
-        metadata_indices: &[isize],
-        animation_indices: &[isize],
-    ) -> Result<()>;
-
-    /// Upload the data to a (permanent) storage.
-    async fn upload_data(
-        &self,
-        sugar_config: &SugarConfig,
-        assets: &HashMap<isize, AssetPair>,
-        cache: &mut Cache,
-        indices: &[isize],
-        data_type: DataType,
-        interrupted: Arc<AtomicBool>,
-    ) -> Result<Vec<UploadError>>;
-}
 
 pub struct UploadArgs {
     pub assets_dir: String,
@@ -79,8 +54,6 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     }
 
     // list of indices to upload
-    // 0: image
-    // 1: metadata
     let mut indices = AssetType {
         image: Vec::new(),
         metadata: Vec::new(),
@@ -90,41 +63,30 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     for (index, pair) in &asset_pairs {
         match cache.items.get_mut(&index.to_string()) {
             Some(item) => {
-                // determining animation condition
-                let animation_condition =
-                    if item.animation_hash.is_some() && item.animation_link.as_ref().is_some() {
-                        !item.animation_hash.eq(&pair.animation_hash)
-                            || item.animation_link.as_ref().unwrap().is_empty()
-                    } else {
-                        false
-                    };
+                let image_changed =
+                    !&item.image_hash.eq(&pair.image_hash) || item.image_link.is_empty();
 
-                // has the image file changed?
-                if !&item.image_hash.eq(&pair.image_hash) || item.image_link.is_empty() {
-                    // we replace the entire item to trigger the image and metadata upload
-                    let item_clone = item.clone();
-                    cache
-                        .items
-                        .insert(index.to_string(), pair.clone().into_cache_item());
-                    // we need to upload both image/metadata
+                let animation_changed = !&item.animation_hash.eq(&pair.animation_hash)
+                    || (item.animation_link.is_none() && pair.animation.is_some());
+
+                let metadata_changed =
+                    !item.metadata_hash.eq(&pair.metadata_hash) || item.metadata_link.is_empty();
+
+                if image_changed {
+                    // triggers the image upload
+                    item.image_hash = pair.image_hash.clone();
+                    item.image_link = String::new();
                     indices.image.push(*index);
-                    indices.metadata.push(*index);
+                }
 
-                    if item_clone.animation_hash.is_some() || item_clone.animation_link.is_some() {
-                        indices.animation.push(*index);
-                    }
-                } else if animation_condition {
-                    // we replace the entire item to trigger the image and metadata upload
-                    cache
-                        .items
-                        .insert(index.to_string(), pair.clone().into_cache_item());
-                    // we need to upload both image/metadata
+                if animation_changed {
+                    // triggers the animation upload
+                    item.animation_hash = pair.animation_hash.clone();
+                    item.animation_link = None;
                     indices.animation.push(*index);
-                    indices.image.push(*index);
-                    indices.metadata.push(*index);
-                } else if !item.metadata_hash.eq(&pair.metadata_hash)
-                    || item.metadata_link.is_empty()
-                {
+                }
+
+                if metadata_changed || image_changed || animation_changed {
                     // triggers the metadata upload
                     item.metadata_hash = pair.metadata_hash.clone();
                     item.metadata_link = String::new();
@@ -140,10 +102,10 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                 // we need to upload both image/metadata
                 indices.image.push(*index);
                 indices.metadata.push(*index);
-
-                if pair.animation_hash.clone().is_some() {
+                // and we might need to upload the animation
+                if pair.animation.is_some() {
                     indices.animation.push(*index);
-                };
+                }
             }
         }
         // sanity check: verifies that both symbol and seller-fee-basis-points are the
@@ -184,15 +146,17 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     pb.finish_and_clear();
 
     println!(
-        "Found {} image/metadata pair(s), uploading files:",
+        "Found {} asset pair(s), uploading files:",
         asset_pairs.len()
     );
     println!("+--------------------+");
     println!("| images    | {:>6} |", indices.image.len());
     println!("| metadata  | {:>6} |", indices.metadata.len());
+
     if !indices.animation.is_empty() {
         println!("| animation | {:>6} |", indices.animation.len());
     }
+
     println!("+--------------------+");
 
     // this should never happen, since every time we update the image file we
@@ -215,40 +179,32 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     if need_upload {
         println!(
             "\n{} {}Initializing upload",
-            if !indices.animation.is_empty() {
-                style("[2/5]").bold().dim()
+            style(if indices.animation.is_empty() {
+                "[2/4]"
             } else {
-                style("[2/4]").bold().dim()
-            },
+                "[2/5]"
+            })
+            .bold()
+            .dim(),
             COMPUTER_EMOJI
         );
 
         let pb = spinner_with_style();
         pb.set_message("Connecting...");
 
-        let handler = match config_data.upload_method {
-            UploadMethod::Bundlr => Box::new(
-                BundlrHandler::initialize(&get_config_data(&args.config)?, &sugar_config).await?,
-            ) as Box<dyn UploadHandler>,
-            UploadMethod::AWS => {
-                Box::new(AWSHandler::initialize(&get_config_data(&args.config)?).await?)
-                    as Box<dyn UploadHandler>
-            }
-            UploadMethod::NftStorage => {
-                Box::new(NftStorageHandler::initialize(&get_config_data(&args.config)?).await?)
-                    as Box<dyn UploadHandler>
-            }
-        };
+        let storage = uploader::initialize(&sugar_config, &config_data).await?;
 
         pb.finish_with_message("Connected");
 
-        handler
+        storage
             .prepare(
                 &sugar_config,
                 &asset_pairs,
-                &indices.image,
-                &indices.metadata,
-                &indices.animation,
+                vec![
+                    (DataType::Image, &indices.image),
+                    (DataType::Animation, &indices.animation),
+                    (DataType::Metadata, &indices.metadata),
+                ],
             )
             .await?;
 
@@ -257,11 +213,13 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
         println!(
             "\n{} {}Uploading image files {}",
-            if !indices.animation.is_empty() {
-                style("[3/5]").bold().dim()
+            style(if indices.animation.is_empty() {
+                "[3/4]"
             } else {
-                style("[3/4]").bold().dim()
-            },
+                "[3/5]"
+            })
+            .bold()
+            .dim(),
             UPLOAD_EMOJI,
             if indices.image.is_empty() {
                 "(skipping)"
@@ -272,16 +230,16 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
         if !indices.image.is_empty() {
             errors.extend(
-                handler
-                    .upload_data(
-                        &sugar_config,
-                        &asset_pairs,
-                        &mut cache,
-                        &indices.image,
-                        DataType::Image,
-                        args.interrupted.clone(),
-                    )
-                    .await?,
+                upload_data(
+                    &sugar_config,
+                    &asset_pairs,
+                    &mut cache,
+                    &indices.image,
+                    DataType::Image,
+                    storage.borrow(),
+                    args.interrupted.clone(),
+                )
+                .await?,
             );
 
             // updates the list of metadata indices since the image upload
@@ -313,26 +271,26 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
         if !indices.animation.is_empty() {
             errors.extend(
-                handler
-                    .upload_data(
-                        &sugar_config,
-                        &asset_pairs,
-                        &mut cache,
-                        &indices.animation,
-                        DataType::Animation,
-                        args.interrupted.clone(),
-                    )
-                    .await?,
+                upload_data(
+                    &sugar_config,
+                    &asset_pairs,
+                    &mut cache,
+                    &indices.animation,
+                    DataType::Animation,
+                    storage.borrow(),
+                    args.interrupted.clone(),
+                )
+                .await?,
             );
 
             // updates the list of metadata indices since the image upload
-            // might fail - removes any index that the image upload failed
+            // might fail - removes any index that the animation upload failed
             if !indices.metadata.is_empty() {
                 for index in indices.animation.clone() {
                     let item = cache.items.get(&index.to_string()).unwrap();
 
-                    if item.animation_link.as_ref().unwrap().is_empty() {
-                        // no image link, not ready for metadata upload
+                    if item.animation_link.is_none() {
+                        // no animation link, not ready for metadata upload
                         indices.metadata.retain(|&x| x != index);
                     }
                 }
@@ -341,11 +299,13 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
         println!(
             "\n{} {}Uploading metadata files {}",
-            if !indices.animation.is_empty() {
-                style("[5/5]").bold().dim()
+            style(if indices.animation.is_empty() {
+                "[4/4]"
             } else {
-                style("[4/4]").bold().dim()
-            },
+                "[5/5]"
+            })
+            .bold()
+            .dim(),
             UPLOAD_EMOJI,
             if indices.metadata.is_empty() {
                 "(skipping)"
@@ -356,16 +316,16 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
         if !indices.metadata.is_empty() {
             errors.extend(
-                handler
-                    .upload_data(
-                        &sugar_config,
-                        &asset_pairs,
-                        &mut cache,
-                        &indices.metadata,
-                        DataType::Metadata,
-                        args.interrupted.clone(),
-                    )
-                    .await?,
+                upload_data(
+                    &sugar_config,
+                    &asset_pairs,
+                    &mut cache,
+                    &indices.metadata,
+                    DataType::Metadata,
+                    storage.borrow(),
+                    args.interrupted.clone(),
+                )
+                .await?,
             );
         }
     } else {
@@ -393,21 +353,12 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     println!(
         "\n{}",
-        if !indices.animation.is_empty() {
-            style(format!(
-                "{}/{} image/animation/metadata pair(s) uploaded.",
-                count,
-                asset_pairs.len()
-            ))
-            .bold()
-        } else {
-            style(format!(
-                "{}/{} image/metadata pair(s) uploaded.",
-                count,
-                asset_pairs.len()
-            ))
-            .bold()
-        }
+        style(format!(
+            "{}/{} asset pair(s) uploaded.",
+            count,
+            asset_pairs.len()
+        ))
+        .bold()
     );
 
     if count != asset_pairs.len() {
@@ -431,11 +382,129 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
             message
         } else {
-            "Incorrect number of image/metadata pairs".to_string()
+            "Not all files were uploaded.".to_string()
         };
 
         return Err(UploadError::Incomplete(message).into());
     }
 
     Ok(())
+}
+
+/// Upload the data to the selected storage.
+async fn upload_data(
+    sugar_config: &SugarConfig,
+    asset_pairs: &HashMap<isize, AssetPair>,
+    cache: &mut Cache,
+    indices: &[isize],
+    data_type: DataType,
+    uploader: &dyn Uploader,
+    interrupted: Arc<AtomicBool>,
+) -> Result<Vec<UploadError>> {
+    let mut extension = HashSet::with_capacity(1);
+    let mut paths = Vec::new();
+
+    for index in indices {
+        let item = match asset_pairs.get(index) {
+            Some(asset_index) => asset_index,
+            None => return Err(anyhow::anyhow!("Failed to get asset at index {}", index)),
+        };
+        // chooses the file path based on the data type
+        let file_path = match data_type {
+            DataType::Image => item.image.clone(),
+            DataType::Metadata => item.metadata.clone(),
+            DataType::Animation => {
+                if let Some(animation) = item.animation.clone() {
+                    animation
+                } else {
+                    return Err(anyhow::anyhow!(
+                        "Missing animation path for asset at index {}",
+                        index
+                    ));
+                }
+            }
+        };
+
+        let path = Path::new(&file_path);
+        let ext = path
+            .extension()
+            .and_then(OsStr::to_str)
+            .expect("Failed to convert extension from unicode");
+        extension.insert(String::from(ext));
+
+        paths.push(file_path);
+    }
+
+    // validates that all files have the same extension
+    let extension = if extension.len() == 1 {
+        extension.iter().next().unwrap()
+    } else {
+        return Err(anyhow!("Invalid file extension: {:?}", extension));
+    };
+
+    let content_type = match data_type {
+        DataType::Image => format!("image/{}", extension),
+        DataType::Metadata => "application/json".to_string(),
+        DataType::Animation => format!("video/{}", extension),
+    };
+
+    // uploading data
+
+    println!("\nSending data: (Ctrl+C to abort)");
+
+    let pb = progress_bar_with_style(paths.len() as u64);
+
+    let mut assets = Vec::new();
+
+    for file_path in paths {
+        // path to the media/metadata file
+        let path = Path::new(&file_path);
+        let file_name = String::from(
+            path.file_name()
+                .and_then(OsStr::to_str)
+                .expect("Filed to get file name."),
+        );
+        let (asset_id, cache_item) = get_cache_item(path, cache)?;
+
+        let content = match data_type {
+            // replaces the media link without modifying the original file to avoid
+            // changing the hash of the metadata file
+            DataType::Metadata => get_updated_metadata(
+                &file_path,
+                &cache_item.image_link,
+                &cache_item.animation_link,
+            )?,
+            _ => file_path.clone(),
+        };
+
+        assets.push(AssetInfo {
+            asset_id: asset_id.to_string(),
+            name: file_name,
+            content,
+            data_type: data_type.clone(),
+            content_type: content_type.clone(),
+        });
+    }
+
+    let errors = uploader
+        .upload(
+            sugar_config,
+            cache,
+            data_type,
+            &mut assets,
+            &pb,
+            interrupted,
+        )
+        .await?;
+
+    if !errors.is_empty() {
+        pb.abandon_with_message(format!("{}", style("Upload failed ").red().bold()));
+    } else {
+        pb.finish_with_message(format!("{}", style("Upload successful ").green().bold()));
+    }
+
+    // makes sure the cache file is updated
+    cache.sync_file()?;
+
+    Ok(errors)
 }

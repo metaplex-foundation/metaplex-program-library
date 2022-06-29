@@ -44,7 +44,11 @@ pub fn sugar_setup(
             Ok(keypair) => keypair,
             Err(e) => {
                 error!("Failed to read keypair file: {}", e);
-                return Err(anyhow!("Failed to read keypair file: {}", e));
+                return Err(anyhow!(
+                    "Failed to read keypair file: {}, {}",
+                    keypair_path,
+                    e
+                ));
             }
         },
 

@@ -37,15 +37,17 @@ par-stream = { version = "0.10.0", features = ["runtime-tokio"] }
 rand = "0.7.0"
 rayon = "1.5.1"
 regex = "1.5.4"
-reqwest = { version = "0.11.9", features = ["json"] }
+reqwest = { version = "0.11.9", features = ["json", "multipart"] }
 ring = "0.16.20"
 serde = { version = "1.0.133", features = ["derive"] }
 serde_json = "1.0.74"
 serde_yaml = "0.8.23"
+shadow-drive-user-staking = "0.1.1"
 shellexpand = "2.1.0"
 solana-account-decoder = "1.8.0"
 solana-client = "1.8.1"
 solana-program = "1.8.1"
+solana-transaction-status = "1.8.1"
 spl-associated-token-account = "1.0.3"
 spl-token = "3.2.0"
 structopt = "0.3.25"

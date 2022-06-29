@@ -9,7 +9,7 @@
 # STORAGE="bundlr"
 #
 # ENV_URL="devnet"
-# RPC="https://devnet.genesysgo.net:/"
+# RPC="https://devnet.genesysgo.net/"
 # STORAGE="bundlr"
 #
 # ITEMS=10
@@ -217,7 +217,7 @@ if [ -z ${STORAGE+x} ]; then
     CYN "Storage type:"
     echo "1. bundlr (default)"
     echo "2. aws"
-    echo "3. NFT Storage"
+    echo "3. nft_storage"
     echo  -n "$(CYN "Select the storage type [1-3]") (default 1): "
     read Input
     case "$Input" in
@@ -521,7 +521,7 @@ if [ $RESUME -eq 0 ]; then
             if [ "$ANIMATION" = 1 ]; then
                 cp "$ASSETS_DIR/template_animation.mp4" "$ASSETS_DIR/$i.mp4"
                 ANIMATION_URL=",\n\t\"animation_url\": \"$i.mp4\","
-                ANIMATION_FILE=",\n\t\t{\n\t\t\t\"uri\": \"$i.mp4\",\n\t\t\t\"type\": \"application/mp4\"\n\t\t}],"
+                ANIMATION_FILE=",\n\t\t{\n\t\t\t\"uri\": \"$i.mp4\",\n\t\t\t\"type\": \"video/mp4\"\n\t\t}],"
             fi
             printf "$METADATA" "$NAME" "$NAME" "$MEDIA_NAME" "$ANIMATION_URL" "$MEDIA_NAME" "$MEDIA_TYPE" "$ANIMATION_FILE" > "$ASSETS_DIR/$i.json"
         done
