@@ -1,0 +1,31 @@
+name: 'Publish version changes'
+description: 'Publish version changes via respective package managers'
+
+inputs:
+  changed-packages:
+    description: 'Changed packages - in format of <package>/<type>'
+    required: true
+  cargo-token:
+    description: 'Token with which we can publish crates'
+    required: true
+  npm-token:
+    description: 'Token with which we can publish NPM packages'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Install dependency packages for script
+      run: |
+        yarn init --yes
+        yarn add @iarna/toml axios
+      shell: bash
+
+    - name: Make version changes
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const script = require('.github/actions/publish-version-changes/script.js')
+          await script(${{ inputs.changed-packages }}, '${{ inputs.cargo-token }}', '${{ inputs.npm-token }}')
