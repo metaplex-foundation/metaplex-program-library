@@ -1,19 +1,16 @@
 pub mod config;
 
-use crate::{constants::*, errors::*, sell::config::*};
+use crate::{constants::*, sell::config::*};
 
-use anchor_lang::{prelude::*, AnchorDeserialize, InstructionData};
+use anchor_lang::{prelude::*, AnchorDeserialize};
 use anchor_spl::token::{Token, TokenAccount};
 
 use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
-    cpi::accounts::AuctioneerSell as AHSell,
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
-
-use solana_program::{clock::UnixTimestamp, program::invoke_signed};
 
 /// Accounts for the [`sell_with_auctioneer` handler](auction_house/fn.sell_with_auctioneer.html).
 #[derive(Accounts, Clone)]

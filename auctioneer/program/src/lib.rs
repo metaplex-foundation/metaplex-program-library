@@ -10,11 +10,9 @@ pub mod sell;
 pub mod utils;
 pub mod withdraw;
 
-use crate::{authorize::*, bid::*, cancel::*, deposit::*, execute_sale::*, sell::*, withdraw::*};
+use crate::{authorize::*, cancel::*, deposit::*, execute_sale::*, withdraw::*};
 
 use anchor_lang::prelude::*;
-
-use solana_program::clock::UnixTimestamp;
 
 declare_id!("neer8g6yJq2mQM6KbnViEDAD4gr3gRZyMMf4F2p3MEh");
 
@@ -81,55 +79,55 @@ pub mod auctioneer {
         )
     }
 
-    /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
-    pub fn sell<'info>(
-        ctx: Context<'_, '_, '_, 'info, AuctioneerSell<'info>>,
-        trade_state_bump: u8,
-        free_trade_state_bump: u8,
-        program_as_signer_bump: u8,
-        auctioneer_authority_bump: u8,
-        token_size: u64,
-        start_time: UnixTimestamp,
-        end_time: UnixTimestamp,
-        reserve_price: Option<u64>,
-        min_bid_increment: Option<u64>,
-        time_ext_period: Option<u32>,
-        time_ext_delta: Option<u32>,
-        allow_high_bid_cancel: Option<bool>,
-    ) -> Result<()> {
-        auctioneer_sell(
-            ctx,
-            trade_state_bump,
-            free_trade_state_bump,
-            program_as_signer_bump,
-            auctioneer_authority_bump,
-            token_size,
-            start_time,
-            end_time,
-            reserve_price,
-            min_bid_increment,
-            time_ext_period,
-            time_ext_delta,
-            allow_high_bid_cancel,
-        )
-    }
+    // /// Create a sell bid by creating a `seller_trade_state` account and approving the program as the token delegate.
+    // pub fn sell<'info>(
+    //     ctx: Context<'_, '_, '_, 'info, AuctioneerSell<'info>>,
+    //     trade_state_bump: u8,
+    //     free_trade_state_bump: u8,
+    //     program_as_signer_bump: u8,
+    //     auctioneer_authority_bump: u8,
+    //     token_size: u64,
+    //     start_time: UnixTimestamp,
+    //     end_time: UnixTimestamp,
+    //     reserve_price: Option<u64>,
+    //     min_bid_increment: Option<u64>,
+    //     time_ext_period: Option<u32>,
+    //     time_ext_delta: Option<u32>,
+    //     allow_high_bid_cancel: Option<bool>,
+    // ) -> Result<()> {
+    //     auctioneer_sell(
+    //         ctx,
+    //         trade_state_bump,
+    //         free_trade_state_bump,
+    //         program_as_signer_bump,
+    //         auctioneer_authority_bump,
+    //         token_size,
+    //         start_time,
+    //         end_time,
+    //         reserve_price,
+    //         min_bid_increment,
+    //         time_ext_period,
+    //         time_ext_delta,
+    //         allow_high_bid_cancel,
+    //     )
+    // }
 
-    /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
-    pub fn buy<'info>(
-        ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
-        trade_state_bump: u8,
-        escrow_payment_bump: u8,
-        auctioneer_authority_bump: u8,
-        buyer_price: u64,
-        token_size: u64,
-    ) -> Result<()> {
-        auctioneer_buy(
-            ctx,
-            trade_state_bump,
-            escrow_payment_bump,
-            auctioneer_authority_bump,
-            buyer_price,
-            token_size,
-        )
-    }
+    // /// Create a private buy bid by creating a `buyer_trade_state` account and an `escrow_payment` account and funding the escrow with the necessary SOL or SPL token amount.
+    // pub fn buy<'info>(
+    //     ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
+    //     trade_state_bump: u8,
+    //     escrow_payment_bump: u8,
+    //     auctioneer_authority_bump: u8,
+    //     buyer_price: u64,
+    //     token_size: u64,
+    // ) -> Result<()> {
+    //     auctioneer_buy(
+    //         ctx,
+    //         trade_state_bump,
+    //         escrow_payment_bump,
+    //         auctioneer_authority_bump,
+    //         buyer_price,
+    //         token_size,
+    //     )
+    // }
 }

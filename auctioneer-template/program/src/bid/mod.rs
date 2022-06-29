@@ -6,12 +6,11 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
-    cpi::accounts::AuctioneerBuy as AHBuy,
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
 
-use crate::{constants::*, sell::config::*, utils::*};
+use crate::{constants::*, sell::config::*};
 
 /// Accounts for the [`private_bid_with_auctioneer` handler](fn.private_bid_with_auctioneer.html).
 #[derive(Accounts)]

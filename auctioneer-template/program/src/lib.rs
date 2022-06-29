@@ -10,11 +10,9 @@ pub mod sell;
 pub mod utils;
 pub mod withdraw;
 
-use crate::{authorize::*, bid::*, cancel::*, deposit::*, execute_sale::*, sell::*, withdraw::*};
+use crate::{authorize::*, cancel::*, deposit::*, execute_sale::*, withdraw::*};
 
 use anchor_lang::prelude::*;
-
-use solana_program::clock::UnixTimestamp;
 
 declare_id!("neer8g6yJq2mQM6KbnViEDAD4gr3gRZyMMf4F2p3MEh");
 
