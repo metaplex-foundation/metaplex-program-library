@@ -12,5 +12,8 @@ exclude = [
   "fixed-price-sale/cli",
   "token-metadata",
   "auction-house/program",
-  "candy-machine/program"
+  "auction-house/sdk",
+  "candy-machine/program",
+  "listing-rewards/program",
+  "listing-rewards/sdk"
 ]

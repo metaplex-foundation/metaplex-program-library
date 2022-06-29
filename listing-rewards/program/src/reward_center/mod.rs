@@ -1,0 +1,102 @@
+use anchor_lang::{prelude::*, AnchorDeserialize};
+use anchor_spl::token::Mint;
+
+use mpl_auction_house::{self, constants::PREFIX, AuctionHouse};
+
+use crate::{constants::REWARD_CENTER, errors::ListingRewardsError};
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub enum RewardCenterVersion {
+    V0,
+}
+
+#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+pub struct ListingRewardRules {
+    /// time a listing must be up before is eligable for a reward in minutes
+    pub warmup_minutes: u32,
+    /// number of tokens to reward for listing
+    pub reward_payout: u64,
+}
+
+#[account]
+pub struct RewardCenter {
+    /// the version of the account
+    pub version: RewardCenterVersion,
+    /// the mint of the token used as rewards
+    pub token_mint: Pubkey,
+    /// the auction house associated to the reward center
+    pub auction_house: Pubkey,
+    /// the oracle allowed to adjust rewardable collections
+    pub collection_oracle: Option<Pubkey>,
+    /// rules for listing rewards
+    pub listing_reward_rules: ListingRewardRules,
+    /// the bump of the pda
+    pub bump: u8,
+}
+
+impl RewardCenter {
+    pub fn size() -> usize {
+        8 + // deliminator
+    1 + // version
+    32 + // token_mint
+    32 + // auction_house
+    1 + 32 + // optional collection oracle
+    4 + 8 + // listing reward rules
+    1 // bump
+    }
+}
+
+/// Options to set on the reward center
+#[derive(AnchorDeserialize, AnchorSerialize)]
+pub struct CreateRewardCenterParams {
+    pub collection_oracle: Option<Pubkey>,
+    pub listing_reward_rules: ListingRewardRules,
+}
+
+/// Accounts for the [`create_reward_center` handler](listing_rewards/fn.create_reward_center.html).
+#[derive(Accounts, Clone)]
+#[instruction(create_reward_center_args: CreateRewardCenterParams)]
+pub struct CreateRewardCenter<'info> {
+    /// User wallet account.
+    #[
+      account(
+        mut,
+        constraint = wallet.key() == auction_house.authority @ ListingRewardsError::SignerNotAuthorized
+      )
+    ]
+    pub wallet: Signer<'info>,
+
+    /// the mint of the token to use as rewards.
+    pub mint: Account<'info, Mint>,
+
+    /// Auction House instance PDA account.
+    #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=mpl_auction_house::id(), bump=auction_house.bump)]
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
+
+    /// The auctioneer program PDA running this auction.
+    #[account(init, payer=wallet, space = RewardCenter::size(), seeds = [REWARD_CENTER.as_bytes(), auction_house.key().as_ref()], bump)]
+    pub reward_center: Account<'info, RewardCenter>,
+
+    pub system_program: Program<'info, System>,
+}
+
+pub fn create_reward_center(
+    ctx: Context<CreateRewardCenter>,
+    reward_center_params: CreateRewardCenterParams,
+) -> Result<()> {
+    let mint = &ctx.accounts.mint;
+    let auction_house = &ctx.accounts.auction_house;
+    let reward_center = &mut ctx.accounts.reward_center;
+
+    reward_center.version = RewardCenterVersion::V0;
+    reward_center.token_mint = mint.key();
+    reward_center.auction_house = auction_house.key();
+    reward_center.collection_oracle = reward_center_params.collection_oracle;
+    reward_center.listing_reward_rules = reward_center_params.listing_reward_rules;
+    reward_center.bump = *ctx
+        .bumps
+        .get(REWARD_CENTER)
+        .ok_or(ListingRewardsError::BumpSeedNotInHashMap)?;
+
+    Ok(())
+}
