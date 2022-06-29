@@ -27,7 +27,7 @@ jobs:
 
   get-changes-scope:
     if:
-      contains(fromJson('["OWNER", "MEMBER"]'), github.event.review.author_association) == true &&
+      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true &&
       contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
@@ -61,7 +61,7 @@ jobs:
 
   get-version-scope:
     if:
-      contains(fromJson('["OWNER", "MEMBER"]'), github.event.review.author_association) == true &&
+      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true &&
       contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
