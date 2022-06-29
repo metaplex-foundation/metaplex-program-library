@@ -7,7 +7,9 @@ use crate::{
     utils::*,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
-use solana_program::{sysvar, sysvar::instructions::get_instruction_relative};
+use solana_program::{
+    program_memory::sol_memset, sysvar, sysvar::instructions::get_instruction_relative,
+};
 
 pub const BID_RECEIPT_SIZE: usize = 8 + //key
 32 + // trade_state
@@ -552,23 +554,26 @@ pub fn print_purchase_receipt<'info>(
 
     purchase.try_serialize(&mut *purchase_receipt_account.try_borrow_mut_data()?)?;
 
-    let mut listing_receipt_data = listing_receipt_info.try_borrow_mut_data()?;
-    let mut listing_receipt_data_slice: &[u8] = &listing_receipt_data;
-
-    let mut listing_receipt = ListingReceipt::try_deserialize(&mut listing_receipt_data_slice)?;
-
-    listing_receipt.purchase_receipt = Some(purchase_receipt_account.key());
-
-    listing_receipt.try_serialize(&mut *listing_receipt_data)?;
+    // since partial buy now exists, need to check token_size before closing listing receipt account
+    if execute_sale_data.token_size == 0 {
+        let mut listing_receipt_data = listing_receipt_info.try_borrow_mut_data()?;
+        let curr_listing_receipt_lamp = listing_receipt_info.lamports();
+        **listing_receipt_info.lamports.borrow_mut() = 0;
+        sol_memset(&mut *listing_receipt_data, 0, LISTING_RECEIPT_SIZE);
+        **bookkeeper.lamports.borrow_mut() = bookkeeper
+            .lamports()
+            .checked_add(curr_listing_receipt_lamp)
+            .ok_or(AuctionHouseError::NumericalOverflow)?;
+    }
 
     let mut bid_receipt_data = bid_receipt_account.try_borrow_mut_data()?;
-    let mut bid_receipt_slice: &[u8] = &bid_receipt_data;
-
-    let mut bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_slice)?;
-
-    bid_receipt.purchase_receipt = Some(purchase_receipt_account.key());
-
-    bid_receipt.try_serialize(&mut *bid_receipt_data)?;
+    let curr_bid_receipt_lamp = bid_receipt_info.lamports();
+    **bid_receipt_info.lamports.borrow_mut() = 0;
+    sol_memset(&mut *bid_receipt_data, 0, BID_RECEIPT_SIZE);
+    **bookkeeper.lamports.borrow_mut() = bookkeeper
+        .lamports()
+        .checked_add(curr_bid_receipt_lamp)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
 
     Ok(())
 }
