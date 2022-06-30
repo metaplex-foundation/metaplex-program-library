@@ -117,7 +117,7 @@ pub fn list_files(assets_dir: &str, include_collection: bool) -> Result<Vec<DirE
                 .expect("Failed to convert file name to valid unicode.");
 
             let is_collection = include_collection && file_stem == "collection";
-            let is_numeric = file_stem.chars().all(|c| c.is_digit(10));
+            let is_numeric = file_stem.chars().all(|c| c.is_ascii_digit());
 
             is_file && (is_numeric || is_collection)
         });

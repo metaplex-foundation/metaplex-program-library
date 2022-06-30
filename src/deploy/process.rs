@@ -1,8 +1,11 @@
-use std::sync::atomic::AtomicBool;
 use std::{
     collections::HashSet,
+    fmt::Write as _,
     str::FromStr,
-    sync::{atomic::Ordering, Arc},
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
 };
 
 use anchor_client::solana_sdk::{
@@ -228,10 +231,11 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
             if !errors.is_empty() {
                 let mut message = String::new();
-                message.push_str(&format!(
+                write!(
+                    message,
                     "Failed to deploy all config lines, {0} error(s) occurred:",
                     errors.len()
-                ));
+                )?;
 
                 let mut unique = HashSet::new();
 

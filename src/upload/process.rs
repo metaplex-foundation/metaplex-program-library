@@ -3,6 +3,7 @@ use std::{
     borrow::Borrow,
     collections::HashSet,
     ffi::OsStr,
+    fmt::Write as _,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
@@ -364,10 +365,11 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
     if count != asset_pairs.len() {
         let message = if !errors.is_empty() {
             let mut message = String::new();
-            message.push_str(&format!(
+            write!(
+                message,
                 "Failed to upload all files, {0} error(s) occurred:",
                 errors.len()
-            ));
+            )?;
 
             let mut unique = HashSet::new();
 
