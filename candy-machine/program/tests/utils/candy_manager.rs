@@ -1,7 +1,8 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, str::FromStr};
 
 use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
+use solana_gateway::state::{get_expire_address_with_seed, get_gateway_token_address_with_seed};
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
@@ -17,10 +18,9 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    airdrop,
     core::{
         helpers::{
-            assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
+            airdrop, assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
             get_balance, get_token_account, get_token_balance, mint_to_wallets, prepare_nft,
         },
         MasterEditionV2 as MasterEditionManager, Metadata as MetadataManager,
@@ -42,6 +42,7 @@ pub struct CandyManager {
     pub collection_info: CollectionInfo,
     pub token_info: TokenInfo,
     pub whitelist_info: WhitelistInfo,
+    pub gateway_info: GatekeeperInfo,
 }
 
 impl Clone for CandyManager {
@@ -54,6 +55,7 @@ impl Clone for CandyManager {
             collection_info: self.collection_info.clone(),
             token_info: self.token_info.clone(),
             whitelist_info: self.whitelist_info.clone(),
+            gateway_info: self.gateway_info.clone(),
         }
     }
 }
@@ -219,6 +221,97 @@ impl Clone for TokenInfo {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct GatekeeperConfig {
+    pub gatekeeper_network: Pubkey,
+    pub expire_on_use: bool,
+}
+
+impl GatekeeperConfig {
+    #[allow(dead_code)]
+    pub fn new(gatekeeper_network: Pubkey, expire_on_use: bool) -> Self {
+        GatekeeperConfig {
+            gatekeeper_network,
+            expire_on_use,
+        }
+    }
+}
+
+impl Default for GatekeeperConfig {
+    fn default() -> Self {
+        GatekeeperConfig {
+            gatekeeper_network: Pubkey::from_str("ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6")
+                .unwrap(),
+            expire_on_use: false,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct GatekeeperInfo {
+    pub set: bool,
+    pub network_expire_feature: Option<Pubkey>,
+    pub gateway_app: Pubkey,
+    pub gateway_token_info: Pubkey,
+    pub gatekeeper_config: GatekeeperConfig,
+}
+
+impl GatekeeperInfo {
+    #[allow(dead_code)]
+    pub fn new(
+        set: bool,
+        network_expire_feature: Option<Pubkey>,
+        gateway_app: Pubkey,
+        gateway_token_info: Pubkey,
+        gatekeeper_config: GatekeeperConfig,
+    ) -> Self {
+        GatekeeperInfo {
+            set,
+            network_expire_feature,
+            gateway_app,
+            gateway_token_info,
+            gatekeeper_config,
+        }
+    }
+
+    pub async fn init(
+        set: bool,
+        gateway_app: Pubkey,
+        gateway_token_info: Pubkey,
+        gatekeeper_config: GatekeeperConfig,
+        payer: Pubkey,
+    ) -> Self {
+        let network_token = get_gateway_token_address_with_seed(&payer, &None, &gateway_token_info);
+
+        let expire_token: Option<Pubkey> = if gatekeeper_config.expire_on_use {
+            let expire_token = get_expire_address_with_seed(&gateway_token_info);
+            Some(expire_token.0)
+        } else {
+            None
+        };
+
+        GatekeeperInfo {
+            set,
+            network_expire_feature: expire_token,
+            gateway_app,
+            gateway_token_info: network_token.0,
+            gatekeeper_config,
+        }
+    }
+}
+
+impl Clone for GatekeeperInfo {
+    fn clone(&self) -> Self {
+        GatekeeperInfo {
+            set: self.set,
+            network_expire_feature: self.network_expire_feature,
+            gateway_app: clone_pubkey(&self.gateway_app),
+            gateway_token_info: clone_pubkey(&self.gateway_token_info),
+            gatekeeper_config: self.gatekeeper_config.clone(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct WhitelistInfo {
     pub set: bool,
@@ -331,6 +424,7 @@ impl CandyManager {
         collection_info: CollectionInfo,
         token_info: TokenInfo,
         whitelist_info: WhitelistInfo,
+        gateway_info: GatekeeperInfo,
     ) -> Self {
         CandyManager {
             candy_machine,
@@ -340,6 +434,7 @@ impl CandyManager {
             collection_info,
             token_info,
             whitelist_info,
+            gateway_info,
         }
     }
 
@@ -348,6 +443,7 @@ impl CandyManager {
         collection: bool,
         token: bool,
         whitelist: Option<WhitelistConfig>,
+        gatekeeper: Option<GatekeeperInfo>,
     ) -> Self {
         println!("Init Candy Machine Manager");
         let candy_machine = Keypair::new();
@@ -400,6 +496,29 @@ impl CandyManager {
             }
         };
 
+        let gateway_info = match gatekeeper {
+            Some(config) => {
+                GatekeeperInfo::init(
+                    true,
+                    config.gateway_app,
+                    config.gateway_token_info,
+                    config.gatekeeper_config,
+                    minter.pubkey(),
+                )
+                .await
+            }
+            None => {
+                GatekeeperInfo::init(
+                    false,
+                    Pubkey::from_str("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs").unwrap(),
+                    Pubkey::from_str("ignREusXmGrscGNUesoU9mxfds9AiYTezUKex2PsZV6").unwrap(),
+                    GatekeeperConfig::default(),
+                    minter.pubkey(),
+                )
+                .await
+            }
+        };
+
         let wallet = match &token_info.set {
             true => token_info.auth_account,
             false => authority.pubkey(),
@@ -413,6 +532,7 @@ impl CandyManager {
             collection_info,
             token_info,
             whitelist_info,
+            gateway_info,
         )
     }
 
@@ -524,6 +644,7 @@ impl CandyManager {
             self.token_info.clone(),
             self.whitelist_info.clone(),
             self.collection_info.clone(),
+            self.gateway_info.clone(),
         )
         .await?;
         Ok(nft_info)
@@ -569,9 +690,10 @@ impl CandyManager {
             associated_token_account.amount, 1,
             "Minter is not the owner"
         );
+
         assert_eq!(
-            candy_start.items_redeemed,
-            candy_end.items_redeemed - 1,
+            candy_start.items_redeemed + 1,
+            candy_end.items_redeemed,
             "Items redeemed wasn't 1"
         );
         if self.collection_info.set {

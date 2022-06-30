@@ -225,7 +225,7 @@ pub fn remove_feature_flag(uuid: &mut String, feature_index: usize) {
 }
 
 pub fn punish_bots<'a>(
-    err: CandyError,
+    error: ProgramError,
     bot_account: AccountInfo<'a>,
     payment_account: AccountInfo<'a>,
     system_program: AccountInfo<'a>,
@@ -233,9 +233,10 @@ pub fn punish_bots<'a>(
 ) -> Result<()> {
     msg!(
         "{}, Candy Machine Botting is taxed at {:?} lamports",
-        err.to_string(),
+        error.to_string(),
         fee
     );
+
     let final_fee = fee.min(bot_account.lamports());
     invoke(
         &system_instruction::transfer(bot_account.key, payment_account.key, final_fee),

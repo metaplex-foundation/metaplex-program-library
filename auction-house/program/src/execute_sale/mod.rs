@@ -121,7 +121,20 @@ pub struct ExecuteSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &buyer_price.to_le_bytes(),
+            &token_size.to_le_bytes()
+        ],
+        bump
+    )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -211,11 +224,11 @@ pub fn execute_sale<'info>(
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
 #[derive(Accounts)]
 #[instruction(
-escrow_payment_bump: u8,
-free_trade_state_bump: u8,
-program_as_signer_bump: u8,
-buyer_price: u64,
-token_size: u64
+    escrow_payment_bump: u8,
+    free_trade_state_bump: u8,
+    program_as_signer_bump: u8,
+    buyer_price: u64,
+    token_size: u64
 )]
 pub struct ExecutePartialSale<'info> {
     /// CHECK: Validated in execute_sale_logic.
@@ -250,13 +263,13 @@ pub struct ExecutePartialSale<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Buyer escrow payment account.
     #[account(
-    mut,
-    seeds = [
-    PREFIX.as_bytes(),
-    auction_house.key().as_ref(),
-    buyer.key().as_ref()
-    ],
-    bump=escrow_payment_bump
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            buyer.key().as_ref()
+        ],
+        bump=escrow_payment_bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -276,42 +289,42 @@ pub struct ExecutePartialSale<'info> {
 
     /// Auction House instance PDA account.
     #[account(
-    seeds = [
-    PREFIX.as_bytes(),
-    auction_house.creator.as_ref(),
-    auction_house.treasury_mint.as_ref()
-    ],
-    bump=auction_house.bump,
-    has_one=authority,
-    has_one=treasury_mint,
-    has_one=auction_house_treasury,
-    has_one=auction_house_fee_account
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.creator.as_ref(),
+            auction_house.treasury_mint.as_ref()
+        ],
+        bump=auction_house.bump,
+        has_one=authority,
+        has_one=treasury_mint,
+        has_one=auction_house_treasury,
+        has_one=auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance fee account.
     #[account(
-    mut,
-    seeds = [
-    PREFIX.as_bytes(),
-    auction_house.key().as_ref(),
-    FEE_PAYER.as_bytes()
-    ],
-    bump=auction_house.fee_payer_bump
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            FEE_PAYER.as_bytes()
+        ],
+        bump=auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Auction House instance treasury account.
     #[account(
-    mut,
-    seeds = [
-    PREFIX.as_bytes(),
-    auction_house.key().as_ref(),
-    TREASURY.as_bytes()
-    ],
-    bump=auction_house.treasury_bump
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            auction_house.key().as_ref(),
+            TREASURY.as_bytes()
+        ],
+        bump=auction_house.treasury_bump
     )]
     pub auction_house_treasury: UncheckedAccount<'info>,
 
@@ -322,24 +335,37 @@ pub struct ExecutePartialSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
-    #[account(mut)]
+    #[account(
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &buyer_price.to_le_bytes(),
+            &token_size.to_le_bytes()
+        ],
+        bump=seller_trade_state.to_account_info().data.borrow()[0]
+    )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Free seller trade state PDA account encoding a free sell order.
     #[account(
-    mut,
-    seeds = [
-    PREFIX.as_bytes(),
-    seller.key().as_ref(),
-    auction_house.key().as_ref(),
-    token_account.key().as_ref(),
-    auction_house.treasury_mint.as_ref(),
-    token_mint.key().as_ref(),
-    &0u64.to_le_bytes(),
-    &token_size.to_le_bytes()
-    ],
-    bump=free_trade_state_bump
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &0u64.to_le_bytes(),
+            &token_size.to_le_bytes()
+        ],
+        bump=free_trade_state_bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -551,7 +577,12 @@ pub struct AuctioneerExecuteSale<'info> {
     pub ata_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(
+        seeds=[
+            PREFIX.as_bytes(), SIGNER.as_bytes()
+        ],
+        bump=program_as_signer_bump
+    )]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -710,24 +741,37 @@ pub struct AuctioneerExecutePartialSale<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
-    #[account(mut)]
+    #[account(
+    mut,
+    seeds = [
+        PREFIX.as_bytes(),
+        seller.key().as_ref(),
+        auction_house.key().as_ref(),
+        token_account.key().as_ref(),
+        auction_house.treasury_mint.as_ref(),
+        token_mint.key().as_ref(),
+        &buyer_price.to_le_bytes(),
+        &token_size.to_le_bytes()
+    ],
+    bump=seller_trade_state.to_account_info().data.borrow()[0]
+    )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Free seller trade state PDA account encoding a free sell order.
     #[account(
-        mut,
-        seeds = [
-            PREFIX.as_bytes(),
-            seller.key().as_ref(),
-            auction_house.key().as_ref(),
-            token_account.key().as_ref(),
-            auction_house.treasury_mint.as_ref(),
-            token_mint.key().as_ref(),
-            &0u64.to_le_bytes(),
-            &token_size.to_le_bytes()
-        ],
-        bump=free_trade_state_bump
+    mut,
+    seeds = [
+        PREFIX.as_bytes(),
+        seller.key().as_ref(),
+        auction_house.key().as_ref(),
+        token_account.key().as_ref(),
+        auction_house.treasury_mint.as_ref(),
+        token_mint.key().as_ref(),
+        &0u64.to_le_bytes(),
+        &token_size.to_le_bytes()
+    ],
+    bump=free_trade_state_bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
