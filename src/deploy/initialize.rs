@@ -26,7 +26,7 @@ pub fn create_candy_machine_data(
     config: &ConfigData,
     uuid: String,
 ) -> Result<CandyMachineData> {
-    let go_live_date = Some(go_live_date_as_timestamp(&config.go_live_date)?);
+    let go_live_date: Option<i64> = go_live_date_as_timestamp(&config.go_live_date)?;
 
     let end_settings = config.end_settings.as_ref().map(|s| s.into_candy_format());
 
