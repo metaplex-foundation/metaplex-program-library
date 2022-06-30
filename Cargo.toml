@@ -31,7 +31,7 @@ glob = "0.3.0"
 indexmap = { version = "1.8.0", features = ["serde"] }
 indicatif = { version = "0.16.2", features = ["rayon"] }
 mpl-token-metadata = "1.2.7"
-mpl-candy-machine = { version = "4.0.0", features = ["no-entrypoint"] }
+mpl-candy-machine = { version = "4.0.1", features = ["no-entrypoint"] }
 num_cpus = "1.13.1"
 par-stream = { version = "0.10.0", features = ["runtime-tokio"] }
 rand = "0.7.0"
@@ -58,3 +58,4 @@ tracing-subscriber = { version = "0.3", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3"
 dialoguer = "0.10.0"
 url = "2.2.2"
+solana-logger = "1.8.1"

@@ -86,6 +86,8 @@ async fn main() {
 }
 
 async fn run() -> Result<()> {
+    solana_logger::setup_with_default("solana=off");
+
     let cli = Cli::parse();
 
     let log_level_error: Result<()> = Err(anyhow!(
