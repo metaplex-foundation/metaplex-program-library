@@ -4,6 +4,12 @@ inputs:
   pull-number:
     description: 'PR number'
     required: true
+  include:
+    description: 'Matching files and paths will to include. Any non-matches will be excluded.'
+    required: false
+  exclude:
+    description: 'Matching files and paths will to exclude'
+    required: false
 
 outputs:
   changed-files:
@@ -19,7 +25,7 @@ runs:
       with:
         script: |
           const script = require('.github/actions/list-changed-files/script.js')
-          await script({github, context, core}, ${{ inputs.pull-number }})
+          await script({github, context, core}, ${{ inputs.pull-number }}, '${{ inputs.include }}', '${{ inputs.exclude }}')
 
     - name: Set changed-files from PR
       id: set-changed-files

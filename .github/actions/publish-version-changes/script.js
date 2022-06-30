@@ -26,6 +26,13 @@ const isNpmPackage = (actual) => isPackageType(actual, 'js');
 // assume most basic versioning for now: `major.minor.patch`; only publish package if local != remote, assuming local >= remote
 const shouldPublishPackage = (localVersion, remoteVersion) => localVersion !== remoteVersion;
 
+const addTag = (tagName) => {
+  console.log(
+    `adding tag ${tagName}`,
+    wrappedExec(`git tag ${tagName} && git push origin ${tagName}`),
+  );
+};
+
 // npm package helpers
 
 const getLocalNpmPackageInfo = (cwd) => {
@@ -45,6 +52,8 @@ const getLatestPublishedNpmVersion = async (packageName) => {
   }
 };
 
+const formatNpmTag = (name, version) => `${name}@${version}`;
+
 const tryPublishNpmPackage = async (npmToken, cwdArgs) => {
   console.log('updating npm package');
   const currentDir = cwdArgs.join('/');
@@ -57,6 +66,8 @@ const tryPublishNpmPackage = async (npmToken, cwdArgs) => {
   if (shouldPublishPackage(localPackageVersion, remotePackageVersion)) {
     wrappedExec(`echo "//registry.npmjs.org/:_authToken=${npmToken}" > ~/.npmrc`, currentDir);
     wrappedExec(`npm publish`, currentDir);
+
+    addTag(formatNpmTag(packageName, localPackageVersion));
   } else {
     console.log('no publish needed');
   }
@@ -89,6 +100,8 @@ const getLatestPublishedCrateVersion = async (crateName) => {
   return versions[0]['num'];
 };
 
+const formatCrateTag = (name, version) => `${name}-v${version}`;
+
 const tryPublishCratesPackage = async (cargoToken, cwdArgs) => {
   console.log('updating rust package');
   const currentDir = cwdArgs.join('/');
@@ -101,6 +114,8 @@ const tryPublishCratesPackage = async (cargoToken, cwdArgs) => {
   // only publish if local != remote crate version
   if (shouldPublishPackage(localCrateVersion, remoteCrateVersion)) {
     wrappedExec(`cargo publish --token ${cargoToken} -p ${crateName}`, currentDir);
+
+    addTag(formatCrateTag(crateName, localCrateVersion));
   } else {
     console.log('no publish needed');
   }
@@ -125,7 +140,10 @@ module.exports = async (packages, cargoToken, npmToken) => {
   const parentDirsToHome = 4; // ~/<home>/./.github/actions/<name>
   const cwdArgs = splitBase.slice(0, splitBase.length - parentDirsToHome);
 
-  for (let package of packages) {
+  // it's possible exclude is a stringified arr
+  const packageIter = typeof packages === 'string' ? (packages = JSON.parse(packages)) : packages;
+
+  for (let package of packageIter) {
     // make sure package doesn't have extra quotes or spacing
     package = package.replace(/\s+|\"|\'/g, '');
     const [name, type] = package.split('/');
