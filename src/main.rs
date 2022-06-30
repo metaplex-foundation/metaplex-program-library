@@ -253,11 +253,13 @@ async fn run() -> Result<()> {
             rpc_url,
             cache,
             candy_machine,
+            unminted,
         } => process_show(ShowArgs {
             keypair,
             rpc_url,
             cache,
             candy_machine,
+            unminted,
         })?,
         Commands::Collection {
             keypair,

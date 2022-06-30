@@ -220,6 +220,10 @@ pub enum Commands {
 
         /// Address of candy machine
         candy_machine: Option<String>,
+
+        /// Display a list of unminted indices
+        #[clap(long)]
+        unminted: bool,
     },
 
     /// Interact with the bundlr network

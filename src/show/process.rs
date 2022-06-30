@@ -4,7 +4,7 @@ use anchor_client::solana_sdk::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 use anyhow::Result;
 use chrono::NaiveDateTime;
 use console::style;
-use mpl_candy_machine::{EndSettingType, WhitelistMintMode};
+use mpl_candy_machine::{utils::is_feature_active, EndSettingType, WhitelistMintMode};
 
 use crate::cache::load_cache;
 use crate::candy_machine::*;
@@ -17,12 +17,23 @@ pub struct ShowArgs {
     pub rpc_url: Option<String>,
     pub cache: String,
     pub candy_machine: Option<String>,
+    pub unminted: bool,
 }
+
+// TODO: change the value '1' for the corresponding constant once the
+// new version of the mpl_candy_machine crate is published
+const SWAP_REMOVE_FEATURE_INDEX: usize = 1;
+// number of indices per line
+const PER_LINE: usize = 11;
 
 pub fn process_show(args: ShowArgs) -> Result<()> {
     println!(
         "{} {}Looking up candy machine",
-        style("[1/1]").bold().dim(),
+        if args.unminted {
+            style("[1/2]").bold().dim()
+        } else {
+            style("[1/1]").bold().dim()
+        },
         LOOKING_GLASS_EMOJI
     );
 
@@ -218,6 +229,97 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
         );
     } else {
         print_with_style("", "gatekeeper", "none".to_string());
+    }
+
+    // unminted indices
+
+    if args.unminted {
+        println!(
+            "\n{} {}Retrieving unminted indices",
+            style("[2/2]").bold().dim(),
+            LOOKING_GLASS_EMOJI
+        );
+
+        let mut start = CONFIG_ARRAY_START
+            + STRING_LEN_SIZE
+            + CONFIG_LINE_SIZE * cndy_data.items_available as usize
+            + STRING_LEN_SIZE
+            + cndy_data
+                .items_available
+                .checked_div(8)
+                .expect("Numerical overflow error") as usize
+            + STRING_LEN_SIZE;
+
+        let pb = spinner_with_style();
+        pb.set_message("Connecting...");
+        // retrieve the (raw) candy machine data
+        let data = program.rpc().get_account_data(&candy_machine_id)?;
+
+        pb.finish_and_clear();
+        let mut index = 0;
+        let mut indices = vec![];
+
+        if is_feature_active(&cndy_data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+            start += 1; // needed to get around rounding precision
+            let remaining = cndy_data.items_available - cndy_state.items_redeemed;
+            for i in 0..remaining {
+                let slice = start + (i * 4) as usize;
+                indices.push(u32::from_le_bytes(
+                    data[slice..slice + 4].try_into().unwrap(),
+                ));
+            }
+        } else {
+            while start < data.len() {
+                let mask = 1u8 << 7;
+
+                for i in 0..8 {
+                    if index < cndy_data.items_available {
+                        // unused mint indices have the 'flag' set to 0
+                        if (data[start] & (mask >> i)) == 0 {
+                            indices.push(index as u32);
+                        }
+                        index += 1;
+                    }
+                }
+
+                start += 1;
+            }
+        }
+
+        if !indices.is_empty() {
+            // makes sure all items are in order
+            indices.sort_unstable();
+            // logs all indices
+            info!("unminted list: {:?}", indices);
+
+            println!(
+                "\n{}{}",
+                PAPER_EMOJI,
+                style(format!("Unminted list ({} total):", indices.len())).dim()
+            );
+            let mut current = 0;
+
+            for i in indices {
+                if current == 0 {
+                    println!("{}", style(" :").dim());
+                    print!("{}", style(" :.. ").dim());
+                }
+                current += 1;
+
+                print!(
+                    "{:<5}{}",
+                    i,
+                    if current == PER_LINE {
+                        current = 0;
+                        "\n"
+                    } else {
+                        " "
+                    }
+                );
+            }
+            // just adds a new line break
+            println!();
+        }
     }
 
     Ok(())
