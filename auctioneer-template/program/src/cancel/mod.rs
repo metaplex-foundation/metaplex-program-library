@@ -90,9 +90,8 @@ pub fn auctioneer_cancel<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
-    if !ctx.accounts.listing_config.allow_high_bid_cancel
-        && (ctx.accounts.trade_state.key()
-            == ctx.accounts.listing_config.highest_bid.buyer_trade_state)
+    if ctx.accounts.trade_state.key()
+            == ctx.accounts.listing_config.highest_bid.buyer_trade_state
     {
         return err!(AuctioneerError::CannotCancelHighestBid);
     }

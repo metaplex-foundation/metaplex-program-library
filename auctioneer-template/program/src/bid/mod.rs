@@ -6,6 +6,7 @@ use anchor_spl::token::{Mint, Token, TokenAccount};
 use mpl_auction_house::{
     self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
+    cpi::accounts::AuctioneerBuy as AHBuy,
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
@@ -115,60 +116,60 @@ pub struct AuctioneerBuy<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
-// Create a private bid on a specific SPL token that is *held by a specific wallet*.
-// pub fn auctioneer_buy<'info>(
-//     ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
-//     trade_state_bump: u8,
-//     escrow_payment_bump: u8,
-//     auctioneer_authority_bump: u8,
-//     buyer_price: u64,
-//     token_size: u64,
-// ) -> Result<()> {
-//     assert_auction_active(&ctx.accounts.listing_config)?;
-//     assert_higher_bid(&ctx.accounts.listing_config, buyer_price)?;
-//     assert_exceeds_reserve_price(&ctx.accounts.listing_config, buyer_price)?;
-//     process_time_extension(&mut ctx.accounts.listing_config)?;
-//     ctx.accounts.listing_config.highest_bid.amount = buyer_price;
-//     ctx.accounts.listing_config.highest_bid.buyer_trade_state =
-//         ctx.accounts.buyer_trade_state.key();
+/// Create a private bid on a specific SPL token that is *held by a specific wallet*.
+pub fn auctioneer_buy<'info>(
+    ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
+    trade_state_bump: u8,
+    escrow_payment_bump: u8,
+    auctioneer_authority_bump: u8,
+    buyer_price: u64,
+    token_size: u64,
+) -> Result<()> {
+    // assert_auction_active(&ctx.accounts.listing_config)?;
+    // assert_higher_bid(&ctx.accounts.listing_config, buyer_price)?;
+    // assert_exceeds_reserve_price(&ctx.accounts.listing_config, buyer_price)?;
+    // process_time_extension(&mut ctx.accounts.listing_config)?;
+    // ctx.accounts.listing_config.highest_bid.amount = buyer_price;
+    // ctx.accounts.listing_config.highest_bid.buyer_trade_state =
+    //     ctx.accounts.buyer_trade_state.key();
 
-//     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
-//     let cpi_accounts = AHBuy {
-//         wallet: ctx.accounts.wallet.to_account_info(),
-//         payment_account: ctx.accounts.payment_account.to_account_info(),
-//         transfer_authority: ctx.accounts.transfer_authority.to_account_info(),
-//         treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
-//         token_account: ctx.accounts.token_account.to_account_info(),
-//         metadata: ctx.accounts.metadata.to_account_info(),
-//         escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
-//         auction_house: ctx.accounts.auction_house.to_account_info(),
-//         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-//         buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),
-//         authority: ctx.accounts.authority.to_account_info(),
-//         auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),
-//         ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
-//         token_program: ctx.accounts.token_program.to_account_info(),
-//         system_program: ctx.accounts.system_program.to_account_info(),
-//         rent: ctx.accounts.rent.to_account_info(),
-//     };
+    let cpi_program = ctx.accounts.auction_house_program.to_account_info();
+    let cpi_accounts = AHBuy {
+        wallet: ctx.accounts.wallet.to_account_info(),
+        payment_account: ctx.accounts.payment_account.to_account_info(),
+        transfer_authority: ctx.accounts.transfer_authority.to_account_info(),
+        treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
+        token_account: ctx.accounts.token_account.to_account_info(),
+        metadata: ctx.accounts.metadata.to_account_info(),
+        escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
+        auction_house: ctx.accounts.auction_house.to_account_info(),
+        auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
+        buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
+        auctioneer_authority: ctx.accounts.auctioneer_authority.to_account_info(),
+        ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+        system_program: ctx.accounts.system_program.to_account_info(),
+        rent: ctx.accounts.rent.to_account_info(),
+    };
 
-//     let auction_house = &ctx.accounts.auction_house;
-//     let ah_key = auction_house.key();
-//     let auctioneer_authority = &ctx.accounts.auctioneer_authority;
-//     let _aa_key = auctioneer_authority.key();
+    let auction_house = &ctx.accounts.auction_house;
+    let ah_key = auction_house.key();
+    let auctioneer_authority = &ctx.accounts.auctioneer_authority;
+    let _aa_key = auctioneer_authority.key();
 
-//     let auctioneer_seeds = [
-//         AUCTIONEER.as_bytes(),
-//         ah_key.as_ref(),
-//         &[auctioneer_authority_bump],
-//     ];
+    let auctioneer_seeds = [
+        AUCTIONEER.as_bytes(),
+        ah_key.as_ref(),
+        &[auctioneer_authority_bump],
+    ];
 
-//     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-//     mpl_auction_house::cpi::auctioneer_buy(
-//         cpi_ctx.with_signer(&[&auctioneer_seeds]),
-//         trade_state_bump,
-//         escrow_payment_bump,
-//         buyer_price,
-//         token_size,
-//     )
-// }
+    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+    mpl_auction_house::cpi::auctioneer_buy(
+        cpi_ctx.with_signer(&[&auctioneer_seeds]),
+        trade_state_bump,
+        escrow_payment_bump,
+        buyer_price,
+        token_size,
+    )
+}
