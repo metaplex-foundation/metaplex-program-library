@@ -1,3 +1,3 @@
 ---
-title: Auctioneer
+title: Auctioneer Template
 ---

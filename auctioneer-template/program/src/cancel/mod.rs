@@ -10,7 +10,7 @@ use mpl_auction_house::{
 };
 use solana_program::program::invoke_signed;
 
-use crate::{constants::*, errors::*, sell::config::*};
+use crate::{constants::*, sell::config::*};
 
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts, Clone)]
@@ -90,11 +90,11 @@ pub fn auctioneer_cancel<'info>(
     buyer_price: u64,
     token_size: u64,
 ) -> Result<()> {
-    if ctx.accounts.trade_state.key()
-            == ctx.accounts.listing_config.highest_bid.buyer_trade_state
-    {
-        return err!(AuctioneerError::CannotCancelHighestBid);
-    }
+    // if ctx.accounts.trade_state.key()
+    //         == ctx.accounts.listing_config.highest_bid.buyer_trade_state
+    // {
+    //     return err!(AuctioneerError::CannotCancelHighestBid);
+    // }
 
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHCancel {

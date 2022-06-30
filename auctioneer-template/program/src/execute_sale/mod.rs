@@ -9,7 +9,7 @@ use mpl_auction_house::{
     AuctionHouse,
 };
 
-use crate::{constants::*, sell::config::*};
+use crate::{sell::config::*};
 
 use solana_program::program::invoke_signed;
 
@@ -22,16 +22,16 @@ pub struct AuctioneerExecuteSale<'info> {
     // Accounts used for Auctioneer
     /// The Listing Config used for listing settings
     #[account(
-        seeds=[
-            LISTING_CONFIG.as_bytes(),
-            seller.key().as_ref(),
-            auction_house.key().as_ref(),
-            token_account.key().as_ref(),
-            auction_house.treasury_mint.as_ref(),
-            token_mint.key().as_ref(),
-            &token_size.to_le_bytes()
-        ],
-        bump=listing_config.bump,
+        // seeds=[
+        //     LISTING_CONFIG.as_bytes(),
+        //     seller.key().as_ref(),
+        //     auction_house.key().as_ref(),
+        //     token_account.key().as_ref(),
+        //     auction_house.treasury_mint.as_ref(),
+        //     token_mint.key().as_ref(),
+        //     &token_size.to_le_bytes()
+        // ],
+        // bump=listing_config.bump,
     )]
     pub listing_config: Box<Account<'info, ListingConfig>>,
 
