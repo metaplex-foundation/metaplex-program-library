@@ -39,6 +39,7 @@ jobs:
         id: list-changed-files
         with:
           pull-number: ${{ github.event.pull_request.number }}
+          exclude: '[".github", "Cargo.lock", "Cargo.toml", "js/idl", "packge.json", "yarn.lock"]'
 
       # map fetched changed files to package / lang (list)
       - name: Get scope of changed packages
