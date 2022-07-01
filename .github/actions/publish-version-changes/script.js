@@ -100,7 +100,7 @@ const getLatestPublishedCrateVersion = async (crateName) => {
   return versions[0]['num'];
 };
 
-const formatCrateTag = (name, version) => `${name}-v${version}`;
+const formatCrateTag = (name, version) => `${name}-prog-v${version}`;
 
 const tryPublishCratesPackage = async (cargoToken, cwdArgs) => {
   console.log('updating rust package');
