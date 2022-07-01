@@ -268,7 +268,6 @@ pub enum CollectionSubcommands {
     /// Set the collection mint on the candy machine
     Set {
         /// Address of collection mint to set the candy machine to.
-        #[clap(long)]
         collection_mint: String,
     },
 
