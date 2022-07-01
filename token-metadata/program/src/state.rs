@@ -1,4 +1,9 @@
-use crate::{deser::meta_deser_unchecked, error::MetadataError, utils::try_from_slice_checked};
+use crate::{
+    deser::meta_deser_unchecked,
+    error::MetadataError,
+    utils::{assert_owned_by, try_from_slice_checked},
+    ID,
+};
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{
@@ -269,6 +274,9 @@ impl Metadata {
 
         // Length and key and checked above.
         let md: Metadata = meta_deser_unchecked(&mut data.as_ref())?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
 
         Ok(md)
     }
@@ -824,7 +832,7 @@ mod metadata_deserialization {
 
         // Setup for `from_account_info` test.
         let pubkey = Keypair::new().pubkey();
-        let owner = Keypair::new().pubkey();
+        let owner = &ID;
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
@@ -850,6 +858,40 @@ mod metadata_deserialization {
     }
 
     #[test]
+    fn fail_to_deserialize_metadata_with_wrong_owner() {
+        let expected_metadata = expected_pesky_metadata();
+
+        let mut buf = Vec::new();
+        expected_metadata.serialize(&mut buf).unwrap();
+        pad_metadata_length(&mut buf);
+
+        let pubkey = Keypair::new().pubkey();
+        let invalid_owner = Keypair::new().pubkey();
+        let mut lamports = 1_000_000_000;
+        let mut data = buf.clone();
+
+        let md_account_info = AccountInfo::new(
+            &pubkey,
+            false,
+            true,
+            &mut lamports,
+            &mut data,
+            &invalid_owner,
+            false,
+            1_000_000_000,
+        );
+
+        // `from_account_info` should not succeed because this account is not owned
+        // by `token-metadata` program.
+        let error = Metadata::from_account_info(&md_account_info).unwrap_err();
+        assert_eq!(error, MetadataError::IncorrectOwner.into());
+
+        // `deserialize` should succeed because it just deserializes bytes, with no account context.
+        let metadata = Metadata::deserialize(&mut buf.as_ref()).unwrap();
+        assert_eq!(metadata, expected_metadata);
+    }
+
+    #[test]
     fn fail_to_deserialize_master_edition() {
         // Setup for BorshDeserialze `deserialize` test.
         let master_edition = MasterEditionV2 {
@@ -862,7 +904,7 @@ mod metadata_deserialization {
 
         // Setup for `from_account_info` test.
         let pubkey = Keypair::new().pubkey();
-        let owner = Keypair::new().pubkey();
+        let owner = &ID;
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
@@ -903,7 +945,7 @@ mod metadata_deserialization {
 
         // Setup for `from_account_info` test.
         let pubkey = Keypair::new().pubkey();
-        let owner = Keypair::new().pubkey();
+        let owner = &ID;
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
@@ -940,7 +982,7 @@ mod metadata_deserialization {
 
         // Setup for `from_account_info` test.
         let pubkey = Keypair::new().pubkey();
-        let owner = Keypair::new().pubkey();
+        let owner = &ID;
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
@@ -976,7 +1018,7 @@ mod metadata_deserialization {
 
         // Setup for `from_account_info` test.
         let pubkey = Keypair::new().pubkey();
-        let owner = Keypair::new().pubkey();
+        let owner = &ID;
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
@@ -1012,7 +1054,7 @@ mod metadata_deserialization {
 
         // Setup for `from_account_info` test.
         let pubkey = Keypair::new().pubkey();
-        let owner = Keypair::new().pubkey();
+        let owner = &ID;
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
