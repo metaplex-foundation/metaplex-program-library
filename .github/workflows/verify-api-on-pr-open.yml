@@ -1,0 +1,106 @@
+name: Verify package SDK
+
+on:
+  pull_request:
+    # by default, this will run on [opened, synchronize, reopened] events
+    # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request
+    # only consider PRs with changes to rust files
+    paths:
+      - '**.rs'
+
+permissions:
+  id-token: write
+
+env:
+  NODE_VERSION: 17.0.1
+  ANCHOR_VERSION: 0.22.0
+  SOLANA_VERSION_STABLE: 1.9.22
+  RUST_TOOLCHAIN: stable
+
+jobs:
+  dump-context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+  get-changes-scope:
+    # only listen for PRs opened against master
+    if: contains(github.base_ref, 'master')
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.map-changed-files-to-pkg.outputs.result }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: List changed files
+        uses: ./.github/actions/list-changed-files
+        id: list-changed-files
+        with:
+          pull-number: ${{ github.event.pull_request.number }}
+
+      # map fetched changed files to package / lang (list)
+      - name: Get scope of changed packages
+        uses: actions/github-script@v4
+        id: map-changed-files-to-pkg
+        with:
+          script: |
+            const files = ${{ steps.list-changed-files.outputs.changed-files }}
+            const uniqueFilesObj = files
+              .filter(f => f.includes('program'))
+              .reduce((p, file) => {
+                const pkgForFile = file.split("/")[0];
+                console.log("pkgForFile: ", pkgForFile);
+                if (!p[pkgForFile]) p[pkgForFile] = 1
+                return p
+              }, {})
+            return Array.from(Object.keys(uniqueFilesObj)).join(" ")
+
+  update-pr-with-changes:
+    needs: [get-changes-scope]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-rust
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+      - uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
+
+      - name: Generate API for modified packages
+        id: generate-package-api
+        run: |
+          pkgs=${{ needs.get-changes-scope.outputs.packages }}
+          pkgs=(${pkgs//\"})
+          for pkg in "${pkgs[@]}"; do
+            echo ">> changing dir $pkg/js"
+            cd "$pkg/js"
+            echo ">> yarn install && solita"
+            yarn install
+            echo ">> install solita"
+            yarn add -D @metaplex-foundation/solita
+            echo ">> generete API"
+            yarn api:gen
+            git restore package.json ../../yarn.lock
+            echo ">> git status"
+            git status
+            if [[ $(git diff --stat) != '' ]]; then
+              echo ">> $pkg needs changes - breaking early"
+              echo "::set-output name=failed::true"
+              break
+            else
+              echo "::set-output name=failed::false"
+            fi
+            echo ">> regress 2 dirs"
+            cd ../..
+          done
+
+      - uses: actions/github-script@v4
+        if: steps.generate-package-api.outputs.failed == 'true'
+        with:
+          script: |
+            core.setFailed("Found differences when generating APIs. See logs for offending package(s).")
