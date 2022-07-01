@@ -571,7 +571,7 @@ pub fn print_purchase_receipt<'info>(
         let mut listing_receipt_data = listing_receipt_info.try_borrow_mut_data()?;
         let curr_listing_receipt_lamp = listing_receipt_info.lamports();
         **listing_receipt_info.lamports.borrow_mut() = 0;
-        sol_memset(&mut *listing_receipt_data, 0, LISTING_RECEIPT_SIZE);
+        sol_memset(*listing_receipt_data, 0, LISTING_RECEIPT_SIZE);
         **bookkeeper.lamports.borrow_mut() = bookkeeper
             .lamports()
             .checked_add(curr_listing_receipt_lamp)
@@ -581,7 +581,7 @@ pub fn print_purchase_receipt<'info>(
     let mut bid_receipt_data = bid_receipt_account.try_borrow_mut_data()?;
     let curr_bid_receipt_lamp = bid_receipt_info.lamports();
     **bid_receipt_info.lamports.borrow_mut() = 0;
-    sol_memset(&mut *bid_receipt_data, 0, BID_RECEIPT_SIZE);
+    sol_memset(*bid_receipt_data, 0, BID_RECEIPT_SIZE);
     **bookkeeper.lamports.borrow_mut() = bookkeeper
         .lamports()
         .checked_add(curr_bid_receipt_lamp)
