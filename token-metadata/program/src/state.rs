@@ -1,12 +1,12 @@
-use std::io::ErrorKind;
-
 use crate::{deser::meta_deser_unchecked, error::MetadataError, utils::try_from_slice_checked};
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
+use std::io::ErrorKind;
+
 /// prefix used for PDAs to avoid certain collision attacks (https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack)
 pub const PREFIX: &str = "metadata";
 
@@ -275,14 +275,11 @@ impl Metadata {
 }
 
 impl borsh::de::BorshDeserialize for Metadata {
-    fn deserialize(buf: &mut &[u8]) -> ::core::result::Result<Self, borsh::maybestd::io::Error> {
+    fn deserialize(buf: &mut &[u8]) -> ::core::result::Result<Self, BorshError> {
         if (buf[0] != Key::MetadataV1 as u8 && buf[0] != Key::Uninitialized as u8)
             || buf.len() != MAX_METADATA_LEN
         {
-            return Err(borsh::maybestd::io::Error::new(
-                ErrorKind::Other,
-                "DataTypeMismatch",
-            ));
+            return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
         }
 
         // Length and key and checked above.
@@ -795,5 +792,246 @@ impl EditionMarker {
         // bitwise or a 1 into our position in that position
         self.ledger[index] |= mask;
         Ok(())
+    }
+}
+
+#[cfg(test)]
+
+mod metadata_deserialization {
+    use solana_sdk::{signature::Keypair, signer::Signer};
+
+    use super::*;
+    use crate::{
+        deser::tests::expected_pesky_metadata,
+        state::{Edition, MasterEditionV2},
+    };
+    pub use crate::{state::Creator, utils::puff_out_data_fields};
+    use std::io::ErrorKind;
+
+    fn pad_metadata_length(metadata: &mut Vec<u8>) {
+        let padding_length = MAX_METADATA_LEN - metadata.len();
+        metadata.extend(vec![0; padding_length]);
+    }
+
+    #[test]
+    fn successfully_deserialize_metadata() {
+        // Setup for BorshDeserialze `deserialize` test.
+        let expected_metadata = expected_pesky_metadata();
+
+        let mut buf = Vec::new();
+        expected_metadata.serialize(&mut buf).unwrap();
+        pad_metadata_length(&mut buf);
+
+        // Setup for `from_account_info` test.
+        let pubkey = Keypair::new().pubkey();
+        let owner = Keypair::new().pubkey();
+        let mut lamports = 1_000_000_000;
+        let mut data = buf.clone();
+
+        let mut md_account_info = AccountInfo::new(
+            &pubkey,
+            false,
+            true,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            1_000_000_000,
+        );
+
+        // Both deserialization methods should succeed.
+        let metadata = Metadata::deserialize(&mut buf.as_ref()).unwrap();
+        assert_eq!(metadata.key, Key::MetadataV1);
+        assert_eq!(metadata, expected_metadata);
+
+        let md = Metadata::from_account_info(&mut md_account_info).unwrap();
+        assert_eq!(md.key, Key::MetadataV1);
+        assert_eq!(md, expected_metadata);
+    }
+
+    #[test]
+    fn fail_to_deserialize_master_edition() {
+        // Setup for BorshDeserialze `deserialize` test.
+        let master_edition = MasterEditionV2 {
+            key: Key::MasterEditionV2,
+            supply: 0,
+            max_supply: Some(0),
+        };
+        let mut buf = Vec::new();
+        master_edition.serialize(&mut buf).unwrap();
+
+        // Setup for `from_account_info` test.
+        let pubkey = Keypair::new().pubkey();
+        let owner = Keypair::new().pubkey();
+        let mut lamports = 1_000_000_000;
+        let mut data = buf.clone();
+
+        let mut me_account_info = AccountInfo::new(
+            &pubkey,
+            false,
+            true,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            1_000_000_000,
+        );
+
+        // Neither deserialization methods should succeed.
+        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::Other);
+        assert_eq!(err.to_string(), "DataTypeMismatch");
+
+        let err = Metadata::from_account_info(&mut me_account_info).unwrap_err();
+        assert_eq!(err, MetadataError::DataTypeMismatch.into());
+    }
+
+    #[test]
+    fn fail_to_deserialize_edition() {
+        // Setup for BorshDeserialze `deserialize` test.
+        let parent = Keypair::new().pubkey();
+        let edition = 1;
+
+        let edition = Edition {
+            key: Key::MasterEditionV2,
+            parent,
+            edition,
+        };
+
+        let mut buf = Vec::new();
+        edition.serialize(&mut buf).unwrap();
+
+        // Setup for `from_account_info` test.
+        let pubkey = Keypair::new().pubkey();
+        let owner = Keypair::new().pubkey();
+        let mut lamports = 1_000_000_000;
+        let mut data = buf.clone();
+
+        let mut e_account_info = AccountInfo::new(
+            &pubkey,
+            false,
+            true,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            1_000_000_000,
+        );
+
+        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::Other);
+        assert_eq!(err.to_string(), "DataTypeMismatch");
+
+        let err = Metadata::from_account_info(&mut e_account_info).unwrap_err();
+        assert_eq!(err, MetadataError::DataTypeMismatch.into());
+    }
+
+    #[test]
+    fn fail_to_deserialize_use_authority_record() {
+        // Setup for BorshDeserialze `deserialize` test.
+        let use_record = UseAuthorityRecord {
+            key: Key::UseAuthorityRecord,
+            allowed_uses: 14,
+            bump: 255,
+        };
+
+        let mut buf = Vec::new();
+        use_record.serialize(&mut buf).unwrap();
+
+        // Setup for `from_account_info` test.
+        let pubkey = Keypair::new().pubkey();
+        let owner = Keypair::new().pubkey();
+        let mut lamports = 1_000_000_000;
+        let mut data = buf.clone();
+
+        let mut use_record_account_info = AccountInfo::new(
+            &pubkey,
+            false,
+            true,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            1_000_000_000,
+        );
+
+        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::Other);
+        assert_eq!(err.to_string(), "DataTypeMismatch");
+
+        let err = Metadata::from_account_info(&mut use_record_account_info).unwrap_err();
+        assert_eq!(err, MetadataError::DataTypeMismatch.into());
+    }
+
+    #[test]
+    fn fail_to_deserialize_collection_authority_record() {
+        // Setup for BorshDeserialze `deserialize` test.
+        let collection_record = CollectionAuthorityRecord {
+            key: Key::CollectionAuthorityRecord,
+            bump: 255,
+        };
+
+        let mut buf = Vec::new();
+        collection_record.serialize(&mut buf).unwrap();
+
+        // Setup for `from_account_info` test.
+        let pubkey = Keypair::new().pubkey();
+        let owner = Keypair::new().pubkey();
+        let mut lamports = 1_000_000_000;
+        let mut data = buf.clone();
+
+        let mut collection_record_account_info = AccountInfo::new(
+            &pubkey,
+            false,
+            true,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            1_000_000_000,
+        );
+
+        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::Other);
+        assert_eq!(err.to_string(), "DataTypeMismatch");
+
+        let err = Metadata::from_account_info(&mut collection_record_account_info).unwrap_err();
+        assert_eq!(err, MetadataError::DataTypeMismatch.into());
+    }
+
+    #[test]
+    fn fail_to_deserialize_edition_marker() {
+        // Setup for BorshDeserialze `deserialize` test.
+        let edition_marker = EditionMarker {
+            key: Key::EditionMarker,
+            ledger: [0; 31],
+        };
+
+        let mut buf = Vec::new();
+        edition_marker.serialize(&mut buf).unwrap();
+
+        // Setup for `from_account_info` test.
+        let pubkey = Keypair::new().pubkey();
+        let owner = Keypair::new().pubkey();
+        let mut lamports = 1_000_000_000;
+        let mut data = buf.clone();
+
+        let mut edition_marker_account_info = AccountInfo::new(
+            &pubkey,
+            false,
+            true,
+            &mut lamports,
+            &mut data,
+            &owner,
+            false,
+            1_000_000_000,
+        );
+
+        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::Other);
+        assert_eq!(err.to_string(), "DataTypeMismatch");
+
+        let err = Metadata::from_account_info(&mut edition_marker_account_info).unwrap_err();
+        assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 }
