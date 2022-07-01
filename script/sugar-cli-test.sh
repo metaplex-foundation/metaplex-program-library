@@ -785,7 +785,7 @@ if [ ! "$MANUAL_CACHE" == "Y" ]; then
 
     echo ""
     MAG "Setting collection >>>"
-    $SUGAR_BIN collection --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC set --collection-mint $COLLECTION_PDA
+    $SUGAR_BIN collection --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC set $COLLECTION_PDA
     MAG "<<<"
 
     # checking that the collection PDA was set
