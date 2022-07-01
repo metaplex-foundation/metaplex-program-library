@@ -828,7 +828,7 @@ mod metadata_deserialization {
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
-        let mut md_account_info = AccountInfo::new(
+        let md_account_info = AccountInfo::new(
             &pubkey,
             false,
             true,
@@ -844,7 +844,7 @@ mod metadata_deserialization {
         assert_eq!(metadata.key, Key::MetadataV1);
         assert_eq!(metadata, expected_metadata);
 
-        let md = Metadata::from_account_info(&mut md_account_info).unwrap();
+        let md = Metadata::from_account_info(&md_account_info).unwrap();
         assert_eq!(md.key, Key::MetadataV1);
         assert_eq!(md, expected_metadata);
     }
@@ -866,7 +866,7 @@ mod metadata_deserialization {
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
-        let mut me_account_info = AccountInfo::new(
+        let me_account_info = AccountInfo::new(
             &pubkey,
             false,
             true,
@@ -882,7 +882,7 @@ mod metadata_deserialization {
         assert_eq!(err.kind(), ErrorKind::Other);
         assert_eq!(err.to_string(), "DataTypeMismatch");
 
-        let err = Metadata::from_account_info(&mut me_account_info).unwrap_err();
+        let err = Metadata::from_account_info(&me_account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 
@@ -907,7 +907,7 @@ mod metadata_deserialization {
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
-        let mut e_account_info = AccountInfo::new(
+        let e_account_info = AccountInfo::new(
             &pubkey,
             false,
             true,
@@ -922,7 +922,7 @@ mod metadata_deserialization {
         assert_eq!(err.kind(), ErrorKind::Other);
         assert_eq!(err.to_string(), "DataTypeMismatch");
 
-        let err = Metadata::from_account_info(&mut e_account_info).unwrap_err();
+        let err = Metadata::from_account_info(&e_account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 
@@ -944,7 +944,7 @@ mod metadata_deserialization {
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
-        let mut use_record_account_info = AccountInfo::new(
+        let use_record_account_info = AccountInfo::new(
             &pubkey,
             false,
             true,
@@ -959,7 +959,7 @@ mod metadata_deserialization {
         assert_eq!(err.kind(), ErrorKind::Other);
         assert_eq!(err.to_string(), "DataTypeMismatch");
 
-        let err = Metadata::from_account_info(&mut use_record_account_info).unwrap_err();
+        let err = Metadata::from_account_info(&use_record_account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 
@@ -980,7 +980,7 @@ mod metadata_deserialization {
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
-        let mut collection_record_account_info = AccountInfo::new(
+        let collection_record_account_info = AccountInfo::new(
             &pubkey,
             false,
             true,
@@ -995,7 +995,7 @@ mod metadata_deserialization {
         assert_eq!(err.kind(), ErrorKind::Other);
         assert_eq!(err.to_string(), "DataTypeMismatch");
 
-        let err = Metadata::from_account_info(&mut collection_record_account_info).unwrap_err();
+        let err = Metadata::from_account_info(&collection_record_account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 
@@ -1016,7 +1016,7 @@ mod metadata_deserialization {
         let mut lamports = 1_000_000_000;
         let mut data = buf.clone();
 
-        let mut edition_marker_account_info = AccountInfo::new(
+        let edition_marker_account_info = AccountInfo::new(
             &pubkey,
             false,
             true,
@@ -1031,7 +1031,7 @@ mod metadata_deserialization {
         assert_eq!(err.kind(), ErrorKind::Other);
         assert_eq!(err.to_string(), "DataTypeMismatch");
 
-        let err = Metadata::from_account_info(&mut edition_marker_account_info).unwrap_err();
+        let err = Metadata::from_account_info(&edition_marker_account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 }
