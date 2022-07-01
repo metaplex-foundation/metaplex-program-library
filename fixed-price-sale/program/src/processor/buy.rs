@@ -262,7 +262,7 @@ impl<'info> Buy<'info> {
             return Err(ErrorCode::WrongOwnerInTokenGatingAcc.into());
         }
 
-        if user_token_acc_data.mint != *collection {
+        if user_token_acc_data.mint != *collection || user_token_acc_data.amount == 0 {
             return Err(ErrorCode::WrongGatingToken.into());
         }
 

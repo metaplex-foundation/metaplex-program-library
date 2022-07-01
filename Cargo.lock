@@ -1789,7 +1789,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-fixed-price-sale"
-version = "0.2.1"
+version = "0.2.3"
 dependencies = [
  "anchor-client",
  "anchor-lang",
