@@ -20,12 +20,14 @@ use solana_program::{
     system_instruction, sysvar,
     sysvar::{instructions::get_instruction_relative, SysvarId},
 };
+use std::convert::TryInto;
 
 use crate::{
     constants::{
         A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
-        CONFIG_LINE_SIZE, CUPCAKE_ID, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+        CONFIG_LINE_SIZE, CUPCAKE_ID, EXPIRE_OFFSET, GUMDROP_ID, PREFIX, SWAP_REMOVE_FEATURE_INDEX,
     },
+    is_feature_active,
     utils::*,
     CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
     WhitelistMintSettings,
@@ -514,8 +516,13 @@ pub fn handle_mint_nft<'info>(
     let most_recent = array_ref![data, 12, 8];
 
     let index = u64::from_le_bytes(*most_recent);
+    let denominator = if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+        candy_machine.data.items_available - candy_machine.items_redeemed
+    } else {
+        candy_machine.data.items_available
+    };
     let modded: usize = index
-        .checked_rem(candy_machine.data.items_available)
+        .checked_rem(denominator)
         .ok_or(CandyError::NumericalOverflowError)? as usize;
 
     let config_line = get_config_line(candy_machine, modded, candy_machine.items_redeemed)?;
@@ -706,34 +713,68 @@ pub fn get_good_index(
 }
 
 pub fn get_config_line(
-    a: &Account<'_, CandyMachine>,
+    candy_machine: &Account<'_, CandyMachine>,
     index: usize,
     mint_number: u64,
 ) -> Result<ConfigLine> {
-    if let Some(hs) = &a.data.hidden_settings {
+    if let Some(hs) = &candy_machine.data.hidden_settings {
         return Ok(ConfigLine {
             name: hs.name.clone() + "#" + &(mint_number + 1).to_string(),
             uri: hs.uri.clone(),
         });
     }
-    let a_info = a.to_account_info();
-
+    let a_info = candy_machine.to_account_info();
     let mut arr = a_info.data.borrow_mut();
 
-    let (mut index_to_use, good) =
-        get_good_index(&mut arr, a.data.items_available as usize, index, true)?;
-    if !good {
-        let (index_to_use_new, good_new) =
-            get_good_index(&mut arr, a.data.items_available as usize, index, false)?;
-        index_to_use = index_to_use_new;
-        if !good_new {
+    let index_to_use = if is_feature_active(&candy_machine.data.uuid, SWAP_REMOVE_FEATURE_INDEX) {
+        let items_available = candy_machine.data.items_available as u64;
+        let indices_vec_start = CONFIG_ARRAY_START
+            + 4
+            + (items_available as usize) * CONFIG_LINE_SIZE
+            + 4
+            + ((items_available
+                .checked_div(8)
+                .ok_or(CandyError::NumericalOverflowError)?
+                + 1) as usize)
+            + 4;
+        // calculates the mint index and retrieves the value at that position
+        let mint_index = indices_vec_start + index * 4;
+        let index_to_use =
+            u32::from_le_bytes(arr[mint_index..mint_index + 4].try_into().unwrap()) as usize;
+        // calculates the last available index and retrieves the value at that position
+        let last_index = indices_vec_start + ((items_available - mint_number - 1) * 4) as usize;
+        let last_value = u32::from_le_bytes(arr[last_index..last_index + 4].try_into().unwrap());
+        // swap_remove: this guarantees that we remove the used mint index from the available array
+        // in a constant time O(1) no matter how big the indices array is
+        arr[mint_index..mint_index + 4].copy_from_slice(&u32::to_le_bytes(last_value));
+
+        index_to_use
+    } else {
+        let (mut index_to_use, good) = get_good_index(
+            &mut arr,
+            candy_machine.data.items_available as usize,
+            index,
+            true,
+        )?;
+        if !good {
+            let (index_to_use_new, good_new) = get_good_index(
+                &mut arr,
+                candy_machine.data.items_available as usize,
+                index,
+                false,
+            )?;
+            index_to_use = index_to_use_new;
+            if !good_new {
+                return err!(CandyError::CannotFindUsableConfigLine);
+            }
+        }
+
+        if arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)] == 1 {
             return err!(CandyError::CannotFindUsableConfigLine);
         }
-    }
 
-    if arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)] == 1 {
-        return err!(CandyError::CannotFindUsableConfigLine);
-    }
+        index_to_use
+    };
 
     let data_array = &mut arr[CONFIG_ARRAY_START + 4 + index_to_use * (CONFIG_LINE_SIZE)
         ..CONFIG_ARRAY_START + 4 + (index_to_use + 1) * (CONFIG_LINE_SIZE)];

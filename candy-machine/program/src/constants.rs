@@ -3,12 +3,15 @@ use mpl_token_metadata::state::{
 };
 use solana_program::pubkey::Pubkey;
 
+// Default UUID for features flag.
+pub const DEFAULT_UUID: &str = "000000";
 pub const EXPIRE_OFFSET: i64 = 10 * 60;
 pub const BLOCK_HASHES: Pubkey =
     solana_program::pubkey!("SysvarRecentB1ockHashes11111111111111111111");
 pub const BOT_FEE: u64 = 10000000;
 pub const PREFIX: &str = "candy_machine";
 pub const COLLECTIONS_FEATURE_INDEX: usize = 0;
+pub const SWAP_REMOVE_FEATURE_INDEX: usize = 1;
 pub const CONFIG_LINE_SIZE: usize = 4 + MAX_NAME_LENGTH + 4 + MAX_URI_LENGTH;
 pub const COLLECTION_PDA_SIZE: usize = 8 + 64;
 pub const GUMDROP_ID: Pubkey =

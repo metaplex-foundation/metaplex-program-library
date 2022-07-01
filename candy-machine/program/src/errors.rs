@@ -72,4 +72,8 @@ pub enum CandyError {
     NoChangingCollectionDuringMint,
     #[msg("Retain authority must be true for Candy Machines with a collection set")]
     CandyCollectionRequiresRetainAuthority,
+    #[msg("Maximum permitted size of data exceeded")]
+    CandyMachineExceedDataLimit,
+    #[msg("Index greater than account length")]
+    IndexGreaterThanAccountLength,
 }
