@@ -1,4 +1,6 @@
-use crate::{deser::meta_deser, error::MetadataError, utils::try_from_slice_checked};
+use std::io::ErrorKind;
+
+use crate::{deser::meta_deser_unchecked, error::MetadataError, utils::try_from_slice_checked};
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{
@@ -257,7 +259,16 @@ pub struct Metadata {
 
 impl Metadata {
     pub fn from_account_info(a: &AccountInfo) -> Result<Metadata, ProgramError> {
-        let md: Metadata = meta_deser(&mut a.data.borrow_mut().as_ref())?;
+        let data = a.data.borrow_mut();
+
+        if (data[0] != Key::MetadataV1 as u8 && data[0] != Key::Uninitialized as u8)
+            || data.len() != MAX_METADATA_LEN
+        {
+            return Err(MetadataError::DataTypeMismatch.into());
+        }
+
+        // Length and key and checked above.
+        let md: Metadata = meta_deser_unchecked(&mut data.as_ref())?;
 
         Ok(md)
     }
@@ -265,7 +276,17 @@ impl Metadata {
 
 impl borsh::de::BorshDeserialize for Metadata {
     fn deserialize(buf: &mut &[u8]) -> ::core::result::Result<Self, borsh::maybestd::io::Error> {
-        let md = meta_deser(buf)?;
+        if (buf[0] != Key::MetadataV1 as u8 && buf[0] != Key::Uninitialized as u8)
+            || buf.len() != MAX_METADATA_LEN
+        {
+            return Err(borsh::maybestd::io::Error::new(
+                ErrorKind::Other,
+                "DataTypeMismatch",
+            ));
+        }
+
+        // Length and key and checked above.
+        let md = meta_deser_unchecked(buf)?;
         Ok(md)
     }
 }

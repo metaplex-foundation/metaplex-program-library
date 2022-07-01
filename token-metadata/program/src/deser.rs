@@ -6,7 +6,7 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubke
 // This function is used in a custom deserialization implementation for the
 // `Metadata` struct, so should never have `msg` macros used in it as it may be used client side
 // either in tests or client code.
-pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Error> {
+pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Error> {
     // Metadata corruption shouldn't appear until after edition_nonce.
     let key: Key = BorshDeserialize::deserialize(buf)?;
     let update_authority: Pubkey = BorshDeserialize::deserialize(buf)?;
@@ -169,7 +169,7 @@ mod tests {
     #[test]
     fn deserialize_corrupted_metadata() {
         let mut buf = pesky_data();
-        let metadata = meta_deser(&mut buf).unwrap();
+        let metadata = meta_deser_unchecked(&mut buf).unwrap();
         let expected_metadata = expected_pesky_metadata();
 
         assert_eq!(metadata, expected_metadata);
