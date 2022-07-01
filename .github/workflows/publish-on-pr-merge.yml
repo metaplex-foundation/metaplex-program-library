@@ -1,0 +1,79 @@
+name: Sync versions on PR merge
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  id-token: write
+  contents: write
+
+env:
+  NODE_VERSION: 17.0.1
+  ANCHOR_VERSION: 0.22.0
+  SOLANA_VERSION_STABLE: 1.9.22
+  RUST_TOOLCHAIN: stable
+
+jobs:
+  dump-context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+  # alt: on version, publish comment or label and then parse here.
+  get-changes-scope:
+    runs-on: ubuntu-latest
+    outputs:
+      changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get PR for push event HEAD commit
+        uses: ./.github/actions/get-pr-for-commit
+        id: get-pr-for-commit
+        with:
+          commit-sha: ${{ github.sha }}
+
+      - name: List changed files
+        uses: ./.github/actions/list-changed-files
+        id: list-changed-files
+        with:
+          pull-number: ${{ steps.get-pr-for-commit.outputs.pull-number }}
+          # only include files which might contain version bumps
+          include: '["package.json", "Cargo.toml"]'
+
+      # map fetched changed files to package / lang (list)
+      - name: Get scope of changed packages
+        uses: actions/github-script@v4
+        id: get-changed-package-scope
+        with:
+          # update regexp to consider other subdirs - e.g. `rust|test|cli|<etc>`
+          script: |
+            const files = ${{ steps.list-changed-files.outputs.changed-files }}
+            const regexp = /[a-zA-Z\-]+\/(js|program)/g
+            const uniqueFilesObj = files.reduce((p, file) => {
+              const match = file.match(regexp)
+              if (match) {
+                // use first match result
+                if (!p[match[0]]) p[match[0]] = 1
+              }
+              return p
+            }, {})
+            return Array.from(Object.keys(uniqueFilesObj))
+
+  publish-version-changes:
+    needs: [get-changes-scope]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Publish version changes
+        uses: ./.github/actions/publish-version-changes
+        id: publish-version-changes
+        with:
+          changed-packages: ${{ needs.get-changes-scope.outputs.changed-packages }}
+          cargo-token: ${{ secrets.CARGO_TOKEN }}
+          npm-token: ${{ secrets.NPM_TOKEN }}

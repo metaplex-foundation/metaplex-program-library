@@ -125,7 +125,7 @@ pub fn handle_mint_nft<'info>(
         && !cmp_pubkeys(&current_ix.program_id, &CUPCAKE_ID)
     {
         punish_bots(
-            CandyError::SuspiciousTransaction,
+            error!(CandyError::SuspiciousTransaction).into(),
             payer.to_account_info(),
             ctx.accounts.candy_machine.to_account_info(),
             ctx.accounts.system_program.to_account_info(),
@@ -150,7 +150,7 @@ pub fn handle_mint_nft<'info>(
         Err(_) => {
             if is_feature_active(&candy_machine.data.uuid, COLLECTIONS_FEATURE_INDEX) {
                 punish_bots(
-                    CandyError::MissingSetCollectionDuringMint,
+                    error!(CandyError::MissingSetCollectionDuringMint).into(),
                     payer.to_account_info(),
                     ctx.accounts.candy_machine.to_account_info(),
                     ctx.accounts.system_program.to_account_info(),
@@ -183,7 +183,7 @@ pub fn handle_mint_nft<'info>(
         {
             msg!("Transaction had ix with program id {}", program_id);
             punish_bots(
-                CandyError::SuspiciousTransaction,
+                error!(CandyError::SuspiciousTransaction).into(),
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
@@ -201,7 +201,7 @@ pub fn handle_mint_nft<'info>(
                     && !cmp_pubkeys(&ctx.accounts.payer.key(), &candy_machine.authority)
                 {
                     punish_bots(
-                        CandyError::CandyMachineNotLive,
+                        error!(CandyError::CandyMachineNotLive).into(),
                         payer.to_account_info(),
                         ctx.accounts.candy_machine.to_account_info(),
                         ctx.accounts.system_program.to_account_info(),
@@ -214,7 +214,7 @@ pub fn handle_mint_nft<'info>(
                 if candy_machine.items_redeemed >= es.number {
                     if !cmp_pubkeys(&ctx.accounts.payer.key(), &candy_machine.authority) {
                         punish_bots(
-                            CandyError::CandyMachineEmpty,
+                            error!(CandyError::CandyMachineEmpty).into(),
                             payer.to_account_info(),
                             ctx.accounts.candy_machine.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
@@ -231,7 +231,7 @@ pub fn handle_mint_nft<'info>(
     if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
         if ctx.remaining_accounts.len() <= remaining_accounts_counter {
             punish_bots(
-                CandyError::GatewayTokenMissing,
+                error!(CandyError::GatewayTokenMissing).into(),
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
@@ -240,6 +240,7 @@ pub fn handle_mint_nft<'info>(
             return Ok(());
         }
         let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
+
         remaining_accounts_counter += 1;
 
         // Eval function used in the gateway CPI
@@ -267,29 +268,48 @@ pub fn handle_mint_nft<'info>(
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::GatewayAppMissing);
             }
+
             let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
+
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::NetworkExpireFeatureMissing);
             }
             let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-            Gateway::verify_and_expire_token_with_eval(
+
+            if let Err(err) = Gateway::verify_and_expire_token_with_eval(
                 gateway_app.clone(),
                 gateway_token_info.clone(),
                 payer.deref().clone(),
                 &gatekeeper.gatekeeper_network,
                 network_expire_feature.clone(),
                 eval_function,
+            ) {
+                punish_bots(
+                    err,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
+                return Ok(());
+            }
+        } else if let Err(err) = Gateway::verify_gateway_token_with_eval(
+            gateway_token_info,
+            &payer.key(),
+            &gatekeeper.gatekeeper_network,
+            None,
+            eval_function,
+        ) {
+            punish_bots(
+                err,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
             )?;
-        } else {
-            Gateway::verify_gateway_token_with_eval(
-                gateway_token_info,
-                &payer.key(),
-                &gatekeeper.gatekeeper_network,
-                None,
-                eval_function,
-            )?;
+            return Ok(());
         }
     }
 
@@ -309,7 +329,7 @@ pub fn handle_mint_nft<'info>(
                                 && !ws.presale
                             {
                                 punish_bots(
-                                    CandyError::CandyMachineNotLive,
+                                    error!(CandyError::CandyMachineNotLive).into(),
                                     payer.to_account_info(),
                                     ctx.accounts.candy_machine.to_account_info(),
                                     ctx.accounts.system_program.to_account_info(),
@@ -324,7 +344,7 @@ pub fn handle_mint_nft<'info>(
                                 && !ws.presale
                             {
                                 punish_bots(
-                                    CandyError::CandyMachineNotLive,
+                                    error!(CandyError::CandyMachineNotLive).into(),
                                     payer.to_account_info(),
                                     ctx.accounts.candy_machine.to_account_info(),
                                     ctx.accounts.system_program.to_account_info(),
@@ -348,7 +368,7 @@ pub fn handle_mint_nft<'info>(
 
                         if key_check.is_err() {
                             punish_bots(
-                                CandyError::IncorrectOwner,
+                                error!(CandyError::IncorrectOwner).into(),
                                 payer.to_account_info(),
                                 ctx.accounts.candy_machine.to_account_info(),
                                 ctx.accounts.system_program.to_account_info(),
@@ -376,7 +396,7 @@ pub fn handle_mint_nft<'info>(
                         // If a pre-sale has no discount, its no issue, because the "discount"
                         // is minting first - a presale whitelist always has an open post sale.
                         punish_bots(
-                            CandyError::NoWhitelistToken,
+                            error!(CandyError::NoWhitelistToken).into(),
                             payer.to_account_info(),
                             ctx.accounts.candy_machine.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
@@ -387,7 +407,7 @@ pub fn handle_mint_nft<'info>(
                     let go_live = assert_valid_go_live(payer, clock, candy_machine);
                     if go_live.is_err() {
                         punish_bots(
-                            CandyError::CandyMachineNotLive,
+                            error!(CandyError::CandyMachineNotLive).into(),
                             payer.to_account_info(),
                             ctx.accounts.candy_machine.to_account_info(),
                             ctx.accounts.system_program.to_account_info(),
@@ -406,7 +426,7 @@ pub fn handle_mint_nft<'info>(
                     // If a pre-sale has no discount, its no issue, because the "discount"
                     // is minting first - a presale whitelist always has an open post sale.
                     punish_bots(
-                        CandyError::NoWhitelistToken,
+                        error!(CandyError::NoWhitelistToken).into(),
                         payer.to_account_info(),
                         ctx.accounts.candy_machine.to_account_info(),
                         ctx.accounts.system_program.to_account_info(),
@@ -420,7 +440,7 @@ pub fn handle_mint_nft<'info>(
                 let go_live = assert_valid_go_live(payer, clock, candy_machine);
                 if go_live.is_err() {
                     punish_bots(
-                        CandyError::CandyMachineNotLive,
+                        error!(CandyError::CandyMachineNotLive).into(),
                         payer.to_account_info(),
                         ctx.accounts.candy_machine.to_account_info(),
                         ctx.accounts.system_program.to_account_info(),
@@ -435,7 +455,7 @@ pub fn handle_mint_nft<'info>(
         let go_live = assert_valid_go_live(payer, clock, candy_machine);
         if go_live.is_err() {
             punish_bots(
-                CandyError::CandyMachineNotLive,
+                error!(CandyError::CandyMachineNotLive).into(),
                 payer.to_account_info(),
                 ctx.accounts.candy_machine.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
@@ -447,7 +467,7 @@ pub fn handle_mint_nft<'info>(
 
     if candy_machine.items_redeemed >= candy_machine.data.items_available {
         punish_bots(
-            CandyError::CandyMachineEmpty,
+            error!(CandyError::CandyMachineEmpty).into(),
             payer.to_account_info(),
             ctx.accounts.candy_machine.to_account_info(),
             ctx.accounts.system_program.to_account_info(),

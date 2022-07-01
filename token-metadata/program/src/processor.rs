@@ -88,7 +88,7 @@ pub fn process_instruction<'a>(
             )
         }
         MetadataInstruction::CreateMetadataAccountV3(args) => {
-            msg!("Instruction: Create Metadata Accounts v2");
+            msg!("Instruction: Create Metadata Accounts v3");
             process_create_metadata_accounts_v3(
                 program_id,
                 accounts,
