@@ -1,17 +1,19 @@
-use anchor_lang::AccountDeserialize;
-use console::style;
 use std::{thread, time::Duration};
 
+use anchor_lang::AccountDeserialize;
+use console::style;
 use mpl_candy_machine::CandyMachine;
 
-use crate::cache::*;
-use crate::candy_machine::CANDY_MACHINE_ID;
-use crate::common::*;
-use crate::config::Cluster;
-use crate::constants::{CANDY_EMOJI, PAPER_EMOJI};
-use crate::pdas::get_collection_pda;
-use crate::utils::*;
-use crate::verify::VerifyError;
+use crate::{
+    cache::*,
+    candy_machine::CANDY_MACHINE_ID,
+    common::*,
+    config::Cluster,
+    constants::{CANDY_EMOJI, PAPER_EMOJI},
+    pdas::get_collection_pda,
+    utils::*,
+    verify::VerifyError,
+};
 
 pub struct VerifyArgs {
     pub keypair: Option<String>,

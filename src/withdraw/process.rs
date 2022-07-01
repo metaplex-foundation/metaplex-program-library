@@ -1,3 +1,9 @@
+use std::{
+    io::{stdin, stdout, Write},
+    rc::Rc,
+    str::FromStr,
+};
+
 pub use anchor_client::{
     solana_sdk::{
         commitment_config::{CommitmentConfig, CommitmentLevel},
@@ -10,24 +16,19 @@ pub use anchor_client::{
     Client, Program,
 };
 use console::style;
+use mpl_candy_machine::{accounts as nft_accounts, instruction as nft_instruction};
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
     rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
 };
-use std::{
-    io::{stdin, stdout, Write},
-    rc::Rc,
-    str::FromStr,
+
+use crate::{
+    candy_machine::CANDY_MACHINE_ID,
+    common::*,
+    setup::{setup_client, sugar_setup},
+    utils::*,
 };
-
-use mpl_candy_machine::accounts as nft_accounts;
-use mpl_candy_machine::instruction as nft_instruction;
-
-use crate::candy_machine::CANDY_MACHINE_ID;
-use crate::common::*;
-use crate::setup::{setup_client, sugar_setup};
-use crate::utils::*;
 
 pub struct WithdrawArgs {
     pub candy_machine: Option<String>,

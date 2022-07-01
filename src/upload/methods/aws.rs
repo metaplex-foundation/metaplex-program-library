@@ -1,14 +1,18 @@
+use std::{fs, sync::Arc};
+
 use async_trait::async_trait;
 use aws_sdk_s3::{types::ByteStream, Client};
 use bs58;
-use std::{fs, sync::Arc};
 use tokio::task::JoinHandle;
 
-use crate::upload::{
-    assets::{AssetPair, DataType},
-    uploader::{AssetInfo, ParallelUploader, Prepare},
+use crate::{
+    common::*,
+    config::*,
+    upload::{
+        assets::{AssetPair, DataType},
+        uploader::{AssetInfo, ParallelUploader, Prepare},
+    },
 };
-use crate::{common::*, config::*};
 
 pub struct AWSMethod {
     pub aws_client: Arc<Client>,

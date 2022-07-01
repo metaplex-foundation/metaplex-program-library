@@ -1,11 +1,12 @@
+use std::{
+    fs::{metadata, OpenOptions},
+    io::ErrorKind,
+};
+
 use anyhow::Result;
-use std::fs::metadata;
-use std::fs::OpenOptions;
-use std::io::ErrorKind;
 use tracing::error;
 
-use crate::config::data::*;
-use crate::config::errors::ConfigError;
+use crate::config::{data::*, errors::ConfigError};
 
 pub fn get_config_data(config_path: &str) -> Result<ConfigData, ConfigError> {
     // checks that the config file exists and it is readable

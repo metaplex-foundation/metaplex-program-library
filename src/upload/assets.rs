@@ -1,5 +1,5 @@
-use std::ffi::OsStr;
 use std::{
+    ffi::OsStr,
     fs::{self, DirEntry, File, OpenOptions},
     io::{BufReader, Read},
     sync::Arc,
@@ -13,8 +13,7 @@ use ring::digest::{Context, SHA256};
 use serde::Serialize;
 use serde_json;
 
-use crate::common::*;
-use crate::validate::format::Metadata;
+use crate::{common::*, validate::format::Metadata};
 
 pub struct UploadDataArgs<'a> {
     pub bundlr_client: Arc<Bundlr<SolanaSigner>>,

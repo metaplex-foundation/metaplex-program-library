@@ -13,9 +13,10 @@ use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 use chrono::Utc;
 use console::style;
-use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{accounts as nft_accounts, CollectionPDA};
-use mpl_candy_machine::{CandyError, CandyMachine, EndSettingType, WhitelistMintMode};
+use mpl_candy_machine::{
+    accounts as nft_accounts, instruction as nft_instruction, CandyError, CandyMachine,
+    CollectionPDA, EndSettingType, WhitelistMintMode,
+};
 use mpl_token_metadata::pda::find_collection_authority_account;
 use solana_client::rpc_response::Response;
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
@@ -25,13 +26,14 @@ use spl_token::{
     ID as TOKEN_PROGRAM_ID,
 };
 
-use crate::cache::load_cache;
-use crate::candy_machine::CANDY_MACHINE_ID;
-use crate::candy_machine::*;
-use crate::common::*;
-use crate::config::Cluster;
-use crate::pdas::*;
-use crate::utils::*;
+use crate::{
+    cache::load_cache,
+    candy_machine::{CANDY_MACHINE_ID, *},
+    common::*,
+    config::Cluster,
+    pdas::*,
+    utils::*,
+};
 
 pub struct MintArgs {
     pub keypair: Option<String>,

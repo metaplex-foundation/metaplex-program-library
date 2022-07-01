@@ -1,25 +1,28 @@
-use anyhow::Result;
-use async_trait::async_trait;
-use console::style;
-use futures::future::select_all;
-pub use indicatif::ProgressBar;
-use std::collections::HashMap;
 use std::{
     cmp,
+    collections::HashMap,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc,
     },
 };
+
+use anyhow::Result;
+use async_trait::async_trait;
+use console::style;
+use futures::future::select_all;
+pub use indicatif::ProgressBar;
 use tokio::task::JoinHandle;
 
-use crate::cache::Cache;
-use crate::config::{ConfigData, SugarConfig, UploadMethod};
-use crate::constants::PARALLEL_LIMIT;
-use crate::upload::{
-    assets::{AssetPair, DataType},
-    methods::*,
-    UploadError,
+use crate::{
+    cache::Cache,
+    config::{ConfigData, SugarConfig, UploadMethod},
+    constants::PARALLEL_LIMIT,
+    upload::{
+        assets::{AssetPair, DataType},
+        methods::*,
+        UploadError,
+    },
 };
 
 // Size of the mock media URI for cost calculations.

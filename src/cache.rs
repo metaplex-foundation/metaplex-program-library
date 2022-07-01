@@ -1,11 +1,16 @@
-use crate::common::*;
-use crate::pdas::find_candy_machine_creator_pda;
+use std::{
+    fs,
+    io::Write,
+    ops::{Deref, DerefMut},
+    path::Path,
+};
+
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anyhow::Result;
 use mpl_candy_machine::ConfigLine;
 use serde::{Deserialize, Serialize};
-use std::ops::{Deref, DerefMut};
-use std::{fs, io::Write, path::Path};
+
+use crate::{common::*, pdas::find_candy_machine_creator_pda};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cache {

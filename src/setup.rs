@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use anchor_client::{
     solana_sdk::{
         commitment_config::CommitmentConfig,
@@ -6,12 +8,13 @@ use anchor_client::{
     Client, Cluster,
 };
 use anyhow::{anyhow, Result};
-use std::rc::Rc;
 use tracing::error;
 
-use crate::config::data::SugarConfig;
-use crate::constants::{DEFAULT_KEYPATH, DEFAULT_RPC_DEVNET};
-use crate::parse::*;
+use crate::{
+    config::data::SugarConfig,
+    constants::{DEFAULT_KEYPATH, DEFAULT_RPC_DEVNET},
+    parse::*,
+};
 
 pub fn setup_client(sugar_config: &SugarConfig) -> Result<Client> {
     let rpc_url = sugar_config.rpc_url.clone();

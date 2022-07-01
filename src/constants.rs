@@ -1,8 +1,7 @@
+use console::Emoji;
 pub use mpl_token_metadata::state::{
     MAX_CREATOR_LEN, MAX_CREATOR_LIMIT, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH,
 };
-
-use console::Emoji;
 
 /// Metaplex program id.
 pub const METAPLEX_PROGRAM_ID: &str = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";

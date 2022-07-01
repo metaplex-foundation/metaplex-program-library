@@ -1,4 +1,3 @@
-use console::style;
 use std::{
     borrow::Borrow,
     collections::HashSet,
@@ -10,12 +9,16 @@ use std::{
     },
 };
 
-use crate::cache::{load_cache, Cache};
-use crate::common::*;
-use crate::config::{get_config_data, SugarConfig};
-use crate::upload::*;
-use crate::utils::*;
-use crate::validate::format::Metadata;
+use console::style;
+
+use crate::{
+    cache::{load_cache, Cache},
+    common::*,
+    config::{get_config_data, SugarConfig},
+    upload::*,
+    utils::*,
+    validate::format::Metadata,
+};
 
 pub struct UploadArgs {
     pub assets_dir: String,

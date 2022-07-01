@@ -1,19 +1,24 @@
+use std::str::FromStr;
+
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
 use console::style;
+use mpl_candy_machine::{
+    accounts as nft_accounts, instruction as nft_instruction, CandyMachineData,
+};
 use spl_associated_token_account::get_associated_token_address;
-use std::str::FromStr;
 
-use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{accounts as nft_accounts, CandyMachineData};
-
-use crate::candy_machine::CANDY_MACHINE_ID;
-use crate::candy_machine::{get_candy_machine_state, parse_config_price};
-use crate::common::*;
-use crate::config::{data::*, parser::get_config_data};
-use crate::utils::{check_spl_token, check_spl_token_account, spinner_with_style};
-use crate::{cache::load_cache, config::data::ConfigData};
+use crate::{
+    cache::load_cache,
+    candy_machine::{get_candy_machine_state, parse_config_price, CANDY_MACHINE_ID},
+    common::*,
+    config::{
+        data::{ConfigData, *},
+        parser::get_config_data,
+    },
+    utils::{check_spl_token, check_spl_token_account, spinner_with_style},
+};
 
 pub struct UpdateArgs {
     pub keypair: Option<String>,

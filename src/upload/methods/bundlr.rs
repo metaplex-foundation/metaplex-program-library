@@ -1,17 +1,18 @@
+use std::{cmp, fs, path::Path, sync::Arc};
+
 use anchor_client::solana_sdk::native_token::LAMPORTS_PER_SOL;
 use async_trait::async_trait;
 use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
 use clap::crate_version;
 use console::style;
 use solana_client::rpc_client::RpcClient;
-use std::{cmp, fs, path::Path, sync::Arc};
 use tokio::{
     task::JoinHandle,
     time::{sleep, Duration},
 };
 
-use crate::candy_machine::CANDY_MACHINE_ID;
 use crate::{
+    candy_machine::CANDY_MACHINE_ID,
     common::*,
     config::*,
     upload::{

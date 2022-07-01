@@ -10,20 +10,21 @@ use anchor_lang::prelude::Pubkey;
 use anyhow::{anyhow, Result};
 use chrono::DateTime;
 use console::style;
-use dialoguer::Confirm;
-use dialoguer::{Input, MultiSelect, Select};
+use dialoguer::{Confirm, Input, MultiSelect, Select};
 use url::Url;
 
-use crate::candy_machine::CANDY_MACHINE_ID;
-use crate::config::{
-    parse_string_as_date, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
-    HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
+use crate::{
+    candy_machine::CANDY_MACHINE_ID,
+    config::{
+        parse_string_as_date, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
+        HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
+    },
+    constants::*,
+    setup::{setup_client, sugar_setup},
+    upload::list_files,
+    utils::{check_spl_token, check_spl_token_account, get_dialoguer_theme},
+    validate::Metadata,
 };
-use crate::constants::*;
-use crate::setup::{setup_client, sugar_setup};
-use crate::upload::list_files;
-use crate::utils::{check_spl_token, check_spl_token_account, get_dialoguer_theme};
-use crate::validate::Metadata;
 
 /// Default name of the first metadata file.
 const DEFAULT_METADATA: &str = "0.json";

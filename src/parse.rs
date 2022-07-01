@@ -1,5 +1,6 @@
-use anyhow::{anyhow, Result};
 use std::{env, fs::File, path::Path};
+
+use anyhow::{anyhow, Result};
 
 use crate::config::data::*;
 

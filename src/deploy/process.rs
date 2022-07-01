@@ -17,18 +17,19 @@ use console::style;
 use rand::rngs::OsRng;
 use spl_associated_token_account::get_associated_token_address;
 
-use crate::cache::*;
-use crate::candy_machine::{get_candy_machine_state, CANDY_MACHINE_ID};
-use crate::common::*;
-use crate::config::parser::get_config_data;
-use crate::deploy::errors::*;
-use crate::deploy::{
-    create_and_set_collection, create_candy_machine_data, generate_config_lines,
-    initialize_candy_machine, upload_config_lines,
+use crate::{
+    cache::*,
+    candy_machine::{get_candy_machine_state, CANDY_MACHINE_ID},
+    common::*,
+    config::parser::get_config_data,
+    deploy::{
+        create_and_set_collection, create_candy_machine_data, errors::*, generate_config_lines,
+        initialize_candy_machine, upload_config_lines,
+    },
+    setup::{setup_client, sugar_setup},
+    utils::*,
+    validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url},
 };
-use crate::setup::{setup_client, sugar_setup};
-use crate::utils::*;
-use crate::validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url};
 
 pub struct DeployArgs {
     pub config: String,

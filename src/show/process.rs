@@ -6,11 +6,7 @@ use chrono::NaiveDateTime;
 use console::style;
 use mpl_candy_machine::{utils::is_feature_active, EndSettingType, WhitelistMintMode};
 
-use crate::cache::load_cache;
-use crate::candy_machine::*;
-use crate::common::*;
-use crate::pdas::get_collection_pda;
-use crate::utils::*;
+use crate::{cache::load_cache, candy_machine::*, common::*, pdas::get_collection_pda, utils::*};
 
 pub struct ShowArgs {
     pub keypair: Option<String>,

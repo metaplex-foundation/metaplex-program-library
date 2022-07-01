@@ -3,18 +3,20 @@ use std::str::FromStr;
 use anchor_client::solana_sdk::{pubkey::Pubkey, system_program, sysvar};
 use anyhow::Result;
 use console::style;
-use mpl_candy_machine::instruction as nft_instruction;
-use mpl_candy_machine::{accounts as nft_accounts, CandyError};
-use mpl_token_metadata::error::MetadataError;
-use mpl_token_metadata::pda::find_collection_authority_account;
-use mpl_token_metadata::state::{MasterEditionV2, Metadata};
+use mpl_candy_machine::{accounts as nft_accounts, instruction as nft_instruction, CandyError};
+use mpl_token_metadata::{
+    error::MetadataError,
+    pda::find_collection_authority_account,
+    state::{MasterEditionV2, Metadata},
+};
 
-use crate::cache::load_cache;
-use crate::candy_machine::CANDY_MACHINE_ID;
-use crate::candy_machine::*;
-use crate::common::*;
-use crate::pdas::*;
-use crate::utils::spinner_with_style;
+use crate::{
+    cache::load_cache,
+    candy_machine::{CANDY_MACHINE_ID, *},
+    common::*,
+    pdas::*,
+    utils::spinner_with_style,
+};
 
 pub struct SetCollectionArgs {
     pub collection_mint: String,

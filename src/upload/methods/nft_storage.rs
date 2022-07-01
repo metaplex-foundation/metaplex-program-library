@@ -1,9 +1,3 @@
-use async_trait::async_trait;
-use reqwest::{
-    header,
-    multipart::{Form, Part},
-    Client, StatusCode,
-};
 use std::{
     fs,
     path::Path,
@@ -11,6 +5,13 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc,
     },
+};
+
+use async_trait::async_trait;
+use reqwest::{
+    header,
+    multipart::{Form, Part},
+    Client, StatusCode,
 };
 use tokio::time::{sleep, Duration};
 

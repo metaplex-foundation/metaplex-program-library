@@ -1,18 +1,16 @@
-use anyhow::Result;
-use console::{style, Style};
-use dialoguer::theme::ColorfulTheme;
-use dialoguer::Confirm;
-use glob::glob;
-use rayon::prelude::*;
 use std::{
     fs::File,
     path::Path,
     sync::{Arc, Mutex},
 };
 
-use crate::common::*;
-use crate::utils::*;
-use crate::validate::*;
+use anyhow::Result;
+use console::{style, Style};
+use dialoguer::{theme::ColorfulTheme, Confirm};
+use glob::glob;
+use rayon::prelude::*;
+
+use crate::{common::*, utils::*, validate::*};
 
 pub struct ValidateArgs {
     pub assets_dir: String,

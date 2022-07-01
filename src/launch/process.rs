@@ -1,16 +1,18 @@
-use anyhow::Result;
-use console::{style, Style};
-use dialoguer::theme::ColorfulTheme;
-use dialoguer::Confirm;
 use std::sync::{atomic::AtomicBool, Arc};
 
-use crate::common::LAUNCH_EMOJI;
-use crate::config::parser::get_config_data;
-use crate::create_config::{process_create_config, CreateConfigArgs};
-use crate::deploy::{process_deploy, DeployArgs};
-use crate::upload::{process_upload, UploadArgs};
-use crate::validate::{process_validate, ValidateArgs};
-use crate::verify::{process_verify, VerifyArgs};
+use anyhow::Result;
+use console::{style, Style};
+use dialoguer::{theme::ColorfulTheme, Confirm};
+
+use crate::{
+    common::LAUNCH_EMOJI,
+    config::parser::get_config_data,
+    create_config::{process_create_config, CreateConfigArgs},
+    deploy::{process_deploy, DeployArgs},
+    upload::{process_upload, UploadArgs},
+    validate::{process_validate, ValidateArgs},
+    verify::{process_verify, VerifyArgs},
+};
 
 pub struct LaunchArgs {
     pub assets_dir: String,

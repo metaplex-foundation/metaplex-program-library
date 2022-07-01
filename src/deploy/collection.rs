@@ -1,16 +1,22 @@
 use anchor_client::{solana_sdk::pubkey::Pubkey, Client};
 use anyhow::Result;
-use mpl_token_metadata::instruction::{create_master_edition_v3, create_metadata_accounts_v2};
-use mpl_token_metadata::pda::find_collection_authority_account;
-use mpl_token_metadata::state::Creator;
+use mpl_token_metadata::{
+    instruction::{create_master_edition_v3, create_metadata_accounts_v2},
+    pda::find_collection_authority_account,
+    state::Creator,
+};
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
-use spl_token::instruction::mint_to;
-use spl_token::{instruction::initialize_mint, ID as TOKEN_PROGRAM_ID};
+use spl_token::{
+    instruction::{initialize_mint, mint_to},
+    ID as TOKEN_PROGRAM_ID,
+};
 
-use crate::candy_machine::CANDY_MACHINE_ID;
-use crate::common::*;
-use crate::config::ConfigData;
-use crate::pdas::{find_collection_pda, find_master_edition_pda, find_metadata_pda};
+use crate::{
+    candy_machine::CANDY_MACHINE_ID,
+    common::*,
+    config::ConfigData,
+    pdas::{find_collection_pda, find_master_edition_pda, find_metadata_pda},
+};
 
 pub fn create_and_set_collection(
     client: Client,

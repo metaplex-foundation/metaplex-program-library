@@ -1,17 +1,20 @@
-use anchor_client::solana_sdk::signature::Keypair;
-use anchor_client::solana_sdk::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use std::{
+    fmt::{self, Display},
+    str::FromStr,
+};
+
+use anchor_client::solana_sdk::{
+    native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, signature::Keypair,
+};
 pub use anyhow::{anyhow, Result};
 use chrono::DateTime;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt::{self, Display};
-use std::str::FromStr;
-
 use mpl_candy_machine::{
     Creator as CandyCreator, EndSettingType as CandyEndSettingType,
     EndSettings as CandyEndSettings, GatekeeperConfig as CandyGatekeeperConfig,
     HiddenSettings as CandyHiddenSettings, WhitelistMintMode as CandyWhitelistMintMode,
     WhitelistMintSettings as CandyWhitelistMintSettings,
 };
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::config::errors::*;
 

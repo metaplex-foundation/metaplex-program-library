@@ -1,11 +1,12 @@
-use anchor_client::solana_sdk::pubkey::Pubkey;
-use anchor_client::{ClientError, Program};
+use anchor_client::{solana_sdk::pubkey::Pubkey, ClientError, Program};
 use anyhow::{anyhow, Result};
 use mpl_candy_machine::CollectionPDA;
-use mpl_token_metadata::deser::meta_deser;
-use mpl_token_metadata::pda::{find_master_edition_account, find_metadata_account};
-use mpl_token_metadata::state::{Key, MasterEditionV2, Metadata, MAX_MASTER_EDITION_LEN};
-use mpl_token_metadata::utils::try_from_slice_checked;
+use mpl_token_metadata::{
+    deser::meta_deser,
+    pda::{find_master_edition_account, find_metadata_account},
+    state::{Key, MasterEditionV2, Metadata, MAX_MASTER_EDITION_LEN},
+    utils::try_from_slice_checked,
+};
 
 use crate::candy_machine::CANDY_MACHINE_ID;
 

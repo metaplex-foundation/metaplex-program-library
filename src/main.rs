@@ -11,26 +11,27 @@ use std::{
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use console::style;
+use sugar_cli::{
+    bundlr::{process_bundlr, BundlrArgs},
+    cli::{Cli, CollectionSubcommands, Commands},
+    collections::{
+        process_remove_collection, process_set_collection, RemoveCollectionArgs, SetCollectionArgs,
+    },
+    constants::{COMPLETE_EMOJI, ERROR_EMOJI},
+    create_config::{process_create_config, CreateConfigArgs},
+    deploy::{process_deploy, DeployArgs},
+    launch::{process_launch, LaunchArgs},
+    mint::{process_mint, MintArgs},
+    show::{process_show, ShowArgs},
+    update::{process_update, UpdateArgs},
+    upload::{process_upload, UploadArgs},
+    validate::{process_validate, ValidateArgs},
+    verify::{process_verify, VerifyArgs},
+    withdraw::{process_withdraw, WithdrawArgs},
+};
 use tracing::subscriber::set_global_default;
 use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
 use tracing_subscriber::{self, filter::LevelFilter, prelude::*, EnvFilter};
-
-use sugar_cli::bundlr::{process_bundlr, BundlrArgs};
-use sugar_cli::cli::{Cli, CollectionSubcommands, Commands};
-use sugar_cli::collections::{
-    process_remove_collection, process_set_collection, RemoveCollectionArgs, SetCollectionArgs,
-};
-use sugar_cli::constants::{COMPLETE_EMOJI, ERROR_EMOJI};
-use sugar_cli::create_config::{process_create_config, CreateConfigArgs};
-use sugar_cli::deploy::{process_deploy, DeployArgs};
-use sugar_cli::launch::{process_launch, LaunchArgs};
-use sugar_cli::mint::{process_mint, MintArgs};
-use sugar_cli::show::{process_show, ShowArgs};
-use sugar_cli::update::{process_update, UpdateArgs};
-use sugar_cli::upload::{process_upload, UploadArgs};
-use sugar_cli::validate::{process_validate, ValidateArgs};
-use sugar_cli::verify::{process_verify, VerifyArgs};
-use sugar_cli::withdraw::{process_withdraw, WithdrawArgs};
 
 fn setup_logging(level: Option<EnvFilter>) -> Result<()> {
     // Log path; change this to be dynamic for multiple OSes.

@@ -1,3 +1,5 @@
+use std::{str::FromStr, thread::sleep, time::Duration};
+
 pub use anchor_client::solana_sdk::hash::Hash;
 use anchor_client::{
     solana_sdk::{
@@ -12,9 +14,6 @@ use dialoguer::theme::ColorfulTheme;
 pub use indicatif::{ProgressBar, ProgressStyle};
 use solana_client::rpc_client::RpcClient;
 use spl_token::state::{Account, Mint};
-use std::str::FromStr;
-use std::thread::sleep;
-use std::time::Duration;
 
 use crate::config::data::Cluster;
 
