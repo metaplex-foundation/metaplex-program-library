@@ -54,7 +54,7 @@ mod metadata {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -145,7 +145,7 @@ mod metadata {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -179,7 +179,7 @@ mod metadata {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -210,7 +210,7 @@ mod metadata {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -240,7 +240,7 @@ mod metadata {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -270,7 +270,7 @@ mod metadata {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -304,7 +304,7 @@ mod master_edition {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -333,7 +333,7 @@ mod master_edition {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -367,7 +367,7 @@ mod edition {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -396,7 +396,7 @@ mod edition {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -430,7 +430,7 @@ mod edition_marker {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -459,7 +459,7 @@ mod edition_marker {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -493,7 +493,7 @@ mod use_authority_record {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -521,7 +521,7 @@ mod use_authority_record {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -555,7 +555,7 @@ mod collection_authority_record {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );
@@ -583,7 +583,7 @@ mod collection_authority_record {
             true,
             &mut lamports,
             &mut data,
-            &owner,
+            owner,
             false,
             1_000_000_000,
         );

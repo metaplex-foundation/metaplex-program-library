@@ -78,10 +78,10 @@ mod try_from_slice_checked {
         // This should be able to deserialize the corrupted metadata account successfully due to the custom BorshDeserilization
         // implementation for the Metadata struct.
         let expected_metadata = expected_pesky_metadata();
-        let mut corrupted_data = pesky_data();
+        let corrupted_data = pesky_data();
 
         let metadata: Metadata =
-            try_from_slice_checked(&mut corrupted_data, Key::MetadataV1, MAX_METADATA_LEN).unwrap();
+            try_from_slice_checked(corrupted_data, Key::MetadataV1, MAX_METADATA_LEN).unwrap();
 
         assert_eq!(metadata, expected_metadata);
     }
