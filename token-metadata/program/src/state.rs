@@ -83,20 +83,6 @@ pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
-// pub trait SafeDeserialize {
-//     fn safe_deserialize<T: BorshDeserialize + TokenMetadataAccount>(
-//         mut data: &[u8],
-//     ) -> Result<T, BorshError> {
-//         if !is_correct_account_type(data, T::key(), T::size()) {
-//             return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
-//         }
-
-//         let result: T = T::deserialize(&mut data)?;
-
-//         Ok(result)
-//     }
-// }
-
 pub trait TokenMetadataAccount {
     fn key() -> Key;
 
