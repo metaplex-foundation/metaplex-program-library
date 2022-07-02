@@ -106,6 +106,16 @@ pub fn handle_mint_nft<'info>(
     let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
     let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
     let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
+    if candy_machine.items_redeemed >= candy_machine.data.items_available {
+        punish_bots(
+            error!(CandyError::CandyMachineEmpty).into(),
+            payer.to_account_info(),
+            ctx.accounts.candy_machine.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            BOT_FEE,
+        )?;
+        return Ok(());
+    }
     if !ctx.accounts.metadata.data_is_empty() {
         return err!(CandyError::MetadataAccountMustBeEmpty);
     }
@@ -461,17 +471,6 @@ pub fn handle_mint_nft<'info>(
             )?;
             return Ok(());
         }
-    }
-
-    if candy_machine.items_redeemed >= candy_machine.data.items_available {
-        punish_bots(
-            error!(CandyError::CandyMachineEmpty).into(),
-            payer.to_account_info(),
-            ctx.accounts.candy_machine.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-            BOT_FEE,
-        )?;
-        return Ok(());
     }
 
     if let Some(mint) = candy_machine.token_mint {
