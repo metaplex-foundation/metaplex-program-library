@@ -830,14 +830,16 @@ pub fn assert_token_program_matches_package(token_program_info: &AccountInfo) ->
     Ok(())
 }
 
+pub fn is_correct_account_type(data: &[u8], data_type: Key, data_size: usize) -> bool {
+    (data[0] == data_type as u8) && (data.len() == data_size)
+}
+
 pub fn try_from_slice_checked<T: BorshDeserialize>(
     data: &[u8],
     data_type: Key,
     data_size: usize,
 ) -> Result<T, ProgramError> {
-    if (data[0] != data_type as u8 && data[0] != Key::Uninitialized as u8)
-        || data.len() != data_size
-    {
+    if !is_correct_account_type(data, data_type, data_size) {
         return Err(MetadataError::DataTypeMismatch.into());
     }
 

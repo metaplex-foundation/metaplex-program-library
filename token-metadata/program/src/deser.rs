@@ -86,7 +86,8 @@ pub mod tests {
     pub use crate::{state::Creator, utils::puff_out_data_fields};
 
     // Pesky Penguins #8060 (NOOT!)
-    fn pesky_data() -> &'static [u8] {
+    // Corrupted data that can't be deserialized with the standard BoshDeserialization implementation.
+    pub fn pesky_data() -> &'static [u8] {
         &[
             4, 12, 25, 250, 103, 242, 3, 129, 143, 173, 110, 204, 157, 11, 1, 247, 211, 138, 199,
             219, 79, 142, 183, 195, 96, 206, 63, 208, 102, 152, 127, 62, 43, 181, 253, 142, 126,

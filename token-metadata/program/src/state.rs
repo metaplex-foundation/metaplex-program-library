@@ -1,7 +1,9 @@
+use std::io::ErrorKind;
+
 use crate::{
     deser::meta_deser_unchecked,
     error::MetadataError,
-    utils::{assert_owned_by, try_from_slice_checked},
+    utils::{assert_owned_by, is_correct_account_type, try_from_slice_checked},
     ID,
 };
 use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
@@ -10,7 +12,6 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
-use std::io::ErrorKind;
 
 /// prefix used for PDAs to avoid certain collision attacks (<https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack>)
 pub const PREFIX: &str = "metadata";
@@ -82,6 +83,43 @@ pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
+// pub trait SafeDeserialize {
+//     fn safe_deserialize<T: BorshDeserialize + TokenMetadataAccount>(
+//         mut data: &[u8],
+//     ) -> Result<T, BorshError> {
+//         if !is_correct_account_type(data, T::key(), T::size()) {
+//             return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
+//         }
+
+//         let result: T = T::deserialize(&mut data)?;
+
+//         Ok(result)
+//     }
+// }
+
+pub trait TokenMetadataAccount {
+    fn key() -> Key;
+
+    fn size() -> usize;
+
+    fn pad_length(buf: &mut Vec<u8>) {
+        let padding_length = Self::size() - buf.len();
+        buf.extend(vec![0; padding_length]);
+    }
+
+    fn safe_deserialize<T: BorshDeserialize + TokenMetadataAccount>(
+        mut data: &[u8],
+    ) -> Result<T, BorshError> {
+        if !is_correct_account_type(data, T::key(), T::size()) {
+            return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
+        }
+
+        let result: T = T::deserialize(&mut data)?;
+
+        Ok(result)
+    }
+}
+
 #[repr(C)]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
 pub enum Key {
@@ -109,6 +147,18 @@ pub struct Data {
     pub seller_fee_basis_points: u16,
     /// Array of creators, optional
     pub creators: Option<Vec<Creator>>,
+}
+
+impl Default for Data {
+    fn default() -> Self {
+        Data {
+            name: "".to_string(),
+            symbol: "".to_string(),
+            uri: "".to_string(),
+            seller_fee_basis_points: 0,
+            creators: None,
+        }
+    }
 }
 
 #[repr(C)]
@@ -183,13 +233,34 @@ pub struct UseAuthorityRecord {
     pub bump: u8,
 }
 
+impl Default for UseAuthorityRecord {
+    fn default() -> Self {
+        UseAuthorityRecord {
+            key: Key::UseAuthorityRecord,
+            allowed_uses: 0,
+            bump: 255,
+        }
+    }
+}
+
+impl TokenMetadataAccount for UseAuthorityRecord {
+    fn key() -> Key {
+        Key::UseAuthorityRecord
+    }
+
+    fn size() -> usize {
+        USE_AUTHORITY_RECORD_SIZE
+    }
+}
+
 impl UseAuthorityRecord {
     pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
-        let ua: UseAuthorityRecord = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::UseAuthorityRecord,
-            USE_AUTHORITY_RECORD_SIZE,
-        )?;
+        let ua: UseAuthorityRecord = UseAuthorityRecord::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
+
         Ok(ua)
     }
 
@@ -211,13 +282,33 @@ pub struct CollectionAuthorityRecord {
     pub bump: u8, //1
 }
 
+impl Default for CollectionAuthorityRecord {
+    fn default() -> Self {
+        CollectionAuthorityRecord {
+            key: Key::CollectionAuthorityRecord,
+            bump: 255,
+        }
+    }
+}
+
+impl TokenMetadataAccount for CollectionAuthorityRecord {
+    fn key() -> Key {
+        Key::CollectionAuthorityRecord
+    }
+
+    fn size() -> usize {
+        COLLECTION_AUTHORITY_RECORD_SIZE
+    }
+}
+
 impl CollectionAuthorityRecord {
     pub fn from_account_info(a: &AccountInfo) -> Result<CollectionAuthorityRecord, ProgramError> {
-        let ua: CollectionAuthorityRecord = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::CollectionAuthorityRecord,
-            COLLECTION_AUTHORITY_RECORD_SIZE,
-        )?;
+        let ua: CollectionAuthorityRecord =
+            CollectionAuthorityRecord::safe_deserialize(&a.data.borrow_mut())
+                .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
 
         Ok(ua)
     }
@@ -262,35 +353,51 @@ pub struct Metadata {
     pub collection_details: Option<CollectionDetails>,
 }
 
+impl Default for Metadata {
+    fn default() -> Self {
+        Metadata {
+            key: Key::MetadataV1,
+            update_authority: Pubkey::default(),
+            mint: Pubkey::default(),
+            data: Data::default(),
+            primary_sale_happened: false,
+            is_mutable: false,
+            edition_nonce: None,
+            token_standard: None,
+            collection: None,
+            uses: None,
+            collection_details: None,
+        }
+    }
+}
+
 impl Metadata {
     pub fn from_account_info(a: &AccountInfo) -> Result<Metadata, ProgramError> {
-        let data = a.data.borrow_mut();
-
-        if (data[0] != Key::MetadataV1 as u8 && data[0] != Key::Uninitialized as u8)
-            || data.len() != MAX_METADATA_LEN
-        {
-            return Err(MetadataError::DataTypeMismatch.into());
-        }
-
-        // Length and key and checked above.
-        let md: Metadata = meta_deser_unchecked(&mut data.as_ref())?;
+        let metadata = Metadata::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
 
         // Check that this is a `token-metadata` owned account.
         assert_owned_by(a, &ID)?;
 
-        Ok(md)
+        Ok(metadata)
     }
 }
 
+impl TokenMetadataAccount for Metadata {
+    fn key() -> Key {
+        Key::MetadataV1
+    }
+
+    fn size() -> usize {
+        MAX_METADATA_LEN
+    }
+}
+
+// We have a custom implementation of BorshDeserialize for Metadata because of corrupted metadata issues
+// caused by resizing of the Creators array. We use a custom `meta_deser_unchecked` function
+// that has fallback values for corrupted fields.
 impl borsh::de::BorshDeserialize for Metadata {
     fn deserialize(buf: &mut &[u8]) -> ::core::result::Result<Self, BorshError> {
-        if (buf[0] != Key::MetadataV1 as u8 && buf[0] != Key::Uninitialized as u8)
-            || buf.len() != MAX_METADATA_LEN
-        {
-            return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
-        }
-
-        // Length and key and checked above.
         let md = meta_deser_unchecked(buf)?;
         Ok(md)
     }
@@ -327,6 +434,26 @@ pub struct MasterEditionV2 {
     pub max_supply: Option<u64>,
 }
 
+impl Default for MasterEditionV2 {
+    fn default() -> Self {
+        MasterEditionV2 {
+            key: Key::MasterEditionV2,
+            supply: 0,
+            max_supply: Some(0),
+        }
+    }
+}
+
+impl TokenMetadataAccount for MasterEditionV2 {
+    fn key() -> Key {
+        Key::MasterEditionV2
+    }
+
+    fn size() -> usize {
+        MAX_MASTER_EDITION_LEN
+    }
+}
+
 impl MasterEdition for MasterEditionV2 {
     fn key(&self) -> Key {
         self.key
@@ -352,11 +479,11 @@ impl MasterEdition for MasterEditionV2 {
 
 impl MasterEditionV2 {
     pub fn from_account_info(a: &AccountInfo) -> Result<MasterEditionV2, ProgramError> {
-        let me: MasterEditionV2 = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::MasterEditionV2,
-            MAX_MASTER_EDITION_LEN,
-        )?;
+        let me: MasterEditionV2 = MasterEditionV2::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
 
         Ok(me)
     }
@@ -387,6 +514,16 @@ pub struct MasterEditionV1 {
     pub one_time_printing_authorization_mint: Pubkey,
 }
 
+impl TokenMetadataAccount for MasterEditionV1 {
+    fn key() -> Key {
+        Key::MasterEditionV1
+    }
+
+    fn size() -> usize {
+        MAX_MASTER_EDITION_LEN
+    }
+}
+
 impl MasterEdition for MasterEditionV1 {
     fn key(&self) -> Key {
         self.key
@@ -412,11 +549,11 @@ impl MasterEdition for MasterEditionV1 {
 
 impl MasterEditionV1 {
     pub fn from_account_info(a: &AccountInfo) -> Result<MasterEditionV1, ProgramError> {
-        let me: MasterEditionV1 = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::MasterEditionV1,
-            MAX_MASTER_EDITION_LEN,
-        )?;
+        let me: MasterEditionV1 = MasterEditionV1::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
 
         Ok(me)
     }
@@ -438,10 +575,33 @@ pub struct Edition {
     pub edition: u64,
 }
 
+impl Default for Edition {
+    fn default() -> Self {
+        Edition {
+            key: Key::EditionV1,
+            parent: Pubkey::default(),
+            edition: 0,
+        }
+    }
+}
+
+impl TokenMetadataAccount for Edition {
+    fn key() -> Key {
+        Key::EditionV1
+    }
+
+    fn size() -> usize {
+        MAX_EDITION_LEN
+    }
+}
+
 impl Edition {
     pub fn from_account_info(a: &AccountInfo) -> Result<Edition, ProgramError> {
-        let ed: Edition =
-            try_from_slice_checked(&a.data.borrow_mut(), Key::EditionV1, MAX_EDITION_LEN)?;
+        let ed: Edition = Edition::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
 
         Ok(ed)
     }
@@ -505,6 +665,16 @@ pub struct ReservationListV2 {
     pub total_reservation_spots: u64,
     /// Cached count of reservation spots in the reservation vec to save on CPU.
     pub current_reservation_spots: u64,
+}
+
+impl TokenMetadataAccount for ReservationListV2 {
+    fn key() -> Key {
+        Key::ReservationListV2
+    }
+
+    fn size() -> usize {
+        MAX_RESERVATION_LIST_SIZE
+    }
 }
 
 impl ReservationList for ReservationListV2 {
@@ -602,11 +772,11 @@ impl ReservationList for ReservationListV2 {
 
 impl ReservationListV2 {
     pub fn from_account_info(a: &AccountInfo) -> Result<ReservationListV2, ProgramError> {
-        let res: ReservationListV2 = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::ReservationListV2,
-            MAX_RESERVATION_LIST_SIZE,
-        )?;
+        let res: ReservationListV2 = ReservationListV2::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
 
         Ok(res)
     }
@@ -631,6 +801,16 @@ pub struct ReservationListV1 {
     /// What supply counter was on master_edition when this reservation was created.
     pub supply_snapshot: Option<u64>,
     pub reservations: Vec<ReservationV1>,
+}
+
+impl TokenMetadataAccount for ReservationListV1 {
+    fn key() -> Key {
+        Key::ReservationListV1
+    }
+
+    fn size() -> usize {
+        MAX_RESERVATION_LIST_V1_SIZE
+    }
 }
 
 impl ReservationList for ReservationListV1 {
@@ -703,11 +883,11 @@ impl ReservationList for ReservationListV1 {
 
 impl ReservationListV1 {
     pub fn from_account_info(a: &AccountInfo) -> Result<ReservationListV1, ProgramError> {
-        let res: ReservationListV1 = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::ReservationListV1,
-            MAX_RESERVATION_LIST_V1_SIZE,
-        )?;
+        let res: ReservationListV1 = ReservationListV1::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
 
         Ok(res)
     }
@@ -728,13 +908,32 @@ pub struct EditionMarker {
     pub ledger: [u8; 31],
 }
 
+impl Default for EditionMarker {
+    fn default() -> Self {
+        Self {
+            key: Key::EditionMarker,
+            ledger: [0; 31],
+        }
+    }
+}
+
+impl TokenMetadataAccount for EditionMarker {
+    fn key() -> Key {
+        Key::EditionMarker
+    }
+
+    fn size() -> usize {
+        MAX_EDITION_MARKER_SIZE
+    }
+}
+
 impl EditionMarker {
     pub fn from_account_info(a: &AccountInfo) -> Result<EditionMarker, ProgramError> {
-        let res: EditionMarker = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::EditionMarker,
-            MAX_EDITION_MARKER_SIZE,
-        )?;
+        let res: EditionMarker = EditionMarker::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
 
         Ok(res)
     }
@@ -800,280 +999,5 @@ impl EditionMarker {
         // bitwise or a 1 into our position in that position
         self.ledger[index] |= mask;
         Ok(())
-    }
-}
-
-#[cfg(test)]
-
-mod metadata_deserialization {
-    use solana_sdk::{signature::Keypair, signer::Signer};
-
-    use super::*;
-    use crate::{
-        deser::tests::expected_pesky_metadata,
-        state::{Edition, MasterEditionV2},
-    };
-    pub use crate::{state::Creator, utils::puff_out_data_fields};
-    use std::io::ErrorKind;
-
-    fn pad_metadata_length(metadata: &mut Vec<u8>) {
-        let padding_length = MAX_METADATA_LEN - metadata.len();
-        metadata.extend(vec![0; padding_length]);
-    }
-
-    #[test]
-    fn successfully_deserialize_metadata() {
-        // Setup for BorshDeserialze `deserialize` test.
-        let expected_metadata = expected_pesky_metadata();
-
-        let mut buf = Vec::new();
-        expected_metadata.serialize(&mut buf).unwrap();
-        pad_metadata_length(&mut buf);
-
-        // Setup for `from_account_info` test.
-        let pubkey = Keypair::new().pubkey();
-        let owner = &ID;
-        let mut lamports = 1_000_000_000;
-        let mut data = buf.clone();
-
-        let md_account_info = AccountInfo::new(
-            &pubkey,
-            false,
-            true,
-            &mut lamports,
-            &mut data,
-            &owner,
-            false,
-            1_000_000_000,
-        );
-
-        // Both deserialization methods should succeed.
-        let metadata = Metadata::deserialize(&mut buf.as_ref()).unwrap();
-        assert_eq!(metadata.key, Key::MetadataV1);
-        assert_eq!(metadata, expected_metadata);
-
-        let md = Metadata::from_account_info(&md_account_info).unwrap();
-        assert_eq!(md.key, Key::MetadataV1);
-        assert_eq!(md, expected_metadata);
-    }
-
-    #[test]
-    fn fail_to_deserialize_metadata_with_wrong_owner() {
-        let expected_metadata = expected_pesky_metadata();
-
-        let mut buf = Vec::new();
-        expected_metadata.serialize(&mut buf).unwrap();
-        pad_metadata_length(&mut buf);
-
-        let pubkey = Keypair::new().pubkey();
-        let invalid_owner = Keypair::new().pubkey();
-        let mut lamports = 1_000_000_000;
-        let mut data = buf.clone();
-
-        let md_account_info = AccountInfo::new(
-            &pubkey,
-            false,
-            true,
-            &mut lamports,
-            &mut data,
-            &invalid_owner,
-            false,
-            1_000_000_000,
-        );
-
-        // `from_account_info` should not succeed because this account is not owned
-        // by `token-metadata` program.
-        let error = Metadata::from_account_info(&md_account_info).unwrap_err();
-        assert_eq!(error, MetadataError::IncorrectOwner.into());
-
-        // `deserialize` should succeed because it just deserializes bytes, with no account context.
-        let metadata = Metadata::deserialize(&mut buf.as_ref()).unwrap();
-        assert_eq!(metadata, expected_metadata);
-    }
-
-    #[test]
-    fn fail_to_deserialize_master_edition() {
-        // Setup for BorshDeserialze `deserialize` test.
-        let master_edition = MasterEditionV2 {
-            key: Key::MasterEditionV2,
-            supply: 0,
-            max_supply: Some(0),
-        };
-        let mut buf = Vec::new();
-        master_edition.serialize(&mut buf).unwrap();
-
-        // Setup for `from_account_info` test.
-        let pubkey = Keypair::new().pubkey();
-        let owner = &ID;
-        let mut lamports = 1_000_000_000;
-        let mut data = buf.clone();
-
-        let account_info = AccountInfo::new(
-            &pubkey,
-            false,
-            true,
-            &mut lamports,
-            &mut data,
-            &owner,
-            false,
-            1_000_000_000,
-        );
-
-        // Neither deserialization methods should succeed.
-        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
-        assert_eq!(err.kind(), ErrorKind::Other);
-        assert_eq!(err.to_string(), "DataTypeMismatch");
-
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
-        assert_eq!(err, MetadataError::DataTypeMismatch.into());
-    }
-
-    #[test]
-    fn fail_to_deserialize_edition() {
-        // Setup for BorshDeserialze `deserialize` test.
-        let parent = Keypair::new().pubkey();
-        let edition = 1;
-
-        let edition = Edition {
-            key: Key::EditionV1,
-            parent,
-            edition,
-        };
-
-        let mut buf = Vec::new();
-        edition.serialize(&mut buf).unwrap();
-
-        // Setup for `from_account_info` test.
-        let pubkey = Keypair::new().pubkey();
-        let owner = &ID;
-        let mut lamports = 1_000_000_000;
-        let mut data = buf.clone();
-
-        let account_info = AccountInfo::new(
-            &pubkey,
-            false,
-            true,
-            &mut lamports,
-            &mut data,
-            &owner,
-            false,
-            1_000_000_000,
-        );
-
-        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
-        assert_eq!(err.kind(), ErrorKind::Other);
-        assert_eq!(err.to_string(), "DataTypeMismatch");
-
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
-        assert_eq!(err, MetadataError::DataTypeMismatch.into());
-    }
-
-    #[test]
-    fn fail_to_deserialize_use_authority_record() {
-        // Setup for BorshDeserialze `deserialize` test.
-        let use_record = UseAuthorityRecord {
-            key: Key::UseAuthorityRecord,
-            allowed_uses: 14,
-            bump: 255,
-        };
-
-        let mut buf = Vec::new();
-        use_record.serialize(&mut buf).unwrap();
-
-        // Setup for `from_account_info` test.
-        let pubkey = Keypair::new().pubkey();
-        let owner = &ID;
-        let mut lamports = 1_000_000_000;
-        let mut data = buf.clone();
-
-        let account_info = AccountInfo::new(
-            &pubkey,
-            false,
-            true,
-            &mut lamports,
-            &mut data,
-            &owner,
-            false,
-            1_000_000_000,
-        );
-
-        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
-        assert_eq!(err.kind(), ErrorKind::Other);
-        assert_eq!(err.to_string(), "DataTypeMismatch");
-
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
-        assert_eq!(err, MetadataError::DataTypeMismatch.into());
-    }
-
-    #[test]
-    fn fail_to_deserialize_collection_authority_record() {
-        // Setup for BorshDeserialze `deserialize` test.
-        let collection_record = CollectionAuthorityRecord {
-            key: Key::CollectionAuthorityRecord,
-            bump: 255,
-        };
-
-        let mut buf = Vec::new();
-        collection_record.serialize(&mut buf).unwrap();
-
-        // Setup for `from_account_info` test.
-        let pubkey = Keypair::new().pubkey();
-        let owner = &ID;
-        let mut lamports = 1_000_000_000;
-        let mut data = buf.clone();
-
-        let account_info = AccountInfo::new(
-            &pubkey,
-            false,
-            true,
-            &mut lamports,
-            &mut data,
-            &owner,
-            false,
-            1_000_000_000,
-        );
-
-        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
-        assert_eq!(err.kind(), ErrorKind::Other);
-        assert_eq!(err.to_string(), "DataTypeMismatch");
-
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
-        assert_eq!(err, MetadataError::DataTypeMismatch.into());
-    }
-
-    #[test]
-    fn fail_to_deserialize_edition_marker() {
-        // Setup for BorshDeserialze `deserialize` test.
-        let edition_marker = EditionMarker {
-            key: Key::EditionMarker,
-            ledger: [0; 31],
-        };
-
-        let mut buf = Vec::new();
-        edition_marker.serialize(&mut buf).unwrap();
-
-        // Setup for `from_account_info` test.
-        let pubkey = Keypair::new().pubkey();
-        let owner = &ID;
-        let mut lamports = 1_000_000_000;
-        let mut data = buf.clone();
-
-        let account_info = AccountInfo::new(
-            &pubkey,
-            false,
-            true,
-            &mut lamports,
-            &mut data,
-            &owner,
-            false,
-            1_000_000_000,
-        );
-
-        let err = Metadata::deserialize(&mut buf.as_ref()).unwrap_err();
-        assert_eq!(err.kind(), ErrorKind::Other);
-        assert_eq!(err.to_string(), "DataTypeMismatch");
-
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
-        assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 }
