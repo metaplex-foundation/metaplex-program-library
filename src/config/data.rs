@@ -295,6 +295,7 @@ impl HiddenSettings {
 #[serde(rename_all = "snake_case")]
 pub enum UploadMethod {
     Bundlr,
+    #[serde(rename = "aws")]
     AWS,
     NftStorage,
 }
