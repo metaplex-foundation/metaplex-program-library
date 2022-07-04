@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 
-use bundlr_sdk::{tags::Tag, Bundlr, SolanaSigner};
+use bundlr_sdk::{tags::Tag, Bundlr, Ed25519Signer as SolanaSigner};
 use data_encoding::HEXLOWER;
 use glob::glob;
 use regex::{Regex, RegexBuilder};

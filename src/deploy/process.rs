@@ -14,7 +14,6 @@ use anchor_client::solana_sdk::{
 };
 use anyhow::Result;
 use console::style;
-use rand::rngs::OsRng;
 use spl_associated_token_account::get_associated_token_address;
 
 use crate::{
@@ -110,7 +109,7 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         let spinner = spinner_with_style();
         spinner.set_message("Creating candy machine...");
 
-        let candy_keypair = Keypair::generate(&mut OsRng);
+        let candy_keypair = Keypair::new();
         let candy_pubkey = candy_keypair.pubkey();
 
         let uuid = DEFAULT_UUID.to_string();
