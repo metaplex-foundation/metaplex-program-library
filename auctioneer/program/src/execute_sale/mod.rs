@@ -187,20 +187,24 @@ pub fn auctioneer_execute_sale<'info>(
         token_size,
     };
 
+    let mut cpi_account_metas: Vec<AccountMeta> = cpi_accounts
+        .to_account_metas(None)
+        .into_iter()
+        .zip(cpi_accounts.to_account_infos())
+        .map(|mut pair| {
+            pair.0.is_signer = pair.1.is_signer;
+            if pair.0.pubkey == ctx.accounts.auctioneer_authority.key() {
+                pair.0.is_signer = true;
+            }
+            pair.0
+        })
+        .collect();
+    
+    cpi_account_metas.append(&mut ctx.remaining_accounts.to_vec().to_account_metas(None));
+
     let ix = solana_program::instruction::Instruction {
         program_id: cpi_program.key(),
-        accounts: cpi_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .zip(cpi_accounts.to_account_infos())
-            .map(|mut pair| {
-                pair.0.is_signer = pair.1.is_signer;
-                if pair.0.pubkey == ctx.accounts.auctioneer_authority.key() {
-                    pair.0.is_signer = true;
-                }
-                pair.0
-            })
-            .collect(),
+        accounts: cpi_account_metas,
         data: execute_sale_data.data(),
     };
 
