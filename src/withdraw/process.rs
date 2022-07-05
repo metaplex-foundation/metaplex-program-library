@@ -1,8 +1,4 @@
-use std::{
-    io::{stdin, stdout, Write},
-    rc::Rc,
-    str::FromStr,
-};
+use std::{rc::Rc, str::FromStr};
 
 pub use anchor_client::{
     solana_sdk::{
@@ -15,7 +11,8 @@ pub use anchor_client::{
     },
     Client, Program,
 };
-use console::style;
+use console::{style, Style};
+use dialoguer::{theme::ColorfulTheme, Confirm};
 use mpl_candy_machine::{accounts as nft_accounts, instruction as nft_instruction};
 use solana_account_decoder::UiAccountEncoding;
 use solana_client::{
@@ -112,39 +109,47 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
             });
 
             println!(
-                "Found {} candy machines, total amount: ◎ {}",
+                "\nFound {} candy machines, total amount: ◎ {}",
                 accounts.len(),
                 total / LAMPORTS_PER_SOL as f64
             );
 
-            if accounts.is_empty() {
-                // nothing else to do, we just say goodbye
-                println!("\n{}", style("[Completed]").bold().dim());
-            } else if args.list {
-                println!("\n{:48} Balance", "Candy Machine ID");
-                println!("{:-<61}", "-");
+            if !accounts.is_empty() {
+                if args.list {
+                    println!("\n{:48} Balance", "Candy Machine ID");
+                    println!("{:-<61}", "-");
 
-                for (pubkey, account) in accounts {
-                    println!(
-                        "{:48} {:>12.8}",
-                        pubkey.to_string(),
-                        account.lamports as f64 / LAMPORTS_PER_SOL as f64
+                    for (pubkey, account) in accounts {
+                        println!(
+                            "{:48} {:>12.8}",
+                            pubkey.to_string(),
+                            account.lamports as f64 / LAMPORTS_PER_SOL as f64
+                        );
+                    }
+                } else {
+                    let warning = format!(
+                        "\n\
+                        +-----------------------------------------------------+\n\
+                        | {} WARNING: This will drain ALL your Candy Machines |\n\
+                        +-----------------------------------------------------+",
+                        WARNING_EMOJI
                     );
-                }
 
-                println!("\n{}", style("[Completed]").bold().dim());
-            } else {
-                println!("\n+----------------------------------------------+");
-                println!("| WARNING: This will drain all candy machines. |");
-                println!("+----------------------------------------------+");
+                    println!("{}\n", style(warning).bold().yellow());
 
-                print!("\nContinue? [Y/n] (default \'n\'): ");
-                stdout().flush().ok();
+                    let theme = ColorfulTheme {
+                        success_prefix: style("✔".to_string()).yellow().force_styling(true),
+                        values_style: Style::new().yellow(),
+                        ..get_dialoguer_theme()
+                    };
 
-                let mut s = String::new();
-                stdin().read_line(&mut s).expect("Error reading input.");
+                    if !Confirm::with_theme(&theme)
+                        .with_prompt("Do you want to continue?")
+                        .interact()?
+                    {
+                        return Err(anyhow!("Withdraw aborted"));
+                    }
 
-                if let Some('Y') = s.chars().next() {
                     let pb = progress_bar_with_style(accounts.len() as u64);
                     let mut not_drained = 0;
 
@@ -168,10 +173,6 @@ pub fn process_withdraw(args: WithdrawArgs) -> Result<()> {
                                 .dim()
                         );
                     }
-                } else {
-                    // there were candy machines to drain, but the user decided
-                    // to abort the withdraw
-                    println!("\n{}", style("Withdraw aborted.").red().bold().dim());
                 }
             }
         }
