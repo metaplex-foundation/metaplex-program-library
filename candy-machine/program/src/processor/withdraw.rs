@@ -7,7 +7,7 @@ use crate::{cmp_pubkeys, CandyError, CandyMachine};
 pub struct WithdrawFunds<'info> {
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
-    #[account(address = candy_machine.authority)]
+    #[account(mut)]
     authority: Signer<'info>,
     // > Only if collection
     // CollectionPDA account

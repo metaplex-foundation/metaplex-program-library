@@ -16,10 +16,12 @@ use crate::{
 pub struct SetCollection<'info> {
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
+    #[account(mut)]
     authority: Signer<'info>,
     /// CHECK: account constraints checked in account trait
     #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
     collection_pda: UncheckedAccount<'info>,
+    #[account(mut)]
     payer: Signer<'info>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
@@ -96,7 +98,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
             &ctx.accounts.collection_pda.to_account_info(),
             &ctx.accounts.rent.to_account_info(),
             &ctx.accounts.system_program.to_account_info(),
-            &ctx.accounts.authority.to_account_info(),
+            &ctx.accounts.payer.to_account_info(),
             COLLECTION_PDA_SIZE,
             &[
                 b"collection".as_ref(),
