@@ -1,5 +1,5 @@
 {
-  "version": "4.0.0",
+  "version": "4.0.2",
   "name": "candy_machine",
   "instructions": [
     {
@@ -865,12 +865,11 @@
       "code": 6034,
       "name": "CandyCollectionRequiresRetainAuthority",
       "msg": "Retain authority must be true for Candy Machines with a collection set"
+    },
+    {
+      "code": 6035,
+      "name": "GatewayProgramError",
+      "msg": "Error within Gateway program"
     }
-  ],
-  "metadata": {
-    "address": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
-    "origin": "anchor",
-    "binaryVersion": "0.24.2",
-    "libVersion": "0.24.2"
-  }
+  ]
 }
