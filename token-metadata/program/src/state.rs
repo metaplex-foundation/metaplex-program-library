@@ -124,7 +124,7 @@ pub enum Key {
     CollectionAuthorityRecord,
 }
 #[repr(C)]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Default, PartialEq, Debug, Clone)]
 pub struct Data {
     /// The name of the asset
     pub name: String,
@@ -136,18 +136,6 @@ pub struct Data {
     pub seller_fee_basis_points: u16,
     /// Array of creators, optional
     pub creators: Option<Vec<Creator>>,
-}
-
-impl Default for Data {
-    fn default() -> Self {
-        Data {
-            name: "".to_string(),
-            symbol: "".to_string(),
-            uri: "".to_string(),
-            seller_fee_basis_points: 0,
-            creators: None,
-        }
-    }
 }
 
 #[repr(C)]

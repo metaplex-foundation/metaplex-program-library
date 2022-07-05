@@ -9,7 +9,7 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubke
 //
 // It does not check `Key` type or account length and should only be used through the custom functions
 // `from_account_info` and `deserialize` implemented on the Metadata struct.
-pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Error> {
+pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     // Metadata corruption shouldn't appear until after edition_nonce.
     let key: Key = BorshDeserialize::deserialize(buf)?;
     let update_authority: Pubkey = BorshDeserialize::deserialize(buf)?;
