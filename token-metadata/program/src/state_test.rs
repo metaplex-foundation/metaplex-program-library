@@ -291,7 +291,7 @@ mod master_edition {
 
         let mut buf = Vec::new();
         expected_data.serialize(&mut buf).unwrap();
-        MasterEditionV2::pad_length(&mut buf);
+        MasterEditionV2::pad_length(&mut buf).unwrap();
 
         let pubkey = Keypair::new().pubkey();
         let owner = &ID;
@@ -320,7 +320,7 @@ mod master_edition {
 
         let mut buf = Vec::new();
         wrong_type.serialize(&mut buf).unwrap();
-        Metadata::pad_length(&mut buf);
+        Metadata::pad_length(&mut buf).unwrap();
 
         let pubkey = Keypair::new().pubkey();
         let owner = &ID;
@@ -354,7 +354,7 @@ mod edition {
 
         let mut buf = Vec::new();
         expected_data.serialize(&mut buf).unwrap();
-        Edition::pad_length(&mut buf);
+        Edition::pad_length(&mut buf).unwrap();
 
         let pubkey = Keypair::new().pubkey();
         let owner = &ID;
@@ -383,7 +383,7 @@ mod edition {
 
         let mut buf = Vec::new();
         wrong_type.serialize(&mut buf).unwrap();
-        Metadata::pad_length(&mut buf);
+        Metadata::pad_length(&mut buf).unwrap();
 
         let pubkey = Keypair::new().pubkey();
         let owner = &ID;
@@ -417,7 +417,7 @@ mod edition_marker {
 
         let mut buf = Vec::new();
         expected_data.serialize(&mut buf).unwrap();
-        EditionMarker::pad_length(&mut buf);
+        EditionMarker::pad_length(&mut buf).unwrap();
 
         let pubkey = Keypair::new().pubkey();
         let owner = &ID;
@@ -446,7 +446,7 @@ mod edition_marker {
 
         let mut buf = Vec::new();
         wrong_type.serialize(&mut buf).unwrap();
-        Metadata::pad_length(&mut buf);
+        Metadata::pad_length(&mut buf).unwrap();
 
         let pubkey = Keypair::new().pubkey();
         let owner = &ID;
@@ -480,7 +480,7 @@ mod use_authority_record {
 
         let mut buf = Vec::new();
         expected_data.serialize(&mut buf).unwrap();
-        UseAuthorityRecord::pad_length(&mut buf);
+        UseAuthorityRecord::pad_length(&mut buf).unwrap();
 
         let pubkey = Keypair::new().pubkey();
         let owner = &ID;
@@ -542,7 +542,7 @@ mod collection_authority_record {
 
         let mut buf = Vec::new();
         expected_data.serialize(&mut buf).unwrap();
-        CollectionAuthorityRecord::pad_length(&mut buf);
+        CollectionAuthorityRecord::pad_length(&mut buf).unwrap();
 
         let pubkey = Keypair::new().pubkey();
         let owner = &ID;

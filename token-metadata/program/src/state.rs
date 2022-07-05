@@ -88,9 +88,12 @@ pub trait TokenMetadataAccount {
 
     fn size() -> usize;
 
-    fn pad_length(buf: &mut Vec<u8>) {
-        let padding_length = Self::size() - buf.len();
+    fn pad_length(buf: &mut Vec<u8>) -> Result<(), MetadataError> {
+        let padding_length = Self::size()
+            .checked_sub(buf.len())
+            .ok_or(MetadataError::NumericalOverflowError)?;
         buf.extend(vec![0; padding_length]);
+        Ok(())
     }
 
     fn safe_deserialize<T: BorshDeserialize + TokenMetadataAccount>(
