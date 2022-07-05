@@ -22,7 +22,7 @@ export type UpdateAuthorityInstructionArgs = {
  * @category UpdateAuthority
  * @category generated
  */
-const updateAuthorityStruct = new beet.FixableBeetArgsStruct<
+export const updateAuthorityStruct = new beet.FixableBeetArgsStruct<
   UpdateAuthorityInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -49,7 +49,7 @@ export type UpdateAuthorityInstructionAccounts = {
   wallet: web3.PublicKey;
 };
 
-const updateAuthorityInstructionDiscriminator = [32, 46, 64, 28, 149, 75, 243, 88];
+export const updateAuthorityInstructionDiscriminator = [32, 46, 64, 28, 149, 75, 243, 88];
 
 /**
  * Creates a _UpdateAuthority_ instruction.
@@ -64,33 +64,32 @@ const updateAuthorityInstructionDiscriminator = [32, 46, 64, 28, 149, 75, 243, 8
 export function createUpdateAuthorityInstruction(
   accounts: UpdateAuthorityInstructionAccounts,
   args: UpdateAuthorityInstructionArgs,
+  programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
 ) {
-  const { candyMachine, authority, wallet } = accounts;
-
   const [data] = updateAuthorityStruct.serialize({
     instructionDiscriminator: updateAuthorityInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: candyMachine,
+      pubkey: accounts.candyMachine,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: wallet,
+      pubkey: accounts.wallet,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+    programId,
     keys,
     data,
   });

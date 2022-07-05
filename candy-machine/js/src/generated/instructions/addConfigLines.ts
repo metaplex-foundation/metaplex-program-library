@@ -23,7 +23,7 @@ export type AddConfigLinesInstructionArgs = {
  * @category AddConfigLines
  * @category generated
  */
-const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
+export const addConfigLinesStruct = new beet.FixableBeetArgsStruct<
   AddConfigLinesInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -49,7 +49,7 @@ export type AddConfigLinesInstructionAccounts = {
   authority: web3.PublicKey;
 };
 
-const addConfigLinesInstructionDiscriminator = [223, 50, 224, 227, 151, 8, 115, 106];
+export const addConfigLinesInstructionDiscriminator = [223, 50, 224, 227, 151, 8, 115, 106];
 
 /**
  * Creates a _AddConfigLines_ instruction.
@@ -64,28 +64,27 @@ const addConfigLinesInstructionDiscriminator = [223, 50, 224, 227, 151, 8, 115, 
 export function createAddConfigLinesInstruction(
   accounts: AddConfigLinesInstructionAccounts,
   args: AddConfigLinesInstructionArgs,
+  programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
 ) {
-  const { candyMachine, authority } = accounts;
-
   const [data] = addConfigLinesStruct.serialize({
     instructionDiscriminator: addConfigLinesInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: candyMachine,
+      pubkey: accounts.candyMachine,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+    programId,
     keys,
     data,
   });

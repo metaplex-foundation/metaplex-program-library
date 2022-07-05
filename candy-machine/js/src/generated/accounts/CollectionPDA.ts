@@ -19,7 +19,7 @@ export type CollectionPDAArgs = {
   candyMachine: web3.PublicKey;
 };
 
-const collectionPDADiscriminator = [203, 128, 119, 125, 234, 89, 232, 157];
+export const collectionPDADiscriminator = [203, 128, 119, 125, 234, 89, 232, 157];
 /**
  * Holds the data for the {@link CollectionPDA} Account and provides de/serialization
  * functionality for that data

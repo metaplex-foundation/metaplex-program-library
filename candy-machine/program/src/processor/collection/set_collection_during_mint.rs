@@ -12,7 +12,9 @@ pub struct SetCollectionDuringMint<'info> {
     #[account(has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     /// CHECK: account checked in CPI/instruction sysvar
+    #[account(mut)]
     metadata: UncheckedAccount<'info>,
+    #[account(mut)]
     payer: Signer<'info>,
     #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
     collection_pda: Account<'info, CollectionPDA>,

@@ -23,7 +23,7 @@ export type CandyMachineArgs = {
   data: CandyMachineData;
 };
 
-const candyMachineDiscriminator = [51, 173, 177, 113, 25, 241, 109, 189];
+export const candyMachineDiscriminator = [51, 173, 177, 113, 25, 241, 109, 189];
 /**
  * Holds the data for the {@link CandyMachine} Account and provides de/serialization
  * functionality for that data
