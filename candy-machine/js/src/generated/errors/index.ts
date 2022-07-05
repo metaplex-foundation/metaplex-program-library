@@ -756,6 +756,26 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * GatewayProgramError: 'Error within Gateway program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class GatewayProgramErrorError extends Error {
+  readonly code: number = 0x1793;
+  readonly name: string = 'GatewayProgramError';
+  constructor() {
+    super('Error within Gateway program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, GatewayProgramErrorError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1793, () => new GatewayProgramErrorError());
+createErrorFromNameLookup.set('GatewayProgramError', () => new GatewayProgramErrorError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
