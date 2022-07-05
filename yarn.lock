@@ -1083,8 +1083,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-candy-machine@workspace:candy-machine/js"
   dependencies:
-    "@metaplex-foundation/beet": ^0.1.0
-    "@metaplex-foundation/beet-solana": ^0.1.1
+    "@metaplex-foundation/beet": ^0.4.0
+    "@metaplex-foundation/beet-solana": ^0.3.0
     "@metaplex-foundation/cusper": ^0.0.2
     "@metaplex-foundation/mpl-core": ^0.6.1
     "@metaplex-foundation/solita": ^0.12.0
