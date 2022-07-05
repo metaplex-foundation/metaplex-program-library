@@ -96,16 +96,27 @@ pub trait TokenMetadataAccount {
         Ok(())
     }
 
-    fn safe_deserialize<T: BorshDeserialize + TokenMetadataAccount>(
-        mut data: &[u8],
-    ) -> Result<T, BorshError> {
-        if !is_correct_account_type(data, T::key(), T::size()) {
+    fn safe_deserialize<T: BorshDeserialize>(mut data: &[u8]) -> Result<T, BorshError> {
+        if !is_correct_account_type(data, Self::key(), Self::size()) {
             return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
         }
 
         let result: T = T::deserialize(&mut data)?;
 
         Ok(result)
+    }
+
+    fn from_account_info<T: BorshDeserialize + TokenMetadataAccount>(
+        a: &AccountInfo,
+    ) -> Result<T, ProgramError>
+where {
+        let ua: T = Self::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
+
+        Ok(ua)
     }
 }
 
@@ -231,16 +242,6 @@ impl TokenMetadataAccount for UseAuthorityRecord {
 }
 
 impl UseAuthorityRecord {
-    pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
-        let ua: UseAuthorityRecord = UseAuthorityRecord::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(ua)
-    }
-
     pub fn from_bytes(b: &[u8]) -> Result<UseAuthorityRecord, ProgramError> {
         let ua: UseAuthorityRecord =
             try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
@@ -279,17 +280,6 @@ impl TokenMetadataAccount for CollectionAuthorityRecord {
 }
 
 impl CollectionAuthorityRecord {
-    pub fn from_account_info(a: &AccountInfo) -> Result<CollectionAuthorityRecord, ProgramError> {
-        let ua: CollectionAuthorityRecord =
-            CollectionAuthorityRecord::safe_deserialize(&a.data.borrow_mut())
-                .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(ua)
-    }
-
     pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
         let ca: CollectionAuthorityRecord = try_from_slice_checked(
             b,
@@ -348,18 +338,6 @@ impl Default for Metadata {
     }
 }
 
-impl Metadata {
-    pub fn from_account_info(a: &AccountInfo) -> Result<Metadata, ProgramError> {
-        let metadata = Metadata::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(metadata)
-    }
-}
-
 impl TokenMetadataAccount for Metadata {
     fn key() -> Key {
         Key::MetadataV1
@@ -393,8 +371,14 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     let master_edition_result: Result<Box<dyn MasterEdition>, ProgramError> = match version {
-        2 => Ok(Box::new(MasterEditionV1::from_account_info(account)?)),
-        6 => Ok(Box::new(MasterEditionV2::from_account_info(account)?)),
+        2 => {
+            let me: MasterEditionV1 = MasterEditionV1::from_account_info(account)?;
+            Ok(Box::new(me))
+        }
+        6 => {
+            let me: MasterEditionV2 = MasterEditionV2::from_account_info(account)?;
+            Ok(Box::new(me))
+        }
         _ => Err(MetadataError::DataTypeMismatch.into()),
     };
 
@@ -454,18 +438,6 @@ impl MasterEdition for MasterEditionV2 {
     }
 }
 
-impl MasterEditionV2 {
-    pub fn from_account_info(a: &AccountInfo) -> Result<MasterEditionV2, ProgramError> {
-        let me: MasterEditionV2 = MasterEditionV2::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(me)
-    }
-}
-
 #[repr(C)]
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct MasterEditionV1 {
@@ -499,6 +471,19 @@ impl TokenMetadataAccount for MasterEditionV1 {
     fn size() -> usize {
         MAX_MASTER_EDITION_LEN
     }
+
+    fn from_account_info<T>(a: &AccountInfo) -> Result<T, ProgramError>
+    where
+        T: BorshDeserialize + TokenMetadataAccount,
+    {
+        let me = T::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
+
+        Ok(me)
+    }
 }
 
 impl MasterEdition for MasterEditionV1 {
@@ -521,18 +506,6 @@ impl MasterEdition for MasterEditionV1 {
     fn save(&self, account: &AccountInfo) -> ProgramResult {
         self.serialize(&mut *account.data.borrow_mut())?;
         Ok(())
-    }
-}
-
-impl MasterEditionV1 {
-    pub fn from_account_info(a: &AccountInfo) -> Result<MasterEditionV1, ProgramError> {
-        let me: MasterEditionV1 = MasterEditionV1::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(me)
     }
 }
 

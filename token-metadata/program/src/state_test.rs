@@ -16,6 +16,9 @@ pub use crate::{state::Creator, utils::puff_out_data_fields};
 
 #[cfg(test)]
 mod metadata {
+
+    use crate::state::TokenMetadataAccount;
+
     use super::*;
 
     fn pad_metadata_length(metadata: &mut Vec<u8>) {
@@ -59,7 +62,7 @@ mod metadata {
             1_000_000_000,
         );
 
-        let md = Metadata::from_account_info(&md_account_info).unwrap();
+        let md: Metadata = Metadata::from_account_info(&md_account_info).unwrap();
         assert_eq!(md.key, Key::MetadataV1);
         assert_eq!(md, expected_metadata);
     }
@@ -90,7 +93,7 @@ mod metadata {
 
         // `from_account_info` should not succeed because this account is not owned
         // by `token-metadata` program.
-        let error = Metadata::from_account_info(&md_account_info).unwrap_err();
+        let error = Metadata::from_account_info::<Metadata>(&md_account_info).unwrap_err();
         assert_eq!(error, MetadataError::IncorrectOwner.into());
     }
 
@@ -120,7 +123,7 @@ mod metadata {
 
         // `from_account_info` should not succeed because this account is not owned
         // by `token-metadata` program.
-        let error = Metadata::from_account_info(&account_info).unwrap_err();
+        let error = Metadata::from_account_info::<Metadata>(&account_info).unwrap_err();
         assert_eq!(error, MetadataError::DataTypeMismatch.into());
     }
 
@@ -150,7 +153,7 @@ mod metadata {
             1_000_000_000,
         );
 
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
+        let err = Metadata::from_account_info::<Metadata>(&account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 
@@ -184,7 +187,7 @@ mod metadata {
             1_000_000_000,
         );
 
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
+        let err = Metadata::from_account_info::<Metadata>(&account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 
@@ -215,7 +218,7 @@ mod metadata {
             1_000_000_000,
         );
 
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
+        let err = Metadata::from_account_info::<Metadata>(&account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 
@@ -245,7 +248,7 @@ mod metadata {
             1_000_000_000,
         );
 
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
+        let err = Metadata::from_account_info::<Metadata>(&account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 
@@ -275,7 +278,7 @@ mod metadata {
             1_000_000_000,
         );
 
-        let err = Metadata::from_account_info(&account_info).unwrap_err();
+        let err = Metadata::from_account_info::<Metadata>(&account_info).unwrap_err();
         assert_eq!(err, MetadataError::DataTypeMismatch.into());
     }
 }
@@ -309,7 +312,7 @@ mod master_edition {
             1_000_000_000,
         );
 
-        let data = MasterEditionV2::from_account_info(&account_info).unwrap();
+        let data = MasterEditionV2::from_account_info::<MasterEditionV2>(&account_info).unwrap();
         assert_eq!(data.key, Key::MasterEditionV2);
         assert_eq!(data, expected_data);
     }
@@ -338,7 +341,8 @@ mod master_edition {
             1_000_000_000,
         );
 
-        let error = MasterEditionV2::from_account_info(&account_info).unwrap_err();
+        let error =
+            MasterEditionV2::from_account_info::<MasterEditionV2>(&account_info).unwrap_err();
         assert_eq!(error, MetadataError::DataTypeMismatch.into());
     }
 }
@@ -498,7 +502,8 @@ mod use_authority_record {
             1_000_000_000,
         );
 
-        let data = UseAuthorityRecord::from_account_info(&account_info).unwrap();
+        let data =
+            UseAuthorityRecord::from_account_info::<UseAuthorityRecord>(&account_info).unwrap();
         assert_eq!(data.key, Key::UseAuthorityRecord);
         assert_eq!(data, expected_data);
     }
@@ -526,7 +531,8 @@ mod use_authority_record {
             1_000_000_000,
         );
 
-        let error = UseAuthorityRecord::from_account_info(&account_info).unwrap_err();
+        let error =
+            UseAuthorityRecord::from_account_info::<UseAuthorityRecord>(&account_info).unwrap_err();
         assert_eq!(error, MetadataError::DataTypeMismatch.into());
     }
 }
@@ -560,7 +566,10 @@ mod collection_authority_record {
             1_000_000_000,
         );
 
-        let data = CollectionAuthorityRecord::from_account_info(&account_info).unwrap();
+        let data = CollectionAuthorityRecord::from_account_info::<CollectionAuthorityRecord>(
+            &account_info,
+        )
+        .unwrap();
         assert_eq!(data.key, Key::CollectionAuthorityRecord);
         assert_eq!(data, expected_data);
     }
@@ -588,7 +597,10 @@ mod collection_authority_record {
             1_000_000_000,
         );
 
-        let error = CollectionAuthorityRecord::from_account_info(&account_info).unwrap_err();
+        let error = CollectionAuthorityRecord::from_account_info::<CollectionAuthorityRecord>(
+            &account_info,
+        )
+        .unwrap_err();
         assert_eq!(error, MetadataError::DataTypeMismatch.into());
     }
 }

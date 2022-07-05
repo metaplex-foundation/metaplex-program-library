@@ -5,10 +5,10 @@ use crate::{
     pda::find_master_edition_account,
     state::{
         get_reservation_list, CollectionDetails, Data, DataV2, Edition, EditionMarker, Key,
-        MasterEditionV1, MasterEditionV2, Metadata, TokenStandard, Uses, EDITION,
-        EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN, MAX_EDITION_MARKER_SIZE,
-        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH,
-        MAX_URI_LENGTH, PREFIX,
+        MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, Uses,
+        EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
+        MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
+        MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -938,7 +938,7 @@ pub fn process_create_metadata_accounts_logic(
         metadata_authority_signer_seeds,
     )?;
 
-    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
     let compatible_data = data.to_v1();
     assert_data_valid(
         &compatible_data,
@@ -1079,7 +1079,7 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
     assert_owned_by(master_edition_account_info, program_id)?;
     assert_owned_by(master_metadata_account_info, program_id)?;
 
-    let master_metadata = Metadata::from_account_info(master_metadata_account_info)?;
+    let master_metadata: Metadata = Metadata::from_account_info(master_metadata_account_info)?;
     let token_account: Account = assert_initialized(token_account_info)?;
 
     if !ignore_owner_signer {
@@ -1343,7 +1343,8 @@ pub fn is_master_edition(
     mint_decimals: u8,
     mint_supply: u64,
 ) -> bool {
-    let is_correct_type = MasterEditionV2::from_account_info(edition_account_info).is_ok();
+    let is_correct_type =
+        MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info).is_ok();
 
     is_correct_type && mint_decimals == 0 && mint_supply == 1
 }
