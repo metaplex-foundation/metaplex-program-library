@@ -106,9 +106,7 @@ pub trait TokenMetadataAccount {
         Ok(result)
     }
 
-    fn from_account_info<T: BorshDeserialize + TokenMetadataAccount>(
-        a: &AccountInfo,
-    ) -> Result<T, ProgramError>
+    fn from_account_info<T: BorshDeserialize>(a: &AccountInfo) -> Result<T, ProgramError>
 where {
         let ua: T = Self::safe_deserialize(&a.data.borrow_mut())
             .map_err(|_| MetadataError::DataTypeMismatch)?;
@@ -470,19 +468,6 @@ impl TokenMetadataAccount for MasterEditionV1 {
 
     fn size() -> usize {
         MAX_MASTER_EDITION_LEN
-    }
-
-    fn from_account_info<T>(a: &AccountInfo) -> Result<T, ProgramError>
-    where
-        T: BorshDeserialize + TokenMetadataAccount,
-    {
-        let me = T::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(me)
     }
 }
 
