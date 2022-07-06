@@ -1240,10 +1240,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-token-metadata@workspace:token-metadata/js"
   dependencies:
-    "@metaplex-foundation/beet": ^0.1.0
-    "@metaplex-foundation/beet-solana": ^0.1.1
+    "@metaplex-foundation/beet": ^0.4.0
+    "@metaplex-foundation/beet-solana": ^0.3.0
     "@metaplex-foundation/cusper": ^0.0.2
-    "@metaplex-foundation/solita": ^0.8.1
+    "@metaplex-foundation/solita": ^0.12.1
     "@solana/spl-token": ^0.2.0
     "@solana/web3.js": ^1.35.1
     "@types/bn.js": ^5.1.0
@@ -1318,6 +1318,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metaplex-foundation/solita@npm:^0.12.1":
+  version: 0.12.1
+  resolution: "@metaplex-foundation/solita@npm:0.12.1"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.4.0
+    "@metaplex-foundation/beet-solana": ^0.3.0
+    "@metaplex-foundation/rustbin": ^0.3.0
+    "@solana/web3.js": ^1.36.0
+    camelcase: ^6.2.1
+    debug: ^4.3.3
+    js-sha256: ^0.9.0
+    prettier: ^2.5.1
+    snake-case: ^3.0.4
+    spok: ^1.4.3
+  bin:
+    solita: dist/src/cli/solita.js
+  checksum: 5c58ad67582be70f46f2da92b7e5281c27cdac721b2c6f6bf3834208bb2c3253079325358bab488eda26dbd9f921d0c6c57e05d184c24a5cdf9420d4f23c2b42
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/solita@npm:^0.2.0":
   version: 0.2.1
   resolution: "@metaplex-foundation/solita@npm:0.2.1"
@@ -1372,26 +1392,6 @@ __metadata:
   bin:
     solita: dist/src/cli/solita.js
   checksum: 16cc9a2ce058217eea6546bff058291f24437c5e021b37c1c59884b6934788cab0f619e2e61e2cd5e7ae5a7897aff5c5343a146c2cd1a90b0ca4d64f58dcff6d
-  languageName: node
-  linkType: hard
-
-"@metaplex-foundation/solita@npm:^0.8.1":
-  version: 0.8.2
-  resolution: "@metaplex-foundation/solita@npm:0.8.2"
-  dependencies:
-    "@metaplex-foundation/beet": ^0.2.0
-    "@metaplex-foundation/beet-solana": ^0.1.1
-    "@metaplex-foundation/rustbin": ^0.3.0
-    "@solana/web3.js": ^1.36.0
-    camelcase: ^6.2.1
-    debug: ^4.3.3
-    js-sha256: ^0.9.0
-    prettier: ^2.5.1
-    snake-case: ^3.0.4
-    spok: ^1.4.3
-  bin:
-    solita: dist/src/cli/solita.js
-  checksum: cf1ee56e01192c97ab38a473ec14fb712df5bc61e1e3b7211420b73b4b84c482ce5b4c7dfaef74d2cce160cf735a80b6bc24cbbe1264978aca097a11b59ca2b0
   languageName: node
   linkType: hard
 
