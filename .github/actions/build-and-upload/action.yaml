@@ -1,3 +1,7 @@
+# this action expects some github event variables to be present
+# that only exist on push events. if used with any other events,
+# this action will need udpates.
+
 name: 'Build program and upload output to S3'
 description: 'Uploads verifiable build output and metadata to S3'
 inputs:
@@ -22,14 +26,24 @@ inputs:
   prefix:
     description: 'Prefix in the bucket to which the file will upload'
     required: true
+  working-dir:
+    description: 'Working directory'
+    required: true
+
+outputs:
+  url:
+    description: URL to uploaded binary
+    value: ${{ steps.set-output.outputs.url }}
 
 runs:
   using: 'composite'
   steps:
     - uses: actions/checkout@v3
+    - name: verifiably build anchor
+      uses: ./.github/actions/anchor-build/
       with:
-        node-version: ${{ env.NODE_VERSION }}
-    - uses: ./.github/actions/anchor-build/
+        working-dir: ${{ inputs.working-dir }}
+
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ inputs.program-binary }}
@@ -50,6 +64,13 @@ runs:
         role: ${{ inputs.role }}
         bucket: ${{ inputs.bucket }}
         prefix: ${{ inputs.prefix }}/${{ github.event.head_commit.id }}
+
+    - name: Set URL for uploaded binary
+      id: set-output
+      run: echo "::set-output name=url::$URL"
+      shell: bash
+      env:
+        URL: ${{ steps.upload-binary.outputs.uploaded-file-path }}
 
     # dump commit context to index.json & upload that
     - name: Dump context to metadata

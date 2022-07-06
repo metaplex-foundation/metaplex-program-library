@@ -6,10 +6,16 @@ on:
   pull_request:
     branches: [master]
 
+# configuration to enable link to AWS for program artifact upload
+permissions:
+  id-token: write
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.9.22
   RUST_TOOLCHAIN: stable
+  ANCHOR_CLI_VERSION: 0.22.0
 
 jobs:
   changes:
@@ -77,3 +83,33 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
+
+  build-and-upload-binary:
+    needs: changes
+    if: ${{ (needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true') && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-token-metadata-build
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ env.SOLANA_VERSION }}
+      - uses: ./.github/actions/install-rust
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - uses: ./.github/actions/setup-aws-env/
+      - name: Build and upload
+        uses: ./.github/actions/build-and-upload/
+        id: upload-binary-metadata
+        with:
+          account-id: ${{ env.BINARY_STORAGE_ACCOUNT_ID }}
+          region: ${{ env.BINARY_STORAGE_REGION }}
+          role: ${{ env.BINARY_STORAGE_ROLE }}
+          bucket: ${{ env.BINARY_STORAGE_BUCKET }}
+          working-dir: ./token-metadata/program
+          program-binary: mpl_token_metadata.so
+          prefix: mpl_token_metadata
