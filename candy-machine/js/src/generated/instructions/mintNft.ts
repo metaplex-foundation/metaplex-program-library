@@ -22,7 +22,7 @@ export type MintNftInstructionArgs = {
  * @category MintNft
  * @category generated
  */
-const mintNftStruct = new beet.BeetArgsStruct<
+export const mintNftStruct = new beet.BeetArgsStruct<
   MintNftInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -64,12 +64,15 @@ export type MintNftInstructionAccounts = {
   updateAuthority: web3.PublicKey;
   masterEdition: web3.PublicKey;
   tokenMetadataProgram: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
   clock: web3.PublicKey;
   recentBlockhashes: web3.PublicKey;
   instructionSysvarAccount: web3.PublicKey;
 };
 
-const mintNftInstructionDiscriminator = [211, 57, 6, 167, 15, 219, 35, 251];
+export const mintNftInstructionDiscriminator = [211, 57, 6, 167, 15, 219, 35, 251];
 
 /**
  * Creates a _MintNft_ instruction.
@@ -84,112 +87,97 @@ const mintNftInstructionDiscriminator = [211, 57, 6, 167, 15, 219, 35, 251];
 export function createMintNftInstruction(
   accounts: MintNftInstructionAccounts,
   args: MintNftInstructionArgs,
+  programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
 ) {
-  const {
-    candyMachine,
-    candyMachineCreator,
-    payer,
-    wallet,
-    metadata,
-    mint,
-    mintAuthority,
-    updateAuthority,
-    masterEdition,
-    tokenMetadataProgram,
-    clock,
-    recentBlockhashes,
-    instructionSysvarAccount,
-  } = accounts;
-
   const [data] = mintNftStruct.serialize({
     instructionDiscriminator: mintNftInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: candyMachine,
+      pubkey: accounts.candyMachine,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: candyMachineCreator,
+      pubkey: accounts.candyMachineCreator,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: wallet,
+      pubkey: accounts.wallet,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mintAuthority,
+      pubkey: accounts.mintAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: accounts.updateAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: tokenMetadataProgram,
+      pubkey: accounts.tokenMetadataProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: clock,
+      pubkey: accounts.clock,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: recentBlockhashes,
+      pubkey: accounts.recentBlockhashes,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: instructionSysvarAccount,
+      pubkey: accounts.instructionSysvarAccount,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+    programId,
     keys,
     data,
   });
