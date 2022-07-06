@@ -5,11 +5,13 @@ use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
     pubkey::Pubkey,
 };
+
 #[cfg(feature = "serde")]
 use {
     serde::{Deserialize, Serialize},
     serde_with::{As, DisplayFromStr},
 };
+
 /// prefix used for PDAs to avoid certain collision attacks (https://en.wikipedia.org/wiki/Collision_attack#Chosen-prefix_collision_attack)
 pub const PREFIX: &str = "metadata";
 
@@ -211,6 +213,7 @@ impl UseAuthorityRecord {
 }
 
 #[repr(C)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct CollectionAuthorityRecord {
     pub key: Key, //1
@@ -247,6 +250,7 @@ pub struct Collection {
 }
 
 #[repr(C)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, BorshSerialize, Debug, PartialEq, ShankAccount)]
 pub struct Metadata {
     pub key: Key,
@@ -306,6 +310,7 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
 }
 
 #[repr(C)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct MasterEditionV2 {
     pub key: Key,
@@ -333,7 +338,7 @@ impl MasterEdition for MasterEditionV2 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        self.serialize(&mut *account.data.borrow_mut())?;
+        BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
     }
 }
@@ -351,6 +356,7 @@ impl MasterEditionV2 {
 }
 
 #[repr(C)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct MasterEditionV1 {
     pub key: Key,
@@ -393,7 +399,7 @@ impl MasterEdition for MasterEditionV1 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        self.serialize(&mut *account.data.borrow_mut())?;
+        BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
     }
 }
@@ -411,6 +417,7 @@ impl MasterEditionV1 {
 }
 
 #[repr(C)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 /// All Editions should never have a supply greater than 1.
 /// To enforce this, a transfer mint authority instruction will happen when
@@ -438,7 +445,6 @@ impl Edition {
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-
 pub struct Creator {
     #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
     pub address: Pubkey,
@@ -483,6 +489,7 @@ pub fn get_reservation_list(
 }
 
 #[repr(C)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct ReservationListV2 {
     pub key: Key,
@@ -570,7 +577,7 @@ impl ReservationList for ReservationListV2 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        self.serialize(&mut *account.data.borrow_mut())?;
+        BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
     }
 
@@ -614,6 +621,7 @@ pub struct Reservation {
 
 // Legacy Reservation List with u8s
 #[repr(C)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct ReservationListV1 {
     pub key: Key,
@@ -676,7 +684,7 @@ impl ReservationList for ReservationListV1 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        self.serialize(&mut *account.data.borrow_mut())?;
+        BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
     }
 
@@ -706,6 +714,7 @@ impl ReservationListV1 {
 }
 
 #[repr(C)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct ReservationV1 {
     pub address: Pubkey,
