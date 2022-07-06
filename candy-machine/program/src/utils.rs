@@ -225,7 +225,7 @@ pub fn remove_feature_flag(uuid: &mut String, feature_index: usize) {
 }
 
 pub fn punish_bots<'a>(
-    error: ProgramError,
+    error: CandyError,
     bot_account: AccountInfo<'a>,
     payment_account: AccountInfo<'a>,
     system_program: AccountInfo<'a>,

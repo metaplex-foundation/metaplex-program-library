@@ -72,4 +72,6 @@ pub enum CandyError {
     NoChangingCollectionDuringMint,
     #[msg("Retain authority must be true for Candy Machines with a collection set")]
     CandyCollectionRequiresRetainAuthority,
+    #[msg("Error within Gateway program")]
+    GatewayProgramError,
 }
