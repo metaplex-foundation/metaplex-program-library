@@ -19,7 +19,7 @@ export type CollectionPDAArgs = {
   candyMachine: web3.PublicKey;
 };
 
-const collectionPDADiscriminator = [203, 128, 119, 125, 234, 89, 232, 157];
+export const collectionPDADiscriminator = [203, 128, 119, 125, 234, 89, 232, 157];
 /**
  * Holds the data for the {@link CollectionPDA} Account and provides de/serialization
  * functionality for that data
@@ -63,6 +63,18 @@ export class CollectionPDA implements CollectionPDAArgs {
       throw new Error(`Unable to find CollectionPDA account at ${address}`);
     }
     return CollectionPDA.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, collectionPDABeet);
   }
 
   /**
