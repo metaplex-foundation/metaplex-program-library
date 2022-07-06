@@ -7,6 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 import { Key, keyBeet } from '../types/Key';
 
 /**
@@ -66,6 +67,18 @@ export class UseAuthorityRecord implements UseAuthorityRecordArgs {
       throw new Error(`Unable to find UseAuthorityRecord account at ${address}`);
     }
     return UseAuthorityRecord.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, useAuthorityRecordBeet);
   }
 
   /**

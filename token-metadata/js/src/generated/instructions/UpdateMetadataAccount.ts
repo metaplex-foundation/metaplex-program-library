@@ -65,28 +65,27 @@ export const updateMetadataAccountInstructionDiscriminator = 1;
 export function createUpdateMetadataAccountInstruction(
   accounts: UpdateMetadataAccountInstructionAccounts,
   args: UpdateMetadataAccountInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { metadata, updateAuthority } = accounts;
-
   const [data] = UpdateMetadataAccountStruct.serialize({
     instructionDiscriminator: updateMetadataAccountInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: accounts.updateAuthority,
       isWritable: false,
       isSigner: true,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

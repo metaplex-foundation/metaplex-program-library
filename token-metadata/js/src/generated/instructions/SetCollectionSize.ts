@@ -66,42 +66,40 @@ export const setCollectionSizeInstructionDiscriminator = 34;
 export function createSetCollectionSizeInstruction(
   accounts: SetCollectionSizeInstructionAccounts,
   args: SetCollectionSizeInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { collectionMetadata, collectionAuthority, collectionMint, collectionAuthorityRecord } =
-    accounts;
-
   const [data] = SetCollectionSizeStruct.serialize({
     instructionDiscriminator: setCollectionSizeInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: collectionMetadata,
+      pubkey: accounts.collectionMetadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: collectionAuthority,
+      pubkey: accounts.collectionAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: collectionMint,
+      pubkey: accounts.collectionMint,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  if (collectionAuthorityRecord != null) {
+  if (accounts.collectionAuthorityRecord != null) {
     keys.push({
-      pubkey: collectionAuthorityRecord,
+      pubkey: accounts.collectionAuthorityRecord,
       isWritable: false,
       isSigner: false,
     });
   }
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

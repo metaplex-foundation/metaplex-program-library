@@ -101,6 +101,18 @@ export class Metadata implements MetadataArgs {
   }
 
   /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, metadataBeet);
+  }
+
+  /**
    * Deserializes the {@link Metadata} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */

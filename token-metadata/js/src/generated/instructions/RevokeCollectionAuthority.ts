@@ -48,43 +48,41 @@ export const revokeCollectionAuthorityInstructionDiscriminator = 24;
  */
 export function createRevokeCollectionAuthorityInstruction(
   accounts: RevokeCollectionAuthorityInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { collectionAuthorityRecord, delegateAuthority, revokeAuthority, metadata, mint } =
-    accounts;
-
   const [data] = RevokeCollectionAuthorityStruct.serialize({
     instructionDiscriminator: revokeCollectionAuthorityInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: collectionAuthorityRecord,
+      pubkey: accounts.collectionAuthorityRecord,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: delegateAuthority,
+      pubkey: accounts.delegateAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: revokeAuthority,
+      pubkey: accounts.revokeAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });
