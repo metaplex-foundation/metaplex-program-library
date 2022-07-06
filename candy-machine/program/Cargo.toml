@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "mpl-candy-machine"
-version = "4.0.1"
+version = "4.0.2"
 description = "NFT Candy Machine v2: programmatic and trustless NFT drops."
 authors = ["Jordan Prince", "Metaplex Developers <dev@metaplex.com>"]
 repository = "https://github.com/metaplex-foundation/metaplex-program-library"

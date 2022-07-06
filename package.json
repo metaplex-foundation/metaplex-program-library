@@ -1,7 +1,7 @@
 {
   "name": "@metaplex-foundation/metaplex-program-library",
   "packageManager": "yarn@3.2.0-rc.12",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Web interface to Smart Contracts by the Metaplex team.",
   "scripts": {
     "build:core": "lerna run build --scope @metaplex-foundation/mpl-core",
