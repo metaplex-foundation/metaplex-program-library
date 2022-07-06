@@ -1,4 +1,4 @@
-name: Verify package SDK
+name: Verify package library
 
 on:
   pull_request:
@@ -48,17 +48,17 @@ jobs:
         with:
           script: |
             const files = ${{ steps.list-changed-files.outputs.changed-files }}
+            const isRustFile = /.*\.rs$/g;
             const uniqueFilesObj = files
-              .filter(f => f.includes('program'))
+              .filter(f => isRustFile.test(f))
               .reduce((p, file) => {
                 const pkgForFile = file.split("/")[0];
-                console.log("pkgForFile: ", pkgForFile);
                 if (!p[pkgForFile]) p[pkgForFile] = 1
                 return p
               }, {})
             return Array.from(Object.keys(uniqueFilesObj)).join(" ")
 
-  update-pr-with-changes:
+  verify-package-library:
     needs: [get-changes-scope]
     runs-on: ubuntu-latest
     steps:
@@ -71,21 +71,18 @@ jobs:
         with:
           solana_version: ${{ env.SOLANA_VERSION_STABLE }}
 
-      - name: Generate API for modified packages
-        id: generate-package-api
+      - name: Generate library for modified packages
+        id: generate-package-lib
         run: |
           pkgs=${{ needs.get-changes-scope.outputs.packages }}
           pkgs=(${pkgs//\"})
           for pkg in "${pkgs[@]}"; do
             echo ">> changing dir $pkg/js"
             cd "$pkg/js"
-            echo ">> yarn install && solita"
-            yarn install
-            echo ">> install solita"
-            yarn add -D @metaplex-foundation/solita
-            echo ">> generete API"
+            echo ">> setup local pcakage dependencies with yarn"
+            yarn
+            echo ">> generate library"
             yarn api:gen
-            git restore package.json ../../yarn.lock
             echo ">> git status"
             git status
             if [[ $(git diff --stat) != '' ]]; then
@@ -100,7 +97,7 @@ jobs:
           done
 
       - uses: actions/github-script@v4
-        if: steps.generate-package-api.outputs.failed == 'true'
+        if: steps.generate-package-lib.outputs.failed == 'true'
         with:
           script: |
-            core.setFailed("Found differences when generating APIs. See logs for offending package(s).")
+            core.setFailed("Found differences when generating libraries. See logs for offending package(s).")
