@@ -608,32 +608,31 @@ pub fn assert_valid_trade_state(
     }
 }
 
-pub fn rent_checked_sub(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
-    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
-    let account_lamports: u64 = escrow_account
+// This function verifies that there are enough funds in `account` such that `amount` can be
+// withdrawn.  If there are not sufficent funds it returns an error.  If there are sufficient
+// funds, it returns any additional amount needed to keep the account above the rent exempt
+// threshold.
+pub fn verify_withdrawal(account: AccountInfo, amount: u64) -> Result<u64> {
+    let rent_minimum = (Rent::get()?).minimum_balance(account.data_len());
+    let diff = account
         .lamports()
-        .checked_sub(diff)
-        .ok_or(AuctionHouseError::NumericalOverflow)?;
+        .checked_sub(amount)
+        .ok_or(AuctionHouseError::InsufficientFunds)?;
 
-    if account_lamports < rent_minimum {
-        Ok(escrow_account.lamports() - rent_minimum)
-    } else {
-        Ok(diff)
-    }
+    Ok(rent_minimum.saturating_sub(diff))
 }
 
-pub fn rent_checked_add(escrow_account: AccountInfo, diff: u64) -> Result<u64> {
-    let rent_minimum: u64 = (Rent::get()?).minimum_balance(escrow_account.data_len());
-    let account_lamports: u64 = escrow_account
+// This function verifies that `amount` can be added to `account`.  This should be true under
+// normal circumstances since lamport amounts should never be overflowing.  The function returns
+// any additional amount needed to keep the account above the rent exempt threshold.
+pub fn verify_deposit(account: AccountInfo, amount: u64) -> Result<u64> {
+    let rent_minimum = (Rent::get()?).minimum_balance(account.data_len());
+    let total = account
         .lamports()
-        .checked_add(diff)
+        .checked_add(amount)
         .ok_or(AuctionHouseError::NumericalOverflow)?;
 
-    if account_lamports < rent_minimum {
-        Ok(rent_minimum - account_lamports)
-    } else {
-        Ok(diff)
-    }
+    Ok(rent_minimum.saturating_sub(total))
 }
 
 pub fn assert_valid_auctioneer_and_scope(
