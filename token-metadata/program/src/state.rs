@@ -449,7 +449,7 @@ impl MasterEdition for MasterEditionV2 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        self.serialize(&mut *account.data.borrow_mut())?;
+        BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
     }
 }
@@ -508,7 +508,7 @@ impl MasterEdition for MasterEditionV1 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        self.serialize(&mut *account.data.borrow_mut())?;
+        BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
     }
 }
@@ -707,7 +707,7 @@ impl ReservationList for ReservationListV2 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        self.serialize(&mut *account.data.borrow_mut())?;
+        BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
     }
 
@@ -824,7 +824,7 @@ impl ReservationList for ReservationListV1 {
     }
 
     fn save(&self, account: &AccountInfo) -> ProgramResult {
-        self.serialize(&mut *account.data.borrow_mut())?;
+        BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
     }
 
