@@ -2338,8 +2338,8 @@
             "type": "bool"
           },
           {
-            "name": "auctioneerPdaBump",
-            "type": "u8"
+            "name": "auctioneerAddress",
+            "type": "publicKey"
           }
         ]
       }
@@ -2365,6 +2365,10 @@
                 7
               ]
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -2668,6 +2672,16 @@
       "code": 6040,
       "name": "PartialPriceMismatch",
       "msg": "Calculated partial price does not not partial price that was provided."
+    },
+    {
+      "code": 6041,
+      "name": "AuctionHouseAlreadyDelegated",
+      "msg": "Auction House already delegated."
+    },
+    {
+      "code": 6042,
+      "name": "AuctioneerAuthorityMismatch",
+      "msg": "Auctioneer Authority Mismatch"
     }
   ],
   "metadata": {

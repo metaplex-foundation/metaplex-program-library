@@ -30,7 +30,7 @@ export type AuctionHouseArgs = {
   canChangeSalePrice: boolean;
   escrowPaymentBump: number;
   hasAuctioneer: boolean;
-  auctioneerPdaBump: number;
+  auctioneerAddress: web3.PublicKey;
 };
 
 const auctionHouseDiscriminator = [40, 108, 215, 107, 213, 85, 245, 48];
@@ -58,7 +58,7 @@ export class AuctionHouse implements AuctionHouseArgs {
     readonly canChangeSalePrice: boolean,
     readonly escrowPaymentBump: number,
     readonly hasAuctioneer: boolean,
-    readonly auctioneerPdaBump: number,
+    readonly auctioneerAddress: web3.PublicKey,
   ) {}
 
   /**
@@ -81,7 +81,7 @@ export class AuctionHouse implements AuctionHouseArgs {
       args.canChangeSalePrice,
       args.escrowPaymentBump,
       args.hasAuctioneer,
-      args.auctioneerPdaBump,
+      args.auctioneerAddress,
     );
   }
 
@@ -182,7 +182,7 @@ export class AuctionHouse implements AuctionHouseArgs {
       canChangeSalePrice: this.canChangeSalePrice,
       escrowPaymentBump: this.escrowPaymentBump,
       hasAuctioneer: this.hasAuctioneer,
-      auctioneerPdaBump: this.auctioneerPdaBump,
+      auctioneerAddress: this.auctioneerAddress.toBase58(),
     };
   }
 }
@@ -214,7 +214,7 @@ export const auctionHouseBeet = new beet.BeetStruct<
     ['canChangeSalePrice', beet.bool],
     ['escrowPaymentBump', beet.u8],
     ['hasAuctioneer', beet.bool],
-    ['auctioneerPdaBump', beet.u8],
+    ['auctioneerAddress', beetSolana.publicKey],
   ],
   AuctionHouse.fromArgs,
   'AuctionHouse',
