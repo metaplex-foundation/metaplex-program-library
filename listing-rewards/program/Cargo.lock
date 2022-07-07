@@ -1760,7 +1760,9 @@ version = "0.1.0"
 dependencies = [
  "anchor-client",
  "anchor-lang",
+ "mpl-auction-house",
  "mpl-listing-rewards",
+ "spl-token",
 ]
 
 [[package]]

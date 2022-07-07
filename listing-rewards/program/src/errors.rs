@@ -9,4 +9,8 @@ pub enum ListingRewardsError {
     // 6001
     #[msg("Unauthorized signer")]
     SignerNotAuthorized,
+
+    // 6003
+    #[msg("Invalid collection maintainer")]
+    InvalidCollectionMaintainer,
 }

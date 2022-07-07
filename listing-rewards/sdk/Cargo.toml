@@ -7,5 +7,7 @@ edition = "2021"
 
 [dependencies]
 mpl-listing-rewards = { path = "./../program", features = ["no-entrypoint"]}
+mpl-auction-house = { path = "./../../auction-house/program", features = ["no-entrypoint"]}
 anchor-lang = "~0.24.2"
 anchor-client = "~0.24.2"
+spl-token = { version = "~3.2",  features = ["no-entrypoint"] }

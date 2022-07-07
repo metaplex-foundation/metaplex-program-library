@@ -6,11 +6,6 @@ use mpl_auction_house::{self, constants::PREFIX, AuctionHouse};
 use crate::{constants::REWARD_CENTER, errors::ListingRewardsError};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone)]
-pub enum RewardCenterVersion {
-    V0,
-}
-
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
 pub struct ListingRewardRules {
     /// time a listing must be up before is eligable for a reward in minutes
     pub warmup_minutes: u32,
@@ -20,8 +15,6 @@ pub struct ListingRewardRules {
 
 #[account]
 pub struct RewardCenter {
-    /// the version of the account
-    pub version: RewardCenterVersion,
     /// the mint of the token used as rewards
     pub token_mint: Pubkey,
     /// the auction house associated to the reward center
@@ -37,12 +30,11 @@ pub struct RewardCenter {
 impl RewardCenter {
     pub fn size() -> usize {
         8 + // deliminator
-    1 + // version
-    32 + // token_mint
-    32 + // auction_house
-    1 + 32 + // optional collection oracle
-    4 + 8 + // listing reward rules
-    1 // bump
+        32 + // token_mint
+        32 + // auction_house
+        1 + 32 + // optional collection oracle
+        4 + 8 + // listing reward rules
+        1 // bump
     }
 }
 
@@ -88,7 +80,6 @@ pub fn create_reward_center(
     let auction_house = &ctx.accounts.auction_house;
     let reward_center = &mut ctx.accounts.reward_center;
 
-    reward_center.version = RewardCenterVersion::V0;
     reward_center.token_mint = mint.key();
     reward_center.auction_house = auction_house.key();
     reward_center.collection_oracle = reward_center_params.collection_oracle;
