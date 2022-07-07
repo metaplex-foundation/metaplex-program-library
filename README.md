@@ -54,13 +54,13 @@ bash <(curl -sSf https://raw.githubusercontent.com/metaplex-foundation/sugar/mai
 ### Using Crates.io
 
 ```bash
-cargo install sugar-cli --locked
+cargo install sugar-cli
 ```
 
 ### Build From Source
 
 ```bash
-cargo install --locked --path ./
+cargo install --path ./
 ```
 
 ## Quick Start
