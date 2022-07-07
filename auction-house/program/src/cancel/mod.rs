@@ -135,9 +135,9 @@ pub struct AuctioneerCancel<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info,Auctioneer>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -172,7 +172,7 @@ pub fn auctioneer_cancel<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::Cancel,

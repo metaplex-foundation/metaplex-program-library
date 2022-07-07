@@ -32,7 +32,7 @@ pub struct UpdateAuctioneer<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump=auction_house.auctioneer_pda_bump,
+        bump=ah_auctioneer_pda.bump,
         has_one=auctioneer_authority
     )]
     pub ah_auctioneer_pda: Account<'info, Auctioneer>,

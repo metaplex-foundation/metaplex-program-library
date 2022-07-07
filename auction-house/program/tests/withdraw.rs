@@ -388,5 +388,5 @@ async fn auctioneer_withdraw_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, INVALID_SEEDS);
+    assert_error!(error, ACCOUNT_NOT_INITIALIZED);
 }

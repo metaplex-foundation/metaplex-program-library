@@ -165,4 +165,12 @@ pub enum AuctionHouseError {
     // 6040
     #[msg("Calculated partial price does not not partial price that was provided.")]
     PartialPriceMismatch,
+
+    // 6041
+    #[msg("Auction House already delegated.")]
+    AuctionHouseAlreadyDelegated,
+
+    // 6042
+    #[msg("Auctioneer Authority Mismatch")]
+    AuctioneerAuthorityMismatch
 }

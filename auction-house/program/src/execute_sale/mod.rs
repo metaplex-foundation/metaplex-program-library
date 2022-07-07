@@ -1,4 +1,6 @@
-use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
+use std::collections::BTreeMap;
+use std::ops::Deref;
+use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, Auctioneer, *};
 use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke, program_pack::Pack},
@@ -210,7 +212,8 @@ pub fn execute_sale<'info>(
     }
 
     execute_sale_logic(
-        ctx,
+        ctx.accounts,
+        ctx.remaining_accounts,
         escrow_payment_bump,
         free_trade_state_bump,
         program_as_signer_bump,
@@ -222,7 +225,7 @@ pub fn execute_sale<'info>(
 }
 
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
-#[derive(Accounts)]
+#[derive(Accounts, Clone)]
 #[instruction(
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
@@ -380,8 +383,36 @@ pub struct ExecutePartialSale<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+impl<'info> From<ExecutePartialSale<'info>>for ExecuteSale<'info> {
+    fn from(a: ExecutePartialSale<'info>) -> ExecuteSale<'info> {
+        ExecuteSale {
+            buyer: a.buyer,
+            seller: a.seller,
+            token_account: a.token_account,
+            token_mint: a.token_mint,
+            metadata: a.metadata,
+            treasury_mint: a.treasury_mint,
+            escrow_payment_account: a.escrow_payment_account,
+            seller_payment_receipt_account: a.seller_payment_receipt_account,
+            buyer_receipt_token_account: a.buyer_receipt_token_account,
+            authority: a.authority,
+            auction_house: a.auction_house,
+            auction_house_fee_account: a.auction_house_fee_account,
+            auction_house_treasury: a.auction_house_treasury,
+            buyer_trade_state: a.buyer_trade_state,
+            seller_trade_state: a.seller_trade_state,
+            free_trade_state: a.free_trade_state,
+            token_program: a.token_program,
+            system_program: a.system_program,
+            ata_program: a.ata_program,
+            program_as_signer: a.program_as_signer,
+            rent: a.rent,
+        }
+    }
+}
+
 pub fn execute_partial_sale<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+    ctx: Context<'_, '_, '_, 'info, ExecutePartialSale<'info>>,
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -396,9 +427,10 @@ pub fn execute_partial_sale<'info>(
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
-
+    let mut accounts: ExecuteSale<'info> = (*ctx.accounts).clone().into();
     execute_sale_logic(
-        ctx,
+        &mut accounts,
+        ctx.remaining_accounts,
         escrow_payment_bump,
         free_trade_state_bump,
         program_as_signer_bump,
@@ -568,9 +600,9 @@ pub struct AuctioneerExecuteSale<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -605,7 +637,7 @@ pub fn auctioneer_execute_sale<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::ExecuteSale,
@@ -613,7 +645,8 @@ pub fn auctioneer_execute_sale<'info>(
 
     // Duplicate the logic methods to avoid going over the compute limit.
     auctioneer_execute_sale_logic(
-        ctx,
+        ctx.accounts,
+        ctx.remaining_accounts,
         escrow_payment_bump,
         free_trade_state_bump,
         program_as_signer_bump,
@@ -624,7 +657,7 @@ pub fn auctioneer_execute_sale<'info>(
     )
 }
 
-#[derive(Accounts)]
+#[derive(Accounts, Clone)]
 #[instruction(
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
@@ -783,9 +816,9 @@ pub struct AuctioneerExecutePartialSale<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -798,8 +831,38 @@ pub struct AuctioneerExecutePartialSale<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+impl<'info> From<AuctioneerExecutePartialSale<'info>> for AuctioneerExecuteSale<'info> {
+    fn from(a: AuctioneerExecutePartialSale<'info>) -> AuctioneerExecuteSale<'info> {
+        AuctioneerExecuteSale {
+            buyer: a.buyer,
+            seller: a.seller,
+            token_account: a.token_account,
+            token_mint: a.token_mint,
+            metadata: a.metadata,
+            treasury_mint: a.treasury_mint,
+            escrow_payment_account: a.escrow_payment_account,
+            seller_payment_receipt_account: a.seller_payment_receipt_account,
+            buyer_receipt_token_account: a.buyer_receipt_token_account,
+            authority: a.authority,
+            auctioneer_authority: a.auctioneer_authority,
+            auction_house: a.auction_house,
+            auction_house_fee_account: a.auction_house_fee_account,
+            auction_house_treasury: a.auction_house_treasury,
+            buyer_trade_state: a.buyer_trade_state,
+            seller_trade_state: a.seller_trade_state,
+            free_trade_state: a.free_trade_state,
+            ah_auctioneer_pda: a.ah_auctioneer_pda,
+            token_program: a.token_program,
+            system_program: a.system_program,
+            ata_program: a.ata_program,
+            program_as_signer: a.program_as_signer,
+            rent: a.rent,
+        }
+    }
+}
+
 pub fn auctioneer_execute_partial_sale<'info>(
-    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
+    ctx: Context<'_, '_, '_, 'info, AuctioneerExecutePartialSale<'info>>,
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -817,15 +880,16 @@ pub fn auctioneer_execute_partial_sale<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::ExecuteSale,
     )?;
-
+    let mut accounts: AuctioneerExecuteSale<'info> = (*ctx.accounts).clone().into();
     // Duplicate the logic methods to avoid going over the compute limit.
     auctioneer_execute_sale_logic(
-        ctx,
+        &mut accounts,
+        ctx.remaining_accounts,
         escrow_payment_bump,
         free_trade_state_bump,
         program_as_signer_bump,
@@ -838,8 +902,9 @@ pub fn auctioneer_execute_partial_sale<'info>(
 
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
 #[inline(never)]
-fn auctioneer_execute_sale_logic<'info>(
-    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
+fn auctioneer_execute_sale_logic<'c, 'info>(
+    accounts: &mut AuctioneerExecuteSale<'info>,
+    remaining_accounts: &'c[AccountInfo<'info>],
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -848,27 +913,27 @@ fn auctioneer_execute_sale_logic<'info>(
     partial_order_size: Option<u64>,
     partial_order_price: Option<u64>,
 ) -> Result<()> {
-    let buyer = &ctx.accounts.buyer;
-    let seller = &ctx.accounts.seller;
-    let token_account = &ctx.accounts.token_account;
-    let token_mint = &ctx.accounts.token_mint;
-    let metadata = &ctx.accounts.metadata;
-    let treasury_mint = &ctx.accounts.treasury_mint;
-    let seller_payment_receipt_account = &ctx.accounts.seller_payment_receipt_account;
-    let buyer_receipt_token_account = &ctx.accounts.buyer_receipt_token_account;
-    let escrow_payment_account = &ctx.accounts.escrow_payment_account;
-    let authority = &ctx.accounts.authority;
-    let auction_house = &ctx.accounts.auction_house;
-    let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-    let auction_house_treasury = &ctx.accounts.auction_house_treasury;
-    let buyer_trade_state = &ctx.accounts.buyer_trade_state;
-    let seller_trade_state = &ctx.accounts.seller_trade_state;
-    let free_trade_state = &ctx.accounts.free_trade_state;
-    let token_program = &ctx.accounts.token_program;
-    let system_program = &ctx.accounts.system_program;
-    let ata_program = &ctx.accounts.ata_program;
-    let program_as_signer = &ctx.accounts.program_as_signer;
-    let rent = &ctx.accounts.rent;
+    let buyer = &accounts.buyer;
+    let seller = &accounts.seller;
+    let token_account = &accounts.token_account;
+    let token_mint = &accounts.token_mint;
+    let metadata = &accounts.metadata;
+    let treasury_mint = &accounts.treasury_mint;
+    let seller_payment_receipt_account = &accounts.seller_payment_receipt_account;
+    let buyer_receipt_token_account = &accounts.buyer_receipt_token_account;
+    let escrow_payment_account = &accounts.escrow_payment_account;
+    let authority = &accounts.authority;
+    let auction_house = &accounts.auction_house;
+    let auction_house_fee_account = &accounts.auction_house_fee_account;
+    let auction_house_treasury = &accounts.auction_house_treasury;
+    let buyer_trade_state = &accounts.buyer_trade_state;
+    let seller_trade_state = &accounts.seller_trade_state;
+    let free_trade_state = &accounts.free_trade_state;
+    let token_program = &accounts.token_program;
+    let system_program = &accounts.system_program;
+    let ata_program = &accounts.ata_program;
+    let program_as_signer = &accounts.program_as_signer;
+    let rent = &accounts.rent;
 
     let metadata_clone = metadata.to_account_info();
     let escrow_clone = escrow_payment_account.to_account_info();
@@ -1048,7 +1113,7 @@ fn auctioneer_execute_sale_logic<'info>(
     };
 
     let buyer_leftover_after_royalties = pay_creator_fees(
-        &mut ctx.remaining_accounts.iter(),
+        &mut remaining_accounts.iter(),
         &metadata_clone,
         &escrow_clone,
         &auction_house_clone,
@@ -1243,8 +1308,9 @@ fn auctioneer_execute_sale_logic<'info>(
 
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
 #[inline(never)]
-fn execute_sale_logic<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+fn execute_sale_logic<'c, 'info>(
+    accounts: &mut ExecuteSale<'info>,
+    remaining_accounts: &'c[AccountInfo<'info>],
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -1253,27 +1319,27 @@ fn execute_sale_logic<'info>(
     partial_order_size: Option<u64>,
     partial_order_price: Option<u64>,
 ) -> Result<()> {
-    let buyer = &ctx.accounts.buyer;
-    let seller = &ctx.accounts.seller;
-    let token_account = &ctx.accounts.token_account;
-    let token_mint = &ctx.accounts.token_mint;
-    let metadata = &ctx.accounts.metadata;
-    let treasury_mint = &ctx.accounts.treasury_mint;
-    let seller_payment_receipt_account = &ctx.accounts.seller_payment_receipt_account;
-    let buyer_receipt_token_account = &ctx.accounts.buyer_receipt_token_account;
-    let escrow_payment_account = &ctx.accounts.escrow_payment_account;
-    let authority = &ctx.accounts.authority;
-    let auction_house = &ctx.accounts.auction_house;
-    let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-    let auction_house_treasury = &ctx.accounts.auction_house_treasury;
-    let buyer_trade_state = &ctx.accounts.buyer_trade_state;
-    let seller_trade_state = &ctx.accounts.seller_trade_state;
-    let free_trade_state = &ctx.accounts.free_trade_state;
-    let token_program = &ctx.accounts.token_program;
-    let system_program = &ctx.accounts.system_program;
-    let ata_program = &ctx.accounts.ata_program;
-    let program_as_signer = &ctx.accounts.program_as_signer;
-    let rent = &ctx.accounts.rent;
+    let buyer = &accounts.buyer;
+    let seller = &accounts.seller;
+    let token_account = &accounts.token_account;
+    let token_mint = &accounts.token_mint;
+    let metadata = &accounts.metadata;
+    let treasury_mint = &accounts.treasury_mint;
+    let seller_payment_receipt_account = &accounts.seller_payment_receipt_account;
+    let buyer_receipt_token_account = &accounts.buyer_receipt_token_account;
+    let escrow_payment_account = &accounts.escrow_payment_account;
+    let authority = &accounts.authority;
+    let auction_house = &accounts.auction_house;
+    let auction_house_fee_account = &accounts.auction_house_fee_account;
+    let auction_house_treasury = &accounts.auction_house_treasury;
+    let buyer_trade_state = &accounts.buyer_trade_state;
+    let seller_trade_state = &accounts.seller_trade_state;
+    let free_trade_state = &accounts.free_trade_state;
+    let token_program = &accounts.token_program;
+    let system_program = &accounts.system_program;
+    let ata_program = &accounts.ata_program;
+    let program_as_signer = &accounts.program_as_signer;
+    let rent = &accounts.rent;
 
     let metadata_clone = metadata.to_account_info();
     let escrow_clone = escrow_payment_account.to_account_info();
@@ -1458,7 +1524,7 @@ fn execute_sale_logic<'info>(
     };
 
     let buyer_leftover_after_royalties = pay_creator_fees(
-        &mut ctx.remaining_accounts.iter(),
+        &mut remaining_accounts.iter(),
         &metadata_clone,
         &escrow_clone,
         &auction_house_clone,

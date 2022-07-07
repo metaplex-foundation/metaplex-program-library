@@ -9,10 +9,7 @@ use anchor_lang::{
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::program_memory::sol_memset;
 
-use crate::{
-    constants::*, errors::AuctionHouseError, utils::*, AuctionHouse, AuthorityScope,
-    TRADE_STATE_SIZE,
-};
+use crate::{constants::*, errors::AuctionHouseError, utils::*, AuctionHouse, AuthorityScope, TRADE_STATE_SIZE, Auctioneer};
 
 /// Accounts for the [`public_bid` handler](fn.public_bid.html).
 #[derive(Accounts)]
@@ -225,9 +222,9 @@ pub struct AuctioneerPublicBuy<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info,Auctioneer>,
 
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -492,18 +489,15 @@ pub struct AuctioneerBuy<'info> {
         bump = trade_state_bump
     )]
     buyer_trade_state: UncheckedAccount<'info>,
-
-    /// CHECK: Not dangerous. Account seeds checked in constraint.
-    /// The auctioneer PDA owned by Auction House storing scopes.
     #[account(
         seeds = [
             AUCTIONEER.as_bytes(),
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump,
+        bump = ah_auctioneer_pda.bump,
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -743,7 +737,7 @@ pub fn auctioneer_bid_logic<'info>(
     buyer_trade_state: UncheckedAccount<'info>,
     authority: UncheckedAccount<'info>,
     auctioneer_authority: Signer<'info>,
-    ah_auctioneer_pda: UncheckedAccount<'info>,
+    ah_auctioneer_pda: Account<'info, Auctioneer>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
     rent: Sysvar<'info, Rent>,
@@ -753,16 +747,15 @@ pub fn auctioneer_bid_logic<'info>(
     token_size: u64,
     public: bool,
 ) -> Result<()> {
-    let ah_auctioneer_pda_account = ah_auctioneer_pda.to_account_info();
 
     if !auction_house.has_auctioneer {
         return Err(AuctionHouseError::NoAuctioneerProgramSet.into());
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
-        &ah_auctioneer_pda_account,
+        &ah_auctioneer_pda,
         AuthorityScope::Buy,
     )?;
 

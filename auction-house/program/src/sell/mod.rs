@@ -220,9 +220,9 @@ pub struct AuctioneerSell<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
@@ -276,7 +276,7 @@ pub fn auctioneer_sell<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::Sell,
