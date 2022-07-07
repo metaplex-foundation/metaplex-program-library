@@ -5,11 +5,11 @@
 # To suppress prompts, you will need to set/export the following variables:
 #
 # ENV_URL="mainnet-beta"
-# RPC="https://ssc-dao.genesysgo.net/"
+# RPC="https://ssc-dao.genesysgo.net"
 # STORAGE="bundlr"
 #
 # ENV_URL="devnet"
-# RPC="https://devnet.genesysgo.net/"
+# RPC="https://devnet.genesysgo.net"
 # STORAGE="bundlr"
 #
 # ITEMS=10
@@ -70,11 +70,13 @@ function default_settings() {
     TEST_IMAGE="n"
     HIDDEN="n"
 
+    STORAGE="bundlr"
     ARWEAVE_JWK="null"
     INFURA_ID="null"
     INFURA_SECRET="null"
     AWS_BUCKET="null"
     NFT_STORAGE_TOKEN="null"
+    SHDW_STORAGE_ACCOUNT="null"
 }
 
 function max_settings() {
@@ -88,23 +90,23 @@ function max_settings() {
     TEST_IMAGE="n"
     HIDDEN="n"
 
+    STORAGE="bundlr"
     ARWEAVE_JWK="null"
     INFURA_ID="null"
     INFURA_SECRET="null"
     AWS_BUCKET="null"
     NFT_STORAGE_TOKEN="null"
+    SHDW_STORAGE_ACCOUNT="null"
 }
 
 function mainnet_env() {
     ENV_URL="mainnet-beta"
-    RPC="https://ssc-dao.genesysgo.net/"
-    STORAGE="bundlr"
+    RPC="https://ssc-dao.genesysgo.net"
 }
 
 function devnet_env() {
     ENV_URL="devnet"
-    RPC="https://devnet.genesysgo.net/"
-    STORAGE="bundlr"
+    RPC="https://devnet.genesysgo.net"
 }
 
 #-----------------------------------------------------------------------------#
@@ -188,8 +190,8 @@ if [ -z ${ENV_URL+x} ]; then
     echo -n "$(CYN "Select the environment [1-2]") (default 1): "
     read Input
     case "$Input" in
-        1) ENV_URL="devnet" ;;
-        2) ENV_URL="mainnet-beta" ;;
+        1) devnet_env ;;
+        2) mainnet_env ;;
     esac
 fi
 
@@ -218,12 +220,14 @@ if [ -z ${STORAGE+x} ]; then
     echo "1. bundlr (default)"
     echo "2. aws"
     echo "3. nft_storage"
-    echo  -n "$(CYN "Select the storage type [1-3]") (default 1): "
+    echo "4. shdw"
+    echo  -n "$(CYN "Select the storage type [1-4]") (default 1): "
     read Input
     case "$Input" in
         1) STORAGE="bundlr" ;;
         2) STORAGE="aws" ;;
-        3) STORAGE="nft_storage"
+        3) STORAGE="nft_storage" ;;
+        4) STORAGE="shdw" ;;
     esac
 fi
 
@@ -263,6 +267,15 @@ if [ -z ${NFT_STORAGE_TOKEN+x} ]; then
     if [ "$STORAGE" = "nft_storage" ]; then
         echo -n $(CYN "Authentication token: ")
         read NFT_STORAGE_TOKEN
+    fi
+fi
+
+if [ -z ${SHDW_STORAGE_ACCOUNT+x} ]; then
+    SHDW_STORAGE_ACCOUNT="null"
+
+    if [ "$STORAGE" = "shdw" ]; then
+        echo -n $(CYN "SHDW storage account: ")
+        read SHDW_STORAGE_ACCOUNT
     fi
 fi
 
@@ -566,6 +579,12 @@ else
     HIDDEN_SETTINGS="null"
 fi
 
+SHDW=null
+
+if [ ! "$SHDW_STORAGE" = "null" ]; then
+    SHDW="\"${SHDW_STORAGE_ACCOUNT}\""
+fi
+
 cat >$CONFIG_FILE <<-EOM
 {
     "price": 0.1,
@@ -585,6 +604,7 @@ cat >$CONFIG_FILE <<-EOM
     "ipfsInfuraSecret": "${INFURA_SECRET}",
     "awsS3Bucket": "${AWS_BUCKET}",
     "nftStorageAuthToken": "${NFT_STORAGE_TOKEN}",
+    "shdwStorageAccount": $SHDW,
     "retainAuthority": true,
     "isMutable": true,
     "creators": [
@@ -617,6 +637,7 @@ INFURA_ID="$INFURA_ID"
 INFURA_SECRET="$INFURA_SECRET"
 AWS_BUCKET="$AWS_BUCKET"
 NFT_STORAGE_TOKEN="$NFT_STORAGE_TOKEN"
+SHDW_STORAGE_ACCOUNT="$SHDW_STORAGE_ACCOUNT"
 
 ENV_URL="$ENV_URL"
 RPC="$RPC"

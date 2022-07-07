@@ -279,5 +279,8 @@ pub async fn initialize(
         UploadMethod::NftStorage => {
             Box::new(NftStorageMethod::new(config_data).await?) as Box<dyn Uploader>
         }
+        UploadMethod::SHDW => {
+            Box::new(SHDWMethod::new(sugar_config, config_data).await?) as Box<dyn Uploader>
+        }
     })
 }

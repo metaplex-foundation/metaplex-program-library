@@ -3854,17 +3854,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "shadow-drive-user-staking"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a7c3be826d35652612f71c78d2fade4c672c912d2939b421c75c0577edcde8c"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "hex",
-]
-
-[[package]]
 name = "shank"
 version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4774,7 +4763,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "shadow-drive-user-staking",
  "shellexpand",
  "solana-account-decoder",
  "solana-client",

@@ -73,6 +73,9 @@ pub struct ConfigData {
 
     #[serde(serialize_with = "to_option_string")]
     pub nft_storage_auth_token: Option<String>,
+
+    #[serde(serialize_with = "to_option_string")]
+    pub shdw_storage_account: Option<String>,
 }
 
 pub fn to_string<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
@@ -298,6 +301,8 @@ pub enum UploadMethod {
     #[serde(rename = "aws")]
     AWS,
     NftStorage,
+    #[serde(rename = "shdw")]
+    SHDW,
 }
 
 impl fmt::Display for UploadMethod {
