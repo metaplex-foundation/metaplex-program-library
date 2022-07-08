@@ -14,7 +14,7 @@ use crate::{
 };
 use borsh::BorshSerialize;
 use mpl_auction::processor::AuctionData;
-use mpl_token_metadata::state::{MasterEditionV1, Metadata};
+use mpl_token_metadata::state::{MasterEditionV1, Metadata, TokenMetadataAccount};
 use mpl_token_vault::state::SafetyDepositBox;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},

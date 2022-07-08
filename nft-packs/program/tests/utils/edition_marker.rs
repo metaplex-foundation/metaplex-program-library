@@ -13,7 +13,6 @@ use solana_program::{
 use solana_program_test::*;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -93,7 +92,7 @@ impl TestEditionMarker {
         vault: &TestVault,
         safety_deposit_box: &Pubkey,
         store: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
         create_token_account(
             context,
@@ -148,7 +147,7 @@ impl TestEditionMarker {
         authority: &Keypair,
         token_authority: &Keypair,
         master_token_acc: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(context, &self.mint, &authority.pubkey(), None).await?;
         create_token_account(
             context,
@@ -194,7 +193,7 @@ impl TestEditionMarker {
     pub async fn create_with_invalid_token_program(
         &self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
         let program_id = mpl_token_metadata::id();
 

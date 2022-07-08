@@ -15,7 +15,6 @@ use solana_sdk::{
     signature::Keypair,
     signer::Signer,
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -471,7 +470,7 @@ async fn fail_request_without_clean_up() {
 
     assert_transport_error!(
         result.unwrap_err(),
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::IllegalOwner
         ))
@@ -773,7 +772,7 @@ async fn fail_request_with_invalid_voucher() {
 
     assert_transport_error!(
         err,
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::IllegalOwner
         ))

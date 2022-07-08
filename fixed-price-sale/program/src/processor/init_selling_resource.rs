@@ -1,6 +1,7 @@
 use crate::{error::ErrorCode, state::SellingResourceState, utils::*, InitSellingResource};
 use anchor_lang::prelude::*;
 use anchor_spl::token;
+use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> InitSellingResource<'info> {
     pub fn process(
@@ -44,7 +45,7 @@ impl<'info> InitSellingResource<'info> {
             ],
         )?;
 
-        let metadata =
+        let metadata: mpl_token_metadata::state::Metadata =
             mpl_token_metadata::state::Metadata::from_account_info(&metadata.to_account_info())?;
 
         // Check, that at least one creator exists in primary sale
@@ -58,7 +59,7 @@ impl<'info> InitSellingResource<'info> {
             }
         }
 
-        let master_edition =
+        let master_edition: mpl_token_metadata::state::MasterEditionV2 =
             mpl_token_metadata::state::MasterEditionV2::from_account_info(master_edition_info)?;
 
         let mut actual_max_supply = max_supply;

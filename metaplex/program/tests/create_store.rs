@@ -18,7 +18,7 @@ use solana_sdk::{
 macro_rules! assert_custom_error {
     ($error:expr, $matcher:pat) => {
         match $error {
-            TransportError::TransactionError(TransactionError::InstructionError(
+            BanksClientError::TransactionError(TransactionError::InstructionError(
                 0,
                 InstructionError::Custom(x),
             )) => match FromPrimitive::from_i32(x as i32) {

@@ -176,7 +176,7 @@ async fn init_native_success_reinitialize_fail() {
     .await
     .unwrap_err();
     match hacked_auction_house {
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::Custom(0),
         )) => (),

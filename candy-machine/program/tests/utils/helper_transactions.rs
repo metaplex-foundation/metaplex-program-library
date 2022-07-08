@@ -35,7 +35,7 @@ pub async fn initialize_candy_machine(
     wallet: &Pubkey,
     candy_data: CandyMachineData,
     token_info: TokenInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let items_available = candy_data.items_available;
     let candy_account_size = if candy_data.hidden_settings.is_some() {
         CONFIG_ARRAY_START
@@ -96,7 +96,7 @@ pub async fn update_candy_machine(
     data: CandyMachineData,
     wallet: &Pubkey,
     token_mint: Option<Pubkey>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut accounts = mpl_candy_machine::accounts::UpdateCandyMachine {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -129,7 +129,7 @@ pub async fn add_config_lines(
     authority: &Keypair,
     index: u32,
     config_lines: Vec<ConfigLine>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::AddConfigLines {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -161,7 +161,7 @@ pub async fn add_all_config_lines(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
     authority: &Keypair,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let candy_machine_account = context
         .banks_client
         .get_account(*candy_machine)
@@ -192,7 +192,7 @@ pub async fn set_collection(
     candy_machine: &Pubkey,
     authority: &Keypair,
     collection_info: &CollectionInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::SetCollection {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -230,7 +230,7 @@ pub async fn remove_collection(
     candy_machine: &Pubkey,
     authority: &Keypair,
     collection_info: &CollectionInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let accounts = mpl_candy_machine::accounts::RemoveCollection {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
@@ -272,7 +272,7 @@ pub async fn mint_nft(
     whitelist_info: WhitelistInfo,
     collection_info: CollectionInfo,
     gateway_info: GatekeeperInfo,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let metadata = new_nft.metadata_pubkey;
     let master_edition = new_nft.pubkey;
     let mint = new_nft.mint_pubkey;

@@ -251,7 +251,7 @@ mod save_primary_metadata_creators {
             .unwrap_err();
         match tx_error {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -350,7 +350,7 @@ mod save_primary_metadata_creators {
             .unwrap_err();
         match tx_error {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -453,7 +453,7 @@ mod save_primary_metadata_creators {
             .unwrap_err();
         match tx_error {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
