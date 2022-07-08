@@ -231,7 +231,7 @@ pub mod auction_house {
         auction_house.seller_fee_basis_points = seller_fee_basis_points;
         auction_house.requires_sign_off = requires_sign_off;
         auction_house.can_change_sale_price = can_change_sale_price;
-        auction_house.creator = authority.key();
+        auction_house.creator = payer.key();
         auction_house.authority = authority.key();
         auction_house.treasury_mint = treasury_mint.key();
         auction_house.auction_house_fee_account = auction_house_fee_account.key();
