@@ -550,18 +550,6 @@ impl TokenMetadataAccount for Edition {
     }
 }
 
-impl Edition {
-    pub fn from_account_info(a: &AccountInfo) -> Result<Edition, ProgramError> {
-        let ed: Edition = Edition::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(ed)
-    }
-}
-
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -600,8 +588,18 @@ pub fn get_reservation_list(
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     let reservation_list_result: Result<Box<dyn ReservationList>, ProgramError> = match version {
-        3 => Ok(Box::new(ReservationListV1::from_account_info(account)?)),
-        5 => Ok(Box::new(ReservationListV2::from_account_info(account)?)),
+        3 => {
+            let reservation_list = Box::new(ReservationListV1::from_account_info::<
+                ReservationListV1,
+            >(account)?);
+            Ok(reservation_list)
+        }
+        5 => {
+            let reservation_list = Box::new(ReservationListV2::from_account_info::<
+                ReservationListV2,
+            >(account)?);
+            Ok(reservation_list)
+        }
         _ => Err(MetadataError::DataTypeMismatch.into()),
     };
 
@@ -728,18 +726,6 @@ impl ReservationList for ReservationListV2 {
     }
 }
 
-impl ReservationListV2 {
-    pub fn from_account_info(a: &AccountInfo) -> Result<ReservationListV2, ProgramError> {
-        let res: ReservationListV2 = ReservationListV2::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(res)
-    }
-}
-
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -841,18 +827,6 @@ impl ReservationList for ReservationListV1 {
     fn set_current_reservation_spots(&mut self, _: u64) {}
 }
 
-impl ReservationListV1 {
-    pub fn from_account_info(a: &AccountInfo) -> Result<ReservationListV1, ProgramError> {
-        let res: ReservationListV1 = ReservationListV1::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(res)
-    }
-}
-
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -890,16 +864,6 @@ impl TokenMetadataAccount for EditionMarker {
 }
 
 impl EditionMarker {
-    pub fn from_account_info(a: &AccountInfo) -> Result<EditionMarker, ProgramError> {
-        let res: EditionMarker = EditionMarker::safe_deserialize(&a.data.borrow_mut())
-            .map_err(|_| MetadataError::DataTypeMismatch)?;
-
-        // Check that this is a `token-metadata` owned account.
-        assert_owned_by(a, &ID)?;
-
-        Ok(res)
-    }
-
     fn get_edition_offset_from_starting_index(edition: u64) -> Result<usize, ProgramError> {
         Ok(edition
             .checked_rem(EDITION_MARKER_BIT_SIZE)

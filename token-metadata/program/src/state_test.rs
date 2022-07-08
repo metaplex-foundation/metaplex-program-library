@@ -376,7 +376,7 @@ mod edition {
             1_000_000_000,
         );
 
-        let data = Edition::from_account_info(&account_info).unwrap();
+        let data = Edition::from_account_info::<Edition>(&account_info).unwrap();
         assert_eq!(data.key, Key::EditionV1);
         assert_eq!(data, expected_data);
     }
@@ -405,7 +405,7 @@ mod edition {
             1_000_000_000,
         );
 
-        let error = Edition::from_account_info(&account_info).unwrap_err();
+        let error = Edition::from_account_info::<Edition>(&account_info).unwrap_err();
         assert_eq!(error, MetadataError::DataTypeMismatch.into());
     }
 }
@@ -439,7 +439,7 @@ mod edition_marker {
             1_000_000_000,
         );
 
-        let data = EditionMarker::from_account_info(&account_info).unwrap();
+        let data = EditionMarker::from_account_info::<EditionMarker>(&account_info).unwrap();
         assert_eq!(data.key, Key::EditionMarker);
         assert_eq!(data, expected_data);
     }
@@ -468,7 +468,7 @@ mod edition_marker {
             1_000_000_000,
         );
 
-        let error = EditionMarker::from_account_info(&account_info).unwrap_err();
+        let error = EditionMarker::from_account_info::<EditionMarker>(&account_info).unwrap_err();
         assert_eq!(error, MetadataError::DataTypeMismatch.into());
     }
 }

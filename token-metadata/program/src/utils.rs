@@ -1142,7 +1142,8 @@ pub fn process_mint_new_edition_from_master_edition_via_token_logic<'a>(
         )?;
     }
 
-    let mut edition_marker = EditionMarker::from_account_info(edition_marker_info)?;
+    let mut edition_marker =
+        EditionMarker::from_account_info::<EditionMarker>(edition_marker_info)?;
     edition_marker.key = Key::EditionMarker;
     if edition_marker.edition_taken(edition)? {
         return Err(MetadataError::AlreadyInitialized.into());
@@ -1354,7 +1355,7 @@ pub fn is_print_edition(
     mint_decimals: u8,
     mint_supply: u64,
 ) -> bool {
-    let is_correct_type = Edition::from_account_info(edition_account_info).is_ok();
+    let is_correct_type = Edition::from_account_info::<Edition>(edition_account_info).is_ok();
 
     is_correct_type && mint_decimals == 0 && mint_supply == 1
 }
