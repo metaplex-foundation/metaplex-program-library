@@ -222,6 +222,11 @@ pub mod auction_house {
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
 
+        if ctx.accounts.payer.key != ctx.accounts.authority.key {
+            msg!("Authority must match payer");
+            return Err(ErrorCode::PublicKeyMismatch.into())
+        }
+
         auction_house.bump = *ctx.bumps.get("auction_house").unwrap();
         auction_house.fee_payer_bump = fee_payer_bump;
         auction_house.treasury_bump = treasury_bump;
