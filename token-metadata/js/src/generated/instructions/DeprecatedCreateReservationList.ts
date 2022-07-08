@@ -36,6 +36,8 @@ export type DeprecatedCreateReservationListInstructionAccounts = {
   masterEdition: web3.PublicKey;
   resource: web3.PublicKey;
   metadata: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
 export const deprecatedCreateReservationListInstructionDiscriminator = 6;
@@ -50,57 +52,56 @@ export const deprecatedCreateReservationListInstructionDiscriminator = 6;
  */
 export function createDeprecatedCreateReservationListInstruction(
   accounts: DeprecatedCreateReservationListInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { reservationList, payer, updateAuthority, masterEdition, resource, metadata } = accounts;
-
   const [data] = DeprecatedCreateReservationListStruct.serialize({
     instructionDiscriminator: deprecatedCreateReservationListInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: reservationList,
+      pubkey: accounts.reservationList,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: accounts.updateAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: resource,
+      pubkey: accounts.resource,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

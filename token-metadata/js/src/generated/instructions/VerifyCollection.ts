@@ -49,54 +49,48 @@ export const verifyCollectionInstructionDiscriminator = 18;
  * @category VerifyCollection
  * @category generated
  */
-export function createVerifyCollectionInstruction(accounts: VerifyCollectionInstructionAccounts) {
-  const {
-    metadata,
-    collectionAuthority,
-    payer,
-    collectionMint,
-    collection,
-    collectionMasterEditionAccount,
-  } = accounts;
-
+export function createVerifyCollectionInstruction(
+  accounts: VerifyCollectionInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+) {
   const [data] = VerifyCollectionStruct.serialize({
     instructionDiscriminator: verifyCollectionInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: collectionAuthority,
-      isWritable: true,
-      isSigner: true,
-    },
-    {
-      pubkey: payer,
+      pubkey: accounts.collectionAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: collectionMint,
+      pubkey: accounts.payer,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.collectionMint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: collection,
+      pubkey: accounts.collection,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: collectionMasterEditionAccount,
+      pubkey: accounts.collectionMasterEditionAccount,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

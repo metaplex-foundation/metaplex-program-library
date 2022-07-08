@@ -1,5 +1,12 @@
-use crate::{deser::meta_deser, error::MetadataError, utils::try_from_slice_checked};
-use borsh::{BorshDeserialize, BorshSerialize};
+use std::io::ErrorKind;
+
+use crate::{
+    deser::meta_deser_unchecked,
+    error::MetadataError,
+    utils::{assert_owned_by, is_correct_account_type, try_from_slice_checked},
+    ID,
+};
+use borsh::{maybestd::io::Error as BorshError, BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
 use solana_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, program_error::ProgramError,
@@ -82,6 +89,41 @@ pub const USE_AUTHORITY_RECORD_SIZE: usize = 18; //8 byte padding
 
 pub const COLLECTION_AUTHORITY_RECORD_SIZE: usize = 11; //10 byte padding
 
+pub trait TokenMetadataAccount {
+    fn key() -> Key;
+
+    fn size() -> usize;
+
+    fn pad_length(buf: &mut Vec<u8>) -> Result<(), MetadataError> {
+        let padding_length = Self::size()
+            .checked_sub(buf.len())
+            .ok_or(MetadataError::NumericalOverflowError)?;
+        buf.extend(vec![0; padding_length]);
+        Ok(())
+    }
+
+    fn safe_deserialize<T: BorshDeserialize>(mut data: &[u8]) -> Result<T, BorshError> {
+        if !is_correct_account_type(data, Self::key(), Self::size()) {
+            return Err(BorshError::new(ErrorKind::Other, "DataTypeMismatch"));
+        }
+
+        let result: T = T::deserialize(&mut data)?;
+
+        Ok(result)
+    }
+
+    fn from_account_info<T: BorshDeserialize>(a: &AccountInfo) -> Result<T, ProgramError>
+where {
+        let ua: T = Self::safe_deserialize(&a.data.borrow_mut())
+            .map_err(|_| MetadataError::DataTypeMismatch)?;
+
+        // Check that this is a `token-metadata` owned account.
+        assert_owned_by(a, &ID)?;
+
+        Ok(ua)
+    }
+}
+
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
@@ -99,7 +141,7 @@ pub enum Key {
 }
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Default, PartialEq, Debug, Clone)]
 pub struct Data {
     /// The name of the asset
     pub name: String,
@@ -191,16 +233,27 @@ pub struct UseAuthorityRecord {
     pub bump: u8,
 }
 
-impl UseAuthorityRecord {
-    pub fn from_account_info(a: &AccountInfo) -> Result<UseAuthorityRecord, ProgramError> {
-        let ua: UseAuthorityRecord = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::UseAuthorityRecord,
-            USE_AUTHORITY_RECORD_SIZE,
-        )?;
-        Ok(ua)
+impl Default for UseAuthorityRecord {
+    fn default() -> Self {
+        UseAuthorityRecord {
+            key: Key::UseAuthorityRecord,
+            allowed_uses: 0,
+            bump: 255,
+        }
+    }
+}
+
+impl TokenMetadataAccount for UseAuthorityRecord {
+    fn key() -> Key {
+        Key::UseAuthorityRecord
     }
 
+    fn size() -> usize {
+        USE_AUTHORITY_RECORD_SIZE
+    }
+}
+
+impl UseAuthorityRecord {
     pub fn from_bytes(b: &[u8]) -> Result<UseAuthorityRecord, ProgramError> {
         let ua: UseAuthorityRecord =
             try_from_slice_checked(b, Key::UseAuthorityRecord, USE_AUTHORITY_RECORD_SIZE)?;
@@ -220,17 +273,26 @@ pub struct CollectionAuthorityRecord {
     pub bump: u8, //1
 }
 
-impl CollectionAuthorityRecord {
-    pub fn from_account_info(a: &AccountInfo) -> Result<CollectionAuthorityRecord, ProgramError> {
-        let ua: CollectionAuthorityRecord = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::CollectionAuthorityRecord,
-            COLLECTION_AUTHORITY_RECORD_SIZE,
-        )?;
+impl Default for CollectionAuthorityRecord {
+    fn default() -> Self {
+        CollectionAuthorityRecord {
+            key: Key::CollectionAuthorityRecord,
+            bump: 255,
+        }
+    }
+}
 
-        Ok(ua)
+impl TokenMetadataAccount for CollectionAuthorityRecord {
+    fn key() -> Key {
+        Key::CollectionAuthorityRecord
     }
 
+    fn size() -> usize {
+        COLLECTION_AUTHORITY_RECORD_SIZE
+    }
+}
+
+impl CollectionAuthorityRecord {
     pub fn from_bytes(b: &[u8]) -> Result<CollectionAuthorityRecord, ProgramError> {
         let ca: CollectionAuthorityRecord = try_from_slice_checked(
             b,
@@ -273,17 +335,40 @@ pub struct Metadata {
     pub collection_details: Option<CollectionDetails>,
 }
 
-impl Metadata {
-    pub fn from_account_info(a: &AccountInfo) -> Result<Metadata, ProgramError> {
-        let md: Metadata = meta_deser(&mut a.data.borrow_mut().as_ref())?;
-
-        Ok(md)
+impl Default for Metadata {
+    fn default() -> Self {
+        Metadata {
+            key: Key::MetadataV1,
+            update_authority: Pubkey::default(),
+            mint: Pubkey::default(),
+            data: Data::default(),
+            primary_sale_happened: false,
+            is_mutable: false,
+            edition_nonce: None,
+            token_standard: None,
+            collection: None,
+            uses: None,
+            collection_details: None,
+        }
     }
 }
 
+impl TokenMetadataAccount for Metadata {
+    fn key() -> Key {
+        Key::MetadataV1
+    }
+
+    fn size() -> usize {
+        MAX_METADATA_LEN
+    }
+}
+
+// We have a custom implementation of BorshDeserialize for Metadata because of corrupted metadata issues
+// caused by resizing of the Creators array. We use a custom `meta_deser_unchecked` function
+// that has fallback values for corrupted fields.
 impl borsh::de::BorshDeserialize for Metadata {
-    fn deserialize(buf: &mut &[u8]) -> ::core::result::Result<Self, borsh::maybestd::io::Error> {
-        let md = meta_deser(buf)?;
+    fn deserialize(buf: &mut &[u8]) -> ::core::result::Result<Self, BorshError> {
+        let md = meta_deser_unchecked(buf)?;
         Ok(md)
     }
 }
@@ -301,8 +386,14 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     let master_edition_result: Result<Box<dyn MasterEdition>, ProgramError> = match version {
-        2 => Ok(Box::new(MasterEditionV1::from_account_info(account)?)),
-        6 => Ok(Box::new(MasterEditionV2::from_account_info(account)?)),
+        2 => {
+            let me: MasterEditionV1 = MasterEditionV1::from_account_info(account)?;
+            Ok(Box::new(me))
+        }
+        6 => {
+            let me: MasterEditionV2 = MasterEditionV2::from_account_info(account)?;
+            Ok(Box::new(me))
+        }
         _ => Err(MetadataError::DataTypeMismatch.into()),
     };
 
@@ -318,6 +409,26 @@ pub struct MasterEditionV2 {
     pub supply: u64,
 
     pub max_supply: Option<u64>,
+}
+
+impl Default for MasterEditionV2 {
+    fn default() -> Self {
+        MasterEditionV2 {
+            key: Key::MasterEditionV2,
+            supply: 0,
+            max_supply: Some(0),
+        }
+    }
+}
+
+impl TokenMetadataAccount for MasterEditionV2 {
+    fn key() -> Key {
+        Key::MasterEditionV2
+    }
+
+    fn size() -> usize {
+        MAX_MASTER_EDITION_LEN
+    }
 }
 
 impl MasterEdition for MasterEditionV2 {
@@ -340,18 +451,6 @@ impl MasterEdition for MasterEditionV2 {
     fn save(&self, account: &AccountInfo) -> ProgramResult {
         BorshSerialize::serialize(self, &mut *account.data.borrow_mut())?;
         Ok(())
-    }
-}
-
-impl MasterEditionV2 {
-    pub fn from_account_info(a: &AccountInfo) -> Result<MasterEditionV2, ProgramError> {
-        let me: MasterEditionV2 = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::MasterEditionV2,
-            MAX_MASTER_EDITION_LEN,
-        )?;
-
-        Ok(me)
     }
 }
 
@@ -381,6 +480,16 @@ pub struct MasterEditionV1 {
     pub one_time_printing_authorization_mint: Pubkey,
 }
 
+impl TokenMetadataAccount for MasterEditionV1 {
+    fn key() -> Key {
+        Key::MasterEditionV1
+    }
+
+    fn size() -> usize {
+        MAX_MASTER_EDITION_LEN
+    }
+}
+
 impl MasterEdition for MasterEditionV1 {
     fn key(&self) -> Key {
         self.key
@@ -404,18 +513,6 @@ impl MasterEdition for MasterEditionV1 {
     }
 }
 
-impl MasterEditionV1 {
-    pub fn from_account_info(a: &AccountInfo) -> Result<MasterEditionV1, ProgramError> {
-        let me: MasterEditionV1 = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::MasterEditionV1,
-            MAX_MASTER_EDITION_LEN,
-        )?;
-
-        Ok(me)
-    }
-}
-
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
@@ -433,12 +530,23 @@ pub struct Edition {
     pub edition: u64,
 }
 
-impl Edition {
-    pub fn from_account_info(a: &AccountInfo) -> Result<Edition, ProgramError> {
-        let ed: Edition =
-            try_from_slice_checked(&a.data.borrow_mut(), Key::EditionV1, MAX_EDITION_LEN)?;
+impl Default for Edition {
+    fn default() -> Self {
+        Edition {
+            key: Key::EditionV1,
+            parent: Pubkey::default(),
+            edition: 0,
+        }
+    }
+}
 
-        Ok(ed)
+impl TokenMetadataAccount for Edition {
+    fn key() -> Key {
+        Key::EditionV1
+    }
+
+    fn size() -> usize {
+        MAX_EDITION_LEN
     }
 }
 
@@ -480,8 +588,18 @@ pub fn get_reservation_list(
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     let reservation_list_result: Result<Box<dyn ReservationList>, ProgramError> = match version {
-        3 => Ok(Box::new(ReservationListV1::from_account_info(account)?)),
-        5 => Ok(Box::new(ReservationListV2::from_account_info(account)?)),
+        3 => {
+            let reservation_list = Box::new(ReservationListV1::from_account_info::<
+                ReservationListV1,
+            >(account)?);
+            Ok(reservation_list)
+        }
+        5 => {
+            let reservation_list = Box::new(ReservationListV2::from_account_info::<
+                ReservationListV2,
+            >(account)?);
+            Ok(reservation_list)
+        }
         _ => Err(MetadataError::DataTypeMismatch.into()),
     };
 
@@ -503,6 +621,16 @@ pub struct ReservationListV2 {
     pub total_reservation_spots: u64,
     /// Cached count of reservation spots in the reservation vec to save on CPU.
     pub current_reservation_spots: u64,
+}
+
+impl TokenMetadataAccount for ReservationListV2 {
+    fn key() -> Key {
+        Key::ReservationListV2
+    }
+
+    fn size() -> usize {
+        MAX_RESERVATION_LIST_SIZE
+    }
 }
 
 impl ReservationList for ReservationListV2 {
@@ -598,18 +726,6 @@ impl ReservationList for ReservationListV2 {
     }
 }
 
-impl ReservationListV2 {
-    pub fn from_account_info(a: &AccountInfo) -> Result<ReservationListV2, ProgramError> {
-        let res: ReservationListV2 = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::ReservationListV2,
-            MAX_RESERVATION_LIST_SIZE,
-        )?;
-
-        Ok(res)
-    }
-}
-
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -631,6 +747,16 @@ pub struct ReservationListV1 {
     /// What supply counter was on master_edition when this reservation was created.
     pub supply_snapshot: Option<u64>,
     pub reservations: Vec<ReservationV1>,
+}
+
+impl TokenMetadataAccount for ReservationListV1 {
+    fn key() -> Key {
+        Key::ReservationListV1
+    }
+
+    fn size() -> usize {
+        MAX_RESERVATION_LIST_V1_SIZE
+    }
 }
 
 impl ReservationList for ReservationListV1 {
@@ -701,18 +827,6 @@ impl ReservationList for ReservationListV1 {
     fn set_current_reservation_spots(&mut self, _: u64) {}
 }
 
-impl ReservationListV1 {
-    pub fn from_account_info(a: &AccountInfo) -> Result<ReservationListV1, ProgramError> {
-        let res: ReservationListV1 = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::ReservationListV1,
-            MAX_RESERVATION_LIST_V1_SIZE,
-        )?;
-
-        Ok(res)
-    }
-}
-
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -730,17 +844,26 @@ pub struct EditionMarker {
     pub ledger: [u8; 31],
 }
 
-impl EditionMarker {
-    pub fn from_account_info(a: &AccountInfo) -> Result<EditionMarker, ProgramError> {
-        let res: EditionMarker = try_from_slice_checked(
-            &a.data.borrow_mut(),
-            Key::EditionMarker,
-            MAX_EDITION_MARKER_SIZE,
-        )?;
+impl Default for EditionMarker {
+    fn default() -> Self {
+        Self {
+            key: Key::EditionMarker,
+            ledger: [0; 31],
+        }
+    }
+}
 
-        Ok(res)
+impl TokenMetadataAccount for EditionMarker {
+    fn key() -> Key {
+        Key::EditionMarker
     }
 
+    fn size() -> usize {
+        MAX_EDITION_MARKER_SIZE
+    }
+}
+
+impl EditionMarker {
     fn get_edition_offset_from_starting_index(edition: u64) -> Result<usize, ProgramError> {
         Ok(edition
             .checked_rem(EDITION_MARKER_BIT_SIZE)

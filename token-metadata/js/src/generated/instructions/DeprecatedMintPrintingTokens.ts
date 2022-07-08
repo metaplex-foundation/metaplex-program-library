@@ -55,6 +55,8 @@ export type DeprecatedMintPrintingTokensInstructionAccounts = {
   updateAuthority: web3.PublicKey;
   metadata: web3.PublicKey;
   masterEdition: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
 export const deprecatedMintPrintingTokensInstructionDiscriminator = 9;
@@ -72,53 +74,52 @@ export const deprecatedMintPrintingTokensInstructionDiscriminator = 9;
 export function createDeprecatedMintPrintingTokensInstruction(
   accounts: DeprecatedMintPrintingTokensInstructionAccounts,
   args: DeprecatedMintPrintingTokensInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { destination, printingMint, updateAuthority, metadata, masterEdition } = accounts;
-
   const [data] = DeprecatedMintPrintingTokensStruct.serialize({
     instructionDiscriminator: deprecatedMintPrintingTokensInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: destination,
+      pubkey: accounts.destination,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: printingMint,
+      pubkey: accounts.printingMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: accounts.updateAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

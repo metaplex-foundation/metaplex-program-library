@@ -50,57 +50,49 @@ export const unverifyCollectionInstructionDiscriminator = 22;
  */
 export function createUnverifyCollectionInstruction(
   accounts: UnverifyCollectionInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const {
-    metadata,
-    collectionAuthority,
-    collectionMint,
-    collection,
-    collectionMasterEditionAccount,
-    collectionAuthorityRecord,
-  } = accounts;
-
   const [data] = UnverifyCollectionStruct.serialize({
     instructionDiscriminator: unverifyCollectionInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: collectionAuthority,
+      pubkey: accounts.collectionAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: collectionMint,
+      pubkey: accounts.collectionMint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: collection,
+      pubkey: accounts.collection,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: collectionMasterEditionAccount,
+      pubkey: accounts.collectionMasterEditionAccount,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  if (collectionAuthorityRecord != null) {
+  if (accounts.collectionAuthorityRecord != null) {
     keys.push({
-      pubkey: collectionAuthorityRecord,
+      pubkey: accounts.collectionAuthorityRecord,
       isWritable: false,
       isSigner: false,
     });
   }
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

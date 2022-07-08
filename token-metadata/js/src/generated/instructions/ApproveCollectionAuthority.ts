@@ -36,6 +36,8 @@ export type ApproveCollectionAuthorityInstructionAccounts = {
   payer: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
 export const approveCollectionAuthorityInstructionDiscriminator = 23;
@@ -50,64 +52,56 @@ export const approveCollectionAuthorityInstructionDiscriminator = 23;
  */
 export function createApproveCollectionAuthorityInstruction(
   accounts: ApproveCollectionAuthorityInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const {
-    collectionAuthorityRecord,
-    newCollectionAuthority,
-    updateAuthority,
-    payer,
-    metadata,
-    mint,
-  } = accounts;
-
   const [data] = ApproveCollectionAuthorityStruct.serialize({
     instructionDiscriminator: approveCollectionAuthorityInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: collectionAuthorityRecord,
+      pubkey: accounts.collectionAuthorityRecord,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newCollectionAuthority,
+      pubkey: accounts.newCollectionAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: updateAuthority,
-      isWritable: true,
-      isSigner: true,
-    },
-    {
-      pubkey: payer,
+      pubkey: accounts.updateAuthority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.payer,
+      isWritable: true,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

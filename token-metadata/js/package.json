@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-token-metadata",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "contractVersion": "1.3.1",
   "description": "MPL Token Metadata JavaScript API.",
   "main": "dist/src/mpl-token-metadata.js",
@@ -39,8 +39,8 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "MIT",
   "dependencies": {
-    "@metaplex-foundation/beet": "^0.1.0",
-    "@metaplex-foundation/beet-solana": "^0.1.1",
+    "@metaplex-foundation/beet": "^0.4.0",
+    "@metaplex-foundation/beet-solana": "^0.3.0",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@solana/spl-token": "^0.2.0",
     "@solana/web3.js": "^1.35.1",
@@ -48,7 +48,7 @@
     "debug": "^4.3.3"
   },
   "devDependencies": {
-    "@metaplex-foundation/solita": "^0.8.1",
+    "@metaplex-foundation/solita": "^0.12.1",
     "@types/bn.js": "^5.1.0",
     "@types/debug": "^4.1.7",
     "@types/tape": "^4.13.2",

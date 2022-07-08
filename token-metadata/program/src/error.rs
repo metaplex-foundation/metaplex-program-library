@@ -436,6 +436,10 @@ pub enum MetadataError {
     /// 110 - Master Edition has prints.
     #[error("This Master Edition has existing prints")]
     MasterEditionHasPrints,
+
+    /// 111 - Borsh Deserialization Error
+    #[error("Borsh Deserialization Error")]
+    BorshDeserializationError,
 }
 
 impl PrintProgramError for MetadataError {

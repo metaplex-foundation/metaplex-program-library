@@ -52,6 +52,9 @@ export type DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstruction
   payer: web3.PublicKey;
   masterUpdateAuthority: web3.PublicKey;
   masterMetadata: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
   reservationList?: web3.PublicKey;
 };
 
@@ -67,115 +70,100 @@ export const deprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructio
  */
 export function createDeprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstruction(
   accounts: DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const {
-    metadata,
-    edition,
-    masterEdition,
-    mint,
-    mintAuthority,
-    printingMint,
-    masterTokenAccount,
-    editionMarker,
-    burnAuthority,
-    payer,
-    masterUpdateAuthority,
-    masterMetadata,
-    reservationList,
-  } = accounts;
-
   const [data] = DeprecatedMintNewEditionFromMasterEditionViaPrintingTokenStruct.serialize({
     instructionDiscriminator:
       deprecatedMintNewEditionFromMasterEditionViaPrintingTokenInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: edition,
+      pubkey: accounts.edition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mintAuthority,
+      pubkey: accounts.mintAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: printingMint,
+      pubkey: accounts.printingMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: masterTokenAccount,
+      pubkey: accounts.masterTokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: editionMarker,
+      pubkey: accounts.editionMarker,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: burnAuthority,
+      pubkey: accounts.burnAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: masterUpdateAuthority,
+      pubkey: accounts.masterUpdateAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: masterMetadata,
+      pubkey: accounts.masterMetadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
-  if (reservationList != null) {
+  if (accounts.reservationList != null) {
     keys.push({
-      pubkey: reservationList,
+      pubkey: accounts.reservationList,
       isWritable: true,
       isSigner: false,
     });
   }
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });
