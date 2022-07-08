@@ -678,17 +678,12 @@ pub mod auction_house {
             .bumps
             .get("escrow_payment_account")
             .ok_or(ErrorCode::PublicKeyMismatch)?;
-        //let free_trade_state_canonical_bump = *ctx
-        //    .bumps
-        //    .get("free_trade_state")
-        //    .ok_or(ErrorCode::PublicKeyMismatch)?;
         let program_as_signer_canonical_bump = *ctx
             .bumps
             .get("program_as_signer")
             .ok_or(ErrorCode::PublicKeyMismatch)?;
 
         if (escrow_canonical_bump != escrow_payment_bump)
-            //|| (free_trade_state_canonical_bump != free_trade_state_bump)
             || (program_as_signer_canonical_bump != program_as_signer_bump)
         {
             return Err(ErrorCode::PublicKeyMismatch.into());
