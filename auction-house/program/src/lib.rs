@@ -661,7 +661,7 @@ pub mod auction_house {
             &token_account.key(),
             ts_bump,
         )?;
-        if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
+        if buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 || ts_bump == 0 || seller_ts_data[0] == 0{
             return Err(ErrorCode::BothPartiesNeedToAgreeToSale.into());
         }
 
@@ -953,7 +953,12 @@ pub mod auction_house {
         let token_program = &ctx.accounts.token_program;
         let system_program = &ctx.accounts.system_program;
         let program_as_signer = &ctx.accounts.program_as_signer;
+
         let rent = &ctx.accounts.rent;
+        let ts_bump = *ctx.bumps.get("seller_trade_state").ok_or(ErrorCode::PublicKeyMismatch).map_err(|e|{
+            msg!("Missing Seller Trade State Bump");
+            e
+        })?;
 
         // Wallet has to be a signer but there are different kinds of errors when it's not.
         if !wallet.to_account_info().is_signer {
@@ -1032,7 +1037,7 @@ pub mod auction_house {
                 token_account.mint.as_ref(),
                 &buyer_price.to_le_bytes(),
                 &token_size.to_le_bytes(),
-                &[trade_state_bump],
+                &[ts_bump],
             ];
             create_or_allocate_account_raw(
                 *ctx.program_id,
@@ -1047,7 +1052,7 @@ pub mod auction_house {
         }
 
         let data = &mut ts_info.data.borrow_mut();
-        data[0] = trade_state_bump;
+        data[0] = ts_bump;
 
         Ok(())
     }
@@ -1181,11 +1186,11 @@ pub struct Sell<'info> {
     pub auction_house_fee_account: UncheckedAccount<'info>,
     /// Seller trade state PDA account encoding the sell order.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump=trade_state_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &buyer_price.to_le_bytes(), &token_size.to_le_bytes()], bump)]
     pub seller_trade_state: UncheckedAccount<'info>,
     /// Free seller trade state PDA account encoding a free sell order.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump=free_trade_state_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &0u64.to_le_bytes(), &token_size.to_le_bytes()], bump)]
     pub free_seller_trade_state: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
