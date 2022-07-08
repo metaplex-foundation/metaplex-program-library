@@ -8,7 +8,7 @@ use crate::{
     state::{PackCard, PackDistributionType, PackSet, ProvingProcess, PREFIX},
     utils::*,
 };
-use mpl_token_metadata::state::{MasterEditionV2, Metadata};
+use mpl_token_metadata::state::{MasterEditionV2, Metadata, TokenMetadataAccount};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -73,9 +73,10 @@ pub fn claim_pack(
     assert_account_key(pack_set_account, &pack_card.pack_set)?;
 
     // Obtain master metadata instance
-    let master_metadata = Metadata::from_account_info(metadata_account)?;
+    let master_metadata: Metadata = Metadata::from_account_info(metadata_account)?;
 
-    let master_edition = MasterEditionV2::from_account_info(master_edition_account)?;
+    let master_edition: MasterEditionV2 =
+        MasterEditionV2::from_account_info(master_edition_account)?;
 
     // Check metadata mint
     assert_account_key(metadata_mint_account, &master_metadata.mint)?;

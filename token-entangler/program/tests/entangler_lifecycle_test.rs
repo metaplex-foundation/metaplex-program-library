@@ -8,7 +8,9 @@ use solana_sdk::{
     instruction::Instruction, program_pack::Pack, signature::Keypair, signer::Signer,
     system_instruction::create_account, transaction::Transaction,
 };
-use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
+use spl_associated_token_account::{
+    get_associated_token_address, instruction::create_associated_token_account,
+};
 use spl_token::{
     instruction::{approve, initialize_mint, mint_to, revoke},
     state::Mint,

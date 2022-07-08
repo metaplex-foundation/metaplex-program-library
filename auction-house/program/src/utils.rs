@@ -49,7 +49,7 @@ pub fn make_ata<'a>(
     };
 
     invoke_signed(
-        &spl_associated_token_account::create_associated_token_account(
+        &spl_associated_token_account::instruction::create_associated_token_account(
             fee_payer.key,
             wallet.key,
             mint.key,

@@ -14,7 +14,7 @@ use crate::{
 };
 use borsh::BorshSerialize;
 use mpl_token_metadata::{
-    state::{MasterEditionV1, MasterEditionV2, Metadata},
+    state::{MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount},
     utils::assert_update_authority_is_correct,
 };
 use mpl_token_vault::state::{SafetyDepositBox, Vault};
@@ -321,7 +321,7 @@ pub fn assert_supply_logic_check(args: SupplyLogicCheckArgs) -> ProgramResult {
             if edition_key != *edition_info.key {
                 return Err(MetaplexError::InvalidEditionAddress.into());
             }
-            let master_edition = MasterEditionV1::from_account_info(edition_info)?;
+            let master_edition: MasterEditionV1 = MasterEditionV1::from_account_info(edition_info)?;
             if safety_deposit.token_mint != master_edition.printing_mint {
                 return Err(MetaplexError::SafetyDepositBoxMasterMintMismatch.into());
             }
@@ -334,7 +334,7 @@ pub fn assert_supply_logic_check(args: SupplyLogicCheckArgs) -> ProgramResult {
             if edition_key != *edition_info.key {
                 return Err(MetaplexError::InvalidEditionAddress.into());
             }
-            let master_edition = MasterEditionV2::from_account_info(edition_info)?;
+            let master_edition: MasterEditionV2 = MasterEditionV2::from_account_info(edition_info)?;
             if safety_deposit.token_mint != metadata.mint {
                 return Err(MetaplexError::SafetyDepositBoxMetadataMismatch.into());
             }
@@ -360,7 +360,7 @@ pub fn assert_supply_logic_check(args: SupplyLogicCheckArgs) -> ProgramResult {
             if edition_key != *edition_info.key {
                 return Err(MetaplexError::InvalidEditionAddress.into());
             }
-            let master_edition = MasterEditionV2::from_account_info(edition_info)?;
+            let master_edition: MasterEditionV2 = MasterEditionV2::from_account_info(edition_info)?;
             if safety_deposit.token_mint != metadata.mint {
                 return Err(MetaplexError::SafetyDepositBoxMetadataMismatch.into());
             }

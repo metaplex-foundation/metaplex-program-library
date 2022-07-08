@@ -7,9 +7,7 @@ use solana_program::{
     instruction::AccountMeta, program_pack::Pack, pubkey::Pubkey, system_instruction,
 };
 use solana_program_test::*;
-use solana_sdk::{
-    signature::Signer, signer::keypair::Keypair, transaction::Transaction, transport,
-};
+use solana_sdk::{signature::Signer, signer::keypair::Keypair, transaction::Transaction};
 use spl_token::state::Account;
 
 #[derive(Debug)]
@@ -40,7 +38,7 @@ impl TestPackSet {
         &self,
         context: &mut ProgramTestContext,
         args: instruction::InitPackSetArgs,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_account::<PackSet>(context, &self.keypair, &mpl_nft_packs::id()).await?;
 
         let tx = Transaction::new_signed_with_payer(
@@ -68,7 +66,7 @@ impl TestPackSet {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn clean_up(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
+    pub async fn clean_up(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::clean_up(
                 &mpl_nft_packs::id(),
@@ -89,7 +87,7 @@ impl TestPackSet {
         test_metadata: &TestMetadata,
         user: &User,
         args: instruction::AddCardToPackArgs,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let rent = context.banks_client.get_rent().await.unwrap();
         let tx = Transaction::new_signed_with_payer(
             &[
@@ -125,7 +123,7 @@ impl TestPackSet {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn activate(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
+    pub async fn activate(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::activate(
                 &mpl_nft_packs::id(),
@@ -140,7 +138,10 @@ impl TestPackSet {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn deactivate(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
+    pub async fn deactivate(
+        &self,
+        context: &mut ProgramTestContext,
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::deactivate(
                 &mpl_nft_packs::id(),
@@ -155,7 +156,7 @@ impl TestPackSet {
         context.banks_client.process_transaction(tx).await
     }
 
-    pub async fn close(&self, context: &mut ProgramTestContext) -> transport::Result<()> {
+    pub async fn close(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::close_pack(
                 &mpl_nft_packs::id(),
@@ -174,7 +175,7 @@ impl TestPackSet {
         &self,
         context: &mut ProgramTestContext,
         new_authority: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::transfer_pack_authority(
                 &mpl_nft_packs::id(),
@@ -197,7 +198,7 @@ impl TestPackSet {
         name: Option<[u8; 32]>,
         description: Option<String>,
         uri: Option<String>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::edit_pack(
                 &mpl_nft_packs::id(),
@@ -224,7 +225,7 @@ impl TestPackSet {
         test_pack_card: &TestPackCard,
         refunder: &Pubkey,
         new_master_edition_owner_token_acc: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::delete_pack_card(
                 &mpl_nft_packs::id(),
@@ -247,7 +248,7 @@ impl TestPackSet {
         &self,
         context: &mut ProgramTestContext,
         refunder: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::delete_pack(
                 &mpl_nft_packs::id(),
@@ -268,7 +269,7 @@ impl TestPackSet {
         context: &mut ProgramTestContext,
         test_pack_voucher: &TestPackVoucher,
         refunder: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::delete_pack_voucher(
                 &mpl_nft_packs::id(),
@@ -292,7 +293,7 @@ impl TestPackSet {
         test_master_edition: &TestMasterEditionV2,
         test_metadata: &TestMetadata,
         user: &User,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let rent = context.banks_client.get_rent().await.unwrap();
 
         let tx = Transaction::new_signed_with_payer(
@@ -338,7 +339,7 @@ impl TestPackSet {
         user_wallet: &Keypair,
         user_token_acc: &Option<Pubkey>,
         voucher_index: u32,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::request_card_for_redeem(
                 &mpl_nft_packs::id(),
@@ -367,7 +368,7 @@ impl TestPackSet {
         user_wallet: &Keypair,
         user_token_acc: &Option<Pubkey>,
         voucher_index: u32,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let mut ix = instruction::request_card_for_redeem(
             &mpl_nft_packs::id(),
             &self.keypair.pubkey(),
@@ -405,7 +406,7 @@ impl TestPackSet {
         master_metadata: &Pubkey,
         master_mint: &Pubkey,
         index: u32,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(context, new_mint, &new_mint_authority.pubkey(), None)
             .await
             .unwrap();

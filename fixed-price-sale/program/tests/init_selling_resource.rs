@@ -20,7 +20,7 @@ mod init_selling_resource {
     };
     use solana_program::{instruction::Instruction, sysvar};
     use solana_program_test::*;
-    use solana_sdk::{transaction::Transaction, transport::TransportError};
+    use solana_sdk::transaction::Transaction;
 
     #[tokio::test]
     async fn success() {
@@ -268,8 +268,8 @@ mod init_selling_resource {
             .await
             .unwrap_err();
         match err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -392,8 +392,8 @@ mod init_selling_resource {
             .await
             .unwrap_err();
         match err {
-            TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::ClientError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

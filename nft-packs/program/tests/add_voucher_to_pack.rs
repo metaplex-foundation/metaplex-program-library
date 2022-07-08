@@ -10,7 +10,6 @@ use solana_sdk::{
     signature::Keypair,
     signer::Signer,
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -197,7 +196,7 @@ async fn fail_invalid_index() {
 
     assert_transport_error!(
         result.unwrap_err(),
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             1,
             InstructionError::InvalidArgument
         ))

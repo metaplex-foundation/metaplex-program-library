@@ -2,10 +2,7 @@ use super::create_token_account;
 use crate::*;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
-use solana_sdk::{
-    signature::{Keypair, Signer},
-    transport,
-};
+use solana_sdk::signature::{Keypair, Signer};
 
 #[derive(Debug)]
 pub struct User {
@@ -22,7 +19,7 @@ impl User {
 pub async fn add_user(
     context: &mut ProgramTestContext,
     test_master_edition: &TestMasterEditionV2,
-) -> transport::Result<User> {
+) -> Result<User, BanksClientError> {
     let owner = Keypair::new();
     let token_account = Keypair::new();
 

@@ -11,12 +11,11 @@ use solana_sdk::{
     account::Account,
     signature::{Keypair, Signer},
     transaction::Transaction,
-    transport::TransportError,
 };
 
-fn string_to_array(value: &str) -> Result<[u8; 32], TransportError> {
+fn string_to_array(value: &str) -> Result<[u8; 32], BanksClientError> {
     if value.len() > 32 {
-        return Err(TransportError::Custom("String too long".to_string()));
+        return Err(BanksClientError::ClientError("String too long"));
     }
     let mut result: [u8; 32] = Default::default();
     result[0..value.len()].copy_from_slice(value.as_bytes());
@@ -35,7 +34,7 @@ pub async fn create_mint(
     banks_client: &mut BanksClient,
     payer: &Keypair,
     recent_blockhash: &Hash,
-) -> Result<(Keypair, Keypair), TransportError> {
+) -> Result<(Keypair, Keypair), BanksClientError> {
     let rent = banks_client.get_rent().await.unwrap();
     let mint_rent = rent.minimum_balance(spl_token::state::Mint::LEN);
     let pool_mint = Keypair::new();
@@ -72,7 +71,7 @@ pub async fn create_token_account(
     account: &Keypair,
     pool_mint: &Pubkey,
     manager: &Pubkey,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let rent = banks_client.get_rent().await.unwrap();
     let account_rent = rent.minimum_balance(spl_token::state::Account::LEN);
 
@@ -108,7 +107,7 @@ pub async fn mint_tokens(
     account: &Pubkey,
     mint_authority: &Keypair,
     amount: u64,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let transaction = Transaction::new_signed_with_payer(
         &[spl_token::instruction::mint_to(
             &spl_token::id(),
@@ -159,7 +158,7 @@ pub async fn create_auction(
     price_floor: PriceFloor,
     gap_tick_size_percentage: Option<u8>,
     tick_size: Option<u64>,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let transaction: Transaction;
     if instant_sale_price.is_some() {
         transaction = Transaction::new_signed_with_payer(
@@ -216,7 +215,7 @@ pub async fn end_auction(
     recent_blockhash: &Hash,
     payer: &Keypair,
     resource: &Pubkey,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::end_auction_instruction(
             *program_id,
@@ -240,7 +239,7 @@ pub async fn start_auction(
     recent_blockhash: &Hash,
     payer: &Keypair,
     resource: &Pubkey,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::start_auction_instruction(
             *program_id,
@@ -269,7 +268,7 @@ pub async fn place_bid(
     resource: &Pubkey,
     mint: &Pubkey,
     amount: u64,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::place_bid_instruction(
             *program_id,
@@ -302,7 +301,7 @@ pub async fn cancel_bid(
     bidder_spl_account: &Pubkey,
     resource: &Pubkey,
     mint: &Pubkey,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::cancel_bid_instruction(
             *program_id,
@@ -329,7 +328,7 @@ pub async fn approve(
     transfer_authority: &Pubkey,
     spl_wallet: &Keypair,
     amount: u64,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let transaction = Transaction::new_signed_with_payer(
         &[spl_token::instruction::approve(
             &spl_token::id(),
@@ -360,7 +359,7 @@ pub async fn claim_bid(
     seller: &Pubkey,
     resource: &Pubkey,
     mint: &Pubkey,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::claim_bid_instruction(
             *program_id,

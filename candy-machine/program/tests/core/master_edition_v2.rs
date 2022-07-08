@@ -3,7 +3,8 @@ use mpl_token_metadata::{
     state::{EDITION, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction, transport};
+use solana_program_test::BanksClientError;
+use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 
 use crate::{
     core::{
@@ -65,7 +66,7 @@ impl MasterEditionV2 {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
                 mpl_token_metadata::id(),

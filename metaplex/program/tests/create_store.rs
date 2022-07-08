@@ -11,14 +11,13 @@ use solana_sdk::{
     instruction::InstructionError,
     signer::keypair::Keypair,
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 
 #[macro_export]
 macro_rules! assert_custom_error {
     ($error:expr, $matcher:pat) => {
         match $error {
-            TransportError::TransactionError(TransactionError::InstructionError(
+            BanksClientError::TransactionError(TransactionError::InstructionError(
                 0,
                 InstructionError::Custom(x),
             )) => match FromPrimitive::from_i32(x as i32) {

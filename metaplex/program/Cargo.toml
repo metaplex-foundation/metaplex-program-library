@@ -12,21 +12,21 @@ no-entrypoint = []
 test-bpf = []
 
 [dependencies]
-mpl-auction = { path = "../../auction/program", features = [ "no-entrypoint" ]}
+mpl-auction = {path = "../../auction/program", features = ["no-entrypoint"]}
 num-derive = "~0.3"
 num-traits = "~0.2"
 arrayref = "~0.3.6"
-solana-program = "~1.9.28"
-spl-token = { version="~3.2.0", features = [ "no-entrypoint" ] }
-mpl-token-vault = { path = "../../token-vault/program", features = [ "no-entrypoint" ]}
-mpl-token-metadata = { version="~1.2.10", features = [ "no-entrypoint" ] }
+solana-program = "~1.10.25"
+spl-token = {version = "~3.3.0", features = ["no-entrypoint"]}
+mpl-token-vault = {path = "../../token-vault/program", features = ["no-entrypoint"]}
+mpl-token-metadata = {path = "../../token-metadata/program", features = ["no-entrypoint"]}
 thiserror = "~1.0"
 borsh = "~0.9.1"
-spl-associated-token-account = "1.0.3"
+spl-associated-token-account = "1.0.5"
 
 [dev-dependencies]
-solana-sdk = "~1.9.28"
-solana-program-test = "~1.9.28"
+solana-program-test = "~1.10.25"
+solana-sdk = "~1.10.25"
 
 [lib]
 crate-type = ["cdylib", "lib"]

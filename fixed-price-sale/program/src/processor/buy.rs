@@ -10,7 +10,10 @@ use anchor_lang::{
     system_program::System,
 };
 use anchor_spl::token;
-use mpl_token_metadata::{state::Metadata, utils::get_supply_off_master_edition};
+use mpl_token_metadata::{
+    state::{Metadata, TokenMetadataAccount},
+    utils::get_supply_off_master_edition,
+};
 
 impl<'info> Buy<'info> {
     pub fn process(
@@ -282,7 +285,7 @@ impl<'info> Buy<'info> {
             user_token_acc.try_borrow_data()?.as_ref(),
         )?;
 
-        let metadata_data = Metadata::from_account_info(metadata)?;
+        let metadata_data: Metadata = Metadata::from_account_info(metadata)?;
 
         let token_metadata_program_key = mpl_token_metadata::id();
         let metadata_seeds = &[

@@ -3,10 +3,9 @@ use mpl_token_metadata::{
     state::{Collection, Creator, Uses, PREFIX},
 };
 use solana_program::borsh::try_from_slice_unchecked;
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 use crate::core::helpers::{clone_keypair, create_mint, get_account, mint_to_wallets};
@@ -67,7 +66,7 @@ impl Metadata {
         freeze_authority: Option<&Pubkey>,
         collection: Option<Collection>,
         uses: Option<Uses>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(
             context,
             &self.authority.pubkey(),

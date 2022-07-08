@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
     account::Account,
     program_pack::Pack,
@@ -8,7 +8,6 @@ use solana_sdk::{
     signer::{keypair::Keypair, Signer},
     system_instruction,
     transaction::Transaction,
-    transport,
 };
 use spl_token::state::Mint;
 
@@ -21,7 +20,7 @@ pub async fn transfer_lamports(
     wallet: &Keypair,
     to: &Pubkey,
     amount: u64,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
         Some(&wallet.pubkey()),
@@ -37,7 +36,7 @@ pub async fn transfer_lamports(
 pub async fn get_token_account(
     client: &mut ProgramTestContext,
     token_account: &Pubkey,
-) -> transport::Result<spl_token::state::Account> {
+) -> Result<spl_token::state::Account, BanksClientError> {
     let account = client.banks_client.get_account(*token_account).await?;
     Ok(spl_token::state::Account::unpack(&account.unwrap().data).unwrap())
 }
@@ -57,7 +56,7 @@ pub async fn airdrop(
     context: &mut ProgramTestContext,
     receiver: &Pubkey,
     amount: u64,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(
             &context.payer.pubkey(),
@@ -111,7 +110,7 @@ pub async fn create_token_account(
     account: &Keypair,
     mint: &Pubkey,
     manager: &Pubkey,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -143,12 +142,12 @@ pub async fn create_associated_token_account(
     context: &mut ProgramTestContext,
     wallet: &Pubkey,
     token_mint: &Pubkey,
-) -> transport::Result<Pubkey> {
+) -> Result<Pubkey, BanksClientError> {
     let recent_blockhash = context.last_blockhash;
 
     let tx = Transaction::new_signed_with_payer(
         &[
-            spl_associated_token_account::create_associated_token_account(
+            spl_associated_token_account::instruction::create_associated_token_account(
                 &context.payer.pubkey(),
                 wallet,
                 token_mint,
@@ -171,7 +170,7 @@ pub async fn create_mint(
     freeze_authority: Option<&Pubkey>,
     decimals: u8,
     mint: Option<Keypair>,
-) -> transport::Result<Keypair> {
+) -> Result<Keypair, BanksClientError> {
     let mint = mint.unwrap_or_else(Keypair::new);
     let rent = context.banks_client.get_rent().await.unwrap();
 
@@ -207,7 +206,7 @@ pub async fn mint_to_wallets(
     mint_pubkey: &Pubkey,
     authority: &Keypair,
     allocations: Vec<(Pubkey, u64)>,
-) -> transport::Result<Vec<Pubkey>> {
+) -> Result<Vec<Pubkey>, BanksClientError> {
     let mut atas = Vec::with_capacity(allocations.len());
 
     #[allow(clippy::needless_range_loop)]
@@ -239,7 +238,7 @@ pub async fn mint_tokens(
     account: &Pubkey,
     amount: u64,
     additional_signer: Option<&Keypair>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut signing_keypairs = vec![authority, &context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
@@ -270,7 +269,7 @@ pub async fn transfer(
     mint: &Pubkey,
     from: &Keypair,
     to: &Keypair,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     create_associated_token_account(context, &to.pubkey(), mint).await?;
     let tx = Transaction::new_signed_with_payer(
         &[spl_token::instruction::transfer(

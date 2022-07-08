@@ -22,7 +22,6 @@ use solana_sdk::{
     signature::Keypair,
     signer::Signer,
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -1347,7 +1346,7 @@ async fn fail_wrong_user_wallet() {
 
     assert_transport_error!(
         tx_result.unwrap_err(),
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::InvalidArgument
         ))

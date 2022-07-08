@@ -7,7 +7,6 @@ use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -54,7 +53,7 @@ impl TestMetadata {
         is_mutable: bool,
         token_account: &Keypair,
         token_owner: &Pubkey,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
         create_token_account(context, token_account, &self.mint.pubkey(), token_owner).await?;
         mint_tokens(
@@ -94,7 +93,7 @@ impl TestMetadata {
     pub async fn update_primary_sale_happened_via_token(
         &self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_primary_sale_happened_via_token(
                 id(),
@@ -118,7 +117,7 @@ impl TestMetadata {
         uri: String,
         creators: Option<Vec<Creator>>,
         seller_fee_basis_points: u16,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts(
                 id(),

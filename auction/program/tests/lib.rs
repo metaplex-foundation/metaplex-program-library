@@ -23,7 +23,6 @@ use solana_sdk::{
     signature::{Keypair, Signer},
     system_instruction, system_program,
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use std::mem;
 mod helpers;
@@ -502,7 +501,7 @@ async fn handle_failing_action(
     resource: &Pubkey,
     auction_pubkey: &Pubkey,
     action: &Action,
-) -> Result<(), TransportError> {
+) -> Result<(), BanksClientError> {
     match *action {
         Action::Bid(bidder, amount) => {
             // Get balances pre bidding.

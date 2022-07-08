@@ -16,7 +16,6 @@ pub use solana_sdk::{
     instruction::{Instruction, InstructionError},
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 pub use std::assert_eq;
 

@@ -24,7 +24,7 @@ use solana_program::clock::Clock;
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
-    signer::keypair::Keypair, system_instruction, transaction::Transaction, transport,
+    signer::keypair::Keypair, system_instruction, transaction::Transaction,
 };
 use spl_token::state::Mint;
 use std::time;
@@ -93,7 +93,7 @@ pub async fn mint_tokens(
     amount: u64,
     owner: &Pubkey,
     additional_signers: Option<Vec<&Keypair>>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut signing_keypairs = vec![&context.payer];
     if let Some(signers) = additional_signers {
         signing_keypairs.extend(signers)
@@ -117,7 +117,7 @@ pub async fn create_token_account(
     account: &Keypair,
     mint: &Pubkey,
     manager: &Pubkey,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -151,7 +151,7 @@ pub async fn transfer_token(
     destination: &Pubkey,
     authority: &Keypair,
     amount: u64,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[spl_token::instruction::transfer(
             &spl_token::id(),
@@ -174,7 +174,7 @@ pub async fn create_account<S: Pack>(
     context: &mut ProgramTestContext,
     account: &Keypair,
     owner: &Pubkey,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -198,7 +198,7 @@ pub async fn create_mint(
     mint: &Keypair,
     manager: &Pubkey,
     freeze_authority: Option<&Pubkey>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -231,7 +231,7 @@ pub async fn create_store(
     context: &mut ProgramTestContext,
     admin: &Keypair,
     public: bool,
-) -> transport::Result<Pubkey> {
+) -> Result<Pubkey, BanksClientError> {
     let metaplex_key = mpl_metaplex::id();
     let admin_key = admin.pubkey();
 
