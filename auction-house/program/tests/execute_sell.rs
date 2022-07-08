@@ -8,8 +8,8 @@ use solana_sdk::signer::Signer;
 
 use std::assert_eq;
 
-use solana_program::{instruction::Instruction, system_program, sysvar};
 use solana_program::instruction::InstructionError;
+use solana_program::{instruction::Instruction, system_program, sysvar};
 
 use solana_program::program_pack::Pack;
 
@@ -17,12 +17,12 @@ use mpl_auction_house::{
     pda::{find_escrow_payment_address, find_program_as_signer_address, find_trade_state_address},
     receipt::{BidReceipt, ListingReceipt, PurchaseReceipt},
 };
-use solana_sdk::{signature::Keypair, transaction::Transaction};
+use mpl_testing_utils::solana::create_associated_token_account;
 use solana_sdk::transaction::TransactionError;
 use solana_sdk::transport::TransportError;
+use solana_sdk::{signature::Keypair, transaction::Transaction};
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::state::Account;
-use mpl_testing_utils::solana::create_associated_token_account;
 use utils::setup_functions::*;
 
 #[tokio::test]
@@ -218,7 +218,9 @@ async fn execute_sale_existing_token_account_success() {
         .unwrap();
     let buyer_token_account =
         get_associated_token_address(&buyer.pubkey(), &test_metadata.mint.pubkey());
-    create_associated_token_account(&mut context, &buyer, &test_metadata.mint.pubkey()).await.unwrap();
+    create_associated_token_account(&mut context, &buyer, &test_metadata.mint.pubkey())
+        .await
+        .unwrap();
     let accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
@@ -242,7 +244,7 @@ async fn execute_sale_existing_token_account_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -264,7 +266,7 @@ async fn execute_sale_existing_token_account_success() {
             token_size: 1,
             buyer_price: 100_000_000,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -307,7 +309,7 @@ async fn execute_sale_existing_token_account_success() {
             .data
             .as_slice(),
     )
-        .unwrap();
+    .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert_eq!(seller_before.lamports < seller_after.lamports, true);
@@ -371,7 +373,9 @@ async fn execute_sale_wrong_token_account_owner_success() {
         .unwrap();
     let malicious_buyer_token_account =
         get_associated_token_address(&malicious.pubkey(), &test_metadata.mint.pubkey());
-    create_associated_token_account(&mut context, &malicious, &test_metadata.mint.pubkey()).await.unwrap();
+    create_associated_token_account(&mut context, &malicious, &test_metadata.mint.pubkey())
+        .await
+        .unwrap();
     let accounts = mpl_auction_house::accounts::ExecuteSale {
         buyer: buyer.pubkey(),
         seller: test_metadata.token.pubkey(),
@@ -395,7 +399,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
     }
-        .to_account_metas(None);
+    .to_account_metas(None);
     let (_, free_sts_bump) = find_trade_state_address(
         &test_metadata.token.pubkey(),
         &ahkey,
@@ -417,7 +421,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
             token_size: 1,
             buyer_price: 100_000_000,
         }
-            .data(),
+        .data(),
         accounts,
     };
     airdrop(&mut context, &ah.auction_house_fee_account, 10_000_000_000)
@@ -430,24 +434,28 @@ async fn execute_sale_wrong_token_account_owner_success() {
         &[&authority],
         context.last_blockhash,
     );
-    let seller_before = context
+    let _seller_before = context
         .banks_client
         .get_account(test_metadata.token.pubkey())
         .await
         .unwrap()
         .unwrap();
-    let buyer_token_before = &context
+    let _buyer_token_before = &context
         .banks_client
         .get_account(malicious_buyer_token_account)
         .await
         .unwrap();
-    let err= context.banks_client.process_transaction(tx).await.unwrap_err();
+    let err = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
     println!("{:?}", err);
     match err {
         TransportError::TransactionError(TransactionError::InstructionError(
-                                             0,
-                                             InstructionError::Custom(6003),
-                                         )) => (),
+            0,
+            InstructionError::Custom(6003),
+        )) => (),
         _ => assert!(false, "Expected custom error"),
     }
 }

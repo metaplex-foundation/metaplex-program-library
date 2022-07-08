@@ -498,8 +498,8 @@ pub fn sell_mint(
 
     let data = mpl_auction_house::instruction::Sell {
         trade_state_bump: sts_bump,
-        _free_trade_state_bump: free_sts_bump,
-        _program_as_signer_bump: pas_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: sale_price,
     }
@@ -592,8 +592,8 @@ pub fn sell(
 
     let data = mpl_auction_house::instruction::Sell {
         trade_state_bump: sts_bump,
-        _free_trade_state_bump: free_sts_bump,
-        _program_as_signer_bump: pas_bump,
+        free_trade_state_bump: free_sts_bump,
+        program_as_signer_bump: pas_bump,
         token_size: 1,
         buyer_price: sale_price,
     }

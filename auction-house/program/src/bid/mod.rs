@@ -25,7 +25,7 @@ pub struct PublicBuy<'info> {
     /// CHECK: Verified through CPI
     metadata: UncheckedAccount<'info>,
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
+    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump)]
     escrow_payment_account: UncheckedAccount<'info>,
     /// CHECK: Verified through CPI
     authority: UncheckedAccount<'info>,
@@ -36,7 +36,7 @@ pub struct PublicBuy<'info> {
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
+    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump)]
     buyer_trade_state: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -72,6 +72,12 @@ pub fn public_bid(
         buyer_price,
         token_size,
         true,
+        *ctx.bumps
+            .get("escrow_payment_account")
+            .ok_or(ErrorCode::PublicKeyMismatch)?,
+        *ctx.bumps
+            .get("buyer_trade_state")
+            .ok_or(ErrorCode::PublicKeyMismatch)?,
     )
 }
 
@@ -90,7 +96,7 @@ pub struct Buy<'info> {
     /// CHECK: Verified through CPI
     metadata: UncheckedAccount<'info>,
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump = escrow_payment_bump)]
+    #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump)]
     escrow_payment_account: UncheckedAccount<'info>,
     /// CHECK: Verified through CPI
     authority: UncheckedAccount<'info>,
@@ -100,7 +106,7 @@ pub struct Buy<'info> {
     #[account(mut, seeds = [PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump = auction_house.fee_payer_bump)]
     auction_house_fee_account: UncheckedAccount<'info>,
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump = trade_state_bump)]
+    #[account(mut, seeds = [PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), treasury_mint.key().as_ref(), token_account.mint.as_ref(), buyer_price.to_le_bytes().as_ref(), token_size.to_le_bytes().as_ref()], bump)]
     buyer_trade_state: UncheckedAccount<'info>,
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -135,6 +141,12 @@ pub fn private_bid<'info>(
         buyer_price,
         token_size,
         false,
+        *ctx.bumps
+            .get("escrow_payment_account")
+            .ok_or(ErrorCode::PublicKeyMismatch)?,
+        *ctx.bumps
+            .get("buyer_trade_state")
+            .ok_or(ErrorCode::PublicKeyMismatch)?,
     )
 }
 
@@ -159,6 +171,8 @@ pub fn bid_logic<'info>(
     buyer_price: u64,
     token_size: u64,
     public: bool,
+    escrow_canonical_bump: u8,
+    trade_state_canonical_bump: u8,
 ) -> Result<()> {
     assert_valid_trade_state(
         &wallet.key(),
@@ -170,6 +184,13 @@ pub fn bid_logic<'info>(
         &token_account.key(),
         trade_state_bump,
     )?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (trade_state_canonical_bump != trade_state_bump)
+    {
+        return Err(ErrorCode::PublicKeyMismatch.into());
+    }
+
     let auction_house_key = auction_house.key();
     let seeds = [
         PREFIX.as_bytes(),

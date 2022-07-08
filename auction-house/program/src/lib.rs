@@ -224,11 +224,30 @@ pub mod auction_house {
 
         if ctx.accounts.payer.key != ctx.accounts.authority.key {
             msg!("Authority must match payer");
-            return Err(ErrorCode::PublicKeyMismatch.into())
+            return Err(ErrorCode::PublicKeyMismatch.into());
+        }
+
+        // Check that bumps passed in are canonical.
+        if fee_payer_bump
+            != *ctx
+                .bumps
+                .get("auction_house_fee_account")
+                .ok_or(ErrorCode::PublicKeyMismatch)?
+        {
+            return Err(ErrorCode::PublicKeyMismatch.into());
+        }
+        auction_house.fee_payer_bump = fee_payer_bump;
+
+        if treasury_bump
+            != *ctx
+                .bumps
+                .get("auction_house_treasury")
+                .ok_or(ErrorCode::PublicKeyMismatch)?
+        {
+            return Err(ErrorCode::PublicKeyMismatch.into());
         }
 
         auction_house.bump = *ctx.bumps.get("auction_house").unwrap();
-        auction_house.fee_payer_bump = fee_payer_bump;
         auction_house.treasury_bump = treasury_bump;
         if seller_fee_basis_points > 10000 {
             return Err(ErrorCode::InvalidBasisPoints.into());
@@ -315,6 +334,15 @@ pub mod auction_house {
         let token_program = &ctx.accounts.token_program;
         let ata_program = &ctx.accounts.ata_program;
         let rent = &ctx.accounts.rent;
+
+        if escrow_payment_bump
+            != *ctx
+                .bumps
+                .get("escrow_payment_account")
+                .ok_or(ErrorCode::PublicKeyMismatch)?
+        {
+            return Err(ErrorCode::PublicKeyMismatch.into());
+        }
 
         let auction_house_key = auction_house.key();
         let seeds = [
@@ -438,6 +466,15 @@ pub mod auction_house {
         let system_program = &ctx.accounts.system_program;
         let token_program = &ctx.accounts.token_program;
         let rent = &ctx.accounts.rent;
+
+        if escrow_payment_bump
+            != *ctx
+                .bumps
+                .get("escrow_payment_account")
+                .ok_or(ErrorCode::PublicKeyMismatch)?
+        {
+            return Err(ErrorCode::PublicKeyMismatch.into());
+        }
 
         let auction_house_key = auction_house.key();
         let seeds = [
@@ -637,6 +674,26 @@ pub mod auction_house {
         let buyer_receipt_clone = buyer_receipt_token_account.to_account_info();
         let token_account_clone = token_account.to_account_info();
 
+        let escrow_canonical_bump = *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(ErrorCode::PublicKeyMismatch)?;
+        //let free_trade_state_canonical_bump = *ctx
+        //    .bumps
+        //    .get("free_trade_state")
+        //    .ok_or(ErrorCode::PublicKeyMismatch)?;
+        let program_as_signer_canonical_bump = *ctx
+            .bumps
+            .get("program_as_signer")
+            .ok_or(ErrorCode::PublicKeyMismatch)?;
+
+        if (escrow_canonical_bump != escrow_payment_bump)
+            //|| (free_trade_state_canonical_bump != free_trade_state_bump)
+            || (program_as_signer_canonical_bump != program_as_signer_bump)
+        {
+            return Err(ErrorCode::PublicKeyMismatch.into());
+        }
+
         let is_native = treasury_mint.key() == spl_token::native_mint::id();
 
         if buyer_price == 0 && !authority_clone.is_signer && !seller.is_signer {
@@ -666,7 +723,11 @@ pub mod auction_house {
             &token_account.key(),
             ts_bump,
         )?;
-        if buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 || ts_bump == 0 || seller_ts_data[0] == 0{
+        if buyer_ts_data.len() == 0
+            || seller_ts_data.len() == 0
+            || ts_bump == 0
+            || seller_ts_data[0] == 0
+        {
             return Err(ErrorCode::BothPartiesNeedToAgreeToSale.into());
         }
 
@@ -942,8 +1003,8 @@ pub mod auction_house {
     pub fn sell<'info>(
         ctx: Context<'_, '_, '_, 'info, Sell<'info>>,
         trade_state_bump: u8,
-        _free_trade_state_bump: u8,
-        _program_as_signer_bump: u8,
+        free_trade_state_bump: u8,
+        program_as_signer_bump: u8,
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
@@ -959,11 +1020,35 @@ pub mod auction_house {
         let system_program = &ctx.accounts.system_program;
         let program_as_signer = &ctx.accounts.program_as_signer;
 
+        let trade_state_canonical_bump = *ctx
+            .bumps
+            .get("seller_trade_state")
+            .ok_or(ErrorCode::PublicKeyMismatch)?;
+        let free_trade_state_canonical_bump = *ctx
+            .bumps
+            .get("free_seller_trade_state")
+            .ok_or(ErrorCode::PublicKeyMismatch)?;
+        let program_as_signer_canonical_bump = *ctx
+            .bumps
+            .get("program_as_signer")
+            .ok_or(ErrorCode::PublicKeyMismatch)?;
+
+        if (trade_state_canonical_bump != trade_state_bump)
+            || (free_trade_state_canonical_bump != free_trade_state_bump)
+            || (program_as_signer_canonical_bump != program_as_signer_bump)
+        {
+            return Err(ErrorCode::PublicKeyMismatch.into());
+        }
+
         let rent = &ctx.accounts.rent;
-        let ts_bump = *ctx.bumps.get("seller_trade_state").ok_or(ErrorCode::PublicKeyMismatch).map_err(|e|{
-            msg!("Missing Seller Trade State Bump");
-            e
-        })?;
+        let ts_bump = *ctx
+            .bumps
+            .get("seller_trade_state")
+            .ok_or(ErrorCode::PublicKeyMismatch)
+            .map_err(|e| {
+                msg!("Missing Seller Trade State Bump");
+                e
+            })?;
 
         // Wallet has to be a signer but there are different kinds of errors when it's not.
         if !wallet.to_account_info().is_signer {
@@ -1200,7 +1285,7 @@ pub struct Sell<'info> {
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -1232,7 +1317,7 @@ pub struct ExecuteSale<'info> {
     pub treasury_mint: Box<Account<'info, Mint>>,
     /// Buyer escrow payment account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump=escrow_payment_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), buyer.key().as_ref()], bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
     /// Seller SOL or SPL account to receive payment at.
     /// CHECK: Verified through CPI
@@ -1272,7 +1357,7 @@ pub struct ExecuteSale<'info> {
     pub system_program: Program<'info, System>,
     pub ata_program: Program<'info, AssociatedToken>,
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -1292,7 +1377,7 @@ pub struct Deposit<'info> {
     pub transfer_authority: UncheckedAccount<'info>,
     /// Buyer escrow payment account PDA.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
     /// Auction House instance treasury mint account.
     pub treasury_mint: Account<'info, Mint>,
@@ -1324,7 +1409,7 @@ pub struct Withdraw<'info> {
     pub receipt_account: UncheckedAccount<'info>,
     /// Buyer escrow payment account PDA.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
     /// Auction House instance treasury mint account.
     pub treasury_mint: Account<'info, Mint>,
@@ -1402,11 +1487,11 @@ pub struct CreateAuctionHouse<'info> {
     pub auction_house: Account<'info, AuctionHouse>,
     /// Auction House instance fee account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=fee_payer_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
     /// Auction House instance treasury PDA account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=treasury_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -1494,7 +1579,7 @@ pub struct CloseEscrowAccount<'info> {
     pub wallet: Signer<'info>,
     /// CHECK: Account seeds checked in constraint.
     /// Buyer escrow payment account PDA.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump=escrow_payment_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), wallet.key().as_ref()], bump)]
     pub escrow_payment_account: UncheckedAccount<'info>,
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], bump=auction_house.bump)]
