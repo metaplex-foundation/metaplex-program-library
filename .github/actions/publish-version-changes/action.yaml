@@ -18,9 +18,9 @@ runs:
     - uses: actions/checkout@v3
 
     - name: Install dependency packages for script
+      # YARN_ENABLE_IMMUTABLE_INSTALLS=false so that we can temporarily use the packages for the action.
       run: |
-        yarn init --yes
-        yarn add @iarna/toml axios
+        YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn && yarn add -D @iarna/toml axios
       shell: bash
 
     - name: Make version changes
@@ -29,3 +29,10 @@ runs:
         script: |
           const script = require('.github/actions/publish-version-changes/script.js')
           await script(${{ inputs.changed-packages }}, '${{ inputs.cargo-token }}', '${{ inputs.npm-token }}')
+
+    - name: Cleanup dependency installs
+      # remove dependencies from package.json and then reset yarn.lock
+      run: |
+        yarn remove @iarna/toml axios
+        git restore yarn.lock
+      shell: bash
