@@ -318,7 +318,7 @@ pub fn mint(
             pubkey: payer,
             is_signer: true,
             is_writable: false,
-        })
+        });
     }
 
     let metadata_pda = find_metadata_pda(&nft_mint.pubkey());
@@ -326,7 +326,7 @@ pub fn mint(
     let (candy_machine_creator_pda, creator_bump) =
         find_candy_machine_creator_pda(&candy_machine_id);
 
-    let mint_ix = program
+    let mut mint_ix = program
         .request()
         .accounts(nft_accounts::MintNFT {
             candy_machine: candy_machine_id,
@@ -346,8 +346,13 @@ pub fn mint(
             recent_blockhashes: sysvar::recent_blockhashes::ID,
             instruction_sysvar_account: sysvar::instructions::ID,
         })
-        .args(nft_instruction::MintNft { creator_bump })
-        .instructions()?;
+        .args(nft_instruction::MintNft { creator_bump });
+
+    // Add additional accounts directly to the mint instruction otherwise it won't work.
+    if !additional_accounts.is_empty() {
+        mint_ix = mint_ix.accounts(additional_accounts);
+    }
+    let mint_ix = mint_ix.instructions()?;
 
     let mut builder = program
         .request()
@@ -355,14 +360,8 @@ pub fn mint(
         .instruction(init_mint_ix)
         .instruction(create_assoc_account_ix)
         .instruction(mint_to_ix)
-        .signer(&nft_mint)
-        .instruction(mint_ix[0].clone());
-
-    if !additional_accounts.is_empty() {
-        for account in additional_accounts {
-            builder = builder.accounts(account);
-        }
-    }
+        .instruction(mint_ix[0].clone())
+        .signer(&nft_mint);
 
     if let Some((collection_pda_pubkey, collection_pda)) = collection_pda_info.as_ref() {
         let collection_authority_record =
