@@ -13,7 +13,7 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-#[cfg(feature = "serde")]
+#[cfg(feature = "serde-feature")]
 use {
     serde::{Deserialize, Serialize},
     serde_with::{As, DisplayFromStr},
@@ -125,7 +125,7 @@ where {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
 pub enum Key {
     Uninitialized,
@@ -140,7 +140,7 @@ pub enum Key {
     CollectionAuthorityRecord,
 }
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, Default, PartialEq, Debug, Clone)]
 pub struct Data {
     /// The name of the asset
@@ -156,7 +156,7 @@ pub struct Data {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct DataV2 {
     /// The name of the asset
@@ -189,7 +189,7 @@ impl DataV2 {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum UseMethod {
     Burn,
@@ -198,14 +198,14 @@ pub enum UseMethod {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum CollectionDetails {
     V1 { size: u64 },
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct Uses {
     // 17 bytes + Option byte
@@ -215,7 +215,7 @@ pub struct Uses {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub enum TokenStandard {
     NonFungible,        // This is a master edition
@@ -225,7 +225,7 @@ pub enum TokenStandard {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct UseAuthorityRecord {
     pub key: Key,          //1
@@ -266,7 +266,7 @@ impl UseAuthorityRecord {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct CollectionAuthorityRecord {
     pub key: Key, //1
@@ -304,7 +304,7 @@ impl CollectionAuthorityRecord {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct Collection {
     pub verified: bool,
@@ -312,7 +312,7 @@ pub struct Collection {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, BorshSerialize, Debug, PartialEq, ShankAccount)]
 pub struct Metadata {
     pub key: Key,
@@ -401,7 +401,7 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct MasterEditionV2 {
     pub key: Key,
@@ -455,7 +455,7 @@ impl MasterEdition for MasterEditionV2 {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 pub struct MasterEditionV1 {
     pub key: Key,
@@ -514,7 +514,7 @@ impl MasterEdition for MasterEditionV1 {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(Clone, Debug, PartialEq, BorshSerialize, BorshDeserialize, ShankAccount)]
 /// All Editions should never have a supply greater than 1.
 /// To enforce this, a transfer mint authority instruction will happen when
@@ -551,10 +551,10 @@ impl TokenMetadataAccount for Edition {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct Creator {
-    #[cfg_attr(feature = "serde", serde(with = "As::<DisplayFromStr>"))]
+    #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub address: Pubkey,
     pub verified: bool,
     // In percentages, NOT basis points ;) Watch out!
@@ -607,7 +607,7 @@ pub fn get_reservation_list(
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct ReservationListV2 {
     pub key: Key,
@@ -727,7 +727,7 @@ impl ReservationList for ReservationListV2 {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct Reservation {
     pub address: Pubkey,
@@ -737,7 +737,7 @@ pub struct Reservation {
 
 // Legacy Reservation List with u8s
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct ReservationListV1 {
     pub key: Key,
@@ -828,7 +828,7 @@ impl ReservationList for ReservationListV1 {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct ReservationV1 {
     pub address: Pubkey,
@@ -837,7 +837,7 @@ pub struct ReservationV1 {
 }
 
 #[repr(C)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, ShankAccount)]
 pub struct EditionMarker {
     pub key: Key,
