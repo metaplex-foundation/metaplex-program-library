@@ -37,10 +37,10 @@ PROCESSOR="$(uname -m)"
 case "$PROCESSOR" in
     arm* | aarch* | ppc* )
         if [ "$OS_FLAVOUR" != Darwin ]; then
-            echo "Binary for $PROCESSOR architecture is not currently supported. Please follow the instructions at:"
+            echo "Binary for $PROCESSOR architecture is not currently supported using this installer. Please follow the instructions at:"
             echo "  => $(CYN https://github.com/metaplex-foundation/sugar)"
             echo ""
-            echo "to build Sugar from the source code."
+            echo "for details on alternate installation methods."
             exit 1
         fi
         ;;

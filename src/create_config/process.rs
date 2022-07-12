@@ -158,7 +158,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     println!("\nCheck out our Candy Machine config docs to learn about the options:");
     println!(
         "  -> {}\n",
-        style("https://docs.metaplex.com/candy-machine-v2/configuration")
+        style("https://docs.metaplex.com/tools/sugar/configuration")
             .bold()
             .magenta()
             .underlined()
@@ -400,7 +400,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         let civic_network = Pubkey::from_str(CIVIC_NETWORK).unwrap();
         let encore_network = Pubkey::from_str(ENCORE_NETWORK).unwrap();
         let selection = Select::with_theme(&theme)
-            .with_prompt("Which gatekeeper network do you want to use? Check https://docs.metaplex.com/candy-machine-v2/configuration#provider-networks for more info.")
+            .with_prompt("Which gatekeeper network do you want to use? Check https://docs.metaplex.com/guides/archived/candy-machine-v2/configuration#provider-networks for more info.")
             .items(&gatekeeper_options)
             .default(0)
             .interact()?;
