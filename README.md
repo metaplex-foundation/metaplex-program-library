@@ -24,7 +24,18 @@ See [the docs](https://docs.metaplex.com/sugar/introduction) for full installati
 
 ## Installation
 
-To install, either download a binary, install from Crates.io, or install from source. Non-technical users will typically find using a pre-built binary to be simpler.
+### Recommended Method
+
+For MacOS, Linux and Windows Subsystem Linux (WSL), run the following install script in your terminal:
+
+```bash
+bash <(curl -sSf https://sugar.metaplex.com/install.sh)
+```
+
+
+For Windows:
+
+Download [this installer binary](https://github.com/metaplex-foundation/winstaller/releases/latest/download/winstaller.exe) and execute it. Since it is not a verified Windows binary you may have to choose "Run Anyway" from "More Info" on the pop-up Windows dialog. 
 
 > **Dependencies:**
 > When installing on Ubuntu or WSL (Windows Subsystem Linux), you may need to install some additional dependencies:
@@ -32,36 +43,26 @@ To install, either download a binary, install from Crates.io, or install from so
 > ```bash
 > sudo apt install libssl-dev libudev-dev pkg-config
 > ```
->
-> macOS users may need to install the OpenSSL library, which can be done using [Homebrew](https://brew.sh):
->
-> ```bash
-> brew install openssl@3
-> ```
 
-### Binaries
 
-Binaries for the supported OS can be found at:
 
-- [Sugar Releases](https://github.com/metaplex-foundation/sugar/releases)
+### Developers
 
-To install Sugar pre-built binary on a supported OS, run the following in your terminal:
-
-```bash
-bash <(curl -sSf https://raw.githubusercontent.com/metaplex-foundation/sugar/main/script/sugar-install.sh)
-```
-
-### Using Crates.io
+Using Crates.io:
 
 ```bash
 cargo install sugar-cli
 ```
 
-### Build From Source
+
+
+Build From Source:
 
 ```bash
 cargo install --path ./
 ```
+
+
 
 ## Quick Start
 
