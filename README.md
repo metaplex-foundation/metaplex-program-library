@@ -41,7 +41,7 @@ Download [this installer binary](https://github.com/metaplex-foundation/winstall
 > When installing on Ubuntu or WSL (Windows Subsystem Linux), you may need to install some additional dependencies:
 >
 > ```bash
-> sudo apt install libssl-dev libudev-dev pkg-config
+> sudo apt install libudev-dev pkg-config unzip
 > ```
 
 
