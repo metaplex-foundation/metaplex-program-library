@@ -46,7 +46,7 @@ pub struct PublicBuy<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump = escrow_payment_bump
+        bump
     )]
     escrow_payment_account: UncheckedAccount<'info>,
 
@@ -91,7 +91,7 @@ pub struct PublicBuy<'info> {
             buyer_price.to_le_bytes().as_ref(),
             token_size.to_le_bytes().as_ref()
         ],
-        bump = trade_state_bump
+        bump
     )]
     buyer_trade_state: UncheckedAccount<'info>,
 
@@ -129,6 +129,12 @@ pub fn public_bid(
         buyer_price,
         token_size,
         true,
+        *ctx.bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,
+        *ctx.bumps
+            .get("buyer_trade_state")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,
     )
 }
 
@@ -165,7 +171,7 @@ pub struct AuctioneerPublicBuy<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump = escrow_payment_bump
+        bump
     )]
     escrow_payment_account: UncheckedAccount<'info>,
 
@@ -213,7 +219,7 @@ pub struct AuctioneerPublicBuy<'info> {
             buyer_price.to_le_bytes().as_ref(),
             token_size.to_le_bytes().as_ref()
         ],
-        bump = trade_state_bump
+        bump
     )]
     buyer_trade_state: UncheckedAccount<'info>,
 
@@ -265,6 +271,12 @@ pub fn auctioneer_public_bid(
         buyer_price,
         token_size,
         true,
+        *ctx.bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,
+        *ctx.bumps
+            .get("buyer_trade_state")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,
     )
 }
 
@@ -308,7 +320,7 @@ pub struct Buy<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump = escrow_payment_bump
+        bump
     )]
     escrow_payment_account: UncheckedAccount<'info>,
 
@@ -357,7 +369,7 @@ pub struct Buy<'info> {
             buyer_price.to_le_bytes().as_ref(),
             token_size.to_le_bytes().as_ref()
         ],
-        bump = trade_state_bump
+        bump
     )]
     buyer_trade_state: UncheckedAccount<'info>,
 
@@ -394,6 +406,12 @@ pub fn private_bid<'info>(
         buyer_price,
         token_size,
         false,
+        *ctx.bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,
+        *ctx.bumps
+            .get("buyer_trade_state")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,
     )
 }
 
@@ -437,7 +455,7 @@ pub struct AuctioneerBuy<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump = escrow_payment_bump
+        bump
     )]
     escrow_payment_account: UncheckedAccount<'info>,
 
@@ -489,7 +507,7 @@ pub struct AuctioneerBuy<'info> {
             buyer_price.to_le_bytes().as_ref(),
             token_size.to_le_bytes().as_ref()
         ],
-        bump = trade_state_bump
+        bump
     )]
     buyer_trade_state: UncheckedAccount<'info>,
 
@@ -540,6 +558,12 @@ pub fn auctioneer_private_bid<'info>(
         buyer_price,
         token_size,
         false,
+        *ctx.bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,
+        *ctx.bumps
+            .get("buyer_trade_state")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,
     )
 }
 
@@ -564,6 +588,8 @@ pub fn bid_logic<'info>(
     buyer_price: u64,
     token_size: u64,
     public: bool,
+    escrow_canonical_bump: u8,
+    trade_state_canonical_bump: u8,
 ) -> Result<()> {
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
@@ -580,6 +606,13 @@ pub fn bid_logic<'info>(
         &token_account.key(),
         trade_state_bump,
     )?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (trade_state_canonical_bump != trade_state_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
+
     let auction_house_key = auction_house.key();
     let seeds = [
         PREFIX.as_bytes(),
@@ -752,6 +785,8 @@ pub fn auctioneer_bid_logic<'info>(
     buyer_price: u64,
     token_size: u64,
     public: bool,
+    escrow_canonical_bump: u8,
+    trade_state_canonical_bump: u8,
 ) -> Result<()> {
     let ah_auctioneer_pda_account = ah_auctioneer_pda.to_account_info();
 
@@ -765,6 +800,12 @@ pub fn auctioneer_bid_logic<'info>(
         &ah_auctioneer_pda_account,
         AuthorityScope::Buy,
     )?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (trade_state_canonical_bump != trade_state_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     assert_valid_trade_state(
         &wallet.key(),

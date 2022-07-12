@@ -69,7 +69,7 @@ pub struct Sell<'info> {
             &buyer_price.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=trade_state_bump
+        bump
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
@@ -87,7 +87,7 @@ pub struct Sell<'info> {
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=free_trade_state_bump
+        bump
     )]
     pub free_seller_trade_state: UncheckedAccount<'info>,
 
@@ -95,7 +95,7 @@ pub struct Sell<'info> {
     pub system_program: Program<'info, System>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -190,7 +190,7 @@ pub struct AuctioneerSell<'info> {
             &u64::MAX.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=trade_state_bump
+        bump
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
@@ -208,7 +208,7 @@ pub struct AuctioneerSell<'info> {
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=free_trade_state_bump
+        bump
     )]
     pub free_seller_trade_state: UncheckedAccount<'info>,
 
@@ -225,7 +225,7 @@ pub struct AuctioneerSell<'info> {
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
@@ -246,6 +246,26 @@ pub fn sell<'info>(
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    let trade_state_canonical_bump = *ctx
+        .bumps
+        .get("seller_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_seller_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (trade_state_canonical_bump != trade_state_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
     }
 
     sell_logic(
@@ -281,6 +301,26 @@ pub fn auctioneer_sell<'info>(
         ah_auctioneer_pda,
         AuthorityScope::Sell,
     )?;
+
+    let trade_state_canonical_bump = *ctx
+        .bumps
+        .get("seller_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_seller_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (trade_state_canonical_bump != trade_state_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     let mut accounts: Sell<'info> = (*ctx.accounts).clone().into();
 

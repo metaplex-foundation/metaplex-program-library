@@ -27,7 +27,7 @@ pub struct Deposit<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -100,6 +100,15 @@ pub fn deposit<'info>(
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
+
     deposit_logic(ctx.accounts, escrow_payment_bump, amount)
 }
 
@@ -128,7 +137,7 @@ pub struct AuctioneerDeposit<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -206,6 +215,15 @@ pub fn auctioneer_deposit<'info>(
         ah_auctioneer_pda,
         AuthorityScope::Deposit,
     )?;
+
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     let mut accounts: Deposit<'info> = (*ctx.accounts).clone().into();
 

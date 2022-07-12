@@ -55,7 +55,7 @@ pub struct ExecuteSale<'info> {
             auction_house.key().as_ref(),
             buyer.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -151,7 +151,7 @@ pub struct ExecuteSale<'info> {
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=free_trade_state_bump
+        bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -160,7 +160,7 @@ pub struct ExecuteSale<'info> {
     pub ata_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -207,6 +207,26 @@ pub fn execute_sale<'info>(
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    let escrow_canonical_bump = *ctx
+        .bumps
+        .get("escrow_payment_account")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
     }
 
     execute_sale_logic(
@@ -269,7 +289,7 @@ pub struct ExecutePartialSale<'info> {
             auction_house.key().as_ref(),
             buyer.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -365,7 +385,7 @@ pub struct ExecutePartialSale<'info> {
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=free_trade_state_bump
+        bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -374,7 +394,7 @@ pub struct ExecutePartialSale<'info> {
     pub ata_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -395,6 +415,26 @@ pub fn execute_partial_sale<'info>(
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
     if auction_house.has_auctioneer {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    let escrow_canonical_bump = *ctx
+        .bumps
+        .get("escrow_payment_account")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
     }
 
     execute_sale_logic(
@@ -456,7 +496,7 @@ pub struct AuctioneerExecuteSale<'info> {
             auction_house.key().as_ref(),
             buyer.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -556,7 +596,7 @@ pub struct AuctioneerExecuteSale<'info> {
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=free_trade_state_bump
+        bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -581,7 +621,7 @@ pub struct AuctioneerExecuteSale<'info> {
         seeds=[
             PREFIX.as_bytes(), SIGNER.as_bytes()
         ],
-        bump=program_as_signer_bump
+        bump
     )]
     pub program_as_signer: UncheckedAccount<'info>,
 
@@ -610,6 +650,26 @@ pub fn auctioneer_execute_sale<'info>(
         ah_auctioneer_pda,
         AuthorityScope::ExecuteSale,
     )?;
+
+    let escrow_canonical_bump = *ctx
+        .bumps
+        .get("escrow_payment_account")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     // Duplicate the logic methods to avoid going over the compute limit.
     auctioneer_execute_sale_logic(
@@ -671,7 +731,7 @@ pub struct AuctioneerExecutePartialSale<'info> {
             auction_house.key().as_ref(),
             buyer.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -742,18 +802,18 @@ pub struct AuctioneerExecutePartialSale<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
     #[account(
-    mut,
-    seeds = [
-        PREFIX.as_bytes(),
-        seller.key().as_ref(),
-        auction_house.key().as_ref(),
-        token_account.key().as_ref(),
-        auction_house.treasury_mint.as_ref(),
-        token_mint.key().as_ref(),
-        &buyer_price.to_le_bytes(),
-        &token_size.to_le_bytes()
-    ],
-    bump=seller_trade_state.to_account_info().data.borrow()[0]
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &buyer_price.to_le_bytes(),
+            &token_size.to_le_bytes()
+        ],
+        bump=seller_trade_state.to_account_info().data.borrow()[0]
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
@@ -771,7 +831,7 @@ pub struct AuctioneerExecutePartialSale<'info> {
         &0u64.to_le_bytes(),
         &token_size.to_le_bytes()
     ],
-    bump=free_trade_state_bump
+    bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -792,7 +852,7 @@ pub struct AuctioneerExecutePartialSale<'info> {
     pub ata_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -822,6 +882,26 @@ pub fn auctioneer_execute_partial_sale<'info>(
         ah_auctioneer_pda,
         AuthorityScope::ExecuteSale,
     )?;
+
+    let escrow_canonical_bump = *ctx
+        .bumps
+        .get("escrow_payment_account")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     // Duplicate the logic methods to avoid going over the compute limit.
     auctioneer_execute_sale_logic(
