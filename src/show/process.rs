@@ -282,7 +282,13 @@ pub fn process_show(args: ShowArgs) -> Result<()> {
             }
         }
 
-        if !indices.is_empty() {
+        if indices.is_empty() {
+            println!(
+                "\n{}{}",
+                PAPER_EMOJI,
+                style("All items of the candy machine have been minted.").dim()
+            );
+        } else {
             // makes sure all items are in order
             indices.sort_unstable();
             // logs all indices
