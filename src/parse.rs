@@ -1,8 +1,10 @@
 use std::{env, fs::File, path::Path};
 
 use anyhow::{anyhow, Result};
+use lazy_static::lazy_static;
+use regex::Regex;
 
-use crate::config::data::*;
+use crate::{config::data::*, program_errors::*};
 
 pub fn parse_solana_config() -> Option<SolanaConfig> {
     let home = if cfg!(unix) {
@@ -34,5 +36,42 @@ pub fn path_to_string(path: &Path) -> Result<String> {
     match path.to_str() {
         Some(s) => Ok(s.to_string()),
         None => Err(anyhow!("Couldn't convert path to string.")),
+    }
+}
+
+pub fn parse_sugar_errors(msg: &str) -> String {
+    lazy_static! {
+        static ref RE: Regex =
+            Regex::new(r"(0x[A-Za-z1-9]+)").expect("Failed to compile parse_client_error regex.");
+    }
+    let mat = RE.find(msg);
+
+    // If there's an RPC error code match in the message, try to parse it, otherwise return the message back.
+    match mat {
+        Some(m) => {
+            let code = msg[m.start()..m.end()].to_string();
+            find_external_program_error(code)
+        }
+        None => msg.to_owned(),
+    }
+}
+
+fn find_external_program_error(code: String) -> String {
+    let code = code.to_uppercase();
+
+    let parsed_code = if code.contains("0X") {
+        code.replace("0X", "")
+    } else {
+        format!("{:X}", code.parse::<i64>().unwrap())
+    };
+
+    if let Some(e) = ANCHOR_ERROR.get(&parsed_code) {
+        format!("Anchor Error: {e}")
+    } else if let Some(e) = METADATA_ERROR.get(&parsed_code) {
+        format!("Token Metadata Error: {e}")
+    } else if let Some(e) = CANDY_ERROR.get(&parsed_code) {
+        format!("Candy Machine Error: {e}")
+    } else {
+        format!("Unknown error. Code: {code}")
     }
 }

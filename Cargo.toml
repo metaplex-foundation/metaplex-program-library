@@ -26,14 +26,17 @@ clap = { version = "3.2.8", features = ["derive", "cargo"] }
 console = "0.15.0"
 ctrlc = "3.2.2"
 data-encoding = "2.3.2"
+dialoguer = "0.10.1"
 futures = "0.3.21"
 glob = "0.3.0"
 indexmap = { version = "1.9.1", features = ["serde"] }
 indicatif = { version = "0.16.2", features = ["rayon"] }
-mpl-token-metadata = "1.2.5"
+lazy_static = "1.4.0"
 mpl-candy-machine = { version = "4.0.1", features = ["no-entrypoint"] }
+mpl-token-metadata = "1.2.7"
 num_cpus = "1.13.1"
 par-stream = { version = "0.10.2", features = ["runtime-tokio"] }
+phf = { version = "0.10", features = ["macros"] }
 rand = "0.8.5"
 rayon = "1.5.3"
 regex = "1.5.6"
@@ -54,7 +57,6 @@ structopt = "0.3.26"
 thiserror = "1.0.31"
 tokio = "1.19.2"
 tracing = { version = "0.1.35", features = ["log"] }
-tracing-subscriber = { version = "0.3.14", features = ["registry", "env-filter"] }
 tracing-bunyan-formatter = "0.3.3"
-dialoguer = "0.10.1"
+tracing-subscriber = { version = "0.3.14", features = ["registry", "env-filter"] }
 url = "2.2.2"
