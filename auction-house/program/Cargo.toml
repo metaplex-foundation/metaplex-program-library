@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "mpl-auction-house"
-version = "1.2.2"
+version = "1.2.3"
 edition = "2021"
 description = "Decentralized Sales Protocol for Solana Tokens"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
