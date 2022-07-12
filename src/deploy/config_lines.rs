@@ -62,7 +62,7 @@ pub fn generate_config_lines(
             }
         } else {
             let config_line = item
-                .into_config_line()
+                .to_config_line()
                 .expect("Could not convert item to config line");
 
             let size = (2 * STRING_LEN_SIZE) + config_line.name.len() + config_line.uri.len();

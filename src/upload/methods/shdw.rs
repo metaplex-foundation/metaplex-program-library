@@ -122,7 +122,7 @@ impl Prepare for SHDWMethod {
                     for index in indices {
                         let item = assets.get(index).unwrap();
                         let path = Path::new(&item.image);
-                        total_size += std::fs::metadata(path)?.len();
+                        total_size += fs::metadata(path)?.len();
                     }
                 }
                 DataType::Animation => {
@@ -131,7 +131,7 @@ impl Prepare for SHDWMethod {
 
                         if let Some(animation) = &item.animation {
                             let path = Path::new(animation);
-                            total_size += std::fs::metadata(path)?.len();
+                            total_size += fs::metadata(path)?.len();
                         }
                     }
                 }

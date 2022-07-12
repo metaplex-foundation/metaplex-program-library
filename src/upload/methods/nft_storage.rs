@@ -120,12 +120,12 @@ impl Prepare for NftStorageMethod {
                 let size = match data_type {
                     DataType::Image => {
                         let path = Path::new(&item.image);
-                        std::fs::metadata(path)?.len()
+                        fs::metadata(path)?.len()
                     }
                     DataType::Animation => {
                         if let Some(animation) = &item.animation {
                             let path = Path::new(animation);
-                            std::fs::metadata(path)?.len()
+                            fs::metadata(path)?.len()
                         } else {
                             0
                         }
@@ -177,7 +177,7 @@ impl Uploader for NftStorageMethod {
             let size = match data_type {
                 DataType::Image | DataType::Animation => {
                     let path = Path::new(&asset_info.content);
-                    std::fs::metadata(path)?.len()
+                    fs::metadata(path)?.len()
                 }
                 DataType::Metadata => {
                     let content = String::from(&asset_info.content);

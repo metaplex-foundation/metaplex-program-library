@@ -26,7 +26,7 @@ See [the docs](https://docs.metaplex.com/sugar/introduction) for full installati
 
 ### Recommended Method
 
-For MacOS, Linux and Windows Subsystem Linux (WSL), run the following install script in your terminal:
+For macOS, Linux and Windows Subsystem Linux (WSL), run the following install script in your terminal:
 
 ```bash
 bash <(curl -sSf https://sugar.metaplex.com/install.sh)

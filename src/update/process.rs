@@ -183,19 +183,16 @@ fn create_candy_machine_data(
     info!("{:?}", config.go_live_date);
     let go_live_date: Option<i64> = go_live_date_as_timestamp(&config.go_live_date)?;
 
-    let end_settings = config.end_settings.as_ref().map(|s| s.into_candy_format());
+    let end_settings = config.end_settings.as_ref().map(|s| s.to_candy_format());
 
     let whitelist_mint_settings = config
         .whitelist_mint_settings
         .as_ref()
-        .map(|s| s.into_candy_format());
+        .map(|s| s.to_candy_format());
 
-    let hidden_settings = config
-        .hidden_settings
-        .as_ref()
-        .map(|s| s.into_candy_format());
+    let hidden_settings = config.hidden_settings.as_ref().map(|s| s.to_candy_format());
 
-    let gatekeeper = config.gatekeeper.as_ref().map(|g| g.into_candy_format());
+    let gatekeeper = config.gatekeeper.as_ref().map(|g| g.to_candy_format());
 
     let price = parse_config_price(client, config)?;
 
@@ -203,7 +200,7 @@ fn create_candy_machine_data(
         .creators
         .clone()
         .into_iter()
-        .map(|c| c.into_candy_format())
+        .map(|c| c.to_candy_format())
         .collect::<Result<Vec<mpl_candy_machine::Creator>>>()?;
 
     let data = CandyMachineData {

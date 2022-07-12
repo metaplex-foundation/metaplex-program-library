@@ -1,5 +1,4 @@
 use std::{
-    fs,
     io::Write,
     ops::{Deref, DerefMut},
     path::Path,
@@ -31,7 +30,7 @@ impl Cache {
 
     pub fn write_to_file<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
         let c = serde_json::to_string(&self)?;
-        let mut f = fs::File::create(path)?;
+        let mut f = File::create(path)?;
         f.write_all(c.as_bytes())?;
 
         Ok(())
@@ -130,7 +129,7 @@ pub struct CacheItem {
 }
 
 impl CacheItem {
-    pub fn into_config_line(&self) -> Option<ConfigLine> {
+    pub fn to_config_line(&self) -> Option<ConfigLine> {
         if !self.on_chain {
             Some(ConfigLine {
                 name: self.name.clone(),

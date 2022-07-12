@@ -68,9 +68,9 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         match cache.items.get_mut(&index.to_string()) {
             Some(item) => {
                 let image_changed =
-                    !&item.image_hash.eq(&pair.image_hash) || item.image_link.is_empty();
+                    !item.image_hash.eq(&pair.image_hash) || item.image_link.is_empty();
 
-                let animation_changed = !&item.animation_hash.eq(&pair.animation_hash)
+                let animation_changed = !item.animation_hash.eq(&pair.animation_hash)
                     || (item.animation_link.is_none() && pair.animation.is_some());
 
                 let metadata_changed =
@@ -196,7 +196,7 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         let pb = spinner_with_style();
         pb.set_message("Connecting...");
 
-        let storage = uploader::initialize(&sugar_config, &config_data).await?;
+        let storage = initialize(&sugar_config, &config_data).await?;
 
         pb.finish_with_message("Connected");
 

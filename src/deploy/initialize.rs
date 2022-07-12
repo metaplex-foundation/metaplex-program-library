@@ -24,28 +24,25 @@ pub fn create_candy_machine_data(
 ) -> Result<CandyMachineData> {
     let go_live_date: Option<i64> = go_live_date_as_timestamp(&config.go_live_date)?;
 
-    let end_settings = config.end_settings.as_ref().map(|s| s.into_candy_format());
+    let end_settings = config.end_settings.as_ref().map(|s| s.to_candy_format());
 
     let whitelist_mint_settings = config
         .whitelist_mint_settings
         .as_ref()
-        .map(|s| s.into_candy_format());
+        .map(|s| s.to_candy_format());
 
-    let hidden_settings = config
-        .hidden_settings
-        .as_ref()
-        .map(|s| s.into_candy_format());
+    let hidden_settings = config.hidden_settings.as_ref().map(|s| s.to_candy_format());
 
     let gatekeeper = config
         .gatekeeper
         .as_ref()
-        .map(|gatekeeper| gatekeeper.into_candy_format());
+        .map(|gatekeeper| gatekeeper.to_candy_format());
 
     let mut creators: Vec<CandyCreator> = Vec::new();
     let mut share = 0u32;
 
     for creator in &config.creators {
-        let c = creator.into_candy_format()?;
+        let c = creator.to_candy_format()?;
         share += c.share as u32;
 
         creators.push(c);
