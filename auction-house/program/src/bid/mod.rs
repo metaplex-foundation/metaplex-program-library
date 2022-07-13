@@ -563,7 +563,13 @@ pub fn bid_logic<'info>(
     public: bool,
 ) -> Result<()> {
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if (auction_house.has_auctioneer
+        && !public
+        && auction_house.scopes[AuthorityScope::Buy as usize])
+        || (auction_house.has_auctioneer
+            && public
+            && auction_house.scopes[AuthorityScope::PublicBuy as usize])
+    {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 

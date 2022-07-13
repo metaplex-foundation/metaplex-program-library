@@ -96,7 +96,7 @@ pub fn deposit<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::Deposit as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 

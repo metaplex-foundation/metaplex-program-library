@@ -205,7 +205,7 @@ pub fn execute_sale<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::ExecuteSale as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
@@ -422,7 +422,7 @@ pub fn execute_partial_sale<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::ExecuteSale as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
     let mut accounts: ExecuteSale<'info> = (*ctx.accounts).clone().into();

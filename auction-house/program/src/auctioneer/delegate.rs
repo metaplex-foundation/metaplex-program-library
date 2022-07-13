@@ -52,7 +52,7 @@ pub fn delegate_auctioneer<'info>(
 
     let auction_house = &mut ctx.accounts.auction_house;
 
-    if auction_house.has_auctioneer == true {
+    if auction_house.has_auctioneer {
         return Err(AuctionHouseError::AuctionHouseAlreadyDelegated.into());
     }
 
