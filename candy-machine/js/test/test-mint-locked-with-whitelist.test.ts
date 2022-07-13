@@ -19,11 +19,13 @@ import {
   LockupSettings,
   LockupType,
   PROGRAM_ID,
+  WhitelistMintMode,
 } from '../src/generated';
 import test from 'tape';
 import { LOCALHOST } from '@metaplex-foundation/amman-client';
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  MintLayout,
   // MintLayout,
   Token,
   TOKEN_PROGRAM_ID,
@@ -56,11 +58,14 @@ const nftToMintKeypair = Keypair.generate();
 const ITEMS_AVAILABLE = 10;
 let tokenAccountToReceive: PublicKey;
 
+const whitelistMintKeypair = Keypair.generate();
+let whitelistMintTokenAccount: PublicKey;
+
 const uuidFromConfigPubkey = (configAccount: PublicKey) => {
   return configAccount.toBase58().slice(0, 6);
 };
 
-test('Candy machine initialize with lockup settings', async (t) => {
+test('Candy machine initialize with lockup settings and mint with whitelist token', async (t) => {
   await amman.airdrop(connection, walletKeypair.publicKey, 30);
   const [lockupSettingsId] = await findLockupSettingsId(candyMachineKeypair.publicKey);
 
@@ -80,7 +85,7 @@ test('Candy machine initialize with lockup settings', async (t) => {
         maxSupply: new BN(10),
         isMutable: true,
         retainAuthority: true,
-        goLiveDate: new BN(Date.now() / 1000),
+        goLiveDate: new BN(Date.now() / 1000 + 60000), // 60 seconds
         endSettings: null,
         creators: [
           {
@@ -90,7 +95,12 @@ test('Candy machine initialize with lockup settings', async (t) => {
           },
         ],
         hiddenSettings: null,
-        whitelistMintSettings: null,
+        whitelistMintSettings: {
+          mode: WhitelistMintMode.BurnEveryTime,
+          mint: whitelistMintKeypair.publicKey,
+          presale: true,
+          discountPrice: 1,
+        },
         itemsAvailable: new BN(ITEMS_AVAILABLE),
         gatekeeper: null,
       },
@@ -240,7 +250,67 @@ test('Candy machine set collections', async (t) => {
   t.assert(collectionPdaData.candyMachine.toString() === candyMachineKeypair.publicKey.toString());
 });
 
-test('Mint with lockup', async (t) => {
+test('Mint whitelist token', async (t) => {
+  whitelistMintTokenAccount = await Token.getAssociatedTokenAddress(
+    ASSOCIATED_TOKEN_PROGRAM_ID,
+    TOKEN_PROGRAM_ID,
+    whitelistMintKeypair.publicKey,
+    walletKeypair.publicKey,
+    false,
+  );
+  const instructions = [
+    SystemProgram.createAccount({
+      fromPubkey: walletKeypair.publicKey,
+      newAccountPubkey: whitelistMintKeypair.publicKey,
+      space: MintLayout.span,
+      lamports: await connection.getMinimumBalanceForRentExemption(MintLayout.span),
+      programId: TOKEN_PROGRAM_ID,
+    }),
+    Token.createInitMintInstruction(
+      TOKEN_PROGRAM_ID,
+      whitelistMintKeypair.publicKey,
+      0,
+      walletKeypair.publicKey,
+      walletKeypair.publicKey,
+    ),
+    Token.createAssociatedTokenAccountInstruction(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      whitelistMintKeypair.publicKey,
+      whitelistMintTokenAccount,
+      walletKeypair.publicKey,
+      walletKeypair.publicKey,
+    ),
+    Token.createMintToInstruction(
+      TOKEN_PROGRAM_ID,
+      whitelistMintKeypair.publicKey,
+      whitelistMintTokenAccount,
+      walletKeypair.publicKey,
+      [],
+      1,
+    ),
+  ];
+  const tx = new Transaction();
+  tx.instructions = instructions;
+  tx.feePayer = walletKeypair.publicKey;
+  tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+  tx.sign(walletKeypair, whitelistMintKeypair);
+  await sendAndConfirmRawTransaction(connection, tx.serialize());
+
+  const checkWhitelistTokenAccount = await new Token(
+    connection,
+    whitelistMintKeypair.publicKey,
+    TOKEN_PROGRAM_ID,
+    walletKeypair,
+  ).getAccountInfo(whitelistMintTokenAccount);
+
+  // assert is frozen
+  t.assert(checkWhitelistTokenAccount.isFrozen === false);
+  // assert amount 1
+  t.assert(checkWhitelistTokenAccount.amount.toNumber() === 1);
+});
+
+test('Mint with lockup and whitelist', async (t) => {
   tokenAccountToReceive = await Token.getAssociatedTokenAddress(
     ASSOCIATED_TOKEN_PROGRAM_ID,
     TOKEN_PROGRAM_ID,
@@ -320,6 +390,22 @@ test('Mint with lockup', async (t) => {
       ...mintIx,
       keys: [
         ...mintIx.keys,
+        // remaining accounts for whitelist
+        {
+          pubkey: whitelistMintTokenAccount,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: whitelistMintKeypair.publicKey,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: walletKeypair.publicKey,
+          isSigner: false,
+          isWritable: false,
+        },
         // remaining accounts for minting the token during execution
         {
           pubkey: tokenAccountToReceive,
