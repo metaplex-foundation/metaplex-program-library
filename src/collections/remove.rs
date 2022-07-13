@@ -25,18 +25,18 @@ pub fn process_remove_collection(args: RemoveCollectionArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let client = setup_client(&sugar_config)?;
     let program = client.program(CANDY_MACHINE_ID);
-    let cache_option: Option<Cache> = None;
+    let mut cache = Cache::new();
 
     // the candy machine id specified takes precedence over the one from the cache
     let candy_machine_id = match args.candy_machine {
-        Some(candy_machine_id) => candy_machine_id,
+        Some(ref candy_machine_id) => candy_machine_id,
         None => {
-            let cache_option = Some(load_cache(&args.cache, false)?);
-            cache_option.unwrap().program.candy_machine
+            cache = load_cache(&args.cache, false)?;
+            &cache.program.candy_machine
         }
     };
 
-    let candy_pubkey = match Pubkey::from_str(&candy_machine_id) {
+    let candy_pubkey = match Pubkey::from_str(candy_machine_id) {
         Ok(candy_pubkey) => candy_pubkey,
         Err(_) => {
             let error = anyhow!("Failed to parse candy machine id: {}", candy_machine_id);
@@ -80,8 +80,10 @@ pub fn process_remove_collection(args: RemoveCollectionArgs) -> Result<()> {
         &collection_metadata_info,
     )?;
 
-    if let Some(mut cache) = cache_option {
-        cache.items.remove("-1");
+    // If a candy machine id wasn't manually specified we are operating on the candy machine in the cache
+    // and so need to update the cache file.
+    if args.candy_machine.is_none() {
+        cache.items.shift_remove("-1");
         cache.program.collection_mint = String::new();
         cache.sync_file()?;
     }

@@ -793,7 +793,7 @@ if [ ! "$MANUAL_CACHE" == "Y" ]; then
     echo ""
 
     MAG "Removing collection >>>"
-    $SUGAR_BIN collection --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC remove
+    $SUGAR_BIN collection remove --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC
     MAG "<<<"
 
     # checking that the collection PDA was removed
@@ -806,7 +806,7 @@ if [ ! "$MANUAL_CACHE" == "Y" ]; then
 
     echo ""
     MAG "Setting collection >>>"
-    $SUGAR_BIN collection --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC set $COLLECTION_PDA
+    $SUGAR_BIN collection set --keypair $WALLET_KEY --cache $CACHE_FILE -r $RPC $COLLECTION_PDA
     MAG "<<<"
 
     # checking that the collection PDA was set
