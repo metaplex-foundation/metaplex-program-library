@@ -53,15 +53,15 @@ pub fn update_auctioneer<'info>(
         return Err(AuctionHouseError::AuctionHouseNotDelegated.into());
     }
 
+    // Set all scopes false and then update as true the ones passed into the handler.
+    auction_house.scopes = [false; MAX_NUM_SCOPES];
+    for scope in scopes {
+        auction_house.scopes[scope as usize] = true;
+    }
+
     let auctioneer = &mut ctx.accounts.ah_auctioneer_pda;
     auctioneer.auctioneer_authority = ctx.accounts.auctioneer_authority.key();
     auctioneer.auction_house = ctx.accounts.auction_house.key();
-
-    // Set all scopes false and then update as true the ones passed into the handler.
-    auctioneer.scopes = [false; MAX_NUM_SCOPES];
-    for scope in scopes {
-        auctioneer.scopes[scope as usize] = true;
-    }
 
     Ok(())
 }

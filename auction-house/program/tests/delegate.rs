@@ -55,7 +55,7 @@ async fn delegate_success() {
         .expect("Error getting new auction house account")
         .expect("Auction House empty");
     let auctioneer = Auctioneer::deserialize(&mut auctioneer_pda_account.data[8..].as_ref())
-        .expect("Failed to deserialize Auction House data");
+        .expect("Failed to deserialize Auctioneer data");
 
     // **ASSERT**
     assert!(!ah.has_auctioneer);
@@ -63,7 +63,7 @@ async fn delegate_success() {
 
     assert_eq!(auctioneer_authority_pubkey, auctioneer.auctioneer_authority);
     assert_eq!(ahkey, auctioneer.auction_house);
-    assert_scopes_eq(scopes, auctioneer.scopes);
+    assert_scopes_eq(scopes, new_ah.scopes);
 }
 
 #[tokio::test]

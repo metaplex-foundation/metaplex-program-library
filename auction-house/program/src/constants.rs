@@ -11,7 +11,6 @@ pub const MAX_NUM_SCOPES: usize = 7;
 pub const AUCTIONEER_SIZE: usize = 8 +                      // Anchor discriminator/sighash
 32 +                                                        // Auctioneer authority
 32 +                                                        // Auction house instance
-MAX_NUM_SCOPES +                                            // Array of AuthorityScope bools
 1 +                                                         // bump
 63                                                          // Padding
 ;
@@ -33,5 +32,6 @@ pub const AUCTION_HOUSE_SIZE: usize = 8 +                   // key
 8 +                                                         // escrow payment bump
 1 +                                                         // has external auctioneer program as an authority
 32 +                                                         // auctioneer address
-179                                                         // padding
+MAX_NUM_SCOPES +                                            // Array of AuthorityScope bools
+172                                                         // padding
 ;

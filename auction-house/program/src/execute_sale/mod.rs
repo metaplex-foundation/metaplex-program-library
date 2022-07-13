@@ -6,8 +6,6 @@ use anchor_lang::{
 };
 use solana_program::program_memory::sol_memset;
 use spl_token::state::Account as SplAccount;
-use std::collections::BTreeMap;
-use std::ops::Deref;
 
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
 #[derive(Accounts)]

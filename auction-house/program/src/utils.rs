@@ -656,18 +656,18 @@ pub fn assert_valid_auctioneer_and_scope(
         auction_house_instance.auctioneer_address,
         auctioneer_pda.key(),
     )
-    .map_err(|e| AuctionHouseError::InvalidAuctioneer)?;
+    .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
     // Assert the auctioneer_authority is tagged in the Auctioneer
     assert_keys_equal(
         auctioneer_pda.auctioneer_authority,
         auctioneer_authority.key(),
     )
-    .map_err(|e| AuctionHouseError::InvalidAuctioneer)?;
+    .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
     // Assert authority, auction house instance and scopes are correct.
     assert_keys_equal(auctioneer_pda.auction_house, auction_house_instance.key())
-        .map_err(|e| AuctionHouseError::InvalidAuctioneer)?;
+        .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
 
-    if !(auctioneer_pda.scopes[scope as usize]) {
+    if !(auction_house_instance.scopes[scope as usize]) {
         return Err(AuctionHouseError::MissingAuctioneerScope.into());
     }
 

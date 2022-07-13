@@ -59,6 +59,12 @@ pub fn delegate_auctioneer<'info>(
     auction_house.has_auctioneer = true;
     auction_house.auctioneer_address = ctx.accounts.ah_auctioneer_pda.key();
 
+    // Set all scopes false and then update as true the ones passed into the handler.
+    auction_house.scopes = [false; MAX_NUM_SCOPES];
+    for scope in scopes {
+        auction_house.scopes[scope as usize] = true;
+    }
+
     let auctioneer = &mut ctx.accounts.ah_auctioneer_pda;
     auctioneer.auctioneer_authority = ctx.accounts.auctioneer_authority.key();
     auctioneer.auction_house = ctx.accounts.auction_house.key();
@@ -66,11 +72,6 @@ pub fn delegate_auctioneer<'info>(
         .bumps
         .get("ah_auctioneer_pda")
         .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
-    // Set all scopes false and then update as true the ones passed into the handler.
-    auctioneer.scopes = [false; MAX_NUM_SCOPES];
-    for scope in scopes {
-        auctioneer.scopes[scope as usize] = true;
-    }
 
     Ok(())
 }

@@ -20,13 +20,13 @@ pub struct AuctionHouse {
     pub escrow_payment_bump: u8,
     pub has_auctioneer: bool,
     pub auctioneer_address: Pubkey,
+    pub scopes: [bool; MAX_NUM_SCOPES],
 }
 
 #[account]
 pub struct Auctioneer {
     pub auctioneer_authority: Pubkey,
     pub auction_house: Pubkey,
-    pub scopes: [bool; MAX_NUM_SCOPES],
     pub bump: u8,
 }
 
