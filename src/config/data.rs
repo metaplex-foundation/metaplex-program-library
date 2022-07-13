@@ -148,7 +148,7 @@ fn discount_price_to_lamports(discount_price: Option<f64>) -> Option<u64> {
     discount_price.map(|price| (price * LAMPORTS_PER_SOL as f64) as u64)
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GatekeeperConfig {
     /// The network for the gateway token required
@@ -176,13 +176,13 @@ impl GatekeeperConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EndSettingType {
     Date,
     Amount,
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct EndSettings {
     #[serde(rename = "endSettingType")]
     end_setting_type: EndSettingType,
@@ -242,7 +242,7 @@ impl WhitelistMintSettings {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum WhitelistMintMode {
     BurnEveryTime,
@@ -270,7 +270,7 @@ impl FromStr for WhitelistMintMode {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HiddenSettings {
     name: String,
     uri: String,
@@ -294,7 +294,7 @@ impl HiddenSettings {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum UploadMethod {
     Bundlr,
