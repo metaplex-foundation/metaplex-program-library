@@ -104,11 +104,17 @@ impl Metadata {
         uses: Option<Uses>,
     ) -> transport::Result<()> {
         create_mint(context, &self.mint, &context.payer.pubkey(), None).await?;
-        let token = create_associated_token_account(context, &self.token, &self.mint.pubkey()).await?;
+        create_token_account(
+            context,
+            &self.token,
+            &self.mint.pubkey(),
+            &context.payer.pubkey(),
+        )
+        .await?;
         mint_tokens(
             context,
             &self.mint.pubkey(),
-            &token,
+            &self.token.pubkey(),
             1,
             &context.payer.pubkey(),
             None,

@@ -3,9 +3,9 @@
 pub mod listing_rewards_test;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
-use mpl_auction_house::{pda::{find_auction_house_address, find_trade_state_address}, AuthorityScope};
-use mpl_listing_rewards::{pda::{find_reward_center_address, find_rewardable_collection_address, find_listing_address}, reward_center, sell::SellParams};
-use mpl_token_metadata::state::Collection;
+use mpl_auction_house::{pda::{find_auction_house_address, find_trade_state_address, find_auctioneer_trade_state_address}, AuthorityScope};
+use mpl_listing_rewards::{pda::{find_reward_center_address, find_rewardable_collection_address, find_listing_address}, reward_center};
+
 use solana_program_test::*;
 use std::str::FromStr;
 
@@ -29,7 +29,7 @@ async fn sell_success() {
         .await
         .unwrap();
     test_metadata
-        .create_v2(
+        .create(
             &mut context,
             "Test".to_string(),
             "TST".to_string(),
@@ -37,11 +37,7 @@ async fn sell_success() {
             None,
             10,
             false,
-            Some(Collection {
-                verified: false,
-                key: collection,
-            }),
-            None,
+            1,
         )
         .await
         .unwrap();
@@ -49,7 +45,7 @@ async fn sell_success() {
     let (auction_house, _) = find_auction_house_address(&wallet, &mint);
     let (reward_center, _) = find_reward_center_address(&auction_house);
     let (rewardable_collection, _) = find_rewardable_collection_address(&reward_center, &collection);
-    let (listing, _) = find_listing_address(&wallet, &test_metadata.mint.pubkey(), &rewardable_collection);
+    let (listing, _) = find_listing_address(owner_pubkey, &test_metadata.mint.pubkey(), &rewardable_collection);
 
     let reward_center_params = reward_center::CreateRewardCenterParams {
         collection_oracle: None,
@@ -116,20 +112,19 @@ async fn sell_success() {
     );
 
     let token_account =
-    get_associated_token_address(&test_metadata.token.pubkey(), &test_metadata.mint.pubkey());
+    get_associated_token_address(owner_pubkey, &test_metadata.mint.pubkey());
 
-    let (seller_trade_state, trade_state_bump) = find_trade_state_address(
-        &test_metadata.token.pubkey(),
+    let (seller_trade_state, trade_state_bump) = find_auctioneer_trade_state_address(
+        owner_pubkey,
         &auction_house,
         &token_account,
         &mint,
         &test_metadata.mint.pubkey(),
-        listing_rewards_test::ONE_SOL,
         1,
     );
 
     let (free_seller_trade_state, free_trade_state_bump) = find_trade_state_address(
-        &test_metadata.token.pubkey(),
+        owner_pubkey,
         &auction_house,
         &token_account,
         &mint,
@@ -139,7 +134,7 @@ async fn sell_success() {
     );
 
     let sell_accounts = mpl_listing_rewards_sdk::SellAccounts {
-        wallet,
+        wallet: *owner_pubkey,
         listing,
         reward_center,
         rewardable_collection,
@@ -167,10 +162,22 @@ async fn sell_success() {
             create_reward_center_ix,
             create_rewardable_collection_ix,
             delegate_auctioneer_ix,
-            sell_ix,
         ],
         Some(&wallet),
         &[&context.payer],
+        context.last_blockhash,
+    );
+
+    let tx_response = context.banks_client.process_transaction(tx).await;
+
+    assert!(tx_response.is_ok());
+
+    let tx = Transaction::new_signed_with_payer(
+        &[
+            sell_ix,
+        ],
+        Some(owner_pubkey),
+        &[&test_metadata.token],
         context.last_blockhash,
     );
 

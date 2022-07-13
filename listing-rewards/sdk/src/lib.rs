@@ -114,7 +114,7 @@ pub fn sell(
         mpl_auction_house::pda::find_program_as_signer_address();
 
     let accounts = accounts::Sell {
-        auction_house_program: mpl_auction_house::program::AuctionHouse::id(),
+        auction_house_program: mpl_auction_house::id(),
         listing,
         reward_center,
         rewardable_collection,

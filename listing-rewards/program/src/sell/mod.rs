@@ -1,4 +1,4 @@
-use anchor_lang::{context::Context, prelude::*, AnchorDeserialize, InstructionData};
+use anchor_lang::{context::Context, prelude::*, AnchorDeserialize};
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
@@ -7,7 +7,6 @@ use crate::{
     rewardable_collection::RewardableCollection,
 };
 use mpl_auction_house::{
-    self,
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
     cpi::accounts::AuctioneerSell,
     program::AuctionHouse as AuctionHouseProgram,
@@ -120,7 +119,7 @@ pub struct Sell<'info> {
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
-    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(), &sell_params.price.to_le_bytes(), &sell_params.token_size.to_le_bytes()], seeds::program=auction_house_program, bump=sell_params.trade_state_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), wallet.key().as_ref(), auction_house.key().as_ref(), token_account.key().as_ref(), auction_house.treasury_mint.as_ref(), token_account.mint.as_ref(),  &u64::MAX.to_le_bytes(), &sell_params.token_size.to_le_bytes()], seeds::program=auction_house_program, bump=sell_params.trade_state_bump)]
     pub seller_trade_state: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
@@ -152,74 +151,41 @@ pub fn sell(
         ..
     }: SellParams,
 ) -> Result<()> {
-    // let reward_center = &ctx.accounts.reward_center;
-    // let cpi_program = ctx.accounts.auction_house_program.to_account_info();
+    let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
     let auction_house_key = auction_house.key();
 
-    let signer_seeds: &[&[&[u8]]] = &[&[
-      REWARD_CENTER.as_bytes(),
-      auction_house_key.as_ref(),
-      &[ctx.accounts.reward_center.bump],
-  ]];
+    let seeds = &[
+        REWARD_CENTER.as_bytes(),
+        auction_house_key.as_ref(),
+        &[reward_center.bump],
+    ];
+    let signer_seeds = &[&seeds[..]];
 
     mpl_auction_house::cpi::auctioneer_sell(
-        ctx.accounts.set_data_ctx().with_signer(signer_seeds),
+        ctx.accounts.set_auctioneer_sell_ctx().with_signer(signer_seeds),
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
         token_size,
     )?;
 
-    // let cpi_accounts: AuctioneerSell = (&*ctx.accounts).into();
-    // let cpi_data: mpl_auction_house::instruction::AuctioneerSell = sell_params.into();
-
-    // let ix = solana_program::instruction::Instruction {
-    //     program_id: cpi_program.key(),
-    //     accounts: cpi_accounts
-    //         .to_account_metas(None)
-    //         .into_iter()
-    //         .zip(cpi_accounts.to_account_infos())
-    //         .map(|mut pair| {
-    //             pair.0.is_signer = pair.1.is_signer;
-    //             if pair.0.pubkey == ctx.accounts.reward_center.key() {
-    //                 pair.0.is_signer = true;
-    //             }
-    //             pair.0
-    //         })
-    //         .collect(),
-    //     data: cpi_data.data(),
-    // };
-
-    // let auction_house = &ctx.accounts.auction_house;
-    // let ah_key = auction_house.key();
-    // let auctioneer_authority = &ctx.accounts.reward_center;
-    // let _aa_key = auctioneer_authority.key();
-
-    // let auctioneer_seeds = [
-    //     REWARD_CENTER.as_bytes(),
-    //     ah_key.as_ref(),
-    //     &[reward_center.bump],
-    // ];
-
-    // invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
-
     Ok(())
 }
 
 impl<'info> Sell<'info> {
-    pub fn set_data_ctx(&self) -> CpiContext<'_, '_, '_, 'info, AuctioneerSell<'info>> {
-        let cpi_program = self.auction_house.to_account_info();
-        let cpi_accounts = (&*self).into();
+    pub fn set_auctioneer_sell_ctx(&self) -> CpiContext<'_, '_, '_, 'info, AuctioneerSell<'info>> {
+        let cpi_program = self.auction_house_program.to_account_info();
+        let accounts = (&*self).into();
 
-        CpiContext::new(cpi_program, cpi_accounts)
+        CpiContext::new(cpi_program, accounts)
     }
 }
 
 impl<'info> From<&Sell<'info>> for AuctioneerSell<'info> {
     fn from(accounts: &Sell<'info>) -> Self {
         Self {
-            wallet: accounts.wallet.to_account_info(),
+            wallet: accounts.wallet.to_account_info().clone(),
             token_account: accounts.token_account.to_account_info(),
             metadata: accounts.metadata.to_account_info(),
             auction_house: accounts.auction_house.to_account_info(),

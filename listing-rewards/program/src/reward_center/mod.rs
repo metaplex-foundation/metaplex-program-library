@@ -5,7 +5,7 @@ use mpl_auction_house::{self, constants::PREFIX, AuctionHouse};
 
 use crate::{constants::REWARD_CENTER, errors::ListingRewardsError};
 
-#[derive(AnchorDeserialize, AnchorSerialize, Clone)]
+#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct ListingRewardRules {
     /// time a listing must be up before is eligable for a reward in minutes
     pub warmup_minutes: u32,
@@ -14,6 +14,7 @@ pub struct ListingRewardRules {
 }
 
 #[account]
+#[derive(Debug)]
 pub struct RewardCenter {
     /// the mint of the token used as rewards
     pub token_mint: Pubkey,
