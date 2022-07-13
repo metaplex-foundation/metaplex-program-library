@@ -73,6 +73,9 @@ jobs:
 
       - name: Generate library for modified packages
         id: generate-package-lib
+        # YARN_ENABLE_IMMUTABLE_INSTALLS=false is needed otherwise, we get this error:
+        # `The lockfile would have been modified by this install, which is explicitly forbidden.`
+        # Additionally, we aren't committing changes here.
         run: |
           pkgs=${{ needs.get-changes-scope.outputs.packages }}
           pkgs=(${pkgs//\"})
@@ -80,10 +83,12 @@ jobs:
             echo ">> changing dir $pkg/js"
             cd "$pkg/js"
             echo ">> setup local pcakage dependencies with yarn"
-            yarn
+            YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
             echo ">> generate library"
             yarn api:gen
             echo ">> git status"
+            # ignore any possible yarn.lock changes
+            git restore ../../yarn.lock
             git status
             if [[ $(git diff --stat) != '' ]]; then
               echo ">> $pkg needs changes - breaking early"
