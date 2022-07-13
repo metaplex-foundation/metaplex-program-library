@@ -347,7 +347,7 @@ pub fn create_program_token_account_if_not_present<'a>(
                 &treasury_mint.key(),
                 &owner.key(),
             )
-                .unwrap(),
+            .unwrap(),
             &[
                 token_program.to_account_info(),
                 treasury_mint.to_account_info(),
@@ -652,11 +652,17 @@ pub fn assert_valid_auctioneer_and_scope(
     scope: AuthorityScope,
 ) -> Result<()> {
     // Assert the Auctioneer is tagged on the auction house
-    assert_keys_equal(auction_house_instance.auctioneer_address, auctioneer_pda.key())
-        .map_err(|e| AuctionHouseError::InvalidAuctioneer)?;
+    assert_keys_equal(
+        auction_house_instance.auctioneer_address,
+        auctioneer_pda.key(),
+    )
+    .map_err(|e| AuctionHouseError::InvalidAuctioneer)?;
     // Assert the auctioneer_authority is tagged in the Auctioneer
-    assert_keys_equal(auctioneer_pda.auctioneer_authority, auctioneer_authority.key())
-        .map_err(|e| AuctionHouseError::InvalidAuctioneer)?;
+    assert_keys_equal(
+        auctioneer_pda.auctioneer_authority,
+        auctioneer_authority.key(),
+    )
+    .map_err(|e| AuctionHouseError::InvalidAuctioneer)?;
     // Assert authority, auction house instance and scopes are correct.
     assert_keys_equal(auctioneer_pda.auction_house, auction_house_instance.key())
         .map_err(|e| AuctionHouseError::InvalidAuctioneer)?;

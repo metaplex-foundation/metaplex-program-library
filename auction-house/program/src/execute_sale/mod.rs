@@ -1,6 +1,4 @@
-use std::collections::BTreeMap;
-use std::ops::Deref;
-use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, Auctioneer, *};
+use crate::{constants::*, errors::*, utils::*, AuctionHouse, Auctioneer, AuthorityScope, *};
 use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke, program_pack::Pack},
@@ -8,6 +6,8 @@ use anchor_lang::{
 };
 use solana_program::program_memory::sol_memset;
 use spl_token::state::Account as SplAccount;
+use std::collections::BTreeMap;
+use std::ops::Deref;
 
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
 #[derive(Accounts)]
@@ -383,7 +383,7 @@ pub struct ExecutePartialSale<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-impl<'info> From<ExecutePartialSale<'info>>for ExecuteSale<'info> {
+impl<'info> From<ExecutePartialSale<'info>> for ExecuteSale<'info> {
     fn from(a: ExecutePartialSale<'info>) -> ExecuteSale<'info> {
         ExecuteSale {
             buyer: a.buyer,
@@ -904,7 +904,7 @@ pub fn auctioneer_execute_partial_sale<'info>(
 #[inline(never)]
 fn auctioneer_execute_sale_logic<'c, 'info>(
     accounts: &mut AuctioneerExecuteSale<'info>,
-    remaining_accounts: &'c[AccountInfo<'info>],
+    remaining_accounts: &'c [AccountInfo<'info>],
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -1310,7 +1310,7 @@ fn auctioneer_execute_sale_logic<'c, 'info>(
 #[inline(never)]
 fn execute_sale_logic<'c, 'info>(
     accounts: &mut ExecuteSale<'info>,
-    remaining_accounts: &'c[AccountInfo<'info>],
+    remaining_accounts: &'c [AccountInfo<'info>],
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,
     program_as_signer_bump: u8,

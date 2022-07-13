@@ -172,5 +172,5 @@ pub enum AuctionHouseError {
 
     // 6042
     #[msg("Auctioneer Authority Mismatch")]
-    AuctioneerAuthorityMismatch
+    AuctioneerAuthorityMismatch,
 }

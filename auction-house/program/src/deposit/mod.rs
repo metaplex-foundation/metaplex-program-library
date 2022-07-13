@@ -180,7 +180,7 @@ pub struct AuctioneerDeposit<'info> {
         ],
         bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: Account<'info,Auctioneer>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,

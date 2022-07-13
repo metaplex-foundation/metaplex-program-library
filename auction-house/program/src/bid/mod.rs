@@ -9,7 +9,10 @@ use anchor_lang::{
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use solana_program::program_memory::sol_memset;
 
-use crate::{constants::*, errors::AuctionHouseError, utils::*, AuctionHouse, AuthorityScope, TRADE_STATE_SIZE, Auctioneer};
+use crate::{
+    constants::*, errors::AuctionHouseError, utils::*, AuctionHouse, Auctioneer, AuthorityScope,
+    TRADE_STATE_SIZE,
+};
 
 /// Accounts for the [`public_bid` handler](fn.public_bid.html).
 #[derive(Accounts)]
@@ -224,7 +227,7 @@ pub struct AuctioneerPublicBuy<'info> {
         ],
         bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: Account<'info,Auctioneer>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
@@ -747,7 +750,6 @@ pub fn auctioneer_bid_logic<'info>(
     token_size: u64,
     public: bool,
 ) -> Result<()> {
-
     if !auction_house.has_auctioneer {
         return Err(AuctionHouseError::NoAuctioneerProgramSet.into());
     }

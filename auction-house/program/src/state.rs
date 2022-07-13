@@ -27,7 +27,7 @@ pub struct Auctioneer {
     pub auctioneer_authority: Pubkey,
     pub auction_house: Pubkey,
     pub scopes: [bool; MAX_NUM_SCOPES],
-    pub bump: u8
+    pub bump: u8,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]

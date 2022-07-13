@@ -201,8 +201,8 @@ async fn delegate_already_init_fail() {
         auctioneer_pda,
         scopes.clone(),
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
     // Call `delegate_auctioneer` with the auction house authority and a new auctioneer program.
     let auctioneer_authority2 = Keypair::new();
     let auctioneer_authority_pubkey2 = auctioneer_authority2.pubkey();
@@ -216,12 +216,11 @@ async fn delegate_already_init_fail() {
         new_auctioneer_pda,
         scopes.clone(),
     )
-        .await
-        .unwrap_err();
+    .await
+    .unwrap_err();
     // Assert account already created
     assert_error!(err, AUCTIONEER_ALREADY_DELEGATED);
 }
-
 
 #[tokio::test]
 async fn already_delegated_fail() {
@@ -242,12 +241,12 @@ async fn already_delegated_fail() {
         auctioneer_pda,
         scopes.clone(),
     )
-        .await
-        .unwrap();
+    .await
+    .unwrap();
     // Call `delegate_auctioneer` with the auction house authority and a new auctioneer program.
     let auctioneer_authority2 = Keypair::new();
     let auctioneer_authority_pubkey2 = auctioneer_authority2.pubkey();
-    let (new_auctioneer_pda, _) =  find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey2);
+    let (new_auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey2);
     let scopes = default_scopes();
     let err = delegate_auctioneer(
         &mut context,
@@ -257,8 +256,8 @@ async fn already_delegated_fail() {
         new_auctioneer_pda,
         scopes.clone(),
     )
-        .await
-        .unwrap_err();
+    .await
+    .unwrap_err();
 
     assert_error!(err, AUCTIONEER_ALREADY_DELEGATED);
 }
