@@ -31,7 +31,7 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
     // missing or empty assets directory
     if !assets_dir.exists() || assets_dir.read_dir()?.next().is_none() {
         info!("Assets directory is missing or empty.");
-        return Err(ValidateError::MissingOrEmptyAssetsDirectory.into());
+        return Err(ValidateParserError::MissingOrEmptyAssetsDirectory.into());
     }
 
     if !args.skip_collection_prompt {
@@ -67,32 +67,35 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
         }
     }
 
-    let path = assets_dir.join("*.json");
-    let pattern = path.to_str().ok_or(ValidateError::InvalidAssetsDirectory)?;
+    let errors = Arc::new(Mutex::new(Vec::new()));
 
-    let (paths, errors): (Vec<_>, Vec<_>) = glob(pattern)?.into_iter().partition(Result::is_ok);
+    let path = assets_dir.join("*.json");
+    let pattern = path
+        .to_str()
+        .ok_or(ValidateParserError::InvalidAssetsDirectory)?;
+
+    // Unwrapping here because we know the pattern is valid and GlobErrors should
+    // be rare or impossible to produce.
+    let paths: Vec<PathBuf> = glob(pattern)
+        .unwrap()
+        .into_iter()
+        .map(Result::unwrap)
+        .collect();
 
     let pb = spinner_with_style();
     pb.enable_steady_tick(120);
     pb.set_message(format!("Validating {} metadata file(s)...", paths.len()));
 
-    let paths: Vec<_> = paths.into_iter().map(Result::unwrap).collect();
-    let path_errors: Vec<_> = errors.into_iter().map(Result::unwrap_err).collect();
-
-    let file_open_errors = Arc::new(Mutex::new(Vec::new()));
-    let deserialize_errors = Arc::new(Mutex::new(Vec::new()));
-    let validate_errors = Arc::new(Mutex::new(Vec::new()));
-
     paths.par_iter().for_each(|path| {
-        let file_open_errors = file_open_errors.clone();
+        let errors = errors.clone();
         let f = match File::open(path) {
             Ok(f) => f,
             Err(error) => {
                 error!("{}: {}", path.display(), error);
-                file_open_errors
-                    .lock()
-                    .unwrap()
-                    .push(FileOpenError { path, error });
+                errors.lock().unwrap().push(ValidateError {
+                    path,
+                    error: error.to_string(),
+                });
                 return;
             }
         };
@@ -101,10 +104,10 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
             Ok(metadata) => metadata,
             Err(error) => {
                 error!("{}: {}", path.display(), error);
-                deserialize_errors
-                    .lock()
-                    .unwrap()
-                    .push(DeserializeError { path, error });
+                errors.lock().unwrap().push(ValidateError {
+                    path,
+                    error: error.to_string(),
+                });
                 return;
             }
         };
@@ -114,7 +117,10 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
                 Ok(()) => {}
                 Err(e) => {
                     error!("{}: {}", path.display(), e);
-                    validate_errors.lock().unwrap().push(e);
+                    errors.lock().unwrap().push(ValidateError {
+                        path,
+                        error: e.to_string(),
+                    });
                 }
             }
         } else {
@@ -122,7 +128,10 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
                 Ok(()) => {}
                 Err(e) => {
                     error!("{}: {}", path.display(), e);
-                    validate_errors.lock().unwrap().push(e);
+                    errors.lock().unwrap().push(ValidateError {
+                        path,
+                        error: e.to_string(),
+                    });
                 }
             }
         }
@@ -130,24 +139,11 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
 
     pb.finish();
 
-    if !path_errors.is_empty() {
-        error!("Path errors: {:?}", path_errors);
-        return Err(ReadFilesError::PathErrors.into());
-    }
-
-    if !file_open_errors.lock().unwrap().is_empty() {
-        error!("File open errors: {:?}", file_open_errors);
-        return Err(ReadFilesError::FileOpenErrors.into());
-    }
-
-    if !deserialize_errors.lock().unwrap().is_empty() {
-        error!("Deserialize errors: {:?}", deserialize_errors);
-        return Err(ReadFilesError::DeserializeErrors.into());
-    }
-
-    if !validate_errors.lock().unwrap().is_empty() {
-        error!("Validate errors: {:?}", validate_errors);
-        return Err(ReadFilesError::ValidateErrors.into());
+    if !errors.lock().unwrap().is_empty() {
+        log_errors("validate_errors", errors)?;
+        return Err(anyhow!(
+            "Validation error: see 'validate_errors.json' file for details"
+        ));
     }
 
     let message = "Validation complete, your metadata file(s) look good.";

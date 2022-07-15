@@ -1,7 +1,8 @@
+use serde::Serialize;
 use thiserror::Error;
 
-#[derive(Debug, Error)]
-pub enum ValidateError {
+#[derive(Debug, Error, Serialize)]
+pub enum ValidateParserError {
     #[error("Missing or empty assets directory")]
     MissingOrEmptyAssetsDirectory,
 
@@ -17,14 +18,14 @@ pub enum ValidateError {
     #[error("Url exceeds 200 chars.")]
     UrlTooLong,
 
-    #[error("Creator address: {0} is invalid.")]
+    #[error("Creator address: '{0}' is invalid.")]
     InvalidCreatorAddress(String),
 
-    #[error("Creators' share does not equal 100%.")]
+    #[error("Combined creators' share does not equal 100%.")]
     InvalidCreatorShare,
 
-    #[error("Seller fee basis points must be between 0 and 10,000.")]
-    InvalidSellerFeeBasisPoints,
+    #[error("Seller fee basis points value '{0}' is invalid: must be between 0 and 10,000.")]
+    InvalidSellerFeeBasisPoints(u16),
 
     #[error("Missing animation url field")]
     MissingAnimationUrl,

@@ -1,6 +1,12 @@
-use std::path::PathBuf;
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 
+use serde::Serialize;
 use thiserror::Error;
+
+use crate::common::*;
 
 #[derive(Debug, Error)]
 pub enum SetupError {
@@ -27,34 +33,25 @@ pub enum CacheError {
 }
 
 #[derive(Debug, Error)]
-pub enum ReadFilesError {
-    #[error("Path errors, check log file for details.")]
-    PathErrors,
-
-    #[error("Deserialize errors, check log file for details.")]
-    DeserializeErrors,
-
-    #[error("Validate errors, check log file for details.")]
-    ValidateErrors,
-
-    #[error("File open errors, check log file for details.")]
-    FileOpenErrors,
-}
-
-#[derive(Debug, Error)]
 pub enum CustomCandyError {
     #[error("Payer key '{0}' does not equal the Candy Machine authority pubkey '{1}'")]
     AuthorityMismatch(String, String),
 }
 
-#[derive(Debug)]
-pub struct DeserializeError<'a> {
+#[derive(Debug, Serialize)]
+pub struct ValidateError<'a> {
     pub path: &'a PathBuf,
-    pub error: serde_json::Error,
+    pub error: String,
 }
 
-#[derive(Debug)]
-pub struct FileOpenError<'a> {
-    pub path: &'a PathBuf,
-    pub error: std::io::Error,
+pub fn log_errors<T: std::fmt::Debug + Serialize>(
+    error_type: &str,
+    errors: Arc<Mutex<Vec<T>>>,
+) -> Result<()> {
+    let errors = &*errors.lock().unwrap();
+    error!("{error_type}: {errors:?}");
+    let f = File::create("validate_errors.json")?;
+    serde_json::to_writer_pretty(f, &errors)?;
+
+    Ok(())
 }

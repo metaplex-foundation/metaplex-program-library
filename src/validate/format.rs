@@ -1,6 +1,7 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
+use super::ValidateParserError;
 use crate::validate::{errors, parser};
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
@@ -13,56 +14,50 @@ pub struct Metadata {
     pub animation_url: Option<String>,
     pub external_url: Option<String>,
     pub attributes: Vec<Attribute>,
-    pub collection: Option<Collection>,
     pub properties: Property,
 }
 
 impl Metadata {
-    pub fn validate(self) -> Result<()> {
+    pub fn validate(&self) -> Result<(), ValidateParserError> {
         parser::check_name(&self.name)?;
         parser::check_symbol(&self.symbol)?;
         parser::check_url(&self.image)?;
         parser::check_seller_fee_basis_points(self.seller_fee_basis_points)?;
+        parser::check_creators_shares(&self.properties.creators)?;
+        parser::check_creators_addresses(&self.properties.creators)?;
 
         Ok(())
     }
 
-    pub fn validate_strict(self) -> Result<()> {
-        if self.animation_url.is_none() {
-            return Err(errors::ValidateError::MissingAnimationUrl.into());
+    pub fn validate_strict(&self) -> Result<(), ValidateParserError> {
+        if let Some(animation_url) = &self.animation_url {
+            parser::check_url(animation_url)?;
         } else {
-            parser::check_url(&self.animation_url.unwrap())?;
+            return Err(errors::ValidateParserError::MissingAnimationUrl);
         }
 
-        if self.collection.is_none() {
-            return Err(errors::ValidateError::MissingCollection.into());
-        }
-
-        if self.external_url.is_none() {
-            return Err(errors::ValidateError::MissingExternalUrl.into());
+        if let Some(external_url) = &self.external_url {
+            parser::check_url(external_url)?;
         } else {
-            parser::check_url(&self.external_url.unwrap())?;
+            return Err(errors::ValidateParserError::MissingExternalUrl);
         }
 
-        parser::check_name(&self.name)?;
-        parser::check_symbol(&self.symbol)?;
-        parser::check_url(&self.image)?;
-        parser::check_seller_fee_basis_points(self.seller_fee_basis_points)?;
+        Self::validate(self)?;
 
         Ok(())
     }
-}
-
-#[derive(Debug, Clone, Deserialize, Default, Serialize)]
-pub struct Collection {
-    pub name: String,
-    pub family: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
 pub struct Property {
     pub files: Vec<FileAttr>,
-    pub category: String,
+    pub creators: Vec<Creator>,
+}
+
+#[derive(Debug, Clone, Deserialize, Default, Serialize)]
+pub struct Creator {
+    pub address: String,
+    pub share: u16,
 }
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
