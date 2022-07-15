@@ -119,8 +119,6 @@ pub struct AuctioneerExecuteSale<'info> {
     #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref()], bump=auctioneer_authority_bump)]
     pub auctioneer_authority: UncheckedAccount<'info>,
 
-    pub lamports: AccountInfo<'info>,
-
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
     #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], seeds::program=auction_house_program, bump = auction_house.auctioneer_pda_bump)]
@@ -135,6 +133,8 @@ pub struct AuctioneerExecuteSale<'info> {
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
+
+    pub lamports: AccountInfo<'info>,
 }
 
 pub fn auctioneer_execute_sale<'info>(
@@ -151,8 +151,6 @@ pub fn auctioneer_execute_sale<'info>(
         &ctx.accounts.listing_config,
         ctx.accounts.buyer_trade_state.key(),
     )?;
-
-    let listing_config = &ctx.accounts.listing_config.to_account_info();
 
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHExecuteSale {
@@ -222,8 +220,10 @@ pub fn auctioneer_execute_sale<'info>(
 
     invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
 
-    let close_listing_config = listing_config.lamports();
-    **listing_config.lamports.borrow_mut() = close_listing_config
+    let listing_config = &ctx.accounts.listing_config.to_account_info();
+
+    let listing_config_lamports = listing_config.lamports();
+    **listing_config.lamports.borrow_mut() = listing_config_lamports
          .checked_add(listing_config.lamports())
          .unwrap();
 
@@ -232,7 +232,7 @@ pub fn auctioneer_execute_sale<'info>(
      let ix = anchor_lang::solana_program::system_instruction::transfer(
         &ctx.accounts.listing_config.key(),
         &ctx.accounts.seller.key(),
-        lamports,
+        listing_config_lamports,
     );
     anchor_lang::solana_program::program::invoke(
         &ix,
