@@ -291,10 +291,12 @@ fn deposit_logic<'info>(
     } else {
         assert_keys_equal(payment_account.key(), wallet.key())?;
 
-        // Reach rental exemption and then add deposit amount.
-        let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), 0)?
-            .checked_add(amount)
+        // Get rental exemption shortfall and then add to deposit amount.
+        let rent_shortfall = verify_deposit(escrow_payment_account.to_account_info(), 0)?;
+        let checked_amount = amount
+            .checked_add(rent_shortfall)
             .ok_or(AuctionHouseError::NumericalOverflow)?;
+
         invoke(
             &system_instruction::transfer(
                 &payment_account.key(),

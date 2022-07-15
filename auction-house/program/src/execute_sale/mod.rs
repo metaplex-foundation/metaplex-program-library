@@ -902,7 +902,16 @@ fn auctioneer_execute_sale_logic<'info>(
     }
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
-    let ts_bump = buyer_ts_data[0];
+
+    let ts_bump = if buyer_ts_data.len() > 0 {
+        buyer_ts_data[0]
+    } else {
+        return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
+    };
+
+    if ts_bump == 0 || seller_ts_data.len() == 0 {
+        return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
+    }
 
     let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
 
@@ -956,10 +965,6 @@ fn auctioneer_execute_sale_logic<'info>(
         }
     };
 
-    if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
-        return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
-    }
-
     let auction_house_key = auction_house.key();
     let seeds = [
         PREFIX.as_bytes(),
@@ -994,21 +999,20 @@ fn auctioneer_execute_sale_logic<'info>(
         ],
     )?;
 
-    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the token.
-    // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
-    // The fee payer makes up the shortfall up to the amount of rent for an empty account.
+    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the
+    // token.  This is intended to cover the migration from pre-rent-exemption checked accounts to
+    // rent-exemption checked accounts.  The fee payer makes up the shortfall up to the amount of
+    // rent for an empty account.
     if is_native {
-        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), buyer_price)?;
-        if diff != buyer_price {
-            // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
-            let shortfall = std::cmp::min(
-                buyer_price
-                    .checked_sub(diff)
-                    .ok_or(AuctionHouseError::NumericalOverflow)?,
-                rent.minimum_balance(escrow_payment_account.data_len()),
-            );
+        let rent_shortfall =
+            verify_withdrawal(escrow_payment_account.to_account_info(), buyer_price)?;
+        if rent_shortfall > 0 {
             invoke_signed(
-                &system_instruction::transfer(fee_payer.key, escrow_payment_account.key, shortfall),
+                &system_instruction::transfer(
+                    fee_payer.key,
+                    escrow_payment_account.key,
+                    rent_shortfall,
+                ),
                 &[
                     fee_payer.to_account_info(),
                     escrow_payment_account.to_account_info(),
@@ -1308,11 +1312,16 @@ fn execute_sale_logic<'info>(
 
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
+
     let ts_bump = if buyer_ts_data.len() > 0 {
         buyer_ts_data[0]
     } else {
         return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
     };
+
+    if ts_bump == 0 || seller_ts_data.len() == 0 {
+        return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
+    }
 
     let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
 
@@ -1366,10 +1375,6 @@ fn execute_sale_logic<'info>(
         }
     };
 
-    if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
-        return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
-    }
-
     let auction_house_key = auction_house.key();
     let seeds = [
         PREFIX.as_bytes(),
@@ -1404,21 +1409,19 @@ fn execute_sale_logic<'info>(
         ],
     )?;
 
-    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the token.
-    // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
-    // The fee payer makes up the shortfall up to the amount of rent for an empty account.
+    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the
+    // token.  This is intended to cover the migration from pre-rent-exemption checked accounts to
+    // rent-exemption checked accounts.  The fee payer makes up the shortfall up to the amount of
+    // rent for an empty account.
     if is_native {
-        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), price)?;
-        if diff != price {
-            // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
-            let shortfall = std::cmp::min(
-                price
-                    .checked_sub(diff)
-                    .ok_or(AuctionHouseError::NumericalOverflow)?,
-                rent.minimum_balance(escrow_payment_account.data_len()),
-            );
+        let rent_shortfall = verify_withdrawal(escrow_payment_account.to_account_info(), price)?;
+        if rent_shortfall > 0 {
             invoke_signed(
-                &system_instruction::transfer(fee_payer.key, escrow_payment_account.key, shortfall),
+                &system_instruction::transfer(
+                    fee_payer.key,
+                    escrow_payment_account.key,
+                    rent_shortfall,
+                ),
                 &[
                     fee_payer.to_account_info(),
                     escrow_payment_account.to_account_info(),

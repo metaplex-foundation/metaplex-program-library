@@ -313,8 +313,11 @@ fn withdraw_logic<'info>(
         )?;
     } else {
         assert_keys_equal(receipt_account.key(), wallet.key())?;
+        let rent_shortfall = verify_withdrawal(escrow_payment_account.to_account_info(), amount)?;
+        let checked_amount = amount
+            .checked_sub(rent_shortfall)
+            .ok_or(AuctionHouseError::InsufficientFunds)?;
 
-        let checked_amount = rent_checked_sub(escrow_payment_account.to_account_info(), amount)?;
         invoke_signed(
             &system_instruction::transfer(
                 &escrow_payment_account.key(),

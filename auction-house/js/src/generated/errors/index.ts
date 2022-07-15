@@ -874,6 +874,26 @@ createErrorFromCodeLookup.set(0x1798, () => new PartialPriceMismatchError());
 createErrorFromNameLookup.set('PartialPriceMismatch', () => new PartialPriceMismatchError());
 
 /**
+ * InsufficientFunds: 'Insufficient funds in escrow account to purchase.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InsufficientFundsError extends Error {
+  readonly code: number = 0x1799;
+  readonly name: string = 'InsufficientFunds';
+  constructor() {
+    super('Insufficient funds in escrow account to purchase.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InsufficientFundsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1799, () => new InsufficientFundsError());
+createErrorFromNameLookup.set('InsufficientFunds', () => new InsufficientFundsError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
