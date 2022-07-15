@@ -119,6 +119,8 @@ pub struct AuctioneerExecuteSale<'info> {
     #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref()], bump=auctioneer_authority_bump)]
     pub auctioneer_authority: UncheckedAccount<'info>,
 
+    pub lamports: AccountInfo<'info>,
+
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
     #[account(seeds = [AUCTIONEER.as_bytes(), auction_house.key().as_ref(), auctioneer_authority.key().as_ref()], seeds::program=auction_house_program, bump = auction_house.auctioneer_pda_bump)]
@@ -150,7 +152,7 @@ pub fn auctioneer_execute_sale<'info>(
         ctx.accounts.buyer_trade_state.key(),
     )?;
 
-    let listing_config = &ctx.accounts.listing_config;
+    let listing_config = &ctx.accounts.listing_config.to_account_info();
 
     let cpi_program = ctx.accounts.auction_house_program.to_account_info();
     let cpi_accounts = AHExecuteSale {
@@ -222,12 +224,12 @@ pub fn auctioneer_execute_sale<'info>(
 
     let close_listing_config = listing_config.lamports();
     **listing_config.lamports.borrow_mut() = close_listing_config
-        .checked_add(listing_config.lamports())
-        .unwrap();
+         .checked_add(listing_config.lamports())
+         .unwrap();
 
-    **listing_config.lamports.borrow_mut() = 0;
+     **listing_config.lamports.borrow_mut() = 0;
 
-    let ix = anchor_lang::solana_program::system_instruction::transfer(
+     let ix = anchor_lang::solana_program::system_instruction::transfer(
         &ctx.accounts.listing_config.key(),
         &ctx.accounts.seller.key(),
         lamports,
