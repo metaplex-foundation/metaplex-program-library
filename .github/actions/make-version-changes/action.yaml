@@ -10,6 +10,9 @@ inputs:
   branch:
     description: 'Branch to checkout'
     required: true
+  repository:
+    description: 'Branch to checkout'
+    required: true
 
 runs:
   using: 'composite'
@@ -17,6 +20,9 @@ runs:
     - uses: actions/checkout@v3
       with:
         ref: ${{ inputs.branch }}
+        # todo: does this work for forks?
+        # github.event.pull_request.head.repo.full_name
+        repository: ${{ inputs.repository }}
 
     # cache and install cargo release
     - uses: actions/cache@v2
