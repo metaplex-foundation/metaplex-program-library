@@ -74,3 +74,31 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
+
+  deploy-with-proposal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
+      - uses: ./.github/actions/install-rust
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Deploy CM to devnet with proposal
+        uses: ./.github/actions/deploy-with-gov-proposal
+        id: deploy-with-gov-proposal
+        with:
+          program: mpl_candy_machine
+          program-id: cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ
+          keypair: ${{ secrets.DEPLOY_KEYPAIR }}
+          network: https://devnet.genesysgo.net/
+          governance-program-id: GovER5Lthms3bLBqWub97yVrMmEogzX7xNjdXpPPCVZw
+          # todo: remove placeholder
+          governance: VpEowyq9xcy3iwVa8aoroRXi4RNdU19vHggFZJJi7v9
+          name: Deploy candy machine ${{ github.ref_name }}
+          # different description?
+          description: https://github.com/jshiohaha/metaplex-program-library/tree/${{ github.ref_name }}

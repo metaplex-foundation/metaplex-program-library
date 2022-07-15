@@ -1,0 +1,97 @@
+name: 'Upload BPF'
+description: 'Uploads an anchor program as a bpf'
+inputs:
+  network:
+    description: 'The Solana network'
+    required: true
+    default: 'devnet'
+  program:
+    description: 'The program to build and upload'
+    required: true
+  program-id:
+    description: 'The program id of the program we are uploading'
+    required: true
+  keypair:
+    description: 'The keypair to use for deploys'
+    required: true
+  buffer-authority:
+    description: 'The buffer authority to set'
+    required: true
+outputs:
+  buffer:
+    description: 'The buffer address'
+    value: ${{ steps.buffer-deploy-store.outputs.BUFFER }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v2
+    - uses: ./.github/actions/install-anchor/
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    # - uses: actions/cache@v2
+    #   name: Cache Builds
+    #   id: cache-buffer
+    #   with:
+    #     path: |
+    #       ./buffer.out
+    #     key: ${{ inputs.network }}-${{ inputs.program-id }}-anchor-verified-build-${{ hashFiles('programs/**/*.rs') }}-${{ hashFiles('./**/Cargo.lock') }}
+
+    # todo: use previously generated .so
+    - run: ~/.cargo/bin/anchor build --verifiable -p $PROGRAM
+      shell: bash
+      if: steps.cache-buffer.outputs.cache-hit != 'true'
+      env:
+        PROGRAM: ${{ inputs.program }}
+
+    - run: solana-keygen new -o keyp --no-bip39-passphrase
+      shell: bash
+
+    - run: echo "$DEPLOY_KEYPAIR" > ./deploy-keypair.json && chmod 600 ./deploy-keypair.json
+      shell: bash
+      env:
+        DEPLOY_KEYPAIR: ${{ inputs.keypair }}
+
+    - name: Buffer Deploy
+      if: steps.cache-buffer.outputs.cache-hit != 'true'
+      id: buffer-deploy
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 30
+        max_attempts: 10
+        shell: bash
+        command:
+          solana program write-buffer --buffer ./keyp -k ./deploy-keypair.json
+          ./target/verifiable/$PROGRAM.so -u $NETWORK > ./buffer.out
+      env:
+        NETWORK: ${{ inputs.network }}
+        PROGRAM: ${{ inputs.program }}
+
+    - name: Buffer Deploy Store
+      shell: bash
+      id: buffer-deploy-store
+      run: |
+        echo "::set-output name=BUFFER::$(cat buffer.out | sed 's/Buffer: //g' | xargs echo -n)"
+
+    - run: echo "The buffer is ${{ steps.buffer-deploy-store.outputs.BUFFER }}"
+      shell: bash
+
+    - name: Transfer buffer to authority
+      uses: nick-invision/retry@v2
+      if: steps.cache-buffer.outputs.cache-hit != 'true'
+      with:
+        timeout_minutes: 10
+        max_attempts: 50
+        shell: bash
+        command:
+          solana program set-buffer-authority $BUFFER -k ./deploy-keypair.json
+          --new-buffer-authority $AUTHORITY -u $NETWORK
+      env:
+        BUFFER: ${{ steps.buffer-deploy-store.outputs.BUFFER }}
+        AUTHORITY: ${{ inputs.buffer-authority }}
+        NETWORK: ${{ inputs.network }}
+
+    - run: rm ./deploy-keypair.json
+      shell: bash
+      if: always()

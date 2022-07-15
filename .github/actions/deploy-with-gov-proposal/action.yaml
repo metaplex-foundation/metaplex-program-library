@@ -1,0 +1,81 @@
+name: 'Deploy wiht Governance Proposal'
+description: 'Uploads an anchor program as a bpf, then creates a proposal to upgrade to this buffer'
+inputs:
+  program:
+    description: 'The program to build and upload'
+    required: true
+  program-id:
+    description: 'The program id of the program we are uploading'
+    required: true
+  keypair:
+    description: 'The keypair to use for deploys'
+    required: true
+  network:
+    description: 'The solana cluster/network'
+    required: true
+    default: devnet
+  governance-program-id:
+    description: 'The governance program ID with which we want to interact'
+    required: true
+  governance:
+    description: 'The public key of the governance'
+    required: true
+  signatory:
+    description: 'Who must sign off to get this out of draft state?'
+    required: true
+  name:
+    description: 'The name on the proposal'
+    required: true
+  description:
+    description: 'The description on the proposal'
+    required: true
+  issuer:
+    description: 'The auth issuer'
+    required: false
+  client-id:
+    description: 'The auth client id'
+    required: false
+  client-secret:
+    description: 'The auth client secret'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    # - uses: actions/cache@v2
+    #   name: Cache Builds
+    #   id: cache-proposal
+    #   with:
+    #     path: |
+    #       ./proposal.out
+    #     key: ${{ inputs.network }}-${{ inputs.program-id }}-${{ hashFiles('programs/**/*.rs') }}-${{ hashFiles('./**/Cargo.lock') }}-proposal
+
+    - uses: ./.github/actions/upload-bpf/
+      # Only upload bpf and create proposals when not already created for these rust files and cluster
+      if: steps.cache-proposal.outputs.cache-hit != 'true'
+      id: buffer-deploy
+      with:
+        network: ${{ inputs.network }}
+        program: ${{ inputs.program }}
+        keypair: ${{ inputs.keypair }}
+        program-id: ${{ inputs.program-id }}
+        buffer-authority: ${{ inputs.governance }}
+
+    - uses: ./.github/actions/create-proposal/
+      # Only upload bpf and create proposals when not already created for these rust files and cluster
+      if: steps.cache-proposal.outputs.cache-hit != 'true'
+      id: create-proposal
+      with:
+        program-id: ${{ inputs.program-id }}
+        program: ${{ inputs.program }}
+        network: ${{ inputs.network }}
+        buffer: ${{ steps.buffer-deploy.outputs.buffer }}
+        keypair: ${{ inputs.keypair }}
+        governance: ${{ inputs.governance }}
+        signatory: ${{ inputs.signatory }}
+        name: ${{ inputs.name }}
+        description: ${{ inputs.description }}
+        issuer: ${{ inputs.issuer }}
+        client-id: ${{ inputs.client-id }}
+        client-secret: ${{ inputs.client-secret }}
+        governance-program-id: ${{ inputs.governance-program-id }}

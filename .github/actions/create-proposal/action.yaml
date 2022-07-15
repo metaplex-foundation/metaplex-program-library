@@ -1,0 +1,94 @@
+name: 'Upload BPF'
+description: 'Uploads an anchor program as a bpf'
+inputs:
+  program:
+    description: 'The program to build and upload'
+    required: true
+  program-id:
+    description: 'The program id of the program we are uploading'
+    required: true
+  buffer:
+    description: 'The buffer address'
+    required: true
+  keypair:
+    description: 'The keypair to use for deploys'
+    required: true
+  network:
+    description: 'The solana cluster/network'
+    required: true
+    default: devnet
+  governance-program-id:
+    description: 'The governance program ID with which we want to interact'
+    required: true
+  governance:
+    description: 'The public key of the governance'
+    required: true
+  signatory:
+    description: 'Who must sign off to get this out of draft state? Goes straight to voting if not provided'
+    required: false
+  name:
+    description: 'The name on the proposal'
+    required: true
+  description:
+    description: 'The description on the proposal'
+    required: true
+  issuer:
+    description: 'The auth issuer'
+    required: false
+  client-id:
+    description: 'The auth client id'
+    required: false
+  client-secret:
+    description: 'The auth client secret'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+    # - uses: actions/cache@v2
+      # name: Cache Builds
+      # id: cache-proposal
+      # with:
+      #   path: |
+      #     ./proposal.out
+      #   key: ${{ inputs.network }}-${{ inputs.program-id }}-${{ hashFiles('programs/**/*.rs') }}-${{ hashFiles('./**/Cargo.lock') }}-proposal
+    
+    # todo: once js package is published, replace all `/home/runner/work/metaplex-program-library/metaplex-program-library/governance/js/deploy-keypair.jso` with `./deploy-keypair.json`
+    - run: echo "$DEPLOY_KEYPAIR" > /home/runner/work/metaplex-program-library/metaplex-program-library/governance/js/deploy-keypair.json && chmod 600 /home/runner/work/metaplex-program-library/metaplex-program-library/governance/js/deploy-keypair.json
+      shell: bash
+      env:
+        DEPLOY_KEYPAIR: ${{ inputs.keypair }}
+    
+    # todo: use this once js package is published
+    # - run: npm install -g @metaplex-program-library/governance-cli@0.0.1
+    #   shell: bash
+
+    - name: Create proposal
+      uses: nick-invision/retry@v2
+      if: steps.cache-proposal.outputs.cache-hit != 'true'
+      with:
+        timeout_minutes: 10
+        max_attempts: 5
+        # todo: command once js package is published `create-proposal > proposal.out`
+        command: cd ../metaplex-program-library/governance/js && npm install && npm run start
+      env:
+        PROGRAM_ID: ${{ inputs.program-id }}
+        BUFFER: ${{ inputs.buffer }}
+        GOVERNANCE_KEY: ${{ inputs.governance }}
+        NETWORK: ${{ inputs.network }}
+        WALLET: /home/runner/work/metaplex-program-library/metaplex-program-library/governance/js/deploy-keypair.json
+        NAME: ${{ inputs.name }}
+        DESCRIPTION: ${{ inputs.description }}
+        SIGNATORY: ${{ inputs.signatory }}
+        ISSUER: ${{ inputs.issuer }}
+        CLIENT_ID: ${{ inputs.client-id }}
+        CLIENT_SECRET: ${{ inputs.client-secret }}
+        GOVERNANCE_PROGRAM_ID: ${{ inputs.governance-program-id }}
+
+    - run: rm /home/runner/work/metaplex-program-library/metaplex-program-library/governance/js/deploy-keypair.json
+      shell: bash
+      if: always()
