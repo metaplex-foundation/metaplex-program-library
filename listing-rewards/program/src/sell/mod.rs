@@ -3,8 +3,10 @@ use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
     constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
+    errors::ListingRewardsError,
     reward_center::RewardCenter,
     rewardable_collection::RewardableCollection,
+    assertions::assert_belongs_to_rewardable_collection
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
@@ -13,16 +15,16 @@ use mpl_auction_house::{
     AuctionHouse,
 };
 
+use mpl_token_metadata::state::Metadata;
+
 #[account]
 pub struct Listing {
-    pub trade_state: Pubkey,
     pub reward_center: Pubkey,
     pub seller: Pubkey,
     pub metadata: Pubkey,
     pub price: u64,
     pub token_size: u64,
     pub bump: u8,
-    pub trade_state_bump: u8,
     pub created_at: i64,
     pub canceled_at: Option<i64>,
     pub purchased_at: Option<i64>,
@@ -33,14 +35,12 @@ pub struct Listing {
 impl Listing {
     pub fn size() -> usize {
         8 + // deliminator
-        32 + // trade_state
         32 + // reward_center
         32 + // seller
         32 + // metadata
         8 + // price
         8 + // token_size
         1 + // bump
-        1 + // trade_state_bump
         8 + // created_at
         1 + 8 + // canceled_at
         1 + 8 + // canceled_at
@@ -91,10 +91,9 @@ pub struct Sell<'info> {
     pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     // Accounts passed into Auction House CPI call
-    /// CHECK: Verified through CPI
     /// User wallet account.
     #[account(mut)]
-    pub wallet: UncheckedAccount<'info>,
+    pub wallet: Signer<'info>,
 
     /// SPL token account containing token for sale.
     #[account(mut)]
@@ -148,12 +147,40 @@ pub fn sell(
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
+        price,
         ..
     }: SellParams,
 ) -> Result<()> {
+    // TODO: migrate to anchor type https://github.com/coral-xyz/anchor/pull/2014
+    let mut metadata_data: &[u8] = &ctx.accounts.metadata.try_borrow_data()?;
+    let metadata = Metadata::deserialize(&mut metadata_data)?;
+    
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
+    let rewardable_collection = &ctx.accounts.rewardable_collection;
+    let metadata_account = &ctx.accounts.metadata;
+    let wallet = &ctx.accounts.wallet;
+    let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
+
+    assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
+
+    let listing = &mut ctx.accounts.listing;
+
+    listing.reward_center = reward_center.key();
+    listing.seller = wallet.key();
+    listing.metadata = metadata_account.key();
+    listing.rewardable_collection = rewardable_collection.key();
+    listing.price = price;
+    listing.token_size = token_size;
+    listing.bump = *ctx
+        .bumps
+        .get(LISTING)
+        .ok_or(ListingRewardsError::BumpSeedNotInHashMap)?;
+    listing.created_at = clock.unix_timestamp;
+    listing.canceled_at = None;
+    listing.reward_redeemed_at = None;
+
 
     let seeds = &[
         REWARD_CENTER.as_bytes(),
@@ -163,7 +190,9 @@ pub fn sell(
     let signer_seeds = &[&seeds[..]];
 
     mpl_auction_house::cpi::auctioneer_sell(
-        ctx.accounts.set_auctioneer_sell_ctx().with_signer(signer_seeds),
+        ctx.accounts
+            .set_auctioneer_sell_ctx()
+            .with_signer(signer_seeds),
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,

@@ -13,4 +13,12 @@ pub enum ListingRewardsError {
     // 6003
     #[msg("Invalid collection maintainer")]
     InvalidCollectionMaintainer,
+
+    // 6004
+    #[msg("The NFT does not belong to a collection")]
+    NFTMissingCollection,
+
+    // 6005
+    #[msg("The NFT does not match the rewardable collection")]
+    NFTMismatchRewardableCollection
 }
