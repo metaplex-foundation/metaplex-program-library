@@ -163,7 +163,9 @@ pub fn sell(
     let signer_seeds = &[&seeds[..]];
 
     mpl_auction_house::cpi::auctioneer_sell(
-        ctx.accounts.set_auctioneer_sell_ctx().with_signer(signer_seeds),
+        ctx.accounts
+            .set_auctioneer_sell_ctx()
+            .with_signer(signer_seeds),
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,

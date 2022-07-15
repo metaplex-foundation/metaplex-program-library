@@ -2,11 +2,11 @@
 
 pub mod listing_rewards_test;
 
-use anchor_client::solana_sdk::{signature::Signer, transaction::Transaction, pubkey::Pubkey};
-use std::str::FromStr;
+use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use mpl_auction_house::pda::find_auction_house_address;
-use mpl_listing_rewards::{reward_center, pda::find_reward_center_address};
+use mpl_listing_rewards::{pda::find_reward_center_address, reward_center};
 use solana_program_test::*;
+use std::str::FromStr;
 
 use spl_token::native_mint;
 
@@ -58,14 +58,18 @@ async fn create_rewardable_collection_success() {
     );
 
     let create_rewardable_collection_ix = mpl_listing_rewards_sdk::create_rewardable_collection(
-      wallet,
-      auction_house,
-      reward_center,
-      collection,
+        wallet,
+        auction_house,
+        reward_center,
+        collection,
     );
 
     let tx = Transaction::new_signed_with_payer(
-        &[create_auction_house_ix, create_reward_center_ix, create_rewardable_collection_ix],
+        &[
+            create_auction_house_ix,
+            create_reward_center_ix,
+            create_rewardable_collection_ix,
+        ],
         Some(&wallet),
         &[&context.payer],
         context.last_blockhash,
