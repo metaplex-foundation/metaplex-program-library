@@ -156,6 +156,7 @@ pub fn mint(
     let program = client.program(CANDY_MACHINE_ID);
     let payer = program.payer();
     let wallet = candy_machine_state.wallet;
+    let authority = candy_machine_state.authority;
 
     let candy_machine_data = &candy_machine_state.data;
 
@@ -377,7 +378,7 @@ pub fn mint(
                 collection_mint: collection_pda.mint,
                 collection_metadata: find_metadata_pda(&collection_pda.mint),
                 collection_master_edition: find_master_edition_pda(&collection_pda.mint),
-                authority: payer,
+                authority,
                 collection_authority_record,
             })
             .args(nft_instruction::SetCollectionDuringMint {});
