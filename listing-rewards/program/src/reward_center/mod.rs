@@ -1,14 +1,14 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
-use anchor_spl::token::Mint;
+use anchor_spl::{token::{Mint, TokenAccount, Token}, associated_token::AssociatedToken};
 
-use mpl_auction_house::{self, constants::PREFIX, AuctionHouse};
+use mpl_auction_house::{AuctionHouse, constants::PREFIX};
 
 use crate::{constants::REWARD_CENTER, errors::ListingRewardsError};
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct ListingRewardRules {
-    /// time a listing must be up before is eligable for a reward in minutes
-    pub warmup_minutes: u32,
+    /// time a listing must be up before is eligable for a rewards in seconds
+    pub warmup_seconds: i64,
     /// number of tokens to reward for listing
     pub reward_payout: u64,
 }
@@ -34,7 +34,7 @@ impl RewardCenter {
         32 + // token_mint
         32 + // auction_house
         1 + 32 + // optional collection oracle
-        4 + 8 + // listing reward rules
+        8 + 8 + // listing reward rules
         1 // bump
     }
 }
@@ -61,6 +61,14 @@ pub struct CreateRewardCenter<'info> {
 
     /// the mint of the token to use as rewards.
     pub mint: Account<'info, Mint>,
+    
+    #[account(
+        init,
+        payer = wallet,
+        associated_token::mint = mint,
+        associated_token::authority = reward_center
+    )]
+    pub associated_token_account: Account<'info, TokenAccount>,
 
     /// Auction House instance PDA account.
     #[account(seeds=[PREFIX.as_bytes(), auction_house.creator.as_ref(), auction_house.treasury_mint.as_ref()], seeds::program=mpl_auction_house::id(), bump=auction_house.bump)]
@@ -71,6 +79,12 @@ pub struct CreateRewardCenter<'info> {
     pub reward_center: Account<'info, RewardCenter>,
 
     pub system_program: Program<'info, System>,
+
+    pub token_program: Program<'info, Token>,
+
+    pub associated_token_program: Program<'info, AssociatedToken>,
+
+    pub rent: Sysvar<'info, Rent>,
 }
 
 pub fn create_reward_center(

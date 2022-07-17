@@ -24,14 +24,55 @@ use mpl_token_metadata::state::Collection;
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::native_mint;
 
+use {
+    solana_sdk::{
+        program_pack::Pack,
+        signature::Keypair,
+        system_instruction,
+    },
+    spl_token::{
+        instruction,
+        state::Mint,
+    },
+};
+
 #[tokio::test]
-async fn sell_success() {
+async fn redeem_rewards_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
 
     let wallet = context.payer.pubkey();
-    let mint = native_mint::id();
+    let mint = Keypair::new();
     let collection = Pubkey::from_str("Cehzo7ugAvuYcTst9HF24ackLxnrpDkzHFajj17FuyUR").unwrap();
+
+    let decimals = 9;
+
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let mint_rent = rent.minimum_balance(Mint::LEN);
+    let transaction = Transaction::new_signed_with_payer(
+        &[system_instruction::create_account(
+            &wallet,
+            &mint.pubkey(),
+            mint_rent,
+            Mint::LEN as u64,
+            &spl_token::id(),
+        )],
+        Some(&wallet),
+        &[&context.payer, &mint],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(transaction).await.unwrap();
+
+    let transaction = Transaction::new_signed_with_payer(
+        &[
+            instruction::initialize_mint(&spl_token::id(), &mint.pubkey(), &wallet, None, decimals)
+                .unwrap(),
+        ],
+        Some(&wallet),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(transaction).await.unwrap();
 
     let metadata = metadata::create(
         &mut context,
@@ -49,14 +90,15 @@ async fn sell_success() {
             uses: None,
         },
         None,
-    ).await;
+    )
+    .await;
 
     let metadata_owner = metadata.token;
     let metadata_address = metadata.pubkey;
     let metadata_owner_address = metadata_owner.pubkey();
     let metadata_mint_address = metadata.mint.pubkey();
 
-    let (auction_house, _) = find_auction_house_address(&wallet, &mint);
+    let (auction_house, _) = find_auction_house_address(&wallet, &mint.pubkey());
     let (reward_center, _) = find_reward_center_address(&auction_house);
     let (rewardable_collection, _) =
         find_rewardable_collection_address(&reward_center, &collection);
@@ -75,7 +117,7 @@ async fn sell_success() {
     };
 
     let create_auction_house_accounts = mpl_auction_house_sdk::CreateAuctionHouseAccounts {
-        treasury_mint: mint,
+        treasury_mint: mint.pubkey(),
         payer: wallet,
         authority: wallet,
         fee_withdrawal_destination: wallet,
@@ -95,7 +137,7 @@ async fn sell_success() {
 
     let create_reward_center_ix = mpl_listing_rewards_sdk::create_reward_center(
         wallet,
-        mint,
+        mint.pubkey(),
         auction_house,
         reward_center_params,
     );
@@ -130,13 +172,14 @@ async fn sell_success() {
         delegate_auctioneer_data,
     );
 
-    let token_account = get_associated_token_address(&metadata_owner_address, &metadata_mint_address);
+    let token_account =
+        get_associated_token_address(&metadata_owner_address, &metadata_mint_address);
 
     let (seller_trade_state, trade_state_bump) = find_auctioneer_trade_state_address(
         &metadata_owner_address,
         &auction_house,
         &token_account,
-        &mint,
+        &mint.pubkey(),
         &metadata_mint_address,
         1,
     );
@@ -145,7 +188,7 @@ async fn sell_success() {
         &metadata_owner_address,
         &auction_house,
         &token_account,
-        &mint,
+        &mint.pubkey(),
         &metadata_mint_address,
         0,
         1,

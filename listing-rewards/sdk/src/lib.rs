@@ -4,6 +4,7 @@ use mpl_listing_rewards::{
     accounts, id, instruction, pda, reward_center::CreateRewardCenterParams,
     rewardable_collection::CreateRewardableCollectionParams,
 };
+use spl_associated_token_account::get_associated_token_address;
 
 pub fn create_reward_center(
     wallet: Pubkey,
@@ -12,12 +13,17 @@ pub fn create_reward_center(
     reward_center_params: CreateRewardCenterParams,
 ) -> Instruction {
     let (reward_center, _) = pda::find_reward_center_address(&auction_house);
+    let associated_token_account = get_associated_token_address(&reward_center, &mint);
 
     let accounts = accounts::CreateRewardCenter {
         wallet,
         mint,
         auction_house,
         reward_center,
+        associated_token_account,
+        token_program: spl_token::id(),
+        associated_token_program: spl_associated_token_account::id(),
+        rent: sysvar::rent::id(),
         system_program: system_program::id(),
     }
     .to_account_metas(None);
@@ -80,7 +86,6 @@ pub struct SellAccounts {
 pub struct SellData {
     pub price: u64,
     pub token_size: u64,
-    pub collection: Pubkey,
     pub trade_state_bump: u8,
     pub free_trade_state_bump: u8,
 }
@@ -101,7 +106,6 @@ pub fn sell(
     SellData {
         price,
         token_size,
-        collection,
         trade_state_bump,
         free_trade_state_bump,
     }: SellData,
@@ -138,7 +142,6 @@ pub fn sell(
         sell_params: mpl_listing_rewards::sell::SellParams {
             price,
             token_size,
-            collection,
             trade_state_bump,
             free_trade_state_bump,
             program_as_signer_bump,
@@ -152,3 +155,25 @@ pub fn sell(
         data,
     }
 }
+
+// pub fn redeem_rewards() -> Instruction {
+//     let accounts = accounts::RedeemRewards {
+//         auction_house_program: mpl_auction_house::id(),
+//         listing,
+//         reward_center,
+//         rewardable_collection,
+//         wallet,
+//         token_program: spl_token::id(),
+//         system_program: system_program::id(),
+//         rent: sysvar::rent::id(),
+//     }
+//     .to_account_metas(None);
+
+//     let data = instruction::RedeemRewards {}.data();
+
+//     Instruction {
+//         program_id: id(),
+//         accounts,
+//         data,
+//     }
+// }

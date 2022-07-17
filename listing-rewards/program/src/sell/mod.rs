@@ -2,6 +2,7 @@ use anchor_lang::{context::Context, prelude::*, AnchorDeserialize};
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
+    MetadataAccount,
     constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
     errors::ListingRewardsError,
     reward_center::RewardCenter,
@@ -10,12 +11,10 @@ use crate::{
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
+    AuctionHouse,
     cpi::accounts::AuctioneerSell,
     program::AuctionHouse as AuctionHouseProgram,
-    AuctionHouse,
 };
-
-use mpl_token_metadata::state::Metadata;
 
 #[account]
 pub struct Listing {
@@ -53,7 +52,6 @@ impl Listing {
 pub struct SellParams {
     pub price: u64,
     pub token_size: u64,
-    pub collection: Pubkey,
     pub trade_state_bump: u8,
     pub free_trade_state_bump: u8,
     pub program_as_signer_bump: u8,
@@ -75,7 +73,7 @@ pub struct Sell<'info> {
         seeds=[
             LISTING.as_bytes(),
             wallet.key().as_ref(),
-            token_account.mint.as_ref(),
+            metadata.key().as_ref(),
             rewardable_collection.key().as_ref(),
         ],
         bump,
@@ -87,7 +85,15 @@ pub struct Sell<'info> {
     pub reward_center: Box<Account<'info, RewardCenter>>,
 
     /// The collection eligable for rewards
-    #[account(seeds = [REWARDABLE_COLLECTION.as_bytes(), reward_center.key().as_ref(), sell_params.collection.as_ref()], bump)]
+    #[
+        account(
+            seeds = [
+                REWARDABLE_COLLECTION.as_bytes(),
+                reward_center.key().as_ref(),
+                metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
+        ],
+        bump = rewardable_collection.bump
+    )]
     pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     // Accounts passed into Auction House CPI call
@@ -96,12 +102,16 @@ pub struct Sell<'info> {
     pub wallet: Signer<'info>,
 
     /// SPL token account containing token for sale.
-    #[account(mut)]
+    #[
+        account(
+            mut,
+            constraint = token_account.owner == wallet.key(),
+            constraint = token_account.amount == 1
+        )]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: UncheckedAccount<'info>,
+    pub metadata: Box<Account<'info, MetadataAccount>>,
 
     /// CHECK: Verified through CPI
     /// Auction House authority account.
@@ -148,13 +158,9 @@ pub fn sell(
         free_trade_state_bump,
         program_as_signer_bump,
         price,
-        ..
     }: SellParams,
 ) -> Result<()> {
-    // TODO: migrate to anchor type https://github.com/coral-xyz/anchor/pull/2014
-    let mut metadata_data: &[u8] = &ctx.accounts.metadata.try_borrow_data()?;
-    let metadata = Metadata::deserialize(&mut metadata_data)?;
-    
+    let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
     let rewardable_collection = &ctx.accounts.rewardable_collection;

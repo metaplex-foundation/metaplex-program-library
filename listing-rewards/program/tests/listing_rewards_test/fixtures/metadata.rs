@@ -40,7 +40,7 @@ pub async fn create<'a>(
     let airdrop_amount = airdrop_amount.unwrap_or(TEN_SOL);
     
     airdrop(context, owner_pubkey, airdrop_amount)
-        .await
+        .await  
         .unwrap();
 
     test_metadata

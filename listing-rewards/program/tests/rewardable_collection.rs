@@ -26,7 +26,7 @@ async fn create_rewardable_collection_success() {
     let reward_center_params = reward_center::CreateRewardCenterParams {
         collection_oracle: None,
         listing_reward_rules: reward_center::ListingRewardRules {
-            warmup_minutes: 2 * 24 * 60,
+            warmup_seconds: 2 * 24 * 60 * 60,
             reward_payout: 1000,
         },
     };

@@ -1644,6 +1644,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "mpl-auction-house",
+ "mpl-token-metadata",
  "solana-program",
 ]
 
@@ -1655,6 +1656,7 @@ dependencies = [
  "anchor-lang",
  "mpl-auction-house",
  "mpl-listing-rewards",
+ "spl-associated-token-account",
  "spl-token",
 ]
 
