@@ -4,7 +4,7 @@ A program that facilitates the payout of a spl token as rewards for listing NFTS
 
 ## Definitions
 
-reward center - A decorator for a Metaplex Auction Houses that holds the treasury of tokens to payout as well as manage reward rules. It is also the auctioneer delegate registered with the auction house program.
+reward center - A decorator for a Metaplex Auction Houses that owns the treasury of tokens to payout as well as manage reward rules. It is also the auctioneer delegate registered with the auction house program.
 
 reward - Is the payout of some amount of tokens from the reward center treasury to users that complete incentivized actions.
 

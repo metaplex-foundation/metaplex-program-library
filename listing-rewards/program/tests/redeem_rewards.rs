@@ -22,7 +22,6 @@ use std::str::FromStr;
 use mpl_token_metadata::state::Collection;
 
 use spl_associated_token_account::get_associated_token_address;
-use spl_token::native_mint;
 
 use {
     solana_sdk::{
@@ -107,6 +106,7 @@ async fn redeem_rewards_success() {
         &metadata_address,
         &rewardable_collection,
     );
+    let treasury_withdraw_desintiation = get_associated_token_address(&wallet, &mint.pubkey());
 
     let reward_center_params = reward_center::CreateRewardCenterParams {
         collection_oracle: None,
@@ -121,7 +121,7 @@ async fn redeem_rewards_success() {
         payer: wallet,
         authority: wallet,
         fee_withdrawal_destination: wallet,
-        treasury_withdrawal_destination: wallet,
+        treasury_withdrawal_destination: treasury_withdraw_desintiation,
         treasury_withdrawal_destination_owner: wallet,
     };
     let create_auction_house_data = mpl_auction_house_sdk::CreateAuctionHouseData {
