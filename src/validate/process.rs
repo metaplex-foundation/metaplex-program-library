@@ -112,8 +112,9 @@ pub fn process_validate(args: ValidateArgs) -> Result<()> {
             }
         };
 
+        // To be replaced with the strict validator once JSON standard is finalized.
         if args.strict {
-            match metadata.validate_strict() {
+            match metadata.validate() {
                 Ok(()) => {}
                 Err(e) => {
                     error!("{}: {}", path.display(), e);

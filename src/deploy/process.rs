@@ -85,11 +85,14 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
     let collection_in_cache = cache.items.get("-1").is_some();
     let mut item_redeemed = false;
 
-    if num_items != (cache.items.len() as u64) - (collection_in_cache as u64) {
+    let cache_items_sans_collection = (cache.items.len() - collection_in_cache as usize) as u64;
+
+    if num_items != cache_items_sans_collection {
         return Err(anyhow!(
-            "Number of items ({}) do not match cache items ({})",
+            "Number of items ({}) do not match cache items ({}). 
+            Item number in the config should only include asset files, not the collection file.",
             num_items,
-            cache.items.len()
+            cache_items_sans_collection
         ));
     } else {
         check_symbol(&config_data.symbol)?;

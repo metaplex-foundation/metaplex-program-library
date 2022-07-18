@@ -152,7 +152,11 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         })?;
 
         symbol = metadata.symbol;
-        seller_fee = metadata.seller_fee_basis_points;
+
+        // Optional in the JSON, so if it doesn't exist, we'll use the default value INVALID value.
+        if let Some(sfbp) = metadata.seller_fee_basis_points {
+            seller_fee = sfbp;
+        }
     }
 
     println!("\nCheck out our Candy Machine config docs to learn about the options:");
@@ -220,7 +224,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     // seller_fee_basis_points
 
-    config_data.seller_fee_basis_points = if num_files > 0 && Confirm::with_theme(&theme)
+    config_data.seller_fee_basis_points = if num_files > 0 && seller_fee != INVALID_SELLER_FEE && Confirm::with_theme(&theme)
         .with_prompt(
             format!(
                 "Found value {} for seller fee basis points in your metadata file. Is this value correct?", seller_fee,
@@ -231,7 +235,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     } else {
         Input::with_theme(&theme)
             .with_prompt(
-                "What is the seller fee basis points? (this must match what is in your asset files)",
+                "What is the seller fee basis points?",
             )
             .validate_with(seller_fee_basis_points_validator)
             .interact()

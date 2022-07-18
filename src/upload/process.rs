@@ -128,15 +128,17 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
                     )
                     .into());
                 }
-                // seller-fee-basis-points check
-                if config_data.seller_fee_basis_points != metadata.seller_fee_basis_points {
-                    return Err(UploadError::MismatchValue(
-                        "seller_fee_basis_points".to_string(),
-                        pair.metadata.clone(),
-                        config_data.seller_fee_basis_points.to_string(),
-                        metadata.seller_fee_basis_points.to_string(),
-                    )
-                    .into());
+                // seller-fee-basis-points check, but only if the asset actually has the value
+                if let Some(seller_fee_basis_points) = metadata.seller_fee_basis_points {
+                    if config_data.seller_fee_basis_points != seller_fee_basis_points {
+                        return Err(UploadError::MismatchValue(
+                            "seller_fee_basis_points".to_string(),
+                            pair.metadata.clone(),
+                            config_data.seller_fee_basis_points.to_string(),
+                            seller_fee_basis_points.to_string(),
+                        )
+                        .into());
+                    }
                 }
             }
             Err(err) => {

@@ -35,4 +35,10 @@ pub enum ValidateParserError {
 
     #[error("Missing collection field")]
     MissingCollection,
+
+    #[error("Missing creators field")]
+    MissingCreators,
+
+    #[error("Missing seller fee basis points field")]
+    MissingSellerFeeBasisPoints,
 }

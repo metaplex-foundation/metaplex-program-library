@@ -2,16 +2,19 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use super::ValidateParserError;
-use crate::validate::{errors, parser};
+use crate::validate::parser;
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
 pub struct Metadata {
     pub name: String,
     pub symbol: String,
     pub description: String,
-    pub seller_fee_basis_points: u16,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seller_fee_basis_points: Option<u16>,
     pub image: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub animation_url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub external_url: Option<String>,
     pub attributes: Vec<Attribute>,
     pub properties: Property,
@@ -22,27 +25,24 @@ impl Metadata {
         parser::check_name(&self.name)?;
         parser::check_symbol(&self.symbol)?;
         parser::check_url(&self.image)?;
-        parser::check_seller_fee_basis_points(self.seller_fee_basis_points)?;
-        parser::check_creators_shares(&self.properties.creators)?;
-        parser::check_creators_addresses(&self.properties.creators)?;
 
-        Ok(())
-    }
+        // If users are using the old format, we do validation on those values.
+        if let Some(sfbp) = &self.seller_fee_basis_points {
+            parser::check_seller_fee_basis_points(*sfbp)?;
+        }
 
-    pub fn validate_strict(&self) -> Result<(), ValidateParserError> {
+        if let Some(creators) = &self.properties.creators {
+            parser::check_creators_shares(creators)?;
+            parser::check_creators_addresses(creators)?;
+        }
+
         if let Some(animation_url) = &self.animation_url {
             parser::check_url(animation_url)?;
-        } else {
-            return Err(errors::ValidateParserError::MissingAnimationUrl);
         }
 
         if let Some(external_url) = &self.external_url {
             parser::check_url(external_url)?;
-        } else {
-            return Err(errors::ValidateParserError::MissingExternalUrl);
         }
-
-        Self::validate(self)?;
 
         Ok(())
     }
@@ -51,7 +51,8 @@ impl Metadata {
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
 pub struct Property {
     pub files: Vec<FileAttr>,
-    pub creators: Vec<Creator>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub creators: Option<Vec<Creator>>,
 }
 
 #[derive(Debug, Clone, Deserialize, Default, Serialize)]
