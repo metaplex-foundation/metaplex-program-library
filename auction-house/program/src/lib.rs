@@ -239,8 +239,28 @@ pub mod auction_house {
             .bumps
             .get("auction_house")
             .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+        // Check that bumps passed in are canonical.
+        if fee_payer_bump
+            != *ctx
+                .bumps
+                .get("auction_house_fee_account")
+                .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+        {
+            return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+        }
         auction_house.fee_payer_bump = fee_payer_bump;
+
+        if treasury_bump
+            != *ctx
+                .bumps
+                .get("auction_house_treasury")
+                .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+        {
+            return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+        }
         auction_house.treasury_bump = treasury_bump;
+
         if seller_fee_basis_points > 10000 {
             return Err(AuctionHouseError::InvalidBasisPoints.into());
         }
@@ -663,12 +683,12 @@ pub struct CreateAuctionHouse<'info> {
 
     /// Auction House instance fee account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump=fee_payer_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), FEE_PAYER.as_bytes()], bump)]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury PDA account.
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump=treasury_bump)]
+    #[account(mut, seeds=[PREFIX.as_bytes(), auction_house.key().as_ref(), TREASURY.as_bytes()], bump)]
     pub auction_house_treasury: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,

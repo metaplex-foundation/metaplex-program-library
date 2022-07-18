@@ -24,7 +24,7 @@ pub struct Withdraw<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -99,6 +99,15 @@ pub fn withdraw<'info>(
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
+
     withdraw_logic(ctx.accounts, escrow_payment_bump, amount)
 }
 
@@ -124,7 +133,7 @@ pub struct AuctioneerWithdraw<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -204,6 +213,15 @@ pub fn auctioneer_withdraw<'info>(
         ah_auctioneer_pda,
         AuthorityScope::Withdraw,
     )?;
+
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     let mut accounts: Withdraw<'info> = (*ctx.accounts).clone().into();
 
