@@ -72,7 +72,7 @@ jobs:
 
       # Run test
       - name: test-auction-house-program
-        id: run_test
+        id: run_auction_house_test
         working-directory: ./auction-house/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
@@ -81,7 +81,7 @@ jobs:
       
       # Verify we didn't break Auctioneer compatibility
       - name: test-auctioneer-program
-        id: run_test
+        id: run_auctioneer_test
         working-directory: ./auctioneer/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
@@ -129,7 +129,7 @@ jobs:
 
       # Run test
       - name: test-auction-house-program
-        id: run_test
+        id: run_auction_house_test
         working-directory: ./auction-house/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
@@ -138,7 +138,7 @@ jobs:
       
       # Verify we didn't break Auctioneer compatibility
       - name: test-auctioneer-program
-        id: run_test
+        id: run_auctioneer_test
         working-directory: ./auctioneer/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
