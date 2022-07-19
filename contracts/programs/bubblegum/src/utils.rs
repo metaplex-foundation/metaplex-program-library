@@ -83,7 +83,6 @@ pub fn append_leaf<'info>(
     bump: u8,
     gummyroll_program: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
-    _append_authority: &AccountInfo<'info>,
     merkle_roll: &AccountInfo<'info>,
     candy_wrapper: &AccountInfo<'info>,
     leaf_node: Node,

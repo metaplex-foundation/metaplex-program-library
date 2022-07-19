@@ -5,8 +5,9 @@ use {
         leaf_schema::{LeafSchema, Version},
         metaplex_adapter::{Creator, MetadataArgs, TokenProgramVersion},
         metaplex_anchor::{MasterEdition, TokenMetadata},
-        NFTDecompressionEvent, NewNFTEvent, Nonce, Voucher, ASSET_PREFIX, NONCE_SIZE,
-        VOUCHER_PREFIX, VOUCHER_SIZE,
+        request::{MintRequest, MINT_REQUEST_SIZE},
+        NFTDecompressionEvent, NewNFTEvent, TreeConfig, Voucher, ASSET_PREFIX,
+        TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
     },
     crate::utils::{
         append_leaf, assert_metadata_is_mpl_compatible, assert_pubkey_equal, cmp_bytes,
@@ -35,13 +36,13 @@ declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 #[derive(Accounts)]
 pub struct CreateTree<'info> {
     #[account(
-    init,
-    seeds = [merkle_slab.key().as_ref()],
-    payer = payer,
-    space = NONCE_SIZE,
-    bump,
+        init,
+        seeds = [merkle_slab.key().as_ref()],
+        payer = payer,
+        space = TREE_AUTHORITY_SIZE,
+        bump,
     )]
-    pub authority: Account<'info, Nonce>,
+    pub authority: Account<'info, TreeConfig>,
     #[account(mut)]
     pub payer: Signer<'info>,
     pub tree_creator: Signer<'info>,
@@ -55,13 +56,22 @@ pub struct CreateTree<'info> {
 
 #[derive(Accounts)]
 pub struct MintV1<'info> {
-    pub mint_authority: Signer<'info>,
+    /// CHECK: checked in method call
     #[account(
-    mut,
-    seeds = [merkle_slab.key().as_ref()],
-    bump,
+        mut,
+        seeds=[merkle_slab.key().as_ref(), mint_authority.key().as_ref()],
+        bump,
     )]
-    pub authority: Account<'info, Nonce>,
+    pub mint_authority_request: Account<'info, MintRequest>,
+    /// CHECK: This is checked in the instruction. Must be signer if it is not equal to the `authority`
+    #[account(mut)]
+    pub mint_authority: AccountInfo<'info>,
+    #[account(
+        mut,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
+    )]
+    pub authority: Account<'info, TreeConfig>,
     pub candy_wrapper: Program<'info, CandyWrapper>,
     pub gummyroll_program: Program<'info, Gummyroll>,
     /// CHECK: This account is neither written to nor read from.
@@ -76,10 +86,10 @@ pub struct MintV1<'info> {
 #[derive(Accounts)]
 pub struct Burn<'info> {
     #[account(
-    seeds = [merkle_slab.key().as_ref()],
-    bump,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
     )]
-    pub authority: Account<'info, Nonce>,
+    pub authority: Account<'info, TreeConfig>,
     pub candy_wrapper: Program<'info, CandyWrapper>,
     pub gummyroll_program: Program<'info, Gummyroll>,
     /// CHECK: This account is checked in the instruction
@@ -95,11 +105,11 @@ pub struct Burn<'info> {
 #[derive(Accounts)]
 pub struct Transfer<'info> {
     #[account(
-    seeds = [merkle_slab.key().as_ref()],
-    bump,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: Account<'info, Nonce>,
+    pub authority: Account<'info, TreeConfig>,
     /// CHECK: This account is checked in the instruction
     pub owner: UncheckedAccount<'info>,
     /// CHECK: This account is chekced in the instruction
@@ -116,11 +126,11 @@ pub struct Transfer<'info> {
 #[derive(Accounts)]
 pub struct Delegate<'info> {
     #[account(
-    seeds = [merkle_slab.key().as_ref()],
-    bump,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: Account<'info, Nonce>,
+    pub authority: Account<'info, TreeConfig>,
     pub owner: Signer<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub previous_delegate: UncheckedAccount<'info>,
@@ -135,19 +145,19 @@ pub struct Delegate<'info> {
 
 #[derive(Accounts)]
 #[instruction(
-_root: [u8; 32],
-_data_hash: [u8; 32],
-_creator_hash: [u8; 32],
-nonce: u64,
-_index: u32,
+    _root: [u8; 32],
+    _data_hash: [u8; 32],
+    _creator_hash: [u8; 32],
+    nonce: u64,
+    _index: u32,
 )]
 pub struct Redeem<'info> {
     #[account(
-    seeds = [merkle_slab.key().as_ref()],
-    bump,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: Account<'info, Nonce>,
+    pub authority: Account<'info, TreeConfig>,
     pub candy_wrapper: Program<'info, CandyWrapper>,
     pub gummyroll_program: Program<'info, Gummyroll>,
     #[account(mut)]
@@ -158,11 +168,11 @@ pub struct Redeem<'info> {
     /// CHECK: checked in cpi
     pub merkle_slab: UncheckedAccount<'info>,
     #[account(
-    init,
-    seeds = [
-    VOUCHER_PREFIX.as_ref(),
-    merkle_slab.key().as_ref(),
-    & nonce.to_le_bytes()
+        init,
+        seeds = [
+        VOUCHER_PREFIX.as_ref(),
+        merkle_slab.key().as_ref(),
+        & nonce.to_le_bytes()
     ],
     payer = owner,
     space = VOUCHER_SIZE,
@@ -175,23 +185,23 @@ pub struct Redeem<'info> {
 #[derive(Accounts)]
 pub struct CancelRedeem<'info> {
     #[account(
-    seeds = [merkle_slab.key().as_ref()],
-    bump,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
     )]
     /// CHECK: This account is neither written to nor read from.
-    pub authority: Account<'info, Nonce>,
+    pub authority: Account<'info, TreeConfig>,
     pub candy_wrapper: Program<'info, CandyWrapper>,
     pub gummyroll_program: Program<'info, Gummyroll>,
     #[account(mut)]
     /// CHECK: unsafe
     pub merkle_slab: UncheckedAccount<'info>,
     #[account(
-    mut,
-    close = owner,
-    seeds = [
-    VOUCHER_PREFIX.as_ref(),
-    merkle_slab.key().as_ref(),
-    & voucher.leaf_schema.nonce().to_le_bytes()
+        mut,
+        close = owner,
+        seeds = [
+        VOUCHER_PREFIX.as_ref(),
+        merkle_slab.key().as_ref(),
+        & voucher.leaf_schema.nonce().to_le_bytes()
     ],
     bump
     )]
@@ -203,14 +213,14 @@ pub struct CancelRedeem<'info> {
 #[derive(Accounts)]
 pub struct DecompressV1<'info> {
     #[account(
-    mut,
-    close = owner,
-    seeds = [
-    VOUCHER_PREFIX.as_ref(),
-    voucher.merkle_slab.as_ref(),
-    voucher.leaf_schema.nonce().to_le_bytes().as_ref()
-    ],
-    bump
+        mut,
+        close = owner,
+        seeds = [
+            VOUCHER_PREFIX.as_ref(),
+            voucher.merkle_slab.as_ref(),
+            voucher.leaf_schema.nonce().to_le_bytes().as_ref()
+        ],
+        bump
     )]
     pub voucher: Box<Account<'info, Voucher>>,
     #[account(mut)]
@@ -220,19 +230,19 @@ pub struct DecompressV1<'info> {
     pub token_account: UncheckedAccount<'info>,
     /// CHECK: versioning is handled in the instruction
     #[account(
-    mut,
-    seeds = [
-        ASSET_PREFIX.as_ref(),
-        voucher.merkle_slab.as_ref(),
-        voucher.leaf_schema.nonce().to_le_bytes().as_ref(),
-    ],
-    bump
+        mut,
+        seeds = [
+            ASSET_PREFIX.as_ref(),
+            voucher.merkle_slab.as_ref(),
+            voucher.leaf_schema.nonce().to_le_bytes().as_ref(),
+        ],
+        bump
     )]
     pub mint: UncheckedAccount<'info>,
     /// CHECK:
     #[account(
-    seeds = [mint.key().as_ref()],
-    bump,
+        seeds = [mint.key().as_ref()],
+        bump,
     )]
     pub mint_authority: UncheckedAccount<'info>,
     /// CHECK:
@@ -254,8 +264,8 @@ pub struct DecompressV1<'info> {
 #[derive(Accounts)]
 pub struct Compress<'info> {
     #[account(
-    seeds = [merkle_slab.key().as_ref()],
-    bump,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
     )]
     /// CHECK: This account is neither written to nor read from.
     pub authority: UncheckedAccount<'info>,
@@ -284,6 +294,112 @@ pub struct Compress<'info> {
     pub token_program: UncheckedAccount<'info>,
     pub candy_wrapper: Program<'info, CandyWrapper>,
     pub gummyroll_program: Program<'info, Gummyroll>,
+}
+
+#[derive(Accounts)]
+pub struct SetMintRequest<'info> {
+    #[account(
+        init_if_needed,
+        space=MINT_REQUEST_SIZE,
+        seeds=[merkle_slab.key().as_ref(), mint_authority.key().as_ref()],
+        payer=mint_authority,
+        bump
+    )]
+    pub mint_authority_request: Account<'info, MintRequest>,
+    #[account(mut)]
+    pub mint_authority: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [merkle_slab.key().as_ref()],
+        bump
+    )]
+    pub tree_authority: Account<'info, TreeConfig>,
+    pub system_program: Program<'info, System>,
+    /// CHECK: this account is neither read from or written to
+    pub merkle_slab: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct SetDefaultMintRequest<'info> {
+    #[account(
+        init_if_needed,
+        space=MINT_REQUEST_SIZE,
+        seeds=[merkle_slab.key().as_ref(), tree_authority.key().as_ref()],
+        payer=creator,
+        bump
+    )]
+    pub mint_authority_request: Account<'info, MintRequest>,
+    #[account(mut)]
+    pub creator: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
+        has_one = creator 
+    )]
+    pub tree_authority: Account<'info, TreeConfig>,
+    pub system_program: Program<'info, System>,
+    /// CHECK: this account is neither read from or written to
+    pub merkle_slab: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct ApproveMintRequest<'info> {
+    #[account(
+        mut,
+        seeds = [merkle_slab.key().as_ref(), mint_authority_request.mint_authority.as_ref()],
+        bump
+    )]
+    pub mint_authority_request: Account<'info, MintRequest>,
+    #[account(
+        constraint= *tree_delegate.key == tree_authority.creator || *tree_delegate.key == tree_authority.delegate
+    )]
+    pub tree_delegate: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [merkle_slab.key().as_ref()],
+        bump
+    )]
+    pub tree_authority: Account<'info, TreeConfig>,
+    /// CHECK: this account is neither read from or written to
+    pub merkle_slab: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CloseMintRequest<'info> {
+    #[account(
+        mut,
+        close = mint_authority,
+        seeds = [merkle_slab.key().as_ref(), mint_authority.key().as_ref()],
+        bump
+    )]
+    pub mint_authority_request: Account<'info, MintRequest>,
+    #[account(mut)]
+    pub mint_authority: Signer<'info>,
+    #[account(
+        mut,
+        seeds = [merkle_slab.key().as_ref()],
+        bump
+    )]
+    pub tree_authority: Account<'info, TreeConfig>,
+    /// CHECK: this account is neither read from or written to
+    pub merkle_slab: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct SetTreeDelegate<'info> {
+    pub creator: Signer<'info>,
+    /// CHECK: this account is neither read from or written to
+    pub new_delegate: UncheckedAccount<'info>,
+    /// CHECK: this account is neither read from or written to
+    pub merkle_slab: UncheckedAccount<'info>,
+    #[account(
+        mut,
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
+        has_one = creator
+    )]
+    pub tree_authority: Account<'info, TreeConfig>,
 }
 
 pub fn hash_metadata(metadata: &MetadataArgs) -> Result<[u8; 32]> {
@@ -326,6 +442,80 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
     }
 }
 
+fn assert_enough_mints_to_approve<'info>(
+    authority: &Account<'info, TreeConfig>,
+    to_approve: u64,
+) -> Result<()> {
+    if !authority.contains_mint_capacity(to_approve) {
+        return Err(BubblegumError::InsufficientMintCapacity.into());
+    }
+    Ok(())
+}
+
+fn process_mint_v1<'info>(
+    message: MetadataArgs,
+    owner: Pubkey,
+    delegate: Pubkey,
+    authority_bump: u8,
+    authority: &mut Account<'info, TreeConfig>,
+    merkle_slab: &AccountInfo<'info>,
+    candy_wrapper: &Program<'info, CandyWrapper>,
+    gummyroll_program: &AccountInfo<'info>,
+) -> Result<()> {
+    assert_metadata_is_mpl_compatible(&message)?;
+    // TODO -> Pass collection in check collection authority or collection delegate authority signer
+    // TODO -> Separate V1 / V1 into seperate instructions
+    // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace instructions, without passing the entire, un-hashed MetadataArgs struct
+    let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
+    let data_hash = keccak::hashv(&[
+        &metadata_args_hash.to_bytes(),
+        &message.seller_fee_basis_points.to_le_bytes(),
+    ]);
+    let creator_data = message
+        .creators
+        .iter()
+        //TODO include verified
+        .map(|c| [c.address.as_ref(), &[c.share]].concat())
+        .collect::<Vec<_>>();
+    let creator_hash = keccak::hashv(
+        creator_data
+            .iter()
+            .map(|c| c.as_slice())
+            .collect::<Vec<&[u8]>>()
+            .as_ref(),
+    );
+    let asset_id = get_asset_id(&merkle_slab.key(), authority.num_minted);
+    let leaf = LeafSchema::new_v0(
+        asset_id,
+        owner,
+        delegate,
+        authority.num_minted,
+        data_hash.to_bytes(),
+        creator_hash.to_bytes(),
+    );
+    let new_nft = NewNFTEvent {
+        version: Version::V1,
+        metadata: message,
+        nonce: authority.num_minted,
+    };
+
+    emit!(new_nft);
+    wrap_event(new_nft.try_to_vec()?, &candy_wrapper)?;
+
+    emit!(leaf.to_event());
+
+    authority.num_minted = authority.num_minted.saturating_add(1);
+    append_leaf(
+        &merkle_slab.key(),
+        authority_bump,
+        &gummyroll_program.to_account_info(),
+        &authority.to_account_info(),
+        &merkle_slab.to_account_info(),
+        &candy_wrapper.to_account_info(),
+        leaf.to_node(),
+    )
+}
+
 #[program]
 pub mod bubblegum {
     use super::*;
@@ -338,6 +528,14 @@ pub mod bubblegum {
         let merkle_slab = ctx.accounts.merkle_slab.to_account_info();
         let seed = merkle_slab.key();
         let seeds = &[seed.as_ref(), &[*ctx.bumps.get("authority").unwrap()]];
+        let authority = &mut ctx.accounts.authority;
+        authority.set_inner(TreeConfig {
+            creator: ctx.accounts.tree_creator.key(),
+            delegate: ctx.accounts.tree_creator.key(),
+            total_mint_capacity: 1 << max_depth,
+            num_mints_approved: 0,
+            num_minted: 0,
+        });
         let authority_pda_signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.gummyroll_program.to_account_info(),
@@ -351,62 +549,85 @@ pub mod bubblegum {
         gummyroll::cpi::init_empty_gummyroll(cpi_ctx, max_depth, max_buffer_size)
     }
 
+    /// Creates a special mint request the tree_authority PDA. This allows permissionless minting without
+    /// requiring a higher level CPI
+    pub fn create_default_mint_request(ctx: Context<SetDefaultMintRequest>, mint_capacity: u64) -> Result<()> {
+        let request = &mut ctx.accounts.mint_authority_request;
+        assert_enough_mints_to_approve(&ctx.accounts.tree_authority, mint_capacity)?;
+        request.init_or_set(ctx.accounts.tree_authority.key(), mint_capacity);
+        Ok(())
+    }
+
+    pub fn request_mint_authority(ctx: Context<SetMintRequest>, mint_capacity: u64) -> Result<()> {
+        let request = &mut ctx.accounts.mint_authority_request;
+        assert_enough_mints_to_approve(&ctx.accounts.tree_authority, mint_capacity)?;
+        request.init_or_set(ctx.accounts.mint_authority.key(), mint_capacity);
+        Ok(())
+    }
+
+    pub fn approve_mint_authority_request(
+        ctx: Context<ApproveMintRequest>,
+        num_mints_to_approve: u64,
+    ) -> Result<()> {
+        let authority = &mut ctx.accounts.tree_authority;
+        let request = &mut ctx.accounts.mint_authority_request;
+        // Check that there are enough valid mints left in tree to approve
+        assert_enough_mints_to_approve(&authority, num_mints_to_approve)?;
+        authority.approve_mint_capacity(num_mints_to_approve);
+        request.approve(num_mints_to_approve)?;
+        Ok(())
+    }
+
+    pub fn close_mint_request(ctx: Context<CloseMintRequest>) -> Result<()> {
+        let authority = &mut ctx.accounts.tree_authority;
+        let request = &ctx.accounts.mint_authority_request;
+        // Transfer remaining mint capacity to authority
+        authority.restore_mint_capacity(request.num_mints_approved);
+        Ok(())
+    }
+
+    pub fn set_tree_delegate(ctx: Context<SetTreeDelegate>) -> Result<()> {
+        ctx.accounts.tree_authority.delegate = ctx.accounts.new_delegate.key();
+        Ok(())
+    }
+
     pub fn mint_v1(ctx: Context<MintV1>, message: MetadataArgs) -> Result<()> {
         // TODO -> Pass collection in check collection authority or collection delegate authority signer
         // TODO -> Separate V1 / V1 into seperate instructions
-        assert_metadata_is_mpl_compatible(&message)?;
         let owner = ctx.accounts.owner.key();
         let delegate = ctx.accounts.delegate.key();
-        let merkle_slab = ctx.accounts.merkle_slab.to_account_info();
+        let mint_authority = &mut ctx.accounts.mint_authority;
+        let merkle_slab = &ctx.accounts.merkle_slab;
 
-        // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace instructions, without passing the entire, un-hashed MetadataArgs struct
-        let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
-        let data_hash = keccak::hashv(&[
-            &metadata_args_hash.to_bytes(),
-            &message.seller_fee_basis_points.to_le_bytes(),
-        ]);
-        let nonce = &mut ctx.accounts.authority;
-        let creator_data = message
-            .creators
-            .iter()
-            //TODO include verified
-            .map(|c| [c.address.as_ref(), &[c.share]].concat())
-            .collect::<Vec<_>>();
-        let creator_hash = keccak::hashv(
-            creator_data
-                .iter()
-                .map(|c| c.as_slice())
-                .collect::<Vec<&[u8]>>()
-                .as_ref(),
-        );
-        let asset_id = get_asset_id(&merkle_slab.key(), nonce.count);
-        let leaf = LeafSchema::new_v0(
-            asset_id,
+        // The mint authority must sign if it is not equal to the tree authority 
+        if mint_authority.key() != ctx.accounts.authority.key() {
+            assert!(mint_authority.is_signer);
+        }
+
+        let authority = &mut ctx.accounts.authority;
+        let request = &mut ctx.accounts.mint_authority_request;
+
+        request.decrement_approvals()?;
+        process_mint_v1(
+            message,
             owner,
             delegate,
-            nonce.count,
-            data_hash.to_bytes(),
-            creator_hash.to_bytes(),
-        );
-        let new_nft = NewNFTEvent {
-            version: Version::V1,
-            metadata: message,
-            nonce: nonce.count,
-        };
-        emit!(new_nft);
-        wrap_event(new_nft.try_to_vec()?, &ctx.accounts.candy_wrapper)?;
-        emit!(leaf.to_event());
-        nonce.count = nonce.count.saturating_add(1);
-        append_leaf(
-            &merkle_slab.key(),
             *ctx.bumps.get("authority").unwrap(),
-            &ctx.accounts.gummyroll_program.to_account_info(),
-            &ctx.accounts.authority.to_account_info(),
-            &ctx.accounts.mint_authority.to_account_info(),
-            &ctx.accounts.merkle_slab.to_account_info(),
-            &ctx.accounts.candy_wrapper.to_account_info(),
-            leaf.to_node(),
-        )
+            authority,
+            merkle_slab,
+            &ctx.accounts.candy_wrapper,
+            &ctx.accounts.gummyroll_program,
+        )?;
+        if request.num_mints_approved == 0 && request.num_mints_requested == 0 {
+            // Transfer lamports
+            let request_info = request.to_account_info();
+            **mint_authority.lamports.borrow_mut() = mint_authority
+                .lamports()
+                .checked_add(request_info.lamports())
+                .ok_or(BubblegumError::CloseMintRequestError)?;
+            **request_info.lamports.borrow_mut() = 0;
+        }
+        Ok(())
     }
 
     pub fn transfer<'info>(
