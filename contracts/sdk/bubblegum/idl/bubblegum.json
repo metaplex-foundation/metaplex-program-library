@@ -53,12 +53,176 @@
       ]
     },
     {
+      "name": "createDefaultMintRequest",
+      "docs": [
+        "Creates a special mint request the tree_authority PDA. This allows permissionless minting without",
+        "requiring a higher level CPI"
+      ],
+      "accounts": [
+        {
+          "name": "mintAuthorityRequest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "creator",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "mintCapacity",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "requestMintAuthority",
+      "accounts": [
+        {
+          "name": "mintAuthorityRequest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "mintCapacity",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "approveMintAuthorityRequest",
+      "accounts": [
+        {
+          "name": "mintAuthorityRequest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "numMintsToApprove",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "closeMintRequest",
+      "accounts": [
+        {
+          "name": "mintAuthorityRequest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setTreeDelegate",
+      "accounts": [
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "newDelegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treeAuthority",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "mintV1",
       "accounts": [
         {
+          "name": "mintAuthorityRequest",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
           "name": "mintAuthority",
-          "isMut": false,
-          "isSigner": true
+          "isMut": true,
+          "isSigner": false
         },
         {
           "name": "authority",
@@ -606,12 +770,48 @@
   ],
   "accounts": [
     {
-      "name": "Nonce",
+      "name": "MintRequest",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "count",
+            "name": "mintAuthority",
+            "type": "publicKey"
+          },
+          {
+            "name": "numMintsRequested",
+            "type": "u64"
+          },
+          {
+            "name": "numMintsApproved",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TreeConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "publicKey"
+          },
+          {
+            "name": "delegate",
+            "type": "publicKey"
+          },
+          {
+            "name": "totalMintCapacity",
+            "type": "u64"
+          },
+          {
+            "name": "numMintsApproved",
+            "type": "u64"
+          },
+          {
+            "name": "numMinted",
             "type": "u64"
           }
         ]
@@ -1081,6 +1281,31 @@
       "code": 6010,
       "name": "MetadataBasisPointsTooHigh",
       "msg": "Basis points in metadata cannot exceed 10000"
+    },
+    {
+      "code": 6011,
+      "name": "InsufficientMintCapacity",
+      "msg": "Not enough unapproved mints left"
+    },
+    {
+      "code": 6012,
+      "name": "MintRequestNotApproved",
+      "msg": "Mint request not approved"
+    },
+    {
+      "code": 6013,
+      "name": "MintRequestKeyMismatch",
+      "msg": "Mint authority key does not match request"
+    },
+    {
+      "code": 6014,
+      "name": "MintRequestDiscriminatorMismatch",
+      "msg": "Mint request data has incorrect disciminator"
+    },
+    {
+      "code": 6015,
+      "name": "CloseMintRequestError",
+      "msg": "Something went wrong closing mint request"
     }
   ],
   "metadata": {

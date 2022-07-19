@@ -7,79 +7,71 @@
 
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
-import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
 
 /**
  * @category Instructions
- * @category MintV1
+ * @category RequestMintAuthority
  * @category generated
  */
-export type MintV1InstructionArgs = {
-  message: MetadataArgs
+export type RequestMintAuthorityInstructionArgs = {
+  mintCapacity: beet.bignum
 }
 /**
  * @category Instructions
- * @category MintV1
+ * @category RequestMintAuthority
  * @category generated
  */
-export const mintV1Struct = new beet.FixableBeetArgsStruct<
-  MintV1InstructionArgs & {
+export const requestMintAuthorityStruct = new beet.BeetArgsStruct<
+  RequestMintAuthorityInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['message', metadataArgsBeet],
+    ['mintCapacity', beet.u64],
   ],
-  'MintV1InstructionArgs'
+  'RequestMintAuthorityInstructionArgs'
 )
 /**
- * Accounts required by the _mintV1_ instruction
+ * Accounts required by the _requestMintAuthority_ instruction
  *
  * @property [_writable_] mintAuthorityRequest
- * @property [_writable_] mintAuthority
- * @property [_writable_] authority
- * @property [] candyWrapper
- * @property [] gummyrollProgram
- * @property [] owner
- * @property [] delegate
- * @property [_writable_] merkleSlab
+ * @property [_writable_, **signer**] mintAuthority
+ * @property [_writable_] treeAuthority
+ * @property [] merkleSlab
  * @category Instructions
- * @category MintV1
+ * @category RequestMintAuthority
  * @category generated
  */
-export type MintV1InstructionAccounts = {
+export type RequestMintAuthorityInstructionAccounts = {
   mintAuthorityRequest: web3.PublicKey
   mintAuthority: web3.PublicKey
-  authority: web3.PublicKey
-  candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
-  owner: web3.PublicKey
-  delegate: web3.PublicKey
+  treeAuthority: web3.PublicKey
+  systemProgram?: web3.PublicKey
   merkleSlab: web3.PublicKey
 }
 
-export const mintV1InstructionDiscriminator = [
-  145, 98, 192, 118, 184, 147, 118, 104,
+export const requestMintAuthorityInstructionDiscriminator = [
+  68, 130, 170, 21, 167, 61, 63, 76,
 ]
 
 /**
- * Creates a _MintV1_ instruction.
+ * Creates a _RequestMintAuthority_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category MintV1
+ * @category RequestMintAuthority
  * @category generated
  */
-export function createMintV1Instruction(
-  accounts: MintV1InstructionAccounts,
-  args: MintV1InstructionArgs,
+export function createRequestMintAuthorityInstruction(
+  accounts: RequestMintAuthorityInstructionAccounts,
+  args: RequestMintAuthorityInstructionArgs,
   programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
 ) {
-  const [data] = mintV1Struct.serialize({
-    instructionDiscriminator: mintV1InstructionDiscriminator,
+  const [data] = requestMintAuthorityStruct.serialize({
+    instructionDiscriminator: requestMintAuthorityInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
@@ -91,36 +83,21 @@ export function createMintV1Instruction(
     {
       pubkey: accounts.mintAuthority,
       isWritable: true,
-      isSigner: false,
+      isSigner: true,
     },
     {
-      pubkey: accounts.authority,
+      pubkey: accounts.treeAuthority,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.candyWrapper,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.gummyrollProgram,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.owner,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: accounts.delegate,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
       pubkey: accounts.merkleSlab,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
   ]

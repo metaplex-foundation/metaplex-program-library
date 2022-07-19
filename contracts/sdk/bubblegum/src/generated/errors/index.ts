@@ -271,6 +271,124 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * InsufficientMintCapacity: 'Not enough unapproved mints left'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InsufficientMintCapacityError extends Error {
+  readonly code: number = 0x177b
+  readonly name: string = 'InsufficientMintCapacity'
+  constructor() {
+    super('Not enough unapproved mints left')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InsufficientMintCapacityError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177b, () => new InsufficientMintCapacityError())
+createErrorFromNameLookup.set(
+  'InsufficientMintCapacity',
+  () => new InsufficientMintCapacityError()
+)
+
+/**
+ * MintRequestNotApproved: 'Mint request not approved'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintRequestNotApprovedError extends Error {
+  readonly code: number = 0x177c
+  readonly name: string = 'MintRequestNotApproved'
+  constructor() {
+    super('Mint request not approved')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintRequestNotApprovedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177c, () => new MintRequestNotApprovedError())
+createErrorFromNameLookup.set(
+  'MintRequestNotApproved',
+  () => new MintRequestNotApprovedError()
+)
+
+/**
+ * MintRequestKeyMismatch: 'Mint authority key does not match request'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintRequestKeyMismatchError extends Error {
+  readonly code: number = 0x177d
+  readonly name: string = 'MintRequestKeyMismatch'
+  constructor() {
+    super('Mint authority key does not match request')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintRequestKeyMismatchError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177d, () => new MintRequestKeyMismatchError())
+createErrorFromNameLookup.set(
+  'MintRequestKeyMismatch',
+  () => new MintRequestKeyMismatchError()
+)
+
+/**
+ * MintRequestDiscriminatorMismatch: 'Mint request data has incorrect disciminator'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MintRequestDiscriminatorMismatchError extends Error {
+  readonly code: number = 0x177e
+  readonly name: string = 'MintRequestDiscriminatorMismatch'
+  constructor() {
+    super('Mint request data has incorrect disciminator')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MintRequestDiscriminatorMismatchError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(
+  0x177e,
+  () => new MintRequestDiscriminatorMismatchError()
+)
+createErrorFromNameLookup.set(
+  'MintRequestDiscriminatorMismatch',
+  () => new MintRequestDiscriminatorMismatchError()
+)
+
+/**
+ * CloseMintRequestError: 'Something went wrong closing mint request'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CloseMintRequestErrorError extends Error {
+  readonly code: number = 0x177f
+  readonly name: string = 'CloseMintRequestError'
+  constructor() {
+    super('Something went wrong closing mint request')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CloseMintRequestErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x177f, () => new CloseMintRequestErrorError())
+createErrorFromNameLookup.set(
+  'CloseMintRequestError',
+  () => new CloseMintRequestErrorError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
