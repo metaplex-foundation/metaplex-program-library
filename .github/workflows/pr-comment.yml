@@ -8,6 +8,8 @@ permissions:
   id-token: write
   contents: write
   packages: write
+  issues: write # make comment
+  pull-requests: write # open PR
 
 env:
   NODE_VERSION: 17.0.1
@@ -26,9 +28,7 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
   get-changes-scope:
-    if:
-      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true &&
-      contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
       changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
@@ -61,9 +61,7 @@ jobs:
             return JSON.stringify(Array.from(Object.keys(uniqueFilesObj)).map((el) => `\"${el}\"`))
 
   get-version-scope:
-    if:
-      contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true &&
-      contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
       versioning: ${{ steps.parse-version-info.outputs.versioning }}
@@ -97,4 +95,8 @@ jobs:
         with:
           changed-packages: ${{ needs.get-changes-scope.outputs.changed-packages }}
           versioning: ${{ needs.get-version-scope.outputs.versioning }}
-          branch: ${{ github.event.pull_request.head.ref }}
+          to-branch: ${{ github.event.pull_request.base.ref }}
+          to-repository: ${{ github.event.pull_request.base.repo.full_name }}
+          from-branch: ${{ github.event.pull_request.head.ref }}
+          from-repository: ${{ github.event.pull_request.head.repo.full_name }}
+          pull-number: ${{ github.event.pull_request.number }}
