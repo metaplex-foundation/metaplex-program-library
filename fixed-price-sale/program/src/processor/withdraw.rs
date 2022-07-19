@@ -1,4 +1,3 @@
-use crate::state::from_mpl_creators;
 use crate::{
     error::ErrorCode,
     state::{Creator, MarketState, PrimaryMetadataCreators},
@@ -10,6 +9,7 @@ use anchor_spl::{
     associated_token::{self, get_associated_token_address},
     token,
 };
+use mpl_token_metadata::state::TokenMetadataAccount;
 
 impl<'info> Withdraw<'info> {
     pub fn process(
@@ -61,7 +61,8 @@ impl<'info> Withdraw<'info> {
         )?;
 
         // Obtain right creators according to sale type
-        let metadata = mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
+        let metadata: mpl_token_metadata::state::Metadata =
+            mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
         let actual_creators = if !metadata.primary_sale_happened {
             if remaining_accounts.len() == 0 {
                 return Err(ErrorCode::PrimaryMetadataCreatorsNotProvided.into());

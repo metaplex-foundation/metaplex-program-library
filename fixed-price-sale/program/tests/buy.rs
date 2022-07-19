@@ -851,7 +851,7 @@ mod buy {
 
         match err {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -1128,7 +1128,7 @@ mod buy {
 
         match err {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -1428,7 +1428,7 @@ mod buy {
 
         match err {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -1728,7 +1728,7 @@ mod buy {
 
         match err {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -2015,7 +2015,7 @@ mod buy {
 
         match err {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -2404,7 +2404,7 @@ mod buy {
 
         match err {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -3308,7 +3308,7 @@ mod buy {
             .unwrap_err();
 
         match err {
-            TransportError::TransactionError(TransactionError::InstructionError(
+            BanksClientError::TransactionError(TransactionError::InstructionError(
                 0,
                 InstructionError::Custom(err_code),
             )) => {
@@ -3920,7 +3920,7 @@ mod buy {
             .unwrap_err();
 
         match err {
-            TransportError::TransactionError(TransactionError::InstructionError(
+            BanksClientError::TransactionError(TransactionError::InstructionError(
                 0,
                 InstructionError::Custom(err_code),
             )) => {

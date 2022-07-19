@@ -14,7 +14,7 @@ use crate::{
 use mpl_metaplex::state::Store;
 use mpl_token_metadata::{
     error::MetadataError,
-    state::{MasterEditionV2, Metadata, EDITION, PREFIX},
+    state::{MasterEditionV2, Metadata, TokenMetadataAccount, EDITION, PREFIX},
     utils::{assert_derivation, assert_initialized},
 };
 use solana_program::{
@@ -150,7 +150,7 @@ pub fn add_card_to_pack(
 
     pack_set.add_card_volume(weight.into(), max_supply, &master_edition)?;
 
-    let master_metadata = Metadata::from_account_info(master_metadata_info)?;
+    let master_metadata: Metadata = Metadata::from_account_info(master_metadata_info)?;
     assert_account_key(mint_info, &master_metadata.mint)?;
     assert_derivation(
         &token_metadata_program_id,

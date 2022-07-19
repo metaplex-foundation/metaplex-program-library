@@ -11,7 +11,7 @@ use crate::{
     utils::{assert_derivation, assert_initialized, create_or_allocate_account_raw},
 };
 use borsh::BorshSerialize;
-use mpl_token_metadata::state::Metadata;
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
 use mpl_token_vault::state::{SafetyDepositBox, Vault};
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
@@ -94,7 +94,7 @@ pub fn process_deprecated_validate_safety_deposit_box_v1<'a>(
     let mut auction_manager = AuctionManagerV1::from_account_info(auction_manager_info)?;
     let safety_deposit = SafetyDepositBox::from_account_info(safety_deposit_info)?;
     let _safety_deposit_token_store: Account = assert_initialized(safety_deposit_token_store_info)?;
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let store = Store::from_account_info(auction_manager_store_info)?;
     // Is it a real vault?
     let vault = Vault::from_account_info(vault_info)?;

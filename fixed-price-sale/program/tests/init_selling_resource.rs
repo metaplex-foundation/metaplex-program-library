@@ -268,8 +268,9 @@ mod init_selling_resource {
             .await
             .unwrap_err();
         match err {
+            BanksClientError => {}
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -393,7 +394,7 @@ mod init_selling_resource {
             .unwrap_err();
         match err {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

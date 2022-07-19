@@ -298,7 +298,7 @@ mod create_market {
 
         match tx_result.unwrap_err() {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -407,7 +407,7 @@ mod create_market {
 
         match tx_result.unwrap_err() {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -612,7 +612,7 @@ mod create_market {
 
         match tx_result.unwrap_err() {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -807,7 +807,7 @@ mod create_market {
 
         match tx_result.unwrap_err() {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
@@ -917,7 +917,7 @@ mod create_market {
 
         match tx_result.unwrap_err() {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }

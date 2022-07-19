@@ -18,4 +18,4 @@ clap = "2.33"
 solana-clap-utils = "1.8.5"
 solana-cli-config = "1.8.5"
 metaplex-token-vault = { package ="mpl-token-vault", path = "../program", features = [ "no-entrypoint" ] }
-spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
+spl-token = { version="3.3.0", features = [ "no-entrypoint" ] }

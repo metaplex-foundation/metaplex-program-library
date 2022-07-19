@@ -6,9 +6,7 @@ use mpl_nft_packs::{
 use num_traits::FromPrimitive;
 use solana_program::{clock::Clock, instruction::InstructionError};
 use solana_program_test::*;
-use solana_sdk::{
-    signature::Keypair, signer::Signer, transaction::TransactionError, transport::TransportError,
-};
+use solana_sdk::{signature::Keypair, signer::Signer, transaction::TransactionError};
 use utils::*;
 
 async fn setup(

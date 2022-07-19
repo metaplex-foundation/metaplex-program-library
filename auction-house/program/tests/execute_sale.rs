@@ -316,7 +316,7 @@ async fn execute_sale_wrong_token_account_owner_success() {
     println!("{:?}", err);
 
     match err {
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             0,
             InstructionError::Custom(6000),
         )) => (),

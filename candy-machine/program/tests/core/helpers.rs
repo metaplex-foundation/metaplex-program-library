@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
     account::Account,
     program_pack::Pack,
@@ -21,7 +21,7 @@ pub async fn transfer_lamports(
     wallet: &Keypair,
     to: &Pubkey,
     amount: u64,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
         Some(&wallet.pubkey()),
@@ -57,7 +57,7 @@ pub async fn airdrop(
     context: &mut ProgramTestContext,
     receiver: &Pubkey,
     amount: u64,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(
             &context.payer.pubkey(),
@@ -111,7 +111,7 @@ pub async fn create_token_account(
     account: &Keypair,
     mint: &Pubkey,
     manager: &Pubkey,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -148,7 +148,7 @@ pub async fn create_associated_token_account(
 
     let tx = Transaction::new_signed_with_payer(
         &[
-            spl_associated_token_account::create_associated_token_account(
+            spl_associated_token_account::instruction::create_associated_token_account(
                 &context.payer.pubkey(),
                 wallet,
                 token_mint,
@@ -239,7 +239,7 @@ pub async fn mint_tokens(
     account: &Pubkey,
     amount: u64,
     additional_signer: Option<&Keypair>,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     let mut signing_keypairs = vec![authority, &context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
@@ -270,7 +270,7 @@ pub async fn transfer(
     mint: &Pubkey,
     from: &Keypair,
     to: &Keypair,
-) -> transport::Result<()> {
+) -> Result<(), BanksClientError> {
     create_associated_token_account(context, &to.pubkey(), mint).await?;
     let tx = Transaction::new_signed_with_payer(
         &[spl_token::instruction::transfer(

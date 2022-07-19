@@ -122,7 +122,6 @@ pub struct PrimaryMetadataCreators {
     pub creators: Vec<Creator>,
 }
 
-
 pub fn from_mpl_creators(creators: Vec<mpl_token_metadata::state::Creator>) -> Vec<Creator> {
     creators
         .iter()

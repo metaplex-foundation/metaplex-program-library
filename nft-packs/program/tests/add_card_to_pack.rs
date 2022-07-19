@@ -8,9 +8,7 @@ use mpl_nft_packs::{
 use num_traits::FromPrimitive;
 use solana_program::instruction::InstructionError;
 use solana_program_test::*;
-use solana_sdk::{
-    signature::Keypair, signer::Signer, transaction::TransactionError, transport::TransportError,
-};
+use solana_sdk::{signature::Keypair, signer::Signer, transaction::TransactionError};
 use utils::*;
 
 async fn setup(
@@ -158,7 +156,7 @@ async fn fail_invalid_index() {
 
     assert_transport_error!(
         result.unwrap_err(),
-        TransportError::TransactionError(TransactionError::InstructionError(
+        BanksClientError::TransactionError(TransactionError::InstructionError(
             1,
             InstructionError::InvalidArgument
         ))

@@ -4,7 +4,7 @@ use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
 use solana_gateway::state::{get_expire_address_with_seed, get_gateway_token_address_with_seed};
 use solana_program::pubkey::Pubkey;
-use solana_program_test::ProgramTestContext;
+use solana_program_test::{BanksClientError, ProgramTestContext};
 use solana_sdk::{
     signature::{Keypair, Signer},
     transport,
@@ -545,7 +545,7 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
         candy_data: CandyMachineData,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         println!("Create");
         initialize_candy_machine(
             context,
@@ -561,7 +561,7 @@ impl CandyManager {
     pub async fn set_collection(
         &mut self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         println!("Set collection");
         set_collection(
             context,
@@ -578,7 +578,7 @@ impl CandyManager {
     pub async fn remove_collection(
         &mut self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         println!("Remove collection");
         remove_collection(
             context,
@@ -594,7 +594,7 @@ impl CandyManager {
     pub async fn fill_config_lines(
         &mut self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         println!("Fill config lines");
         add_all_config_lines(context, &self.candy_machine.pubkey(), &self.authority).await
     }
@@ -604,7 +604,7 @@ impl CandyManager {
         context: &mut ProgramTestContext,
         new_wallet: Option<Pubkey>,
         new_data: CandyMachineData,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         println!("Update");
         if let Some(wallet) = new_wallet {
             self.wallet = wallet;
@@ -767,7 +767,7 @@ impl CandyManager {
     pub async fn mint_and_assert_bot_tax(
         &mut self,
         context: &mut ProgramTestContext,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         println!("Mint and assert bot tax");
         let start_balance = get_balance(context, &self.minter.pubkey()).await;
         let start_token_balance = get_token_balance(context, &self.token_info.minter_account).await;

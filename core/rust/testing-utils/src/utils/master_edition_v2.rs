@@ -15,7 +15,6 @@ use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
-    transport,
 };
 
 #[derive(Debug)]
@@ -65,7 +64,7 @@ impl MasterEditionV2 {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let fake_token_program = Keypair::new();
 
         let fake_instruction = Instruction {
@@ -100,7 +99,7 @@ impl MasterEditionV2 {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition(
                 id(),
@@ -124,7 +123,7 @@ impl MasterEditionV2 {
         &self,
         context: &mut ProgramTestContext,
         max_supply: Option<u64>,
-    ) -> transport::Result<()> {
+    ) -> Result<(), BanksClientError> {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_master_edition_v3(
                 id(),

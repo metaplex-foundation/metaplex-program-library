@@ -1254,7 +1254,7 @@ mod claim_resource {
             .unwrap_err();
         match tx_error {
             TransportError::Custom(_) => assert!(true),
-            TransportError::TransactionError(_) => assert!(true),
+            BanksClientError::TransactionError(_) => assert!(true),
             _ => assert!(false),
         }
     }
