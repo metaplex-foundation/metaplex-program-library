@@ -54,7 +54,7 @@ import {
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import { TokenProgramVersion, Version } from "../sdk/bubblegum/src/generated";
 import { SugarShack } from "../target/types/sugar_shack";
-import { getBubblegumAuthorityPDA, computeDataHash, computeCreatorHash, computeMetadataArgsHash } from "../sdk/bubblegum/src/convenience";
+import { getBubblegumAuthorityPDA, computeDataHash, computeCreatorHash, computeMetadataArgsHash, getNonceCount } from "../sdk/bubblegum/src/convenience";
 
 // @ts-ignore
 let SugarShack;
@@ -107,14 +107,14 @@ describe("sugar-shack", () => {
         dataHash: dataHashOfCompressedNFT,
         creatorHash: creatorHashOfCompressedNFT,
         nonce: leafNonce,
-        index: 0,
+        index: leafNonce.toNumber(),
         root: bufferToArray(onChainRoot),
       }
     );
     if (proofToLeaf) {
       proofToLeaf.forEach(acctMeta => createOrModifyListingIx.keys.push(acctMeta));
     }
-    await execute(SugarShack.provider, [createOrModifyListingIx], [currentNFTOwner]);
+    await execute(SugarShack.provider, [createOrModifyListingIx], [currentNFTOwner], true);
   }
 
   async function removeListing(
@@ -146,7 +146,7 @@ describe("sugar-shack", () => {
     if (proofToLeaf) {
       proofToLeaf.forEach(acctMeta => removeListIx.keys.push(acctMeta));
     }
-    await execute(SugarShack.provider, [removeListIx], [currentNFTOwner]);
+    await execute(SugarShack.provider, [removeListIx], [currentNFTOwner], true);
   }
 
   async function withdrawFees(feePayoutRecipient: PublicKey, authority: Keypair, lamportsToWithdraw: BN) {
@@ -161,7 +161,7 @@ describe("sugar-shack", () => {
         lamportsToWithdraw,
       }
     );
-    await execute(SugarShack.provider, [withdrawFeesIx], [authority]);
+    await execute(SugarShack.provider, [withdrawFeesIx], [authority], true);
   }
 
   async function purchaseNFTFromListing(
@@ -204,7 +204,7 @@ describe("sugar-shack", () => {
     if (proofToLeaf) {
       proofToLeaf.forEach(acctMeta => purchaseIx.keys.push(acctMeta));
     }
-    await execute(SugarShack.provider, [purchaseIx], [nftPurchaser]);
+    await execute(SugarShack.provider, [purchaseIx], [nftPurchaser], true);
   }
 
   before(async () => {
@@ -250,7 +250,7 @@ describe("sugar-shack", () => {
         authority: marketplaceAuthority.publicKey,
       }
     );
-    await execute(SugarShack.provider, [initMarketplacePropsIx], [payer]);
+    await execute(SugarShack.provider, [initMarketplacePropsIx], [payer], true);
 
     // Confirm that properties of the onchain marketplace PDA match expectation
     const onChainMarketplaceAccount: MarketplaceProperties = await MarketplaceProperties.fromAccountAddress(SugarShack.provider.connection, marketplaceAccountKey);
@@ -302,7 +302,7 @@ describe("sugar-shack", () => {
           maxBufferSize: MERKLE_ROLL_MAX_BUFFER_SIZE
         }
       );
-      await execute(SugarShack.provider, [allocMerkleRollAcctInstr, createCompressedNFTTreeIx], [payer, merkleRollKeypair]);
+      await execute(SugarShack.provider, [allocMerkleRollAcctInstr, createCompressedNFTTreeIx], [payer, merkleRollKeypair], true);
 
       // build a corresponding off-chain tree...this allows us to fetch a proof
       const leaves = Array(2 ** MERKLE_ROLL_MAX_DEPTH).fill(Buffer.alloc(32));
@@ -341,6 +341,7 @@ describe("sugar-shack", () => {
       };
       const mintIx = createMintV1Instruction({
         mintAuthority: payer.publicKey,
+        mintAuthorityRequest: payer.publicKey,
         authority: bubblegumAuthority,
         gummyrollProgram: GummyrollProgramId,
         owner: lister.publicKey,
@@ -348,7 +349,7 @@ describe("sugar-shack", () => {
         merkleSlab: merkleRollKeypair.publicKey,
         candyWrapper: CANDY_WRAPPER_PROGRAM_ID,
       }, { message: compressedNFTMetadata });
-      await execute(SugarShack.provider, [mintIx], [payer]);
+      await execute(SugarShack.provider, [mintIx], [payer], true);
 
       // creator hash
       bufferOfCreatorShares = Buffer.from(compressedNFTMetadata.creators.map(c => c.share));
@@ -359,8 +360,7 @@ describe("sugar-shack", () => {
       dataHashOfCompressedNFT = computeDataHash(compressedNFTMetadata.sellerFeeBasisPoints, undefined, metadataArgsHash);
 
       // Get the nonce for the minted leaf
-      const nonceInfo = await SugarShack.provider.connection.getAccountInfo(bubblegumAuthority);
-      leafNonce = (new BN(nonceInfo.data.slice(8, 16), "le")).sub(new BN(1));
+      leafNonce = await (await getNonceCount(SugarShack.provider.connection, merkleRollKeypair.publicKey)).sub(new BN(1));
 
       // Record the PDA key that will be used as the "default" listing for each test
       listingPrice = new BN(1 * LAMPORTS_PER_SOL);

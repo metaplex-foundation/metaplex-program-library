@@ -121,10 +121,7 @@ describe("gummyroll", () => {
         })
       );
     }
-    let txId = await execute(Gummyroll.provider, ixs, [
-      payer,
-      merkleRollKeypair,
-    ]);
+    let txId = await execute(Gummyroll.provider, ixs, [payer, merkleRollKeypair]);
     if (canopyDepth) {
       await logTx(Gummyroll.provider, txId as string);
     }
@@ -255,7 +252,7 @@ describe("gummyroll", () => {
       try {
         await execute(Gummyroll.provider, [verifyLeafIx], [payer]);
         assert(false, "Proof should have failed to verify");
-      } catch {}
+      } catch { }
 
       // Replace instruction with same proof fails
       const replaceLeafIx = createReplaceIx(
@@ -271,7 +268,7 @@ describe("gummyroll", () => {
       try {
         await execute(Gummyroll.provider, [replaceLeafIx], [payer]);
         assert(false, "Replace should have failed to verify");
-      } catch {}
+      } catch { }
       const merkleRollAccount =
         await Gummyroll.provider.connection.getAccountInfo(
           merkleRollKeypair.publicKey
@@ -386,7 +383,7 @@ describe("gummyroll", () => {
           Gummyroll,
           authority,
           merkleRollKeypair.publicKey,
-          randomSigner.publicKey
+          randomSigner.publicKey,
         );
         await execute(Gummyroll.provider, [transferAuthorityIx], [authority]);
 
@@ -427,7 +424,7 @@ describe("gummyroll", () => {
             false,
             "Transaction should have failed since incorrect authority cannot execute replaces"
           );
-        } catch {}
+        } catch { }
       });
     });
   });
@@ -566,7 +563,7 @@ describe("gummyroll", () => {
           false,
           "Attacker was able to succesfully write fake existence of a leaf"
         );
-      } catch (e) {}
+      } catch (e) { }
 
       const merkleRoll = decodeMerkleRoll(
         (
@@ -607,7 +604,7 @@ describe("gummyroll", () => {
           false,
           "Attacker was able to succesfully write fake existence of a leaf"
         );
-      } catch (e) {}
+      } catch (e) { }
 
       const merkleRoll = decodeMerkleRoll(
         (
@@ -693,7 +690,7 @@ describe("gummyroll", () => {
       }
 
       let newLeafList = []
-      for (let i = 0; i < 32; ++i)  {
+      for (let i = 0; i < 32; ++i) {
         newLeafList.push(newLeaves[i])
       }
 
@@ -704,7 +701,7 @@ describe("gummyroll", () => {
         const newLeaf = crypto.randomBytes(32);
         let i = Math.floor(Math.random() * 32)
         const leaf = newLeaves[i];
-        
+
         let partialProof = getProofOfLeaf(tree, i).slice(0, proofSize).map((n) => n.node)
         console.log(`Replacing node ${i}, proof length = ${proofSize}`)
         for (const [level, node] of Object.entries(partialProof)) {
