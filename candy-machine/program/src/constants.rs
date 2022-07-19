@@ -15,6 +15,8 @@ pub const COLLECTION_PDA_SIZE: usize = 8 + 64;
 pub const GUMDROP_ID: Pubkey =
     solana_program::pubkey!("gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a");
 pub const A_TOKEN: Pubkey = solana_program::pubkey!("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+pub const COMPUTE_ID: Pubkey =
+    solana_program::pubkey!("ComputeBudget111111111111111111111111111111");
 pub const CONFIG_ARRAY_START: usize = 8 + // key
     32 + // authority
     32 + // wallet

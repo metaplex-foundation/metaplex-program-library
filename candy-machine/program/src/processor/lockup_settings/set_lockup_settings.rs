@@ -14,7 +14,7 @@ pub struct SetLockupSettings<'info> {
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
     #[account(
-        init,
+        init_if_needed,
         seeds = [LOCKUP_SETTINGS_SEED.as_bytes(), candy_machine.to_account_info().key.as_ref()],
         space = LOCKUP_SETTINGS_SIZE,
         payer = payer,
