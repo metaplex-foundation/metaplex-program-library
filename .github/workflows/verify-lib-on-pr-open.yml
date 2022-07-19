@@ -32,7 +32,7 @@ jobs:
     if: contains(github.base_ref, 'master')
     runs-on: ubuntu-latest
     outputs:
-      packages: ${{ steps.map-changed-files-to-pkg.outputs.result }}
+      packages: ${{ steps.filter-out-excluded-pkgs.outputs.result }}
     steps:
       - uses: actions/checkout@v3
       - name: List changed files
@@ -56,10 +56,29 @@ jobs:
                 if (!p[pkgForFile]) p[pkgForFile] = 1
                 return p
               }, {})
-            return Array.from(Object.keys(uniqueFilesObj)).join(" ")
+            return Array.from(Object.keys(uniqueFilesObj))
+
+      - name: Exclude packages
+        uses: actions/github-script@v4
+        id: filter-out-excluded-pkgs
+        with:
+          # exclude packages either do not have `js` dirs or do not have `api:gen` scripts in their local package.json
+          script: |
+            const exclude = ['metaplex', 'auction', 'core', 'nft-packs']
+            const files = ${{ steps.map-changed-files-to-pkg.outputs.result }}
+            const result = files
+              .filter(f => !exclude.includes(f))
+              .join(" ")
+            return result.length > 0 ? result : null
+
+      - name: Print packages to verify
+        run: echo "${{ steps.filter-out-excluded-pkgs.outputs.result }}"
+        shell: bash
 
   verify-package-library:
     needs: [get-changes-scope]
+    # note: checking for empty string just doesn't work, so we explicitly return and check null in the case that there's nothing to verify
+    if: ${{ needs.get-changes-scope.outputs.packages != 'null' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
