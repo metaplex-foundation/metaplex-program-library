@@ -7,8 +7,21 @@ inputs:
   versioning:
     description: 'Versioning command(s)'
     required: true
-  branch:
-    description: 'Branch to checkout'
+  from-branch:
+    description: 'From branch'
+    required: true
+  from-repository:
+    description: 'From full repo name'
+    required: true
+  to-branch:
+    description: 'To branch'
+    required: true
+  to-repository:
+    description: 'To full repo name'
+    required: true
+  pull-number:
+    description:
+      'Pull request numeric ID. If this is empty, expect a commit-sha with an associated PR.'
     required: true
 
 runs:
@@ -16,7 +29,8 @@ runs:
   steps:
     - uses: actions/checkout@v3
       with:
-        ref: ${{ inputs.branch }}
+        ref: ${{ inputs.from-branch }}
+        repository: ${{ inputs.from-repository }}
 
     # cache and install cargo release
     - uses: actions/cache@v2
@@ -53,4 +67,11 @@ runs:
       with:
         script: |
           const script = require('.github/actions/make-version-changes/script.js')
-          await script({github, context, core, glob, io}, ${{ inputs.changed-packages }}, ${{ inputs.versioning }})
+          const change_config = {
+            from_repository: '${{ inputs.from-repository }}',
+            from_branch: '${{ inputs.from-branch }}',
+            to_repository: '${{ inputs.to-repository }}',
+            to_branch: '${{ inputs.to-branch }}',
+            pull_number: '${{ inputs.pull-number }}'
+          }
+          await script({github, context, core, glob, io, change_config}, ${{ inputs.changed-packages }}, ${{ inputs.versioning }})
