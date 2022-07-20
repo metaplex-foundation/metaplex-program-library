@@ -41,27 +41,28 @@ export const signMetadataInstructionDiscriminator = 7;
  * @category SignMetadata
  * @category generated
  */
-export function createSignMetadataInstruction(accounts: SignMetadataInstructionAccounts) {
-  const { metadata, creator } = accounts;
-
+export function createSignMetadataInstruction(
+  accounts: SignMetadataInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+) {
   const [data] = SignMetadataStruct.serialize({
     instructionDiscriminator: signMetadataInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: creator,
+      pubkey: accounts.creator,
       isWritable: false,
       isSigner: true,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

@@ -70,6 +70,9 @@ export type MintNewEditionFromMasterEditionViaTokenInstructionAccounts = {
   tokenAccount: web3.PublicKey;
   newMetadataUpdateAuthority: web3.PublicKey;
   metadata: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
 export const mintNewEditionFromMasterEditionViaTokenInstructionDiscriminator = 11;
@@ -87,100 +90,87 @@ export const mintNewEditionFromMasterEditionViaTokenInstructionDiscriminator = 1
 export function createMintNewEditionFromMasterEditionViaTokenInstruction(
   accounts: MintNewEditionFromMasterEditionViaTokenInstructionAccounts,
   args: MintNewEditionFromMasterEditionViaTokenInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const {
-    newMetadata,
-    newEdition,
-    masterEdition,
-    newMint,
-    editionMarkPda,
-    newMintAuthority,
-    payer,
-    tokenAccountOwner,
-    tokenAccount,
-    newMetadataUpdateAuthority,
-    metadata,
-  } = accounts;
-
   const [data] = MintNewEditionFromMasterEditionViaTokenStruct.serialize({
     instructionDiscriminator: mintNewEditionFromMasterEditionViaTokenInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: newMetadata,
+      pubkey: accounts.newMetadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newEdition,
+      pubkey: accounts.newEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newMint,
+      pubkey: accounts.newMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: editionMarkPda,
+      pubkey: accounts.editionMarkPda,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: newMintAuthority,
+      pubkey: accounts.newMintAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: tokenAccountOwner,
+      pubkey: accounts.tokenAccountOwner,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: tokenAccount,
+      pubkey: accounts.tokenAccount,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: newMetadataUpdateAuthority,
+      pubkey: accounts.newMetadataUpdateAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

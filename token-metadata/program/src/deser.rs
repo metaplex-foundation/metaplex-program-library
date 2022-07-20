@@ -6,7 +6,10 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubke
 // This function is used in a custom deserialization implementation for the
 // `Metadata` struct, so should never have `msg` macros used in it as it may be used client side
 // either in tests or client code.
-pub fn meta_deser(buf: &mut &[u8]) -> Result<Metadata, borsh::maybestd::io::Error> {
+//
+// It does not check `Key` type or account length and should only be used through the custom functions
+// `from_account_info` and `deserialize` implemented on the Metadata struct.
+pub fn meta_deser_unchecked(buf: &mut &[u8]) -> Result<Metadata, BorshError> {
     // Metadata corruption shouldn't appear until after edition_nonce.
     let key: Key = BorshDeserialize::deserialize(buf)?;
     let update_authority: Pubkey = BorshDeserialize::deserialize(buf)?;
@@ -76,14 +79,15 @@ pub fn clean_write_metadata(
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
+    use solana_program::pubkey;
+
     use super::*;
     pub use crate::{state::Creator, utils::puff_out_data_fields};
-    use std::str::FromStr;
 
     // Pesky Penguins #8060 (NOOT!)
-    #[allow(dead_code)]
-    fn pesky_data() -> &'static [u8] {
+    // Corrupted data that can't be deserialized with the standard BoshDeserialization implementation.
+    pub fn pesky_data() -> &'static [u8] {
         &[
             4, 12, 25, 250, 103, 242, 3, 129, 143, 173, 110, 204, 157, 11, 1, 247, 211, 138, 199,
             219, 79, 142, 183, 195, 96, 206, 63, 208, 102, 152, 127, 62, 43, 181, 253, 142, 126,
@@ -118,21 +122,20 @@ mod tests {
         ]
     }
 
-    #[allow(dead_code)]
-    fn expected_pesky_metadata() -> Metadata {
+    pub fn expected_pesky_metadata() -> Metadata {
         let creators = vec![
             Creator {
-                address: Pubkey::from_str("A6XTVFiwGVsG6b6LsvQTGnV5LH3Pfa3qW3TGz8RjToLp").unwrap(),
+                address: pubkey!("A6XTVFiwGVsG6b6LsvQTGnV5LH3Pfa3qW3TGz8RjToLp"),
                 verified: true,
                 share: 0,
             },
             Creator {
-                address: Pubkey::from_str("pEsKYABNARLiDFYrjbjHDieD5h6gHrvYf9Vru62NX9k").unwrap(),
+                address: pubkey!("pEsKYABNARLiDFYrjbjHDieD5h6gHrvYf9Vru62NX9k"),
                 verified: true,
                 share: 40,
             },
             Creator {
-                address: Pubkey::from_str("ppTeamTpw1cbC8ybJpppbnoL7xXD9froJNFb5uvoPvb").unwrap(),
+                address: pubkey!("ppTeamTpw1cbC8ybJpppbnoL7xXD9froJNFb5uvoPvb"),
                 verified: false,
                 share: 60,
             },
@@ -148,9 +151,8 @@ mod tests {
 
         let mut metadata = Metadata {
             key: Key::MetadataV1,
-            update_authority: Pubkey::from_str("pEsKYABNARLiDFYrjbjHDieD5h6gHrvYf9Vru62NX9k")
-                .unwrap(),
-            mint: Pubkey::from_str("DFR3KjTso6PFCyUtq48a2aPZQpMMoaFgtbdxtaLxF2TR").unwrap(),
+            update_authority: pubkey!("pEsKYABNARLiDFYrjbjHDieD5h6gHrvYf9Vru62NX9k"),
+            mint: pubkey!("DFR3KjTso6PFCyUtq48a2aPZQpMMoaFgtbdxtaLxF2TR"),
             data,
             primary_sale_happened: true,
             is_mutable: true,
@@ -169,7 +171,7 @@ mod tests {
     #[test]
     fn deserialize_corrupted_metadata() {
         let mut buf = pesky_data();
-        let metadata = meta_deser(&mut buf).unwrap();
+        let metadata = meta_deser_unchecked(&mut buf).unwrap();
         let expected_metadata = expected_pesky_metadata();
 
         assert_eq!(metadata, expected_metadata);

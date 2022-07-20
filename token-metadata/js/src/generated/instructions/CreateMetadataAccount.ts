@@ -54,6 +54,8 @@ export type CreateMetadataAccountInstructionAccounts = {
   mintAuthority: web3.PublicKey;
   payer: web3.PublicKey;
   updateAuthority: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
 export const createMetadataAccountInstructionDiscriminator = 0;
@@ -71,53 +73,52 @@ export const createMetadataAccountInstructionDiscriminator = 0;
 export function createCreateMetadataAccountInstruction(
   accounts: CreateMetadataAccountInstructionAccounts,
   args: CreateMetadataAccountInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { metadata, mint, mintAuthority, payer, updateAuthority } = accounts;
-
   const [data] = CreateMetadataAccountStruct.serialize({
     instructionDiscriminator: createMetadataAccountInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: mint,
+      pubkey: accounts.mint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: mintAuthority,
+      pubkey: accounts.mintAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: accounts.updateAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

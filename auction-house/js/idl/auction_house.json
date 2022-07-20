@@ -2675,13 +2675,8 @@
     },
     {
       "code": 6041,
-      "name": "AuctionHouseAlreadyDelegated",
-      "msg": "Auction House already delegated."
-    },
-    {
-      "code": 6042,
-      "name": "AuctioneerAuthorityMismatch",
-      "msg": "Auctioneer Authority Mismatch"
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds in escrow account to purchase."
     }
   ],
   "metadata": {

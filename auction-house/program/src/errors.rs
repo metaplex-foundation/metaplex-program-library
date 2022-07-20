@@ -173,4 +173,8 @@ pub enum AuctionHouseError {
     // 6042
     #[msg("Auctioneer Authority Mismatch")]
     AuctioneerAuthorityMismatch,
+
+    // 6043
+    #[msg("Insufficient funds in escrow account to purchase.")]
+    InsufficientFunds,
 }

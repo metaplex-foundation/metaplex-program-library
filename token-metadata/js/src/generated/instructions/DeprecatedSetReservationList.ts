@@ -67,33 +67,32 @@ export const deprecatedSetReservationListInstructionDiscriminator = 5;
 export function createDeprecatedSetReservationListInstruction(
   accounts: DeprecatedSetReservationListInstructionAccounts,
   args: DeprecatedSetReservationListInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { masterEdition, reservationList, resource } = accounts;
-
   const [data] = DeprecatedSetReservationListStruct.serialize({
     instructionDiscriminator: deprecatedSetReservationListInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: reservationList,
+      pubkey: accounts.reservationList,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: resource,
+      pubkey: accounts.resource,
       isWritable: false,
       isSigner: true,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

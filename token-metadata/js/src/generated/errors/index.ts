@@ -2394,6 +2394,29 @@ createErrorFromCodeLookup.set(0x6e, () => new MasterEditionHasPrintsError());
 createErrorFromNameLookup.set('MasterEditionHasPrints', () => new MasterEditionHasPrintsError());
 
 /**
+ * BorshDeserializationError: 'Borsh Deserialization Error'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class BorshDeserializationErrorError extends Error {
+  readonly code: number = 0x6f;
+  readonly name: string = 'BorshDeserializationError';
+  constructor() {
+    super('Borsh Deserialization Error');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, BorshDeserializationErrorError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x6f, () => new BorshDeserializationErrorError());
+createErrorFromNameLookup.set(
+  'BorshDeserializationError',
+  () => new BorshDeserializationErrorError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

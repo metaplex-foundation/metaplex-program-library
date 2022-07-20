@@ -15,9 +15,9 @@ use crate::{
     solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
-        MasterEditionV2, Metadata, TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN,
-        COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, MAX_MASTER_EDITION_LEN,
-        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, UseAuthorityRecord,
+        UseMethod, Uses, BURN, COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION,
+        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
@@ -395,7 +395,7 @@ pub fn process_update_primary_sale_happened_via_token(
     let token_account_info = next_account_info(account_info_iter)?;
 
     let token_account: Account = assert_initialized(token_account_info)?;
-    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
 
     assert_owned_by(metadata_account_info, program_id)?;
     assert_owned_by(token_account_info, &spl_token::id())?;
@@ -431,7 +431,7 @@ pub fn process_sign_metadata(program_id: &Pubkey, accounts: &[AccountInfo]) -> P
     assert_signer(creator_info)?;
     assert_owned_by(metadata_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
 
     if let Some(creators) = &mut metadata.data.creators {
         let mut found = false;
@@ -465,7 +465,7 @@ pub fn process_remove_creator_verification(
     assert_signer(creator_info)?;
     assert_owned_by(metadata_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
 
     if let Some(creators) = &mut metadata.data.creators {
         let mut found = false;
@@ -505,7 +505,7 @@ pub fn process_create_master_edition(
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
-    let metadata = Metadata::from_account_info(metadata_account_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
     let mint: Mint = assert_initialized(mint_info)?;
 
     let bump_seed = assert_derivation(
@@ -556,14 +556,14 @@ pub fn process_create_master_edition(
         edition_authority_seeds,
     )?;
 
-    let mut edition = MasterEditionV2::from_account_info(edition_account_info)?;
+    let mut edition = MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info)?;
 
     edition.key = Key::MasterEditionV2;
     edition.supply = 0;
     edition.max_supply = max_supply;
     edition.serialize(&mut *edition_account_info.try_borrow_mut_data()?)?;
     if metadata_account_info.is_writable {
-        let mut metadata_mut = Metadata::from_account_info(metadata_account_info)?;
+        let mut metadata_mut: Metadata = Metadata::from_account_info(metadata_account_info)?;
         metadata_mut.token_standard = Some(TokenStandard::NonFungible);
         metadata_mut.serialize(&mut *metadata_account_info.try_borrow_mut_data()?)?;
     }
@@ -1065,7 +1065,7 @@ pub fn process_approve_use_authority(
     let token_program_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
@@ -1151,7 +1151,7 @@ pub fn process_revoke_use_authority(
     let mint_info = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
@@ -1223,7 +1223,7 @@ pub fn process_utilize(
     let _ata_program_account_info = next_account_info(account_info_iter)?;
     let _system_account_info = next_account_info(account_info_iter)?;
     let _rent_info = next_account_info(account_info_iter)?;
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let approved_authority_is_using = accounts.len() == 11;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
@@ -1240,7 +1240,7 @@ pub fn process_utilize(
         mint_info,
         token_account_info,
     )?;
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let metadata_uses = metadata.uses.unwrap();
     let must_burn = metadata_uses.use_method == UseMethod::Burn;
     if number_of_uses > metadata_uses.total || number_of_uses > metadata_uses.remaining {
@@ -1327,7 +1327,7 @@ pub fn process_approve_collection_authority(
     let system_account_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::id())?;
     assert_signer(update_authority)?;
@@ -1366,7 +1366,8 @@ pub fn process_approve_collection_authority(
         &collection_authority_seeds,
     )?;
 
-    let mut record = CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
+    let mut record: CollectionAuthorityRecord =
+        CollectionAuthorityRecord::from_account_info(collection_authority_record)?;
     record.key = Key::CollectionAuthorityRecord;
     record.bump = collection_authority_bump_seed[0];
     record.serialize(&mut *collection_authority_record.try_borrow_mut_data()?)?;
@@ -1383,7 +1384,7 @@ pub fn process_revoke_collection_authority(
     let revoke_authority = next_account_info(account_info_iter)?;
     let metadata_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     assert_owned_by(metadata_info, program_id)?;
     assert_owned_by(mint_info, &spl_token::id())?;
     assert_signer(revoke_authority)?;
@@ -1438,8 +1439,8 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
-    let collection_data = Metadata::from_account_info(collection_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
+    let collection_data: Metadata = Metadata::from_account_info(collection_info)?;
     if metadata.update_authority != *update_authority.key
         || metadata.update_authority != collection_data.update_authority
     {
@@ -1504,8 +1505,8 @@ pub fn set_and_verify_sized_collection_item(
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
-    let mut collection_metadata = Metadata::from_account_info(collection_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
+    let mut collection_metadata: Metadata = Metadata::from_account_info(collection_info)?;
 
     if metadata.update_authority != *update_authority.key
         || metadata.update_authority != collection_metadata.update_authority
@@ -1671,7 +1672,7 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
 
     let collection_nft_provided = accounts.len() == 7;
 
-    let metadata = Metadata::from_account_info(metadata_info)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
 
     // If the NFT is a verified part of a collection but the user has not provided the collection
     // metadata account, we cannot burn it because we need to check if we need to decrement the collection size.
@@ -1873,7 +1874,7 @@ pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
 
     // Owned by token-metadata program.
     assert_owned_by(metadata_account_info, program_id)?;
-    let mut metadata = Metadata::from_account_info(metadata_account_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
 
     // Mint account passed in must be the mint of the metadata account passed in.
     if &metadata.mint != mint_account_info.key {
