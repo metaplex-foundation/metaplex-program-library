@@ -7,7 +7,11 @@ use crate::{
     utils::*,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize, AnchorSerialize};
-use solana_program::{sysvar, sysvar::instructions::get_instruction_relative};
+use solana_program::{
+    program_memory::sol_memset, program_pack::Pack, sysvar,
+    sysvar::instructions::get_instruction_relative,
+};
+use spl_token::state::Account as SplAccount;
 
 pub const BID_RECEIPT_SIZE: usize = 8 + //key
 32 + // trade_state
@@ -444,6 +448,12 @@ pub struct PrintPurchaseReceipt<'info> {
     /// CHECK: Validated by the address constraint.
     #[account(address = sysvar::instructions::id())]
     instruction: UncheckedAccount<'info>,
+
+    /// CHECK: Validated in execute_sale_logic.
+    // cannot mark these as real Accounts or else we blow stack size limit
+    ///Token account where the SPL token is stored.
+    #[account(mut)]
+    pub token_account: UncheckedAccount<'info>,
 }
 
 /// Create a Purchase Receipt account at a PDA with the seeds:
@@ -463,6 +473,7 @@ pub fn print_purchase_receipt<'info>(
     let bookkeeper = &ctx.accounts.bookkeeper;
     let rent = &ctx.accounts.rent;
     let system_program = &ctx.accounts.system_program;
+    let token_account = &ctx.accounts.token_account;
     let clock = Clock::get()?;
 
     let prev_instruction = get_instruction_relative(-1, instruction_account)?;
@@ -552,23 +563,29 @@ pub fn print_purchase_receipt<'info>(
 
     purchase.try_serialize(&mut *purchase_receipt_account.try_borrow_mut_data()?)?;
 
-    let mut listing_receipt_data = listing_receipt_info.try_borrow_mut_data()?;
-    let mut listing_receipt_data_slice: &[u8] = &listing_receipt_data;
+    // since partial buy now exists, need to check token_size before closing listing receipt account
 
-    let mut listing_receipt = ListingReceipt::try_deserialize(&mut listing_receipt_data_slice)?;
+    let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
 
-    listing_receipt.purchase_receipt = Some(purchase_receipt_account.key());
-
-    listing_receipt.try_serialize(&mut *listing_receipt_data)?;
+    if token_account_data.amount == 0 {
+        let mut listing_receipt_data = listing_receipt_info.try_borrow_mut_data()?;
+        let curr_listing_receipt_lamp = listing_receipt_info.lamports();
+        **listing_receipt_info.lamports.borrow_mut() = 0;
+        sol_memset(*listing_receipt_data, 0, LISTING_RECEIPT_SIZE);
+        **bookkeeper.lamports.borrow_mut() = bookkeeper
+            .lamports()
+            .checked_add(curr_listing_receipt_lamp)
+            .ok_or(AuctionHouseError::NumericalOverflow)?;
+    }
 
     let mut bid_receipt_data = bid_receipt_account.try_borrow_mut_data()?;
-    let mut bid_receipt_slice: &[u8] = &bid_receipt_data;
-
-    let mut bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_slice)?;
-
-    bid_receipt.purchase_receipt = Some(purchase_receipt_account.key());
-
-    bid_receipt.try_serialize(&mut *bid_receipt_data)?;
+    let curr_bid_receipt_lamp = bid_receipt_info.lamports();
+    **bid_receipt_info.lamports.borrow_mut() = 0;
+    sol_memset(*bid_receipt_data, 0, BID_RECEIPT_SIZE);
+    **bookkeeper.lamports.borrow_mut() = bookkeeper
+        .lamports()
+        .checked_add(curr_bid_receipt_lamp)
+        .ok_or(AuctionHouseError::NumericalOverflow)?;
 
     Ok(())
 }

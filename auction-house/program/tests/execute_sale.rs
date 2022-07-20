@@ -23,7 +23,7 @@ use solana_program::{
 
 use mpl_auction_house::{
     pda::{find_escrow_payment_address, find_program_as_signer_address, find_trade_state_address},
-    receipt::{BidReceipt, ListingReceipt, PurchaseReceipt},
+    receipt::PurchaseReceipt,
 };
 use solana_program::program_pack::Pack;
 use solana_sdk::{
@@ -1464,33 +1464,17 @@ async fn execute_public_sale_success() {
         .banks_client
         .get_account(purchase_receipt_acc.bid_receipt)
         .await
-        .expect("no bid receipt")
-        .expect("bid receipt empty");
+        .unwrap();
 
-    let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
-
-    assert_eq!(
-        bid_receipt.purchase_receipt,
-        Some(purchase_receipt_acc.purchase_receipt)
-    );
-    assert_eq!(bid_receipt.canceled_at, None);
-    assert_eq!(bid_receipt.token_account, None);
+    assert_eq!(bid_receipt_account, None);
 
     let listing_receipt_account = context
         .banks_client
         .get_account(purchase_receipt_acc.listing_receipt)
         .await
-        .expect("no listing receipt")
-        .expect("listing receipt empty");
+        .unwrap();
 
-    let listing_receipt =
-        ListingReceipt::try_deserialize(&mut listing_receipt_account.data.as_ref()).unwrap();
-
-    assert_eq!(
-        listing_receipt.purchase_receipt,
-        Some(purchase_receipt_acc.purchase_receipt)
-    );
-    assert_eq!(listing_receipt.canceled_at, None);
+    assert_eq!(listing_receipt_account, None);
 }
 
 #[tokio::test]

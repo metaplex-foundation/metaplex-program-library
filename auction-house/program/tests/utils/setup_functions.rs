@@ -632,6 +632,7 @@ pub fn execute_sale(
         system_program: system_program::id(),
         rent: sysvar::rent::id(),
         instruction: sysvar::instructions::id(),
+        token_account: *token_account,
     };
 
     let print_purchase_receipt_instruction = Instruction {
