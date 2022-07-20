@@ -583,7 +583,7 @@ pub fn assert_valid_trade_state(
             treasury_mint_bytes,
             mint_bytes,
             &buyer_price_bytes,
-            &token_size_bytes,
+            &token_size_bytes
         ],
     );
 
@@ -597,7 +597,7 @@ pub fn assert_valid_trade_state(
             treasury_mint_bytes,
             mint_bytes,
             &buyer_price_bytes,
-            &token_size_bytes,
+            &token_size_bytes
         ],
     );
 
