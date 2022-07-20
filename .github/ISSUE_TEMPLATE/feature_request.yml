@@ -19,6 +19,7 @@ body:
         - token-entangler
         - token-metadata
         - token-vault
+        - hydra
     validations:
       required: true
   - type: textarea
