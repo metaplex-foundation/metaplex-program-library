@@ -2,14 +2,7 @@ import { strict as assert } from 'assert';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore createInitializeMintInstruction export actually exist but isn't setup correctly
 import { createInitializeMintInstruction, MintLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import {
-  Connection,
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-  TransactionCtorFields,
-} from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
 
 type CreateMintParams = {
   newAccountPubkey: PublicKey;
@@ -23,7 +16,10 @@ type CreateMintParams = {
  * Transaction that is used to create a mint.
  */
 export class CreateMint extends Transaction {
-  private constructor(options: TransactionCtorFields, params: CreateMintParams) {
+  private constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: CreateMintParams,
+  ) {
     const { feePayer } = options;
     assert(feePayer != null, 'need to provide non-null feePayer');
 

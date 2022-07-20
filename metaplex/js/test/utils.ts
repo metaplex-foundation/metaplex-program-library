@@ -1,5 +1,5 @@
 import path from 'path';
-import { Keypair, PublicKey, TransactionCtorFields } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import { tmpdir } from 'os';
 import { readFileSync } from 'fs';
 import { LOCALHOST } from '@metaplex-foundation/amman';
@@ -89,7 +89,7 @@ export const VAULT_EXTENRNAL_PRICE_ACCOUNT = new PublicKey(
   '58S2MNcuS79ncBc5xi1T8jdS98jcXJbXqM5UvGvgmwcr',
 );
 
-export const mockTransaction: TransactionCtorFields = {
+export const mockTransaction: ConstructorParameters<typeof Transaction>[0] = {
   feePayer: new PublicKey('7J6QvJGCB22vDvYB33ikrWCXRBRsFY74ntAArSK4KJUn'),
   recentBlockhash: RECENT_ISH_BLOCKHASH,
 };

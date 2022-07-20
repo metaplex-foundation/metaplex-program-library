@@ -6,12 +6,7 @@
  * that would be a wasted effort and therefore we make an EXCEPTION here.
  */
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
-import {
-  PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  TransactionCtorFields,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
 import { ParamsWithStore } from './vault';
@@ -30,7 +25,10 @@ type StartAuctionParams = {
 };
 
 export class StartAuction extends Transaction {
-  constructor(options: TransactionCtorFields, params: ParamsWithStore<StartAuctionParams>) {
+  constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: ParamsWithStore<StartAuctionParams>,
+  ) {
     super(options);
     const { store, auction, auctionManager, auctionManagerAuthority } = params;
 

@@ -11,7 +11,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
@@ -50,7 +49,10 @@ type InitAuctionManagerV2Params = {
 };
 
 export class InitAuctionManagerV2 extends Transaction {
-  constructor(options: TransactionCtorFields, params: ParamsWithStore<InitAuctionManagerV2Params>) {
+  constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: ParamsWithStore<InitAuctionManagerV2Params>,
+  ) {
     super(options);
     const { feePayer } = options;
     assert(feePayer != null, 'need to provide feePayer account');

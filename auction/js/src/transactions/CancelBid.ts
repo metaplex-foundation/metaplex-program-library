@@ -12,7 +12,6 @@ import {
   SystemProgram,
   SYSVAR_CLOCK_PUBKEY,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import { AuctionProgram } from '../AuctionProgram';
@@ -41,7 +40,7 @@ type CancelBidParams = {
 };
 
 export class CancelBid extends Transaction {
-  constructor(options: TransactionCtorFields, params: CancelBidParams) {
+  constructor(options: ConstructorParameters<typeof Transaction>[0], params: CancelBidParams) {
     super(options);
     const {
       auction,

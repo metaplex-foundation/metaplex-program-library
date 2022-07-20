@@ -12,7 +12,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
@@ -50,7 +49,7 @@ type RedeemFullRightsTransferBidParams = {
 
 export class RedeemFullRightsTransferBid extends Transaction {
   constructor(
-    options: TransactionCtorFields,
+    options: ConstructorParameters<typeof Transaction>[0],
     params: ParamsWithStore<RedeemFullRightsTransferBidParams>,
   ) {
     super(options);

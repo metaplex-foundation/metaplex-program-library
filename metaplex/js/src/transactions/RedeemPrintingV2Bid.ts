@@ -14,7 +14,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import BN from 'bn.js';
@@ -57,7 +56,10 @@ type RedeemPrintingV2BidParams = {
 };
 
 export class RedeemPrintingV2Bid extends Transaction {
-  constructor(options: TransactionCtorFields, params: ParamsWithStore<RedeemPrintingV2BidParams>) {
+  constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: ParamsWithStore<RedeemPrintingV2BidParams>,
+  ) {
     super(options);
     const { feePayer } = options;
     assert(feePayer != null, 'need to provide feePayer');

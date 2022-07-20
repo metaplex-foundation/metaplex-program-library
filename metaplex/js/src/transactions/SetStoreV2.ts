@@ -11,7 +11,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
@@ -41,7 +40,10 @@ type SetStoreV2Params = {
 };
 
 export class SetStoreV2 extends Transaction {
-  constructor(options: TransactionCtorFields, params: ParamsWithStore<SetStoreV2Params>) {
+  constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: ParamsWithStore<SetStoreV2Params>,
+  ) {
     super(options);
     const { feePayer } = options;
     assert(feePayer != null, 'need to provide feePayer');

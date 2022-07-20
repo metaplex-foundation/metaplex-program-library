@@ -12,7 +12,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import { MetaplexProgram } from '../MetaplexProgram';
@@ -37,7 +36,7 @@ type SetWhitelistedCreatorParams = {
 
 export class SetWhitelistedCreator extends Transaction {
   constructor(
-    options: TransactionCtorFields,
+    options: ConstructorParameters<typeof Transaction>[0],
     params: ParamsWithStore<SetWhitelistedCreatorParams>,
   ) {
     super(options);

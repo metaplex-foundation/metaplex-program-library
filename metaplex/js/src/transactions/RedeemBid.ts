@@ -11,7 +11,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 import { MetadataProgram } from '@metaplex-foundation/mpl-token-metadata';
@@ -71,7 +70,10 @@ type RedeemBidParams = {
 };
 
 export class RedeemBid extends Transaction {
-  constructor(options: TransactionCtorFields, params: ParamsWithStore<RedeemBidParams>) {
+  constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: ParamsWithStore<RedeemBidParams>,
+  ) {
     super(options);
     const { feePayer } = options;
     assert(feePayer != null, 'need to provide feePayer account');

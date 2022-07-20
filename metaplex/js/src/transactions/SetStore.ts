@@ -12,7 +12,6 @@ import {
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
-  TransactionCtorFields,
   TransactionInstruction,
 } from '@solana/web3.js';
 
@@ -38,7 +37,10 @@ type SetStoreParams = {
 };
 
 export class SetStore extends Transaction {
-  constructor(options: TransactionCtorFields, params: ParamsWithStore<SetStoreParams>) {
+  constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: ParamsWithStore<SetStoreParams>,
+  ) {
     super(options);
     const { feePayer } = options;
     assert(feePayer != null, 'need to provide feePayer');

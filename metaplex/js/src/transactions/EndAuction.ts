@@ -7,12 +7,7 @@
  */
 import BN from 'bn.js';
 import { Borsh, Transaction } from '@metaplex-foundation/mpl-core';
-import {
-  PublicKey,
-  SYSVAR_CLOCK_PUBKEY,
-  TransactionCtorFields,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { PublicKey, SYSVAR_CLOCK_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { ParamsWithStore } from './vault';
 import { AuctionProgram } from '@metaplex-foundation/mpl-auction';
 import { MetaplexProgram } from '../MetaplexProgram';
@@ -37,7 +32,10 @@ type EndAuctionParams = {
 };
 
 export class EndAuction extends Transaction {
-  constructor(options: TransactionCtorFields, params: ParamsWithStore<EndAuctionParams>) {
+  constructor(
+    options: ConstructorParameters<typeof Transaction>[0],
+    params: ParamsWithStore<EndAuctionParams>,
+  ) {
     super(options);
     const {
       store,
