@@ -121,7 +121,6 @@ fn parse_accounts<'a, 'b: 'a>(
     Ok(accounts)
 }
 
-#[allow(clippy::absurd_extreme_comparisons)]
 pub fn place_bid<'r, 'b: 'r>(
     program_id: &Pubkey,
     accounts: &'r [AccountInfo<'b>],
@@ -304,7 +303,7 @@ pub fn place_bid<'r, 'b: 'r>(
 
     // Confirm payers SPL token balance is enough to pay the bid.
     let account: Account = Account::unpack_from_slice(&accounts.bidder_token.data.borrow())?;
-    if account.amount.saturating_sub(bid_price) < 0 {
+    if account.amount.checked_sub(bid_price).is_none() {
         msg!(
             "Amount is too small: {:?}, compared to account amount of {:?}",
             bid_price,

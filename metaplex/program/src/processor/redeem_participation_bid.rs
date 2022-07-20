@@ -206,9 +206,10 @@ fn charge_for_participation<'a>(
         }
     }
 
-    if bidder_token.amount.saturating_sub(price) < 0 as u64 {
-        return Err(MetaplexError::NotEnoughBalanceForParticipation.into());
-    }
+    bidder_token
+        .amount
+        .checked_sub(price)
+        .ok_or(MetaplexError::NotEnoughBalanceForParticipation)?;
 
     if price > 0 {
         auction_manager.add_to_collected_payment(safety_deposit_config_info, price)?;
@@ -226,7 +227,7 @@ fn charge_for_participation<'a>(
 }
 
 #[allow(clippy::unnecessary_cast)]
-#[allow(clippy::absurd_extreme_comparisons)]
+// #[allow(clippy::absurd_extreme_comparisons)]
 pub fn process_redeem_participation_bid<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
