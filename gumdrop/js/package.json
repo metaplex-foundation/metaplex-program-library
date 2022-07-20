@@ -1,6 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-gumdrop",
   "version": "0.0.0",
+  "contractVersion": "0.1.1",
   "description": "Metaplex Gumdrop SDK",
   "main": "dist/src/mpl-gumdrop.js",
   "types": "dist/src/mpl-gumdrop.d.ts",

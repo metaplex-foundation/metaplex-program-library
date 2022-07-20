@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const toml = require('@iarna/toml');
+
+const CONTRACT_VERSION_FIELD = 'contractVersion';
 
 // todo: move somewhere, like a separate config/constants file.
 const MPL_PROGRAM_CONFIG = {
@@ -91,6 +94,48 @@ const isNpmPackage = (actual) => isPackageType(actual, 'js');
 const parseVersioningCommand = (cmd) => cmd.split(':');
 const shouldUpdate = (actual, target) => target === '*' || target === actual;
 
+const getCrateInfo = (cwd) => {
+  const cargoPath = `${cwd}/Cargo.toml`;
+  let tomlObj = toml.parse(fs.readFileSync(cargoPath, 'utf-8'));
+  if (!tomlObj.package) throw new Error('No package tag defined in Cargo.toml');
+
+  return {
+    name: tomlObj.package.name,
+    version: tomlObj.package.version,
+  };
+};
+
+const updatePackageLibContractVersion = (cwdArgs) => {
+  const currentDir = cwdArgs.join('/');
+  const crateInfo = getCrateInfo(currentDir);
+  console.log(`Found crate info: ${crateInfo.name} is at version ${crateInfo.version}`);
+
+  const packageJsonPath = [...cwdArgs.slice(0, cwdArgs.length - 1), 'js', 'package.json'].join('/');
+  if (!fs.existsSync(packageJsonPath)) {
+    console.log(
+      `JS directory (${packageJsonPath}) does not exist - skipping contractVersion update...`,
+    );
+    return;
+  }
+
+  let packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+  if (!packageJson[CONTRACT_VERSION_FIELD]) {
+    console.log(
+      `No '${CONTRACT_VERSION_FIELD}' field in found in ${packageJsonPath} - skipping contractVersion update...`,
+    );
+    return;
+  }
+
+  console.log(
+    `Updating '${CONTRACT_VERSION_FIELD}' from [${packageJson[CONTRACT_VERSION_FIELD]}] to [${crateInfo.version}]`,
+  );
+
+  // update contractVersion field, serialize, and add updated package.json
+  packageJson[CONTRACT_VERSION_FIELD] = crateInfo.version;
+  fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+  wrappedExec(`git add ${packageJsonPath} && git commit --amend -C HEAD`);
+};
+
 const updateCratesPackage = async (io, cwdArgs, pkg, semvar) => {
   console.log('updating rust package');
   const currentDir = cwdArgs.join('/');
@@ -101,7 +146,17 @@ const updateCratesPackage = async (io, cwdArgs, pkg, semvar) => {
     currentDir,
   );
 
-  const sourceIdlDir = [...cwdArgs.slice(0, cwdArgs.length - 2), 'target', 'idl'].join('/');
+  const rootDir = cwdArgs.slice(0, cwdArgs.length - 2);
+
+  // if we globally installed `@iarna/toml`, the root `yarn.lock` file will have been committed
+  // along with `cargo release` command. so, we need to resolve this.
+  const rootYarnLockPath = [...rootDir, 'yarn.lock'].join('/');
+  wrappedExec(`git restore --source=HEAD^ --staged -- ${rootYarnLockPath}`);
+  wrappedExec('git commit --amend --allow-empty -C HEAD');
+
+  updatePackageLibContractVersion(cwdArgs);
+
+  const sourceIdlDir = [...rootDir, 'target', 'idl'].join('/');
 
   // generate IDL
   if (packageHasIdl(pkg)) {
@@ -134,6 +189,8 @@ const updateCratesPackage = async (io, cwdArgs, pkg, semvar) => {
     // append IDL change to rust version bump commit
     wrappedExec(`git add ${destIdlDir} && git commit --amend -C HEAD && git push`);
   }
+
+  wrappedExec('git push');
 };
 
 const updateNpmPackage = (cwdArgs, _pkg, semvar) => {
@@ -181,7 +238,7 @@ module.exports = async ({ github, context, core, glob, io }, packages, versionin
       continue;
     }
 
-    for (let package of JSON.parse(packages)) {
+    for (let package of packages) {
       // make sure package doesn't have extra quotes or spacing
       package = package.replace(/\s+|\"|\'/g, '');
 

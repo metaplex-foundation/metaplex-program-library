@@ -23,30 +23,30 @@ runs:
       name: Cache Cargo Release
       id: cache-cargo-release
       with:
-        path: |
-          ~/.cargo/bin/cargo-release
+        path: ~/.cargo/bin/cargo-release
         key: cargo-release-${{ runner.os }}
 
     - name: Install Cargo Release
       if: steps.cache-cargo-release.outputs.cache-hit != 'true'
       shell: bash
-      run: |
-        cargo install cargo-release
+      run: cargo install cargo-release
 
     # cache and install shank cli
     - uses: actions/cache@v2
       name: Cache Shank CLI
       id: cache-shank-cli
       with:
-        path: |
-          ~/.cargo/bin/shank
+        path: ~/.cargo/bin/shank
         key: shank-cli-${{ runner.os }}
 
     - name: Install Cargo Shank
       if: steps.cache-shank-cli.outputs.cache-hit != 'true'
       shell: bash
-      run: |
-        cargo install shank-cli
+      run: cargo install shank-cli
+
+    - name: Install dependency packages for script
+      run: npm install -g @iarna/toml && npm link @iarna/toml
+      shell: bash
 
     - name: Make version changes
       uses: actions/github-script@v4
@@ -54,3 +54,7 @@ runs:
         script: |
           const script = require('.github/actions/make-version-changes/script.js')
           await script({github, context, core, glob, io}, ${{ inputs.changed-packages }}, ${{ inputs.versioning }})
+
+    - name: Cleanup dependency installs
+      run: git restore yarn.lock
+      shell: bash
