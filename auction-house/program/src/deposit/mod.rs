@@ -27,7 +27,7 @@ pub struct Deposit<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -100,6 +100,15 @@ pub fn deposit<'info>(
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
+
     deposit_logic(ctx.accounts, escrow_payment_bump, amount)
 }
 
@@ -128,7 +137,7 @@ pub struct AuctioneerDeposit<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -206,6 +215,15 @@ pub fn auctioneer_deposit<'info>(
         ah_auctioneer_pda,
         AuthorityScope::Deposit,
     )?;
+
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     let mut accounts: Deposit<'info> = (*ctx.accounts).clone().into();
 
@@ -291,10 +309,12 @@ fn deposit_logic<'info>(
     } else {
         assert_keys_equal(payment_account.key(), wallet.key())?;
 
-        // Reach rental exemption and then add deposit amount.
-        let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), 0)?
-            .checked_add(amount)
+        // Get rental exemption shortfall and then add to deposit amount.
+        let rent_shortfall = verify_deposit(escrow_payment_account.to_account_info(), 0)?;
+        let checked_amount = amount
+            .checked_add(rent_shortfall)
             .ok_or(AuctionHouseError::NumericalOverflow)?;
+
         invoke(
             &system_instruction::transfer(
                 &payment_account.key(),

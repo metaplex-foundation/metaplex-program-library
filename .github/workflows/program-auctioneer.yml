@@ -1,4 +1,4 @@
-name: Program Auction House
+name: Program Auctioneer
 
 on:
   push:
@@ -29,14 +29,14 @@ jobs:
             core:
               - 'core/**'
             package:
-              - 'auction-house/**'
+              - 'auctioneer/**'
 
-  build-and-test-auction-house-stable:
+  build-and-test-auctioneer-stable:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
-      cache_id: program-auction-house-stable
+      cache_id: program-auctioneer-stable
 
     steps:
       # Setup Deps
@@ -65,35 +65,26 @@ jobs:
       # Run lint checks
       - uses: ./.github/actions/verify-rust
         with:
-          working-directory: ./auction-house/program
+          working-directory: ./auctioneer/program
 
       # Build deps
       - uses: ./.github/actions/build-token-metadata
-
-      # Run test
-      - name: test-auction-house-program
-        id: run_auction_house_test
-        working-directory: ./auction-house/program
-        run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
       
       # Verify we didn't break Auctioneer compatibility
       - name: test-auctioneer-program
-        id: run_auctioneer_test
+        id: run_test
         working-directory: ./auctioneer/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
 
-  build-and-test-auction-house-unstable:
+  build-and-test-auctioneer-unstable:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
-      cache_id: program-auction-house-unstable
+      cache_id: program-auctioneer-unstable
 
     steps:
       # Setup Deps
@@ -122,23 +113,14 @@ jobs:
       # Run lint checks
       - uses: ./.github/actions/verify-rust
         with:
-          working-directory: ./auction-house/program
+          working-directory: ./auctioneer/program
 
       # Build deps
       - uses: ./.github/actions/build-token-metadata
-
-      # Run test
-      - name: test-auction-house-program
-        id: run_auction_house_test
-        working-directory: ./auction-house/program
-        run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
       
       # Verify we didn't break Auctioneer compatibility
       - name: test-auctioneer-program
-        id: run_auctioneer_test
+        id: run_test
         working-directory: ./auctioneer/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1

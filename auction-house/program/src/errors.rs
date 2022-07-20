@@ -165,4 +165,8 @@ pub enum AuctionHouseError {
     // 6040
     #[msg("Calculated partial price does not not partial price that was provided.")]
     PartialPriceMismatch,
+
+    // 6041
+    #[msg("Insufficient funds in escrow account to purchase.")]
+    InsufficientFunds,
 }

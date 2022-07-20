@@ -84,7 +84,7 @@ async fn _lifecycle_test() {
         };
 
         let instruction = mpl_token_entangler::instruction::CreateEntangledPair {
-            bump: entangled_pair.1,
+            _bump: entangled_pair.1,
             _reverse_bump: reverse_pair.1,
             token_a_escrow_bump: escrow_a.1,
             token_b_escrow_bump: escrow_b.1,

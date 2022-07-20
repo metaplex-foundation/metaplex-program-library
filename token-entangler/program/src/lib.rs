@@ -25,7 +25,7 @@ pub mod token_entangler {
 
     pub fn create_entangled_pair<'info>(
         ctx: Context<'_, '_, '_, 'info, CreateEntangledPair<'info>>,
-        bump: u8,
+        _bump: u8,
         _reverse_bump: u8,
         token_a_escrow_bump: u8,
         token_b_escrow_bump: u8,
@@ -55,7 +55,10 @@ pub mod token_entangler {
             return Err(ErrorCode::EntangledPairExists.into());
         }
 
-        entangled_pair.bump = bump;
+        entangled_pair.bump = *ctx
+            .bumps
+            .get("entangled_pair")
+            .ok_or(ErrorCode::BumpSeedNotInHashMap)?;
         entangled_pair.token_a_escrow_bump = token_a_escrow_bump;
         entangled_pair.token_b_escrow_bump = token_b_escrow_bump;
         entangled_pair.price = price;
@@ -447,4 +450,6 @@ pub enum ErrorCode {
     EntangledPairExists,
     #[msg("Must have supply one!")]
     MustHaveSupplyOne,
+    #[msg("Bump seed not in hash map")]
+    BumpSeedNotInHashMap,
 }
