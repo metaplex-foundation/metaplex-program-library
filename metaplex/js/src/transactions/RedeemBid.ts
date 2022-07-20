@@ -97,7 +97,7 @@ export class RedeemBid extends Transaction {
       auctioneerReclaimIndex,
     } = params;
 
-    const data = auctioneerReclaimIndex
+    const data = auctioneerReclaimIndex !== undefined
       ? RedeemUnusedWinningConfigItemsAsAuctioneerArgs.serialize({
           winningConfigItemIndex: auctioneerReclaimIndex,
           proxyCall: ProxyCallAddress.RedeemBid,
