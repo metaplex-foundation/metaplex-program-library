@@ -353,10 +353,19 @@ async fn execute_sale_success() {
             .as_slice(),
     )
     .unwrap();
+    assert_eq!(buyer_token_before.is_none(), true);
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert_eq!(seller_before.lamports < seller_after.lamports, true);
     assert_eq!(buyer_token_after.amount, 1);
+
+    let listing_config_closed = context
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(listing_config_closed.lamports, 0);
 }
 
 #[tokio::test]
