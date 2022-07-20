@@ -133,8 +133,6 @@ pub struct AuctioneerExecuteSale<'info> {
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
-
-    pub lamports: AccountInfo<'info>,
 }
 
 pub fn auctioneer_execute_sale<'info>(
@@ -224,23 +222,33 @@ pub fn auctioneer_execute_sale<'info>(
 
     let listing_config_lamports = listing_config.lamports();
     **listing_config.lamports.borrow_mut() = listing_config_lamports
-         .checked_add(listing_config.lamports())
-         .unwrap();
+    .checked_add(listing_config.lamports())
+    .unwrap();
+    **listing_config.lamports.borrow_mut() = 0;
 
-     **listing_config.lamports.borrow_mut() = 0;
+    let mut source_data = listing_config.data.borrow_mut();
+    source_data.fill(0);
 
-     let ix = anchor_lang::solana_program::system_instruction::transfer(
-        &ctx.accounts.listing_config.key(),
-        &ctx.accounts.seller.key(),
-        listing_config_lamports,
-    );
-    anchor_lang::solana_program::program::invoke(
-        &ix,
-        &[
-            ctx.accounts.listing_config.to_account_info(),
-            ctx.accounts.seller.to_account_info(),
-        ],
-    );
+
+    // let listing_config_lamports = listing_config.lamports();
+    // **listing_config.lamports.borrow_mut() = listing_config_lamports
+    //      .checked_add(listing_config.lamports())
+    //      .unwrap();
+
+    //  **listing_config.lamports.borrow_mut() = 0;
+
+    //  let ix = anchor_lang::solana_program::system_instruction::transfer(
+    //     &ctx.accounts.listing_config.key(),
+    //     &ctx.accounts.seller.key(),
+    //     listing_config_lamports,
+    // );
+    // anchor_lang::solana_program::program::invoke(
+    //     &ix,
+    //     &[
+    //         ctx.accounts.listing_config.to_account_info(),
+    //         ctx.accounts.seller.to_account_info(),
+    //     ],
+    // );
 
     Ok(())
 }
