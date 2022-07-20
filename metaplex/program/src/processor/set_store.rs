@@ -167,7 +167,7 @@ pub fn process_set_store_v2<'a>(
             store_info.key.as_ref(),
         ],
     )?;
-
+    
     if store_config_info.data_is_empty() {
         create_or_allocate_account_raw(
             *program_id,

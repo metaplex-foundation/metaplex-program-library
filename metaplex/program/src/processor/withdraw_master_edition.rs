@@ -1,20 +1,22 @@
-use crate::{
-    error::MetaplexError,
-    state::{get_auction_manager, PrizeTrackingTicket, Store, PREFIX},
-    utils::{
-        assert_derivation, assert_is_ata, assert_owned_by, assert_rent_exempt,
-        assert_safety_deposit_config_valid, assert_store_safety_vault_manager_match,
-        transfer_safety_deposit_box_items,
+use {
+    crate::{
+        error::MetaplexError,
+        state::{get_auction_manager, PrizeTrackingTicket, Store, PREFIX},
+        utils::{
+            assert_derivation, assert_is_ata, assert_owned_by, assert_rent_exempt,
+            assert_safety_deposit_config_valid, assert_store_safety_vault_manager_match,
+            transfer_safety_deposit_box_items,
+        },
     },
-};
-use mpl_auction::processor::{AuctionData, AuctionDataExtended, AuctionState};
-use mpl_token_vault::state::SafetyDepositBox;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    pubkey::Pubkey,
-    rent::Rent,
-    sysvar::Sysvar,
+    mpl_auction::processor::{AuctionData, AuctionDataExtended, AuctionState},
+    mpl_token_vault::state::SafetyDepositBox,
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        pubkey::Pubkey,
+        rent::Rent,
+        sysvar::Sysvar,
+    },
 };
 
 pub fn process_withdraw_master_edition<'a>(

@@ -1,8 +1,8 @@
 use crate::{
     error::MetaplexError,
     state::{
-        get_auction_manager, AuctionManager, AuctionManagerStatus, BidRedemptionTicket, Key,
-        OriginalAuthorityLookup, Store, WhitelistedCreator, PREFIX,
+        get_auction_manager, AuctionManager, AuctionManagerStatus, BidRedemptionTicket,
+        FractionManager, Key, OriginalAuthorityLookup, Store, WhitelistedCreator, PREFIX,
     },
 };
 use arrayref::array_ref;
@@ -146,6 +146,58 @@ pub fn assert_at_least_one_creator_matches_or_store_public_and_all_verified(
                     PREFIX.as_bytes(),
                     program_id.as_ref(),
                     auction_manager.store().as_ref(),
+                    creator.address.as_ref(),
+                ],
+                program_id,
+            );
+
+            if key == *whitelisted_creator_info.key {
+                found = true;
+            }
+
+            if !creator.verified {
+                return Err(MetaplexError::CreatorHasNotVerifiedMetadata.into());
+            }
+        }
+
+        if found {
+            return Ok(());
+        }
+    }
+    Err(MetaplexError::InvalidWhitelistedCreator.into())
+}
+
+pub fn assert_at_least_one_fraction_creator_matches_or_store_public_and_all_verified(
+    program_id: &Pubkey,
+    fraction_manager: &dyn FractionManager,
+    metadata: &Metadata,
+    whitelisted_creator_info: &AccountInfo,
+    store_info: &AccountInfo,
+) -> ProgramResult {
+    let store = Store::from_account_info(store_info)?;
+    if store.public {
+        return Ok(());
+    }
+    if let Some(creators) = &metadata.data.creators {
+        // does it exist? It better!
+        let existing_whitelist_creator: WhitelistedCreator =
+            match WhitelistedCreator::from_account_info(whitelisted_creator_info) {
+                Ok(val) => val,
+                Err(_) => return Err(MetaplexError::InvalidWhitelistedCreator.into()),
+            };
+
+        if !existing_whitelist_creator.activated {
+            return Err(MetaplexError::WhitelistedCreatorInactive.into());
+        }
+
+        let mut found = false;
+        for creator in creators {
+            // Now find at least one creator that can make this pda in the list
+            let (key, _) = Pubkey::find_program_address(
+                &[
+                    PREFIX.as_bytes(),
+                    program_id.as_ref(),
+                    fraction_manager.store().as_ref(),
                     creator.address.as_ref(),
                 ],
                 program_id,

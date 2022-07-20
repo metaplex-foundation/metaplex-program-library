@@ -1,24 +1,26 @@
-use crate::{
-    deprecated_state::{AuctionManagerV1, ParticipationConfigV1},
-    error::MetaplexError,
-    state::{NonWinningConstraint, Store, WinningConstraint, PREFIX},
-    utils::{
-        assert_derivation, assert_initialized, assert_owned_by,
-        assert_store_safety_vault_manager_match, transfer_safety_deposit_box_items,
+use {
+    crate::{
+        deprecated_state::{AuctionManagerV1, ParticipationConfigV1},
+        error::MetaplexError,
+        state::{NonWinningConstraint, Store, WinningConstraint, PREFIX},
+        utils::{
+            assert_derivation, assert_initialized, assert_owned_by,
+            assert_store_safety_vault_manager_match, transfer_safety_deposit_box_items,
+        },
     },
+    mpl_auction::processor::{AuctionData, AuctionDataExtended, AuctionState},
+    mpl_token_metadata::{
+        deprecated_instruction::deprecated_mint_printing_tokens_via_token, state::MasterEditionV1,
+    },
+    mpl_token_vault::state::SafetyDepositBox,
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        program::invoke_signed,
+        pubkey::Pubkey,
+    },
+    spl_token::{instruction::close_account, state::Account},
 };
-use mpl_auction::processor::{AuctionData, AuctionDataExtended, AuctionState};
-use mpl_token_metadata::{
-    deprecated_instruction::deprecated_mint_printing_tokens_via_token, state::MasterEditionV1,
-};
-use mpl_token_vault::state::SafetyDepositBox;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    program::invoke_signed,
-    pubkey::Pubkey,
-};
-use spl_token::{instruction::close_account, state::Account};
 
 fn mint_printing_tokens<'a: 'b, 'b>(
     program: &AccountInfo<'a>,

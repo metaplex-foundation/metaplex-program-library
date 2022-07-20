@@ -1,19 +1,23 @@
-use crate::{
-    error::MetaplexError,
-    state::{
-        AuctionCache, AuctionManagerV2, Key, Store, CACHE, MAX_AUCTION_CACHE_SIZE,
-        MAX_METADATA_PER_CACHE, PREFIX,
+use {
+    crate::{
+        error::MetaplexError,
+        state::{
+            AuctionCache, AuctionManagerV2, Key, Store, CACHE, MAX_AUCTION_CACHE_SIZE,
+            MAX_METADATA_PER_CACHE, PREFIX,
+        },
+        utils::{
+            assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw,
+        },
     },
-    utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
-};
-use borsh::BorshSerialize;
-use mpl_auction::processor::AuctionData;
-use mpl_token_vault::state::SafetyDepositBox;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    pubkey::Pubkey,
-    sysvar::{clock::Clock, Sysvar},
+    borsh::BorshSerialize,
+    mpl_auction::processor::AuctionData,
+    mpl_token_vault::state::SafetyDepositBox,
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        pubkey::Pubkey,
+        sysvar::{clock::Clock, Sysvar},
+    },
 };
 
 pub fn process_set_auction_cache<'a>(

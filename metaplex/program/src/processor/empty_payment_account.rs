@@ -1,31 +1,34 @@
 use solana_program::msg;
 
-use crate::{
-    error::MetaplexError,
-    instruction::EmptyPaymentAccountArgs,
-    state::{
-        get_auction_manager, AuctionManager, Key, PayoutTicket, Store, MAX_PAYOUT_TICKET_SIZE,
-        PREFIX, TOTALS,
+use {
+    crate::{
+        error::MetaplexError,
+        instruction::EmptyPaymentAccountArgs,
+        state::{
+            get_auction_manager, AuctionManager, Key, PayoutTicket, Store, MAX_PAYOUT_TICKET_SIZE,
+            PREFIX, TOTALS,
+        },
+        utils::{
+            assert_derivation, assert_initialized, assert_is_ata, assert_owned_by,
+            assert_rent_exempt, assert_safety_deposit_config_valid, create_or_allocate_account_raw,
+            spl_token_transfer,
+        },
     },
-    utils::{
-        assert_derivation, assert_initialized, assert_is_ata, assert_owned_by, assert_rent_exempt,
-        assert_safety_deposit_config_valid, create_or_allocate_account_raw, spl_token_transfer,
+    borsh::BorshSerialize,
+    mpl_auction::processor::AuctionData,
+    mpl_token_metadata::state::{MasterEditionV1, Metadata},
+    mpl_token_vault::state::SafetyDepositBox,
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        program_error::ProgramError,
+        program_option::COption,
+        pubkey::Pubkey,
+        rent::Rent,
+        sysvar::Sysvar,
     },
+    spl_token::state::Account,
 };
-use borsh::BorshSerialize;
-use mpl_auction::processor::AuctionData;
-use mpl_token_metadata::state::{MasterEditionV1, Metadata};
-use mpl_token_vault::state::SafetyDepositBox;
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    program_error::ProgramError,
-    program_option::COption,
-    pubkey::Pubkey,
-    rent::Rent,
-    sysvar::Sysvar,
-};
-use spl_token::state::Account;
 
 fn assert_destination_ownership_validity(
     auction_manager: &Box<dyn AuctionManager>,

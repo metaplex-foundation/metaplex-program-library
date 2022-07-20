@@ -1,14 +1,12 @@
 //! Error types
 
-use {
-    num_derive::FromPrimitive,
-    solana_program::{
-        decode_error::DecodeError,
-        msg,
-        program_error::{PrintProgramError, ProgramError},
-    },
-    thiserror::Error,
+use num_derive::FromPrimitive;
+use solana_program::{
+    decode_error::DecodeError,
+    msg,
+    program_error::{PrintProgramError, ProgramError},
 };
+use thiserror::Error;
 
 /// Errors that may be returned by the Vault program.
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
@@ -201,9 +199,17 @@ pub enum VaultError {
     #[error("There are not enough shares")]
     NotEnoughShares,
 
-    /// External price account must be signer
-    #[error("External price account must be signer")]
-    ExternalPriceAccountMustBeSigner,
+    /// Vault authority must be signer
+    #[error("Vault authority must be signer")]
+    VaultAuthorityMustBeSigner,
+
+    /// Vault authority supplied is not the correct vault authority
+    #[error("Vault authority supplied is not the correct vault authority")]
+    VaultAuthorityMismatch,
+
+    /// External price account is not the correct external price account
+    #[error("External price account supplied is not the external price account")]
+    ExternalPriceAccountMismatch,
 
     ///Very bad, someone changed external account's price mint after vault creation!
     #[error("Very bad, someone changed external account's price mint after vault creation!")]

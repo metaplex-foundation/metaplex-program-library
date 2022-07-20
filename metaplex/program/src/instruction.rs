@@ -1,6 +1,6 @@
 use crate::{
     deprecated_state::AuctionManagerSettingsV1,
-    state::{SafetyDepositConfig, TupleNumericType, PREFIX},
+    state::{FractionSafetyDepositConfig, SafetyDepositConfig, TupleNumericType, PREFIX},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_metadata::state::EDITION_MARKER_BIT_SIZE;
@@ -19,7 +19,6 @@ pub struct SetStoreV2Args {
     pub public: bool,
     pub settings_uri: Option<String>,
 }
-
 #[derive(BorshSerialize, BorshDeserialize, Clone)]
 pub struct SetWhitelistedCreatorArgs {
     pub activated: bool,
@@ -71,6 +70,17 @@ pub struct InitAuctionManagerV2Args {
     // validation and have a failed auction.
     pub max_ranges: u64,
 }
+
+#[derive(BorshSerialize, BorshDeserialize, Clone)]
+pub struct InitFractionManagerArgs {
+    //TODO - add validation for pool sizes
+    //TODO - Make sure you can't put negative values in!!!!!
+    // TODO - the transaction will cost a lot more with this. Make sure the user is asked about it and show a estimation...
+    // Number of fraction tokens to be used when setting up a Serum exchange.
+    // If this is 0, no market is created. A Serum market can optionally be made later on.
+    pub orderbook_market_pool_size: u64,
+}
+
 #[derive(BorshSerialize, BorshDeserialize, Clone)]
 pub struct EndAuctionArgs {
     /// If the auction was blinded, a revealing price must be specified to release the auction
@@ -670,6 +680,7 @@ pub enum MetaplexInstruction {
     ///   7. `[]` Rent sysvar
     ///   8. `[]` Clock sysvar
     SetAuctionCache,
+
     /// Given a signer wallet, create a store with pda ['metaplex', wallet] (if it does not exist) and/or update it
     /// (if it already exists). Stores can be set to open (anybody can publish) or closed (publish only via whitelist).
     ///
@@ -684,6 +695,52 @@ pub enum MetaplexInstruction {
     ///   8. `[]` System
     ///   8. `[]` Rent sysvar
     SetStoreV2(SetStoreV2Args),
+
+    //25!!
+    // TODO - FIX NOTES to correct things and signers and writable
+    /// Initializes an Fraction Manager V1
+    ///
+    /// NOTE: It is not possible to use MasterEditionV1s for fractionalisation.
+    ///
+    ///   0. `[writable]` Uninitialized, unallocated fraction manager account with pda of ['metaplex', vault, fraction mint]
+    ///   1. `[]` Combined vault account with authority set to auction manager account (this will be checked)
+    ///           Note in addition that this vault account should have authority set to this program's pda of ['metaplex', auction_key]
+    ///   2. `[]` Auction with auctioned item being set to the vault given and authority set to this program's pda of ['metaplex', auction_key]
+    ///   3. `[]` Authority for the Auction Manager
+    ///   4. `[signer]` Payer
+    ///   5. `[]` Accept payment account of same token mint as the auction for taking payment for open editions, owner should be auction manager key
+    ///   6. `[]` Store that this auction manager will belong to
+    ///   7. `[]` System sysvar    
+    ///   8. `[]` Rent sysvar
+    InitFractionManager(InitFractionManagerArgs),
+
+    /// NOTE: Requires a FractionManager
+    /// TODO: FIX NOTES HERE! instruction = 26
+    /// Validates that a given safety deposit box has in it contents that match the given FractionSafetyDepositConfig, and creates said config.
+    /// A stateful call, this will error out if you call it a second time after validation has occurred.
+    ///   0. `[writable]` Uninitialized Safety deposit config, pda of seed ['metaplex', program id, auction manager key, safety deposit key]
+    ///   1. `[writable]` AuctionWinnerTokenTypeTracker, pda of seed ['metaplex', program id, auction manager key, 'totals']
+    ///   2. `[writable]` Auction manager
+    ///   3. `[writable]` Metadata account
+    ///   4. `[writable]` Original authority lookup - unallocated uninitialized pda account with seed ['metaplex', auction key, metadata key]
+    ///                   We will store original authority here to return it later.
+    ///   5. `[]` A whitelisted creator entry for the store of this auction manager pda of ['metaplex', store key, creator key]
+    ///   where creator key comes from creator list of metadata, any will do
+    ///   6. `[]` The auction manager's store key
+    ///   7. `[]` Safety deposit box account
+    ///   8. `[]` Safety deposit box storage account where the actual nft token is stored
+    ///   9. `[]` Mint account of the token in the safety deposit box
+    ///   10. `[]` Edition OR MasterEdition record key
+    ///           Remember this does not need to be an existing account (may not be depending on token), just is a pda with seed
+    ///            of ['metadata', program id, Printing mint id, 'edition']. - remember PDA is relative to token metadata program.
+    ///   11. `[]` Vault account
+    ///   12. `[signer]` Authority
+    ///   13. `[signer optional]` Metadata Authority - Signer only required if doing a full ownership txfer
+    ///   14. `[signer]` Payer
+    ///   15. `[]` Token metadata program
+    ///   16. `[]` System
+    ///   17. `[]` Rent sysvar
+    ValidateFractionSafetyDepositBox(FractionSafetyDepositConfig),
 }
 
 /// Creates an DeprecatedInitAuctionManager instruction
@@ -750,6 +807,38 @@ pub fn create_init_auction_manager_v2_instruction(
             amount_type,
             length_type,
             max_ranges,
+        })
+        .try_to_vec()
+        .unwrap(),
+    }
+}
+
+/// Creates an InitFractionManager instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_init_fraction_manager_instruction(
+    program_id: Pubkey,
+    fraction_manager: Pubkey,
+    vault: Pubkey,
+    fraction_manager_authority: Pubkey,
+    payer: Pubkey,
+    accept_payment_account_key: Pubkey,
+    store: Pubkey,
+    orderbook_market_pool_size: u64,
+) -> Instruction {
+    Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new(fraction_manager, false),
+            AccountMeta::new_readonly(vault, false),
+            AccountMeta::new_readonly(fraction_manager_authority, false),
+            AccountMeta::new_readonly(payer, true),
+            AccountMeta::new_readonly(accept_payment_account_key, false),
+            AccountMeta::new_readonly(store, false),
+            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(sysvar::rent::id(), false),
+        ],
+        data: MetaplexInstruction::InitFractionManager(InitFractionManagerArgs {
+            orderbook_market_pool_size,
         })
         .try_to_vec()
         .unwrap(),
@@ -910,6 +999,63 @@ pub fn create_validate_safety_deposit_box_v2_instruction(
         program_id,
         accounts,
         data: MetaplexInstruction::ValidateSafetyDepositBoxV2(safety_deposit_config)
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+/// Creates an ValidateFractionSafetyDepositBox instruction
+#[allow(clippy::too_many_arguments)]
+pub fn create_validate_fraction_safety_deposit_box_instruction(
+    program_id: Pubkey,
+    fraction_manager: Pubkey,
+    metadata: Pubkey,
+    original_authority_lookup: Pubkey,
+    whitelisted_creator: Pubkey,
+    store: Pubkey,
+    safety_deposit_box: Pubkey,
+    safety_deposit_token_store: Pubkey,
+    safety_deposit_mint: Pubkey,
+    edition: Pubkey,
+    vault: Pubkey,
+    fraction_manager_authority: Pubkey,
+    metadata_authority: Pubkey,
+    payer: Pubkey,
+    safety_deposit_config: FractionSafetyDepositConfig,
+) -> Instruction {
+    let (validation, _) = Pubkey::find_program_address(
+        &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            fraction_manager.as_ref(),
+            safety_deposit_box.as_ref(),
+        ],
+        &program_id,
+    );
+    let accounts = vec![
+        AccountMeta::new(validation, false),
+        AccountMeta::new(fraction_manager, false),
+        AccountMeta::new(metadata, false),
+        AccountMeta::new(original_authority_lookup, false),
+        AccountMeta::new_readonly(whitelisted_creator, false),
+        AccountMeta::new_readonly(store, false),
+        AccountMeta::new_readonly(safety_deposit_box, false),
+        AccountMeta::new_readonly(safety_deposit_token_store, false),
+        AccountMeta::new_readonly(safety_deposit_mint, false),
+        AccountMeta::new_readonly(edition, false),
+        AccountMeta::new_readonly(vault, false),
+        AccountMeta::new_readonly(fraction_manager_authority, true),
+        AccountMeta::new_readonly(metadata_authority, true),
+        AccountMeta::new_readonly(payer, true),
+        AccountMeta::new_readonly(mpl_token_metadata::id(), false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(sysvar::rent::id(), false),
+    ];
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetaplexInstruction::ValidateFractionSafetyDepositBox(safety_deposit_config)
             .try_to_vec()
             .unwrap(),
     }

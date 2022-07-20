@@ -1,25 +1,27 @@
-use crate::{
-    deprecated_state::{AuctionManagerV1, ParticipationStateV1},
-    error::MetaplexError,
-    state::{AuctionManagerStatus, Store},
-    utils::{
-        assert_at_least_one_creator_matches_or_store_public_and_all_verified,
-        assert_authority_correct, assert_derivation, assert_initialized, assert_owned_by,
-        assert_rent_exempt, assert_store_safety_vault_manager_match,
+use {
+    crate::{
+        deprecated_state::{AuctionManagerV1, ParticipationStateV1},
+        error::MetaplexError,
+        state::{AuctionManagerStatus, Store},
+        utils::{
+            assert_at_least_one_creator_matches_or_store_public_and_all_verified,
+            assert_authority_correct, assert_derivation, assert_initialized, assert_owned_by,
+            assert_rent_exempt, assert_store_safety_vault_manager_match,
+        },
     },
+    borsh::BorshSerialize,
+    mpl_token_metadata::state::{MasterEditionV1, Metadata},
+    mpl_token_vault::state::{SafetyDepositBox, Vault},
+    solana_program::{
+        account_info::{next_account_info, AccountInfo},
+        entrypoint::ProgramResult,
+        program_option::COption,
+        pubkey::Pubkey,
+        rent::Rent,
+        sysvar::Sysvar,
+    },
+    spl_token::state::Account,
 };
-use borsh::BorshSerialize;
-use mpl_token_metadata::state::{MasterEditionV1, Metadata};
-use mpl_token_vault::state::{SafetyDepositBox, Vault};
-use solana_program::{
-    account_info::{next_account_info, AccountInfo},
-    entrypoint::ProgramResult,
-    program_option::COption,
-    pubkey::Pubkey,
-    rent::Rent,
-    sysvar::Sysvar,
-};
-use spl_token::state::Account;
 
 pub fn process_deprecated_validate_participation(
     program_id: &Pubkey,
