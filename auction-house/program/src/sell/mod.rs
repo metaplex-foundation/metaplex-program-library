@@ -13,9 +13,8 @@ use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
     token_size: u64
 )]
 pub struct Sell<'info> {
-    /// CHECK: Verified through CPI
     /// User wallet account.
-    pub wallet: UncheckedAccount<'info>,
+    pub wallet: Signer<'info>,
 
     /// SPL token account containing token for sale.
     #[account(mut)]
@@ -132,7 +131,7 @@ pub struct AuctioneerSell<'info> {
     /// CHECK: Wallet is validated as a signer in sell_logic.
     /// User wallet account.
     #[account(mut)]
-    pub wallet: UncheckedAccount<'info>,
+    pub wallet: Signer<'info>,
 
     /// SPL token account containing token for sale.
     #[account(mut)]

@@ -1,0 +1,12 @@
+[package]
+name = "mpl-auction-house-sdk"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+mpl-auction-house = { path = "./../program", features = ["no-entrypoint"] }
+anchor-lang = "~0.24.2"
+anchor-client = "~0.24.2"
+anchor-spl = "~0.24.2"
