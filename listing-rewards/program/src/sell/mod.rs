@@ -2,27 +2,28 @@ use anchor_lang::{context::Context, prelude::*, AnchorDeserialize};
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
+    MetadataAccount,
     constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
+    errors::ListingRewardsError,
     reward_center::RewardCenter,
     rewardable_collection::RewardableCollection,
+    assertions::assert_belongs_to_rewardable_collection
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
+    AuctionHouse,
     cpi::accounts::AuctioneerSell,
     program::AuctionHouse as AuctionHouseProgram,
-    AuctionHouse,
 };
 
 #[account]
 pub struct Listing {
-    pub trade_state: Pubkey,
     pub reward_center: Pubkey,
     pub seller: Pubkey,
     pub metadata: Pubkey,
     pub price: u64,
     pub token_size: u64,
     pub bump: u8,
-    pub trade_state_bump: u8,
     pub created_at: i64,
     pub canceled_at: Option<i64>,
     pub purchased_at: Option<i64>,
@@ -33,14 +34,12 @@ pub struct Listing {
 impl Listing {
     pub fn size() -> usize {
         8 + // deliminator
-        32 + // trade_state
         32 + // reward_center
         32 + // seller
         32 + // metadata
         8 + // price
         8 + // token_size
         1 + // bump
-        1 + // trade_state_bump
         8 + // created_at
         1 + 8 + // canceled_at
         1 + 8 + // canceled_at
@@ -53,7 +52,6 @@ impl Listing {
 pub struct SellParams {
     pub price: u64,
     pub token_size: u64,
-    pub collection: Pubkey,
     pub trade_state_bump: u8,
     pub free_trade_state_bump: u8,
     pub program_as_signer_bump: u8,
@@ -75,7 +73,7 @@ pub struct Sell<'info> {
         seeds=[
             LISTING.as_bytes(),
             wallet.key().as_ref(),
-            token_account.mint.as_ref(),
+            metadata.key().as_ref(),
             rewardable_collection.key().as_ref(),
         ],
         bump,
@@ -87,22 +85,33 @@ pub struct Sell<'info> {
     pub reward_center: Box<Account<'info, RewardCenter>>,
 
     /// The collection eligable for rewards
-    #[account(seeds = [REWARDABLE_COLLECTION.as_bytes(), reward_center.key().as_ref(), sell_params.collection.as_ref()], bump)]
+    #[
+        account(
+            seeds = [
+                REWARDABLE_COLLECTION.as_bytes(),
+                reward_center.key().as_ref(),
+                metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
+        ],
+        bump = rewardable_collection.bump
+    )]
     pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     // Accounts passed into Auction House CPI call
-    /// CHECK: Verified through CPI
     /// User wallet account.
     #[account(mut)]
-    pub wallet: UncheckedAccount<'info>,
+    pub wallet: Signer<'info>,
 
     /// SPL token account containing token for sale.
-    #[account(mut)]
+    #[
+        account(
+            mut,
+            constraint = token_account.owner == wallet.key(),
+            constraint = token_account.amount == 1
+        )]
     pub token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Verified through CPI
     /// Metaplex metadata account decorating SPL mint account.
-    pub metadata: UncheckedAccount<'info>,
+    pub metadata: Box<Account<'info, MetadataAccount>>,
 
     /// CHECK: Verified through CPI
     /// Auction House authority account.
@@ -148,12 +157,36 @@ pub fn sell(
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
-        ..
+        price,
     }: SellParams,
 ) -> Result<()> {
+    let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
+    let rewardable_collection = &ctx.accounts.rewardable_collection;
+    let metadata_account = &ctx.accounts.metadata;
+    let wallet = &ctx.accounts.wallet;
+    let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
+
+    assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
+
+    let listing = &mut ctx.accounts.listing;
+
+    listing.reward_center = reward_center.key();
+    listing.seller = wallet.key();
+    listing.metadata = metadata_account.key();
+    listing.rewardable_collection = rewardable_collection.key();
+    listing.price = price;
+    listing.token_size = token_size;
+    listing.bump = *ctx
+        .bumps
+        .get(LISTING)
+        .ok_or(ListingRewardsError::BumpSeedNotInHashMap)?;
+    listing.created_at = clock.unix_timestamp;
+    listing.canceled_at = None;
+    listing.reward_redeemed_at = None;
+
 
     let seeds = &[
         REWARD_CENTER.as_bytes(),

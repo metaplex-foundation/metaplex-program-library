@@ -1762,6 +1762,7 @@ dependencies = [
  "anchor-lang",
  "mpl-auction-house",
  "mpl-listing-rewards",
+ "spl-associated-token-account",
  "spl-token",
 ]
 

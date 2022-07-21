@@ -1,3 +1,5 @@
+pub mod fixtures;
+
 use solana_program_test::*;
 
 pub const TEN_SOL: u64 = 10_000_000_000;

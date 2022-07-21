@@ -10,11 +10,11 @@ use mpl_auction_house::{
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CreateOfferParams {
-    collection: Pubkey,
-    trade_state_bump: u8,
-    escrow_payment_bump: u8,
-    buyer_price: u64,
-    token_size: u64,
+    pub collection: Pubkey,
+    pub trade_state_bump: u8,
+    pub escrow_payment_bump: u8,
+    pub buyer_price: u64,
+    pub token_size: u64,
 }
 
 #[derive(Accounts, Clone)]
