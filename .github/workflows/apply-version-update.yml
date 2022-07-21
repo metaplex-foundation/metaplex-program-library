@@ -1,4 +1,4 @@
-name: Version updates
+name: Apply version update
 
 on:
   pull_request_review:
@@ -31,7 +31,8 @@ jobs:
       contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
     runs-on: ubuntu-latest
     outputs:
-      changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
+      changed-packages: ${{ steps.get-changed-package-scope.outputs.packages }}
+      num-packages: ${{ steps.get-changed-package-scope.outputs.num-packages }}
     steps:
       - uses: actions/checkout@v3
       - name: List changed files
@@ -39,7 +40,12 @@ jobs:
         id: list-changed-files
         with:
           pull-number: ${{ github.event.pull_request.number }}
-          exclude: '[".github", "Cargo.lock", "Cargo.toml", "js/idl", "packge.json", "yarn.lock"]'
+          # we ignore js/idl because that's an output of updating the package's rust version
+          # note: rust version updates also result in package.json changes, so multiple version updates
+          #       will result in the js package also getting updated. but, i think this is ok since there
+          #       haven't been any PRs to date with multiple version changes. and, in the long term, we
+          #       want more granular version commands
+          exclude: '["js/idl"]'
 
       # map fetched changed files to package / lang (list)
       - name: Get scope of changed packages
@@ -58,7 +64,16 @@ jobs:
               }
               return p
             }, {})
-            return JSON.stringify(Array.from(Object.keys(uniqueFilesObj)).map((el) => `\"${el}\"`))
+            const changedPackages = Array.from(Object.keys(uniqueFilesObj))
+            core.setOutput('packages', JSON.stringify(changedPackages.map((el) => `\"${el}\"`)))
+            core.setOutput('num-packages', changedPackages.length)
+
+      - name: Print changed scope output
+        id: print-changed-scope-output
+        run: |
+          echo "num packages -> ${{ steps.get-changed-package-scope.outputs.num-packages }}"
+          echo "packages -> ${{ steps.get-changed-package-scope.outputs.packages }}"
+        shell: bash
 
   get-version-scope:
     if:
@@ -78,7 +93,7 @@ jobs:
 
   update-pr-with-changes:
     needs: [get-changes-scope, get-version-scope]
-    if: ${{ needs.get-version-scope.outputs.has-versioning == 'true' }}
+    if: needs.get-version-scope.outputs.has-versioning == 'true' && needs.get-changes-scope.outputs.num-packages > 0
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

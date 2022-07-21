@@ -1,6 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-auctioneer",
   "version": "0.1.0",
+  "contractVersion": "0.1.0",
   "description": "MPL Auctioneer JavaScript API.",
   "main": "dist/src/mpl-auctioneer.js",
   "types": "dist/src/mpl-auctioneer.d.ts",

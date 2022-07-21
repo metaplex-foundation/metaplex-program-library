@@ -1,6 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-metaplex",
   "version": "0.0.5",
+  "contractVersion": "0.0.3",
   "description": "MPL Metaplex JavaScript API.",
   "main": "dist/src/mpl-metaplex.js",
   "types": "dist/src/mpl-metaplex.d.ts",

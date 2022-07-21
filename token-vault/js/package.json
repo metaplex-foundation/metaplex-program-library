@@ -1,6 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-token-vault",
   "version": "0.0.2",
+  "contractVersion": "0.1.1",
   "description": "MPL Token Vault JavaScript API.",
   "main": "dist/src/mpl-token-vault.js",
   "types": "dist/src/mpl-token-vault.d.ts",
