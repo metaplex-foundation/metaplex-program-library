@@ -411,7 +411,7 @@ async fn auction_cancel_listing_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, INVALID_SEEDS);
+    assert_error!(error, ACCOUNT_NOT_INITIALIZED);
 }
 
 #[tokio::test]
@@ -841,5 +841,5 @@ async fn auction_cancel_bid_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, INVALID_SEEDS);
+    assert_error!(error, ACCOUNT_NOT_INITIALIZED);
 }

@@ -19,6 +19,7 @@ use metaplex_token_metadata::state::Metadata;
 use spl_associated_token_account::get_associated_token_address;
 use spl_token::{instruction::initialize_account2, state::Account as SplAccount};
 use std::{convert::TryInto, slice::Iter};
+
 pub fn assert_is_ata(ata: &AccountInfo, wallet: &Pubkey, mint: &Pubkey) -> Result<SplAccount> {
     assert_owned_by(ata, &spl_token::id())?;
     let ata_account: SplAccount = assert_initialized(ata)?;
@@ -162,6 +163,14 @@ pub fn assert_valid_delegation(
 }
 
 pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
+    if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
+        return err!(AuctionHouseError::PublicKeyMismatch);
+    } else {
+        Ok(())
+    }
+}
+
+pub fn assert_keys_equal_err(key1: Pubkey, key2: Pubkey) -> Result<()> {
     if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
         return err!(AuctionHouseError::PublicKeyMismatch);
     } else {
@@ -636,35 +645,28 @@ pub fn verify_deposit(account: AccountInfo, amount: u64) -> Result<u64> {
 }
 
 pub fn assert_valid_auctioneer_and_scope(
-    auction_house_instance: &Pubkey,
+    auction_house_instance: &Account<AuctionHouse>,
     auctioneer_authority: &Pubkey,
-    auctioneer_pda: &AccountInfo,
+    auctioneer_pda: &Account<Auctioneer>,
     scope: AuthorityScope,
 ) -> Result<()> {
-    let sale_authority_seeds = [
-        AUCTIONEER.as_bytes(),
-        auction_house_instance.as_ref(),
-        auctioneer_authority.as_ref(),
-    ];
-
-    // Assert we're given the correctly derived account.
-    assert_derivation(&crate::id(), auctioneer_pda, &sale_authority_seeds)?;
-
-    // Deserialize into the Rust struct.
-    let data = auctioneer_pda.data.borrow_mut();
-    let auctioneer = Auctioneer::try_deserialize(&mut data.as_ref())
-        .expect("Failed to deserialize Auctioneer account");
-
+    // Assert the Auctioneer is tagged on the auction house
+    assert_keys_equal(
+        auction_house_instance.auctioneer_address,
+        auctioneer_pda.key(),
+    )
+    .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
+    // Assert the auctioneer_authority is tagged in the Auctioneer
+    assert_keys_equal(
+        auctioneer_pda.auctioneer_authority,
+        auctioneer_authority.key(),
+    )
+    .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
     // Assert authority, auction house instance and scopes are correct.
-    if auctioneer.auction_house != *auction_house_instance {
-        return Err(AuctionHouseError::InvalidAuctioneer.into());
-    }
+    assert_keys_equal(auctioneer_pda.auction_house, auction_house_instance.key())
+        .map_err(|_e| AuctionHouseError::InvalidAuctioneer)?;
 
-    if auctioneer.auctioneer_authority != *auctioneer_authority {
-        return Err(AuctionHouseError::InvalidAuctioneer.into());
-    }
-
-    if !(auctioneer.scopes[scope as usize]) {
+    if !(auction_house_instance.scopes[scope as usize]) {
         return Err(AuctionHouseError::MissingAuctioneerScope.into());
     }
 

@@ -1229,7 +1229,7 @@ pub async fn auctioneer_execute_sale_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, INVALID_SEEDS);
+    assert_error!(error, ACCOUNT_NOT_INITIALIZED);
 }
 
 #[tokio::test]
@@ -1964,7 +1964,7 @@ async fn auctioneer_execute_public_sale_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, INVALID_SEEDS);
+    assert_error!(error, ACCOUNT_NOT_INITIALIZED);
 }
 
 #[tokio::test]

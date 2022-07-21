@@ -31,7 +31,7 @@ test('account auction-house: round trip serilization', async (t) => {
     canChangeSalePrice: true,
     escrowPaymentBump: 255,
     hasAuctioneer: false,
-    auctioneerPdaBump: 255,
+    auctioneerAddress: PublicKey.default,
   };
 
   const expected = AuctionHouse.fromArgs(args);

@@ -451,7 +451,7 @@ pub mod auction_house {
     }
 
     pub fn execute_partial_sale<'info>(
-        ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+        ctx: Context<'_, '_, '_, 'info, ExecutePartialSale<'info>>,
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
@@ -491,7 +491,7 @@ pub mod auction_house {
     }
 
     pub fn auctioneer_execute_partial_sale<'info>(
-        ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
+        ctx: Context<'_, '_, '_, 'info, AuctioneerExecutePartialSale<'info>>,
         escrow_payment_bump: u8,
         _free_trade_state_bump: u8,
         program_as_signer_bump: u8,
