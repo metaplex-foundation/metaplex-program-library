@@ -645,7 +645,7 @@ pub fn verify_deposit(account: AccountInfo, amount: u64) -> Result<u64> {
 }
 
 pub fn assert_valid_auctioneer_and_scope(
-    auction_house_instance: &Box<Account<AuctionHouse>>,
+    auction_house_instance: &Account<AuctionHouse>,
     auctioneer_authority: &Pubkey,
     auctioneer_pda: &Account<Auctioneer>,
     scope: AuthorityScope,

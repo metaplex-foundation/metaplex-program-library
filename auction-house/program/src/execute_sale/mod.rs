@@ -133,7 +133,7 @@ pub struct ExecuteSale<'info> {
             &buyer_price.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump
+        bump = seller_trade_state.to_account_info().data.borrow()[0]
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
