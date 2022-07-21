@@ -1,8 +1,9 @@
 use std::{fs, sync::Arc};
 
 use async_trait::async_trait;
-use aws_sdk_s3::{types::ByteStream, Client};
 use bs58;
+use ini::ini;
+use s3::{bucket::Bucket, creds::Credentials, region::Region};
 use tokio::task::JoinHandle;
 
 use crate::{
@@ -14,31 +15,42 @@ use crate::{
     },
 };
 
+// Maximum number of times to retry each individual upload.
+const MAX_RETRY: u8 = 3;
+
 pub struct AWSMethod {
-    pub aws_client: Arc<Client>,
-    pub bucket: String,
+    pub bucket: Arc<Bucket>,
 }
 
 impl AWSMethod {
     pub async fn new(config_data: &ConfigData) -> Result<Self> {
-        let shared_config = aws_config::load_from_env().await;
-        let client = Client::new(&shared_config);
+        let credentials = Credentials::default()?;
+        let region = AWSMethod::load_region()?;
 
         if let Some(aws_s3_bucket) = &config_data.aws_s3_bucket {
             Ok(Self {
-                aws_client: Arc::new(client),
-                bucket: aws_s3_bucket.to_string(),
+                bucket: Arc::new(Bucket::new(aws_s3_bucket, region, credentials)?),
             })
         } else {
             Err(anyhow!("Missing 'awsS3Bucket' value in config file."))
         }
     }
 
-    async fn send(
-        client: Arc<Client>,
-        bucket: String,
-        asset_info: AssetInfo,
-    ) -> Result<(String, String)> {
+    fn load_region() -> Result<Region> {
+        let home_dir = dirs::home_dir().expect("Couldn't find home dir.");
+        let credentials = home_dir.join(Path::new(".aws/credentials"));
+        let configuration = ini!(credentials
+            .to_str()
+            .ok_or_else(|| anyhow!("Failed to load AWS credentials"))?);
+
+        if let Some(region) = &configuration["default"]["region"] {
+            Ok(region.parse()?)
+        } else {
+            Err(anyhow!("Region configuration not found"))
+        }
+    }
+
+    async fn send(bucket: Arc<Bucket>, asset_info: AssetInfo) -> Result<(String, String)> {
         let data = match asset_info.data_type {
             DataType::Image => fs::read(&asset_info.content)?,
             DataType::Metadata => asset_info.content.into_bytes(),
@@ -46,17 +58,25 @@ impl AWSMethod {
         };
 
         let key = bs58::encode(&asset_info.name).into_string();
+        let mut retry = MAX_RETRY;
+        // send data to AWS S3 with a simple retry logic (mitigates dns lookup errors)
+        loop {
+            match bucket
+                .put_object_with_content_type(&key, &data, &asset_info.content_type)
+                .await
+            {
+                Ok(_) => break,
+                Err(error) => {
+                    if retry == 0 {
+                        return Err(error.into());
+                    }
+                    // we try one more time before reporting the error
+                    retry -= 1;
+                }
+            }
+        }
 
-        client
-            .put_object()
-            .bucket(&bucket)
-            .key(&key)
-            .body(ByteStream::from(data))
-            .content_type(asset_info.content_type)
-            .send()
-            .await?;
-
-        let link = format!("https://{}.s3.amazonaws.com/{}", bucket, key);
+        let link = format!("https://{}.s3.amazonaws.com/{}", bucket.name(), key);
 
         Ok((asset_info.asset_id, link))
     }
@@ -78,8 +98,7 @@ impl Prepare for AWSMethod {
 #[async_trait]
 impl ParallelUploader for AWSMethod {
     fn upload_asset(&self, asset_info: AssetInfo) -> JoinHandle<Result<(String, String)>> {
-        let client = self.aws_client.clone();
         let bucket = self.bucket.clone();
-        tokio::spawn(async move { AWSMethod::send(client, bucket, asset_info).await })
+        tokio::spawn(async move { AWSMethod::send(bucket, asset_info).await })
     }
 }
