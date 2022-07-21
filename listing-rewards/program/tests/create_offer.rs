@@ -14,13 +14,16 @@ use mpl_auction_house::{
 };
 use mpl_listing_rewards::{
     constants,
-    pda::{find_listing_address, find_reward_center_address, find_rewardable_collection_address},
+    pda::{
+        find_listing_address, find_offer_address, find_reward_center_address,
+        find_rewardable_collection_address,
+    },
     reward_center,
 };
 
 use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
 
-use mpl_testing_utils::solana::{airdrop, create_associated_token_account, transfer_lamports};
+use mpl_testing_utils::solana::{airdrop, transfer_lamports};
 use solana_program_test::*;
 use solana_sdk::signature::Keypair;
 use std::str::FromStr;
@@ -216,11 +219,6 @@ async fn create_offer_success() {
         .await
         .unwrap();
 
-    let buyer_token_account =
-        create_associated_token_account(&mut context, &buyer, &metadata_mint_address)
-            .await
-            .unwrap();
-
     let buyer_wsol_token_account = get_associated_token_address(buyer_pubkey, &mint);
 
     transfer_lamports(
@@ -241,8 +239,12 @@ async fn create_offer_success() {
         1,
     );
 
+    let (offer, _) = find_offer_address(buyer_pubkey, &metadata_address, &rewardable_collection);
+
     let create_offer_accounts = CreateOfferAccounts {
         wallet: *buyer_pubkey,
+        rewardable_collection,
+        offer,
         transfer_authority: *buyer_pubkey,
         payment_account: *buyer_pubkey,
         treasury_mint: mint,
@@ -255,7 +257,6 @@ async fn create_offer_success() {
     };
 
     let create_offer_params = CreateOfferData {
-        collection,
         token_size: 1,
         buyer_price: listing_rewards_test::ONE_SOL,
         trade_state_bump: buyer_trade_state_bump,

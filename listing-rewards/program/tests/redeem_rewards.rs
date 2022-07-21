@@ -19,20 +19,14 @@ use mpl_listing_rewards::{
 use solana_program_test::*;
 use std::str::FromStr;
 
+use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
 use mpl_token_metadata::state::Collection;
 
 use spl_associated_token_account::get_associated_token_address;
 
 use {
-    solana_sdk::{
-        program_pack::Pack,
-        signature::Keypair,
-        system_instruction,
-    },
-    spl_token::{
-        instruction,
-        state::Mint,
-    },
+    solana_sdk::{program_pack::Pack, signature::Keypair, system_instruction},
+    spl_token::{instruction, state::Mint},
 };
 
 #[tokio::test]
@@ -60,7 +54,11 @@ async fn redeem_rewards_success() {
         &[&context.payer, &mint],
         context.last_blockhash,
     );
-    context.banks_client.process_transaction(transaction).await.unwrap();
+    context
+        .banks_client
+        .process_transaction(transaction)
+        .await
+        .unwrap();
 
     let transaction = Transaction::new_signed_with_payer(
         &[
@@ -71,7 +69,11 @@ async fn redeem_rewards_success() {
         &[&context.payer],
         context.last_blockhash,
     );
-    context.banks_client.process_transaction(transaction).await.unwrap();
+    context
+        .banks_client
+        .process_transaction(transaction)
+        .await
+        .unwrap();
 
     let metadata = metadata::create(
         &mut context,
@@ -194,7 +196,7 @@ async fn redeem_rewards_success() {
         1,
     );
 
-    let sell_accounts = mpl_listing_rewards_sdk::SellAccounts {
+    let sell_accounts = SellAccounts {
         wallet: metadata_owner_address,
         listing,
         reward_center,
@@ -207,14 +209,14 @@ async fn redeem_rewards_success() {
         free_seller_trade_state,
     };
 
-    let sell_params = mpl_listing_rewards_sdk::SellData {
+    let sell_params = SellData {
         price: listing_rewards_test::ONE_SOL,
         token_size: 1,
         trade_state_bump,
         free_trade_state_bump,
     };
 
-    let sell_ix = mpl_listing_rewards_sdk::sell(sell_accounts, sell_params);
+    let sell_ix = sell(sell_accounts, sell_params);
 
     let tx = Transaction::new_signed_with_payer(
         &[

@@ -19,7 +19,6 @@ use mpl_listing_rewards::{
 use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
 
 use solana_program_test::*;
-use solana_sdk::signature::Keypair;
 use std::str::FromStr;
 
 use mpl_token_metadata::state::Collection;
@@ -149,7 +148,7 @@ async fn sell_success() {
     );
 
     let sell_accounts = SellAccounts {
-        wallet: *owner_pubkey,
+        wallet: metadata_owner.pubkey(),
         listing,
         reward_center,
         rewardable_collection,

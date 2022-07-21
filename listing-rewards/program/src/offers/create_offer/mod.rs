@@ -1,16 +1,52 @@
-use crate::{constants::REWARD_CENTER, reward_center::RewardCenter};
+use crate::{
+    assertions::assert_belongs_to_rewardable_collection,
+    constants::{OFFER, REWARDABLE_COLLECTION, REWARD_CENTER},
+    errors::ListingRewardsError,
+    reward_center::RewardCenter,
+    rewardable_collection::RewardableCollection,
+    MetadataAccount,
+};
 use anchor_lang::prelude::{Result, *};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
-    cpi::accounts::AuctioneerPublicBuy,
+    cpi::accounts::{AuctioneerDeposit, AuctioneerPublicBuy},
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
 
+#[account]
+pub struct Offer {
+    pub reward_center: Pubkey,
+    pub buyer: Pubkey,
+    pub metadata: Pubkey,
+    pub price: u64,
+    pub token_size: u64,
+    pub bump: u8,
+    pub created_at: i64,
+    pub canceled_at: Option<i64>,
+    pub purchased_at: Option<i64>,
+    pub rewardable_collection: Pubkey,
+}
+
+impl Offer {
+    pub fn size() -> usize {
+        8 + // deliminator
+        32 + // reward_center
+        32 + // buyer
+        32 + // metadata
+        8 + // price
+        8 + // token_size
+        1 + // bump
+        8 + // created_at
+        1 + 8 + // canceled_at
+        1 + 8 + // purchased_at
+        32 // rewardable_collection
+    }
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CreateOfferParams {
-    pub collection: Pubkey,
     pub trade_state_bump: u8,
     pub escrow_payment_bump: u8,
     pub buyer_price: u64,
@@ -20,7 +56,34 @@ pub struct CreateOfferParams {
 #[derive(Accounts, Clone)]
 #[instruction(create_offer_params: CreateOfferParams)]
 pub struct CreateOffer<'info> {
+    #[account(mut)]
     pub wallet: Signer<'info>,
+
+    /// The Offer config account used for bids
+    #[account(
+        init,
+        payer = wallet,
+        space = Offer::size(),
+        seeds = [
+            OFFER.as_bytes(),
+            wallet.key().as_ref(),
+            metadata.key().as_ref(),
+            rewardable_collection.key().as_ref()
+        ],  
+        bump
+    )]
+    pub offer: Account<'info, Offer>,
+
+    /// The collection eligable for rewards
+    #[account(
+        seeds = [
+            REWARDABLE_COLLECTION.as_bytes(),
+            reward_center.key().as_ref(),
+            metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
+        ],
+        bump = rewardable_collection.bump
+    )]
+    pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     /// CHECK: Validated in public_bid_logic.
     #[account(mut)]
@@ -33,8 +96,8 @@ pub struct CreateOffer<'info> {
 
     pub token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Validated in public_bid_logic.
-    pub metadata: UncheckedAccount<'info>,
+    /// Metaplex metadata account decorating SPL mint account.
+    pub metadata: Box<Account<'info, MetadataAccount>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(
@@ -50,6 +113,7 @@ pub struct CreateOffer<'info> {
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// CHECK: Verified with has_one constraint on auction house account.
+    /// Auction House authority account.
     pub authority: UncheckedAccount<'info>,
 
     /// CHECK: Verified in ah_auctioneer_pda seeds and in bid logic.
@@ -136,16 +200,56 @@ pub fn create_offer(
         ..
     }: CreateOfferParams,
 ) -> Result<()> {
+    let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
-
+    let rewardable_collection = &ctx.accounts.rewardable_collection;
+    let wallet = &ctx.accounts.wallet;
+    let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
+
+    assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
+
+    let offer = &mut ctx.accounts.offer;
+
+    offer.reward_center = reward_center.key();
+    offer.buyer = wallet.key();
+    offer.metadata = metadata.key();
+    offer.rewardable_collection = rewardable_collection.key();
+    offer.price = buyer_price;
+    offer.token_size = token_size;
+    offer.bump = *ctx
+        .bumps
+        .get(OFFER)
+        .ok_or(ListingRewardsError::BumpSeedNotInHashMap)?;
+    offer.created_at = clock.unix_timestamp;
+    offer.canceled_at = None;
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),
         auction_house_key.as_ref(),
         &[reward_center.bump],
     ]];
+
+    let deposit_accounts_ctx = CpiContext::new_with_signer(
+        ctx.accounts.auction_house_program.to_account_info(),
+        AuctioneerDeposit {
+            wallet: ctx.accounts.wallet.to_account_info(),
+            transfer_authority: ctx.accounts.transfer_authority.to_account_info(),
+            treasury_mint: ctx.accounts.treasury_mint.to_account_info(),
+            ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
+            auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
+            auction_house: ctx.accounts.auction_house.to_account_info(),
+            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
+            authority: ctx.accounts.authority.to_account_info(),
+            escrow_payment_account: ctx.accounts.escrow_payment_account.to_account_info(),
+            payment_account: ctx.accounts.payment_account.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+            system_program: ctx.accounts.system_program.to_account_info(),
+            rent: ctx.accounts.rent.to_account_info(),
+        },
+        reward_center_signer_seeds,
+    );
 
     let public_buy_accounts_ctx = CpiContext::new_with_signer(
         ctx.accounts.auction_house_program.to_account_info(),
@@ -170,14 +274,18 @@ pub fn create_offer(
         reward_center_signer_seeds,
     );
 
-    msg!("Hi there");
-
     mpl_auction_house::cpi::auctioneer_public_buy(
         public_buy_accounts_ctx,
         trade_state_bump,
         escrow_payment_bump,
         buyer_price,
         token_size,
+    )?;
+
+    mpl_auction_house::cpi::auctioneer_deposit(
+        deposit_accounts_ctx,
+        escrow_payment_bump,
+        buyer_price,
     )?;
 
     Ok(())
