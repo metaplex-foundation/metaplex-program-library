@@ -12,11 +12,7 @@ use anchor_lang::prelude::*;
 use core::ops::Deref;
 
 use crate::{
-    offers::create_offer::{create_offer as c_offer, *},
-    redeem_rewards::*,
-    reward_center::*,
-    rewardable_collection::*,
-    sell::*,
+    offers::create::*, redeem_rewards::*, reward_center::*, rewardable_collection::*, sell::*,
 };
 
 // TODO: Remove when added to Anchor https://github.com/coral-xyz/anchor/pull/2014
@@ -77,7 +73,7 @@ pub mod listing_rewards {
         ctx: Context<CreateOffer>,
         create_offer_params: CreateOfferParams,
     ) -> Result<()> {
-        c_offer(ctx, create_offer_params)
+        offers::create::handler(ctx, create_offer_params)
     }
 
     pub fn redeem_rewards(ctx: Context<RedemRewards>) -> Result<()> {

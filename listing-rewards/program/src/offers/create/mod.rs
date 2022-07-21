@@ -190,7 +190,7 @@ pub struct CreateOffer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn create_offer(
+pub fn handler(
     ctx: Context<CreateOffer>,
     CreateOfferParams {
         trade_state_bump,

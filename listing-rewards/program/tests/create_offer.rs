@@ -40,7 +40,7 @@ async fn create_offer_success() {
 
     let wallet = context.payer.pubkey();
     let mint = native_mint::id();
-    let collection = Pubkey::from_str(constants::TEST_COLLECTION).unwrap();
+    let collection = Pubkey::from_str(listing_rewards_test::TEST_COLLECTION).unwrap();
 
     let metadata = metadata::create(
         &mut context,
@@ -219,17 +219,6 @@ async fn create_offer_success() {
         .await
         .unwrap();
 
-    let buyer_wsol_token_account = get_associated_token_address(buyer_pubkey, &mint);
-
-    transfer_lamports(
-        &mut context,
-        &buyer,
-        &buyer_wsol_token_account,
-        listing_rewards_test::ONE_SOL + 500000000,
-    )
-    .await
-    .unwrap();
-
     let (buyer_trade_state, buyer_trade_state_bump) = find_public_bid_trade_state_address(
         buyer_pubkey,
         &auction_house,
@@ -272,8 +261,6 @@ async fn create_offer_success() {
     );
 
     let tx_response = context.banks_client.process_transaction(tx).await;
-
-    println!("{:?}", tx_response);
 
     assert!(tx_response.is_ok());
 

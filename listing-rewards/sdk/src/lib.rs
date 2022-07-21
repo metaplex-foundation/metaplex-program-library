@@ -6,7 +6,7 @@ use anchor_client::solana_sdk::{instruction::Instruction, pubkey::Pubkey, system
 use anchor_lang::{prelude::*, InstructionData};
 use args::{CreateOfferData, SellData};
 use mpl_listing_rewards::{
-    accounts as rewards_accounts, id, instruction, offers::create_offer::CreateOfferParams, pda,
+    accounts as rewards_accounts, id, instruction, offers::create::CreateOfferParams, pda,
     reward_center::CreateRewardCenterParams,
     rewardable_collection::CreateRewardableCollectionParams, sell::SellParams,
 };
