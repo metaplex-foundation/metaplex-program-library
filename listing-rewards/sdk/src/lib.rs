@@ -154,10 +154,11 @@ pub fn create_offer(
         transfer_authority,
         treasury_mint,
         wallet,
+        rewardable_collection,
+        offer,
     }: CreateOfferAccounts,
     CreateOfferData {
         buyer_price,
-        collection,
         token_size,
         trade_state_bump,
     }: CreateOfferData,
@@ -184,6 +185,8 @@ pub fn create_offer(
         treasury_mint,
         escrow_payment_account,
         wallet,
+        rewardable_collection,
+        offer,
         auction_house_program: mpl_auction_house::id(),
         token_program: spl_token::id(),
         system_program: system_program::id(),
@@ -194,7 +197,6 @@ pub fn create_offer(
     let data = instruction::CreateOffer {
         create_offer_params: CreateOfferParams {
             buyer_price,
-            collection,
             escrow_payment_bump,
             token_size,
             trade_state_bump,

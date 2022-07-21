@@ -15,7 +15,9 @@ pub struct SellAccounts {
 
 pub struct CreateOfferAccounts {
     pub wallet: Pubkey,
+    pub offer: Pubkey,
     pub payment_account: Pubkey,
+    pub rewardable_collection: Pubkey,
     pub transfer_authority: Pubkey,
     pub treasury_mint: Pubkey,
     pub token_account: Pubkey,
