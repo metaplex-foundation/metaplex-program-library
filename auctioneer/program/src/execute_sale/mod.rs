@@ -207,7 +207,7 @@ pub fn auctioneer_execute_sale<'info>(
             pair.0
         })
         .collect();
-    
+
     cpi_account_metas.append(&mut ctx.remaining_accounts.to_vec().to_account_metas(None));
 
     let ix = solana_program::instruction::Instruction {

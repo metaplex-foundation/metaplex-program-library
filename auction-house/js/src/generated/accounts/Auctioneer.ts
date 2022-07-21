@@ -17,7 +17,6 @@ import * as beet from '@metaplex-foundation/beet';
 export type AuctioneerArgs = {
   auctioneerAuthority: web3.PublicKey;
   auctionHouse: web3.PublicKey;
-  scopes: boolean[] /* size: 7 */;
   bump: number;
 };
 
@@ -33,7 +32,6 @@ export class Auctioneer implements AuctioneerArgs {
   private constructor(
     readonly auctioneerAuthority: web3.PublicKey,
     readonly auctionHouse: web3.PublicKey,
-    readonly scopes: boolean[] /* size: 7 */,
     readonly bump: number,
   ) {}
 
@@ -41,7 +39,7 @@ export class Auctioneer implements AuctioneerArgs {
    * Creates a {@link Auctioneer} instance from the provided args.
    */
   static fromArgs(args: AuctioneerArgs) {
-    return new Auctioneer(args.auctioneerAuthority, args.auctionHouse, args.scopes, args.bump);
+    return new Auctioneer(args.auctioneerAuthority, args.auctionHouse, args.bump);
   }
 
   /**
@@ -125,7 +123,6 @@ export class Auctioneer implements AuctioneerArgs {
     return {
       auctioneerAuthority: this.auctioneerAuthority.toBase58(),
       auctionHouse: this.auctionHouse.toBase58(),
-      scopes: this.scopes,
       bump: this.bump,
     };
   }
@@ -145,7 +142,6 @@ export const auctioneerBeet = new beet.BeetStruct<
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['auctioneerAuthority', beetSolana.publicKey],
     ['auctionHouse', beetSolana.publicKey],
-    ['scopes', beet.uniformFixedSizeArray(beet.bool, 7)],
     ['bump', beet.u8],
   ],
   Auctioneer.fromArgs,

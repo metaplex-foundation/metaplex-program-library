@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.3",
   "name": "auction_house",
   "instructions": [
     {
@@ -2340,6 +2340,15 @@
           {
             "name": "auctioneerAddress",
             "type": "publicKey"
+          },
+          {
+            "name": "scopes",
+            "type": {
+              "array": [
+                "bool",
+                7
+              ]
+            }
           }
         ]
       }
@@ -2356,15 +2365,6 @@
           {
             "name": "auctionHouse",
             "type": "publicKey"
-          },
-          {
-            "name": "scopes",
-            "type": {
-              "array": [
-                "bool",
-                7
-              ]
-            }
           },
           {
             "name": "bump",
@@ -2675,6 +2675,16 @@
     },
     {
       "code": 6041,
+      "name": "AuctionHouseAlreadyDelegated",
+      "msg": "Auction House already delegated."
+    },
+    {
+      "code": 6042,
+      "name": "AuctioneerAuthorityMismatch",
+      "msg": "Auctioneer Authority Mismatch"
+    },
+    {
+      "code": 6043,
       "name": "InsufficientFunds",
       "msg": "Insufficient funds in escrow account to purchase."
     }
