@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         TEST: [buy, cancel, create_auction_house, delegate, deposit, execute_sale, sell, update_auction_house, withdraw_from_fee, withdraw_from_treasury, withdraw]
-        SOLANA_VERSION: ${{fromJson(needs.setup.outputs.versions)}}
+        #SOLANA_VERSION: ${{fromJson(needs.setup.outputs.versions)}}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -50,6 +50,7 @@ jobs:
               - 'core/**'
             package:
               - 'auction-house/**'
+        run: echo ${{ needs.setup.outputs.versions }}
 
   build-and-test-auction-house:
     needs: changes
@@ -58,7 +59,8 @@ jobs:
     env:
       cache_id: program-auction-house
       TEST: ${{ matrix.TEST }}
-      SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
+      #SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
+      SOLANA_VERSION: 1.10.29
 
     steps:
       # Setup Deps
@@ -66,7 +68,7 @@ jobs:
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
         with:
-          solana_version: ${{ matrix.SOLANA_VERSION }}
+          solana_version: ${{ env.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
