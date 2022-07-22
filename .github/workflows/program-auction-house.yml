@@ -25,7 +25,7 @@ jobs:
           echo "${VERSIONS[@]}" && \
           VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s) && \
           echo $VERSION_JSON && \
-          echo '::set-output name=value::"$VERSION_JSON"'
+          echo '::set-output name=value::$MAINNET'
         shell: bash
       - id: debug
         run: |
