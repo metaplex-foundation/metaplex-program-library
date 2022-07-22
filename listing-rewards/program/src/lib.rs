@@ -7,6 +7,7 @@ pub mod redeem_rewards;
 pub mod reward_center;
 pub mod rewardable_collection;
 pub mod sell;
+pub mod state;
 
 use anchor_lang::prelude::*;
 use core::ops::Deref;

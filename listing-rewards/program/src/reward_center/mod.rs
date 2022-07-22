@@ -6,41 +6,11 @@ use anchor_spl::{
 
 use mpl_auction_house::{constants::PREFIX, AuctionHouse};
 
-use crate::{constants::REWARD_CENTER, errors::ListingRewardsError};
-
-#[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
-pub struct ListingRewardRules {
-    /// time a listing must be up before is eligable for a rewards in seconds
-    pub warmup_seconds: i64,
-    /// number of tokens to reward for listing
-    pub reward_payout: u64,
-}
-
-#[account]
-#[derive(Debug)]
-pub struct RewardCenter {
-    /// the mint of the token used as rewards
-    pub token_mint: Pubkey,
-    /// the auction house associated to the reward center
-    pub auction_house: Pubkey,
-    /// the oracle allowed to adjust rewardable collections
-    pub collection_oracle: Option<Pubkey>,
-    /// rules for listing rewards
-    pub listing_reward_rules: ListingRewardRules,
-    /// the bump of the pda
-    pub bump: u8,
-}
-
-impl RewardCenter {
-    pub fn size() -> usize {
-        8 + // deliminator
-        32 + // token_mint
-        32 + // auction_house
-        1 + 32 + // optional collection oracle
-        8 + 8 + // listing reward rules
-        1 // bump
-    }
-}
+use crate::{
+    constants::REWARD_CENTER,
+    errors::ListingRewardsError,
+    state::{ListingRewardRules, RewardCenter},
+};
 
 /// Options to set on the reward center
 #[derive(AnchorDeserialize, AnchorSerialize)]
