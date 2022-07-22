@@ -25,9 +25,11 @@ jobs:
           echo "${VERSIONS[@]}" && \
           VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s) && \
           echo $VERSION_JSON && \
-          echo '::set-output name=value::$VERSION_JSON' && \
-          echo "Result: ${{ steps.matrix.outputs.value }}"
+          echo '::set-output name=value::$VERSION_JSON'
         shell: bash
+      - id: debug
+        run: |
+          echo "Result: ${{ steps.matrix.outputs.value }}"
 
   changes:
     needs: setup
