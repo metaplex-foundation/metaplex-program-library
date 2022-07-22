@@ -18,11 +18,13 @@ jobs:
     steps:
       - id: matrix
         run: |
-          sudo apt-get install -y jq \
-          MAINNET=$(curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') \
-          TESTNET=$(curl https://api.testnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') \
-          VERSIONS=($MAINNET $TESTNET) \
-          VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s) \
+          sudo apt-get install -y jq && \
+          MAINNET=$(curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
+          TESTNET=$(curl https://api.testnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
+          VERSIONS=($MAINNET $TESTNET) && \
+          echo "${VERSIONS[@]}" && \
+          VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s) && \
+          echo $VERSION_JSON && \
           echo '::set-output name=value::${VERSION_JSON}'
         shell: bash
 
