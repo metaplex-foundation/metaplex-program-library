@@ -24,6 +24,7 @@ jobs:
           VERSIONS=($MAINNET $TESTNET)
           VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s)
           echo '::set-output name=value::${VERSION_JSON}'
+        shell: bash
 
   changes:
     needs: setup
