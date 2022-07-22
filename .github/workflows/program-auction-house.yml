@@ -38,7 +38,7 @@ jobs:
     strategy:
       matrix:
         TEST: [buy, cancel, create_auction_house, delegate, deposit, execute_sale, sell, update_auction_house, withdraw_from_fee, withdraw_from_treasury, withdraw]
-        #SOLANA_VERSION: ${{fromJson(needs.setup.outputs.versions)}}
+        SOLANA_VERSION: ${{fromJson(needs.setup.outputs.versions)}}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
