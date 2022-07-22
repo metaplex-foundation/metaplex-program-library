@@ -23,7 +23,7 @@ jobs:
           TESTNET=$(curl https://api.testnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') \
           VERSIONS=($MAINNET $TESTNET)
           VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s)
-          echo '::set-output name=value::$(VERSION_JSON)'
+          echo '::set-output name=value::${{ VERSION_JSON }}'
 
   changes:
     needs: setup
