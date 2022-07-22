@@ -39,7 +39,7 @@ jobs:
     steps:
       - id: matrix
         run: |
-          echo '::set-output name=value::[1.10.31, 1.11.4]'
+          echo '::set-output name=value::[\"1.10.31\", \"1.11.4\"]'
 
   build-and-test-auction-house:
     needs: [changes, setup]
