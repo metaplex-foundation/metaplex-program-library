@@ -50,6 +50,9 @@ jobs:
               - 'core/**'
             package:
               - 'auction-house/**'
+      - name: debug
+        id: debug
+        working-directory: ./auction-house/program
         run: echo ${{ needs.setup.outputs.versions }}
 
   build-and-test-auction-house:
