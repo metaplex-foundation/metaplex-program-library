@@ -11,7 +11,17 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.matrix.outputs.value }}
+    steps:
+      - id: matrix
+        run: |
+          echo '::set-output name=value::[\"1.10.31\", \"1.11.4\"]'
+
   changes:
+    needs: setup
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -20,6 +30,7 @@ jobs:
     strategy:
       matrix:
         TEST: [buy, cancel, create_auction_house, delegate, deposit, execute_sale, sell, update_auction_house, withdraw_from_fee, withdraw_from_treasury, withdraw]
+        SOLANA_VERSION: ${{fromJson(needs.setup.outputs.versions)}}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -32,23 +43,14 @@ jobs:
             package:
               - 'auction-house/**'
 
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      versions: ${{ steps.matrix.outputs.value }}
-    steps:
-      - id: matrix
-        run: |
-          echo '::set-output name=value::[\"1.10.31\", \"1.11.4\"]'
-
   build-and-test-auction-house:
-    needs: [changes, setup]
+    needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction-house
       TEST: ${{ matrix.TEST }}
-      SOLANA_VERSION: ${{fromJson(needs.setup.outputs.versions)}}
+      SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
 
     steps:
       # Setup Deps
