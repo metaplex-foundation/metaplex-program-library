@@ -8,8 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION_STABLE: 1.9.22
-  SOLANA_VERSION_UNSTABLE: 1.10.5
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -19,6 +17,10 @@ jobs:
     outputs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
+    strategy:
+      matrix:
+        SOLANA_VERSION: [1.10.31, 1.11.4]
+        TEST: [buy, cancel, create_auction_house, delegate, deposit, execute_sale, sell, update_auction_house, withdraw_from_fee, withdraw_from_treasury, withdraw]
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -31,12 +33,13 @@ jobs:
             package:
               - 'auction-house/**'
 
-  build-and-test-auction-house-stable:
+  build-and-test-auction-house:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
-      cache_id: program-auction-house-stable
+      cache_id: program-auction-house
+      TEST: ${{ matrix.TEST }}
 
     steps:
       # Setup Deps
@@ -44,7 +47,7 @@ jobs:
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
         with:
-          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
+          solana_version: ${{ matrix.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
@@ -86,61 +89,4 @@ jobs:
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
-
-  build-and-test-auction-house-unstable:
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
-    runs-on: ubuntu-latest
-    env:
-      cache_id: program-auction-house-unstable
-
-    steps:
-      # Setup Deps
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/install-linux-build-deps
-      - uses: ./.github/actions/install-solana
-        with:
-          solana_version: ${{ env.SOLANA_VERSION_UNSTABLE }}
-      - uses: ./.github/actions/install-rust
-        with:
-          toolchain: ${{ env.RUST_TOOLCHAIN }}
-
-      # Restore Cache from previous build/test
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./rust/target
-          key:
-            ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{
-            env.RUSTC_HASH }}
-
-      # Run lint checks
-      - uses: ./.github/actions/verify-rust
-        with:
-          working-directory: ./auction-house/program
-
-      # Build deps
-      - uses: ./.github/actions/build-token-metadata
-
-      # Run test
-      - name: test-auction-house-program
-        id: run_auction_house_test
-        working-directory: ./auction-house/program
-        run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
-      
-      # Verify we didn't break Auctioneer compatibility
-      - name: test-auctioneer-program
-        id: run_auctioneer_test
-        working-directory: ./auctioneer/program
-        run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ --test ${{ env.TEST }} -- --nocapture --test-threads 1
