@@ -19,7 +19,6 @@ jobs:
       package: ${{ steps.filter.outputs.package }}
     strategy:
       matrix:
-        SOLANA_VERSION: [1.10.31, 1.11.4]
         TEST: [buy, cancel, create_auction_house, delegate, deposit, execute_sale, sell, update_auction_house, withdraw_from_fee, withdraw_from_treasury, withdraw]
     steps:
       - uses: actions/checkout@v2
@@ -33,13 +32,23 @@ jobs:
             package:
               - 'auction-house/**'
 
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.matrix.outputs.value }}
+    steps:
+      - id: matrix
+        run: |
+          echo '::set-output name=value::[1.10.31, 1.11.4]'
+
   build-and-test-auction-house:
-    needs: changes
+    needs: [changes, setup]
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     env:
       cache_id: program-auction-house
       TEST: ${{ matrix.TEST }}
+      SOLANA_VERSION: ${{fromJson(needs.setup.outputs.versions)}}
 
     steps:
       # Setup Deps
