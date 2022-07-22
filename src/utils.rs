@@ -128,3 +128,13 @@ pub fn get_dialoguer_theme() -> ColorfulTheme {
         ..Default::default()
     }
 }
+
+pub fn assert_correct_authority(user_keypair: &Pubkey, update_authority: &Pubkey) -> Result<()> {
+    if user_keypair != update_authority {
+        return Err(anyhow!(
+            "Update authority does not match that of the candy machine."
+        ));
+    }
+
+    Ok(())
+}
