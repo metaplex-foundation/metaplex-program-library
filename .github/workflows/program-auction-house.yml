@@ -36,7 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - id: matrix
-        working-directory: ./auction-house/program
         run: |
           sudo apt-get install -y jq
           ls
