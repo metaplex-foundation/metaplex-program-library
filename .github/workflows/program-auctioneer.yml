@@ -1,6 +1,7 @@
 name: Program Auctioneer
 
 on:
+  workflow_dispatch:
   push:
     branches: [master]
   pull_request:
@@ -39,7 +40,7 @@ jobs:
         run: |
           sudo apt-get install -y jq
           FILES=()
-          for FILE in $(ls ./auction-house/program/tests/ | grep rs)
+          for FILE in $(ls ./auctioneer/program/tests/ | grep rs)
           do
             echo $FILE
             FILES+=(\"$(basename $FILE .rs)\")
@@ -113,6 +114,7 @@ jobs:
 
       # Build deps
       - uses: ./.github/actions/build-token-metadata
+
        # Run test
       - name: test-auctioneer-program
         id: run_test
