@@ -38,8 +38,9 @@ jobs:
         working-directory: ./
         run: |
           sudo apt-get install -y jq
+          ls
           FILES=()
-          for FILE in $(ls auction-house/program/tests/ | grep rs)
+          for FILE in $(ls ./auction-house/program/tests/ | grep rs)
           do
             echo $FILE
             FILES+=(\"$(basename $FILE .rs)\")
