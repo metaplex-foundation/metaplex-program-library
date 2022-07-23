@@ -1,13 +1,11 @@
 name: Program Auction House
 
 on:
+  workflow_dispatch:
   push:
     branches: [master]
   pull_request:
     branches: [master]
-  workflow_dispatch:
-    inputs:
-      branches: [master]
 
 env:
   CARGO_TERM_COLOR: always
