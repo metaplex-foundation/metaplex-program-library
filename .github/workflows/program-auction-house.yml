@@ -35,7 +35,8 @@ jobs:
       tests: ${{ steps.matrix.outputs.value }}
     steps:
       - id: matrix
-        working-directory: ./
+      - uses: actions/checkout@v2
+        working-directory: ./auction-house/program
         run: |
           sudo apt-get install -y jq
           ls
