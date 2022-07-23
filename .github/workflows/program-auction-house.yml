@@ -37,12 +37,16 @@ jobs:
       - id: matrix
         working-directory: ./
         run: |
-          sudo apt-get install -y jq && \
-          FILES=() && \
-          for FILE in auction-house/program/tests/*.rs; do FILES+=(\"$(basename $FILE .rs)\"); done && \
-          echo "${FILES[@]}" && \
-          FILE_JSON=$(echo "${FILES[@]}" | jq -s -c) && \
-          echo $FILE_JSON && \
+          sudo apt-get install -y jq \
+          FILES=() \
+          for FILE in auction-house/program/tests/*.rs
+          do
+            echo $FILE
+            FILES+=(\"$(basename $FILE .rs)\")
+          done \
+          echo "${FILES[@]}" \
+          FILE_JSON=$(echo "${FILES[@]}" | jq -s -c) \
+          echo $FILE_JSON \
           echo "::set-output name=value::$FILE_JSON"
         shell: bash
 
