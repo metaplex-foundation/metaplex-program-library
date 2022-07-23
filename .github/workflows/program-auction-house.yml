@@ -38,7 +38,6 @@ jobs:
       - id: matrix
         run: |
           sudo apt-get install -y jq
-          ls
           FILES=()
           for FILE in $(ls ./auction-house/program/tests/ | grep rs)
           do
@@ -52,16 +51,11 @@ jobs:
         shell: bash
 
   changes:
-    needs: [setup-versions, setup-tests]
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
-    strategy:
-      matrix:
-        TEST: ${{fromJson(needs.setup-tests.outputs.tests)}}
-        SOLANA_VERSION: ${{fromJson(needs.setup-versions.outputs.versions)}}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -73,20 +67,19 @@ jobs:
               - 'core/**'
             package:
               - 'auction-house/**'
-      - name: debug
-        id: debug
-        working-directory: ./auction-house/program
-        run: echo ${{ needs.setup-versions.outputs.versions }}
 
   build-and-test-auction-house:
-    needs: changes
+    needs: [changes, setup-versions, setup-tests]
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        TEST: ${{fromJson(needs.setup-tests.outputs.tests)}}
+        SOLANA_VERSION: ${{fromJson(needs.setup-versions.outputs.versions)}}
     env:
       cache_id: program-auction-house
       TEST: ${{ matrix.TEST }}
       SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
-      #SOLANA_VERSION: 1.10.29
 
     steps:
       # Setup Deps
