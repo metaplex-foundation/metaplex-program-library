@@ -39,7 +39,7 @@ jobs:
         run: |
           sudo apt-get install -y jq
           FILES=()
-          for FILE in auction-house/program/tests/*.rs
+          for FILE in auction-house/program/tests/\*.rs
           do
             echo $FILE
             FILES+=(\"$(basename $FILE .rs)\")
