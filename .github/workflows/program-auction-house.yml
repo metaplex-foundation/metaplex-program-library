@@ -48,7 +48,6 @@ jobs:
           FILE_JSON=$(echo "${FILES[@]}" | jq -s -c)
           echo $FILE_JSON
           echo "::set-output name=value::$FILE_JSON"
-        shell: bash
 
   changes:
     needs: [setup-versions, setup-tests]
