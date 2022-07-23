@@ -11,7 +11,7 @@ env:
   RUST_TOOLCHAIN: stable
 
 jobs:
-  setup:
+  setup-versions:
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.matrix.outputs.value }}
@@ -21,18 +21,33 @@ jobs:
           sudo apt-get install -y jq && \
           MAINNET=$(curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
           TESTNET=$(curl https://api.testnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
-          VERSIONS=($MAINNET $TESTNET) && \
+          DEVNET=$(curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
+          VERSIONS=($MAINNET $TESTNET $DEVNET) && \
           echo "${VERSIONS[@]}" && \
           VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s -c) && \
           echo $VERSION_JSON && \
           echo "::set-output name=value::$VERSION_JSON"
         shell: bash
-      - id: debug
-        run: |
-          echo "Result: ${{ steps.matrix.outputs.value }}"
+  
+  setup-tests:
+  runs-on: ubuntu-latest
+  outputs:
+    tests: ${{ steps.,matrix.outputs.value }}
+  steps:
+    - id: matrix
+      working-directory: ./
+      run: |
+        sudo apt-get install -y jq && \
+        FILES=()
+        for FILE in auction-house/program/tests/*.rs; do FILES+=($(basename $FILE .rs)); done
+        echo "${FILES[@]}" && \
+        FILE_JSON=$(echo "${VERSIONS[@]}" | jq -s -c) && \
+        echo $FILE_JSON && \
+        echo "::set-output name=value::$FILE_JSON"
+      shell: bash
 
   changes:
-    needs: setup
+    needs: [setup-versions, setup-tests]
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
@@ -40,8 +55,8 @@ jobs:
       package: ${{ steps.filter.outputs.package }}
     strategy:
       matrix:
-        TEST: [buy, cancel, create_auction_house, delegate, deposit, execute_sale, sell, update_auction_house, withdraw_from_fee, withdraw_from_treasury, withdraw]
-        SOLANA_VERSION: ${{fromJson(needs.setup.outputs.versions)}}
+        TEST: ${{fromJson(needs.setup-tests.outputs.tests)}}
+        SOLANA_VERSION: ${{fromJson(needs.setup-versions.outputs.versions)}}
     steps:
       - uses: actions/checkout@v2
       # For pull requests it's not necessary to checkout the code
@@ -56,7 +71,7 @@ jobs:
       - name: debug
         id: debug
         working-directory: ./auction-house/program
-        run: echo ${{ needs.setup.outputs.versions }}
+        run: echo ${{ needs.setup-versions.outputs.versions }}
 
   build-and-test-auction-house:
     needs: changes
@@ -65,8 +80,8 @@ jobs:
     env:
       cache_id: program-auction-house
       TEST: ${{ matrix.TEST }}
-      #SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
-      SOLANA_VERSION: 1.10.29
+      SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
+      #SOLANA_VERSION: 1.10.29
 
     steps:
       # Setup Deps
