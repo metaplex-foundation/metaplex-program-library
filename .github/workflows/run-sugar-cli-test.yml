@@ -1,0 +1,48 @@
+name: Run Sugar CLI Test
+
+on:
+  workflow_dispatch:
+
+env:
+  SOLANA_VERSION: 1.9.22
+  RUST_TOOLCHAIN: stable
+
+jobs:
+  run-sugar-cli-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-solana
+        with:
+          solana_version: ${{ env.SOLANA_VERSION }}
+      - uses: ./.github/actions/install-rust
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - run: solana-keygen new -o $GITHUB_WORKSPACE/kp --no-bip39-passphrase
+        shell: bash
+
+      - run: solana config set --url https://api.devnet.solana.com --keypair $GITHUB_WORKSPACE/kp
+        shell: bash
+
+      # note: must specify config before this command, or directly specify network. otherwise, airdrop might fail.
+      - run: solana airdrop 1 $(solana address -k $GITHUB_WORKSPACE/kp)
+        shell: bash
+
+      - run: solana balance $(solana address -k $GITHUB_WORKSPACE/kp)
+        shell: bash
+
+      # install the publicly available binary for the lifetime of the workflow
+      - name: Install Stable Sugar
+        run: bash <(curl -sSf https://sugar.metaplex.com/install.sh)
+        shell: bash
+
+      # we need to actually reference the test script to run it, so we'll clone the repo and launch the script from there
+      - name: Pull in test script from Sugar repository (outside of MPL)
+        shell: bash
+        run: cd .. && git clone https://github.com/metaplex-foundation/sugar.git && cd sugar
+
+      - name: Run test script from sugar directory
+        shell: bash
+        run: cd ../sugar && echo | ./script/sugar-cli-test.sh
