@@ -30,21 +30,21 @@ jobs:
         shell: bash
   
   setup-tests:
-  runs-on: ubuntu-latest
-  outputs:
-    tests: ${{ steps.,matrix.outputs.value }}
-  steps:
-    - id: matrix
-      working-directory: ./
-      run: |
-        sudo apt-get install -y jq && \
-        FILES=()
-        for FILE in auction-house/program/tests/*.rs; do FILES+=($(basename $FILE .rs)); done
-        echo "${FILES[@]}" && \
-        FILE_JSON=$(echo "${VERSIONS[@]}" | jq -s -c) && \
-        echo $FILE_JSON && \
-        echo "::set-output name=value::$FILE_JSON"
-      shell: bash
+    runs-on: ubuntu-latest
+    outputs:
+      tests: ${{ steps.,matrix.outputs.value }}
+    steps:
+      - id: matrix
+        working-directory: ./
+        run: |
+          sudo apt-get install -y jq && \
+          FILES=()
+          for FILE in auction-house/program/tests/*.rs; do FILES+=($(basename $FILE .rs)); done
+          echo "${FILES[@]}" && \
+          FILE_JSON=$(echo "${VERSIONS[@]}" | jq -s -c) && \
+          echo $FILE_JSON && \
+          echo "::set-output name=value::$FILE_JSON"
+        shell: bash
 
   changes:
     needs: [setup-versions, setup-tests]
