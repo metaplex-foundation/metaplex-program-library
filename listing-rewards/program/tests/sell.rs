@@ -16,6 +16,8 @@ use mpl_listing_rewards::{
     reward_center,
 };
 
+use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
+
 use solana_program_test::*;
 use std::str::FromStr;
 
@@ -31,7 +33,7 @@ async fn sell_success() {
 
     let wallet = context.payer.pubkey();
     let mint = native_mint::id();
-    let collection = Pubkey::from_str("Cehzo7ugAvuYcTst9HF24ackLxnrpDkzHFajj17FuyUR").unwrap();
+    let collection = Pubkey::from_str(listing_rewards_test::TEST_COLLECTION).unwrap();
 
     let metadata = metadata::create(
         &mut context,
@@ -49,7 +51,8 @@ async fn sell_success() {
             uses: None,
         },
         None,
-    ).await;
+    )
+    .await;
 
     let metadata_owner = metadata.token;
     let metadata_address = metadata.pubkey;
@@ -93,19 +96,11 @@ async fn sell_success() {
         create_auction_house_data,
     );
 
-    let create_reward_center_ix = mpl_listing_rewards_sdk::create_reward_center(
-        wallet,
-        mint,
-        auction_house,
-        reward_center_params,
-    );
+    let create_reward_center_ix =
+        create_reward_center(wallet, mint, auction_house, reward_center_params);
 
-    let create_rewardable_collection_ix = mpl_listing_rewards_sdk::create_rewardable_collection(
-        wallet,
-        auction_house,
-        reward_center,
-        collection,
-    );
+    let create_rewardable_collection_ix =
+        create_rewardable_collection(wallet, auction_house, reward_center, collection);
 
     let delegate_auctioneer_accounts = mpl_auction_house_sdk::DelegateAuctioneerAccounts {
         auction_house,
@@ -130,7 +125,8 @@ async fn sell_success() {
         delegate_auctioneer_data,
     );
 
-    let token_account = get_associated_token_address(&metadata_owner_address, &metadata_mint_address);
+    let token_account =
+        get_associated_token_address(&metadata_owner_address, &metadata_mint_address);
 
     let (seller_trade_state, trade_state_bump) = find_auctioneer_trade_state_address(
         &metadata_owner_address,
@@ -151,8 +147,8 @@ async fn sell_success() {
         1,
     );
 
-    let sell_accounts = mpl_listing_rewards_sdk::SellAccounts {
-        wallet: metadata_owner_address,
+    let sell_accounts = SellAccounts {
+        wallet: metadata_owner.pubkey(),
         listing,
         reward_center,
         rewardable_collection,
@@ -164,14 +160,14 @@ async fn sell_success() {
         free_seller_trade_state,
     };
 
-    let sell_params = mpl_listing_rewards_sdk::SellData {
+    let sell_params = SellData {
         price: listing_rewards_test::ONE_SOL,
         token_size: 1,
         trade_state_bump,
         free_trade_state_bump,
     };
 
-    let sell_ix = mpl_listing_rewards_sdk::sell(sell_accounts, sell_params);
+    let sell_ix = sell(sell_accounts, sell_params);
 
     let tx = Transaction::new_signed_with_payer(
         &[

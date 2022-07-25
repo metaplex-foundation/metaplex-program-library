@@ -1,7 +1,10 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
-use anchor_spl::{token::{Mint, TokenAccount, Token}, associated_token::AssociatedToken};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
+};
 
-use mpl_auction_house::{AuctionHouse, constants::PREFIX};
+use mpl_auction_house::{constants::PREFIX, AuctionHouse};
 
 use crate::{constants::REWARD_CENTER, errors::ListingRewardsError};
 
@@ -61,7 +64,7 @@ pub struct CreateRewardCenter<'info> {
 
     /// the mint of the token to use as rewards.
     pub mint: Account<'info, Mint>,
-    
+
     #[account(
         init,
         payer = wallet,

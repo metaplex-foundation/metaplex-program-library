@@ -7,73 +7,40 @@ use listing_rewards_test::fixtures::metadata;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use mpl_auction_house::{
     pda::{
-        find_auction_house_address, find_auctioneer_trade_state_address, find_trade_state_address,
+        find_auction_house_address, find_auctioneer_trade_state_address,
+        find_public_bid_trade_state_address, find_trade_state_address,
     },
     AuthorityScope,
 };
 use mpl_listing_rewards::{
-    pda::{find_listing_address, find_reward_center_address, find_rewardable_collection_address},
+    constants,
+    pda::{
+        find_listing_address, find_offer_address, find_reward_center_address,
+        find_rewardable_collection_address,
+    },
     reward_center,
 };
 
+use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
+
+use mpl_testing_utils::solana::{airdrop, transfer_lamports};
 use solana_program_test::*;
+use solana_sdk::signature::Keypair;
 use std::str::FromStr;
 
-use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
 use mpl_token_metadata::state::Collection;
 
 use spl_associated_token_account::get_associated_token_address;
-
-use {
-    solana_sdk::{program_pack::Pack, signature::Keypair, system_instruction},
-    spl_token::{instruction, state::Mint},
-};
+use spl_token::native_mint;
 
 #[tokio::test]
-async fn redeem_rewards_success() {
+async fn create_offer_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
 
     let wallet = context.payer.pubkey();
-    let mint = Keypair::new();
-    let collection = Pubkey::from_str("Cehzo7ugAvuYcTst9HF24ackLxnrpDkzHFajj17FuyUR").unwrap();
-
-    let decimals = 9;
-
-    let rent = context.banks_client.get_rent().await.unwrap();
-    let mint_rent = rent.minimum_balance(Mint::LEN);
-    let transaction = Transaction::new_signed_with_payer(
-        &[system_instruction::create_account(
-            &wallet,
-            &mint.pubkey(),
-            mint_rent,
-            Mint::LEN as u64,
-            &spl_token::id(),
-        )],
-        Some(&wallet),
-        &[&context.payer, &mint],
-        context.last_blockhash,
-    );
-    context
-        .banks_client
-        .process_transaction(transaction)
-        .await
-        .unwrap();
-
-    let transaction = Transaction::new_signed_with_payer(
-        &[
-            instruction::initialize_mint(&spl_token::id(), &mint.pubkey(), &wallet, None, decimals)
-                .unwrap(),
-        ],
-        Some(&wallet),
-        &[&context.payer],
-        context.last_blockhash,
-    );
-    context
-        .banks_client
-        .process_transaction(transaction)
-        .await
-        .unwrap();
+    let mint = native_mint::id();
+    let collection = Pubkey::from_str(listing_rewards_test::TEST_COLLECTION).unwrap();
 
     let metadata = metadata::create(
         &mut context,
@@ -99,7 +66,7 @@ async fn redeem_rewards_success() {
     let metadata_owner_address = metadata_owner.pubkey();
     let metadata_mint_address = metadata.mint.pubkey();
 
-    let (auction_house, _) = find_auction_house_address(&wallet, &mint.pubkey());
+    let (auction_house, _) = find_auction_house_address(&wallet, &mint);
     let (reward_center, _) = find_reward_center_address(&auction_house);
     let (rewardable_collection, _) =
         find_rewardable_collection_address(&reward_center, &collection);
@@ -108,7 +75,6 @@ async fn redeem_rewards_success() {
         &metadata_address,
         &rewardable_collection,
     );
-    let treasury_withdraw_desintiation = get_associated_token_address(&wallet, &mint.pubkey());
 
     let reward_center_params = reward_center::CreateRewardCenterParams {
         collection_oracle: None,
@@ -119,11 +85,11 @@ async fn redeem_rewards_success() {
     };
 
     let create_auction_house_accounts = mpl_auction_house_sdk::CreateAuctionHouseAccounts {
-        treasury_mint: mint.pubkey(),
+        treasury_mint: mint,
         payer: wallet,
         authority: wallet,
         fee_withdrawal_destination: wallet,
-        treasury_withdrawal_destination: treasury_withdraw_desintiation,
+        treasury_withdrawal_destination: wallet,
         treasury_withdrawal_destination_owner: wallet,
     };
     let create_auction_house_data = mpl_auction_house_sdk::CreateAuctionHouseData {
@@ -139,7 +105,7 @@ async fn redeem_rewards_success() {
 
     let create_reward_center_ix = mpl_listing_rewards_sdk::create_reward_center(
         wallet,
-        mint.pubkey(),
+        mint,
         auction_house,
         reward_center_params,
     );
@@ -181,7 +147,7 @@ async fn redeem_rewards_success() {
         &metadata_owner_address,
         &auction_house,
         &token_account,
-        &mint.pubkey(),
+        &mint,
         &metadata_mint_address,
         1,
     );
@@ -190,7 +156,7 @@ async fn redeem_rewards_success() {
         &metadata_owner_address,
         &auction_house,
         &token_account,
-        &mint.pubkey(),
+        &mint,
         &metadata_mint_address,
         0,
         1,
@@ -238,6 +204,59 @@ async fn redeem_rewards_success() {
         &[sell_ix],
         Some(&metadata_owner_address),
         &[&metadata_owner],
+        context.last_blockhash,
+    );
+
+    let tx_response = context.banks_client.process_transaction(tx).await;
+
+    assert!(tx_response.is_ok());
+
+    // CREATE OFFER TEST
+
+    let buyer = Keypair::new();
+    let buyer_pubkey = &buyer.pubkey();
+    airdrop(&mut context, buyer_pubkey, listing_rewards_test::TEN_SOL)
+        .await
+        .unwrap();
+
+    let (buyer_trade_state, buyer_trade_state_bump) = find_public_bid_trade_state_address(
+        buyer_pubkey,
+        &auction_house,
+        &mint,
+        &metadata_mint_address,
+        listing_rewards_test::ONE_SOL,
+        1,
+    );
+
+    let (offer, _) = find_offer_address(buyer_pubkey, &metadata_address, &rewardable_collection);
+
+    let create_offer_accounts = CreateOfferAccounts {
+        wallet: *buyer_pubkey,
+        rewardable_collection,
+        offer,
+        transfer_authority: *buyer_pubkey,
+        payment_account: *buyer_pubkey,
+        treasury_mint: mint,
+        auction_house,
+        reward_center,
+        token_account,
+        metadata: metadata_address,
+        authority: wallet,
+        buyer_trade_state,
+    };
+
+    let create_offer_params = CreateOfferData {
+        token_size: 1,
+        buyer_price: listing_rewards_test::ONE_SOL,
+        trade_state_bump: buyer_trade_state_bump,
+    };
+
+    let create_offer_ix = create_offer(create_offer_accounts, create_offer_params);
+
+    let tx = Transaction::new_signed_with_payer(
+        &[create_offer_ix],
+        Some(buyer_pubkey),
+        &[&buyer],
         context.last_blockhash,
     );
 

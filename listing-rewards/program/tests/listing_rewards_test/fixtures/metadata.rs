@@ -1,11 +1,7 @@
 use mpl_testing_utils::{solana::airdrop, utils::Metadata};
-use mpl_token_metadata::{
-    state::{Collection, Creator, Uses},
-};
+use mpl_token_metadata::state::{Collection, Creator, Uses};
 use solana_program_test::ProgramTestContext;
-use solana_sdk::{
-    signature::Signer,
-};
+use solana_sdk::signature::Signer;
 
 use crate::listing_rewards_test::TEN_SOL;
 
@@ -38,9 +34,9 @@ pub async fn create<'a>(
     let test_metadata = Metadata::new();
     let owner_pubkey = &test_metadata.token.pubkey();
     let airdrop_amount = airdrop_amount.unwrap_or(TEN_SOL);
-    
+
     airdrop(context, owner_pubkey, airdrop_amount)
-        .await  
+        .await
         .unwrap();
 
     test_metadata

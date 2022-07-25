@@ -2,18 +2,18 @@ use anchor_lang::{context::Context, prelude::*, AnchorDeserialize};
 use anchor_spl::token::{Token, TokenAccount};
 
 use crate::{
-    MetadataAccount,
+    assertions::assert_belongs_to_rewardable_collection,
     constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
     errors::ListingRewardsError,
     reward_center::RewardCenter,
     rewardable_collection::RewardableCollection,
-    assertions::assert_belongs_to_rewardable_collection
+    MetadataAccount,
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
-    AuctionHouse,
     cpi::accounts::AuctioneerSell,
     program::AuctionHouse as AuctionHouseProgram,
+    AuctionHouse,
 };
 
 #[account]
@@ -42,7 +42,7 @@ impl Listing {
         1 + // bump
         8 + // created_at
         1 + 8 + // canceled_at
-        1 + 8 + // canceled_at
+        1 + 8 + // purchased_at
         32 + // rewardable_collection
         1 + 8 // reward_redeemed_at
     }
@@ -186,7 +186,6 @@ pub fn sell(
     listing.created_at = clock.unix_timestamp;
     listing.canceled_at = None;
     listing.reward_redeemed_at = None;
-
 
     let seeds = &[
         REWARD_CENTER.as_bytes(),

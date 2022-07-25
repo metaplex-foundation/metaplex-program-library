@@ -1,16 +1,19 @@
 pub mod assertions;
 pub mod constants;
 pub mod errors;
+pub mod offers;
 pub mod pda;
+pub mod redeem_rewards;
 pub mod reward_center;
 pub mod rewardable_collection;
 pub mod sell;
-pub mod redeem_rewards;
 
 use anchor_lang::prelude::*;
 use core::ops::Deref;
 
-use crate::{reward_center::*, rewardable_collection::*, sell::*, redeem_rewards::*};
+use crate::{
+    offers::create::*, redeem_rewards::*, reward_center::*, rewardable_collection::*, sell::*,
+};
 
 // TODO: Remove when added to Anchor https://github.com/coral-xyz/anchor/pull/2014
 #[derive(Clone, Debug, PartialEq)]
@@ -64,6 +67,13 @@ pub mod listing_rewards {
 
     pub fn sell(ctx: Context<Sell>, sell_params: SellParams) -> Result<()> {
         sell::sell(ctx, sell_params)
+    }
+
+    pub fn create_offer(
+        ctx: Context<CreateOffer>,
+        create_offer_params: CreateOfferParams,
+    ) -> Result<()> {
+        offers::create::handler(ctx, create_offer_params)
     }
 
     pub fn redeem_rewards(ctx: Context<RedemRewards>) -> Result<()> {

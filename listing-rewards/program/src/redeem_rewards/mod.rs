@@ -1,14 +1,17 @@
 use anchor_lang::{context::Context, prelude::*};
-use anchor_spl::{token::{Token, TokenAccount, Mint}, associated_token::AssociatedToken};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
+};
 
 use crate::{
-    MetadataAccount,
+    assertions::assert_listing_reward_redemption_eligibility,
     constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
-    rewardable_collection::RewardableCollection,
-    reward_center::RewardCenter,
-    sell::Listing,
     errors::ListingRewardsError,
-    assertions::assert_listing_reward_redemption_eligibility
+    reward_center::RewardCenter,
+    rewardable_collection::RewardableCollection,
+    sell::Listing,
+    MetadataAccount,
 };
 
 /// Accounts for the [`redeem_rewards` handler](listing_rewards/fn.redeem_rewards.html).
@@ -75,6 +78,5 @@ pub fn redeem_rewards(ctx: Context<RedemRewards>) -> Result<()> {
 
     assert_listing_reward_redemption_eligibility(listing, reward_center)?;
 
-        
     Ok(())
 }
