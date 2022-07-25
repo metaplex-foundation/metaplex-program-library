@@ -42,4 +42,4 @@ solana-sdk = "~1.9.28"
 env_logger="~0.9.0"
 
 [profile.release]
-overflow-checks = true     # Disable integer overflow checks.
+overflow-checks = true     # Enable integer overflow checks.
