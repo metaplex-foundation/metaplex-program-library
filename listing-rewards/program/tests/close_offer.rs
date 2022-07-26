@@ -277,8 +277,6 @@ async fn close_offer_success() {
 
     let tx_response = context.banks_client.process_transaction(tx).await;
 
-    println!("{:?}", tx_response);
-
     assert!(tx_response.is_ok());
 
     ()
