@@ -220,9 +220,9 @@ pub struct AuctioneerSell<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
@@ -244,7 +244,7 @@ pub fn sell<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::Sell as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
@@ -296,7 +296,7 @@ pub fn auctioneer_sell<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::Sell,

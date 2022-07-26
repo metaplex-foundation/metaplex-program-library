@@ -167,6 +167,14 @@ pub enum AuctionHouseError {
     PartialPriceMismatch,
 
     // 6041
+    #[msg("Auction House already delegated.")]
+    AuctionHouseAlreadyDelegated,
+
+    // 6042
+    #[msg("Auctioneer Authority Mismatch")]
+    AuctioneerAuthorityMismatch,
+
+    // 6043
     #[msg("Insufficient funds in escrow account to purchase.")]
     InsufficientFunds,
 }
