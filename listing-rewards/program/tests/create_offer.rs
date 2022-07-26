@@ -7,23 +7,18 @@ use listing_rewards_test::fixtures::metadata;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use mpl_auction_house::{
     pda::{
-        find_auction_house_address, find_auctioneer_trade_state_address,
-        find_public_bid_trade_state_address, find_trade_state_address,
+        find_auction_house_address, find_auctioneer_trade_state_address, find_trade_state_address,
     },
     AuthorityScope,
 };
 use mpl_listing_rewards::{
-    constants,
-    pda::{
-        find_listing_address, find_offer_address, find_reward_center_address,
-        find_rewardable_collection_address,
-    },
-    reward_center,
+    pda::{find_listing_address, find_reward_center_address, find_rewardable_collection_address},
+    reward_center, state,
 };
 
 use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
 
-use mpl_testing_utils::solana::{airdrop, transfer_lamports};
+use mpl_testing_utils::solana::airdrop;
 use solana_program_test::*;
 use solana_sdk::signature::Keypair;
 use std::str::FromStr;
@@ -78,7 +73,7 @@ async fn create_offer_success() {
 
     let reward_center_params = reward_center::CreateRewardCenterParams {
         collection_oracle: None,
-        listing_reward_rules: reward_center::ListingRewardRules {
+        listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,
             reward_payout: 1000,
         },
@@ -219,36 +214,23 @@ async fn create_offer_success() {
         .await
         .unwrap();
 
-    let (buyer_trade_state, buyer_trade_state_bump) = find_public_bid_trade_state_address(
-        buyer_pubkey,
-        &auction_house,
-        &mint,
-        &metadata_mint_address,
-        listing_rewards_test::ONE_SOL,
-        1,
-    );
-
-    let (offer, _) = find_offer_address(buyer_pubkey, &metadata_address, &rewardable_collection);
-
     let create_offer_accounts = CreateOfferAccounts {
         wallet: *buyer_pubkey,
         rewardable_collection,
-        offer,
         transfer_authority: *buyer_pubkey,
         payment_account: *buyer_pubkey,
         treasury_mint: mint,
+        token_mint: metadata_mint_address,
         auction_house,
         reward_center,
         token_account,
         metadata: metadata_address,
         authority: wallet,
-        buyer_trade_state,
     };
 
     let create_offer_params = CreateOfferData {
         token_size: 1,
         buyer_price: listing_rewards_test::ONE_SOL,
-        trade_state_bump: buyer_trade_state_bump,
     };
 
     let create_offer_ix = create_offer(create_offer_accounts, create_offer_params);
