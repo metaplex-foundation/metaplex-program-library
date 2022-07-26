@@ -103,6 +103,18 @@ pub fn handle_mint_nft<'info>(
     //Account name the same for IDL compatability
     let recent_slothashes = &ctx.accounts.recent_blockhashes;
     let instruction_sysvar_account = &ctx.accounts.instruction_sysvar_account;
+
+    if candy_machine.items_redeemed >= candy_machine.data.items_available {
+        punish_bots(
+            CandyError::CandyMachineEmpty,
+            payer.to_account_info(),
+            ctx.accounts.candy_machine.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            BOT_FEE,
+        )?;
+        return Ok(());
+    }
+
     let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
     let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
     let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
@@ -465,17 +477,6 @@ pub fn handle_mint_nft<'info>(
             )?;
             return Ok(());
         }
-    }
-
-    if candy_machine.items_redeemed >= candy_machine.data.items_available {
-        punish_bots(
-            CandyError::CandyMachineEmpty,
-            payer.to_account_info(),
-            ctx.accounts.candy_machine.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-            BOT_FEE,
-        )?;
-        return Ok(());
     }
 
     if let Some(mint) = candy_machine.token_mint {
