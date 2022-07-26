@@ -6,7 +6,11 @@ pub struct SellData {
 }
 
 pub struct CreateOfferData {
-    pub trade_state_bump: u8,
+    pub buyer_price: u64,
+    pub token_size: u64,
+}
+
+pub struct CloseOfferData {
     pub buyer_price: u64,
     pub token_size: u64,
 }
