@@ -10,7 +10,7 @@ pub struct Cancel<'info> {
     /// CHECK: Verified in cancel_logic.
     /// User wallet account.
     #[account(mut)]
-    pub wallet: UncheckedAccount<'info>,
+    pub wallet: Signer<'info>,
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]
@@ -79,7 +79,7 @@ pub struct AuctioneerCancel<'info> {
     /// CHECK: Wallet validated as owner in cancel logic.
     /// User wallet account.
     #[account(mut)]
-    pub wallet: UncheckedAccount<'info>,
+    pub wallet: Signer<'info>,
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]
