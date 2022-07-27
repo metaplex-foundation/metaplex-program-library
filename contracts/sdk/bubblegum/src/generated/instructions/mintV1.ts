@@ -36,26 +36,26 @@ export const mintV1Struct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _mintV1_ instruction
  *
- * @property [_writable_] mintAuthorityRequest
- * @property [_writable_] mintAuthority
+ * @property [] mintAuthority
  * @property [_writable_] authority
  * @property [] candyWrapper
  * @property [] gummyrollProgram
  * @property [] owner
  * @property [] delegate
+ * @property [_writable_] mintAuthorityRequest
  * @property [_writable_] merkleSlab
  * @category Instructions
  * @category MintV1
  * @category generated
  */
 export type MintV1InstructionAccounts = {
-  mintAuthorityRequest: web3.PublicKey
   mintAuthority: web3.PublicKey
   authority: web3.PublicKey
   candyWrapper: web3.PublicKey
   gummyrollProgram: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
+  mintAuthorityRequest: web3.PublicKey
   merkleSlab: web3.PublicKey
 }
 
@@ -84,13 +84,8 @@ export function createMintV1Instruction(
   })
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.mintAuthorityRequest,
-      isWritable: true,
-      isSigner: false,
-    },
-    {
       pubkey: accounts.mintAuthority,
-      isWritable: true,
+      isWritable: false,
       isSigner: false,
     },
     {
@@ -116,6 +111,11 @@ export function createMintV1Instruction(
     {
       pubkey: accounts.delegate,
       isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.mintAuthorityRequest,
+      isWritable: true,
       isSigner: false,
     },
     {

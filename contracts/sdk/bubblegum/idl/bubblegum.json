@@ -225,13 +225,8 @@
       "name": "mintV1",
       "accounts": [
         {
-          "name": "mintAuthorityRequest",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "mintAuthority",
-          "isMut": true,
+          "isMut": false,
           "isSigner": false
         },
         {
@@ -257,6 +252,11 @@
         {
           "name": "delegate",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mintAuthorityRequest",
+          "isMut": true,
           "isSigner": false
         },
         {
