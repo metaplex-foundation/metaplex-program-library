@@ -65,8 +65,13 @@
           "isSigner": false
         },
         {
-          "name": "creator",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "creator",
+          "isMut": false,
           "isSigner": true
         },
         {
@@ -101,8 +106,13 @@
           "isSigner": false
         },
         {
-          "name": "mintAuthority",
+          "name": "payer",
           "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": false,
           "isSigner": true
         },
         {
