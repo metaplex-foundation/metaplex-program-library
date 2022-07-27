@@ -32,11 +32,9 @@ impl TreeConfig {
     }
 
     pub fn contains_mint_capacity(&self, requested_capacity: u64) -> bool {
-        let remaining_mints_to_approve = self
-            .total_mint_capacity
-            .saturating_sub(self.num_mints_approved);
         let remaining_mints = self.total_mint_capacity.saturating_sub(self.num_minted);
-        requested_capacity <= remaining_mints && requested_capacity <= remaining_mints_to_approve
+        let remaining_mints_to_approve = remaining_mints.saturating_sub(self.num_mints_approved);
+        requested_capacity <= remaining_mints_to_approve
     }
 
     pub fn restore_mint_capacity(&mut self, capacity: u64) {

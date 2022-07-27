@@ -64,7 +64,6 @@ pub struct MintV1<'info> {
     )]
     pub mint_authority_request: Account<'info, MintRequest>,
     /// CHECK: This is checked in the instruction. Must be signer if it is not equal to the `authority`
-    #[account(mut)]
     pub mint_authority: AccountInfo<'info>,
     #[account(
         mut,
@@ -302,11 +301,12 @@ pub struct SetMintRequest<'info> {
         init_if_needed,
         space=MINT_REQUEST_SIZE,
         seeds=[merkle_slab.key().as_ref(), mint_authority.key().as_ref()],
-        payer=mint_authority,
+        payer=payer,
         bump
     )]
     pub mint_authority_request: Account<'info, MintRequest>,
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub mint_authority: Signer<'info>,
     #[account(
         mut,
@@ -325,11 +325,12 @@ pub struct SetDefaultMintRequest<'info> {
         init_if_needed,
         space=MINT_REQUEST_SIZE,
         seeds=[merkle_slab.key().as_ref(), tree_authority.key().as_ref()],
-        payer=creator,
+        payer=payer,
         bump
     )]
     pub mint_authority_request: Account<'info, MintRequest>,
     #[account(mut)]
+    pub payer: Signer<'info>,
     pub creator: Signer<'info>,
     #[account(
         mut,
