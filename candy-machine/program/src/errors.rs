@@ -74,4 +74,32 @@ pub enum CandyError {
     CandyCollectionRequiresRetainAuthority,
     #[msg("Error within Gateway program")]
     GatewayProgramError,
+    #[msg("Invalid candy machine authority")]
+    InvalidCandyMachineAuthority,
+    #[msg("Lockup settings lockup type is invalid")]
+    InvalidLockupType,
+    #[msg("Lockup settings account missing")]
+    LockupSettingsAccountMissing,
+    #[msg("Lockup settings account invalid")]
+    LockupSettingsAccountInvalid,
+    #[msg("Lockup settings missing accounts")]
+    LockupSettingsMissingAccounts,
+    #[msg("Lockup settings missing token manager")]
+    LockupSettingsMissingTokenManager,
+    #[msg("Lockup settings missing token managertoken account")]
+    LockupSettingsMissingTokenManagerTokenAccount,
+    #[msg("Lockup settings missing mint counter")]
+    LockupSettingsMissingMintCounter,
+    #[msg("Lockup settings missing recipient token account")]
+    LockupSettingsMissingRecipientTokenAccount,
+    #[msg("Lockup settings missing time invalidator")]
+    LockupSettingsMissingTimeInvalidator,
+    #[msg("Lockup settings missing time invalidator program")]
+    LockupSettingsMissingTimeInvalidatorProgram,
+    #[msg("Lockup settings invalid time invalidator program")]
+    LockupSettingsInvalidTimeInvalidatorProgram,
+    #[msg("Lockup settings missing token manager program")]
+    LockupSettingsMissingTokenManagerProgram,
+    #[msg("Lockup settings invalid token manager program")]
+    LockupSettingsInvalidTokenManagerProgram,
 }

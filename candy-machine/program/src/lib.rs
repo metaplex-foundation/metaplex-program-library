@@ -64,6 +64,18 @@ pub mod candy_machine {
         handle_set_collection_during_mint(ctx)
     }
 
+    pub fn set_lockup_settings(
+        ctx: Context<SetLockupSettings>,
+        lockup_type: u8,
+        number: i64,
+    ) -> Result<()> {
+        handle_set_lockup_settings(ctx, lockup_type, number)
+    }
+
+    pub fn close_lockup_settings(ctx: Context<CloseLockupSettings>) -> Result<()> {
+        handle_close_lockup_settings(ctx)
+    }
+
     pub fn withdraw_funds<'info>(ctx: Context<WithdrawFunds<'info>>) -> Result<()> {
         handle_withdraw_funds(ctx)
     }

@@ -535,6 +535,48 @@ dependencies = [
 ]
 
 [[package]]
+name = "cardinal-payment-manager"
+version = "1.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9f7d9e11dd82cceb0a0dfff99b3b955e2adf1c682150a85a2cf1b2b6375e422"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
+
+[[package]]
+name = "cardinal-time-invalidator"
+version = "1.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05eb457b6bba5ddb70d6eb2ed72e19ea90e3d5a3c51417a9024cc0a64d5fd9d6"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "cardinal-payment-manager",
+ "cardinal-token-manager",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
+
+[[package]]
+name = "cardinal-token-manager"
+version = "1.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6bd82b839265293c79f9596d51a601adb57f8794d555fd4e10e83b34b273ba7"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "mpl-token-metadata",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.72"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1681,6 +1723,8 @@ dependencies = [
  "anchor-spl",
  "arrayref",
  "borsh",
+ "cardinal-time-invalidator",
+ "cardinal-token-manager",
  "mpl-token-metadata",
  "solana-gateway",
  "solana-program",

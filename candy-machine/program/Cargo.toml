@@ -20,7 +20,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.24.2"
+anchor-lang = { version = "0.24.2", features = ["init-if-needed"] }
 arrayref = "0.3.6"
 spl-token = { version = "3.2.0", features = ["no-entrypoint"] }
 mpl-token-metadata = { version = "1.2.5", features = ["no-entrypoint"] }
@@ -30,6 +30,8 @@ spl-associated-token-account = { version = "1.0.3", features = [
 anchor-spl = "0.24.2"
 solana-program = "1.9.18"
 solana-gateway = "0.2.0"
+cardinal-token-manager = { version = "^1.4.6", features = ["cpi"] }
+cardinal-time-invalidator = { version = "^1.4.6", features = ["cpi"] }
 
 [dev-dependencies]
 solana-program-test = "1.9.18"

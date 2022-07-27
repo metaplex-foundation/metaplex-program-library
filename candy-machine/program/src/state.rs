@@ -82,6 +82,24 @@ pub struct HiddenSettings {
     pub hash: [u8; 32],
 }
 
+pub const LOCKUP_SETTINGS_SIZE: usize = 8 + std::mem::size_of::<LockupSettings>() + 8;
+pub const LOCKUP_SETTINGS_SEED: &str = "lockup_settings";
+
+#[account]
+#[derive(Default, Debug)]
+pub struct LockupSettings {
+    pub candy_machine: Pubkey,
+    pub lockup_type: u8,
+    pub number: i64,
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
+#[repr(u8)]
+pub enum LockupType {
+    Expiration = 0,
+    Duration = 1,
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct WhitelistMintSettings {
     pub mode: WhitelistMintMode,
