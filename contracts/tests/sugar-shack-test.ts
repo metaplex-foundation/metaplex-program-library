@@ -440,7 +440,7 @@ describe("sugar-shack", () => {
         },
         { message: compressedNFTMetadata }
       );
-      await execute(SugarShack.provider, [mintIx], [payer], true, true);
+      await execute(SugarShack.provider, [mintIx], [], true, true);
 
       // creator hash
       bufferOfCreatorShares = Buffer.from(
