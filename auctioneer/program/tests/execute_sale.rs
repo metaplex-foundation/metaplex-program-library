@@ -366,6 +366,7 @@ async fn execute_sale_success() {
         .unwrap()
         .unwrap();
     assert_eq!(listing_config_closed.lamports, 0);
+    
 }
 
 #[tokio::test]
