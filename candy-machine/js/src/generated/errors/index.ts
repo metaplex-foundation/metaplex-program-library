@@ -776,6 +776,328 @@ createErrorFromCodeLookup.set(0x1793, () => new GatewayProgramErrorError());
 createErrorFromNameLookup.set('GatewayProgramError', () => new GatewayProgramErrorError());
 
 /**
+ * InvalidCandyMachineAuthority: 'Invalid candy machine authority'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidCandyMachineAuthorityError extends Error {
+  readonly code: number = 0x1794;
+  readonly name: string = 'InvalidCandyMachineAuthority';
+  constructor() {
+    super('Invalid candy machine authority');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidCandyMachineAuthorityError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1794, () => new InvalidCandyMachineAuthorityError());
+createErrorFromNameLookup.set(
+  'InvalidCandyMachineAuthority',
+  () => new InvalidCandyMachineAuthorityError(),
+);
+
+/**
+ * InvalidLockupType: 'Lockup settings lockup type is invalid'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidLockupTypeError extends Error {
+  readonly code: number = 0x1795;
+  readonly name: string = 'InvalidLockupType';
+  constructor() {
+    super('Lockup settings lockup type is invalid');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidLockupTypeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1795, () => new InvalidLockupTypeError());
+createErrorFromNameLookup.set('InvalidLockupType', () => new InvalidLockupTypeError());
+
+/**
+ * LockupSettingsAccountMissing: 'Lockup settings account missing'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsAccountMissingError extends Error {
+  readonly code: number = 0x1796;
+  readonly name: string = 'LockupSettingsAccountMissing';
+  constructor() {
+    super('Lockup settings account missing');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsAccountMissingError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1796, () => new LockupSettingsAccountMissingError());
+createErrorFromNameLookup.set(
+  'LockupSettingsAccountMissing',
+  () => new LockupSettingsAccountMissingError(),
+);
+
+/**
+ * LockupSettingsAccountInvalid: 'Lockup settings account invalid'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsAccountInvalidError extends Error {
+  readonly code: number = 0x1797;
+  readonly name: string = 'LockupSettingsAccountInvalid';
+  constructor() {
+    super('Lockup settings account invalid');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsAccountInvalidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1797, () => new LockupSettingsAccountInvalidError());
+createErrorFromNameLookup.set(
+  'LockupSettingsAccountInvalid',
+  () => new LockupSettingsAccountInvalidError(),
+);
+
+/**
+ * LockupSettingsMissingAccounts: 'Lockup settings missing accounts'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsMissingAccountsError extends Error {
+  readonly code: number = 0x1798;
+  readonly name: string = 'LockupSettingsMissingAccounts';
+  constructor() {
+    super('Lockup settings missing accounts');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsMissingAccountsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1798, () => new LockupSettingsMissingAccountsError());
+createErrorFromNameLookup.set(
+  'LockupSettingsMissingAccounts',
+  () => new LockupSettingsMissingAccountsError(),
+);
+
+/**
+ * LockupSettingsMissingTokenManager: 'Lockup settings missing token manager'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsMissingTokenManagerError extends Error {
+  readonly code: number = 0x1799;
+  readonly name: string = 'LockupSettingsMissingTokenManager';
+  constructor() {
+    super('Lockup settings missing token manager');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsMissingTokenManagerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1799, () => new LockupSettingsMissingTokenManagerError());
+createErrorFromNameLookup.set(
+  'LockupSettingsMissingTokenManager',
+  () => new LockupSettingsMissingTokenManagerError(),
+);
+
+/**
+ * LockupSettingsMissingTokenManagerTokenAccount: 'Lockup settings missing token managertoken account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsMissingTokenManagerTokenAccountError extends Error {
+  readonly code: number = 0x179a;
+  readonly name: string = 'LockupSettingsMissingTokenManagerTokenAccount';
+  constructor() {
+    super('Lockup settings missing token managertoken account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsMissingTokenManagerTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(
+  0x179a,
+  () => new LockupSettingsMissingTokenManagerTokenAccountError(),
+);
+createErrorFromNameLookup.set(
+  'LockupSettingsMissingTokenManagerTokenAccount',
+  () => new LockupSettingsMissingTokenManagerTokenAccountError(),
+);
+
+/**
+ * LockupSettingsMissingMintCounter: 'Lockup settings missing mint counter'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsMissingMintCounterError extends Error {
+  readonly code: number = 0x179b;
+  readonly name: string = 'LockupSettingsMissingMintCounter';
+  constructor() {
+    super('Lockup settings missing mint counter');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsMissingMintCounterError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179b, () => new LockupSettingsMissingMintCounterError());
+createErrorFromNameLookup.set(
+  'LockupSettingsMissingMintCounter',
+  () => new LockupSettingsMissingMintCounterError(),
+);
+
+/**
+ * LockupSettingsMissingRecipientTokenAccount: 'Lockup settings missing recipient token account'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsMissingRecipientTokenAccountError extends Error {
+  readonly code: number = 0x179c;
+  readonly name: string = 'LockupSettingsMissingRecipientTokenAccount';
+  constructor() {
+    super('Lockup settings missing recipient token account');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsMissingRecipientTokenAccountError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179c, () => new LockupSettingsMissingRecipientTokenAccountError());
+createErrorFromNameLookup.set(
+  'LockupSettingsMissingRecipientTokenAccount',
+  () => new LockupSettingsMissingRecipientTokenAccountError(),
+);
+
+/**
+ * LockupSettingsMissingTimeInvalidator: 'Lockup settings missing time invalidator'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsMissingTimeInvalidatorError extends Error {
+  readonly code: number = 0x179d;
+  readonly name: string = 'LockupSettingsMissingTimeInvalidator';
+  constructor() {
+    super('Lockup settings missing time invalidator');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsMissingTimeInvalidatorError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179d, () => new LockupSettingsMissingTimeInvalidatorError());
+createErrorFromNameLookup.set(
+  'LockupSettingsMissingTimeInvalidator',
+  () => new LockupSettingsMissingTimeInvalidatorError(),
+);
+
+/**
+ * LockupSettingsMissingTimeInvalidatorProgram: 'Lockup settings missing time invalidator program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsMissingTimeInvalidatorProgramError extends Error {
+  readonly code: number = 0x179e;
+  readonly name: string = 'LockupSettingsMissingTimeInvalidatorProgram';
+  constructor() {
+    super('Lockup settings missing time invalidator program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsMissingTimeInvalidatorProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179e, () => new LockupSettingsMissingTimeInvalidatorProgramError());
+createErrorFromNameLookup.set(
+  'LockupSettingsMissingTimeInvalidatorProgram',
+  () => new LockupSettingsMissingTimeInvalidatorProgramError(),
+);
+
+/**
+ * LockupSettingsInvalidTimeInvalidatorProgram: 'Lockup settings invalid time invalidator program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsInvalidTimeInvalidatorProgramError extends Error {
+  readonly code: number = 0x179f;
+  readonly name: string = 'LockupSettingsInvalidTimeInvalidatorProgram';
+  constructor() {
+    super('Lockup settings invalid time invalidator program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsInvalidTimeInvalidatorProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179f, () => new LockupSettingsInvalidTimeInvalidatorProgramError());
+createErrorFromNameLookup.set(
+  'LockupSettingsInvalidTimeInvalidatorProgram',
+  () => new LockupSettingsInvalidTimeInvalidatorProgramError(),
+);
+
+/**
+ * LockupSettingsMissingTokenManagerProgram: 'Lockup settings missing token manager program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsMissingTokenManagerProgramError extends Error {
+  readonly code: number = 0x17a0;
+  readonly name: string = 'LockupSettingsMissingTokenManagerProgram';
+  constructor() {
+    super('Lockup settings missing token manager program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsMissingTokenManagerProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a0, () => new LockupSettingsMissingTokenManagerProgramError());
+createErrorFromNameLookup.set(
+  'LockupSettingsMissingTokenManagerProgram',
+  () => new LockupSettingsMissingTokenManagerProgramError(),
+);
+
+/**
+ * LockupSettingsInvalidTokenManagerProgram: 'Lockup settings invalid token manager program'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class LockupSettingsInvalidTokenManagerProgramError extends Error {
+  readonly code: number = 0x17a1;
+  readonly name: string = 'LockupSettingsInvalidTokenManagerProgram';
+  constructor() {
+    super('Lockup settings invalid token manager program');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, LockupSettingsInvalidTokenManagerProgramError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a1, () => new LockupSettingsInvalidTokenManagerProgramError());
+createErrorFromNameLookup.set(
+  'LockupSettingsInvalidTokenManagerProgram',
+  () => new LockupSettingsInvalidTokenManagerProgramError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

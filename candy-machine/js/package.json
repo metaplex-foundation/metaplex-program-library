@@ -13,7 +13,9 @@
     "postpublish": "git push origin && git push origin --tags",
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
-    "test": "echo mpl-candy-machine tests coming up ...",
+    "test": "DEBUG=\"mpl:tm-test:*\" CI=1 tape ./dist/test/*.test.js",
+    "amman:start": "DEBUG='amman:(info|error|debug)' CI=1 amman start",
+    "amman:stop": "pkill -f solana-test-validator",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
@@ -39,17 +41,25 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
+    "@cardinal/token-manager": "1.4.6",
     "@metaplex-foundation/beet": "^0.4.0",
     "@metaplex-foundation/beet-solana": "^0.3.0",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@metaplex-foundation/mpl-core": "^0.6.1",
+    "@solana/spl-token": "0.1.8",
     "@solana/web3.js": "^1.35.1"
   },
   "devDependencies": {
+    "@metaplex-foundation/amman": "^0.10.0",
+    "@metaplex-foundation/amman-client": "^0.1.0",
+    "@metaplex-foundation/mpl-token-metadata": "1.2.5",
     "@metaplex-foundation/solita": "^0.12.0",
+    "@project-serum/anchor": "^0.24.2",
+    "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
+    "tape": "^5.5.3",
     "typescript": "^4.6.2"
   }
 }
