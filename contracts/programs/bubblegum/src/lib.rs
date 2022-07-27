@@ -56,13 +56,6 @@ pub struct CreateTree<'info> {
 
 #[derive(Accounts)]
 pub struct MintV1<'info> {
-    /// CHECK: checked in method call
-    #[account(
-        mut,
-        seeds=[merkle_slab.key().as_ref(), mint_authority.key().as_ref()],
-        bump,
-    )]
-    pub mint_authority_request: Account<'info, MintRequest>,
     /// CHECK: This is checked in the instruction. Must be signer if it is not equal to the `authority`
     pub mint_authority: AccountInfo<'info>,
     #[account(
@@ -77,6 +70,12 @@ pub struct MintV1<'info> {
     pub owner: AccountInfo<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub delegate: AccountInfo<'info>,
+    #[account(
+        mut,
+        seeds=[merkle_slab.key().as_ref(), mint_authority.key().as_ref()],
+        bump,
+    )]
+    pub mint_authority_request: Account<'info, MintRequest>,
     #[account(mut)]
     /// CHECK: unsafe
     pub merkle_slab: UncheckedAccount<'info>,
