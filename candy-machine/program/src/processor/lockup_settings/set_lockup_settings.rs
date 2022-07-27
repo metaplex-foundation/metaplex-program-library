@@ -33,7 +33,9 @@ pub fn handle_set_lockup_settings(
 ) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
     let lockup_settings = &mut ctx.accounts.lockup_settings;
-    if lockup_type != LockupType::Duration as u8 && lockup_type != LockupType::Expiration as u8 {
+    if lockup_type != LockupType::DurationSeconds as u8
+        && lockup_type != LockupType::ExpirationUnixTimstamp as u8
+    {
         return err!(CandyError::InvalidLockupType);
     }
     lockup_settings.candy_machine = candy_machine.key();

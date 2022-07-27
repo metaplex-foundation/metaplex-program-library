@@ -1028,7 +1028,7 @@ fn handle_time_invalidator<'info>(
         collector: ctx.accounts.payer.key(),
         // no fees
         payment_manager: Pubkey::default(),
-        duration_seconds: if lockup_settings.lockup_type == LockupType::Duration as u8 {
+        duration_seconds: if lockup_settings.lockup_type == LockupType::DurationSeconds as u8 {
             Some(lockup_settings.number)
         } else {
             None
@@ -1036,7 +1036,7 @@ fn handle_time_invalidator<'info>(
         extension_payment_amount: None,
         extension_duration_seconds: None,
         extension_payment_mint: None,
-        max_expiration: if lockup_settings.lockup_type == LockupType::Expiration as u8 {
+        max_expiration: if lockup_settings.lockup_type == LockupType::ExpirationUnixTimstamp as u8 {
             Some(lockup_settings.number)
         } else {
             None

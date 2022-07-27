@@ -11,8 +11,8 @@ import * as beet from '@metaplex-foundation/beet';
  * @category generated
  */
 export enum LockupType {
-  Expiration,
-  Duration,
+  ExpirationUnixTimstamp,
+  DurationSeconds,
 }
 
 /**

@@ -96,8 +96,8 @@ pub struct LockupSettings {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum LockupType {
-    Expiration = 0,
-    Duration = 1,
+    ExpirationUnixTimstamp = 0,
+    DurationSeconds = 1,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]

@@ -767,10 +767,10 @@
         "kind": "enum",
         "variants": [
           {
-            "name": "Expiration"
+            "name": "ExpirationUnixTimstamp"
           },
           {
-            "name": "Duration"
+            "name": "DurationSeconds"
           }
         ]
       }

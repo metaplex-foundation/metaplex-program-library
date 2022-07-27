@@ -114,7 +114,7 @@ test('Candy machine initialize with lockup settings and mint with whitelist toke
       payer: walletKeypair.publicKey,
     },
     {
-      lockupType: Number(LockupType.Duration),
+      lockupType: Number(LockupType.DurationSeconds),
       number: new BN(5),
     },
   );
@@ -144,7 +144,7 @@ test('Candy machine initialize with lockup settings and mint with whitelist toke
   await sendAndConfirmRawTransaction(connection, tx.serialize());
 
   const lockupSettings = await LockupSettings.fromAccountAddress(connection, lockupSettingsId);
-  t.assert(lockupSettings.lockupType === LockupType.Duration);
+  t.assert(lockupSettings.lockupType === LockupType.DurationSeconds);
   t.assert(Number(lockupSettings.number) === 5);
 });
 

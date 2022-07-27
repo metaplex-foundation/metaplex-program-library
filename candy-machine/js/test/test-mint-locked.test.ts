@@ -92,7 +92,7 @@ test('Candy machine initialize with lockup settings', async (t) => {
       payer: walletKeypair.publicKey,
     },
     {
-      lockupType: Number(LockupType.Duration),
+      lockupType: Number(LockupType.DurationSeconds),
       number: new BN(5),
     },
   );
@@ -122,7 +122,7 @@ test('Candy machine initialize with lockup settings', async (t) => {
   await sendAndConfirmRawTransaction(connection, tx.serialize());
 
   const lockupSettings = await LockupSettings.fromAccountAddress(connection, lockupSettingsId);
-  t.assert(lockupSettings.lockupType === LockupType.Duration);
+  t.assert(lockupSettings.lockupType === LockupType.DurationSeconds);
   t.assert(Number(lockupSettings.number) === 5);
 });
 
