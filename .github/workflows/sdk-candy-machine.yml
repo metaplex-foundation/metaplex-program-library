@@ -14,16 +14,16 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
     steps:
-    - uses: actions/checkout@v2
-    # For pull requests it's not necessary to checkout the code
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          core:
-            - 'core/**'
-          package:
-            - 'candy-machine/**'
+      - uses: actions/checkout@v2
+      # For pull requests it's not necessary to checkout the code
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            core:
+              - 'core/**'
+            package:
+              - 'candy-machine/**'
 
   build-lint-and-test-candy-machine:
     needs: changes
@@ -33,6 +33,8 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: ./.github/actions/yarn-install-and-verify
-        with: 
+        with:
           cache_id: sdk-candy-machine
           working_dir: ./candy-machine/js
+          build_token_metadata: true
+          skip_test: true
