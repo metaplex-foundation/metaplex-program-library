@@ -107,9 +107,9 @@ pub struct AuctioneerBuy<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ], seeds::program=auction_house_program,
-        bump = auction_house.auctioneer_pda_bump,
+        bump = ah_auctioneer_pda.bump,
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, mpl_auction_house::Auctioneer>,
 
     token_program: Program<'info, Token>,
     system_program: Program<'info, System>,
