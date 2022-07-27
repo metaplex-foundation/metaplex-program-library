@@ -142,6 +142,7 @@ describe("bubblegum", function () {
       {
         merkleSlab: merkleRollKeypair.publicKey,
         creator: payer.publicKey,
+        payer: payer.publicKey,
         treeAuthority: authority,
         mintAuthorityRequest: defaultMintRequestKey,
       },
@@ -731,6 +732,7 @@ describe("bubblegum", function () {
     const initRequestIx = createRequestMintAuthorityInstruction(
       {
         mintAuthority: randomRequester.publicKey,
+        payer: randomRequester.publicKey,
         mintAuthorityRequest: requestPda,
         treeAuthority,
         merkleSlab: merkleRollKeypair.publicKey,
