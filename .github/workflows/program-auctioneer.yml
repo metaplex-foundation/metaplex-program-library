@@ -21,9 +21,8 @@ jobs:
         run: |
           sudo apt-get install -y jq && \
           MAINNET=$(curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
-          TESTNET=$(curl https://api.testnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
           DEVNET=$(curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
-          VERSIONS=($MAINNET $TESTNET $DEVNET) && \
+          VERSIONS=($MAINNET $DEVNET) && \
           echo "${VERSIONS[@]}" && \
           VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s -c) && \
           echo $VERSION_JSON && \
