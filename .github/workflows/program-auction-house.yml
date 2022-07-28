@@ -74,6 +74,7 @@ jobs:
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         TEST: ${{fromJson(needs.setup-tests.outputs.tests)}}
         SOLANA_VERSION: ${{fromJson(needs.setup-versions.outputs.versions)}}
