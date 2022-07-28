@@ -13,6 +13,19 @@ pub struct SellAccounts {
     pub free_seller_trade_state: Pubkey,
 }
 
+pub struct CancelListingAccounts {
+    pub wallet: Pubkey,
+    pub listing: Pubkey,
+    pub reward_center: Pubkey,
+    pub rewardable_collection: Pubkey,
+    pub metadata: Pubkey,
+    pub token_account: Pubkey,
+    pub authority: Pubkey,
+    pub auction_house: Pubkey,
+    pub token_mint: Pubkey,
+    pub treasury_mint: Pubkey,
+}
+
 pub struct CreateOfferAccounts {
     pub wallet: Pubkey,
     pub payment_account: Pubkey,

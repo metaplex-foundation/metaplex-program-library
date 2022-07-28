@@ -1,13 +1,17 @@
 pub mod accounts;
 pub mod args;
 
-use accounts::{CloseOfferAccounts, CreateOfferAccounts, SellAccounts};
+use accounts::{CancelListingAccounts, CloseOfferAccounts, CreateOfferAccounts, SellAccounts};
 use anchor_client::solana_sdk::{instruction::Instruction, pubkey::Pubkey, system_program, sysvar};
 use anchor_lang::{prelude::*, InstructionData};
-use args::{CloseOfferData, CreateOfferData, SellData};
-use mpl_auction_house::pda::find_public_bid_trade_state_address;
+use args::{CancelListingData, CloseOfferData, CreateOfferData, SellData};
+use mpl_auction_house::pda::{
+    find_auctioneer_trade_state_address, find_public_bid_trade_state_address,
+};
 use mpl_listing_rewards::{
-    accounts as rewards_accounts, id, instruction,
+    accounts as rewards_accounts,
+    cancel_listing::CancelListingParams,
+    id, instruction,
     offers::{close::CloseOfferParams, create::CreateOfferParams},
     pda,
     reward_center::CreateRewardCenterParams,
@@ -136,6 +140,67 @@ pub fn sell(
             free_trade_state_bump,
             program_as_signer_bump,
         },
+    }
+    .data();
+
+    Instruction {
+        program_id: id(),
+        accounts,
+        data,
+    }
+}
+
+pub fn cancel_listing(
+    CancelListingAccounts {
+        auction_house,
+        listing,
+        reward_center,
+        rewardable_collection,
+        authority,
+        metadata,
+        token_account,
+        token_mint,
+        treasury_mint,
+        wallet,
+    }: CancelListingAccounts,
+    CancelListingData { token_size, price }: CancelListingData,
+) -> Instruction {
+    let (auction_house_fee_account, _) =
+        mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
+    let (ah_auctioneer_pda, _) =
+        mpl_auction_house::pda::find_auctioneer_pda(&auction_house, &reward_center);
+
+    let (seller_trade_state, _) = find_auctioneer_trade_state_address(
+        &wallet,
+        &auction_house,
+        &token_account,
+        &treasury_mint,
+        &token_mint,
+        1,
+    );
+
+    println!("reward Center {}", reward_center.to_string());
+
+    let accounts = rewards_accounts::CancelListing {
+        ah_auctioneer_pda,
+        auction_house,
+        auction_house_fee_account,
+        authority,
+        listing,
+        metadata,
+        reward_center,
+        rewardable_collection,
+        token_account,
+        token_mint,
+        trade_state: seller_trade_state,
+        wallet,
+        auction_house_program: mpl_auction_house::id(),
+        token_program: spl_token::id(),
+    }
+    .to_account_metas(None);
+
+    let data = instruction::CancelListing {
+        cancel_listing_params: CancelListingParams { price, token_size },
     }
     .data();
 
