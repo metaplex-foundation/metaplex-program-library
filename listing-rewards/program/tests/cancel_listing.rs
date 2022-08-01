@@ -16,12 +16,14 @@ use mpl_listing_rewards::{
     reward_center, state,
 };
 
-use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
+use mpl_listing_rewards_sdk::{
+    accounts::{CancelListingAccounts, *},
+    args::*,
+    *,
+};
 
-use mpl_testing_utils::solana::airdrop;
 use solana_program_test::*;
-use solana_sdk::signature::Keypair;
-use std::str::FromStr;
+use std::{println, str::FromStr};
 
 use mpl_token_metadata::state::Collection;
 
@@ -29,7 +31,7 @@ use spl_associated_token_account::get_associated_token_address;
 use spl_token::native_mint;
 
 #[tokio::test]
-async fn close_offer_success() {
+async fn cancel_listing_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
 
@@ -147,6 +149,12 @@ async fn close_offer_success() {
         1,
     );
 
+    println!(
+        "S1 {} S1 bump {}",
+        seller_trade_state.to_string(),
+        trade_state_bump
+    );
+
     let (free_seller_trade_state, free_trade_state_bump) = find_trade_state_address(
         &metadata_owner_address,
         &auction_house,
@@ -206,72 +214,34 @@ async fn close_offer_success() {
 
     assert!(tx_response.is_ok());
 
-    // CREATE OFFER TEST
+    // CANCEL LISTING TEST
 
-    let buyer = Keypair::new();
-    let buyer_pubkey = &buyer.pubkey();
-    airdrop(&mut context, buyer_pubkey, listing_rewards_test::TEN_SOL)
-        .await
-        .unwrap();
+    println!("reward Center {}", reward_center.to_string());
 
-    let create_offer_accounts = CreateOfferAccounts {
-        wallet: *buyer_pubkey,
-        rewardable_collection,
-        transfer_authority: *buyer_pubkey,
-        payment_account: *buyer_pubkey,
-        treasury_mint: mint,
-        token_mint: metadata_mint_address,
-        auction_house,
+    let cancel_listing_accounts = CancelListingAccounts {
+        wallet: metadata_owner_address,
+        listing,
         reward_center,
+        rewardable_collection,
         token_account,
         metadata: metadata_address,
         authority: wallet,
-    };
-
-    let create_offer_params = CreateOfferData {
-        token_size: 1,
-        buyer_price: listing_rewards_test::ONE_SOL,
-    };
-
-    let create_offer_ix = create_offer(create_offer_accounts, create_offer_params);
-
-    let tx = Transaction::new_signed_with_payer(
-        &[create_offer_ix],
-        Some(buyer_pubkey),
-        &[&buyer],
-        context.last_blockhash,
-    );
-
-    let tx_response = context.banks_client.process_transaction(tx).await;
-
-    assert!(tx_response.is_ok());
-
-    // CLOSE OFFER TEST
-
-    let close_offer_accounts = CloseOfferAccounts {
-        wallet: *buyer_pubkey,
-        rewardable_collection,
+        auction_house,
         treasury_mint: mint,
         token_mint: metadata_mint_address,
-        token_account,
-        receipt_account: *buyer_pubkey,
-        metadata: metadata_address,
-        authority: wallet,
-        auction_house,
-        reward_center,
     };
 
-    let close_offer_params = CloseOfferData {
+    let cancel_listing_params = CancelListingData {
+        price: u64::MAX,
         token_size: 1,
-        buyer_price: listing_rewards_test::ONE_SOL,
     };
 
-    let close_offer_ix = close_offer(close_offer_accounts, close_offer_params);
+    let cancel_listing_ix = cancel_listing(cancel_listing_accounts, cancel_listing_params);
 
     let tx = Transaction::new_signed_with_payer(
-        &[close_offer_ix],
-        Some(buyer_pubkey),
-        &[&buyer],
+        &[cancel_listing_ix],
+        Some(&metadata_owner_address),
+        &[&metadata_owner],
         context.last_blockhash,
     );
 

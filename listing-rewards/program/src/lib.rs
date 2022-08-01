@@ -1,4 +1,5 @@
 pub mod assertions;
+pub mod cancel_listing;
 pub mod constants;
 pub mod errors;
 pub mod offers;
@@ -13,6 +14,7 @@ use anchor_lang::prelude::*;
 use core::ops::Deref;
 
 use crate::{
+    cancel_listing::*,
     offers::{close::*, create::*},
     redeem_rewards::*,
     reward_center::*,
@@ -72,6 +74,13 @@ pub mod listing_rewards {
 
     pub fn sell(ctx: Context<Sell>, sell_params: SellParams) -> Result<()> {
         sell::sell(ctx, sell_params)
+    }
+
+    pub fn cancel_listing(
+        ctx: Context<CancelListing>,
+        cancel_listing_params: CancelListingParams,
+    ) -> Result<()> {
+        cancel_listing::handler(ctx, cancel_listing_params)
     }
 
     pub fn create_offer(
