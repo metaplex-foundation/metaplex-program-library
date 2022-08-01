@@ -93,7 +93,7 @@ pub fn process_deprecated_init_auction_manager_v1(
         })
     }
 
-    let authority_seeds = &[PREFIX.as_bytes(), &auction_info.key.as_ref(), &[bump_seed]];
+    let authority_seeds = &[PREFIX.as_bytes(), auction_info.key.as_ref(), &[bump_seed]];
 
     create_or_allocate_account_raw(
         *program_id,

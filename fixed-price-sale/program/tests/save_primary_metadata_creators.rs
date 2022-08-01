@@ -88,7 +88,7 @@ mod save_primary_metadata_creators {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: admin_wallet.pubkey(),
                 share: 100,
@@ -195,7 +195,7 @@ mod save_primary_metadata_creators {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![
                 mpl_fixed_price_sale::state::Creator {
                     address: admin_wallet.pubkey(),
@@ -325,7 +325,7 @@ mod save_primary_metadata_creators {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: Vec::new(),
         }
         .data();
@@ -424,7 +424,7 @@ mod save_primary_metadata_creators {
         .to_account_metas(None);
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
-            primary_metadata_creators_bump: primary_metadata_creators_bump,
+            primary_metadata_creators_bump,
             creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: admin_wallet.pubkey(),
                 share: 10,

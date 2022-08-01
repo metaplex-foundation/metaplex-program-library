@@ -206,7 +206,7 @@ fn charge_for_participation<'a>(
         }
     }
 
-    if bidder_token.amount.saturating_sub(price) < 0 as u64 {
+    if bidder_token.amount.saturating_sub(price) < 0_u64 {
         return Err(MetaplexError::NotEnoughBalanceForParticipation.into());
     }
 
@@ -307,10 +307,7 @@ pub fn process_redeem_participation_bid<'a>(
         store_info,
         safety_deposit_config_info: Some(safety_deposit_config_info),
         is_participation: true,
-        user_provided_win_index: Some(match user_provided_win_index {
-            Some(val) => Some(val as usize),
-            None => None,
-        }),
+        user_provided_win_index: Some(user_provided_win_index.map(|val| val as usize)),
         overwrite_win_index: None,
         assert_bidder_signer: legacy,
         ignore_bid_redeemed_item_check: false,
@@ -337,18 +334,15 @@ pub fn process_redeem_participation_bid<'a>(
     let mut gets_participation =
         config.non_winning_constraint != NonWinningConstraint::NoParticipationPrize;
 
-    if !cancelled {
-        if AuctionData::get_is_winner(auction_info, bidder_info.key).is_some() {
-            // Okay, so they placed in the auction winning prizes section!
-            gets_participation =
-                config.winner_constraint == WinningConstraint::ParticipationPrizeGiven;
-        }
+    if !cancelled && AuctionData::get_is_winner(auction_info, bidder_info.key).is_some() {
+        // Okay, so they placed in the auction winning prizes section!
+        gets_participation = config.winner_constraint == WinningConstraint::ParticipationPrizeGiven;
     }
 
     let bump_seed = assert_derivation(
         program_id,
         auction_manager_info,
-        &[PREFIX.as_bytes(), &auction_manager.auction().as_ref()],
+        &[PREFIX.as_bytes(), auction_manager.auction().as_ref()],
     )?;
 
     if gets_participation {

@@ -49,7 +49,7 @@ fn set_reservation_list_wrapper<'a>(
             reservation_list_info.clone(),
             auction_manager_info.clone(),
         ],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -212,7 +212,7 @@ pub fn process_redeem_bid<'a>(
             let auction_bump_seed = assert_derivation(
                 program_id,
                 auction_manager_info,
-                &[PREFIX.as_bytes(), &auction_manager.auction().as_ref()],
+                &[PREFIX.as_bytes(), auction_manager.auction().as_ref()],
             )?;
 
             let auction_key = auction_manager.auction();

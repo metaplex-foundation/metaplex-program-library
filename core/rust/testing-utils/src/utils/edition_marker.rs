@@ -145,7 +145,7 @@ impl EditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create(&self, context: &mut ProgramTestContext) -> Result<(), BanksClientError> {
@@ -188,7 +188,7 @@ impl EditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create_with_invalid_token_program(
@@ -247,6 +247,6 @@ impl EditionMarker {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

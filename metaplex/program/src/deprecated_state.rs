@@ -300,7 +300,7 @@ impl AuctionManager for AuctionManagerV1 {
                 fixed_price: part_config.fixed_price,
             })
         } else {
-            return Err(MetaplexError::NotEligibleForParticipation.into());
+            Err(MetaplexError::NotEligibleForParticipation.into())
         }
     }
 
@@ -349,8 +349,7 @@ impl AuctionManager for AuctionManagerV1 {
             if self.settings.winning_configs[n]
                 .items
                 .iter()
-                .find(|i| i.safety_deposit_box_index == u8_order)
-                .is_some()
+                .any(|i| i.safety_deposit_box_index == u8_order)
             {
                 // This means at least n bids must exist for there to be at least one bidder that will be eligible for this prize.
                 max_bids_allowed_before_removal_is_stopped = n;
@@ -358,7 +357,7 @@ impl AuctionManager for AuctionManagerV1 {
             }
         }
 
-        return Ok(max_bids_allowed_before_removal_is_stopped);
+        Ok(max_bids_allowed_before_removal_is_stopped)
     }
 
     fn assert_is_valid_master_edition_v2_safety_deposit(
@@ -445,7 +444,7 @@ impl AuctionManager for AuctionManagerV1 {
                             .primary_sale_happened,
                     )
                 } else {
-                    return Err(MetaplexError::InvalidWinningConfigItemIndex.into());
+                    Err(MetaplexError::InvalidWinningConfigItemIndex.into())
                 }
             }
             None => {

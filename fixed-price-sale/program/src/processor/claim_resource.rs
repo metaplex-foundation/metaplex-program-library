@@ -25,10 +25,8 @@ impl<'info> ClaimResource<'info> {
             if clock.unix_timestamp as u64 <= end_date {
                 return Err(ErrorCode::MarketInInvalidState.into());
             }
-        } else {
-            if market.state != MarketState::Ended {
-                return Err(ErrorCode::MarketInInvalidState.into());
-            }
+        } else if market.state != MarketState::Ended {
+            return Err(ErrorCode::MarketInInvalidState.into());
         }
 
         let is_native = market.treasury_mint == System::id();
@@ -72,7 +70,7 @@ impl<'info> ClaimResource<'info> {
 
         // Update primary sale flag
         let metadata_state: mpl_token_metadata::state::Metadata =
-            mpl_token_metadata::state::Metadata::from_account_info(&metadata)?;
+            mpl_token_metadata::state::Metadata::from_account_info(metadata)?;
         if !metadata_state.primary_sale_happened {
             mpl_update_primary_sale_happened_via_token(
                 &metadata.to_account_info(),

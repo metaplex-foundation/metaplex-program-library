@@ -39,7 +39,7 @@ pub fn process_withdraw_master_edition<'a>(
     let rent_info = next_account_info(account_info_iter)?;
     let safety_deposit_config_info = next_account_info(account_info_iter).ok();
 
-    let rent = &Rent::from_account_info(&rent_info)?;
+    let rent = &Rent::from_account_info(rent_info)?;
 
     let auction_manager = get_auction_manager(auction_manager_info)?;
     let auction = AuctionData::from_account_info(auction_info)?;
@@ -48,19 +48,19 @@ pub fn process_withdraw_master_edition<'a>(
     let store = Store::from_account_info(store_info)?;
     let safety_deposit_box = SafetyDepositBox::from_account_info(safety_deposit_info)?;
 
-    assert_owned_by(&destination_info, token_program_info.key)?;
-    assert_owned_by(&auction_manager_info, &program_id)?;
+    assert_owned_by(destination_info, token_program_info.key)?;
+    assert_owned_by(auction_manager_info, program_id)?;
     assert_owned_by(safety_deposit_token_store_info, token_program_info.key)?;
     assert_owned_by(safety_deposit_info, token_vault_program_info.key)?;
     assert_owned_by(vault_info, token_vault_program_info.key)?;
     assert_owned_by(fraction_mint_info, token_program_info.key)?;
     assert_owned_by(auction_info, &store.auction_program)?;
-    assert_owned_by(store_info, &program_id)?;
+    assert_owned_by(store_info, program_id)?;
 
     assert_store_safety_vault_manager_match(
         &auction_manager.vault(),
-        &safety_deposit_info,
-        &vault_info,
+        safety_deposit_info,
+        vault_info,
         token_vault_program_info.key,
     )?;
     assert_safety_deposit_config_valid(
@@ -72,7 +72,7 @@ pub fn process_withdraw_master_edition<'a>(
     )?;
 
     // looking out for you!
-    assert_rent_exempt(rent, &destination_info)?;
+    assert_rent_exempt(rent, destination_info)?;
 
     if auction_manager.auction() != *auction_info.key {
         return Err(MetaplexError::AuctionManagerAuctionMismatch.into());
@@ -152,7 +152,7 @@ pub fn process_withdraw_master_edition<'a>(
     let auction_bump_seed = assert_derivation(
         program_id,
         auction_manager_info,
-        &[PREFIX.as_bytes(), &auction_manager.auction().as_ref()],
+        &[PREFIX.as_bytes(), auction_manager.auction().as_ref()],
     )?;
 
     let auction_key = auction_manager.auction();

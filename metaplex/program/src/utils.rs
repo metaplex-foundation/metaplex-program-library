@@ -99,7 +99,7 @@ pub fn assert_store_safety_vault_manager_match(
     let token_mint_key = Pubkey::new_from_array(*array_ref![data, 33, 32]);
 
     assert_derivation(
-        &token_vault_program,
+        token_vault_program,
         safety_deposit_info,
         &[
             mpl_token_vault::state::PREFIX.as_bytes(),
@@ -231,7 +231,7 @@ pub fn create_or_allocate_account_raw<'a>(
     if required_lamports > 0 {
         msg!("Transfer {} lamports to the new account", required_lamports);
         invoke(
-            &system_instruction::transfer(&payer_info.key, new_account_info.key, required_lamports),
+            &system_instruction::transfer(payer_info.key, new_account_info.key, required_lamports),
             &[
                 payer_info.clone(),
                 new_account_info.clone(),
@@ -246,14 +246,14 @@ pub fn create_or_allocate_account_raw<'a>(
     invoke_signed(
         &system_instruction::allocate(new_account_info.key, size.try_into().unwrap()),
         accounts,
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     msg!("Assign the account to the owning program");
     invoke_signed(
         &system_instruction::assign(new_account_info.key, &program_id),
         accounts,
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
     msg!("Completed assignation!");
 
@@ -297,7 +297,7 @@ pub fn transfer_safety_deposit_box_items<'a>(
             transfer_authority,
             rent,
         ],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -325,7 +325,7 @@ pub fn transfer_metadata_ownership<'a>(
             metadata_info,
             token_metadata_program,
         ],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -347,7 +347,7 @@ pub fn transfer_mint_authority<'a>(
             Some(new_authority_key),
             AuthorityType::MintTokens,
             mint_authority_info.key,
-            &[&mint_authority_info.key],
+            &[mint_authority_info.key],
         )
         .unwrap(),
         &[
@@ -363,10 +363,10 @@ pub fn transfer_mint_authority<'a>(
         &set_authority(
             token_program_info.key,
             mint_info.key,
-            Some(&new_authority_key),
+            Some(new_authority_key),
             AuthorityType::FreezeAccount,
             mint_authority_info.key,
-            &[&mint_authority_info.key],
+            &[mint_authority_info.key],
         )
         .unwrap(),
         &[
@@ -538,7 +538,7 @@ pub fn common_redeem_checks(
         ignore_bid_redeemed_item_check,
     } = args;
 
-    let rent = &Rent::from_account_info(&rent_info)?;
+    let rent = &Rent::from_account_info(rent_info)?;
 
     let mut auction_manager: Box<dyn AuctionManager> = get_auction_manager(auction_manager_info)?;
     let store_data = store_info.data.borrow();
@@ -587,7 +587,7 @@ pub fn common_redeem_checks(
             bidder_metadata_info.key.as_ref(),
         ];
         let (redemption_key, actual_redemption_bump_seed) =
-            Pubkey::find_program_address(&redemption_path, &program_id);
+            Pubkey::find_program_address(&redemption_path, program_id);
 
         redemption_bump_seed = actual_redemption_bump_seed;
         if redemption_key != *bid_redemption_info.key {
@@ -617,21 +617,21 @@ pub fn common_redeem_checks(
         assert_signer(bidder_info)?;
     }
 
-    assert_owned_by(&destination_info, token_program_info.key)?;
-    assert_owned_by(&auction_manager_info, &program_id)?;
+    assert_owned_by(destination_info, token_program_info.key)?;
+    assert_owned_by(auction_manager_info, program_id)?;
     assert_owned_by(safety_deposit_token_store_info, token_program_info.key)?;
     if !bid_redemption_info.data_is_empty() {
-        assert_owned_by(bid_redemption_info, &program_id)?;
+        assert_owned_by(bid_redemption_info, program_id)?;
     }
     assert_owned_by(safety_deposit_info, &token_vault_program)?;
     assert_owned_by(vault_info, &token_vault_program)?;
     assert_owned_by(auction_info, &auction_program)?;
-    assert_owned_by(store_info, &program_id)?;
+    assert_owned_by(store_info, program_id)?;
 
     assert_store_safety_vault_manager_match(
         &auction_manager.vault(),
-        &safety_deposit_info,
-        &vault_info,
+        safety_deposit_info,
+        vault_info,
         &token_vault_program,
     )?;
     assert_safety_deposit_config_valid(
@@ -642,7 +642,7 @@ pub fn common_redeem_checks(
         &auction_manager.key(),
     )?;
     // looking out for you!
-    assert_rent_exempt(rent, &destination_info)?;
+    assert_rent_exempt(rent, destination_info)?;
 
     if auction_manager.auction() != *auction_info.key {
         return Err(MetaplexError::AuctionManagerAuctionMismatch.into());
@@ -739,10 +739,10 @@ pub fn common_redeem_finish(args: CommonRedeemFinishArgs) -> ProgramResult {
         if bid_redemption_info.data_is_empty() {
             create_or_allocate_account_raw(
                 *program_id,
-                &bid_redemption_info,
-                &rent_info,
-                &system_info,
-                &payer_info,
+                bid_redemption_info,
+                rent_info,
+                system_info,
+                payer_info,
                 1 + 9 + 32 + 1 + token_type_count as usize,
                 redemption_seeds,
             )?;
@@ -799,7 +799,7 @@ pub fn shift_authority_back_to_originating_user<'a>(
     ];
 
     let (expected_key, _) =
-        Pubkey::find_program_address(original_authority_lookup_seeds, &program_id);
+        Pubkey::find_program_address(original_authority_lookup_seeds, program_id);
 
     if expected_key != *original_authority_lookup_info.key {
         return Err(MetaplexError::OriginalAuthorityLookupKeyMismatch.into());
@@ -857,7 +857,7 @@ pub fn assert_edition_valid(
     let edition_seeds = &[
         mpl_token_metadata::state::PREFIX.as_bytes(),
         program_id.as_ref(),
-        &mint.as_ref(),
+        mint.as_ref(),
         EDITION.as_bytes(),
     ];
     let (edition_key, _) = Pubkey::find_program_address(edition_seeds, program_id);
@@ -898,7 +898,7 @@ pub fn assert_derivation(
     account: &AccountInfo,
     path: &[&[u8]],
 ) -> Result<u8, ProgramError> {
-    let (key, bump) = Pubkey::find_program_address(&path, program_id);
+    let (key, bump) = Pubkey::find_program_address(path, program_id);
     if key != *account.key {
         return Err(MetaplexError::DerivedKeyInvalid.into());
     }

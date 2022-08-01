@@ -233,14 +233,14 @@ pub fn process_empty_payment_account(
             tracker_info,
             &[
                 PREFIX.as_bytes(),
-                &program_id.as_ref(),
+                program_id.as_ref(),
                 auction_manager_info.key.as_ref(),
                 TOTALS.as_bytes(),
             ],
         )?;
     }
 
-    let rent = &Rent::from_account_info(&rent_info)?;
+    let rent = &Rent::from_account_info(rent_info)?;
 
     let auction_manager = get_auction_manager(auction_manager_info)?;
     let store = Store::from_account_info(store_info)?;
@@ -374,8 +374,8 @@ pub fn process_empty_payment_account(
             winning_config_index_key.as_bytes(),
             winning_config_item_index_key.as_bytes(),
             creator_index_key.as_bytes(),
-            &safety_deposit_info.key.as_ref(),
-            &destination.owner.as_ref(),
+            safety_deposit_info.key.as_ref(),
+            destination.owner.as_ref(),
         ],
     )?;
 
@@ -385,8 +385,8 @@ pub fn process_empty_payment_account(
         winning_config_index_key.as_bytes(),
         winning_config_item_index_key.as_bytes(),
         creator_index_key.as_bytes(),
-        &safety_deposit_info.key.as_ref(),
-        &destination.owner.as_ref(),
+        safety_deposit_info.key.as_ref(),
+        destination.owner.as_ref(),
         &[payout_bump],
     ];
 

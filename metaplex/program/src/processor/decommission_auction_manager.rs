@@ -34,7 +34,7 @@ fn set_vault_authority_to_auction_manager_authority<'a>(
             vault_info.clone(),
             vault_program_info.clone(),
         ],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())
@@ -46,7 +46,7 @@ pub fn process_decommission_auction_manager<'a>(
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
-    let mut auction_manager_info = next_account_info(account_info_iter)?;
+    let auction_manager_info = next_account_info(account_info_iter)?;
     let auction_info = next_account_info(account_info_iter)?;
     let authority_info = next_account_info(account_info_iter)?;
     let vault_info = next_account_info(account_info_iter)?;
@@ -92,10 +92,10 @@ pub fn process_decommission_auction_manager<'a>(
     let bump_seed = assert_derivation(
         program_id,
         auction_manager_info,
-        &[PREFIX.as_bytes(), &auction_info.key.as_ref()],
+        &[PREFIX.as_bytes(), auction_info.key.as_ref()],
     )?;
 
-    let authority_seeds = &[PREFIX.as_bytes(), &auction_info.key.as_ref(), &[bump_seed]];
+    let authority_seeds = &[PREFIX.as_bytes(), auction_info.key.as_ref(), &[bump_seed]];
 
     end_auction(
         auction_manager.vault(),
@@ -121,7 +121,7 @@ pub fn process_decommission_auction_manager<'a>(
 
     auction_manager.set_status(AuctionManagerStatus::Disbursing);
 
-    auction_manager.save(&mut auction_manager_info)?;
+    auction_manager.save(auction_manager_info)?;
 
     Ok(())
 }

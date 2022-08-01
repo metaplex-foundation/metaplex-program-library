@@ -54,7 +54,7 @@ pub fn assert_common_checks(
     let bump_seed = assert_derivation(
         program_id,
         auction_manager_info,
-        &[PREFIX.as_bytes(), &auction_info.key.as_ref()],
+        &[PREFIX.as_bytes(), auction_info.key.as_ref()],
     )?;
 
     assert_derivation(
@@ -62,8 +62,8 @@ pub fn assert_common_checks(
         auction_info,
         &[
             mpl_auction::PREFIX.as_bytes(),
-            &store.auction_program.as_ref(),
-            &vault_info.key.as_ref(),
+            store.auction_program.as_ref(),
+            vault_info.key.as_ref(),
         ],
     )?;
 
@@ -124,7 +124,7 @@ pub fn process_init_auction_manager_v2(
         authority_info,
     )?;
 
-    let authority_seeds = &[PREFIX.as_bytes(), &auction_info.key.as_ref(), &[bump_seed]];
+    let authority_seeds = &[PREFIX.as_bytes(), auction_info.key.as_ref(), &[bump_seed]];
 
     create_or_allocate_account_raw(
         *program_id,
@@ -158,7 +158,7 @@ pub fn process_init_auction_manager_v2(
             auction_token_tracker_info,
             &[
                 PREFIX.as_bytes(),
-                &program_id.as_ref(),
+                program_id.as_ref(),
                 auction_manager_info.key.as_ref(),
                 TOTALS.as_bytes(),
             ],
@@ -173,7 +173,7 @@ pub fn process_init_auction_manager_v2(
 
         let token_seeds = &[
             PREFIX.as_bytes(),
-            &program_id.as_ref(),
+            program_id.as_ref(),
             auction_manager_info.key.as_ref(),
             TOTALS.as_bytes(),
             &[token_bump],
@@ -189,7 +189,7 @@ pub fn process_init_auction_manager_v2(
             token_seeds,
         )?;
 
-        token_type_tracker.save(&auction_token_tracker_info);
+        token_type_tracker.save(auction_token_tracker_info);
     }
 
     Ok(())

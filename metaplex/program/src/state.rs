@@ -214,10 +214,10 @@ pub fn get_auction_manager(account: &AccountInfo) -> Result<Box<dyn AuctionManag
 
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     match version {
-        7 => return Ok(Box::new(AuctionManagerV1::from_account_info(account)?)),
-        10 => return Ok(Box::new(AuctionManagerV2::from_account_info(account)?)),
-        _ => return Err(MetaplexError::DataTypeMismatch.into()),
-    };
+        7 => Ok(Box::new(AuctionManagerV1::from_account_info(account)?) as _),
+        10 => Ok(Box::new(AuctionManagerV2::from_account_info(account)?) as _),
+        _ => Err(MetaplexError::DataTypeMismatch.into()),
+    }
 }
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, Debug)]
@@ -300,7 +300,7 @@ impl AuctionManager for AuctionManagerV2 {
                 winning_config_item_index: Some(0),
             })
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -343,7 +343,7 @@ impl AuctionManager for AuctionManagerV2 {
                 winning_config_item_index: Some(0),
             })
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -372,7 +372,7 @@ impl AuctionManager for AuctionManagerV2 {
         if let Some(p_config) = safety_config.participation_config {
             Ok(p_config)
         } else {
-            return Err(MetaplexError::NotEligibleForParticipation.into());
+            Err(MetaplexError::NotEligibleForParticipation.into())
         }
     }
 
@@ -401,7 +401,7 @@ impl AuctionManager for AuctionManagerV2 {
     fn assert_legacy_printing_token_match(&self, _account: &AccountInfo) -> ProgramResult {
         // You cannot use MEV1s with auth tokens with V2 auction managers, so if somehow this is called,
         // throw an error.
-        return Err(MetaplexError::PrintingAuthorizationTokenAccountMismatch.into());
+        Err(MetaplexError::PrintingAuthorizationTokenAccountMismatch.into())
     }
 
     fn get_max_bids_allowed_before_removal_is_stopped(
@@ -424,7 +424,7 @@ impl AuctionManager for AuctionManagerV2 {
 
             Ok(0)
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -444,7 +444,7 @@ impl AuctionManager for AuctionManagerV2 {
 
             Ok(())
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -485,9 +485,9 @@ impl AuctionManager for AuctionManagerV2 {
                 }
             }
 
-            return Err(MetaplexError::NoTokensForThisWinner.into());
+            Err(MetaplexError::NoTokensForThisWinner.into())
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -503,7 +503,7 @@ impl AuctionManager for AuctionManagerV2 {
                 Ok(0)
             }
         } else {
-            return Err(MetaplexError::InvalidOperation.into());
+            Err(MetaplexError::InvalidOperation.into())
         }
     }
 
@@ -902,8 +902,8 @@ fn write_length_type(
 impl SafetyDepositConfig {
     /// Size of account with padding included
     pub fn created_size(&self) -> usize {
-        return BASE_SAFETY_CONFIG_SIZE
-            + (self.amount_type as usize + self.length_type as usize) * self.amount_ranges.len();
+        BASE_SAFETY_CONFIG_SIZE
+            + (self.amount_type as usize + self.length_type as usize) * self.amount_ranges.len()
     }
 
     pub fn get_order(a: &AccountInfo) -> u64 {
@@ -1274,8 +1274,8 @@ pub struct AuctionWinnerTokenTypeTracker {
 
 impl AuctionWinnerTokenTypeTracker {
     pub fn created_size(&self, range_size: u64) -> usize {
-        return BASE_TRACKER_SIZE
-            + (self.amount_type as usize + self.length_type as usize) * range_size as usize;
+        BASE_TRACKER_SIZE
+            + (self.amount_type as usize + self.length_type as usize) * range_size as usize
     }
     pub fn from_account_info(
         a: &AccountInfo,
@@ -1359,19 +1359,19 @@ impl AuctionWinnerTokenTypeTracker {
     ) -> ProgramResult {
         let mut new_range: Vec<AmountRange> = vec![];
 
-        if self.amount_ranges.len() == 0 {
+        if self.amount_ranges.is_empty() {
             self.amount_ranges = amount_ranges
                 .iter()
                 .map(|x| {
                     if x.0 > 0 {
-                        return AmountRange(1, x.1);
+                        AmountRange(1, x.1)
                     } else {
-                        return AmountRange(0, x.1);
+                        AmountRange(0, x.1)
                     }
                 })
                 .collect();
             return Ok(());
-        } else if amount_ranges.len() == 0 {
+        } else if amount_ranges.is_empty() {
             return Ok(());
         }
 
@@ -1589,7 +1589,7 @@ impl BidRedemptionTicket {
                     let order = SafetyDepositConfig::get_order(config);
 
                     let (position, mask) = BidRedemptionTicket::get_index_and_mask(data, order)?;
-                    data[position] = data[position] | mask;
+                    data[position] |= mask;
                 }
                 None => return Err(MetaplexError::InvalidOperation.into()),
             }

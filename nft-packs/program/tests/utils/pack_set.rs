@@ -181,7 +181,7 @@ impl TestPackSet {
                 &mpl_nft_packs::id(),
                 &self.keypair.pubkey(),
                 &self.authority.pubkey(),
-                &new_authority,
+                new_authority,
             )],
             Some(&context.payer.pubkey()),
             &[&self.authority, &context.payer],
@@ -466,7 +466,7 @@ impl TestPackSet {
                 index,
             )],
             Some(&context.payer.pubkey()),
-            &[&context.payer, user_wallet, &new_mint_authority],
+            &[&context.payer, user_wallet, new_mint_authority],
             context.last_blockhash,
         );
 

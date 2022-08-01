@@ -87,7 +87,7 @@ pub fn mint_edition<'a>(
             system_program_info.clone(),
             rent_info.clone(),
         ],
-        &[&signer_seeds],
+        &[signer_seeds],
     )?;
 
     Ok(())

@@ -1259,7 +1259,7 @@ fn main() {
     let client = RpcClient::new(
         app_matches
             .value_of("json_rpc_url")
-            .unwrap_or(&"https://api.devnet.solana.com".to_owned())
+            .unwrap_or("https://api.devnet.solana.com")
             .to_owned(),
     );
 

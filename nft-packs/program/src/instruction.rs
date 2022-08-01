@@ -92,7 +92,7 @@ pub enum NFTPacksInstruction {
     /// - read                           whitelisted_creator. Optional key
     ///
     /// Parameters:
-    /// - name	[u8; 32]
+    /// - name [u8; 32]
     /// - description String
     /// - URI String
     /// - mutable	bool
@@ -265,7 +265,7 @@ pub enum NFTPacksInstruction {
     /// - name Option<[u8; 32]>
     /// - description Option<String>
     /// - URI Option<String>
-    /// - mutable	Option<bool> (only can be changed from true to false)
+    /// - mutable Option<bool> (only can be changed from true to false)
     EditPack(EditPackSetArgs),
 
     /// RequestCardForRedeem

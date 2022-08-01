@@ -138,7 +138,7 @@ pub fn process_set_store_v2<'a>(
     let system_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
 
-    let res = set_store_logic(
+    set_store_logic(
         public,
         program_id,
         auction_program_info,
@@ -150,10 +150,7 @@ pub fn process_set_store_v2<'a>(
         store_info,
         admin_wallet_info,
         payer_info,
-    );
-    if res.is_err() {
-        return res;
-    }
+    )?;
     if !store_config_info.data_is_empty() {
         assert_owned_by(store_config_info, program_id)?;
     }

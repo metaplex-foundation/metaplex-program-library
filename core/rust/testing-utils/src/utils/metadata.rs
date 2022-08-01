@@ -16,6 +16,12 @@ pub struct Metadata {
     pub token: Keypair,
 }
 
+impl Default for Metadata {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Metadata {
     pub fn new() -> Self {
         let mint = Keypair::new();
@@ -69,11 +75,11 @@ impl Metadata {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts(
                 id(),
-                self.pubkey.clone(),
+                self.pubkey,
                 self.mint.pubkey(),
-                context.payer.pubkey().clone(),
-                context.payer.pubkey().clone(),
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
                 name,
                 symbol,
                 uri,
@@ -87,7 +93,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn create_v2(
@@ -123,11 +129,11 @@ impl Metadata {
         let tx = Transaction::new_signed_with_payer(
             &[instruction::create_metadata_accounts_v2(
                 id(),
-                self.pubkey.clone(),
+                self.pubkey,
                 self.mint.pubkey(),
-                context.payer.pubkey().clone(),
-                context.payer.pubkey().clone(),
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
+                context.payer.pubkey(),
                 name,
                 symbol,
                 uri,
@@ -143,7 +149,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn update_primary_sale_happened_via_token(
@@ -162,7 +168,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn update(
@@ -178,7 +184,7 @@ impl Metadata {
             &[instruction::update_metadata_accounts(
                 id(),
                 self.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 Some(Data {
                     name,
@@ -194,7 +200,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn update_v2(
@@ -213,7 +219,7 @@ impl Metadata {
             &[instruction::update_metadata_accounts_v2(
                 id(),
                 self.pubkey,
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 None,
                 Some(DataV2 {
                     name,
@@ -221,8 +227,8 @@ impl Metadata {
                     uri,
                     creators,
                     seller_fee_basis_points,
-                    collection: collection,
-                    uses: uses,
+                    collection,
+                    uses,
                 }),
                 None,
                 Some(is_mutable),
@@ -232,7 +238,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn verify_collection(
@@ -249,7 +255,7 @@ impl Metadata {
                 id(),
                 self.pubkey,
                 collection_authority.pubkey(),
-                context.payer.pubkey().clone(),
+                context.payer.pubkey(),
                 collection_mint,
                 collection,
                 collection_master_edition_account,
@@ -260,7 +266,7 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 
     pub async fn unverify_collection(
@@ -287,6 +293,6 @@ impl Metadata {
             context.last_blockhash,
         );
 
-        Ok(context.banks_client.process_transaction(tx).await?)
+        context.banks_client.process_transaction(tx).await
     }
 }

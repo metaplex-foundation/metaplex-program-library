@@ -79,7 +79,7 @@ async fn cancel_listing() {
         token_program: spl_token::id(),
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -195,7 +195,7 @@ async fn cancel_bid() {
         token_program: spl_token::id(),
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -313,7 +313,7 @@ async fn cancel_highest_bid() {
         token_program: spl_token::id(),
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -382,7 +382,7 @@ async fn cancel_highest_bid() {
         token_program: spl_token::id(),
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -427,7 +427,7 @@ async fn cancel_highest_bid() {
         token_program: spl_token::id(),
         token_mint: test_metadata.mint.pubkey(),
         auction_house_fee_account: ah.auction_house_fee_account,
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);

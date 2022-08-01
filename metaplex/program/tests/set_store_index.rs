@@ -246,10 +246,8 @@ async fn test_set_index<
                 .get_account(account.pubkey)
                 .await
                 .unwrap()
-                .expect(&format!(
-                    "Passed nonexistant account argument {} at {}",
-                    account.pubkey, i
-                ));
+                .unwrap_or_else(|| panic!("Passed nonexistant account argument {} at {}",
+                    account.pubkey, i));
         }
 
         instructions.push(Instruction {
@@ -488,7 +486,7 @@ mod set_store_index {
             .into_iter()
             .map(|i| i + (i >= offset) as usize)
             .map(cache);
-        let expected_caches = idcs.into_iter();
+        let expected_caches = idcs;
 
         // Assert that we insert into the middle, and that the resulting index
         // should not contain more elements
@@ -757,8 +755,8 @@ mod set_store_index {
 
     //// base58 data for `plants_regression` ////
 
-    const INDEX_DATA: &'static str = include_str!("fixtures/plants_regression/index_data.b58");
-    const CACHE_DATA: &'static str = include_str!("fixtures/plants_regression/cache_data.b58");
-    const STORE_DATA: &'static str = include_str!("fixtures/plants_regression/store_data.b58");
-    const BEFORE_DATA: &'static str = include_str!("fixtures/plants_regression/before_data.b58");
+    const INDEX_DATA: &str = include_str!("fixtures/plants_regression/index_data.b58");
+    const CACHE_DATA: &str = include_str!("fixtures/plants_regression/cache_data.b58");
+    const STORE_DATA: &str = include_str!("fixtures/plants_regression/store_data.b58");
+    const BEFORE_DATA: &str = include_str!("fixtures/plants_regression/before_data.b58");
 }
