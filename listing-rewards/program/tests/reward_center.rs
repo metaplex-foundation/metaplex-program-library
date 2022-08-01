@@ -4,7 +4,7 @@ pub mod listing_rewards_test;
 
 use anchor_client::solana_sdk::{signature::Signer, transaction::Transaction};
 use mpl_auction_house::pda::find_auction_house_address;
-use mpl_listing_rewards::reward_center;
+use mpl_listing_rewards::{reward_center, state};
 use solana_program_test::*;
 
 use spl_token::native_mint;
@@ -21,7 +21,7 @@ async fn create_reward_center_success() {
 
     let reward_center_params = reward_center::CreateRewardCenterParams {
         collection_oracle: None,
-        listing_reward_rules: reward_center::ListingRewardRules {
+        listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,
             reward_payout: 1000,
         },

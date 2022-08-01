@@ -18,8 +18,10 @@ use mpl_listing_rewards::{
 
 use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
 
+use mpl_testing_utils::solana::airdrop;
 use solana_program_test::*;
-use std::str::FromStr;
+use solana_sdk::signature::Keypair;
+use std::{println, str::FromStr};
 
 use mpl_token_metadata::state::Collection;
 
@@ -27,7 +29,7 @@ use spl_associated_token_account::get_associated_token_address;
 use spl_token::native_mint;
 
 #[tokio::test]
-async fn sell_success() {
+async fn close_offer_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
 
@@ -96,11 +98,19 @@ async fn sell_success() {
         create_auction_house_data,
     );
 
-    let create_reward_center_ix =
-        create_reward_center(wallet, mint, auction_house, reward_center_params);
+    let create_reward_center_ix = mpl_listing_rewards_sdk::create_reward_center(
+        wallet,
+        mint,
+        auction_house,
+        reward_center_params,
+    );
 
-    let create_rewardable_collection_ix =
-        create_rewardable_collection(wallet, auction_house, reward_center, collection);
+    let create_rewardable_collection_ix = mpl_listing_rewards_sdk::create_rewardable_collection(
+        wallet,
+        auction_house,
+        reward_center,
+        collection,
+    );
 
     let delegate_auctioneer_accounts = mpl_auction_house_sdk::DelegateAuctioneerAccounts {
         auction_house,
@@ -148,7 +158,7 @@ async fn sell_success() {
     );
 
     let sell_accounts = SellAccounts {
-        wallet: metadata_owner.pubkey(),
+        wallet: metadata_owner_address,
         listing,
         reward_center,
         rewardable_collection,
@@ -189,6 +199,79 @@ async fn sell_success() {
         &[sell_ix],
         Some(&metadata_owner_address),
         &[&metadata_owner],
+        context.last_blockhash,
+    );
+
+    let tx_response = context.banks_client.process_transaction(tx).await;
+
+    assert!(tx_response.is_ok());
+
+    // CREATE OFFER TEST
+
+    let buyer = Keypair::new();
+    let buyer_pubkey = &buyer.pubkey();
+    airdrop(&mut context, buyer_pubkey, listing_rewards_test::TEN_SOL)
+        .await
+        .unwrap();
+
+    let create_offer_accounts = CreateOfferAccounts {
+        wallet: *buyer_pubkey,
+        rewardable_collection,
+        transfer_authority: *buyer_pubkey,
+        payment_account: *buyer_pubkey,
+        treasury_mint: mint,
+        token_mint: metadata_mint_address,
+        auction_house,
+        reward_center,
+        token_account,
+        metadata: metadata_address,
+        authority: wallet,
+    };
+
+    let create_offer_params = CreateOfferData {
+        token_size: 1,
+        buyer_price: listing_rewards_test::ONE_SOL,
+    };
+
+    let create_offer_ix = create_offer(create_offer_accounts, create_offer_params);
+
+    let tx = Transaction::new_signed_with_payer(
+        &[create_offer_ix],
+        Some(buyer_pubkey),
+        &[&buyer],
+        context.last_blockhash,
+    );
+
+    let tx_response = context.banks_client.process_transaction(tx).await;
+
+    assert!(tx_response.is_ok());
+
+    // CLOSE OFFER TEST
+
+    let close_offer_accounts = CloseOfferAccounts {
+        wallet: *buyer_pubkey,
+        rewardable_collection,
+        treasury_mint: mint,
+        token_mint: metadata_mint_address,
+        token_account,
+        receipt_account: *buyer_pubkey,
+        metadata: metadata_address,
+        authority: wallet,
+        auction_house,
+        reward_center,
+    };
+
+    let close_offer_params = CloseOfferData {
+        token_size: 1,
+        buyer_price: listing_rewards_test::ONE_SOL,
+    };
+
+    let close_offer_ix = close_offer(close_offer_accounts, close_offer_params);
+
+    let tx = Transaction::new_signed_with_payer(
+        &[close_offer_ix],
+        Some(buyer_pubkey),
+        &[&buyer],
         context.last_blockhash,
     );
 

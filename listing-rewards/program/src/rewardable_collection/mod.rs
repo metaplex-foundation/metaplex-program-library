@@ -5,27 +5,8 @@ use crate::{
     assertions::*,
     constants::{REWARDABLE_COLLECTION, REWARD_CENTER},
     errors::ListingRewardsError,
-    reward_center::*,
+    state::{RewardCenter, RewardableCollection},
 };
-
-#[account]
-pub struct RewardableCollection {
-    /// the mint address of the collection
-    pub collection: Pubkey,
-    /// the address of the associated reward center
-    pub reward_center: Pubkey,
-    /// the pda bump
-    pub bump: u8,
-}
-
-impl RewardableCollection {
-    pub fn size() -> usize {
-        8 + // deliminator
-      32 + // collection
-      32 + // reward_center
-      1 // pda bump
-    }
-}
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct CreateRewardableCollectionParams {

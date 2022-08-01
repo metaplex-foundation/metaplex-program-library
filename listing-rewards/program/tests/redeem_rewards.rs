@@ -13,7 +13,7 @@ use mpl_auction_house::{
 };
 use mpl_listing_rewards::{
     pda::{find_listing_address, find_reward_center_address, find_rewardable_collection_address},
-    reward_center,
+    reward_center, state,
 };
 
 use solana_program_test::*;
@@ -112,7 +112,7 @@ async fn redeem_rewards_success() {
 
     let reward_center_params = reward_center::CreateRewardCenterParams {
         collection_oracle: None,
-        listing_reward_rules: reward_center::ListingRewardRules {
+        listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,
             reward_payout: 1000,
         },

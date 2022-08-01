@@ -4,7 +4,7 @@ pub mod listing_rewards_test;
 
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use mpl_auction_house::pda::find_auction_house_address;
-use mpl_listing_rewards::{pda::find_reward_center_address, reward_center};
+use mpl_listing_rewards::{pda::find_reward_center_address, reward_center, state};
 use solana_program_test::*;
 use std::str::FromStr;
 
@@ -25,7 +25,7 @@ async fn create_rewardable_collection_success() {
 
     let reward_center_params = reward_center::CreateRewardCenterParams {
         collection_oracle: None,
-        listing_reward_rules: reward_center::ListingRewardRules {
+        listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,
             reward_payout: 1000,
         },

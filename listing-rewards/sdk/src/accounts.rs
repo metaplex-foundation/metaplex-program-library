@@ -15,15 +15,27 @@ pub struct SellAccounts {
 
 pub struct CreateOfferAccounts {
     pub wallet: Pubkey,
-    pub offer: Pubkey,
     pub payment_account: Pubkey,
     pub rewardable_collection: Pubkey,
     pub transfer_authority: Pubkey,
     pub treasury_mint: Pubkey,
+    pub token_mint: Pubkey,
     pub token_account: Pubkey,
     pub metadata: Pubkey,
     pub authority: Pubkey,
     pub reward_center: Pubkey,
     pub auction_house: Pubkey,
-    pub buyer_trade_state: Pubkey,
+}
+
+pub struct CloseOfferAccounts {
+    pub wallet: Pubkey,
+    pub receipt_account: Pubkey,
+    pub rewardable_collection: Pubkey,
+    pub treasury_mint: Pubkey,
+    pub token_mint: Pubkey,
+    pub token_account: Pubkey,
+    pub metadata: Pubkey,
+    pub authority: Pubkey,
+    pub reward_center: Pubkey,
+    pub auction_house: Pubkey,
 }

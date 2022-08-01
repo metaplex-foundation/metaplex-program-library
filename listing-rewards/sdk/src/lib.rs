@@ -1,14 +1,18 @@
 pub mod accounts;
 pub mod args;
 
-use accounts::{CreateOfferAccounts, SellAccounts};
+use accounts::{CloseOfferAccounts, CreateOfferAccounts, SellAccounts};
 use anchor_client::solana_sdk::{instruction::Instruction, pubkey::Pubkey, system_program, sysvar};
 use anchor_lang::{prelude::*, InstructionData};
-use args::{CreateOfferData, SellData};
+use args::{CloseOfferData, CreateOfferData, SellData};
+use mpl_auction_house::pda::find_public_bid_trade_state_address;
 use mpl_listing_rewards::{
-    accounts as rewards_accounts, id, instruction, offers::create::CreateOfferParams, pda,
+    accounts as rewards_accounts, id, instruction,
+    offers::{close::CloseOfferParams, create::CreateOfferParams},
+    pda,
     reward_center::CreateRewardCenterParams,
-    rewardable_collection::CreateRewardableCollectionParams, sell::SellParams,
+    rewardable_collection::CreateRewardableCollectionParams,
+    sell::SellParams,
 };
 use spl_associated_token_account::get_associated_token_address;
 
@@ -146,21 +150,19 @@ pub fn create_offer(
     CreateOfferAccounts {
         auction_house,
         authority,
-        buyer_trade_state,
         metadata,
         payment_account,
         reward_center,
         token_account,
         transfer_authority,
         treasury_mint,
+        token_mint,
         wallet,
         rewardable_collection,
-        offer,
     }: CreateOfferAccounts,
     CreateOfferData {
         buyer_price,
         token_size,
-        trade_state_bump,
     }: CreateOfferData,
 ) -> Instruction {
     let (auction_house_fee_account, _) =
@@ -170,6 +172,17 @@ pub fn create_offer(
 
     let (escrow_payment_account, escrow_payment_bump) =
         mpl_auction_house::pda::find_escrow_payment_address(&auction_house, &wallet);
+
+    let (buyer_trade_state, trade_state_bump) = find_public_bid_trade_state_address(
+        &wallet,
+        &auction_house,
+        &treasury_mint,
+        &token_mint,
+        buyer_price,
+        token_size,
+    );
+
+    let (offer, _) = pda::find_offer_address(&wallet, &metadata, &rewardable_collection);
 
     let accounts = rewards_accounts::CreateOffer {
         ah_auctioneer_pda,
@@ -196,6 +209,83 @@ pub fn create_offer(
 
     let data = instruction::CreateOffer {
         create_offer_params: CreateOfferParams {
+            buyer_price,
+            escrow_payment_bump,
+            token_size,
+            trade_state_bump,
+        },
+    }
+    .data();
+
+    Instruction {
+        program_id: id(),
+        accounts,
+        data,
+    }
+}
+
+pub fn close_offer(
+    CloseOfferAccounts {
+        auction_house,
+        authority,
+        metadata,
+        receipt_account,
+        reward_center,
+        rewardable_collection,
+        token_account,
+        token_mint,
+        treasury_mint,
+        wallet,
+    }: CloseOfferAccounts,
+    CloseOfferData {
+        buyer_price,
+        token_size,
+    }: CloseOfferData,
+) -> Instruction {
+    let (auction_house_fee_account, _) =
+        mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
+    let (ah_auctioneer_pda, _) =
+        mpl_auction_house::pda::find_auctioneer_pda(&auction_house, &reward_center);
+    let (escrow_payment_account, escrow_payment_bump) =
+        mpl_auction_house::pda::find_escrow_payment_address(&auction_house, &wallet);
+
+    let (buyer_trade_state, trade_state_bump) = find_public_bid_trade_state_address(
+        &wallet,
+        &auction_house,
+        &treasury_mint,
+        &token_mint,
+        buyer_price,
+        token_size,
+    );
+
+    let (offer, _) = pda::find_offer_address(&wallet, &metadata, &rewardable_collection);
+
+    let accounts = rewards_accounts::CloseOffer {
+        wallet,
+        ah_auctioneer_pda,
+        auction_house,
+        auction_house_fee_account,
+        authority,
+        escrow_payment_account,
+        metadata,
+        offer,
+        receipt_account,
+        reward_center,
+        rewardable_collection,
+        token_account,
+        token_mint,
+        trade_state: buyer_trade_state,
+        treasury_mint,
+        auction_house_program: mpl_auction_house::id(),
+        ata_program: spl_associated_token_account::id(),
+        token_program: spl_token::id(),
+        system_program: system_program::id(),
+        rent: sysvar::rent::id(),
+    }
+    .to_account_metas(None);
+
+    let data = instruction::CloseOffer {
+        close_offer_params: CloseOfferParams {
             buyer_price,
             escrow_payment_bump,
             token_size,

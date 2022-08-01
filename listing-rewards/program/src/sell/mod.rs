@@ -5,8 +5,7 @@ use crate::{
     assertions::assert_belongs_to_rewardable_collection,
     constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
     errors::ListingRewardsError,
-    reward_center::RewardCenter,
-    rewardable_collection::RewardableCollection,
+    state::{Listing, RewardCenter, RewardableCollection},
     MetadataAccount,
 };
 use mpl_auction_house::{
@@ -15,38 +14,6 @@ use mpl_auction_house::{
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
-
-#[account]
-pub struct Listing {
-    pub reward_center: Pubkey,
-    pub seller: Pubkey,
-    pub metadata: Pubkey,
-    pub price: u64,
-    pub token_size: u64,
-    pub bump: u8,
-    pub created_at: i64,
-    pub canceled_at: Option<i64>,
-    pub purchased_at: Option<i64>,
-    pub rewardable_collection: Pubkey,
-    pub reward_redeemed_at: Option<i64>,
-}
-
-impl Listing {
-    pub fn size() -> usize {
-        8 + // deliminator
-        32 + // reward_center
-        32 + // seller
-        32 + // metadata
-        8 + // price
-        8 + // token_size
-        1 + // bump
-        8 + // created_at
-        1 + 8 + // canceled_at
-        1 + 8 + // purchased_at
-        32 + // rewardable_collection
-        1 + 8 // reward_redeemed_at
-    }
-}
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct SellParams {
