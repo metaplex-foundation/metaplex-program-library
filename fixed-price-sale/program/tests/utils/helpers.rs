@@ -61,7 +61,7 @@ pub async fn create_token_account(
             .unwrap(),
         ],
         Some(&context.payer.pubkey()),
-        &[&context.payer, &account],
+        &[&context.payer, account],
         context.last_blockhash,
     );
 

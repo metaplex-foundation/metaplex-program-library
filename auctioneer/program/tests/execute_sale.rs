@@ -332,6 +332,7 @@ async fn execute_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
+        
     assert!(buyer_token_before.is_none());
 
     let listing_config_account = context
@@ -556,6 +557,7 @@ async fn execute_sale_two_bids_success() {
         .get_account(buyer1_token_account)
         .await
         .unwrap();
+        
     assert!(buyer1_token_before.is_none());
 
     let listing_config_account = context
