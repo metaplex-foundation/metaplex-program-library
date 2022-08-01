@@ -398,7 +398,7 @@ pub fn mint(
     {
         let cluster_param = match get_cluster(program.rpc()).unwrap_or(Cluster::Mainnet) {
             Cluster::Devnet => "?devnet",
-            Cluster::Mainnet => "",
+            _ => "",
         };
         return Err(anyhow!(
             "Minting most likely failed with a bot tax. Check the transaction link for more details: https://explorer.solana.com/tx/{}{}",

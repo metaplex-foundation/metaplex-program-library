@@ -341,6 +341,7 @@ impl Creator {
 pub enum Cluster {
     Devnet,
     Mainnet,
+    Unknown,
 }
 
 impl FromStr for Cluster {
@@ -350,6 +351,7 @@ impl FromStr for Cluster {
         match s {
             "devnet" => Ok(Cluster::Devnet),
             "mainnet" => Ok(Cluster::Mainnet),
+            "unknown" => Ok(Cluster::Unknown),
             _ => Err(ConfigError::InvalidCluster(s.to_string()).into()),
         }
     }
@@ -360,6 +362,7 @@ impl ToString for Cluster {
         match self {
             Cluster::Devnet => "devnet".to_string(),
             Cluster::Mainnet => "mainnet".to_string(),
+            Cluster::Unknown => "unknown".to_string(),
         }
     }
 }

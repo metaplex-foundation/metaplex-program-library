@@ -29,16 +29,13 @@ pub fn get_cluster(rpc_client: RpcClient) -> Result<Cluster> {
     let mainnet_hash = Hash::from_str(MAINNET_HASH).unwrap();
     let genesis_hash = rpc_client.get_genesis_hash()?;
 
-    if genesis_hash == devnet_hash {
-        Ok(Cluster::Devnet)
+    Ok(if genesis_hash == devnet_hash {
+        Cluster::Devnet
     } else if genesis_hash == mainnet_hash {
-        Ok(Cluster::Mainnet)
+        Cluster::Mainnet
     } else {
-        Err(anyhow!(format!(
-            "Genesis hash '{}' doesn't match supported Solana clusters for Candy Machine",
-            genesis_hash
-        )))
-    }
+        Cluster::Unknown
+    })
 }
 
 /// Check that the mint token is a valid address.

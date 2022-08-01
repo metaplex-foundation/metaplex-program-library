@@ -66,6 +66,11 @@ impl SHDWMethod {
             let endpoint = match solana_cluster {
                 Cluster::Devnet => DEVNET_ENDPOINT,
                 Cluster::Mainnet => MAINNET_ENDPOINT,
+                Cluster::Unknown => {
+                    return Err(anyhow!(
+                        "ShadowDrive is only supported on devnet or mainnet"
+                    ));
+                }
             };
 
             let http_client = reqwest::Client::new();

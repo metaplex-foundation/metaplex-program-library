@@ -43,11 +43,13 @@ PNG="https://arweave.net/yFoNLhe6cBK-wj0n_Wu-XuX7DC75VbMsNKwVbRSz4iQ?ext=png"
 GIF="https://arweave.net/-cksjCg70nWw-NE8F-DDR4FGQNfQQrWONWm5TIGt6e8?ext=gif"
 JPG="https://arweave.net/X5Czkw4R6EAq5kKW0VgX0oVjLlhn3MV2L0LId0PgZPQ?ext=jpg"
 MP4="https://arweave.net/kM6fxv3Qj_Gcn8tcq9dU8wpZAXHNEWvEfVoIpRJzg8c/?ext=mp4"
-COLLECTION_PNG="https://arweave.net/mzXSf1Zqc2Uxd33DYdqLctfGEplrK83cLB7mtfq9rVc?ext=png"
+COLLECTION_PNG="https://arweave.net/Ycr_kDA9ITOTFHDr2W1pgYZxTsf_SsiqiIVwrfiMz4s"
 
 # Metadata URL for large collection tests
+COLLECTION_URL="https://arweave.net/V1cFfj1Hl4edgdDMCRZiTm7FbRpbFQm8nyOYo9bCodw"
 METADATA_URL="https://arweave.net/uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ"
 # Media hash (png) for large collection tests
+COLLECTION_HASH="6500707cb13044b7d133abb5ad68e0af660b154499229af49419c86a251a2b4d"
 MEDIA_HASH="209a200ebea39be9e9e7882da2bc5e652fb690e612abecb094dc13e06db84e54"
 
 # output colours
@@ -552,7 +554,11 @@ if [ $RESUME -eq 0 ]; then
     fi
 
     if [ "$MANUAL_CACHE" == "Y" ]; then
-        echo -n "{\"program\":{\"candyMachine\":\"\", \"candyMachineCreator\":\"\"}, \"items\":{" >> $CACHE_FILE
+        echo -n "{\"program\":{\"candyMachine\":\"\", \"candyMachineCreator\":\"\", \"collectionMint\":\"\"}, \"items\":{" >> $CACHE_FILE
+
+        NAME="Collection"
+        METADATA_HASH=`sha256sum "$ASSETS_DIR/collection.json" | cut -d ' ' -f 1`
+        echo "\"-1\":{\"name\":\"[$TIMESTAMP] $NAME\",\"image_hash\":\"$COLLECTION_HASH\",\"image_link\":\"$COLLECTION_PNG\",\"metadata_hash\":\"$METADATA_HASH\",\"metadata_link\":\"$COLLECTION_URL\",\"onChain\":false}," >> $CACHE_FILE
         
         for ((i = 0; i < $ITEMS; i++)); do
             if [ "$i" -gt "0" ]; then

@@ -47,6 +47,9 @@ pub async fn process_bundlr(args: BundlrArgs) -> Result<()> {
     let bundlr_node = match solana_cluster {
         Cluster::Devnet => BUNDLR_DEVNET,
         Cluster::Mainnet => BUNDLR_MAINNET,
+        Cluster::Unknown => {
+            return Err(anyhow!("Bundlr is only supported on devnet or mainnet"));
+        }
     };
 
     let balance = BundlrMethod::get_bundlr_balance(&http_client, &address, bundlr_node).await?;

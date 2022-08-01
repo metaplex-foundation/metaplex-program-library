@@ -210,13 +210,18 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
     let cluster = match get_cluster(program.rpc())? {
         Cluster::Devnet => "devnet",
         Cluster::Mainnet => "mainnet",
+        Cluster::Unknown => "",
     };
 
-    println!(
-        "\nVerification successful. You're good to go!\n\nSee your candy machine at:\n  -> https://www.solaneyes.com/address/{}?cluster={}",
-        cache.program.candy_machine,
-        cluster
-    );
+    if cluster.is_empty() {
+        println!("\nVerification successful. You're good to go!");
+    } else {
+        println!(
+            "\nVerification successful. You're good to go!\n\nSee your candy machine at:\n  -> https://www.solaneyes.com/address/{}{}",
+            cache.program.candy_machine,
+            cluster
+        );
+    }
     Ok(())
 }
 

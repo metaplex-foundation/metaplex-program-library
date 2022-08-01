@@ -42,21 +42,16 @@ pub struct BundlrMethod {
 }
 
 impl BundlrMethod {
-    pub async fn new(sugar_config: &SugarConfig, config_data: &ConfigData) -> Result<Self> {
+    pub async fn new(sugar_config: &SugarConfig, _config_data: &ConfigData) -> Result<Self> {
         let client = setup_client(sugar_config)?;
         let program = client.program(CANDY_MACHINE_ID);
         let solana_cluster: Cluster = get_cluster(program.rpc())?;
 
-        let bundlr_node = match config_data.upload_method {
-            UploadMethod::Bundlr => match solana_cluster {
-                Cluster::Devnet => BUNDLR_DEVNET,
-                Cluster::Mainnet => BUNDLR_MAINNET,
-            },
-            _ => {
-                return Err(anyhow!(format!(
-                    "Upload method '{}' currently unsupported!",
-                    &config_data.upload_method.to_string()
-                )))
+        let bundlr_node = match solana_cluster {
+            Cluster::Devnet => BUNDLR_DEVNET,
+            Cluster::Mainnet => BUNDLR_MAINNET,
+            Cluster::Unknown => {
+                return Err(anyhow!("Bundlr is only supported on devnet or mainnet"));
             }
         };
 
