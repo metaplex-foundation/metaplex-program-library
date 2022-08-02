@@ -40,6 +40,7 @@ pub struct MintArgs {
     pub rpc_url: Option<String>,
     pub cache: String,
     pub number: Option<u64>,
+    pub receiver: Option<String>,
     pub candy_machine: Option<String>,
 }
 
@@ -89,6 +90,13 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
         CANDY_EMOJI
     );
 
+    let receiver_pubkey = match args.receiver {
+        Some(receiver_id) => Pubkey::from_str(&receiver_id)
+            .map_err(|_| anyhow!("Failed to parse receiver pubkey: {}", receiver_id))?,
+        None => candy_machine_state.wallet,
+    };
+    println!("\nMinting to {}", &receiver_pubkey);
+
     let number = args.number.unwrap_or(1);
     let available = candy_machine_state.data.items_available - candy_machine_state.items_redeemed;
 
@@ -113,6 +121,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
             candy_pubkey,
             Arc::clone(&candy_machine_state),
             Arc::clone(&collection_pda_info),
+            receiver_pubkey,
         ) {
             Ok(signature) => format!("{} {}", style("Signature:").bold(), signature),
             Err(err) => {
@@ -132,6 +141,7 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
                 candy_pubkey,
                 Arc::clone(&candy_machine_state),
                 Arc::clone(&collection_pda_info),
+                receiver_pubkey,
             ) {
                 pb.abandon_with_message(format!("{}", style("Mint failed ").red().bold()));
                 error!("{:?}", err);
@@ -152,6 +162,7 @@ pub fn mint(
     candy_machine_id: Pubkey,
     candy_machine_state: Arc<CandyMachine>,
     collection_pda_info: Arc<Option<PdaInfo<CollectionPDA>>>,
+    receiver: Pubkey,
 ) -> Result<Signature> {
     let program = client.program(CANDY_MACHINE_ID);
     let payer = program.payer();
@@ -244,11 +255,11 @@ pub fn mint(
     )?;
 
     // Derive associated token account
-    let assoc = get_associated_token_address(&payer, &nft_mint.pubkey());
+    let assoc = get_associated_token_address(&receiver, &nft_mint.pubkey());
 
     // Create associated account instruction
     let create_assoc_account_ix =
-        create_associated_token_account(&payer, &payer, &nft_mint.pubkey());
+        create_associated_token_account(&payer, &receiver, &nft_mint.pubkey());
 
     // Mint to instruction
     let mint_to_ix = mint_to(

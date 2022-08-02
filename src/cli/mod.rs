@@ -81,6 +81,10 @@ pub enum Commands {
         #[clap(short, long)]
         number: Option<u64>,
 
+        /// Public key of the receiver of the minted NFT, defaults to keypair
+        #[clap(long)]
+        receiver: Option<String>,
+
         /// Address of candy machine to mint from.
         #[clap(long)]
         candy_machine: Option<String>,

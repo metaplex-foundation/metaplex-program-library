@@ -168,12 +168,14 @@ async fn run() -> Result<()> {
             rpc_url,
             cache,
             number,
+            receiver,
             candy_machine,
         } => process_mint(MintArgs {
             keypair,
             rpc_url,
             cache,
             number,
+            receiver,
             candy_machine,
         })?,
         Commands::Update {
