@@ -1,4 +1,4 @@
-name: Run Sugar CLI Test
+name: Run Sugar CLI Test 2
 
 on:
   workflow_dispatch:
@@ -20,29 +20,50 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
+      # todo: install from https://sugar.metaplex.com/install.sh after a new release that includes this commit
+      # https://github.com/metaplex-foundation/sugar/commit/875fe740fca6ac8d7dddd4d4c5bfaee363262635
+      - name: Pull in test script from Sugar repository (outside of MPL)
+        shell: bash
+        run: |
+          cd .. && git clone https://github.com/metaplex-foundation/sugar.git && cd sugar
+          cargo install --path ./ --force
+
       - run: solana-keygen new -o $GITHUB_WORKSPACE/kp --no-bip39-passphrase
         shell: bash
 
-      - run: solana config set --url https://api.devnet.solana.com --keypair $GITHUB_WORKSPACE/kp
+      - run: solana config set --url http://127.0.0.1:8899 --keypair $GITHUB_WORKSPACE/kp
         shell: bash
 
-      # note: must specify config before this command, or directly specify network. otherwise, airdrop might fail.
-      - run: solana airdrop 1 $(solana address -k $GITHUB_WORKSPACE/kp)
+      # `sugar-cli-test.amman.js` specifies how to load candy machine and token metadata bytes into the local validator
+      - name: Install and start amman with custom config
         shell: bash
+        run: |
+          cd candy-machine/js
+          YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn && npm install --location=global @metaplex-foundation/amman
+          cat $GITHUB_WORKSPACE/.github/.config/sugar-cli-test.amman.js > .ammanrc.js
+          amman start > /dev/null &
 
-      - run: solana balance $(solana address -k $GITHUB_WORKSPACE/kp)
+      - name: Airdrop and print SOL balance
         shell: bash
+        run: |
+          solana airdrop 1 $(solana address -k $GITHUB_WORKSPACE/kp)
+          solana balance $(solana address -k $GITHUB_WORKSPACE/kp)
 
-      # install the publicly available binary for the lifetime of the workflow
-      - name: Install Stable Sugar
-        run: bash <(curl -sSf https://sugar.metaplex.com/install.sh)
+      - name: Setup AWS credentials
         shell: bash
+        run: |
+          mkdir ~/.aws
+          echo -ne "[default]\naws_access_key_id=${{ secrets.SUGAR_CLI_TEST_AWS_ACCESS_KEY }}\naws_secret_access_key=${{ secrets.SUGAR_CLI_TEST_AWS_SECRET_KEY }}\nregion=${{ secrets.SUGAR_CLI_TEST_AWS_REGION }}" > ~/.aws/credentials
 
-      # we need to actually reference the test script to run it, so we'll clone the repo and launch the script from there
-      - name: Pull in test script from Sugar repository (outside of MPL)
+      # all assets are dumped to root of bucket; we can't update the path on a per-workflow run basis because
+      # sugar manages the paths of the assets (which s3 interprets as the keys)
+      - name: Set AWS upload environment variables
         shell: bash
-        run: cd .. && git clone https://github.com/metaplex-foundation/sugar.git && cd sugar
+        run: |
+          echo "STORAGE=aws" >> $GITHUB_ENV
+          echo "AWS_BUCKET=gh-sugar-cli-test-workflow-assets" >> $GITHUB_ENV
 
-      - name: Run test script from sugar directory
+      # note: by setting the `STORAGE` env var above, the script will default to the AWS upload method over bundlr
+      - name: Run test script from sugar directory (interactive mode + defaults)
         shell: bash
-        run: cd ../sugar && echo | ./script/sugar-cli-test.sh
+        run: cd ../sugar && echo | echo 1 | ./script/sugar-cli-test.sh -r http://127.0.0.1:8899
