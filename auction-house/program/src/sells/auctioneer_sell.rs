@@ -1,6 +1,8 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
 
-use crate::{constants::*, errors::*, sell::sell_logic, utils::*, AuctionHouse, AuthorityScope, *};
+use crate::{
+    constants::*, errors::*, sells::sell_logic, utils::*, AuctionHouse, AuthorityScope, *,
+};
 
 /// Accounts for the [`auctioneer_sell` handler](auction_house/fn.auctioneer_sell.html).
 #[derive(Accounts, Clone)]

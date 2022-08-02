@@ -4,24 +4,24 @@
 //! Full docs can be found [here](https://docs.metaplex.com/auction-house/definition).
 
 pub mod auctioneer;
-pub mod bid;
-pub mod cancel;
+pub mod bids;
+pub mod cancels;
 pub mod constants;
-pub mod deposit;
+pub mod deposits;
 pub mod errors;
-pub mod execute_sale;
+pub mod execute_sales;
 pub mod pda;
 pub mod receipt;
-pub mod sell;
+pub mod sells;
 pub mod state;
 pub mod utils;
-pub mod withdraw;
+pub mod withdraws;
 
 pub use state::*;
 
 use crate::{
-    auctioneer::*, bid::*, cancel::*, constants::*, deposit::*, errors::AuctionHouseError,
-    execute_sale::*, receipt::*, sell::*, utils::*, withdraw::*,
+    auctioneer::*, bids::*, cancels::*, constants::*, deposits::*, errors::AuctionHouseError,
+    execute_sales::*, receipt::*, sells::*, utils::*, withdraws::*,
 };
 
 use anchor_lang::{
@@ -353,7 +353,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        bid::auctioneer_private_bid(
+        bids::auctioneer_private_bid(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -387,7 +387,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        bid::auctioneer_public_bid(
+        bids::auctioneer_public_bid(
             ctx,
             trade_state_bump,
             escrow_payment_bump,
@@ -402,7 +402,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        cancel::cancel(ctx, buyer_price, token_size)
+        cancels::cancel(ctx, buyer_price, token_size)
     }
 
     /// Cancel, but with an auctioneer
@@ -411,7 +411,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        cancel::auctioneer_cancel(ctx, buyer_price, token_size)
+        cancels::auctioneer_cancel(ctx, buyer_price, token_size)
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
@@ -420,7 +420,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        deposit::deposit(ctx, escrow_payment_bump, amount)
+        deposits::deposit(ctx, escrow_payment_bump, amount)
     }
 
     /// Deposit `amount` into the escrow payment account for your specific wallet.
@@ -429,7 +429,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        deposit::auctioneer_deposit(ctx, escrow_payment_bump, amount)
+        deposits::auctioneer_deposit(ctx, escrow_payment_bump, amount)
     }
 
     pub fn execute_sale<'info>(
@@ -440,7 +440,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        execute_sale::execute_sale(
+        execute_sales::execute_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -460,7 +460,7 @@ pub mod auction_house {
         partial_order_size: Option<u64>,
         partial_order_price: Option<u64>,
     ) -> Result<()> {
-        execute_sale::execute_partial_sale(
+        execute_sales::execute_partial_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -480,7 +480,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        execute_sale::auctioneer_execute_sale(
+        execute_sales::auctioneer_execute_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -500,7 +500,7 @@ pub mod auction_house {
         partial_order_size: Option<u64>,
         partial_order_price: Option<u64>,
     ) -> Result<()> {
-        execute_sale::auctioneer_execute_partial_sale(
+        execute_sales::auctioneer_execute_partial_sale(
             ctx,
             escrow_payment_bump,
             _free_trade_state_bump,
@@ -520,7 +520,7 @@ pub mod auction_house {
         buyer_price: u64,
         token_size: u64,
     ) -> Result<()> {
-        sell::sell(
+        sells::sell(
             ctx,
             trade_state_bump,
             free_trade_state_bump,
@@ -537,7 +537,7 @@ pub mod auction_house {
         program_as_signer_bump: u8,
         token_size: u64,
     ) -> Result<()> {
-        sell::auctioneer_sell(
+        sells::auctioneer_sell(
             ctx,
             trade_state_bump,
             free_trade_state_bump,
@@ -552,7 +552,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        withdraw::withdraw(ctx, escrow_payment_bump, amount)
+        withdraws::withdraw(ctx, escrow_payment_bump, amount)
     }
 
     /// Withdraw `amount` from the escrow payment account for your specific wallet.
@@ -561,7 +561,7 @@ pub mod auction_house {
         escrow_payment_bump: u8,
         amount: u64,
     ) -> Result<()> {
-        withdraw::auctioneer_withdraw(ctx, escrow_payment_bump, amount)
+        withdraws::auctioneer_withdraw(ctx, escrow_payment_bump, amount)
     }
 
     /// Close the escrow account of the user.

@@ -1,6 +1,6 @@
 use crate::{
     constants::*, errors::*,
-    execute_sale::auctioneer_execute_sale_logic::auctioneer_execute_sale_logic, utils::*,
+    execute_sales::auctioneer_execute_sale_logic::auctioneer_execute_sale_logic, utils::*,
     AuctionHouse, Auctioneer, AuthorityScope, *,
 };
 use anchor_lang::{prelude::*, AnchorDeserialize};

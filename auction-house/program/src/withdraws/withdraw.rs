@@ -1,6 +1,6 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
 
-use crate::{constants::*, errors::*, withdraw::withdraw_logic, AuctionHouse, AuthorityScope, *};
+use crate::{constants::*, errors::*, withdraws::withdraw_logic, AuctionHouse, AuthorityScope, *};
 
 /// Accounts for the [`withdraw` handler](auction_house/fn.withdraw.html).
 #[derive(Accounts)]

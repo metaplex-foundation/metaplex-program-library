@@ -1,6 +1,6 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
 
-use crate::{cancel::cancel_logic, constants::*, errors::*, AuctionHouse, AuthorityScope, *};
+use crate::{cancels::cancel_logic, constants::*, errors::*, AuctionHouse, AuthorityScope, *};
 
 /// Accounts for the [`cancel` handler](auction_house/fn.cancel.html).
 #[derive(Accounts)]

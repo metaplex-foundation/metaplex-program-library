@@ -2,11 +2,11 @@ use anchor_lang::{prelude::*, AnchorDeserialize};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::{
-    bid::auctioneer_bid_logic::auctioneer_bid_logic, constants::*, errors::AuctionHouseError,
+    bids::auctioneer_bid_logic::auctioneer_bid_logic, constants::*, errors::AuctionHouseError,
     AuctionHouse, Auctioneer,
 };
 
-/// Accounts for the [`auctioneer_private_bid` handler](fn.auctioneer_private_bid.html).
+/// Accounts for the [`auctioneer_public_bid` handler](fn.auctioneer_public_bid.html).
 #[derive(Accounts)]
 #[instruction(
     trade_state_bump: u8,
@@ -14,31 +14,24 @@ use crate::{
     buyer_price: u64,
     token_size: u64
 )]
-pub struct AuctioneerBuy<'info> {
-    /// User wallet account.
+pub struct AuctioneerPublicBuy<'info> {
     wallet: Signer<'info>,
 
-    /// CHECK: Validated in bid_logic.
-    /// User SOL or SPL account to transfer funds from.
+    /// CHECK: Validated in public_bid_logic.
     #[account(mut)]
     payment_account: UncheckedAccount<'info>,
 
-    /// CHECK: Validated in bid_logic.
-    /// SPL token account transfer authority.
+    /// CHECK: Validated in public_bid_logic.
     transfer_authority: UncheckedAccount<'info>,
 
-    /// Auction House instance treasury mint account.
     treasury_mint: Box<Account<'info, Mint>>,
 
-    /// SPL token account.
     token_account: Box<Account<'info, TokenAccount>>,
 
-    /// CHECK: Validated in bid_logic.
-    /// SPL token account metadata.
+    /// CHECK: Validated in public_bid_logic.
     metadata: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    /// Buyer escrow payment account PDA.
     #[account(
         mut,
         seeds = [
@@ -53,17 +46,16 @@ pub struct AuctioneerBuy<'info> {
     /// CHECK: Verified with has_one constraint on auction house account.
     authority: UncheckedAccount<'info>,
 
-    /// CHECK: Verified in ah_auctioneer_pda seeds check.
+    /// CHECK: Verified in ah_auctioneer_pda seeds and in bid logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     auctioneer_authority: Signer<'info>,
 
-    /// Auction House instance PDA account.
     #[account(
         seeds = [
             PREFIX.as_bytes(),
             auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
-            ],
+        ],
         bump = auction_house.bump,
         has_one = authority,
         has_one = treasury_mint,
@@ -72,7 +64,6 @@ pub struct AuctioneerBuy<'info> {
     auction_house: Box<Account<'info, AuctionHouse>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    /// Auction House instance fee account.
     #[account(
         mut,
         seeds = [
@@ -85,14 +76,12 @@ pub struct AuctioneerBuy<'info> {
     auction_house_fee_account: UncheckedAccount<'info>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    /// Buyer trade state PDA.
     #[account(
         mut,
         seeds = [
             PREFIX.as_bytes(),
             wallet.key().as_ref(),
             auction_house.key().as_ref(),
-            token_account.key().as_ref(),
             treasury_mint.key().as_ref(),
             token_account.mint.as_ref(),
             buyer_price.to_le_bytes().as_ref(),
@@ -101,13 +90,16 @@ pub struct AuctioneerBuy<'info> {
         bump
     )]
     buyer_trade_state: UncheckedAccount<'info>,
+
+    /// CHECK: Not dangerous. Account seeds checked in constraint.
+    /// The auctioneer PDA owned by Auction House storing scopes.
     #[account(
         seeds = [
             AUCTIONEER.as_bytes(),
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = ah_auctioneer_pda.bump,
+        bump = ah_auctioneer_pda.bump
     )]
     pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
@@ -116,9 +108,10 @@ pub struct AuctioneerBuy<'info> {
     rent: Sysvar<'info, Rent>,
 }
 
-/// Create a private bid on a specific SPL token that is *held by a specific wallet*.
-pub fn auctioneer_private_bid<'info>(
-    ctx: Context<'_, '_, '_, 'info, AuctioneerBuy<'info>>,
+/// Create a bid on a specific SPL token.
+/// Public bids are specific to the token itself, rather than the auction, and remain open indefinitely until either the user closes it or the requirements for the bid are met and it is matched with a counter bid and closed as a transaction.
+pub fn auctioneer_public_bid(
+    ctx: Context<AuctioneerPublicBuy>,
     trade_state_bump: u8,
     escrow_payment_bump: u8,
     buyer_price: u64,
@@ -145,7 +138,7 @@ pub fn auctioneer_private_bid<'info>(
         escrow_payment_bump,
         buyer_price,
         token_size,
-        false,
+        true,
         *ctx.bumps
             .get("escrow_payment_account")
             .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?,

@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
 
 use crate::{
-    constants::*, errors::*, utils::*, withdraw::withdraw_logic, AuctionHouse, AuthorityScope, *,
+    constants::*, errors::*, utils::*, withdraws::withdraw_logic, AuctionHouse, AuthorityScope, *,
 };
 
 /// Accounts for the [`auctioneer_withdraw` handler](auction_house/fn.auctioneer_withdraw.html).

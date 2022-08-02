@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
 
 use crate::{
-    constants::*, deposit::deposit_logic, errors::*, utils::*, AuctionHouse, AuthorityScope, *,
+    constants::*, deposits::deposit_logic, errors::*, utils::*, AuctionHouse, AuthorityScope, *,
 };
 
 /// Accounts for the [`deposit` handler](auction_house/fn.deposit.html).

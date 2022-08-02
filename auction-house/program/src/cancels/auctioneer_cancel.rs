@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
 
 use crate::{
-    cancel::cancel_logic, constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *,
+    cancels::cancel_logic, constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *,
 };
 
 /// Accounts for the [`auctioneer_cancel` handler](auction_house/fn.auctioneer_cancel.html).

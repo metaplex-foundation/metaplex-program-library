@@ -1,7 +1,7 @@
 use anchor_lang::{prelude::*, AnchorDeserialize};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
-use crate::{bid::bid_logic::bid_logic, constants::*, errors::AuctionHouseError, AuctionHouse};
+use crate::{bids::bid_logic::bid_logic, constants::*, errors::AuctionHouseError, AuctionHouse};
 
 /// Accounts for the [`private_bid` handler](fn.private_bid.html).
 #[derive(Accounts)]
