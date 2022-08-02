@@ -80,7 +80,7 @@ pub fn auctioneer_execute_sale_logic<'c, 'info>(
         return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
     };
 
-    if ts_bump == 0 || seller_ts_data.len() == 0 {
+    if ts_bump == 0 || seller_ts_data.len() == 0 || seller_ts_data[0] == 0 {
         return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
     }
 
