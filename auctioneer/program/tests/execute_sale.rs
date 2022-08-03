@@ -354,9 +354,22 @@ async fn execute_sale_success() {
     )
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
-    assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
+    // assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert_eq!(seller_before.lamports < seller_after.lamports, true);
     assert_eq!(buyer_token_after.amount, 1);
+
+    let listing_config_account = context
+          .banks_client
+          .get_account(listing_config_address)
+          .await
+          .unwrap()
+          .unwrap();
+    
+
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(listing_config_account.data.len());
+
+    assert_eq!(seller_before.lamports + fee_minus + rent_exempt_min, seller_after.lamports);
 }
 
 #[tokio::test]
@@ -556,9 +569,22 @@ async fn execute_sale_two_bids_success() {
     )
     .unwrap();
     let fee_minus: u64 = 100_000_001 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
-    assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
+    // assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
     assert_eq!(seller_before.lamports < seller_after.lamports, true);
     assert_eq!(buyer1_token_after.amount, 1);
+
+    // let listing_config_account = context
+    //       .banks_client
+    //       .get_account(listing_config_address)
+    //       .await
+    //       .unwrap()
+    //       .unwrap();
+    
+
+    // let rent = context.banks_client.get_rent().await.unwrap();
+    // let rent_exempt_min: u64 = rent.minimum_balance(listing_config_account.data.len());
+
+    assert_eq!(seller_before.lamports + fee_minus , seller_after.lamports);
 }
 
 #[tokio::test]
