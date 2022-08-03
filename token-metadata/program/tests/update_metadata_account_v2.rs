@@ -247,7 +247,6 @@ mod update_metadata_account_v2 {
             .unwrap();
 
         let updated_name = "New Name".to_string();
-        let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
 
         let tx2 = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
