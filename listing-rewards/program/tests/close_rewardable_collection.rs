@@ -6,7 +6,7 @@ use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::
 use mpl_auction_house::pda::find_auction_house_address;
 use mpl_listing_rewards::{pda::find_reward_center_address, reward_center, state};
 use solana_program_test::*;
-use std::{println, str::FromStr};
+use std::str::FromStr;
 
 use spl_token::native_mint;
 
@@ -85,7 +85,6 @@ async fn close_rewardable_collection_success() {
 
     let tx_response = context.banks_client.process_transaction(tx).await;
 
-    println!("{:?}", tx_response);
     assert!(tx_response.is_ok());
 
     ()
