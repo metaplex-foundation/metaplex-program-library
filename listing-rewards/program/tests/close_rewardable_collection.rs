@@ -6,19 +6,19 @@ use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::
 use mpl_auction_house::pda::find_auction_house_address;
 use mpl_listing_rewards::{pda::find_reward_center_address, reward_center, state};
 use solana_program_test::*;
-use std::str::FromStr;
+use std::{println, str::FromStr};
 
 use spl_token::native_mint;
 
 #[tokio::test]
-async fn create_rewardable_collection_success() {
+async fn close_rewardable_collection_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
 
     let wallet = context.payer.pubkey();
     let mint = native_mint::id();
 
-    let collection = Pubkey::from_str("Cehzo7ugAvuYcTst9HF24ackLxnrpDkzHFajj17FuyUR").unwrap();
+    let collection = Pubkey::from_str(listing_rewards_test::TEST_COLLECTION).unwrap();
 
     let (auction_house, _) = find_auction_house_address(&wallet, &mint);
     let (reward_center, _) = find_reward_center_address(&auction_house);
@@ -64,11 +64,19 @@ async fn create_rewardable_collection_success() {
         collection,
     );
 
+    let close_rewardable_collection_ix = mpl_listing_rewards_sdk::close_rewardable_collection(
+        wallet,
+        auction_house,
+        reward_center,
+        collection,
+    );
+
     let tx = Transaction::new_signed_with_payer(
         &[
             create_auction_house_ix,
             create_reward_center_ix,
             create_rewardable_collection_ix,
+            close_rewardable_collection_ix,
         ],
         Some(&wallet),
         &[&context.payer],
@@ -77,6 +85,7 @@ async fn create_rewardable_collection_success() {
 
     let tx_response = context.banks_client.process_transaction(tx).await;
 
+    println!("{:?}", tx_response);
     assert!(tx_response.is_ok());
 
     ()

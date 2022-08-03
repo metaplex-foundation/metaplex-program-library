@@ -72,6 +72,13 @@ pub mod listing_rewards {
         rewardable_collection::create::handler(ctx, rewardable_collection_params)
     }
 
+    pub fn close_rewardable_collection(
+        ctx: Context<CloseRewardableCollection>,
+        rewardable_collection_params: CloseRewardableCollectionParams,
+    ) -> Result<()> {
+        rewardable_collection::close::handler(ctx, rewardable_collection_params)
+    }
+
     pub fn sell(ctx: Context<Sell>, sell_params: SellParams) -> Result<()> {
         sell::sell(ctx, sell_params)
     }

@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::Mint;
 use mpl_auction_house::{self, constants::PREFIX, AuctionHouse};
 
 use crate::{
@@ -9,24 +8,27 @@ use crate::{
     state::{RewardCenter, RewardableCollection},
 };
 
+
+#[derive(AnchorSerialize, AnchorDeserialize, Debug)]
+pub struct CloseRewardableCollectionParams {
+    pub collection: Pubkey,
+}
+
 /// Accounts for the [`create_rewardable_collection` handler](listing_rewards/fn.create_rewardable_collection.html).
 #[derive(Accounts, Clone)]
+#[instruction(rewardable_collection_params: CloseRewardableCollectionParams)]
 pub struct CloseRewardableCollection<'info> {
     /// The wallet of collection maintainer. Either the auction house authority or collection oracle.
     #[account(mut)]
     pub wallet: Signer<'info>,
 
-    /// The collection mint address for rewards
-    pub collection: Account<'info, Mint>,
-
     /// The auctioneer program PDA running this auction.
     #[account(
-        has_one = collection,
         constraint = rewardable_collection.deleted_at.is_none() @ ListingRewardsError::RewardableCollectionAlreadyDeleted,
         seeds = [
             REWARDABLE_COLLECTION.as_bytes(), 
             reward_center.key().as_ref(), 
-            collection.key().as_ref()
+            rewardable_collection_params.collection.as_ref()
         ],
         bump = rewardable_collection.bump,
     )]
@@ -57,12 +59,19 @@ pub struct CloseRewardableCollection<'info> {
 
 pub fn handler(
     ctx: Context<CloseRewardableCollection>,
+    CloseRewardableCollectionParams { collection }: CloseRewardableCollectionParams,
 ) -> Result<()> {
     let rewardable_collection = &mut ctx.accounts.rewardable_collection;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
+
+    require_eq!(
+        collection,
+        rewardable_collection.collection,
+        ListingRewardsError::NFTMismatchRewardableCollection
+    );
 
     assert_rewardable_collection_maintainer(wallet.key(), auction_house, reward_center)?;
 
