@@ -243,14 +243,5 @@ pub fn auctioneer_execute_sale<'info>(
     // let mut source_data = listing_config.data.borrow_mut();
     // source_data.fill(0);
 
-    // let amount_of_lamports = listing_config.lamports(); // could be an argument ;-)
-    //     let from = ctx.accounts.listing_config.to_account_info();
-    //     let to = ctx.accounts.seller.to_account_info();
-
-    //     // Debit from_account and credit to_account
-    //     **from.try_borrow_mut_lamports()? -= amount_of_lamports;
-    //     **to.try_borrow_mut_lamports()? += amount_of_lamports;
-
-
     Ok(())
 }
