@@ -851,7 +851,7 @@ if [ ! $EXIT_CODE -eq 0 ]; then
 fi
 
 if [ "${CLOSE}" = "Y" ]; then
-    CANDY_MACHINE_ID=`cat $CACHE_FILE | sed -n -e 's/^\(.*\)\(\"candyMachine\":\"\)\([a-zA-Z0-9]*\)\(.*\)$/\3/p'`
+    CANDY_MACHINE_ID=`cat $CACHE_FILE | sed -n -e 's/\(\"candyMachine\": \"\)\([a-zA-Z0-9]*\)\(.*\)/\2/p'`
     echo ""
     CYN "8. Withdrawing Candy Machine funds and clean up"
     echo ""

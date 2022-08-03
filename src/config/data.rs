@@ -292,6 +292,9 @@ impl HiddenSettings {
                 .expect("Hidden settings hash has to be 32 characters long!"),
         }
     }
+    pub fn set_hash(&mut self, hash: String) {
+        self.hash = hash;
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

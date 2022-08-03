@@ -549,18 +549,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .validate_with(url_validator)
             .interact()
             .unwrap();
-        let hash = Input::with_theme(&theme)
-            .with_prompt("What is the hash value for your hidden settings?")
-            .validate_with(|hash: &String| {
-                if hash.len() != 32 {
-                    Err("Your hidden settings hash has to be 32 characters long.")
-                } else {
-                    Ok(())
-                }
-            })
-            .interact()
-            .unwrap();
-        Some(HiddenSettings::new(name, uri, hash))
+        Some(HiddenSettings::new(name, uri, String::from("")))
     } else {
         None
     };

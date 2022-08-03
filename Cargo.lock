@@ -4638,6 +4638,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "sha2 0.10.2",
  "shellexpand",
  "solana-account-decoder",
  "solana-client",

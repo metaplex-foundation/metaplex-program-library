@@ -25,7 +25,9 @@ use crate::{
         create_and_set_collection, create_candy_machine_data, errors::*, generate_config_lines,
         initialize_candy_machine, upload_config_lines,
     },
+    hash::hash_and_update,
     setup::{setup_client, sugar_setup},
+    update::{process_update, UpdateArgs},
     utils::*,
     validate::parser::{check_name, check_seller_fee_basis_points, check_symbol, check_url},
 };
@@ -72,9 +74,9 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
         }
     }
 
-    let sugar_config = Arc::new(sugar_setup(args.keypair, args.rpc_url)?);
+    let sugar_config = Arc::new(sugar_setup(args.keypair.clone(), args.rpc_url.clone())?);
     let client = setup_client(&sugar_config)?;
-    let config_data = get_config_data(&args.config)?;
+    let mut config_data = get_config_data(&args.config)?;
 
     let candy_machine_address = &cache.program.candy_machine;
 
@@ -208,10 +210,41 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
 
     println!("{} {}", style("Candy machine ID:").bold(), candy_pubkey);
 
+    if let Some(collection_item) = cache.items.get_mut("-1") {
+        println!(
+            "\n{} {}Creating and setting the collection NFT for candy machine",
+            style(format!("[2/{}]", total_steps)).bold().dim(),
+            COLLECTION_EMOJI
+        );
+
+        if item_redeemed {
+            println!("\nAn item has already been minted and thus cannot modify the candy machine collection. Skipping...");
+        } else if collection_item.on_chain {
+            println!("\nCollection mint already deployed.");
+        } else {
+            let pb = spinner_with_style();
+            pb.set_message("Sending create and set collection NFT transaction...");
+
+            let (_, collection_mint) =
+                create_and_set_collection(client, candy_pubkey, &mut cache, &config_data)?;
+
+            pb.finish_and_clear();
+            println!(
+                "{} {}",
+                style("Collection mint ID:").bold(),
+                collection_mint
+            );
+        }
+    }
+
+    // Hidden Settings check needs to be the last action in this command, so we can update the hash with the final cache state.
     if !hidden {
+        let step_num = 2 + (collection_in_cache as u8);
         println!(
             "\n{} {}Writing config lines",
-            style(format!("[2/{}]", total_steps)).bold().dim(),
+            style(format!("[{}/{}]", step_num, total_steps))
+                .bold()
+                .dim(),
             PAPER_EMOJI
         );
 
@@ -255,34 +288,26 @@ pub async fn process_deploy(args: DeployArgs) -> Result<()> {
             }
         }
     } else {
+        // If hidden settings are enabled, update the hash value with the new cache file.
         println!("\nCandy machine with hidden settings deployed.");
-    }
+        let hidden_settings = config_data.hidden_settings.as_ref().unwrap().clone();
 
-    if let Some(collection_item) = cache.items.get_mut("-1") {
         println!(
-            "\n{} {}Creating and setting the collection NFT for candy machine",
-            style(format!("[3/{}]", total_steps)).bold().dim(),
-            COLLECTION_EMOJI
+            "\nHidden settings hash: {}",
+            hash_and_update(hidden_settings, &args.config, &mut config_data, &args.cache,)?
         );
 
-        if item_redeemed {
-            println!("\nAn item has already been minted and thus cannot modify the candy machine collection. Skipping...");
-        } else if collection_item.on_chain {
-            println!("\nCollection mint already deployed.");
-        } else {
-            let pb = spinner_with_style();
-            pb.set_message("Sending create and set collection NFT transaction...");
+        println!("\nUpdating candy machine state with new hash value:\n");
+        let update_args = UpdateArgs {
+            keypair: args.keypair,
+            rpc_url: args.rpc_url,
+            cache: args.cache,
+            new_authority: None,
+            config: args.config,
+            candy_machine: Some(candy_pubkey.to_string()),
+        };
 
-            let (_, collection_mint) =
-                create_and_set_collection(client, candy_pubkey, &mut cache, config_data)?;
-
-            pb.finish_and_clear();
-            println!(
-                "{} {}",
-                style("Collection mint ID:").bold(),
-                collection_mint
-            );
-        }
+        process_update(update_args)?;
     }
 
     Ok(())

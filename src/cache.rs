@@ -1,5 +1,4 @@
 use std::{
-    io::Write,
     ops::{Deref, DerefMut},
     path::Path,
 };
@@ -29,9 +28,8 @@ impl Cache {
     }
 
     pub fn write_to_file<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
-        let c = serde_json::to_string(&self)?;
-        let mut f = File::create(path)?;
-        f.write_all(c.as_bytes())?;
+        let f = File::create(path)?;
+        serde_json::to_writer_pretty(f, &self)?;
 
         Ok(())
     }

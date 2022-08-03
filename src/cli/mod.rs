@@ -15,6 +15,26 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
+    /// Interact with the bundlr network
+    Bundlr {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        #[clap(subcommand)]
+        action: BundlrAction,
+    },
+
+    /// Manage the collection on the candy machine
+    Collection {
+        #[clap(subcommand)]
+        command: CollectionSubcommands,
+    },
+
     /// Interactive process to create the config file
     CreateConfig {
         /// Path to the config file
@@ -33,6 +53,41 @@ pub enum Commands {
         #[clap(default_value = DEFAULT_ASSETS)]
         assets_dir: String,
     },
+
+    /// Deploy cache items into candy machine config on-chain
+    Deploy {
+        /// Path to the config file, defaults to "config.json"
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
+
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+    },
+
+    /// Generate hash of cache file for hidden settings.
+    Hash {
+        /// Path to the config file, defaults to "config.json"
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Compare a provided hash with a cache file to check integrity.
+        #[clap(long)]
+        compare: Option<String>,
+    },
+
     /// Create a candy machine deployment from assets
     Launch {
         /// Path to the directory with the assets to upload
@@ -63,6 +118,7 @@ pub enum Commands {
         #[clap(long)]
         skip_collection_prompt: bool,
     },
+
     /// Mint one NFT from candy machine
     Mint {
         /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
@@ -88,6 +144,28 @@ pub enum Commands {
         /// Address of candy machine to mint from.
         #[clap(long)]
         candy_machine: Option<String>,
+    },
+
+    /// Show the on-chain config of an existing candy machine
+    Show {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Address of candy machine
+        candy_machine: Option<String>,
+
+        /// Display a list of unminted indices
+        #[clap(long)]
+        unminted: bool,
     },
 
     /// Update the candy machine config on-chain
@@ -117,25 +195,6 @@ pub enum Commands {
         candy_machine: Option<String>,
     },
 
-    /// Deploy cache items into candy machine config on-chain
-    Deploy {
-        /// Path to the config file, defaults to "config.json"
-        #[clap(short, long, default_value = DEFAULT_CONFIG)]
-        config: String,
-
-        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
-        #[clap(short, long)]
-        keypair: Option<String>,
-
-        /// RPC Url
-        #[clap(short, long)]
-        rpc_url: Option<String>,
-
-        /// Path to the cache file, defaults to "cache.json"
-        #[clap(long, default_value = DEFAULT_CACHE)]
-        cache: String,
-    },
-
     /// Upload assets to storage and creates the cache config
     Upload {
         /// Path to the directory with the assets to upload
@@ -157,25 +216,6 @@ pub enum Commands {
         /// Path to the cache file
         #[clap(long, default_value = DEFAULT_CACHE)]
         cache: String,
-    },
-
-    /// Withdraw funds from candy machine account closing it
-    Withdraw {
-        /// Address of candy machine to withdraw funds from.
-        #[clap(long)]
-        candy_machine: Option<String>,
-
-        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
-        #[clap(short, long)]
-        keypair: Option<String>,
-
-        /// RPC Url
-        #[clap(short, long)]
-        rpc_url: Option<String>,
-
-        /// List available candy machines, no withdraw performed
-        #[clap(long)]
-        list: bool,
     },
 
     /// Validate JSON metadata files
@@ -208,30 +248,12 @@ pub enum Commands {
         cache: String,
     },
 
-    /// Show the on-chain config of an existing candy machine
-    Show {
-        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
-        #[clap(short, long)]
-        keypair: Option<String>,
-
-        /// RPC Url
-        #[clap(short, long)]
-        rpc_url: Option<String>,
-
-        /// Path to the cache file, defaults to "cache.json"
-        #[clap(long, default_value = DEFAULT_CACHE)]
-        cache: String,
-
-        /// Address of candy machine
+    /// Withdraw funds from candy machine account closing it
+    Withdraw {
+        /// Address of candy machine to withdraw funds from.
+        #[clap(long)]
         candy_machine: Option<String>,
 
-        /// Display a list of unminted indices
-        #[clap(long)]
-        unminted: bool,
-    },
-
-    /// Interact with the bundlr network
-    Bundlr {
         /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
         #[clap(short, long)]
         keypair: Option<String>,
@@ -240,14 +262,9 @@ pub enum Commands {
         #[clap(short, long)]
         rpc_url: Option<String>,
 
-        #[clap(subcommand)]
-        action: BundlrAction,
-    },
-
-    /// Manage the collection on the candy machine
-    Collection {
-        #[clap(subcommand)]
-        command: CollectionSubcommands,
+        /// List available candy machines, no withdraw performed
+        #[clap(long)]
+        list: bool,
     },
 }
 
@@ -266,6 +283,10 @@ pub enum CollectionSubcommands {
         /// Path to the cache file, defaults to "cache.json"
         #[clap(long, default_value = DEFAULT_CACHE)]
         cache: String,
+
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
 
         /// Address of candy machine to update.
         #[clap(long)]
@@ -288,6 +309,10 @@ pub enum CollectionSubcommands {
         /// Path to the cache file, defaults to "cache.json"
         #[clap(long, default_value = DEFAULT_CACHE)]
         cache: String,
+
+        /// Path to the config file
+        #[clap(short, long, default_value = DEFAULT_CONFIG)]
+        config: String,
 
         /// Address of candy machine to update.
         #[clap(long)]

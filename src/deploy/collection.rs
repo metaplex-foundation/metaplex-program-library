@@ -22,7 +22,7 @@ pub fn create_and_set_collection(
     client: Client,
     candy_pubkey: Pubkey,
     cache: &mut Cache,
-    config_data: ConfigData,
+    config_data: &ConfigData,
 ) -> Result<(Signature, Pubkey)> {
     let program = client.program(CANDY_MACHINE_ID);
     let payer = program.payer();
@@ -89,7 +89,7 @@ pub fn create_and_set_collection(
         payer,
         payer,
         collection_item.name.clone(),
-        config_data.symbol,
+        config_data.symbol.clone(),
         collection_item.metadata_link.clone(),
         Some(vec![creator]),
         0,

@@ -345,8 +345,8 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
 
     let mut count = 0;
 
-    for (_index, item) in cache.items.0 {
-        let has_animation = if let Some(animation_link) = item.animation_link {
+    for (_index, item) in &cache.items.0 {
+        let has_animation = if let Some(animation_link) = &item.animation_link {
             animation_link.is_empty()
         } else {
             false
