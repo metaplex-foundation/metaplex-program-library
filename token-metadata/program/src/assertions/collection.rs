@@ -48,6 +48,7 @@ pub fn assert_has_collection_authority(
     delegate_collection_authority_record: Option<&AccountInfo>,
 ) -> Result<(), ProgramError> {
     if let Some(collection_authority_record) = delegate_collection_authority_record {
+        
         let bump = assert_is_collection_delegated_authority(
             collection_authority_record,
             collection_authority_info.key,

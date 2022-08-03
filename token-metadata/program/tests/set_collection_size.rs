@@ -6,7 +6,7 @@ use mpl_token_metadata::{
     error::MetadataError,
     instruction::{approve_collection_authority, set_collection_size},
     state::{CollectionDetails, Metadata as ProgramMetadata},
-    ID as PROGRAM_ID,
+    ID as PROGRAM_ID, pda::find_collection_authority_account,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
@@ -484,4 +484,75 @@ mod set_collection_size {
             .unwrap_err();
         assert_custom_error!(err, MetadataError::SizedCollection);
     }
+}
+
+#[tokio::test]
+async fn invalid_update_authority_fails_with_delegated_collection_authority() {
+    let mut context = program_test().start_with_context().await;
+
+    // Create a Collection Parent NFT with the CollectionDetails set to None
+    let collection_parent_nft = Metadata::new();
+    collection_parent_nft
+        .create_v3(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    let parent_master_edition_account = MasterEditionV2::new(&collection_parent_nft);
+    parent_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    // NFT is created with context payer as the update authority so we need to update this so we don't automatically
+    // get the update authority to sign the transaction.
+    let new_update_authority = Keypair::new();
+
+    collection_parent_nft
+        .change_update_authority(&mut context, new_update_authority.pubkey())
+        .await
+        .unwrap();
+
+    let invalid_update_authority = Keypair::new();
+
+    let (record, _) = find_collection_authority_account(
+        &collection_parent_nft.mint.pubkey(),
+        &invalid_update_authority.pubkey(),
+    );
+
+    let size = 1123;
+
+    let ix = set_collection_size(
+        PROGRAM_ID,
+        collection_parent_nft.pubkey,
+        invalid_update_authority.pubkey(),
+        collection_parent_nft.mint.pubkey(),
+        Some(record),
+        size,
+    );
+
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &invalid_update_authority],
+        context.last_blockhash,
+    );
+
+    let err = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(err, MetadataError::InvalidCollectionUpdateAuthority);
 }

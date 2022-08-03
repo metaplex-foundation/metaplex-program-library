@@ -1841,6 +1841,10 @@ pub fn set_collection_size(
             collection_mint_account_info.key,
             Some(collection_authority_record),
         )?;
+
+        if !collection_update_authority_account_info.is_signer {
+            return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
+        }
     } else {
         assert_has_collection_authority(
             collection_update_authority_account_info,
