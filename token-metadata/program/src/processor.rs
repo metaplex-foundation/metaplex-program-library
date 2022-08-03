@@ -1888,6 +1888,15 @@ pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
     let token_standard = if accounts.len() == 4 {
         let edition_account_info = next_account_info(account_info_iter)?;
 
+        let edition_path = Vec::from([
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_account_info.key.as_ref(),
+            EDITION.as_bytes(),
+        ]);
+        assert_owned_by(edition_account_info, program_id)?;
+        assert_derivation(program_id, edition_account_info, &edition_path)?;
+
         check_token_standard(mint_account_info, Some(edition_account_info))?
     } else {
         check_token_standard(mint_account_info, None)?
