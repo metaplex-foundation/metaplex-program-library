@@ -573,18 +573,18 @@ async fn execute_sale_two_bids_success() {
     assert_eq!(seller_before.lamports < seller_after.lamports, true);
     assert_eq!(buyer1_token_after.amount, 1);
 
-    // let listing_config_account = context
-    //       .banks_client
-    //       .get_account(listing_config_address)
-    //       .await
-    //       .unwrap()
-    //       .unwrap();
+    let listing_config_account = context
+          .banks_client
+          .get_account(listing_config_address)
+          .await
+          .unwrap()
+          .unwrap();
     
 
-    // let rent = context.banks_client.get_rent().await.unwrap();
-    // let rent_exempt_min: u64 = rent.minimum_balance(listing_config_account.data.len());
+    let rent = context.banks_client.get_rent().await.unwrap();
+    let rent_exempt_min: u64 = rent.minimum_balance(listing_config_account.data.len());
 
-    assert_eq!(seller_before.lamports + fee_minus , seller_after.lamports);
+    assert_eq!(seller_before.lamports + fee_minus + rent_exempt_min, seller_after.lamports);
 }
 
 #[tokio::test]
