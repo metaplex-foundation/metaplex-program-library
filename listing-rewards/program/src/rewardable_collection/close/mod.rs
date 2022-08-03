@@ -1,1 +1,72 @@
-pub struct Hi {}
+use anchor_lang::prelude::*;
+use anchor_spl::token::Mint;
+use mpl_auction_house::{self, constants::PREFIX, AuctionHouse};
+
+use crate::{
+    assertions::*,
+    constants::{REWARDABLE_COLLECTION, REWARD_CENTER},
+    errors::ListingRewardsError,
+    state::{RewardCenter, RewardableCollection},
+};
+
+/// Accounts for the [`create_rewardable_collection` handler](listing_rewards/fn.create_rewardable_collection.html).
+#[derive(Accounts, Clone)]
+pub struct CloseRewardableCollection<'info> {
+    /// The wallet of collection maintainer. Either the auction house authority or collection oracle.
+    #[account(mut)]
+    pub wallet: Signer<'info>,
+
+    /// The collection mint address for rewards
+    pub collection: Account<'info, Mint>,
+
+    /// The auctioneer program PDA running this auction.
+    #[account(
+        has_one = collection,
+        constraint = rewardable_collection.deleted_at.is_none() @ ListingRewardsError::RewardableCollectionAlreadyDeleted,
+        seeds = [
+            REWARDABLE_COLLECTION.as_bytes(), 
+            reward_center.key().as_ref(), 
+            collection.key().as_ref()
+        ],
+        bump = rewardable_collection.bump,
+    )]
+    pub rewardable_collection: Account<'info, RewardableCollection>,
+
+    /// Auction House instance PDA account.
+    #[account(
+        seeds = [
+            PREFIX.as_bytes(), 
+            auction_house.creator.as_ref(), 
+            auction_house.treasury_mint.as_ref()
+        ], 
+        seeds::program=mpl_auction_house::id(), 
+        bump = auction_house.bump
+    )]
+    pub auction_house: Box<Account<'info, AuctionHouse>>,
+
+    /// The auctioneer program PDA running this auction.
+    #[account(
+        seeds = [
+            REWARD_CENTER.as_bytes(), 
+            auction_house.key().as_ref()
+        ], 
+        bump = reward_center.bump
+    )]
+    pub reward_center: Account<'info, RewardCenter>,
+}
+
+pub fn handler(
+    ctx: Context<CloseRewardableCollection>,
+) -> Result<()> {
+    let rewardable_collection = &mut ctx.accounts.rewardable_collection;
+    let reward_center = &ctx.accounts.reward_center;
+    let auction_house = &ctx.accounts.auction_house;
+    let wallet = &ctx.accounts.wallet;
+    let clock = Clock::get()?;
+
+    assert_rewardable_collection_maintainer(wallet.key(), auction_house, reward_center)?;
+
+    rewardable_collection.deleted_at = Some(clock.unix_timestamp);
+
+    Ok(())
+}

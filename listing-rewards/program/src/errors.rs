@@ -33,4 +33,8 @@ pub enum ListingRewardsError {
     // 6008
     #[msg("The listings is not eligible for rewards yet")]
     IneligibaleForRewards,
+
+    // 6009
+    #[msg("Cannot delete an already flushed out rewardable collection")]
+    RewardableCollectionAlreadyDeleted,
 }
