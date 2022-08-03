@@ -18,7 +18,7 @@ use crate::{
     offers::{close::*, create::*},
     redeem_rewards::*,
     reward_center::*,
-    rewardable_collection::*,
+    rewardable_collection::{close::*, create::*},
     sell::*,
 };
 
@@ -69,7 +69,7 @@ pub mod listing_rewards {
         ctx: Context<CreateRewardableCollection>,
         rewardable_collection_params: CreateRewardableCollectionParams,
     ) -> Result<()> {
-        rewardable_collection::create_rewardable_collection(ctx, rewardable_collection_params)
+        rewardable_collection::create::handler(ctx, rewardable_collection_params)
     }
 
     pub fn sell(ctx: Context<Sell>, sell_params: SellParams) -> Result<()> {

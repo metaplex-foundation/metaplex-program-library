@@ -2,7 +2,7 @@ use crate::{
     assertions::assert_belongs_to_rewardable_collection,
     constants::{OFFER, REWARDABLE_COLLECTION, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{RewardableCollection, RewardCenter, Offer},
+    state::{Offer, RewardCenter, RewardableCollection},
     MetadataAccount,
 };
 use anchor_lang::prelude::{Result, *};

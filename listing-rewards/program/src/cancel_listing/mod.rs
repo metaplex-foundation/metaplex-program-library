@@ -1,7 +1,18 @@
+use crate::{
+    assertions::assert_belongs_to_rewardable_collection,
+    constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
+    errors::ListingRewardsError,
+    state::{Listing, RewardCenter, RewardableCollection},
+    MetadataAccount,
+};
 use anchor_lang::prelude::*;
-use anchor_spl::token::{TokenAccount, Mint, Token};
-use mpl_auction_house::{AuctionHouse, constants::{AUCTIONEER, PREFIX, FEE_PAYER}, program::AuctionHouse as AuctionHouseProgram, cpi::accounts::AuctioneerCancel};
-use crate::{constants::{REWARD_CENTER, REWARDABLE_COLLECTION, LISTING}, state::{RewardCenter, Listing, RewardableCollection}, MetadataAccount, errors::ListingRewardsError, assertions::assert_belongs_to_rewardable_collection};
+use anchor_spl::token::{Mint, Token, TokenAccount};
+use mpl_auction_house::{
+    constants::{AUCTIONEER, FEE_PAYER, PREFIX},
+    cpi::accounts::AuctioneerCancel,
+    program::AuctionHouse as AuctionHouseProgram,
+    AuctionHouse,
+};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CancelListingParams {
@@ -114,7 +125,10 @@ pub struct CancelListing<'info> {
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
 }
 
-pub fn handler(ctx: Context<CancelListing>, CancelListingParams { price, token_size }: CancelListingParams) -> Result<()> {
+pub fn handler(
+    ctx: Context<CancelListing>,
+    CancelListingParams { price, token_size }: CancelListingParams,
+) -> Result<()> {
     let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
@@ -134,18 +148,22 @@ pub fn handler(ctx: Context<CancelListing>, CancelListingParams { price, token_s
         &[reward_center.bump],
     ]];
 
-    let cancel_accounts_ctx = CpiContext::new_with_signer(ctx.accounts.auction_house_program.to_account_info(), AuctioneerCancel {
-        wallet: ctx.accounts.wallet.to_account_info(),
-        token_account: ctx.accounts.token_account.to_account_info(),
-        token_mint: ctx.accounts.token_mint.to_account_info(),
-        auction_house: ctx.accounts.auction_house.to_account_info(),
-        auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-        trade_state: ctx.accounts.trade_state.to_account_info(),
-        authority: ctx.accounts.authority.to_account_info(),
-        auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
-        ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
-        token_program: ctx.accounts.token_program.to_account_info(),
-    }, reward_center_signer_seeds);
+    let cancel_accounts_ctx = CpiContext::new_with_signer(
+        ctx.accounts.auction_house_program.to_account_info(),
+        AuctioneerCancel {
+            wallet: ctx.accounts.wallet.to_account_info(),
+            token_account: ctx.accounts.token_account.to_account_info(),
+            token_mint: ctx.accounts.token_mint.to_account_info(),
+            auction_house: ctx.accounts.auction_house.to_account_info(),
+            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
+            trade_state: ctx.accounts.trade_state.to_account_info(),
+            authority: ctx.accounts.authority.to_account_info(),
+            auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
+            ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+        },
+        reward_center_signer_seeds,
+    );
 
     mpl_auction_house::cpi::auctioneer_cancel(cancel_accounts_ctx, price, token_size)?;
 

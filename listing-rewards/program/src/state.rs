@@ -8,6 +8,8 @@ pub struct RewardableCollection {
     pub reward_center: Pubkey,
     /// the pda bump
     pub bump: u8,
+    /// Deleted at timestamp
+    pub deleted_at: Option<i64>,
 }
 
 impl RewardableCollection {
@@ -15,7 +17,8 @@ impl RewardableCollection {
         8 + // deliminator
       32 + // collection
       32 + // reward_center
-      1 // pda bump
+      1 + // pda bump
+      8 // deleted_at
     }
 }
 

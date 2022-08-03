@@ -15,7 +15,7 @@ use mpl_listing_rewards::{
     offers::{close::CloseOfferParams, create::CreateOfferParams},
     pda,
     reward_center::CreateRewardCenterParams,
-    rewardable_collection::CreateRewardableCollectionParams,
+    rewardable_collection::create::CreateRewardableCollectionParams,
     sell::SellParams,
 };
 use spl_associated_token_account::get_associated_token_address;
