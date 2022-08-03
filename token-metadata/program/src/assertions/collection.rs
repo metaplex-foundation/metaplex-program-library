@@ -19,6 +19,7 @@ pub fn assert_collection_update_is_valid(
     // If incoming verified is true. Confirm incoming and existing are identical
     let is_incoming_data_valid = !is_incoming_verified_true
         || (existing.is_some()
+            && !existing.as_ref().unwrap().verified
             && incoming.as_ref().unwrap().verified == existing.as_ref().unwrap().verified
             && incoming.as_ref().unwrap().key == existing.as_ref().unwrap().key);
 

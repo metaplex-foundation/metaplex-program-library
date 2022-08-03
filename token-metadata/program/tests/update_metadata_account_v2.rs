@@ -275,7 +275,61 @@ mod update_metadata_account_v2 {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx2).await.unwrap();
+        let result = context
+            .banks_client
+            .process_transaction(tx2)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(
+            result,
+            MetadataError::CollectionCannotBeVerifiedInThisInstruction
+        );
+
+        test_metadata
+            .unverify_collection(
+                &mut context,
+                test_collection.pubkey,
+                &new_collection_authority,
+                test_collection.mint.pubkey(),
+                collection_master_edition_account.pubkey,
+                Some(record),
+            )
+            .await
+            .unwrap();
+        let metadata_after_unverify = test_metadata.get_data(&mut context).await;
+        assert!(!metadata_after_unverify.collection.unwrap().verified);
+
+        let updated_name = "New Name".to_string();
+        let puffed_updated_name = puffed_out_string(&updated_name, MAX_NAME_LENGTH);
+
+        let tx3 = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey(),
+                None,
+                Some(DataV2 {
+                    name: updated_name,
+                    symbol: symbol.clone(),
+                    uri: uri.clone(),
+                    creators: None,
+                    seller_fee_basis_points: 10,
+                    collection: Some(Collection {
+                        key: test_collection.mint.pubkey(),
+                        verified: false,
+                    }),
+                    uses: None,
+                }),
+                None,
+                Some(false),
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx3).await.unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
 
