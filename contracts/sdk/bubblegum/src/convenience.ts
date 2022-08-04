@@ -132,7 +132,7 @@ export async function getVoucherPDA(
     [
       Buffer.from("voucher", "utf8"),
       tree.toBuffer(),
-      (new BN(leafIndex)).toBuffer("le", 8),
+      Uint8Array.from((new BN(leafIndex)).toArray("le", 8)),
     ],
     PROGRAM_ID
   );
@@ -147,7 +147,7 @@ export async function getLeafAssetId(
     [
       Buffer.from("asset", "utf8"),
       tree.toBuffer(),
-      leafIndex.toBuffer("le", 8),
+      Uint8Array.from(leafIndex.toArray("le", 8)),
     ],
     PROGRAM_ID
   );
