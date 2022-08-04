@@ -1691,6 +1691,7 @@ version = "1.3.3"
 dependencies = [
  "arrayref",
  "borsh",
+ "itertools",
  "mpl-token-vault",
  "num-derive",
  "num-traits",

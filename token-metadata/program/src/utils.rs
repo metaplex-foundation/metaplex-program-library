@@ -4,8 +4,8 @@ use crate::{
     error::MetadataError,
     pda::find_master_edition_account,
     state::{
-        get_reservation_list, CollectionDetails, Data, DataV2, Edition, EditionMarker, Key,
-        MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, Uses,
+        get_reservation_list, CollectionDetails, Creator, Data, DataV2, Edition, EditionMarker,
+        Key, MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, Uses,
         EDITION, EDITION_MARKER_BIT_SIZE, MAX_CREATOR_LIMIT, MAX_EDITION_LEN,
         MAX_EDITION_MARKER_SIZE, MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, MAX_NAME_LENGTH,
         MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
@@ -13,6 +13,7 @@ use crate::{
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 use borsh::{BorshDeserialize, BorshSerialize};
+use itertools::Itertools;
 use solana_program::{
     account_info::AccountInfo,
     borsh::try_from_slice_unchecked,
@@ -38,7 +39,6 @@ pub fn assert_data_valid(
     existing_metadata: &Metadata,
     allow_direct_creator_writes: bool,
     update_authority_is_signer: bool,
-    is_updating: bool,
 ) -> ProgramResult {
     if data.name.len() > MAX_NAME_LENGTH {
         return Err(MetadataError::NameTooLong.into());
@@ -55,79 +55,81 @@ pub fn assert_data_valid(
     if data.seller_fee_basis_points > 10000 {
         return Err(MetadataError::InvalidBasisPoints.into());
     }
-    if data.creators.is_some() {
-        if let Some(creators) = &data.creators {
-            if creators.len() > MAX_CREATOR_LIMIT {
-                return Err(MetadataError::CreatorsTooLong.into());
+
+    if let Some(creators) = &data.creators {
+        if creators.len() > MAX_CREATOR_LIMIT {
+            return Err(MetadataError::CreatorsTooLong.into());
+        }
+
+        if creators.is_empty() {
+            return Err(MetadataError::CreatorsMustBeAtleastOne.into());
+        }
+
+        // Do not allow duplicate creators.
+        let u: Vec<&Creator> = creators.into_iter().unique().collect();
+        if u.len() != creators.len() {
+            return Err(MetadataError::DuplicateCreatorAddress.into());
+        }
+
+        let mut share_total: u8 = 0;
+        for creator in creators {
+            share_total = share_total
+                .checked_add(creator.share)
+                .ok_or(MetadataError::NumericalOverflowError)?;
+
+            // If this flag is set we allow creators to be marked as verified without further
+            // checking.  This can only be done in special circumstances such as when minting a
+            // limited edition.
+            if allow_direct_creator_writes {
+                continue;
             }
 
-            if creators.is_empty() {
-                return Err(MetadataError::CreatorsMustBeAtleastOne.into());
-            } else {
-                let mut found = false;
-                let mut total: u8 = 0;
-                for i in 0..creators.len() {
-                    let creator = &creators[i];
-                    for iter in creators.iter().skip(i + 1) {
-                        if iter.address == creator.address {
-                            return Err(MetadataError::DuplicateCreatorAddress.into());
+            // If this specific creator is a signer and an update authority, then no matter
+            // whether `creator.verified` is `true` or `false` for this specific creator (of this
+            // loop iteration), we are ok with it because this creator is allowed to verify
+            // themself.
+            if update_authority_is_signer && creator.address == *update_authority {
+                continue;
+            }
+
+            // If the previous two conditions are not true then we check for the existence of
+            // an existing metadata creators array.
+            // 1. If `creator.verified` is set to `true` for this specific creator (of this loop
+            //    iteration), then it must be already set to `true` in an existing metadata creators
+            //    array.
+            // 2. If `creator.verified` is set to `false` for this specific creator (of this loop
+            //    iteration), then it must NOT be set to true in an existing metadata creators
+            //    array.  It is ok in this case if existing metadata creators array either does
+            //    not exist or if this particular creator is not listed in the creators array.
+            if let Some(existing_creators) = &existing_metadata.data.creators {
+                match existing_creators
+                    .iter()
+                    .find(|c| c.address == creator.address)
+                {
+                    Some(existing_creator) => {
+                        if creator.verified && !existing_creator.verified {
+                            return Err(MetadataError::CannotVerifyAnotherCreator.into());
+                        } else if !creator.verified && existing_creator.verified {
+                            return Err(MetadataError::CannotUnverifyAnotherCreator.into());
                         }
                     }
-
-                    total = total
-                        .checked_add(creator.share)
-                        .ok_or(MetadataError::NumericalOverflowError)?;
-
-                    if creator.address == *update_authority {
-                        found = true;
-                    }
-
-                    // Dont allow metadata owner to unilaterally say a creator verified...
-                    // cross check with array, only let them say verified=true here if
-                    // it already was true and in the array.
-                    // Conversely, dont let a verified creator be wiped.
-                    if (!update_authority_is_signer || creator.address != *update_authority)
-                        && !allow_direct_creator_writes
-                    {
-                        if let Some(existing_creators) = &existing_metadata.data.creators {
-                            match existing_creators
-                                .iter()
-                                .find(|c| c.address == creator.address)
-                            {
-                                Some(existing_creator) => {
-                                    if creator.verified && !existing_creator.verified {
-                                        return Err(
-                                            MetadataError::CannotVerifyAnotherCreator.into()
-                                        );
-                                    } else if !creator.verified && existing_creator.verified {
-                                        return Err(
-                                            MetadataError::CannotUnverifyAnotherCreator.into()
-                                        );
-                                    }
-                                }
-                                None => {
-                                    if creator.verified {
-                                        return Err(
-                                            MetadataError::CannotVerifyAnotherCreator.into()
-                                        );
-                                    }
-                                }
-                            }
-                        } else if creator.verified {
+                    None => {
+                        if creator.verified {
                             return Err(MetadataError::CannotVerifyAnotherCreator.into());
                         }
                     }
                 }
-
-                if !found && !allow_direct_creator_writes && !is_updating {
-                    return Err(MetadataError::MustBeOneOfCreators.into());
-                }
-                if total != 100 {
-                    return Err(MetadataError::ShareTotalMustBe100.into());
-                }
+            } else if creator.verified {
+                return Err(MetadataError::CannotVerifyAnotherCreator.into());
             }
         }
+
+        // Ensure share total is 100%.
+        if share_total != 100 {
+            return Err(MetadataError::ShareTotalMustBe100.into());
+        }
     }
+
     Ok(())
 }
 
@@ -599,7 +601,8 @@ pub fn mint_limited_edition<'a>(
             total: u.total,
         }),
     };
-    // create the metadata the normal way...
+    // create the metadata the normal way, except `allow_direct_creator_writes` is set to true
+    // because we are directly copying from the Master Edition metadata.
 
     process_create_metadata_accounts_logic(
         program_id,
@@ -868,6 +871,16 @@ pub const SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
     0x92, 0x17, 0x2c, 0xc4, 0x72, 0x5d, 0xc0, 0x41, 0xf9, 0xdd, 0x8c, 0x51, 0x52, 0x60, 0x04, 0x26,
     0x00, 0x93, 0xa3, 0x0b, 0x02, 0x73, 0xdc, 0xfa, 0x74, 0x92, 0x17, 0xfc, 0x94, 0xa2, 0x40, 0x49,
 ]);
+
+// This equals the program address of the Bubblegum program:
+// "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+// This allows the Bubblegum program to add verified creators since they were verified as part of
+// the Bubblegum program.
+pub const BUBBLEGUM_SEED_AUTHORITY: Pubkey = Pubkey::new_from_array([
+    0x98, 0x8b, 0x80, 0xeb, 0x79, 0x35, 0x28, 0x69, 0xb2, 0x24, 0x74, 0x5f, 0x59, 0xdd, 0xbf, 0x8a,
+    0x26, 0x58, 0xca, 0x13, 0xdc, 0x68, 0x81, 0x21, 0x26, 0x35, 0x1c, 0xae, 0x07, 0xc1, 0xa5, 0xa5,
+]);
+
 /// Create a new account instruction
 pub fn process_create_metadata_accounts_logic(
     program_id: &Pubkey,
@@ -910,6 +923,18 @@ pub fn process_create_metadata_accounts_logic(
     )?;
     assert_owned_by(mint_info, &spl_token::id())?;
 
+    // This allows the Bubblegum program to create metadata with verified creators since they were verified
+    // already by the Bubblegum program.
+    const BUBBLEGUM_ACTIVATED: bool = false;
+    let allow_direct_creator_writes = if BUBBLEGUM_ACTIVATED
+        && mint_authority_info.key == &BUBBLEGUM_SEED_AUTHORITY
+        && mint_authority_info.is_signer
+    {
+        true
+    } else {
+        allow_direct_creator_writes
+    };
+
     let metadata_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -946,7 +971,6 @@ pub fn process_create_metadata_accounts_logic(
         &metadata,
         allow_direct_creator_writes,
         update_authority_info.is_signer,
-        false,
     )?;
 
     let mint_decimals = get_mint_decimals(mint_info)?;
