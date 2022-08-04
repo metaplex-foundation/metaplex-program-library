@@ -15,15 +15,9 @@ const programDir = path.join(__dirname, '..', '..', 'programs', 'bubblegum');
 const cargoToml = path.join(programDir, 'Cargo.toml')
 const generatedIdlDir = path.join(__dirname, 'idl');
 const generatedSDKDir = path.join(__dirname, 'src', 'generated');
-const rootDir = path.join(__dirname, '.crates')
 
 async function main() {
-    const anchorExecutable = realpathSync("../../../deps/anchor/target/debug/anchor");
-    if (!existsSync(anchorExecutable)) {
-        console.log(`Could not find: ${anchorExecutable}`);
-        throw new Error("Please `cd candyland/deps/anchor/anchor-cli` && cargo build`")
-    }
-    const anchor = spawn(anchorExecutable, ['build', '--idl', generatedIdlDir], { cwd: programDir })
+    const anchor = spawn("anchor", ['build', '--idl', generatedIdlDir], { cwd: programDir })
         .on('error', (err) => {
             console.error(err);
             // @ts-ignore this err does have a code
