@@ -52,11 +52,9 @@ import {
 } from "../sdk/gumball-machine/src/generated/types/index";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
-  createMint,
-  getOrCreateAssociatedTokenAccount,
-  mintTo,
-  getAccount,
-} from "../../deps/solana-program-library/token/js/src";
+  Token,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { NATIVE_MINT } from "@solana/spl-token";
 import { EncodeMethod } from "../sdk/gumball-machine/src/generated/types/EncodeMethod";
 import { getBubblegumAuthorityPDA } from "../sdk/bubblegum/src/convenience";
@@ -252,7 +250,7 @@ describe("gumball-machine", function () {
       GumballMachine.provider,
       initializeGumballMachineInstrs,
       [payer, gumballMachineAcctKeypair, merkleRollKeypair],
-      true,
+      true
     );
 
     const tree = buildTree(
@@ -920,11 +918,17 @@ describe("gumball-machine", function () {
         "confirmed"
       );
 
-      someMint = await createMint(connection, payer, payer.publicKey, null, 9);
-      creatorReceiverTokenAccount = await getOrCreateAssociatedTokenAccount(
-        connection,
-        payer,
-        someMint,
+      const mintToken = 
+        await Token.createMint(
+          connection,
+          payer,
+          payer.publicKey,
+          null,
+          9,
+          TOKEN_PROGRAM_ID
+        )
+      someMint = mintToken.publicKey;
+      creatorReceiverTokenAccount = await mintToken.getOrCreateAssociatedAccountInfo(
         creatorAddress.publicKey
       );
 
@@ -1000,18 +1004,14 @@ describe("gumball-machine", function () {
       );
 
       // Create and fund the NFT pruchaser
-      nftBuyerTokenAccount = await getOrCreateAssociatedTokenAccount(
-        connection,
-        payer,
-        someMint,
+      nftBuyerTokenAccount = await mintToken.getOrCreateAssociatedAccountInfo(
         nftBuyer.publicKey
       );
-      await mintTo(
-        connection,
-        payer,
-        someMint,
+
+      await mintToken.mintTo(
         nftBuyerTokenAccount.address,
         payer,
+        [],
         50
       );
     });
@@ -1069,8 +1069,13 @@ describe("gumball-machine", function () {
     });
 
     it("Can dispense multiple NFTs paid in token, but not more than remaining, unminted config lines", async function () {
-      let buyerTokenAccount = await getAccount(
+      let mintToken = new Token(
         connection,
+        someMint,
+        TOKEN_PROGRAM_ID,
+        payer, 
+      );
+      let buyerTokenAccount = await mintToken.getAccountInfo(
         nftBuyerTokenAccount.address
       );
       await dispenseCompressedNFTForTokens(
@@ -1083,12 +1088,10 @@ describe("gumball-machine", function () {
         true
       );
 
-      let newCreatorTokenAccount = await getAccount(
-        connection,
+      let newCreatorTokenAccount = await mintToken.getAccountInfo(
         creatorReceiverTokenAccount.address
       );
-      let newBuyerTokenAccount = await getAccount(
-        connection,
+      let newBuyerTokenAccount = await mintToken.getAccountInfo(
         nftBuyerTokenAccount.address
       );
 

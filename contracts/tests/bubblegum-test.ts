@@ -46,8 +46,8 @@ import {
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
   Token,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
   TokenProgramVersion,
@@ -828,7 +828,7 @@ describe("bubblegum", function () {
       { message: metadata }
     );
     // Shakes fist at Anchor
-    mintWithRequestIx.keys[1].isSigner = true;
+    mintWithRequestIx.keys[0].isSigner = true;
     await execute(
       Bubblegum.provider,
       [mintWithRequestIx],
