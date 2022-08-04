@@ -89,7 +89,7 @@ pub fn assert_collection_verify_is_valid(
 
     assert_derivation(
         &crate::id(),
-        collection_mint,
+        edition_account_info,
         &[
             PREFIX.as_bytes(),
             crate::id().as_ref(),
