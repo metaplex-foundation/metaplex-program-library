@@ -6,8 +6,8 @@ use {
         metaplex_adapter::{Creator, MetadataArgs, TokenProgramVersion},
         metaplex_anchor::{MasterEdition, TokenMetadata},
         request::{MintRequest, MINT_REQUEST_SIZE},
-        NFTDecompressionEvent, NewNFTEvent, TreeConfig, Voucher, ASSET_PREFIX,
-        TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
+        NFTDecompressionEvent, NewNFTEvent, TreeConfig, Voucher, ASSET_PREFIX, TREE_AUTHORITY_SIZE,
+        VOUCHER_PREFIX, VOUCHER_SIZE,
     },
     crate::utils::{
         append_leaf, assert_metadata_is_mpl_compatible, assert_pubkey_equal, cmp_bytes,
@@ -335,7 +335,7 @@ pub struct SetDefaultMintRequest<'info> {
         mut,
         seeds = [merkle_slab.key().as_ref()],
         bump,
-        has_one = creator 
+        has_one = creator,
     )]
     pub tree_authority: Account<'info, TreeConfig>,
     pub system_program: Program<'info, System>,
@@ -551,7 +551,10 @@ pub mod bubblegum {
 
     /// Creates a special mint request the tree_authority PDA. This allows permissionless minting without
     /// requiring a higher level CPI
-    pub fn create_default_mint_request(ctx: Context<SetDefaultMintRequest>, mint_capacity: u64) -> Result<()> {
+    pub fn create_default_mint_request(
+        ctx: Context<SetDefaultMintRequest>,
+        mint_capacity: u64,
+    ) -> Result<()> {
         let request = &mut ctx.accounts.mint_authority_request;
         assert_enough_mints_to_approve(&ctx.accounts.tree_authority, mint_capacity)?;
         request.init_or_set(ctx.accounts.tree_authority.key(), mint_capacity);
@@ -599,7 +602,7 @@ pub mod bubblegum {
         let mint_authority = &mut ctx.accounts.mint_authority;
         let merkle_slab = &ctx.accounts.merkle_slab;
 
-        // The mint authority must sign if it is not equal to the tree authority 
+        // The mint authority must sign if it is not equal to the tree authority
         if mint_authority.key() != ctx.accounts.authority.key() {
             assert!(mint_authority.is_signer);
         }
