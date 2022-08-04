@@ -144,6 +144,7 @@ mod update_metadata_account_v2 {
             .unwrap();
 
         let metadata = test_metadata.get_data(&mut context).await;
+        let collection = metadata.collection.unwrap();
 
         assert_eq!(metadata.data.name, puffed_updated_name);
         assert_eq!(metadata.data.symbol, puffed_symbol);
@@ -156,7 +157,8 @@ mod update_metadata_account_v2 {
         assert_eq!(metadata.mint, test_metadata.mint.pubkey());
         assert_eq!(metadata.update_authority, context.payer.pubkey());
         assert_eq!(metadata.key, Key::MetadataV1);
-        assert!(!metadata.collection.unwrap().verified);
+        assert!(collection.key == test_metadata.pubkey);
+        assert!(!collection.verified);
         assert_eq!(metadata.uses.unwrap().total, 15);
     }
 
