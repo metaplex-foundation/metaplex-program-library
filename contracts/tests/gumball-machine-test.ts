@@ -45,7 +45,6 @@ import {
   num32ToBuffer,
   arrayEquals,
   logTx,
-<<<<<<< HEAD
   execute,
 } from "../sdk/utils/index";
 import {
@@ -53,10 +52,6 @@ import {
   gumballMachineHeaderBeet,
   GumballCreatorAdapter,
 } from "../sdk/gumball-machine/src/generated/types/index";
-=======
-  execute
-} from "@sorend-solana/utils";
->>>>>>> main
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
   Token,
