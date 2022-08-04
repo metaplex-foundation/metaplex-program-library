@@ -1,22 +1,22 @@
 pub mod accounts;
 pub mod args;
 
-use accounts::{CancelListingAccounts, CloseOfferAccounts, CreateOfferAccounts, SellAccounts};
+use accounts::{
+    CancelListingAccounts, CloseOfferAccounts, CreateListingAccounts, CreateOfferAccounts,
+};
 use anchor_client::solana_sdk::{instruction::Instruction, pubkey::Pubkey, system_program, sysvar};
 use anchor_lang::{prelude::*, InstructionData};
-use args::{CancelListingData, CloseOfferData, CreateOfferData, SellData};
+use args::{CancelListingData, CloseOfferData, CreateListingData, CreateOfferData};
 use mpl_auction_house::pda::{
     find_auctioneer_trade_state_address, find_public_bid_trade_state_address,
 };
 use mpl_listing_rewards::{
-    accounts as rewards_accounts,
-    cancel_listing::CancelListingParams,
-    id, instruction,
+    accounts as rewards_accounts, id, instruction,
+    listings::{cancel::CancelListingParams, create::CreateListingParams},
     offers::{close::CloseOfferParams, create::CreateOfferParams},
     pda,
     reward_center::CreateRewardCenterParams,
     rewardable_collection::{close::*, create::CreateRewardableCollectionParams},
-    sell::SellParams,
 };
 use spl_associated_token_account::get_associated_token_address;
 
@@ -113,8 +113,8 @@ pub fn close_rewardable_collection(
     }
 }
 
-pub fn sell(
-    SellAccounts {
+pub fn create_listing(
+    CreateListingAccounts {
         wallet,
         listing,
         reward_center,
@@ -125,13 +125,13 @@ pub fn sell(
         auction_house,
         seller_trade_state,
         free_seller_trade_state,
-    }: SellAccounts,
-    SellData {
+    }: CreateListingAccounts,
+    CreateListingData {
         price,
         token_size,
         trade_state_bump,
         free_trade_state_bump,
-    }: SellData,
+    }: CreateListingData,
 ) -> Instruction {
     let (auction_house_fee_account, _) =
         mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
@@ -140,7 +140,7 @@ pub fn sell(
     let (program_as_signer, program_as_signer_bump) =
         mpl_auction_house::pda::find_program_as_signer_address();
 
-    let accounts = rewards_accounts::Sell {
+    let accounts = rewards_accounts::CreateListing {
         auction_house_program: mpl_auction_house::id(),
         listing,
         reward_center,
@@ -161,8 +161,8 @@ pub fn sell(
     }
     .to_account_metas(None);
 
-    let data = instruction::Sell {
-        sell_params: SellParams {
+    let data = instruction::CreateListing {
+        sell_params: CreateListingParams {
             price,
             token_size,
             trade_state_bump,

@@ -16,7 +16,7 @@ use mpl_auction_house::{
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct SellParams {
+pub struct CreateListingParams {
     pub price: u64,
     pub token_size: u64,
     pub trade_state_bump: u8,
@@ -26,8 +26,8 @@ pub struct SellParams {
 
 /// Accounts for the [`sell` handler](listing_rewards/fn.sell.html).
 #[derive(Accounts, Clone)]
-#[instruction(sell_params: SellParams)]
-pub struct Sell<'info> {
+#[instruction(sell_params: CreateListingParams)]
+pub struct CreateListing<'info> {
     /// Auction House Program used for CPI call
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
 
@@ -117,15 +117,15 @@ pub struct Sell<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn sell(
-    ctx: Context<Sell>,
-    SellParams {
+pub fn handler(
+    ctx: Context<CreateListing>,
+    CreateListingParams {
         token_size,
         trade_state_bump,
         free_trade_state_bump,
         program_as_signer_bump,
         price,
-    }: SellParams,
+    }: CreateListingParams,
 ) -> Result<()> {
     let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
@@ -174,7 +174,7 @@ pub fn sell(
     Ok(())
 }
 
-impl<'info> Sell<'info> {
+impl<'info> CreateListing<'info> {
     pub fn set_auctioneer_sell_ctx(&self) -> CpiContext<'_, '_, '_, 'info, AuctioneerSell<'info>> {
         let cpi_program = self.auction_house_program.to_account_info();
         let accounts = (&*self).into();
@@ -183,8 +183,8 @@ impl<'info> Sell<'info> {
     }
 }
 
-impl<'info> From<&Sell<'info>> for AuctioneerSell<'info> {
-    fn from(accounts: &Sell<'info>) -> Self {
+impl<'info> From<&CreateListing<'info>> for AuctioneerSell<'info> {
+    fn from(accounts: &CreateListing<'info>) -> Self {
         Self {
             wallet: accounts.wallet.to_account_info().clone(),
             token_account: accounts.token_account.to_account_info(),

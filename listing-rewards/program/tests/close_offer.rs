@@ -157,8 +157,8 @@ async fn close_offer_success() {
         1,
     );
 
-    let sell_accounts = SellAccounts {
-        wallet: metadata_owner_address,
+    let create_listing_accounts = CreateListingAccounts {
+        wallet: metadata_owner.pubkey(),
         listing,
         reward_center,
         rewardable_collection,
@@ -170,14 +170,14 @@ async fn close_offer_success() {
         free_seller_trade_state,
     };
 
-    let sell_params = SellData {
+    let create_listing_params = CreateListingData {
         price: listing_rewards_test::ONE_SOL,
         token_size: 1,
         trade_state_bump,
         free_trade_state_bump,
     };
 
-    let sell_ix = sell(sell_accounts, sell_params);
+    let create_listing_ix = create_listing(create_listing_accounts, create_listing_params);
 
     let tx = Transaction::new_signed_with_payer(
         &[
@@ -196,7 +196,7 @@ async fn close_offer_success() {
     assert!(tx_response.is_ok());
 
     let tx = Transaction::new_signed_with_payer(
-        &[sell_ix],
+        &[create_listing_ix],
         Some(&metadata_owner_address),
         &[&metadata_owner],
         context.last_blockhash,

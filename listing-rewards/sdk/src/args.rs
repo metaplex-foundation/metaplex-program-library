@@ -1,4 +1,4 @@
-pub struct SellData {
+pub struct CreateListingData {
     pub price: u64,
     pub token_size: u64,
     pub trade_state_bump: u8,
