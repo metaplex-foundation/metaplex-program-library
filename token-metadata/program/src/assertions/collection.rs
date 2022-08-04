@@ -2,7 +2,7 @@ use solana_program::{account_info::AccountInfo, program_error::ProgramError, pub
 
 use crate::{
     error::MetadataError,
-    pda::find_collection_authority_account,
+    pda::{find_collection_authority_account, find_master_edition_account},
     state::{
         Collection, CollectionAuthorityRecord, MasterEditionV2, Metadata, TokenMetadataAccount,
         TokenStandard,
@@ -85,6 +85,10 @@ pub fn assert_collection_verify_is_valid(
             return Err(MetadataError::CollectionNotFound.into());
         }
     }
+
+    let (edition_pda, _) = find_master_edition_account(&collection_data.mint);
+
+    
     assert_master_edition(collection_data, edition_account_info)?;
     Ok(())
 }
