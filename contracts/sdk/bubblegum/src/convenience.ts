@@ -132,7 +132,7 @@ export async function getVoucherPDA(
     [
       Buffer.from("voucher", "utf8"),
       tree.toBuffer(),
-      new BN(leafIndex).toBuffer("le", 8),
+      (new BN(leafIndex)).toBuffer("le", 8),
     ],
     PROGRAM_ID
   );
