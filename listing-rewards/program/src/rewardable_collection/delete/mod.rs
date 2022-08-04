@@ -10,14 +10,14 @@ use crate::{
 
 
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
-pub struct CloseRewardableCollectionParams {
+pub struct DeleteRewardableCollectionParams {
     pub collection: Pubkey,
 }
 
 /// Accounts for the [`create_rewardable_collection` handler](listing_rewards/fn.create_rewardable_collection.html).
 #[derive(Accounts, Clone)]
-#[instruction(rewardable_collection_params: CloseRewardableCollectionParams)]
-pub struct CloseRewardableCollection<'info> {
+#[instruction(rewardable_collection_params: DeleteRewardableCollectionParams)]
+pub struct DeleteRewardableCollection<'info> {
     /// The wallet of collection maintainer. Either the auction house authority or collection oracle.
     #[account(mut)]
     pub wallet: Signer<'info>,
@@ -58,8 +58,8 @@ pub struct CloseRewardableCollection<'info> {
 }
 
 pub fn handler(
-    ctx: Context<CloseRewardableCollection>,
-    CloseRewardableCollectionParams { collection }: CloseRewardableCollectionParams,
+    ctx: Context<DeleteRewardableCollection>,
+    DeleteRewardableCollectionParams { collection }: DeleteRewardableCollectionParams,
 ) -> Result<()> {
     let rewardable_collection = &mut ctx.accounts.rewardable_collection;
     let reward_center = &ctx.accounts.reward_center;

@@ -17,7 +17,7 @@ use crate::{
     offers::{close::*, create::*},
     redeem_rewards::*,
     reward_center::*,
-    rewardable_collection::{close::*, create::*},
+    rewardable_collection::{create::*, delete::*},
 };
 
 // TODO: Remove when added to Anchor https://github.com/coral-xyz/anchor/pull/2014
@@ -70,11 +70,11 @@ pub mod listing_rewards {
         rewardable_collection::create::handler(ctx, rewardable_collection_params)
     }
 
-    pub fn close_rewardable_collection(
-        ctx: Context<CloseRewardableCollection>,
-        rewardable_collection_params: CloseRewardableCollectionParams,
+    pub fn delete_rewardable_collection(
+        ctx: Context<DeleteRewardableCollection>,
+        rewardable_collection_params: DeleteRewardableCollectionParams,
     ) -> Result<()> {
-        rewardable_collection::close::handler(ctx, rewardable_collection_params)
+        rewardable_collection::delete::handler(ctx, rewardable_collection_params)
     }
 
     pub fn create_listing(

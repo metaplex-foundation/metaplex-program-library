@@ -23,7 +23,7 @@ use mpl_listing_rewards_sdk::{
 };
 
 use solana_program_test::*;
-use std::{println, str::FromStr};
+use std::str::FromStr;
 
 use mpl_token_metadata::state::Collection;
 

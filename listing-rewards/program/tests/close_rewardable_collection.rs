@@ -11,7 +11,7 @@ use std::str::FromStr;
 use spl_token::native_mint;
 
 #[tokio::test]
-async fn close_rewardable_collection_success() {
+async fn delete_rewardable_collection_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
 
@@ -64,7 +64,7 @@ async fn close_rewardable_collection_success() {
         collection,
     );
 
-    let close_rewardable_collection_ix = mpl_listing_rewards_sdk::close_rewardable_collection(
+    let delete_rewardable_collection_ix = mpl_listing_rewards_sdk::delete_rewardable_collection(
         wallet,
         auction_house,
         reward_center,
@@ -76,7 +76,7 @@ async fn close_rewardable_collection_success() {
             create_auction_house_ix,
             create_reward_center_ix,
             create_rewardable_collection_ix,
-            close_rewardable_collection_ix,
+            delete_rewardable_collection_ix,
         ],
         Some(&wallet),
         &[&context.payer],

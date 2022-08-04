@@ -16,7 +16,9 @@ use mpl_listing_rewards::{
     offers::{close::CloseOfferParams, create::CreateOfferParams},
     pda,
     reward_center::CreateRewardCenterParams,
-    rewardable_collection::{close::*, create::CreateRewardableCollectionParams},
+    rewardable_collection::{
+        create::CreateRewardableCollectionParams, delete::DeleteRewardableCollectionParams,
+    },
 };
 use spl_associated_token_account::get_associated_token_address;
 
@@ -84,7 +86,7 @@ pub fn create_rewardable_collection(
     }
 }
 
-pub fn close_rewardable_collection(
+pub fn delete_rewardable_collection(
     wallet: Pubkey,
     auction_house: Pubkey,
     reward_center: Pubkey,
@@ -93,7 +95,7 @@ pub fn close_rewardable_collection(
     let (rewardable_collection, _) =
         pda::find_rewardable_collection_address(&reward_center, &collection);
 
-    let accounts = rewards_accounts::CloseRewardableCollection {
+    let accounts = rewards_accounts::DeleteRewardableCollection {
         wallet,
         reward_center,
         rewardable_collection,
@@ -101,8 +103,8 @@ pub fn close_rewardable_collection(
     }
     .to_account_metas(None);
 
-    let data = instruction::CloseRewardableCollection {
-        rewardable_collection_params: CloseRewardableCollectionParams { collection },
+    let data = instruction::DeleteRewardableCollection {
+        rewardable_collection_params: DeleteRewardableCollectionParams { collection },
     }
     .data();
 
