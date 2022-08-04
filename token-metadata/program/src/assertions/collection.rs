@@ -5,8 +5,9 @@ use crate::{
     pda::{find_collection_authority_account, find_master_edition_account},
     state::{
         Collection, CollectionAuthorityRecord, MasterEditionV2, Metadata, TokenMetadataAccount,
-        TokenStandard,
+        TokenStandard, EDITION, PREFIX,
     },
+    utils::assert_derivation,
 };
 
 pub fn assert_collection_update_is_valid(
@@ -86,9 +87,17 @@ pub fn assert_collection_verify_is_valid(
         }
     }
 
-    let (edition_pda, _) = find_master_edition_account(&collection_data.mint);
+    assert_derivation(
+        &crate::id(),
+        collection_mint,
+        &[
+            PREFIX.as_bytes(),
+            crate::id().as_ref(),
+            collection_data.mint.as_ref(),
+            EDITION.as_bytes(),
+        ],
+    )?;
 
-    
     assert_master_edition(collection_data, edition_account_info)?;
     Ok(())
 }
