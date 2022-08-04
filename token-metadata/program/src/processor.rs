@@ -345,7 +345,6 @@ pub fn process_update_metadata_accounts_v2(
                 &metadata,
                 false,
                 update_authority_info.is_signer,
-                true,
             )?;
             metadata.data = compatible_data;
             assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;

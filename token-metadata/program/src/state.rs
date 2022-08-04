@@ -552,7 +552,7 @@ impl TokenMetadataAccount for Edition {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Eq, Hash)]
 pub struct Creator {
     #[cfg_attr(feature = "serde-feature", serde(with = "As::<DisplayFromStr>"))]
     pub address: Pubkey,
