@@ -1,6 +1,7 @@
 import * as anchor from "@project-serum/anchor";
 import { BN, AnchorProvider, Program } from "@project-serum/anchor";
 import { Bubblegum } from "../target/types/bubblegum";
+import { GumballMachine } from "../target/types/gumball_machine";
 import {
   PublicKey,
   Keypair,
@@ -17,17 +18,14 @@ import { buildTree } from "./merkle-tree";
 import {
   getMerkleRollAccountSize,
   assertOnChainMerkleRollProperties,
-} from "../sdk/gummyroll";
+} from "@sorend-solana/gummyroll";
 import {
-  GumballMachine,
   decodeGumballMachine,
   OnChainGumballMachine,
   createDispenseNFTForSolIx,
   createDispenseNFTForTokensIx,
   createInitializeGumballMachineIxs,
   initializeGumballMachineIndices,
-} from "../sdk/gumball-machine";
-import {
   InitializeGumballMachineInstructionArgs,
   createAddConfigLinesInstruction,
   createUpdateConfigLinesInstruction,
@@ -35,7 +33,11 @@ import {
   UpdateConfigLinesInstructionArgs,
   createUpdateHeaderMetadataInstruction,
   createDestroyInstruction,
-} from "../sdk/gumball-machine/src/generated/instructions";
+  GumballMachineHeader,
+  gumballMachineHeaderBeet,
+  GumballCreatorAdapter,
+  EncodeMethod
+} from "@sorend-solana/gumball-machine";
 import {
   val,
   strToByteArray,
@@ -43,6 +45,7 @@ import {
   num32ToBuffer,
   arrayEquals,
   logTx,
+<<<<<<< HEAD
   execute,
 } from "../sdk/utils/index";
 import {
@@ -50,14 +53,17 @@ import {
   gumballMachineHeaderBeet,
   GumballCreatorAdapter,
 } from "../sdk/gumball-machine/src/generated/types/index";
+=======
+  execute
+} from "@sorend-solana/utils";
+>>>>>>> main
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
   Token,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { NATIVE_MINT } from "@solana/spl-token";
-import { EncodeMethod } from "../sdk/gumball-machine/src/generated/types/EncodeMethod";
-import { getBubblegumAuthorityPDA } from "../sdk/bubblegum/src/convenience";
+import { getBubblegumAuthorityPDA } from "@sorend-solana/bubblegum";
 
 // @ts-ignore
 let GumballMachine;

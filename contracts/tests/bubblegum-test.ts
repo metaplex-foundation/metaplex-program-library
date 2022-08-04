@@ -29,6 +29,7 @@ import {
   createRedeemInstruction,
   createCancelRedeemInstruction,
   MetadataArgs,
+<<<<<<< HEAD
   createRequestMintAuthorityInstruction,
   createApproveMintAuthorityRequestInstruction,
   createCloseMintRequestInstruction,
@@ -38,17 +39,36 @@ import {
   createCreateDefaultMintRequestInstruction,
 } from "../sdk/bubblegum/src/generated";
 
+=======
+  TokenProgramVersion,
+  Version,
+  Creator,
+  getBubblegumAuthorityPDA,
+  getCreateTreeIxs,
+  getNonceCount,
+  getVoucherPDA,
+  computeDataHash,
+  computeCreatorHash
+} from "@sorend-solana/bubblegum";
+>>>>>>> main
 import { buildTree, Tree } from "./merkle-tree";
 import {
   getRootOfOnChainMerkleRoot,
   assertOnChainMerkleRollProperties,
+<<<<<<< HEAD
 } from "../sdk/gummyroll";
+=======
+  createTransferAuthorityIx,
+  createAllocTreeIx,
+} from "@sorend-solana/gummyroll";
+>>>>>>> main
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   Token,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+<<<<<<< HEAD
 import {
   TokenProgramVersion,
   Version,
@@ -74,6 +94,9 @@ import {
   getDefaultMintRequestPDA,
 } from "../sdk/bubblegum/src/convenience";
 // import { getBubblegumAuthorityPDA, getCreateTreeIxs, getMintRequestPDA, getNonceCount, getVoucherPDA, assertOnChainMintRequest, assertOnChainTreeAuthority } from "../sdk/bubblegum/src/convenience";
+=======
+import { CANDY_WRAPPER_PROGRAM_ID, execute, bufferToArray, strToByteArray, arrayEquals, trimStringPadding } from "@sorend-solana/utils";
+>>>>>>> main
 
 // @ts-ignore
 let Bubblegum;
