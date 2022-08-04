@@ -1277,7 +1277,7 @@ mod verify_collection {
 }
 
 #[tokio::test]
-async fn fail_verify_collection_is_valid() {
+async fn fail_verify_collection_invalid_owner() {
     let mut context = program_test().start_with_context().await;
 
     let test_collection = Metadata::new();
@@ -1334,18 +1334,109 @@ async fn fail_verify_collection_is_valid() {
 
     let kpbytes = &context.payer;
     let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
-    let fake_edition_account = Keypair::new();
+    let fake_mint = Keypair::new();
     let err = test_metadata
         .verify_collection(
             &mut context,
             test_collection.pubkey,
             &kp,
-            test_collection.mint.pubkey(),
+            fake_mint.pubkey(),
             collection_master_edition_account.pubkey,
             None,
         )
         .await
         .unwrap_err();
 
-    assert_custom_error!(err, MetadataError::DerivedKeyInvalid);
+    assert_custom_error!(err, MetadataError::IncorrectOwner);
+}
+
+#[tokio::test]
+async fn fail_verify_collection_derived_key_invalid() {
+    let mut context = program_test().start_with_context().await;
+
+    let test_collection = Metadata::new();
+    test_collection
+        .create_v2(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let test_collection_fake = Metadata::new();
+    test_collection_fake
+        .create_v2(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    let collection_master_edition_account = MasterEditionV2::new(&test_collection_fake);
+    collection_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let name = "Test".to_string();
+    let symbol = "TST".to_string();
+    let uri = "uri".to_string();
+    let test_metadata = Metadata::new();
+
+    let uses = Some(Uses {
+        total: 1,
+        remaining: 1,
+        use_method: UseMethod::Single,
+    });
+
+    test_metadata
+        .create_v2(
+            &mut context,
+            name,
+            symbol,
+            uri,
+            None,
+            10,
+            false,
+            None,
+            Some(Collection {
+                key: test_collection.mint.pubkey(),
+                verified: false,
+            }),
+            uses.to_owned(),
+        )
+        .await
+        .unwrap();
+
+    let kpbytes = &context.payer;
+    let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+    let fake_mint = Keypair::new();
+    let err = test_metadata
+        .verify_collection(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            fake_mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(err, MetadataError::IncorrectOwner);
 }
