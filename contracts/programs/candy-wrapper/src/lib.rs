@@ -1,12 +1,12 @@
 use solana_program::{
-    account_info::AccountInfo, declare_id, entrypoint, entrypoint::ProgramResult,
-    instruction::Instruction, pubkey::Pubkey,
+    account_info::AccountInfo, declare_id, entrypoint::ProgramResult, instruction::Instruction,
+    pubkey::Pubkey,
 };
 
 declare_id!("WRAPYChf58WFCnyjXKJHtrPgzKXgHp6MD9aVDqJBbGh");
 
 #[cfg(not(feature = "no-entrypoint"))]
-entrypoint!(wrap);
+solana_program::entrypoint!(wrap);
 
 pub fn wrap(
     _program_id: &Pubkey,
