@@ -224,7 +224,7 @@ export function computeDataHash(
   const sellerFeeBasisPointsNumberArray = bufferToArray(
     num16ToBuffer(sellerFeeBasisPoints)
   );
-  const allDataToHash = metadataArgsHash.concat(
+  const allDataToHash = metadataArgsHash!.concat(
     sellerFeeBasisPointsNumberArray
   );
   const dataHashOfCompressedNFT = bufferToArray(
