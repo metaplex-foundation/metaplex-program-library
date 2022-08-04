@@ -6,6 +6,7 @@ import {
   AccountInfo,
 } from "@solana/web3.js";
 import { keccak_256 } from "js-sha3";
+<<<<<<< HEAD
 import { Creator, TreeConfig, MintRequest, PROGRAM_ID } from "./generated";
 import {
   CANDY_WRAPPER_PROGRAM_ID,
@@ -16,6 +17,11 @@ import {
   PROGRAM_ID as GUMMYROLL_PROGRAM_ID,
   createAllocTreeIx,
 } from "../../gummyroll";
+=======
+import { Creator, Nonce, PROGRAM_ID } from './generated';
+import { CANDY_WRAPPER_PROGRAM_ID, bufferToArray, num16ToBuffer } from "@sorend-solana/utils";
+import { PROGRAM_ID as GUMMYROLL_PROGRAM_ID, createAllocTreeIx } from "@sorend-solana/gummyroll";
+>>>>>>> main
 import { createCreateTreeInstruction } from "./generated";
 import { assert } from "chai";
 
@@ -221,6 +227,7 @@ export function computeDataHash(
     metadataArgsHash = computeMetadataArgsHash(mintIx);
   }
 
+<<<<<<< HEAD
   const sellerFeeBasisPointsNumberArray = bufferToArray(
     num16ToBuffer(sellerFeeBasisPoints)
   );
@@ -231,6 +238,18 @@ export function computeDataHash(
     Buffer.from(keccak_256.digest(allDataToHash))
   );
   return dataHashOfCompressedNFT;
+=======
+    if (typeof metadataArgsHash === 'undefined') {
+        throw new Error("Metadata Args Hash Unexpectedly Undefined!");
+    }
+
+    const sellerFeeBasisPointsNumberArray = bufferToArray(num16ToBuffer(sellerFeeBasisPoints))
+    const allDataToHash = metadataArgsHash.concat(sellerFeeBasisPointsNumberArray)
+    const dataHashOfCompressedNFT = bufferToArray(
+        Buffer.from(keccak_256.digest(allDataToHash))
+    );
+    return dataHashOfCompressedNFT;
+>>>>>>> main
 }
 
 export function computeCreatorHash(creators: Creator[]) {
