@@ -19,7 +19,6 @@ import {
   createCreateTreeInstruction,
   createMintV1Instruction,
 } from "../sdk/bubblegum/src/generated/instructions";
-import { MarketplaceProperties } from "../sdk/sugar-shack/src/generated/accounts/index";
 import {
   MarketplaceProperties,
   createInitializeMarketplaceInstruction,

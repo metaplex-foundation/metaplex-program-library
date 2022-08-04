@@ -18,7 +18,7 @@ import { buildTree } from "./merkle-tree";
 import {
   getMerkleRollAccountSize,
   assertOnChainMerkleRollProperties,
-} from "@sorend-solana/gummyroll";
+} from "../sdk/gummyroll";
 import {
   decodeGumballMachine,
   OnChainGumballMachine,
@@ -33,11 +33,8 @@ import {
   UpdateConfigLinesInstructionArgs,
   createUpdateHeaderMetadataInstruction,
   createDestroyInstruction,
-  GumballMachineHeader,
-  gumballMachineHeaderBeet,
-  GumballCreatorAdapter,
   EncodeMethod
-} from "@sorend-solana/gumball-machine";
+} from "../sdk/gumball-machine";
 import {
   val,
   strToByteArray,
@@ -58,7 +55,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { NATIVE_MINT } from "@solana/spl-token";
-import { getBubblegumAuthorityPDA } from "@sorend-solana/bubblegum";
+import { getBubblegumAuthorityPDA } from "../sdk/bubblegum";
 
 // @ts-ignore
 let GumballMachine;
