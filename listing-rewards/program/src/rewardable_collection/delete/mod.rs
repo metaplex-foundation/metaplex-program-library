@@ -24,7 +24,8 @@ pub struct DeleteRewardableCollection<'info> {
 
     /// The auctioneer program PDA running this auction.
     #[account(
-        constraint = rewardable_collection.deleted_at.is_none() @ ListingRewardsError::RewardableCollectionAlreadyDeleted,
+        mut,
+        constraint = rewardable_collection.is_initialized && rewardable_collection.deleted_at.is_none() @ ListingRewardsError::RewardableCollectionAlreadyDeleted,
         seeds = [
             REWARDABLE_COLLECTION.as_bytes(), 
             reward_center.key().as_ref(), 
