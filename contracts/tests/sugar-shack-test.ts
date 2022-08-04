@@ -19,8 +19,8 @@ import {
   createCreateTreeInstruction,
   createMintV1Instruction,
 } from "../sdk/bubblegum/src/generated/instructions";
+import { MarketplaceProperties } from "../sdk/sugar-shack/src/generated/accounts/index";
 import {
-  MarketplaceProperties,
   createInitializeMarketplaceInstruction,
   createCreateOrModifyListingInstruction,
   createRemoveListingInstruction,
@@ -52,6 +52,7 @@ import {
   TreeNode,
 } from "./merkle-tree";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
+import { TokenProgramVersion, Version } from "../sdk/bubblegum/src/generated";
 import { SugarShack } from "../target/types/sugar_shack";
 import {
   getBubblegumAuthorityPDA,

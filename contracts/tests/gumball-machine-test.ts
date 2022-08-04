@@ -1,7 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { BN, AnchorProvider, Program } from "@project-serum/anchor";
 import { Bubblegum } from "../target/types/bubblegum";
-import { GumballMachine } from "../target/types/gumball_machine";
 import {
   PublicKey,
   Keypair,
@@ -20,12 +19,15 @@ import {
   assertOnChainMerkleRollProperties,
 } from "../sdk/gummyroll";
 import {
+  GumballMachine,
   decodeGumballMachine,
   OnChainGumballMachine,
   createDispenseNFTForSolIx,
   createDispenseNFTForTokensIx,
   createInitializeGumballMachineIxs,
   initializeGumballMachineIndices,
+} from "../sdk/gumball-machine";
+import {
   InitializeGumballMachineInstructionArgs,
   createAddConfigLinesInstruction,
   createUpdateConfigLinesInstruction,
@@ -33,8 +35,7 @@ import {
   UpdateConfigLinesInstructionArgs,
   createUpdateHeaderMetadataInstruction,
   createDestroyInstruction,
-  EncodeMethod
-} from "../sdk/gumball-machine";
+} from "../sdk/gumball-machine/src/generated/instructions";
 import {
   val,
   strToByteArray,
@@ -55,7 +56,8 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { NATIVE_MINT } from "@solana/spl-token";
-import { getBubblegumAuthorityPDA } from "../sdk/bubblegum";
+import { EncodeMethod } from "../sdk/gumball-machine/src/generated/types/EncodeMethod";
+import { getBubblegumAuthorityPDA } from "../sdk/bubblegum/src/convenience";
 
 // @ts-ignore
 let GumballMachine;
