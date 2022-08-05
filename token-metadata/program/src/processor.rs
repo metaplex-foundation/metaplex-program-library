@@ -1846,6 +1846,11 @@ pub fn set_collection_size(
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
     let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
+    // Check that the update authority or delegate is a signer.
+    if !collection_update_authority_account_info.is_signer {
+        return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
+    }
+
     if using_delegated_collection_authority {
         let collection_authority_record = next_account_info(account_info_iter)?;
         assert_has_collection_authority(
@@ -1861,10 +1866,6 @@ pub fn set_collection_size(
             collection_mint_account_info.key,
             None,
         )?;
-
-        if !collection_update_authority_account_info.is_signer {
-            return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
-        }
     }
 
     // Only unsized collections can have the size set, and only once.
