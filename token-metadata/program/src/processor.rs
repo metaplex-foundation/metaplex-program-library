@@ -348,8 +348,10 @@ pub fn process_update_metadata_accounts_v2(
                 true,
             )?;
             metadata.data = compatible_data;
-            assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
-            metadata.collection = data.collection;
+            if data.collection.is_some() {
+                assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
+                metadata.collection = data.collection;
+            }
             assert_valid_use(&data.uses, &metadata.uses)?;
             metadata.uses = data.uses;
         } else {
