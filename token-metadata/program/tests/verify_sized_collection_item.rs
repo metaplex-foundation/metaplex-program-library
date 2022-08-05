@@ -459,7 +459,7 @@ mod verify_sized_collection_item {
             )
             .await
             .unwrap_err();
-        assert_custom_error!(err, MetadataError::CollectionMustBeAUniqueMasterEdition);
+        assert_custom_error!(err, MetadataError::CollectionMasterEditionAccountInvalid);
         let metadata_after = test_metadata.get_data(&mut context).await;
         assert_eq!(
             metadata_after.collection.to_owned().unwrap().key,
