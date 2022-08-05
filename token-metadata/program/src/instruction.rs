@@ -409,7 +409,7 @@ pub enum MetadataInstruction {
 
     /// Revoke account to call [verify_collection] on this NFT.
     #[account(0, writable, name="collection_authority_record", desc="Collection Authority Record PDA")]
-    #[account(1, signer, writable, name="delegate_authority", desc="Delegated Collection Authority")]
+    #[account(1, writable, name="delegate_authority", desc="Delegated Collection Authority")]
     #[account(2, signer, writable, name="revoke_authority", desc="Update Authority, or Delegated Authority, of Collection NFT")]
     #[account(3, name="metadata", desc="Metadata account")]
     #[account(4, name="mint", desc="Mint of Metadata")]

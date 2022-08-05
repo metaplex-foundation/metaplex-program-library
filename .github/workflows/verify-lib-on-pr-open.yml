@@ -10,6 +10,7 @@ on:
 
 permissions:
   id-token: write
+  pull-requests: write # make comment on PR
 
 env:
   NODE_VERSION: 17.0.1
@@ -112,6 +113,7 @@ jobs:
             if [[ $(git diff --stat) != '' ]]; then
               echo ">> $pkg needs changes - breaking early"
               echo "::set-output name=failed::true"
+              echo "::set-output name=failed-package::$pkg"
               break
             else
               echo "::set-output name=failed::false"
@@ -120,8 +122,28 @@ jobs:
             cd ../..
           done
 
+      - name: Print step outputs on success
+        if: steps.generate-package-lib.outputs.failed == 'false'
+        run: |
+          echo "${{ steps.generate-package-lib.outputs.failed }}"
+        shell: bash
+
+      - name: Print step outputs on failure
+        if: steps.generate-package-lib.outputs.failed == 'true'
+        run: |
+          echo "${{ steps.generate-package-lib.outputs.failed }}"
+          echo "${{ steps.generate-package-lib.outputs.failed-package }}"
+        shell: bash
+
+      # we don't want failing job to necessarily block a PR, so add an informative comment to the PR
       - uses: actions/github-script@v4
         if: steps.generate-package-lib.outputs.failed == 'true'
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            core.setFailed("Found differences when generating libraries. See logs for offending package(s).")
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Workflow `Verify package library` found differences when running `yarn api:gen` in the JS lib for `${{ steps.generate-package-lib.outputs.failed-package }}`. Please see the job for more details: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}.'
+            })
