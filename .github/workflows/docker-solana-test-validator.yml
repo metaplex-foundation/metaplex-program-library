@@ -1,0 +1,123 @@
+---
+name: Build & Push Solana Docker Images
+
+on:
+  push:
+    paths:
+      - "solana-test-validator/**"
+      - ".github/workflows/docker-solana-test-validator.yml"
+
+jobs:
+  docker:
+    runs-on: large-runner
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: xxxxx
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Context for Buildx
+        id: buildx-context
+        run: |
+          docker context create builders
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        with:
+          endpoint: builders
+          config-inline: |
+            [registry."docker.io"]
+              mirrors = ["docker-registry-mirror"]
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-solana-test-validator-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-solana-test-validator-
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GH_BOT_USER }}
+          password: ${{ secrets.GH_PAT_GHCR }}
+
+      - name: Inject slug/short variables
+        uses: rlespinasse/github-slug-action@v3.x
+
+      - name: Build base image
+        id: docker_build_base
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: |
+            ghcr.io/metaplex/solana-test-validator-base:${{ env.GITHUB_REF_SLUG }}
+            ghcr.io/metaplex/solana-test-validator-base:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-base
+          context: ./packages/solana-test-validator
+          file: ./packages/solana-test-validator/Dockerfile.base
+
+      - name: Pull programs from chain
+        uses: addnab/docker-run-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GH_BOT_USER }}
+          password: ${{ secrets.GH_PAT_GHCR }}
+          options: -v ${{ github.workspace }}:/workspace 
+          image: ghcr.io/metaplex/solana-test-validator-base:${{ github.sha }}
+          run: |
+            cd workspace/solana-test-validator/
+            /workspace/solana-test-validator/scripts/dump-from-chain.sh
+
+      - name: Build and push source image
+        id: docker_build_source
+        uses: docker/build-push-action@v2
+        with:
+          build-args: BASE_IMAGE=ghcr.io/metaplex/solana-test-validator-base:${{ github.sha }}
+          push: true  
+          tags: |
+            ghcr.io/metaplex/solana-test-validator-source:${{ env.GITHUB_REF_SLUG }}
+            ghcr.io/metaplex/solana-test-validator-source:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache-base
+          cache-to: type=local,dest=/tmp/.buildx-cache-source
+          context: ./packages/solana-test-validator
+          file: ./packages/solana-test-validator/Dockerfile.source
+
+      - name: Build and push onchain image
+        id: docker_build_onchain
+        uses: docker/build-push-action@v2
+        with:
+          build-args: BASE_IMAGE=ghcr.io/metaplex/solana-test-validator-base:${{ github.sha }}
+          push: true
+          tags: |
+            ghcr.io/metaplex/solana-test-validator-onchain:${{ env.GITHUB_REF_SLUG }}
+            ghcr.io/metaplex/solana-test-validator-onchain:${{ github.sha }}
+          cache-from: type=local,src=/tmp/.buildx-cache-source
+          cache-to: type=local,dest=/tmp/.buildx-cache-onchain
+          context: ./packages/solana-test-validator
+          file: ./packages/solana-test-validator/Dockerfile.onchain
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+      # Temporary fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-onchain /tmp/.buildx-cache
+
+          

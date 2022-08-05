@@ -1,0 +1,53 @@
+FROM ubuntu:20.04 as build
+
+ENV TZ=GMT
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Install system dependencies
+RUN apt-get update -y && apt-get upgrade -y
+RUN apt-get install -y \
+    curl gnupg ca-certificates \
+    git \
+    pkg-config build-essential  \
+    libudev-dev 
+
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+    apt-get install -y nodejs
+
+WORKDIR /
+COPY patches patches 
+RUN git clone https://github.com/metaplex-foundation/deprecated-clis/ metaplex
+RUN cd metaplex && git apply /patches/localnet.patch && cd ..
+RUN npm install -g \
+    yarn 
+WORKDIR /metaplex/
+RUN yarn install
+WORKDIR /
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup component add rustfmt
+
+RUN curl -sSfL https://release.solana.com/v1.10.31/install > /install.sh
+RUN chmod +x /install.sh 
+RUN bash -c /install.sh
+
+ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
+
+COPY keys keys
+COPY scripts scripts
+COPY accounts accounts
+
+RUN solana config set --url http://127.0.0.1:8899 --keypair /keys/id.json
+
+RUN npm install -g \
+    typescript \
+    wait-on \
+    ts-node
+
+COPY .. metaplex-program-library
+
+RUN npm install -g \
+    @project-serum/anchor-cli@0.20.1 
+
+WORKDIR /

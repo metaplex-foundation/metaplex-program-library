@@ -1,0 +1,15 @@
+diff --git a/src/helpers/constants.ts b/src/helpers/constants.ts
+index 37491bd0..c5fc7fb4 100644
+--- a/src/helpers/constants.ts
++++ b/src/helpers/constants.ts
+@@ -131,5 +131,10 @@ export const CLUSTERS: Cluster[] = [
+     name: 'devnet',
+     url: clusterApiUrl('devnet'),
+   },
++  {
++    name: 'localnet',
++    url: "http://127.0.0.1:8899",
++
++  },
+ ];
+ export const DEFAULT_CLUSTER = CLUSTERS[2];

@@ -1,0 +1,54 @@
+ARG BASE_IMAGE=solana-test-validator-base:latest
+
+FROM ${BASE_IMAGE} as build
+
+RUN mkdir programs
+
+# Install BPF toolchain
+RUN ls
+# Run anchor build to generate the IDL
+WORKDIR /metaplex-program-library
+RUN cargo build-bpf || true
+
+RUN cargo clean
+RUN ["anchor", "build", \
+    "--provider.cluster", "http://127.0.0.1:8899", \
+    "--provider.wallet", "/keys/id.json", \
+    "-p", "mpl_auction_house"]
+RUN cp /metaplex-program-library/auction-house/program/target/deploy/mpl_auction_house.so /programs
+
+WORKDIR /metaplex-program-library/metaplex/program
+RUN ["cargo", "+bpf", "build-bpf", "--bpf-out-dir", "/programs", "--manifest-path", "./Cargo.toml"]
+
+WORKDIR /metaplex-program-library/token-metadata/program
+RUN ["cargo", "+bpf", "build-bpf", "--bpf-out-dir", "/programs", "--manifest-path", "./Cargo.toml"]
+
+WORKDIR /metaplex-program-library/token-vault/program
+RUN ["cargo", "+bpf", "build-bpf", "--bpf-out-dir", "/programs", "--manifest-path", "./Cargo.toml"]
+
+WORKDIR /metaplex-program-library/candy-machine/program
+RUN ["cargo", "+bpf", "build-bpf", "--bpf-out-dir", "/programs", "--manifest-path", "./Cargo.toml"]
+WORKDIR /
+
+COPY scripts scripts
+RUN bash -c "/scripts/setup-validator.sh"
+WORKDIR /
+
+# Build minimal runtime image with solana validator and ledger from previous step
+FROM ubuntu:20.04 AS runtime
+ENV TZ=GMT
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone  
+
+RUN apt update
+RUN apt install curl -y
+COPY --from=build /install.sh /install.sh
+RUN chmod +x /install.sh 
+RUN bash -c /install.sh
+ENV PATH="/root/.local/share/solana/install/active_release/bin:$PATH"
+COPY --from=build /test-ledger /test-ledger
+COPY --from=build /keys /keys
+
+EXPOSE 8899
+EXPOSE 8900 
+
+CMD ["solana-test-validator"]
