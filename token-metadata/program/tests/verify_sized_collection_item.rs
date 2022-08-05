@@ -2,7 +2,7 @@
 pub mod utils;
 
 use mpl_token_metadata::pda::find_collection_authority_account;
-use mpl_token_metadata::state::Collection;
+use mpl_token_metadata::state::{Collection, CollectionDetails};
 use mpl_token_metadata::state::{UseMethod, Uses};
 use mpl_token_metadata::{
     error::MetadataError,
@@ -1283,4 +1283,337 @@ mod verify_sized_collection_item {
 
         assert_custom_error!(err, MetadataError::RevokeCollectionAuthoritySignerIncorrect);
     }
+}
+
+#[tokio::test]
+async fn fail_verify_already_verified() {
+    // If metadata is already verified don't reverify and therefore increment the collection size.
+
+    let mut context = program_test().start_with_context().await;
+
+    let test_collection = Metadata::new();
+    test_collection
+        .create_v3(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+            DEFAULT_COLLECTION_DETAILS,
+        )
+        .await
+        .unwrap();
+    let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+    collection_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let name = "Test".to_string();
+    let symbol = "TST".to_string();
+    let uri = "uri".to_string();
+    let test_metadata = Metadata::new();
+    test_metadata
+        .create_v2(
+            &mut context,
+            name,
+            symbol,
+            uri,
+            None,
+            10,
+            false,
+            None,
+            Some(Collection {
+                key: test_collection.mint.pubkey(),
+                verified: false,
+            }),
+            None,
+        )
+        .await
+        .unwrap();
+
+    let metadata = test_metadata.get_data(&mut context).await;
+    assert_eq!(
+        metadata.collection.to_owned().unwrap().key,
+        test_collection.mint.pubkey()
+    );
+    assert!(!metadata.collection.unwrap().verified);
+
+    let kpbytes = &context.payer;
+    let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+    test_metadata
+        .verify_sized_collection_item(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            test_collection.mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let metadata_after = test_metadata.get_data(&mut context).await;
+    assert_eq!(
+        metadata_after.collection.to_owned().unwrap().key,
+        test_collection.mint.pubkey()
+    );
+    assert!(metadata_after.collection.unwrap().verified);
+
+    let collection_md = test_collection.get_data(&mut context).await;
+    let size = if let Some(details) = collection_md.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
+    } else {
+        panic!("Expected CollectionDetails::V1");
+    };
+    assert_eq!(size, 1);
+
+    // Allow time to pass so our tx isn't rejected for being 'already processed'.
+    context.warp_to_slot(100).unwrap();
+
+    let error = test_metadata
+        .verify_sized_collection_item(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            test_collection.mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap_err();
+
+    let metadata_after = test_metadata.get_data(&mut context).await;
+    assert_eq!(
+        metadata_after.collection.to_owned().unwrap().key,
+        test_collection.mint.pubkey()
+    );
+    assert!(metadata_after.collection.unwrap().verified);
+    assert_custom_error!(error, MetadataError::AlreadyVerified);
+
+    let collection_md = test_collection.get_data(&mut context).await;
+    let size = if let Some(details) = collection_md.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
+    } else {
+        panic!("Expected CollectionDetails::V1");
+    };
+    assert_eq!(size, 1);
+}
+
+#[tokio::test]
+async fn fail_unverify_already_unverified() {
+    // If metadata is already unverified don't unverify and therefore decrement the collection size.
+
+    let mut context = program_test().start_with_context().await;
+
+    let test_collection = Metadata::new();
+    test_collection
+        .create_v3(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+            DEFAULT_COLLECTION_DETAILS,
+        )
+        .await
+        .unwrap();
+    let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+    collection_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let name = "Test".to_string();
+    let symbol = "TST".to_string();
+    let uri = "uri".to_string();
+    let test_metadata = Metadata::new();
+    test_metadata
+        .create_v2(
+            &mut context,
+            name,
+            symbol,
+            uri,
+            None,
+            10,
+            false,
+            None,
+            Some(Collection {
+                key: test_collection.mint.pubkey(),
+                verified: false,
+            }),
+            None,
+        )
+        .await
+        .unwrap();
+
+    let metadata = test_metadata.get_data(&mut context).await;
+    assert_eq!(
+        metadata.collection.to_owned().unwrap().key,
+        test_collection.mint.pubkey()
+    );
+    assert!(!metadata.collection.unwrap().verified);
+
+    let kpbytes = &context.payer;
+    let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+    let error = test_metadata
+        .unverify_sized_collection_item(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            test_collection.mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(error, MetadataError::AlreadyUnverified);
+
+    let collection_md = test_collection.get_data(&mut context).await;
+    let size = if let Some(details) = collection_md.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
+    } else {
+        panic!("Expected CollectionDetails::V1");
+    };
+    assert_eq!(size, 0);
+}
+
+#[tokio::test]
+async fn fail_set_and_verify_already_verified() {
+    // If metadata is already verified don't reverify and therefore increment the collection size.
+
+    let mut context = program_test().start_with_context().await;
+
+    let test_collection = Metadata::new();
+    test_collection
+        .create_v3(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            None,
+            None,
+            None,
+            DEFAULT_COLLECTION_DETAILS,
+        )
+        .await
+        .unwrap();
+    let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+    collection_master_edition_account
+        .create_v3(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let name = "Test".to_string();
+    let symbol = "TST".to_string();
+    let uri = "uri".to_string();
+    let test_metadata = Metadata::new();
+    test_metadata
+        .create_v2(
+            &mut context,
+            name,
+            symbol,
+            uri,
+            None,
+            10,
+            false,
+            None,
+            Some(Collection {
+                key: test_collection.mint.pubkey(),
+                verified: false,
+            }),
+            None,
+        )
+        .await
+        .unwrap();
+
+    let metadata = test_metadata.get_data(&mut context).await;
+    assert_eq!(
+        metadata.collection.to_owned().unwrap().key,
+        test_collection.mint.pubkey()
+    );
+    assert!(!metadata.collection.unwrap().verified);
+
+    let kpbytes = &context.payer;
+    let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+    test_metadata
+        .set_and_verify_sized_collection_item(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            kp.pubkey(),
+            test_collection.mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+    let metadata_after = test_metadata.get_data(&mut context).await;
+    assert_eq!(
+        metadata_after.collection.to_owned().unwrap().key,
+        test_collection.mint.pubkey()
+    );
+    assert!(metadata_after.collection.unwrap().verified);
+
+    let collection_md = test_collection.get_data(&mut context).await;
+    let size = if let Some(details) = collection_md.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
+    } else {
+        panic!("Expected CollectionDetails::V1");
+    };
+    assert_eq!(size, 1);
+
+    // Allow time to pass so our tx isn't rejected for being 'already processed'.
+    context.warp_to_slot(100).unwrap();
+
+    let error = test_metadata
+        .set_and_verify_sized_collection_item(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            kp.pubkey(),
+            test_collection.mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(error, MetadataError::AlreadyVerified);
+
+    let collection_md = test_collection.get_data(&mut context).await;
+    let size = if let Some(details) = collection_md.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
+    } else {
+        panic!("Expected CollectionDetails::V1");
+    };
+    assert_eq!(size, 1);
 }
