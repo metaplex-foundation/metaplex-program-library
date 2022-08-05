@@ -1,8 +1,22 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{token::{Mint, TokenAccount, Token}, associated_token::AssociatedToken};
-use mpl_auction_house::{constants::{PREFIX, FEE_PAYER, AUCTIONEER}, AuctionHouse, program::AuctionHouse as AuctionHouseProgram, cpi::accounts::{AuctioneerWithdraw, AuctioneerCancel}};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
+};
+use mpl_auction_house::{
+    constants::{AUCTIONEER, FEE_PAYER, PREFIX},
+    cpi::accounts::{AuctioneerCancel, AuctioneerWithdraw},
+    program::AuctionHouse as AuctionHouseProgram,
+    AuctionHouse,
+};
 
-use crate::{state::{RewardCenter, Offer, RewardableCollection}, constants::{REWARD_CENTER, OFFER, REWARDABLE_COLLECTION}, MetadataAccount, errors::ListingRewardsError, assertions::assert_belongs_to_rewardable_collection};
+use crate::{
+    assertions::assert_belongs_to_rewardable_collection,
+    constants::{OFFER, REWARDABLE_COLLECTION, REWARD_CENTER},
+    errors::ListingRewardsError,
+    state::{Offer, RewardCenter, RewardableCollection},
+    MetadataAccount,
+};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CloseOfferParams {
@@ -67,7 +81,6 @@ pub struct CloseOffer<'info> {
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
-
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: Box<Account<'info, MetadataAccount>>,
 
@@ -89,8 +102,8 @@ pub struct CloseOffer<'info> {
     )]
     pub reward_center: Box<Account<'info, RewardCenter>>,
 
-     /// Auction House instance PDA account.
-     #[account(
+    /// Auction House instance PDA account.
+    #[account(
         seeds = [
             PREFIX.as_bytes(),
             auction_house.creator.as_ref(),
@@ -103,7 +116,6 @@ pub struct CloseOffer<'info> {
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
-    
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(
         mut,
@@ -116,7 +128,7 @@ pub struct CloseOffer<'info> {
         bump = auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
-        
+
     /// CHECK: Validated in auction house program cancel_logic.
     /// Trade state PDA account representing the bid or ask to be canceled.
     #[account(mut)]
@@ -142,7 +154,15 @@ pub struct CloseOffer<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(ctx: Context<CloseOffer>, CloseOfferParams { buyer_price, token_size, escrow_payment_bump, .. }: CloseOfferParams) -> Result<()> {
+pub fn handler(
+    ctx: Context<CloseOffer>,
+    CloseOfferParams {
+        buyer_price,
+        token_size,
+        escrow_payment_bump,
+        ..
+    }: CloseOfferParams,
+) -> Result<()> {
     let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
@@ -183,23 +203,30 @@ pub fn handler(ctx: Context<CloseOffer>, CloseOfferParams { buyer_price, token_s
         reward_center_signer_seeds,
     );
 
-    let cancel_accounts_ctx = CpiContext::new_with_signer(ctx.accounts.auction_house_program.to_account_info(), AuctioneerCancel {
-        wallet: ctx.accounts.wallet.to_account_info(),
-        token_account: ctx.accounts.token_account.to_account_info(),
-        token_mint: ctx.accounts.token_mint.to_account_info(),
-        auction_house: ctx.accounts.auction_house.to_account_info(),
-        auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-        trade_state: ctx.accounts.trade_state.to_account_info(),
-        authority: ctx.accounts.authority.to_account_info(),
-        auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
-        ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
-        token_program: ctx.accounts.token_program.to_account_info(),
-    }, reward_center_signer_seeds);
+    let cancel_accounts_ctx = CpiContext::new_with_signer(
+        ctx.accounts.auction_house_program.to_account_info(),
+        AuctioneerCancel {
+            wallet: ctx.accounts.wallet.to_account_info(),
+            token_account: ctx.accounts.token_account.to_account_info(),
+            token_mint: ctx.accounts.token_mint.to_account_info(),
+            auction_house: ctx.accounts.auction_house.to_account_info(),
+            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
+            trade_state: ctx.accounts.trade_state.to_account_info(),
+            authority: ctx.accounts.authority.to_account_info(),
+            auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
+            ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
+            token_program: ctx.accounts.token_program.to_account_info(),
+        },
+        reward_center_signer_seeds,
+    );
 
-    
-    mpl_auction_house::cpi::auctioneer_withdraw(withdraw_accounts_ctx, escrow_payment_bump, buyer_price)?;
+    mpl_auction_house::cpi::auctioneer_withdraw(
+        withdraw_accounts_ctx,
+        escrow_payment_bump,
+        buyer_price,
+    )?;
 
     mpl_auction_house::cpi::auctioneer_cancel(cancel_accounts_ctx, buyer_price, token_size)?;
-    
+
     Ok(())
 }

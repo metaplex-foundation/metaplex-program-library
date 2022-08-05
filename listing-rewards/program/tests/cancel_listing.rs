@@ -23,7 +23,7 @@ use mpl_listing_rewards_sdk::{
 };
 
 use solana_program_test::*;
-use std::{println, str::FromStr};
+use std::str::FromStr;
 
 use mpl_token_metadata::state::Collection;
 
@@ -149,12 +149,6 @@ async fn cancel_listing_success() {
         1,
     );
 
-    println!(
-        "S1 {} S1 bump {}",
-        seller_trade_state.to_string(),
-        trade_state_bump
-    );
-
     let (free_seller_trade_state, free_trade_state_bump) = find_trade_state_address(
         &metadata_owner_address,
         &auction_house,
@@ -165,8 +159,8 @@ async fn cancel_listing_success() {
         1,
     );
 
-    let sell_accounts = SellAccounts {
-        wallet: metadata_owner_address,
+    let create_listing_accounts = CreateListingAccounts {
+        wallet: metadata_owner.pubkey(),
         listing,
         reward_center,
         rewardable_collection,
@@ -178,14 +172,14 @@ async fn cancel_listing_success() {
         free_seller_trade_state,
     };
 
-    let sell_params = SellData {
+    let create_listing_params = CreateListingData {
         price: listing_rewards_test::ONE_SOL,
         token_size: 1,
         trade_state_bump,
         free_trade_state_bump,
     };
 
-    let sell_ix = sell(sell_accounts, sell_params);
+    let create_listing_ix = create_listing(create_listing_accounts, create_listing_params);
 
     let tx = Transaction::new_signed_with_payer(
         &[
@@ -204,7 +198,7 @@ async fn cancel_listing_success() {
     assert!(tx_response.is_ok());
 
     let tx = Transaction::new_signed_with_payer(
-        &[sell_ix],
+        &[create_listing_ix],
         Some(&metadata_owner_address),
         &[&metadata_owner],
         context.last_blockhash,
@@ -215,8 +209,6 @@ async fn cancel_listing_success() {
     assert!(tx_response.is_ok());
 
     // CANCEL LISTING TEST
-
-    println!("reward Center {}", reward_center.to_string());
 
     let cancel_listing_accounts = CancelListingAccounts {
         wallet: metadata_owner_address,

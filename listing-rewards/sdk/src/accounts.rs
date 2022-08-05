@@ -1,6 +1,6 @@
 use anchor_lang::prelude::Pubkey;
 
-pub struct SellAccounts {
+pub struct CreateListingAccounts {
     pub wallet: Pubkey,
     pub listing: Pubkey,
     pub reward_center: Pubkey,

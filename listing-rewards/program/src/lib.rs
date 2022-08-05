@@ -1,25 +1,23 @@
 pub mod assertions;
-pub mod cancel_listing;
 pub mod constants;
 pub mod errors;
+pub mod listings;
 pub mod offers;
 pub mod pda;
 pub mod redeem_rewards;
 pub mod reward_center;
 pub mod rewardable_collection;
-pub mod sell;
 pub mod state;
 
 use anchor_lang::prelude::*;
 use core::ops::Deref;
 
 use crate::{
-    cancel_listing::*,
+    listings::{cancel::*, create::*},
     offers::{close::*, create::*},
     redeem_rewards::*,
     reward_center::*,
-    rewardable_collection::*,
-    sell::*,
+    rewardable_collection::{create::*, delete::*},
 };
 
 // TODO: Remove when added to Anchor https://github.com/coral-xyz/anchor/pull/2014
@@ -69,18 +67,28 @@ pub mod listing_rewards {
         ctx: Context<CreateRewardableCollection>,
         rewardable_collection_params: CreateRewardableCollectionParams,
     ) -> Result<()> {
-        rewardable_collection::create_rewardable_collection(ctx, rewardable_collection_params)
+        rewardable_collection::create::handler(ctx, rewardable_collection_params)
     }
 
-    pub fn sell(ctx: Context<Sell>, sell_params: SellParams) -> Result<()> {
-        sell::sell(ctx, sell_params)
+    pub fn delete_rewardable_collection(
+        ctx: Context<DeleteRewardableCollection>,
+        rewardable_collection_params: DeleteRewardableCollectionParams,
+    ) -> Result<()> {
+        rewardable_collection::delete::handler(ctx, rewardable_collection_params)
+    }
+
+    pub fn create_listing(
+        ctx: Context<CreateListing>,
+        sell_params: CreateListingParams,
+    ) -> Result<()> {
+        listings::create::handler(ctx, sell_params)
     }
 
     pub fn cancel_listing(
         ctx: Context<CancelListing>,
         cancel_listing_params: CancelListingParams,
     ) -> Result<()> {
-        cancel_listing::handler(ctx, cancel_listing_params)
+        listings::cancel::handler(ctx, cancel_listing_params)
     }
 
     pub fn create_offer(

@@ -46,6 +46,21 @@ pub fn assert_belongs_to_rewardable_collection(
     Ok(())
 }
 
+pub fn assert_rewardable_collection_deleted_if_initialized(
+    rewardable_collection: &Account<RewardableCollection>,
+) -> Result<()> {
+    if !rewardable_collection.is_initialized {
+        return Ok(());
+    }
+
+    require!(
+        rewardable_collection.is_initialized && rewardable_collection.deleted_at.is_some(),
+        ListingRewardsError::RewardableCollectionAlreadyActive,
+    );
+
+    Ok(())
+}
+
 pub fn assert_rewardable_collection_maintainer(
     wallet: Pubkey,
     auction_house: &Box<Account<AuctionHouse>>,
