@@ -238,10 +238,10 @@ pub fn auctioneer_execute_sale<'info>(
         .lamports()
         .checked_add(listing_config_lamports)
         .unwrap();
-    // **listing_config.lamports.borrow_mut() = 0;
+    **listing_config.lamports.borrow_mut() = 0;
 
-    // let mut source_data = listing_config.data.borrow_mut();
-    // source_data.fill(0);
+    let mut source_data = listing_config.data.borrow_mut();
+    source_data.fill(0);
 
     Ok(())
 }
