@@ -805,13 +805,11 @@ mod update_metadata_account_v2 {
     #[tokio::test]
     async fn fail_cannot_unverify_another_creator_by_changing_array() {
         let mut context = program_test().start_with_context().await;
-        let creators = vec![
-            Creator {
-                address: context.payer.pubkey(),
-                verified: true,
-                share: 100,
-            },
-        ];
+        let creators = vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }];
 
         // Create metadata with one verified creator.
         let test_metadata = Metadata::new();
@@ -876,7 +874,7 @@ mod update_metadata_account_v2 {
                     creators: Some(new_creators),
                     seller_fee_basis_points: 10,
                     collection: None,
-                    uses: None
+                    uses: None,
                 }),
                 None,
                 None,
@@ -899,13 +897,11 @@ mod update_metadata_account_v2 {
 #[tokio::test]
 async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
     let mut context = program_test().start_with_context().await;
-    let creators = vec![
-        Creator {
-            address: context.payer.pubkey(),
-            verified: true,
-            share: 100,
-        },
-    ];
+    let creators = vec![Creator {
+        address: context.payer.pubkey(),
+        verified: true,
+        share: 100,
+    }];
 
     // Create metadata with one verified creator.
     let test_metadata = Metadata::new();
@@ -944,13 +940,11 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
     context.banks_client.process_transaction(tx).await.unwrap();
 
     // Try to update metadata with a different verified creator.
-    let new_creators = vec![
-        Creator {
-            address: new_update_authority.pubkey(),
-            verified: true,
-            share: 100,
-        },
-    ];
+    let new_creators = vec![Creator {
+        address: new_update_authority.pubkey(),
+        verified: true,
+        share: 100,
+    }];
 
     let tx = Transaction::new_signed_with_payer(
         &[instruction::update_metadata_accounts_v2(
@@ -965,7 +959,7 @@ async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
                 creators: Some(new_creators),
                 seller_fee_basis_points: 10,
                 collection: None,
-                uses: None
+                uses: None,
             }),
             None,
             None,

@@ -74,12 +74,11 @@ pub fn assert_data_valid(
         }
 
         // If there is an existing creator's array, store this in a hashmap as well.
-        let existing_creators_map: Option<HashMap<&Pubkey, &Creator>> =
-            if let Some(existing_creators) = &existing_metadata.data.creators {
-                Some(existing_creators.iter().map(|c| (&c.address, c)).collect())
-            } else {
-                None
-            };
+        let existing_creators_map: Option<HashMap<&Pubkey, &Creator>> = existing_metadata
+            .data
+            .creators
+            .as_ref()
+            .map(|existing_creators| existing_creators.iter().map(|c| (&c.address, c)).collect());
 
         // Loop over new creator's map.
         let mut share_total: u8 = 0;
