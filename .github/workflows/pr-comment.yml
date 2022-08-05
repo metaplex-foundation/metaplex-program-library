@@ -68,11 +68,30 @@ jobs:
       has-versioning: ${{ steps.parse-version-info.outputs.has-versioning }}
     steps:
       - uses: actions/checkout@v3
+
+      # GH doesn't process or format body fields, so we do some light processing so that multiline comments will break inputs
+      - name: Process content body
+        id: process-content-body
+        run: |
+          REVIEW_CONTENT=$(cat << EOF
+          ${{ github.event.review.body }}
+          EOF
+          )
+          REVIEW_CONTENT="${REVIEW_CONTENT//\'/}"
+          REVIEW_CONTENT="${REVIEW_CONTENT//$'\n'/\\n}"
+          REVIEW_CONTENT="${REVIEW_CONTENT//$'\r'/\\r}"
+          echo "::set-output name=content::$REVIEW_CONTENT"
+        shell: bash
+
+      - name: Log processed content body
+        run: echo "${{ steps.process-content-body.outputs.content }}"
+        shell: bash
+
       - name: Parse version info from review
         uses: ./.github/actions/parse-version-command
         id: parse-version-info
         with:
-          body: ${{ github.event.review.body }}
+          body: ${{ steps.process-content-body.outputs.content }}
 
   update-pr-with-changes:
     needs: [get-changes-scope, get-version-scope]
