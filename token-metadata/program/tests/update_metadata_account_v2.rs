@@ -646,6 +646,110 @@ mod update_metadata_account_v2 {
     }
 
     #[tokio::test]
+    async fn can_set_unverified_data_to_none() {
+        let mut context = program_test().start_with_context().await;
+
+        let test_collection = Metadata::new();
+        test_collection
+            .create_v2(
+                &mut context,
+                "Test Col".to_string(),
+                "TSTCOL".to_string(),
+                "uricol".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let collection_master_edition_account = MasterEditionV2::new(&test_collection);
+        collection_master_edition_account
+            .create_v3(&mut context, Some(1))
+            .await
+            .unwrap();
+
+        let test_metadata = Metadata::new();
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                true,
+                None,
+                Some(Collection {
+                    key: test_collection.pubkey,
+                    verified: false,
+                }),
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Setting existing, but unverified collection data to None.
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey(),
+                None,
+                Some(DataV2 {
+                    name: "Test".to_string(),
+                    symbol: "TST".to_string(),
+                    uri: "uri".to_string(),
+                    creators: None,
+                    seller_fee_basis_points: 10,
+                    collection: None,
+                    uses: None,
+                }),
+                None,
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+        let metadata = test_metadata.get_data(&mut context).await;
+        assert_eq!(metadata.collection, None);
+
+        // Setting Collection data that's already None to None.
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey(),
+                None,
+                Some(DataV2 {
+                    name: "Test".to_string(),
+                    symbol: "TST".to_string(),
+                    uri: "uri".to_string(),
+                    creators: None,
+                    seller_fee_basis_points: 10,
+                    collection: None,
+                    uses: None,
+                }),
+                None,
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(tx).await.unwrap();
+        let metadata = test_metadata.get_data(&mut context).await;
+        assert_eq!(metadata.collection, None);
+    }
+
+    #[tokio::test]
     async fn extra_data_zeroed() {
         let mut context = program_test().start_with_context().await;
 

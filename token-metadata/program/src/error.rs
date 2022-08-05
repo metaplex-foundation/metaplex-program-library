@@ -440,6 +440,10 @@ pub enum MetadataError {
     /// 111 - Borsh Deserialization Error
     #[error("Borsh Deserialization Error")]
     BorshDeserializationError,
+
+    /// 112 - Cannot update a verified colleciton in this command
+    #[error("Cannot update a verified colleciton in this command")]
+    CannotUpdateVerifiedCollection,
 }
 
 impl PrintProgramError for MetadataError {
