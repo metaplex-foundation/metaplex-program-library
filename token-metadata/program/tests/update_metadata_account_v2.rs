@@ -762,6 +762,7 @@ mod update_metadata_account_v2 {
         let creator2 = Keypair::new();
         let creator3 = Keypair::new();
         let creator4 = Keypair::new();
+        let creator5 = Keypair::new();
 
         let creators = vec![
             Creator {
@@ -784,9 +785,8 @@ mod update_metadata_account_v2 {
                 verified: false,
                 share: 20,
             },
-            // Context key must be in array or we get an error.
             Creator {
-                address: context.payer.pubkey(),
+                address: creator5.pubkey(),
                 verified: false,
                 share: 20,
             },
@@ -896,4 +896,179 @@ mod update_metadata_account_v2 {
 
         assert_custom_error!(result, MetadataError::InvalidUseMethod);
     }
+
+    #[tokio::test]
+    async fn fail_cannot_unverify_another_creator_by_changing_array() {
+        let mut context = program_test().start_with_context().await;
+        let creators = vec![Creator {
+            address: context.payer.pubkey(),
+            verified: true,
+            share: 100,
+        }];
+
+        // Create metadata with one verified creator.
+        let test_metadata = Metadata::new();
+        test_metadata
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                Some(creators),
+                10,
+                true,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        // Update authority.
+        let new_update_authority = Keypair::new();
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                context.payer.pubkey(),
+                Some(new_update_authority.pubkey()),
+                None,
+                None,
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+        context.banks_client.process_transaction(tx).await.unwrap();
+
+        // Try to update metadata with a different verified creator.
+        let new_creators = vec![
+            Creator {
+                address: context.payer.pubkey(),
+                verified: false,
+                share: 50,
+            },
+            Creator {
+                address: new_update_authority.pubkey(),
+                verified: true,
+                share: 50,
+            },
+        ];
+
+        let tx = Transaction::new_signed_with_payer(
+            &[instruction::update_metadata_accounts_v2(
+                id(),
+                test_metadata.pubkey,
+                new_update_authority.pubkey(),
+                None,
+                Some(DataV2 {
+                    name: "Test".to_string(),
+                    symbol: "TST".to_string(),
+                    uri: "uri".to_string(),
+                    creators: Some(new_creators),
+                    seller_fee_basis_points: 10,
+                    collection: None,
+                    uses: None,
+                }),
+                None,
+                None,
+            )],
+            Some(&context.payer.pubkey()),
+            &[&context.payer, &new_update_authority],
+            context.last_blockhash,
+        );
+
+        let result = context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .unwrap_err();
+
+        assert_custom_error!(result, MetadataError::CannotUnverifyAnotherCreator);
+    }
+}
+
+#[tokio::test]
+async fn fail_cannot_unverify_another_creator_by_removing_from_array() {
+    let mut context = program_test().start_with_context().await;
+    let creators = vec![Creator {
+        address: context.payer.pubkey(),
+        verified: true,
+        share: 100,
+    }];
+
+    // Create metadata with one verified creator.
+    let test_metadata = Metadata::new();
+    test_metadata
+        .create_v2(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            Some(creators),
+            10,
+            true,
+            None,
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+
+    // Update authority.
+    let new_update_authority = Keypair::new();
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction::update_metadata_accounts_v2(
+            id(),
+            test_metadata.pubkey,
+            context.payer.pubkey(),
+            Some(new_update_authority.pubkey()),
+            None,
+            None,
+            None,
+        )],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    // Try to update metadata with a different verified creator.
+    let new_creators = vec![Creator {
+        address: new_update_authority.pubkey(),
+        verified: true,
+        share: 100,
+    }];
+
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction::update_metadata_accounts_v2(
+            id(),
+            test_metadata.pubkey,
+            new_update_authority.pubkey(),
+            None,
+            Some(DataV2 {
+                name: "Test".to_string(),
+                symbol: "TST".to_string(),
+                uri: "uri".to_string(),
+                creators: Some(new_creators),
+                seller_fee_basis_points: 10,
+                collection: None,
+                uses: None,
+            }),
+            None,
+            None,
+        )],
+        Some(&context.payer.pubkey()),
+        &[&context.payer, &new_update_authority],
+        context.last_blockhash,
+    );
+
+    let result = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(result, MetadataError::CannotUnverifyAnotherCreator);
 }

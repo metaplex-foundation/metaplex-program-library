@@ -345,7 +345,6 @@ pub fn process_update_metadata_accounts_v2(
                 &metadata,
                 false,
                 update_authority_info.is_signer,
-                true,
             )?;
             metadata.data = compatible_data;
             // If the user passes in Collection data, only allow updating if it's unverified
