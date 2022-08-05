@@ -348,8 +348,21 @@ pub fn process_update_metadata_accounts_v2(
                 true,
             )?;
             metadata.data = compatible_data;
-            assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
-            metadata.collection = data.collection;
+            // If the user passes in Collection data, only allow updating if it's unverified
+            // or if it exactly matches the existing collection info.
+            // If the user passes in None for the Collection data then only set it if it's unverified.
+            if data.collection.is_some() {
+                assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
+                metadata.collection = data.collection;
+            } else if let Some(collection) = metadata.collection.as_ref() {
+                // Can't change a verified collection in this command.
+                if collection.verified {
+                    return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+                }
+                // If it's unverified, it's ok to set to None.
+                metadata.collection = data.collection;
+            }
+            // If already None leave it as None.
             assert_valid_use(&data.uses, &metadata.uses)?;
             metadata.uses = data.uses;
         } else {
@@ -1833,6 +1846,11 @@ pub fn set_collection_size(
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
     let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
+    // Check that the update authority or delegate is a signer.
+    if !collection_update_authority_account_info.is_signer {
+        return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
+    }
+
     if using_delegated_collection_authority {
         let collection_authority_record = next_account_info(account_info_iter)?;
         assert_has_collection_authority(
@@ -1848,10 +1866,6 @@ pub fn set_collection_size(
             collection_mint_account_info.key,
             None,
         )?;
-
-        if !collection_update_authority_account_info.is_signer {
-            return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
-        }
     }
 
     // Only unsized collections can have the size set, and only once.

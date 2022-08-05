@@ -441,6 +441,10 @@ pub enum MetadataError {
     #[error("Borsh Deserialization Error")]
     BorshDeserializationError,
 
+    /// 112 - Cannot update a verified colleciton in this command
+    #[error("Cannot update a verified colleciton in this command")]
+    CannotUpdateVerifiedCollection,
+    
     /// 113 - Edition Account Doesnt Match Collection
     #[error("Edition account aoesnt match collection ")]
     CollectionMasterEditionAccountInvalid,
