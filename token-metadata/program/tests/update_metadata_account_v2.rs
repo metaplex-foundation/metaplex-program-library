@@ -247,6 +247,8 @@ mod update_metadata_account_v2 {
 
         let updated_name = "New Name".to_string();
 
+        let incoming_collection = Keypair::new();
+
         let tx2 = Transaction::new_signed_with_payer(
             &[instruction::update_metadata_accounts_v2(
                 id(),
@@ -260,7 +262,7 @@ mod update_metadata_account_v2 {
                     creators: None,
                     seller_fee_basis_points: 10,
                     collection: Some(Collection {
-                        key: test_collection.mint.pubkey(),
+                        key: incoming_collection.pubkey(),
                         verified: true,
                     }),
                     uses: None,
