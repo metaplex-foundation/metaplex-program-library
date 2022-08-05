@@ -1351,7 +1351,7 @@ async fn fail_verify_collection_invalid_owner() {
 }
 
 #[tokio::test]
-async fn fail_verify_collection_edition_derived_key_invalid() {
+async fn fail_verify_collection_negative_cases() {
     let mut context = program_test().start_with_context().await;
 
     let test_collection = Metadata::new();
@@ -1387,8 +1387,8 @@ async fn fail_verify_collection_edition_derived_key_invalid() {
         )
         .await
         .unwrap();
-    let collection_master_edition_account = MasterEditionV2::new(&test_collection_fake);
-    collection_master_edition_account
+    let fake_collection_master_edition_account = MasterEditionV2::new(&test_collection_fake);
+    fake_collection_master_edition_account
         .create_v3(&mut context, Some(0))
         .await
         .unwrap();
@@ -1425,18 +1425,44 @@ async fn fail_verify_collection_edition_derived_key_invalid() {
 
     let kpbytes = &context.payer;
     let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
-    let fake_mint = Keypair::new();
+    // Mismatch of collection mint and master edition
     let err = test_metadata
         .verify_collection(
             &mut context,
             test_collection.pubkey,
             &kp,
-            fake_mint.pubkey(),
-            collection_master_edition_account.pubkey,
+            fake_collection_master_edition_account.mint_pubkey,
+            fake_collection_master_edition_account.pubkey,
             None,
         )
         .await
         .unwrap_err();
-
+    assert_custom_error!(err, MetadataError::CollectionNotFound);
+    // Mismatch master edition but correct mint
+    let err = test_metadata
+        .verify_collection(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            test_collection.mint.pubkey(),
+            fake_collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap_err();
+    assert_custom_error!(err, MetadataError::CollectionMasterEditionAccountInvalid);
+    // Random Edition account
+    let key = Keypair::new();
+    let err = test_metadata
+        .verify_collection(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            test_collection.mint.pubkey(),
+            key.pubkey(),
+            None,
+        )
+        .await
+        .unwrap_err();
     assert_custom_error!(err, MetadataError::IncorrectOwner);
 }

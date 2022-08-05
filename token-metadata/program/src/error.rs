@@ -440,6 +440,10 @@ pub enum MetadataError {
     /// 111 - Borsh Deserialization Error
     #[error("Borsh Deserialization Error")]
     BorshDeserializationError,
+
+    /// 113 - Edition Account Doesnt Match Collection
+    #[error("Edition account aoesnt match collection ")]
+    CollectionMasterEditionAccountInvalid
 }
 
 impl PrintProgramError for MetadataError {
