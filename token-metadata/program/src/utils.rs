@@ -125,6 +125,26 @@ pub fn assert_data_valid(
                 if total != 100 {
                     return Err(MetadataError::ShareTotalMustBe100.into());
                 }
+
+                // Next make sure there were not any existing creators that were already verified but
+                // not listed in the new creator's array.
+                if let Some(existing_creators) = &existing_metadata.data.creators {
+                    for existing_creator in existing_creators {
+                        if (!update_authority_is_signer
+                            || existing_creator.address != *update_authority)
+                            && !allow_direct_creator_writes
+                        {
+                            if let None = creators
+                                .iter()
+                                .find(|c| c.address == existing_creator.address)
+                            {
+                                if existing_creator.verified {
+                                    return Err(MetadataError::CannotUnverifyAnotherCreator.into());
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
