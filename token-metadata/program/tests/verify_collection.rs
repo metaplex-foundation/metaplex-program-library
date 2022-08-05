@@ -1351,7 +1351,7 @@ async fn fail_verify_collection_invalid_owner() {
 }
 
 #[tokio::test]
-async fn fail_verify_collection_derived_key_invalid() {
+async fn fail_verify_collection_edition_derived_key_invalid() {
     let mut context = program_test().start_with_context().await;
 
     let test_collection = Metadata::new();
