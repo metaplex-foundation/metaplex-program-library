@@ -358,6 +358,127 @@ async fn mint_matches_metadata() {
 }
 
 #[tokio::test]
+async fn incorrect_edition_fails() {
+    let mut context = program_test().start_with_context().await;
+
+    // Create an old version NFT with no token standard set.
+    let test_nft = Metadata::new();
+    test_nft
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            0,
+        )
+        .await
+        .unwrap();
+
+    // Other NFT so we can create a valid, but incorrect edition account.
+    // This one won't match the mint passed in.
+    let test_nft2 = Metadata::new();
+    test_nft2
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            0,
+        )
+        .await
+        .unwrap();
+
+    let wrong_master_edition = MasterEditionV2::new(&test_nft2);
+    wrong_master_edition
+        .create(&mut context, Some(0))
+        .await
+        .unwrap();
+
+    let md_account = get_account(&mut context, &test_nft.pubkey).await;
+    let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+
+    // Check that token standard is not set.
+    assert_eq!(metadata.token_standard, None);
+
+    let ix = set_token_standard(
+        PROGRAM_ID,
+        test_nft.pubkey,
+        context.payer.pubkey(),
+        test_nft.mint.pubkey(),
+        Some(wrong_master_edition.pubkey),
+    );
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    let err = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(err, MetadataError::DerivedKeyInvalid);
+}
+
+#[tokio::test]
+async fn invalid_edition_fails() {
+    let mut context = program_test().start_with_context().await;
+
+    // Create an old version NFT with no token standard set.
+    let test_nft = Metadata::new();
+    test_nft
+        .create(
+            &mut context,
+            "Test".to_string(),
+            "TST".to_string(),
+            "uri".to_string(),
+            None,
+            10,
+            false,
+            0,
+        )
+        .await
+        .unwrap();
+
+    let invalid_edition = Keypair::new().pubkey();
+
+    let md_account = get_account(&mut context, &test_nft.pubkey).await;
+    let metadata = ProgramMetadata::deserialize(&mut md_account.data.as_slice()).unwrap();
+
+    // Check that token standard is not set.
+    assert_eq!(metadata.token_standard, None);
+
+    let ix = set_token_standard(
+        PROGRAM_ID,
+        test_nft.pubkey,
+        context.payer.pubkey(),
+        test_nft.mint.pubkey(),
+        Some(invalid_edition),
+    );
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    let err = context
+        .banks_client
+        .process_transaction(tx)
+        .await
+        .unwrap_err();
+
+    assert_custom_error!(err, MetadataError::IncorrectOwner);
+}
+
+#[tokio::test]
 async fn updating_nonfungible_without_edition_fails() {
     let mut context = program_test().start_with_context().await;
 
