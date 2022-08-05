@@ -348,8 +348,21 @@ pub fn process_update_metadata_accounts_v2(
                 true,
             )?;
             metadata.data = compatible_data;
-            assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
-            metadata.collection = data.collection;
+            // If the user passes in Collection data, only allow updating if it's unverified
+            // or if it exactly matches the existing collection info.
+            // If the user passes in None for the Collection data then only set it if it's unverified.
+            if data.collection.is_some() {
+                assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
+                metadata.collection = data.collection;
+            } else if let Some(collection) = metadata.collection.as_ref() {
+                // Can't change a verified collection in this command.
+                if collection.verified {
+                    return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+                }
+                // If it's unverified, it's ok to set to None.
+                metadata.collection = data.collection;
+            }
+            // If already None leave it as None.
             assert_valid_use(&data.uses, &metadata.uses)?;
             metadata.uses = data.uses;
         } else {
