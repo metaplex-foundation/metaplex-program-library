@@ -443,7 +443,7 @@ pub enum MetadataError {
 
     /// 113 - Edition Account Doesnt Match Collection
     #[error("Edition account aoesnt match collection ")]
-    CollectionMasterEditionAccountInvalid
+    CollectionMasterEditionAccountInvalid,
 }
 
 impl PrintProgramError for MetadataError {

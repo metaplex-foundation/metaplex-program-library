@@ -96,7 +96,8 @@ pub fn assert_collection_verify_is_valid(
             collection_data.mint.as_ref(),
             EDITION.as_bytes(),
         ],
-    ).map_err(|_| MetadataError::CollectionMasterEditionAccountInvalid)?;
+    )
+    .map_err(|_| MetadataError::CollectionMasterEditionAccountInvalid)?;
 
     assert_master_edition(collection_data, edition_account_info)?;
     Ok(())
