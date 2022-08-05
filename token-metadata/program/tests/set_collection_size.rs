@@ -5,8 +5,9 @@ use borsh::BorshDeserialize;
 use mpl_token_metadata::{
     error::MetadataError,
     instruction::{approve_collection_authority, set_collection_size},
+    pda::find_collection_authority_account,
     state::{CollectionDetails, Metadata as ProgramMetadata},
-    ID as PROGRAM_ID, pda::find_collection_authority_account,
+    ID as PROGRAM_ID,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
