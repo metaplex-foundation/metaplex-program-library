@@ -1,6 +1,7 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
+use mpl_token_metadata::instruction::set_collection_size;
 use mpl_token_metadata::pda::find_collection_authority_account;
 use mpl_token_metadata::state::{Collection, CollectionDetails};
 use mpl_token_metadata::state::{UseMethod, Uses};
@@ -8,9 +9,11 @@ use mpl_token_metadata::{
     error::MetadataError,
     state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
+    ID as PROGRAM_ID,
 };
 use num_traits::FromPrimitive;
 use solana_program_test::*;
+use solana_sdk::transaction::Transaction;
 use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
@@ -1429,7 +1432,7 @@ async fn fail_unverify_already_unverified() {
             None,
             None,
             None,
-            DEFAULT_COLLECTION_DETAILS,
+            None,
         )
         .await
         .unwrap();
@@ -1472,6 +1475,60 @@ async fn fail_unverify_already_unverified() {
     let kpbytes = &context.payer;
     let kp = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
 
+    // Set a size so we can test that it's actually incremented and decremented correctly.
+    let size = 13;
+
+    let ix = set_collection_size(
+        PROGRAM_ID,
+        test_collection.pubkey,
+        kp.pubkey(),
+        test_collection.mint.pubkey(),
+        None,
+        size,
+    );
+
+    let tx = Transaction::new_signed_with_payer(
+        &[ix],
+        Some(&context.payer.pubkey()),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+    context.banks_client.process_transaction(tx).await.unwrap();
+
+    assert_collection_size(&mut context, &test_collection, size).await;
+
+    // Verify to so we can test decrementing the collection size.
+    test_metadata
+        .verify_sized_collection_item(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            test_collection.mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_collection_size(&mut context, &test_collection, size + 1).await;
+
+    test_metadata
+        .unverify_sized_collection_item(
+            &mut context,
+            test_collection.pubkey,
+            &kp,
+            test_collection.mint.pubkey(),
+            collection_master_edition_account.pubkey,
+            None,
+        )
+        .await
+        .unwrap();
+
+    assert_collection_size(&mut context, &test_collection, size).await;
+
+    // Allow time to pass so our tx isn't rejected for being 'already processed'.
+    context.warp_to_slot(100).unwrap();
+
     let error = test_metadata
         .unverify_sized_collection_item(
             &mut context,
@@ -1486,15 +1543,7 @@ async fn fail_unverify_already_unverified() {
 
     assert_custom_error!(error, MetadataError::AlreadyUnverified);
 
-    let collection_md = test_collection.get_data(&mut context).await;
-    let size = if let Some(details) = collection_md.collection_details {
-        match details {
-            CollectionDetails::V1 { size } => size,
-        }
-    } else {
-        panic!("Expected CollectionDetails::V1");
-    };
-    assert_eq!(size, 0);
+    assert_collection_size(&mut context, &test_collection, size).await;
 }
 
 #[tokio::test]
