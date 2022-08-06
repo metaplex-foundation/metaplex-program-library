@@ -453,7 +453,7 @@ pub enum MetadataError {
     #[error("Item is already verified.")]
     AlreadyVerified,
 
-    /// 115 - Item is already verified.
+    /// 115 - Item is already unverified.
     #[error("Item is already unverified.")]
     AlreadyUnverified,
 }
