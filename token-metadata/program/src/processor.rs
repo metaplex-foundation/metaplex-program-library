@@ -906,8 +906,8 @@ pub fn verify_sized_collection_item(
     let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata = Metadata::from_account_info(collection_info)?;
 
-    // Don't reverify already verified items, otherwise we end up with invalid size data.
-    if let Some(ref collection) = metadata.collection {
+    // Don't verify already verified items, otherwise we end up with invalid size data.
+    if let Some(collection) = &metadata.collection {
         if collection.verified {
             return Err(MetadataError::AlreadyVerified.into());
         }
@@ -1032,7 +1032,7 @@ pub fn unverify_sized_collection_item(
     let mut collection_metadata = Metadata::from_account_info(collection_info)?;
 
     // Don't unverify already unverified items, otherwise we end up with invalid size data.
-    if let Some(ref collection) = metadata.collection {
+    if let Some(collection) = &metadata.collection {
         if !collection.verified {
             return Err(MetadataError::AlreadyUnverified.into());
         }
@@ -1534,8 +1534,8 @@ pub fn set_and_verify_sized_collection_item(
     let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata: Metadata = Metadata::from_account_info(collection_info)?;
 
-    // Don't reverify already verified items, otherwise we end up with invalid size data.
-    if let Some(ref collection) = metadata.collection {
+    // Don't verify already verified items, otherwise we end up with invalid size data.
+    if let Some(collection) = metadata.collection {
         if collection.verified {
             return Err(MetadataError::AlreadyVerified.into());
         }
