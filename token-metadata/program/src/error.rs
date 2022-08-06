@@ -448,6 +448,14 @@ pub enum MetadataError {
     /// 113 - Edition Account Doesnt Match Collection
     #[error("Edition account aoesnt match collection ")]
     CollectionMasterEditionAccountInvalid,
+
+    /// 114 - Item is already verified.
+    #[error("Item is already verified.")]
+    AlreadyVerified,
+
+    /// 115 - Item is already unverified.
+    #[error("Item is already unverified.")]
+    AlreadyUnverified,
 }
 
 impl PrintProgramError for MetadataError {

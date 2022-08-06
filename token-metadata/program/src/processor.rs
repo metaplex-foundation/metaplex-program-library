@@ -903,8 +903,15 @@ pub fn verify_sized_collection_item(
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata = Metadata::from_account_info(collection_info)?;
+
+    // Don't verify already verified items, otherwise we end up with invalid size data.
+    if let Some(collection) = &metadata.collection {
+        if collection.verified {
+            return Err(MetadataError::AlreadyVerified.into());
+        }
+    }
 
     assert_collection_verify_is_valid(
         &metadata,
@@ -930,7 +937,7 @@ pub fn verify_sized_collection_item(
         )?;
     }
 
-    // If the NFT has collection data, we set it to be verified and then update the collection
+    // If the NFT has unverified collection data, we set it to be verified and then update the collection
     // size on the Collection Parent.
     if let Some(collection) = &mut metadata.collection {
         msg!("Verifying sized collection item");
@@ -1021,8 +1028,15 @@ pub fn unverify_sized_collection_item(
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata = Metadata::from_account_info(collection_info)?;
+
+    // Don't unverify already unverified items, otherwise we end up with invalid size data.
+    if let Some(collection) = &metadata.collection {
+        if !collection.verified {
+            return Err(MetadataError::AlreadyUnverified.into());
+        }
+    }
 
     assert_collection_verify_is_valid(
         &metadata,
@@ -1519,6 +1533,13 @@ pub fn set_and_verify_sized_collection_item(
 
     let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata: Metadata = Metadata::from_account_info(collection_info)?;
+
+    // Don't verify already verified items, otherwise we end up with invalid size data.
+    if let Some(collection) = metadata.collection {
+        if collection.verified {
+            return Err(MetadataError::AlreadyVerified.into());
+        }
+    }
 
     if metadata.update_authority != *update_authority.key
         || metadata.update_authority != collection_metadata.update_authority
