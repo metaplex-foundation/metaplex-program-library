@@ -38,10 +38,10 @@ jobs:
       - name: Install and start amman with custom config
         shell: bash
         run: |
-          cd candy-machine/js
           YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn && npm install --location=global @metaplex-foundation/amman
-          cat $GITHUB_WORKSPACE/.github/.config/sugar-cli-test.amman.js > .ammanrc.js
-          amman start > /dev/null &
+          amman start --config .github/.config/sugar-cli-test.amman.js > $GITHUB_WORKSPACE/amman-logs 2>&1
+          pwd
+          cat $GITHUB_WORKSPACE/amman-logs
 
       - name: Airdrop and print SOL balance
         shell: bash
@@ -67,3 +67,7 @@ jobs:
       - name: Run test script from sugar directory (interactive mode + defaults)
         shell: bash
         run: cd ../sugar && echo | echo 1 | ./script/sugar-cli-test.sh -r http://127.0.0.1:8899
+
+      - run: echo "Amman output"; cat $GITHUB_WORKSPACE/amman-logs
+        shell: bash
+        if: always()
