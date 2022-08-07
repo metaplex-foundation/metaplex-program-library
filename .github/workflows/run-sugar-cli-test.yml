@@ -40,8 +40,6 @@ jobs:
         run: |
           YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn && npm install --location=global @metaplex-foundation/amman
           amman start --config .github/.config/sugar-cli-test.amman.js > $GITHUB_WORKSPACE/amman-logs 2>&1
-          pwd
-          cat $GITHUB_WORKSPACE/amman-logs
 
       - name: Airdrop and print SOL balance
         shell: bash
