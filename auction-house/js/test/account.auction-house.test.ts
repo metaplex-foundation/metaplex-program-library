@@ -32,6 +32,7 @@ test('account auction-house: round trip serilization', async (t) => {
     escrowPaymentBump: 255,
     hasAuctioneer: false,
     auctioneerAddress: PublicKey.default,
+    scopes: [],
   };
 
   const expected = AuctionHouse.fromArgs(args);

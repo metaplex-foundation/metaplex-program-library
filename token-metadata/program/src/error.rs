@@ -440,6 +440,22 @@ pub enum MetadataError {
     /// 111 - Borsh Deserialization Error
     #[error("Borsh Deserialization Error")]
     BorshDeserializationError,
+
+    /// 112 - Cannot update a verified colleciton in this command
+    #[error("Cannot update a verified colleciton in this command")]
+    CannotUpdateVerifiedCollection,
+
+    /// 113 - Edition Account Doesnt Match Collection
+    #[error("Edition account aoesnt match collection ")]
+    CollectionMasterEditionAccountInvalid,
+
+    /// 114 - Item is already verified.
+    #[error("Item is already verified.")]
+    AlreadyVerified,
+
+    /// 115 - Item is already unverified.
+    #[error("Item is already unverified.")]
+    AlreadyUnverified,
 }
 
 impl PrintProgramError for MetadataError {

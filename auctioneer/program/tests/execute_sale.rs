@@ -332,7 +332,7 @@ async fn execute_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert!(buyer_token_before.is_none(),);
+    assert!(buyer_token_before.is_none());
 
     context.banks_client.process_transaction(tx).await.unwrap();
 
@@ -355,7 +355,7 @@ async fn execute_sale_success() {
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
     assert_eq!(seller_before.lamports + fee_minus, seller_after.lamports);
-    assert!(seller_before.lamports < seller_after.lamports,);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 }
 
@@ -534,7 +534,7 @@ async fn execute_sale_two_bids_success() {
         .get_account(buyer1_token_account)
         .await
         .unwrap();
-    assert!(buyer1_token_before.is_none(),);
+    assert!(buyer1_token_before.is_none());
 
     context.banks_client.process_transaction(tx).await.unwrap();
 
