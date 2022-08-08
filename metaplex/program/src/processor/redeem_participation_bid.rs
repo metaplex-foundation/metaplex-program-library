@@ -204,7 +204,6 @@ fn charge_for_participation<'a>(
         }
     }
 
-    #[allow(unused_comparisons)]
     if bidder_token.amount.saturating_sub(price) < 0_u64 {
         return Err(MetaplexError::NotEnoughBalanceForParticipation.into());
     }
