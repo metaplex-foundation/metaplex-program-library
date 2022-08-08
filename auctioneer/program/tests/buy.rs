@@ -731,7 +731,7 @@ async fn multiple_bids_time_ext_success() {
         .await
         .unwrap();
 
-    context.warp_to_slot(1 * 400).unwrap();
+    context.warp_to_slot(400).unwrap();
 
     let listing0 = context
         .banks_client
