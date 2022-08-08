@@ -65,6 +65,4 @@ async fn sell_success() {
         .expect("Error Getting Trade State")
         .expect("Trade State Empty");
     assert_eq!(sts.data.len(), 1);
-
-    ()
 }
