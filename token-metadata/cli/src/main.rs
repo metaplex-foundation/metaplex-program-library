@@ -1,39 +1,37 @@
 use solana_client::rpc_request::TokenAccountsFilter;
 use solana_sdk::account::ReadableAccount;
 
-use {
-    clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand},
-    mpl_token_metadata::{
-        instruction::{
-            create_master_edition, create_metadata_accounts,
-            mint_new_edition_from_master_edition_via_token, puff_metadata_account,
-            update_metadata_accounts,
-        },
-        state::{
-            get_reservation_list, Data, Edition, Key, MasterEditionV1, MasterEditionV2, Metadata,
-            EDITION, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
-        },
+use clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand};
+use mpl_token_metadata::{
+    instruction::{
+        create_master_edition, create_metadata_accounts,
+        mint_new_edition_from_master_edition_via_token, puff_metadata_account,
+        update_metadata_accounts,
     },
-    solana_clap_utils::{
-        input_parsers::pubkey_of,
-        input_validators::{is_url, is_valid_pubkey, is_valid_signer},
+    state::{
+        get_reservation_list, Data, Edition, Key, MasterEditionV1, MasterEditionV2, Metadata,
+        EDITION, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH, PREFIX,
     },
-    solana_client::rpc_client::RpcClient,
-    solana_program::{
-        account_info::AccountInfo, borsh::try_from_slice_unchecked, program_pack::Pack,
-    },
-    solana_sdk::{
-        pubkey::Pubkey,
-        signature::{read_keypair_file, Keypair, Signer},
-        system_instruction::create_account,
-        transaction::Transaction,
-    },
-    spl_token::{
-        instruction::{initialize_account, initialize_mint, mint_to},
-        state::{Account, Mint},
-    },
-    std::str::FromStr,
 };
+use solana_clap_utils::{
+    input_parsers::pubkey_of,
+    input_validators::{is_url, is_valid_pubkey, is_valid_signer},
+};
+use solana_client::rpc_client::RpcClient;
+use solana_program::{
+    account_info::AccountInfo, borsh::try_from_slice_unchecked, program_pack::Pack,
+};
+use solana_sdk::{
+    pubkey::Pubkey,
+    signature::{read_keypair_file, Keypair, Signer},
+    system_instruction::create_account,
+    transaction::Transaction,
+};
+use spl_token::{
+    instruction::{initialize_account, initialize_mint, mint_to},
+    state::{Account, Mint},
+};
+use std::str::FromStr;
 
 const TOKEN_PROGRAM_PUBKEY: &str = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 fn puff_unpuffed_metadata(_app_matches: &ArgMatches, payer: Keypair, client: RpcClient) {

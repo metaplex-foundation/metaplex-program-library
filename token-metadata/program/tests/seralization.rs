@@ -1,9 +1,10 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use mpl_token_metadata::state::Key;
-use mpl_token_metadata::state::MasterEditionV2 as ProgramME;
-use mpl_token_metadata::{state::MAX_MASTER_EDITION_LEN, utils::try_from_slice_checked};
+use mpl_token_metadata::{
+    state::{Key, MasterEditionV2 as ProgramME, MAX_MASTER_EDITION_LEN},
+    utils::try_from_slice_checked,
+};
 
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;

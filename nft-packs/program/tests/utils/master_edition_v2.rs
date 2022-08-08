@@ -5,14 +5,17 @@ use mpl_token_metadata::{
     instruction::{self, CreateMasterEditionArgs, MetadataInstruction},
     state::{EDITION, PREFIX},
 };
-use solana_program::borsh::try_from_slice_unchecked;
 use solana_program::{
+    borsh::try_from_slice_unchecked,
     instruction::{AccountMeta, Instruction},
     sysvar,
 };
 use solana_program_test::*;
-use solana_sdk::signature::Keypair;
-use solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
+use solana_sdk::{
+    pubkey::Pubkey,
+    signature::{Keypair, Signer},
+    transaction::Transaction,
+};
 
 #[derive(Debug)]
 pub struct TestMasterEditionV2 {

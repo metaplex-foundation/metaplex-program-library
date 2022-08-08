@@ -1,26 +1,24 @@
-use {
-    crate::{
-        error::MetaplexError,
-        processor::redeem_printing_v2_bid::{create_or_update_prize_tracking, mint_edition},
-        state::{
-            AuctionManager, NonWinningConstraint, ParticipationConfigV2, Store, WinningConstraint,
-            PREFIX,
-        },
-        utils::{
-            assert_derivation, assert_initialized, assert_is_ata, assert_owned_by,
-            common_redeem_checks, common_redeem_finish, get_amount_from_token_account,
-            spl_token_transfer, CommonRedeemCheckArgs, CommonRedeemFinishArgs, CommonRedeemReturn,
-        },
+use crate::{
+    error::MetaplexError,
+    processor::redeem_printing_v2_bid::{create_or_update_prize_tracking, mint_edition},
+    state::{
+        AuctionManager, NonWinningConstraint, ParticipationConfigV2, Store, WinningConstraint,
+        PREFIX,
     },
-    mpl_auction::processor::{AuctionData, AuctionDataExtended, BidderMetadata},
-    mpl_token_metadata::utils::get_supply_off_master_edition,
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        pubkey::Pubkey,
+    utils::{
+        assert_derivation, assert_initialized, assert_is_ata, assert_owned_by,
+        common_redeem_checks, common_redeem_finish, get_amount_from_token_account,
+        spl_token_transfer, CommonRedeemCheckArgs, CommonRedeemFinishArgs, CommonRedeemReturn,
     },
-    spl_token::state::Account,
 };
+use mpl_auction::processor::{AuctionData, AuctionDataExtended, BidderMetadata};
+use mpl_token_metadata::utils::get_supply_off_master_edition;
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    pubkey::Pubkey,
+};
+use spl_token::state::Account;
 
 struct LegacyAccounts<'a> {
     pub participation_printing_holding_account_info: &'a AccountInfo<'a>,

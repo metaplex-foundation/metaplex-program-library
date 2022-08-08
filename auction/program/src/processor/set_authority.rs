@@ -7,14 +7,12 @@ use crate::{
     PREFIX,
 };
 
-use {
-    borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        msg,
-        pubkey::Pubkey,
-    },
+use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    msg,
+    pubkey::Pubkey,
 };
 
 pub fn set_authority(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {

@@ -21,7 +21,10 @@ use std::result::Result as StdResult;
 
 use mpl_token_metadata::pda::find_metadata_account;
 use solana_program_test::*;
-use solana_sdk::{clock::UnixTimestamp, instruction::Instruction, transaction::Transaction, transport::TransportError};
+use solana_sdk::{
+    clock::UnixTimestamp, instruction::Instruction, transaction::Transaction,
+    transport::TransportError,
+};
 use spl_associated_token_account::get_associated_token_address;
 
 use crate::utils::helpers::default_scopes;

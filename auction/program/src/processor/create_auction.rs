@@ -10,18 +10,16 @@ use crate::{
     EXTENDED, PREFIX,
 };
 
-use {
-    borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        clock::UnixTimestamp,
-        entrypoint::ProgramResult,
-        msg,
-        program_error::ProgramError,
-        pubkey::Pubkey,
-    },
-    std::mem,
+use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    clock::UnixTimestamp,
+    entrypoint::ProgramResult,
+    msg,
+    program_error::ProgramError,
+    pubkey::Pubkey,
 };
+use std::mem;
 
 #[repr(C)]
 #[derive(Clone, BorshSerialize, BorshDeserialize, PartialEq)]

@@ -1,20 +1,18 @@
 use solana_program::program_pack::IsInitialized;
 
-use {
-    crate::errors::AuctionError,
-    solana_program::{
-        account_info::AccountInfo,
-        entrypoint::ProgramResult,
-        msg,
-        program::{invoke, invoke_signed},
-        program_error::ProgramError,
-        program_pack::Pack,
-        pubkey::Pubkey,
-        system_instruction,
-        sysvar::{rent::Rent, Sysvar},
-    },
-    std::convert::TryInto,
+use crate::errors::AuctionError;
+use solana_program::{
+    account_info::AccountInfo,
+    entrypoint::ProgramResult,
+    msg,
+    program::{invoke, invoke_signed},
+    program_error::ProgramError,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    system_instruction,
+    sysvar::{rent::Rent, Sysvar},
 };
+use std::convert::TryInto;
 
 pub fn assert_initialized<T: Pack + IsInitialized>(
     account_info: &AccountInfo,

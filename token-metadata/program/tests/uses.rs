@@ -5,8 +5,9 @@ use mpl_token_metadata::state::{UseMethod, Uses};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
-    instruction::InstructionError, signature::Signer, transaction::Transaction,
-    transaction::TransactionError,
+    instruction::InstructionError,
+    signature::Signer,
+    transaction::{Transaction, TransactionError},
 };
 
 use utils::*;

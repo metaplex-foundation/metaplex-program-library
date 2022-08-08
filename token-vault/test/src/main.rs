@@ -1,36 +1,34 @@
-use {
-    clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand},
-    metaplex_token_vault::{
-        instruction::{
-            create_activate_vault_instruction, create_add_shares_instruction,
-            create_add_token_to_inactive_vault_instruction, create_combine_vault_instruction,
-            create_init_vault_instruction, create_mint_shares_instruction,
-            create_redeem_shares_instruction, create_update_external_price_account_instruction,
-            create_withdraw_shares_instruction, create_withdraw_tokens_instruction,
-        },
-        state::{
-            ExternalPriceAccount, SafetyDepositBox, Vault, VaultState, MAX_EXTERNAL_ACCOUNT_SIZE,
-            MAX_VAULT_SIZE, PREFIX,
-        },
+use clap::{crate_description, crate_name, crate_version, App, Arg, ArgMatches, SubCommand};
+use metaplex_token_vault::{
+    instruction::{
+        create_activate_vault_instruction, create_add_shares_instruction,
+        create_add_token_to_inactive_vault_instruction, create_combine_vault_instruction,
+        create_init_vault_instruction, create_mint_shares_instruction,
+        create_redeem_shares_instruction, create_update_external_price_account_instruction,
+        create_withdraw_shares_instruction, create_withdraw_tokens_instruction,
     },
-    solana_clap_utils::{
-        input_parsers::pubkey_of,
-        input_validators::{is_url, is_valid_pubkey, is_valid_signer},
+    state::{
+        ExternalPriceAccount, SafetyDepositBox, Vault, VaultState, MAX_EXTERNAL_ACCOUNT_SIZE,
+        MAX_VAULT_SIZE, PREFIX,
     },
-    solana_client::rpc_client::RpcClient,
-    solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack},
-    solana_sdk::{
-        pubkey::Pubkey,
-        signature::{read_keypair_file, Keypair, Signer},
-        system_instruction::create_account,
-        transaction::Transaction,
-    },
-    spl_token::{
-        instruction::{approve, initialize_account, initialize_mint, mint_to},
-        state::{Account, Mint},
-    },
-    std::str::FromStr,
 };
+use solana_clap_utils::{
+    input_parsers::pubkey_of,
+    input_validators::{is_url, is_valid_pubkey, is_valid_signer},
+};
+use solana_client::rpc_client::RpcClient;
+use solana_program::{borsh::try_from_slice_unchecked, program_pack::Pack};
+use solana_sdk::{
+    pubkey::Pubkey,
+    signature::{read_keypair_file, Keypair, Signer},
+    system_instruction::create_account,
+    transaction::Transaction,
+};
+use spl_token::{
+    instruction::{approve, initialize_account, initialize_mint, mint_to},
+    state::{Account, Mint},
+};
+use std::str::FromStr;
 
 const PROGRAM_PUBKEY: &str = "94wRaYAQdC2gYF76AUTYSugNJ3rAC4EimjAMPwM7uYry";
 const TOKEN_PROGRAM_PUBKEY: &str = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";

@@ -1,22 +1,23 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use mpl_token_metadata::state::{UseMethod, Uses};
 use mpl_token_metadata::{
-    state::{MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    state::{UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 
 use borsh::BorshSerialize;
-use mpl_token_metadata::pda::{find_program_as_burner_account, find_use_authority_account};
-use mpl_token_metadata::state::Key as MetadataKey;
-use mpl_token_metadata::state::UseAuthorityRecord;
+use mpl_token_metadata::{
+    pda::{find_program_as_burner_account, find_use_authority_account},
+    state::{Key as MetadataKey, UseAuthorityRecord},
+};
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
-use solana_sdk::account::WritableAccount;
-use solana_sdk::account::{Account, AccountSharedData};
-use solana_sdk::signature::{Keypair, Signer};
-use solana_sdk::transaction::Transaction;
+use solana_sdk::{
+    account::{Account, AccountSharedData, WritableAccount},
+    signature::{Keypair, Signer},
+    transaction::Transaction,
+};
 use utils::*;
 mod bump_seed_migration {
 

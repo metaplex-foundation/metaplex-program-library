@@ -5,19 +5,17 @@ use crate::{
     PREFIX,
 };
 
-use {
-    borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        clock::Clock,
-        entrypoint::ProgramResult,
-        hash, msg,
-        program_error::ProgramError,
-        pubkey::Pubkey,
-        sysvar::Sysvar,
-    },
-    std::mem,
+use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    clock::Clock,
+    entrypoint::ProgramResult,
+    hash, msg,
+    program_error::ProgramError,
+    pubkey::Pubkey,
+    sysvar::Sysvar,
 };
+use std::mem;
 
 type Price = u64;
 type Salt = u64;

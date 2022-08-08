@@ -1,25 +1,23 @@
-use {
-    crate::{
-        error::MetaplexError,
-        state::{CommonWinningIndexChecks, CommonWinningIndexReturn, WinningConfigType, PREFIX},
-        utils::{
-            assert_derivation, common_redeem_checks, common_redeem_finish,
-            get_amount_from_token_account, transfer_safety_deposit_box_items,
-            CommonRedeemCheckArgs, CommonRedeemFinishArgs, CommonRedeemReturn,
-        },
+use crate::{
+    error::MetaplexError,
+    state::{CommonWinningIndexChecks, CommonWinningIndexReturn, WinningConfigType, PREFIX},
+    utils::{
+        assert_derivation, common_redeem_checks, common_redeem_finish,
+        get_amount_from_token_account, transfer_safety_deposit_box_items, CommonRedeemCheckArgs,
+        CommonRedeemFinishArgs, CommonRedeemReturn,
     },
-    arrayref::array_ref,
-    mpl_auction::processor::AuctionData,
-    mpl_token_metadata::{
-        deprecated_instruction::deprecated_set_reservation_list, state::Reservation,
-    },
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        program::invoke_signed,
-        program_error::ProgramError,
-        pubkey::Pubkey,
-    },
+};
+use arrayref::array_ref;
+use mpl_auction::processor::AuctionData;
+use mpl_token_metadata::{
+    deprecated_instruction::deprecated_set_reservation_list, state::Reservation,
+};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    program::invoke_signed,
+    program_error::ProgramError,
+    pubkey::Pubkey,
 };
 
 fn set_reservation_list_wrapper<'a>(

@@ -1,20 +1,18 @@
-use {
-    crate::{
-        deprecated_state::{
-            AuctionManagerSettingsV1, AuctionManagerV1, ParticipationStateV1, WinningConfigState,
-            WinningConfigStateItem, MAX_AUCTION_MANAGER_V1_SIZE,
-        },
-        error::MetaplexError,
-        processor::init_auction_manager_v2::assert_common_checks,
-        state::{AuctionManagerStatus, Key, PREFIX},
-        utils::create_or_allocate_account_raw,
+use crate::{
+    deprecated_state::{
+        AuctionManagerSettingsV1, AuctionManagerV1, ParticipationStateV1, WinningConfigState,
+        WinningConfigStateItem, MAX_AUCTION_MANAGER_V1_SIZE,
     },
-    borsh::BorshSerialize,
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        pubkey::Pubkey,
-    },
+    error::MetaplexError,
+    processor::init_auction_manager_v2::assert_common_checks,
+    state::{AuctionManagerStatus, Key, PREFIX},
+    utils::create_or_allocate_account_raw,
+};
+use borsh::BorshSerialize;
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    pubkey::Pubkey,
 };
 
 pub fn process_deprecated_init_auction_manager_v1(

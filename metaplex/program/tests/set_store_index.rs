@@ -246,8 +246,12 @@ async fn test_set_index<
                 .get_account(account.pubkey)
                 .await
                 .unwrap()
-                .unwrap_or_else(|| panic!("Passed nonexistant account argument {} at {}",
-                    account.pubkey, i));
+                .unwrap_or_else(|| {
+                    panic!(
+                        "Passed nonexistant account argument {} at {}",
+                        account.pubkey, i
+                    )
+                });
         }
 
         instructions.push(Instruction {

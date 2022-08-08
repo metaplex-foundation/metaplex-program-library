@@ -28,25 +28,23 @@ use crate::{
 
 use super::BIDDER_METADATA_LEN;
 
-use {
-    borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        msg,
-        program::{invoke, invoke_signed},
-        program_error::ProgramError,
-        program_option::COption,
-        program_pack::Pack,
-        pubkey::Pubkey,
-        rent::Rent,
-        system_instruction,
-        system_instruction::create_account,
-        sysvar::{clock::Clock, Sysvar},
-    },
-    spl_token::state::Account,
-    std::mem,
+use borsh::{BorshDeserialize, BorshSerialize};
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    msg,
+    program::{invoke, invoke_signed},
+    program_error::ProgramError,
+    program_option::COption,
+    program_pack::Pack,
+    pubkey::Pubkey,
+    rent::Rent,
+    system_instruction,
+    system_instruction::create_account,
+    sysvar::{clock::Clock, Sysvar},
 };
+use spl_token::state::Account;
+use std::mem;
 
 /// Arguments for the PlaceBid instruction discriminant .
 #[repr(C)]

@@ -1,29 +1,27 @@
-use {
-    crate::instruction::MetaplexInstruction,
-    borsh::BorshDeserialize,
-    claim_bid::process_claim_bid,
-    decommission_auction_manager::process_decommission_auction_manager,
-    deprecated_init_auction_manager_v1::process_deprecated_init_auction_manager_v1,
-    deprecated_populate_participation_printing_account::process_deprecated_populate_participation_printing_account,
-    deprecated_validate_participation::process_deprecated_validate_participation,
-    deprecated_validate_safety_deposit_box_v1::process_deprecated_validate_safety_deposit_box_v1,
-    empty_payment_account::process_empty_payment_account,
-    end_auction::process_end_auction,
-    init_auction_manager_v2::process_init_auction_manager_v2,
-    redeem_bid::process_redeem_bid,
-    redeem_full_rights_transfer_bid::process_full_rights_transfer_bid,
-    redeem_participation_bid::process_redeem_participation_bid,
-    redeem_printing_v2_bid::process_redeem_printing_v2_bid,
-    redeem_unused_winning_config_items_as_auctioneer::process_redeem_unused_winning_config_items_as_auctioneer,
-    set_auction_cache::process_set_auction_cache,
-    set_store::{process_set_store, process_set_store_v2},
-    set_store_index::process_set_store_index,
-    set_whitelisted_creator::process_set_whitelisted_creator,
-    solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey},
-    start_auction::process_start_auction,
-    validate_safety_deposit_box_v2::process_validate_safety_deposit_box_v2,
-    withdraw_master_edition::process_withdraw_master_edition,
-};
+use crate::instruction::MetaplexInstruction;
+use borsh::BorshDeserialize;
+use claim_bid::process_claim_bid;
+use decommission_auction_manager::process_decommission_auction_manager;
+use deprecated_init_auction_manager_v1::process_deprecated_init_auction_manager_v1;
+use deprecated_populate_participation_printing_account::process_deprecated_populate_participation_printing_account;
+use deprecated_validate_participation::process_deprecated_validate_participation;
+use deprecated_validate_safety_deposit_box_v1::process_deprecated_validate_safety_deposit_box_v1;
+use empty_payment_account::process_empty_payment_account;
+use end_auction::process_end_auction;
+use init_auction_manager_v2::process_init_auction_manager_v2;
+use redeem_bid::process_redeem_bid;
+use redeem_full_rights_transfer_bid::process_full_rights_transfer_bid;
+use redeem_participation_bid::process_redeem_participation_bid;
+use redeem_printing_v2_bid::process_redeem_printing_v2_bid;
+use redeem_unused_winning_config_items_as_auctioneer::process_redeem_unused_winning_config_items_as_auctioneer;
+use set_auction_cache::process_set_auction_cache;
+use set_store::{process_set_store, process_set_store_v2};
+use set_store_index::process_set_store_index;
+use set_whitelisted_creator::process_set_whitelisted_creator;
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
+use start_auction::process_start_auction;
+use validate_safety_deposit_box_v2::process_validate_safety_deposit_box_v2;
+use withdraw_master_edition::process_withdraw_master_edition;
 
 pub mod claim_bid;
 pub mod decommission_auction_manager;

@@ -3,8 +3,7 @@ pub mod utils;
 
 use mpl_token_metadata::state::{UseAuthorityRecord, UseMethod, Uses};
 
-use mpl_token_metadata::error::MetadataError;
-use mpl_token_metadata::pda::find_use_authority_account;
+use mpl_token_metadata::{error::MetadataError, pda::find_use_authority_account};
 use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{

@@ -1,12 +1,10 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
-use mpl_token_metadata::pda::find_collection_authority_account;
-use mpl_token_metadata::state::Collection;
-use mpl_token_metadata::state::{UseMethod, Uses};
 use mpl_token_metadata::{
     error::MetadataError,
-    state::{Key, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
+    pda::find_collection_authority_account,
+    state::{Collection, Key, UseMethod, Uses, MAX_NAME_LENGTH, MAX_SYMBOL_LENGTH, MAX_URI_LENGTH},
     utils::puffed_out_string,
 };
 use num_traits::FromPrimitive;

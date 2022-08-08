@@ -1,19 +1,15 @@
 use crate::state::StoreConfig;
 
-use {
-    crate::{
-        error::MetaplexError,
-        state::{Key, Store, CONFIG, MAX_STORE_CONFIG_V1_SIZE, MAX_STORE_SIZE, PREFIX},
-        utils::{
-            assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw,
-        },
-    },
-    borsh::BorshSerialize,
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        pubkey::Pubkey,
-    },
+use crate::{
+    error::MetaplexError,
+    state::{Key, Store, CONFIG, MAX_STORE_CONFIG_V1_SIZE, MAX_STORE_SIZE, PREFIX},
+    utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
+};
+use borsh::BorshSerialize;
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    pubkey::Pubkey,
 };
 
 pub fn set_store_logic<'a>(

@@ -1,16 +1,12 @@
-use {
-    crate::{
-        state::{Key, WhitelistedCreator, MAX_WHITELISTED_CREATOR_SIZE, PREFIX},
-        utils::{
-            assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw,
-        },
-    },
-    borsh::BorshSerialize,
-    solana_program::{
-        account_info::{next_account_info, AccountInfo},
-        entrypoint::ProgramResult,
-        pubkey::Pubkey,
-    },
+use crate::{
+    state::{Key, WhitelistedCreator, MAX_WHITELISTED_CREATOR_SIZE, PREFIX},
+    utils::{assert_derivation, assert_owned_by, assert_signer, create_or_allocate_account_raw},
+};
+use borsh::BorshSerialize;
+use solana_program::{
+    account_info::{next_account_info, AccountInfo},
+    entrypoint::ProgramResult,
+    pubkey::Pubkey,
 };
 
 pub fn process_set_whitelisted_creator<'a>(
