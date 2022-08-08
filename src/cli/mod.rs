@@ -168,6 +168,29 @@ pub enum Commands {
         unminted: bool,
     },
 
+    /// Sign one or all NFTs from candy machine
+    Sign {
+        /// Path to the keypair file, uses Sol config or defaults to "~/.config/solana/id.json"
+        #[clap(short, long)]
+        keypair: Option<String>,
+
+        /// RPC Url
+        #[clap(short, long)]
+        rpc_url: Option<String>,
+
+        /// Path to the cache file, defaults to "cache.json"
+        #[clap(long, default_value = DEFAULT_CACHE)]
+        cache: String,
+
+        /// Mint id for single NFT to be signed
+        #[clap(short, long)]
+        mint: Option<String>,
+
+        /// Candy machine id.
+        #[clap(long)]
+        candy_machine_id: Option<String>,
+    },
+
     /// Update the candy machine config on-chain
     Update {
         /// Path to the config file, defaults to "config.json"
