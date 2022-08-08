@@ -1,0 +1,11 @@
+{
+  "name": "bubblegum",
+  "version": "1.0.0",
+  "description": "SDK for MPL Bubblegum contract",
+  "main": "index.ts",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@metaplex-foundation/rustbin": "^0.3.1",
+    "@metaplex-foundation/solita": "^0.12.2"
+  }
+}
