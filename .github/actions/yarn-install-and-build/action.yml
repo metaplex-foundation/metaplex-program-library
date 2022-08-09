@@ -24,6 +24,10 @@ inputs:
     description: If true it will build the token_vault package
     required: false
     default: false
+  build_auction_house:
+    description: If true it will build the auction_house package
+    required: false
+    default: false
 
 runs:
   using: composite
@@ -81,6 +85,16 @@ runs:
         echo 'Install and Build token-vault: yarn build'
         yarn build
       working-directory: ./token-vault/js 
+      shell: bash
+
+    - name: Install and Build auction-house
+      if: inputs.build_auction_house == 'true'
+      run: |
+        echo 'Install and Build auction_house: yarn install'
+        yarn install
+        echo 'Install and Build auction_house: yarn build'
+        yarn build
+      working-directory: ./auction_house/js 
       shell: bash
 
     ##############
