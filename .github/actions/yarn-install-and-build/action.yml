@@ -94,7 +94,7 @@ runs:
         yarn install
         echo 'Install and Build auction_house: yarn build'
         yarn build
-      working-directory: ./auction_house/js 
+      working-directory: ./auction-house/js 
       shell: bash
 
     ##############
