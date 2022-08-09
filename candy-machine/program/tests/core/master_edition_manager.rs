@@ -28,10 +28,10 @@ impl Clone for MasterEditionManager {
     fn clone(&self) -> Self {
         Self {
             authority: clone_keypair(&self.authority),
-            edition_pubkey: self.edition_pubkey.clone(),
-            metadata_pubkey: self.metadata_pubkey.clone(),
-            mint_pubkey: self.mint_pubkey.clone(),
-            token_account: self.token_account.clone(),
+            edition_pubkey: self.edition_pubkey,
+            metadata_pubkey: self.metadata_pubkey,
+            mint_pubkey: self.mint_pubkey,
+            token_account: self.token_account,
             owner: clone_keypair(&self.owner),
         }
     }
