@@ -55,7 +55,7 @@ async fn delegate_success() {
         .expect("Error getting new auction house account")
         .expect("Auction House empty");
     let auctioneer = Auctioneer::deserialize(&mut auctioneer_pda_account.data[8..].as_ref())
-        .expect("Failed to deserialize Auction House data");
+        .expect("Failed to deserialize Auctioneer data");
 
     // **ASSERT**
     assert!(!ah.has_auctioneer);
@@ -63,7 +63,7 @@ async fn delegate_success() {
 
     assert_eq!(auctioneer_authority_pubkey, auctioneer.auctioneer_authority);
     assert_eq!(ahkey, auctioneer.auction_house);
-    assert_scopes_eq(scopes, auctioneer.scopes);
+    assert_scopes_eq(scopes, new_ah.scopes);
 }
 
 #[tokio::test]
@@ -180,4 +180,44 @@ async fn incorrect_auctioneer_pda_fails() {
         err,
         TransportError::TransactionError(TransactionError::InstructionError(0, _))
     );
+}
+
+#[tokio::test]
+async fn delegate_already_init_fail() {
+    let mut context = auction_house_program_test().start_with_context().await;
+    let (_ah, ahkey, ah_authority) = existing_auction_house_test_context(&mut context)
+        .await
+        .unwrap();
+    let auctioneer_authority = Keypair::new();
+    let auctioneer_authority_pubkey = auctioneer_authority.pubkey();
+
+    let (auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey);
+    let scopes = default_scopes();
+    delegate_auctioneer(
+        &mut context,
+        ahkey,
+        &ah_authority,
+        auctioneer_authority_pubkey,
+        auctioneer_pda,
+        scopes.clone(),
+    )
+    .await
+    .unwrap();
+    // Call `delegate_auctioneer` with the auction house authority and a new auctioneer program.
+    let auctioneer_authority2 = Keypair::new();
+    let auctioneer_authority_pubkey2 = auctioneer_authority2.pubkey();
+    let (new_auctioneer_pda, _) = find_auctioneer_pda(&ahkey, &auctioneer_authority_pubkey2);
+    let scopes = default_scopes();
+    let err = delegate_auctioneer(
+        &mut context,
+        ahkey,
+        &ah_authority,
+        auctioneer_authority_pubkey2,
+        new_auctioneer_pda,
+        scopes.clone(),
+    )
+    .await
+    .unwrap_err();
+    // Assert account already created
+    assert_error!(err, AUCTIONEER_ALREADY_DELEGATED);
 }

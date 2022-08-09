@@ -514,3 +514,19 @@ impl Default for Metadata {
         Self::new()
     }
 }
+
+pub async fn assert_collection_size(
+    context: &mut ProgramTestContext,
+    collection_metadata: &Metadata,
+    size: u64,
+) {
+    let collection_md = collection_metadata.get_data(context).await;
+    let retrieved_size = if let Some(details) = collection_md.collection_details {
+        match details {
+            CollectionDetails::V1 { size } => size,
+        }
+    } else {
+        panic!("Expected CollectionDetails::V1");
+    };
+    assert_eq!(retrieved_size, size);
+}

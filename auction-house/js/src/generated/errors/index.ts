@@ -874,6 +874,72 @@ createErrorFromCodeLookup.set(0x1798, () => new PartialPriceMismatchError());
 createErrorFromNameLookup.set('PartialPriceMismatch', () => new PartialPriceMismatchError());
 
 /**
+ * AuctionHouseAlreadyDelegated: 'Auction House already delegated.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AuctionHouseAlreadyDelegatedError extends Error {
+  readonly code: number = 0x1799;
+  readonly name: string = 'AuctionHouseAlreadyDelegated';
+  constructor() {
+    super('Auction House already delegated.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AuctionHouseAlreadyDelegatedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1799, () => new AuctionHouseAlreadyDelegatedError());
+createErrorFromNameLookup.set(
+  'AuctionHouseAlreadyDelegated',
+  () => new AuctionHouseAlreadyDelegatedError(),
+);
+
+/**
+ * AuctioneerAuthorityMismatch: 'Auctioneer Authority Mismatch'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AuctioneerAuthorityMismatchError extends Error {
+  readonly code: number = 0x179a;
+  readonly name: string = 'AuctioneerAuthorityMismatch';
+  constructor() {
+    super('Auctioneer Authority Mismatch');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AuctioneerAuthorityMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179a, () => new AuctioneerAuthorityMismatchError());
+createErrorFromNameLookup.set(
+  'AuctioneerAuthorityMismatch',
+  () => new AuctioneerAuthorityMismatchError(),
+);
+
+/**
+ * InsufficientFunds: 'Insufficient funds in escrow account to purchase.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InsufficientFundsError extends Error {
+  readonly code: number = 0x179b;
+  readonly name: string = 'InsufficientFunds';
+  constructor() {
+    super('Insufficient funds in escrow account to purchase.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InsufficientFundsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179b, () => new InsufficientFundsError());
+createErrorFromNameLookup.set('InsufficientFunds', () => new InsufficientFundsError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -1,4 +1,4 @@
-use crate::{constants::*, errors::*, utils::*, AuctionHouse, AuthorityScope, *};
+use crate::{constants::*, errors::*, utils::*, AuctionHouse, Auctioneer, AuthorityScope, *};
 use anchor_lang::{
     prelude::*,
     solana_program::{program::invoke, program_pack::Pack},
@@ -55,7 +55,7 @@ pub struct ExecuteSale<'info> {
             auction_house.key().as_ref(),
             buyer.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -133,7 +133,7 @@ pub struct ExecuteSale<'info> {
             &buyer_price.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump
+        bump = seller_trade_state.to_account_info().data.borrow()[0]
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
@@ -151,7 +151,7 @@ pub struct ExecuteSale<'info> {
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=free_trade_state_bump
+        bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -160,7 +160,7 @@ pub struct ExecuteSale<'info> {
     pub ata_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
@@ -205,12 +205,33 @@ pub fn execute_sale<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::ExecuteSale as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
+    let escrow_canonical_bump = *ctx
+        .bumps
+        .get("escrow_payment_account")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
+
     execute_sale_logic(
-        ctx,
+        ctx.accounts,
+        ctx.remaining_accounts,
         escrow_payment_bump,
         free_trade_state_bump,
         program_as_signer_bump,
@@ -222,7 +243,7 @@ pub fn execute_sale<'info>(
 }
 
 /// Accounts for the [`execute_sale` handler](auction_house/fn.execute_sale.html).
-#[derive(Accounts)]
+#[derive(Accounts, Clone)]
 #[instruction(
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
@@ -269,7 +290,7 @@ pub struct ExecutePartialSale<'info> {
             auction_house.key().as_ref(),
             buyer.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -365,7 +386,7 @@ pub struct ExecutePartialSale<'info> {
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=free_trade_state_bump
+        bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -374,14 +395,42 @@ pub struct ExecutePartialSale<'info> {
     pub ata_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
 }
 
+impl<'info> From<ExecutePartialSale<'info>> for ExecuteSale<'info> {
+    fn from(a: ExecutePartialSale<'info>) -> ExecuteSale<'info> {
+        ExecuteSale {
+            buyer: a.buyer,
+            seller: a.seller,
+            token_account: a.token_account,
+            token_mint: a.token_mint,
+            metadata: a.metadata,
+            treasury_mint: a.treasury_mint,
+            escrow_payment_account: a.escrow_payment_account,
+            seller_payment_receipt_account: a.seller_payment_receipt_account,
+            buyer_receipt_token_account: a.buyer_receipt_token_account,
+            authority: a.authority,
+            auction_house: a.auction_house,
+            auction_house_fee_account: a.auction_house_fee_account,
+            auction_house_treasury: a.auction_house_treasury,
+            buyer_trade_state: a.buyer_trade_state,
+            seller_trade_state: a.seller_trade_state,
+            free_trade_state: a.free_trade_state,
+            token_program: a.token_program,
+            system_program: a.system_program,
+            ata_program: a.ata_program,
+            program_as_signer: a.program_as_signer,
+            rent: a.rent,
+        }
+    }
+}
+
 pub fn execute_partial_sale<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+    ctx: Context<'_, '_, '_, 'info, ExecutePartialSale<'info>>,
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -393,12 +442,35 @@ pub fn execute_partial_sale<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::ExecuteSale as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
     }
 
+    let escrow_canonical_bump = *ctx
+        .bumps
+        .get("escrow_payment_account")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
+
+    let mut accounts: ExecuteSale<'info> = (*ctx.accounts).clone().into();
+
     execute_sale_logic(
-        ctx,
+        &mut accounts,
+        ctx.remaining_accounts,
         escrow_payment_bump,
         free_trade_state_bump,
         program_as_signer_bump,
@@ -456,7 +528,7 @@ pub struct AuctioneerExecuteSale<'info> {
             auction_house.key().as_ref(),
             buyer.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -556,7 +628,7 @@ pub struct AuctioneerExecuteSale<'info> {
             &0u64.to_le_bytes(),
             &token_size.to_le_bytes()
         ],
-        bump=free_trade_state_bump
+        bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -568,9 +640,9 @@ pub struct AuctioneerExecuteSale<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -581,7 +653,7 @@ pub struct AuctioneerExecuteSale<'info> {
         seeds=[
             PREFIX.as_bytes(), SIGNER.as_bytes()
         ],
-        bump=program_as_signer_bump
+        bump
     )]
     pub program_as_signer: UncheckedAccount<'info>,
 
@@ -605,15 +677,36 @@ pub fn auctioneer_execute_sale<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::ExecuteSale,
     )?;
 
+    let escrow_canonical_bump = *ctx
+        .bumps
+        .get("escrow_payment_account")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
+
     // Duplicate the logic methods to avoid going over the compute limit.
     auctioneer_execute_sale_logic(
-        ctx,
+        ctx.accounts,
+        ctx.remaining_accounts,
         escrow_payment_bump,
         free_trade_state_bump,
         program_as_signer_bump,
@@ -624,7 +717,7 @@ pub fn auctioneer_execute_sale<'info>(
     )
 }
 
-#[derive(Accounts)]
+#[derive(Accounts, Clone)]
 #[instruction(
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
@@ -671,7 +764,7 @@ pub struct AuctioneerExecutePartialSale<'info> {
             auction_house.key().as_ref(),
             buyer.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -742,18 +835,18 @@ pub struct AuctioneerExecutePartialSale<'info> {
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// Seller trade state PDA account encoding the sell order.
     #[account(
-    mut,
-    seeds = [
-        PREFIX.as_bytes(),
-        seller.key().as_ref(),
-        auction_house.key().as_ref(),
-        token_account.key().as_ref(),
-        auction_house.treasury_mint.as_ref(),
-        token_mint.key().as_ref(),
-        &buyer_price.to_le_bytes(),
-        &token_size.to_le_bytes()
-    ],
-    bump=seller_trade_state.to_account_info().data.borrow()[0]
+        mut,
+        seeds = [
+            PREFIX.as_bytes(),
+            seller.key().as_ref(),
+            auction_house.key().as_ref(),
+            token_account.key().as_ref(),
+            auction_house.treasury_mint.as_ref(),
+            token_mint.key().as_ref(),
+            &buyer_price.to_le_bytes(),
+            &token_size.to_le_bytes()
+        ],
+        bump=seller_trade_state.to_account_info().data.borrow()[0]
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
@@ -771,7 +864,7 @@ pub struct AuctioneerExecutePartialSale<'info> {
         &0u64.to_le_bytes(),
         &token_size.to_le_bytes()
     ],
-    bump=free_trade_state_bump
+    bump
     )]
     pub free_trade_state: UncheckedAccount<'info>,
 
@@ -783,23 +876,53 @@ pub struct AuctioneerExecutePartialSale<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub ata_program: Program<'info, AssociatedToken>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
-    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump=program_as_signer_bump)]
+    #[account(seeds=[PREFIX.as_bytes(), SIGNER.as_bytes()], bump)]
     pub program_as_signer: UncheckedAccount<'info>,
 
     pub rent: Sysvar<'info, Rent>,
 }
 
+impl<'info> From<AuctioneerExecutePartialSale<'info>> for AuctioneerExecuteSale<'info> {
+    fn from(a: AuctioneerExecutePartialSale<'info>) -> AuctioneerExecuteSale<'info> {
+        AuctioneerExecuteSale {
+            buyer: a.buyer,
+            seller: a.seller,
+            token_account: a.token_account,
+            token_mint: a.token_mint,
+            metadata: a.metadata,
+            treasury_mint: a.treasury_mint,
+            escrow_payment_account: a.escrow_payment_account,
+            seller_payment_receipt_account: a.seller_payment_receipt_account,
+            buyer_receipt_token_account: a.buyer_receipt_token_account,
+            authority: a.authority,
+            auctioneer_authority: a.auctioneer_authority,
+            auction_house: a.auction_house,
+            auction_house_fee_account: a.auction_house_fee_account,
+            auction_house_treasury: a.auction_house_treasury,
+            buyer_trade_state: a.buyer_trade_state,
+            seller_trade_state: a.seller_trade_state,
+            free_trade_state: a.free_trade_state,
+            ah_auctioneer_pda: a.ah_auctioneer_pda,
+            token_program: a.token_program,
+            system_program: a.system_program,
+            ata_program: a.ata_program,
+            program_as_signer: a.program_as_signer,
+            rent: a.rent,
+        }
+    }
+}
+
 pub fn auctioneer_execute_partial_sale<'info>(
-    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
+    ctx: Context<'_, '_, '_, 'info, AuctioneerExecutePartialSale<'info>>,
     escrow_payment_bump: u8,
     free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -817,15 +940,38 @@ pub fn auctioneer_execute_partial_sale<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::ExecuteSale,
     )?;
 
+    let escrow_canonical_bump = *ctx
+        .bumps
+        .get("escrow_payment_account")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let free_trade_state_canonical_bump = *ctx
+        .bumps
+        .get("free_trade_state")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+    let program_as_signer_canonical_bump = *ctx
+        .bumps
+        .get("program_as_signer")
+        .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?;
+
+    if (escrow_canonical_bump != escrow_payment_bump)
+        || (free_trade_state_canonical_bump != free_trade_state_bump)
+        || (program_as_signer_canonical_bump != program_as_signer_bump)
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
+
+    let mut accounts: AuctioneerExecuteSale<'info> = (*ctx.accounts).clone().into();
+
     // Duplicate the logic methods to avoid going over the compute limit.
     auctioneer_execute_sale_logic(
-        ctx,
+        &mut accounts,
+        ctx.remaining_accounts,
         escrow_payment_bump,
         free_trade_state_bump,
         program_as_signer_bump,
@@ -838,8 +984,9 @@ pub fn auctioneer_execute_partial_sale<'info>(
 
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
 #[inline(never)]
-fn auctioneer_execute_sale_logic<'info>(
-    ctx: Context<'_, '_, '_, 'info, AuctioneerExecuteSale<'info>>,
+fn auctioneer_execute_sale_logic<'c, 'info>(
+    accounts: &mut AuctioneerExecuteSale<'info>,
+    remaining_accounts: &'c [AccountInfo<'info>],
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -848,27 +995,27 @@ fn auctioneer_execute_sale_logic<'info>(
     partial_order_size: Option<u64>,
     partial_order_price: Option<u64>,
 ) -> Result<()> {
-    let buyer = &ctx.accounts.buyer;
-    let seller = &ctx.accounts.seller;
-    let token_account = &ctx.accounts.token_account;
-    let token_mint = &ctx.accounts.token_mint;
-    let metadata = &ctx.accounts.metadata;
-    let treasury_mint = &ctx.accounts.treasury_mint;
-    let seller_payment_receipt_account = &ctx.accounts.seller_payment_receipt_account;
-    let buyer_receipt_token_account = &ctx.accounts.buyer_receipt_token_account;
-    let escrow_payment_account = &ctx.accounts.escrow_payment_account;
-    let authority = &ctx.accounts.authority;
-    let auction_house = &ctx.accounts.auction_house;
-    let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-    let auction_house_treasury = &ctx.accounts.auction_house_treasury;
-    let buyer_trade_state = &ctx.accounts.buyer_trade_state;
-    let seller_trade_state = &ctx.accounts.seller_trade_state;
-    let free_trade_state = &ctx.accounts.free_trade_state;
-    let token_program = &ctx.accounts.token_program;
-    let system_program = &ctx.accounts.system_program;
-    let ata_program = &ctx.accounts.ata_program;
-    let program_as_signer = &ctx.accounts.program_as_signer;
-    let rent = &ctx.accounts.rent;
+    let buyer = &accounts.buyer;
+    let seller = &accounts.seller;
+    let token_account = &accounts.token_account;
+    let token_mint = &accounts.token_mint;
+    let metadata = &accounts.metadata;
+    let treasury_mint = &accounts.treasury_mint;
+    let seller_payment_receipt_account = &accounts.seller_payment_receipt_account;
+    let buyer_receipt_token_account = &accounts.buyer_receipt_token_account;
+    let escrow_payment_account = &accounts.escrow_payment_account;
+    let authority = &accounts.authority;
+    let auction_house = &accounts.auction_house;
+    let auction_house_fee_account = &accounts.auction_house_fee_account;
+    let auction_house_treasury = &accounts.auction_house_treasury;
+    let buyer_trade_state = &accounts.buyer_trade_state;
+    let seller_trade_state = &accounts.seller_trade_state;
+    let free_trade_state = &accounts.free_trade_state;
+    let token_program = &accounts.token_program;
+    let system_program = &accounts.system_program;
+    let ata_program = &accounts.ata_program;
+    let program_as_signer = &accounts.program_as_signer;
+    let rent = &accounts.rent;
 
     let metadata_clone = metadata.to_account_info();
     let escrow_clone = escrow_payment_account.to_account_info();
@@ -902,7 +1049,16 @@ fn auctioneer_execute_sale_logic<'info>(
     }
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
-    let ts_bump = buyer_ts_data[0];
+
+    let ts_bump = if buyer_ts_data.len() > 0 {
+        buyer_ts_data[0]
+    } else {
+        return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
+    };
+
+    if ts_bump == 0 || seller_ts_data.len() == 0 || seller_ts_data[0] == 0 {
+        return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
+    }
 
     let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
 
@@ -956,10 +1112,6 @@ fn auctioneer_execute_sale_logic<'info>(
         }
     };
 
-    if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
-        return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
-    }
-
     let auction_house_key = auction_house.key();
     let seeds = [
         PREFIX.as_bytes(),
@@ -994,21 +1146,20 @@ fn auctioneer_execute_sale_logic<'info>(
         ],
     )?;
 
-    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the token.
-    // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
-    // The fee payer makes up the shortfall up to the amount of rent for an empty account.
+    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the
+    // token.  This is intended to cover the migration from pre-rent-exemption checked accounts to
+    // rent-exemption checked accounts.  The fee payer makes up the shortfall up to the amount of
+    // rent for an empty account.
     if is_native {
-        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), buyer_price)?;
-        if diff != buyer_price {
-            // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
-            let shortfall = std::cmp::min(
-                buyer_price
-                    .checked_sub(diff)
-                    .ok_or(AuctionHouseError::NumericalOverflow)?,
-                rent.minimum_balance(escrow_payment_account.data_len()),
-            );
+        let rent_shortfall =
+            verify_withdrawal(escrow_payment_account.to_account_info(), buyer_price)?;
+        if rent_shortfall > 0 {
             invoke_signed(
-                &system_instruction::transfer(fee_payer.key, escrow_payment_account.key, shortfall),
+                &system_instruction::transfer(
+                    fee_payer.key,
+                    escrow_payment_account.key,
+                    rent_shortfall,
+                ),
                 &[
                     fee_payer.to_account_info(),
                     escrow_payment_account.to_account_info(),
@@ -1048,7 +1199,7 @@ fn auctioneer_execute_sale_logic<'info>(
     };
 
     let buyer_leftover_after_royalties = pay_creator_fees(
-        &mut ctx.remaining_accounts.iter(),
+        &mut remaining_accounts.iter(),
         &metadata_clone,
         &escrow_clone,
         &auction_house_clone,
@@ -1243,8 +1394,9 @@ fn auctioneer_execute_sale_logic<'info>(
 
 /// Execute sale between provided buyer and seller trade state accounts transferring funds to seller wallet and token to buyer wallet.
 #[inline(never)]
-fn execute_sale_logic<'info>(
-    ctx: Context<'_, '_, '_, 'info, ExecuteSale<'info>>,
+fn execute_sale_logic<'c, 'info>(
+    accounts: &mut ExecuteSale<'info>,
+    remaining_accounts: &'c [AccountInfo<'info>],
     escrow_payment_bump: u8,
     _free_trade_state_bump: u8,
     program_as_signer_bump: u8,
@@ -1253,27 +1405,27 @@ fn execute_sale_logic<'info>(
     partial_order_size: Option<u64>,
     partial_order_price: Option<u64>,
 ) -> Result<()> {
-    let buyer = &ctx.accounts.buyer;
-    let seller = &ctx.accounts.seller;
-    let token_account = &ctx.accounts.token_account;
-    let token_mint = &ctx.accounts.token_mint;
-    let metadata = &ctx.accounts.metadata;
-    let treasury_mint = &ctx.accounts.treasury_mint;
-    let seller_payment_receipt_account = &ctx.accounts.seller_payment_receipt_account;
-    let buyer_receipt_token_account = &ctx.accounts.buyer_receipt_token_account;
-    let escrow_payment_account = &ctx.accounts.escrow_payment_account;
-    let authority = &ctx.accounts.authority;
-    let auction_house = &ctx.accounts.auction_house;
-    let auction_house_fee_account = &ctx.accounts.auction_house_fee_account;
-    let auction_house_treasury = &ctx.accounts.auction_house_treasury;
-    let buyer_trade_state = &ctx.accounts.buyer_trade_state;
-    let seller_trade_state = &ctx.accounts.seller_trade_state;
-    let free_trade_state = &ctx.accounts.free_trade_state;
-    let token_program = &ctx.accounts.token_program;
-    let system_program = &ctx.accounts.system_program;
-    let ata_program = &ctx.accounts.ata_program;
-    let program_as_signer = &ctx.accounts.program_as_signer;
-    let rent = &ctx.accounts.rent;
+    let buyer = &accounts.buyer;
+    let seller = &accounts.seller;
+    let token_account = &accounts.token_account;
+    let token_mint = &accounts.token_mint;
+    let metadata = &accounts.metadata;
+    let treasury_mint = &accounts.treasury_mint;
+    let seller_payment_receipt_account = &accounts.seller_payment_receipt_account;
+    let buyer_receipt_token_account = &accounts.buyer_receipt_token_account;
+    let escrow_payment_account = &accounts.escrow_payment_account;
+    let authority = &accounts.authority;
+    let auction_house = &accounts.auction_house;
+    let auction_house_fee_account = &accounts.auction_house_fee_account;
+    let auction_house_treasury = &accounts.auction_house_treasury;
+    let buyer_trade_state = &accounts.buyer_trade_state;
+    let seller_trade_state = &accounts.seller_trade_state;
+    let free_trade_state = &accounts.free_trade_state;
+    let token_program = &accounts.token_program;
+    let system_program = &accounts.system_program;
+    let ata_program = &accounts.ata_program;
+    let program_as_signer = &accounts.program_as_signer;
+    let rent = &accounts.rent;
 
     let metadata_clone = metadata.to_account_info();
     let escrow_clone = escrow_payment_account.to_account_info();
@@ -1308,11 +1460,16 @@ fn execute_sale_logic<'info>(
 
     let buyer_ts_data = &mut buyer_trade_state.try_borrow_mut_data()?;
     let seller_ts_data = &mut seller_trade_state.try_borrow_mut_data()?;
+
     let ts_bump = if buyer_ts_data.len() > 0 {
         buyer_ts_data[0]
     } else {
         return Err(AuctionHouseError::BuyerTradeStateNotValid.into());
     };
+
+    if ts_bump == 0 || seller_ts_data.len() == 0 || seller_ts_data[0] == 0 {
+        return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
+    }
 
     let token_account_data = SplAccount::unpack(&token_account.data.borrow())?;
 
@@ -1366,10 +1523,6 @@ fn execute_sale_logic<'info>(
         }
     };
 
-    if ts_bump == 0 || buyer_ts_data.len() == 0 || seller_ts_data.len() == 0 {
-        return Err(AuctionHouseError::BothPartiesNeedToAgreeToSale.into());
-    }
-
     let auction_house_key = auction_house.key();
     let seeds = [
         PREFIX.as_bytes(),
@@ -1404,21 +1557,19 @@ fn execute_sale_logic<'info>(
         ],
     )?;
 
-    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the token.
-    // This is intended to cover the migration from pre-rent-exemption checked accounts to rent-exemption checked accounts.
-    // The fee payer makes up the shortfall up to the amount of rent for an empty account.
+    // For native purchases, verify that the amount in escrow is sufficient to actually purchase the
+    // token.  This is intended to cover the migration from pre-rent-exemption checked accounts to
+    // rent-exemption checked accounts.  The fee payer makes up the shortfall up to the amount of
+    // rent for an empty account.
     if is_native {
-        let diff = rent_checked_sub(escrow_payment_account.to_account_info(), price)?;
-        if diff != price {
-            // Return the shortfall amount (if greater than 0 but less than rent), but don't exceed the minimum rent the account should need.
-            let shortfall = std::cmp::min(
-                price
-                    .checked_sub(diff)
-                    .ok_or(AuctionHouseError::NumericalOverflow)?,
-                rent.minimum_balance(escrow_payment_account.data_len()),
-            );
+        let rent_shortfall = verify_withdrawal(escrow_payment_account.to_account_info(), price)?;
+        if rent_shortfall > 0 {
             invoke_signed(
-                &system_instruction::transfer(fee_payer.key, escrow_payment_account.key, shortfall),
+                &system_instruction::transfer(
+                    fee_payer.key,
+                    escrow_payment_account.key,
+                    rent_shortfall,
+                ),
                 &[
                     fee_payer.to_account_info(),
                     escrow_payment_account.to_account_info(),
@@ -1458,7 +1609,7 @@ fn execute_sale_logic<'info>(
     };
 
     let buyer_leftover_after_royalties = pay_creator_fees(
-        &mut ctx.remaining_accounts.iter(),
+        &mut remaining_accounts.iter(),
         &metadata_clone,
         &escrow_clone,
         &auction_house_clone,

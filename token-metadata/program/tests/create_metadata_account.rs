@@ -424,6 +424,23 @@ mod create_meta_accounts {
 
         pass_creators(context, creators).await;
     }
+
+    #[tokio::test]
+    async fn two_unverified_creators_update_authority_not_creator() {
+        let context = program_test().start_with_context().await;
+        let (creator1, creator2) = (Keypair::new(), Keypair::new());
+        let creators = vec![&creator1, &creator2]
+            .into_iter()
+            .map(|creator| Creator {
+                address: creator.pubkey(),
+                share: 50,
+                verified: false,
+            })
+            .collect::<Vec<Creator>>();
+
+        pass_creators(context, creators).await;
+    }
+
     // -----------------
     // Uses Failures
     // -----------------

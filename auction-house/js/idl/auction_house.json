@@ -1,5 +1,5 @@
 {
-  "version": "1.2.2",
+  "version": "1.2.4",
   "name": "auction_house",
   "instructions": [
     {
@@ -2338,8 +2338,17 @@
             "type": "bool"
           },
           {
-            "name": "auctioneerPdaBump",
-            "type": "u8"
+            "name": "auctioneerAddress",
+            "type": "publicKey"
+          },
+          {
+            "name": "scopes",
+            "type": {
+              "array": [
+                "bool",
+                7
+              ]
+            }
           }
         ]
       }
@@ -2358,13 +2367,8 @@
             "type": "publicKey"
           },
           {
-            "name": "scopes",
-            "type": {
-              "array": [
-                "bool",
-                7
-              ]
-            }
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -2668,12 +2672,21 @@
       "code": 6040,
       "name": "PartialPriceMismatch",
       "msg": "Calculated partial price does not not partial price that was provided."
+    },
+    {
+      "code": 6041,
+      "name": "AuctionHouseAlreadyDelegated",
+      "msg": "Auction House already delegated."
+    },
+    {
+      "code": 6042,
+      "name": "AuctioneerAuthorityMismatch",
+      "msg": "Auctioneer Authority Mismatch"
+    },
+    {
+      "code": 6043,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds in escrow account to purchase."
     }
-  ],
-  "metadata": {
-    "address": "hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk",
-    "origin": "anchor",
-    "binaryVersion": "0.24.2",
-    "libVersion": "~0.24.2"
-  }
+  ]
 }
