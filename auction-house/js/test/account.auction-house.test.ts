@@ -32,7 +32,7 @@ test('account auction-house: round trip serilization', async (t) => {
     escrowPaymentBump: 255,
     hasAuctioneer: false,
     auctioneerAddress: PublicKey.default,
-    scopes: [],
+    scopes: Array(7).fill(false), // constant size field in the contract
   };
 
   const expected = AuctionHouse.fromArgs(args);
