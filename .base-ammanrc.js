@@ -43,7 +43,7 @@ const programs = {
     auction_house: {
         label: "Auction House",
         programId: 'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
-        deployPath: localDeployPath('mpl_auction_house'),
+        deployPath:  path.join(__dirname, 'auction-house', 'program', 'target', 'deploy')
     },
 };
 
