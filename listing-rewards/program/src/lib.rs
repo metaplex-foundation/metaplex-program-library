@@ -63,6 +63,13 @@ pub mod listing_rewards {
         reward_center::create::handler(ctx, create_reward_center_params)
     }
 
+    pub fn edit_reward_center(
+        ctx: Context<EditRewardCenter>,
+        edit_reward_center_params: EditRewardCenterParams,
+    ) -> Result<()> {
+        reward_center::edit::handler(ctx, edit_reward_center_params)
+    }
+
     pub fn create_rewardable_collection(
         ctx: Context<CreateRewardableCollection>,
         rewardable_collection_params: CreateRewardableCollectionParams,
