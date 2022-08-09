@@ -23,7 +23,7 @@ async fn delete_rewardable_collection_success() {
     let (auction_house, _) = find_auction_house_address(&wallet, &mint);
     let (reward_center, _) = find_reward_center_address(&auction_house);
 
-    let reward_center_params = reward_center::CreateRewardCenterParams {
+    let reward_center_params = reward_center::create::CreateRewardCenterParams {
         collection_oracle: None,
         listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,

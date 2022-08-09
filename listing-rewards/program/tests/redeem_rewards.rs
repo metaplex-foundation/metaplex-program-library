@@ -110,7 +110,7 @@ async fn redeem_rewards_success() {
     );
     let treasury_withdraw_desintiation = get_associated_token_address(&wallet, &mint.pubkey());
 
-    let reward_center_params = reward_center::CreateRewardCenterParams {
+    let reward_center_params = reward_center::create::CreateRewardCenterParams {
         collection_oracle: None,
         listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,

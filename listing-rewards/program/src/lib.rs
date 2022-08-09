@@ -16,7 +16,7 @@ use crate::{
     listings::{cancel::*, create::*},
     offers::{close::*, create::*},
     redeem_rewards::*,
-    reward_center::*,
+    reward_center::{create::*, edit::*},
     rewardable_collection::{create::*, delete::*},
 };
 
@@ -58,9 +58,9 @@ pub mod listing_rewards {
 
     pub fn create_reward_center(
         ctx: Context<CreateRewardCenter>,
-        reward_center_params: CreateRewardCenterParams,
+        create_reward_center_params: CreateRewardCenterParams,
     ) -> Result<()> {
-        reward_center::create_reward_center(ctx, reward_center_params)
+        reward_center::create::handler(ctx, create_reward_center_params)
     }
 
     pub fn create_rewardable_collection(

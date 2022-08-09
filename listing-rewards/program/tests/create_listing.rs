@@ -71,7 +71,7 @@ async fn create_listing_success() {
         &rewardable_collection,
     );
 
-    let reward_center_params = reward_center::CreateRewardCenterParams {
+    let reward_center_params = reward_center::create::CreateRewardCenterParams {
         collection_oracle: None,
         listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,
