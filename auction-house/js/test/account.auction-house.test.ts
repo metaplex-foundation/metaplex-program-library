@@ -1,9 +1,20 @@
-import { AccountInfo, Keypair, PublicKey } from '@solana/web3.js';
-import { AuctionHouse, AuctionHouseArgs } from 'src/generated';
-import * as anchor from '@project-serum/anchor';
-// import { Program } from '@project-serum/anchor';
+import { AccountInfo, Connection, Keypair, PublicKey } from '@solana/web3.js';
+import {
+  AuctionHouse,
+  AuctionHouseArgs,
+  // CreateAuctionHouseInstructionAccounts,
+  // CreateAuctionHouseInstructionArgs,
+  // createCreateAuctionHouseInstruction,
+} from 'src/generated';
 import test from 'tape';
 import spok from 'spok';
+import { Amman } from '@metaplex-foundation/amman-client';
+
+const connectionURL = 'http://localhost:8899';
+export const amman = Amman.instance({
+  knownLabels: { ['hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk']: 'Auction House' },
+  log: console.log,
+});
 
 function quickKeypair(): [PublicKey, Uint8Array] {
   const kp = Keypair.generate();
@@ -51,8 +62,19 @@ test('account auction-house: round trip serilization', async (t) => {
   spok(t, actual, expected);
 });
 
-test('account auction-house: round trip serilization', async (t) => {
-  const provider = anchor.Provider.env();
-  anchor.setProvider(provider);
+test('instruction auction-house: create auction-house', async (t) => {
+  const authority = quickKeypair();
+  const connection = new Connection(connectionURL, 'confirmed');
+  await amman.airdrop(connection, authority[0], 2);
+  // const accounts: CreateAuctionHouseInstructionAccounts = {
+  //   treasuryMint: web3.PublicKey,
+  //   payer: web3.PublicKey,
+  //   authority: web3.PublicKey,
+  //   feeWithdrawalDestination: web3.PublicKey,
+  //   treasuryWithdrawalDestination: web3.PublicKey,
+  //   treasuryWithdrawalDestinationOwner: web3.PublicKey,    auctionHouse: web3.PublicKey;
+  //   auctionHouseFeeAccount: web3.PublicKey,
+  //   auctionHouseTreasury: web3.PublicKey,
+  // };
   t.ok(true);
 });
