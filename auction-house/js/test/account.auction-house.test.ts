@@ -1,5 +1,7 @@
 import { AccountInfo, Keypair, PublicKey } from '@solana/web3.js';
 import { AuctionHouse, AuctionHouseArgs } from 'src/generated';
+import * as anchor from '@project-serum/anchor';
+// import { Program } from '@project-serum/anchor';
 import test from 'tape';
 import spok from 'spok';
 
@@ -47,4 +49,10 @@ test('account auction-house: round trip serilization', async (t) => {
 
   const actual = AuctionHouse.fromAccountInfo(info)[0];
   spok(t, actual, expected);
+});
+
+test('account auction-house: round trip serilization', async (t) => {
+  const provider = anchor.Provider.env();
+  anchor.setProvider(provider);
+  t.ok(true);
 });
