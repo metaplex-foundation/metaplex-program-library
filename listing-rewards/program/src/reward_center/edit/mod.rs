@@ -54,12 +54,7 @@ pub fn handler(
     reward_center_params: EditRewardCenterParams,
 ) -> Result<()> {
     let reward_center = &mut ctx.accounts.reward_center;
-
-    reward_center.collection_oracle = match reward_center_params.collection_oracle {
-        Some(collection_oracle) => Some(collection_oracle),
-        None => reward_center.collection_oracle
-    };
-
+    reward_center.collection_oracle = reward_center_params.collection_oracle;
     reward_center.listing_reward_rules = reward_center_params.listing_reward_rules;
 
     Ok(())
