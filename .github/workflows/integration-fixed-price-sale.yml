@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SOLANA_VERSION: 1.9.5
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -32,12 +31,30 @@ jobs:
             - 'fixed-price-sale/**'
           workflow:
             - '.github/workflows/integration-fixed-price-sale.yml '
-  build-and-integration-test-fixed-price-sale:
+
+  setup-versions:
+    needs: [changes]
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
     runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.get-solana-versions.outputs.value }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: get-solana-versions
+        uses: ./.github/actions/get-solana-versions
+
+  build-and-integration-test-fixed-price-sale:
+    needs: [changes, setup-versions]
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        SOLANA_VERSION: ${{fromJson(needs.setup-versions.outputs.versions)}}
     env:
       cache_id: program-fixed-price-sale
-    needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
+      SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
+
     steps:
       # Setup Deps
       - uses: actions/checkout@v2

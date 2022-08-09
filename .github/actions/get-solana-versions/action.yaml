@@ -1,0 +1,24 @@
+name: 'Get Solana network versions'
+description: 'Returns unique solana versions (mainnet-beta, devnet)'
+
+outputs:
+  value:
+    description: Solana devnet and mainnet versions
+    value: ${{ steps.fetch-solana-versions.outputs.value }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+    - name: Invoke getVersions to get current Solana network versions
+      id: fetch-solana-versions
+      shell: bash
+      run: |
+        sudo apt-get install -y jq && \
+        MAINNET=$(curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
+        DEVNET=$(curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
+        VERSIONS=($MAINNET $DEVNET) && \
+        echo "${VERSIONS[@]}" && \
+        VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s -c 'unique') && \
+        echo $VERSION_JSON && \
+        echo "::set-output name=value::$VERSION_JSON"

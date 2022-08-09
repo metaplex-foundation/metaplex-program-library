@@ -15,20 +15,12 @@ jobs:
   setup-versions:
     runs-on: ubuntu-latest
     outputs:
-      versions: ${{ steps.matrix.outputs.value }}
+      versions: ${{ steps.get-solana-versions.outputs.value }}
     steps:
-      - id: matrix
-        run: |
-          sudo apt-get install -y jq && \
-          MAINNET=$(curl https://api.mainnet-beta.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
-          DEVNET=$(curl https://api.devnet.solana.com -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1, "method":"getVersion"}' | jq '.result["solana-core"]') && \
-          VERSIONS=($MAINNET $DEVNET) && \
-          echo "${VERSIONS[@]}" && \
-          VERSION_JSON=$(echo "${VERSIONS[@]}" | jq -s -c) && \
-          echo $VERSION_JSON && \
-          echo "::set-output name=value::$VERSION_JSON"
-        shell: bash
-  
+      - uses: actions/checkout@v3
+      - id: get-solana-versions
+        uses: ./.github/actions/get-solana-versions
+
   setup-tests:
     runs-on: ubuntu-latest
     outputs:

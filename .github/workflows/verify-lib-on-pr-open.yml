@@ -14,8 +14,6 @@ permissions:
 
 env:
   NODE_VERSION: 17.0.1
-  ANCHOR_VERSION: 0.22.0
-  SOLANA_VERSION_STABLE: 1.9.22
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -27,6 +25,24 @@ jobs:
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
+
+  # only pull the first version from the `get-solana-versions` because we don't want to run the workflow multiple times
+  setup-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.get-first-solana-version.outputs.value }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: get-solana-versions
+        uses: ./.github/actions/get-solana-versions
+      - id: get-first-solana-version
+        shell: bash
+        run: |
+          sudo apt-get install -y jq && \
+          echo "${{toJson(steps.get-solana-versions.outputs.value)}}" && \
+          FIRST_VERSION=$(echo "${{toJson(steps.get-solana-versions.outputs.value)}}" | jq -s -c '.[0]') && \
+          echo $FIRST_VERSION && \
+          echo "::set-output name=value::$FIRST_VERSION"
 
   get-changes-scope:
     # only listen for PRs opened against master
@@ -77,10 +93,17 @@ jobs:
         shell: bash
 
   verify-package-library:
-    needs: [get-changes-scope]
+    needs: [setup-versions, get-changes-scope]
     # note: checking for empty string just doesn't work, so we explicitly return and check null in the case that there's nothing to verify
     if: ${{ needs.get-changes-scope.outputs.packages != 'null' }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        SOLANA_VERSION: ${{fromJson(needs.setup-versions.outputs.versions)}}
+    env:
+      SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
+
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-linux-build-deps
@@ -89,7 +112,7 @@ jobs:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
       - uses: ./.github/actions/install-solana
         with:
-          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
+          solana_version: ${{ env.SOLANA_VERSION }}
 
       - name: Generate library for modified packages
         id: generate-package-lib

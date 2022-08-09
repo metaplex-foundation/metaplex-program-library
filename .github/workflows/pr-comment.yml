@@ -13,8 +13,8 @@ permissions:
 
 env:
   NODE_VERSION: 17.0.1
+  # todo: pull from package's Cargo.toml?
   ANCHOR_VERSION: 0.22.0
-  SOLANA_VERSION_STABLE: 1.9.22
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -27,8 +27,23 @@ jobs:
           GITHUB_CONTEXT: ${{ toJson(github) }}
         run: echo "$GITHUB_CONTEXT"
 
+  qualify-workflow-run:
+    runs-on: ubuntu-latest
+    outputs:
+      output: ${{ steps.qualify-run.outputs.value }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: qualify-run
+        shell: bash
+        run: |
+          WORKFLOW_QUALIFIER=${{ contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true }}
+          WORKFLOW_QUALIFIER=$WORKFLOW_QUALIFIER && ${{ contains(fromJson('["approved", "commented"]'), github.event.review.state) == true }}
+          WORKFLOW_QUALIFIER=$WORKFLOW_QUALIFIER && ${{ github.event.pull_request.number > 0 }}
+          echo "::set-output name=value::$WORKFLOW_QUALIFIER"
+
   get-changes-scope:
-    if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    needs: [qualify-workflow-run]
+    if: ${{ needs.qualify-workflow-run.outputs.output == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
@@ -61,7 +76,8 @@ jobs:
             return JSON.stringify(Array.from(Object.keys(uniqueFilesObj)).map((el) => `\"${el}\"`))
 
   get-version-scope:
-    if: contains(fromJson('["OWNER", "MEMBER", "CONTRIBUTOR"]'), github.event.review.author_association) == true && contains(fromJson('["approved", "commented"]'), github.event.review.state) == true
+    needs: [qualify-workflow-run]
+    if: ${{ needs.qualify-workflow-run.outputs.output == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       versioning: ${{ steps.parse-version-info.outputs.versioning }}
@@ -93,16 +109,34 @@ jobs:
         with:
           body: ${{ steps.process-content-body.outputs.content }}
 
+  setup-versions:
+    needs: [qualify-workflow-run]
+    if: ${{ needs.qualify-workflow-run.outputs.output == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.get-solana-versions.outputs.value }}
+    steps:
+      - uses: actions/checkout@v3
+      - id: get-solana-versions
+        uses: ./.github/actions/get-solana-versions
+
   update-pr-with-changes:
-    needs: [get-changes-scope, get-version-scope]
+    needs: [get-changes-scope, get-version-scope, setup-versions]
     if: ${{ needs.get-version-scope.outputs.has-versioning == 'true' }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        SOLANA_VERSION: ${{fromJson(needs.setup-versions.outputs.versions)}}
+    env:
+      SOLANA_VERSION: ${{ matrix.SOLANA_VERSION }}
+
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-solana
         with:
-          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
+          solana_version: ${{ env.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
