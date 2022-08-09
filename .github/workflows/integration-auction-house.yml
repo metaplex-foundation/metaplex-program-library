@@ -87,7 +87,7 @@ jobs:
         run: DEBUG=amman* yarn amman:start onchain.ammanrc.js
 
       - name: integration-test-auction-house-program
-        id: run_integration_test
+        id: run_integration_test_onchain
         working-directory: ./auction-house/js
         run: DEBUG=mpl* yarn test 
 
