@@ -22,7 +22,7 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.25"
+anchor-lang = "~0.25"
 anchor-spl = "0.25"
 solana-program = "1.10.25"
 spl-token = "3.3.0"
