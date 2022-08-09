@@ -15,7 +15,7 @@
     "build:watch": "rimraf dist && tsc -p tsconfig.json --watch",
     "amman:start": "DEBUG=\"amman*\" amman start",
     "amman:start-custom-ammanrc": "DEBUG=\"amman*\" amman start ${0}",
-    "amman:stop": "pkill solana-test-validator",
+    "amman:stop": "DEBUG=\"amman*\" amman stop",
     "test:all": "yarn build && yarn amman:start && yarn test",
     "test:all-custom-ammanrc": "yarn build && yarn amman:start ${0} && yarn test",
     "test": "esr ./test/*.test.ts",
