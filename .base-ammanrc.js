@@ -48,6 +48,7 @@ const programs = {
 };
 
 const validator = {
+    accountsCluster: 'https://api.metaplex.solana.com',
     killRunningValidators: true,
     programs,
     commitment: 'singleGossip',
