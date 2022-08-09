@@ -3351,6 +3351,26 @@
       "code": 111,
       "name": "BorshDeserializationError",
       "msg": "Borsh Deserialization Error"
+    },
+    {
+      "code": 112,
+      "name": "CannotUpdateVerifiedCollection",
+      "msg": "Cannot update a verified colleciton in this command"
+    },
+    {
+      "code": 113,
+      "name": "CollectionMasterEditionAccountInvalid",
+      "msg": "Edition account aoesnt match collection "
+    },
+    {
+      "code": 114,
+      "name": "AlreadyVerified",
+      "msg": "Item is already verified."
+    },
+    {
+      "code": 115,
+      "name": "AlreadyUnverified",
+      "msg": "Item is already unverified."
     }
   ],
   "metadata": {
