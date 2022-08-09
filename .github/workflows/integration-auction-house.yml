@@ -84,7 +84,7 @@ jobs:
       # Run integration test - onchain program
       - name: start-local-test-validator-onchain
         working-directory: ./auction-house/js
-        run: DEBUG=amman* yarn amman:start onchain.ammanrc.js
+        run: DEBUG=amman* yarn amman:start-custom-ammanrc onchain.ammanrc.js
 
       - name: integration-test-auction-house-program
         id: run_integration_test_onchain
