@@ -13,17 +13,19 @@ use spl_associated_token_account::get_associated_token_address;
 
 use mpl_candy_machine::{
     constants::BOT_FEE,
-    CandyMachine, CandyMachineData, WhitelistMintMode,
+    CandyMachine, CandyMachineData, CollectionPDA, FreezePDA, WhitelistMintMode,
     WhitelistMintMode::{BurnEveryTime, NeverBurn},
 };
 
+use crate::core::helpers::create_associated_token_account;
+use crate::utils::{remove_freeze, set_freeze, thaw_nft};
 use crate::{
     core::{
         helpers::{
-            airdrop, assert_account_empty, clone_keypair, clone_pubkey, create_mint, get_account,
-            get_balance, get_token_account, get_token_balance, mint_to_wallets, prepare_nft,
+            airdrop, assert_account_empty, clone_keypair, create_mint, get_account, get_balance,
+            get_token_account, get_token_balance, mint_to_wallets, prepare_nft,
         },
-        MasterEditionV2 as MasterEditionManager, Metadata as MetadataManager,
+        MasterEditionManager, MetadataManager,
     },
     utils::{
         add_all_config_lines,
@@ -43,6 +45,7 @@ pub struct CandyManager {
     pub token_info: TokenInfo,
     pub whitelist_info: WhitelistInfo,
     pub gateway_info: GatekeeperInfo,
+    pub freeze_info: FreezeInfo,
 }
 
 impl Clone for CandyManager {
@@ -50,12 +53,13 @@ impl Clone for CandyManager {
         CandyManager {
             candy_machine: clone_keypair(&self.candy_machine),
             authority: clone_keypair(&self.authority),
-            wallet: clone_pubkey(&self.wallet),
+            wallet: self.wallet,
             minter: clone_keypair(&self.minter),
             collection_info: self.collection_info.clone(),
             token_info: self.token_info.clone(),
             whitelist_info: self.whitelist_info.clone(),
             gateway_info: self.gateway_info.clone(),
+            freeze_info: self.freeze_info.clone(),
         }
     }
 }
@@ -75,12 +79,12 @@ impl Clone for CollectionInfo {
     fn clone(&self) -> Self {
         CollectionInfo {
             set: self.set,
-            pda: clone_pubkey(&self.pda),
+            pda: self.pda,
             mint: clone_keypair(&self.mint),
-            metadata: clone_pubkey(&self.metadata),
-            master_edition: clone_pubkey(&self.master_edition),
-            token_account: clone_pubkey(&self.token_account),
-            authority_record: clone_pubkey(&self.authority_record),
+            metadata: self.metadata,
+            master_edition: self.master_edition,
+            token_account: self.token_account,
+            authority_record: self.authority_record,
         }
     }
 }
@@ -143,10 +147,10 @@ impl CollectionInfo {
         CollectionInfo {
             set,
             pda: collection_pda,
-            mint: metadata_info.mint,
+            mint: clone_keypair(&metadata_info.mint),
             metadata: metadata_info.pubkey,
-            master_edition: master_edition_info.pubkey,
-            token_account: metadata_info.token,
+            master_edition: master_edition_info.edition_pubkey,
+            token_account: metadata_info.get_ata(),
             authority_record: collection_authority_record,
         }
     }
@@ -213,10 +217,10 @@ impl Clone for TokenInfo {
     fn clone(&self) -> Self {
         TokenInfo {
             set: self.set,
-            mint: clone_pubkey(&self.mint),
+            mint: self.mint,
             authority: clone_keypair(&self.authority),
-            auth_account: clone_pubkey(&self.auth_account),
-            minter_account: clone_pubkey(&self.minter_account),
+            auth_account: self.auth_account,
+            minter_account: self.minter_account,
         }
     }
 }
@@ -305,10 +309,62 @@ impl Clone for GatekeeperInfo {
         GatekeeperInfo {
             set: self.set,
             network_expire_feature: self.network_expire_feature,
-            gateway_app: clone_pubkey(&self.gateway_app),
-            gateway_token_info: clone_pubkey(&self.gateway_token_info),
+            gateway_app: self.gateway_app,
+            gateway_token_info: self.gateway_token_info,
             gatekeeper_config: self.gatekeeper_config.clone(),
         }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct FreezeInfo {
+    pub freeze_time: i64,
+    pub set: bool,
+    pub ata: Pubkey,
+    pub pda: Pubkey,
+}
+
+impl FreezeInfo {
+    pub fn new(set: bool, candy_machine: &Pubkey, freeze_time: i64, mint: Pubkey) -> Self {
+        let seeds: &[&[u8]] = &[FreezePDA::PREFIX.as_bytes(), candy_machine.as_ref()];
+        let pda = Pubkey::find_program_address(seeds, &mpl_candy_machine::ID).0;
+        let freeze_ata = get_associated_token_address(&pda, &mint);
+        FreezeInfo {
+            set,
+            pda,
+            freeze_time,
+            ata: freeze_ata,
+        }
+    }
+
+    pub async fn init(
+        context: &mut ProgramTestContext,
+        set: bool,
+        candy_machine: &Pubkey,
+        freeze_time: i64,
+        mint: Pubkey,
+    ) -> Self {
+        let freeze_info = FreezeInfo::new(set, candy_machine, freeze_time, mint);
+        create_associated_token_account(context, &freeze_info.pda, &mint)
+            .await
+            .unwrap();
+        freeze_info
+    }
+
+    pub fn find_freeze_ata(&self, token_mint: &Pubkey) -> Pubkey {
+        get_associated_token_address(&self.pda, token_mint)
+    }
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct FreezeConfig {
+    pub set: bool,
+    pub freeze_time: i64,
+}
+
+impl FreezeConfig {
+    pub fn new(set: bool, freeze_time: i64) -> Self {
+        Self { set, freeze_time }
     }
 }
 
@@ -407,9 +463,9 @@ impl Clone for WhitelistInfo {
     fn clone(&self) -> Self {
         WhitelistInfo {
             set: self.set,
-            mint: clone_pubkey(&self.mint),
-            minter_account: clone_pubkey(&self.minter_account),
-            auth_account: clone_pubkey(&self.auth_account),
+            mint: self.mint,
+            minter_account: self.minter_account,
+            auth_account: self.auth_account,
             whitelist_config: self.whitelist_config.clone(),
         }
     }
@@ -425,6 +481,7 @@ impl CandyManager {
         token_info: TokenInfo,
         whitelist_info: WhitelistInfo,
         gateway_info: GatekeeperInfo,
+        freeze_info: FreezeInfo,
     ) -> Self {
         CandyManager {
             candy_machine,
@@ -435,6 +492,7 @@ impl CandyManager {
             token_info,
             whitelist_info,
             gateway_info,
+            freeze_info,
         }
     }
 
@@ -442,6 +500,7 @@ impl CandyManager {
         context: &mut ProgramTestContext,
         collection: bool,
         token: bool,
+        freeze: Option<FreezeConfig>,
         whitelist: Option<WhitelistConfig>,
         gatekeeper: Option<GatekeeperInfo>,
     ) -> Self {
@@ -470,6 +529,22 @@ impl CandyManager {
             (minter.pubkey(), 1),
         )
         .await;
+
+        let freeze_info = match freeze {
+            Some(config) => {
+                FreezeInfo::init(
+                    context,
+                    config.set,
+                    &candy_machine.pubkey(),
+                    config.freeze_time,
+                    token_info.mint,
+                )
+                .await
+            }
+            None => {
+                FreezeInfo::init(context, false, &candy_machine.pubkey(), 0, token_info.mint).await
+            }
+        };
 
         let whitelist_info = match whitelist {
             Some(config) => {
@@ -533,12 +608,23 @@ impl CandyManager {
             token_info,
             whitelist_info,
             gateway_info,
+            freeze_info,
         )
     }
 
     pub async fn get_candy(&self, context: &mut ProgramTestContext) -> CandyMachine {
         let account = get_account(context, &self.candy_machine.pubkey()).await;
         CandyMachine::try_deserialize(&mut account.data.as_ref()).unwrap()
+    }
+
+    pub async fn get_collection_pda(&self, context: &mut ProgramTestContext) -> CollectionPDA {
+        let account = get_account(context, &self.collection_info.pda).await;
+        CollectionPDA::try_deserialize(&mut account.data.as_ref()).unwrap()
+    }
+
+    pub async fn get_freeze_pda(&self, context: &mut ProgramTestContext) -> FreezePDA {
+        let account = get_account(context, &self.freeze_info.pda).await;
+        FreezePDA::try_deserialize(&mut account.data.as_ref()).unwrap()
     }
 
     pub async fn create(
@@ -625,6 +711,57 @@ impl CandyManager {
         .await
     }
 
+    pub async fn set_freeze(&mut self, context: &mut ProgramTestContext) -> transport::Result<()> {
+        println!("Set freeze");
+        set_freeze(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.freeze_info,
+            &self.token_info,
+        )
+        .await?;
+        self.freeze_info.set = true;
+        Ok(())
+    }
+
+    pub async fn remove_freeze(
+        &mut self,
+        context: &mut ProgramTestContext,
+    ) -> transport::Result<()> {
+        println!("Remove freeze");
+        remove_freeze(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.freeze_info,
+            &self.token_info,
+        )
+        .await?;
+        self.freeze_info.set = false;
+        Ok(())
+    }
+
+    pub async fn thaw_nft(
+        &mut self,
+        context: &mut ProgramTestContext,
+        nft_info: MasterEditionManager,
+        owner: &Keypair,
+        authority: &Keypair,
+    ) -> transport::Result<()> {
+        println!("Thaw");
+        thaw_nft(
+            context,
+            &self.candy_machine.pubkey(),
+            authority,
+            owner,
+            &self.freeze_info,
+            &nft_info,
+        )
+        .await?;
+        Ok(())
+    }
+
     pub async fn mint_nft(
         &mut self,
         context: &mut ProgramTestContext,
@@ -645,6 +782,7 @@ impl CandyManager {
             self.whitelist_info.clone(),
             self.collection_info.clone(),
             self.gateway_info.clone(),
+            self.freeze_info.clone(),
         )
         .await?;
         Ok(nft_info)
@@ -655,14 +793,23 @@ impl CandyManager {
         context: &mut ProgramTestContext,
         balance_change: Option<u64>,
         auto_whitelist: bool,
-    ) {
+    ) -> transport::Result<MasterEditionManager> {
         println!("Mint and assert successful");
         let candy_start = self.get_candy(context).await;
         let start_balance = get_balance(context, &self.minter.pubkey()).await;
-        let start_wallet_balance = if self.token_info.set {
-            get_token_balance(context, &self.wallet).await
+        let wallet_to_use = if self.freeze_info.set {
+            if self.token_info.set {
+                get_associated_token_address(&self.freeze_info.pda, &self.token_info.mint)
+            } else {
+                self.freeze_info.pda
+            }
         } else {
-            get_balance(context, &self.wallet).await
+            self.wallet
+        };
+        let start_wallet_balance = if self.token_info.set {
+            get_token_balance(context, &wallet_to_use).await
+        } else {
+            get_balance(context, &wallet_to_use).await
         };
         let start_token_balance = get_token_balance(context, &self.token_info.minter_account).await;
         let start_whitelist_balance =
@@ -671,9 +818,9 @@ impl CandyManager {
         let candy_end = self.get_candy(context).await;
         let end_balance = get_balance(context, &self.minter.pubkey()).await;
         let end_wallet_balance = if self.token_info.set {
-            get_token_balance(context, &self.wallet).await
+            get_token_balance(context, &wallet_to_use).await
         } else {
-            get_balance(context, &self.wallet).await
+            get_balance(context, &wallet_to_use).await
         };
         let end_token_balance = get_token_balance(context, &self.token_info.minter_account).await;
         let end_whitelist_balance =
@@ -712,7 +859,15 @@ impl CandyManager {
                 "Collection was set when it shouldn't be!"
             );
         }
-        let sol_fees = 5000 + 5616720 + 2853600;
+
+        let sol_fees = {
+            let mut fees = 5000 + 5616720 + 2853600;
+            if self.freeze_info.set {
+                let freeze_pda = self.get_freeze_pda(context).await;
+                fees += freeze_pda.freeze_fee;
+            };
+            fees
+        };
         if let Some(change) = balance_change {
             assert_eq!(
                 end_wallet_balance - start_wallet_balance,
@@ -762,6 +917,7 @@ impl CandyManager {
                 );
             }
         }
+        Ok(new_nft)
     }
 
     pub async fn mint_and_assert_bot_tax(

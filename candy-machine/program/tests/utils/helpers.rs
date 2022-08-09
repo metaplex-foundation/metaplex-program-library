@@ -1,5 +1,7 @@
 use solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
+use spl_associated_token_account::get_associated_token_address;
 
+use crate::utils::{FreezeInfo, TokenInfo};
 use mpl_candy_machine::{constants::PREFIX as CANDY_PREFIX, ConfigLine};
 
 pub fn make_config_lines(start_index: u32, total: u8) -> Vec<ConfigLine> {
@@ -23,6 +25,10 @@ pub fn find_collection_pda(candy_machine_key: &Pubkey) -> (Pubkey, u8) {
         &[b"collection".as_ref(), candy_machine_key.as_ref()],
         &mpl_candy_machine::id(),
     )
+}
+
+pub fn find_freeze_ata(freeze_info: &FreezeInfo, token_info: &TokenInfo) -> Pubkey {
+    get_associated_token_address(&freeze_info.pda, &token_info.mint)
 }
 
 pub fn sol(amount: f64) -> u64 {

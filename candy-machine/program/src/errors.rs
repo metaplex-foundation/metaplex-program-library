@@ -74,4 +74,30 @@ pub enum CandyError {
     CandyCollectionRequiresRetainAuthority,
     #[msg("Error within Gateway program")]
     GatewayProgramError,
+    #[msg(
+        "Can't change freeze settings after items have begun to be minted. You can only disable."
+    )]
+    NoChangingFreezeDuringMint,
+    #[msg("Can't change authority while freeze is enabled. Disable freeze first.")]
+    NoChangingAuthorityWithFreeze,
+    #[msg("Can't change token while freeze is enabled. Disable freeze first.")]
+    NoChangingTokenWithFreeze,
+    #[msg("Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing")]
+    InvalidThawNft,
+    #[msg("The number of remaining accounts passed in doesn't match the Candy Machine settings")]
+    IncorrectRemainingAccountsLen,
+    #[msg("FreezePDA ATA needs to be passed in if token mint is enabled.")]
+    MissingFreezeAta,
+    #[msg("Incorrect freeze ATA address.")]
+    IncorrectFreezeAta,
+    #[msg("FreezePDA doesn't belong to this Candy Machine.")]
+    FreezePDAMismatch,
+    #[msg("Max freeze time can't be longer than 7 days.")]
+    MaxFreezeIsOneWeek,
+    #[msg("Can't withdraw Candy Machine while freeze is active. Disable freeze first.")]
+    NoWithdrawWithFreeze,
+    #[msg("Missing required remaining accounts for remove_freeze with token mint.")]
+    MissingRemoveFreezeTokenAccounts,
+    #[msg("Can't withdraw SPL Token from freeze PDA into itself")]
+    InvalidFreezeWithdrawTokenAddress,
 }
