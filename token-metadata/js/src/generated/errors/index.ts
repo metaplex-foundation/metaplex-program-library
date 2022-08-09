@@ -2417,6 +2417,92 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * CannotUpdateVerifiedCollection: 'Cannot update a verified colleciton in this command'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CannotUpdateVerifiedCollectionError extends Error {
+  readonly code: number = 0x70;
+  readonly name: string = 'CannotUpdateVerifiedCollection';
+  constructor() {
+    super('Cannot update a verified colleciton in this command');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CannotUpdateVerifiedCollectionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x70, () => new CannotUpdateVerifiedCollectionError());
+createErrorFromNameLookup.set(
+  'CannotUpdateVerifiedCollection',
+  () => new CannotUpdateVerifiedCollectionError(),
+);
+
+/**
+ * CollectionMasterEditionAccountInvalid: 'Edition account aoesnt match collection '
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionMasterEditionAccountInvalidError extends Error {
+  readonly code: number = 0x71;
+  readonly name: string = 'CollectionMasterEditionAccountInvalid';
+  constructor() {
+    super('Edition account aoesnt match collection ');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionMasterEditionAccountInvalidError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x71, () => new CollectionMasterEditionAccountInvalidError());
+createErrorFromNameLookup.set(
+  'CollectionMasterEditionAccountInvalid',
+  () => new CollectionMasterEditionAccountInvalidError(),
+);
+
+/**
+ * AlreadyVerified: 'Item is already verified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyVerifiedError extends Error {
+  readonly code: number = 0x72;
+  readonly name: string = 'AlreadyVerified';
+  constructor() {
+    super('Item is already verified.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyVerifiedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x72, () => new AlreadyVerifiedError());
+createErrorFromNameLookup.set('AlreadyVerified', () => new AlreadyVerifiedError());
+
+/**
+ * AlreadyUnverified: 'Item is already unverified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyUnverifiedError extends Error {
+  readonly code: number = 0x73;
+  readonly name: string = 'AlreadyUnverified';
+  constructor() {
+    super('Item is already unverified.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyUnverifiedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x73, () => new AlreadyUnverifiedError());
+createErrorFromNameLookup.set('AlreadyUnverified', () => new AlreadyUnverifiedError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
