@@ -7,5 +7,8 @@
   "dependencies": {
     "@metaplex-foundation/rustbin": "^0.3.1",
     "@metaplex-foundation/solita": "^0.12.2"
+  },
+  "scripts": {
+    "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita"
   }
 }

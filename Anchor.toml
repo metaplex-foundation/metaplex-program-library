@@ -31,7 +31,7 @@ program = "target/deploy/mpl_gumdrop.so"
 
 [[test.genesis]]
 address = "WRAPYChf58WFCnyjXKJHtrPgzKXgHp6MD9aVDqJBbGh"
-program = "./target/deploy/candy_wrapper.so"
+program = "target/deploy/candy_wrapper.so"
 
 [workspace]
 members = [
