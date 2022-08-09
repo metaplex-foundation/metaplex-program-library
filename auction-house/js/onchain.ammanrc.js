@@ -2,13 +2,13 @@
 // @ts-check
 const base = require('../../.base-ammanrc.js');
 
-const accounts = {
-  auction_house: {
+const accounts = [
+  {
     label: "Auction House",
-    programId: 'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
+    accountId: 'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
     executable: true,
   },
-}
+]
 
 const validator = {
   ...base.validator,
