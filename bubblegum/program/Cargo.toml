@@ -21,7 +21,7 @@ anchor-spl = { version = "0.25.0" }
 spl-token = { version = "3.3.0", features = [ "no-entrypoint" ] }
 spl-associated-token-account = { version = "1.0.5", features = [ "no-entrypoint" ] }
 mpl-token-metadata = { version = "1.3.3", features = ["no-entrypoint"] }
-gummyroll = { path = "../gummyroll", features = ["cpi"] }
+gummyroll = { git = "https://github.com/jarry-xiao/candyland.git", features = ["cpi"] }
 bytemuck = "1.8.0"
 
 [profile.release]

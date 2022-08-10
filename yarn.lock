@@ -1275,7 +1275,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/rustbin@npm:^0.3.0":
+"@metaplex-foundation/rustbin@npm:^0.3.0, @metaplex-foundation/rustbin@npm:^0.3.1":
   version: 0.3.1
   resolution: "@metaplex-foundation/rustbin@npm:0.3.1"
   dependencies:
@@ -1287,7 +1287,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/solita@npm:^0.12.0, @metaplex-foundation/solita@npm:^0.12.1":
+"@metaplex-foundation/solita@npm:^0.12.0, @metaplex-foundation/solita@npm:^0.12.1, @metaplex-foundation/solita@npm:^0.12.2":
   version: 0.12.2
   resolution: "@metaplex-foundation/solita@npm:0.12.2"
   dependencies:
@@ -2510,6 +2510,15 @@ __metadata:
   checksum: 2475cb0684e07077521aac718e604a13e0f891d58cff923d437a2f7e9e28703ab39fce9f84c7c703ab369815a675f11e3bd394d38643bfe8969fbe42e6833d45
   languageName: node
   linkType: hard
+
+"bubblegum@workspace:bubblegum/js":
+  version: 0.0.0-use.local
+  resolution: "bubblegum@workspace:bubblegum/js"
+  dependencies:
+    "@metaplex-foundation/rustbin": ^0.3.1
+    "@metaplex-foundation/solita": ^0.12.2
+  languageName: unknown
+  linkType: soft
 
 "buffer-from@npm:^1.0.0":
   version: 1.1.2

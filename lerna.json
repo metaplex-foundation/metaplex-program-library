@@ -8,7 +8,8 @@
     "token-metadata/js",
     "metaplex/js",
     "auction-house/js",
-    "fixed-price-sale/js"
+    "fixed-price-sale/js",
+    "bubblegum/js"
   ],
   "useWorkspaces": true,
   "version": "independent",
