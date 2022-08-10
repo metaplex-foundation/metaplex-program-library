@@ -198,8 +198,10 @@ test('test auction-house instructions', async (t) => {
 
     const deposit_fee_paid = (await connection.getFeeForMessage(tx.compileMessage())).value;
     const wallet_sol_post_balance = await connection.getBalance(wallet.publicKey);
+    const lsol_post_balance = await connection.getBalance(escrowPaymentAccount);
 
-    t.equal(wallet_sol_post_balance, wallet_sol_pre_balance - deposit_amount - deposit_fee_paid - REQUIRED_RENT_EXEMPTION)
+    t.equal(wallet_sol_post_balance, wallet_sol_pre_balance - deposit_amount - deposit_fee_paid - REQUIRED_RENT_EXEMPTION, "wallet_sol_post_balance")
+    t.equal(lsol_post_balance, deposit_amount + REQUIRED_RENT_EXEMPTION, "escrow_sol_post_balance")
   });
   t.ok(true);
 });
