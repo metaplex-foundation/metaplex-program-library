@@ -1,15 +1,23 @@
-import { AccountInfo, Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { AccountInfo, Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
 import {
   AuctionHouse,
   AuctionHouseArgs,
-  // CreateAuctionHouseInstructionAccounts,
-  // CreateAuctionHouseInstructionArgs,
-  // createCreateAuctionHouseInstruction,
+  CreateAuctionHouseInstructionAccounts,
+  CreateAuctionHouseInstructionArgs,
+  createCreateAuctionHouseInstruction,
 } from 'src/generated';
 import test from 'tape';
 import spok from 'spok';
 import { Amman } from '@metaplex-foundation/amman-client';
 
+const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
+export const AUCTION_HOUSE = 'auction_house';
+export const FEE_PAYER = 'fee_payer';
+export const TREASURY = 'treasury';
+
+export const AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
+  'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
+);
 const connectionURL = 'http://localhost:8899';
 export const amman = Amman.instance({
   knownLabels: { ['hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk']: 'Auction House' },
@@ -21,7 +29,35 @@ function quickKeypair(): [PublicKey, Uint8Array] {
   return [kp.publicKey, kp.secretKey];
 }
 
-test('account auction-house: round trip serilization', async (t) => {
+export const getAuctionHouse = async (
+  creator: PublicKey,
+  treasuryMint: PublicKey,
+): Promise<[PublicKey, number]> => {
+  return await PublicKey.findProgramAddress(
+    [Buffer.from(AUCTION_HOUSE), creator.toBuffer(), treasuryMint.toBuffer()],
+    AUCTION_HOUSE_PROGRAM_ID,
+  );
+};
+
+export const getAuctionHouseFeeAcct = async (
+  auctionHouse: PublicKey,
+): Promise<[PublicKey, number]> => {
+  return await PublicKey.findProgramAddress(
+    [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), Buffer.from(FEE_PAYER)],
+    AUCTION_HOUSE_PROGRAM_ID,
+  );
+};
+
+export const getAuctionHouseTreasuryAcct = async (
+  auctionHouse: PublicKey,
+): Promise<[PublicKey, number]> => {
+  return await PublicKey.findProgramAddress(
+    [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), Buffer.from(TREASURY)],
+    AUCTION_HOUSE_PROGRAM_ID,
+  );
+};
+
+test('account auction-house: round trip serialization', async (t) => {
   const [creator] = quickKeypair();
   const [auctionHouseTreasury] = quickKeypair();
   const [treasuryWithdrawalDestination] = quickKeypair();
@@ -63,18 +99,42 @@ test('account auction-house: round trip serilization', async (t) => {
 });
 
 test('instruction auction-house: create auction-house', async (t) => {
-  const authority = quickKeypair();
+  const authority = Keypair.generate();
+  const treasuryWithdrawal = Keypair.generate();
   const connection = new Connection(connectionURL, 'confirmed');
-  await amman.airdrop(connection, authority[0], 2);
-  // const accounts: CreateAuctionHouseInstructionAccounts = {
-  //   treasuryMint: web3.PublicKey,
-  //   payer: web3.PublicKey,
-  //   authority: web3.PublicKey,
-  //   feeWithdrawalDestination: web3.PublicKey,
-  //   treasuryWithdrawalDestination: web3.PublicKey,
-  //   treasuryWithdrawalDestinationOwner: web3.PublicKey,    auctionHouse: web3.PublicKey;
-  //   auctionHouseFeeAccount: web3.PublicKey,
-  //   auctionHouseTreasury: web3.PublicKey,
-  // };
-  t.ok(true);
+  const transactionHandler = amman.payerTransactionHandler(connection, authority);
+  await amman.airdrop(connection, authority.publicKey, 2);
+
+  const [auctionHouse, ahBump] = await getAuctionHouse(authority.publicKey, WRAPPED_SOL_MINT);
+  const [feeAccount, feeBump] = await getAuctionHouseFeeAcct(auctionHouse);
+  const [treasuryAccount, treasuryBump] = await getAuctionHouseTreasuryAcct(auctionHouse);
+
+  const accounts: CreateAuctionHouseInstructionAccounts = {
+    treasuryMint: WRAPPED_SOL_MINT,
+    payer: authority.publicKey,
+    authority: authority.publicKey,
+    feeWithdrawalDestination: authority.publicKey,
+    treasuryWithdrawalDestination: treasuryWithdrawal.publicKey,
+    treasuryWithdrawalDestinationOwner: treasuryWithdrawal.publicKey,
+    auctionHouse: auctionHouse,
+    auctionHouseFeeAccount: feeAccount,
+    auctionHouseTreasury: treasuryAccount,
+  };
+
+  const args: CreateAuctionHouseInstructionArgs = {
+    bump: ahBump,
+    feePayerBump: feeBump,
+    treasuryBump: treasuryBump,
+    sellerFeeBasisPoints: 250,
+    requiresSignOff: false,
+    canChangeSalePrice: false,
+  };
+  const create_ah_instruction = createCreateAuctionHouseInstruction(accounts, args);
+  const tx = new Transaction().add(create_ah_instruction);
+  tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+  const txId = await transactionHandler.sendAndConfirmTransaction(tx, [authority], {
+    skipPreflight: true,
+  });
+
+  t.ok(txId);
 });
