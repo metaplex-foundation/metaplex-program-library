@@ -170,6 +170,7 @@ test('test auction-house instructions', async (t) => {
       wallet.publicKey,
     );
 
+    /* tslint:disable:no-unused-variable */
     const auction_house_fee_account_pre_balance = await connection.getBalance(feeAccount);
     await amman.airdrop(connection, wallet.publicKey, 2);
     const wallet_sol_pre_balance = await connection.getBalance(wallet.publicKey);
@@ -194,6 +195,7 @@ test('test auction-house instructions', async (t) => {
     const deposit_instruction = createDepositInstruction(depositAccounts, args);
     const tx = new Transaction().add(deposit_instruction);
     tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+    /* tslint:disable:no-unused-variable */
     const txId = await transactionHandler.sendAndConfirmTransaction(tx, [wallet], {
       skipPreflight: false,
     });
