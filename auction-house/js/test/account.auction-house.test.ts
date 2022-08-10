@@ -1,4 +1,4 @@
-import { AccountInfo, Connection, Keypair, PublicKey, Transaction } from '@solana/web3.js';
+import { AccountInfo, Connection, Keypair, PublicKey, Transaction, LAMPORTS_PER_SOL} from '@solana/web3.js';
 import {
   AuctionHouse,
   AuctionHouseArgs,
@@ -18,6 +18,7 @@ const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111
 export const AUCTION_HOUSE = 'auction_house';
 export const FEE_PAYER = 'fee_payer';
 export const TREASURY = 'treasury';
+const REQUIRED_RENT_EXEMPTION = 890_880
 
 export const AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
   'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
@@ -119,7 +120,13 @@ test('test auction-house instructions', async (t) => {
   test('instruction auction-house: create auction-house', async (t) => {
     const treasuryWithdrawal = Keypair.generate();
     const transactionHandler = amman.payerTransactionHandler(connection, authority);
-    await amman.airdrop(connection, authority.publicKey, 2);
+    const authority_aidrop_sol = 2
+    
+    test('airdrop to AH authority', async(t) => {
+      await amman.airdrop(connection, authority.publicKey, authority_aidrop_sol);
+      const authority_balance = await connection.getBalance(authority.publicKey);
+      t.equal(authority_balance/LAMPORTS_PER_SOL, authority_aidrop_sol);
+    });
 
     const [auctionHouse, ahBump] = await getAuctionHouse(authority.publicKey, WRAPPED_SOL_MINT);
     const [feeAccount, feeBump] = await getAuctionHouseFeeAcct(auctionHouse);
@@ -163,7 +170,11 @@ test('test auction-house instructions', async (t) => {
       wallet.publicKey,
     );
 
+    const auction_house_fee_account_pre_balance = await connection.getBalance(feeAccount);
     await amman.airdrop(connection, wallet.publicKey, 2);
+    const wallet_sol_pre_balance = await connection.getBalance(wallet.publicKey);
+    const deposit_amount = 1000;
+
     const depositAccounts: DepositInstructionAccounts = {
       wallet: wallet.publicKey,
       paymentAccount: wallet.publicKey,
@@ -177,7 +188,7 @@ test('test auction-house instructions', async (t) => {
 
     const args: DepositInstructionArgs = {
       escrowPaymentBump: escrowPaymentBump,
-      amount: 1000,
+      amount: deposit_amount,
     };
 
     const deposit_instruction = createDepositInstruction(depositAccounts, args);
@@ -187,7 +198,10 @@ test('test auction-house instructions', async (t) => {
       skipPreflight: false,
     });
 
-    t.ok(txId);
+    const deposit_fee_paid = (await connection.getFeeForMessage(tx.compileMessage())).value;
+    const wallet_sol_post_balance = await connection.getBalance(wallet.publicKey);
+
+    t.equal(wallet_sol_post_balance, wallet_sol_pre_balance - deposit_amount - deposit_fee_paid - REQUIRED_RENT_EXEMPTION)
   });
   t.ok(true);
 });
