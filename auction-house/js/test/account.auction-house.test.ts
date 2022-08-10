@@ -121,12 +121,9 @@ test('test auction-house instructions', async (t) => {
     const treasuryWithdrawal = Keypair.generate();
     const transactionHandler = amman.payerTransactionHandler(connection, authority);
     const authority_aidrop_sol = 2
-    
-    test('airdrop to AH authority', async(t) => {
-      await amman.airdrop(connection, authority.publicKey, authority_aidrop_sol);
-      const authority_balance = await connection.getBalance(authority.publicKey);
-      t.equal(authority_balance/LAMPORTS_PER_SOL, authority_aidrop_sol);
-    });
+    await amman.airdrop(connection, authority.publicKey, authority_aidrop_sol);
+    const authority_balance = await connection.getBalance(authority.publicKey);
+    t.equal(authority_balance/LAMPORTS_PER_SOL, authority_aidrop_sol);
 
     const [auctionHouse, ahBump] = await getAuctionHouse(authority.publicKey, WRAPPED_SOL_MINT);
     const [feeAccount, feeBump] = await getAuctionHouseFeeAcct(auctionHouse);
@@ -159,6 +156,7 @@ test('test auction-house instructions', async (t) => {
       skipPreflight: false,
     });
     t.ok(txId);
+    t.end();
   });
   test('instruction auction-house: deposit and withdraw', async (t) => {
     const wallet = Keypair.generate();
