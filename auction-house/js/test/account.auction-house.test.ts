@@ -133,7 +133,7 @@ test('instruction auction-house: create auction-house', async (t) => {
   const tx = new Transaction().add(create_ah_instruction);
   tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
   const txId = await transactionHandler.sendAndConfirmTransaction(tx, [authority], {
-    // skipPreflight: true,
+    skipPreflight: false,
   });
 
   t.ok(txId);
