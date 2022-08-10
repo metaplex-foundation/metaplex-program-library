@@ -15,7 +15,7 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   RUST_TOOLCHAIN: stable
-  ANCHOR_CLI_VERSION: 0.22.0
+  ANCHOR_CLI_VERSION: 0.25.0
 
 jobs:
   setup-versions:
@@ -34,7 +34,7 @@ jobs:
           echo $VERSION_JSON && \
           echo "::set-output name=value::$VERSION_JSON"
         shell: bash
-  
+
   setup-tests:
     runs-on: ubuntu-latest
     outputs:
@@ -139,9 +139,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-linux-build-deps
-      - uses: ./.github/actions/install-solana
-        with:
-          solana_version: ${{ env.SOLANA_VERSION_STABLE }}
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}

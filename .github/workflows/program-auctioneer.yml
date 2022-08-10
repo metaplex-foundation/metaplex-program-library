@@ -7,9 +7,15 @@ on:
   pull_request:
     branches: [master]
 
+# configuration to enable link to AWS for program artifact upload
+permissions:
+  id-token: write
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
   RUST_TOOLCHAIN: stable
+  ANCHOR_CLI_VERSION: 0.25.0
 
 jobs:
   setup-versions:
@@ -28,7 +34,7 @@ jobs:
           echo $VERSION_JSON && \
           echo "::set-output name=value::$VERSION_JSON"
         shell: bash
-  
+
   setup-tests:
     runs-on: ubuntu-latest
     outputs:
@@ -116,7 +122,7 @@ jobs:
       - uses: ./.github/actions/build-token-metadata
       - uses: ./.github/actions/build-auction-house
 
-       # Run test
+      # Run test
       - name: test-auctioneer-program
         id: run_test
         working-directory: ./auctioneer/program
@@ -124,3 +130,30 @@ jobs:
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
           cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ --test ${{ env.TEST }} -- --nocapture --test-threads 1
+
+  build-and-upload-binary:
+    needs: [changes]
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      cache_id: program-auctioneer-build
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-linux-build-deps
+      - uses: ./.github/actions/install-rust
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - uses: ./.github/actions/setup-aws-env/
+      - name: Build and upload
+        uses: ./.github/actions/build-and-upload/
+        id: upload-binary-metadata
+        with:
+          account-id: ${{ env.BINARY_STORAGE_ACCOUNT_ID }}
+          region: ${{ env.BINARY_STORAGE_REGION }}
+          role: ${{ env.BINARY_STORAGE_ROLE }}
+          bucket: ${{ env.BINARY_STORAGE_BUCKET }}
+          working-dir: ./auctioneer/program
+          program-binary: mpl_auctioneer.so
+          prefix: mpl_auctioneer

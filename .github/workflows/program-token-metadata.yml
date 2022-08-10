@@ -15,7 +15,7 @@ env:
   CARGO_TERM_COLOR: always
   SOLANA_VERSION: 1.9.22
   RUST_TOOLCHAIN: stable
-  ANCHOR_CLI_VERSION: 0.22.0
+  ANCHOR_CLI_VERSION: 0.25.0
 
 jobs:
   changes:
@@ -94,9 +94,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-linux-build-deps
-      - uses: ./.github/actions/install-solana
-        with:
-          solana_version: ${{ env.SOLANA_VERSION }}
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
