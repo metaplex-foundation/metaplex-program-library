@@ -3,6 +3,7 @@ use std::{str::FromStr, thread::sleep, time::Duration};
 pub use anchor_client::solana_sdk::hash::Hash;
 use anchor_client::{
     solana_sdk::{
+        commitment_config::{CommitmentConfig, CommitmentLevel},
         program_pack::{IsInitialized, Pack},
         pubkey::Pubkey,
     },
@@ -12,10 +13,16 @@ pub use anyhow::{anyhow, Result};
 use console::{style, Style};
 use dialoguer::theme::ColorfulTheme;
 pub use indicatif::{ProgressBar, ProgressStyle};
-use solana_client::rpc_client::RpcClient;
+use mpl_token_metadata::ID as TOKEN_METADATA_PROGRAM_ID;
+use solana_account_decoder::UiAccountEncoding;
+use solana_client::{
+    rpc_client::RpcClient,
+    rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
+    rpc_filter::{Memcmp, MemcmpEncodedBytes, RpcFilterType},
+};
 use spl_token::state::{Account, Mint};
 
-use crate::config::data::Cluster;
+use crate::{common::*, config::data::Cluster};
 
 /// Hash for devnet cluster
 pub const DEVNET_HASH: &str = "EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG";
@@ -134,4 +141,56 @@ pub fn assert_correct_authority(user_keypair: &Pubkey, update_authority: &Pubkey
     }
 
     Ok(())
+}
+
+pub fn get_cm_creator_accounts(
+    client: &RpcClient,
+    creator: &str,
+    position: usize,
+) -> Result<Vec<Pubkey>> {
+    if position > 4 {
+        error!("CM Creator position cannot be greator than 4");
+        std::process::exit(1);
+    }
+
+    let config = RpcProgramAccountsConfig {
+        filters: Some(vec![RpcFilterType::Memcmp(Memcmp {
+            offset: 1 + // key
+            32 + // update auth
+            32 + // mint
+            4 + // name string length
+            MAX_NAME_LENGTH + // name
+            4 + // uri string length
+            MAX_URI_LENGTH + // uri*
+            4 + // symbol string length
+            MAX_SYMBOL_LENGTH + // symbol
+            2 + // seller fee basis points
+            1 + // whether or not there is a creators vec
+            4 + // creators
+            position * // index for each creator
+            (
+                32 + // address
+                1 + // verified
+                1 // share
+            ),
+            bytes: MemcmpEncodedBytes::Base58(creator.to_string()),
+            encoding: None,
+        })]),
+        account_config: RpcAccountInfoConfig {
+            encoding: Some(UiAccountEncoding::Base64),
+            data_slice: None,
+            commitment: Some(CommitmentConfig {
+                commitment: CommitmentLevel::Confirmed,
+            }),
+        },
+        with_context: None,
+    };
+
+    let accounts = client
+        .get_program_accounts_with_config(&TOKEN_METADATA_PROGRAM_ID, config)?
+        .into_iter()
+        .map(|(pubkey, _account)| pubkey)
+        .collect::<Vec<Pubkey>>();
+
+    Ok(accounts)
 }

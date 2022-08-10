@@ -285,11 +285,7 @@ impl HiddenSettings {
         CandyHiddenSettings {
             name: self.name.clone(),
             uri: self.uri.clone(),
-            hash: self
-                .hash
-                .as_bytes()
-                .try_into()
-                .expect("Hidden settings hash has to be 32 characters long!"),
+            hash: self.hash.as_bytes().try_into().unwrap_or([0; 32]),
         }
     }
     pub fn set_hash(&mut self, hash: String) {
