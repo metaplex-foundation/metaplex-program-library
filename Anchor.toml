@@ -6,7 +6,7 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-mpl_auction_house="hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
+auction_house="hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk"
 bubblegum="BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
 
 [[test.genesis]]
@@ -39,7 +39,8 @@ members = [
   "token-metadata/program",
   "auction-house/program",
   "fixed-price-sale/program",
-  "bubblegum/program"
+  "bubblegum/program",
+  "candy-wrapper/program"
 ]
 
 [test.validator]
@@ -54,8 +55,11 @@ address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
 [[test.validator.clone]]
 address = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
 
+[[test.validator.clone]]
+address = "GRoLLzvxpxxu2PGNJMMeZPyMxjAUH9pKqxGXV9DGiceU"
+
 [test]
 startup_wait = 10000
 
 [scripts]
-test = "yarn run ts-mocha -t 1000000 tests/**/*-test.ts"
+test = "yarn run ts-mocha -p ./tsconfig.build.json -t 1000000 ./**/js/test/*-test.ts"

@@ -1,9 +1,7 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "moduleResolution": "node",
-    "module": "es2022",
-    "target": "es2019",
-    "outDir": "dist/esm/"
-  }
+    "rootDir": "."
+  },
+  "include": ["./src", "test"]
 }
