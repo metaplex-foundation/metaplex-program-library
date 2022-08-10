@@ -136,6 +136,9 @@ pub async fn process_sign(args: SignArgs) -> Result<()> {
 
         if account_keys.is_empty() {
             pb.finish_with_message(format!("{}", style("No NFTs found.").green().bold()));
+            return Err(anyhow!(format!(
+                "No NFTs found for candy machine id {candy_machine_id}.",
+            )));
         } else {
             pb.finish_with_message(format!("Found {:?} accounts", account_keys.len() as u64));
             println!(
@@ -166,10 +169,7 @@ pub async fn process_sign(args: SignArgs) -> Result<()> {
         }
 
         if !errors.is_empty() {
-            pb.abandon_with_message(format!(
-                "{}",
-                style("Signing all NFTs failed ").red().bold()
-            ));
+            pb.abandon_with_message(format!("{}", style("Signing command failed ").red().bold()));
             return Err(anyhow!(format!("Not all NFTs were signed.")));
         } else {
             pb.finish_with_message(format!(
