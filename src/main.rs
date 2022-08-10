@@ -238,14 +238,17 @@ async fn run() -> Result<()> {
             number,
             receiver,
             candy_machine,
-        } => process_mint(MintArgs {
-            keypair,
-            rpc_url,
-            cache,
-            number,
-            receiver,
-            candy_machine,
-        })?,
+        } => {
+            process_mint(MintArgs {
+                keypair,
+                rpc_url,
+                cache,
+                number,
+                receiver,
+                candy_machine,
+            })
+            .await?
+        }
         Commands::Show {
             keypair,
             rpc_url,

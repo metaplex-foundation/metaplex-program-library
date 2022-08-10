@@ -1,13 +1,10 @@
 use std::{str::FromStr, sync::Arc};
 
-use anchor_client::{
-    solana_sdk::{
-        program_pack::Pack,
-        pubkey::Pubkey,
-        signature::{Keypair, Signature, Signer},
-        system_instruction, system_program, sysvar,
-    },
-    Client,
+use anchor_client::solana_sdk::{
+    program_pack::Pack,
+    pubkey::Pubkey,
+    signature::{Keypair, Signature, Signer},
+    system_instruction, system_program, sysvar,
 };
 use anchor_lang::prelude::AccountMeta;
 use anyhow::Result;
@@ -25,12 +22,13 @@ use spl_token::{
     state::Account,
     ID as TOKEN_PROGRAM_ID,
 };
+use tokio::sync::Semaphore;
 
 use crate::{
     cache::load_cache,
     candy_machine::{CANDY_MACHINE_ID, *},
     common::*,
-    config::Cluster,
+    config::{Cluster, SugarConfig},
     pdas::*,
     utils::*,
 };
@@ -44,7 +42,7 @@ pub struct MintArgs {
     pub candy_machine: Option<String>,
 }
 
-pub fn process_mint(args: MintArgs) -> Result<()> {
+pub async fn process_mint(args: MintArgs) -> Result<()> {
     let sugar_config = sugar_setup(args.keypair, args.rpc_url)?;
     let client = Arc::new(setup_client(&sugar_config)?);
 
@@ -115,14 +113,17 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
             "{} item(s) remaining",
             candy_machine_state.data.items_available - candy_machine_state.items_redeemed
         ));
+        let config = Arc::new(sugar_config);
 
         let result = match mint(
-            Arc::clone(&client),
+            Arc::clone(&config),
             candy_pubkey,
             Arc::clone(&candy_machine_state),
             Arc::clone(&collection_pda_info),
             receiver_pubkey,
-        ) {
+        )
+        .await
+        {
             Ok(signature) => format!("{} {}", style("Signature:").bold(), signature),
             Err(err) => {
                 pb.abandon_with_message(format!("{}", style("Mint failed ").red().bold()));
@@ -135,35 +136,72 @@ pub fn process_mint(args: MintArgs) -> Result<()> {
     } else {
         let pb = progress_bar_with_style(number);
 
-        for _i in 0..number {
-            if let Err(err) = mint(
-                Arc::clone(&client),
-                candy_pubkey,
-                Arc::clone(&candy_machine_state),
-                Arc::clone(&collection_pda_info),
-                receiver_pubkey,
-            ) {
-                pb.abandon_with_message(format!("{}", style("Mint failed ").red().bold()));
-                error!("{:?}", err);
-                return Err(err);
-            }
+        let mut tasks = Vec::new();
+        let semaphore = Arc::new(Semaphore::new(100));
+        let config = Arc::new(sugar_config);
 
-            pb.inc(1);
+        for _i in 0..number {
+            let config = config.clone();
+            let permit = Arc::clone(&semaphore).acquire_owned().await.unwrap();
+            let candy_machine_state = candy_machine_state.clone();
+            let collection_pda_info = collection_pda_info.clone();
+            let pb = pb.clone();
+
+            // Start tasks
+            tasks.push(tokio::spawn(async move {
+                let _permit = permit;
+                let res = mint(
+                    config,
+                    candy_pubkey,
+                    candy_machine_state,
+                    collection_pda_info,
+                    receiver_pubkey,
+                )
+                .await;
+                pb.inc(1);
+                res
+            }));
         }
 
+        let mut error_count = 0;
+
+        // Resolve tasks
+        for task in tasks {
+            let res = task.await.unwrap();
+            if let Err(e) = res {
+                error_count += 1;
+                error!("{:?}, continuing. . .", e);
+            }
+        }
+
+        if error_count > 0 {
+            pb.abandon_with_message(format!(
+                "{} {} items failed.",
+                style("Some of the items failed to mint.").red().bold(),
+                error_count
+            ));
+            return Err(anyhow!(
+                "{} {}/{} {}",
+                style("Minted").red().bold(),
+                number - error_count,
+                number,
+                style("of the items").red().bold()
+            ));
+        }
         pb.finish();
     }
 
     Ok(())
 }
 
-pub fn mint(
-    client: Arc<Client>,
+pub async fn mint(
+    config: Arc<SugarConfig>,
     candy_machine_id: Pubkey,
     candy_machine_state: Arc<CandyMachine>,
     collection_pda_info: Arc<Option<PdaInfo<CollectionPDA>>>,
     receiver: Pubkey,
 ) -> Result<Signature> {
+    let client = setup_client(&config)?;
     let program = client.program(CANDY_MACHINE_ID);
     let payer = program.payer();
     let wallet = candy_machine_state.wallet;
