@@ -1038,19 +1038,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/mpl-auction@^0.0.2, @metaplex-foundation/mpl-auction@workspace:auction/js":
-  version: 0.0.0-use.local
-  resolution: "@metaplex-foundation/mpl-auction@workspace:auction/js"
-  dependencies:
-    "@metaplex-foundation/mpl-core": ^0.0.5
-    "@solana/spl-token": ^0.2.0
-    "@solana/web3.js": ^1.35.1
-    eslint: ^8.3.0
-    rimraf: ^3.0.2
-    typescript: ^4.6.2
-  languageName: unknown
-  linkType: soft
-
 "@metaplex-foundation/mpl-auctioneer@workspace:auctioneer/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-auctioneer@workspace:auctioneer/js"
@@ -1097,16 +1084,6 @@ __metadata:
     typescript: ^4.6.2
   languageName: unknown
   linkType: soft
-
-"@metaplex-foundation/mpl-core@npm:^0.0.2":
-  version: 0.0.2
-  resolution: "@metaplex-foundation/mpl-core@npm:0.0.2"
-  dependencies:
-    "@solana/web3.js": ^1.31.0
-    bs58: ^4.0.1
-  checksum: f74ad09538dbd8b567c349724310ed3ca1e3c9d7e65992ea32077294b09791cd246ab2ac0c29c0a8ed00aaccb6858dbb0fffc55e7e788da7c418f2ed094a1d9a
-  languageName: node
-  linkType: hard
 
 "@metaplex-foundation/mpl-core@npm:^0.0.5":
   version: 0.0.5
@@ -1162,26 +1139,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/mpl-metaplex@workspace:metaplex/js":
-  version: 0.0.0-use.local
-  resolution: "@metaplex-foundation/mpl-metaplex@workspace:metaplex/js"
-  dependencies:
-    "@metaplex-foundation/amman": ^0.1.0
-    "@metaplex-foundation/mpl-auction": ^0.0.2
-    "@metaplex-foundation/mpl-core": ^0.0.5
-    "@metaplex-foundation/mpl-token-metadata": ^0.0.2
-    "@metaplex-foundation/mpl-token-vault": ^0.0.2
-    "@solana/spl-token": ^0.2.0
-    "@solana/web3.js": ^1.35.1
-    esbuild: ^0.14.14
-    esbuild-runner: ^2.2.1
-    eslint: ^8.3.0
-    rimraf: ^3.0.2
-    tape: ^5.5.2
-    typescript: ^4.6.2
-  languageName: unknown
-  linkType: soft
-
 "@metaplex-foundation/mpl-token-entangler@workspace:token-entangler/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-token-entangler@workspace:token-entangler/js"
@@ -1214,17 +1171,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/mpl-token-metadata@npm:^0.0.2":
-  version: 0.0.2
-  resolution: "@metaplex-foundation/mpl-token-metadata@npm:0.0.2"
-  dependencies:
-    "@metaplex-foundation/mpl-core": ^0.0.2
-    "@solana/spl-token": ^0.1.8
-    "@solana/web3.js": ^1.31.0
-  checksum: 03064927d289cd3de12b238c233cb06ce7476338b7bf203e5c02828048d0e51c438ba90c9151d24c379618270cfcd05cee327ca9dc7b100d1108c4301ad3388b
-  languageName: node
-  linkType: hard
-
 "@metaplex-foundation/mpl-token-metadata@workspace:token-metadata/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-token-metadata@workspace:token-metadata/js"
@@ -1247,31 +1193,6 @@ __metadata:
     supports-color: ^9.2.1
     tape: ^5.5.3
     typescript: ^4.6.2
-  languageName: unknown
-  linkType: soft
-
-"@metaplex-foundation/mpl-token-vault@^0.0.2, @metaplex-foundation/mpl-token-vault@workspace:token-vault/js":
-  version: 0.0.0-use.local
-  resolution: "@metaplex-foundation/mpl-token-vault@workspace:token-vault/js"
-  dependencies:
-    "@metaplex-foundation/amman": ^0.1.0
-    "@metaplex-foundation/beet": ^0.1.0
-    "@metaplex-foundation/beet-solana": ^0.1.1
-    "@metaplex-foundation/cusper": ^0.0.2
-    "@metaplex-foundation/mpl-core": ^0.0.5
-    "@metaplex-foundation/solita": ^0.5.0
-    "@solana/spl-token": ^0.2.0
-    "@solana/web3.js": ^1.35.1
-    "@types/debug": ^4.1.7
-    bn.js: ^5.2.0
-    debug: ^4.3.3
-    eslint: ^8.3.0
-    rimraf: ^3.0.2
-    spok: ^1.4.3
-    tape: ^5.5.0
-    typedoc: ^0.22.11
-    typescript: ^4.6.2
-    utility-types: ^3.10.0
   languageName: unknown
   linkType: soft
 
@@ -3519,118 +3440,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild-android-64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-android-64@npm:0.14.49"
-  conditions: os=android & cpu=x64
-  languageName: node
-  linkType: hard
-
-"esbuild-android-arm64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-android-arm64@npm:0.14.49"
-  conditions: os=android & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"esbuild-darwin-64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-darwin-64@npm:0.14.49"
-  conditions: os=darwin & cpu=x64
-  languageName: node
-  linkType: hard
-
-"esbuild-darwin-arm64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-darwin-arm64@npm:0.14.49"
-  conditions: os=darwin & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"esbuild-freebsd-64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-freebsd-64@npm:0.14.49"
-  conditions: os=freebsd & cpu=x64
-  languageName: node
-  linkType: hard
-
-"esbuild-freebsd-arm64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-freebsd-arm64@npm:0.14.49"
-  conditions: os=freebsd & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"esbuild-linux-32@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-linux-32@npm:0.14.49"
-  conditions: os=linux & cpu=ia32
-  languageName: node
-  linkType: hard
-
-"esbuild-linux-64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-linux-64@npm:0.14.49"
-  conditions: os=linux & cpu=x64
-  languageName: node
-  linkType: hard
-
-"esbuild-linux-arm64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-linux-arm64@npm:0.14.49"
-  conditions: os=linux & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"esbuild-linux-arm@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-linux-arm@npm:0.14.49"
-  conditions: os=linux & cpu=arm
-  languageName: node
-  linkType: hard
-
-"esbuild-linux-mips64le@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-linux-mips64le@npm:0.14.49"
-  conditions: os=linux & cpu=mips64el
-  languageName: node
-  linkType: hard
-
-"esbuild-linux-ppc64le@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-linux-ppc64le@npm:0.14.49"
-  conditions: os=linux & cpu=ppc64
-  languageName: node
-  linkType: hard
-
-"esbuild-linux-riscv64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-linux-riscv64@npm:0.14.49"
-  conditions: os=linux & cpu=riscv64
-  languageName: node
-  linkType: hard
-
-"esbuild-linux-s390x@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-linux-s390x@npm:0.14.49"
-  conditions: os=linux & cpu=s390x
-  languageName: node
-  linkType: hard
-
-"esbuild-netbsd-64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-netbsd-64@npm:0.14.49"
-  conditions: os=netbsd & cpu=x64
-  languageName: node
-  linkType: hard
-
-"esbuild-openbsd-64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-openbsd-64@npm:0.14.49"
-  conditions: os=openbsd & cpu=x64
-  languageName: node
-  linkType: hard
-
 "esbuild-runner@npm:^2.2.1":
   version: 2.2.1
   resolution: "esbuild-runner@npm:2.2.1"
@@ -3642,105 +3451,6 @@ __metadata:
   bin:
     esr: bin/esr.js
   checksum: 6818c1a0b7773ca6d688ceb8dc33f8077eabf1a3154c86b5e9006321c11a29a5544500f56456e804cdbdefae2281614e2e2b2bf1173316f80e36a2da496d3795
-  languageName: node
-  linkType: hard
-
-"esbuild-sunos-64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-sunos-64@npm:0.14.49"
-  conditions: os=sunos & cpu=x64
-  languageName: node
-  linkType: hard
-
-"esbuild-windows-32@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-windows-32@npm:0.14.49"
-  conditions: os=win32 & cpu=ia32
-  languageName: node
-  linkType: hard
-
-"esbuild-windows-64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-windows-64@npm:0.14.49"
-  conditions: os=win32 & cpu=x64
-  languageName: node
-  linkType: hard
-
-"esbuild-windows-arm64@npm:0.14.49":
-  version: 0.14.49
-  resolution: "esbuild-windows-arm64@npm:0.14.49"
-  conditions: os=win32 & cpu=arm64
-  languageName: node
-  linkType: hard
-
-"esbuild@npm:^0.14.14":
-  version: 0.14.49
-  resolution: "esbuild@npm:0.14.49"
-  dependencies:
-    esbuild-android-64: 0.14.49
-    esbuild-android-arm64: 0.14.49
-    esbuild-darwin-64: 0.14.49
-    esbuild-darwin-arm64: 0.14.49
-    esbuild-freebsd-64: 0.14.49
-    esbuild-freebsd-arm64: 0.14.49
-    esbuild-linux-32: 0.14.49
-    esbuild-linux-64: 0.14.49
-    esbuild-linux-arm: 0.14.49
-    esbuild-linux-arm64: 0.14.49
-    esbuild-linux-mips64le: 0.14.49
-    esbuild-linux-ppc64le: 0.14.49
-    esbuild-linux-riscv64: 0.14.49
-    esbuild-linux-s390x: 0.14.49
-    esbuild-netbsd-64: 0.14.49
-    esbuild-openbsd-64: 0.14.49
-    esbuild-sunos-64: 0.14.49
-    esbuild-windows-32: 0.14.49
-    esbuild-windows-64: 0.14.49
-    esbuild-windows-arm64: 0.14.49
-  dependenciesMeta:
-    esbuild-android-64:
-      optional: true
-    esbuild-android-arm64:
-      optional: true
-    esbuild-darwin-64:
-      optional: true
-    esbuild-darwin-arm64:
-      optional: true
-    esbuild-freebsd-64:
-      optional: true
-    esbuild-freebsd-arm64:
-      optional: true
-    esbuild-linux-32:
-      optional: true
-    esbuild-linux-64:
-      optional: true
-    esbuild-linux-arm:
-      optional: true
-    esbuild-linux-arm64:
-      optional: true
-    esbuild-linux-mips64le:
-      optional: true
-    esbuild-linux-ppc64le:
-      optional: true
-    esbuild-linux-riscv64:
-      optional: true
-    esbuild-linux-s390x:
-      optional: true
-    esbuild-netbsd-64:
-      optional: true
-    esbuild-openbsd-64:
-      optional: true
-    esbuild-sunos-64:
-      optional: true
-    esbuild-windows-32:
-      optional: true
-    esbuild-windows-64:
-      optional: true
-    esbuild-windows-arm64:
-      optional: true
-  bin:
-    esbuild: bin/esbuild
-  checksum: b718f4c9eaf2f83bb26f2cdb18d82d70365179ae8d1d88636afc3073a0c328364340695798b9a6322ae15e31b90e1f71266151f61637412649fb31bb3ecb2e0a
   languageName: node
   linkType: hard
 
@@ -4467,7 +4177,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^8.0.1, glob@npm:^8.0.3":
+"glob@npm:^8.0.1":
   version: 8.0.3
   resolution: "glob@npm:8.0.3"
   dependencies:
@@ -5345,13 +5055,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonc-parser@npm:^3.0.0":
-  version: 3.1.0
-  resolution: "jsonc-parser@npm:3.1.0"
-  checksum: 81b00c565c60cb1b400523a918d42ad9c7bb3d9cf34c708bf78d37c8c496ecd670c3ff8828f2f60aa6e6627ef4287982794ddf92261ea71e320973c54b29fb22
-  languageName: node
-  linkType: hard
-
 "jsonfile@npm:^6.0.1":
   version: 6.1.0
   resolution: "jsonfile@npm:6.1.0"
@@ -5583,13 +5286,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lunr@npm:^2.3.9":
-  version: 2.3.9
-  resolution: "lunr@npm:2.3.9"
-  checksum: 176719e24fcce7d3cf1baccce9dd5633cd8bdc1f41ebe6a180112e5ee99d80373fe2454f5d4624d437e5a8319698ca6837b9950566e15d2cae5f2a543a3db4b8
-  languageName: node
-  linkType: hard
-
 "make-dir@npm:^2.1.0":
   version: 2.1.0
   resolution: "make-dir@npm:2.1.0"
@@ -5701,15 +5397,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"marked@npm:^4.0.16":
-  version: 4.0.18
-  resolution: "marked@npm:4.0.18"
-  bin:
-    marked: bin/marked.js
-  checksum: a13e886d5059a8500a6fd552feecc16e18fc3636aa491fce372384b1fdea67e323d67ac49f7618f6977e66ca96e39f27400eb5c1273d5ee9c2301e8c33e90dce
-  languageName: node
-  linkType: hard
-
 "meow@npm:^8.0.0":
   version: 8.1.2
   resolution: "meow@npm:8.1.2"
@@ -5806,7 +5493,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"minimatch@npm:^5.0.1, minimatch@npm:^5.1.0":
+"minimatch@npm:^5.0.1":
   version: 5.1.0
   resolution: "minimatch@npm:5.1.0"
   dependencies:
@@ -7455,17 +7142,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shiki@npm:^0.10.1":
-  version: 0.10.1
-  resolution: "shiki@npm:0.10.1"
-  dependencies:
-    jsonc-parser: ^3.0.0
-    vscode-oniguruma: ^1.6.1
-    vscode-textmate: 5.2.0
-  checksum: fb746f3cb3de7e545e3b10a6cb658d3938f840e4ccc9a3c90ceb7e69a8f89dbb432171faac1e9f02a03f103684dad88ee5e54b5c4964fa6b579fca6e8e26424d
-  languageName: node
-  linkType: hard
-
 "side-channel@npm:^1.0.3, side-channel@npm:^1.0.4":
   version: 1.0.4
   resolution: "side-channel@npm:1.0.4"
@@ -7924,7 +7600,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tape@npm:^5.5.0, tape@npm:^5.5.2, tape@npm:^5.5.3":
+"tape@npm:^5.5.2, tape@npm:^5.5.3":
   version: 5.5.3
   resolution: "tape@npm:5.5.3"
   dependencies:
@@ -8238,23 +7914,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typedoc@npm:^0.22.11":
-  version: 0.22.18
-  resolution: "typedoc@npm:0.22.18"
-  dependencies:
-    glob: ^8.0.3
-    lunr: ^2.3.9
-    marked: ^4.0.16
-    minimatch: ^5.1.0
-    shiki: ^0.10.1
-  peerDependencies:
-    typescript: 4.0.x || 4.1.x || 4.2.x || 4.3.x || 4.4.x || 4.5.x || 4.6.x || 4.7.x
-  bin:
-    typedoc: bin/typedoc
-  checksum: b813d8129682f6ed5a4e96bacaf019e4da1d2744ca89fef850d6bb4c034616567ce67e6a7f5cfc5f00aac573f0b45d44b1427aafa262ab88dce6b460cb9e744c
-  languageName: node
-  linkType: hard
-
 "typescript@npm:^4.6.2":
   version: 4.7.4
   resolution: "typescript@npm:4.7.4"
@@ -8384,13 +8043,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"utility-types@npm:^3.10.0":
-  version: 3.10.0
-  resolution: "utility-types@npm:3.10.0"
-  checksum: 8f274415c6196ab62883b8bd98c9d2f8829b58016e4269aaa1ebd84184ac5dda7dc2ca45800c0d5e0e0650966ba063bf9a412aaeaea6850ca4440a391283d5c8
-  languageName: node
-  linkType: hard
-
 "uuid@npm:^3.3.2":
   version: 3.4.0
   resolution: "uuid@npm:3.4.0"
@@ -8443,20 +8095,6 @@ __metadata:
     core-util-is: 1.0.2
     extsprintf: ^1.2.0
   checksum: c431df0bedf2088b227a4e051e0ff4ca54df2c114096b0c01e1cbaadb021c30a04d7dd5b41ab277bcd51246ca135bf931d4c4c796ecae7a4fef6d744ecef36ea
-  languageName: node
-  linkType: hard
-
-"vscode-oniguruma@npm:^1.6.1":
-  version: 1.6.2
-  resolution: "vscode-oniguruma@npm:1.6.2"
-  checksum: 6b754acdafd5b68242ea5938bb00a32effc16c77f471d4f0f337d879d0e8e592622998e2441f42d9a7ff799c1593f31c11f26ca8d9bf9917e3ca881d3c1f3e19
-  languageName: node
-  linkType: hard
-
-"vscode-textmate@npm:5.2.0":
-  version: 5.2.0
-  resolution: "vscode-textmate@npm:5.2.0"
-  checksum: 5449b42d451080f6f3649b66948f4b5ee4643c4e88cfe3558a3b31c84c78060cfdd288c4958c1690eaa5cd65d09992fa6b7c3bef9d4aa72b3651054a04624d20
   languageName: node
   linkType: hard
 
