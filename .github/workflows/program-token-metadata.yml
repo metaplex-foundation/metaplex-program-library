@@ -66,9 +66,6 @@ jobs:
         with:
           working-directory: ./token-metadata/program
 
-      # Build deps
-      - uses: ./.github/actions/build-token-vault
-
       # Run test
       - name: test-token-metadata-program
         id: run_test
