@@ -257,7 +257,7 @@ test('test auction-house instructions', async (t) => {
     );
     t.equal(
       wallet_sol_post_withdraw_balance,
-      wallet_sol_post_balance - withdraw_fee_paid + deposit_amount - REQUIRED_RENT_EXEMPTION,
+      wallet_sol_post_balance - withdraw_fee_paid + deposit_amount,
       'wallet balance post withdraw == expected',
     );
 
