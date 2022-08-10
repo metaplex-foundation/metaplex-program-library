@@ -29,11 +29,6 @@ export const amman = Amman.instance({
   log: console.log,
 });
 
-function quickKeypair(): [PublicKey, Uint8Array] {
-  const kp = Keypair.generate();
-  return [kp.publicKey, kp.secretKey];
-}
-
 export const getAuctionHouse = async (
   creator: PublicKey,
   treasuryMint: PublicKey,
@@ -71,7 +66,6 @@ export const getAuctionHouseBuyerEscrow = async (
     AUCTION_HOUSE_PROGRAM_ID,
   );
 };
-
 
 test('test auction-house instructions', async (t) => {
   const authority = Keypair.generate();
