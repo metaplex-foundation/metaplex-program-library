@@ -1718,22 +1718,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "metaplex-token-vault-test-client"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "borsh 0.9.3",
- "clap",
- "mpl-token-vault 0.1.1",
- "solana-clap-utils",
- "solana-cli-config",
- "solana-client",
- "solana-program",
- "solana-sdk",
- "spl-token",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1772,22 +1756,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-auction"
-version = "0.0.2"
-dependencies = [
- "arrayref",
- "borsh 0.9.3",
- "mpl-testing-utils",
- "num-derive",
- "num-traits",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "mpl-fixed-price-sale"
 version = "0.2.3"
 dependencies = [
@@ -1803,33 +1771,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "mpl-metaplex"
-version = "0.0.3"
-dependencies = [
- "arrayref",
- "borsh 0.9.3",
- "mpl-auction",
- "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
- "num-derive",
- "num-traits",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
 name = "mpl-nft-packs"
 version = "0.1.0"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "mpl-metaplex",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
  "num-derive",
  "num-traits",
  "num_enum",
@@ -1840,27 +1787,6 @@ dependencies = [
  "spl-math",
  "spl-token",
  "thiserror",
-]
-
-[[package]]
-name = "mpl-testing-utils"
-version = "0.0.2"
-dependencies = [
- "anchor-client",
- "borsh 0.9.3",
- "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
- "num",
- "num-derive",
- "num-traits",
- "rand 0.7.3",
- "serde_json",
- "shellexpand",
- "solana-program",
- "solana-program-test",
- "solana-sdk",
- "spl-associated-token-account",
- "spl-token",
 ]
 
 [[package]]
@@ -1886,7 +1812,7 @@ checksum = "741990cd07cb31d009a345806f30ace8eab99c063cd9440eba8d3df7be2a6988"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "shank",
@@ -1905,19 +1831,6 @@ dependencies = [
  "borsh 0.9.3",
  "num-derive",
  "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-vault"
-version = "0.1.1"
-dependencies = [
- "borsh 0.9.3",
- "num-derive",
- "num-traits",
- "shank",
  "solana-program",
  "spl-token",
  "thiserror",
@@ -1946,20 +1859,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "num"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43db66d1170d347f9a065114077f7dccb00c1b9478c89384490a3425279a4606"
-dependencies = [
- "num-bigint",
- "num-complex",
- "num-integer",
- "num-iter",
- "num-rational",
- "num-traits",
-]
-
-[[package]]
 name = "num-bigint"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1967,15 +1866,6 @@ checksum = "f93ab6289c7b344a8a9f60f88d80aa20032336fe78da341afc91c8a2341fc75f"
 dependencies = [
  "autocfg",
  "num-integer",
- "num-traits",
-]
-
-[[package]]
-name = "num-complex"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26873667bbbb7c5182d4a37c1add32cdf09f841af72da53318fdb81543c15085"
-dependencies = [
  "num-traits",
 ]
 
@@ -1997,29 +1887,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
 dependencies = [
  "autocfg",
- "num-traits",
-]
-
-[[package]]
-name = "num-iter"
-version = "0.1.42"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2021c8337a54d21aca0d59a92577a029af9431cb59b909b03252b9c164fad59"
-dependencies = [
- "autocfg",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
-name = "num-rational"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
-dependencies = [
- "autocfg",
- "num-bigint",
- "num-integer",
  "num-traits",
 ]
 
@@ -2809,15 +2676,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "900fba806f70c630b0a382d0d825e17a0f19fcd059a2ade1ff237bcddf446b31"
 dependencies = [
  "lazy_static",
-]
-
-[[package]]
-name = "shellexpand"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83bdb7831b2d85ddf4a7b148aa19d0587eddbe8671a436b7bd1182eaad0f2829"
-dependencies = [
- "dirs-next",
 ]
 
 [[package]]
