@@ -98,43 +98,46 @@ test('account auction-house: round trip serialization', async (t) => {
   spok(t, actual, expected);
 });
 
-test('instruction auction-house: create auction-house', async (t) => {
-  const authority = Keypair.generate();
-  const treasuryWithdrawal = Keypair.generate();
-  const connection = new Connection(connectionURL, 'confirmed');
-  const transactionHandler = amman.payerTransactionHandler(connection, authority);
-  await amman.airdrop(connection, authority.publicKey, 2);
+test('test auction-house instructions', async (t) => {
+  test('instruction auction-house: create auction-house', async (t) => {
+    const authority = Keypair.generate();
+    const treasuryWithdrawal = Keypair.generate();
+    const connection = new Connection(connectionURL, 'confirmed');
+    const transactionHandler = amman.payerTransactionHandler(connection, authority);
+    await amman.airdrop(connection, authority.publicKey, 2);
 
-  const [auctionHouse, ahBump] = await getAuctionHouse(authority.publicKey, WRAPPED_SOL_MINT);
-  const [feeAccount, feeBump] = await getAuctionHouseFeeAcct(auctionHouse);
-  const [treasuryAccount, treasuryBump] = await getAuctionHouseTreasuryAcct(auctionHouse);
+    const [auctionHouse, ahBump] = await getAuctionHouse(authority.publicKey, WRAPPED_SOL_MINT);
+    const [feeAccount, feeBump] = await getAuctionHouseFeeAcct(auctionHouse);
+    const [treasuryAccount, treasuryBump] = await getAuctionHouseTreasuryAcct(auctionHouse);
 
-  const accounts: CreateAuctionHouseInstructionAccounts = {
-    treasuryMint: WRAPPED_SOL_MINT,
-    payer: authority.publicKey,
-    authority: authority.publicKey,
-    feeWithdrawalDestination: authority.publicKey,
-    treasuryWithdrawalDestination: treasuryWithdrawal.publicKey,
-    treasuryWithdrawalDestinationOwner: treasuryWithdrawal.publicKey,
-    auctionHouse: auctionHouse,
-    auctionHouseFeeAccount: feeAccount,
-    auctionHouseTreasury: treasuryAccount,
-  };
+    const accounts: CreateAuctionHouseInstructionAccounts = {
+      treasuryMint: WRAPPED_SOL_MINT,
+      payer: authority.publicKey,
+      authority: authority.publicKey,
+      feeWithdrawalDestination: authority.publicKey,
+      treasuryWithdrawalDestination: treasuryWithdrawal.publicKey,
+      treasuryWithdrawalDestinationOwner: treasuryWithdrawal.publicKey,
+      auctionHouse: auctionHouse,
+      auctionHouseFeeAccount: feeAccount,
+      auctionHouseTreasury: treasuryAccount,
+    };
 
-  const args: CreateAuctionHouseInstructionArgs = {
-    bump: ahBump,
-    feePayerBump: feeBump,
-    treasuryBump: treasuryBump,
-    sellerFeeBasisPoints: 250,
-    requiresSignOff: false,
-    canChangeSalePrice: false,
-  };
-  const create_ah_instruction = createCreateAuctionHouseInstruction(accounts, args);
-  const tx = new Transaction().add(create_ah_instruction);
-  tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-  const txId = await transactionHandler.sendAndConfirmTransaction(tx, [authority], {
-    skipPreflight: false,
+    const args: CreateAuctionHouseInstructionArgs = {
+      bump: ahBump,
+      feePayerBump: feeBump,
+      treasuryBump: treasuryBump,
+      sellerFeeBasisPoints: 250,
+      requiresSignOff: false,
+      canChangeSalePrice: false,
+    };
+    const create_ah_instruction = createCreateAuctionHouseInstruction(accounts, args);
+    const tx = new Transaction().add(create_ah_instruction);
+    tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+    const txId = await transactionHandler.sendAndConfirmTransaction(tx, [authority], {
+      skipPreflight: false,
+    });
+
+    t.ok(txId);
   });
-
-  t.ok(txId);
+  t.ok(true);
 });
