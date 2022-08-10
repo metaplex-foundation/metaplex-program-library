@@ -38,6 +38,15 @@ pub enum CustomCandyError {
     AuthorityMismatch(String, String),
 }
 
+#[derive(Debug, Error)]
+pub enum FloatConversionError {
+    #[error("Conversion failed with an overflow")]
+    Overflow,
+
+    #[error("Conversion failed because of a fractional component")]
+    Fractional,
+}
+
 #[derive(Debug, Serialize)]
 pub struct ValidateError<'a> {
     pub path: &'a PathBuf,
