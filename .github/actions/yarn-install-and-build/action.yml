@@ -12,16 +12,8 @@ inputs:
     description: If not false it will build the core package
     required: false
     default: true
-  build_auction:
-    description: If true it will build the auction package
-    required: false
-    default: false
   build_token_metadata:
     description: If true it will build the token_metadata package
-    required: false
-    default: false
-  build_token_vault:
-    description: If true it will build the token_vault package
     required: false
     default: false
 
@@ -40,9 +32,7 @@ runs:
     # All contract SDKs depend on mpl-core so we need to build at least that
     # We avoid running build in the project root to avoid a check for a contract failing due to
     # an issue in another contract which would cause a build failure.
-    # For the metaplex contract this is unfortunately not entirely possible as it depends on core, token-metadat,
-    # token-vault and auction
-
+   
     - name: Install and Build core
       if: inputs.build_core == 'true'
       run: |
@@ -53,16 +43,6 @@ runs:
       working-directory: ./core/js 
       shell: bash
 
-    - name: Install and Build auction
-      if: inputs.build_auction == 'true'
-      run: |
-        echo 'Install and Build auction: yarn install'
-        yarn install
-        echo 'Install and Build auction: yarn build'
-        yarn build
-      working-directory: ./auction/js 
-      shell: bash
-
     - name: Install and Build token-metadata
       if: inputs.build_token_metadata == 'true'
       run: |
@@ -71,16 +51,6 @@ runs:
         echo 'Install and Build token-metadata: yarn build'
         yarn build
       working-directory: ./token-metadata/js 
-      shell: bash
-
-    - name: Install and Build token-vault
-      if: inputs.build_token_vault == 'true'
-      run: |
-        echo 'Install and Build token-vault: yarn install'
-        yarn install
-        echo 'Install and Build token-vault: yarn build'
-        yarn build
-      working-directory: ./token-vault/js 
       shell: bash
 
     ##############
