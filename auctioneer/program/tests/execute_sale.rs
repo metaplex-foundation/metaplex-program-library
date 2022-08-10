@@ -125,7 +125,7 @@ async fn execute_sale_early_failure() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -169,7 +169,7 @@ async fn execute_sale_early_failure() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
 
     let result = context
         .banks_client
@@ -281,7 +281,7 @@ async fn execute_sale_success() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -332,7 +332,7 @@ async fn execute_sale_success() {
         .get_account(buyer_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer_token_before.is_none(), true);
+    assert!(buyer_token_before.is_none());
 
     let listing_config_account = context
           .banks_client
@@ -351,7 +351,7 @@ async fn execute_sale_success() {
         .unwrap()
         .unwrap();
     let buyer_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer_token_account)
             .await
@@ -362,7 +362,7 @@ async fn execute_sale_success() {
     )
     .unwrap();
     let fee_minus: u64 = 100_000_000 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer_token_after.amount, 1);
 
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -504,7 +504,7 @@ async fn execute_sale_two_bids_success() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);
@@ -554,7 +554,7 @@ async fn execute_sale_two_bids_success() {
         .get_account(buyer1_token_account)
         .await
         .unwrap();
-    assert_eq!(buyer1_token_before.is_none(), true);
+    assert!(buyer1_token_before.is_none());
 
     let listing_config_account = context
           .banks_client
@@ -572,7 +572,7 @@ async fn execute_sale_two_bids_success() {
         .unwrap()
         .unwrap();
     let buyer1_token_after = Account::unpack_from_slice(
-        &context
+        context
             .banks_client
             .get_account(buyer1_token_account)
             .await
@@ -583,7 +583,7 @@ async fn execute_sale_two_bids_success() {
     )
     .unwrap();
     let fee_minus: u64 = 100_000_001 - ((ah.seller_fee_basis_points as u64 * 100_000_000) / 10000);
-    assert_eq!(seller_before.lamports < seller_after.lamports, true);
+    assert!(seller_before.lamports < seller_after.lamports);
     assert_eq!(buyer1_token_after.amount, 1);
 
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -725,7 +725,7 @@ async fn execute_sale_two_bids_failure() {
         system_program: system_program::id(),
         ata_program: spl_associated_token_account::id(),
         rent: sysvar::rent::id(),
-        auctioneer_authority: auctioneer_authority,
+        auctioneer_authority,
         ah_auctioneer_pda: auctioneer_pda,
     }
     .to_account_metas(None);

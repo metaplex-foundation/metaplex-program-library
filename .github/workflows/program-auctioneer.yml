@@ -114,6 +114,7 @@ jobs:
 
       # Build deps
       - uses: ./.github/actions/build-token-metadata
+      - uses: ./.github/actions/build-auction-house
 
        # Run test
       - name: test-auctioneer-program

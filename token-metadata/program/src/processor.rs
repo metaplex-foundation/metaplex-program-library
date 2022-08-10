@@ -345,11 +345,23 @@ pub fn process_update_metadata_accounts_v2(
                 &metadata,
                 false,
                 update_authority_info.is_signer,
-                true,
             )?;
             metadata.data = compatible_data;
-            assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
-            metadata.collection = data.collection;
+            // If the user passes in Collection data, only allow updating if it's unverified
+            // or if it exactly matches the existing collection info.
+            // If the user passes in None for the Collection data then only set it if it's unverified.
+            if data.collection.is_some() {
+                assert_collection_update_is_valid(false, &metadata.collection, &data.collection)?;
+                metadata.collection = data.collection;
+            } else if let Some(collection) = metadata.collection.as_ref() {
+                // Can't change a verified collection in this command.
+                if collection.verified {
+                    return Err(MetadataError::CannotUpdateVerifiedCollection.into());
+                }
+                // If it's unverified, it's ok to set to None.
+                metadata.collection = data.collection;
+            }
+            // If already None leave it as None.
             assert_valid_use(&data.uses, &metadata.uses)?;
             metadata.uses = data.uses;
         } else {
@@ -891,8 +903,15 @@ pub fn verify_sized_collection_item(
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata = Metadata::from_account_info(collection_info)?;
+
+    // Don't verify already verified items, otherwise we end up with invalid size data.
+    if let Some(collection) = &metadata.collection {
+        if collection.verified {
+            return Err(MetadataError::AlreadyVerified.into());
+        }
+    }
 
     assert_collection_verify_is_valid(
         &metadata,
@@ -918,7 +937,7 @@ pub fn verify_sized_collection_item(
         )?;
     }
 
-    // If the NFT has collection data, we set it to be verified and then update the collection
+    // If the NFT has unverified collection data, we set it to be verified and then update the collection
     // size on the Collection Parent.
     if let Some(collection) = &mut metadata.collection {
         msg!("Verifying sized collection item");
@@ -1009,8 +1028,15 @@ pub fn unverify_sized_collection_item(
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata = Metadata::from_account_info(collection_info)?;
+
+    // Don't unverify already unverified items, otherwise we end up with invalid size data.
+    if let Some(collection) = &metadata.collection {
+        if !collection.verified {
+            return Err(MetadataError::AlreadyUnverified.into());
+        }
+    }
 
     assert_collection_verify_is_valid(
         &metadata,
@@ -1508,6 +1534,13 @@ pub fn set_and_verify_sized_collection_item(
     let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let mut collection_metadata: Metadata = Metadata::from_account_info(collection_info)?;
 
+    // Don't verify already verified items, otherwise we end up with invalid size data.
+    if let Some(collection) = metadata.collection {
+        if collection.verified {
+            return Err(MetadataError::AlreadyVerified.into());
+        }
+    }
+
     if metadata.update_authority != *update_authority.key
         || metadata.update_authority != collection_metadata.update_authority
     {
@@ -1833,6 +1866,11 @@ pub fn set_collection_size(
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
     let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
+    // Check that the update authority or delegate is a signer.
+    if !collection_update_authority_account_info.is_signer {
+        return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
+    }
+
     if using_delegated_collection_authority {
         let collection_authority_record = next_account_info(account_info_iter)?;
         assert_has_collection_authority(
@@ -1848,10 +1886,6 @@ pub fn set_collection_size(
             collection_mint_account_info.key,
             None,
         )?;
-
-        if !collection_update_authority_account_info.is_signer {
-            return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
-        }
     }
 
     // Only unsized collections can have the size set, and only once.
@@ -1887,6 +1921,15 @@ pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
     // Edition account provided.
     let token_standard = if accounts.len() == 4 {
         let edition_account_info = next_account_info(account_info_iter)?;
+
+        let edition_path = Vec::from([
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_account_info.key.as_ref(),
+            EDITION.as_bytes(),
+        ]);
+        assert_owned_by(edition_account_info, program_id)?;
+        assert_derivation(program_id, edition_account_info, &edition_path)?;
 
         check_token_standard(mint_account_info, Some(edition_account_info))?
     } else {
