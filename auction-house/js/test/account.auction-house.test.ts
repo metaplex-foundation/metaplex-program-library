@@ -8,6 +8,9 @@ import {
   DepositInstructionAccounts,
   DepositInstructionArgs,
   createDepositInstruction,
+  WithdrawInstructionAccounts,
+  WithdrawInstructionArgs,
+  createWithdrawInstruction,
   // createAuctioneerWithdrawInstruction,
 } from 'src/generated';
 import test from 'tape';
@@ -168,10 +171,11 @@ test('test auction-house instructions', async (t) => {
       wallet.publicKey,
     );
 
-    //const auction_house_fee_account_pre_balance = await connection.getBalance(feeAccount);
+    const auction_house_fee_account_pre_balance = await connection.getBalance(feeAccount);
     await amman.airdrop(connection, wallet.publicKey, 2);
     const wallet_sol_pre_balance = await connection.getBalance(wallet.publicKey);
     const deposit_amount = 1000;
+    const expected_balance_post_withdraw = 0;
 
     const depositAccounts: DepositInstructionAccounts = {
       wallet: wallet.publicKey,
@@ -184,24 +188,58 @@ test('test auction-house instructions', async (t) => {
       auctionHouseFeeAccount: feeAccount,
     };
 
-    const args: DepositInstructionArgs = {
+    const deposit_args: DepositInstructionArgs = {
       escrowPaymentBump: escrowPaymentBump,
       amount: deposit_amount,
     };
 
-    const deposit_instruction = createDepositInstruction(depositAccounts, args);
-    const tx = new Transaction().add(deposit_instruction);
-    tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-    /*const txId = */ await transactionHandler.sendAndConfirmTransaction(tx, [wallet], {
+    const deposit_instruction = createDepositInstruction(depositAccounts, deposit_args);
+    const deposit_tx = new Transaction().add(deposit_instruction);
+    deposit_tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+    /*const txId = */ await transactionHandler.sendAndConfirmTransaction(deposit_tx, [wallet], {
       skipPreflight: false,
     });
 
-    const deposit_fee_paid = (await connection.getFeeForMessage(tx.compileMessage())).value;
+    const deposit_fee_paid = (await connection.getFeeForMessage(deposit_tx.compileMessage())).value;
     const wallet_sol_post_balance = await connection.getBalance(wallet.publicKey);
-    const lsol_post_balance = await connection.getBalance(escrowPaymentAccount);
+    const escrow_post_balance = await connection.getBalance(escrowPaymentAccount);
 
     t.equal(wallet_sol_post_balance, wallet_sol_pre_balance - deposit_amount - deposit_fee_paid - REQUIRED_RENT_EXEMPTION, "wallet_sol_post_balance")
-    t.equal(lsol_post_balance, deposit_amount + REQUIRED_RENT_EXEMPTION, "escrow_sol_post_balance")
+    t.equal(escrow_post_balance, deposit_amount + REQUIRED_RENT_EXEMPTION, "escrow_sol_post_balance")
+
+    // withdraw
+    const withdrawAccounts: WithdrawInstructionAccounts = {
+      wallet: wallet.publicKey,
+      receiptAccount: wallet.publicKey,
+      escrowPaymentAccount: escrowPaymentAccount,
+      treasuryMint: WRAPPED_SOL_MINT,
+      authority: authority.publicKey,
+      auctionHouse: auctionHouse,
+      auctionHouseFeeAccount: feeAccount,
+    }
+
+    const withdraw_args: WithdrawInstructionArgs = {
+      escrowPaymentBump: escrowPaymentBump,
+      amount: deposit_amount
+    }
+
+    const withdraw_instruction = createWithdrawInstruction(withdrawAccounts, withdraw_args)
+    const withdraw_tx = new Transaction().add(withdraw_instruction);
+    withdraw_tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+    await transactionHandler.sendAndConfirmTransaction(withdraw_tx, [wallet], {
+      skipPreflight: false,
+    });
+
+    const withdraw_fee_paid = (await connection.getFeeForMessage(withdraw_tx.compileMessage())).value;
+    const escrow_post_withdraw_balance = await connection.getBalance(escrowPaymentAccount);
+    const wallet_sol_post_withdraw_balance = await connection.getBalance(wallet.publicKey);
+
+    t.equal(escrow_post_withdraw_balance, expected_balance_post_withdraw, "escrow balance post withdraw == expected")
+    t.equal(wallet_sol_post_withdraw_balance, wallet_sol_post_balance - withdraw_fee_paid + deposit_amount + REQUIRED_RENT_EXEMPTION, "wallet balance post withdraw == expected");
+    
+    const auction_house_fee_account_post_balance = await connection.getBalance(feeAccount);
+    t.equal(auction_house_fee_account_pre_balance, auction_house_fee_account_post_balance, "auction_house_fee_account_pre_balance == auction_house_fee_account_post_balance");
+    t.end();
   });
   t.ok(true);
 });
