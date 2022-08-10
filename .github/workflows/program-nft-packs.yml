@@ -60,7 +60,6 @@ jobs:
           key: ${{ env.cache_id }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ env.RUSTC_HASH }}
 
       # Build deps
-      - uses: ./.github/actions/build-metaplex
       - uses: ./.github/actions/build-token-metadata
       # Run test
       - name: test-nft-packs-program

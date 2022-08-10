@@ -62,7 +62,6 @@ jobs:
             env.RUSTC_HASH }}
 
       # Build deps
-      - uses: ./.github/actions/build-metaplex
       - uses: ./.github/actions/build-token-metadata
 
       # Run test
