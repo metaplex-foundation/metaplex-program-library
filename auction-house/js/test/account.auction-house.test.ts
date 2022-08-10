@@ -5,6 +5,10 @@ import {
   CreateAuctionHouseInstructionAccounts,
   CreateAuctionHouseInstructionArgs,
   createCreateAuctionHouseInstruction,
+  DepositInstructionAccounts,
+  DepositInstructionArgs,
+  createDepositInstruction,
+  // createAuctioneerWithdrawInstruction,
 } from 'src/generated';
 import test from 'tape';
 import spok from 'spok';
@@ -57,6 +61,16 @@ export const getAuctionHouseTreasuryAcct = async (
   );
 };
 
+export const getAuctionHouseBuyerEscrow = async (
+  auctionHouse: PublicKey,
+  wallet: PublicKey,
+): Promise<[PublicKey, number]> => {
+  return await PublicKey.findProgramAddress(
+    [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), wallet.toBuffer()],
+    AUCTION_HOUSE_PROGRAM_ID,
+  );
+};
+
 test('account auction-house: round trip serialization', async (t) => {
   const [creator] = quickKeypair();
   const [auctionHouseTreasury] = quickKeypair();
@@ -99,10 +113,11 @@ test('account auction-house: round trip serialization', async (t) => {
 });
 
 test('test auction-house instructions', async (t) => {
+  const authority = Keypair.generate();
+  const connection = new Connection(connectionURL, 'confirmed');
+
   test('instruction auction-house: create auction-house', async (t) => {
-    const authority = Keypair.generate();
     const treasuryWithdrawal = Keypair.generate();
-    const connection = new Connection(connectionURL, 'confirmed');
     const transactionHandler = amman.payerTransactionHandler(connection, authority);
     await amman.airdrop(connection, authority.publicKey, 2);
 
@@ -134,6 +149,41 @@ test('test auction-house instructions', async (t) => {
     const tx = new Transaction().add(create_ah_instruction);
     tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
     const txId = await transactionHandler.sendAndConfirmTransaction(tx, [authority], {
+      skipPreflight: false,
+    });
+    t.ok(txId);
+  });
+  test('instruction auction-house: deposit and withdraw', async (t) => {
+    const wallet = Keypair.generate();
+    const transactionHandler = amman.payerTransactionHandler(connection, wallet);
+    const [auctionHouse, {}] = await getAuctionHouse(authority.publicKey, WRAPPED_SOL_MINT);
+    const [feeAccount, {}] = await getAuctionHouseFeeAcct(auctionHouse);
+    const [escrowPaymentAccount, escrowPaymentBump] = await getAuctionHouseBuyerEscrow(
+      auctionHouse,
+      wallet.publicKey,
+    );
+
+    await amman.airdrop(connection, wallet.publicKey, 2);
+    const depositAccounts: DepositInstructionAccounts = {
+      wallet: wallet.publicKey,
+      paymentAccount: wallet.publicKey,
+      transferAuthority: authority.publicKey,
+      escrowPaymentAccount: escrowPaymentAccount,
+      treasuryMint: WRAPPED_SOL_MINT,
+      authority: authority.publicKey,
+      auctionHouse: auctionHouse,
+      auctionHouseFeeAccount: feeAccount,
+    };
+
+    const args: DepositInstructionArgs = {
+      escrowPaymentBump: escrowPaymentBump,
+      amount: 1000,
+    };
+
+    const deposit_instruction = createDepositInstruction(depositAccounts, args);
+    const tx = new Transaction().add(deposit_instruction);
+    tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+    const txId = await transactionHandler.sendAndConfirmTransaction(tx, [wallet], {
       skipPreflight: false,
     });
 
