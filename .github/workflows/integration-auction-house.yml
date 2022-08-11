@@ -101,3 +101,4 @@ jobs:
       - name: stop-local-test-validator
         working-directory: ./auction-house/js
         run: DEBUG=amman* yarn amman:stop 
+
