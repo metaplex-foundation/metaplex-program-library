@@ -1,7 +1,9 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
-    assertions::collection::assert_master_edition, instruction::approve_collection_authority,
-    state::Metadata, utils::create_or_allocate_account_raw,
+    assertions::collection::assert_master_edition,
+    instruction::approve_collection_authority,
+    state::{Metadata, TokenMetadataAccount},
+    utils::create_or_allocate_account_raw,
 };
 use solana_program::program::invoke;
 
