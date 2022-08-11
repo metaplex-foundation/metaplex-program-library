@@ -68,7 +68,7 @@ pub fn process_hash(args: HashArgs) -> Result<()> {
         );
         std::process::exit(0);
     } else {
-        return Err(anyhow!("No hidden settings found in config file."));
+        Err(anyhow!("No hidden settings found in config file."))
     }
 }
 

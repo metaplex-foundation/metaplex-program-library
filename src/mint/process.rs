@@ -91,7 +91,7 @@ pub async fn process_mint(args: MintArgs) -> Result<()> {
     let receiver_pubkey = match args.receiver {
         Some(receiver_id) => Pubkey::from_str(&receiver_id)
             .map_err(|_| anyhow!("Failed to parse receiver pubkey: {}", receiver_id))?,
-        None => candy_machine_state.wallet,
+        None => sugar_config.keypair.pubkey(),
     };
     println!("\nMinting to {}", &receiver_pubkey);
 
