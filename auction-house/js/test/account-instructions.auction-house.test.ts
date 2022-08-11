@@ -200,9 +200,13 @@ test('test auction-house instructions', async (t) => {
     const deposit_instruction = createDepositInstruction(depositAccounts, deposit_args);
     const deposit_tx = new Transaction().add(deposit_instruction);
     deposit_tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-    /*const txId = */ await transactionHandler.sendAndConfirmTransaction(deposit_tx, [wallet], {
-      skipPreflight: false,
-    });
+    /*const txId = */ await transactionHandler.sendAndConfirmTransaction(
+      deposit_tx,
+      [wallet, authority],
+      {
+        skipPreflight: false,
+      },
+    );
 
     const deposit_fee_paid = (await connection.getFeeForMessage(deposit_tx.compileMessage())).value;
     const wallet_sol_post_balance = await connection.getBalance(wallet.publicKey);
@@ -238,7 +242,7 @@ test('test auction-house instructions', async (t) => {
     const withdraw_instruction = createWithdrawInstruction(withdrawAccounts, withdraw_args);
     const withdraw_tx = new Transaction().add(withdraw_instruction);
     withdraw_tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-    await transactionHandler.sendAndConfirmTransaction(withdraw_tx, [wallet], {
+    await transactionHandler.sendAndConfirmTransaction(withdraw_tx, [wallet, authority], {
       skipPreflight: false,
     });
 
