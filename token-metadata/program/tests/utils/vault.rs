@@ -30,7 +30,7 @@ impl Vault {
         context: &mut ProgramTestContext,
         amount: u64,
         metadata: &Metadata,
-    ) -> transport::Result<(Pubkey, Pubkey)> {
+    ) -> solana_program_test::Result<(Pubkey, Pubkey)> {
         let vault_pubkey = self.keypair.pubkey();
         let metaplex_token_vault_id = mpl_token_vault::id();
 
