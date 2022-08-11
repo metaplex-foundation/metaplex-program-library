@@ -20,7 +20,7 @@ use {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for update call
 pub struct UpdateMetadataAccountArgs {
     pub data: Option<Data>,
@@ -49,7 +49,7 @@ pub struct UpdateMetadataAccountArgsV2 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for create call
 pub struct CreateMetadataAccountArgs {
     /// Note that unique metadatas are disabled for now.
