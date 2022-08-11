@@ -13,6 +13,8 @@ import {
 } from 'src/generated';
 import test from 'tape';
 import { Amman } from '@metaplex-foundation/amman-client';
+import { LOCALHOST } from '@metaplex-foundation/amman';
+const connectionURL = LOCALHOST;
 
 const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
 export const AUCTION_HOUSE = 'auction_house';
@@ -23,7 +25,6 @@ const REQUIRED_RENT_EXEMPTION = 890_880;
 export const AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
   'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
 );
-const connectionURL = 'http://localhost:8899';
 export const amman = Amman.instance({
   knownLabels: { ['hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk']: 'Auction House' },
   log: console.log,
