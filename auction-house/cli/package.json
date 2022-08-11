@@ -9,7 +9,8 @@
     "format:check": "prettier --loglevel warn --check \"**/*.{ts,js,json,yaml}\"",
     "lint:eslint": "eslint '{src,test}/**/*.{ts,tsx}'",
     "lint:fix": "prettier --write '{src,test}/**/*.{ts,tsx}' && eslint --fix '{src,test}/**/*.{ts,tsx}'",
-    "test": "jest"
+    "test": "jest",
+    "build": "yarn tsc -p ./src"
   },
   "pkg": {
     "scripts": "./build/**/*.{js|json}"

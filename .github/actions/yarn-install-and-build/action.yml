@@ -28,6 +28,10 @@ inputs:
     description: If true it will build the auction_house package
     required: false
     default: false
+  build_auction_house_cli:
+    description: If true it will build the auction_house CLI package
+    required: false
+    default: false
 
 runs:
   using: composite
@@ -95,6 +99,16 @@ runs:
         echo 'Install and Build auction_house: yarn build'
         yarn build
       working-directory: ./auction-house/js 
+      shell: bash
+
+    - name: Install and Build auction-house CLI
+      if: inputs.build_auction_house_cli == 'true'
+      run: |
+        echo 'Install and Build auction_house CLI: yarn install'
+        yarn install
+        echo 'Install and Build auction_house CLI: yarn build'
+        yarn build
+      working-directory: ./auction-house/cli 
       shell: bash
 
     ##############

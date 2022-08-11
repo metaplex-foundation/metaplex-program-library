@@ -67,6 +67,13 @@ jobs:
           working_dir: ./auction-house/js
           build_auction_house: true
 
+      # Install CLI deps
+      - uses: ./.github/actions/yarn-install-and-build
+        with: 
+          cache_id: sdk-auction-house
+          working_dir: ./auction-house/cli
+          build_auction_house_cli: true
+
       # Run integration test
       - name: start-local-test-validator
         working-directory: ./auction-house/js
