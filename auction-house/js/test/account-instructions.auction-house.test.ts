@@ -153,7 +153,7 @@ test('test auction-house instructions', async (t) => {
       feePayerBump: feeBump,
       treasuryBump: treasuryBump,
       sellerFeeBasisPoints: 250,
-      requiresSignOff: false,
+      requiresSignOff: true,
       canChangeSalePrice: false,
     };
     const create_ah_instruction = createCreateAuctionHouseInstruction(accounts, args);
