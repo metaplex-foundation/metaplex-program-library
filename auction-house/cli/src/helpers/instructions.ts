@@ -1,3 +1,6 @@
+// @ts-nocheck
+// Errors from this file broke the build for 
+// auction-house/js which references it in tests
 import {
   PublicKey,
   SystemProgram,

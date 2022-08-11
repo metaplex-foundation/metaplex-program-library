@@ -9,6 +9,12 @@ import {
 import { AuctionHouse, AuctionHouseArgs } from 'src/generated';
 import test from 'tape';
 import spok from 'spok';
+import {
+  getAuctionHouse,
+  getAuctionHouseFeeAcct,
+  getAuctionHouseTreasuryAcct,
+  getAuctionHouseBuyerEscrow,
+} from '../cli/src/helpers/accounts';
 
 import {
   CreateAuctionHouseInstructionAccounts,
@@ -27,52 +33,13 @@ import { LOCALHOST } from '@metaplex-foundation/amman';
 const connectionURL = LOCALHOST;
 
 const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
-const AUCTION_HOUSE = 'auction_house';
-const FEE_PAYER = 'fee_payer';
-const TREASURY = 'treasury';
 const REQUIRED_RENT_EXEMPTION = 890_880;
 
 const AUCTION_HOUSE_PROGRAM_ID = new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk');
 const amman = Amman.instance({
-  knownLabels: { ['hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk']: 'Auction House' },
+  knownLabels: { [AUCTION_HOUSE_PROGRAM_ID.toString()]: 'Auction House' },
   log: console.log,
 });
-
-const getAuctionHouse = async (
-  creator: PublicKey,
-  treasuryMint: PublicKey,
-): Promise<[PublicKey, number]> => {
-  return await PublicKey.findProgramAddress(
-    [Buffer.from(AUCTION_HOUSE), creator.toBuffer(), treasuryMint.toBuffer()],
-    AUCTION_HOUSE_PROGRAM_ID,
-  );
-};
-
-const getAuctionHouseFeeAcct = async (auctionHouse: PublicKey): Promise<[PublicKey, number]> => {
-  return await PublicKey.findProgramAddress(
-    [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), Buffer.from(FEE_PAYER)],
-    AUCTION_HOUSE_PROGRAM_ID,
-  );
-};
-
-const getAuctionHouseTreasuryAcct = async (
-  auctionHouse: PublicKey,
-): Promise<[PublicKey, number]> => {
-  return await PublicKey.findProgramAddress(
-    [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), Buffer.from(TREASURY)],
-    AUCTION_HOUSE_PROGRAM_ID,
-  );
-};
-
-const getAuctionHouseBuyerEscrow = async (
-  auctionHouse: PublicKey,
-  wallet: PublicKey,
-): Promise<[PublicKey, number]> => {
-  return await PublicKey.findProgramAddress(
-    [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), wallet.toBuffer()],
-    AUCTION_HOUSE_PROGRAM_ID,
-  );
-};
 
 function quickKeypair(): [PublicKey, Uint8Array] {
   const kp = Keypair.generate();

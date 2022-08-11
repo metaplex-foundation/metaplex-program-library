@@ -1,3 +1,6 @@
+// @ts-nocheck
+// Errors from this file broke the build for 
+// auction-house/js which references it in tests
 import {
   LAMPORTS_PER_SOL,
   AccountInfo,
@@ -401,6 +404,7 @@ export function getCluster(name: string): string {
   }
 
   throw new Error(`Could not get cluster: ${name}`);
+  //@ts-ignore
   return null;
 }
 
