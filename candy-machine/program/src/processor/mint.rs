@@ -91,7 +91,7 @@ pub struct MintNFT<'info> {
     // token_account_info
     // transfer_authority_info
     // > Only needed if freeze token until after mint is set to true
-    // freeze_pda
+    // freeze_pda (writable)
     // nft_token_account (writable)
     // freeze_ata (writable) // Only needed if spl token mint is enabled
 }
