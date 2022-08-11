@@ -123,7 +123,7 @@ impl PackConfig {
         };
         for i in self.weights.iter() {
             bound = bound.error_sub(i.1).unwrap_or(0);
-            if bound <= 0 {
+            if bound == 0 {
                 return Ok(*i);
             }
         }
