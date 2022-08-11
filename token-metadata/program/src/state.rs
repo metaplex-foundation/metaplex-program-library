@@ -157,7 +157,7 @@ pub struct Data {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct DataV2 {
     /// The name of the asset
     pub name: String,
@@ -313,7 +313,7 @@ pub struct Collection {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(Clone, BorshSerialize, Debug, PartialEq, ShankAccount)]
+#[derive(Clone, BorshSerialize, Debug, PartialEq, Eq, ShankAccount)]
 pub struct Metadata {
     pub key: Key,
     pub update_authority: Pubkey,
