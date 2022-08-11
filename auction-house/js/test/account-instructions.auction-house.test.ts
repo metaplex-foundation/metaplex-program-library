@@ -167,7 +167,7 @@ test('test auction-house instructions', async (t) => {
     const deposit_instruction = createDepositInstruction(depositAccounts, deposit_args);
     const deposit_tx = new Transaction().add(deposit_instruction);
     deposit_tx.recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-    /*const txId = */ await transactionHandler.sendAndConfirmTransaction(
+    await transactionHandler.sendAndConfirmTransaction(
       deposit_tx,
       [wallet, authority],
       {
@@ -176,18 +176,18 @@ test('test auction-house instructions', async (t) => {
     );
 
     const deposit_fee_paid = (await connection.getFeeForMessage(deposit_tx.compileMessage())).value;
-    const wallet_sol_post_balance = await connection.getBalance(wallet.publicKey);
-    const escrow_post_balance = await connection.getBalance(escrowPaymentAccount);
+    const wallet_sol_post_deposit_balance = await connection.getBalance(wallet.publicKey);
+    const escrow_post_deposit_balance = await connection.getBalance(escrowPaymentAccount);
 
     t.equal(
-      wallet_sol_post_balance,
+      wallet_sol_post_deposit_balance,
       wallet_sol_pre_balance - deposit_amount - deposit_fee_paid - REQUIRED_RENT_EXEMPTION,
-      'wallet_sol_post_balance',
+      'wallet_sol_post_deposit_balance',
     );
     t.equal(
-      escrow_post_balance,
+      escrow_post_deposit_balance,
       deposit_amount + REQUIRED_RENT_EXEMPTION,
-      'escrow_sol_post_balance',
+      'escrow_sol_post_deposit_balance',
     );
 
     // withdraw
@@ -225,7 +225,7 @@ test('test auction-house instructions', async (t) => {
     );
     t.equal(
       wallet_sol_post_withdraw_balance,
-      wallet_sol_post_balance - withdraw_fee_paid + deposit_amount,
+      wallet_sol_post_deposit_balance - withdraw_fee_paid + deposit_amount,
       'wallet balance post withdraw == expected',
     );
 
