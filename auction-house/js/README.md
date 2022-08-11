@@ -1,6 +1,6 @@
 # mpl-auction-house
 
-This package contains the auction house contract SDK code.
+This package contains the auction house contract SDK code. 
 
 ## Developing
 
