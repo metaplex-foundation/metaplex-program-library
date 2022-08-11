@@ -18,7 +18,7 @@
     "amman:stop": "DEBUG=\"amman*\" amman stop",
     "test:all": "yarn build && yarn amman:start && yarn test",
     "test:all-custom-ammanrc": "yarn build && yarn amman:start-custom-ammanrc ${0} && yarn test",
-    "test": "tape ./dist/test/*.test.js",
+    "test": "tape ./test/*.test.ts",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
