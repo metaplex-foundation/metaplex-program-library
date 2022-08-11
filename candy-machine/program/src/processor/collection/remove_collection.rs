@@ -33,7 +33,7 @@ pub struct RemoveCollection<'info> {
 pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
     let mint = ctx.accounts.mint.to_account_info();
     let candy_machine = &mut ctx.accounts.candy_machine;
-    candy_machine.assert_not_minted(CandyError::NoChangingCollectionDuringMint)?;
+    candy_machine.assert_not_minted(error!(CandyError::NoChangingCollectionDuringMint))?;
 
     let metadata: Metadata = Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
     if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {

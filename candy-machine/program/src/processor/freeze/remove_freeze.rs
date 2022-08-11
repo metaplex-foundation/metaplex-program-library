@@ -97,7 +97,7 @@ pub fn handle_remove_freeze<'info>(
 
     // Closes the account to enable editing if minting hasn't started
     if candy_machine
-        .assert_not_minted(CandyError::Uninitialized)
+        .assert_not_minted(error!(CandyError::Uninitialized))
         .is_ok()
     {
         freeze_pda.close(ctx.accounts.authority.to_account_info())?;

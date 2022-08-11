@@ -98,9 +98,9 @@ pub struct CandyMachineData {
 }
 
 impl CandyMachine {
-    pub fn assert_not_minted(&self, candy_error: CandyError) -> Result<()> {
+    pub fn assert_not_minted(&self, candy_error: Error) -> Result<()> {
         if self.items_redeemed > 0 {
-            Err(error!(candy_error))
+            Err(candy_error)
         } else {
             Ok(())
         }

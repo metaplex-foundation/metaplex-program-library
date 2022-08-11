@@ -52,7 +52,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let edition = ctx.accounts.edition.to_account_info();
     let authority_record = ctx.accounts.collection_authority_record.to_account_info();
     let candy_machine = &mut ctx.accounts.candy_machine;
-    candy_machine.assert_not_minted(CandyError::NoChangingCollectionDuringMint)?;
+    candy_machine.assert_not_minted(error!(CandyError::NoChangingCollectionDuringMint))?;
     if !candy_machine.data.retain_authority {
         return err!(CandyError::CandyCollectionRequiresRetainAuthority);
     }

@@ -23,7 +23,7 @@ pub struct SetFreeze<'info> {
 
 pub fn handle_set_freeze(ctx: Context<SetFreeze>, freeze_time: i64) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
-    candy_machine.assert_not_minted(CandyError::NoChangingFreezeDuringMint)?;
+    candy_machine.assert_not_minted(error!(CandyError::NoChangingFreezeDuringMint))?;
     let freeze_pda = &mut ctx.accounts.freeze_pda;
     if freeze_time > MAX_FREEZE_TIME {
         return err!(CandyError::MaxFreezeIsOneWeek);
