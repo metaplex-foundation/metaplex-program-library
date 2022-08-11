@@ -22,6 +22,7 @@ pub struct AuctioneerExecuteSale<'info> {
     // Accounts used for Auctioneer
     /// The Listing Config used for listing settings
     #[account(
+        mut,
         seeds=[
             LISTING_CONFIG.as_bytes(),
             seller.key().as_ref(),
@@ -228,6 +229,19 @@ pub fn auctioneer_execute_sale<'info>(
     ];
 
     invoke_signed(&ix, &cpi_accounts.to_account_infos(), &[&auctioneer_seeds])?;
+
+    let listing_config = &ctx.accounts.listing_config.to_account_info();
+    let seller = &ctx.accounts.seller.to_account_info();
+
+    let listing_config_lamports = listing_config.lamports();
+    **seller.lamports.borrow_mut() = seller
+        .lamports()
+        .checked_add(listing_config_lamports)
+        .unwrap();
+    **listing_config.lamports.borrow_mut() = 0;
+
+    let mut source_data = listing_config.data.borrow_mut();
+    source_data.fill(0);
 
     Ok(())
 }
