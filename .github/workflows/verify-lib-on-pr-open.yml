@@ -100,6 +100,11 @@ jobs:
           pkgs=${{ needs.get-changes-scope.outputs.packages }}
           pkgs=(${pkgs//\"})
           for pkg in "${pkgs[@]}"; do
+            if [ ! -d "$pkg/js" ]; then
+              echo "$pkg/js does not exist - skipping"
+              continue
+            fi
+
             echo ">> changing dir $pkg/js"
             cd "$pkg/js"
             echo ">> setup local pcakage dependencies with yarn"
