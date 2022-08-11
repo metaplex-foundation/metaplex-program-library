@@ -10,7 +10,7 @@ pub struct Cancel<'info> {
     /// CHECK: Verified in cancel_logic.
     /// User wallet account.
     #[account(mut)]
-    pub wallet: Signer<'info>,
+    pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]
@@ -30,9 +30,9 @@ pub struct Cancel<'info> {
             auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
         ],
-        bump=auction_house.bump,
-        has_one=authority,
-        has_one=auction_house_fee_account
+        bump = auction_house.bump,
+        has_one = authority,
+        has_one = auction_house_fee_account
     )]
     pub auction_house: Box<Account<'info, AuctionHouse>>,
 
@@ -45,7 +45,7 @@ pub struct Cancel<'info> {
             auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
         ],
-        bump=auction_house.fee_payer_bump
+        bump = auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
@@ -79,7 +79,7 @@ pub struct AuctioneerCancel<'info> {
     /// CHECK: Wallet validated as owner in cancel logic.
     /// User wallet account.
     #[account(mut)]
-    pub wallet: Signer<'info>,
+    pub wallet: UncheckedAccount<'info>,
 
     /// SPL token account containing the token of the sale to be canceled.
     #[account(mut)]

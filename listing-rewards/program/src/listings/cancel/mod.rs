@@ -5,14 +5,17 @@ use crate::{
     state::{Listing, RewardCenter, RewardableCollection},
     MetadataAccount,
 };
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token::{Mint, Token, TokenAccount};
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
     cpi::accounts::AuctioneerCancel,
+    instruction::AuctioneerCancel as AuctioneerCancelParams,
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
+use solana_program::{instruction::Instruction, program::invoke_signed};
+
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CancelListingParams {
@@ -40,12 +43,11 @@ pub struct CancelListing<'info> {
     pub listing: Account<'info, Listing>,
 
     /// The collection eligable for rewards
-    #[
-        account(
-            seeds = [
-                REWARDABLE_COLLECTION.as_bytes(),
-                reward_center.key().as_ref(),
-                metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
+    #[account(
+        seeds = [
+            REWARDABLE_COLLECTION.as_bytes(),
+            reward_center.key().as_ref(),
+            metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
         ],
         bump = rewardable_collection.bump
     )]
@@ -148,24 +150,43 @@ pub fn handler(
         &[reward_center.bump],
     ]];
 
-    let cancel_accounts_ctx = CpiContext::new_with_signer(
-        ctx.accounts.auction_house_program.to_account_info(),
-        AuctioneerCancel {
-            wallet: ctx.accounts.wallet.to_account_info(),
-            token_account: ctx.accounts.token_account.to_account_info(),
-            token_mint: ctx.accounts.token_mint.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            trade_state: ctx.accounts.trade_state.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
-            ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-        },
-        reward_center_signer_seeds,
-    );
+    let auction_house_program = ctx.accounts.auction_house_program.to_account_info();
 
-    mpl_auction_house::cpi::auctioneer_cancel(cancel_accounts_ctx, price, token_size)?;
+    let cancel_listing_ctx_accounts = AuctioneerCancel {
+        wallet: ctx.accounts.wallet.to_account_info(),
+        token_account: ctx.accounts.token_account.to_account_info(),
+        token_mint: ctx.accounts.token_mint.to_account_info(),
+        auction_house: ctx.accounts.auction_house.to_account_info(),
+        auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
+        trade_state: ctx.accounts.trade_state.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
+        auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
+        ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+    };
+
+    let cancel_listing_params = AuctioneerCancelParams {
+        buyer_price: price,
+        token_size,
+    };
+
+    let signer_required_keys = vec![
+        ctx.accounts.reward_center.key(),
+        ctx.accounts.wallet.key(),
+    ];
+
+    let cancel_listing_ix = Instruction {
+        program_id: auction_house_program.key(),
+        data: cancel_listing_params.data(),
+        accounts: cancel_listing_ctx_accounts.to_account_metas(None).into_iter().map(|mut account| {
+            if signer_required_keys.contains(&account.pubkey) {
+                account.is_signer = true;
+            }
+            account
+        }).collect()
+    };
+
+    invoke_signed(&cancel_listing_ix, &cancel_listing_ctx_accounts.to_account_infos(), &reward_center_signer_seeds)?;
 
     Ok(())
 }

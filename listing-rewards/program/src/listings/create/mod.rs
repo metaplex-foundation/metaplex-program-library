@@ -247,7 +247,7 @@ pub fn handler(
         token_size,
     };
 
-    let signer_required_keys = [
+    let signer_required_keys = vec![
         ctx.accounts.reward_center.key(),
         ctx.accounts.wallet.key(),
     ];
