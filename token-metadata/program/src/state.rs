@@ -126,7 +126,7 @@ where {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Copy)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Copy)]
 pub enum Key {
     Uninitialized,
     EditionV1,
@@ -141,7 +141,7 @@ pub enum Key {
 }
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, Default, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Default, PartialEq, Eq, Debug, Clone)]
 pub struct Data {
     /// The name of the asset
     pub name: String,
@@ -190,7 +190,7 @@ impl DataV2 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum UseMethod {
     Burn,
     Multiple,
@@ -199,7 +199,7 @@ pub enum UseMethod {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum CollectionDetails {
     V1 { size: u64 },
 }
@@ -216,7 +216,7 @@ pub struct Uses {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub enum TokenStandard {
     NonFungible,        // This is a master edition
     FungibleAsset,      // A token with metadata that can also have attrributes
@@ -305,7 +305,7 @@ impl CollectionAuthorityRecord {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct Collection {
     pub verified: bool,
     pub key: Pubkey,
@@ -728,7 +728,7 @@ impl ReservationList for ReservationListV2 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct Reservation {
     pub address: Pubkey,
     pub spots_remaining: u64,
@@ -829,7 +829,7 @@ impl ReservationList for ReservationListV1 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ReservationV1 {
     pub address: Pubkey,
     pub spots_remaining: u8,
