@@ -1756,6 +1756,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-auction"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8d763de66c9f224482208e621ef0e8e28056e0aeed2eb0ba796dead291a4985"
+dependencies = [
+ "arrayref",
+ "borsh 0.9.3",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
 name = "mpl-fixed-price-sale"
 version = "0.2.3"
 dependencies = [
@@ -1771,12 +1786,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "mpl-metaplex"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "426eee9c8c553b340db442bb3b3299ef97203c7a370a9cf819dbe1d3c7356a29"
+dependencies = [
+ "arrayref",
+ "borsh 0.9.3",
+ "mpl-auction",
+ "mpl-token-metadata",
+ "mpl-token-vault",
+ "num-derive",
+ "num-traits",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
 name = "mpl-nft-packs"
 version = "0.1.0"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
+ "mpl-metaplex",
  "mpl-token-metadata",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "num_enum",
