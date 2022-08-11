@@ -1,0 +1,98 @@
+# required permissions:
+#   id-token: write for writing to github
+#   contents: write for updating package contents
+
+name: "Publish to updated package artifacts"
+description: "Publish to NPM registry and push updates to Github"
+inputs:
+  # cannot load token directly in action, so we need to pass it in
+  npm-token:
+    description: "NPM token for authenticated requests"
+    required: true
+  github-token:
+    description: "Github token for authenticated requests"
+    required: true
+  path-to-package-dir:
+    description: "Path to the package to update's directory"
+    required: true
+  pull-number:
+    description: "Pull request numeric ID. If this is empty, expect a commit-sha with an associated PR."
+    required: false
+  commit-sha:
+    description: "Commit SHA of code to publish"
+    required: false
+  branch:
+    description: "Branch to update"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Get PR for push event HEAD commit
+      # only fetch PR for commit if pull-number is not specified
+      if: ${{ inputs.pull-number == '' }}
+      uses: ./.github/actions/get-pr-for-commit
+      id: get-pr-for-commit
+      with:
+        commit-sha: ${{ inputs.commit-sha }}
+
+    - name: Decide the value of pull-number
+      id: set-pull-number
+      shell: bash
+      run: |
+        if [[ '${{ inputs.pull-number }}' != '' ]]
+        then
+            echo "::set-output name=pull-number::${{ inputs.pull-number }}"
+        else
+            echo "::set-output name=pull-number::${{ steps.get-pr-for-commit.outputs.pull-number }}"
+        fi
+
+    - name: Map PR review to version update
+      if: steps.set-pull-number.outputs.pull-number > 0
+      uses: ./.github/actions/map-pr-review-to-version
+      id: map-pr-review-to-version
+      with:
+        pull-number: ${{ steps.set-pull-number.outputs.pull-number }}
+
+    - name: Install dependencies && upgrade package version
+      # this prevents any subsequent steps from running in the event there is (1) no version update or (2) no PR associated with the commit
+      if: contains(fromJson('["", "none"]'), steps.map-pr-review-to-version.outputs.version) == false
+      id: update-package-version
+      shell: bash
+      run: |
+        cd $PATH_TO_PACKAGE_DIR
+        yarn install
+        git config user.name github-actions[bot]
+        git config user.email github-actions[bot]@users.noreply.github.com
+        npm version ${{ steps.map-pr-review-to-version.outputs.version }}
+        echo "\n\nLog after update"
+        git log
+        echo "\n\n"
+      env:
+        PATH_TO_PACKAGE_DIR: ${{ inputs.path-to-package-dir }}
+
+    - name: NPM login
+      if: contains(fromJson('["", "none"]'), steps.map-pr-review-to-version.outputs.version) == false
+      shell: bash
+      run: |
+        echo "//registry.npmjs.org/:_authToken=${NPM_PUBLISH_TOKEN}" > ~/.npmrc
+      env:
+        NPM_PUBLISH_TOKEN: ${{ inputs.npm-token }}
+
+    - name: Publish artifacts to NPM
+      if: contains(fromJson('["", "none"]'), steps.map-pr-review-to-version.outputs.version) == false
+      run: npm publish $PATH_TO_PACKAGE_DIR
+      shell: bash
+      env:
+        PATH_TO_PACKAGE_DIR: ${{ inputs.path-to-package-dir }}
+
+    - name: Push changes to Github
+      if: contains(fromJson('["", "none"]'), steps.map-pr-review-to-version.outputs.version) == false
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ inputs.github-token }}
+        branch: ${{ inputs.branch }}

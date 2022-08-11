@@ -21,6 +21,7 @@ jobs:
         filters: |
           core:
             - 'core/**'
+
   build-lint-and-test-core:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' }}

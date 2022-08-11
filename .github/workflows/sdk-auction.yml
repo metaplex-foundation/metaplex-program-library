@@ -24,6 +24,7 @@ jobs:
             - 'core/**'
           package:
             - 'auction/**'
+
   build-lint-and-test-auction:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}

@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category ConvertMasterEditionV1ToV2
  * @category generated
  */
-const ConvertMasterEditionV1ToV2Struct = new beet.BeetArgsStruct<{
+export const ConvertMasterEditionV1ToV2Struct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
 }>([['instructionDiscriminator', beet.u8]], 'ConvertMasterEditionV1ToV2InstructionArgs');
 /**
@@ -32,7 +32,7 @@ export type ConvertMasterEditionV1ToV2InstructionAccounts = {
   printingMint: web3.PublicKey;
 };
 
-const convertMasterEditionV1ToV2InstructionDiscriminator = 12;
+export const convertMasterEditionV1ToV2InstructionDiscriminator = 12;
 
 /**
  * Creates a _ConvertMasterEditionV1ToV2_ instruction.
@@ -44,32 +44,31 @@ const convertMasterEditionV1ToV2InstructionDiscriminator = 12;
  */
 export function createConvertMasterEditionV1ToV2Instruction(
   accounts: ConvertMasterEditionV1ToV2InstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { masterEdition, oneTimeAuth, printingMint } = accounts;
-
   const [data] = ConvertMasterEditionV1ToV2Struct.serialize({
     instructionDiscriminator: convertMasterEditionV1ToV2InstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: oneTimeAuth,
+      pubkey: accounts.oneTimeAuth,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: printingMint,
+      pubkey: accounts.printingMint,
       isWritable: true,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

@@ -27,7 +27,7 @@ pub struct Deposit<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
@@ -78,7 +78,7 @@ impl<'info> From<AuctioneerDeposit<'info>> for Deposit<'info> {
             transfer_authority: a.transfer_authority,
             escrow_payment_account: a.escrow_payment_account,
             treasury_mint: a.treasury_mint,
-            authority: a.auctioneer_authority,
+            authority: a.authority,
             auction_house: a.auction_house,
             auction_house_fee_account: a.auction_house_fee_account,
             token_program: a.token_program,
@@ -96,8 +96,17 @@ pub fn deposit<'info>(
     let auction_house = &ctx.accounts.auction_house;
 
     // If it has an auctioneer authority delegated must use auctioneer_* handler.
-    if auction_house.has_auctioneer {
+    if auction_house.has_auctioneer && auction_house.scopes[AuthorityScope::Deposit as usize] {
         return Err(AuctionHouseError::MustUseAuctioneerHandler.into());
+    }
+
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
     }
 
     deposit_logic(ctx.accounts, escrow_payment_bump, amount)
@@ -128,16 +137,20 @@ pub struct AuctioneerDeposit<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        bump=escrow_payment_bump
+        bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
 
     /// Auction House instance treasury mint account.
     pub treasury_mint: Box<Account<'info, Mint>>,
 
+    /// CHECK: Validated in deposit_logic.
+    /// Auction House instance authority account.
+    pub authority: UncheckedAccount<'info>,
+
     /// CHECK: Validated in ah_auctioneer_pda seeds and deposit_logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
-    pub auctioneer_authority: UncheckedAccount<'info>,
+    pub auctioneer_authority: Signer<'info>,
 
     /// Auction House instance PDA account.
     #[account(
@@ -147,6 +160,7 @@ pub struct AuctioneerDeposit<'info> {
             auction_house.treasury_mint.as_ref()
         ],
         bump=auction_house.bump,
+        has_one=authority,
         has_one=treasury_mint,
         has_one=auction_house_fee_account
     )]
@@ -173,9 +187,9 @@ pub struct AuctioneerDeposit<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump = auction_house.auctioneer_pda_bump
+        bump = ah_auctioneer_pda.bump
     )]
-    pub ah_auctioneer_pda: UncheckedAccount<'info>,
+    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
 
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
@@ -196,11 +210,20 @@ pub fn auctioneer_deposit<'info>(
     }
 
     assert_valid_auctioneer_and_scope(
-        &auction_house.key(),
+        auction_house,
         &auctioneer_authority.key(),
         ah_auctioneer_pda,
         AuthorityScope::Deposit,
     )?;
+
+    if escrow_payment_bump
+        != *ctx
+            .bumps
+            .get("escrow_payment_account")
+            .ok_or(AuctionHouseError::BumpSeedNotInHashMap)?
+    {
+        return Err(AuctionHouseError::BumpSeedNotInHashMap.into());
+    }
 
     let mut accounts: Deposit<'info> = (*ctx.accounts).clone().into();
 
@@ -286,10 +309,12 @@ fn deposit_logic<'info>(
     } else {
         assert_keys_equal(payment_account.key(), wallet.key())?;
 
-        // Reach rental exemption and then add deposit amount.
-        let checked_amount = rent_checked_add(escrow_payment_account.to_account_info(), 0)?
-            .checked_add(amount)
+        // Get rental exemption shortfall and then add to deposit amount.
+        let rent_shortfall = verify_deposit(escrow_payment_account.to_account_info(), 0)?;
+        let checked_amount = amount
+            .checked_add(rent_shortfall)
             .ok_or(AuctionHouseError::NumericalOverflow)?;
+
         invoke(
             &system_instruction::transfer(
                 &payment_account.key(),

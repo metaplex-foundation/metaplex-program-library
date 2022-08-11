@@ -1,7 +1,7 @@
 [workspace]
 [package]
 name = "mpl-auction-house"
-version = "1.1.6"
+version = "1.2.4"
 edition = "2021"
 description = "Decentralized Sales Protocol for Solana Tokens"
 authors = ["Metaplex Developers <dev@metaplex.com>"]
@@ -21,12 +21,12 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-solana-program = "~1.9.15"
+solana-program = "~1.9.28"
 anchor-lang = "~0.24.2"
 anchor-spl = "~0.24.2"
 spl-token = { version = "~3.2",  features = ["no-entrypoint"] }
 spl-associated-token-account = {version = "~1.0.3", features = ["no-entrypoint"]}
-mpl-token-metadata = { version="~1.2.7", features = [ "no-entrypoint" ], path="../../token-metadata/program" }
+mpl-token-metadata = { version="~1.2.7", features = [ "no-entrypoint" ] }
 metaplex-token-metadata = { version = "0.0.1", features = [ "no-entrypoint" ] }
 thiserror = "~1.0"
 arrayref = "~0.3.6"
@@ -35,8 +35,8 @@ arrayref = "~0.3.6"
 anchor-client = "~0.24.2"
 shellexpand = "~2.1.0"
 serde_json = "~1.0"
-solana-program = "~1.9.15"
+solana-program = "~1.9.28"
 mpl-testing-utils= {path="../../core/rust/testing-utils" }
-solana-program-test = "~1.9.15"
-solana-sdk = "~1.9.15"
+solana-program-test = "~1.9.28"
+solana-sdk = "~1.9.28"
 env_logger="~0.9.0"

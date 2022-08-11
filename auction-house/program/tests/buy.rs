@@ -26,6 +26,7 @@ async fn buy_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -48,6 +49,7 @@ async fn buy_success() {
         &test_metadata.token.pubkey(),
         &buyer,
         ONE_SOL,
+        1,
     );
     context
         .banks_client
@@ -105,6 +107,7 @@ async fn auctioneer_buy_success() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -136,7 +139,7 @@ async fn auctioneer_buy_success() {
         &ah,
         &test_metadata,
         &buyer,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         ONE_SOL,
     );
 
@@ -146,14 +149,14 @@ async fn auctioneer_buy_success() {
         .await
         .unwrap();
 
-    let ((acc, print_bid_acc), buy_tx) = auctioneer_buy(
+    let (acc, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         ONE_SOL,
     );
 
@@ -170,25 +173,6 @@ async fn auctioneer_buy_success() {
         .expect("Error Getting Trade State")
         .expect("Trade State Empty");
     assert_eq!(bts.data.len(), 1);
-
-    let bid_receipt_account = context
-        .banks_client
-        .get_account(print_bid_acc.receipt)
-        .await
-        .expect("Error Getting Public Bid Receipt")
-        .expect("Public Bid Empty");
-
-    let bid_receipt = BidReceipt::try_deserialize(&mut bid_receipt_account.data.as_ref()).unwrap();
-
-    assert_eq!(bid_receipt.price, ONE_SOL);
-    assert_eq!(bid_receipt.auction_house, acc.auction_house);
-    assert_eq!(bid_receipt.metadata, acc.metadata);
-    assert_eq!(bid_receipt.token_account, Some(acc.token_account));
-    assert_eq!(bid_receipt.buyer, acc.wallet);
-    assert_eq!(bid_receipt.trade_state, acc.buyer_trade_state);
-    assert_eq!(bid_receipt.token_size, 1);
-    assert_eq!(bid_receipt.purchase_receipt, None);
-    assert_eq!(bid_receipt.bookkeeper, buyer.pubkey());
 }
 
 #[tokio::test]
@@ -215,6 +199,7 @@ async fn auctioneer_buy_no_delegate_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -232,14 +217,14 @@ async fn auctioneer_buy_no_delegate_fails() {
         .process_transaction(deposit_tx)
         .await
         .unwrap();
-    let ((_acc, _print_bid_acc), buy_tx) = auctioneer_buy(
+    let (_acc, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         ONE_SOL,
     );
 
@@ -249,7 +234,7 @@ async fn auctioneer_buy_no_delegate_fails() {
         .await
         .unwrap_err();
 
-    assert_error!(error, INVALID_SEEDS);
+    assert_error!(error, ACCOUNT_NOT_INITIALIZED);
 }
 
 #[tokio::test]
@@ -273,6 +258,7 @@ async fn auctioneer_buy_invalid_scope_fails() {
             None,
             10,
             false,
+            1,
         )
         .await
         .unwrap();
@@ -307,7 +293,7 @@ async fn auctioneer_buy_invalid_scope_fails() {
         &ah,
         &test_metadata,
         &buyer,
-        auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         ONE_SOL,
     );
 
@@ -317,14 +303,14 @@ async fn auctioneer_buy_invalid_scope_fails() {
         .await
         .unwrap();
 
-    let ((_, _), buy_tx) = auctioneer_buy(
+    let (_, buy_tx) = auctioneer_buy(
         &mut context,
         &ahkey,
         &ah,
         &test_metadata,
         &test_metadata.token.pubkey(),
         &buyer,
-        &auctioneer_authority.pubkey(),
+        &auctioneer_authority,
         ONE_SOL,
     );
 

@@ -23,7 +23,7 @@ export type CandyMachineArgs = {
   data: CandyMachineData;
 };
 
-const candyMachineDiscriminator = [51, 173, 177, 113, 25, 241, 109, 189];
+export const candyMachineDiscriminator = [51, 173, 177, 113, 25, 241, 109, 189];
 /**
  * Holds the data for the {@link CandyMachine} Account and provides de/serialization
  * functionality for that data
@@ -79,6 +79,18 @@ export class CandyMachine implements CandyMachineArgs {
       throw new Error(`Unable to find CandyMachine account at ${address}`);
     }
     return CandyMachine.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, candyMachineBeet);
   }
 
   /**

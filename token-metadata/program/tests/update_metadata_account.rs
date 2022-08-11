@@ -13,7 +13,6 @@ use solana_sdk::{
     instruction::InstructionError,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -41,6 +40,7 @@ mod update_metadata_account {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();
@@ -82,6 +82,7 @@ mod update_metadata_account {
                 None,
                 10,
                 true,
+                0,
             )
             .await
             .unwrap();

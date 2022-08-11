@@ -149,4 +149,32 @@ pub enum AuctionHouseError {
     // 6036
     #[msg("Invalid seeds or Auction House not delegated")]
     InvalidSeedsOrAuctionHouseNotDelegated,
+
+    // 6037
+    #[msg("The buyer trade state was unable to be initialized.")]
+    BuyerTradeStateNotValid,
+
+    // 6038
+    #[msg("Partial order size and price must both be provided in a partial buy.")]
+    MissingElementForPartialOrder,
+
+    // 6039
+    #[msg("Amount of tokens available for purchase is less than the partial order amount.")]
+    NotEnoughTokensAvailableForPurchase,
+
+    // 6040
+    #[msg("Calculated partial price does not not partial price that was provided.")]
+    PartialPriceMismatch,
+
+    // 6041
+    #[msg("Auction House already delegated.")]
+    AuctionHouseAlreadyDelegated,
+
+    // 6042
+    #[msg("Auctioneer Authority Mismatch")]
+    AuctioneerAuthorityMismatch,
+
+    // 6043
+    #[msg("Insufficient funds in escrow account to purchase.")]
+    InsufficientFunds,
 }

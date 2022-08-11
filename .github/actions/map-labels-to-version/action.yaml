@@ -1,0 +1,43 @@
+name: 'Map labels to version'
+description: 'Map labels assigned to a PR to a specific semvar version for package updates'
+inputs:
+  pull-number:
+    description: 'Pull request number'
+    required: true
+
+outputs:
+  version:
+    description: Semvar version
+    value: ${{ steps.set-version-output.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Fetch PR labels
+      uses: ./.github/actions/fetch-pr-labels
+      id: fetch-pr-labels
+      with:
+        pull-number: ${{ inputs.pull-number }}
+
+    - name: Map labels to version
+      uses: actions/github-script@v4
+      id: parse-labels-for-version
+      with:
+        script: |
+          const isOfType = (lbls, v) => lbls.filter(l => l.toLowerCase() === v).length > 0
+          const labels = ${{ steps.fetch-pr-labels.outputs.labels }}
+          if (labels.length > 0) {
+            if (isOfType(labels, "version:major")) return 'major'
+            if (isOfType(labels, "version:minor")) return 'minor'
+            if (isOfType(labels, "version:patch")) return 'patch'
+          }
+          return 'none'
+
+    - name: Set output path to uploaded file
+      id: set-version-output
+      run: echo "::set-output name=version::$VERSION"
+      shell: bash
+      env:
+        VERSION: ${{ steps.parse-labels-for-version.outputs.result }}

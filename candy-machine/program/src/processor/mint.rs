@@ -24,7 +24,7 @@ use solana_program::{
 use crate::{
     constants::{
         A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
-        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+        CONFIG_LINE_SIZE, CUPCAKE_ID, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
     },
     utils::*,
     CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
@@ -120,6 +120,7 @@ pub fn handle_mint_nft<'info>(
     // Restrict Who can call Candy Machine via CPI
     if !cmp_pubkeys(&current_ix.program_id, &crate::id())
         && !cmp_pubkeys(&current_ix.program_id, &GUMDROP_ID)
+        && !cmp_pubkeys(&current_ix.program_id, &CUPCAKE_ID)
     {
         punish_bots(
             CandyError::SuspiciousTransaction,
@@ -237,6 +238,7 @@ pub fn handle_mint_nft<'info>(
             return Ok(());
         }
         let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
+
         remaining_accounts_counter += 1;
 
         // Eval function used in the gateway CPI
@@ -264,29 +266,52 @@ pub fn handle_mint_nft<'info>(
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::GatewayAppMissing);
             }
+
             let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
+
             if ctx.remaining_accounts.len() <= remaining_accounts_counter {
                 return err!(CandyError::NetworkExpireFeatureMissing);
             }
             let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-            Gateway::verify_and_expire_token_with_eval(
+
+            if Gateway::verify_and_expire_token_with_eval(
                 gateway_app.clone(),
                 gateway_token_info.clone(),
                 payer.deref().clone(),
                 &gatekeeper.gatekeeper_network,
                 network_expire_feature.clone(),
                 eval_function,
+            )
+            .is_err()
+            {
+                punish_bots(
+                    CandyError::GatewayProgramError,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
+                return Ok(());
+            }
+        } else if Gateway::verify_gateway_token_with_eval(
+            gateway_token_info,
+            &payer.key(),
+            &gatekeeper.gatekeeper_network,
+            None,
+            eval_function,
+        )
+        .is_err()
+        {
+            punish_bots(
+                CandyError::GatewayProgramError,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
             )?;
-        } else {
-            Gateway::verify_gateway_token_with_eval(
-                gateway_token_info,
-                &payer.key(),
-                &gatekeeper.gatekeeper_network,
-                None,
-                eval_function,
-            )?;
+            return Ok(());
         }
     }
 
@@ -341,7 +366,7 @@ pub fn handle_mint_nft<'info>(
                             &ctx.remaining_accounts[remaining_accounts_counter];
                         remaining_accounts_counter += 1;
 
-                        let key_check = assert_keys_equal(whitelist_token_mint.key(), ws.mint);
+                        let key_check = assert_keys_equal(&whitelist_token_mint.key(), &ws.mint);
 
                         if key_check.is_err() {
                             punish_bots(
@@ -459,6 +484,7 @@ pub fn handle_mint_nft<'info>(
         let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
         // If we add more extra accounts later on we need to uncomment the following line out.
         // remaining_accounts_counter += 1;
+
         let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
         if token_account.amount < price {

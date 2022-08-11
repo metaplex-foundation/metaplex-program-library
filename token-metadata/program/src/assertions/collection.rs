@@ -3,7 +3,11 @@ use solana_program::{account_info::AccountInfo, program_error::ProgramError, pub
 use crate::{
     error::MetadataError,
     pda::find_collection_authority_account,
-    state::{Collection, CollectionAuthorityRecord, MasterEditionV2, Metadata, TokenStandard},
+    state::{
+        Collection, CollectionAuthorityRecord, MasterEditionV2, Metadata, TokenMetadataAccount,
+        TokenStandard, EDITION, PREFIX,
+    },
+    utils::assert_derivation,
 };
 
 pub fn assert_collection_update_is_valid(
@@ -82,6 +86,19 @@ pub fn assert_collection_verify_is_valid(
             return Err(MetadataError::CollectionNotFound.into());
         }
     }
+
+    assert_derivation(
+        &crate::id(),
+        edition_account_info,
+        &[
+            PREFIX.as_bytes(),
+            crate::id().as_ref(),
+            collection_data.mint.as_ref(),
+            EDITION.as_bytes(),
+        ],
+    )
+    .map_err(|_| MetadataError::CollectionMasterEditionAccountInvalid)?;
+
     assert_master_edition(collection_data, edition_account_info)?;
     Ok(())
 }
@@ -90,7 +107,7 @@ pub fn assert_master_edition(
     collection_data: &Metadata,
     edition_account_info: &AccountInfo,
 ) -> Result<(), ProgramError> {
-    let edition = MasterEditionV2::from_account_info(edition_account_info)
+    let edition = MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info)
         .map_err(|_err: ProgramError| MetadataError::CollectionMustBeAUniqueMasterEdition)?;
     if collection_data.token_standard != Some(TokenStandard::NonFungible)
         || edition.max_supply != Some(0)

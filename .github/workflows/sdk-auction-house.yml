@@ -24,6 +24,7 @@ jobs:
             - 'core/**'
           package:
             - 'auction-house/**'
+
   build-lint-and-test-auction-house:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
@@ -33,6 +34,6 @@ jobs:
       - uses: actions/checkout@v1
       - uses: ./.github/actions/yarn-install-and-verify
         with: 
-          cache_id: sdk-auction  
-          working_dir: ./auction/js
+          cache_id: sdk-auction-house
+          working_dir: ./auction-house/js
           skip_test: true

@@ -6,9 +6,7 @@ use solana_program::{
     system_instruction,
 };
 use solana_program_test::*;
-use solana_sdk::{
-    commitment_config::CommitmentLevel, signature::Keypair, transaction::Transaction, transport,
-};
+use solana_sdk::{signature::Keypair, transaction::Transaction, transport};
 
 use mpl_candy_machine::{
     constants::{CONFIG_ARRAY_START, CONFIG_LINE_SIZE},
@@ -17,17 +15,16 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    core::{get_balance, master_edition_v2::MasterEditionV2},
+    core::MasterEditionV2,
     utils::{
-        candy_manager::{CollectionInfo, TokenInfo, WhitelistInfo},
-        make_config_lines,
+        candy_manager::{CollectionInfo, GatekeeperInfo, TokenInfo, WhitelistInfo},
+        helpers::make_config_lines,
     },
 };
 
 pub fn candy_machine_program_test() -> ProgramTest {
     let mut program = ProgramTest::new("mpl_candy_machine", mpl_candy_machine::id(), None);
     program.add_program("mpl_token_metadata", mpl_token_metadata::id(), None);
-    // program.add_program("solana_gateway_program", solana_gateway::id(), None);
     program
 }
 
@@ -227,6 +224,7 @@ pub async fn set_collection(
     context.banks_client.process_transaction(tx).await
 }
 
+#[allow(dead_code)]
 pub async fn remove_collection(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
@@ -273,6 +271,7 @@ pub async fn mint_nft(
     token_info: TokenInfo,
     whitelist_info: WhitelistInfo,
     collection_info: CollectionInfo,
+    gateway_info: GatekeeperInfo,
 ) -> transport::Result<()> {
     let metadata = new_nft.metadata_pubkey;
     let master_edition = new_nft.pubkey;
@@ -309,6 +308,17 @@ pub async fn mint_nft(
     if token_info.set {
         accounts.push(AccountMeta::new(token_info.minter_account, false));
         accounts.push(AccountMeta::new_readonly(payer.pubkey(), false));
+    }
+
+    if gateway_info.set {
+        accounts.push(AccountMeta::new(gateway_info.gateway_token_info, false));
+
+        if gateway_info.gatekeeper_config.expire_on_use {
+            accounts.push(AccountMeta::new_readonly(gateway_info.gateway_app, false));
+            if let Some(expire_token) = gateway_info.network_expire_feature {
+                accounts.push(AccountMeta::new_readonly(expire_token, false));
+            }
+        }
     }
 
     let data = mpl_candy_machine::instruction::MintNft { creator_bump }.data();

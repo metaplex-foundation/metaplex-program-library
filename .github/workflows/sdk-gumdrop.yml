@@ -24,6 +24,7 @@ jobs:
             - 'core/**'
           package:
             - 'gumdrop/**'
+
   build-lint-and-test-gumdrop:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}

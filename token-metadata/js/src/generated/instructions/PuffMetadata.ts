@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category PuffMetadata
  * @category generated
  */
-const PuffMetadataStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
+export const PuffMetadataStruct = new beet.BeetArgsStruct<{ instructionDiscriminator: number }>(
   [['instructionDiscriminator', beet.u8]],
   'PuffMetadataInstructionArgs',
 );
@@ -29,7 +29,7 @@ export type PuffMetadataInstructionAccounts = {
   metadata: web3.PublicKey;
 };
 
-const puffMetadataInstructionDiscriminator = 14;
+export const puffMetadataInstructionDiscriminator = 14;
 
 /**
  * Creates a _PuffMetadata_ instruction.
@@ -39,22 +39,23 @@ const puffMetadataInstructionDiscriminator = 14;
  * @category PuffMetadata
  * @category generated
  */
-export function createPuffMetadataInstruction(accounts: PuffMetadataInstructionAccounts) {
-  const { metadata } = accounts;
-
+export function createPuffMetadataInstruction(
+  accounts: PuffMetadataInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+) {
   const [data] = PuffMetadataStruct.serialize({
     instructionDiscriminator: puffMetadataInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });
