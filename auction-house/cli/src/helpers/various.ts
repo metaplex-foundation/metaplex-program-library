@@ -404,7 +404,6 @@ export function getCluster(name: string): string {
   }
 
   throw new Error(`Could not get cluster: ${name}`);
-  //@ts-ignore
   return null;
 }
 
