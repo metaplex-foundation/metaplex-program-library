@@ -17,20 +17,18 @@ import { LOCALHOST } from '@metaplex-foundation/amman';
 const connectionURL = LOCALHOST;
 
 const WRAPPED_SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112');
-export const AUCTION_HOUSE = 'auction_house';
-export const FEE_PAYER = 'fee_payer';
-export const TREASURY = 'treasury';
+const AUCTION_HOUSE = 'auction_house';
+const FEE_PAYER = 'fee_payer';
+const TREASURY = 'treasury';
 const REQUIRED_RENT_EXEMPTION = 890_880;
 
-export const AUCTION_HOUSE_PROGRAM_ID = new PublicKey(
-  'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
-);
-export const amman = Amman.instance({
+const AUCTION_HOUSE_PROGRAM_ID = new PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk');
+const amman = Amman.instance({
   knownLabels: { ['hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk']: 'Auction House' },
   log: console.log,
 });
 
-export const getAuctionHouse = async (
+const getAuctionHouse = async (
   creator: PublicKey,
   treasuryMint: PublicKey,
 ): Promise<[PublicKey, number]> => {
@@ -40,16 +38,14 @@ export const getAuctionHouse = async (
   );
 };
 
-export const getAuctionHouseFeeAcct = async (
-  auctionHouse: PublicKey,
-): Promise<[PublicKey, number]> => {
+const getAuctionHouseFeeAcct = async (auctionHouse: PublicKey): Promise<[PublicKey, number]> => {
   return await PublicKey.findProgramAddress(
     [Buffer.from(AUCTION_HOUSE), auctionHouse.toBuffer(), Buffer.from(FEE_PAYER)],
     AUCTION_HOUSE_PROGRAM_ID,
   );
 };
 
-export const getAuctionHouseTreasuryAcct = async (
+const getAuctionHouseTreasuryAcct = async (
   auctionHouse: PublicKey,
 ): Promise<[PublicKey, number]> => {
   return await PublicKey.findProgramAddress(
@@ -58,7 +54,7 @@ export const getAuctionHouseTreasuryAcct = async (
   );
 };
 
-export const getAuctionHouseBuyerEscrow = async (
+const getAuctionHouseBuyerEscrow = async (
   auctionHouse: PublicKey,
   wallet: PublicKey,
 ): Promise<[PublicKey, number]> => {
