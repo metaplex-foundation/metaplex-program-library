@@ -14,7 +14,7 @@ import {
   getAuctionHouseFeeAcct,
   getAuctionHouseTreasuryAcct,
   getAuctionHouseBuyerEscrow,
-} from '../cli/src/helpers/accounts';
+} from '../../cli/src/helpers/accounts';
 
 import {
   CreateAuctionHouseInstructionAccounts,
