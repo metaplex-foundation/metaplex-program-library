@@ -378,7 +378,7 @@ async fn execute_sale_success() {
         .await
         .unwrap();
 
-    assert_eq!(listing_config_closed.is_none(), true);
+    assert!(listing_config_closed.is_none());
 }
 
 #[tokio::test]
@@ -602,7 +602,7 @@ async fn execute_sale_two_bids_success() {
         .await
         .unwrap();
 
-    assert_eq!(listing_config_closed.is_none(), true);
+    assert!(listing_config_closed.is_none());
 }
 
 #[tokio::test]
