@@ -1,0 +1,6 @@
+{
+  "entryPoints": ["src/mpl-bubblegum.ts"],
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "out": "../../docs/bubble-gum"
+}
