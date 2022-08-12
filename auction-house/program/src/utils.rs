@@ -164,7 +164,7 @@ pub fn assert_valid_delegation(
 
 pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
     if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
-        return err!(AuctionHouseError::PublicKeyMismatch);
+        err!(AuctionHouseError::PublicKeyMismatch)
     } else {
         Ok(())
     }
@@ -172,7 +172,7 @@ pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
 
 pub fn assert_keys_equal_err(key1: Pubkey, key2: Pubkey) -> Result<()> {
     if sol_memcmp(key1.as_ref(), key2.as_ref(), PUBKEY_BYTES) != 0 {
-        return err!(AuctionHouseError::PublicKeyMismatch);
+        err!(AuctionHouseError::PublicKeyMismatch)
     } else {
         Ok(())
     }
@@ -240,7 +240,7 @@ pub fn assert_program_cancel_instruction(sighash: &[u8]) -> Result<CancelType> {
 
 pub fn assert_program_instruction_equal(sighash: &[u8], expected_sighash: [u8; 8]) -> Result<()> {
     if sighash != expected_sighash {
-        return err!(AuctionHouseError::InstructionMismatch);
+        err!(AuctionHouseError::InstructionMismatch)
     } else {
         Ok(())
     }
@@ -249,7 +249,7 @@ pub fn assert_program_instruction_equal(sighash: &[u8], expected_sighash: [u8; 8
 pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -> Result<T> {
     let account: T = T::unpack_unchecked(&account_info.data.borrow())?;
     if !account.is_initialized() {
-        return err!(AuctionHouseError::UninitializedAccount);
+        err!(AuctionHouseError::UninitializedAccount)
     } else {
         Ok(account)
     }
@@ -257,7 +257,7 @@ pub fn assert_initialized<T: Pack + IsInitialized>(account_info: &AccountInfo) -
 
 pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {
     if account.owner != owner {
-        return err!(AuctionHouseError::IncorrectOwner);
+        err!(AuctionHouseError::IncorrectOwner)
     } else {
         Ok(())
     }
