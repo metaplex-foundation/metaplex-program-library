@@ -1,0 +1,9 @@
+{
+  "name": "@metaplex-foundation/mpl-candy-wrapper",
+  "version": "0.0.1",
+  "description": "No SDK/JavaScript API is available for this contract",
+  "scripts": {
+    "api:gen": ""
+  },
+  "license": "Apache-2.0"
+}

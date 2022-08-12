@@ -9,7 +9,8 @@
     "metaplex/js",
     "auction-house/js",
     "fixed-price-sale/js",
-    "bubblegum/js"
+    "bubblegum/js",
+    "candy-wrapper/js"
   ],
   "useWorkspaces": true,
   "version": "independent",

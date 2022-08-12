@@ -1180,6 +1180,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@metaplex-foundation/mpl-candy-wrapper@workspace:candy-wrapper/js":
+  version: 0.0.0-use.local
+  resolution: "@metaplex-foundation/mpl-candy-wrapper@workspace:candy-wrapper/js"
+  languageName: unknown
+  linkType: soft
+
 "@metaplex-foundation/mpl-core@^0.6.1, @metaplex-foundation/mpl-core@workspace:core/js":
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-core@workspace:core/js"
