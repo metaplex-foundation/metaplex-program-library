@@ -300,7 +300,7 @@
         },
         {
           "name": "listingConfig",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
