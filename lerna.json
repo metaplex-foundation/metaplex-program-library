@@ -5,7 +5,9 @@
     "auctioneer/js",
     "token-metadata/js",
     "auction-house/js",
-    "fixed-price-sale/js"
+    "fixed-price-sale/js",
+    "bubblegum/js",
+    "candy-wrapper/js"
   ],
   "useWorkspaces": true,
   "version": "independent",
