@@ -345,19 +345,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "771fe0050b883fcc3ea2359b1a96bcfbc090b7116eae7c3c512c7a083fdf23d3"
 
 [[package]]
-name = "bubblegum"
-version = "0.1.0"
-dependencies = [
- "anchor-lang",
- "anchor-spl",
- "bytemuck",
- "gummyroll",
- "mpl-token-metadata",
- "spl-associated-token-account",
- "spl-token",
-]
-
-[[package]]
 name = "bumpalo"
 version = "3.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -821,6 +808,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "mpl-bubblegum"
+version = "0.1.0"
+dependencies = [
+ "anchor-lang",
+ "anchor-spl",
+ "bytemuck",
+ "gummyroll",
+ "mpl-token-metadata",
+ "spl-associated-token-account",
+ "spl-token",
 ]
 
 [[package]]

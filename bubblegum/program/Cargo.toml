@@ -1,12 +1,11 @@
 [package]
-name = "bubblegum"
+name = "mpl-bubblegum"
 version = "0.1.0"
 description = "Created with Anchor"
 edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "bubblegum"
 
 [features]
 no-entrypoint = []
