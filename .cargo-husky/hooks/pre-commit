@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# -e : exit immediately if a command exits with a non-zero status
+# -u : treat unset variables as an error
+set -eu
+
+if ! cargo +nightly fmt -- --check
+then
+    echo "There are some code style issues."
+    echo "Run `cargo +nightly fmt` first."
+    exit 1
+fi
+
+if ! cargo clippy --all-targets -- -D warnings
+then
+    echo "There are some clippy issues."
+    exit 1
+fi
+
+if ! cargo test
+then
+    echo "There are failing tests."
+    exit 1
+fi
+
+exit 0
