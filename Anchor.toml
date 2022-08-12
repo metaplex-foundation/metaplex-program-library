@@ -29,10 +29,6 @@ program = "target/deploy/mpl_fixed_price_sale.so"
 address = "gdrpGjVffourzkdDRrQmySw4aTHr8a3xmQzzxSwFD1a"
 program = "target/deploy/mpl_gumdrop.so"
 
-[[test.genesis]]
-address = "WRAPYChf58WFCnyjXKJHtrPgzKXgHp6MD9aVDqJBbGh"
-program = "target/deploy/candy_wrapper.so"
-
 [workspace]
 members = [
   "token-entangler/program",
@@ -42,24 +38,3 @@ members = [
   "bubblegum/program",
   "candy-wrapper/program"
 ]
-
-[test.validator]
-url = "https://api.mainnet-beta.solana.com"
-
-[[test.validator.clone]]
-address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
-
-[[test.validator.clone]]
-address = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-
-[[test.validator.clone]]
-address = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-
-[[test.validator.clone]]
-address = "GRoLLzvxpxxu2PGNJMMeZPyMxjAUH9pKqxGXV9DGiceU"
-
-[test]
-startup_wait = 10000
-
-[scripts]
-test = "yarn run ts-mocha -p ./tsconfig.build.json -t 1000000 ./**/js/test/*-test.ts"
