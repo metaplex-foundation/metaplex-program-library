@@ -2033,13 +2033,8 @@ dependencies = [
  "anchor-client",
  "borsh",
  "mpl-token-metadata",
-<<<<<<< HEAD
- "mpl-token-vault",
- "num",
-=======
  "mpl-token-vault 0.1.1",
  "num 0.4.0",
->>>>>>> 49c8ac6 (make cargo clippy happy)
  "num-derive",
  "num-traits",
  "rand 0.7.3",
@@ -2058,11 +2053,7 @@ version = "1.3.3"
 dependencies = [
  "arrayref",
  "borsh",
-<<<<<<< HEAD
- "mpl-token-vault",
-=======
  "mpl-token-vault 0.1.0",
->>>>>>> 49c8ac6 (make cargo clippy happy)
  "num-derive",
  "num-traits",
  "shank 0.0.4",
@@ -2074,11 +2065,6 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-vault"
-<<<<<<< HEAD
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36789b99869391fcc1041509729db1183d2abb0ffe62b165fadd9fffba391fde"
-=======
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ade4ef15bc06a6033076c4ff28cba9b42521df5ec61211d6f419415ace2746a"
@@ -2094,7 +2080,6 @@ dependencies = [
 [[package]]
 name = "mpl-token-vault"
 version = "0.1.1"
->>>>>>> 49c8ac6 (make cargo clippy happy)
 dependencies = [
  "borsh",
  "num-derive",
