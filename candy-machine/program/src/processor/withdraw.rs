@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use anchor_lang::AccountsClose;
 
-use crate::constants::FREEZE_FEATURE_INDEX;
+use crate::constants::{FREEZE_FEATURE_INDEX, FREEZE_LOCK_FEATURE_INDEX};
 use crate::{cmp_pubkeys, is_feature_active, CandyError, CandyMachine, CollectionPDA};
 
 /// Withdraw SOL from candy machine account.
@@ -22,6 +22,9 @@ pub fn handle_withdraw_funds<'info>(
     let candy_machine = &ctx.accounts.candy_machine;
     if is_feature_active(&candy_machine.data.uuid, FREEZE_FEATURE_INDEX) {
         return err!(CandyError::NoWithdrawWithFreeze);
+    }
+    if is_feature_active(&candy_machine.data.uuid, FREEZE_LOCK_FEATURE_INDEX) {
+        return err!(CandyError::NoWithdrawWithFrozenFunds);
     }
 
     if !ctx.remaining_accounts.is_empty() {

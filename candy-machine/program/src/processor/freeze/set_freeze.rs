@@ -1,9 +1,9 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::MAX_FREEZE_TIME;
 use crate::{
-    assert_is_ata, constants::FREEZE_FEATURE_INDEX, set_feature_flag, CandyError, CandyMachine,
-    FreezePDA,
+    assert_is_ata,
+    constants::{FREEZE_FEATURE_INDEX, FREEZE_LOCK_FEATURE_INDEX, MAX_FREEZE_TIME},
+    set_feature_flag, CandyError, CandyMachine, FreezePDA,
 };
 
 /// Set the Freeze PDA for the candy machine
@@ -39,5 +39,6 @@ pub fn handle_set_freeze(ctx: Context<SetFreeze>, freeze_time: i64) -> Result<()
             .map_err(|_| CandyError::IncorrectFreezeAta)?;
     }
     set_feature_flag(&mut candy_machine.data.uuid, FREEZE_FEATURE_INDEX);
+    set_feature_flag(&mut candy_machine.data.uuid, FREEZE_LOCK_FEATURE_INDEX);
     Ok(())
 }

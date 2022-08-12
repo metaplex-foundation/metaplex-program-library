@@ -96,8 +96,16 @@ pub enum CandyError {
     MaxFreezeIsOneWeek,
     #[msg("Can't withdraw Candy Machine while freeze is active. Disable freeze first.")]
     NoWithdrawWithFreeze,
+    #[msg(
+        "Can't withdraw Candy Machine while frozen funds need to be redeemed. Unlock funds first."
+    )]
+    NoWithdrawWithFrozenFunds,
     #[msg("Missing required remaining accounts for remove_freeze with token mint.")]
     MissingRemoveFreezeTokenAccounts,
     #[msg("Can't withdraw SPL Token from freeze PDA into itself")]
     InvalidFreezeWithdrawTokenAddress,
+    #[msg("Can't unlock funds while freeze is active. Remove freeze first.")]
+    NoUnlockWhileFreezeActive,
+    #[msg("Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.")]
+    NoUnlockWithNFTsStillFrozen,
 }

@@ -13,6 +13,7 @@ pub const MAX_FREEZE_TIME: i64 = 60 * 60 * 24 * 7;
 
 pub const COLLECTIONS_FEATURE_INDEX: usize = 0;
 pub const FREEZE_FEATURE_INDEX: usize = 1;
+pub const FREEZE_LOCK_FEATURE_INDEX: usize = 2;
 
 pub const COLLECTION_PDA_SIZE: usize = 8 + 32 + 32;
 
