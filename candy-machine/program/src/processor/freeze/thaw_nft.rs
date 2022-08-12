@@ -10,7 +10,7 @@ use crate::{cmp_pubkeys, CandyError, CandyMachine, FreezePDA};
 /// Set the collection PDA for the candy machine
 #[derive(Accounts)]
 pub struct ThawNFT<'info> {
-    #[account(mut, seeds = [b"freeze".as_ref(), candy_machine.key.as_ref()], bump, has_one = candy_machine)]
+    #[account(mut, seeds = [FreezePDA::PREFIX.as_bytes(), candy_machine.key().as_ref()], bump, has_one = candy_machine)]
     freeze_pda: Account<'info, FreezePDA>,
     /// CHECK: account could be empty so must be unchecked. Checked in freeze_pda constraint.
     #[account(mut)]
@@ -36,6 +36,7 @@ pub fn handle_thaw_nft(ctx: Context<ThawNFT>) -> Result<()> {
     let candy_machine = &mut ctx.accounts.candy_machine;
     let current_timestamp = Clock::get()?.unix_timestamp;
     let can_thaw = if candy_machine.data_is_empty() {
+        // shouldn't be possible to get into this state with NFTs still not frozen
         true
     } else {
         let candy_struct: Account<CandyMachine> =
@@ -78,7 +79,6 @@ pub fn handle_thaw_nft(ctx: Context<ThawNFT>) -> Result<()> {
             ],
             &[&freeze_seeds],
         )?;
-        freeze_pda.frozen_count = freeze_pda.frozen_count.saturating_sub(1);
         if freeze_pda.freeze_fee > 0 && freeze_pda.frozen_count > 0 {
             transfer(
                 CpiContext::new(
@@ -91,6 +91,10 @@ pub fn handle_thaw_nft(ctx: Context<ThawNFT>) -> Result<()> {
                 freeze_pda.freeze_fee,
             )?;
         }
+        // if everything is correct, this saturating sub shouldn't be needed.
+        // Just an extra precaution to allow unfreezing if something unexpected were to
+        // happen to the freeze count to allow everyone to still unfreeze
+        freeze_pda.frozen_count = freeze_pda.frozen_count.saturating_sub(1);
     } else {
         msg!("Token account is not frozen!");
     }
