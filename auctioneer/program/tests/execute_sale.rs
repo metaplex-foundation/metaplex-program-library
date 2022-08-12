@@ -335,12 +335,11 @@ async fn execute_sale_success() {
     assert!(buyer_token_before.is_none());
 
     let listing_config_account = context
-          .banks_client
-          .get_account(listing_config_address)
-          .await
-          .unwrap()
-          .unwrap();
-    
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap()
+        .unwrap();
 
     context.banks_client.process_transaction(tx).await.unwrap();
 
@@ -368,15 +367,18 @@ async fn execute_sale_success() {
     let rent = context.banks_client.get_rent().await.unwrap();
     let rent_exempt_min: u64 = rent.minimum_balance(listing_config_account.data.len());
 
-    assert_eq!(seller_before.lamports + fee_minus + rent_exempt_min, seller_after.lamports);
+    assert_eq!(
+        seller_before.lamports + fee_minus + rent_exempt_min,
+        seller_after.lamports
+    );
 
     let listing_config_closed = context
-          .banks_client
-          .get_account(listing_config_address)
-          .await
-          .unwrap();
-    
-    assert_eq!(listing_config_closed.is_none(), true);
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap();
+
+    assert!(listing_config_closed.is_none());
 }
 
 #[tokio::test]
@@ -557,11 +559,11 @@ async fn execute_sale_two_bids_success() {
     assert!(buyer1_token_before.is_none());
 
     let listing_config_account = context
-          .banks_client
-          .get_account(listing_config_address)
-          .await
-          .unwrap()
-          .unwrap();
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap()
+        .unwrap();
 
     context.banks_client.process_transaction(tx).await.unwrap();
 
@@ -589,15 +591,18 @@ async fn execute_sale_two_bids_success() {
     let rent = context.banks_client.get_rent().await.unwrap();
     let rent_exempt_min: u64 = rent.minimum_balance(listing_config_account.data.len());
 
-    assert_eq!(seller_before.lamports + fee_minus + rent_exempt_min, seller_after.lamports);
+    assert_eq!(
+        seller_before.lamports + fee_minus + rent_exempt_min,
+        seller_after.lamports
+    );
 
     let listing_config_closed = context
-          .banks_client
-          .get_account(listing_config_address)
-          .await
-          .unwrap();
-    
-    assert_eq!(listing_config_closed.is_none(), true);
+        .banks_client
+        .get_account(listing_config_address)
+        .await
+        .unwrap();
+
+    assert!(listing_config_closed.is_none());
 }
 
 #[tokio::test]

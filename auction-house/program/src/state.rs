@@ -30,7 +30,7 @@ pub struct Auctioneer {
     pub bump: u8,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, Debug)]
 #[repr(u32)]
 pub enum AuthorityScope {
     Deposit = 0,
