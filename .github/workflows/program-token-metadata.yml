@@ -113,7 +113,7 @@ jobs:
 
       # Run test
       - name: test-token-metadata-program
-        id: run_auction_house_test
+        id: run_token_metadata_test
         working-directory: ./token-metadata/program
         run: |
           cargo +${{ env.RUST_TOOLCHAIN }} test -- --nocapture --test-threads 1
