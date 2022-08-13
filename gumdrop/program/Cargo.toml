@@ -28,3 +28,6 @@ solana-program = "1.9.18"
 spl-token = "3.2.0"
 spl-associated-token-account = { version = "=1.0.3", features = [ "no-entrypoint" ] }
 mpl-token-metadata = { version="=1.2.7", features = [ "no-entrypoint" ] }
+
+[dev-dependencies]
+getrandom = { version = "0.2", features = ["js"] }
