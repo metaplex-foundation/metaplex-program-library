@@ -1274,8 +1274,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "418d37c8b1d42553c93648be529cb70f920d3baf8ef469b74b9638df426e0b4c"
 dependencies = [
  "cfg-if",
+ "js-sys",
  "libc",
  "wasi 0.10.2+wasi-snapshot-preview1",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -1777,6 +1779,7 @@ dependencies = [
  "anchor-client",
  "anchor-lang",
  "anchor-spl",
+ "getrandom 0.2.4",
  "mpl-token-metadata",
  "solana-program",
  "solana-program-test",
@@ -1810,6 +1813,7 @@ version = "0.1.0"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
+ "getrandom 0.2.4",
  "mpl-metaplex",
  "mpl-token-metadata",
  "mpl-token-vault",
@@ -1832,6 +1836,7 @@ dependencies = [
  "anchor-lang",
  "anchor-spl",
  "arrayref",
+ "getrandom 0.2.4",
  "mpl-token-metadata",
  "solana-program-test",
  "solana-sdk",
