@@ -290,7 +290,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
 
     #[tokio::test]
     async fn fail_store_account_mismatch() {
-        let mut program_test = program_test();
+        let program_test = program_test();
         let mut context = program_test.start_with_context().await;
 
         let test_metadata = Metadata::new();
