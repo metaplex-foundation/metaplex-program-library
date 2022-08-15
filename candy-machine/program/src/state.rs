@@ -31,7 +31,7 @@ impl CollectionPDA {
 
 /// Collection PDA account
 #[account]
-#[derive(Default, Debug)]
+#[derive(Default, Debug, PartialEq, Eq)]
 pub struct FreezePDA {
     // duplicate key in order to find the candy machine without txn crawling
     pub candy_machine: Pubkey,   // 32
