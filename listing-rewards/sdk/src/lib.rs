@@ -15,7 +15,7 @@ use mpl_listing_rewards::{
     listings::{cancel::CancelListingParams, create::CreateListingParams},
     offers::{close::CloseOfferParams, create::CreateOfferParams},
     pda,
-    reward_center::CreateRewardCenterParams,
+    reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
     rewardable_collection::{
         create::CreateRewardableCollectionParams, delete::DeleteRewardableCollectionParams,
     },
@@ -26,7 +26,7 @@ pub fn create_reward_center(
     wallet: Pubkey,
     mint: Pubkey,
     auction_house: Pubkey,
-    reward_center_params: CreateRewardCenterParams,
+    create_reward_center_params: CreateRewardCenterParams,
 ) -> Instruction {
     let (reward_center, _) = pda::find_reward_center_address(&auction_house);
     let associated_token_account = get_associated_token_address(&reward_center, &mint);
@@ -45,7 +45,33 @@ pub fn create_reward_center(
     .to_account_metas(None);
 
     let data = instruction::CreateRewardCenter {
-        reward_center_params,
+        create_reward_center_params,
+    }
+    .data();
+
+    Instruction {
+        program_id: id(),
+        accounts,
+        data,
+    }
+}
+
+pub fn edit_reward_center(
+    wallet: Pubkey,
+    auction_house: Pubkey,
+    edit_reward_center_params: EditRewardCenterParams,
+) -> Instruction {
+    let (reward_center, _) = pda::find_reward_center_address(&auction_house);
+
+    let accounts = rewards_accounts::EditRewardCenter {
+        wallet,
+        auction_house,
+        reward_center,
+    }
+    .to_account_metas(None);
+
+    let data = instruction::EditRewardCenter {
+        edit_reward_center_params,
     }
     .data();
 

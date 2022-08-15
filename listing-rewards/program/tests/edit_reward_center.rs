@@ -7,6 +7,7 @@ use mpl_auction_house::pda::find_auction_house_address;
 use mpl_listing_rewards::{reward_center, state};
 use solana_program_test::*;
 
+use solana_sdk::signature::Keypair;
 use spl_token::native_mint;
 
 #[tokio::test]
@@ -19,11 +20,21 @@ async fn create_reward_center_success() {
 
     let (auction_house, _) = find_auction_house_address(&wallet, &mint);
 
-    let reward_center_params = reward_center::CreateRewardCenterParams {
+    let reward_center_params = reward_center::create::CreateRewardCenterParams {
         collection_oracle: None,
         listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,
             reward_payout: 1000,
+        },
+    };
+
+    let test_collection_oracle = Keypair::new().pubkey();
+
+    let edit_reward_center_params = reward_center::edit::EditRewardCenterParams {
+        collection_oracle: Some(test_collection_oracle),
+        listing_reward_rules: state::ListingRewardRules {
+            warmup_seconds: 10 * 24 * 60 * 60,
+            reward_payout: 2000,
         },
     };
 
@@ -53,8 +64,18 @@ async fn create_reward_center_success() {
         reward_center_params,
     );
 
+    let edit_reward_center_ix = mpl_listing_rewards_sdk::edit_reward_center(
+        wallet,
+        auction_house,
+        edit_reward_center_params,
+    );
+
     let tx = Transaction::new_signed_with_payer(
-        &[create_auction_house_id, create_reward_center_ix],
+        &[
+            create_auction_house_id,
+            create_reward_center_ix,
+            edit_reward_center_ix,
+        ],
         Some(&wallet),
         &[&context.payer],
         context.last_blockhash,
