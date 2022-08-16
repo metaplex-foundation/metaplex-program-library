@@ -31,7 +31,7 @@ commiting and pushing the version bump.
 - `preversion`: ensures that the package builds and its tests pass
 - `postversion`: adds and commits the version bump and adds a tag indicating package name and new
   version, i.e. `@metaplex-foundation/mp-core@v0.0.1`
-- `prepublish`: ensures that the package builds and its tests pass again (just to be _really_ sure)
+- `prepublishOnly`: ensures that the package builds and its tests pass again (just to be _really_ sure)
 - `postpublish`: pushes the committed change and new tag to github
 
 In order to version and then publish a package just run the following commands from the folder of
