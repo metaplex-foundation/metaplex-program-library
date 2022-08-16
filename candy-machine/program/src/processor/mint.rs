@@ -23,7 +23,7 @@ use solana_program::{
 };
 use spl_token::instruction::approve;
 
-use crate::constants::FREEZE_FEATURE_INDEX;
+use crate::constants::{COMPUTE_BUDGET, FREEZE_FEATURE_INDEX};
 use crate::{
     constants::{
         A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
@@ -204,6 +204,7 @@ pub fn handle_mint_nft<'info>(
             && !cmp_pubkeys(&program_id, &spl_token::id())
             && !cmp_pubkeys(&program_id, &solana_program::system_program::ID)
             && !cmp_pubkeys(&program_id, &A_TOKEN)
+            && !cmp_pubkeys(&program_id, &COMPUTE_BUDGET)
         {
             msg!("Transaction had ix with program id {}", program_id);
             punish_bots(
