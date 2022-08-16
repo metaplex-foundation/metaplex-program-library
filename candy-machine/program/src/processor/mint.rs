@@ -722,6 +722,7 @@ pub fn handle_mint_nft<'info>(
             ],
             &[&freeze_seeds],
         )?;
+        freeze_pda.exit(&crate::id())?;
     }
 
     Ok(())
