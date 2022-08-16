@@ -320,7 +320,6 @@ pub async fn remove_freeze(
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
         freeze_pda: freeze_info.pda,
-        system_program: system_program::id(),
     }
     .to_account_metas(None);
 
@@ -353,8 +352,7 @@ pub async fn remove_freeze(
 pub async fn thaw_nft(
     context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
-    authority: &Keypair,
-    owner: &Keypair,
+    signer: &Keypair,
     freeze_info: &FreezeInfo,
     nft_info: &MasterEditionManager,
 ) -> transport::Result<()> {
@@ -362,10 +360,10 @@ pub async fn thaw_nft(
         freeze_pda: freeze_info.pda,
         candy_machine: *candy_machine,
         token_account: nft_info.token_account,
-        owner: owner.pubkey(),
+        owner: nft_info.owner.pubkey(),
         mint: nft_info.mint_pubkey,
         edition: nft_info.edition_pubkey,
-        payer: authority.pubkey(),
+        payer: signer.pubkey(),
         token_program: spl_token::ID,
         token_metadata_program: mpl_token_metadata::ID,
         system_program: system_program::id(),
@@ -373,6 +371,37 @@ pub async fn thaw_nft(
     .to_account_metas(None);
 
     let data = mpl_candy_machine::instruction::ThawNft {}.data();
+    let set_ix = Instruction {
+        program_id: mpl_candy_machine::id(),
+        data,
+        accounts,
+    };
+    update_blockhash(context).await?;
+    let tx = Transaction::new_signed_with_payer(
+        &[set_ix],
+        Some(&signer.pubkey()),
+        &[signer],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn unlock_funds(
+    context: &mut ProgramTestContext,
+    candy_machine: &Pubkey,
+    authority: &Keypair,
+    freeze_info: &FreezeInfo,
+) -> transport::Result<()> {
+    let accounts = mpl_candy_machine::accounts::UnlockFunds {
+        freeze_pda: freeze_info.pda,
+        candy_machine: *candy_machine,
+        authority: authority.pubkey(),
+        system_program: system_program::id(),
+    }
+    .to_account_metas(None);
+
+    let data = mpl_candy_machine::instruction::UnlockFunds {}.data();
     let set_ix = Instruction {
         program_id: mpl_candy_machine::id(),
         data,

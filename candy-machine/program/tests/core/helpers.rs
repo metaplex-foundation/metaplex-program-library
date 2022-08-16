@@ -1,4 +1,5 @@
 use solana_program_test::ProgramTestContext;
+use solana_sdk::commitment_config::CommitmentLevel;
 use solana_sdk::transport::TransportError;
 use solana_sdk::{
     account::Account,
@@ -89,7 +90,7 @@ pub fn clone_keypair(keypair: &Keypair) -> Keypair {
 pub async fn get_account(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Account {
     context
         .banks_client
-        .get_account(*pubkey)
+        .get_account_with_commitment(*pubkey, CommitmentLevel::Processed)
         .await
         .expect("account not found")
         .expect("account empty")
