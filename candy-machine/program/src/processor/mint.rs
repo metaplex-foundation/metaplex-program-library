@@ -476,13 +476,13 @@ pub fn handle_mint_nft<'info>(
     }
 
     let wallet_to_use = if is_feature_active(&candy_machine.data.uuid, FREEZE_FEATURE_INDEX) {
-        let freeze_pda = &ctx.remaining_accounts[remaining_accounts_counter + 2];
         if let Some(mint) = candy_machine.token_mint {
+            let freeze_pda = &ctx.remaining_accounts[remaining_accounts_counter + 2];
             let freeze_ata = &ctx.remaining_accounts[remaining_accounts_counter + 2 + 2];
             assert_is_ata(freeze_ata, freeze_pda.key, &mint)?;
             freeze_ata
         } else {
-            freeze_pda
+            &ctx.remaining_accounts[remaining_accounts_counter]
         }
     } else {
         wallet
@@ -513,7 +513,7 @@ pub fn handle_mint_nft<'info>(
             return err!(CandyError::NotEnoughSOL);
         }
         invoke(
-            &system_instruction::transfer(&ctx.accounts.payer.key(), &wallet.key(), price),
+            &system_instruction::transfer(&ctx.accounts.payer.key(), &wallet_to_use.key(), price),
             &[
                 ctx.accounts.payer.to_account_info(),
                 wallet_to_use.to_account_info(),
