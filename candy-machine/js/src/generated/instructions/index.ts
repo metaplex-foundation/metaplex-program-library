@@ -7,6 +7,7 @@ export * from './setCollection';
 export * from './setCollectionDuringMint';
 export * from './setFreeze';
 export * from './thawNft';
+export * from './unlockFunds';
 export * from './updateAuthority';
 export * from './updateCandyMachine';
 export * from './withdrawFunds';

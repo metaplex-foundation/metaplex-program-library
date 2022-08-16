@@ -10,47 +10,48 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category RemoveFreeze
+ * @category UnlockFunds
  * @category generated
  */
-export const removeFreezeStruct = new beet.BeetArgsStruct<{
+export const unlockFundsStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'RemoveFreezeInstructionArgs',
+  'UnlockFundsInstructionArgs',
 );
 /**
- * Accounts required by the _removeFreeze_ instruction
+ * Accounts required by the _unlockFunds_ instruction
  *
  * @property [_writable_] candyMachine
  * @property [_writable_, **signer**] authority
  * @property [_writable_] freezePda
  * @category Instructions
- * @category RemoveFreeze
+ * @category UnlockFunds
  * @category generated
  */
-export type RemoveFreezeInstructionAccounts = {
+export type UnlockFundsInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
   freezePda: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
 };
 
-export const removeFreezeInstructionDiscriminator = [1, 212, 80, 168, 129, 60, 46, 251];
+export const unlockFundsInstructionDiscriminator = [175, 119, 16, 245, 141, 55, 255, 43];
 
 /**
- * Creates a _RemoveFreeze_ instruction.
+ * Creates a _UnlockFunds_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category RemoveFreeze
+ * @category UnlockFunds
  * @category generated
  */
-export function createRemoveFreezeInstruction(
-  accounts: RemoveFreezeInstructionAccounts,
+export function createUnlockFundsInstruction(
+  accounts: UnlockFundsInstructionAccounts,
   programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
 ) {
-  const [data] = removeFreezeStruct.serialize({
-    instructionDiscriminator: removeFreezeInstructionDiscriminator,
+  const [data] = unlockFundsStruct.serialize({
+    instructionDiscriminator: unlockFundsInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
@@ -66,6 +67,11 @@ export function createRemoveFreezeInstruction(
     {
       pubkey: accounts.freezePda,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
+      isWritable: false,
       isSigner: false,
     },
   ];

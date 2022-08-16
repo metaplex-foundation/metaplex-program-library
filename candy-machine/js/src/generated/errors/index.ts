@@ -990,13 +990,38 @@ createErrorFromCodeLookup.set(0x179d, () => new NoWithdrawWithFreezeError());
 createErrorFromNameLookup.set('NoWithdrawWithFreeze', () => new NoWithdrawWithFreezeError());
 
 /**
+ * NoWithdrawWithFrozenFunds: 'Can't withdraw Candy Machine while frozen funds need to be redeemed. Unlock funds first.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoWithdrawWithFrozenFundsError extends Error {
+  readonly code: number = 0x179e;
+  readonly name: string = 'NoWithdrawWithFrozenFunds';
+  constructor() {
+    super(
+      "Can't withdraw Candy Machine while frozen funds need to be redeemed. Unlock funds first.",
+    );
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoWithdrawWithFrozenFundsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179e, () => new NoWithdrawWithFrozenFundsError());
+createErrorFromNameLookup.set(
+  'NoWithdrawWithFrozenFunds',
+  () => new NoWithdrawWithFrozenFundsError(),
+);
+
+/**
  * MissingRemoveFreezeTokenAccounts: 'Missing required remaining accounts for remove_freeze with token mint.'
  *
  * @category Errors
  * @category generated
  */
 export class MissingRemoveFreezeTokenAccountsError extends Error {
-  readonly code: number = 0x179e;
+  readonly code: number = 0x179f;
   readonly name: string = 'MissingRemoveFreezeTokenAccounts';
   constructor() {
     super('Missing required remaining accounts for remove_freeze with token mint.');
@@ -1006,7 +1031,7 @@ export class MissingRemoveFreezeTokenAccountsError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x179e, () => new MissingRemoveFreezeTokenAccountsError());
+createErrorFromCodeLookup.set(0x179f, () => new MissingRemoveFreezeTokenAccountsError());
 createErrorFromNameLookup.set(
   'MissingRemoveFreezeTokenAccounts',
   () => new MissingRemoveFreezeTokenAccountsError(),
@@ -1019,7 +1044,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InvalidFreezeWithdrawTokenAddressError extends Error {
-  readonly code: number = 0x179f;
+  readonly code: number = 0x17a0;
   readonly name: string = 'InvalidFreezeWithdrawTokenAddress';
   constructor() {
     super("Can't withdraw SPL Token from freeze PDA into itself");
@@ -1029,10 +1054,56 @@ export class InvalidFreezeWithdrawTokenAddressError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x179f, () => new InvalidFreezeWithdrawTokenAddressError());
+createErrorFromCodeLookup.set(0x17a0, () => new InvalidFreezeWithdrawTokenAddressError());
 createErrorFromNameLookup.set(
   'InvalidFreezeWithdrawTokenAddress',
   () => new InvalidFreezeWithdrawTokenAddressError(),
+);
+
+/**
+ * NoUnlockWhileFreezeActive: 'Can't unlock funds while freeze is active. Remove freeze first.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoUnlockWhileFreezeActiveError extends Error {
+  readonly code: number = 0x17a1;
+  readonly name: string = 'NoUnlockWhileFreezeActive';
+  constructor() {
+    super("Can't unlock funds while freeze is active. Remove freeze first.");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoUnlockWhileFreezeActiveError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a1, () => new NoUnlockWhileFreezeActiveError());
+createErrorFromNameLookup.set(
+  'NoUnlockWhileFreezeActive',
+  () => new NoUnlockWhileFreezeActiveError(),
+);
+
+/**
+ * NoUnlockWithNFTsStillFrozen: 'Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoUnlockWithNFTsStillFrozenError extends Error {
+  readonly code: number = 0x17a2;
+  readonly name: string = 'NoUnlockWithNFTsStillFrozen';
+  constructor() {
+    super("Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoUnlockWithNFTsStillFrozenError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a2, () => new NoUnlockWithNFTsStillFrozenError());
+createErrorFromNameLookup.set(
+  'NoUnlockWithNFTsStillFrozen',
+  () => new NoUnlockWithNFTsStillFrozenError(),
 );
 
 /**

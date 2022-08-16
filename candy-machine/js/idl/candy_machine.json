@@ -448,11 +448,6 @@
           "name": "freezePda",
           "isMut": true,
           "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": []
@@ -503,6 +498,32 @@
         {
           "name": "tokenMetadataProgram",
           "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "unlockFunds",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "freezePda",
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1070,13 +1091,28 @@
     },
     {
       "code": 6046,
+      "name": "NoWithdrawWithFrozenFunds",
+      "msg": "Can't withdraw Candy Machine while frozen funds need to be redeemed. Unlock funds first."
+    },
+    {
+      "code": 6047,
       "name": "MissingRemoveFreezeTokenAccounts",
       "msg": "Missing required remaining accounts for remove_freeze with token mint."
     },
     {
-      "code": 6047,
+      "code": 6048,
       "name": "InvalidFreezeWithdrawTokenAddress",
       "msg": "Can't withdraw SPL Token from freeze PDA into itself"
+    },
+    {
+      "code": 6049,
+      "name": "NoUnlockWhileFreezeActive",
+      "msg": "Can't unlock funds while freeze is active. Remove freeze first."
+    },
+    {
+      "code": 6050,
+      "name": "NoUnlockWithNFTsStillFrozen",
+      "msg": "Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first."
     }
   ],
   "metadata": {
