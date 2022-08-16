@@ -2289,9 +2289,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-machine"
-version = "4.0.2"
+version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2dc08b936f755828f16fc7743c8356a76e7092270e65eb5ee54464eec51bbc12"
+checksum = "2feb2837b75c59a4476820ca2b96e157727a023b73a48315c3b9595907ab8306"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
@@ -2305,9 +2305,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-token-metadata"
-version = "1.2.10"
+version = "1.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "741990cd07cb31d009a345806f30ace8eab99c063cd9440eba8d3df7be2a6988"
+checksum = "029a329d7a89f7a3caf0b91bec307531f4b6c9cca34aa775454845fbbd05ac57"
 dependencies = [
  "arrayref",
  "borsh",

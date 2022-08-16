@@ -2,9 +2,8 @@ use anchor_client::{solana_sdk::pubkey::Pubkey, ClientError, Program};
 use anyhow::{anyhow, Result};
 use mpl_candy_machine::CollectionPDA;
 use mpl_token_metadata::{
-    deser::meta_deser,
     pda::{find_master_edition_account, find_metadata_account},
-    state::{Key, MasterEditionV2, Metadata, MAX_MASTER_EDITION_LEN},
+    state::{Key, MasterEditionV2, Metadata, TokenMetadataAccount, MAX_MASTER_EDITION_LEN},
     utils::try_from_slice_checked,
 };
 
@@ -26,7 +25,7 @@ pub fn get_metadata_pda(mint: &Pubkey, program: &Program) -> Result<PdaInfo<Meta
             &metadata_pubkey.to_string()
         )
     })?;
-    let metadata = meta_deser(&mut metadata_account.data.as_slice());
+    let metadata = Metadata::safe_deserialize(metadata_account.data.as_slice());
     metadata.map(|m| (metadata_pubkey, m)).map_err(|_| {
         anyhow!(
             "Failed to deserialize metadata account: {}",
