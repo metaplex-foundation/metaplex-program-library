@@ -573,12 +573,12 @@ fn process_creator_verification<'info>(
     }
 
     // User-provided creator Vec must result in same user-provided creator hash.
-    let creator_data = creators
+    let provided_creator_data = creators
         .iter()
         .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
         .collect::<Vec<_>>();
     let calculated_creator_hash = keccak::hashv(
-        creator_data
+        provided_creator_data
             .iter()
             .map(|c| c.as_slice())
             .collect::<Vec<&[u8]>>()
@@ -587,7 +587,7 @@ fn process_creator_verification<'info>(
     assert_eq!(creator_hash, calculated_creator_hash.to_bytes());
 
     // Calculate new creator hash with `verified` set to true for signing creator.
-    let creator_data = creators
+    let updated_creator_data = creators
         .iter()
         .map(|c| {
             let verified = if c.address == creator.key() {
@@ -598,8 +598,8 @@ fn process_creator_verification<'info>(
             [c.address.as_ref(), &[verified as u8], &[c.share]].concat()
         })
         .collect::<Vec<_>>();
-    let calculated_creator_hash = keccak::hashv(
-        creator_data
+    let updated_creator_hash = keccak::hashv(
+        updated_creator_data
             .iter()
             .map(|c| c.as_slice())
             .collect::<Vec<&[u8]>>()
@@ -621,7 +621,7 @@ fn process_creator_verification<'info>(
         delegate.key(),
         nonce,
         data_hash,
-        calculated_creator_hash.to_bytes(),
+        updated_creator_hash.to_bytes(),
     );
     emit!(new_leaf.to_event());
     replace_leaf(
