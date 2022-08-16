@@ -1,3 +1,4 @@
+use console::style;
 use solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 use spl_associated_token_account::get_associated_token_address;
 
@@ -33,4 +34,44 @@ pub fn find_freeze_ata(freeze_info: &FreezeInfo, token_info: &TokenInfo) -> Pubk
 
 pub fn sol(amount: f64) -> u64 {
     (amount * LAMPORTS_PER_SOL as f64) as u64
+}
+
+pub struct CandyTestLogger {
+    test_name: String,
+}
+
+impl CandyTestLogger {
+    pub fn new(test_name: &str) -> Self {
+        Self {
+            test_name: test_name.to_string(),
+        }
+    }
+
+    pub fn new_start(test_name: &str) -> Self {
+        let new = Self {
+            test_name: test_name.to_string(),
+        };
+        new.start();
+        new
+    }
+
+    pub fn start(&self) {
+        println!(
+            "{}",
+            style(format!("\n{} start.", self.test_name)).bold().cyan()
+        )
+    }
+
+    pub fn end(&self) {
+        println!(
+            "{}",
+            style(format!("{} finished!\n", self.test_name))
+                .bold()
+                .green()
+        )
+    }
+}
+
+pub fn test_start(input: &str) {
+    println!("\n{}", style(input).magenta().bold().underlined());
 }

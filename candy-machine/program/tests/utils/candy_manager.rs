@@ -3,6 +3,7 @@ use std::{fmt::Debug, str::FromStr};
 use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
 use solana_gateway::state::{get_expire_address_with_seed, get_gateway_token_address_with_seed};
+use solana_program::program_option::COption;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
 use solana_sdk::{
@@ -10,15 +11,18 @@ use solana_sdk::{
     transport,
 };
 use spl_associated_token_account::get_associated_token_address;
+use spl_token::state::AccountState;
 
+use mpl_candy_machine::constants::{FREEZE_FEATURE_INDEX, FREEZE_LOCK_FEATURE_INDEX};
 use mpl_candy_machine::{
     constants::BOT_FEE,
-    CandyMachine, CandyMachineData, CollectionPDA, FreezePDA, WhitelistMintMode,
+    is_feature_active, CandyMachine, CandyMachineData, CollectionPDA, FreezePDA, WhitelistMintMode,
     WhitelistMintMode::{BurnEveryTime, NeverBurn},
 };
 
 use crate::core::helpers::create_associated_token_account;
-use crate::utils::{remove_freeze, set_freeze, thaw_nft};
+use crate::utils::helpers::CandyTestLogger;
+use crate::utils::{remove_freeze, set_freeze, thaw_nft, unlock_funds};
 use crate::{
     core::{
         helpers::{
@@ -504,7 +508,7 @@ impl CandyManager {
         whitelist: Option<WhitelistConfig>,
         gatekeeper: Option<GatekeeperInfo>,
     ) -> Self {
-        println!("Init Candy Machine Manager");
+        let logger = CandyTestLogger::new_start("Init Candy Machine Manager");
         let candy_machine = Keypair::new();
         let authority = Keypair::new();
         let minter = Keypair::new();
@@ -598,7 +602,7 @@ impl CandyManager {
             true => token_info.auth_account,
             false => authority.pubkey(),
         };
-
+        logger.end();
         CandyManager::new(
             candy_machine,
             authority,
@@ -627,12 +631,54 @@ impl CandyManager {
         FreezePDA::try_deserialize(&mut account.data.as_ref()).unwrap()
     }
 
+    pub async fn assert_freeze_set(
+        &self,
+        context: &mut ProgramTestContext,
+        expected_freeze_pda: &FreezePDA,
+    ) {
+        let freeze_pda_account = self.get_freeze_pda(context).await;
+        let candy_machine_account = self.get_candy(context).await;
+        assert_eq!(*expected_freeze_pda, freeze_pda_account);
+        assert!(is_feature_active(
+            &candy_machine_account.data.uuid,
+            FREEZE_FEATURE_INDEX
+        ));
+        assert!(is_feature_active(
+            &candy_machine_account.data.uuid,
+            FREEZE_LOCK_FEATURE_INDEX
+        ));
+    }
+
+    pub async fn assert_frozen(
+        &self,
+        context: &mut ProgramTestContext,
+        new_nft: &MasterEditionManager,
+    ) {
+        let token_account = get_token_account(context, &new_nft.token_account)
+            .await
+            .unwrap();
+        assert_eq!(
+            token_account.state,
+            AccountState::Frozen,
+            "Token account state is not correct"
+        );
+        assert_eq!(
+            token_account.delegate,
+            COption::Some(self.freeze_info.pda),
+            "Token account delegate is not correct"
+        );
+        assert_eq!(
+            token_account.delegated_amount, 1,
+            "Delegated amount is not correct"
+        );
+    }
+
     pub async fn create(
         &mut self,
         context: &mut ProgramTestContext,
         candy_data: CandyMachineData,
     ) -> transport::Result<()> {
-        println!("Create");
+        let logger = CandyTestLogger::new_start("Initialize Candy Machine");
         initialize_candy_machine(
             context,
             &self.candy_machine,
@@ -641,14 +687,16 @@ impl CandyManager {
             candy_data,
             self.token_info.clone(),
         )
-        .await
+        .await?;
+        logger.end();
+        Ok(())
     }
 
     pub async fn set_collection(
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
-        println!("Set collection");
+        let logger = CandyTestLogger::new_start("Set Collection");
         set_collection(
             context,
             &self.candy_machine.pubkey(),
@@ -657,6 +705,7 @@ impl CandyManager {
         )
         .await?;
         self.collection_info.set = true;
+        logger.end();
         Ok(())
     }
 
@@ -665,7 +714,7 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
-        println!("Remove collection");
+        let logger = CandyTestLogger::new_start("Remove Collection");
         remove_collection(
             context,
             &self.candy_machine.pubkey(),
@@ -674,6 +723,7 @@ impl CandyManager {
         )
         .await?;
         self.collection_info.set = false;
+        logger.end();
         Ok(())
     }
 
@@ -681,8 +731,10 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
-        println!("Fill config lines");
-        add_all_config_lines(context, &self.candy_machine.pubkey(), &self.authority).await
+        let logger = CandyTestLogger::new_start("Fill Config Lines");
+        add_all_config_lines(context, &self.candy_machine.pubkey(), &self.authority).await?;
+        logger.end();
+        Ok(())
     }
 
     pub async fn update(
@@ -691,7 +743,7 @@ impl CandyManager {
         new_wallet: Option<Pubkey>,
         new_data: CandyMachineData,
     ) -> transport::Result<()> {
-        println!("Update");
+        let logger = CandyTestLogger::new_start("Update Candy Machine");
         if let Some(wallet) = new_wallet {
             self.wallet = wallet;
         }
@@ -708,11 +760,13 @@ impl CandyManager {
             &self.wallet,
             token_info,
         )
-        .await
+        .await?;
+        logger.end();
+        Ok(())
     }
 
     pub async fn set_freeze(&mut self, context: &mut ProgramTestContext) -> transport::Result<()> {
-        println!("Set freeze");
+        let logger = CandyTestLogger::new_start("Set freeze");
         set_freeze(
             context,
             &self.candy_machine.pubkey(),
@@ -722,6 +776,7 @@ impl CandyManager {
         )
         .await?;
         self.freeze_info.set = true;
+        logger.end();
         Ok(())
     }
 
@@ -729,7 +784,7 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
-        println!("Remove freeze");
+        let logger = CandyTestLogger::new_start("Remove freeze");
         remove_freeze(
             context,
             &self.candy_machine.pubkey(),
@@ -739,6 +794,7 @@ impl CandyManager {
         )
         .await?;
         self.freeze_info.set = false;
+        logger.end();
         Ok(())
     }
 
@@ -746,19 +802,34 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
         nft_info: MasterEditionManager,
-        owner: &Keypair,
         authority: &Keypair,
     ) -> transport::Result<()> {
-        println!("Thaw");
+        let logger = CandyTestLogger::new_start("Thaw NFT");
         thaw_nft(
             context,
             &self.candy_machine.pubkey(),
             authority,
-            owner,
             &self.freeze_info,
             &nft_info,
         )
         .await?;
+        logger.end();
+        Ok(())
+    }
+
+    pub async fn unlock_funds(
+        &mut self,
+        context: &mut ProgramTestContext,
+    ) -> transport::Result<()> {
+        let logger = CandyTestLogger::new_start("Unlock Funds");
+        unlock_funds(
+            context,
+            &self.candy_machine.pubkey(),
+            &self.authority,
+            &self.freeze_info,
+        )
+        .await?;
+        logger.end();
         Ok(())
     }
 
@@ -766,6 +837,7 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<MasterEditionManager> {
+        let logger = CandyTestLogger::new_start("Mint NFT");
         let nft_info = prepare_nft(context, &self.minter).await;
         let (candy_machine_creator, creator_bump) =
             find_candy_creator(&self.candy_machine.pubkey());
@@ -785,6 +857,7 @@ impl CandyManager {
             self.freeze_info.clone(),
         )
         .await?;
+        logger.end();
         Ok(nft_info)
     }
 
@@ -794,7 +867,6 @@ impl CandyManager {
         balance_change: Option<u64>,
         auto_whitelist: bool,
     ) -> transport::Result<MasterEditionManager> {
-        println!("Mint and assert successful");
         let candy_start = self.get_candy(context).await;
         let start_balance = get_balance(context, &self.minter.pubkey()).await;
         let wallet_to_use = if self.freeze_info.set {
@@ -924,7 +996,6 @@ impl CandyManager {
         &mut self,
         context: &mut ProgramTestContext,
     ) -> transport::Result<()> {
-        println!("Mint and assert bot tax");
         let start_balance = get_balance(context, &self.minter.pubkey()).await;
         let start_token_balance = get_token_balance(context, &self.token_info.minter_account).await;
         let start_whitelist_balance =
