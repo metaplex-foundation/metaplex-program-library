@@ -92,11 +92,29 @@ pub struct Burn<'info> {
     pub gummyroll_program: Program<'info, Gummyroll>,
     /// CHECK: This account is checked in the instruction
     pub owner: UncheckedAccount<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub delegate: UncheckedAccount<'info>,
+    #[account(mut)]
+    /// CHECK: This account is modified in the downstream program
+    pub merkle_slab: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CreatorVerification<'info> {
+    #[account(
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
+    )]
+    pub authority: Account<'info, TreeConfig>,
+    /// CHECK: This account is checked in the instruction
+    pub owner: UncheckedAccount<'info>,
     /// CHECK: This account is chekced in the instruction
     pub delegate: UncheckedAccount<'info>,
-
+    pub creator: Signer<'info>,
+    pub candy_wrapper: Program<'info, CandyWrapper>,
+    pub gummyroll_program: Program<'info, Gummyroll>,
     #[account(mut)]
-    /// CHECK: This account is chekced in the instruction
+    /// CHECK: This account is modified in the downstream program
     pub merkle_slab: UncheckedAccount<'info>,
 }
 
@@ -456,6 +474,7 @@ fn process_mint_v1<'info>(
     message: MetadataArgs,
     owner: Pubkey,
     delegate: Pubkey,
+    signer: Option<Pubkey>,
     authority_bump: u8,
     authority: &mut Account<'info, TreeConfig>,
     merkle_slab: &AccountInfo<'info>,
@@ -471,12 +490,22 @@ fn process_mint_v1<'info>(
         &metadata_args_hash.to_bytes(),
         &message.seller_fee_basis_points.to_le_bytes(),
     ]);
+
+    // Verify that if `verified` was set in the creator Vec, then the creator was
+    // a signer.
     let creator_data = message
         .creators
         .iter()
-        //TODO include verified
-        .map(|c| [c.address.as_ref(), &[c.share]].concat())
-        .collect::<Vec<_>>();
+        .map(|c| {
+            if c.verified && signer != Some(c.address) {
+                Err(BubblegumError::CreatorDidNotSign.into())
+            } else {
+                Ok([c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
+            }
+        })
+        .collect::<Result<Vec<_>>>()?;
+
+    // Calculate creator hash.
     let creator_hash = keccak::hashv(
         creator_data
             .iter()
@@ -484,6 +513,7 @@ fn process_mint_v1<'info>(
             .collect::<Vec<&[u8]>>()
             .as_ref(),
     );
+
     let asset_id = get_asset_id(&merkle_slab.key(), authority.num_minted);
     let leaf = LeafSchema::new_v0(
         asset_id,
@@ -513,6 +543,99 @@ fn process_mint_v1<'info>(
         &merkle_slab.to_account_info(),
         &candy_wrapper.to_account_info(),
         leaf.to_node(),
+    )
+}
+
+fn process_creator_verification<'info>(
+    ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
+    root: [u8; 32],
+    data_hash: [u8; 32],
+    creator_hash: [u8; 32],
+    nonce: u64,
+    index: u32,
+    creators: Vec<Creator>,
+    verify: bool,
+) -> Result<()> {
+    let owner = ctx.accounts.owner.to_account_info();
+    let delegate = ctx.accounts.delegate.to_account_info();
+    let merkle_slab = ctx.accounts.merkle_slab.to_account_info();
+
+    let creator = ctx.accounts.owner.key();
+
+    // Creator Vec must contain creators.
+    if creators.is_empty() {
+        return Err(BubblegumError::NoCreatorsPresent.into());
+    }
+
+    // Creator must be in user-provided creator Vec.
+    if !creators.iter().any(|c| c.address == creator) {
+        return Err(BubblegumError::CreatorNotFound.into());
+    }
+
+    // User-provided creator Vec must result in same user-provided creator hash.
+    let creator_data = creators
+        .iter()
+        .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
+        .collect::<Vec<_>>();
+    let calculated_creator_hash = keccak::hashv(
+        creator_data
+            .iter()
+            .map(|c| c.as_slice())
+            .collect::<Vec<&[u8]>>()
+            .as_ref(),
+    );
+    assert_eq!(creator_hash, calculated_creator_hash.to_bytes());
+
+    // Calculate new creator hash with `verified` set to true for signing creator.
+    let creator_data = creators
+        .iter()
+        .map(|c| {
+            let verified = if c.address == creator.key() {
+                verify
+            } else {
+                c.verified
+            };
+            [c.address.as_ref(), &[verified as u8], &[c.share]].concat()
+        })
+        .collect::<Vec<_>>();
+    let calculated_creator_hash = keccak::hashv(
+        creator_data
+            .iter()
+            .map(|c| c.as_slice())
+            .collect::<Vec<&[u8]>>()
+            .as_ref(),
+    );
+
+    let asset_id = get_asset_id(&merkle_slab.key(), nonce);
+    let previous_leaf = LeafSchema::new_v0(
+        asset_id,
+        owner.key(),
+        delegate.key(),
+        nonce,
+        data_hash,
+        creator_hash,
+    );
+    let new_leaf = LeafSchema::new_v0(
+        asset_id,
+        owner.key(),
+        delegate.key(),
+        nonce,
+        data_hash,
+        calculated_creator_hash.to_bytes(),
+    );
+    emit!(new_leaf.to_event());
+    replace_leaf(
+        &merkle_slab.key(),
+        *ctx.bumps.get("authority").unwrap(),
+        &ctx.accounts.gummyroll_program.to_account_info(),
+        &ctx.accounts.authority.to_account_info(),
+        &ctx.accounts.merkle_slab.to_account_info(),
+        &ctx.accounts.candy_wrapper.to_account_info(),
+        ctx.remaining_accounts,
+        root,
+        previous_leaf.to_node(),
+        new_leaf.to_node(),
+        index,
     )
 }
 
@@ -603,9 +726,12 @@ pub mod bubblegum {
         let merkle_slab = &ctx.accounts.merkle_slab;
 
         // The mint authority must sign if it is not equal to the tree authority
-        if mint_authority.key() != ctx.accounts.authority.key() {
+        let signer = if mint_authority.key() != ctx.accounts.authority.key() {
             assert!(mint_authority.is_signer);
-        }
+            Some(mint_authority.key())
+        } else {
+            None
+        };
 
         let authority = &mut ctx.accounts.authority;
         let request = &mut ctx.accounts.mint_authority_request;
@@ -615,6 +741,7 @@ pub mod bubblegum {
             message,
             owner,
             delegate,
+            signer,
             *ctx.bumps.get("authority").unwrap(),
             authority,
             merkle_slab,
@@ -631,6 +758,48 @@ pub mod bubblegum {
             **request_info.lamports.borrow_mut() = 0;
         }
         Ok(())
+    }
+
+    pub fn verify_creator<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+        creators: Vec<Creator>,
+    ) -> Result<()> {
+        process_creator_verification(
+            ctx,
+            root,
+            data_hash,
+            creator_hash,
+            nonce,
+            index,
+            creators,
+            true,
+        )
+    }
+
+    pub fn unverify_creator<'info>(
+        ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+        creators: Vec<Creator>,
+    ) -> Result<()> {
+        process_creator_verification(
+            ctx,
+            root,
+            data_hash,
+            creator_hash,
+            nonce,
+            index,
+            creators,
+            false,
+        )
     }
 
     pub fn transfer<'info>(
