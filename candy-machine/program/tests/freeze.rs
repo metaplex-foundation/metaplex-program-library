@@ -1,13 +1,19 @@
 #![cfg(feature = "test-bpf")]
 #![allow(dead_code)]
 
+use solana_program::clock::Clock;
 use solana_program::program_option::COption;
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
 use spl_token::state::AccountState;
 
-use mpl_candy_machine::{CandyMachineData, WhitelistMintMode::BurnEveryTime};
+use mpl_candy_machine::constants::{FREEZE_FEATURE_INDEX, FREEZE_FEE, FREEZE_LOCK_FEATURE_INDEX};
+use mpl_candy_machine::{
+    is_feature_active, CandyMachineData, FreezePDA, WhitelistMintMode::BurnEveryTime,
+};
 
+use crate::core::helpers::new_funded_keypair;
+use crate::utils::helpers::test_start;
 use crate::utils::FreezeConfig;
 use crate::{
     core::helpers::{airdrop, assert_account_empty, clone_keypair, get_token_account},
@@ -19,14 +25,16 @@ pub mod utils;
 
 #[tokio::test]
 async fn test_freeze() {
+    test_start("Test Freeze");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
 
+    let freeze_time = 60 * 60;
     let mut candy_manager = CandyManager::init(
         context,
         true,
         true,
-        Some(FreezeConfig::new(true, 60 * 60)),
+        Some(FreezeConfig::new(true, freeze_time)),
         Some(WhitelistConfig::new(BurnEveryTime, false, Some(1))),
         None,
     )
@@ -44,14 +52,12 @@ async fn test_freeze() {
     candy_manager.fill_config_lines(context).await.unwrap();
     assert_account_empty(context, &candy_manager.collection_info.pda).await;
     candy_manager.set_collection(context).await.unwrap();
-    let collection_pda_account = candy_manager.get_collection_pda(context).await;
-    println!("Collection PDA: {:#?}", collection_pda_account);
 
     assert_account_empty(context, &candy_manager.freeze_info.pda).await;
     candy_manager.set_freeze(context).await.unwrap();
 
     let freeze_pda_account = candy_manager.get_freeze_pda(context).await;
-    println!("Freeze PDA: {:#?}", freeze_pda_account);
+    assert_eq!(freeze_pda_account.freeze_time, 60 * 60);
 
     let failed = candy_manager.mint_and_assert_bot_tax(context).await;
     if failed.is_err() {
@@ -74,7 +80,6 @@ async fn test_freeze() {
     let token_account = get_token_account(context, &new_nft.token_account)
         .await
         .unwrap();
-    println!("Token account: {:#?}", token_account);
     assert_eq!(
         token_account.state,
         AccountState::Frozen,
@@ -90,12 +95,7 @@ async fn test_freeze() {
         "Delegated amount is not correct"
     );
     candy_manager
-        .thaw_nft(
-            context,
-            new_nft.clone(),
-            &new_nft.owner,
-            &clone_keypair(&candy_manager.authority),
-        )
+        .thaw_nft(context, &new_nft, &clone_keypair(&candy_manager.authority))
         .await
         .unwrap_err();
     let token_account = get_token_account(context, &new_nft.token_account)
@@ -115,18 +115,11 @@ async fn test_freeze() {
         token_account.delegated_amount, 1,
         "Delegated amount is not correct"
     );
-    println!("Token account: {:#?}", token_account);
     candy_manager.remove_freeze(context).await.unwrap();
     let freeze_pda = candy_manager.get_freeze_pda(context).await;
-    println!("Freeze PDA: {:#?}", freeze_pda);
     assert!(freeze_pda.allow_thaw, "Allow thaw is not true!");
     candy_manager
-        .thaw_nft(
-            context,
-            new_nft.clone(),
-            &new_nft.owner,
-            &clone_keypair(&candy_manager.authority),
-        )
+        .thaw_nft(context, &new_nft, &clone_keypair(&candy_manager.authority))
         .await
         .unwrap();
     let token_account = get_token_account(context, &new_nft.token_account)
@@ -146,15 +139,13 @@ async fn test_freeze() {
         token_account.delegated_amount, 1,
         "Delegated amount is not correct"
     );
-    println!("Token account: {:#?}", token_account);
     candy_manager
-        .thaw_nft(context, new_nft.clone(), &new_nft.owner, &new_nft.owner)
+        .thaw_nft(context, &new_nft, &new_nft.owner)
         .await
         .unwrap();
     let token_account = get_token_account(context, &new_nft.token_account)
         .await
         .unwrap();
-    println!("Token account: {:#?}", token_account);
     assert_eq!(
         token_account.state,
         AccountState::Initialized,
@@ -169,4 +160,183 @@ async fn test_freeze() {
         token_account.delegated_amount, 0,
         "Delegated amount is not correct"
     );
+}
+
+#[tokio::test]
+async fn test_freeze_update() {
+    test_start("Test Freeze Update");
+    let mut context = candy_machine_program_test().start_with_context().await;
+    let context = &mut context;
+    let freeze_time = 60 * 60;
+    let mut candy_manager = CandyManager::init(
+        context,
+        false,
+        false,
+        Some(FreezeConfig::new(true, freeze_time)),
+        None,
+        None,
+    )
+    .await;
+
+    let random_key = new_funded_keypair(context, sol(1.0)).await;
+    airdrop(context, &candy_manager.minter.pubkey(), sol(20.0))
+        .await
+        .unwrap();
+
+    let candy_data = auto_config(&candy_manager, Some(0), true, true, None, None);
+    candy_manager
+        .create(context, candy_data.clone())
+        .await
+        .unwrap();
+    candy_manager.fill_config_lines(context).await.unwrap();
+
+    assert_account_empty(context, &candy_manager.freeze_info.pda).await;
+    candy_manager.set_freeze(context).await.unwrap();
+
+    let mut expected_freeze_pda = FreezePDA {
+        candy_machine: candy_manager.candy_machine.pubkey(),
+        freeze_fee: FREEZE_FEE,
+        freeze_time,
+        frozen_count: 0,
+        allow_thaw: false,
+        mint_start: None,
+    };
+    candy_manager
+        .assert_freeze_set(context, &expected_freeze_pda)
+        .await;
+
+    candy_manager.remove_freeze(context).await.unwrap();
+
+    let candy_machine_account = candy_manager.get_candy(context).await;
+    assert_account_empty(context, &candy_manager.freeze_info.pda).await;
+    assert!(!is_feature_active(
+        &candy_machine_account.data.uuid,
+        FREEZE_FEATURE_INDEX
+    ));
+    assert!(!is_feature_active(
+        &candy_machine_account.data.uuid,
+        FREEZE_LOCK_FEATURE_INDEX
+    ));
+
+    candy_manager.set_freeze(context).await.unwrap();
+    candy_manager
+        .assert_freeze_set(context, &expected_freeze_pda)
+        .await;
+
+    let new_nft = candy_manager
+        .mint_and_assert_successful(context, Some(sol(1.0)), true)
+        .await
+        .unwrap();
+    candy_manager.assert_frozen(context, &new_nft).await;
+
+    let mint_start = context
+        .banks_client
+        .get_sysvar::<Clock>()
+        .await
+        .unwrap()
+        .unix_timestamp;
+    expected_freeze_pda.mint_start = Some(mint_start);
+    expected_freeze_pda.frozen_count += 1;
+
+    candy_manager
+        .assert_freeze_set(context, &expected_freeze_pda)
+        .await;
+
+    candy_manager
+        .thaw_nft(context, &new_nft, &clone_keypair(&candy_manager.authority))
+        .await
+        .unwrap_err();
+
+    candy_manager.remove_freeze(context).await.unwrap();
+
+    expected_freeze_pda.allow_thaw = true;
+    let freeze_pda = candy_manager.get_freeze_pda(context).await;
+    assert_eq!(freeze_pda, expected_freeze_pda);
+    let uuid = candy_manager.get_candy(context).await.data.uuid;
+    assert!(!is_feature_active(&uuid, FREEZE_FEATURE_INDEX));
+    assert!(is_feature_active(&uuid, FREEZE_LOCK_FEATURE_INDEX));
+
+    candy_manager
+        .thaw_nft(context, &new_nft, &random_key)
+        .await
+        .unwrap();
+    candy_manager.assert_thawed(context, &new_nft, true).await;
+    let freeze_pda = candy_manager.get_freeze_pda(context).await;
+    expected_freeze_pda.frozen_count -= 1;
+    assert_eq!(freeze_pda, expected_freeze_pda);
+
+    let new_nft_2 = candy_manager
+        .mint_and_assert_successful(context, Some(sol(1.0)), true)
+        .await
+        .unwrap();
+    candy_manager.assert_thawed(context, &new_nft_2, true).await;
+
+    let freeze_pda_before = candy_manager.get_freeze_pda(context).await;
+    candy_manager
+        .thaw_nft(
+            context,
+            &new_nft_2,
+            &clone_keypair(&candy_manager.authority),
+        )
+        .await
+        .unwrap();
+    let freeze_pda_after = candy_manager.get_freeze_pda(context).await;
+    assert_eq!(freeze_pda_before, freeze_pda_after);
+}
+
+//TODO: finish this test
+#[tokio::test]
+async fn test_edit_candy_with_freeze() {
+    let mut context = candy_machine_program_test().start_with_context().await;
+    let context = &mut context;
+    let freeze_time = 60 * 60;
+    let mut candy_manager = CandyManager::init(
+        context,
+        false,
+        true,
+        Some(FreezeConfig::new(true, freeze_time)),
+        None,
+        None,
+    )
+    .await;
+
+    // let random_key = new_funded_keypair(context, sol(1.0)).await;
+    airdrop(context, &candy_manager.minter.pubkey(), sol(20.0))
+        .await
+        .unwrap();
+
+    let candy_data = auto_config(&candy_manager, Some(0), true, true, None, None);
+    candy_manager
+        .create(context, candy_data.clone())
+        .await
+        .unwrap();
+    candy_manager.fill_config_lines(context).await.unwrap();
+
+    assert_account_empty(context, &candy_manager.freeze_info.pda).await;
+    candy_manager.set_freeze(context).await.unwrap();
+
+    let expected_freeze_pda = FreezePDA {
+        candy_machine: candy_manager.candy_machine.pubkey(),
+        freeze_fee: FREEZE_FEE,
+        freeze_time,
+        frozen_count: 0,
+        allow_thaw: false,
+        mint_start: None,
+    };
+    candy_manager
+        .assert_freeze_set(context, &expected_freeze_pda)
+        .await;
+
+    candy_manager.remove_freeze(context).await.unwrap();
+
+    let candy_machine_account = candy_manager.get_candy(context).await;
+    assert_account_empty(context, &candy_manager.freeze_info.pda).await;
+    assert!(!is_feature_active(
+        &candy_machine_account.data.uuid,
+        FREEZE_FEATURE_INDEX
+    ));
+    assert!(!is_feature_active(
+        &candy_machine_account.data.uuid,
+        FREEZE_LOCK_FEATURE_INDEX
+    ));
 }

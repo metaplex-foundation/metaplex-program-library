@@ -62,6 +62,12 @@ pub async fn get_token_balance(context: &mut ProgramTestContext, token_account: 
         .amount
 }
 
+pub async fn new_funded_keypair(context: &mut ProgramTestContext, amount: u64) -> Keypair {
+    let new_key = Keypair::new();
+    airdrop(context, &new_key.pubkey(), amount).await.unwrap();
+    new_key
+}
+
 pub async fn airdrop(
     context: &mut ProgramTestContext,
     receiver: &Pubkey,

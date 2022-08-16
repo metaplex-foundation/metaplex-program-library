@@ -635,7 +635,7 @@ impl CandyManager {
         &self,
         context: &mut ProgramTestContext,
         expected_freeze_pda: &FreezePDA,
-    ) {
+    ) -> FreezePDA {
         let freeze_pda_account = self.get_freeze_pda(context).await;
         let candy_machine_account = self.get_candy(context).await;
         assert_eq!(*expected_freeze_pda, freeze_pda_account);
@@ -647,6 +647,7 @@ impl CandyManager {
             &candy_machine_account.data.uuid,
             FREEZE_LOCK_FEATURE_INDEX
         ));
+        freeze_pda_account
     }
 
     pub async fn assert_frozen(
@@ -671,6 +672,33 @@ impl CandyManager {
             token_account.delegated_amount, 1,
             "Delegated amount is not correct"
         );
+    }
+
+    pub async fn assert_thawed(
+        &self,
+        context: &mut ProgramTestContext,
+        new_nft: &MasterEditionManager,
+        undelegated: bool,
+    ) {
+        let token_account = get_token_account(context, &new_nft.token_account)
+            .await
+            .unwrap();
+        assert_eq!(
+            token_account.state,
+            AccountState::Initialized,
+            "Token account state is not correct"
+        );
+        if !undelegated {
+            assert_eq!(
+                token_account.delegate,
+                COption::Some(self.freeze_info.pda),
+                "Token account delegate is not correct"
+            );
+            assert_eq!(
+                token_account.delegated_amount, 1,
+                "Delegated amount is not correct"
+            );
+        }
     }
 
     pub async fn create(
@@ -801,7 +829,7 @@ impl CandyManager {
     pub async fn thaw_nft(
         &mut self,
         context: &mut ProgramTestContext,
-        nft_info: MasterEditionManager,
+        nft_info: &MasterEditionManager,
         authority: &Keypair,
     ) -> transport::Result<()> {
         let logger = CandyTestLogger::new_start("Thaw NFT");
@@ -810,7 +838,7 @@ impl CandyManager {
             &self.candy_machine.pubkey(),
             authority,
             &self.freeze_info,
-            &nft_info,
+            nft_info,
         )
         .await?;
         logger.end();
