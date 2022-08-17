@@ -1060,6 +1060,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3ee2393c4a91429dffb4bedf19f4d6abf27d8a732c8ce4980305d782e5426d57"
 
 [[package]]
+name = "dateparser"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "81dcee48ba66b79ba92dab399f218228f98c5d601ca85127fbc1ad60caf237d8"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "lazy_static",
+ "regex",
+]
+
+[[package]]
 name = "der"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4527,6 +4539,7 @@ dependencies = [
  "console",
  "ctrlc",
  "data-encoding",
+ "dateparser",
  "dialoguer 0.10.2",
  "dirs",
  "futures",

@@ -7,7 +7,8 @@ use anchor_client::solana_sdk::{
     native_token::LAMPORTS_PER_SOL, pubkey::Pubkey, signature::Keypair,
 };
 pub use anyhow::{anyhow, Result};
-use chrono::DateTime;
+use chrono::prelude::*;
+use dateparser::DateTimeUtc;
 use mpl_candy_machine::{
     Creator as CandyCreator, EndSettingType as CandyEndSettingType,
     EndSettings as CandyEndSettings, GatekeeperConfig as CandyGatekeeperConfig,
@@ -97,22 +98,15 @@ where
 }
 
 pub fn parse_string_as_date(go_live_date: &str) -> Result<String> {
-    let date = DateTime::parse_from_str(go_live_date, "%Y-%m-%d %H:%M:%S %z")?;
-    Ok(date.to_rfc2822())
+    let date = dateparser::parse_with(go_live_date, &Local, NaiveTime::from_hms(0, 0, 0))?;
+
+    Ok(date.to_rfc3339())
 }
 
 pub fn go_live_date_as_timestamp(go_live_date: &Option<String>) -> Result<Option<i64>> {
     if let Some(go_live_date) = go_live_date {
-        let format = if let Ok(date) = chrono::DateTime::parse_from_rfc2822(go_live_date) {
-            date.timestamp()
-        } else if let Ok(date) = chrono::DateTime::parse_from_rfc3339(go_live_date) {
-            date.timestamp()
-        } else if let Ok(timestamp) = go_live_date.parse::<i64>() {
-            timestamp
-        } else {
-            return Err(anyhow!("Invalid date format. Format must be: RFC2822(Fri, 14 Jul 2022 02:40:00 -0400), RFC3339(2022-02-25T13:00:00Z), or UNIX timestamp."));
-        };
-        Ok(Some(format))
+        let date = dateparser::parse(go_live_date)?;
+        Ok(Some(date.timestamp()))
     } else {
         Ok(None)
     }
@@ -185,23 +179,56 @@ pub enum EndSettingType {
 pub struct EndSettings {
     #[serde(rename = "endSettingType")]
     end_setting_type: EndSettingType,
-    number: u64,
+    number: Option<u64>,
+    date: Option<String>,
 }
 
 impl EndSettings {
-    pub fn new(end_setting_type: EndSettingType, number: u64) -> EndSettings {
+    pub fn new(
+        end_setting_type: EndSettingType,
+        number: Option<u64>,
+        date: Option<String>,
+    ) -> EndSettings {
         EndSettings {
             end_setting_type,
             number,
+            date,
         }
     }
-    pub fn to_candy_format(&self) -> CandyEndSettings {
-        CandyEndSettings {
-            end_setting_type: match self.end_setting_type {
-                EndSettingType::Date => CandyEndSettingType::Date,
-                EndSettingType::Amount => CandyEndSettingType::Amount,
-            },
-            number: self.number,
+    pub fn to_candy_format(&self) -> Result<CandyEndSettings> {
+        match self.end_setting_type {
+            // For amount, we just make sure the Option is Some and use that value.
+            EndSettingType::Amount => {
+                let number = self
+                    .number
+                    .ok_or_else(|| anyhow!("No number set for EndSetting Amount"))?;
+                let end_setting_type = CandyEndSettingType::Amount;
+
+                Ok(CandyEndSettings {
+                    end_setting_type,
+                    number,
+                })
+            }
+            // For date, we need to make sure the Option is Some and parse the date to a Unix timestamp.
+            EndSettingType::Date => {
+                // The onchain data struct uses a u64 for the timestamp, so we use try_from to safely convert.
+                // Timestamps older than Jan 1, 1970 are not supported.
+                let timestamp = self
+                    .date
+                    .as_ref()
+                    .ok_or_else(|| anyhow!("No date set for Endsetting Date"))?
+                    .parse::<DateTimeUtc>()?
+                    .0
+                    .timestamp();
+                let number: u64 = u64::try_from(timestamp)
+                    .map_err(|_| anyhow!("Error: the date is prior to Jan 1, 1970."))?;
+                let end_setting_type = CandyEndSettingType::Date;
+
+                Ok(CandyEndSettings {
+                    end_setting_type,
+                    number,
+                })
+            }
         }
     }
 }

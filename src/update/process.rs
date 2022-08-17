@@ -189,7 +189,11 @@ fn create_candy_machine_data(
     info!("{:?}", config.go_live_date);
     let go_live_date: Option<i64> = go_live_date_as_timestamp(&config.go_live_date)?;
 
-    let end_settings = config.end_settings.as_ref().map(|s| s.to_candy_format());
+    let end_settings = if let Some(end_settings) = &config.end_settings {
+        Some(end_settings.to_candy_format()?)
+    } else {
+        None
+    };
 
     let whitelist_mint_settings = config
         .whitelist_mint_settings

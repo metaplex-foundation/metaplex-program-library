@@ -8,7 +8,7 @@ use std::{
 
 use anchor_lang::prelude::Pubkey;
 use anyhow::{anyhow, Result};
-use chrono::DateTime;
+use chrono::prelude::*;
 use console::style;
 use dialoguer::{Confirm, Input, MultiSelect, Select};
 use url::Url;
@@ -32,9 +32,6 @@ const DEFAULT_METADATA: &str = "0.json";
 /// Default value to represent an invalid seller fee basis points.
 const INVALID_SELLER_FEE: u16 = u16::MAX;
 const INVALID_SYMBOL: &str = "abcdefghijklmnopqrstuvwxyz";
-
-/// Date mask for formatting input.
-const DATE_MASK: &str = "%Y-%m-%d %H:%M:%S %z";
 
 pub struct CreateConfigArgs {
     pub keypair: Option<String>,
@@ -251,7 +248,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     let null_or_none = |input: &str| -> bool { input == "none" || input == "null" };
     let date= Input::with_theme(&theme)
-    .with_prompt("What is your go live date? Enter it this format, YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET or type 'now' for \
+    .with_prompt("What is your go live date? Many common formats are supported. If unsure, try YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET or type 'now' for \
      current time. For example 2022-05-02 18:00:00 +0000 for May 2, 2022 18:00:00 UTC.")
      .validate_with(|input: &String| {
         let trimmed = input.trim().to_lowercase();
@@ -268,12 +265,12 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
 
     config_data.go_live_date = if trimmed == "now" {
         let current_time = chrono::Utc::now();
-        Some(current_time.format("%d %b %Y %H:%M:%S %z").to_string())
+        Some(current_time.to_rfc3339())
     } else if null_or_none(&trimmed) {
         None
     } else {
-        let date = DateTime::parse_from_str(&date, DATE_MASK)?;
-        Some(date.format("%d %b %Y %H:%M:%S %z").to_string())
+        let date = dateparser::parse_with(&date, &Local, NaiveTime::from_hms(0, 0, 0))?;
+        Some(date.to_rfc3339())
     };
 
     // creators
@@ -481,7 +478,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     // end settings
 
     config_data.end_settings = if choices.contains(&END_SETTINGS_INDEX) {
-        let end_settings_options = vec!["Date", "Amount"];
+        let end_settings_options = vec!["Amount", "Date"];
         let end_setting_type = match Select::with_theme(&theme)
             .with_prompt("What end settings type do you want to use?")
             .items(&end_settings_options)
@@ -489,13 +486,14 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             .interact()
             .unwrap()
         {
-            0 => EndSettingType::Date,
-            1 => EndSettingType::Amount,
-            _ => EndSettingType::Date,
+            0 => EndSettingType::Amount,
+            1 => EndSettingType::Date,
+            _ => panic!("Invalid end setting type"),
         };
 
-        let number = match end_setting_type {
-            EndSettingType::Amount => Input::with_theme(&theme)
+        match end_setting_type {
+            EndSettingType::Amount => {
+                let number = Input::with_theme(&theme)
                 .with_prompt("What is the amount to stop the mint?")
                 .validate_with(number_validator)
                 .validate_with(|num: &String| {
@@ -508,20 +506,33 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
                 .interact()
                 .unwrap()
                 .parse::<u64>()
-                .expect("Failed to parse number into u64 that should have already been validated."),
+                .expect("Failed to parse number into u64 that should have already been validated.");
+
+                Some(EndSettings::new(end_setting_type, Some(number), None))
+            }
             EndSettingType::Date => {
+                println!("Date setting detected");
                 let date = Input::with_theme(&theme)
-                    .with_prompt("What is the date to stop the mint? Enter it this format, YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET. \
+                    .with_prompt("What is the date to stop the mint? Many common formats are supported. If unsure, try YYYY-MM-DD HH:MM:SS [+/-]UTC-OFFSET. \
                     For example 2022-05-02 18:00:00 +0000 for May 2, 2022 18:00:00 UTC.")
                     .validate_with(date_validator)
                     .interact()
                     .unwrap();
-                    let date_time = DateTime::parse_from_str(&date, DATE_MASK)?;
-                    date_time.timestamp() as u64
-            }
-        };
 
-        Some(EndSettings::new(end_setting_type, number))
+                println!("date:{}:date", date);
+
+                // Convert to ISO 8601 for consistency, before storing in config.
+                let formatted_date = parse_string_as_date(&date)?;
+
+                println!("formatted_date: {}", formatted_date);
+
+                Some(EndSettings::new(
+                    end_setting_type,
+                    None,
+                    Some(formatted_date),
+                ))
+            }
+        }
     } else {
         None
     };
