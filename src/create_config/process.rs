@@ -31,6 +31,7 @@ const DEFAULT_METADATA: &str = "0.json";
 
 /// Default value to represent an invalid seller fee basis points.
 const INVALID_SELLER_FEE: u16 = u16::MAX;
+const INVALID_SYMBOL: &str = "abcdefghijklmnopqrstuvwxyz";
 
 /// Date mask for formatting input.
 const DATE_MASK: &str = "%Y-%m-%d %H:%M:%S %z";
@@ -132,7 +133,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         _ => 0,
     };
 
-    let mut symbol: String = Default::default();
+    let mut symbol: String = INVALID_SYMBOL.to_string();
     let mut seller_fee = INVALID_SELLER_FEE;
 
     if num_files > 0 {
@@ -151,9 +152,12 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
             anyhow!("Failed to read metadata file '{metadata_file}' with error: {e}")
         })?;
 
-        symbol = metadata.symbol;
+        // Optional in the JSON, so if it doesn't exist, we'll use the default value.
+        if let Some(s) = metadata.symbol {
+            symbol = s;
+        }
 
-        // Optional in the JSON, so if it doesn't exist, we'll use the default value INVALID value.
+        // Optional in the JSON, so if it doesn't exist, we'll use the default value.
         if let Some(sfbp) = metadata.seller_fee_basis_points {
             seller_fee = sfbp;
         }
@@ -199,6 +203,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     // symbol
 
     config_data.symbol = if num_files > 0
+        && symbol != *INVALID_SYMBOL
         && Confirm::with_theme(&theme)
             .with_prompt(format!(
                 "Found {} in your metadata file. Is this value correct?",
@@ -213,9 +218,7 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
         symbol
     } else {
         Input::with_theme(&theme)
-            .with_prompt(
-                "What is the symbol of your collection? This must match what is in your asset files. Hit [ENTER] for no symbol.",
-            )
+            .with_prompt("What is the symbol of your collection? Hit [ENTER] for no symbol.")
             .allow_empty(true)
             .validate_with(symbol_validator)
             .interact()

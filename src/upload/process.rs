@@ -118,15 +118,17 @@ pub async fn process_upload(args: UploadArgs) -> Result<()> {
         match serde_json::from_reader(f) {
             Ok(metadata) => {
                 let metadata: Metadata = metadata;
-                // symbol check
-                if config_data.symbol.ne(&metadata.symbol) {
-                    return Err(UploadError::MismatchValue(
-                        "symbol".to_string(),
-                        pair.metadata.clone(),
-                        config_data.symbol,
-                        metadata.symbol,
-                    )
-                    .into());
+                // symbol check, but only if the asset actually has the value
+                if let Some(symbol) = metadata.symbol {
+                    if config_data.symbol.ne(&symbol) {
+                        return Err(UploadError::MismatchValue(
+                            "symbol".to_string(),
+                            pair.metadata.clone(),
+                            config_data.symbol,
+                            symbol,
+                        )
+                        .into());
+                    }
                 }
                 // seller-fee-basis-points check, but only if the asset actually has the value
                 if let Some(seller_fee_basis_points) = metadata.seller_fee_basis_points {
