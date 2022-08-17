@@ -68,8 +68,7 @@ pub struct ConfigData {
 
     pub seller_fee_basis_points: u16,
 
-    #[serde(serialize_with = "to_option_string")]
-    pub aws_s3_bucket: Option<String>,
+    pub aws_config: Option<AwsConfig>,
 
     #[serde(serialize_with = "to_option_string")]
     pub nft_storage_auth_token: Option<String>,
@@ -362,6 +361,23 @@ impl ToString for Cluster {
             Cluster::Devnet => "devnet".to_string(),
             Cluster::Mainnet => "mainnet".to_string(),
             Cluster::Unknown => "unknown".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AwsConfig {
+    pub bucket: String,
+    pub profile: String,
+    pub directory: String,
+}
+
+impl AwsConfig {
+    pub fn new(bucket: String, profile: String, directory: String) -> AwsConfig {
+        AwsConfig {
+            bucket,
+            profile,
+            directory,
         }
     }
 }

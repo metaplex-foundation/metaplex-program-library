@@ -16,8 +16,8 @@ use url::Url;
 use crate::{
     candy_machine::CANDY_MACHINE_ID,
     config::{
-        parse_string_as_date, ConfigData, Creator, EndSettingType, EndSettings, GatekeeperConfig,
-        HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
+        parse_string_as_date, AwsConfig, ConfigData, Creator, EndSettingType, EndSettings,
+        GatekeeperConfig, HiddenSettings, UploadMethod, WhitelistMintMode, WhitelistMintSettings,
     },
     constants::*,
     setup::{setup_client, sugar_setup},
@@ -575,12 +575,24 @@ pub fn process_create_config(args: CreateConfigArgs) -> Result<()> {
     };
 
     if config_data.upload_method == UploadMethod::AWS {
-        config_data.aws_s3_bucket = Some(
-            Input::with_theme(&theme)
-                .with_prompt("What is the AWS S3 bucket name?")
-                .interact()
-                .unwrap(),
-        );
+        let bucket: String = Input::with_theme(&theme)
+            .with_prompt("What is the AWS S3 bucket name?")
+            .interact()
+            .unwrap();
+
+        let profile = Input::with_theme(&theme)
+            .with_prompt("What is the AWS profile name?")
+            .default(String::from("default"))
+            .interact()
+            .unwrap();
+
+        let directory = Input::with_theme(&theme)
+            .with_prompt("What is the directory to upload to? Leave blank to store files at the bucket root dir.")
+            .default(String::from(""))
+            .interact()
+            .unwrap();
+
+        config_data.aws_config = Some(AwsConfig::new(bucket, profile, directory));
     }
 
     if config_data.upload_method == UploadMethod::NftStorage {
