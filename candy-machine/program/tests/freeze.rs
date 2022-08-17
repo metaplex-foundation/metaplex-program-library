@@ -32,7 +32,7 @@ async fn freeze_flow_with_spl_token() {
     let freeze_time = 60 * 60;
     let mut candy_manager = CandyManager::init(
         context,
-        true,
+        Some(false),
         true,
         Some(FreezeConfig::new(true, freeze_time)),
         Some(WhitelistConfig::new(BurnEveryTime, false, Some(1))),
@@ -142,7 +142,7 @@ async fn freeze_update() {
     let freeze_time = 60 * 60;
     let mut candy_manager = CandyManager::init(
         context,
-        false,
+        None,
         false,
         Some(FreezeConfig::new(true, freeze_time)),
         None,
@@ -263,7 +263,7 @@ async fn thaw_after_freeze_time() {
     let freeze_time = 30; //30 seconds
     let mut candy_manager = CandyManager::init(
         context,
-        false,
+        None,
         false,
         Some(FreezeConfig::new(true, freeze_time)),
         None,
@@ -347,7 +347,7 @@ async fn unlock_funds() {
     let freeze_time = 30; //30 seconds
     let mut candy_manager = CandyManager::init(
         context,
-        false,
+        Some(false),
         false,
         Some(FreezeConfig::new(true, freeze_time)),
         None,
@@ -407,7 +407,7 @@ async fn mint_out_unfreeze() {
     let freeze_time = MAX_FREEZE_TIME;
     let mut candy_manager = CandyManager::init(
         context,
-        false,
+        None,
         false,
         Some(FreezeConfig::new(true, freeze_time)),
         None,

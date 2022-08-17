@@ -363,7 +363,7 @@
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {

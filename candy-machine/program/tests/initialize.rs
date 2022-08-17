@@ -47,7 +47,7 @@ async fn init_default_success() {
 
     let mut candy_manager = CandyManager::init(
         context,
-        true,
+        Some(true),
         true,
         None,
         Some(WhitelistConfig::new(BurnEveryTime, false, Some(1))),
@@ -108,7 +108,7 @@ async fn bot_tax_on_gatekeeper_expire_token() {
 
     let mut candy_manager = CandyManager::init(
         context,
-        false,
+        None,
         false,
         None,
         None,
@@ -245,7 +245,7 @@ async fn bot_tax_on_gatekeeper() {
 
     let mut candy_manager = CandyManager::init(
         context,
-        false,
+        None,
         false,
         None,
         None,

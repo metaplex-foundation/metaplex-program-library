@@ -26,7 +26,7 @@ pub mod utils;
 async fn fail_metadata_not_blank() {
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
-    let mut candy_manager = CandyManager::init(context, false, false, None, None, None).await;
+    let mut candy_manager = CandyManager::init(context, None, false, None, None, None).await;
 
     airdrop(context, &candy_manager.minter.pubkey(), sol(6.0))
         .await
@@ -85,7 +85,7 @@ async fn fail_metadata_not_blank() {
 async fn metadata_check_before_bot_tax() {
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
-    let mut candy_manager = CandyManager::init(context, false, false, None, None, None).await;
+    let mut candy_manager = CandyManager::init(context, None, false, None, None, None).await;
 
     airdrop(context, &candy_manager.minter.pubkey(), sol(6.0))
         .await
