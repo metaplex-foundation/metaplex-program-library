@@ -639,7 +639,7 @@ pub fn withdraw(
 
 pub async fn existing_auction_house_test_context(
     context: &mut ProgramTestContext,
-) -> StdResult<(AuctionHouse, Pubkey, Keypair), BanksClientError> {
+) -> StdResult<(AuctionHouse, Pubkey, Keypair), TransportError> {
     let twd_key = context.payer.pubkey();
     let fwd_key = context.payer.pubkey();
     let t_mint_key = spl_token::native_mint::id();
@@ -682,6 +682,6 @@ pub async fn existing_auction_house_test_context(
         .expect("account empty");
 
     let auction_house_data = AuctionHouse::try_deserialize(&mut auction_house_acc.data.as_ref())
-        .map_err(|e| BanksClientError::Io(io::Error::new(io::ErrorKind::InvalidData, e)))?;
+        .map_err(|e| TransportError::IoError(io::Error::new(io::ErrorKind::InvalidData, e)))?;
     Ok((auction_house_data, auction_house_address, authority))
 }
