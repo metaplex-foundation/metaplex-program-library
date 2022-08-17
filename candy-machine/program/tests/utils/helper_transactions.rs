@@ -361,7 +361,7 @@ pub async fn thaw_nft(
         candy_machine: *candy_machine,
         token_account: nft_info.token_account,
         owner: nft_info.owner.pubkey(),
-        mint: nft_info.mint_pubkey,
+        mint: nft_info.mint.pubkey(),
         edition: nft_info.edition_pubkey,
         payer: signer.pubkey(),
         token_program: spl_token::ID,
@@ -436,7 +436,7 @@ pub async fn mint_nft(
 ) -> transport::Result<()> {
     let metadata = new_nft.metadata_pubkey;
     let master_edition = new_nft.edition_pubkey;
-    let mint = new_nft.mint_pubkey;
+    let mint = new_nft.mint.pubkey();
 
     let mut accounts = mpl_candy_machine::accounts::MintNFT {
         candy_machine: *candy_machine,

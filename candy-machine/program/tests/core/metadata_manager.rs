@@ -12,6 +12,7 @@ use solana_sdk::{
 use crate::core::helpers::{
     clone_keypair, create_mint, get_account, mint_to_wallets, update_blockhash,
 };
+use crate::core::MasterEditionManager;
 
 #[derive(Debug)]
 pub struct MetadataManager {
@@ -28,6 +29,17 @@ impl Clone for MetadataManager {
             mint: clone_keypair(&self.mint),
             pubkey: self.pubkey,
             owner: clone_keypair(&self.owner),
+        }
+    }
+}
+
+impl From<MasterEditionManager> for MetadataManager {
+    fn from(master: MasterEditionManager) -> Self {
+        Self {
+            authority: master.authority,
+            owner: master.owner,
+            mint: master.mint,
+            pubkey: master.metadata_pubkey,
         }
     }
 }
@@ -49,7 +61,7 @@ impl MetadataManager {
         }
     }
 
-    pub async fn _get_data(&self, context: &mut ProgramTestContext) -> Metadata {
+    pub async fn get_data(&self, context: &mut ProgramTestContext) -> Metadata {
         let account = get_account(context, &self.pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }

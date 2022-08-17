@@ -1,3 +1,4 @@
+use mpl_token_metadata::state::Metadata;
 use mpl_token_metadata::{
     instruction::{self},
     state::{MasterEditionV2, EDITION, PREFIX},
@@ -19,7 +20,7 @@ pub struct MasterEditionManager {
     pub authority: Keypair,
     pub edition_pubkey: Pubkey,
     pub metadata_pubkey: Pubkey,
-    pub mint_pubkey: Pubkey,
+    pub mint: Keypair,
     pub token_account: Pubkey,
     pub owner: Keypair,
 }
@@ -30,7 +31,7 @@ impl Clone for MasterEditionManager {
             authority: clone_keypair(&self.authority),
             edition_pubkey: self.edition_pubkey,
             metadata_pubkey: self.metadata_pubkey,
-            mint_pubkey: self.mint_pubkey,
+            mint: clone_keypair(&self.mint),
             token_account: self.token_account,
             owner: clone_keypair(&self.owner),
         }
@@ -55,7 +56,7 @@ impl MasterEditionManager {
             authority: clone_keypair(&metadata.authority),
             edition_pubkey,
             metadata_pubkey: metadata.pubkey,
-            mint_pubkey,
+            mint: clone_keypair(&metadata.mint),
             token_account: get_associated_token_address(
                 &metadata.owner.pubkey(),
                 &metadata.mint.pubkey(),
@@ -67,6 +68,11 @@ impl MasterEditionManager {
     #[allow(dead_code)]
     pub async fn get_data(&self, context: &mut ProgramTestContext) -> MasterEditionV2 {
         let account = get_account(context, &self.edition_pubkey).await;
+        try_from_slice_unchecked(&account.data).unwrap()
+    }
+
+    pub async fn get_metadata(&self, context: &mut ProgramTestContext) -> Metadata {
+        let account = get_account(context, &self.metadata_pubkey).await;
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
@@ -89,7 +95,7 @@ impl MasterEditionManager {
             &[instruction::create_master_edition_v3(
                 mpl_token_metadata::id(),
                 self.edition_pubkey,
-                self.mint_pubkey,
+                self.mint.pubkey(),
                 self.authority.pubkey(),
                 self.authority.pubkey(),
                 self.metadata_pubkey,

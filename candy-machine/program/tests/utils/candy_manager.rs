@@ -688,7 +688,17 @@ impl CandyManager {
             AccountState::Initialized,
             "Token account state is not correct"
         );
-        if !undelegated {
+        if undelegated {
+            assert_eq!(
+                token_account.delegate,
+                COption::None,
+                "Token account delegate is not None"
+            );
+            assert_eq!(
+                token_account.delegated_amount, 0,
+                "Delegated amount is not 0"
+            );
+        } else {
             assert_eq!(
                 token_account.delegate,
                 COption::Some(self.freeze_info.pda),
@@ -914,7 +924,7 @@ impl CandyManager {
         let start_token_balance = get_token_balance(context, &self.token_info.minter_account).await;
         let start_whitelist_balance =
             get_token_balance(context, &self.whitelist_info.minter_account).await;
-        let new_nft = self.mint_nft(context).await.unwrap();
+        let mut new_nft = self.mint_nft(context).await.unwrap();
         let candy_end = self.get_candy(context).await;
         let end_balance = get_balance(context, &self.minter.pubkey()).await;
         let end_wallet_balance = if self.token_info.set {
@@ -1017,6 +1027,7 @@ impl CandyManager {
                 );
             }
         }
+        new_nft.authority = clone_keypair(&self.authority);
         Ok(new_nft)
     }
 
