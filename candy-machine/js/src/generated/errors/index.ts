@@ -1061,36 +1061,13 @@ createErrorFromNameLookup.set(
 );
 
 /**
- * NoUnlockWhileFreezeActive: 'Can't unlock funds while freeze is active. Remove freeze first.'
- *
- * @category Errors
- * @category generated
- */
-export class NoUnlockWhileFreezeActiveError extends Error {
-  readonly code: number = 0x17a1;
-  readonly name: string = 'NoUnlockWhileFreezeActive';
-  constructor() {
-    super("Can't unlock funds while freeze is active. Remove freeze first.");
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, NoUnlockWhileFreezeActiveError);
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x17a1, () => new NoUnlockWhileFreezeActiveError());
-createErrorFromNameLookup.set(
-  'NoUnlockWhileFreezeActive',
-  () => new NoUnlockWhileFreezeActiveError(),
-);
-
-/**
  * NoUnlockWithNFTsStillFrozen: 'Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.'
  *
  * @category Errors
  * @category generated
  */
 export class NoUnlockWithNFTsStillFrozenError extends Error {
-  readonly code: number = 0x17a2;
+  readonly code: number = 0x17a1;
   readonly name: string = 'NoUnlockWithNFTsStillFrozen';
   constructor() {
     super("Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.");
@@ -1100,7 +1077,7 @@ export class NoUnlockWithNFTsStillFrozenError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x17a2, () => new NoUnlockWithNFTsStillFrozenError());
+createErrorFromCodeLookup.set(0x17a1, () => new NoUnlockWithNFTsStillFrozenError());
 createErrorFromNameLookup.set(
   'NoUnlockWithNFTsStillFrozen',
   () => new NoUnlockWithNFTsStillFrozenError(),

@@ -104,8 +104,6 @@ pub enum CandyError {
     MissingRemoveFreezeTokenAccounts,
     #[msg("Can't withdraw SPL Token from freeze PDA into itself")]
     InvalidFreezeWithdrawTokenAddress,
-    #[msg("Can't unlock funds while freeze is active. Remove freeze first.")]
-    NoUnlockWhileFreezeActive,
     #[msg("Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.")]
     NoUnlockWithNFTsStillFrozen,
 }

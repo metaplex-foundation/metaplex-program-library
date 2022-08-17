@@ -1106,11 +1106,6 @@
     },
     {
       "code": 6049,
-      "name": "NoUnlockWhileFreezeActive",
-      "msg": "Can't unlock funds while freeze is active. Remove freeze first."
-    },
-    {
-      "code": 6050,
       "name": "NoUnlockWithNFTsStillFrozen",
       "msg": "Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first."
     }
