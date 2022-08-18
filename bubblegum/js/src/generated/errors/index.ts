@@ -153,26 +153,26 @@ createErrorFromNameLookup.set(
 )
 
 /**
- * CreatorDidNotSign: 'Creator did not sign so cannot be verified'
+ * CreatorDidNotVerify: 'Creator did not verify the metadata'
  *
  * @category Errors
  * @category generated
  */
-export class CreatorDidNotSignError extends Error {
+export class CreatorDidNotVerifyError extends Error {
   readonly code: number = 0x1776
-  readonly name: string = 'CreatorDidNotSign'
+  readonly name: string = 'CreatorDidNotVerify'
   constructor() {
-    super('Creator did not sign so cannot be verified')
+    super('Creator did not verify the metadata')
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, CreatorDidNotSignError)
+      Error.captureStackTrace(this, CreatorDidNotVerifyError)
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x1776, () => new CreatorDidNotSignError())
+createErrorFromCodeLookup.set(0x1776, () => new CreatorDidNotVerifyError())
 createErrorFromNameLookup.set(
-  'CreatorDidNotSign',
-  () => new CreatorDidNotSignError()
+  'CreatorDidNotVerify',
+  () => new CreatorDidNotVerifyError()
 )
 
 /**

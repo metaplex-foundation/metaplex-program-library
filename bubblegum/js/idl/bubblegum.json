@@ -1439,8 +1439,8 @@
     },
     {
       "code": 6006,
-      "name": "CreatorDidNotSign",
-      "msg": "Creator did not sign so cannot be verified"
+      "name": "CreatorDidNotVerify",
+      "msg": "Creator did not verify the metadata"
     },
     {
       "code": 6007,

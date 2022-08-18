@@ -25,6 +25,7 @@ use {
     },
     gummyroll::{program::Gummyroll, state::CandyWrapper, utils::wrap_event, Node},
     spl_token::state::Mint as SplMint,
+    std::collections::HashSet,
 };
 
 pub mod error;
@@ -474,7 +475,7 @@ fn process_mint_v1<'info>(
     message: MetadataArgs,
     owner: Pubkey,
     delegate: Pubkey,
-    signer: Option<Pubkey>,
+    metadata_auth: HashSet<Pubkey>,
     authority_bump: u8,
     authority: &mut Account<'info, TreeConfig>,
     merkle_slab: &AccountInfo<'info>,
@@ -491,14 +492,14 @@ fn process_mint_v1<'info>(
         &message.seller_fee_basis_points.to_le_bytes(),
     ]);
 
-    // Verify that if `verified` was set in the creator Vec, then the creator was
-    // a signer.
+    // Use the metadata auth to check whether we can allow `verified` to be set to true in the
+    // creator Vec.
     let creator_data = message
         .creators
         .iter()
         .map(|c| {
-            if c.verified && signer != Some(c.address) {
-                Err(BubblegumError::CreatorDidNotSign.into())
+            if c.verified && !metadata_auth.contains(&c.address) {
+                Err(BubblegumError::CreatorDidNotVerify.into())
             } else {
                 Ok([c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
             }
@@ -725,13 +726,22 @@ pub mod bubblegum {
         let mint_authority = &mut ctx.accounts.mint_authority;
         let merkle_slab = &ctx.accounts.merkle_slab;
 
-        // The mint authority must sign if it is not equal to the tree authority
-        let signer = if mint_authority.key() != ctx.accounts.authority.key() {
+        // The mint authority must sign if it is not equal to the tree authority.  Also, if the
+        // mint authority is a signer it can be used for creator validation.
+        let mut metadata_auth = HashSet::<Pubkey>::new();
+        if mint_authority.key() != ctx.accounts.authority.key() {
             assert!(mint_authority.is_signer);
-            Some(mint_authority.key())
-        } else {
-            None
-        };
+            metadata_auth.insert(mint_authority.key());
+        }
+
+        // If there are any remaining accounts that are also signers, they can also be used for
+        // creator validation.
+        metadata_auth.extend(
+            ctx.remaining_accounts
+                .iter()
+                .filter(|a| a.is_signer)
+                .map(|a| a.key()),
+        );
 
         let authority = &mut ctx.accounts.authority;
         let request = &mut ctx.accounts.mint_authority_request;
@@ -741,7 +751,7 @@ pub mod bubblegum {
             message,
             owner,
             delegate,
-            signer,
+            metadata_auth,
             *ctx.bumps.get("authority").unwrap(),
             authority,
             merkle_slab,

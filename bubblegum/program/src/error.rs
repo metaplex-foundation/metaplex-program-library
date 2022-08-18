@@ -14,8 +14,8 @@ pub enum BubblegumError {
     CreatorShareTotalMustBe100,
     #[msg("No duplicate creator addresses in metadata")]
     DuplicateCreatorAddress,
-    #[msg("Creator did not sign so cannot be verified")]
-    CreatorDidNotSign,
+    #[msg("Creator did not verify the metadata")]
+    CreatorDidNotVerify,
     #[msg("Creator not found in creator Vec")]
     CreatorNotFound,
     #[msg("No creators in creator Vec")]
