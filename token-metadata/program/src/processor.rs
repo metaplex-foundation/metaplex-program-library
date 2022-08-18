@@ -277,7 +277,7 @@ pub fn process_create_metadata_accounts_v2<'a>(
         is_mutable,
         false,
         true,
-        None, // V2 does not suport collection parents.
+        None, // V2 does not support collection parents.
     )
 }
 
