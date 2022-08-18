@@ -950,24 +950,27 @@ createErrorFromCodeLookup.set(0x179b, () => new FreezePDAMismatchError());
 createErrorFromNameLookup.set('FreezePDAMismatch', () => new FreezePDAMismatchError());
 
 /**
- * MaxFreezeIsOneWeek: 'Max freeze time can't be longer than 7 days.'
+ * EnteredFreezeIsMoreThanMaxFreeze: 'Freeze time can't be longer than MAX_FREEZE_TIME.'
  *
  * @category Errors
  * @category generated
  */
-export class MaxFreezeIsOneWeekError extends Error {
+export class EnteredFreezeIsMoreThanMaxFreezeError extends Error {
   readonly code: number = 0x179c;
-  readonly name: string = 'MaxFreezeIsOneWeek';
+  readonly name: string = 'EnteredFreezeIsMoreThanMaxFreeze';
   constructor() {
-    super("Max freeze time can't be longer than 7 days.");
+    super("Freeze time can't be longer than MAX_FREEZE_TIME.");
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, MaxFreezeIsOneWeekError);
+      Error.captureStackTrace(this, EnteredFreezeIsMoreThanMaxFreezeError);
     }
   }
 }
 
-createErrorFromCodeLookup.set(0x179c, () => new MaxFreezeIsOneWeekError());
-createErrorFromNameLookup.set('MaxFreezeIsOneWeek', () => new MaxFreezeIsOneWeekError());
+createErrorFromCodeLookup.set(0x179c, () => new EnteredFreezeIsMoreThanMaxFreezeError());
+createErrorFromNameLookup.set(
+  'EnteredFreezeIsMoreThanMaxFreeze',
+  () => new EnteredFreezeIsMoreThanMaxFreezeError(),
+);
 
 /**
  * NoWithdrawWithFreeze: 'Can't withdraw Candy Machine while freeze is active. Disable freeze first.'

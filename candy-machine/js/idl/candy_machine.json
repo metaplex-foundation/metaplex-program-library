@@ -1081,8 +1081,8 @@
     },
     {
       "code": 6044,
-      "name": "MaxFreezeIsOneWeek",
-      "msg": "Max freeze time can't be longer than 7 days."
+      "name": "EnteredFreezeIsMoreThanMaxFreeze",
+      "msg": "Freeze time can't be longer than MAX_FREEZE_TIME."
     },
     {
       "code": 6045,

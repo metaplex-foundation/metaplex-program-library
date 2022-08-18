@@ -92,8 +92,8 @@ pub enum CandyError {
     IncorrectFreezeAta,
     #[msg("FreezePDA doesn't belong to this Candy Machine.")]
     FreezePDAMismatch,
-    #[msg("Max freeze time can't be longer than 7 days.")]
-    MaxFreezeIsOneWeek,
+    #[msg("Freeze time can't be longer than MAX_FREEZE_TIME.")]
+    EnteredFreezeIsMoreThanMaxFreeze,
     #[msg("Can't withdraw Candy Machine while freeze is active. Disable freeze first.")]
     NoWithdrawWithFreeze,
     #[msg(

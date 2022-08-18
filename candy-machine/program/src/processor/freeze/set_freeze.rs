@@ -26,7 +26,7 @@ pub fn handle_set_freeze(ctx: Context<SetFreeze>, freeze_time: i64) -> Result<()
     candy_machine.assert_not_minted(error!(CandyError::NoChangingFreezeDuringMint))?;
     let freeze_pda = &mut ctx.accounts.freeze_pda;
     if freeze_time > MAX_FREEZE_TIME {
-        return err!(CandyError::MaxFreezeIsOneWeek);
+        return err!(CandyError::EnteredFreezeIsMoreThanMaxFreeze);
     }
     freeze_pda.init(candy_machine.key(), None, freeze_time);
 

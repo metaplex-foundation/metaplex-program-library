@@ -9,7 +9,7 @@ pub const PREFIX: &str = "candy_machine";
 pub const BOT_FEE: u64 = 10000000;
 pub const FREEZE_FEE: u64 = 0; //100000; // 0.0001 SOL
 
-pub const MAX_FREEZE_TIME: i64 = 60 * 60 * 24 * 7;
+pub const MAX_FREEZE_TIME: i64 = 60 * 60 * 24 * 31; // 1 month
 
 pub const COLLECTIONS_FEATURE_INDEX: usize = 0;
 pub const FREEZE_FEATURE_INDEX: usize = 1;
