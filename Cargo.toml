@@ -10,7 +10,9 @@ members=[
 ]
 exclude = [
   "fixed-price-sale/cli",
-  "candy-machine/program",
   "token-metadata",
   "auction-house/program",
+  "candy-machine/program",
+  "bubblegum/program",
+  "candy-wrapper/program",
 ]

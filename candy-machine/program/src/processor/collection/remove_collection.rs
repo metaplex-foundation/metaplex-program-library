@@ -1,5 +1,8 @@
 use anchor_lang::prelude::*;
-use mpl_token_metadata::{instruction::revoke_collection_authority, state::Metadata};
+use mpl_token_metadata::{
+    instruction::revoke_collection_authority,
+    state::{Metadata, TokenMetadataAccount},
+};
 use solana_program::program::invoke;
 
 use crate::{

@@ -90,7 +90,7 @@ pub struct WhitelistMintSettings {
     pub discount_price: Option<u64>,
 }
 
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Debug)]
+#[derive(AnchorSerialize, AnchorDeserialize, Clone, Eq, PartialEq, Debug)]
 pub enum WhitelistMintMode {
     // Only captcha uses the bytes, the others just need to have same length
     // for front end borsh to not crap itself
