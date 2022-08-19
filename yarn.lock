@@ -952,7 +952,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/amman@npm:0.10.0":
+"@metaplex-foundation/amman@npm:0.10.0, @metaplex-foundation/amman@npm:^0.10.0":
   version: 0.10.0
   resolution: "@metaplex-foundation/amman@npm:0.10.0"
   dependencies:
@@ -995,34 +995,6 @@ __metadata:
   bin:
     amman: dist/cli/amman.js
   checksum: 7d81073def86e29d7557722c1acf27db26cdbc8a5120af02c89578f7d9fec1b061c8fd23e072c5432d4d68539e14ea21fa6e27250362a6cf6cd4d955e9f6db7a
-  languageName: node
-  linkType: hard
-
-"@metaplex-foundation/amman@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "@metaplex-foundation/amman@npm:0.10.0"
-  dependencies:
-    "@metaplex-foundation/amman-client": ^0.1.0
-    "@solana/spl-token": ^0.2.0
-    "@solana/web3.js": ^1.43.4
-    ansi-colors: ^4.1.1
-    bn.js: ^5.2.0
-    buffer-hexdump: ^1.0.0
-    date-fns: ^2.28.0
-    debug: ^4.3.3
-    deep-diff: ^1.0.2
-    diff: ^5.1.0
-    numeral: ^2.0.6
-    port-pid: ^0.0.7
-    socket.io: ^4.4.1
-    split2: ^4.1.0
-    text-table: ^0.2.0
-    timeago.js: ^4.0.2
-    wait-on: ^6.0.0
-    yargs: ^17.3.0
-  bin:
-    amman: dist/cli/amman.js
-  checksum: ceefa1f6db040ceb8b0c423e46bbc1a28881e108c5b7bc6af1fd57315ba173d71d66605c94231cde08382b59dd3b02a3ecfda1835ab4dc1ad3186228a6fc8576
   languageName: node
   linkType: hard
 
@@ -1903,7 +1875,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/web3.js@npm:^1.17.0, @solana/web3.js@npm:^1.21.0, @solana/web3.js@npm:^1.31.0, @solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.35.0, @solana/web3.js@npm:^1.35.1, @solana/web3.js@npm:^1.36.0, @solana/web3.js@npm:^1.37.0, @solana/web3.js@npm:^1.43.4, @solana/web3.js@npm:^1.44.0, @solana/web3.js@npm:^1.50.1":
+"@solana/web3.js@npm:^1.17.0, @solana/web3.js@npm:^1.21.0, @solana/web3.js@npm:^1.31.0, @solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.35.0, @solana/web3.js@npm:^1.35.1, @solana/web3.js@npm:^1.36.0, @solana/web3.js@npm:^1.37.0, @solana/web3.js@npm:^1.44.0, @solana/web3.js@npm:^1.50.1":
   version: 1.52.0
   resolution: "@solana/web3.js@npm:1.52.0"
   dependencies:
@@ -1925,31 +1897,6 @@ __metadata:
     superstruct: ^0.14.2
     tweetnacl: ^1.0.3
   checksum: be162bc31ea9a9f3e025e740f077bba2164ca6882e211fa5f694407cf44fac5038c8149691d12c5170cf4cca5a3c7adb82c04f0b34bdbc3d1429d7db21d3ba8f
-  languageName: node
-  linkType: hard
-
-"@sorend-solana/gummyroll@npm:^0.0.6":
-  version: 0.0.6
-  resolution: "@sorend-solana/gummyroll@npm:0.0.6"
-  dependencies:
-    "@metaplex-foundation/beet": ^0.4.0
-    "@metaplex-foundation/beet-solana": ^0.3.0
-    "@project-serum/anchor": 0.24.2
-    "@solana/web3.js": ^1.50.1
-    "@sorend-solana/utils": ^0.0.5
-  checksum: 2d0539bd002ec9704f5441c8cdd3dd823e45f5063e8a1c0bfcac9a73d4bd86fb88175e1464c928745549e6e22770043cd7831da74a4f6204edd5b3c0b5cf7269
-  languageName: node
-  linkType: hard
-
-"@sorend-solana/utils@npm:^0.0.5":
-  version: 0.0.5
-  resolution: "@sorend-solana/utils@npm:0.0.5"
-  dependencies:
-    "@metaplex-foundation/beet": 0.3.0
-    "@project-serum/anchor": 0.24.2
-    "@solana/web3.js": ^1.50.1
-    borsh: ^0.7.0
-  checksum: 5d304ca1ddb69e599d40ca7b38c2fc6761ebd431022b5af705ce9a83404fb44849aa4eff77bec72e655dad833d100c1c24d06c511c0c3edb173136ca42ff83b6
   languageName: node
   linkType: hard
 
@@ -1975,6 +1922,31 @@ __metadata:
     superstruct: ^0.14.2
     tweetnacl: ^1.0.0
   checksum: 49dca7b9caa776a6184b6008af74907d55b4dde3652babd066d316b585e00f7e2d63d1fb450b7a32591c371dfcee3d4bbfff98409ed80a07216a90dc58c7fb86
+  languageName: node
+  linkType: hard
+
+"@sorend-solana/gummyroll@npm:^0.0.6":
+  version: 0.0.6
+  resolution: "@sorend-solana/gummyroll@npm:0.0.6"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.4.0
+    "@metaplex-foundation/beet-solana": ^0.3.0
+    "@project-serum/anchor": 0.24.2
+    "@solana/web3.js": ^1.50.1
+    "@sorend-solana/utils": ^0.0.5
+  checksum: 2d0539bd002ec9704f5441c8cdd3dd823e45f5063e8a1c0bfcac9a73d4bd86fb88175e1464c928745549e6e22770043cd7831da74a4f6204edd5b3c0b5cf7269
+  languageName: node
+  linkType: hard
+
+"@sorend-solana/utils@npm:^0.0.5":
+  version: 0.0.5
+  resolution: "@sorend-solana/utils@npm:0.0.5"
+  dependencies:
+    "@metaplex-foundation/beet": 0.3.0
+    "@project-serum/anchor": 0.24.2
+    "@solana/web3.js": ^1.50.1
+    borsh: ^0.7.0
+  checksum: 5d304ca1ddb69e599d40ca7b38c2fc6761ebd431022b5af705ce9a83404fb44849aa4eff77bec72e655dad833d100c1c24d06c511c0c3edb173136ca42ff83b6
   languageName: node
   linkType: hard
 
@@ -2098,7 +2070,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=10.0.0":
+"@types/node@npm:*":
   version: 18.7.2
   resolution: "@types/node@npm:18.7.2"
   checksum: 422cf95dea09959d0e809d24280b76948f60ea805e20d38f07bf9eeafeb413513b9cc365404766f7752bef9cafb8301a882d9d097f780e13f2bedf507459ebc5
@@ -9075,7 +9047,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tweetnacl@npm:^1.0.3":
+"tweetnacl@npm:^1.0.0, tweetnacl@npm:^1.0.3":
   version: 1.0.3
   resolution: "tweetnacl@npm:1.0.3"
   checksum: e4a57cac188f0c53f24c7a33279e223618a2bfb5fea426231991652a13247bea06b081fd745d71291fcae0f4428d29beba1b984b1f1ce6f66b06a6d1ab90645c
@@ -9698,28 +9670,6 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 2152cf862cae0693f3775bc688a6afb2e989d19d626d215e70f5fcd8eb55b1c3b0d3a6a4052905ec320e2d7734e20aeedbf9744496d62f15a26ad79cf4cf7dae
-  languageName: node
-  linkType: hard
-
-"ws@npm:~8.2.3":
-  version: 8.2.3
-  resolution: "ws@npm:8.2.3"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ^5.0.2
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: c869296ccb45f218ac6d32f8f614cd85b50a21fd434caf11646008eef92173be53490810c5c23aea31bc527902261fbfd7b062197eea341b26128d4be56a85e4
-  languageName: node
-  linkType: hard
-
-"xmlhttprequest-ssl@npm:~2.0.0":
-  version: 2.0.0
-  resolution: "xmlhttprequest-ssl@npm:2.0.0"
-  checksum: 1e98df67f004fec15754392a131343ea92e6ab5ac4d77e842378c5c4e4fd5b6a9134b169d96842cc19422d77b1606b8df84a5685562b3b698cb68441636f827e
   languageName: node
   linkType: hard
 
