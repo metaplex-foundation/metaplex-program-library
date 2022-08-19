@@ -181,7 +181,7 @@ pub fn get_asset_pairs(assets_dir: &str) -> Result<HashMap<isize, AssetPair>> {
             return Err(error);
         };
 
-        let img_pattern = format!("^{}\\.((jpg)|(gif)|(png))$", i);
+        let img_pattern = format!("^{}\\.((jpg)|(jpeg)|(gif)|(png))$", i);
 
         let img_regex = RegexBuilder::new(&img_pattern)
             .case_insensitive(true)
