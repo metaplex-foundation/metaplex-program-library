@@ -177,6 +177,7 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
     let nft_lookup: HashMap<String, &CacheItem> = cache
         .items
         .iter()
+        .filter(|(k, _)| *k != "-1") // skip collection index
         .map(|(k, item)| (increment_key(k), item))
         .collect();
 
