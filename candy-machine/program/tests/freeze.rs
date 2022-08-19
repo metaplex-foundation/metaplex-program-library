@@ -130,8 +130,8 @@ async fn freeze_flow_with_spl_token() {
 
     let pre_balance = get_token_balance(context, &candy_manager.token_info.auth_account).await;
     candy_manager.unlock_funds(context).await.unwrap();
-    let post_balance = get_balance(context, &candy_manager.token_info.auth_account).await;
-    assert!(post_balance - pre_balance >= sol(2.0));
+    let post_balance = get_token_balance(context, &candy_manager.token_info.auth_account).await;
+    assert!(post_balance - pre_balance >= 1);
 }
 
 #[tokio::test]
