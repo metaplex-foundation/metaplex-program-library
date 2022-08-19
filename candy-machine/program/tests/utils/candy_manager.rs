@@ -3,6 +3,7 @@ use std::{fmt::Debug, str::FromStr};
 use anchor_lang::AccountDeserialize;
 use mpl_token_metadata::pda::find_collection_authority_account;
 use solana_gateway::state::{get_expire_address_with_seed, get_gateway_token_address_with_seed};
+use solana_program::clock::Clock;
 use solana_program::program_option::COption;
 use solana_program::pubkey::Pubkey;
 use solana_program_test::ProgramTestContext;
@@ -907,7 +908,15 @@ impl CandyManager {
     ) -> transport::Result<MasterEditionManager> {
         let candy_start = self.get_candy(context).await;
         let start_balance = get_balance(context, &self.minter.pubkey()).await;
-        let wallet_to_use = if self.freeze_info.set {
+        let wallet_to_use = if self.freeze_info.set && {
+            let freeze = self.get_freeze_pda(context).await;
+            let current_timestamp = context
+                .banks_client
+                .get_sysvar::<Clock>()
+                .await?
+                .unix_timestamp;
+            !freeze.thaw_eligible(current_timestamp, &candy_start)
+        } {
             if self.token_info.set {
                 get_associated_token_address(&self.freeze_info.pda, &self.token_info.mint)
             } else {

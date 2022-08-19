@@ -476,18 +476,30 @@ pub fn handle_mint_nft<'info>(
         }
     }
 
-    let wallet_to_use = if is_feature_active(&candy_machine.data.uuid, FREEZE_FEATURE_INDEX) {
-        if let Some(mint) = candy_machine.token_mint {
-            let freeze_pda = &ctx.remaining_accounts[remaining_accounts_counter + 2];
-            let freeze_ata = &ctx.remaining_accounts[remaining_accounts_counter + 2 + 2];
-            assert_is_ata(freeze_ata, freeze_pda.key, &mint)?;
-            freeze_ata
+    let (wallet_to_use, freeze_pda): (&AccountInfo, Option<Account<FreezePDA>>) =
+        if is_feature_active(&candy_machine.data.uuid, FREEZE_FEATURE_INDEX) {
+            if let Some(mint) = candy_machine.token_mint {
+                let freeze_pda_info = &ctx.remaining_accounts[remaining_accounts_counter + 2];
+                let freeze_ata = &ctx.remaining_accounts[remaining_accounts_counter + 2 + 2];
+                assert_is_ata(freeze_ata, freeze_pda_info.key, &mint)?;
+                let freeze_pda: Account<FreezePDA> = Account::try_from(freeze_pda_info)?;
+                if freeze_pda.thaw_eligible(clock.unix_timestamp, candy_machine) {
+                    (wallet, None)
+                } else {
+                    (freeze_ata, Some(freeze_pda))
+                }
+            } else {
+                let freeze_pda_info = &ctx.remaining_accounts[remaining_accounts_counter];
+                let freeze_pda: Account<FreezePDA> = Account::try_from(freeze_pda_info)?;
+                if freeze_pda.thaw_eligible(clock.unix_timestamp, candy_machine) {
+                    (wallet, None)
+                } else {
+                    (freeze_pda_info, Some(freeze_pda))
+                }
+            }
         } else {
-            &ctx.remaining_accounts[remaining_accounts_counter]
-        }
-    } else {
-        wallet
-    };
+            (wallet, None)
+        };
 
     if let Some(mint) = candy_machine.token_mint {
         let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
@@ -644,16 +656,15 @@ pub fn handle_mint_nft<'info>(
         &[&authority_seeds],
     )?;
 
-    if is_feature_active(&candy_machine.data.uuid, FREEZE_FEATURE_INDEX) {
+    if let Some(mut freeze_pda) = freeze_pda {
         msg!("About to freeze nft");
         let mint_pubkey = ctx.accounts.mint.key();
         let candy_pubkey = ctx.accounts.candy_machine.key();
-        let freeze_pda_info = &ctx.remaining_accounts[remaining_accounts_counter];
+        // counter incremented here since we sorta incremented it in our hearts during the wallet_to_use block.
         remaining_accounts_counter += 1;
         let nft_token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
         // If we add more extra accounts later on we need to uncomment the following line out.
         // remaining_accounts_counter += 1;
-        let mut freeze_pda: Account<FreezePDA> = Account::try_from(freeze_pda_info)?;
 
         assert_is_ata(nft_token_account_info, &payer.key(), &mint_pubkey)?;
         let seeds: &[&[u8]] = &[FreezePDA::PREFIX.as_bytes(), candy_pubkey.as_ref()];

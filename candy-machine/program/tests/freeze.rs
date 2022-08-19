@@ -7,7 +7,9 @@ use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
 use spl_token::state::AccountState;
 
-use mpl_candy_machine::constants::{FREEZE_FEATURE_INDEX, FREEZE_FEE, FREEZE_LOCK_FEATURE_INDEX};
+use mpl_candy_machine::constants::{
+    FREEZE_FEATURE_INDEX, FREEZE_FEE, FREEZE_LOCK_FEATURE_INDEX, MAX_FREEZE_TIME,
+};
 use mpl_candy_machine::{
     is_feature_active, CandyMachineData, FreezePDA, WhitelistMintMode::BurnEveryTime,
 };
@@ -24,7 +26,7 @@ pub mod core;
 pub mod utils;
 
 #[tokio::test]
-async fn test_freeze() {
+async fn freeze_general() {
     test_start("Test Freeze");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
@@ -163,7 +165,7 @@ async fn test_freeze() {
 }
 
 #[tokio::test]
-async fn test_freeze_update() {
+async fn freeze_update() {
     test_start("Test Freeze Update");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
@@ -284,9 +286,8 @@ async fn test_freeze_update() {
     assert_eq!(freeze_pda_before, freeze_pda_after);
 }
 
-//TODO: finish this test
 #[tokio::test]
-async fn test_thaw_after_timeout() {
+async fn thaw_after_freeze_time() {
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
     let freeze_time = 30; //30 seconds
@@ -300,7 +301,6 @@ async fn test_thaw_after_timeout() {
     )
     .await;
 
-    // let random_key = new_funded_keypair(context, sol(1.0)).await;
     airdrop(context, &candy_manager.minter.pubkey(), sol(20.0))
         .await
         .unwrap();
@@ -331,6 +331,7 @@ async fn test_thaw_after_timeout() {
         .await
         .unwrap();
     let current_slot = context.banks_client.get_root_slot().await.unwrap();
+
     //test thaw fail
     candy_manager
         .thaw_nft(context, &new_nft, &new_nft.authority)
@@ -360,10 +361,17 @@ async fn test_thaw_after_timeout() {
         thaw_time - mint_time >= freeze_time,
         "This shouldn't happen. Something must have went wrong."
     );
+
+    // now that freeze time has passed, new mints shouldn't be frozen
+    let new_nft = candy_manager
+        .mint_and_assert_successful(context, Some(sol(1.0)), true)
+        .await
+        .unwrap();
+    candy_manager.assert_thawed(context, &new_nft, true).await;
 }
 
 #[tokio::test]
-async fn test_unlock_funds() {
+async fn unlock_funds() {
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
     let freeze_time = 30; //30 seconds
@@ -402,10 +410,12 @@ async fn test_unlock_funds() {
     candy_manager
         .assert_freeze_set(context, &expected_freeze_pda)
         .await;
+
     let new_nft = candy_manager
         .mint_and_assert_successful(context, Some(sol(1.0)), true)
         .await
         .unwrap();
+
     candy_manager.remove_freeze(context).await.unwrap();
     // shouldn't work because one nft is still frozen
     candy_manager.unlock_funds(context).await.unwrap_err();
@@ -417,8 +427,88 @@ async fn test_unlock_funds() {
     let pre_balance = get_balance(context, &candy_manager.authority.pubkey()).await;
     candy_manager.unlock_funds(context).await.unwrap();
     let post_balance = get_balance(context, &candy_manager.authority.pubkey()).await;
-    println!(
-        "Pre balance: {}, post balance: {}",
-        pre_balance, post_balance
-    );
+    assert!(post_balance - pre_balance >= sol(1.0));
+}
+
+#[tokio::test]
+async fn mint_out_unfreeze() {
+    let mut context = candy_machine_program_test().start_with_context().await;
+    let context = &mut context;
+    let freeze_time = MAX_FREEZE_TIME;
+    let mut candy_manager = CandyManager::init(
+        context,
+        false,
+        false,
+        Some(FreezeConfig::new(true, freeze_time)),
+        None,
+        None,
+    )
+    .await;
+    let random_key = new_funded_keypair(context, sol(1.0)).await;
+    airdrop(context, &candy_manager.minter.pubkey(), sol(6.0))
+        .await
+        .unwrap();
+
+    let mut candy_data = auto_config(&candy_manager, Some(0), true, true, None, None);
+    candy_data.items_available = 2;
+    candy_manager
+        .create(context, candy_data.clone())
+        .await
+        .unwrap();
+    candy_manager.fill_config_lines(context).await.unwrap();
+
+    assert_account_empty(context, &candy_manager.freeze_info.pda).await;
+    candy_manager.set_freeze(context).await.unwrap();
+
+    let expected_freeze_pda = FreezePDA {
+        candy_machine: candy_manager.candy_machine.pubkey(),
+        freeze_fee: FREEZE_FEE,
+        freeze_time,
+        frozen_count: 0,
+        allow_thaw: false,
+        mint_start: None,
+    };
+
+    candy_manager
+        .assert_freeze_set(context, &expected_freeze_pda)
+        .await;
+
+    let nft1 = candy_manager
+        .mint_and_assert_successful(context, Some(sol(1.0)), true)
+        .await
+        .unwrap();
+
+    candy_manager.assert_frozen(context, &nft1).await;
+
+    // should fail
+    candy_manager
+        .thaw_nft(context, &nft1, &random_key)
+        .await
+        .unwrap_err();
+
+    let nft2 = candy_manager
+        .mint_and_assert_successful(context, Some(sol(1.0)), true)
+        .await
+        .unwrap();
+
+    candy_manager.assert_frozen(context, &nft2).await;
+
+    // should succeed
+    candy_manager
+        .thaw_nft(context, &nft1, &random_key)
+        .await
+        .unwrap();
+
+    // This should fail because nft2 is still frozen
+    candy_manager.unlock_funds(context).await.unwrap_err();
+
+    candy_manager
+        .thaw_nft(context, &nft2, &random_key)
+        .await
+        .unwrap();
+
+    let pre_balance = get_balance(context, &candy_manager.authority.pubkey()).await;
+    candy_manager.unlock_funds(context).await.unwrap();
+    let post_balance = get_balance(context, &candy_manager.authority.pubkey()).await;
+    assert!(post_balance - pre_balance >= sol(2.0));
 }
