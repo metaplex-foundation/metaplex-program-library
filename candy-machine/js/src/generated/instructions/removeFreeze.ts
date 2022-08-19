@@ -10,45 +10,47 @@ import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
- * @category WithdrawFunds
+ * @category RemoveFreeze
  * @category generated
  */
-export const withdrawFundsStruct = new beet.BeetArgsStruct<{
+export const removeFreezeStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number[] /* size: 8 */;
 }>(
   [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'WithdrawFundsInstructionArgs',
+  'RemoveFreezeInstructionArgs',
 );
 /**
- * Accounts required by the _withdrawFunds_ instruction
+ * Accounts required by the _removeFreeze_ instruction
  *
  * @property [_writable_] candyMachine
  * @property [_writable_, **signer**] authority
+ * @property [_writable_] freezePda
  * @category Instructions
- * @category WithdrawFunds
+ * @category RemoveFreeze
  * @category generated
  */
-export type WithdrawFundsInstructionAccounts = {
+export type RemoveFreezeInstructionAccounts = {
   candyMachine: web3.PublicKey;
   authority: web3.PublicKey;
+  freezePda: web3.PublicKey;
 };
 
-export const withdrawFundsInstructionDiscriminator = [241, 36, 29, 111, 208, 31, 104, 217];
+export const removeFreezeInstructionDiscriminator = [1, 212, 80, 168, 129, 60, 46, 251];
 
 /**
- * Creates a _WithdrawFunds_ instruction.
+ * Creates a _RemoveFreeze_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @category Instructions
- * @category WithdrawFunds
+ * @category RemoveFreeze
  * @category generated
  */
-export function createWithdrawFundsInstruction(
-  accounts: WithdrawFundsInstructionAccounts,
+export function createRemoveFreezeInstruction(
+  accounts: RemoveFreezeInstructionAccounts,
   programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
 ) {
-  const [data] = withdrawFundsStruct.serialize({
-    instructionDiscriminator: withdrawFundsInstructionDiscriminator,
+  const [data] = removeFreezeStruct.serialize({
+    instructionDiscriminator: removeFreezeInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
@@ -60,6 +62,11 @@ export function createWithdrawFundsInstruction(
       pubkey: accounts.authority,
       isWritable: true,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.freezePda,
+      isWritable: true,
+      isSigner: false,
     },
   ];
 
