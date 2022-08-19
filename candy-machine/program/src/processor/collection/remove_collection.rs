@@ -16,7 +16,7 @@ pub struct RemoveCollection<'info> {
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
-    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close=authority)]
+    #[account(mut, seeds = [CollectionPDA::PREFIX.as_ref(), candy_machine.to_account_info().key.as_ref()], bump, close=authority)]
     collection_pda: Account<'info, CollectionPDA>,
     /// CHECK: account checked in CPI
     metadata: UncheckedAccount<'info>,
@@ -33,9 +33,8 @@ pub struct RemoveCollection<'info> {
 pub fn handle_remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
     let mint = ctx.accounts.mint.to_account_info();
     let candy_machine = &mut ctx.accounts.candy_machine;
-    if candy_machine.items_redeemed > 0 {
-        return err!(CandyError::NoChangingCollectionDuringMint);
-    }
+    candy_machine.assert_not_minted(error!(CandyError::NoChangingCollectionDuringMint))?;
+
     let metadata: Metadata = Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
     if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {
         return err!(CandyError::IncorrectCollectionAuthority);
