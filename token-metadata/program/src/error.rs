@@ -456,6 +456,14 @@ pub enum MetadataError {
     /// 115 - Item is already unverified.
     #[error("Item is already unverified.")]
     AlreadyUnverified,
+
+    /// 116 - Not a Print Edition
+    #[error("This edition is not a Print Edition")]
+    NotAPrintEdition,
+
+    /// 117 - Incorrect Edition Marker
+    #[error("Incorrect Edition Marker")]
+    IncorrectEditionMarker,
 }
 
 impl PrintProgramError for MetadataError {

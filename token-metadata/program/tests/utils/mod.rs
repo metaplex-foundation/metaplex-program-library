@@ -91,6 +91,40 @@ pub async fn burn(
     Ok(())
 }
 
+pub async fn burn_edition(
+    context: &mut ProgramTestContext,
+    metadata: Pubkey,
+    owner: &Keypair,
+    mint: Pubkey,
+    original_mint: Pubkey,
+    token: Pubkey,
+    master_edition: Pubkey,
+    edition: Pubkey,
+    edition_marker: Pubkey,
+) -> Result<(), BanksClientError> {
+    let tx = Transaction::new_signed_with_payer(
+        &[instruction::burn_edition_nft(
+            mpl_token_metadata::ID,
+            metadata,
+            owner.pubkey(),
+            mint,
+            original_mint,
+            token,
+            master_edition,
+            edition,
+            edition_marker,
+            spl_token::ID,
+        )],
+        Some(&owner.pubkey()),
+        &[owner],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await?;
+
+    Ok(())
+}
+
 pub async fn mint_tokens(
     context: &mut ProgramTestContext,
     mint: &Pubkey,

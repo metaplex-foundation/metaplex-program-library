@@ -14,10 +14,11 @@ use crate::{
     instruction::{MetadataInstruction, SetCollectionSizeArgs},
     solana_program::program_memory::sol_memset,
     state::{
-        Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
-        MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, UseAuthorityRecord,
-        UseMethod, Uses, BURN, COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION,
-        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Edition, EditionMarker,
+        Key, MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard,
+        UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
+        COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, EDITION_MARKER_BIT_SIZE, MAX_MASTER_EDITION_LEN,
+        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
@@ -25,8 +26,9 @@ use crate::{
         assert_mint_authority_matches_mint, assert_owned_by, assert_signer,
         assert_token_program_matches_package, assert_update_authority_is_correct,
         assert_verified_member_of_collection, check_token_standard, create_or_allocate_account_raw,
-        decrement_collection_size, get_owner_from_token_account, increment_collection_size,
-        process_create_metadata_accounts_logic,
+        decrement_collection_size, get_mint_decimals, get_mint_supply,
+        get_owner_from_token_account, increment_collection_size, is_master_edition,
+        is_print_edition, process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
@@ -221,6 +223,10 @@ pub fn process_instruction<'a>(
         MetadataInstruction::BurnNft => {
             msg!("Instruction: Burn NFT");
             process_burn_nft(program_id, accounts)
+        }
+        MetadataInstruction::BurnEditionNft => {
+            msg!("Instruction: Burn Edition NFT");
+            process_burn_edition_nft(program_id, accounts)
         }
         MetadataInstruction::VerifySizedCollectionItem => {
             msg!("Instruction: Verify Collection V2");
@@ -1843,6 +1849,198 @@ pub fn process_burn_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
             }
         }
     }
+
+    Ok(())
+}
+
+pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let metadata_info = next_account_info(account_info_iter)?;
+    let owner_info = next_account_info(account_info_iter)?;
+    let mint_info = next_account_info(account_info_iter)?;
+    let original_mint_info = next_account_info(account_info_iter)?;
+    let token_info = next_account_info(account_info_iter)?;
+    let master_edition_info = next_account_info(account_info_iter)?;
+    let edition_info = next_account_info(account_info_iter)?;
+    let edition_marker_info = next_account_info(account_info_iter)?;
+    let spl_token_program_info = next_account_info(account_info_iter)?;
+
+    //    **CHECKS**
+
+    // Ensure the master edition is actually a master edition.
+    let original_mint_decimals = get_mint_decimals(original_mint_info)?;
+    let original_mint_supply = get_mint_supply(original_mint_info)?;
+
+    msg!("checking master edition. . . ");
+    if !is_master_edition(
+        master_edition_info,
+        original_mint_decimals,
+        original_mint_supply,
+    ) {
+        return Err(MetadataError::NotAMasterEdition.into());
+    }
+
+    // Ensure the print edition is actually a print edition.
+    let mint_decimals = get_mint_decimals(original_mint_info)?;
+    let mint_supply = get_mint_supply(original_mint_info)?;
+
+    if !is_print_edition(edition_info, mint_decimals, mint_supply) {
+        return Err(MetadataError::NotAPrintEdition.into());
+    }
+
+    let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
+
+    // Checks:
+    // * Metadata is owned by the token-metadata program
+    // * Mint is owned by the spl-token program
+    // * Token is owned by the spl-token program
+    // * Token account is initialized
+    // * Token account data owner is 'owner'
+    // * Token account belongs to mint
+    // * Token account has 1 or more tokens
+    // * Mint matches metadata.mint
+    assert_currently_holding(
+        program_id,
+        owner_info,
+        metadata_info,
+        &metadata,
+        mint_info,
+        token_info,
+    )?;
+
+    // Owned by token-metadata program.
+    assert_owned_by(master_edition_info, program_id)?;
+    assert_owned_by(edition_info, program_id)?;
+    assert_owned_by(edition_marker_info, program_id)?;
+
+    // Owned by spl-token program.
+    assert_owned_by(original_mint_info, &spl_token::id())?;
+
+    // Owner is a signer.
+    assert_signer(owner_info)?;
+
+    // Master and Print editions are valid PDAs for their given mints.
+    let master_edition_info_path = Vec::from([
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        original_mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+    ]);
+    assert_derivation(program_id, master_edition_info, &master_edition_info_path)?;
+
+    let edition_info_path = Vec::from([
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+    ]);
+    assert_derivation(program_id, edition_info, &edition_info_path)?;
+
+    let edition: Edition = Edition::from_account_info(edition_info)?;
+
+    // Which edition marker is this edition in
+    let edition_marker_number = edition
+        .edition
+        .checked_div(EDITION_MARKER_BIT_SIZE)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+    let edition_marker_number_str = edition_marker_number.to_string();
+
+    msg!("edition marker number: {}", edition_marker_number_str);
+
+    // Ensure we were passed the correct edition marker PDA.
+    let edition_marker_info_path = Vec::from([
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        original_mint_info.key.as_ref(),
+        EDITION.as_bytes(),
+        edition_marker_number_str.as_bytes(),
+    ]);
+    assert_derivation(program_id, edition_marker_info, &edition_marker_info_path)
+        .map_err(|_| MetadataError::IncorrectEditionMarker)?;
+
+    //      **BURN**
+    // Burn the SPL token
+    let params = TokenBurnParams {
+        mint: mint_info.clone(),
+        source: token_info.clone(),
+        authority: owner_info.clone(),
+        token_program: spl_token_program_info.clone(),
+        amount: 1,
+        authority_signer_seeds: None,
+    };
+    spl_token_burn(params)?;
+
+    // Close token account.
+    let params = TokenCloseParams {
+        token_program: spl_token_program_info.clone(),
+        account: token_info.clone(),
+        destination: owner_info.clone(),
+        owner: owner_info.clone(),
+        authority_signer_seeds: None,
+    };
+    spl_token_close(params)?;
+
+    // Close metadata and edition accounts by transferring rent funds to owner and
+    // zeroing out the data.
+    let metadata_lamports = metadata_info.lamports();
+    **metadata_info.try_borrow_mut_lamports()? = 0;
+    **owner_info.try_borrow_mut_lamports()? = owner_info
+        .lamports()
+        .checked_add(metadata_lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+
+    let edition_lamports = edition_info.lamports();
+    **edition_info.try_borrow_mut_lamports()? = 0;
+    **owner_info.try_borrow_mut_lamports()? = owner_info
+        .lamports()
+        .checked_add(edition_lamports)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+
+    let metadata_data = &mut metadata_info.try_borrow_mut_data()?;
+    let edition_data = &mut edition_info.try_borrow_mut_data()?;
+    let edition_data_len = edition_data.len();
+
+    // Use MAX_METADATA_LEN because it has unused padding, making it longer than current metadata len.
+    sol_memset(metadata_data, 0, MAX_METADATA_LEN);
+    sol_memset(edition_data, 0, edition_data_len);
+
+    //       **EDITION HOUSEKEEPING**
+    // Set the particular bit for this edition to 0.
+    let mut edition_marker: EditionMarker = EditionMarker::from_account_info(edition_marker_info)?;
+    let (index, mask) = EditionMarker::get_index_and_mask(edition.edition)?;
+    edition_marker.ledger[index] ^= mask;
+
+    // If the entire edition marker is empty, then we can close the account.
+    // Otherwise, serialize the new edition marker and update the account data.
+    if edition_marker.ledger.iter().all(|i| *i == 0) {
+        msg!("Closing edition marker account");
+        let edition_marker_lamports = edition_marker_info.lamports();
+        **edition_marker_info.try_borrow_mut_lamports()? = 0;
+        **owner_info.try_borrow_mut_lamports()? = owner_info
+            .lamports()
+            .checked_add(edition_marker_lamports)
+            .ok_or(MetadataError::NumericalOverflowError)?;
+
+        let edition_marker_data = &mut edition_marker_info.try_borrow_mut_data()?;
+        let edition_marker_data_len = edition_marker_data.len();
+
+        sol_memset(edition_marker_data, 0, edition_marker_data_len);
+    } else {
+        let mut edition_marker_info_data = edition_marker_info.try_borrow_mut_data()?;
+        edition_marker_info_data[0..].fill(0);
+        edition_marker.serialize(&mut *edition_marker_info_data)?;
+    }
+
+    // Decrement the suppply on the master edition now that we've successfully burned a print.
+    // TODO: should we decrement total supply as well?
+    let mut master_edition: MasterEditionV2 =
+        MasterEditionV2::from_account_info(master_edition_info)?;
+    master_edition.supply = master_edition
+        .supply
+        .checked_sub(1)
+        .ok_or(MetadataError::NumericalOverflowError)?;
+    master_edition.serialize(&mut *master_edition_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
