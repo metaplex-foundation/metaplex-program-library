@@ -40,3 +40,6 @@ mpl-testing-utils= {path="../../core/rust/testing-utils" }
 solana-program-test = "~1.9.28"
 solana-sdk = "~1.9.28"
 env_logger="~0.9.0"
+
+[profile.release]
+overflow-checks = true     # Enable integer overflow checks.
