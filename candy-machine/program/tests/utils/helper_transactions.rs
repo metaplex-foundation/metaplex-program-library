@@ -314,23 +314,13 @@ pub async fn remove_freeze(
     candy_machine: &Pubkey,
     authority: &Keypair,
     freeze_info: &FreezeInfo,
-    token_info: &TokenInfo,
 ) -> transport::Result<()> {
-    let mut accounts = mpl_candy_machine::accounts::RemoveFreeze {
+    let accounts = mpl_candy_machine::accounts::RemoveFreeze {
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
         freeze_pda: freeze_info.pda,
     }
     .to_account_metas(None);
-
-    if token_info.set {
-        accounts.push(AccountMeta::new_readonly(spl_token::id(), false));
-        accounts.push(AccountMeta::new(
-            freeze_info.find_freeze_ata(&token_info.mint),
-            false,
-        ));
-        accounts.push(AccountMeta::new(token_info.auth_account, false));
-    }
 
     let data = mpl_candy_machine::instruction::RemoveFreeze {}.data();
     let set_ix = Instruction {
@@ -392,14 +382,23 @@ pub async fn unlock_funds(
     candy_machine: &Pubkey,
     authority: &Keypair,
     freeze_info: &FreezeInfo,
+    token_info: &TokenInfo,
 ) -> transport::Result<()> {
-    let accounts = mpl_candy_machine::accounts::UnlockFunds {
+    let mut accounts = mpl_candy_machine::accounts::UnlockFunds {
         freeze_pda: freeze_info.pda,
         candy_machine: *candy_machine,
         authority: authority.pubkey(),
         system_program: system_program::id(),
     }
     .to_account_metas(None);
+    if token_info.set {
+        accounts.push(AccountMeta::new_readonly(spl_token::id(), false));
+        accounts.push(AccountMeta::new(
+            freeze_info.find_freeze_ata(&token_info.mint),
+            false,
+        ));
+        accounts.push(AccountMeta::new(token_info.auth_account, false));
+    }
 
     let data = mpl_candy_machine::instruction::UnlockFunds {}.data();
     let set_ix = Instruction {

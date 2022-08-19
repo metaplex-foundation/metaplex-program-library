@@ -829,7 +829,6 @@ impl CandyManager {
             &self.candy_machine.pubkey(),
             &self.authority,
             &self.freeze_info,
-            &self.token_info,
         )
         .await?;
         self.freeze_info.set = false;
@@ -866,6 +865,7 @@ impl CandyManager {
             &self.candy_machine.pubkey(),
             &self.authority,
             &self.freeze_info,
+            &self.token_info,
         )
         .await?;
         logger.end();

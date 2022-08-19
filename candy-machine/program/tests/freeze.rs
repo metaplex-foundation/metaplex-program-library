@@ -2,10 +2,8 @@
 #![allow(dead_code)]
 
 use solana_program::clock::Clock;
-use solana_program::program_option::COption;
 use solana_program_test::*;
 use solana_sdk::{signature::Keypair, signer::Signer};
-use spl_token::state::AccountState;
 
 use mpl_candy_machine::constants::{
     FREEZE_FEATURE_INDEX, FREEZE_FEE, FREEZE_LOCK_FEATURE_INDEX, MAX_FREEZE_TIME,
@@ -14,11 +12,11 @@ use mpl_candy_machine::{
     is_feature_active, CandyMachineData, FreezePDA, WhitelistMintMode::BurnEveryTime,
 };
 
-use crate::core::helpers::{get_balance, new_funded_keypair};
+use crate::core::helpers::{get_balance, get_token_balance, new_funded_keypair};
 use crate::utils::helpers::test_start;
 use crate::utils::FreezeConfig;
 use crate::{
-    core::helpers::{airdrop, assert_account_empty, clone_keypair, get_token_account},
+    core::helpers::{airdrop, assert_account_empty, clone_keypair},
     utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager, WhitelistConfig},
 };
 
@@ -26,7 +24,7 @@ pub mod core;
 pub mod utils;
 
 #[tokio::test]
-async fn freeze_general() {
+async fn freeze_flow_with_spl_token() {
     test_start("Test Freeze");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
@@ -41,6 +39,9 @@ async fn freeze_general() {
         None,
     )
     .await;
+    let balance = get_token_balance(context, &candy_manager.token_info.auth_account).await;
+    let balance2 = get_token_balance(context, &candy_manager.token_info.minter_account).await;
+    println!("Auth: {}, Minter: {}", balance, balance2);
 
     airdrop(context, &candy_manager.minter.pubkey(), sol(2.0))
         .await
@@ -58,8 +59,18 @@ async fn freeze_general() {
     assert_account_empty(context, &candy_manager.freeze_info.pda).await;
     candy_manager.set_freeze(context).await.unwrap();
 
-    let freeze_pda_account = candy_manager.get_freeze_pda(context).await;
-    assert_eq!(freeze_pda_account.freeze_time, 60 * 60);
+    let mut expected_freeze_pda = FreezePDA {
+        candy_machine: candy_manager.candy_machine.pubkey(),
+        freeze_fee: FREEZE_FEE,
+        freeze_time,
+        frozen_count: 0,
+        allow_thaw: false,
+        mint_start: None,
+    };
+
+    candy_manager
+        .assert_freeze_set(context, &expected_freeze_pda)
+        .await;
 
     let failed = candy_manager.mint_and_assert_bot_tax(context).await;
     if failed.is_err() {
@@ -75,93 +86,52 @@ async fn freeze_general() {
         .update(context, None, candy_data)
         .await
         .unwrap();
+
     let new_nft = candy_manager
         .mint_and_assert_successful(context, Some(1), true)
         .await
         .unwrap();
-    let token_account = get_token_account(context, &new_nft.token_account)
+    let mint_start = context
+        .banks_client
+        .get_sysvar::<Clock>()
         .await
-        .unwrap();
-    assert_eq!(
-        token_account.state,
-        AccountState::Frozen,
-        "Token account state is not correct"
-    );
-    assert_eq!(
-        token_account.delegate,
-        COption::Some(candy_manager.freeze_info.pda),
-        "Token account delegate is not correct"
-    );
-    assert_eq!(
-        token_account.delegated_amount, 1,
-        "Delegated amount is not correct"
-    );
+        .unwrap()
+        .unix_timestamp;
+    expected_freeze_pda.mint_start = Some(mint_start);
+    expected_freeze_pda.frozen_count += 1;
+
+    candy_manager.assert_frozen(context, &new_nft).await;
+    candy_manager
+        .assert_freeze_set(context, &expected_freeze_pda)
+        .await;
+
     candy_manager
         .thaw_nft(context, &new_nft, &clone_keypair(&candy_manager.authority))
         .await
         .unwrap_err();
-    let token_account = get_token_account(context, &new_nft.token_account)
-        .await
-        .unwrap();
-    assert_eq!(
-        token_account.state,
-        AccountState::Frozen,
-        "Token account state is not correct"
-    );
-    assert_eq!(
-        token_account.delegate,
-        COption::Some(candy_manager.freeze_info.pda),
-        "Token account delegate is not correct"
-    );
-    assert_eq!(
-        token_account.delegated_amount, 1,
-        "Delegated amount is not correct"
-    );
+    candy_manager.assert_frozen(context, &new_nft).await;
+
     candy_manager.remove_freeze(context).await.unwrap();
     let freeze_pda = candy_manager.get_freeze_pda(context).await;
     assert!(freeze_pda.allow_thaw, "Allow thaw is not true!");
+
     candy_manager
         .thaw_nft(context, &new_nft, &clone_keypair(&candy_manager.authority))
         .await
         .unwrap();
-    let token_account = get_token_account(context, &new_nft.token_account)
-        .await
-        .unwrap();
-    assert_eq!(
-        token_account.state,
-        AccountState::Initialized,
-        "Token account state is not correct"
-    );
-    assert_eq!(
-        token_account.delegate,
-        COption::Some(candy_manager.freeze_info.pda),
-        "Token account delegate is not correct"
-    );
-    assert_eq!(
-        token_account.delegated_amount, 1,
-        "Delegated amount is not correct"
-    );
+
+    candy_manager.assert_thawed(context, &new_nft, false).await;
+
     candy_manager
         .thaw_nft(context, &new_nft, &new_nft.owner)
         .await
         .unwrap();
-    let token_account = get_token_account(context, &new_nft.token_account)
-        .await
-        .unwrap();
-    assert_eq!(
-        token_account.state,
-        AccountState::Initialized,
-        "Token account state is not Initialized"
-    );
-    assert_eq!(
-        token_account.delegate,
-        COption::None,
-        "Token account delegate is not none"
-    );
-    assert_eq!(
-        token_account.delegated_amount, 0,
-        "Delegated amount is not correct"
-    );
+    candy_manager.assert_thawed(context, &new_nft, true).await;
+
+    let pre_balance = get_token_balance(context, &candy_manager.token_info.auth_account).await;
+    candy_manager.unlock_funds(context).await.unwrap();
+    let post_balance = get_balance(context, &candy_manager.token_info.auth_account).await;
+    assert!(post_balance - pre_balance >= sol(2.0));
 }
 
 #[tokio::test]
