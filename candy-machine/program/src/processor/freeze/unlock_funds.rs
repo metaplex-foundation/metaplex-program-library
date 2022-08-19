@@ -30,11 +30,12 @@ pub fn handle_unlock_funds<'info>(
     let candy_machine = &mut ctx.accounts.candy_machine;
     let freeze_pda = &mut ctx.accounts.freeze_pda;
     let authority = &mut ctx.accounts.authority;
-    if !freeze_pda.allow_thaw {
-        freeze_pda.allow_thaw = true;
-    }
     if freeze_pda.frozen_count > 0 {
         return err!(CandyError::NoUnlockWithNFTsStillFrozen);
+    }
+
+    if !freeze_pda.allow_thaw {
+        freeze_pda.allow_thaw = true;
     }
     if let Some(mint) = &candy_machine.token_mint {
         if ctx.remaining_accounts.len() != 3 {
