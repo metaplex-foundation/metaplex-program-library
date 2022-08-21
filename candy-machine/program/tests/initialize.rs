@@ -1,4 +1,5 @@
 #![cfg(feature = "test-bpf")]
+#![allow(dead_code)]
 
 use std::{
     str::FromStr,
@@ -21,6 +22,11 @@ use solana_sdk::{
     transaction::Transaction,
 };
 
+use mpl_candy_machine::{
+    CandyMachineData, GatekeeperConfig as GKConfig, WhitelistMintMode::BurnEveryTime,
+};
+use utils::{custom_config, GatekeeperInfo};
+
 use crate::{
     core::helpers::airdrop,
     utils::{
@@ -28,10 +34,6 @@ use crate::{
         WhitelistConfig,
     },
 };
-use mpl_candy_machine::{
-    CandyMachineData, GatekeeperConfig as GKConfig, WhitelistMintMode::BurnEveryTime,
-};
-use utils::{custom_config, GatekeeperInfo};
 
 const GATEWAY_ACCOUNT_PUBKEY: Pubkey = pubkey!("gatem74V238djXdzWnJf94Wo1DcnuGkfijbf3AuBhfs");
 
@@ -47,6 +49,7 @@ async fn init_default_success() {
         context,
         true,
         true,
+        None,
         Some(WhitelistConfig::new(BurnEveryTime, false, Some(1))),
         None,
     )
@@ -78,7 +81,8 @@ async fn init_default_success() {
         .unwrap();
     candy_manager
         .mint_and_assert_successful(context, Some(1), true)
-        .await;
+        .await
+        .unwrap();
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -106,6 +110,7 @@ async fn bot_tax_on_gatekeeper_expire_token() {
         context,
         false,
         false,
+        None,
         None,
         Some(GatekeeperInfo {
             set: true,
@@ -242,6 +247,7 @@ async fn bot_tax_on_gatekeeper() {
         context,
         false,
         false,
+        None,
         None,
         Some(GatekeeperInfo {
             set: true,
