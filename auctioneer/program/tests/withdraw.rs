@@ -103,6 +103,4 @@ async fn withdraw_success() {
 
     assert_eq!(sale_price + rent_exempt_min, escrow_balance_before_withdraw);
     assert_eq!(rent_exempt_min, escrow_balance_after_withdraw);
-
-    ()
 }

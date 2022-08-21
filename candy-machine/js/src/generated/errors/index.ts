@@ -776,6 +776,317 @@ createErrorFromCodeLookup.set(0x1793, () => new GatewayProgramErrorError());
 createErrorFromNameLookup.set('GatewayProgramError', () => new GatewayProgramErrorError());
 
 /**
+ * NoChangingFreezeDuringMint: 'Can't change freeze settings after items have begun to be minted. You can only disable.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoChangingFreezeDuringMintError extends Error {
+  readonly code: number = 0x1794;
+  readonly name: string = 'NoChangingFreezeDuringMint';
+  constructor() {
+    super(
+      "Can't change freeze settings after items have begun to be minted. You can only disable.",
+    );
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoChangingFreezeDuringMintError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1794, () => new NoChangingFreezeDuringMintError());
+createErrorFromNameLookup.set(
+  'NoChangingFreezeDuringMint',
+  () => new NoChangingFreezeDuringMintError(),
+);
+
+/**
+ * NoChangingAuthorityWithFreeze: 'Can't change authority while freeze is enabled. Disable freeze first.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoChangingAuthorityWithFreezeError extends Error {
+  readonly code: number = 0x1795;
+  readonly name: string = 'NoChangingAuthorityWithFreeze';
+  constructor() {
+    super("Can't change authority while freeze is enabled. Disable freeze first.");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoChangingAuthorityWithFreezeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1795, () => new NoChangingAuthorityWithFreezeError());
+createErrorFromNameLookup.set(
+  'NoChangingAuthorityWithFreeze',
+  () => new NoChangingAuthorityWithFreezeError(),
+);
+
+/**
+ * NoChangingTokenWithFreeze: 'Can't change token while freeze is enabled. Disable freeze first.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoChangingTokenWithFreezeError extends Error {
+  readonly code: number = 0x1796;
+  readonly name: string = 'NoChangingTokenWithFreeze';
+  constructor() {
+    super("Can't change token while freeze is enabled. Disable freeze first.");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoChangingTokenWithFreezeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1796, () => new NoChangingTokenWithFreezeError());
+createErrorFromNameLookup.set(
+  'NoChangingTokenWithFreeze',
+  () => new NoChangingTokenWithFreezeError(),
+);
+
+/**
+ * InvalidThawNft: 'Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidThawNftError extends Error {
+  readonly code: number = 0x1797;
+  readonly name: string = 'InvalidThawNft';
+  constructor() {
+    super('Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidThawNftError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1797, () => new InvalidThawNftError());
+createErrorFromNameLookup.set('InvalidThawNft', () => new InvalidThawNftError());
+
+/**
+ * IncorrectRemainingAccountsLen: 'The number of remaining accounts passed in doesn't match the Candy Machine settings'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectRemainingAccountsLenError extends Error {
+  readonly code: number = 0x1798;
+  readonly name: string = 'IncorrectRemainingAccountsLen';
+  constructor() {
+    super("The number of remaining accounts passed in doesn't match the Candy Machine settings");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectRemainingAccountsLenError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1798, () => new IncorrectRemainingAccountsLenError());
+createErrorFromNameLookup.set(
+  'IncorrectRemainingAccountsLen',
+  () => new IncorrectRemainingAccountsLenError(),
+);
+
+/**
+ * MissingFreezeAta: 'FreezePDA ATA needs to be passed in if token mint is enabled.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingFreezeAtaError extends Error {
+  readonly code: number = 0x1799;
+  readonly name: string = 'MissingFreezeAta';
+  constructor() {
+    super('FreezePDA ATA needs to be passed in if token mint is enabled.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingFreezeAtaError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1799, () => new MissingFreezeAtaError());
+createErrorFromNameLookup.set('MissingFreezeAta', () => new MissingFreezeAtaError());
+
+/**
+ * IncorrectFreezeAta: 'Incorrect freeze ATA address.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectFreezeAtaError extends Error {
+  readonly code: number = 0x179a;
+  readonly name: string = 'IncorrectFreezeAta';
+  constructor() {
+    super('Incorrect freeze ATA address.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectFreezeAtaError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179a, () => new IncorrectFreezeAtaError());
+createErrorFromNameLookup.set('IncorrectFreezeAta', () => new IncorrectFreezeAtaError());
+
+/**
+ * FreezePDAMismatch: 'FreezePDA doesn't belong to this Candy Machine.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class FreezePDAMismatchError extends Error {
+  readonly code: number = 0x179b;
+  readonly name: string = 'FreezePDAMismatch';
+  constructor() {
+    super("FreezePDA doesn't belong to this Candy Machine.");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, FreezePDAMismatchError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179b, () => new FreezePDAMismatchError());
+createErrorFromNameLookup.set('FreezePDAMismatch', () => new FreezePDAMismatchError());
+
+/**
+ * EnteredFreezeIsMoreThanMaxFreeze: 'Freeze time can't be longer than MAX_FREEZE_TIME.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class EnteredFreezeIsMoreThanMaxFreezeError extends Error {
+  readonly code: number = 0x179c;
+  readonly name: string = 'EnteredFreezeIsMoreThanMaxFreeze';
+  constructor() {
+    super("Freeze time can't be longer than MAX_FREEZE_TIME.");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, EnteredFreezeIsMoreThanMaxFreezeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179c, () => new EnteredFreezeIsMoreThanMaxFreezeError());
+createErrorFromNameLookup.set(
+  'EnteredFreezeIsMoreThanMaxFreeze',
+  () => new EnteredFreezeIsMoreThanMaxFreezeError(),
+);
+
+/**
+ * NoWithdrawWithFreeze: 'Can't withdraw Candy Machine while freeze is active. Disable freeze first.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoWithdrawWithFreezeError extends Error {
+  readonly code: number = 0x179d;
+  readonly name: string = 'NoWithdrawWithFreeze';
+  constructor() {
+    super("Can't withdraw Candy Machine while freeze is active. Disable freeze first.");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoWithdrawWithFreezeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179d, () => new NoWithdrawWithFreezeError());
+createErrorFromNameLookup.set('NoWithdrawWithFreeze', () => new NoWithdrawWithFreezeError());
+
+/**
+ * NoWithdrawWithFrozenFunds: 'Can't withdraw Candy Machine while frozen funds need to be redeemed. Unlock funds first.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoWithdrawWithFrozenFundsError extends Error {
+  readonly code: number = 0x179e;
+  readonly name: string = 'NoWithdrawWithFrozenFunds';
+  constructor() {
+    super(
+      "Can't withdraw Candy Machine while frozen funds need to be redeemed. Unlock funds first.",
+    );
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoWithdrawWithFrozenFundsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179e, () => new NoWithdrawWithFrozenFundsError());
+createErrorFromNameLookup.set(
+  'NoWithdrawWithFrozenFunds',
+  () => new NoWithdrawWithFrozenFundsError(),
+);
+
+/**
+ * MissingRemoveFreezeTokenAccounts: 'Missing required remaining accounts for remove_freeze with token mint.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingRemoveFreezeTokenAccountsError extends Error {
+  readonly code: number = 0x179f;
+  readonly name: string = 'MissingRemoveFreezeTokenAccounts';
+  constructor() {
+    super('Missing required remaining accounts for remove_freeze with token mint.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingRemoveFreezeTokenAccountsError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x179f, () => new MissingRemoveFreezeTokenAccountsError());
+createErrorFromNameLookup.set(
+  'MissingRemoveFreezeTokenAccounts',
+  () => new MissingRemoveFreezeTokenAccountsError(),
+);
+
+/**
+ * InvalidFreezeWithdrawTokenAddress: 'Can't withdraw SPL Token from freeze PDA into itself'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidFreezeWithdrawTokenAddressError extends Error {
+  readonly code: number = 0x17a0;
+  readonly name: string = 'InvalidFreezeWithdrawTokenAddress';
+  constructor() {
+    super("Can't withdraw SPL Token from freeze PDA into itself");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidFreezeWithdrawTokenAddressError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a0, () => new InvalidFreezeWithdrawTokenAddressError());
+createErrorFromNameLookup.set(
+  'InvalidFreezeWithdrawTokenAddress',
+  () => new InvalidFreezeWithdrawTokenAddressError(),
+);
+
+/**
+ * NoUnlockWithNFTsStillFrozen: 'Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoUnlockWithNFTsStillFrozenError extends Error {
+  readonly code: number = 0x17a1;
+  readonly name: string = 'NoUnlockWithNFTsStillFrozen';
+  constructor() {
+    super("Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.");
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoUnlockWithNFTsStillFrozenError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a1, () => new NoUnlockWithNFTsStillFrozenError());
+createErrorFromNameLookup.set(
+  'NoUnlockWithNFTsStillFrozen',
+  () => new NoUnlockWithNFTsStillFrozenError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
