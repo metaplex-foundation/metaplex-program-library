@@ -350,11 +350,9 @@
           "type": "u32"
         },
         {
-          "name": "creators",
+          "name": "message",
           "type": {
-            "vec": {
-              "defined": "Creator"
-            }
+            "defined": "MetadataArgs"
           }
         }
       ]
@@ -435,11 +433,9 @@
           "type": "u32"
         },
         {
-          "name": "creators",
+          "name": "message",
           "type": {
-            "vec": {
-              "defined": "Creator"
-            }
+            "defined": "MetadataArgs"
           }
         }
       ]

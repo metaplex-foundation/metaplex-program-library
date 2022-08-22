@@ -7,7 +7,7 @@
 
 import * as beet from '@metaplex-foundation/beet'
 import * as web3 from '@solana/web3.js'
-import { Creator, creatorBeet } from '../types/Creator'
+import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
 
 /**
  * @category Instructions
@@ -20,7 +20,7 @@ export type VerifyCreatorInstructionArgs = {
   creatorHash: number[] /* size: 32 */
   nonce: beet.bignum
   index: number
-  creators: Creator[]
+  message: MetadataArgs
 }
 /**
  * @category Instructions
@@ -39,7 +39,7 @@ export const verifyCreatorStruct = new beet.FixableBeetArgsStruct<
     ['creatorHash', beet.uniformFixedSizeArray(beet.u8, 32)],
     ['nonce', beet.u64],
     ['index', beet.u32],
-    ['creators', beet.array(creatorBeet)],
+    ['message', metadataArgsBeet],
   ],
   'VerifyCreatorInstructionArgs'
 )
