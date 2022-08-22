@@ -550,6 +550,7 @@ fn process_mint_v1<'info>(
 fn process_creator_verification<'info>(
     ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
     root: [u8; 32],
+    mut message: MetadataArgs,
     data_hash: [u8; 32],
     creator_hash: [u8; 32],
     nonce: u64,
@@ -587,8 +588,8 @@ fn process_creator_verification<'info>(
     );
     assert_eq!(creator_hash, calculated_creator_hash.to_bytes());
 
-    // Calculate new creator hash with `verified` set to true for signing creator.
-    let updated_creator_data = creators
+    // Calculate new creator Vec with `verified` set to true for signing creator.
+    let updated_creator_vec = creators
         .iter()
         .map(|c| {
             let verified = if c.address == creator.key() {
@@ -596,9 +597,23 @@ fn process_creator_verification<'info>(
             } else {
                 c.verified
             };
-            [c.address.as_ref(), &[verified as u8], &[c.share]].concat()
+            Creator {
+                address: c.address,
+                verified,
+                share: c.share,
+            }
         })
+        .collect::<Vec<Creator>>();
+
+    // Update creator Vec in metadata args.
+    message.creators = updated_creator_vec;
+
+    // Calculate new creator hash.
+    let updated_creator_data = creators
+        .iter()
+        .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
         .collect::<Vec<_>>();
+
     let updated_creator_hash = keccak::hashv(
         updated_creator_data
             .iter()
@@ -606,6 +621,13 @@ fn process_creator_verification<'info>(
             .collect::<Vec<&[u8]>>()
             .as_ref(),
     );
+
+    // Calculate new data hash.
+    let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
+    let updated_data_hash = keccak::hashv(&[
+        &metadata_args_hash.to_bytes(),
+        &message.seller_fee_basis_points.to_le_bytes(),
+    ]);
 
     let asset_id = get_asset_id(&merkle_slab.key(), nonce);
     let previous_leaf = LeafSchema::new_v0(
@@ -621,7 +643,7 @@ fn process_creator_verification<'info>(
         owner.key(),
         delegate.key(),
         nonce,
-        data_hash,
+        updated_data_hash.to_bytes(),
         updated_creator_hash.to_bytes(),
     );
     emit!(new_leaf.to_event());
@@ -773,6 +795,7 @@ pub mod bubblegum {
     pub fn verify_creator<'info>(
         ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
         root: [u8; 32],
+        message: MetadataArgs,
         data_hash: [u8; 32],
         creator_hash: [u8; 32],
         nonce: u64,
@@ -782,6 +805,7 @@ pub mod bubblegum {
         process_creator_verification(
             ctx,
             root,
+            message,
             data_hash,
             creator_hash,
             nonce,
@@ -794,6 +818,7 @@ pub mod bubblegum {
     pub fn unverify_creator<'info>(
         ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
         root: [u8; 32],
+        message: MetadataArgs,
         data_hash: [u8; 32],
         creator_hash: [u8; 32],
         nonce: u64,
@@ -803,6 +828,7 @@ pub mod bubblegum {
         process_creator_verification(
             ctx,
             root,
+            message,
             data_hash,
             creator_hash,
             nonce,
