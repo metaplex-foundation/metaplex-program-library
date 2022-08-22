@@ -550,11 +550,11 @@ fn process_mint_v1<'info>(
 fn process_creator_verification<'info>(
     ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
     root: [u8; 32],
-    mut message: MetadataArgs,
     data_hash: [u8; 32],
     creator_hash: [u8; 32],
     nonce: u64,
     index: u32,
+    mut message: MetadataArgs,
     creators: Vec<Creator>,
     verify: bool,
 ) -> Result<()> {
@@ -795,21 +795,21 @@ pub mod bubblegum {
     pub fn verify_creator<'info>(
         ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
         root: [u8; 32],
-        message: MetadataArgs,
         data_hash: [u8; 32],
         creator_hash: [u8; 32],
         nonce: u64,
         index: u32,
+        message: MetadataArgs,
         creators: Vec<Creator>,
     ) -> Result<()> {
         process_creator_verification(
             ctx,
             root,
-            message,
             data_hash,
             creator_hash,
             nonce,
             index,
+            message,
             creators,
             true,
         )
@@ -818,21 +818,21 @@ pub mod bubblegum {
     pub fn unverify_creator<'info>(
         ctx: Context<'_, '_, '_, 'info, CreatorVerification<'info>>,
         root: [u8; 32],
-        message: MetadataArgs,
         data_hash: [u8; 32],
         creator_hash: [u8; 32],
         nonce: u64,
         index: u32,
+        message: MetadataArgs,
         creators: Vec<Creator>,
     ) -> Result<()> {
         process_creator_verification(
             ctx,
             root,
-            message,
             data_hash,
             creator_hash,
             nonce,
             index,
+            message,
             creators,
             false,
         )
