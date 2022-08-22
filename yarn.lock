@@ -1064,6 +1064,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metaplex-foundation/beet@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "@metaplex-foundation/beet@npm:0.6.0"
+  dependencies:
+    ansicolors: ^0.3.2
+    bn.js: ^5.2.0
+    debug: ^4.3.3
+  checksum: 33329dbcb86e1a88ae3f325917ea8971fa3b9a5568124a8585b31b092035acaacb8658a6a22c6f8a097b3a2e82c721ee2ade30aa3e6f1ada141db353ad86a772
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/cusper@npm:^0.0.2":
   version: 0.0.2
   resolution: "@metaplex-foundation/cusper@npm:0.0.2"
@@ -1277,6 +1288,21 @@ __metadata:
     eslint: ^8.3.0
     rimraf: ^3.0.2
     tape: ^5.5.2
+    typescript: ^4.6.2
+  languageName: unknown
+  linkType: soft
+
+"@metaplex-foundation/mpl-nft-packs@workspace:nft-packs/js":
+  version: 0.0.0-use.local
+  resolution: "@metaplex-foundation/mpl-nft-packs@workspace:nft-packs/js"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.6.0
+    "@metaplex-foundation/beet-solana": ^0.3.0
+    "@metaplex-foundation/cusper": ^0.0.2
+    "@metaplex-foundation/solita": ^0.12.1
+    "@solana/web3.js": ^1.35.1
+    eslint: ^8.3.0
+    rimraf: ^3.0.2
     typescript: ^4.6.2
   languageName: unknown
   linkType: soft
