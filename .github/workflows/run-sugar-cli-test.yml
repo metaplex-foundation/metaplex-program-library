@@ -1,4 +1,4 @@
-name: Run Sugar CLI Test 2
+name: Run Sugar CLI Test
 
 on:
   workflow_dispatch:
@@ -19,14 +19,6 @@ jobs:
       - uses: ./.github/actions/install-rust
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
-
-      # # todo: install from https://sugar.metaplex.com/install.sh after a new release that includes this commit
-      # # https://github.com/metaplex-foundation/sugar/commit/875fe740fca6ac8d7dddd4d4c5bfaee363262635
-      # - name: Pull in test script from Sugar repository (outside of MPL)
-      #   shell: bash
-      #   run: |
-      #     cd .. && git clone https://github.com/metaplex-foundation/sugar.git && cd sugar
-      #     cargo install --path ./ --force
 
       # install the publicly available binary for the lifetime of the workflow
       - name: Install Stable Sugar
@@ -57,6 +49,7 @@ jobs:
         run: |
           mkdir ~/.aws
           echo -ne "[default]\naws_access_key_id=${{ secrets.SUGAR_CLI_TEST_AWS_ACCESS_KEY }}\naws_secret_access_key=${{ secrets.SUGAR_CLI_TEST_AWS_SECRET_KEY }}\nregion=${{ secrets.SUGAR_CLI_TEST_AWS_REGION }}" > ~/.aws/credentials
+          cat ~/.aws/credentials
 
       # all assets are dumped to root of bucket; we can't update the path on a per-workflow run basis because
       # sugar manages the paths of the assets (which s3 interprets as the keys)
@@ -65,6 +58,13 @@ jobs:
         run: |
           echo "STORAGE=aws" >> $GITHUB_ENV
           echo "AWS_BUCKET=gh-sugar-cli-test-workflow-assets" >> $GITHUB_ENV
+          echo "AWS_PROFILE=default" >> $GITHUB_ENV
+          echo "AWS_DIRECTORY=${{ github.run_id }}" >> $GITHUB_ENV
+
+      # we need to actually reference the test script to run it, so we'll clone the repo and launch the script from there
+      - name: Pull in test script from Sugar repository (outside of MPL)
+        shell: bash
+        run: cd ../ && git clone https://github.com/metaplex-foundation/sugar.git && ls
 
       # note: by setting the `STORAGE` env var above, the script will default to the AWS upload method over bundlr
       - name: Run test script from sugar directory (interactive mode + defaults)
