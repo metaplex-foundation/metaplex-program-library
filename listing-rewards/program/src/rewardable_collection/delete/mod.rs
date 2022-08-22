@@ -8,7 +8,6 @@ use crate::{
     state::{RewardCenter, RewardableCollection},
 };
 
-
 #[derive(AnchorSerialize, AnchorDeserialize, Debug)]
 pub struct DeleteRewardableCollectionParams {
     pub collection: Pubkey,

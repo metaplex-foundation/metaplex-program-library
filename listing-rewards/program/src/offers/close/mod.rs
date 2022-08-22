@@ -1,4 +1,4 @@
-use anchor_lang::prelude::*;
+use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
@@ -6,6 +6,7 @@ use anchor_spl::{
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX},
     cpi::accounts::{AuctioneerCancel, AuctioneerWithdraw},
+    instruction::AuctioneerCancel as AuctioneerCancelParams,
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse,
 };
@@ -17,6 +18,7 @@ use crate::{
     state::{Offer, RewardCenter, RewardableCollection},
     MetadataAccount,
 };
+use solana_program::{instruction::Instruction, program::invoke_signed};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct CloseOfferParams {
@@ -169,6 +171,8 @@ pub fn handler(
     let rewardable_collection = &ctx.accounts.rewardable_collection;
     let wallet = &ctx.accounts.wallet;
     let auction_house_key = auction_house.key();
+    let wallet_key = ctx.accounts.wallet.key();
+    let auction_house_authority_key = ctx.accounts.authority.key();
 
     assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
 
@@ -203,30 +207,66 @@ pub fn handler(
         reward_center_signer_seeds,
     );
 
-    let cancel_accounts_ctx = CpiContext::new_with_signer(
-        ctx.accounts.auction_house_program.to_account_info(),
-        AuctioneerCancel {
-            wallet: ctx.accounts.wallet.to_account_info(),
-            token_account: ctx.accounts.token_account.to_account_info(),
-            token_mint: ctx.accounts.token_mint.to_account_info(),
-            auction_house: ctx.accounts.auction_house.to_account_info(),
-            auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
-            trade_state: ctx.accounts.trade_state.to_account_info(),
-            authority: ctx.accounts.authority.to_account_info(),
-            auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
-            ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
-            token_program: ctx.accounts.token_program.to_account_info(),
-        },
-        reward_center_signer_seeds,
-    );
-
     mpl_auction_house::cpi::auctioneer_withdraw(
         withdraw_accounts_ctx,
         escrow_payment_bump,
         buyer_price,
     )?;
 
-    mpl_auction_house::cpi::auctioneer_cancel(cancel_accounts_ctx, buyer_price, token_size)?;
+    // Cancel (Close Offer) instruction via invoke_signed
+
+    let close_offer_ctx_accounts = AuctioneerCancel {
+        wallet: ctx.accounts.wallet.to_account_info(),
+        token_account: ctx.accounts.token_account.to_account_info(),
+        token_mint: ctx.accounts.token_mint.to_account_info(),
+        auction_house: ctx.accounts.auction_house.to_account_info(),
+        auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
+        trade_state: ctx.accounts.trade_state.to_account_info(),
+        authority: ctx.accounts.authority.to_account_info(),
+        auctioneer_authority: ctx.accounts.reward_center.to_account_info(),
+        ah_auctioneer_pda: ctx.accounts.ah_auctioneer_pda.to_account_info(),
+        token_program: ctx.accounts.token_program.to_account_info(),
+    };
+
+    let close_offer_params = AuctioneerCancelParams {
+        buyer_price,
+        token_size,
+    };
+
+    let auth_account_key = if auction_house.requires_sign_off {
+        auction_house_authority_key
+    } else {
+        wallet_key
+    };
+
+    let signer_required_keys = vec![ctx.accounts.reward_center.key(), auth_account_key];
+
+    let close_offer_ix = Instruction {
+        program_id: ctx.accounts.auction_house_program.key(),
+        data: close_offer_params.data(),
+        accounts: close_offer_ctx_accounts
+            .to_account_metas(None)
+            .into_iter()
+            .map(|mut account| {
+                if signer_required_keys.contains(&account.pubkey) {
+                    account.is_signer = if account.pubkey.eq(&reward_center.key()) {
+                        true
+                    } else if account.pubkey.eq(&wallet_key) {
+                        ctx.accounts.wallet.to_account_info().is_signer
+                    } else {
+                        ctx.accounts.authority.to_account_info().is_signer
+                    }
+                }
+                account
+            })
+            .collect(),
+    };
+
+    invoke_signed(
+        &close_offer_ix,
+        &close_offer_ctx_accounts.to_account_infos(),
+        &reward_center_signer_seeds,
+    )?;
 
     Ok(())
 }

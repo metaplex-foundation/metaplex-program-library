@@ -196,6 +196,8 @@ pub fn handler(
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
+    let wallet_key = ctx.accounts.wallet.key();
+    let auction_house_authority_key = ctx.accounts.authority.key();
 
     assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
 
@@ -247,23 +249,40 @@ pub fn handler(
         token_size,
     };
 
-    let signer_required_keys = vec![
-        ctx.accounts.reward_center.key(),
-        ctx.accounts.wallet.key(),
-    ];
+    let auth_account_key = if auction_house.requires_sign_off || price == 0 {
+        auction_house_authority_key
+    } else {
+        wallet_key
+    };
+
+    let signer_required_keys = vec![ctx.accounts.reward_center.key(), auth_account_key];
 
     let create_listing_ix = Instruction {
         program_id: auction_house_program.key(),
         data: create_listing_params.data(),
-        accounts: create_listing_ctx_accounts.to_account_metas(None).into_iter().map(|mut account| {
-            if signer_required_keys.contains(&account.pubkey) {
-                account.is_signer = true;
-            }
-            account
-        }).collect()
+        accounts: create_listing_ctx_accounts
+            .to_account_metas(None)
+            .into_iter()
+            .map(|mut account| {
+                if signer_required_keys.contains(&account.pubkey) {
+                    account.is_signer = if account.pubkey.eq(&reward_center.key()) {
+                        true
+                    } else if account.pubkey.eq(&wallet_key) {
+                        ctx.accounts.wallet.to_account_info().is_signer
+                    } else {
+                        ctx.accounts.authority.to_account_info().is_signer
+                    }
+                }
+                account
+            })
+            .collect(),
     };
 
-    invoke_signed(&create_listing_ix, &create_listing_ctx_accounts.to_account_infos(), &reward_center_signer_seeds)?;
+    invoke_signed(
+        &create_listing_ix,
+        &create_listing_ctx_accounts.to_account_infos(),
+        &reward_center_signer_seeds,
+    )?;
 
     Ok(())
 }
