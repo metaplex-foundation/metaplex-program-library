@@ -394,8 +394,142 @@
         },
         {
           "name": "authority",
-          "isMut": false,
+          "isMut": true,
           "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "setFreeze",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "freezePda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "freezeTime",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "removeFreeze",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "freezePda",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "thawNft",
+      "accounts": [
+        {
+          "name": "freezePda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "unlockFunds",
+      "accounts": [
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "freezePda",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
         }
       ],
       "args": []
@@ -446,6 +580,40 @@
           {
             "name": "candyMachine",
             "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FreezePDA",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "candyMachine",
+            "type": "publicKey"
+          },
+          {
+            "name": "allowThaw",
+            "type": "bool"
+          },
+          {
+            "name": "frozenCount",
+            "type": "u64"
+          },
+          {
+            "name": "mintStart",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "freezeTime",
+            "type": "i64"
+          },
+          {
+            "name": "freezeFee",
+            "type": "u64"
           }
         ]
       }
@@ -870,6 +1038,82 @@
       "code": 6035,
       "name": "GatewayProgramError",
       "msg": "Error within Gateway program"
+    },
+    {
+      "code": 6036,
+      "name": "NoChangingFreezeDuringMint",
+      "msg": "Can't change freeze settings after items have begun to be minted. You can only disable."
+    },
+    {
+      "code": 6037,
+      "name": "NoChangingAuthorityWithFreeze",
+      "msg": "Can't change authority while freeze is enabled. Disable freeze first."
+    },
+    {
+      "code": 6038,
+      "name": "NoChangingTokenWithFreeze",
+      "msg": "Can't change token while freeze is enabled. Disable freeze first."
+    },
+    {
+      "code": 6039,
+      "name": "InvalidThawNft",
+      "msg": "Cannot thaw NFT unless all NFTs are minted or Candy Machine authority enables thawing"
+    },
+    {
+      "code": 6040,
+      "name": "IncorrectRemainingAccountsLen",
+      "msg": "The number of remaining accounts passed in doesn't match the Candy Machine settings"
+    },
+    {
+      "code": 6041,
+      "name": "MissingFreezeAta",
+      "msg": "FreezePDA ATA needs to be passed in if token mint is enabled."
+    },
+    {
+      "code": 6042,
+      "name": "IncorrectFreezeAta",
+      "msg": "Incorrect freeze ATA address."
+    },
+    {
+      "code": 6043,
+      "name": "FreezePDAMismatch",
+      "msg": "FreezePDA doesn't belong to this Candy Machine."
+    },
+    {
+      "code": 6044,
+      "name": "EnteredFreezeIsMoreThanMaxFreeze",
+      "msg": "Freeze time can't be longer than MAX_FREEZE_TIME."
+    },
+    {
+      "code": 6045,
+      "name": "NoWithdrawWithFreeze",
+      "msg": "Can't withdraw Candy Machine while freeze is active. Disable freeze first."
+    },
+    {
+      "code": 6046,
+      "name": "NoWithdrawWithFrozenFunds",
+      "msg": "Can't withdraw Candy Machine while frozen funds need to be redeemed. Unlock funds first."
+    },
+    {
+      "code": 6047,
+      "name": "MissingRemoveFreezeTokenAccounts",
+      "msg": "Missing required remaining accounts for remove_freeze with token mint."
+    },
+    {
+      "code": 6048,
+      "name": "InvalidFreezeWithdrawTokenAddress",
+      "msg": "Can't withdraw SPL Token from freeze PDA into itself"
+    },
+    {
+      "code": 6049,
+      "name": "NoUnlockWithNFTsStillFrozen",
+      "msg": "Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first."
     }
-  ]
+  ],
+  "metadata": {
+    "address": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
+    "origin": "anchor",
+    "binaryVersion": "0.24.2",
+    "libVersion": "0.24.2"
+  }
 }

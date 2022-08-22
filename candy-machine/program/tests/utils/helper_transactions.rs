@@ -15,10 +15,11 @@ use mpl_candy_machine::{
 };
 
 use crate::{
-    core::MasterEditionV2,
+    core::{helpers::update_blockhash, MasterEditionManager},
     utils::{
         candy_manager::{CollectionInfo, GatekeeperInfo, TokenInfo, WhitelistInfo},
         helpers::make_config_lines,
+        FreezeInfo,
     },
 };
 
@@ -79,6 +80,7 @@ pub async fn initialize_candy_machine(
         accounts,
     };
 
+    update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[create_ix, init_ix],
         Some(&payer.pubkey()),
@@ -113,6 +115,8 @@ pub async fn update_candy_machine(
         data,
         accounts,
     };
+
+    update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[update_ix],
         Some(&authority.pubkey()),
@@ -147,6 +151,9 @@ pub async fn add_config_lines(
         data,
         accounts,
     };
+
+    update_blockhash(context).await?;
+
     let tx = Transaction::new_signed_with_payer(
         &[add_config_line_ix],
         Some(&authority.pubkey()),
@@ -214,6 +221,8 @@ pub async fn set_collection(
         data,
         accounts,
     };
+
+    update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[set_ix],
         Some(&authority.pubkey()),
@@ -248,6 +257,156 @@ pub async fn remove_collection(
         data,
         accounts,
     };
+
+    update_blockhash(context).await?;
+    let tx = Transaction::new_signed_with_payer(
+        &[set_ix],
+        Some(&authority.pubkey()),
+        &[authority],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn set_freeze(
+    context: &mut ProgramTestContext,
+    candy_machine: &Pubkey,
+    authority: &Keypair,
+    freeze_info: &FreezeInfo,
+    token_info: &TokenInfo,
+) -> transport::Result<()> {
+    let mut accounts = mpl_candy_machine::accounts::SetFreeze {
+        candy_machine: *candy_machine,
+        freeze_pda: freeze_info.pda,
+        authority: authority.pubkey(),
+        system_program: system_program::id(),
+    }
+    .to_account_metas(None);
+
+    if token_info.set {
+        accounts.push(AccountMeta::new(freeze_info.ata, false));
+    }
+
+    let data = mpl_candy_machine::instruction::SetFreeze {
+        freeze_time: freeze_info.freeze_time,
+    }
+    .data();
+    let set_ix = Instruction {
+        program_id: mpl_candy_machine::id(),
+        data,
+        accounts,
+    };
+
+    update_blockhash(context).await?;
+    let tx = Transaction::new_signed_with_payer(
+        &[set_ix],
+        Some(&authority.pubkey()),
+        &[authority],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn remove_freeze(
+    context: &mut ProgramTestContext,
+    candy_machine: &Pubkey,
+    authority: &Keypair,
+    freeze_info: &FreezeInfo,
+) -> transport::Result<()> {
+    let accounts = mpl_candy_machine::accounts::RemoveFreeze {
+        candy_machine: *candy_machine,
+        authority: authority.pubkey(),
+        freeze_pda: freeze_info.pda,
+    }
+    .to_account_metas(None);
+
+    let data = mpl_candy_machine::instruction::RemoveFreeze {}.data();
+    let set_ix = Instruction {
+        program_id: mpl_candy_machine::id(),
+        data,
+        accounts,
+    };
+    update_blockhash(context).await?;
+    let tx = Transaction::new_signed_with_payer(
+        &[set_ix],
+        Some(&authority.pubkey()),
+        &[authority],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn thaw_nft(
+    context: &mut ProgramTestContext,
+    candy_machine: &Pubkey,
+    signer: &Keypair,
+    freeze_info: &FreezeInfo,
+    nft_info: &MasterEditionManager,
+) -> transport::Result<()> {
+    let accounts = mpl_candy_machine::accounts::ThawNFT {
+        freeze_pda: freeze_info.pda,
+        candy_machine: *candy_machine,
+        token_account: nft_info.token_account,
+        owner: nft_info.owner.pubkey(),
+        mint: nft_info.mint.pubkey(),
+        edition: nft_info.edition_pubkey,
+        payer: signer.pubkey(),
+        token_program: spl_token::ID,
+        token_metadata_program: mpl_token_metadata::ID,
+        system_program: system_program::id(),
+    }
+    .to_account_metas(None);
+
+    let data = mpl_candy_machine::instruction::ThawNft {}.data();
+    let set_ix = Instruction {
+        program_id: mpl_candy_machine::id(),
+        data,
+        accounts,
+    };
+    update_blockhash(context).await?;
+    let tx = Transaction::new_signed_with_payer(
+        &[set_ix],
+        Some(&signer.pubkey()),
+        &[signer],
+        context.last_blockhash,
+    );
+
+    context.banks_client.process_transaction(tx).await
+}
+
+pub async fn unlock_funds(
+    context: &mut ProgramTestContext,
+    candy_machine: &Pubkey,
+    authority: &Keypair,
+    freeze_info: &FreezeInfo,
+    token_info: &TokenInfo,
+) -> transport::Result<()> {
+    let mut accounts = mpl_candy_machine::accounts::UnlockFunds {
+        freeze_pda: freeze_info.pda,
+        candy_machine: *candy_machine,
+        authority: authority.pubkey(),
+        system_program: system_program::id(),
+    }
+    .to_account_metas(None);
+    if token_info.set {
+        accounts.push(AccountMeta::new_readonly(spl_token::id(), false));
+        accounts.push(AccountMeta::new(
+            freeze_info.find_freeze_ata(&token_info.mint),
+            false,
+        ));
+        accounts.push(AccountMeta::new(token_info.auth_account, false));
+    }
+
+    let data = mpl_candy_machine::instruction::UnlockFunds {}.data();
+    let set_ix = Instruction {
+        program_id: mpl_candy_machine::id(),
+        data,
+        accounts,
+    };
+    update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[set_ix],
         Some(&authority.pubkey()),
@@ -267,15 +426,16 @@ pub async fn mint_nft(
     wallet: &Pubkey,
     authority: &Pubkey,
     payer: &Keypair,
-    new_nft: &MasterEditionV2,
+    new_nft: &MasterEditionManager,
     token_info: TokenInfo,
     whitelist_info: WhitelistInfo,
     collection_info: CollectionInfo,
     gateway_info: GatekeeperInfo,
+    freeze_info: FreezeInfo,
 ) -> transport::Result<()> {
     let metadata = new_nft.metadata_pubkey;
-    let master_edition = new_nft.pubkey;
-    let mint = new_nft.mint_pubkey;
+    let master_edition = new_nft.edition_pubkey;
+    let mint = new_nft.mint.pubkey();
 
     let mut accounts = mpl_candy_machine::accounts::MintNFT {
         candy_machine: *candy_machine,
@@ -297,6 +457,17 @@ pub async fn mint_nft(
     }
     .to_account_metas(None);
 
+    if gateway_info.set {
+        accounts.push(AccountMeta::new(gateway_info.gateway_token_info, false));
+
+        if gateway_info.gatekeeper_config.expire_on_use {
+            accounts.push(AccountMeta::new_readonly(gateway_info.gateway_app, false));
+            if let Some(expire_token) = gateway_info.network_expire_feature {
+                accounts.push(AccountMeta::new_readonly(expire_token, false));
+            }
+        }
+    }
+
     if whitelist_info.set {
         accounts.push(AccountMeta::new(whitelist_info.minter_account, false));
         if whitelist_info.whitelist_config.burn == BurnEveryTime {
@@ -310,14 +481,14 @@ pub async fn mint_nft(
         accounts.push(AccountMeta::new_readonly(payer.pubkey(), false));
     }
 
-    if gateway_info.set {
-        accounts.push(AccountMeta::new(gateway_info.gateway_token_info, false));
-
-        if gateway_info.gatekeeper_config.expire_on_use {
-            accounts.push(AccountMeta::new_readonly(gateway_info.gateway_app, false));
-            if let Some(expire_token) = gateway_info.network_expire_feature {
-                accounts.push(AccountMeta::new_readonly(expire_token, false));
-            }
+    if freeze_info.set {
+        accounts.push(AccountMeta::new(freeze_info.pda, false));
+        accounts.push(AccountMeta::new(new_nft.token_account, false));
+        if token_info.set {
+            accounts.push(AccountMeta::new(
+                freeze_info.find_freeze_ata(&token_info.mint),
+                false,
+            ));
         }
     }
 
@@ -359,6 +530,7 @@ pub async fn mint_nft(
         instructions.push(collection_ix);
     }
 
+    update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &instructions,
         Some(&payer.pubkey()),

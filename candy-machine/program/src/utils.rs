@@ -29,7 +29,7 @@ pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
 
 pub fn assert_valid_go_live<'info>(
     payer: &Signer<'info>,
-    clock: Clock,
+    clock: &Clock,
     candy_machine: &Account<'info, CandyMachine>,
 ) -> Result<()> {
     match candy_machine.data.go_live_date {
