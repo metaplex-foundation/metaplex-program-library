@@ -113,9 +113,11 @@ pub fn handle_mint_nft<'info>(
     let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
     let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
     let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
+    
     if !ctx.accounts.metadata.data_is_empty() {
         return err!(CandyError::MetadataAccountMustBeEmpty);
     }
+    
     if get_expected_remaining_accounts_count(candy_machine) < ctx.remaining_accounts.len() {
         punish_bots(
             CandyError::IncorrectRemainingAccountsLen,
