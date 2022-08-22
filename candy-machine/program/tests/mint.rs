@@ -10,7 +10,7 @@ use solana_sdk::{signature::Keypair, signer::Signer};
 
 use crate::core::helpers::prepare_nft;
 use crate::utils::helpers::find_candy_creator;
-use crate::utils::{mint_nft};
+use crate::utils::mint_nft;
 use crate::{
     core::helpers::airdrop,
     utils::{auto_config, candy_machine_program_test, helpers::sol, CandyManager},
