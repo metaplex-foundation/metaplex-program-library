@@ -419,7 +419,6 @@ pub async fn unlock_funds(
 
 #[allow(clippy::too_many_arguments)]
 pub fn mint_nft_ix(
-    context: &mut ProgramTestContext,
     candy_machine: &Pubkey,
     candy_creator_pda: &Pubkey,
     creator_bump: u8,
@@ -546,7 +545,6 @@ pub async fn mint_nft(
     freeze_info: FreezeInfo,
 ) -> transport::Result<()> {
     let ins = mint_nft_ix(
-        context,
         candy_machine,
         candy_creator_pda,
         creator_bump,
@@ -560,8 +558,7 @@ pub async fn mint_nft(
         gateway_info,
         freeze_info,
     );
-    let mut signers = Vec::new();
-    signers.push(payer);
+    let signers = vec![payer];
     update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &ins,

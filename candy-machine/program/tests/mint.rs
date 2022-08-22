@@ -125,7 +125,6 @@ async fn metadata_check_before_bot_tax() {
     let (candy_machine_creator, creator_bump) =
         find_candy_creator(&candy_manager.candy_machine.pubkey());
     let mut ix = mint_nft_ix(
-        context,
         &candy_manager.candy_machine.pubkey(),
         &candy_machine_creator,
         creator_bump,
