@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  SOLANA_VERSION: 1.9.22
+  SOLANA_VERSION: 1.10.30
   RUST_TOOLCHAIN: stable
 
 jobs:
@@ -20,13 +20,18 @@ jobs:
         with:
           toolchain: ${{ env.RUST_TOOLCHAIN }}
 
-      # todo: install from https://sugar.metaplex.com/install.sh after a new release that includes this commit
-      # https://github.com/metaplex-foundation/sugar/commit/875fe740fca6ac8d7dddd4d4c5bfaee363262635
-      - name: Pull in test script from Sugar repository (outside of MPL)
+      # # todo: install from https://sugar.metaplex.com/install.sh after a new release that includes this commit
+      # # https://github.com/metaplex-foundation/sugar/commit/875fe740fca6ac8d7dddd4d4c5bfaee363262635
+      # - name: Pull in test script from Sugar repository (outside of MPL)
+      #   shell: bash
+      #   run: |
+      #     cd .. && git clone https://github.com/metaplex-foundation/sugar.git && cd sugar
+      #     cargo install --path ./ --force
+
+      # install the publicly available binary for the lifetime of the workflow
+      - name: Install Stable Sugar
+        run: bash <(curl -sSf https://sugar.metaplex.com/install.sh)
         shell: bash
-        run: |
-          cd .. && git clone https://github.com/metaplex-foundation/sugar.git && cd sugar
-          cargo install --path ./ --force
 
       - run: solana-keygen new -o $GITHUB_WORKSPACE/kp --no-bip39-passphrase
         shell: bash
