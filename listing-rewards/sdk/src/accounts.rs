@@ -52,3 +52,16 @@ pub struct CloseOfferAccounts {
     pub reward_center: Pubkey,
     pub auction_house: Pubkey,
 }
+
+pub struct ExecuteSaleAccounts {
+    pub buyer: Pubkey,
+    pub seller: Pubkey,
+    pub authority: Pubkey,
+    pub auction_house: Pubkey,
+    pub treasury_mint: Pubkey,
+    pub token_mint: Pubkey,
+    pub token_account: Pubkey,
+    pub metadata: Pubkey,
+    pub seller_payment_receipt_account: Pubkey,
+    pub buyer_receipt_token_account: Pubkey,
+}

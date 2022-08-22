@@ -1,6 +1,7 @@
 pub mod assertions;
 pub mod constants;
 pub mod errors;
+pub mod execute_sale;
 pub mod listings;
 pub mod offers;
 pub mod pda;
@@ -13,6 +14,7 @@ use anchor_lang::prelude::*;
 use core::ops::Deref;
 
 use crate::{
+    execute_sale::*,
     listings::{cancel::*, create::*},
     offers::{close::*, create::*},
     redeem_rewards::*,
@@ -110,6 +112,13 @@ pub mod listing_rewards {
         close_offer_params: CloseOfferParams,
     ) -> Result<()> {
         offers::close::handler(ctx, close_offer_params)
+    }
+
+    pub fn execute_sale(
+        ctx: Context<ExecuteSale>,
+        execute_sale_params: ExecuteSaleParams,
+    ) -> Result<()> {
+        execute_sale::handler(ctx, execute_sale_params)
     }
 
     pub fn redeem_rewards(ctx: Context<RedemRewards>) -> Result<()> {
