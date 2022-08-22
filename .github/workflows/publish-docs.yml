@@ -1,0 +1,106 @@
+name: Publish docs
+
+on:
+  push:
+    branches: [master]
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  dump-context:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+  get-changes-scope:
+    runs-on: ubuntu-latest
+    outputs:
+      changed-packages: ${{ steps.map-changed-files-to-pkg.outputs.result }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Get PR for push event HEAD commit
+        uses: ./.github/actions/get-pr-for-commit
+        id: get-pr-for-commit
+        with:
+          commit-sha: ${{ github.sha }}
+
+      - name: List changed files
+        uses: ./.github/actions/list-changed-files
+        id: list-changed-files
+        with:
+          pull-number: ${{ steps.get-pr-for-commit.outputs.pull-number }}
+
+      - name: Get scope of changed packages
+        uses: actions/github-script@v4
+        id: map-changed-files-to-pkg
+        with:
+          script: |
+            const files = ${{ steps.list-changed-files.outputs.changed-files }}
+            // yarn doc flow only generates docs for JS
+            const regexp = /[a-zA-Z\-]+\/(js)/g
+            const uniqueFilesObj = files
+              .filter(f => regexp.test(f))
+              .reduce((p, file) => {
+                const pkgForFile = file.split("/")[0];
+                if (!p[pkgForFile]) p[pkgForFile] = 1
+                return p
+              }, {})
+            const result = Array.from(Object.keys(uniqueFilesObj))
+            return result.length > 0 ? result.join(" ") : null
+
+  build-docs:
+    needs: [get-changes-scope]
+    # note: checking for empty string doesn't work, so we explicitly return and check null
+    if: ${{ needs.get-changes-scope.outputs.changed-packages != 'null' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - run: |
+          git config --global user.name github-actions[bot]
+          git config --global user.email github-actions[bot]@users.noreply.github.com
+          git checkout HEAD^
+
+      - name: Generate docs for packages
+        # YARN_ENABLE_IMMUTABLE_INSTALLS=false is needed otherwise, we get this error:
+        # `The lockfile would have been modified by this install, which is explicitly forbidden.`
+        # Additionally, we aren't committing changes here.
+        run: |
+          git checkout gh-pages
+          git reset master --hard
+          echo ">> setup local package dependencies with yarn"
+          YARN_ENABLE_IMMUTABLE_INSTALLS=false yarn install
+          pkgs=(${{ needs.get-changes-scope.outputs.changed-packages }})
+          pkgs=(${pkgs//\"})
+          udpatedPkgs=()
+          for pkg in "${pkgs[@]}"; do
+            echo "$pkg"
+            if [ ! -d "$pkg/js" ]; then
+              echo "$pkg/js does not exist - skipping"
+              continue
+            fi
+
+            echo ">> changing dir $pkg/js"
+            cd "$pkg/js"
+            udpatedPkgs+=("${pkg}")
+            echo ">> call build:docs script for $pkg"
+            yarn build:docs
+            echo ">> add new doc changes"
+            git add ../../docs/$pkg
+            echo ">> regress 2 dirs"
+            cd ../..
+          done
+
+          echo "generated docs for these packages: ${udpatedPkgs[@]}"
+          updatedPkgsStr=$(IFS=,; echo "${udpatedPkgs[*]}")
+          git commit -m "chore: update docs for $(echo $updatedPkgsStr)"
+          git push -f origin gh-pages
