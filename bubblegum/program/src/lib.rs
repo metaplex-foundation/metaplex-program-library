@@ -555,27 +555,27 @@ fn process_creator_verification<'info>(
     nonce: u64,
     index: u32,
     mut message: MetadataArgs,
-    creators: Vec<Creator>,
     verify: bool,
 ) -> Result<()> {
     let owner = ctx.accounts.owner.to_account_info();
     let delegate = ctx.accounts.delegate.to_account_info();
     let merkle_slab = ctx.accounts.merkle_slab.to_account_info();
 
-    let creator = ctx.accounts.owner.key();
+    let creator = ctx.accounts.creator.key();
 
     // Creator Vec must contain creators.
-    if creators.is_empty() {
+    if message.creators.is_empty() {
         return Err(BubblegumError::NoCreatorsPresent.into());
     }
 
     // Creator must be in user-provided creator Vec.
-    if !creators.iter().any(|c| c.address == creator) {
+    if !message.creators.iter().any(|c| c.address == creator) {
         return Err(BubblegumError::CreatorNotFound.into());
     }
 
     // User-provided creator Vec must result in same user-provided creator hash.
-    let provided_creator_data = creators
+    let provided_creator_data = message
+        .creators
         .iter()
         .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
         .collect::<Vec<_>>();
@@ -589,7 +589,8 @@ fn process_creator_verification<'info>(
     assert_eq!(creator_hash, calculated_creator_hash.to_bytes());
 
     // Calculate new creator Vec with `verified` set to true for signing creator.
-    let updated_creator_vec = creators
+    let updated_creator_vec = message
+        .creators
         .iter()
         .map(|c| {
             let verified = if c.address == creator.key() {
@@ -608,12 +609,14 @@ fn process_creator_verification<'info>(
     // Update creator Vec in metadata args.
     message.creators = updated_creator_vec;
 
-    // Calculate new creator hash.
-    let updated_creator_data = creators
+    // Convert creator Vec to bytes Vec.
+    let updated_creator_data = message
+        .creators
         .iter()
         .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
         .collect::<Vec<_>>();
 
+    // Calculate new creator hash.
     let updated_creator_hash = keccak::hashv(
         updated_creator_data
             .iter()
@@ -800,7 +803,6 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
         message: MetadataArgs,
-        creators: Vec<Creator>,
     ) -> Result<()> {
         process_creator_verification(
             ctx,
@@ -810,7 +812,6 @@ pub mod bubblegum {
             nonce,
             index,
             message,
-            creators,
             true,
         )
     }
@@ -823,7 +824,6 @@ pub mod bubblegum {
         nonce: u64,
         index: u32,
         message: MetadataArgs,
-        creators: Vec<Creator>,
     ) -> Result<()> {
         process_creator_verification(
             ctx,
@@ -833,7 +833,6 @@ pub mod bubblegum {
             nonce,
             index,
             message,
-            creators,
             false,
         )
     }
