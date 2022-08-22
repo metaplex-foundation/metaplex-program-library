@@ -1,0 +1,1041 @@
+{
+  "version": "0.1.0",
+  "name": "listing_rewards",
+  "instructions": [
+    {
+      "name": "createRewardCenter",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "createRewardCenterParams",
+          "type": {
+            "defined": "CreateRewardCenterParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "editRewardCenter",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "editRewardCenterParams",
+          "type": {
+            "defined": "EditRewardCenterParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "createRewardableCollection",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rewardableCollection",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "rewardableCollectionParams",
+          "type": {
+            "defined": "CreateRewardableCollectionParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "deleteRewardableCollection",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rewardableCollection",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "rewardableCollectionParams",
+          "type": {
+            "defined": "DeleteRewardableCollectionParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "createListing",
+      "accounts": [
+        {
+          "name": "auctionHouseProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "listing",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardableCollection",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "sellerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "freeSellerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "programAsSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "sellParams",
+          "type": {
+            "defined": "CreateListingParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cancelListing",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "listing",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardableCollection",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "cancelListingParams",
+          "type": {
+            "defined": "CancelListingParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "createOffer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "offer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rewardableCollection",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "paymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "escrowPaymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "buyerTradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "createOfferParams",
+          "type": {
+            "defined": "CreateOfferParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "closeOffer",
+      "accounts": [
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "offer",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "rewardableCollection",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "treasuryMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "receiptAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "escrowPaymentAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouse",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseFeeAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tradeState",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "ahAuctioneerPda",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "auctionHouseProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "ataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "closeOfferParams",
+          "type": {
+            "defined": "CloseOfferParams"
+          }
+        }
+      ]
+    },
+    {
+      "name": "redeemRewards",
+      "accounts": [
+        {
+          "name": "listing",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "rewardCenterAssociatedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "walletAssociatedTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardCenter",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rewardableCollection",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "associatedTokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "RewardableCollection",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "isInitialized",
+            "type": "bool"
+          },
+          {
+            "name": "maintainer",
+            "type": "publicKey"
+          },
+          {
+            "name": "collection",
+            "type": "publicKey"
+          },
+          {
+            "name": "rewardCenter",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "deletedAt",
+            "type": {
+              "option": "i64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "RewardCenter",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "auctionHouse",
+            "type": "publicKey"
+          },
+          {
+            "name": "collectionOracle",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "listingRewardRules",
+            "type": {
+              "defined": "ListingRewardRules"
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Listing",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rewardCenter",
+            "type": "publicKey"
+          },
+          {
+            "name": "seller",
+            "type": "publicKey"
+          },
+          {
+            "name": "metadata",
+            "type": "publicKey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "canceledAt",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "purchasedAt",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "rewardableCollection",
+            "type": "publicKey"
+          },
+          {
+            "name": "rewardRedeemedAt",
+            "type": {
+              "option": "i64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Offer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "rewardCenter",
+            "type": "publicKey"
+          },
+          {
+            "name": "buyer",
+            "type": "publicKey"
+          },
+          {
+            "name": "metadata",
+            "type": "publicKey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "canceledAt",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "purchasedAt",
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "rewardableCollection",
+            "type": "publicKey"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "CancelListingParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateListingParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          },
+          {
+            "name": "tradeStateBump",
+            "type": "u8"
+          },
+          {
+            "name": "freeTradeStateBump",
+            "type": "u8"
+          },
+          {
+            "name": "programAsSignerBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CloseOfferParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tradeStateBump",
+            "type": "u8"
+          },
+          {
+            "name": "escrowPaymentBump",
+            "type": "u8"
+          },
+          {
+            "name": "buyerPrice",
+            "type": "u64"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateOfferParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tradeStateBump",
+            "type": "u8"
+          },
+          {
+            "name": "escrowPaymentBump",
+            "type": "u8"
+          },
+          {
+            "name": "buyerPrice",
+            "type": "u64"
+          },
+          {
+            "name": "tokenSize",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateRewardCenterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionOracle",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "listingRewardRules",
+            "type": {
+              "defined": "ListingRewardRules"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EditRewardCenterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collectionOracle",
+            "type": {
+              "option": "publicKey"
+            }
+          },
+          {
+            "name": "listingRewardRules",
+            "type": {
+              "defined": "ListingRewardRules"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CreateRewardableCollectionParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collection",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DeleteRewardableCollectionParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collection",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ListingRewardRules",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "warmupSeconds",
+            "type": "i64"
+          },
+          {
+            "name": "rewardPayout",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "BumpSeedNotInHashMap",
+      "msg": "Bump seed not in hash map"
+    },
+    {
+      "code": 6001,
+      "name": "SignerNotAuthorized",
+      "msg": "Unauthorized signer"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidCollectionMaintainer",
+      "msg": "Invalid collection maintainer"
+    },
+    {
+      "code": 6003,
+      "name": "NFTMissingCollection",
+      "msg": "The NFT does not belong to a collection"
+    },
+    {
+      "code": 6004,
+      "name": "NFTMismatchRewardableCollection",
+      "msg": "The NFT does not match the rewardable collection"
+    },
+    {
+      "code": 6005,
+      "name": "SellerWalletMismatch",
+      "msg": "The seller doesnt match the provided wallet"
+    },
+    {
+      "code": 6006,
+      "name": "RewardsAlreadyClaimed",
+      "msg": "The rewards were already claimed for this listing"
+    },
+    {
+      "code": 6007,
+      "name": "IneligibaleForRewards",
+      "msg": "The listings is not eligible for rewards yet"
+    },
+    {
+      "code": 6008,
+      "name": "RewardableCollectionAlreadyDeleted",
+      "msg": "Cannot delete an already flushed out rewardable collection"
+    },
+    {
+      "code": 6009,
+      "name": "RewardableCollectionAlreadyActive",
+      "msg": "The rewardable collection is already created/active"
+    }
+  ],
+  "metadata": {
+    "address": "rwdLstiU8aJU1DPdoPtocaNKApMhCFdCg283hz8dd3u",
+    "origin": "anchor",
+    "binaryVersion": "0.24.2",
+    "libVersion": "~0.24.2"
+  }
+}
