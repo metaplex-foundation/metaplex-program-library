@@ -116,6 +116,8 @@ jobs:
             git restore ../../yarn.lock
             git status
             if [[ $(git diff --stat) != '' ]]; then
+              echo ">> git diff"
+              git diff
               echo ">> $pkg needs changes - breaking early"
               echo "::set-output name=failed::true"
               echo "::set-output name=failed-package::$pkg"
