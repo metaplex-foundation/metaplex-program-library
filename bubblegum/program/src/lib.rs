@@ -24,6 +24,9 @@ use {
         },
     },
     gummyroll::{program::Gummyroll, state::CandyWrapper, utils::wrap_event, Node},
+    mpl_token_metadata::assertions::collection::{
+        assert_collection_verify_is_valid, assert_has_collection_authority,
+    },
     spl_token::state::Mint as SplMint,
     std::collections::HashSet,
 };
@@ -117,6 +120,30 @@ pub struct CreatorVerification<'info> {
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_slab: UncheckedAccount<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CollectionVerification<'info> {
+    #[account(
+        seeds = [merkle_slab.key().as_ref()],
+        bump,
+    )]
+    pub authority: Account<'info, TreeConfig>,
+    /// CHECK: This account is checked in the instruction
+    pub owner: UncheckedAccount<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub delegate: UncheckedAccount<'info>,
+    pub collection_authority: Signer<'info>,
+    /// CHECK: This account is checked in the instruction
+    pub collection_mint: UncheckedAccount<'info>,
+    pub collection_metadata: Box<Account<'info, TokenMetadata>>,
+    pub edition_account: Box<Account<'info, MasterEdition>>,
+    pub candy_wrapper: Program<'info, CandyWrapper>,
+    pub gummyroll_program: Program<'info, Gummyroll>,
+    #[account(mut)]
+    /// CHECK: This account is modified in the downstream program
+    pub merkle_slab: UncheckedAccount<'info>,
+    pub token_metadata_program: Program<'info, MplTokenMetadata>,
 }
 
 #[derive(Accounts)]
@@ -483,9 +510,20 @@ fn process_mint_v1<'info>(
     gummyroll_program: &AccountInfo<'info>,
 ) -> Result<()> {
     assert_metadata_is_mpl_compatible(&message)?;
-    // TODO -> Pass collection in check collection authority or collection delegate authority signer
     // TODO -> Separate V1 / V1 into seperate instructions
-    // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace instructions, without passing the entire, un-hashed MetadataArgs struct
+
+    // TODO -> Pass collection in check collection authority or collection delegate authority signer
+    //
+    // Currently, not allowing a collection to be verified outside of `verify_collection`
+    // instruction to have parity with token-metadata.
+    if let Some(collection) = &message.collection {
+        if collection.verified {
+            return Err(BubblegumError::CollectionCannotBeVerifiedInThisInstruction.into());
+        }
+    }
+
+    // @dev: seller_fee_basis points is encoded twice so that it can be passed to marketplace
+    // instructions, without passing the entire, un-hashed MetadataArgs struct
     let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
     let data_hash = keccak::hashv(&[
         &metadata_args_hash.to_bytes(),
@@ -632,6 +670,7 @@ fn process_creator_verification<'info>(
         &message.seller_fee_basis_points.to_le_bytes(),
     ]);
 
+    // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
     let asset_id = get_asset_id(&merkle_slab.key(), nonce);
     let previous_leaf = LeafSchema::new_v0(
         asset_id,
@@ -663,6 +702,120 @@ fn process_creator_verification<'info>(
         new_leaf.to_node(),
         index,
     )
+}
+
+fn process_collection_verification<'info>(
+    ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
+    root: [u8; 32],
+    data_hash: [u8; 32],
+    creator_hash: [u8; 32],
+    nonce: u64,
+    index: u32,
+    mut message: MetadataArgs,
+    verify: bool,
+    sized: bool,
+) -> Result<()> {
+    let owner = ctx.accounts.owner.to_account_info();
+    let delegate = ctx.accounts.delegate.to_account_info();
+    let merkle_slab = ctx.accounts.merkle_slab.to_account_info();
+    let collection_metadata = &ctx.accounts.collection_metadata;
+    let collection_mint = ctx.accounts.collection_mint.to_account_info();
+    let edition_account = ctx.accounts.edition_account.to_account_info();
+    let collection_authority = ctx.accounts.collection_authority.to_account_info();
+
+    require!(
+        *collection_metadata.to_account_info().owner == ctx.accounts.token_metadata_program.key(),
+        BubblegumError::IncorrectOwner
+    );
+    require!(
+        *collection_mint.owner == spl_token::id(),
+        BubblegumError::IncorrectOwner
+    );
+    require!(
+        *edition_account.owner == ctx.accounts.token_metadata_program.key(),
+        BubblegumError::IncorrectOwner
+    );
+
+    // If the NFT has collection data, we set it to the correct value after doing some validation.
+    if let Some(collection) = &mut message.collection {
+        // Create a token-metadata Metadata struct and ONLY populate the collection field.
+        // This is being created only to interact with some token-metadata assert functions.
+        let mut mpl_metadata = mpl_token_metadata::state::Metadata::default();
+        mpl_metadata.collection = Some(collection.adapt());
+
+        // Collection verify assert from token-metadata program.
+        assert_collection_verify_is_valid(
+            &mpl_metadata,
+            &collection_metadata,
+            &collection_mint,
+            &edition_account,
+        )?;
+
+        // Look for collection authority record PDA as a remaining account.
+        let collection_authority_record = if ctx.remaining_accounts.len() > 0 {
+            Some(&ctx.remaining_accounts[0])
+        } else {
+            None
+        };
+
+        // Collection authority assert from token-metadata.
+        assert_has_collection_authority(
+            &collection_authority,
+            &collection_metadata,
+            collection_mint.key,
+            collection_authority_record,
+        )?;
+
+        // This handler can only verify non-sized NFTs so far.
+        if !sized && collection_metadata.collection_details.is_some() {
+            return Err(BubblegumError::SizedCollection.into());
+        }
+
+        // Update collection in metadata args.
+        collection.verified = verify;
+
+        // Calculate new data hash.
+        let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
+        let updated_data_hash = keccak::hashv(&[
+            &metadata_args_hash.to_bytes(),
+            &message.seller_fee_basis_points.to_le_bytes(),
+        ]);
+
+        // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
+        let asset_id = get_asset_id(&merkle_slab.key(), nonce);
+        let previous_leaf = LeafSchema::new_v0(
+            asset_id,
+            owner.key(),
+            delegate.key(),
+            nonce,
+            data_hash,
+            creator_hash,
+        );
+        let new_leaf = LeafSchema::new_v0(
+            asset_id,
+            owner.key(),
+            delegate.key(),
+            nonce,
+            updated_data_hash.to_bytes(),
+            creator_hash,
+        );
+        emit!(new_leaf.to_event());
+        replace_leaf(
+            &merkle_slab.key(),
+            *ctx.bumps.get("authority").unwrap(),
+            &ctx.accounts.gummyroll_program.to_account_info(),
+            &ctx.accounts.authority.to_account_info(),
+            &ctx.accounts.merkle_slab.to_account_info(),
+            &ctx.accounts.candy_wrapper.to_account_info(),
+            ctx.remaining_accounts,
+            root,
+            previous_leaf.to_node(),
+            new_leaf.to_node(),
+            index,
+        )
+    } else {
+        Ok(())
+    }
 }
 
 #[program]
@@ -833,6 +986,50 @@ pub mod bubblegum {
             nonce,
             index,
             message,
+            false,
+        )
+    }
+
+    pub fn verify_collection<'info>(
+        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+        message: MetadataArgs,
+    ) -> Result<()> {
+        process_collection_verification(
+            ctx,
+            root,
+            data_hash,
+            creator_hash,
+            nonce,
+            index,
+            message,
+            true,
+            false,
+        )
+    }
+
+    pub fn unverify_collection<'info>(
+        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+        message: MetadataArgs,
+    ) -> Result<()> {
+        process_collection_verification(
+            ctx,
+            root,
+            data_hash,
+            creator_hash,
+            nonce,
+            index,
+            message,
+            false,
             false,
         )
     }

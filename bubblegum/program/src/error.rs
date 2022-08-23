@@ -40,4 +40,10 @@ pub enum BubblegumError {
     MintRequestDiscriminatorMismatch,
     #[msg("Something went wrong closing mint request")]
     CloseMintRequestError,
+    #[msg("Incorrect account owner")]
+    IncorrectOwner,
+    #[msg("Can't use this function on a sized collection")]
+    SizedCollection,
+    #[msg("Cannont Verify Collection in this Instruction")]
+    CollectionCannotBeVerifiedInThisInstruction,
 }
