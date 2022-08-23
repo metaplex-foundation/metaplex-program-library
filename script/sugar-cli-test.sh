@@ -261,6 +261,24 @@ if [ -z ${AWS_BUCKET+x} ]; then
     fi
 fi
 
+if [ -z ${AWS_PROFILE+x} ]; then
+    AWS_PROFILE="null"
+
+    if [ "$STORAGE" = "aws" ]; then
+        echo -n $(CYN "AWS profile name: ")
+        read AWS_PROFILE
+    fi
+fi
+
+if [ -z ${AWS_DIRECTORY+x} ]; then
+    AWS_DIRECTORY="null"
+
+    if [ "$STORAGE" = "aws" ]; then
+        echo -n $(CYN "AWS directory name: ")
+        read AWS_DIRECTORY
+    fi
+fi
+
 if [ -z ${NFT_STORAGE_TOKEN+x} ]; then
     NFT_STORAGE_TOKEN="null"
 
@@ -606,7 +624,11 @@ cat >$CONFIG_FILE <<-EOM
     "uploadMethod": "${STORAGE}",
     "ipfsInfuraProjectId": "${INFURA_ID}",
     "ipfsInfuraSecret": "${INFURA_SECRET}",
-    "awsS3Bucket": "${AWS_BUCKET}",
+    "awsConfig": {
+        "bucket": "${AWS_BUCKET}",
+        "profile": "${AWS_PROFILE}",
+        "directory": "${AWS_DIRECTORY}"
+    },
     "nftStorageAuthToken": "${NFT_STORAGE_TOKEN}",
     "shdwStorageAccount": $SHDW,
     "retainAuthority": true,
@@ -640,6 +662,8 @@ ARWEAVE_JWK="$ARWEAVE_JWK"
 INFURA_ID="$INFURA_ID"
 INFURA_SECRET="$INFURA_SECRET"
 AWS_BUCKET="$AWS_BUCKET"
+AWS_PROFILE="$AWS_PROFILE"
+AWS_DIRECTORY="$AWS_DIRECTORY"
 NFT_STORAGE_TOKEN="$NFT_STORAGE_TOKEN"
 SHDW_STORAGE_ACCOUNT="$SHDW_STORAGE_ACCOUNT"
 

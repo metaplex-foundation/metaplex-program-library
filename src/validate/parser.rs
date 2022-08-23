@@ -37,7 +37,7 @@ pub fn check_seller_fee_basis_points(
     Ok(())
 }
 
-pub fn check_creators_shares(creators: &Vec<Creator>) -> Result<(), ValidateParserError> {
+pub fn check_creators_shares(creators: &[Creator]) -> Result<(), ValidateParserError> {
     let mut shares = 0;
     for creator in creators {
         shares += creator.share;
@@ -49,7 +49,7 @@ pub fn check_creators_shares(creators: &Vec<Creator>) -> Result<(), ValidatePars
     Ok(())
 }
 
-pub fn check_creators_addresses(creators: &Vec<Creator>) -> Result<(), ValidateParserError> {
+pub fn check_creators_addresses(creators: &[Creator]) -> Result<(), ValidateParserError> {
     for creator in creators {
         Pubkey::from_str(&creator.address)
             .map_err(|_| ValidateParserError::InvalidCreatorAddress(creator.address.clone()))?;

@@ -74,9 +74,9 @@ pub fn process_hash(args: HashArgs) -> Result<()> {
 
 pub fn hash_and_update(
     mut hidden_settings: HiddenSettings,
-    config_file: &String,
+    config_file: &str,
     config_data: &mut ConfigData,
-    cache_file_path: &String,
+    cache_file_path: &str,
 ) -> Result<String> {
     let mut hasher = Sha256::new();
 

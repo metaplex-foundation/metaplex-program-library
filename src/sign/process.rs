@@ -163,7 +163,7 @@ pub async fn process_sign(args: SignArgs) -> Result<()> {
 
         if !errors.is_empty() {
             pb.abandon_with_message(format!("{}", style("Signing command failed ").red().bold()));
-            return Err(anyhow!(format!("Not all NFTs were signed.")));
+            return Err(anyhow!("Not all NFTs were signed.".to_string()));
         } else {
             pb.finish_with_message(format!(
                 "{}",
