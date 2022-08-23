@@ -3,6 +3,7 @@
 use super::*;
 use crate::math::SafeMath;
 use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankAccount;
 use solana_program::{
     msg,
     program_error::ProgramError,
@@ -12,7 +13,9 @@ use solana_program::{
 
 /// Pack card
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, BorshSchema, Default)]
+#[derive(
+    Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, BorshSchema, Default, ShankAccount,
+)]
 pub struct PackCard {
     /// Account type - PackCard
     pub account_type: AccountType,

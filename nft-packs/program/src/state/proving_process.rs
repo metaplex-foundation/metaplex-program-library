@@ -2,6 +2,7 @@
 
 use super::*;
 use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankAccount;
 use solana_program::{
     borsh::try_from_slice_unchecked,
     msg,
@@ -13,7 +14,7 @@ use std::collections::BTreeMap;
 
 /// Proving process
 #[repr(C)]
-#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, Default)]
+#[derive(Debug, Clone, PartialEq, BorshSerialize, BorshDeserialize, Default, ShankAccount)]
 pub struct ProvingProcess {
     /// Account type - ProvingProcess
     pub account_type: AccountType,
