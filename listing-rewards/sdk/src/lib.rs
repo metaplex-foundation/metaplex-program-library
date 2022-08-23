@@ -437,7 +437,7 @@ pub fn execute_sale(
     }: ExecuteSaleAccounts,
     ExecuteSaleData { price, token_size }: ExecuteSaleData,
 ) -> Instruction {
-    let (reward_center, reward_center_bump) = find_reward_center_address(&auction_house);
+    let (reward_center, _) = find_reward_center_address(&auction_house);
 
     let (auction_house_fee_account, _) =
         mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
@@ -456,17 +456,17 @@ pub fn execute_sale(
         token_size,
     );
 
-    let (free_trade_state, free_trade_state_bump) = find_trade_state_address(
+    let (free_seller_trade_state, free_trade_state_bump) = find_trade_state_address(
         &seller,
         &auction_house,
         &token_account,
         &treasury_mint,
         &token_mint,
-        price,
+        0,
         token_size,
     );
 
-    let (seller_trade_state, _) = find_auctioneer_trade_state_address(
+    let (seller_trade_state, seller_trade_state_bump) = find_auctioneer_trade_state_address(
         &seller,
         &auction_house,
         &token_account,
@@ -495,7 +495,7 @@ pub fn execute_sale(
         auction_house,
         auction_house_treasury,
         buyer_trade_state,
-        free_trade_state,
+        free_seller_trade_state,
         seller_trade_state,
         program_as_signer,
         auction_house_program: mpl_auction_house::id(),
@@ -512,7 +512,7 @@ pub fn execute_sale(
             escrow_payment_bump,
             free_trade_state_bump,
             program_as_signer_bump,
-            reward_center_bump,
+            seller_trade_state_bump,
             token_size,
         },
     }
@@ -546,3 +546,7 @@ pub fn execute_sale(
 //         data,
 //     }
 // }
+
+/* Used for printing addresses
+    println!("All accounts\n Buyer: {}\n Seller: {}\n Authority: {}\n Treasury Mint: {}\n Token Mint: {}\n Token Account: {}\n Metadata: {}\n Buyer Receipt Token Account: {}\n Seller Payment Receipt Account: {}\n Auction House Fee Account: {}\n AH Auctioneer PDA: {}\n Escrow Payment Account: {}\n Reward Center: {}\n Auction House: {}\n Auction House Treasury: {}\n Buyer Trade State: {}\n Free Seller Trade State: {}\n Seller Trade State: {}\n Program As Signer: {}\n", buyer.to_string(), seller.to_string(), authority.to_string(), treasury_mint.to_string(), token_mint.to_string(), token_account.to_string(), metadata.to_string(), buyer_receipt_token_account.to_string(), seller_payment_receipt_account.to_string(), auction_house_fee_account.to_string(), ah_auctioneer_pda.to_string(), escrow_payment_account.to_string(), reward_center.to_string(), auction_house.to_string(), auction_house_treasury.to_string(), buyer_trade_state.to_string(), free_seller_trade_state.to_string(), seller_trade_state.to_string(), program_as_signer.to_string());
+*/
