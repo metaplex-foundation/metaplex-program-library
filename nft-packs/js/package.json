@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-nft-packs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "contractVersion": "0.1.0",
   "description": "MPL Token Metadata JavaScript API.",
   "main": "dist/src/mpl-nft-packs.js",
