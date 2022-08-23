@@ -13,7 +13,7 @@ Metaplex smart contracts and SDK.
 | [Auction](./auction)                   | [![Program Auction][p-auction-svg]][p-auction-yml]                            | [![SDK Auction][sdk-auction-svg]][sdk-auction-yml]                            |                                                                                    |
 | [Auction House](./auction-house)       | [![Program Auction House][p-auction-house-svg]][p-auction-house-yml]          | [![SDK Auction House][sdk-auction-house-svg]][sdk-auction-house-yml]          |                                                                                    |
 | [Metaplex](./metaplex)                 | [![Program Metaplex][p-metaplex-svg]][p-metaplex-yml]                         | [![SDK Metaplex][sdk-metaplex-svg]][sdk-metaplex-yml]                         |                                                                                    |
-| [NFT-Packs](./nft-packs)               | [![Program NFT-Packs][p-nft-packs-svg]][p-nft-packs-yml]                      |                                                                               |                                                                                    |
+| [NFT-Packs](./nft-packs)               | [![Program NFT-Packs][p-nft-packs-svg]][p-nft-packs-yml]                      | [![SDK NFT-Packs][sdk-nft-packs-svg]][sdk-nft-packs-yml]                      |                                                                                    |
 | [Gumdrop](./gumdrop)                   | [![Program Gumdrop][p-gumdrop-svg]][p-gumdrop-yml]                            | [![SDK Gumdrop][sdk-gumdrop-svg]][sdk-gumdrop-yml]                            |                                                                                    |
 | [Fixed price sale](./fixed-price-sale) | [![Program Fixed Price Sale][p-fixed-price-sale-svg]][p-fixed-price-sale-yml] | [![SDK Fixed Price Sale][sdk-fixed-price-sale-svg]][sdk-fixed-price-sale-yml] | [![Integration Fixed Price Sale][i-fixed-price-sale-svg]][i-fixed-price-sale-yml]  |
 
@@ -119,6 +119,8 @@ The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/lice
 [sdk-gumdrop-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml/badge.svg
 [sdk-fixed-price-sale-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml
 [sdk-fixed-price-sale-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml/badge.svg
+[sdk-nft-packs-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-nft-packs.yml
+[sdk-nft-packs-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-nft-packs.yml/badge.svg
 
 <!-- Integration Badges -->
 [i-token-vault-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-token-vault.yml/badge.svg

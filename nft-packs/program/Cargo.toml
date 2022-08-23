@@ -15,17 +15,20 @@ num_enum = "~0.5.4"
 solana-program = "~1.9.28"
 thiserror = "~1.0"
 borsh = "~0.9.1"
-spl-math = { version = "~0.1", features = [ "no-entrypoint" ] }
-spl-token = { version="~3.2.0", features = [ "no-entrypoint" ] }
+spl-math = { version = "~0.1", features = ["no-entrypoint"] }
+spl-token = { version = "~3.2.0", features = ["no-entrypoint"] }
+shank = "~0.0.7"
 mpl-metaplex = { path = "../../metaplex/program", features = ["no-entrypoint"] }
-mpl-token-metadata = { version="~1.2.10", features = [ "no-entrypoint" ] }
-mpl-token-vault = { path = "../../token-vault/program", features = [ "no-entrypoint" ] }
+mpl-token-metadata = { version = "~1.2.10", features = ["no-entrypoint"] }
+mpl-token-vault = { path = "../../token-vault/program", features = [
+  "no-entrypoint",
+] }
 arrayref = "0.3.6"
 
 [dev-dependencies]
 solana-program-test = "~1.9.28"
 solana-sdk = "~1.9.28"
-rand = { version="~0.8.4" }
+rand = { version = "~0.8.4" }
 
 [lib]
 crate-type = ["cdylib", "lib"]
