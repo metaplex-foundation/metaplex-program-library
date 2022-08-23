@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["src/mpl-token-metadata.ts"],
+  "entryPoints": ["src/mpl-nft-packs.ts"],
   "excludeInternal": true,
   "excludePrivate": true,
   "categorizeByGroup": false,
@@ -17,5 +17,5 @@
   ],
   "readme": "none",
   "emit": "both",
-  "out": "../../docs/token-metadata"
+  "out": "../../docs/nft-packs"
 }
