@@ -13,7 +13,7 @@ use solana_program::{
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Eq, PartialEq, Debug, Clone)]
 pub struct MintPrintingTokensViaTokenArgs {
     pub supply: u64,
 }

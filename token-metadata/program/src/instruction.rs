@@ -84,7 +84,7 @@ pub struct CreateMetadataAccountArgsV3 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Eq, PartialEq, Debug, Clone)]
 pub struct CreateMasterEditionArgs {
     /// If set, means that no more than this number of editions can ever be minted. This is immutable.
     pub max_supply: Option<u64>,
@@ -92,28 +92,28 @@ pub struct CreateMasterEditionArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Eq, PartialEq, Debug, Clone)]
 pub struct MintNewEditionFromMasterEditionViaTokenArgs {
     pub edition: u64,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Eq, PartialEq, Debug, Clone)]
 pub struct ApproveUseAuthorityArgs {
     pub number_of_uses: u64,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Eq, PartialEq, Debug, Clone)]
 pub struct UtilizeArgs {
     pub number_of_uses: u64,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Eq, PartialEq, Debug, Clone)]
 pub struct SetCollectionSizeArgs {
     pub size: u64,
 }
