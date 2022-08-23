@@ -190,17 +190,27 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
         UPLOAD_EMOJI
     );
 
-    let pattern = regex::Regex::new(r"#([0-9]+)").unwrap();
+    let pattern = regex::Regex::new(r"#([0-9]+)").expect("Failed to create regex pattern.");
 
     let spinner = spinner_with_style();
     spinner.set_message("Setting up transactions...");
     for m in metadata {
         let name = m.data.name.trim_matches(char::from(0)).to_string();
-        let capture = pattern.captures(&name).map(|c| c[0].to_string()).unwrap();
-        let num = capture.split('#').nth(1).unwrap();
+        let capture = pattern
+            .captures(&name)
+            .map(|c| c[0].to_string())
+            .ok_or_else(|| anyhow!("No captures found for {name}"))?;
+        let num = capture
+            .split('#')
+            .nth(1)
+            .ok_or_else(|| anyhow!("No NFT number found for name: {name}"))?;
 
         let metadata_pubkey = find_metadata_pda(&m.mint);
-        let new_uri = nft_lookup.get(num).unwrap().metadata_link.clone();
+        let new_uri = nft_lookup
+            .get(num)
+            .ok_or_else(|| anyhow!("No URI found for number: {num}"))?
+            .metadata_link
+            .clone();
         update_values.push(MetadataUpdateValues {
             metadata_pubkey,
             metadata: m,
@@ -262,7 +272,8 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
             "{}Some reveals failed. See the reveal cache file for details. Re-run the command.",
             WARNING_EMOJI
         );
-        let f = File::create("sugar-reveal-cache.json").unwrap();
+        let f = File::create("sugar-reveal-cache.json")
+            .map_err(|e| anyhow!("Failed to create sugar reveal cache file: {e}"))?;
         serde_json::to_writer_pretty(f, &errors).unwrap();
     } else {
         println!("{}Reveal complete!", CONFETTI_EMOJI);
@@ -322,5 +333,8 @@ async fn update_metadata_value(
 }
 
 fn increment_key(key: &str) -> String {
-    (key.parse::<u32>().unwrap() + 1).to_string()
+    (key.parse::<u32>()
+        .expect("Key parsing out of bounds for u32.")
+        + 1)
+    .to_string()
 }
