@@ -50,7 +50,13 @@ pub struct CreateListing<'info> {
     pub listing: Account<'info, Listing>,
 
     /// The auctioneer program PDA running this auction.
-    #[account(seeds = [REWARD_CENTER.as_bytes(), auction_house.key().as_ref()], bump = reward_center.bump)]
+    #[account(
+        seeds = [
+            REWARD_CENTER.as_bytes(), 
+            auction_house.key().as_ref()
+        ], 
+        bump = reward_center.bump
+    )]
     pub reward_center: Box<Account<'info, RewardCenter>>,
 
     /// The collection eligable for rewards
@@ -197,6 +203,7 @@ pub fn handler(
     let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
     let wallet_key = ctx.accounts.wallet.key();
+    let reward_center_key = ctx.accounts.reward_center.key();
     let auction_house_authority_key = ctx.accounts.authority.key();
 
     assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
@@ -249,13 +256,7 @@ pub fn handler(
         token_size,
     };
 
-    let auth_account_key = if auction_house.requires_sign_off || price == 0 {
-        auction_house_authority_key
-    } else {
-        wallet_key
-    };
-
-    let signer_required_keys = vec![ctx.accounts.reward_center.key(), auth_account_key];
+    let signer_required_keys = vec![reward_center_key, wallet_key, auction_house_authority_key];
 
     let create_listing_ix = Instruction {
         program_id: auction_house_program.key(),

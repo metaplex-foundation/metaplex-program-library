@@ -100,7 +100,7 @@ pub struct CancelListing<'info> {
             FEE_PAYER.as_bytes()
         ],
         seeds::program = auction_house_program,
-        bump=auction_house.fee_payer_bump
+        bump = auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
 
@@ -136,6 +136,7 @@ pub fn handler(
     let rewardable_collection = &ctx.accounts.rewardable_collection;
     let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
+    let reward_center_key = ctx.accounts.reward_center.key();
     let wallet_key = ctx.accounts.wallet.key();
     let auction_house_authority_key = ctx.accounts.authority.key();
 
@@ -171,13 +172,7 @@ pub fn handler(
         token_size,
     };
 
-    let auth_account_key = if auction_house.requires_sign_off {
-        auction_house_authority_key
-    } else {
-        wallet_key
-    };
-
-    let signer_required_keys = vec![ctx.accounts.reward_center.key(), auth_account_key];
+    let signer_required_keys = vec![reward_center_key, wallet_key, auction_house_authority_key];
 
     let cancel_listing_ix = Instruction {
         program_id: auction_house_program.key(),

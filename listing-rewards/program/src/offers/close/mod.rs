@@ -78,7 +78,7 @@ pub struct CloseOffer<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = close_offer_params.escrow_payment_bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
@@ -111,8 +111,8 @@ pub struct CloseOffer<'info> {
             auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
         ],
-        seeds::program=auction_house_program,
-        bump=auction_house.bump,
+        seeds::program = auction_house_program,
+        bump =auction_house.bump,
         has_one=authority,
         has_one=auction_house_fee_account
     )]
@@ -126,7 +126,7 @@ pub struct CloseOffer<'info> {
             auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -144,7 +144,7 @@ pub struct CloseOffer<'info> {
             auction_house.key().as_ref(),
             reward_center.key().as_ref()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = auction_house.auctioneer_pda_bump
     )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
@@ -172,6 +172,7 @@ pub fn handler(
     let wallet = &ctx.accounts.wallet;
     let auction_house_key = auction_house.key();
     let wallet_key = ctx.accounts.wallet.key();
+    let reward_center_key = ctx.accounts.reward_center.key();
     let auction_house_authority_key = ctx.accounts.authority.key();
 
     assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
@@ -233,13 +234,7 @@ pub fn handler(
         token_size,
     };
 
-    let auth_account_key = if auction_house.requires_sign_off {
-        auction_house_authority_key
-    } else {
-        wallet_key
-    };
-
-    let signer_required_keys = vec![ctx.accounts.reward_center.key(), auth_account_key];
+    let signer_required_keys = vec![reward_center_key, wallet_key, auction_house_authority_key];
 
     let close_offer_ix = Instruction {
         program_id: ctx.accounts.auction_house_program.key(),
