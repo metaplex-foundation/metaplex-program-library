@@ -249,33 +249,21 @@ pub fn handler(
         token_size,
     };
 
-    let auth_account_key = if auction_house.requires_sign_off || price == 0 {
-        auction_house_authority_key
-    } else {
-        wallet_key
-    };
-
-    let signer_required_keys = vec![ctx.accounts.reward_center.key(), auth_account_key];
-
     let create_listing_ix = Instruction {
         program_id: auction_house_program.key(),
         data: create_listing_params.data(),
         accounts: create_listing_ctx_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .map(|mut account| {
-                if signer_required_keys.contains(&account.pubkey) {
-                    account.is_signer = if account.pubkey.eq(&reward_center.key()) {
-                        true
-                    } else if account.pubkey.eq(&wallet_key) {
-                        ctx.accounts.wallet.to_account_info().is_signer
-                    } else {
-                        ctx.accounts.authority.to_account_info().is_signer
-                    }
-                }
-                account
-            })
-            .collect(),
+        .to_account_metas(None)
+        .into_iter()
+        .zip(create_listing_ctx_accounts.to_account_infos())
+        .map(|mut pair| {
+            pair.0.is_signer = pair.1.is_signer;
+            if pair.0.pubkey == ctx.accounts.reward_center.key() {
+                pair.0.is_signer = true;
+            }
+            pair.0
+        })
+        .collect()
     };
 
     invoke_signed(
