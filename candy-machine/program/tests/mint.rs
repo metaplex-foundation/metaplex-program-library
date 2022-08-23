@@ -140,7 +140,7 @@ async fn metadata_check_before_bot_tax() {
     );
 
     ix[0].accounts.pop();
-    update_blockhash(context).await;
+    update_blockhash(context).await.unwrap();
     let tx = Transaction::new_signed_with_payer(
         ix.as_slice(),
         Some(&candy_manager.minter.pubkey()),
