@@ -461,9 +461,9 @@ pub enum MetadataError {
     #[error("This edition is not a Print Edition")]
     NotAPrintEdition,
 
-    /// 117 - Incorrect Edition Marker
-    #[error("Incorrect Edition Marker")]
-    IncorrectEditionMarker,
+    /// 117 - Invalid Edition Marker
+    #[error("Invalid Edition Marker")]
+    InvalidEditionMarker,
 }
 
 impl PrintProgramError for MetadataError {

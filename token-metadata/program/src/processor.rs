@@ -1957,7 +1957,7 @@ pub fn process_burn_edition_nft(program_id: &Pubkey, accounts: &[AccountInfo]) -
         edition_marker_number_str.as_bytes(),
     ]);
     assert_derivation(program_id, edition_marker_info, &edition_marker_info_path)
-        .map_err(|_| MetadataError::IncorrectEditionMarker)?;
+        .map_err(|_| MetadataError::InvalidEditionMarker)?;
 
     //      **BURN**
     // Burn the SPL token
