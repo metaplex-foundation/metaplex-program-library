@@ -458,6 +458,78 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * IncorrectOwner: 'Incorrect account owner'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectOwnerError extends Error {
+  readonly code: number = 0x1783
+  readonly name: string = 'IncorrectOwner'
+  constructor() {
+    super('Incorrect account owner')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectOwnerError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1783, () => new IncorrectOwnerError())
+createErrorFromNameLookup.set('IncorrectOwner', () => new IncorrectOwnerError())
+
+/**
+ * SizedCollection: 'Can't use this function on a sized collection'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SizedCollectionError extends Error {
+  readonly code: number = 0x1784
+  readonly name: string = 'SizedCollection'
+  constructor() {
+    super("Can't use this function on a sized collection")
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SizedCollectionError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1784, () => new SizedCollectionError())
+createErrorFromNameLookup.set(
+  'SizedCollection',
+  () => new SizedCollectionError()
+)
+
+/**
+ * CollectionCannotBeVerifiedInThisInstruction: 'Cannont Verify Collection in this Instruction'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionCannotBeVerifiedInThisInstructionError extends Error {
+  readonly code: number = 0x1785
+  readonly name: string = 'CollectionCannotBeVerifiedInThisInstruction'
+  constructor() {
+    super('Cannont Verify Collection in this Instruction')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(
+        this,
+        CollectionCannotBeVerifiedInThisInstructionError
+      )
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(
+  0x1785,
+  () => new CollectionCannotBeVerifiedInThisInstructionError()
+)
+createErrorFromNameLookup.set(
+  'CollectionCannotBeVerifiedInThisInstruction',
+  () => new CollectionCannotBeVerifiedInThisInstructionError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
