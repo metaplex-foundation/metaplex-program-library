@@ -136,8 +136,6 @@ pub fn handler(
     let rewardable_collection = &ctx.accounts.rewardable_collection;
     let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
-    let wallet_key = ctx.accounts.wallet.key();
-    let auction_house_authority_key = ctx.accounts.authority.key();
 
     assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
 
