@@ -2503,6 +2503,46 @@ createErrorFromCodeLookup.set(0x73, () => new AlreadyUnverifiedError());
 createErrorFromNameLookup.set('AlreadyUnverified', () => new AlreadyUnverifiedError());
 
 /**
+ * NotAPrintEdition: 'This edition is not a Print Edition'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NotAPrintEditionError extends Error {
+  readonly code: number = 0x74;
+  readonly name: string = 'NotAPrintEdition';
+  constructor() {
+    super('This edition is not a Print Edition');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NotAPrintEditionError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x74, () => new NotAPrintEditionError());
+createErrorFromNameLookup.set('NotAPrintEdition', () => new NotAPrintEditionError());
+
+/**
+ * InvalidEditionMarker: 'Invalid Edition Marker'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidEditionMarkerError extends Error {
+  readonly code: number = 0x75;
+  readonly name: string = 'InvalidEditionMarker';
+  constructor() {
+    super('Invalid Edition Marker');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidEditionMarkerError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x75, () => new InvalidEditionMarkerError());
+createErrorFromNameLookup.set('InvalidEditionMarker', () => new InvalidEditionMarkerError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
