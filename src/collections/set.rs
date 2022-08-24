@@ -123,17 +123,17 @@ pub fn process_set_collection(args: SetCollectionArgs) -> Result<()> {
 
         // If hidden settings are enabled, we update the hash value in the config file and update the candy machine on-chain.
         if candy_machine_state.data.hidden_settings.is_some() {
-            println!(
-                "\nCandy machine has hidden settings and cache file was updated. Updating hash value..."
-            );
-
             let mut config_data = get_config_data(&args.config)?;
-
             let hidden_settings = config_data.hidden_settings.as_ref().unwrap().clone();
 
             println!(
-                "\nHidden settings hash: {}",
+                "\n{} {}",
+                style("Hidden settings hash:").bold(),
                 hash_and_update(hidden_settings, &args.config, &mut config_data, &args.cache,)?
+            );
+
+            println!(
+                "\nCandy machine has hidden settings and cache file was updated. Updating hash value...\n"
             );
 
             let update_args = UpdateArgs {
