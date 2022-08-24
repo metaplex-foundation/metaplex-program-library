@@ -42,7 +42,7 @@ pub struct AssetInfo {
     pub asset_id: String,
     /// Name (file name) of the asset.
     pub name: String,
-    /// Content of the asset - either a file path of the string representation fo the content.
+    /// Content of the asset - either a file path or the string representation of the content.
     pub content: String,
     /// Type of the asset.
     pub data_type: DataType,
