@@ -1,0 +1,667 @@
+{
+  "version": "0.0.1",
+  "name": "candy_guard",
+  "instructions": [
+    {
+      "name": "initialize",
+      "docs": [
+        "Create a new candy guard account."
+      ],
+      "accounts": [
+        {
+          "name": "candyGuard",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "base",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": "CandyGuardData"
+          }
+        }
+      ]
+    },
+    {
+      "name": "mint",
+      "docs": [
+        "Mint an NFT from a candy machine wrapped in the candy guard."
+      ],
+      "accounts": [
+        {
+          "name": "candyGuard",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "updateAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineCreator",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "wallet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "metadata",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "mintUpdateAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "masterEdition",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "recentSlothashes",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "instructionSysvarAccount",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "creatorBump",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "unwrap",
+      "docs": [
+        "Remove a candy guard from a candy machine, setting the authority to the",
+        "candy guard authority."
+      ],
+      "accounts": [
+        {
+          "name": "candyGuard",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update",
+      "docs": [
+        "Update the candy guard configuration."
+      ],
+      "accounts": [
+        {
+          "name": "candyGuard",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "data",
+          "type": {
+            "defined": "CandyGuardData"
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrap",
+      "docs": [
+        "Add a candy guard to a candy machine. After the guard is added, mint",
+        "is only allowed through the candy guard."
+      ],
+      "accounts": [
+        {
+          "name": "candyGuard",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachine",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "candyMachineProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "CandyGuard",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "base",
+            "type": "publicKey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "features",
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "BotTax",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "lamports",
+            "type": "u64"
+          },
+          {
+            "name": "lastInstruction",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EndSettings",
+      "docs": [
+        "Configurations options for end settings."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "endSettingType",
+            "type": {
+              "defined": "EndSettingType"
+            }
+          },
+          {
+            "name": "number",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Gatekeeper",
+      "docs": [
+        "Configurations options for the gatekeeper."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "gatekeeperNetwork",
+            "docs": [
+              "The network for the gateway token required"
+            ],
+            "type": "publicKey"
+          },
+          {
+            "name": "expireOnUse",
+            "docs": [
+              "Whether or not the token should expire after minting.",
+              "The gatekeeper network must support this if true."
+            ],
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Lamports",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LiveDate",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "date",
+            "type": {
+              "option": "i64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SplToken",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "tokenMint",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ThirdPartySigner",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "signerKey",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Whitelist",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "publicKey"
+          },
+          {
+            "name": "presale",
+            "type": "bool"
+          },
+          {
+            "name": "discountPrice",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "mode",
+            "type": {
+              "defined": "WhitelistTokenMode"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "CandyGuardData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "botTax",
+            "docs": [
+              "Last instruction check and bot tax (penalty for invalid transactions)."
+            ],
+            "type": {
+              "option": {
+                "defined": "BotTax"
+              }
+            }
+          },
+          {
+            "name": "liveDate",
+            "docs": [
+              "Live data guard (controls when minting is allowed)."
+            ],
+            "type": {
+              "option": {
+                "defined": "LiveDate"
+              }
+            }
+          },
+          {
+            "name": "lamports",
+            "docs": [
+              "Lamports guard (set the price for the mint in lamports)."
+            ],
+            "type": {
+              "option": {
+                "defined": "Lamports"
+              }
+            }
+          },
+          {
+            "name": "splToken",
+            "docs": [
+              "Spl-token guard (set the price for the mint in spl-token amount)."
+            ],
+            "type": {
+              "option": {
+                "defined": "SplToken"
+              }
+            }
+          },
+          {
+            "name": "thirdPartySigner",
+            "docs": [
+              "Third party signer guard."
+            ],
+            "type": {
+              "option": {
+                "defined": "ThirdPartySigner"
+              }
+            }
+          },
+          {
+            "name": "whitelist",
+            "docs": [
+              "Whitelist guard (whitelist mint settings)."
+            ],
+            "type": {
+              "option": {
+                "defined": "Whitelist"
+              }
+            }
+          },
+          {
+            "name": "gatekeeper",
+            "docs": [
+              "Gatekeeper guard"
+            ],
+            "type": {
+              "option": {
+                "defined": "Gatekeeper"
+              }
+            }
+          },
+          {
+            "name": "endSettings",
+            "docs": [
+              "End settings guard"
+            ],
+            "type": {
+              "option": {
+                "defined": "EndSettings"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EndSettingType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Date"
+          },
+          {
+            "name": "Amount"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WhitelistTokenMode",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "BurnEveryTime"
+          },
+          {
+            "name": "NeverBurn"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidAccountSize",
+      "msg": "Could not save guard to account"
+    },
+    {
+      "code": 6001,
+      "name": "DeserializationError",
+      "msg": "Could not deserialize guard"
+    },
+    {
+      "code": 6002,
+      "name": "PublicKeyMismatch",
+      "msg": "Public key mismatch"
+    },
+    {
+      "code": 6003,
+      "name": "DataIncrementLimitExceeded",
+      "msg": "Missing expected remaining account"
+    },
+    {
+      "code": 6004,
+      "name": "IncorrectOwner",
+      "msg": "Account does not have correct owner"
+    },
+    {
+      "code": 6005,
+      "name": "Uninitialized",
+      "msg": "Account is not initialized"
+    },
+    {
+      "code": 6006,
+      "name": "MissingRemainingAccount",
+      "msg": "Missing expected remaining account"
+    },
+    {
+      "code": 6007,
+      "name": "NumericalOverflowError",
+      "msg": "Numerical overflow error"
+    },
+    {
+      "code": 6008,
+      "name": "CollectionKeyMismatch",
+      "msg": "Collection public key mismatch"
+    },
+    {
+      "code": 6009,
+      "name": "MissingCollectionAccounts",
+      "msg": "Missing collection accounts"
+    },
+    {
+      "code": 6010,
+      "name": "CollectionUpdateAuthorityKeyMismatch",
+      "msg": "Collection update authority public key mismatch"
+    },
+    {
+      "code": 6011,
+      "name": "MintNotLastTransaction",
+      "msg": "Mint must be the last instructions of the transaction"
+    },
+    {
+      "code": 6012,
+      "name": "MissingCollectionInstruction",
+      "msg": "Missing set collection during mint IX"
+    },
+    {
+      "code": 6013,
+      "name": "MintNotLive",
+      "msg": "Mint is not live"
+    },
+    {
+      "code": 6014,
+      "name": "NotEnoughSOL",
+      "msg": "Not enough SOL to pay for the mint"
+    },
+    {
+      "code": 6015,
+      "name": "TokenTransferFailed",
+      "msg": "Token transfer failed"
+    },
+    {
+      "code": 6016,
+      "name": "NotEnoughTokens",
+      "msg": "Not enough tokens to pay for this minting"
+    },
+    {
+      "code": 6017,
+      "name": "MissingRequiredSignature",
+      "msg": "A signature was required but not found"
+    },
+    {
+      "code": 6018,
+      "name": "TokenBurnFailed",
+      "msg": "Token burn failed"
+    },
+    {
+      "code": 6019,
+      "name": "NoWhitelistToken",
+      "msg": "No whitelist token present"
+    },
+    {
+      "code": 6020,
+      "name": "GatewayTokenInvalid",
+      "msg": "Gateway token is not valid"
+    },
+    {
+      "code": 6021,
+      "name": "AfterEndSettingsDate",
+      "msg": "Current time is after the set end settings date"
+    },
+    {
+      "code": 6022,
+      "name": "AfterEndSettingsMintAmount",
+      "msg": "Current items minted is at the set end settings amount"
+    }
+  ],
+  "metadata": {
+    "address": "grd1hVewsa8dR1T1JfSFGzQUqgWmc1xXZ3uRRFJJ8XJ",
+    "origin": "anchor",
+    "binaryVersion": "0.25.0",
+    "libVersion": "0.25.0"
+  }
+}

@@ -1,0 +1,12 @@
+[workspace]
+[package]
+name = "mpl-candy-guard-derive"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1.0.98", features = ["extra-traits"] }
+quote = "1.0.20"

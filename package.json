@@ -23,6 +23,8 @@
     "metaplex/js",
     "auction-house/js",
     "gumdrop/js",
+    "candy-core/js",
+    "candy-guard/js",
     "candy-machine/js",
     "fixed-price-sale/js",
     "bubblegum/js",
