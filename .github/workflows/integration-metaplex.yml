@@ -13,7 +13,7 @@ env:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Set job outputs to values from filter step
     outputs:
       core: ${{ steps.filter.outputs.core }}
@@ -30,7 +30,7 @@ jobs:
           package:
             - 'metaplex/**'
   build-and-integration-test-metaplex:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       cache_id: program-metaplex 
     needs: changes

@@ -58,6 +58,7 @@ pub struct MintNFT<'info> {
     /// CHECK: account checked in CPI
     #[account(mut)]
     mint: UncheckedAccount<'info>,
+    #[account(mut)]
     mint_authority: Signer<'info>,
     update_authority: Signer<'info>,
     /// CHECK: account checked in CPI

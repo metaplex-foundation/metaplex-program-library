@@ -16,7 +16,7 @@ env:
 
 jobs:
   dump-context:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Dump GitHub context
@@ -26,7 +26,7 @@ jobs:
 
   # alt: on version, publish comment or label and then parse here.
   get-changes-scope:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       changed-packages: ${{ steps.get-changed-package-scope.outputs.result }}
     steps:
@@ -67,7 +67,7 @@ jobs:
 
   publish-version-changes:
     needs: [get-changes-scope]
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
       - name: Publish version changes

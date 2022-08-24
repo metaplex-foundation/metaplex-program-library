@@ -8,7 +8,7 @@ on:
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # Set job outputs to values from filter step
     outputs:
       package: ${{ steps.filter.outputs.package }}
@@ -25,7 +25,7 @@ jobs:
   build-lint-and-test-token-metadata:
     needs: changes
     if: ${{ needs.changes.outputs.package == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - uses: actions/checkout@v1
