@@ -14,6 +14,9 @@ use solana_program_test::BanksClientError;
 use solana_sdk::{
     pubkey::Pubkey, signature::Signer, signer::keypair::Keypair, transaction::Transaction,
 };
+use spl_associated_token_account::{
+    get_associated_token_address, instruction::create_associated_token_account,
+};
 
 #[derive(Debug)]
 pub struct EditionMarker {
@@ -248,5 +251,37 @@ impl EditionMarker {
         );
 
         context.banks_client.process_transaction(tx).await
+    }
+
+    pub async fn transfer(
+        &mut self,
+        context: &mut ProgramTestContext,
+        new_owner: &Pubkey,
+    ) -> Result<(), BanksClientError> {
+        let new_owner_token_account = get_associated_token_address(new_owner, &self.mint.pubkey());
+        let create_token_account_ix = create_associated_token_account(
+            &context.payer.pubkey(),
+            new_owner,
+            &self.mint.pubkey(),
+        );
+
+        let transfer_ix = spl_token::instruction::transfer(
+            &spl_token::id(),
+            &self.token.pubkey(),
+            &new_owner_token_account,
+            &context.payer.pubkey(),
+            &[],
+            1,
+        )
+        .unwrap();
+
+        let transfer_tx = Transaction::new_signed_with_payer(
+            &[create_token_account_ix, transfer_ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context.banks_client.process_transaction(transfer_tx).await
     }
 }

@@ -13,6 +13,7 @@ mod burn_edition_nft {
     };
     use solana_program::pubkey::Pubkey;
     use solana_sdk::signature::Keypair;
+    use spl_associated_token_account::get_associated_token_address;
 
     use super::*;
 
@@ -120,6 +121,133 @@ mod burn_edition_nft {
             .await
             .unwrap();
         assert!(master_edition_account.is_some());
+    }
+
+    #[tokio::test]
+    async fn burn_edition_nft_in_separate_wallet() {
+        // Burn a print edition that is in a separate wallet, so owned by a different account
+        // than the master edition nft.
+        let mut context = program_test().start_with_context().await;
+
+        let original_nft = Metadata::new();
+        original_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new(&original_nft);
+        master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+        let mut print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+
+        // Transfer to new owner.
+        let new_owner = Keypair::new();
+        let new_owner_pubkey = new_owner.pubkey();
+        airdrop(&mut context, &new_owner_pubkey, 1_000_000_000)
+            .await
+            .unwrap();
+
+        context.warp_to_slot(10).unwrap();
+
+        print_edition
+            .transfer(&mut context, &new_owner_pubkey)
+            .await
+            .unwrap();
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        // Old owner should not be able to burn.
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            print_edition.token.pubkey(),
+            master_edition.pubkey,
+            print_edition.new_edition_pubkey,
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        // We've passed in the correct token account associated with the old owner but
+        // it has 0 tokens so we get this error.
+        assert_custom_error!(err, MetadataError::NotEnoughTokens);
+
+        // Old owner should not be able to burn even if we pass in the new token
+        // account associated with the new owner.
+        let new_owner_token_account =
+            get_associated_token_address(&new_owner_pubkey, &print_edition.mint.pubkey());
+
+        let err = burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            new_owner_token_account,
+            master_edition.pubkey,
+            print_edition.new_edition_pubkey,
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap_err();
+
+        // We've passed in the correct token account associated with the new owner but
+        // the old owner is not the current owner of the account so this shuld fail with
+        // InvalidOwner error.
+        assert_custom_error!(err, MetadataError::InvalidOwner);
+
+        // New owner can burn.
+        burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &new_owner,
+            print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            new_owner_token_account,
+            master_edition.pubkey,
+            print_edition.new_edition_pubkey,
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap();
+
+        // Metadata, Edition and token account are burned.
+        let md_account = context
+            .banks_client
+            .get_account(print_edition.new_metadata_pubkey)
+            .await
+            .unwrap();
+        let edition_account = context
+            .banks_client
+            .get_account(print_edition.new_edition_pubkey)
+            .await
+            .unwrap();
+        let token_account = context
+            .banks_client
+            .get_account(new_owner_token_account)
+            .await
+            .unwrap();
+        assert!(md_account.is_none());
+        assert!(edition_account.is_none());
+        assert!(token_account.is_none());
     }
 
     #[tokio::test]
