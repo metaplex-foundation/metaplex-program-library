@@ -841,11 +841,11 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let collection_metadata = Metadata::from_account_info(collection_info)?;
 
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_metadata,
         collection_mint,
         edition_account_info,
@@ -914,7 +914,7 @@ pub fn verify_sized_collection_item(
     }
 
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_metadata,
         collection_mint,
         edition_account_info,
@@ -966,11 +966,11 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let collection_data = Metadata::from_account_info(collection_info)?;
 
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_data,
         collection_mint,
         edition_account_info,
@@ -1039,7 +1039,7 @@ pub fn unverify_sized_collection_item(
     }
 
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_metadata,
         collection_mint,
         edition_account_info,
@@ -1494,7 +1494,7 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         verified: true,
     });
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_data,
         collection_mint,
         edition_account_info,
@@ -1568,7 +1568,7 @@ pub fn set_and_verify_sized_collection_item(
         verified: true,
     });
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_metadata,
         collection_mint,
         edition_account_info,
