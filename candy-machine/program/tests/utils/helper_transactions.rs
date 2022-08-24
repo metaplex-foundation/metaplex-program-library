@@ -418,8 +418,7 @@ pub async fn unlock_funds(
 }
 
 #[allow(clippy::too_many_arguments)]
-pub async fn mint_nft(
-    context: &mut ProgramTestContext,
+pub fn mint_nft_ix(
     candy_machine: &Pubkey,
     candy_creator_pda: &Pubkey,
     creator_bump: u8,
@@ -432,7 +431,7 @@ pub async fn mint_nft(
     collection_info: CollectionInfo,
     gateway_info: GatekeeperInfo,
     freeze_info: FreezeInfo,
-) -> transport::Result<()> {
+) -> Vec<Instruction> {
     let metadata = new_nft.metadata_pubkey;
     let master_edition = new_nft.edition_pubkey;
     let mint = new_nft.mint.pubkey();
@@ -495,7 +494,6 @@ pub async fn mint_nft(
     let data = mpl_candy_machine::instruction::MintNft { creator_bump }.data();
 
     let mut instructions = Vec::new();
-    let mut signers = Vec::new();
 
     let mint_ix = Instruction {
         program_id: mpl_candy_machine::id(),
@@ -503,7 +501,6 @@ pub async fn mint_nft(
         accounts,
     };
     instructions.push(mint_ix);
-    signers.push(payer);
 
     if collection_info.set {
         let accounts = mpl_candy_machine::accounts::SetCollectionDuringMint {
@@ -520,19 +517,51 @@ pub async fn mint_nft(
             collection_authority_record: collection_info.authority_record,
         }
         .to_account_metas(None);
-
         let data = mpl_candy_machine::instruction::SetCollectionDuringMint {}.data();
-        let collection_ix = Instruction {
+        let set_ix = Instruction {
             program_id: mpl_candy_machine::id(),
             data,
             accounts,
         };
-        instructions.push(collection_ix);
+        instructions.push(set_ix)
     }
+    instructions
+}
 
+#[allow(clippy::too_many_arguments)]
+pub async fn mint_nft(
+    context: &mut ProgramTestContext,
+    candy_machine: &Pubkey,
+    candy_creator_pda: &Pubkey,
+    creator_bump: u8,
+    wallet: &Pubkey,
+    authority: &Pubkey,
+    payer: &Keypair,
+    new_nft: &MasterEditionManager,
+    token_info: TokenInfo,
+    whitelist_info: WhitelistInfo,
+    collection_info: CollectionInfo,
+    gateway_info: GatekeeperInfo,
+    freeze_info: FreezeInfo,
+) -> transport::Result<()> {
+    let ins = mint_nft_ix(
+        candy_machine,
+        candy_creator_pda,
+        creator_bump,
+        wallet,
+        authority,
+        payer,
+        new_nft,
+        token_info,
+        whitelist_info,
+        collection_info,
+        gateway_info,
+        freeze_info,
+    );
+    let signers = vec![payer];
     update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
-        &instructions,
+        &ins,
         Some(&payer.pubkey()),
         &signers,
         context.last_blockhash,
