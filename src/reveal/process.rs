@@ -56,8 +56,8 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
         LOOKING_GLASS_EMOJI
     );
 
-    let pb = spinner_with_style();
-    pb.set_message("Connecting...");
+    let spinner = spinner_with_style();
+    spinner.set_message("Connecting...");
 
     let config = get_config_data(&args.config)?;
 
@@ -85,16 +85,17 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
         }
     };
 
-    pb.finish_and_clear();
+    spinner.finish_with_message("Done");
 
     println!(
-        "{} {}Getting minted NFTs for candy machine {}",
+        "\n{} {}Getting minted NFTs for candy machine {}",
         style("[2/4]").bold().dim(),
         LOOKING_GLASS_EMOJI,
         candy_machine_id
     );
 
     let spinner = spinner_with_style();
+    spinner.set_message("Loading...");
     let solana_cluster: Cluster = get_cluster(program.rpc())?;
 
     #[allow(unused_assignments)]
@@ -126,10 +127,9 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
             ))
         }
     };
-    spinner.finish_and_clear();
 
     if metadata_pubkeys.is_empty() {
-        pb.finish_with_message(format!(
+        spinner.finish_with_message(format!(
             "{}{:?}",
             style("No NFTs found on ").red().bold(),
             style(solana_cluster).red().bold()
@@ -140,16 +140,17 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
         ));
     }
 
-    pb.finish_with_message(format!(
+    spinner.finish_with_message(format!(
         "Found {:?} accounts",
         metadata_pubkeys.len() as u64
     ));
 
     println!(
-        "{} {}Matching NFTs to cache values",
+        "\n{} {}Matching NFTs to cache values",
         style("[3/4]").bold().dim(),
         LOOKING_GLASS_EMOJI
     );
+    let spinner = spinner_with_style();
 
     let mut futures = Vec::new();
     let client = RpcClient::new(&rpc_url);
@@ -182,10 +183,12 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
         .map(|(k, item)| (increment_key(k), item))
         .collect();
 
+    spinner.finish_with_message("Done");
+
     let mut update_values = Vec::new();
 
     println!(
-        "{} {}Updating NFT URIs from cache values",
+        "\n{} {}Updating NFT URIs from cache values",
         style("[4/4]").bold().dim(),
         UPLOAD_EMOJI
     );
@@ -225,7 +228,7 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
     let mut tx_tasks = Vec::new();
 
     let pb = progress_bar_with_style(metadata_pubkeys.len() as u64);
-    pb.set_message("Updating NFTs...");
+    pb.set_message("Updating NFTs... ");
 
     for item in update_values {
         let permit = Arc::clone(&sem).acquire_owned().await.unwrap();
@@ -258,7 +261,7 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
     for task in tx_tasks {
         task.await.unwrap();
     }
-    pb.finish_and_clear();
+    pb.finish();
 
     let results = reveal_results.lock().unwrap();
 
@@ -276,7 +279,7 @@ pub async fn process_reveal(args: RevealArgs) -> Result<()> {
             .map_err(|e| anyhow!("Failed to create sugar reveal cache file: {e}"))?;
         serde_json::to_writer_pretty(f, &errors).unwrap();
     } else {
-        println!("{}Reveal complete!", CONFETTI_EMOJI);
+        println!("\n{}Reveal complete!", CONFETTI_EMOJI);
     }
 
     Ok(())
