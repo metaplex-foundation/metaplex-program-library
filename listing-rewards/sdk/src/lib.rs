@@ -15,7 +15,7 @@ use mpl_listing_rewards::{
     id, instruction,
     listings::{cancel::CancelListingParams, create::CreateListingParams},
     offers::{close::CloseOfferParams, create::CreateOfferParams},
-    pda::{self, find_reward_center_address},
+    pda::{self, find_listing_address, find_offer_address, find_reward_center_address},
     reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
     rewardable_collection::{
         create::CreateRewardableCollectionParams, delete::DeleteRewardableCollectionParams,
@@ -425,6 +425,7 @@ pub fn close_offer(
 pub fn execute_sale(
     ExecuteSaleAccounts {
         auction_house,
+        rewardable_collection,
         seller,
         buyer,
         authority,
@@ -438,6 +439,8 @@ pub fn execute_sale(
     ExecuteSaleData { price, token_size }: ExecuteSaleData,
 ) -> Instruction {
     let (reward_center, _) = find_reward_center_address(&auction_house);
+    let (offer, _) = find_offer_address(&buyer, &metadata, &rewardable_collection);
+    let (listing, _) = find_listing_address(&seller, &metadata, &rewardable_collection);
 
     let (auction_house_fee_account, _) =
         mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
@@ -481,6 +484,9 @@ pub fn execute_sale(
     let accounts = rewards_accounts::ExecuteSale {
         buyer,
         seller,
+        listing,
+        offer,
+        rewardable_collection,
         authority,
         treasury_mint,
         token_mint,

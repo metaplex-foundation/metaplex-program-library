@@ -254,10 +254,13 @@ async fn execute_sale_success() {
     context.warp_to_slot(120 * 400).unwrap();
 
     // EXECUTE SALE TEST
+
+    let auction_house_fee_account = &find_auction_house_fee_account_address(&auction_house).0;
+
     airdrop(
         &mut context,
-        &find_auction_house_fee_account_address(&auction_house).0,
-        1_000_000_000,
+        auction_house_fee_account,
+        listing_rewards_test::ONE_SOL,
     )
     .await
     .unwrap();
@@ -267,6 +270,7 @@ async fn execute_sale_success() {
     let execute_sale_accounts = ExecuteSaleAccounts {
         auction_house,
         token_account,
+        rewardable_collection,
         buyer: buyer.pubkey(),
         seller: metadata_owner.pubkey(),
         authority: wallet,

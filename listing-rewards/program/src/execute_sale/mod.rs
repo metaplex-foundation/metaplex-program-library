@@ -1,4 +1,6 @@
-use crate::constants::REWARD_CENTER;
+use crate::constants::{LISTING, OFFER, REWARDABLE_COLLECTION, REWARD_CENTER};
+use crate::errors::ListingRewardsError;
+use crate::state::{Listing, Offer, RewardableCollection};
 use crate::{state::RewardCenter, MetadataAccount};
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::{
@@ -7,10 +9,10 @@ use anchor_spl::{
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER, TREASURY},
+    cpi::accounts::AuctioneerExecuteSale,
+    instruction::AuctioneerExecuteSale as AuctioneerExecuteSaleParams,
     program::AuctionHouse as AuctionHouseProgram,
     AuctionHouse, Auctioneer,
-    cpi::accounts::AuctioneerExecuteSale,
-    instruction::AuctioneerExecuteSale as AuctioneerExecuteSaleParams
 };
 use solana_program::{instruction::Instruction, program::invoke_signed};
 
@@ -37,6 +39,44 @@ pub struct ExecuteSale<'info> {
     /// Seller user wallet account.
     #[account(mut)]
     pub seller: UncheckedAccount<'info>,
+
+    // Accounts used for Auctioneer
+    /// The Listing Config used for listing settings
+    #[account(
+        mut,
+        seeds = [
+            LISTING.as_bytes(),
+            seller.key().as_ref(),
+            metadata.key().as_ref(),
+            rewardable_collection.key().as_ref(),
+        ],
+        bump,
+    )]
+    pub listing: Box<Account<'info, Listing>>,
+
+    /// The offer config account used for bids
+    #[account(
+        mut,
+        seeds = [
+            OFFER.as_bytes(),
+            buyer.key().as_ref(),
+            metadata.key().as_ref(),
+            rewardable_collection.key().as_ref()
+        ],  
+        bump = offer.bump
+    )]
+    pub offer: Box<Account<'info, Offer>>,
+
+    /// The collection eligable for rewards
+    #[account(
+        seeds = [
+            REWARDABLE_COLLECTION.as_bytes(),
+            reward_center.key().as_ref(),
+            metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
+        ],
+        bump = rewardable_collection.bump
+    )]
+    pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     ///Token account where the SPL token is stored.
     #[account(
@@ -190,7 +230,7 @@ pub struct ExecuteSale<'info> {
         seeds::program = auction_house_program,
         bump = auction_house.auctioneer_pda_bump
     )]
-    pub ah_auctioneer_pda: Account<'info, Auctioneer>,
+    pub ah_auctioneer_pda: Box<Account<'info, Auctioneer>>,
 
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     #[account(
@@ -217,25 +257,35 @@ pub struct ExecuteSale<'info> {
 
 pub fn handler(
     ctx: Context<ExecuteSale>,
-    ExecuteSaleParams { escrow_payment_bump, free_trade_state_bump, program_as_signer_bump, price, token_size, .. }: ExecuteSaleParams,
+    ExecuteSaleParams {
+        escrow_payment_bump,
+        free_trade_state_bump,
+        program_as_signer_bump,
+        price,
+        token_size,
+        ..
+    }: ExecuteSaleParams,
 ) -> Result<()> {
+    let seller_listing = &mut ctx.accounts.listing;
+    let buyer_offer = &mut ctx.accounts.offer;
 
     let auction_house = &ctx.accounts.auction_house;
     let reward_center = &ctx.accounts.reward_center;
-    let auction_house_authority = &ctx.accounts.authority;
-    let buyer = &ctx.accounts.buyer;
-    let seller = &ctx.accounts.seller;
     let auction_house_program = &ctx.accounts.auction_house_program;
 
     let auction_house_key = auction_house.key();
-    let seller_key = seller.key();
-    let buyer_key = buyer.key();
 
-     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
+    let clock = Clock::get()?; 
+
+    let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),
         auction_house_key.as_ref(),
         &[reward_center.bump],
     ]];
+
+    // Updating purchased_at for listing and offer
+    seller_listing.purchased_at = Some(clock.unix_timestamp);
+    buyer_offer.purchased_at = Some(clock.unix_timestamp);
 
     let execute_sale_ctx_accounts = AuctioneerExecuteSale {
         buyer: ctx.accounts.buyer.to_account_info(),
@@ -246,7 +296,10 @@ pub fn handler(
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         auction_house_treasury: ctx.accounts.auction_house_treasury.to_account_info(),
         buyer_receipt_token_account: ctx.accounts.buyer_receipt_token_account.to_account_info(),
-        seller_payment_receipt_account: ctx.accounts.seller_payment_receipt_account.to_account_info(),
+        seller_payment_receipt_account: ctx
+            .accounts
+            .seller_payment_receipt_account
+            .to_account_info(),
         buyer_trade_state: ctx.accounts.buyer_trade_state.to_account_info(),
         free_trade_state: ctx.accounts.free_seller_trade_state.to_account_info(),
         seller_trade_state: ctx.accounts.seller_trade_state.to_account_info(),
@@ -271,27 +324,19 @@ pub fn handler(
         _free_trade_state_bump: free_trade_state_bump,
     };
 
-    let signer_required_keys = vec![reward_center.key(), seller.key(), buyer.key(), auction_house_authority.key()];
-
     let execute_sale_ix = Instruction {
         program_id: auction_house_program.key(),
         data: execute_sale_params.data(),
         accounts: execute_sale_ctx_accounts
             .to_account_metas(None)
             .into_iter()
-            .map(|mut account| {
-                if signer_required_keys.contains(&account.pubkey) {
-                    account.is_signer = if account.pubkey.eq(&reward_center.key()) {
-                        true
-                    } else if account.pubkey.eq(&buyer_key) {
-                        ctx.accounts.buyer.to_account_info().is_signer
-                    } else if account.pubkey.eq(&seller_key) {
-                        ctx.accounts.seller.to_account_info().is_signer
-                    } else {
-                        ctx.accounts.authority.to_account_info().is_signer
-                    }
+            .zip(execute_sale_ctx_accounts.to_account_infos())
+            .map(|mut pair| {
+                pair.0.is_signer = pair.1.is_signer;
+                if pair.0.pubkey == ctx.accounts.reward_center.key() {
+                    pair.0.is_signer = true;
                 }
-                account
+                pair.0
             })
             .collect(),
     };
