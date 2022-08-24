@@ -448,8 +448,26 @@ pub struct SetTreeDelegate<'info> {
     pub tree_authority: Account<'info, TreeConfig>,
 }
 
+pub fn hash_creators(creators: &Vec<Creator>) -> Result<[u8; 32]> {
+    // Convert creator Vec to bytes Vec.
+    let creator_data = creators
+        .iter()
+        .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
+        .collect::<Vec<_>>();
+    // Calculate new creator hash.
+    Ok(keccak::hashv(
+        creator_data
+            .iter()
+            .map(|c| c.as_slice())
+            .collect::<Vec<&[u8]>>()
+            .as_ref(),
+    )
+    .to_bytes())
+}
+
 pub fn hash_metadata(metadata: &MetadataArgs) -> Result<[u8; 32]> {
     let metadata_args_hash = keccak::hashv(&[metadata.try_to_vec()?.as_slice()]);
+    // Calculate new data hash.
     Ok(keccak::hashv(&[
         &metadata_args_hash.to_bytes(),
         &metadata.seller_fee_basis_points.to_le_bytes(),
@@ -612,19 +630,12 @@ fn process_creator_verification<'info>(
     }
 
     // User-provided creator Vec must result in same user-provided creator hash.
-    let provided_creator_data = message
-        .creators
-        .iter()
-        .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
-        .collect::<Vec<_>>();
-    let calculated_creator_hash = keccak::hashv(
-        provided_creator_data
-            .iter()
-            .map(|c| c.as_slice())
-            .collect::<Vec<&[u8]>>()
-            .as_ref(),
-    );
-    assert_eq!(creator_hash, calculated_creator_hash.to_bytes());
+    let incoming_creator_hash = hash_creators(&message.creators)?;
+    assert_eq!(creator_hash, incoming_creator_hash);
+
+    // User-provided metadata must result in same user-provided data hash.
+    let incoming_data_hash = hash_metadata(&message)?;
+    assert_eq!(data_hash, incoming_data_hash);
 
     // Calculate new creator Vec with `verified` set to true for signing creator.
     let updated_creator_vec = message
@@ -644,31 +655,14 @@ fn process_creator_verification<'info>(
         })
         .collect::<Vec<Creator>>();
 
+    // Calculate new creator hash.
+    let updated_creator_hash = hash_creators(&message.creators)?;
+
     // Update creator Vec in metadata args.
     message.creators = updated_creator_vec;
 
-    // Convert creator Vec to bytes Vec.
-    let updated_creator_data = message
-        .creators
-        .iter()
-        .map(|c| [c.address.as_ref(), &[c.verified as u8], &[c.share]].concat())
-        .collect::<Vec<_>>();
-
-    // Calculate new creator hash.
-    let updated_creator_hash = keccak::hashv(
-        updated_creator_data
-            .iter()
-            .map(|c| c.as_slice())
-            .collect::<Vec<&[u8]>>()
-            .as_ref(),
-    );
-
     // Calculate new data hash.
-    let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
-    let updated_data_hash = keccak::hashv(&[
-        &metadata_args_hash.to_bytes(),
-        &message.seller_fee_basis_points.to_le_bytes(),
-    ]);
+    let updated_data_hash = hash_metadata(&message)?;
 
     // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
     let asset_id = get_asset_id(&merkle_slab.key(), nonce);
@@ -685,8 +679,8 @@ fn process_creator_verification<'info>(
         owner.key(),
         delegate.key(),
         nonce,
-        updated_data_hash.to_bytes(),
-        updated_creator_hash.to_bytes(),
+        updated_data_hash,
+        updated_creator_hash,
     );
     emit!(new_leaf.to_event());
     replace_leaf(
@@ -736,6 +730,10 @@ fn process_collection_verification<'info>(
         BubblegumError::IncorrectOwner
     );
 
+    // User-provided metadata must result in same user-provided data hash.
+    let incoming_data_hash = hash_metadata(&message)?;
+    assert_eq!(data_hash, incoming_data_hash);
+
     // If the NFT has collection data, we set it to the correct value after doing some validation.
     if let Some(collection) = &mut message.collection {
         // Create a token-metadata Metadata struct and ONLY populate the collection field.
@@ -775,11 +773,7 @@ fn process_collection_verification<'info>(
         collection.verified = verify;
 
         // Calculate new data hash.
-        let metadata_args_hash = keccak::hashv(&[message.try_to_vec()?.as_slice()]);
-        let updated_data_hash = keccak::hashv(&[
-            &metadata_args_hash.to_bytes(),
-            &message.seller_fee_basis_points.to_le_bytes(),
-        ]);
+        let updated_data_hash = hash_metadata(&message)?;
 
         // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
         let asset_id = get_asset_id(&merkle_slab.key(), nonce);
@@ -796,7 +790,7 @@ fn process_collection_verification<'info>(
             owner.key(),
             delegate.key(),
             nonce,
-            updated_data_hash.to_bytes(),
+            updated_data_hash,
             creator_hash,
         );
         emit!(new_leaf.to_event());
