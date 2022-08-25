@@ -47,25 +47,7 @@ mod burn_edition_nft {
         print_edition.create(&mut context).await.unwrap();
 
         // Metadata, Print Edition and token account exist.
-        let md_account = context
-            .banks_client
-            .get_account(print_edition.new_metadata_pubkey)
-            .await
-            .unwrap();
-        let token_account = context
-            .banks_client
-            .get_account(print_edition.token.pubkey())
-            .await
-            .unwrap();
-        let print_edition_account = context
-            .banks_client
-            .get_account(print_edition.new_edition_pubkey)
-            .await
-            .unwrap();
-
-        assert!(md_account.is_some());
-        assert!(token_account.is_some());
-        assert!(print_edition_account.is_some());
+        assert!(print_edition.exists_on_chain(&mut context).await);
 
         let kpbytes = &context.payer;
         let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
@@ -87,24 +69,7 @@ mod burn_edition_nft {
         .unwrap();
 
         // Metadata, Edition and token account are burned.
-        let md_account = context
-            .banks_client
-            .get_account(print_edition.new_metadata_pubkey)
-            .await
-            .unwrap();
-        let edition_account = context
-            .banks_client
-            .get_account(print_edition.new_edition_pubkey)
-            .await
-            .unwrap();
-        let token_account = context
-            .banks_client
-            .get_account(print_edition.token.pubkey())
-            .await
-            .unwrap();
-        assert!(md_account.is_none());
-        assert!(edition_account.is_none());
-        assert!(token_account.is_none());
+        assert!(!print_edition.exists_on_chain(&mut context).await);
 
         // Edition marker account should also be burned, because that was the only print edition on it.
         let edition_marker_account = context
@@ -230,24 +195,7 @@ mod burn_edition_nft {
         .unwrap();
 
         // Metadata, Edition and token account are burned.
-        let md_account = context
-            .banks_client
-            .get_account(print_edition.new_metadata_pubkey)
-            .await
-            .unwrap();
-        let edition_account = context
-            .banks_client
-            .get_account(print_edition.new_edition_pubkey)
-            .await
-            .unwrap();
-        let token_account = context
-            .banks_client
-            .get_account(new_owner_token_account)
-            .await
-            .unwrap();
-        assert!(md_account.is_none());
-        assert!(edition_account.is_none());
-        assert!(token_account.is_none());
+        assert!(!print_edition.exists_on_chain(&mut context).await);
     }
 
     #[tokio::test]
@@ -280,25 +228,7 @@ mod burn_edition_nft {
         print_edition.create(&mut context).await.unwrap();
 
         // Metadata, Print Edition and token account exist.
-        let md_account = context
-            .banks_client
-            .get_account(print_edition.new_metadata_pubkey)
-            .await
-            .unwrap();
-        let token_account = context
-            .banks_client
-            .get_account(print_edition.token.pubkey())
-            .await
-            .unwrap();
-        let print_edition_account = context
-            .banks_client
-            .get_account(print_edition.new_edition_pubkey)
-            .await
-            .unwrap();
-
-        assert!(md_account.is_some());
-        assert!(token_account.is_some());
-        assert!(print_edition_account.is_some());
+        assert!(print_edition.exists_on_chain(&mut context).await);
 
         let not_owner = Keypair::new();
         airdrop(&mut context, &not_owner.pubkey(), 1_000_000_000)
@@ -362,25 +292,7 @@ mod burn_edition_nft {
         print_edition.create(&mut context).await.unwrap();
 
         // Metadata, Print Edition and token account exist.
-        let md_account = context
-            .banks_client
-            .get_account(print_edition.new_metadata_pubkey)
-            .await
-            .unwrap();
-        let token_account = context
-            .banks_client
-            .get_account(print_edition.token.pubkey())
-            .await
-            .unwrap();
-        let print_edition_account = context
-            .banks_client
-            .get_account(print_edition.new_edition_pubkey)
-            .await
-            .unwrap();
-
-        assert!(md_account.is_some());
-        assert!(token_account.is_some());
-        assert!(print_edition_account.is_some());
+        assert!(print_edition.exists_on_chain(&mut context).await);
 
         let err = burn_edition(
             &mut context,
@@ -785,5 +697,66 @@ mod burn_edition_nft {
         let ledger = &edition_marker_account.data[1..];
 
         assert!(ledger[0] == 0b0101_0000);
+    }
+
+    #[tokio::test]
+    pub async fn reprint_burned_edition() {
+        let mut context = program_test().start_with_context().await;
+
+        let original_nft = Metadata::new();
+        original_nft
+            .create_v2(
+                &mut context,
+                "Test".to_string(),
+                "TST".to_string(),
+                "uri".to_string(),
+                None,
+                10,
+                false,
+                None,
+                None,
+                None,
+            )
+            .await
+            .unwrap();
+
+        let master_edition = MasterEditionV2::new(&original_nft);
+        master_edition
+            .create_v3(&mut context, Some(10))
+            .await
+            .unwrap();
+
+        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+
+        // Metadata, Print Edition and token account exist.
+        assert!(print_edition.exists_on_chain(&mut context).await);
+
+        let kpbytes = &context.payer;
+        let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
+
+        burn_edition(
+            &mut context,
+            print_edition.new_metadata_pubkey,
+            &payer,
+            print_edition.mint.pubkey(),
+            original_nft.mint.pubkey(),
+            print_edition.token.pubkey(),
+            master_edition.pubkey,
+            print_edition.new_edition_pubkey,
+            print_edition.pubkey,
+        )
+        .await
+        .unwrap();
+
+        // Metadata, Print Edition and token account do not exist.
+        assert!(!print_edition.exists_on_chain(&mut context).await);
+
+        // Reprint burned edition
+        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
+        print_edition.create(&mut context).await.unwrap();
+
+        // Metadata, Print Edition and token account exist.
+        assert!(print_edition.exists_on_chain(&mut context).await);
     }
 }

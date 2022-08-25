@@ -284,4 +284,25 @@ impl EditionMarker {
 
         context.banks_client.process_transaction(transfer_tx).await
     }
+
+    pub async fn exists_on_chain(&self, context: &mut ProgramTestContext) -> bool {
+        // Metadata, Print Edition and token account exist.
+        let md_account = context
+            .banks_client
+            .get_account(self.new_metadata_pubkey)
+            .await
+            .unwrap();
+        let token_account = context
+            .banks_client
+            .get_account(self.token.pubkey())
+            .await
+            .unwrap();
+        let print_edition_account = context
+            .banks_client
+            .get_account(self.new_edition_pubkey)
+            .await
+            .unwrap();
+
+        md_account.is_some() && token_account.is_some() && print_edition_account.is_some()
+    }
 }
