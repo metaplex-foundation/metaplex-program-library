@@ -347,7 +347,7 @@ async fn unlock_funds() {
     let freeze_time = 30; //30 seconds
     let mut candy_manager = CandyManager::init(
         context,
-        Some(false),
+        None,
         false,
         Some(FreezeConfig::new(true, freeze_time)),
         None,
