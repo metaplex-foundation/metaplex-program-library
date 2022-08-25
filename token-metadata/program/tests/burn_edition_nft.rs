@@ -648,21 +648,17 @@ mod burn_edition_nft {
             .await
             .unwrap();
 
-        let print_edition = EditionMarker::new(&original_nft, &master_edition, 1);
-        print_edition.create(&mut context).await.unwrap();
-
-        let second_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
-        second_print_edition.create(&mut context).await.unwrap();
-
-        let third_print_edition = EditionMarker::new(&original_nft, &master_edition, 3);
-        third_print_edition.create(&mut context).await.unwrap();
+        let print_editions = master_edition
+            .mint_editions(&mut context, &original_nft, 3)
+            .await
+            .unwrap();
 
         let kpbytes = &context.payer;
         let payer = Keypair::from_bytes(&kpbytes.to_bytes()).unwrap();
 
         let edition_marker_account = context
             .banks_client
-            .get_account(second_print_edition.pubkey)
+            .get_account(print_editions[1].pubkey)
             .await
             .unwrap()
             .unwrap();
@@ -674,21 +670,21 @@ mod burn_edition_nft {
 
         burn_edition(
             &mut context,
-            second_print_edition.new_metadata_pubkey,
+            print_editions[1].new_metadata_pubkey,
             &payer,
-            second_print_edition.mint.pubkey(),
+            print_editions[1].mint.pubkey(),
             original_nft.mint.pubkey(),
-            second_print_edition.token.pubkey(),
+            print_editions[1].token.pubkey(),
             master_edition.pubkey,
-            second_print_edition.new_edition_pubkey,
-            second_print_edition.pubkey,
+            print_editions[1].new_edition_pubkey,
+            print_editions[1].pubkey,
         )
         .await
         .unwrap();
 
         let edition_marker_account = context
             .banks_client
-            .get_account(second_print_edition.pubkey)
+            .get_account(print_editions[1].pubkey)
             .await
             .unwrap()
             .unwrap();
