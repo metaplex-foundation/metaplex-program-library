@@ -41,7 +41,7 @@ runs:
     # Prepare Core and Dependencies
     ##############
     
-    # All contract SDKs depend on mpl-core so we need to build at least that
+    # Some contract SDKs depend on mpl-core so we need to build at least that by default.
     # We avoid running build in the project root to avoid a check for a contract failing due to
     # an issue in another contract which would cause a build failure.
     # For the metaplex contract this is unfortunately not entirely possible as it depends on core, token-metadat,

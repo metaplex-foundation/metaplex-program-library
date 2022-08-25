@@ -13,7 +13,6 @@ declare_id!("cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ");
 
 #[program]
 pub mod candy_machine {
-
     use super::*;
 
     pub fn initialize_candy_machine(
@@ -64,7 +63,25 @@ pub mod candy_machine {
         handle_set_collection_during_mint(ctx)
     }
 
-    pub fn withdraw_funds<'info>(ctx: Context<WithdrawFunds<'info>>) -> Result<()> {
+    pub fn withdraw_funds<'info>(
+        ctx: Context<'_, '_, '_, 'info, WithdrawFunds<'info>>,
+    ) -> Result<()> {
         handle_withdraw_funds(ctx)
+    }
+
+    pub fn set_freeze(ctx: Context<SetFreeze>, freeze_time: i64) -> Result<()> {
+        handle_set_freeze(ctx, freeze_time)
+    }
+
+    pub fn remove_freeze(ctx: Context<RemoveFreeze>) -> Result<()> {
+        handle_remove_freeze(ctx)
+    }
+
+    pub fn thaw_nft(ctx: Context<ThawNFT>) -> Result<()> {
+        handle_thaw_nft(ctx)
+    }
+
+    pub fn unlock_funds<'info>(ctx: Context<'_, '_, '_, 'info, UnlockFunds<'info>>) -> Result<()> {
+        handle_unlock_funds(ctx)
     }
 }

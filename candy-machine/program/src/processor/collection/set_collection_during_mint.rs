@@ -14,7 +14,7 @@ pub struct SetCollectionDuringMint<'info> {
     /// CHECK: account checked in CPI/instruction sysvar
     metadata: UncheckedAccount<'info>,
     payer: Signer<'info>,
-    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
+    #[account(mut, seeds = [CollectionPDA::PREFIX.as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
     collection_pda: Account<'info, CollectionPDA>,
     /// CHECK: account constraints checked in account trait
     #[account(address = mpl_token_metadata::id())]
@@ -95,9 +95,13 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
     if !cmp_pubkeys(&collection_pda.mint, &collection_mint.key()) {
         return Ok(());
     }
-    let seeds = [b"collection".as_ref(), candy_key.as_ref()];
+    let seeds = [CollectionPDA::PREFIX.as_bytes(), candy_key.as_ref()];
     let bump = assert_derivation(&crate::id(), &collection_pda.to_account_info(), &seeds)?;
-    let signer_seeds = [b"collection".as_ref(), candy_key.as_ref(), &[bump]];
+    let signer_seeds = [
+        CollectionPDA::PREFIX.as_bytes(),
+        candy_key.as_ref(),
+        &[bump],
+    ];
     let set_collection_infos = vec![
         ctx.accounts.metadata.to_account_info(),
         collection_pda.to_account_info(),

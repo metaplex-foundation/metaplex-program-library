@@ -1,3 +1,5 @@
+use crate::constants::FREEZE_FEE;
+use crate::CandyError;
 use anchor_lang::prelude::*;
 
 /// Candy machine state and config data.
@@ -23,6 +25,56 @@ pub struct CollectionPDA {
     pub candy_machine: Pubkey,
 }
 
+impl CollectionPDA {
+    pub const PREFIX: &'static str = "collection";
+}
+
+/// Collection PDA account
+#[account]
+#[derive(Default, Debug, PartialEq, Eq)]
+pub struct FreezePDA {
+    // duplicate key in order to find the candy machine without txn crawling
+    pub candy_machine: Pubkey,   // 32
+    pub allow_thaw: bool,        // 1
+    pub frozen_count: u64,       // 8
+    pub mint_start: Option<i64>, // 1 + 8
+    pub freeze_time: i64,        // 8
+    pub freeze_fee: u64,         // 8
+}
+
+impl FreezePDA {
+    pub const SIZE: usize = 8 + 32 + 32 + 1 + 8 + 1 + 8 + 8 + 8;
+
+    pub const PREFIX: &'static str = "freeze";
+
+    pub fn init(&mut self, candy_machine: Pubkey, mint_start: Option<i64>, freeze_time: i64) {
+        self.candy_machine = candy_machine;
+        self.allow_thaw = false;
+        self.frozen_count = 0;
+        self.mint_start = mint_start;
+        self.freeze_time = freeze_time;
+        self.freeze_fee = FREEZE_FEE;
+    }
+
+    pub fn thaw_eligible(&self, current_timestamp: i64, candy_machine: &CandyMachine) -> bool {
+        if self.allow_thaw || candy_machine.items_redeemed >= candy_machine.data.items_available {
+            return true;
+        } else if let Some(start_timestamp) = self.mint_start {
+            if current_timestamp >= start_timestamp + self.freeze_time {
+                return true;
+            }
+        }
+        false
+    }
+
+    pub fn assert_from_candy(&self, candy_machine: &Pubkey) -> Result<()> {
+        if &self.candy_machine != candy_machine {
+            return err!(CandyError::FreezePDAMismatch);
+        }
+        Ok(())
+    }
+}
+
 /// Candy machine settings data.
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Default, Debug)]
 pub struct CandyMachineData {
@@ -43,6 +95,16 @@ pub struct CandyMachineData {
     pub items_available: u64,
     /// If [`Some`] requires gateway tokens on mint
     pub gatekeeper: Option<GatekeeperConfig>,
+}
+
+impl CandyMachine {
+    pub fn assert_not_minted(&self, candy_error: Error) -> Result<()> {
+        if self.items_redeemed > 0 {
+            Err(candy_error)
+        } else {
+            Ok(())
+        }
+    }
 }
 
 /// Individual config line for storing NFT data pre-mint.

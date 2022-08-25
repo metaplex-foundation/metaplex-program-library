@@ -1,6 +1,6 @@
-use std::str::FromStr;
-
 use solana_program_test::ProgramTestContext;
+use solana_sdk::commitment_config::CommitmentLevel;
+use solana_sdk::transport::TransportError;
 use solana_sdk::{
     account::Account,
     program_pack::Pack,
@@ -12,7 +12,15 @@ use solana_sdk::{
 };
 use spl_token::state::Mint;
 
-use crate::core::{master_edition_v2::MasterEditionV2, metadata};
+use crate::core::{master_edition_manager::MasterEditionManager, metadata_manager};
+
+pub async fn update_blockhash(context: &mut ProgramTestContext) -> transport::Result<()> {
+    let current_slot = context.banks_client.get_root_slot().await?;
+    context
+        .warp_to_slot(current_slot + 5)
+        .map_err(|_| TransportError::Custom("Warp to slot failed!".to_string()))?;
+    Ok(())
+}
 
 /// Perform native lamports transfer.
 #[allow(dead_code)]
@@ -22,6 +30,7 @@ pub async fn transfer_lamports(
     to: &Pubkey,
     amount: u64,
 ) -> transport::Result<()> {
+    update_blockhash(client).await?;
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(&wallet.pubkey(), to, amount)],
         Some(&wallet.pubkey()),
@@ -53,11 +62,18 @@ pub async fn get_token_balance(context: &mut ProgramTestContext, token_account: 
         .amount
 }
 
+pub async fn new_funded_keypair(context: &mut ProgramTestContext, amount: u64) -> Keypair {
+    let new_key = Keypair::new();
+    airdrop(context, &new_key.pubkey(), amount).await.unwrap();
+    new_key
+}
+
 pub async fn airdrop(
     context: &mut ProgramTestContext,
     receiver: &Pubkey,
     amount: u64,
 ) -> transport::Result<()> {
+    update_blockhash(context).await?;
     let tx = Transaction::new_signed_with_payer(
         &[system_instruction::transfer(
             &context.payer.pubkey(),
@@ -77,14 +93,10 @@ pub fn clone_keypair(keypair: &Keypair) -> Keypair {
     Keypair::from_bytes(&keypair.to_bytes()).unwrap()
 }
 
-pub fn clone_pubkey(pubkey: &Pubkey) -> Pubkey {
-    Pubkey::from_str(&pubkey.to_string()).unwrap()
-}
-
 pub async fn get_account(context: &mut ProgramTestContext, pubkey: &Pubkey) -> Account {
     context
         .banks_client
-        .get_account(*pubkey)
+        .get_account_with_commitment(*pubkey, CommitmentLevel::Processed)
         .await
         .expect("account not found")
         .expect("account empty")
@@ -112,6 +124,7 @@ pub async fn create_token_account(
     mint: &Pubkey,
     manager: &Pubkey,
 ) -> transport::Result<()> {
+    update_blockhash(context).await?;
     let rent = context.banks_client.get_rent().await.unwrap();
 
     let tx = Transaction::new_signed_with_payer(
@@ -144,6 +157,7 @@ pub async fn create_associated_token_account(
     wallet: &Pubkey,
     token_mint: &Pubkey,
 ) -> transport::Result<Pubkey> {
+    update_blockhash(context).await?;
     let recent_blockhash = context.last_blockhash;
 
     let tx = Transaction::new_signed_with_payer(
@@ -172,6 +186,7 @@ pub async fn create_mint(
     decimals: u8,
     mint: Option<Keypair>,
 ) -> transport::Result<Keypair> {
+    update_blockhash(context).await?;
     let mint = mint.unwrap_or_else(Keypair::new);
     let rent = context.banks_client.get_rent().await.unwrap();
 
@@ -208,16 +223,12 @@ pub async fn mint_to_wallets(
     authority: &Keypair,
     allocations: Vec<(Pubkey, u64)>,
 ) -> transport::Result<Vec<Pubkey>> {
+    update_blockhash(context).await?;
     let mut atas = Vec::with_capacity(allocations.len());
 
     #[allow(clippy::needless_range_loop)]
     for i in 0..allocations.len() {
         let ata = create_associated_token_account(context, &allocations[i].0, mint_pubkey).await?;
-        // println!("Minting to wallet {}", i);
-        // println!(
-        //     "Token account ATA: {:#?}",
-        //     get_token_account(context, &ata).await.unwrap()
-        // );
         mint_tokens(
             context,
             authority,
@@ -240,6 +251,7 @@ pub async fn mint_tokens(
     amount: u64,
     additional_signer: Option<&Keypair>,
 ) -> transport::Result<()> {
+    update_blockhash(context).await?;
     let mut signing_keypairs = vec![authority, &context.payer];
     if let Some(signer) = additional_signer {
         signing_keypairs.push(signer);
@@ -271,6 +283,7 @@ pub async fn transfer(
     from: &Keypair,
     to: &Keypair,
 ) -> transport::Result<()> {
+    update_blockhash(context).await?;
     create_associated_token_account(context, &to.pubkey(), mint).await?;
     let tx = Transaction::new_signed_with_payer(
         &[spl_token::instruction::transfer(
@@ -290,8 +303,12 @@ pub async fn transfer(
     context.banks_client.process_transaction(tx).await
 }
 
-pub async fn prepare_nft(context: &mut ProgramTestContext, minter: &Keypair) -> MasterEditionV2 {
-    let nft_info = metadata::Metadata::new(minter);
+pub async fn prepare_nft(
+    context: &mut ProgramTestContext,
+    minter: &Keypair,
+) -> MasterEditionManager {
+    update_blockhash(context).await.expect("warp slot failed!");
+    let nft_info = metadata_manager::MetadataManager::new(minter);
     create_mint(
         context,
         &minter.pubkey(),
@@ -309,5 +326,5 @@ pub async fn prepare_nft(context: &mut ProgramTestContext, minter: &Keypair) -> 
     )
     .await
     .unwrap();
-    MasterEditionV2::new(&nft_info)
+    MasterEditionManager::new(&nft_info)
 }
