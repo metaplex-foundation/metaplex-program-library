@@ -1186,7 +1186,7 @@ __metadata:
     "@metaplex-foundation/beet-solana": ^0.3.0
     "@metaplex-foundation/cusper": ^0.0.2
     "@metaplex-foundation/mpl-core": ^0.6.1
-    "@metaplex-foundation/solita": ^0.12.0
+    "@metaplex-foundation/solita": ^0.14.0
     "@solana/web3.js": ^1.35.1
     eslint: ^8.3.0
     prettier: ^2.5.1
@@ -1412,7 +1412,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@metaplex-foundation/solita@npm:^0.12.0, @metaplex-foundation/solita@npm:^0.12.1, @metaplex-foundation/solita@npm:^0.12.2":
+"@metaplex-foundation/solita@npm:^0.12.1, @metaplex-foundation/solita@npm:^0.12.2":
   version: 0.12.2
   resolution: "@metaplex-foundation/solita@npm:0.12.2"
   dependencies:
@@ -1449,6 +1449,26 @@ __metadata:
   bin:
     solita: dist/src/cli/solita.js
   checksum: 4e6e9e2cbcb1fc944a1f0e48616b1bce428920effa2db8bc49a80f929d197dfc487e4b65891ccb7804b504ac12e7f01a431da3d520ef55b2b175e05a2ec97ac4
+  languageName: node
+  linkType: hard
+
+"@metaplex-foundation/solita@npm:^0.14.0":
+  version: 0.14.0
+  resolution: "@metaplex-foundation/solita@npm:0.14.0"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.6.0
+    "@metaplex-foundation/beet-solana": ^0.3.0
+    "@metaplex-foundation/rustbin": ^0.3.0
+    "@solana/web3.js": ^1.36.0
+    camelcase: ^6.2.1
+    debug: ^4.3.3
+    js-sha256: ^0.9.0
+    prettier: ^2.5.1
+    snake-case: ^3.0.4
+    spok: ^1.4.3
+  bin:
+    solita: dist/src/cli/solita.js
+  checksum: 438614f3e42781f585bed7d92e79f0da1cfb41cf2c43be762ff0ff1b1d3f2d90a407f6a2063240ef1b62f1561a621c7d8fb09995f4e9649bf7d3c059ef2eb29e
   languageName: node
   linkType: hard
 
