@@ -1,5 +1,5 @@
 {
-  "version": "4.1.1",
+  "version": "4.2.0",
   "name": "candy_machine",
   "instructions": [
     {
@@ -1109,11 +1109,5 @@
       "name": "NoUnlockWithNFTsStillFrozen",
       "msg": "Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first."
     }
-  ],
-  "metadata": {
-    "address": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
-    "origin": "anchor",
-    "binaryVersion": "0.24.2",
-    "libVersion": "0.24.2"
-  }
+  ]
 }

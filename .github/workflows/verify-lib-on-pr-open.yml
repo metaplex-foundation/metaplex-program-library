@@ -82,7 +82,12 @@ jobs:
     if: ${{ needs.get-changes-scope.outputs.packages != 'null' }}
     runs-on: ubuntu-latest
     steps:
+      # branch should be the branch from which the PR is opened
       - uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-rust
         with:
