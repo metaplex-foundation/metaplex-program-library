@@ -649,7 +649,7 @@ mod burn_edition_nft {
             .unwrap();
 
         let print_editions = master_edition
-            .mint_editions(&mut context, &original_nft, 3)
+            .mint_editions(&mut context, &original_nft, 10)
             .await
             .unwrap();
 
@@ -666,8 +666,11 @@ mod burn_edition_nft {
         // Ledger is the 31 bytes after the key.
         let ledger = &edition_marker_account.data[1..];
 
-        assert!(ledger[0] == 0b0111_0000);
+        assert!(ledger[0] == 0b0111_1111);
+        println!("{:?}", ledger[1]);
+        assert!(ledger[1] == 0b1110_0000);
 
+        // Burn the second one
         burn_edition(
             &mut context,
             print_editions[1].new_metadata_pubkey,
@@ -692,7 +695,40 @@ mod burn_edition_nft {
         // Ledger is the 31 bytes after the key.
         let ledger = &edition_marker_account.data[1..];
 
-        assert!(ledger[0] == 0b0101_0000);
+        // One bit flipped here
+        assert!(ledger[0] == 0b0101_1111);
+        // None here
+        assert!(ledger[1] == 0b1110_0000);
+
+        // Burn the last one
+        burn_edition(
+            &mut context,
+            print_editions[9].new_metadata_pubkey,
+            &payer,
+            print_editions[9].mint.pubkey(),
+            original_nft.mint.pubkey(),
+            print_editions[9].token.pubkey(),
+            master_edition.pubkey,
+            print_editions[9].new_edition_pubkey,
+            print_editions[9].pubkey,
+        )
+        .await
+        .unwrap();
+
+        let edition_marker_account = context
+            .banks_client
+            .get_account(print_editions[1].pubkey)
+            .await
+            .unwrap()
+            .unwrap();
+
+        // Ledger is the 31 bytes after the key.
+        let ledger = &edition_marker_account.data[1..];
+
+        // Stays the same
+        assert!(ledger[0] == 0b0101_1111);
+        // One bit flipped
+        assert!(ledger[1] == 0b1100_0000);
     }
 
     #[tokio::test]
