@@ -152,7 +152,7 @@ impl MasterEditionV2 {
         let mut editions = Vec::new();
 
         for i in 1..=number {
-            let print_edition = EditionMarker::new(&nft, &self, i);
+            let print_edition = EditionMarker::new(nft, self, i);
             print_edition.create(context).await?;
             editions.push(print_edition);
         }
