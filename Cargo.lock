@@ -1834,7 +1834,7 @@ dependencies = [
  "num-traits",
  "num_enum",
  "rand 0.8.4",
- "shank 0.0.6",
+ "shank 0.0.8",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -2780,9 +2780,11 @@ dependencies = [
 
 [[package]]
 name = "shank"
-version = "0.0.6"
+version = "0.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2935c06d5a141ad2854622a014e30c5eeaa40096667df6bdd682dba9f8f81819"
 dependencies = [
- "shank_macro 0.0.6",
+ "shank_macro 0.0.8",
 ]
 
 [[package]]
@@ -2799,11 +2801,13 @@ dependencies = [
 
 [[package]]
 name = "shank_macro"
-version = "0.0.6"
+version = "0.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6ab8a1eb550845e36c88007f4c00175eeeb436d2fc6c70d05207a338cba7519f"
 dependencies = [
  "proc-macro2 1.0.36",
  "quote 1.0.15",
- "shank_macro_impl 0.0.6",
+ "shank_macro_impl 0.0.8",
  "syn 1.0.86",
 ]
 
@@ -2822,7 +2826,9 @@ dependencies = [
 
 [[package]]
 name = "shank_macro_impl"
-version = "0.0.6"
+version = "0.0.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "23ec51b35f2336faaeff44daf8952ddee4fe3e3693a313804ae7366f18a9967d"
 dependencies = [
  "anyhow",
  "proc-macro2 1.0.36",
