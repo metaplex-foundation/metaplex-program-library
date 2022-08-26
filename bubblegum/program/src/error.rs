@@ -44,8 +44,10 @@ pub enum BubblegumError {
     NumericalOverflowError,
     #[msg("Incorrect account owner")]
     IncorrectOwner,
-    #[msg("Cannont Verify Collection in this Instruction")]
+    #[msg("Cannot Verify Collection in this Instruction")]
     CollectionCannotBeVerifiedInThisInstruction,
+    #[msg("Collection Not Found on Metadata")]
+    CollectionNotFound,
     #[msg("Collection item is already verified.")]
     AlreadyVerified,
     #[msg("Collection item is already unverified.")]

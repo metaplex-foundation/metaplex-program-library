@@ -761,11 +761,6 @@ fn process_collection_verification<'info>(
             return Err(BubblegumError::AlreadyUnverified.into());
         }
 
-        // Create a token-metadata Metadata struct and ONLY populate the collection field.
-        // This is being created only to interact with some token-metadata assert functions.
-        //let mut mpl_metadata = mpl_token_metadata::state::Metadata::default();
-        //mpl_metadata.collection = Some(collection.adapt());
-
         // Collection verify assert from token-metadata program.
         assert_collection_verify_is_valid(
             &Some(collection.adapt()),
@@ -864,7 +859,7 @@ fn process_collection_verification<'info>(
             index,
         )
     } else {
-        Ok(())
+        Err(BubblegumError::CollectionNotFound.into())
     }
 }
 
