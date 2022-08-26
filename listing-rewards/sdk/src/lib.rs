@@ -436,7 +436,7 @@ pub fn execute_sale(
         seller_payment_receipt_account,
         buyer_receipt_token_account,
     }: ExecuteSaleAccounts,
-    ExecuteSaleData { price, token_size }: ExecuteSaleData,
+    ExecuteSaleData { price, token_size, reward_mint }: ExecuteSaleData,
 ) -> Instruction {
     let (reward_center, _) = find_reward_center_address(&auction_house);
     let (offer, _) = find_offer_address(&buyer, &metadata, &rewardable_collection);
@@ -449,6 +449,10 @@ pub fn execute_sale(
         mpl_auction_house::pda::find_auctioneer_pda(&auction_house, &reward_center);
     let (escrow_payment_account, escrow_payment_bump) =
         mpl_auction_house::pda::find_escrow_payment_address(&auction_house, &buyer);
+
+    let reward_center_reward_token_account = get_associated_token_address(&reward_center, &reward_mint);
+    let buyer_reward_token_account = get_associated_token_address(&buyer, &reward_mint);
+    let seller_reward_token_account = get_associated_token_address(&seller, &reward_mint);
 
     let (buyer_trade_state, _) = find_public_bid_trade_state_address(
         &buyer,
@@ -483,7 +487,9 @@ pub fn execute_sale(
 
     let accounts = rewards_accounts::ExecuteSale {
         buyer,
+        buyer_reward_token_account,
         seller,
+        seller_reward_token_account,
         listing,
         offer,
         rewardable_collection,
@@ -498,6 +504,7 @@ pub fn execute_sale(
         ah_auctioneer_pda,
         escrow_payment_account,
         reward_center,
+        reward_center_reward_token_account,
         auction_house,
         auction_house_treasury,
         buyer_trade_state,
@@ -530,29 +537,3 @@ pub fn execute_sale(
         data,
     }
 }
-
-// pub fn redeem_rewards() -> Instruction {
-//     let accounts = accounts::RedeemRewards {
-//         auction_house_program: mpl_auction_house::id(),
-//         listing,
-//         reward_center,
-//         rewardable_collection,
-//         wallet,
-//         token_program: spl_token::id(),
-//         system_program: system_program::id(),
-//         rent: sysvar::rent::id(),
-//     }
-//     .to_account_metas(None);
-
-//     let data = instruction::RedeemRewards {}.data();
-
-//     Instruction {
-//         program_id: id(),
-//         accounts,
-//         data,
-//     }
-// }
-
-/* Used for printing addresses
-    println!("All accounts\n Buyer: {}\n Seller: {}\n Authority: {}\n Treasury Mint: {}\n Token Mint: {}\n Token Account: {}\n Metadata: {}\n Buyer Receipt Token Account: {}\n Seller Payment Receipt Account: {}\n Auction House Fee Account: {}\n AH Auctioneer PDA: {}\n Escrow Payment Account: {}\n Reward Center: {}\n Auction House: {}\n Auction House Treasury: {}\n Buyer Trade State: {}\n Free Seller Trade State: {}\n Seller Trade State: {}\n Program As Signer: {}\n", buyer.to_string(), seller.to_string(), authority.to_string(), treasury_mint.to_string(), token_mint.to_string(), token_account.to_string(), metadata.to_string(), buyer_receipt_token_account.to_string(), seller_payment_receipt_account.to_string(), auction_house_fee_account.to_string(), ah_auctioneer_pda.to_string(), escrow_payment_account.to_string(), reward_center.to_string(), auction_house.to_string(), auction_house_treasury.to_string(), buyer_trade_state.to_string(), free_seller_trade_state.to_string(), seller_trade_state.to_string(), program_as_signer.to_string());
-*/

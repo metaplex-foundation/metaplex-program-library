@@ -35,10 +35,28 @@ pub struct ExecuteSale<'info> {
     #[account(mut)]
     pub buyer: UncheckedAccount<'info>,
 
+    #[
+        account(
+            mut,
+            constraint = reward_center.token_mint == buyer_reward_token_account.mint @ ListingRewardsError::MintMismatch
+        )
+    ]
+    /// The token account to receive the buyer rewards.
+    pub buyer_reward_token_account: Box<Account<'info, TokenAccount>>,
+
     /// CHECK: Verified through CPI
     /// Seller user wallet account.
     #[account(mut)]
     pub seller: UncheckedAccount<'info>,
+
+    #[
+        account(
+            mut,
+            constraint = reward_center.token_mint == buyer_reward_token_account.mint @ ListingRewardsError::MintMismatch
+        )
+    ]
+    /// The token account to receive the seller rewards.
+    pub seller_reward_token_account: Box<Account<'info, TokenAccount>>,
 
     // Accounts used for Auctioneer
     /// The Listing Config used for listing settings
@@ -219,6 +237,15 @@ pub struct ExecuteSale<'info> {
     )]
     pub reward_center: Box<Account<'info, RewardCenter>>,
 
+    #[
+        account(
+            mut,
+            constraint = reward_center.token_mint == reward_center_reward_token_account.mint @ ListingRewardsError::MintMismatch
+        )
+    ]
+    /// The token account holding the reward token for the reward center.
+    pub reward_center_reward_token_account: Box<Account<'info, TokenAccount>>,
+
     /// CHECK: Not dangerous. Account seeds checked in constraint.
     /// The auctioneer PDA owned by Auction House storing scopes.
     #[account(
@@ -275,7 +302,7 @@ pub fn handler(
 
     let auction_house_key = auction_house.key();
 
-    let clock = Clock::get()?; 
+    let clock = Clock::get()?;
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),
@@ -286,6 +313,8 @@ pub fn handler(
     // Updating purchased_at for listing and offer
     seller_listing.purchased_at = Some(clock.unix_timestamp);
     buyer_offer.purchased_at = Some(clock.unix_timestamp);
+
+    let (seller_payout, buyer_payout) = reward_center.payouts(price)?;
 
     let execute_sale_ctx_accounts = AuctioneerExecuteSale {
         buyer: ctx.accounts.buyer.to_account_info(),

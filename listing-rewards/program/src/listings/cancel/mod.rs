@@ -173,17 +173,17 @@ pub fn handler(
         program_id: auction_house_program.key(),
         data: cancel_listing_params.data(),
         accounts: cancel_listing_ctx_accounts
-        .to_account_metas(None)
-        .into_iter()
-        .zip(cancel_listing_ctx_accounts.to_account_infos())
-        .map(|mut pair| {
-            pair.0.is_signer = pair.1.is_signer;
-            if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                pair.0.is_signer = true;
-            }
-            pair.0
-        })
-        .collect()
+            .to_account_metas(None)
+            .into_iter()
+            .zip(cancel_listing_ctx_accounts.to_account_infos())
+            .map(|mut pair| {
+                pair.0.is_signer = pair.1.is_signer;
+                if pair.0.pubkey == ctx.accounts.reward_center.key() {
+                    pair.0.is_signer = true;
+                }
+                pair.0
+            })
+            .collect(),
     };
 
     invoke_signed(

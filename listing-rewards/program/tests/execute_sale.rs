@@ -30,7 +30,7 @@ use std::str::FromStr;
 
 use mpl_token_metadata::state::Collection;
 
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account::{get_associated_token_address, create_associated_token_account};
 use spl_token::native_mint;
 
 #[tokio::test]
@@ -79,8 +79,6 @@ async fn execute_sale_success() {
     let reward_center_params = reward_center::create::CreateRewardCenterParams {
         collection_oracle: None,
         listing_reward_rules: state::ListingRewardRules {
-            warmup_seconds: 2 * 24 * 60 * 60,
-            reward_payout: 1000,
             seller_reward_payout_basis_points: 1000,
             payout_divider: 5,
         },
@@ -286,12 +284,16 @@ async fn execute_sale_success() {
     let execute_sale_params = ExecuteSaleData {
         price: listing_rewards_test::ONE_SOL,
         token_size: 1,
+        reward_mint: mint,
     };
+
+    let create_buyer_ata_ix = create_associated_token_account(&context.payer.pubkey(), &buyer.pubkey(), &mint);
+    let create_seller_ata_ix = create_associated_token_account(&context.payer.pubkey(), &metadata_owner.pubkey(), &mint);
 
     let execute_sale_ix = execute_sale(execute_sale_accounts, execute_sale_params);
 
     let tx = Transaction::new_signed_with_payer(
-        &[execute_sale_ix],
+        &[create_buyer_ata_ix, create_seller_ata_ix, execute_sale_ix],
         Some(&wallet),
         &[&context.payer],
         context.last_blockhash,

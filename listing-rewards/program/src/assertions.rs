@@ -9,13 +9,12 @@ use crate::{
 
 pub fn assert_listing_reward_redemption_eligibility(
     listing: &Account<Listing>,
-    reward_center: &Account<RewardCenter>,
+    _: &Account<RewardCenter>,
 ) -> Result<()> {
     let clock = Clock::get()?;
     let current_timestamp = clock.unix_timestamp;
 
-    let eligibility_timestamp =
-        listing.created_at + reward_center.listing_reward_rules.warmup_seconds;
+    let eligibility_timestamp = listing.created_at;
 
     if listing.reward_redeemed_at.is_some() {
         return err!(ListingRewardsError::RewardsAlreadyClaimed);
