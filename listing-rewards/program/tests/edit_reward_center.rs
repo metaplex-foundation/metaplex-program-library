@@ -25,6 +25,8 @@ async fn create_reward_center_success() {
         listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 2 * 24 * 60 * 60,
             reward_payout: 1000,
+            seller_reward_payout_basis_points: 1000,
+            payout_divider: 5,
         },
     };
 
@@ -35,6 +37,8 @@ async fn create_reward_center_success() {
         listing_reward_rules: state::ListingRewardRules {
             warmup_seconds: 10 * 24 * 60 * 60,
             reward_payout: 2000,
+            seller_reward_payout_basis_points: 2000,
+            payout_divider: 10,
         },
     };
 

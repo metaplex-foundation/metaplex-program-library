@@ -34,6 +34,10 @@ pub struct ListingRewardRules {
     pub warmup_seconds: i64,
     /// number of tokens to reward for listing
     pub reward_payout: u64,
+    // Basis Points to determine reward ratio for seller
+    pub seller_reward_payout_basis_points: u16,
+    // Payout Divider for determining reward distribution to seller/buyer
+    pub payout_divider: u16,
 }
 
 #[account]
@@ -57,7 +61,7 @@ impl RewardCenter {
         32 + // token_mint
         32 + // auction_house
         1 + 32 + // optional collection oracle
-        8 + 8 + // listing reward rules
+        8 + 8 + 2 + 2 + // listing reward rules
         1 // bump
     }
 }
