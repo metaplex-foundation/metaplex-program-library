@@ -136,9 +136,6 @@ pub fn handler(
     let rewardable_collection = &ctx.accounts.rewardable_collection;
     let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
-    let reward_center_key = ctx.accounts.reward_center.key();
-    let wallet_key = ctx.accounts.wallet.key();
-    let auction_house_authority_key = ctx.accounts.authority.key();
 
     assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
 
@@ -172,27 +169,21 @@ pub fn handler(
         token_size,
     };
 
-    let signer_required_keys = vec![reward_center_key, wallet_key, auction_house_authority_key];
-
     let cancel_listing_ix = Instruction {
         program_id: auction_house_program.key(),
         data: cancel_listing_params.data(),
         accounts: cancel_listing_ctx_accounts
-            .to_account_metas(None)
-            .into_iter()
-            .map(|mut account| {
-                if signer_required_keys.contains(&account.pubkey) {
-                    account.is_signer = if account.pubkey.eq(&reward_center.key()) {
-                        true
-                    } else if account.pubkey.eq(&wallet_key) {
-                        ctx.accounts.wallet.to_account_info().is_signer
-                    } else {
-                        ctx.accounts.authority.to_account_info().is_signer
-                    }
-                }
-                account
-            })
-            .collect(),
+        .to_account_metas(None)
+        .into_iter()
+        .zip(cancel_listing_ctx_accounts.to_account_infos())
+        .map(|mut pair| {
+            pair.0.is_signer = pair.1.is_signer;
+            if pair.0.pubkey == ctx.accounts.reward_center.key() {
+                pair.0.is_signer = true;
+            }
+            pair.0
+        })
+        .collect()
     };
 
     invoke_signed(
