@@ -53,6 +53,7 @@ export const unverifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @property [] collectionMint
  * @property [] collectionMetadata
  * @property [] editionAccount
+ * @property [] bubblegumProgramAuthority
  * @property [] candyWrapper
  * @property [] gummyrollProgram
  * @property [_writable_] merkleSlab
@@ -69,6 +70,7 @@ export type UnverifyCollectionInstructionAccounts = {
   collectionMint: web3.PublicKey
   collectionMetadata: web3.PublicKey
   editionAccount: web3.PublicKey
+  bubblegumProgramAuthority: web3.PublicKey
   candyWrapper: web3.PublicKey
   gummyrollProgram: web3.PublicKey
   merkleSlab: web3.PublicKey
@@ -131,6 +133,11 @@ export function createUnverifyCollectionInstruction(
     },
     {
       pubkey: accounts.editionAccount,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.bubblegumProgramAuthority,
       isWritable: false,
       isSigner: false,
     },

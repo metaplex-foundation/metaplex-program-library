@@ -458,13 +458,36 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * NumericalOverflowError: 'NumericalOverflowError'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NumericalOverflowErrorError extends Error {
+  readonly code: number = 0x1783
+  readonly name: string = 'NumericalOverflowError'
+  constructor() {
+    super('NumericalOverflowError')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NumericalOverflowErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1783, () => new NumericalOverflowErrorError())
+createErrorFromNameLookup.set(
+  'NumericalOverflowError',
+  () => new NumericalOverflowErrorError()
+)
+
+/**
  * IncorrectOwner: 'Incorrect account owner'
  *
  * @category Errors
  * @category generated
  */
 export class IncorrectOwnerError extends Error {
-  readonly code: number = 0x1783
+  readonly code: number = 0x1784
   readonly name: string = 'IncorrectOwner'
   constructor() {
     super('Incorrect account owner')
@@ -474,31 +497,8 @@ export class IncorrectOwnerError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1783, () => new IncorrectOwnerError())
+createErrorFromCodeLookup.set(0x1784, () => new IncorrectOwnerError())
 createErrorFromNameLookup.set('IncorrectOwner', () => new IncorrectOwnerError())
-
-/**
- * SizedCollection: 'Can't use this function on a sized collection'
- *
- * @category Errors
- * @category generated
- */
-export class SizedCollectionError extends Error {
-  readonly code: number = 0x1784
-  readonly name: string = 'SizedCollection'
-  constructor() {
-    super("Can't use this function on a sized collection")
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, SizedCollectionError)
-    }
-  }
-}
-
-createErrorFromCodeLookup.set(0x1784, () => new SizedCollectionError())
-createErrorFromNameLookup.set(
-  'SizedCollection',
-  () => new SizedCollectionError()
-)
 
 /**
  * CollectionCannotBeVerifiedInThisInstruction: 'Cannont Verify Collection in this Instruction'
@@ -527,6 +527,52 @@ createErrorFromCodeLookup.set(
 createErrorFromNameLookup.set(
   'CollectionCannotBeVerifiedInThisInstruction',
   () => new CollectionCannotBeVerifiedInThisInstructionError()
+)
+
+/**
+ * AlreadyVerified: 'Collection item is already verified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyVerifiedError extends Error {
+  readonly code: number = 0x1786
+  readonly name: string = 'AlreadyVerified'
+  constructor() {
+    super('Collection item is already verified.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyVerifiedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1786, () => new AlreadyVerifiedError())
+createErrorFromNameLookup.set(
+  'AlreadyVerified',
+  () => new AlreadyVerifiedError()
+)
+
+/**
+ * AlreadyUnverified: 'Collection item is already unverified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyUnverifiedError extends Error {
+  readonly code: number = 0x1787
+  readonly name: string = 'AlreadyUnverified'
+  constructor() {
+    super('Collection item is already unverified.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyUnverifiedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1787, () => new AlreadyUnverifiedError())
+createErrorFromNameLookup.set(
+  'AlreadyUnverified',
+  () => new AlreadyUnverifiedError()
 )
 
 /**

@@ -479,6 +479,11 @@
           "isSigner": false
         },
         {
+          "name": "bubblegumProgramAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
           "name": "candyWrapper",
           "isMut": false,
           "isSigner": false
@@ -578,6 +583,11 @@
         },
         {
           "name": "editionAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bubblegumProgramAuthority",
           "isMut": false,
           "isSigner": false
         },
@@ -1706,18 +1716,28 @@
     },
     {
       "code": 6019,
-      "name": "IncorrectOwner",
-      "msg": "Incorrect account owner"
+      "name": "NumericalOverflowError",
+      "msg": "NumericalOverflowError"
     },
     {
       "code": 6020,
-      "name": "SizedCollection",
-      "msg": "Can't use this function on a sized collection"
+      "name": "IncorrectOwner",
+      "msg": "Incorrect account owner"
     },
     {
       "code": 6021,
       "name": "CollectionCannotBeVerifiedInThisInstruction",
       "msg": "Cannont Verify Collection in this Instruction"
+    },
+    {
+      "code": 6022,
+      "name": "AlreadyVerified",
+      "msg": "Collection item is already verified."
+    },
+    {
+      "code": 6023,
+      "name": "AlreadyUnverified",
+      "msg": "Collection item is already unverified."
     }
   ],
   "metadata": {
