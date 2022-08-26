@@ -436,7 +436,11 @@ pub fn execute_sale(
         seller_payment_receipt_account,
         buyer_receipt_token_account,
     }: ExecuteSaleAccounts,
-    ExecuteSaleData { price, token_size, reward_mint }: ExecuteSaleData,
+    ExecuteSaleData {
+        price,
+        token_size,
+        reward_mint,
+    }: ExecuteSaleData,
 ) -> Instruction {
     let (reward_center, _) = find_reward_center_address(&auction_house);
     let (offer, _) = find_offer_address(&buyer, &metadata, &rewardable_collection);
@@ -450,7 +454,8 @@ pub fn execute_sale(
     let (escrow_payment_account, escrow_payment_bump) =
         mpl_auction_house::pda::find_escrow_payment_address(&auction_house, &buyer);
 
-    let reward_center_reward_token_account = get_associated_token_address(&reward_center, &reward_mint);
+    let reward_center_reward_token_account =
+        get_associated_token_address(&reward_center, &reward_mint);
     let buyer_reward_token_account = get_associated_token_address(&buyer, &reward_mint);
     let seller_reward_token_account = get_associated_token_address(&seller, &reward_mint);
 

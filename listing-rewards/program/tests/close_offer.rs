@@ -16,23 +16,31 @@ use mpl_listing_rewards::{
     reward_center, state,
 };
 
-use mpl_listing_rewards_sdk::{accounts::*, args::*, *};
+use mpl_listing_rewards_sdk::{
+    accounts::{CloseOfferAccounts, *},
+    args::{CloseOfferData, *},
+    *,
+};
 
 use mpl_testing_utils::solana::airdrop;
 use solana_program_test::*;
-use solana_sdk::signature::Keypair;
+use solana_sdk::{program_pack::Pack, signature::Keypair, system_instruction::create_account};
 use std::str::FromStr;
 
 use mpl_token_metadata::state::Collection;
 
 use spl_associated_token_account::get_associated_token_address;
-use spl_token::native_mint;
+use spl_token::{
+    instruction::{initialize_mint, mint_to_checked},
+    native_mint,
+    state::Mint,
+};
 
 #[tokio::test]
 async fn close_offer_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
-
+    let rent = context.banks_client.get_rent().await.unwrap();
     let wallet = context.payer.pubkey();
     let mint = native_mint::id();
     let collection = Pubkey::from_str(listing_rewards_test::TEST_COLLECTION).unwrap();
@@ -71,6 +79,57 @@ async fn close_offer_success() {
         &rewardable_collection,
     );
 
+    // Creating Rewards mint and token account
+    let token_program = &spl_token::id();
+    let reward_mint_authority_keypair = Keypair::new();
+    let reward_mint_keypair = Keypair::new();
+
+    let reward_mint_authority_pubkey = reward_mint_authority_keypair.pubkey();
+    let reward_mint_pubkey = reward_mint_keypair.pubkey();
+
+    airdrop(
+        &mut context,
+        &reward_mint_authority_pubkey,
+        listing_rewards_test::TEN_SOL,
+    )
+    .await
+    .unwrap();
+
+    // Assign account and rent
+    let mint_account_rent = rent.minimum_balance(Mint::LEN);
+    let allocate_reward_mint_space_ix = create_account(
+        &reward_mint_authority_pubkey,
+        &reward_mint_pubkey,
+        mint_account_rent,
+        Mint::LEN as u64,
+        &token_program,
+    );
+
+    // Initialize rewards mint
+    let init_rewards_reward_mint_ix = initialize_mint(
+        &token_program,
+        &reward_mint_pubkey,
+        &reward_mint_authority_pubkey,
+        Some(&reward_mint_authority_pubkey),
+        9,
+    )
+    .unwrap();
+
+    // Minting initial tokens to reward_center
+    let reward_center_reward_token_account =
+        get_associated_token_address(&reward_center, &reward_mint_pubkey);
+
+    let mint_reward_tokens_ix = mint_to_checked(
+        &token_program,
+        &reward_mint_pubkey,
+        &reward_center_reward_token_account,
+        &reward_mint_authority_pubkey,
+        &[],
+        100_000_000_000,
+        9,
+    )
+    .unwrap();
+
     let reward_center_params = reward_center::create::CreateRewardCenterParams {
         collection_oracle: None,
         listing_reward_rules: state::ListingRewardRules {
@@ -100,7 +159,7 @@ async fn close_offer_success() {
 
     let create_reward_center_ix = mpl_listing_rewards_sdk::create_reward_center(
         wallet,
-        mint,
+        reward_mint_keypair.pubkey(),
         auction_house,
         reward_center_params,
     );
@@ -182,12 +241,19 @@ async fn close_offer_success() {
     let tx = Transaction::new_signed_with_payer(
         &[
             create_auction_house_ix,
+            allocate_reward_mint_space_ix,
+            init_rewards_reward_mint_ix,
             create_reward_center_ix,
+            mint_reward_tokens_ix,
             create_rewardable_collection_ix,
             delegate_auctioneer_ix,
         ],
         Some(&wallet),
-        &[&context.payer],
+        &[
+            &context.payer,
+            &reward_mint_authority_keypair,
+            &reward_mint_keypair,
+        ],
         context.last_blockhash,
     );
 
