@@ -3,6 +3,7 @@ use crate::errors::ListingRewardsError;
 use crate::state::{Listing, Offer, RewardableCollection};
 use crate::{state::RewardCenter, MetadataAccount};
 use anchor_lang::{prelude::*, InstructionData};
+use anchor_spl::token::{transfer, Transfer};
 use anchor_spl::{
     associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
@@ -35,13 +36,11 @@ pub struct ExecuteSale<'info> {
     #[account(mut)]
     pub buyer: UncheckedAccount<'info>,
 
-    #[
-        account(
-            mut,
-            constraint = reward_center.token_mint == buyer_reward_token_account.mint @ ListingRewardsError::MintMismatch
-        )
-    ]
     /// The token account to receive the buyer rewards.
+    #[account(
+        mut,
+        constraint = reward_center.token_mint == buyer_reward_token_account.mint @ ListingRewardsError::MintMismatch
+    )]
     pub buyer_reward_token_account: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: Verified through CPI
@@ -49,13 +48,11 @@ pub struct ExecuteSale<'info> {
     #[account(mut)]
     pub seller: UncheckedAccount<'info>,
 
-    #[
-        account(
-            mut,
-            constraint = reward_center.token_mint == buyer_reward_token_account.mint @ ListingRewardsError::MintMismatch
-        )
-    ]
     /// The token account to receive the seller rewards.
+    #[account(
+        mut,
+        constraint = reward_center.token_mint == buyer_reward_token_account.mint @ ListingRewardsError::MintMismatch
+    )]
     pub seller_reward_token_account: Box<Account<'info, TokenAccount>>,
 
     // Accounts used for Auctioneer
@@ -314,8 +311,8 @@ pub fn handler(
     seller_listing.purchased_at = Some(clock.unix_timestamp);
     buyer_offer.purchased_at = Some(clock.unix_timestamp);
 
-    let (seller_payout, buyer_payout) = reward_center.payouts(price)?;
 
+    // Auction house CPI
     let execute_sale_ctx_accounts = AuctioneerExecuteSale {
         buyer: ctx.accounts.buyer.to_account_info(),
         seller: ctx.accounts.seller.to_account_info(),
@@ -374,6 +371,41 @@ pub fn handler(
         &execute_sale_ix,
         &execute_sale_ctx_accounts.to_account_infos(),
         &reward_center_signer_seeds,
+    )?;
+
+    let (seller_payout, buyer_payout) = reward_center.payouts(price)?;
+    // Buyer transfer
+    transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                authority: ctx.accounts.reward_center.to_account_info(),
+                from: ctx
+                    .accounts
+                    .reward_center_reward_token_account
+                    .to_account_info(),
+                to: ctx.accounts.buyer_reward_token_account.to_account_info(),
+            },
+            &reward_center_signer_seeds,
+        ),
+        buyer_payout,
+    )?;
+
+    // Seller transfer
+    transfer(
+        CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            Transfer {
+                authority: ctx.accounts.reward_center.to_account_info(),
+                from: ctx
+                    .accounts
+                    .reward_center_reward_token_account
+                    .to_account_info(),
+                to: ctx.accounts.seller_reward_token_account.to_account_info(),
+            },
+            &reward_center_signer_seeds,
+        ),
+        seller_payout,
     )?;
 
     Ok(())
