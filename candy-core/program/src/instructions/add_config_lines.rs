@@ -27,7 +27,7 @@ pub fn add_config_lines(
     }
     // hidden settings candies do not store config lines
     if candy_machine.data.hidden_settings.is_some() {
-        return err!(CandyError::HiddenSettingsConfigsDoNotHaveConfigLines);
+        return err!(CandyError::HiddenSettingsDoNotHaveConfigLines);
     }
 
     let config_line = if let Some(config_line) = &candy_machine.data.config_line_settings {

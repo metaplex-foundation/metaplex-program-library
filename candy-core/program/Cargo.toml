@@ -1,4 +1,3 @@
-[workspace]
 [package]
 name = "mpl-candy-machine-core"
 version = "0.0.1"

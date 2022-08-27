@@ -166,34 +166,31 @@ createErrorFromNameLookup.set(
 )
 
 /**
- * HiddenSettingsConfigsDoNotHaveConfigLines: 'Configs that are using hidden uris do not have config lines, they have a single hash representing hashed order'
+ * HiddenSettingsDoNotHaveConfigLines: 'Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order'
  *
  * @category Errors
  * @category generated
  */
-export class HiddenSettingsConfigsDoNotHaveConfigLinesError extends Error {
+export class HiddenSettingsDoNotHaveConfigLinesError extends Error {
   readonly code: number = 0x1777
-  readonly name: string = 'HiddenSettingsConfigsDoNotHaveConfigLines'
+  readonly name: string = 'HiddenSettingsDoNotHaveConfigLines'
   constructor() {
     super(
-      'Configs that are using hidden uris do not have config lines, they have a single hash representing hashed order'
+      'Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order'
     )
     if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(
-        this,
-        HiddenSettingsConfigsDoNotHaveConfigLinesError
-      )
+      Error.captureStackTrace(this, HiddenSettingsDoNotHaveConfigLinesError)
     }
   }
 }
 
 createErrorFromCodeLookup.set(
   0x1777,
-  () => new HiddenSettingsConfigsDoNotHaveConfigLinesError()
+  () => new HiddenSettingsDoNotHaveConfigLinesError()
 )
 createErrorFromNameLookup.set(
-  'HiddenSettingsConfigsDoNotHaveConfigLines',
-  () => new HiddenSettingsConfigsDoNotHaveConfigLinesError()
+  'HiddenSettingsDoNotHaveConfigLines',
+  () => new HiddenSettingsDoNotHaveConfigLinesError()
 )
 
 /**

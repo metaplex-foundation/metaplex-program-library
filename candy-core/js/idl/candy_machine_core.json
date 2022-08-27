@@ -699,8 +699,8 @@
     },
     {
       "code": 6007,
-      "name": "HiddenSettingsConfigsDoNotHaveConfigLines",
-      "msg": "Configs that are using hidden uris do not have config lines, they have a single hash representing hashed order"
+      "name": "HiddenSettingsDoNotHaveConfigLines",
+      "msg": "Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order"
     },
     {
       "code": 6008,

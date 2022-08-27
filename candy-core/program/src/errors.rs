@@ -16,8 +16,8 @@ pub enum CandyError {
     TooManyCreators,
     #[msg("Candy machine is empty")]
     CandyMachineEmpty,
-    #[msg("Configs that are using hidden uris do not have config lines, they have a single hash representing hashed order")]
-    HiddenSettingsConfigsDoNotHaveConfigLines,
+    #[msg("Candy machines using hidden uris do not have config lines, they have a single hash representing hashed order")]
+    HiddenSettingsDoNotHaveConfigLines,
     #[msg("Cannot change number of lines unless is a hidden config")]
     CannotChangeNumberOfLines,
     #[msg("Cannot switch to hidden settings after items available is greater than 0")]
