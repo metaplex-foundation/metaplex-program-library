@@ -1906,7 +1906,7 @@ pub fn bubblegum_set_collection_size(
     let parent_nft_metadata_account_info = next_account_info(account_info_iter)?;
     let collection_update_authority_account_info = next_account_info(account_info_iter)?;
     let collection_mint_account_info = next_account_info(account_info_iter)?;
-    let bubblegum_program_authority_info = next_account_info(account_info_iter)?;
+    let bubblegum_signer_info = next_account_info(account_info_iter)?;
 
     let using_delegated_collection_authority = accounts.len() == 5;
 
@@ -1916,8 +1916,8 @@ pub fn bubblegum_set_collection_size(
     }
 
     // This instruction can only be called by the Bubblegum program.
-    assert_owned_by(bubblegum_program_authority_info, &BUBBLEGUM_PROGRAM_ADDRESS)?;
-    assert_signer(bubblegum_program_authority_info)?;
+    assert_owned_by(bubblegum_signer_info, &BUBBLEGUM_PROGRAM_ADDRESS)?;
+    assert_signer(bubblegum_signer_info)?;
 
     // Owned by token-metadata program.
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;

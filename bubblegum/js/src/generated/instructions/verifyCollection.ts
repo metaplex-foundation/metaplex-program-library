@@ -49,11 +49,13 @@ export const verifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @property [] authority
  * @property [] owner
  * @property [] delegate
+ * @property [**signer**] payer
+ * @property [] treeDelegate
  * @property [**signer**] collectionAuthority
  * @property [] collectionMint
  * @property [] collectionMetadata
  * @property [] editionAccount
- * @property [] bubblegumProgramAuthority
+ * @property [] bubblegumSigner
  * @property [] candyWrapper
  * @property [] gummyrollProgram
  * @property [_writable_] merkleSlab
@@ -66,11 +68,13 @@ export type VerifyCollectionInstructionAccounts = {
   authority: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
+  payer: web3.PublicKey
+  treeDelegate: web3.PublicKey
   collectionAuthority: web3.PublicKey
   collectionMint: web3.PublicKey
   collectionMetadata: web3.PublicKey
   editionAccount: web3.PublicKey
-  bubblegumProgramAuthority: web3.PublicKey
+  bubblegumSigner: web3.PublicKey
   candyWrapper: web3.PublicKey
   gummyrollProgram: web3.PublicKey
   merkleSlab: web3.PublicKey
@@ -117,6 +121,16 @@ export function createVerifyCollectionInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.payer,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
+      pubkey: accounts.treeDelegate,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
       pubkey: accounts.collectionAuthority,
       isWritable: false,
       isSigner: true,
@@ -137,7 +151,7 @@ export function createVerifyCollectionInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.bubblegumProgramAuthority,
+      pubkey: accounts.bubblegumSigner,
       isWritable: false,
       isSigner: false,
     },

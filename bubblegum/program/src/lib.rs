@@ -3,11 +3,11 @@ use {
     crate::state::metaplex_anchor::MplTokenMetadata,
     crate::state::{
         leaf_schema::{LeafSchema, Version},
-        metaplex_adapter::{Creator, MetadataArgs, TokenProgramVersion},
+        metaplex_adapter::{self, Creator, MetadataArgs, TokenProgramVersion},
         metaplex_anchor::{MasterEdition, TokenMetadata},
         request::{MintRequest, MINT_REQUEST_SIZE},
-        NFTDecompressionEvent, NewNFTEvent, TreeConfig, Voucher, ASSET_PREFIX, TREE_AUTHORITY_SIZE,
-        VOUCHER_PREFIX, VOUCHER_SIZE,
+        NFTDecompressionEvent, NewNFTEvent, TreeConfig, Voucher, ASSET_PREFIX,
+        COLLECTION_CPI_PREFIX, TREE_AUTHORITY_SIZE, VOUCHER_PREFIX, VOUCHER_SIZE,
     },
     crate::utils::{
         append_leaf, assert_metadata_is_mpl_compatible, assert_pubkey_equal, cmp_bytes,
@@ -117,6 +117,7 @@ pub struct CreatorVerification<'info> {
     pub owner: UncheckedAccount<'info>,
     /// CHECK: This account is chekced in the instruction
     pub delegate: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
     pub creator: Signer<'info>,
     pub candy_wrapper: Program<'info, CandyWrapper>,
     pub gummyroll_program: Program<'info, Gummyroll>,
@@ -136,17 +137,23 @@ pub struct CollectionVerification<'info> {
     pub owner: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
     pub delegate: UncheckedAccount<'info>,
+    pub payer: Signer<'info>,
+    /// CHECK: This account is checked to be a signer in
+    /// the case of `set_and_verify_collection` where
+    /// we are actually changing the NFT metadata.
+    pub tree_delegate: UncheckedAccount<'info>,
     pub collection_authority: Signer<'info>,
     /// CHECK: This account is checked in the instruction
     pub collection_mint: UncheckedAccount<'info>,
     pub collection_metadata: Box<Account<'info, TokenMetadata>>,
-    pub edition_account: Box<Account<'info, MasterEdition>>,
+    /// CHECK: This account is checked in the instruction
+    pub edition_account: UncheckedAccount<'info>,
     /// CHECK: This is just used as a signing PDA.
     #[account(
-        seeds = [],
+        seeds = [COLLECTION_CPI_PREFIX.as_ref()],
         bump,
     )]
-    pub bubblegum_program_authority: UncheckedAccount<'info>,
+    pub bubblegum_signer: UncheckedAccount<'info>,
     pub candy_wrapper: Program<'info, CandyWrapper>,
     pub gummyroll_program: Program<'info, Gummyroll>,
     #[account(mut)]
@@ -716,15 +723,17 @@ fn process_collection_verification<'info>(
     index: u32,
     mut message: MetadataArgs,
     verify: bool,
+    new_collection: Option<[u8; 32]>,
 ) -> Result<()> {
     let owner = ctx.accounts.owner.to_account_info();
     let delegate = ctx.accounts.delegate.to_account_info();
     let merkle_slab = ctx.accounts.merkle_slab.to_account_info();
-    let collection_metadata = &mut ctx.accounts.collection_metadata;
+    let collection_metadata = &ctx.accounts.collection_metadata;
     let collection_mint = ctx.accounts.collection_mint.to_account_info();
     let edition_account = ctx.accounts.edition_account.to_account_info();
     let collection_authority = ctx.accounts.collection_authority.to_account_info();
-    let bubblegum_program_authority = ctx.accounts.bubblegum_program_authority.to_account_info();
+    let bubblegum_signer = ctx.accounts.bubblegum_signer.to_account_info();
+    let token_metadata_program = ctx.accounts.token_metadata_program.to_account_info();
 
     // Look for collection authority record PDA as a remaining account.
     let collection_authority_record = if ctx.remaining_accounts.len() > 0 {
@@ -750,6 +759,14 @@ fn process_collection_verification<'info>(
     // User-provided metadata must result in same user-provided data hash.
     let incoming_data_hash = hash_metadata(&message)?;
     assert_eq!(data_hash, incoming_data_hash);
+
+    // If new collection was provided, set it in the NFT metadata.
+    if new_collection.is_some() {
+        message.collection = new_collection.map(|c| metaplex_adapter::Collection {
+            verified: false, // Set to true below.
+            key: Pubkey::new(&c),
+        });
+    }
 
     // If the NFT has collection data, we set it to the correct value after doing some validation.
     if let Some(collection) = &mut message.collection {
@@ -777,90 +794,93 @@ fn process_collection_verification<'info>(
             collection_authority_record,
         )?;
 
-        // If this is a sized collection, then increment or decrement collection size.
-        if let Some(details) = &collection_metadata.collection_details {
-            // Increment or decrement existing size.
-            let new_size = match details {
-                CollectionDetails::V1 { size } => {
-                    if verify {
-                        size.checked_add(1)
-                            .ok_or(BubblegumError::NumericalOverflowError)?
-                    } else {
-                        size.checked_sub(1)
-                            .ok_or(BubblegumError::NumericalOverflowError)?
-                    }
-                }
-            };
-
-            // CPI into to token-metadata program to change the collection size.
-            let mut bubblegum_set_collection_size_infos = vec![
-                collection_metadata.to_account_info(),
-                collection_authority.clone(),
-                collection_mint.clone(),
-                bubblegum_program_authority.clone(),
-            ];
-
-            if let Some(record) = collection_authority_record {
-                bubblegum_set_collection_size_infos.push(record.clone());
-            }
-
-            invoke_signed(
-                &mpl_token_metadata::instruction::bubblegum_set_collection_size(
-                    ctx.accounts.token_metadata_program.key(),
-                    collection_metadata.to_account_info().key(),
-                    collection_authority.key(),
-                    collection_mint.key(),
-                    bubblegum_program_authority.key(),
-                    collection_authority_record.map(|r| r.key()),
-                    new_size,
-                ),
-                bubblegum_set_collection_size_infos.as_slice(),
-                &[&[&[ctx.bumps["bubblegum_program_authority"]]]],
-            )?;
-        }
-
         // Update collection in metadata args.  Note since this is a mutable reference,
         // it is still updating `message.collection` after being destructured.
         collection.verified = verify;
-
-        // Calculate new data hash.
-        let updated_data_hash = hash_metadata(&message)?;
-
-        // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
-        let asset_id = get_asset_id(&merkle_slab.key(), nonce);
-        let previous_leaf = LeafSchema::new_v0(
-            asset_id,
-            owner.key(),
-            delegate.key(),
-            nonce,
-            data_hash,
-            creator_hash,
-        );
-        let new_leaf = LeafSchema::new_v0(
-            asset_id,
-            owner.key(),
-            delegate.key(),
-            nonce,
-            updated_data_hash,
-            creator_hash,
-        );
-        emit!(new_leaf.to_event());
-        replace_leaf(
-            &merkle_slab.key(),
-            *ctx.bumps.get("authority").unwrap(),
-            &ctx.accounts.gummyroll_program.to_account_info(),
-            &ctx.accounts.authority.to_account_info(),
-            &ctx.accounts.merkle_slab.to_account_info(),
-            &ctx.accounts.candy_wrapper.to_account_info(),
-            ctx.remaining_accounts,
-            root,
-            previous_leaf.to_node(),
-            new_leaf.to_node(),
-            index,
-        )
     } else {
-        Err(BubblegumError::CollectionNotFound.into())
+        return Err(BubblegumError::CollectionNotFound.into());
     }
+
+    // If this is a sized collection, then increment or decrement collection size.
+    if let Some(details) = &collection_metadata.collection_details {
+        // Increment or decrement existing size.
+        let new_size = match details {
+            CollectionDetails::V1 { size } => {
+                if verify {
+                    size.checked_add(1)
+                        .ok_or(BubblegumError::NumericalOverflowError)?
+                } else {
+                    size.checked_sub(1)
+                        .ok_or(BubblegumError::NumericalOverflowError)?
+                }
+            }
+        };
+
+        // CPI into to token-metadata program to change the collection size.
+        let mut bubblegum_set_collection_size_infos = vec![
+            collection_metadata.to_account_info(),
+            collection_authority.clone(),
+            collection_mint.clone(),
+            bubblegum_signer.clone(),
+        ];
+
+        if let Some(record) = collection_authority_record {
+            bubblegum_set_collection_size_infos.push(record.clone());
+        }
+
+        invoke_signed(
+            &mpl_token_metadata::instruction::bubblegum_set_collection_size(
+                token_metadata_program.key(),
+                collection_metadata.to_account_info().key(),
+                collection_authority.key(),
+                collection_mint.key(),
+                bubblegum_signer.key(),
+                collection_authority_record.map(|r| r.key()),
+                new_size,
+            ),
+            bubblegum_set_collection_size_infos.as_slice(),
+            &[&[
+                COLLECTION_CPI_PREFIX.as_bytes(),
+                &[ctx.bumps["bubblegum_signer"]],
+            ]],
+        )?;
+    }
+
+    // Calculate new data hash.
+    let updated_data_hash = hash_metadata(&message)?;
+
+    // Build previous leaf struct, new leaf struct, and replace the leaf in the tree.
+    let asset_id = get_asset_id(&merkle_slab.key(), nonce);
+    let previous_leaf = LeafSchema::new_v0(
+        asset_id,
+        owner.key(),
+        delegate.key(),
+        nonce,
+        data_hash,
+        creator_hash,
+    );
+    let new_leaf = LeafSchema::new_v0(
+        asset_id,
+        owner.key(),
+        delegate.key(),
+        nonce,
+        updated_data_hash,
+        creator_hash,
+    );
+    emit!(new_leaf.to_event());
+    replace_leaf(
+        &merkle_slab.key(),
+        *ctx.bumps.get("authority").unwrap(),
+        &ctx.accounts.gummyroll_program.to_account_info(),
+        &ctx.accounts.authority.to_account_info(),
+        &ctx.accounts.merkle_slab.to_account_info(),
+        &ctx.accounts.candy_wrapper.to_account_info(),
+        ctx.remaining_accounts,
+        root,
+        previous_leaf.to_node(),
+        new_leaf.to_node(),
+        index,
+    )
 }
 
 #[program]
@@ -1053,6 +1073,7 @@ pub mod bubblegum {
             index,
             message,
             true,
+            None,
         )
     }
 
@@ -1074,6 +1095,56 @@ pub mod bubblegum {
             index,
             message,
             false,
+            None,
+        )
+    }
+
+    pub fn set_and_verify_collection<'info>(
+        ctx: Context<'_, '_, '_, 'info, CollectionVerification<'info>>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+        message: MetadataArgs,
+        collection: [u8; 32],
+    ) -> Result<()> {
+        let incoming_tree_delegate = &ctx.accounts.tree_delegate;
+        let tree_creator = ctx.accounts.authority.creator;
+        let tree_delegate = ctx.accounts.authority.delegate;
+        let collection_metadata = &ctx.accounts.collection_metadata;
+
+        // Require that either the tree authority signed this transaction, or the tree authority is
+        // the collection update authority which means the leaf update is approved via proxy, when
+        // we later call `assert_has_collection_authority()`.
+        //
+        // This is similar to logic in token-metadata for `set_and_verify_collection()` except
+        // this logic also allows the tree authority (which we are treating as the leaf metadata
+        // authority) to be different than the collection authority (actual or delegated).  The
+        // token-metadata program required them to be the same.
+        let tree_authority_signed = incoming_tree_delegate.is_signer
+            && (incoming_tree_delegate.key() == tree_creator
+                || incoming_tree_delegate.key() == tree_delegate);
+
+        let tree_authority_is_collection_update_authority = collection_metadata.update_authority
+            == tree_creator
+            || collection_metadata.update_authority == tree_delegate;
+
+        require!(
+            tree_authority_signed || tree_authority_is_collection_update_authority,
+            BubblegumError::UpdateAuthorityIncorrect
+        );
+
+        process_collection_verification(
+            ctx,
+            root,
+            data_hash,
+            creator_hash,
+            nonce,
+            index,
+            message,
+            true,
+            Some(collection),
         )
     }
 

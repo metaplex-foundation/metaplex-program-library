@@ -52,4 +52,6 @@ pub enum BubblegumError {
     AlreadyVerified,
     #[msg("Collection item is already unverified.")]
     AlreadyUnverified,
+    #[msg("Incorrect leaf metadata update authority.")]
+    UpdateAuthorityIncorrect,
 }
