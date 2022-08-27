@@ -64,7 +64,6 @@ pub fn process_instruction<'a>(
                 program_id,
                 accounts,
                 args.data,
-                false,
                 args.is_mutable,
             )
         }
@@ -80,13 +79,7 @@ pub fn process_instruction<'a>(
         }
         MetadataInstruction::CreateMetadataAccountV2(args) => {
             msg!("Instruction: Create Metadata Accounts v2");
-            process_create_metadata_accounts_v2(
-                program_id,
-                accounts,
-                args.data,
-                false,
-                args.is_mutable,
-            )
+            process_create_metadata_accounts_v2(program_id, accounts, args.data, args.is_mutable)
         }
         MetadataInstruction::CreateMetadataAccountV3(args) => {
             msg!("Instruction: Create Metadata Accounts v3");
@@ -94,7 +87,6 @@ pub fn process_instruction<'a>(
                 program_id,
                 accounts,
                 args.data,
-                false,
                 args.is_mutable,
                 args.collection_details,
             )
@@ -254,7 +246,6 @@ pub fn process_create_metadata_accounts_v2<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     data: DataV2,
-    allow_direct_creator_writes: bool,
     is_mutable: bool,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
@@ -278,7 +269,7 @@ pub fn process_create_metadata_accounts_v2<'a>(
             rent_info,
         },
         data,
-        allow_direct_creator_writes,
+        false,
         is_mutable,
         false,
         true,
@@ -290,7 +281,6 @@ pub fn process_create_metadata_accounts_v3<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     data: DataV2,
-    allow_direct_creator_writes: bool,
     is_mutable: bool,
     collection_details: Option<CollectionDetails>,
 ) -> ProgramResult {
@@ -315,7 +305,7 @@ pub fn process_create_metadata_accounts_v3<'a>(
             rent_info,
         },
         data,
-        allow_direct_creator_writes,
+        false,
         is_mutable,
         false,
         true,

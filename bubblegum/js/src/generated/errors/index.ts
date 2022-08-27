@@ -153,13 +153,82 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * CreatorDidNotVerify: 'Creator did not verify the metadata'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CreatorDidNotVerifyError extends Error {
+  readonly code: number = 0x1776
+  readonly name: string = 'CreatorDidNotVerify'
+  constructor() {
+    super('Creator did not verify the metadata')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreatorDidNotVerifyError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1776, () => new CreatorDidNotVerifyError())
+createErrorFromNameLookup.set(
+  'CreatorDidNotVerify',
+  () => new CreatorDidNotVerifyError()
+)
+
+/**
+ * CreatorNotFound: 'Creator not found in creator Vec'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CreatorNotFoundError extends Error {
+  readonly code: number = 0x1777
+  readonly name: string = 'CreatorNotFound'
+  constructor() {
+    super('Creator not found in creator Vec')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CreatorNotFoundError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1777, () => new CreatorNotFoundError())
+createErrorFromNameLookup.set(
+  'CreatorNotFound',
+  () => new CreatorNotFoundError()
+)
+
+/**
+ * NoCreatorsPresent: 'No creators in creator Vec'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NoCreatorsPresentError extends Error {
+  readonly code: number = 0x1778
+  readonly name: string = 'NoCreatorsPresent'
+  constructor() {
+    super('No creators in creator Vec')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NoCreatorsPresentError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1778, () => new NoCreatorsPresentError())
+createErrorFromNameLookup.set(
+  'NoCreatorsPresent',
+  () => new NoCreatorsPresentError()
+)
+
+/**
  * CreatorsTooLong: 'Creators list too long'
  *
  * @category Errors
  * @category generated
  */
 export class CreatorsTooLongError extends Error {
-  readonly code: number = 0x1776
+  readonly code: number = 0x1779
   readonly name: string = 'CreatorsTooLong'
   constructor() {
     super('Creators list too long')
@@ -169,7 +238,7 @@ export class CreatorsTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1776, () => new CreatorsTooLongError())
+createErrorFromCodeLookup.set(0x1779, () => new CreatorsTooLongError())
 createErrorFromNameLookup.set(
   'CreatorsTooLong',
   () => new CreatorsTooLongError()
@@ -182,7 +251,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataNameTooLongError extends Error {
-  readonly code: number = 0x1777
+  readonly code: number = 0x177a
   readonly name: string = 'MetadataNameTooLong'
   constructor() {
     super('Name in metadata is too long')
@@ -192,7 +261,7 @@ export class MetadataNameTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1777, () => new MetadataNameTooLongError())
+createErrorFromCodeLookup.set(0x177a, () => new MetadataNameTooLongError())
 createErrorFromNameLookup.set(
   'MetadataNameTooLong',
   () => new MetadataNameTooLongError()
@@ -205,7 +274,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataSymbolTooLongError extends Error {
-  readonly code: number = 0x1778
+  readonly code: number = 0x177b
   readonly name: string = 'MetadataSymbolTooLong'
   constructor() {
     super('Symbol in metadata is too long')
@@ -215,7 +284,7 @@ export class MetadataSymbolTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1778, () => new MetadataSymbolTooLongError())
+createErrorFromCodeLookup.set(0x177b, () => new MetadataSymbolTooLongError())
 createErrorFromNameLookup.set(
   'MetadataSymbolTooLong',
   () => new MetadataSymbolTooLongError()
@@ -228,7 +297,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataUriTooLongError extends Error {
-  readonly code: number = 0x1779
+  readonly code: number = 0x177c
   readonly name: string = 'MetadataUriTooLong'
   constructor() {
     super('Uri in metadata is too long')
@@ -238,7 +307,7 @@ export class MetadataUriTooLongError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x1779, () => new MetadataUriTooLongError())
+createErrorFromCodeLookup.set(0x177c, () => new MetadataUriTooLongError())
 createErrorFromNameLookup.set(
   'MetadataUriTooLong',
   () => new MetadataUriTooLongError()
@@ -251,7 +320,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MetadataBasisPointsTooHighError extends Error {
-  readonly code: number = 0x177a
+  readonly code: number = 0x177d
   readonly name: string = 'MetadataBasisPointsTooHigh'
   constructor() {
     super('Basis points in metadata cannot exceed 10000')
@@ -262,7 +331,7 @@ export class MetadataBasisPointsTooHighError extends Error {
 }
 
 createErrorFromCodeLookup.set(
-  0x177a,
+  0x177d,
   () => new MetadataBasisPointsTooHighError()
 )
 createErrorFromNameLookup.set(
@@ -277,7 +346,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class InsufficientMintCapacityError extends Error {
-  readonly code: number = 0x177b
+  readonly code: number = 0x177e
   readonly name: string = 'InsufficientMintCapacity'
   constructor() {
     super('Not enough unapproved mints left')
@@ -287,7 +356,7 @@ export class InsufficientMintCapacityError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177b, () => new InsufficientMintCapacityError())
+createErrorFromCodeLookup.set(0x177e, () => new InsufficientMintCapacityError())
 createErrorFromNameLookup.set(
   'InsufficientMintCapacity',
   () => new InsufficientMintCapacityError()
@@ -300,7 +369,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MintRequestNotApprovedError extends Error {
-  readonly code: number = 0x177c
+  readonly code: number = 0x177f
   readonly name: string = 'MintRequestNotApproved'
   constructor() {
     super('Mint request not approved')
@@ -310,7 +379,7 @@ export class MintRequestNotApprovedError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177c, () => new MintRequestNotApprovedError())
+createErrorFromCodeLookup.set(0x177f, () => new MintRequestNotApprovedError())
 createErrorFromNameLookup.set(
   'MintRequestNotApproved',
   () => new MintRequestNotApprovedError()
@@ -323,7 +392,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MintRequestKeyMismatchError extends Error {
-  readonly code: number = 0x177d
+  readonly code: number = 0x1780
   readonly name: string = 'MintRequestKeyMismatch'
   constructor() {
     super('Mint authority key does not match request')
@@ -333,7 +402,7 @@ export class MintRequestKeyMismatchError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177d, () => new MintRequestKeyMismatchError())
+createErrorFromCodeLookup.set(0x1780, () => new MintRequestKeyMismatchError())
 createErrorFromNameLookup.set(
   'MintRequestKeyMismatch',
   () => new MintRequestKeyMismatchError()
@@ -346,7 +415,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class MintRequestDiscriminatorMismatchError extends Error {
-  readonly code: number = 0x177e
+  readonly code: number = 0x1781
   readonly name: string = 'MintRequestDiscriminatorMismatch'
   constructor() {
     super('Mint request data has incorrect disciminator')
@@ -357,7 +426,7 @@ export class MintRequestDiscriminatorMismatchError extends Error {
 }
 
 createErrorFromCodeLookup.set(
-  0x177e,
+  0x1781,
   () => new MintRequestDiscriminatorMismatchError()
 )
 createErrorFromNameLookup.set(
@@ -372,7 +441,7 @@ createErrorFromNameLookup.set(
  * @category generated
  */
 export class CloseMintRequestErrorError extends Error {
-  readonly code: number = 0x177f
+  readonly code: number = 0x1782
   readonly name: string = 'CloseMintRequestError'
   constructor() {
     super('Something went wrong closing mint request')
@@ -382,7 +451,7 @@ export class CloseMintRequestErrorError extends Error {
   }
 }
 
-createErrorFromCodeLookup.set(0x177f, () => new CloseMintRequestErrorError())
+createErrorFromCodeLookup.set(0x1782, () => new CloseMintRequestErrorError())
 createErrorFromNameLookup.set(
   'CloseMintRequestError',
   () => new CloseMintRequestErrorError()
