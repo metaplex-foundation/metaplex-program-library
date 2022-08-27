@@ -1,4 +1,4 @@
-use std::io::ErrorKind;
+use std::{io::ErrorKind, mem};
 
 use crate::{
     deser::meta_deser_unchecked,
@@ -30,6 +30,8 @@ pub const RESERVATION: &str = "reservation";
 pub const USER: &str = "user";
 
 pub const BURN: &str = "burn";
+
+pub const ESCROW_PREFIX: &str = "escrow";
 
 pub const COLLECTION_AUTHORITY: &str = "collection_authority";
 
@@ -925,5 +927,24 @@ impl EditionMarker {
         // bitwise or a 1 into our position in that position
         self.ledger[index] |= mask;
         Ok(())
+    }
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Default)]
+pub struct TokenOwnedEscrow {
+    pub tokens: Vec<Pubkey>,
+    pub delegates: Vec<Pubkey>,
+    pub model: Option<Pubkey>,
+}
+
+impl TokenOwnedEscrow {
+    pub fn len(&self) -> usize {
+        let mut len = 0;
+        len += 4 + self.tokens.len() * mem::size_of::<Pubkey>();
+        len += 4 + self.delegates.len() * mem::size_of::<Pubkey>();
+        len += mem::size_of::<Option<Pubkey>>();
+        len
     }
 }

@@ -11,13 +11,14 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction::{MetadataInstruction, SetCollectionSizeArgs},
+    instruction::{CreateEscrowAccountArgs, MetadataInstruction, SetCollectionSizeArgs},
     solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
-        MasterEditionV2, Metadata, TokenMetadataAccount, TokenStandard, UseAuthorityRecord,
-        UseMethod, Uses, BURN, COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION,
-        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        MasterEditionV2, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
+        UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
+        COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, ESCROW_PREFIX, MAX_MASTER_EDITION_LEN,
+        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
@@ -241,6 +242,10 @@ pub fn process_instruction<'a>(
         MetadataInstruction::SetTokenStandard => {
             msg!("Instruction: Set Token Standard");
             set_token_standard(program_id, accounts)
+        }
+        MetadataInstruction::CreateEscrowAccount(args) => {
+            msg!("Instruction: Create Escrow Account");
+            create_escrow_account(program_id, accounts, args)
         }
     }
 }
@@ -1938,5 +1943,77 @@ pub fn set_token_standard(program_id: &Pubkey, accounts: &[AccountInfo]) -> Prog
 
     metadata.token_standard = Some(token_standard);
     clean_write_metadata(&mut metadata, metadata_account_info)?;
+    Ok(())
+}
+
+pub fn create_escrow_account(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: CreateEscrowAccountArgs,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let escrow_account_info = next_account_info(account_info_iter)?;
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let mint_account_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
+    let payer_account_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
+    // Owned by token-metadata program.
+    assert_owned_by(metadata_account_info, program_id)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
+
+    // Mint account passed in must be the mint of the metadata account passed in.
+    if &metadata.mint != mint_account_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    assert!(
+        check_token_standard(mint_account_info, Some(edition_account_info))?
+            == TokenStandard::NonFungible,
+    );
+
+    let bump_seed = assert_derivation(
+        program_id,
+        escrow_account_info,
+        &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_account_info.key.as_ref(),
+            ESCROW_PREFIX.as_bytes(),
+        ],
+    )?;
+
+    //assert_update_authority_is_correct(&metadata, update_authority_info)?;
+
+    let escrow_authority_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        metadata.mint.as_ref(),
+        ESCROW_PREFIX.as_bytes(),
+        &[bump_seed],
+    ];
+
+    let mut toe = TokenOwnedEscrow::default();
+
+    create_or_allocate_account_raw(
+        *program_id,
+        escrow_account_info,
+        &rent_info,
+        system_account_info,
+        payer_account_info,
+        toe.len(),
+        escrow_authority_seeds,
+    )?;
+
+    // let mut edition = MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info)?;
+
+    // edition.key = Key::MasterEditionV2;
+    // edition.supply = 0;
+    // edition.max_supply = max_supply;
+    // edition.serialize(&mut *edition_account_info.try_borrow_mut_data()?)?;
+
     Ok(())
 }

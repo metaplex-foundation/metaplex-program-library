@@ -118,6 +118,13 @@ pub struct SetCollectionSizeArgs {
     pub size: u64,
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct CreateEscrowAccountArgs {
+    pub constraint_model: Option<Pubkey>,
+}
+
 /// Instructions supported by the Metadata program.
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
@@ -516,6 +523,16 @@ pub enum MetadataInstruction {
     #[account(2, name="mint", desc="Mint account")]
     #[account(3, optional, name="edition", desc="Edition account")]
     SetTokenStandard,
+
+    /// Create an escrow account to hold tokens.
+    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(1, name="metadata", desc="Metadata account")]
+    #[account(2, name="mint", desc="Mint account")]
+    #[account(3, name="edition", desc="Edition account")]
+    #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="rent", desc="Rent info")]
+    CreateEscrowAccount(CreateEscrowAccountArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1678,6 +1695,38 @@ pub fn set_token_standard(
     if let Some(edition_account) = edition_account {
         accounts.push(AccountMeta::new_readonly(edition_account, false));
     }
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
+    }
+}
+
+pub fn create_escrow_account(
+    program_id: Pubkey,
+    escrow_account: Pubkey,
+    metadata_account: Pubkey,
+    mint_account: Pubkey,
+    edition_account: Pubkey,
+    payer_account: Pubkey,
+    system_account: Pubkey,
+    rent: Pubkey,
+    constraint_model: Option<Pubkey>,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(escrow_account, false),
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new(mint_account, false),
+        AccountMeta::new(edition_account, false),
+        AccountMeta::new(payer_account, true),
+        AccountMeta::new(system_account, false),
+        AccountMeta::new(rent, false),
+    ];
+    let data =
+        MetadataInstruction::CreateEscrowAccount(CreateEscrowAccountArgs { constraint_model })
+            .try_to_vec()
+            .unwrap();
 
     Instruction {
         program_id,
