@@ -21,9 +21,16 @@ use {
             program_error::ProgramError,
             program_pack::Pack,
             system_instruction,
+            account_info::AccountInfo
         },
     },
-    gummyroll::{program::Gummyroll, state::CandyWrapper, utils::wrap_event, Node},
+    spl_compression::{
+        Node,
+        data_wrapper::{
+            Wrapper,
+            wrap_event
+        },
+    },
     spl_token::state::Mint as SplMint,
     std::collections::HashSet,
 };
@@ -33,6 +40,15 @@ pub mod state;
 pub mod utils;
 
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
+
+#[derive(Clone)]
+pub struct SplCompression;
+
+impl Id for SplCompression {
+    fn id() -> Pubkey {
+        spl_compression::id()
+    }
+}
 
 #[derive(Accounts)]
 pub struct CreateTree<'info> {
@@ -47,9 +63,9 @@ pub struct CreateTree<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
     pub tree_creator: Signer<'info>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
+    pub candy_wrapper: Program<'info, Wrapper>,
     pub system_program: Program<'info, System>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub gummyroll_program: Program<'info, SplCompression>,
     #[account(zero)]
     /// CHECK: This account must be all zeros
     pub merkle_slab: UncheckedAccount<'info>,
@@ -65,8 +81,8 @@ pub struct MintV1<'info> {
         bump,
     )]
     pub authority: Account<'info, TreeConfig>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub candy_wrapper: Program<'info, Wrapper>,
+    pub gummyroll_program: Program<'info, SplCompression>,
     /// CHECK: This account is neither written to nor read from.
     pub owner: AccountInfo<'info>,
     /// CHECK: This account is neither written to nor read from.
@@ -89,8 +105,8 @@ pub struct Burn<'info> {
         bump,
     )]
     pub authority: Account<'info, TreeConfig>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub candy_wrapper: Program<'info, Wrapper>,
+    pub gummyroll_program: Program<'info, SplCompression>,
     /// CHECK: This account is checked in the instruction
     pub owner: UncheckedAccount<'info>,
     /// CHECK: This account is checked in the instruction
@@ -112,8 +128,8 @@ pub struct CreatorVerification<'info> {
     /// CHECK: This account is chekced in the instruction
     pub delegate: UncheckedAccount<'info>,
     pub creator: Signer<'info>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub candy_wrapper: Program<'info, Wrapper>,
+    pub gummyroll_program: Program<'info, SplCompression>,
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_slab: UncheckedAccount<'info>,
@@ -133,8 +149,8 @@ pub struct Transfer<'info> {
     pub delegate: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub new_owner: UncheckedAccount<'info>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub candy_wrapper: Program<'info, Wrapper>,
+    pub gummyroll_program: Program<'info, SplCompression>,
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_slab: UncheckedAccount<'info>,
@@ -153,8 +169,8 @@ pub struct Delegate<'info> {
     pub previous_delegate: UncheckedAccount<'info>,
     /// CHECK: This account is neither written to nor read from.
     pub new_delegate: UncheckedAccount<'info>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub candy_wrapper: Program<'info, Wrapper>,
+    pub gummyroll_program: Program<'info, SplCompression>,
     #[account(mut)]
     /// CHECK: This account is modified in the downstream program
     pub merkle_slab: UncheckedAccount<'info>,
@@ -175,8 +191,8 @@ pub struct Redeem<'info> {
     )]
     /// CHECK: This account is neither written to nor read from.
     pub authority: Account<'info, TreeConfig>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub candy_wrapper: Program<'info, Wrapper>,
+    pub gummyroll_program: Program<'info, SplCompression>,
     #[account(mut)]
     pub owner: Signer<'info>,
     /// CHECK: This account is chekced in the instruction
@@ -207,8 +223,8 @@ pub struct CancelRedeem<'info> {
     )]
     /// CHECK: This account is neither written to nor read from.
     pub authority: Account<'info, TreeConfig>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub candy_wrapper: Program<'info, Wrapper>,
+    pub gummyroll_program: Program<'info, SplCompression>,
     #[account(mut)]
     /// CHECK: unsafe
     pub merkle_slab: UncheckedAccount<'info>,
@@ -309,8 +325,8 @@ pub struct Compress<'info> {
     pub token_metadata_program: UncheckedAccount<'info>,
     /// CHECK:
     pub token_program: UncheckedAccount<'info>,
-    pub candy_wrapper: Program<'info, CandyWrapper>,
-    pub gummyroll_program: Program<'info, Gummyroll>,
+    pub candy_wrapper: Program<'info, Wrapper>,
+    pub gummyroll_program: Program<'info, SplCompression>,
 }
 
 #[derive(Accounts)]
@@ -479,7 +495,7 @@ fn process_mint_v1<'info>(
     authority_bump: u8,
     authority: &mut Account<'info, TreeConfig>,
     merkle_slab: &AccountInfo<'info>,
-    candy_wrapper: &Program<'info, CandyWrapper>,
+    candy_wrapper: &Program<'info, Wrapper>,
     gummyroll_program: &AccountInfo<'info>,
 ) -> Result<()> {
     assert_metadata_is_mpl_compatible(&message)?;
@@ -688,14 +704,14 @@ pub mod bubblegum {
         let authority_pda_signer = &[&seeds[..]];
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.gummyroll_program.to_account_info(),
-            gummyroll::cpi::accounts::Initialize {
+            spl_compression::cpi::accounts::Initialize {
                 authority: ctx.accounts.authority.to_account_info(),
-                merkle_roll: merkle_slab,
-                candy_wrapper: ctx.accounts.candy_wrapper.to_account_info(),
+                merkle_tree: merkle_slab,
+                log_wrapper: ctx.accounts.candy_wrapper.to_account_info(),
             },
             authority_pda_signer,
         );
-        gummyroll::cpi::init_empty_gummyroll(cpi_ctx, max_depth, max_buffer_size)
+        spl_compression::cpi::init_empty_merkle_tree(cpi_ctx, max_depth, max_buffer_size)
     }
 
     /// Creates a special mint request the tree_authority PDA. This allows permissionless minting without
