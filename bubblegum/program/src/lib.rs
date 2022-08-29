@@ -456,6 +456,9 @@ pub enum InstructionName {
     DecompressV1,
     Compress,
     Burn,
+    CreateTree,
+    VerifyCreator,
+    UnverifyCreator
 }
 
 pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
@@ -473,6 +476,9 @@ pub fn get_instruction_type(full_bytes: &[u8]) -> InstructionName {
         [54, 85, 76, 70, 228, 250, 164, 81] => InstructionName::DecompressV1,
         [116, 110, 29, 56, 107, 219, 42, 93] => InstructionName::Burn,
         [82, 193, 176, 117, 176, 21, 115, 253] => InstructionName::Compress,
+        [165, 83, 136, 142, 89, 202, 47, 220] => InstructionName::CreateTree,
+        [52, 17, 96, 132, 71, 4, 85, 194] => InstructionName::VerifyCreator,
+        [107, 178, 57, 39, 105, 115, 112, 152] => InstructionName::UnverifyCreator,
         _ => InstructionName::Unknown,
     }
 }
