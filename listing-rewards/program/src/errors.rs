@@ -49,4 +49,8 @@ pub enum ListingRewardsError {
     // 6011
     #[msg("The mints do not match")]
     MintMismatch,
+
+    // 6012
+    #[msg("Listing and offer prices do not match")]
+    PriceMismatch,
 }

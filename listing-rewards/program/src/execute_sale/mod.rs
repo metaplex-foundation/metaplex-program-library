@@ -301,6 +301,12 @@ pub fn handler(
 
     let clock = Clock::get()?;
 
+    // Checking if price is equal
+    require!(
+        seller_listing.price == buyer_offer.price,
+        ListingRewardsError::PriceMismatch
+    );
+
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),
         auction_house_key.as_ref(),
@@ -310,7 +316,6 @@ pub fn handler(
     // Updating purchased_at for listing and offer
     seller_listing.purchased_at = Some(clock.unix_timestamp);
     buyer_offer.purchased_at = Some(clock.unix_timestamp);
-
 
     // Auction house CPI
     let execute_sale_ctx_accounts = AuctioneerExecuteSale {
@@ -374,39 +379,47 @@ pub fn handler(
     )?;
 
     let (seller_payout, buyer_payout) = reward_center.payouts(price)?;
+
     // Buyer transfer
-    transfer(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                authority: ctx.accounts.reward_center.to_account_info(),
-                from: ctx
-                    .accounts
-                    .reward_center_reward_token_account
-                    .to_account_info(),
-                to: ctx.accounts.buyer_reward_token_account.to_account_info(),
-            },
-            &reward_center_signer_seeds,
-        ),
-        buyer_payout,
-    )?;
+    let reward_center_reward_token_balance = ctx.accounts.reward_center_reward_token_account.amount;
+    if reward_center_reward_token_balance >= buyer_payout {
+        transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    authority: ctx.accounts.reward_center.to_account_info(),
+                    from: ctx
+                        .accounts
+                        .reward_center_reward_token_account
+                        .to_account_info(),
+                    to: ctx.accounts.buyer_reward_token_account.to_account_info(),
+                },
+                &reward_center_signer_seeds,
+            ),
+            buyer_payout,
+        )?;
+    }
 
     // Seller transfer
-    transfer(
-        CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                authority: ctx.accounts.reward_center.to_account_info(),
-                from: ctx
-                    .accounts
-                    .reward_center_reward_token_account
-                    .to_account_info(),
-                to: ctx.accounts.seller_reward_token_account.to_account_info(),
-            },
-            &reward_center_signer_seeds,
-        ),
-        seller_payout,
-    )?;
+    ctx.accounts.reward_center_reward_token_account.reload()?;
+    let reward_center_reward_token_balance = ctx.accounts.reward_center_reward_token_account.amount;
+    if reward_center_reward_token_balance >= seller_payout {
+        transfer(
+            CpiContext::new_with_signer(
+                ctx.accounts.token_program.to_account_info(),
+                Transfer {
+                    authority: ctx.accounts.reward_center.to_account_info(),
+                    from: ctx
+                        .accounts
+                        .reward_center_reward_token_account
+                        .to_account_info(),
+                    to: ctx.accounts.seller_reward_token_account.to_account_info(),
+                },
+                &reward_center_signer_seeds,
+            ),
+            seller_payout,
+        )?
+    };
 
     Ok(())
 }
