@@ -53,6 +53,7 @@
     "@metaplex-foundation/amman": "^0.10.0",
     "@metaplex-foundation/solita": "^0.12.0",
     "@types/bn.js": "^5.1.0",
+    "@types/tape": "^4.13.2",
     "eslint": "^8.3.0",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
