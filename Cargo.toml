@@ -1,19 +1,22 @@
 [workspace]
+
 members = [
-  "auction/program",
-  "metaplex/program",
-  "token-entangler/program",
-  "token-vault/program",
-  "token-vault/test",
-  "nft-packs/program",
-  "fixed-price-sale/program",
+  "candy-core/program",
+  "candy-guard/program"
 ]
+
 exclude = [
-  "fixed-price-sale/cli",
-  "token-metadata",
+  "auction/program",
   "auction-house/program",
-  "candy-machine/program",
   "bubblegum/program",
+  "candy-machine/program",
   "candy-wrapper/program",
-  "candy-guard/program",
+  "fixed-price-sale/cli",
+  "fixed-price-sale/program",
+  "metaplex/program",
+  "nft-packs/program",
+  "token-entangler/program",
+  "token-metadata",
+  "token-vault/program",
+  "token-vault/test"
 ]
