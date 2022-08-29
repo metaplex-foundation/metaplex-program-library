@@ -157,7 +157,7 @@ export class InitTransactions {
       // sends the config lines in chunks of 10
       const limit = Math.min(lines.length - start, 10);
       const args: program.AddConfigLinesInstructionArgs = {
-        configLines: lines.slice(start, limit),
+        configLines: lines.slice(start, start + limit),
         index: start
       };
 
