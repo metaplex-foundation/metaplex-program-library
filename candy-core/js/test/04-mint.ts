@@ -31,7 +31,7 @@ test('mint (authority)', async (t) => {
         hiddenSettings: null
     };
 
-    const { tx: transaction, candyMachine: address } = await init.createCandyMachine(
+    const { tx: transaction, candyMachine: address } = await init.create(
         t,
         payerPair,
         data,
@@ -62,7 +62,7 @@ test('mint (authority)', async (t) => {
         ).assertSuccess(t);
     }
 
-    const { tx: mintTransaction } = await init.mintFromCandyMachine(
+    const { tx: mintTransaction } = await init.mint(
         t,
         address,
         payerPair,
@@ -98,7 +98,7 @@ test('mint (minter)', async (t) => {
         hiddenSettings: null
     };
 
-    const { tx: transaction, candyMachine: address } = await init.createCandyMachine(
+    const { tx: transaction, candyMachine: address } = await init.create(
         t,
         payerPair,
         data,
@@ -133,7 +133,7 @@ test('mint (minter)', async (t) => {
     const { fstTxHandler: minterHandler, minterPair, connection: minterConnection } = await init.minter();
 
     try {
-        const { tx: mintTransaction } = await init.mintFromCandyMachine(
+        const { tx: mintTransaction } = await init.mint(
             t,
             address,
             minterPair,

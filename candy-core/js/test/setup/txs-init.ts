@@ -96,14 +96,14 @@ export class InitTransactions {
     }
   }
 
-  async createCandyMachine(
+  async create(
     t: Test,
     payer: Keypair,
     data: program.CandyMachineData,
     handler: PayerTransactionHandler,
     connection: Connection
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise, candyMachine: PublicKey }> {
-    const [_, candyMachine] = await this.getKeypair('Candy Machine')
+    const [_, candyMachine] = await this.getKeypair('Candy Machine Account')
 
     const accounts: program.InitializeInstructionAccounts = {
       candyMachine: candyMachine.publicKey,
@@ -194,7 +194,7 @@ export class InitTransactions {
     return { tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Update') };
   }
 
-  async mintFromCandyMachine(
+  async mint(
     t: Test,
     candyMachine: PublicKey,
     payer: Keypair,
@@ -204,6 +204,7 @@ export class InitTransactions {
     const candyMachineObject = await CandyMachine.fromAccountAddress(connection, candyMachine);
     // mint address
     const [mint, mintPair] = await this.getKeypair('mint');
+    amman.addr.addLabel('Mint', mint);
 
     // PDAs required for the mint
 
@@ -212,11 +213,15 @@ export class InitTransactions {
       [Buffer.from('candy_machine'), candyMachine.toBuffer()],
       program.PROGRAM_ID,
     );
+    amman.addr.addLabel('Mint Creator', candyMachineCreator);
+
     // associated token address
     const [associatedToken,] = await PublicKey.findProgramAddress(
       [payer.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
       ASSOCIATED_TOKEN_PROGRAM_ID,
     );
+    amman.addr.addLabel('Mint Associated Token', associatedToken);
+
     // metadata address
     const [metadataAddress,] = await PublicKey.findProgramAddress(
       [
@@ -226,6 +231,8 @@ export class InitTransactions {
       ],
       METAPLEX_PROGRAM_ID,
     );
+    amman.addr.addLabel('Mint Metadata', metadataAddress);
+
     // master edition address
     const [masterEdition,] = await PublicKey.findProgramAddress(
       [
@@ -236,6 +243,7 @@ export class InitTransactions {
       ],
       METAPLEX_PROGRAM_ID,
     );
+    amman.addr.addLabel('Mint Master Edition', masterEdition);
 
     const accounts: program.MintInstructionAccounts = {
       candyMachine: candyMachine,

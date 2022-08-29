@@ -31,7 +31,7 @@ test('withdraw', async (t) => {
         hiddenSettings: null
     };
 
-    const { tx: transaction, candyMachine: address } = await init.createCandyMachine(
+    const { tx: transaction, candyMachine: address } = await init.create(
         t,
         payerPair,
         data,
