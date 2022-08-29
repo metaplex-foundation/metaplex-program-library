@@ -11,7 +11,7 @@ pub fn mint<'info>(ctx: Context<'_, '_, '_, 'info, Mint<'info>>, creator_bump: u
     let account_info = &candy_guard.to_account_info();
 
     let candy_guard_data =
-        CandyGuardData::from_data(candy_guard.features, &mut account_info.data.borrow_mut())?;
+        CandyGuardData::from_data(candy_guard.features, &account_info.data.borrow())?;
     let conditions = candy_guard_data.enabled_conditions();
     let process_error = |error: Error| -> Result<()> {
         if let Some(bot_tax) = &candy_guard_data.bot_tax {

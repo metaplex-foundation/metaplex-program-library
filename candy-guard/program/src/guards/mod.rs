@@ -100,7 +100,7 @@ pub trait Guard: Condition + AnchorSerialize + AnchorDeserialize {
 
     /// Deserializes the guard from a slice of data. Only attempts the deserialization
     /// if the data slice is large enough.
-    fn load(data: &mut [u8], offset: usize) -> Result<Option<Self>> {
+    fn load(data: &[u8], offset: usize) -> Result<Option<Self>> {
         if offset <= data.len() {
             let mut slice = &data[offset - Self::size()..offset];
             let guard = Self::deserialize(&mut slice)?;
