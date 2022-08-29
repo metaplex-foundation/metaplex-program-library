@@ -746,30 +746,38 @@ pub fn spl_token_close(params: TokenCloseParams<'_, '_>) -> ProgramResult {
 /// TokenBurnParams
 pub struct TokenBurnParams<'a: 'b, 'b> {
     /// mint
+    /// CHECK: account checked in CPI
     pub mint: AccountInfo<'a>,
     /// source
+    /// CHECK: account checked in CPI
     pub source: AccountInfo<'a>,
     /// amount
     pub amount: u64,
     /// authority
+    /// CHECK: account checked in CPI
     pub authority: AccountInfo<'a>,
     /// authority_signer_seeds
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
     /// token_program
+    /// CHECK: account checked in CPI
     pub token_program: AccountInfo<'a>,
 }
 
 /// TokenCloseParams
 pub struct TokenCloseParams<'a: 'b, 'b> {
     /// Token account
+    /// CHECK: account checked in CPI
     pub account: AccountInfo<'a>,
     /// Destination for redeemed SOL.
+    /// CHECK: account checked in CPI
     pub destination: AccountInfo<'a>,
     /// Owner of the token account.
+    /// CHECK: account checked in CPI
     pub owner: AccountInfo<'a>,
     /// authority_signer_seeds
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
     /// token_program
+    /// CHECK: account checked in CPI
     pub token_program: AccountInfo<'a>,
 }
 
@@ -804,16 +812,20 @@ pub fn spl_token_mint_to(params: TokenMintToParams<'_, '_>) -> ProgramResult {
 /// TokenMintToParams
 pub struct TokenMintToParams<'a: 'b, 'b> {
     /// mint
+    /// CHECK: account checked in CPI
     pub mint: AccountInfo<'a>,
     /// destination
+    /// CHECK: account checked in CPI
     pub destination: AccountInfo<'a>,
     /// amount
     pub amount: u64,
     /// authority
+    /// CHECK: account checked in CPI
     pub authority: AccountInfo<'a>,
     /// authority_signer_seeds
     pub authority_signer_seeds: Option<&'b [&'b [u8]]>,
     /// token_program
+    /// CHECK: account checked in CPI
     pub token_program: AccountInfo<'a>,
 }
 
