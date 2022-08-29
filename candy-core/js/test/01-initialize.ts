@@ -14,7 +14,7 @@ test('initialize: new candy machine', async (t) => {
 
     const data = {
         itemsAvailable: items,
-        symbol: "CORE",
+        symbol: 'CORE',
         sellerFeeBasisPoints: 500,
         maxSupply: 0,
         isMutable: true,
@@ -25,37 +25,44 @@ test('initialize: new candy machine', async (t) => {
             percentageShare: 100
         }],
         configLineSettings: {
-            prefixName: "TEST ",
+            prefixName: 'TEST ',
             nameLength: 10,
-            prefixUri: "https://arweave.net/",
+            prefixUri: 'https://arweave.net/',
             uriLength: 50,
             isSequential: false
         },
         hiddenSettings: null
     };
 
-    const address = await init.createCandyMachine(t, payerPair, data, fstTxHandler, connection);
+    const { tx: transaction, candyMachine: address } = await init.createCandyMachine(
+        t,
+        payerPair,
+        data,
+        fstTxHandler,
+        connection
+    );
+    // executes the transaction
+    await transaction.assertSuccess(t);
+    // retrieves the created candy machine
     const candyMachine = await CandyMachine.fromAccountAddress(connection, address);
 
     spok(t, candyMachine, {
         authority: spokSamePubkey(payerPair.publicKey),
         updateAuthority: spokSamePubkey(payerPair.publicKey),
-        itemsRedeemed: spokSameBignum(0)
+        itemsRedeemed: spokSameBignum(0),
+        data: {
+            itemsAvailable: spokSameBignum(items),
+            maxSupply: spokSameBignum(0),
+            isMutable: true,
+            retainAuthority: true,
+            creators: data.creators,
+            configLineSettings: data.configLineSettings
+        }
     });
 
-    spok(t, candyMachine.data, {
-        itemsAvailable: spokSameBignum(items),
-        maxSupply: spokSameBignum(0),
-        isMutable: true,
-        retainAuthority: true,
-        creators: data.creators
-    });
-
-    spok(t, candyMachine.data.configLineSettings, data.configLineSettings);
     // hidden settings must be null
-    t.isEqual(
+    t.notOk(
         candyMachine.data.hiddenSettings,
-        null,
         'hidden settings should be null'
     );
 })
@@ -66,7 +73,7 @@ test('initialize: new candy machine (hidden settings)', async (t) => {
 
     const data = {
         itemsAvailable: items,
-        symbol: "CORE",
+        symbol: 'CORE',
         sellerFeeBasisPoints: 500,
         maxSupply: 0,
         isMutable: true,
@@ -78,34 +85,40 @@ test('initialize: new candy machine (hidden settings)', async (t) => {
         }],
         configLineSettings: null,
         hiddenSettings: {
-            name: "Hidden NFT",
-            uri: "https://arweave.net/uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ",
-            hash: Buffer.from("74bac30d82a0baa41dd2bee4b41bbc36").toJSON().data
+            name: 'Hidden NFT',
+            uri: 'https://arweave.net/uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ',
+            hash: Buffer.from('74bac30d82a0baa41dd2bee4b41bbc36').toJSON().data
         }
     };
 
-    const address = await init.createCandyMachine(t, payerPair, data, fstTxHandler, connection);
+    const { tx: transaction, candyMachine: address } = await init.createCandyMachine(
+        t,
+        payerPair,
+        data,
+        fstTxHandler,
+        connection
+    );
+    // executes the transaction
+    await transaction.assertSuccess(t);
+    // retrieves the created candy machine
     const candyMachine = await CandyMachine.fromAccountAddress(connection, address);
 
     spok(t, candyMachine, {
         authority: spokSamePubkey(payerPair.publicKey),
         updateAuthority: spokSamePubkey(payerPair.publicKey),
-        itemsRedeemed: spokSameBignum(0)
-    });
-
-    spok(t, candyMachine.data, {
-        itemsAvailable: spokSameBignum(items),
-        maxSupply: spokSameBignum(0),
-        isMutable: true,
-        retainAuthority: true,
-        creators: data.creators
-    });
-
-    spok(t, candyMachine.data.hiddenSettings, data.hiddenSettings);
+        itemsRedeemed: spokSameBignum(0),
+        data: {
+            itemsAvailable: spokSameBignum(items),
+            maxSupply: spokSameBignum(0),
+            isMutable: true,
+            retainAuthority: true,
+            creators: data.creators,
+            hiddenSettings: data.hiddenSettings
+        }
+    });;
     // config lines must be null
-    t.isEqual(
+    t.notOk(
         candyMachine.data.configLineSettings,
-        null,
         'config lines settings should be null'
     );
 })

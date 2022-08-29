@@ -1,5 +1,5 @@
 import {
-  ConfirmedTransactionDetails,
+  ConfirmedTransactionAssertablePromise,
   GenLabeledKeypair,
   LoadOrGenKeypair,
   LOCALHOST,
@@ -102,7 +102,7 @@ export class InitTransactions {
     data: program.CandyMachineData,
     handler: PayerTransactionHandler,
     connection: Connection
-  ): Promise<PublicKey> {
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise, candyMachine: PublicKey }> {
     const [_, candyMachine] = await this.getKeypair('Candy Machine')
 
     const accounts: program.InitializeInstructionAccounts = {
@@ -132,11 +132,10 @@ export class InitTransactions {
 
     const tx = new Transaction().add(ixCreateAccount).add(ixInitialize);
 
-    await handler
-      .sendAndConfirmTransaction(tx, [candyMachine, payer], 'tx: Initialize')
-      .assertSuccess(t, [/success/i]);
+    const txPromise = handler
+      .sendAndConfirmTransaction(tx, [candyMachine, payer], 'tx: Initialize');
 
-    return candyMachine.publicKey;
+    return { tx: txPromise, candyMachine: candyMachine.publicKey };
   }
 
   async addConfigLines(
@@ -144,14 +143,14 @@ export class InitTransactions {
     candyMachine: PublicKey,
     payer: Keypair,
     lines: program.ConfigLine[],
-    handler: PayerTransactionHandler,
-    success = true
-  ) {
+    handler: PayerTransactionHandler
+  ): Promise<{ txs: Transaction[] }> {
     const accounts: program.AddConfigLinesInstructionAccounts = {
       candyMachine: candyMachine,
       authority: payer.publicKey,
     };
 
+    const txs = [];
     let start = 0;
 
     while (start < lines.length) {
@@ -163,20 +162,12 @@ export class InitTransactions {
       };
 
       const ix = program.createAddConfigLinesInstruction(accounts, args);
-      const tx = new Transaction().add(ix);
-
-      if (success) {
-        await handler
-          .sendAndConfirmTransaction(tx, [payer], 'tx: AddConfigLines')
-          .assertSuccess(t, [/success/i]);
-      } else {
-        await handler
-          .sendAndConfirmTransaction(tx, [payer], 'tx: AddConfigLines')
-          .assertError(t, /do not have/i);
-      }
+      txs.push(new Transaction().add(ix));
 
       start = start + limit;
     }
+
+    return { txs };
   }
 
   async updateCandyMachine(
@@ -185,9 +176,8 @@ export class InitTransactions {
     wallet: PublicKey,
     payer: Keypair,
     data: CandyMachineData,
-    handler: PayerTransactionHandler,
-    success = true
-  ) {
+    handler: PayerTransactionHandler
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const accounts: program.UpdateInstructionAccounts = {
       candyMachine: candyMachine,
       authority: payer.publicKey,
@@ -201,15 +191,7 @@ export class InitTransactions {
     const ix = program.createUpdateInstruction(accounts, args);
     const tx = new Transaction().add(ix);
 
-    if (success) {
-      await handler
-        .sendAndConfirmTransaction(tx, [payer], 'tx: Update')
-        .assertSuccess(t, [/success/i]);
-    } else {
-      await handler
-        .sendAndConfirmTransaction(tx, [payer], 'tx: Update')
-        .assertError(t, /Cannot/i);
-    }
+    return { tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Update') };
   }
 
   async mintFromCandyMachine(
@@ -217,9 +199,8 @@ export class InitTransactions {
     candyMachine: PublicKey,
     payer: Keypair,
     handler: PayerTransactionHandler,
-    connection: Connection,
-    success = true
-  ) {
+    connection: Connection
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
     const candyMachineObject = await CandyMachine.fromAccountAddress(connection, candyMachine);
     // mint address
     const [mint, mintPair] = await this.getKeypair('mint');
@@ -295,15 +276,23 @@ export class InitTransactions {
     ixs.push(program.createMintInstruction(accounts, args));
     const tx = new Transaction().add(...ixs);
 
-    if (success) {
-      await handler
-        .sendAndConfirmTransaction(tx, [payer, mintPair], 'tx: Mint')
-        .assertSuccess(t, [/success/i])
-        .then((res: ConfirmedTransactionDetails) => console.log(res.txSignature));
-    } else {
-      await handler
-        .sendAndConfirmTransaction(tx, [payer, mintPair], 'tx: Mint')
-        .assertError(t);
-    }
+    return { tx: handler.sendAndConfirmTransaction(tx, [payer, mintPair], 'tx: Mint') };
+  }
+
+  async withdraw(
+    t: Test,
+    candyMachine: PublicKey,
+    payer: Keypair,
+    handler: PayerTransactionHandler
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    const accounts: program.WithdrawInstructionAccounts = {
+      candyMachine: candyMachine,
+      authority: payer.publicKey
+    };
+
+    const ix = program.createWithdrawInstruction(accounts);
+    const tx = new Transaction().add(ix);
+
+    return { tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Withdraw') };
   }
 }
