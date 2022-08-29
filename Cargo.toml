@@ -1,12 +1,12 @@
 [workspace]
-members=[
+members = [
   "auction/program",
   "metaplex/program",
   "token-entangler/program",
   "token-vault/program",
   "token-vault/test",
   "nft-packs/program",
-  "fixed-price-sale/program"
+  "fixed-price-sale/program",
 ]
 exclude = [
   "fixed-price-sale/cli",
@@ -15,4 +15,5 @@ exclude = [
   "candy-machine/program",
   "bubblegum/program",
   "candy-wrapper/program",
+  "candy-guard/program",
 ]
