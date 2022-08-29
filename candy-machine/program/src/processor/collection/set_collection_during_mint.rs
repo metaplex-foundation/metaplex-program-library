@@ -8,7 +8,7 @@ use solana_program::{
     program::invoke_signed, sysvar, sysvar::instructions::get_instruction_relative,
 };
 
-use crate::{cmp_pubkeys, CandyMachine, CollectionPDA};
+use crate::{cmp_pubkeys, CandyError, CandyMachine, CollectionPDA};
 
 /// Sets and verifies the collection during a candy machine mint
 #[derive(Accounts)]
@@ -104,6 +104,9 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
         Metadata::safe_deserialize(&ctx.accounts.collection_metadata.data.borrow_mut())?;
 
     let collection_instruction = if collection_metadata.collection_details.is_some() {
+        if !ctx.accounts.collection_metadata.is_writable {
+            return err!(CandyError::SizedCollectionMetadataMustBeMutable);
+        }
         set_and_verify_sized_collection_item(
             ctx.accounts.token_metadata_program.key(),
             ctx.accounts.metadata.key(),

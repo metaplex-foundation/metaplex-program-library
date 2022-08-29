@@ -25,7 +25,7 @@ pub mod utils;
 
 #[tokio::test]
 async fn freeze_flow_with_spl_token() {
-    test_start("Test Freeze");
+    test_start("Test Freeze With SPL Token");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
 
@@ -258,6 +258,7 @@ async fn freeze_update() {
 
 #[tokio::test]
 async fn thaw_after_freeze_time() {
+    test_start("Thaw After Freeze Time");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
     let freeze_time = 30; //30 seconds
@@ -342,6 +343,7 @@ async fn thaw_after_freeze_time() {
 
 #[tokio::test]
 async fn unlock_funds() {
+    test_start("Unlock Funds");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
     let freeze_time = 30; //30 seconds
@@ -402,6 +404,7 @@ async fn unlock_funds() {
 
 #[tokio::test]
 async fn mint_out_unfreeze() {
+    test_start("Mint Out Unfreeze");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
     let freeze_time = MAX_FREEZE_TIME;
