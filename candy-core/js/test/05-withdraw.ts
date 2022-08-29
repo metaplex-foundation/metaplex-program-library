@@ -1,8 +1,5 @@
 import test from 'tape'
-import spok from 'spok'
-import { CandyMachine } from 'src/generated'
-import { amman, InitTransactions, killStuckProcess } from './setup/'
-import { spokSameBignum, spokSamePubkey } from './utils'
+import { InitTransactions, killStuckProcess } from './setup/'
 
 const init = new InitTransactions()
 
