@@ -30,7 +30,7 @@ pub struct CandyGuard {
     //
     // available guards:
     // 1) bot tax
-    // 2) live data
+    // 2) live date
     // 3) lamports
     // 4) spltoken
     // 5) third party signer
