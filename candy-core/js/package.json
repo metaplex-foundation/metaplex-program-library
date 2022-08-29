@@ -47,7 +47,6 @@
     "@metaplex-foundation/beet-solana": "^0.3.0",
     "@metaplex-foundation/cusper": "^0.0.2",
     "@metaplex-foundation/mpl-core": "^0.6.1",
-    "@metaplex-foundation/mpl-token-metadata": "^2.2.3",
     "@solana/spl-token": "^0.2.0"
   },
   "devDependencies": {

@@ -45,6 +45,11 @@ const programs = {
         programId: 'cndy3CZK71ZHMp9ddpq5NVvQDx33o6cCYDf4JBAWCk7',
         deployPath: localDeployPath('mpl_candy_machine_core'),
     },
+    candy_guard: {
+        label: "Candy Guard",
+        programId: 'grd1hVewsa8dR1T1JfSFGzQUqgWmc1xXZ3uRRFJJ8XJ',
+        deployPath: localDeployPath('mpl_candy_guard'),
+    },
 };
 
 const validator = {
