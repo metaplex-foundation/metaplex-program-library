@@ -1,0 +1,1355 @@
+{
+  "version": "0.1.0",
+  "name": "mpl_nft_packs",
+  "instructions": [
+    {
+      "name": "InitPack",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "store",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent account"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Clock account"
+        },
+        {
+          "name": "whitelistedCreator",
+          "isMut": false,
+          "isSigner": false,
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "initPackSetArgs",
+          "type": {
+            "defined": "InitPackSetArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 0
+      }
+    },
+    {
+      "name": "AddCardToPack",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "packConfig",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['config', pack]"
+        },
+        {
+          "name": "packCard",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['card', pack, index]"
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "masterEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "masterMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "source",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "program account to hold MasterEdition token"
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "store",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token program"
+        }
+      ],
+      "args": [
+        {
+          "name": "addCardToPackArgs",
+          "type": {
+            "defined": "AddCardToPackArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 1
+      }
+    },
+    {
+      "name": "AddVoucherToPack",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "packVoucher",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['voucher', pack, index]"
+        },
+        {
+          "name": "authority",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "voucherOwner",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "masterEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "masterMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "mint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "source",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "store",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token program"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 2
+      }
+    },
+    {
+      "name": "Activate",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 3
+      }
+    },
+    {
+      "name": "Deactivate",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 4
+      }
+    },
+    {
+      "name": "ClosePack",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Solana Clock"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 5
+      }
+    },
+    {
+      "name": "ClaimPack",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "provingProcess",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['proving', pack, user_wallet]"
+        },
+        {
+          "name": "userWallet",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "packCard",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['card', pack, index]"
+        },
+        {
+          "name": "userToken",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "User token account to hold new minted edition"
+        },
+        {
+          "name": "newMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "newEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "masterEdition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "newMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "newMintAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "metadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "metadataMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "editionMarker",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent"
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Metaplex Token Metadata Program"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token program"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program"
+        }
+      ],
+      "args": [
+        {
+          "name": "claimPackArgs",
+          "type": {
+            "defined": "ClaimPackArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 6
+      }
+    },
+    {
+      "name": "TransferPackAuthority",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "currentAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "newAuthority",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 7
+      }
+    },
+    {
+      "name": "DeletePack",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "refunder",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 8
+      }
+    },
+    {
+      "name": "DeletePackCard",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "packCard",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "refunder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "newMasterEditionOwner",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "programAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent"
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "SPL Token program"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 9
+      }
+    },
+    {
+      "name": "DeletePackVoucher",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "packVoucher",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "refunder",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 10
+      }
+    },
+    {
+      "name": "EditPack",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [
+        {
+          "name": "editPackSetArgs",
+          "type": {
+            "defined": "EditPackSetArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 11
+      }
+    },
+    {
+      "name": "RequestCardForRedeem",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "packConfig",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['config', pack]"
+        },
+        {
+          "name": "store",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "edition",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "editionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "packVoucher",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "provingProcess",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['proving', pack, user_wallet]"
+        },
+        {
+          "name": "userWallet",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "recentSlothashes",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Solana Slot Hashes"
+        },
+        {
+          "name": "clock",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Solana Clock"
+        },
+        {
+          "name": "rent",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Rent"
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "System Program"
+        },
+        {
+          "name": "userToken",
+          "isMut": false,
+          "isSigner": false,
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "requestCardToRedeemArgs",
+          "type": {
+            "defined": "RequestCardToRedeemArgs"
+          }
+        }
+      ],
+      "discriminant": {
+        "type": "u8",
+        "value": 12
+      }
+    },
+    {
+      "name": "CleanUp",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "packConfig",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['config', pack]"
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 13
+      }
+    },
+    {
+      "name": "DeletePackConfig",
+      "accounts": [
+        {
+          "name": "packSet",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "packConfig",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "PDA, ['config', pack]"
+        },
+        {
+          "name": "refunder",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": true
+        }
+      ],
+      "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 14
+      }
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PackCard",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "packSet",
+            "type": "publicKey"
+          },
+          {
+            "name": "master",
+            "type": "publicKey"
+          },
+          {
+            "name": "metadata",
+            "type": "publicKey"
+          },
+          {
+            "name": "tokenAccount",
+            "type": "publicKey"
+          },
+          {
+            "name": "maxSupply",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u16"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PackConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "weights",
+            "type": {
+              "vec": {
+                "tuple": [
+                  "u32",
+                  "u32",
+                  "u32"
+                ]
+              }
+            }
+          },
+          {
+            "name": "actionToDo",
+            "type": {
+              "defined": "CleanUpActions"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PackSet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "store",
+            "type": "publicKey"
+          },
+          {
+            "name": "authority",
+            "type": "publicKey"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "packCards",
+            "type": "u32"
+          },
+          {
+            "name": "packVouchers",
+            "type": "u32"
+          },
+          {
+            "name": "totalWeight",
+            "type": "u64"
+          },
+          {
+            "name": "totalEditions",
+            "type": "u64"
+          },
+          {
+            "name": "mutable",
+            "type": "bool"
+          },
+          {
+            "name": "packState",
+            "type": {
+              "defined": "PackSetState"
+            }
+          },
+          {
+            "name": "distributionType",
+            "type": {
+              "defined": "PackDistributionType"
+            }
+          },
+          {
+            "name": "allowedAmountToRedeem",
+            "type": "u32"
+          },
+          {
+            "name": "redeemStartDate",
+            "type": "u64"
+          },
+          {
+            "name": "redeemEndDate",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "PackVoucher",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "packSet",
+            "type": "publicKey"
+          },
+          {
+            "name": "master",
+            "type": "publicKey"
+          },
+          {
+            "name": "metadata",
+            "type": "publicKey"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProvingProcess",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "accountType",
+            "type": {
+              "defined": "AccountType"
+            }
+          },
+          {
+            "name": "walletKey",
+            "type": "publicKey"
+          },
+          {
+            "name": "isExhausted",
+            "type": "bool"
+          },
+          {
+            "name": "voucherMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "packSet",
+            "type": "publicKey"
+          },
+          {
+            "name": "cardsRedeemed",
+            "type": "u32"
+          },
+          {
+            "name": "cardsToRedeem",
+            "type": {
+              "bTreeMap": [
+                "u32",
+                "u32"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "types": [
+    {
+      "name": "AddCardToPackArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "maxSupply",
+            "type": "u32"
+          },
+          {
+            "name": "weight",
+            "type": "u16"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitPackSetArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "uri",
+            "type": "string"
+          },
+          {
+            "name": "mutable",
+            "type": "bool"
+          },
+          {
+            "name": "distributionType",
+            "type": {
+              "defined": "PackDistributionType"
+            }
+          },
+          {
+            "name": "allowedAmountToRedeem",
+            "type": "u32"
+          },
+          {
+            "name": "redeemStartDate",
+            "type": {
+              "option": "u64"
+            }
+          },
+          {
+            "name": "redeemEndDate",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "EditPackSetArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "name",
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "description",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "uri",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "mutable",
+            "type": {
+              "option": "bool"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClaimPackArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RequestCardToRedeemArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CleanUpActions",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Change",
+            "fields": [
+              "u32",
+              "u32"
+            ]
+          },
+          {
+            "name": "Sort"
+          },
+          {
+            "name": "None"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PackSetState",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "NotActivated"
+          },
+          {
+            "name": "Activated"
+          },
+          {
+            "name": "Deactivated"
+          },
+          {
+            "name": "Ended"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PackDistributionType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "MaxSupply"
+          },
+          {
+            "name": "Fixed"
+          },
+          {
+            "name": "Unlimited"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AccountType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Uninitialized"
+          },
+          {
+            "name": "PackSet"
+          },
+          {
+            "name": "PackCard"
+          },
+          {
+            "name": "PackVoucher"
+          },
+          {
+            "name": "ProvingProcess"
+          },
+          {
+            "name": "PackConfig"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 0,
+      "name": "WrongAllowedAmountToRedeem",
+      "msg": "Allowed amount to redeem should be more then 0"
+    },
+    {
+      "code": 1,
+      "name": "WrongRedeemDate",
+      "msg": "Wrong redeem date"
+    },
+    {
+      "code": 2,
+      "name": "CardProbabilityMissing",
+      "msg": "Card probability is missing"
+    },
+    {
+      "code": 3,
+      "name": "WrongCardProbability",
+      "msg": "Wrong card probability value"
+    },
+    {
+      "code": 4,
+      "name": "CardShouldntHaveProbabilityValue",
+      "msg": "Cards for this pack shouldn't have probability value"
+    },
+    {
+      "code": 5,
+      "name": "ProvedVouchersMismatchPackVouchers",
+      "msg": "Proved vouchers mismatch pack vouchers"
+    },
+    {
+      "code": 6,
+      "name": "PackIsAlreadyEnded",
+      "msg": "Pack is already ended"
+    },
+    {
+      "code": 7,
+      "name": "PackSetNotConfigured",
+      "msg": "NFT pack set not fully configured"
+    },
+    {
+      "code": 8,
+      "name": "CantActivatePack",
+      "msg": "Can't activate NFT pack in current state"
+    },
+    {
+      "code": 9,
+      "name": "PackSetNotActivated",
+      "msg": "Pack set should be activated"
+    },
+    {
+      "code": 10,
+      "name": "ProvingPackProcessCompleted",
+      "msg": "Proving process for this pack is completed"
+    },
+    {
+      "code": 11,
+      "name": "ProvingVoucherProcessCompleted",
+      "msg": "Proving process for this voucher is completed"
+    },
+    {
+      "code": 12,
+      "name": "WrongEdition",
+      "msg": "Received edition from wrong master"
+    },
+    {
+      "code": 13,
+      "name": "WrongEditionMint",
+      "msg": "Received wrong edition mint"
+    },
+    {
+      "code": 14,
+      "name": "Overflow",
+      "msg": "Overflow"
+    },
+    {
+      "code": 15,
+      "name": "Underflow",
+      "msg": "Underflow"
+    },
+    {
+      "code": 16,
+      "name": "NotEmptyPackSet",
+      "msg": "Pack set should be empty to delete it"
+    },
+    {
+      "code": 17,
+      "name": "WrongPackState",
+      "msg": "Wrong pack state to change data"
+    },
+    {
+      "code": 18,
+      "name": "ImmutablePackSet",
+      "msg": "Pack set is immutable"
+    },
+    {
+      "code": 19,
+      "name": "CantSetTheSameValue",
+      "msg": "Can't set the same value"
+    },
+    {
+      "code": 20,
+      "name": "WrongMaxSupply",
+      "msg": "Wrong max supply value"
+    },
+    {
+      "code": 21,
+      "name": "WrongVoucherSupply",
+      "msg": "Voucher should have supply greater then 0"
+    },
+    {
+      "code": 22,
+      "name": "CardDoesntHaveEditions",
+      "msg": "Card ran out of editions"
+    },
+    {
+      "code": 23,
+      "name": "UserRedeemedAllCards",
+      "msg": "User redeemed all allowed cards"
+    },
+    {
+      "code": 24,
+      "name": "UriTooLong",
+      "msg": "URI too long"
+    },
+    {
+      "code": 25,
+      "name": "CardDoesntHaveMaxSupply",
+      "msg": "Card doesn't have max supply"
+    },
+    {
+      "code": 26,
+      "name": "WrongMasterSupply",
+      "msg": "Master edition should have unlimited supply"
+    },
+    {
+      "code": 27,
+      "name": "MissingEditionsInPack",
+      "msg": "Pack set doesn't have total editions"
+    },
+    {
+      "code": 28,
+      "name": "AlreadySetNextCardToRedeem",
+      "msg": "User already got next card to redeem"
+    },
+    {
+      "code": 29,
+      "name": "EndDateNotArrived",
+      "msg": "Can't close the pack before end date"
+    },
+    {
+      "code": 30,
+      "name": "DescriptionTooLong",
+      "msg": "Pack description too long"
+    },
+    {
+      "code": 31,
+      "name": "WhitelistedCreatorInactive",
+      "msg": "Whitelisted creator inactive"
+    },
+    {
+      "code": 32,
+      "name": "WrongWhitelistedCreator",
+      "msg": "Wrong whitelisted creator address"
+    },
+    {
+      "code": 33,
+      "name": "WrongVoucherOwner",
+      "msg": "Voucher owner mismatch"
+    },
+    {
+      "code": 34,
+      "name": "CardShouldntHaveSupplyValue",
+      "msg": "Cards for this pack shouldn't have supply value"
+    },
+    {
+      "code": 35,
+      "name": "PackIsFullWithCards",
+      "msg": "Pack is already full of cards"
+    },
+    {
+      "code": 36,
+      "name": "WeightsNotCleanedUp",
+      "msg": "Card weights should be cleaned up"
+    },
+    {
+      "code": 37,
+      "name": "CardAlreadyRedeemed",
+      "msg": "User already redeemed this card"
+    },
+    {
+      "code": 38,
+      "name": "UserCantRedeemThisCard",
+      "msg": "User can't redeem this card"
+    },
+    {
+      "code": 39,
+      "name": "InvalidWeightPosition",
+      "msg": "Invalid weight position"
+    }
+  ],
+  "metadata": {
+    "origin": "shank",
+    "address": "packFeFNZzMfD9aVWL7QbGz1WcU7R9zpf6pvNsw2BLu",
+    "binaryVersion": "0.0.7",
+    "libVersion": "~0.0.7"
+  }
+}

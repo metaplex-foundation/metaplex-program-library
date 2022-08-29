@@ -82,7 +82,12 @@ jobs:
     if: ${{ needs.get-changes-scope.outputs.packages != 'null' }}
     runs-on: ubuntu-latest
     steps:
+      # branch should be the branch from which the PR is opened
       - uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.pull_request.head.ref }}
+
       - uses: ./.github/actions/install-linux-build-deps
       - uses: ./.github/actions/install-rust
         with:
@@ -116,6 +121,8 @@ jobs:
             git restore ../../yarn.lock
             git status
             if [[ $(git diff --stat) != '' ]]; then
+              echo ">> git diff"
+              git diff
               echo ">> $pkg needs changes - breaking early"
               echo "::set-output name=failed::true"
               echo "::set-output name=failed-package::$pkg"

@@ -103,6 +103,8 @@ The Rust/Cargo programs are licensed under the [AGPLv3](https://www.gnu.org/lice
 [sdk-gumdrop-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-gumdrop.yml/badge.svg
 [sdk-fixed-price-sale-yml]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml
 [sdk-fixed-price-sale-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/sdk-fixed-price-sale.yml/badge.svg
+[sdk-nft-packs-yml]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-nft-packs.yml
+[sdk-nft-packs-svg]:https://github.com/metaplex/metaplex-program-library/actions/workflows/sdk-nft-packs.yml/badge.svg
 
 <!-- Integration Badges -->
 [i-fixed-price-sale-svg]:https://github.com/metaplex-foundation/metaplex-program-library/actions/workflows/integration-fixed-price-sale.yml/badge.svg

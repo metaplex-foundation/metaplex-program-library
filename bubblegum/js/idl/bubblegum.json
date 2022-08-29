@@ -275,6 +275,172 @@
       ]
     },
     {
+      "name": "verifyCreator",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "delegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "candyWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gummyrollProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unverifyCreator",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "delegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "creator",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "candyWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gummyrollProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": true,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        }
+      ]
+    },
+    {
       "name": "transfer",
       "accounts": [
         {
@@ -1269,51 +1435,66 @@
     },
     {
       "code": 6006,
+      "name": "CreatorDidNotVerify",
+      "msg": "Creator did not verify the metadata"
+    },
+    {
+      "code": 6007,
+      "name": "CreatorNotFound",
+      "msg": "Creator not found in creator Vec"
+    },
+    {
+      "code": 6008,
+      "name": "NoCreatorsPresent",
+      "msg": "No creators in creator Vec"
+    },
+    {
+      "code": 6009,
       "name": "CreatorsTooLong",
       "msg": "Creators list too long"
     },
     {
-      "code": 6007,
+      "code": 6010,
       "name": "MetadataNameTooLong",
       "msg": "Name in metadata is too long"
     },
     {
-      "code": 6008,
+      "code": 6011,
       "name": "MetadataSymbolTooLong",
       "msg": "Symbol in metadata is too long"
     },
     {
-      "code": 6009,
+      "code": 6012,
       "name": "MetadataUriTooLong",
       "msg": "Uri in metadata is too long"
     },
     {
-      "code": 6010,
+      "code": 6013,
       "name": "MetadataBasisPointsTooHigh",
       "msg": "Basis points in metadata cannot exceed 10000"
     },
     {
-      "code": 6011,
+      "code": 6014,
       "name": "InsufficientMintCapacity",
       "msg": "Not enough unapproved mints left"
     },
     {
-      "code": 6012,
+      "code": 6015,
       "name": "MintRequestNotApproved",
       "msg": "Mint request not approved"
     },
     {
-      "code": 6013,
+      "code": 6016,
       "name": "MintRequestKeyMismatch",
       "msg": "Mint authority key does not match request"
     },
     {
-      "code": 6014,
+      "code": 6017,
       "name": "MintRequestDiscriminatorMismatch",
       "msg": "Mint request data has incorrect disciminator"
     },
     {
-      "code": 6015,
+      "code": 6018,
       "name": "CloseMintRequestError",
       "msg": "Something went wrong closing mint request"
     }

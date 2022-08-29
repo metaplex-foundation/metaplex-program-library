@@ -20,7 +20,7 @@ pub struct SetCollection<'info> {
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
     /// CHECK: account constraints checked in account trait
-    #[account(mut, seeds = [b"collection".as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
+    #[account(mut, seeds = [CollectionPDA::PREFIX.as_ref(), candy_machine.to_account_info().key.as_ref()], bump)]
     collection_pda: UncheckedAccount<'info>,
     payer: Signer<'info>,
     system_program: Program<'info, System>,
@@ -45,16 +45,14 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
     let metadata: Metadata = Metadata::from_account_info(&ctx.accounts.metadata.to_account_info())?;
     if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.authority.key()) {
         return err!(CandyError::IncorrectCollectionAuthority);
-    };
+    }
     if !cmp_pubkeys(&metadata.mint, &mint.key()) {
         return err!(CandyError::MintMismatch);
     }
     let edition = ctx.accounts.edition.to_account_info();
     let authority_record = ctx.accounts.collection_authority_record.to_account_info();
     let candy_machine = &mut ctx.accounts.candy_machine;
-    if candy_machine.items_redeemed > 0 {
-        return err!(CandyError::NoChangingCollectionDuringMint);
-    }
+    candy_machine.assert_not_minted(error!(CandyError::NoChangingCollectionDuringMint))?;
     if !candy_machine.data.retain_authority {
         return err!(CandyError::CandyCollectionRequiresRetainAuthority);
     }
@@ -101,7 +99,7 @@ pub fn handle_set_collection(ctx: Context<SetCollection>) -> Result<()> {
             &ctx.accounts.authority.to_account_info(),
             COLLECTION_PDA_SIZE,
             &[
-                b"collection".as_ref(),
+                CollectionPDA::PREFIX.as_bytes(),
                 candy_machine.key().as_ref(),
                 &[*ctx.bumps.get("collection_pda").unwrap()],
             ],
