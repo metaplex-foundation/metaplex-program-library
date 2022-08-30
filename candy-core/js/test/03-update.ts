@@ -2,7 +2,7 @@ import test from 'tape'
 import spok from 'spok'
 import { CandyMachine } from 'src/generated'
 import { InitTransactions, killStuckProcess } from './setup/'
-import { spokSameBignum, spokSamePubkey } from './utils'
+import { spokSameBignum } from './utils'
 
 const init = new InitTransactions()
 
