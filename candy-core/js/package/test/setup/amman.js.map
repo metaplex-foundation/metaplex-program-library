@@ -1,0 +1,1 @@
+{"version":3,"file":"amman.js","sourceRoot":"","sources":["../../../test/setup/amman.ts"],"names":[],"mappings":";;;AAAA,oEAAyD;AACzD,4CAAwC;AAExC,mDAAqD;AACrD,wBAA4B;AAEf,QAAA,KAAK,GAAG,oBAAK,CAAC,QAAQ,CAAC;IAClC,WAAW,EAAE,EAAE,CAAC,2BAAe,CAAC,EAAE,oBAAoB,EAAE;IACxD,GAAG,EAAE,WAAQ;IACb,aAAa,EAAE,eAAM;CACtB,CAAC,CAAA"}
