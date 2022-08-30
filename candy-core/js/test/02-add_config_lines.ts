@@ -58,7 +58,7 @@ test('add_config_lines', async (t) => {
             tx,
             [payerPair],
             'tx: AddConfigLines'
-        ).assertSuccess(t);
+        ).assertSuccess(t, [/New config line added/i]);
     }
 })
 
@@ -113,6 +113,6 @@ test('add_config_lines (hidden settings)', async (t) => {
             tx,
             [payerPair],
             'tx: AddConfigLines'
-        ).assertError(t);
+        ).assertError(t, /do not have config lines/i);
     }
 })
