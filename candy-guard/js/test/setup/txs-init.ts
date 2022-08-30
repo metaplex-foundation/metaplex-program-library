@@ -16,7 +16,6 @@ import { Test } from 'tape'
 import { amman } from '.'
 import { getCandyGuardPDA } from '../utils'
 import {
-  CandyGuard,
   CandyGuardData,
   createInitializeInstruction,
   createUpdateInstruction,
