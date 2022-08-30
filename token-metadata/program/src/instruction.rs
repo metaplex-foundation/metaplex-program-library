@@ -516,6 +516,15 @@ pub enum MetadataInstruction {
     #[account(2, name="mint", desc="Mint account")]
     #[account(3, optional, name="edition", desc="Edition account")]
     SetTokenStandard,
+
+    /// Set size of an existing collection using CPI from the Bubblegum program.  This is how
+    /// collection size is incremented and decremented for compressed NFTs.
+    #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, name="collection_mint", desc="Mint of the Collection")]
+    #[account(3, signer, name="bubblegum_signer", desc="Signing PDA of Bubblegum program")]
+    #[account(4, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    BubblegumSetCollectionSize(SetCollectionSizeArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1656,6 +1665,35 @@ pub fn set_collection_size(
         program_id,
         accounts,
         data: MetadataInstruction::SetCollectionSize(SetCollectionSizeArgs { size })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+pub fn bubblegum_set_collection_size(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    update_authority: Pubkey,
+    mint: Pubkey,
+    bubblegum_signer: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+    size: u64,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new_readonly(bubblegum_signer, true),
+    ];
+
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::BubblegumSetCollectionSize(SetCollectionSizeArgs { size })
             .try_to_vec()
             .unwrap(),
     }

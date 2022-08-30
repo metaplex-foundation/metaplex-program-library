@@ -30,6 +30,7 @@ use crate::{
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
         spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
         MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
+        BUBBLEGUM_ACTIVATED, BUBBLEGUM_PROGRAM_ADDRESS,
     },
 };
 use arrayref::array_ref;
@@ -233,6 +234,10 @@ pub fn process_instruction<'a>(
         MetadataInstruction::SetTokenStandard => {
             msg!("Instruction: Set Token Standard");
             set_token_standard(program_id, accounts)
+        }
+        MetadataInstruction::BubblegumSetCollectionSize(args) => {
+            msg!("Instruction: Bubblegum Program Set Collection Size");
+            bubblegum_set_collection_size(program_id, accounts, args)
         }
     }
 }
@@ -831,11 +836,11 @@ pub fn verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let collection_metadata = Metadata::from_account_info(collection_info)?;
 
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_metadata,
         collection_mint,
         edition_account_info,
@@ -904,7 +909,7 @@ pub fn verify_sized_collection_item(
     }
 
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_metadata,
         collection_mint,
         edition_account_info,
@@ -956,11 +961,11 @@ pub fn unverify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) -> Pro
     assert_owned_by(collection_mint, &spl_token::id())?;
     assert_owned_by(edition_account_info, program_id)?;
 
-    let mut metadata = Metadata::from_account_info(metadata_info)?;
+    let mut metadata: Metadata = Metadata::from_account_info(metadata_info)?;
     let collection_data = Metadata::from_account_info(collection_info)?;
 
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_data,
         collection_mint,
         edition_account_info,
@@ -1029,7 +1034,7 @@ pub fn unverify_sized_collection_item(
     }
 
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_metadata,
         collection_mint,
         edition_account_info,
@@ -1484,7 +1489,7 @@ pub fn set_and_verify_collection(program_id: &Pubkey, accounts: &[AccountInfo]) 
         verified: true,
     });
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_data,
         collection_mint,
         edition_account_info,
@@ -1558,7 +1563,7 @@ pub fn set_and_verify_sized_collection_item(
         verified: true,
     });
     assert_collection_verify_is_valid(
-        &metadata,
+        &metadata.collection,
         &collection_metadata,
         collection_mint,
         edition_account_info,
@@ -1888,6 +1893,68 @@ pub fn set_collection_size(
     } else {
         metadata.collection_details = Some(CollectionDetails::V1 { size });
     }
+
+    clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)?;
+    Ok(())
+}
+
+pub fn bubblegum_set_collection_size(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: SetCollectionSizeArgs,
+) -> ProgramResult {
+    let size = args.size;
+
+    let account_info_iter = &mut accounts.iter();
+
+    let parent_nft_metadata_account_info = next_account_info(account_info_iter)?;
+    let collection_update_authority_account_info = next_account_info(account_info_iter)?;
+    let collection_mint_account_info = next_account_info(account_info_iter)?;
+    let bubblegum_signer_info = next_account_info(account_info_iter)?;
+
+    let using_delegated_collection_authority = accounts.len() == 5;
+
+    // Bubblegum program not currently activated.
+    if !BUBBLEGUM_ACTIVATED {
+        return Err(MetadataError::InvalidOperation.into());
+    }
+
+    // This instruction can only be called by the Bubblegum program.
+    assert_owned_by(bubblegum_signer_info, &BUBBLEGUM_PROGRAM_ADDRESS)?;
+    assert_signer(bubblegum_signer_info)?;
+
+    // Owned by token-metadata program.
+    assert_owned_by(parent_nft_metadata_account_info, program_id)?;
+
+    // Mint owned by spl token program.
+    assert_owned_by(collection_mint_account_info, &spl_token::id())?;
+
+    let mut metadata: Metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
+
+    // Check that the update authority or delegate is a signer.
+    if !collection_update_authority_account_info.is_signer {
+        return Err(MetadataError::UpdateAuthorityIsNotSigner.into());
+    }
+
+    if using_delegated_collection_authority {
+        let collection_authority_record = next_account_info(account_info_iter)?;
+        assert_has_collection_authority(
+            collection_update_authority_account_info,
+            &metadata,
+            collection_mint_account_info.key,
+            Some(collection_authority_record),
+        )?;
+    } else {
+        assert_has_collection_authority(
+            collection_update_authority_account_info,
+            &metadata,
+            collection_mint_account_info.key,
+            None,
+        )?;
+    }
+
+    // The Bubblegum program has authority to manage the collection details.
+    metadata.collection_details = Some(CollectionDetails::V1 { size });
 
     clean_write_metadata(&mut metadata, parent_nft_metadata_account_info)?;
     Ok(())

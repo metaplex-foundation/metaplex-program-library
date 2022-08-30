@@ -458,6 +458,170 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * NumericalOverflowError: 'NumericalOverflowError'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class NumericalOverflowErrorError extends Error {
+  readonly code: number = 0x1783
+  readonly name: string = 'NumericalOverflowError'
+  constructor() {
+    super('NumericalOverflowError')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, NumericalOverflowErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1783, () => new NumericalOverflowErrorError())
+createErrorFromNameLookup.set(
+  'NumericalOverflowError',
+  () => new NumericalOverflowErrorError()
+)
+
+/**
+ * IncorrectOwner: 'Incorrect account owner'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class IncorrectOwnerError extends Error {
+  readonly code: number = 0x1784
+  readonly name: string = 'IncorrectOwner'
+  constructor() {
+    super('Incorrect account owner')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, IncorrectOwnerError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1784, () => new IncorrectOwnerError())
+createErrorFromNameLookup.set('IncorrectOwner', () => new IncorrectOwnerError())
+
+/**
+ * CollectionCannotBeVerifiedInThisInstruction: 'Cannot Verify Collection in this Instruction'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionCannotBeVerifiedInThisInstructionError extends Error {
+  readonly code: number = 0x1785
+  readonly name: string = 'CollectionCannotBeVerifiedInThisInstruction'
+  constructor() {
+    super('Cannot Verify Collection in this Instruction')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(
+        this,
+        CollectionCannotBeVerifiedInThisInstructionError
+      )
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(
+  0x1785,
+  () => new CollectionCannotBeVerifiedInThisInstructionError()
+)
+createErrorFromNameLookup.set(
+  'CollectionCannotBeVerifiedInThisInstruction',
+  () => new CollectionCannotBeVerifiedInThisInstructionError()
+)
+
+/**
+ * CollectionNotFound: 'Collection Not Found on Metadata'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class CollectionNotFoundError extends Error {
+  readonly code: number = 0x1786
+  readonly name: string = 'CollectionNotFound'
+  constructor() {
+    super('Collection Not Found on Metadata')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, CollectionNotFoundError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1786, () => new CollectionNotFoundError())
+createErrorFromNameLookup.set(
+  'CollectionNotFound',
+  () => new CollectionNotFoundError()
+)
+
+/**
+ * AlreadyVerified: 'Collection item is already verified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyVerifiedError extends Error {
+  readonly code: number = 0x1787
+  readonly name: string = 'AlreadyVerified'
+  constructor() {
+    super('Collection item is already verified.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyVerifiedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1787, () => new AlreadyVerifiedError())
+createErrorFromNameLookup.set(
+  'AlreadyVerified',
+  () => new AlreadyVerifiedError()
+)
+
+/**
+ * AlreadyUnverified: 'Collection item is already unverified.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AlreadyUnverifiedError extends Error {
+  readonly code: number = 0x1788
+  readonly name: string = 'AlreadyUnverified'
+  constructor() {
+    super('Collection item is already unverified.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AlreadyUnverifiedError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1788, () => new AlreadyUnverifiedError())
+createErrorFromNameLookup.set(
+  'AlreadyUnverified',
+  () => new AlreadyUnverifiedError()
+)
+
+/**
+ * UpdateAuthorityIncorrect: 'Incorrect leaf metadata update authority.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class UpdateAuthorityIncorrectError extends Error {
+  readonly code: number = 0x1789
+  readonly name: string = 'UpdateAuthorityIncorrect'
+  constructor() {
+    super('Incorrect leaf metadata update authority.')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, UpdateAuthorityIncorrectError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new UpdateAuthorityIncorrectError())
+createErrorFromNameLookup.set(
+  'UpdateAuthorityIncorrect',
+  () => new UpdateAuthorityIncorrectError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated
