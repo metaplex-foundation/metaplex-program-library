@@ -11,12 +11,15 @@ use crate::{
     },
     deser::clean_write_metadata,
     error::MetadataError,
-    instruction::{CreateEscrowAccountArgs, MetadataInstruction, SetCollectionSizeArgs},
+    instruction::{
+        CloseEscrowAccountArgs, CreateEscrowAccountArgs, MetadataInstruction,
+        SetCollectionSizeArgs, TransferIntoEscrowArgs, TransferOutOfEscrowArgs,
+    },
     solana_program::program_memory::sol_memset,
     state::{
         Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
-        MasterEditionV2, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenStandard,
-        UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
+        MasterEditionV2, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenOwnedEscrowAccount,
+        TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
         COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, ESCROW_PREFIX, MAX_MASTER_EDITION_LEN,
         MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
@@ -42,6 +45,7 @@ use solana_program::{
     msg,
     program::{invoke, invoke_signed},
     program_error::ProgramError,
+    program_pack::Pack,
     pubkey::Pubkey,
 };
 use spl_token::{
@@ -238,6 +242,18 @@ pub fn process_instruction<'a>(
         MetadataInstruction::CreateEscrowAccount(args) => {
             msg!("Instruction: Create Escrow Account");
             create_escrow_account(program_id, accounts, args)
+        }
+        MetadataInstruction::CloseEscrowAccount(args) => {
+            msg!("Instruction: Close Escrow Account");
+            close_escrow_account(program_id, accounts, args)
+        }
+        MetadataInstruction::TransferIntoEscrow(args) => {
+            msg!("Instruction: Transfer Into Escrow");
+            transfer_into_escrow(program_id, accounts, args)
+        }
+        MetadataInstruction::TransferOutOfEscrow(args) => {
+            msg!("Instruction: Transfer Out Of Escrow");
+            transfer_out_of_escrow(program_id, accounts, args)
         }
     }
 }
@@ -1991,7 +2007,255 @@ pub fn create_escrow_account(
     create_or_allocate_account_raw(
         *program_id,
         escrow_account_info,
-        &rent_info,
+        rent_info,
+        system_account_info,
+        payer_account_info,
+        toe.len(),
+        escrow_authority_seeds,
+    )?;
+
+    if args.constraint_model.is_some() {
+        if *payer_account_info.key == metadata.update_authority {
+            toe.model = args.constraint_model;
+        } else {
+            return Err(MetadataError::MustBeUpdateAuthToSetModel.into());
+        }
+    }
+
+    Ok(())
+}
+
+pub fn close_escrow_account(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    _args: CloseEscrowAccountArgs,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let escrow_account_info = next_account_info(account_info_iter)?;
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let mint_account_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
+    let payer_account_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
+    // Owned by token-metadata program.
+    assert_owned_by(metadata_account_info, program_id)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
+
+    // Mint account passed in must be the mint of the metadata account passed in.
+    if &metadata.mint != mint_account_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    assert!(
+        check_token_standard(mint_account_info, Some(edition_account_info))?
+            == TokenStandard::NonFungible,
+    );
+
+    let bump_seed = assert_derivation(
+        program_id,
+        escrow_account_info,
+        &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_account_info.key.as_ref(),
+            ESCROW_PREFIX.as_bytes(),
+        ],
+    )?;
+
+    //assert_update_authority_is_correct(&metadata, update_authority_info)?;
+
+    let escrow_authority_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        metadata.mint.as_ref(),
+        ESCROW_PREFIX.as_bytes(),
+        &[bump_seed],
+    ];
+
+    let mut toe = TokenOwnedEscrow::default();
+
+    // let mut edition = MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info)?;
+
+    // edition.key = Key::MasterEditionV2;
+    // edition.supply = 0;
+    // edition.max_supply = max_supply;
+    // edition.serialize(&mut *edition_account_info.try_borrow_mut_data()?)?;
+
+    Ok(())
+}
+
+pub fn transfer_into_escrow(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: TransferIntoEscrowArgs,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let escrow_info = next_account_info(account_info_iter)?;
+    let payer_info = next_account_info(account_info_iter)?;
+    let attribute_mint_info = next_account_info(account_info_iter)?;
+    let attribute_src_info = next_account_info(account_info_iter)?;
+    let attribute_dst_info = next_account_info(account_info_iter)?;
+    let attribute_metadata_info = next_account_info(account_info_iter)?;
+    let escrow_mint_info = next_account_info(account_info_iter)?;
+    let escrow_account_info = next_account_info(account_info_iter)?;
+    let constraint_model_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+    let ata_program_info = next_account_info(account_info_iter)?;
+    let token_program_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
+    // Owned by token-metadata program.
+    assert_owned_by(attribute_metadata_info, program_id)?;
+    let attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
+
+    msg!("Asserting Derivation");
+    let bump_seed = assert_derivation(
+        program_id,
+        escrow_info,
+        &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            escrow_mint_info.key.as_ref(),
+            ESCROW_PREFIX.as_bytes(),
+        ],
+    )?;
+    msg!("Derivation Correct");
+
+    //assert_update_authority_is_correct(&metadata, update_authority_info)?;
+
+    let escrow_authority_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        escrow_mint_info.key.as_ref(),
+        ESCROW_PREFIX.as_bytes(),
+        &[bump_seed],
+    ];
+
+    assert_signer(payer_info)?;
+
+    //msg!("Creating ATA: {:#?}", attribute_dst_info.key);
+
+    // Allocate the escrow accounts new ATA.
+    let create_escrow_ata_ix =
+        spl_associated_token_account::instruction::create_associated_token_account(
+            payer_info.key,
+            escrow_info.key,
+            attribute_mint_info.key,
+        );
+
+    invoke(
+        &create_escrow_ata_ix,
+        &[
+            payer_info.clone(),
+            attribute_dst_info.clone(),
+            escrow_info.clone(),
+            attribute_mint_info.clone(),
+            system_account_info.clone(),
+            token_program_info.clone(),
+            ata_program_info.clone(),
+            rent_info.clone(),
+        ],
+        //&[escrow_authority_seeds],
+    )?;
+
+    // Deserialize the token accounts.
+    let attribute_src = spl_token::state::Account::unpack(&attribute_src_info.data.borrow())?;
+    assert!(attribute_src.mint == *attribute_mint_info.key);
+    assert!(attribute_src.delegate.is_none());
+    assert!(attribute_src.amount >= args.amount);
+    msg!("\n{:#?}\n{:#?}", attribute_src_info.key, attribute_src);
+    let attribute_dst = spl_token::state::Account::unpack(&attribute_dst_info.data.borrow())?;
+    assert!(attribute_dst.mint == *attribute_mint_info.key);
+    assert!(attribute_dst.delegate.is_none());
+    msg!("\n{:#?}\n{:#?}", attribute_dst_info.key, attribute_dst);
+    let escrow_account = spl_token::state::Account::unpack(&escrow_account_info.data.borrow())?;
+    msg!("\n{:#?}\n{:#?}", escrow_account_info.key, escrow_account);
+
+    assert!(attribute_src.owner == escrow_account.owner);
+
+    let transfer_ix = spl_token::instruction::transfer(
+        &spl_token::id(),
+        attribute_src_info.key,
+        attribute_dst_info.key,
+        payer_info.key,
+        &[payer_info.key],
+        args.amount,
+    )
+    .unwrap();
+
+    // let escrow_info_clone = escrow_info.clone();
+    // let buf = &escrow_info_clone.data.borrow_mut();
+    //let mut buf = escrow_info.data.borrow().as_ref();
+    // let mut toe = TokenOwnedEscrow::deserialize(&mut buf.as_ref())?;
+
+    let mut toe: TokenOwnedEscrow = TokenOwnedEscrow::from_account_info(escrow_info)?;
+
+    toe.tokens.push(*attribute_mint_info.key);
+    toe.serialize(&mut *escrow_info.try_borrow_mut_data()?)?;
+
+    Ok(())
+}
+
+pub fn transfer_out_of_escrow(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: TransferOutOfEscrowArgs,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let escrow_account_info = next_account_info(account_info_iter)?;
+    let metadata_account_info = next_account_info(account_info_iter)?;
+    let mint_account_info = next_account_info(account_info_iter)?;
+    let edition_account_info = next_account_info(account_info_iter)?;
+    let payer_account_info = next_account_info(account_info_iter)?;
+    let system_account_info = next_account_info(account_info_iter)?;
+    let rent_info = next_account_info(account_info_iter)?;
+
+    // Owned by token-metadata program.
+    assert_owned_by(metadata_account_info, program_id)?;
+    let metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
+
+    // Mint account passed in must be the mint of the metadata account passed in.
+    if &metadata.mint != mint_account_info.key {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
+    assert!(
+        check_token_standard(mint_account_info, Some(edition_account_info))?
+            == TokenStandard::NonFungible,
+    );
+
+    let bump_seed = assert_derivation(
+        program_id,
+        escrow_account_info,
+        &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            mint_account_info.key.as_ref(),
+            ESCROW_PREFIX.as_bytes(),
+        ],
+    )?;
+
+    //assert_update_authority_is_correct(&metadata, update_authority_info)?;
+
+    let escrow_authority_seeds = &[
+        PREFIX.as_bytes(),
+        program_id.as_ref(),
+        metadata.mint.as_ref(),
+        ESCROW_PREFIX.as_bytes(),
+        &[bump_seed],
+    ];
+
+    let mut toe = TokenOwnedEscrow::default();
+
+    create_or_allocate_account_raw(
+        *program_id,
+        escrow_account_info,
+        rent_info,
         system_account_info,
         payer_account_info,
         toe.len(),

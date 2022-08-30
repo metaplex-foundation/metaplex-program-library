@@ -125,6 +125,25 @@ pub struct CreateEscrowAccountArgs {
     pub constraint_model: Option<Pubkey>,
 }
 
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct CloseEscrowAccountArgs {}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct TransferIntoEscrowArgs {
+    pub amount: u64,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct TransferOutOfEscrowArgs {
+    pub amount: u64,
+}
+
 /// Instructions supported by the Metadata program.
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, Clone, ShankInstruction)]
@@ -533,6 +552,42 @@ pub enum MetadataInstruction {
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
     CreateEscrowAccount(CreateEscrowAccountArgs),
+
+    /// Close the escrow account.
+    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(1, name="metadata", desc="Metadata account")]
+    #[account(2, name="mint", desc="Mint account")]
+    #[account(3, name="edition", desc="Edition account")]
+    #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="rent", desc="Rent info")]
+    CloseEscrowAccount(CloseEscrowAccountArgs),
+
+    /// Transfer tokens into the escrow account.
+    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
+    #[account(3, writable, name="attribute_src", desc="Token account source for the new attribute")]
+    #[account(4, writable, name="attribute_dst", desc="Token account, owned by TM, destination for the new attribute")]
+    #[account(5, name="attribute_metadata", desc="Metadata account of the new attribute")]
+    #[account(6, name="escrow_mint", desc="Mint account that the escrow is attached")]
+    #[account(7, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
+    #[account(8, name="constraint_model", desc="The constraint model to check against")]
+    #[account(9, name="system_program", desc="System program")]
+    #[account(10, name="ata_program", desc="Associated Token program")]
+    #[account(11, name="token_program", desc="Token program")]
+    #[account(12, name="rent", desc="Rent info")]
+    TransferIntoEscrow(TransferIntoEscrowArgs),
+
+    /// Create an escrow account to hold tokens.
+    #[account(0, writable, name="escrow", desc="Escrow account")]
+    #[account(1, name="metadata", desc="Metadata account")]
+    #[account(2, name="mint", desc="Mint account")]
+    #[account(3, name="edition", desc="Edition account")]
+    #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(5, name="system_program", desc="System program")]
+    #[account(6, name="rent", desc="Rent info")]
+    TransferOutOfEscrow(TransferOutOfEscrowArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1710,9 +1765,113 @@ pub fn create_escrow_account(
     mint_account: Pubkey,
     edition_account: Pubkey,
     payer_account: Pubkey,
-    system_account: Pubkey,
-    rent: Pubkey,
+    // system_account: Pubkey,
+    // rent: Pubkey,
     constraint_model: Option<Pubkey>,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(escrow_account, false),
+        AccountMeta::new_readonly(metadata_account, false),
+        AccountMeta::new_readonly(mint_account, false),
+        AccountMeta::new_readonly(edition_account, false),
+        AccountMeta::new(payer_account, true),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+    ];
+    let data =
+        MetadataInstruction::CreateEscrowAccount(CreateEscrowAccountArgs { constraint_model })
+            .try_to_vec()
+            .unwrap();
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
+    }
+}
+
+pub fn close_escrow_account(
+    program_id: Pubkey,
+    escrow_account: Pubkey,
+    metadata_account: Pubkey,
+    mint_account: Pubkey,
+    edition_account: Pubkey,
+    payer_account: Pubkey,
+    // system_account: Pubkey,
+    // rent: Pubkey,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(escrow_account, false),
+        AccountMeta::new_readonly(metadata_account, false),
+        AccountMeta::new_readonly(mint_account, false),
+        AccountMeta::new_readonly(edition_account, false),
+        AccountMeta::new(payer_account, true),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+    ];
+    let data = MetadataInstruction::CloseEscrowAccount(CloseEscrowAccountArgs {})
+        .try_to_vec()
+        .unwrap();
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
+    }
+}
+
+pub fn transfer_into_escrow(
+    program_id: Pubkey,
+    escrow: Pubkey,
+    payer: Pubkey,
+    attribute_mint: Pubkey,
+    attribute_src: Pubkey,
+    attribute_dst: Pubkey,
+    attribute_metadata: Pubkey,
+    escrow_mint: Pubkey,
+    escrow_account: Pubkey,
+    constraint_model: Pubkey,
+    // ata_program: Pubkey,
+    // token_program: Pubkey,
+    // rent: Pubkey,
+    amount: u64,
+) -> Instruction {
+    let accounts = vec![
+        AccountMeta::new(escrow, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(attribute_mint, false),
+        AccountMeta::new(attribute_src, false),
+        AccountMeta::new(attribute_dst, false),
+        AccountMeta::new_readonly(attribute_metadata, false),
+        AccountMeta::new_readonly(escrow_mint, false),
+        AccountMeta::new_readonly(escrow_account, false),
+        AccountMeta::new_readonly(constraint_model, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+    ];
+    let data = MetadataInstruction::TransferIntoEscrow(TransferIntoEscrowArgs { amount })
+        .try_to_vec()
+        .unwrap();
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
+    }
+}
+
+pub fn transfer_out_of_escrow(
+    program_id: Pubkey,
+    escrow_account: Pubkey,
+    metadata_account: Pubkey,
+    mint_account: Pubkey,
+    edition_account: Pubkey,
+    payer_account: Pubkey,
+    // system_account: Pubkey,
+    // rent: Pubkey,
+    amount: u64,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(escrow_account, false),
@@ -1720,13 +1879,12 @@ pub fn create_escrow_account(
         AccountMeta::new(mint_account, false),
         AccountMeta::new(edition_account, false),
         AccountMeta::new(payer_account, true),
-        AccountMeta::new(system_account, false),
-        AccountMeta::new(rent, false),
+        AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
     ];
-    let data =
-        MetadataInstruction::CreateEscrowAccount(CreateEscrowAccountArgs { constraint_model })
-            .try_to_vec()
-            .unwrap();
+    let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount })
+        .try_to_vec()
+        .unwrap();
 
     Instruction {
         program_id,

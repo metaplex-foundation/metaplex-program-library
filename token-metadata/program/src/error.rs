@@ -456,6 +456,10 @@ pub enum MetadataError {
     /// 115 - Item is already unverified.
     #[error("Item is already unverified.")]
     AlreadyUnverified,
+
+    /// 116 - Must be Update Authority to set the Constraint Model.
+    #[error("Must be Update Authority to set the Constraint Model.")]
+    MustBeUpdateAuthToSetModel,
 }
 
 impl PrintProgramError for MetadataError {
