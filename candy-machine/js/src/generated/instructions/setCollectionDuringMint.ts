@@ -29,7 +29,7 @@ export const setCollectionDuringMintStruct = new beet.BeetArgsStruct<{
  * @property [] tokenMetadataProgram
  * @property [] instructions
  * @property [] collectionMint
- * @property [] collectionMetadata
+ * @property [_writable_] collectionMetadata
  * @property [] collectionMasterEdition
  * @property [] authority
  * @property [] collectionAuthorityRecord
@@ -106,7 +106,7 @@ export function createSetCollectionDuringMintInstruction(
     },
     {
       pubkey: accounts.collectionMetadata,
-      isWritable: false,
+      isWritable: true,
       isSigner: false,
     },
     {
