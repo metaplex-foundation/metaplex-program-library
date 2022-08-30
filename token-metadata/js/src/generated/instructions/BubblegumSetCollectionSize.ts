@@ -39,7 +39,7 @@ export const BubblegumSetCollectionSizeStruct = new beet.BeetArgsStruct<
  * @property [_writable_] collectionMetadata Collection Metadata account
  * @property [_writable_, **signer**] collectionAuthority Collection Update authority
  * @property [] collectionMint Mint of the Collection
- * @property [**signer**] bubblegumProgramAuthority Signing PDA of Bubblegum program
+ * @property [**signer**] bubblegumSigner Signing PDA of Bubblegum program
  * @property [] collectionAuthorityRecord (optional) Collection Authority Record PDA
  * @category Instructions
  * @category BubblegumSetCollectionSize
@@ -49,11 +49,11 @@ export type BubblegumSetCollectionSizeInstructionAccounts = {
   collectionMetadata: web3.PublicKey;
   collectionAuthority: web3.PublicKey;
   collectionMint: web3.PublicKey;
-  bubblegumProgramAuthority: web3.PublicKey;
+  bubblegumSigner: web3.PublicKey;
   collectionAuthorityRecord?: web3.PublicKey;
 };
 
-export const bubblegumSetCollectionSizeInstructionDiscriminator = 35;
+export const bubblegumSetCollectionSizeInstructionDiscriminator = 36;
 
 /**
  * Creates a _BubblegumSetCollectionSize_ instruction.
@@ -91,7 +91,7 @@ export function createBubblegumSetCollectionSizeInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.bubblegumProgramAuthority,
+      pubkey: accounts.bubblegumSigner,
       isWritable: false,
       isSigner: true,
     },

@@ -1963,54 +1963,6 @@
       }
     },
     {
-      "name": "BubblegumSetCollectionSize",
-      "accounts": [
-        {
-          "name": "collectionMetadata",
-          "isMut": true,
-          "isSigner": false,
-          "desc": "Collection Metadata account"
-        },
-        {
-          "name": "collectionAuthority",
-          "isMut": true,
-          "isSigner": true,
-          "desc": "Collection Update authority"
-        },
-        {
-          "name": "collectionMint",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Mint of the Collection"
-        },
-        {
-          "name": "bubblegumProgramAuthority",
-          "isMut": false,
-          "isSigner": true,
-          "desc": "Signing PDA of Bubblegum program"
-        },
-        {
-          "name": "collectionAuthorityRecord",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "Collection Authority Record PDA",
-          "optional": true
-        }
-      ],
-      "args": [
-        {
-          "name": "setCollectionSizeArgs",
-          "type": {
-            "defined": "SetCollectionSizeArgs"
-          }
-        }
-      ],
-      "discriminant": {
-        "type": "u8",
-        "value": 35
-      }
-    },
-    {
       "name": "SetTokenStandard",
       "accounts": [
         {
@@ -2040,6 +1992,54 @@
         }
       ],
       "args": [],
+      "discriminant": {
+        "type": "u8",
+        "value": 35
+      }
+    },
+    {
+      "name": "BubblegumSetCollectionSize",
+      "accounts": [
+        {
+          "name": "collectionMetadata",
+          "isMut": true,
+          "isSigner": false,
+          "desc": "Collection Metadata account"
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": true,
+          "isSigner": true,
+          "desc": "Collection Update authority"
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Mint of the Collection"
+        },
+        {
+          "name": "bubblegumSigner",
+          "isMut": false,
+          "isSigner": true,
+          "desc": "Signing PDA of Bubblegum program"
+        },
+        {
+          "name": "collectionAuthorityRecord",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "Collection Authority Record PDA",
+          "optional": true
+        }
+      ],
+      "args": [
+        {
+          "name": "setCollectionSizeArgs",
+          "type": {
+            "defined": "SetCollectionSizeArgs"
+          }
+        }
+      ],
       "discriminant": {
         "type": "u8",
         "value": 36

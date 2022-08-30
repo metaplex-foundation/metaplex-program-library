@@ -35,7 +35,7 @@ export type SetTokenStandardInstructionAccounts = {
   edition?: web3.PublicKey;
 };
 
-export const setTokenStandardInstructionDiscriminator = 36;
+export const setTokenStandardInstructionDiscriminator = 35;
 
 /**
  * Creates a _SetTokenStandard_ instruction.

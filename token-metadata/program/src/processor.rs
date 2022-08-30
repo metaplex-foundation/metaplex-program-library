@@ -231,13 +231,13 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Set Collection Size");
             set_collection_size(program_id, accounts, args)
         }
-        MetadataInstruction::BubblegumSetCollectionSize(args) => {
-            msg!("Instruction: Bubblegum Program Set Collection Size");
-            set_collection_size(program_id, accounts, args)
-        }
         MetadataInstruction::SetTokenStandard => {
             msg!("Instruction: Set Token Standard");
             set_token_standard(program_id, accounts)
+        }
+        MetadataInstruction::BubblegumSetCollectionSize(args) => {
+            msg!("Instruction: Bubblegum Program Set Collection Size");
+            bubblegum_set_collection_size(program_id, accounts, args)
         }
     }
 }
