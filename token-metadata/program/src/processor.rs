@@ -1854,7 +1854,11 @@ pub fn set_collection_size(
 
     // Owned by token-metadata program.
     assert_owned_by(parent_nft_metadata_account_info, program_id)?;
-    let mut metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
+
+    // Mint owned by spl token program.
+    assert_owned_by(collection_mint_account_info, &spl_token::id())?;
+
+    let mut metadata: Metadata = Metadata::from_account_info(parent_nft_metadata_account_info)?;
 
     // Check that the update authority or delegate is a signer.
     if !collection_update_authority_account_info.is_signer {
