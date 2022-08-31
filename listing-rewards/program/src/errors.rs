@@ -41,4 +41,16 @@ pub enum ListingRewardsError {
     // 6009
     #[msg("The rewardable collection is already created/active")]
     RewardableCollectionAlreadyActive,
+
+    // 6010
+    #[msg("Math numerical overflow")]
+    NumericalOverflowError,
+
+    // 6011
+    #[msg("The mints do not match")]
+    MintMismatch,
+
+    // 6012
+    #[msg("Listing and offer prices do not match")]
+    PriceMismatch,
 }

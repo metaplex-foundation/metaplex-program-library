@@ -78,7 +78,7 @@ pub struct CloseOffer<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = close_offer_params.escrow_payment_bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
@@ -111,8 +111,8 @@ pub struct CloseOffer<'info> {
             auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
         ],
-        seeds::program=auction_house_program,
-        bump=auction_house.bump,
+        seeds::program = auction_house_program,
+        bump =auction_house.bump,
         has_one=authority,
         has_one=auction_house_fee_account
     )]
@@ -126,7 +126,7 @@ pub struct CloseOffer<'info> {
             auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -144,7 +144,7 @@ pub struct CloseOffer<'info> {
             auction_house.key().as_ref(),
             reward_center.key().as_ref()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = auction_house.auctioneer_pda_bump
     )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,
@@ -236,17 +236,17 @@ pub fn handler(
         program_id: auction_house_program.key(),
         data: close_offer_params.data(),
         accounts: close_offer_ctx_accounts
-        .to_account_metas(None)
-        .into_iter()
-        .zip(close_offer_ctx_accounts.to_account_infos())
-        .map(|mut pair| {
-            pair.0.is_signer = pair.1.is_signer;
-            if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                pair.0.is_signer = true;
-            }
-            pair.0
-        })
-        .collect()
+            .to_account_metas(None)
+            .into_iter()
+            .zip(close_offer_ctx_accounts.to_account_infos())
+            .map(|mut pair| {
+                pair.0.is_signer = pair.1.is_signer;
+                if pair.0.pubkey == ctx.accounts.reward_center.key() {
+                    pair.0.is_signer = true;
+                }
+                pair.0
+            })
+            .collect(),
     };
 
     invoke_signed(

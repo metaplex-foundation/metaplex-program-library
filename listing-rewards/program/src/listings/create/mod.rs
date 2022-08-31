@@ -50,7 +50,13 @@ pub struct CreateListing<'info> {
     pub listing: Account<'info, Listing>,
 
     /// The auctioneer program PDA running this auction.
-    #[account(seeds = [REWARD_CENTER.as_bytes(), auction_house.key().as_ref()], bump = reward_center.bump)]
+    #[account(
+        seeds = [
+            REWARD_CENTER.as_bytes(), 
+            auction_house.key().as_ref()
+        ], 
+        bump = reward_center.bump
+    )]
     pub reward_center: Box<Account<'info, RewardCenter>>,
 
     /// The collection eligable for rewards
@@ -251,17 +257,17 @@ pub fn handler(
         program_id: auction_house_program.key(),
         data: create_listing_params.data(),
         accounts: create_listing_ctx_accounts
-        .to_account_metas(None)
-        .into_iter()
-        .zip(create_listing_ctx_accounts.to_account_infos())
-        .map(|mut pair| {
-            pair.0.is_signer = pair.1.is_signer;
-            if pair.0.pubkey == ctx.accounts.reward_center.key() {
-                pair.0.is_signer = true;
-            }
-            pair.0
-        })
-        .collect()
+            .to_account_metas(None)
+            .into_iter()
+            .zip(create_listing_ctx_accounts.to_account_infos())
+            .map(|mut pair| {
+                pair.0.is_signer = pair.1.is_signer;
+                if pair.0.pubkey == ctx.accounts.reward_center.key() {
+                    pair.0.is_signer = true;
+                }
+                pair.0
+            })
+            .collect(),
     };
 
     invoke_signed(

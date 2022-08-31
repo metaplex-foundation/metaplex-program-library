@@ -76,7 +76,7 @@ pub struct CreateOffer<'info> {
             auction_house.key().as_ref(),
             wallet.key().as_ref()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = create_offer_params.escrow_payment_bump
     )]
     pub escrow_payment_account: UncheckedAccount<'info>,
@@ -102,7 +102,7 @@ pub struct CreateOffer<'info> {
             auction_house.creator.as_ref(),
             auction_house.treasury_mint.as_ref()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = auction_house.bump,
         has_one = authority,
         has_one = treasury_mint,
@@ -118,7 +118,7 @@ pub struct CreateOffer<'info> {
             auction_house.key().as_ref(),
             FEE_PAYER.as_bytes()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = auction_house.fee_payer_bump
     )]
     pub auction_house_fee_account: UncheckedAccount<'info>,
@@ -135,7 +135,7 @@ pub struct CreateOffer<'info> {
             create_offer_params.buyer_price.to_le_bytes().as_ref(),
             create_offer_params.token_size.to_le_bytes().as_ref()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = create_offer_params.trade_state_bump
     )]
     buyer_trade_state: UncheckedAccount<'info>,
@@ -148,7 +148,7 @@ pub struct CreateOffer<'info> {
             auction_house.key().as_ref(),
             reward_center.key().as_ref()
         ],
-        seeds::program=auction_house_program,
+        seeds::program = auction_house_program,
         bump = auction_house.auctioneer_pda_bump
     )]
     pub ah_auctioneer_pda: UncheckedAccount<'info>,

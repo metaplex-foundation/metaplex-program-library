@@ -1,3 +1,5 @@
+use anchor_lang::prelude::Pubkey;
+
 pub struct CreateListingData {
     pub price: u64,
     pub token_size: u64,
@@ -18,4 +20,10 @@ pub struct CreateOfferData {
 pub struct CloseOfferData {
     pub buyer_price: u64,
     pub token_size: u64,
+}
+
+pub struct ExecuteSaleData {
+    pub price: u64,
+    pub token_size: u64,
+    pub reward_mint: Pubkey,
 }

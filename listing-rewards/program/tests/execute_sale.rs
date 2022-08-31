@@ -7,7 +7,8 @@ use listing_rewards_test::fixtures::metadata;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use mpl_auction_house::{
     pda::{
-        find_auction_house_address, find_auctioneer_trade_state_address, find_trade_state_address,
+        find_auction_house_address, find_auction_house_fee_account_address,
+        find_auctioneer_trade_state_address, find_trade_state_address,
     },
     AuthorityScope,
 };
@@ -17,8 +18,8 @@ use mpl_listing_rewards::{
 };
 
 use mpl_listing_rewards_sdk::{
-    accounts::{CloseOfferAccounts, *},
-    args::{CloseOfferData, *},
+    accounts::{ExecuteSaleAccounts, *},
+    args::{ExecuteSaleData, *},
     *,
 };
 
@@ -29,7 +30,7 @@ use std::str::FromStr;
 
 use mpl_token_metadata::state::Collection;
 
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
     instruction::{initialize_mint, mint_to_checked},
     native_mint,
@@ -37,7 +38,7 @@ use spl_token::{
 };
 
 #[tokio::test]
-async fn close_offer_success() {
+async fn execute_sale_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -312,32 +313,59 @@ async fn close_offer_success() {
 
     assert!(tx_response.is_ok());
 
-    // CLOSE OFFER TEST
+    context.warp_to_slot(120 * 400).unwrap();
 
-    let close_offer_accounts = CloseOfferAccounts {
-        wallet: *buyer_pubkey,
-        rewardable_collection,
-        treasury_mint: mint,
-        token_mint: metadata_mint_address,
-        token_account,
-        receipt_account: *buyer_pubkey,
-        metadata: metadata_address,
-        authority: wallet,
+    // EXECUTE SALE TEST
+
+    let auction_house_fee_account = &find_auction_house_fee_account_address(&auction_house).0;
+
+    airdrop(
+        &mut context,
+        auction_house_fee_account,
+        listing_rewards_test::ONE_SOL,
+    )
+    .await
+    .unwrap();
+
+    // Creating Associated Token accounts
+    let create_buyer_reward_token_ix =
+        create_associated_token_account(&wallet, &buyer_pubkey, &reward_mint_pubkey);
+
+    let create_seller_reward_token_ix =
+        create_associated_token_account(&wallet, &metadata_owner_address, &reward_mint_pubkey);
+
+    let buyer_token_account = get_associated_token_address(&buyer.pubkey(), &metadata_mint_address);
+
+    let execute_sale_accounts = ExecuteSaleAccounts {
         auction_house,
-        reward_center,
+        token_account,
+        rewardable_collection,
+        buyer: buyer.pubkey(),
+        seller: metadata_owner.pubkey(),
+        authority: wallet,
+        token_mint: metadata_mint_address,
+        treasury_mint: mint,
+        buyer_receipt_token_account: buyer_token_account,
+        seller_payment_receipt_account: metadata_owner.pubkey(),
+        metadata: metadata_address,
     };
 
-    let close_offer_params = CloseOfferData {
+    let execute_sale_params = ExecuteSaleData {
+        price: listing_rewards_test::ONE_SOL,
         token_size: 1,
-        buyer_price: listing_rewards_test::ONE_SOL,
+        reward_mint: reward_mint_pubkey,
     };
 
-    let close_offer_ix = close_offer(close_offer_accounts, close_offer_params);
+    let execute_sale_ix = execute_sale(execute_sale_accounts, execute_sale_params);
 
     let tx = Transaction::new_signed_with_payer(
-        &[close_offer_ix],
-        Some(buyer_pubkey),
-        &[&buyer],
+        &[
+            create_buyer_reward_token_ix,
+            create_seller_reward_token_ix,
+            execute_sale_ix,
+        ],
+        Some(&wallet),
+        &[&context.payer],
         context.last_blockhash,
     );
 

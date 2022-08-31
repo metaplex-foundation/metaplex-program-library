@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use crate::errors::ListingRewardsError;
+
 #[account]
 pub struct RewardableCollection {
     /// is Initialized
@@ -30,10 +32,10 @@ impl RewardableCollection {
 
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct ListingRewardRules {
-    /// time a listing must be up before is eligable for a rewards in seconds
-    pub warmup_seconds: i64,
-    /// number of tokens to reward for listing
-    pub reward_payout: u64,
+    // Basis Points to determine reward ratio for seller
+    pub seller_reward_payout_basis_points: u16,
+    // Payout Divider for determining reward distribution to seller/buyer
+    pub payout_divider: u16,
 }
 
 #[account]
@@ -57,8 +59,30 @@ impl RewardCenter {
         32 + // token_mint
         32 + // auction_house
         1 + 32 + // optional collection oracle
-        8 + 8 + // listing reward rules
+        2 + 2 + // listing reward rules
         1 // bump
+    }
+
+    // TODO: review the effects of decimals on the payouts. The math is clean when the currency token is the same as the reward token.
+    pub fn payouts(&self, listing_price: u64) -> Result<(u64, u64)> {
+        let total_token_payout = listing_price
+            .checked_div(self.listing_reward_rules.payout_divider.into())
+            .ok_or(ListingRewardsError::NumericalOverflowError)?
+            as u64;
+
+        let seller_share = self.listing_reward_rules.seller_reward_payout_basis_points;
+
+        let seller_payout = (seller_share as u128)
+            .checked_mul(total_token_payout as u128)
+            .ok_or(ListingRewardsError::NumericalOverflowError)?
+            .checked_div(10000)
+            .ok_or(ListingRewardsError::NumericalOverflowError)? as u64;
+
+        let buyer_payout = total_token_payout
+            .checked_sub(seller_payout)
+            .ok_or(ListingRewardsError::NumericalOverflowError)?;
+
+        return Ok((seller_payout, buyer_payout));
     }
 }
 
