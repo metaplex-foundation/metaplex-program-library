@@ -1,7 +1,7 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
     state::{
-        Collection, CollectionDetails, Creator, Data, DataV2, Uses, EDITION,
+        Collection, CollectionDetails, Creator, Data, DataV2, EscrowConstraint, Uses, EDITION,
         EDITION_MARKER_BIT_SIZE, PREFIX,
     },
 };
@@ -142,6 +142,14 @@ pub struct TransferIntoEscrowArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct TransferOutOfEscrowArgs {
     pub amount: u64,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub struct CreateEscrowConstraintsModelAccountArgs {
+    pub name: String,
+    pub constraints: Vec<EscrowConstraint>,
 }
 
 /// Instructions supported by the Metadata program.
@@ -588,6 +596,14 @@ pub enum MetadataInstruction {
     #[account(5, name="system_program", desc="System program")]
     #[account(6, name="rent", desc="Rent info")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
+
+    /// Create an constraints model to be used by one or many escrow accounts.
+    #[account(0, writable, name="escrow_constraints_model", desc="Constraints model account")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(2, name="update_authority", desc="Update authority of the constraints model")]
+    #[account(3, name="system_program", desc="System program")]
+    #[account(4, name="rent", desc="Rent info")]
+    CreateEscrowConstraintsModelAccount(CreateEscrowConstraintsModelAccountArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction

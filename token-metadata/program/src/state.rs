@@ -1,4 +1,4 @@
-use std::{io::ErrorKind, mem};
+use std::{collections::HashMap, io::ErrorKind, mem};
 
 use crate::{
     deser::meta_deser_unchecked,
@@ -979,3 +979,38 @@ impl TokenOwnedEscrow {
 }
 
 impl TokenOwnedEscrowAccount for TokenOwnedEscrow {}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Default)]
+pub struct EscrowConstraintsModel {
+    pub name: String,
+    pub constraints: Vec<EscrowConstraint>,
+    pub update_authority: Pubkey,
+    /// The number of Token Owned Escrow accounts that are using this model.
+    pub count: u64,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Default)]
+pub struct EscrowConstraint {
+    pub name: String,
+    pub token_limit: u64,
+    pub constraint_type: EscrowConstraintType,
+}
+
+#[repr(C)]
+#[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+pub enum EscrowConstraintType {
+    None,
+    Collection(Pubkey),
+    Tokens(HashMap<Pubkey, ()>),
+}
+
+impl Default for EscrowConstraintType {
+    fn default() -> Self {
+        EscrowConstraintType::None
+    }
+}

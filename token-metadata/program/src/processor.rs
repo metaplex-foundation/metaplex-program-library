@@ -12,16 +12,17 @@ use crate::{
     deser::clean_write_metadata,
     error::MetadataError,
     instruction::{
-        CloseEscrowAccountArgs, CreateEscrowAccountArgs, MetadataInstruction,
-        SetCollectionSizeArgs, TransferIntoEscrowArgs, TransferOutOfEscrowArgs,
+        CloseEscrowAccountArgs, CreateEscrowAccountArgs, CreateEscrowConstraintsModelAccountArgs,
+        MetadataInstruction, SetCollectionSizeArgs, TransferIntoEscrowArgs,
+        TransferOutOfEscrowArgs,
     },
     solana_program::program_memory::sol_memset,
     state::{
-        Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, Key, MasterEditionV1,
-        MasterEditionV2, Metadata, TokenMetadataAccount, TokenOwnedEscrow, TokenOwnedEscrowAccount,
-        TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN, COLLECTION_AUTHORITY,
-        COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, ESCROW_PREFIX, MAX_MASTER_EDITION_LEN,
-        MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
+        Collection, CollectionAuthorityRecord, CollectionDetails, DataV2, EscrowConstraintsModel,
+        Key, MasterEditionV1, MasterEditionV2, Metadata, TokenMetadataAccount, TokenOwnedEscrow,
+        TokenOwnedEscrowAccount, TokenStandard, UseAuthorityRecord, UseMethod, Uses, BURN,
+        COLLECTION_AUTHORITY, COLLECTION_AUTHORITY_RECORD_SIZE, EDITION, ESCROW_PREFIX,
+        MAX_MASTER_EDITION_LEN, MAX_METADATA_LEN, PREFIX, USER, USE_AUTHORITY_RECORD_SIZE,
     },
     utils::{
         assert_currently_holding, assert_data_valid, assert_delegated_tokens, assert_derivation,
@@ -254,6 +255,10 @@ pub fn process_instruction<'a>(
         MetadataInstruction::TransferOutOfEscrow(args) => {
             msg!("Instruction: Transfer Out Of Escrow");
             transfer_out_of_escrow(program_id, accounts, args)
+        }
+        MetadataInstruction::CreateEscrowConstraintsModelAccount(args) => {
+            msg!("Instruction: Create Escrow Constraints Model Account");
+            create_escrow_contstraints_model_account(program_id, accounts, args)
         }
     }
 }
@@ -2292,6 +2297,36 @@ pub fn transfer_out_of_escrow(
     // edition.supply = 0;
     // edition.max_supply = max_supply;
     // edition.serialize(&mut *edition_account_info.try_borrow_mut_data()?)?;
+
+    Ok(())
+}
+
+fn create_escrow_contstraints_model_account(
+    _program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    args: CreateEscrowConstraintsModelAccountArgs,
+) -> ProgramResult {
+    let account_info_iter = &mut accounts.iter();
+
+    let escrow_constraints_model_account = next_account_info(account_info_iter)?;
+    let payer_account = next_account_info(account_info_iter)?;
+    let update_authority = next_account_info(account_info_iter)?;
+    let system_program = next_account_info(account_info_iter)?;
+    let rent = next_account_info(account_info_iter)?;
+
+    todo!("figure out what the derivation path should be");
+    todo!("assert derivation path is correct");
+    todo!("create the account with system_program and set the payer.");
+
+    let escrow_constraints_model = EscrowConstraintsModel {
+        name: args.name,
+        update_authority: update_authority.key.to_owned(),
+        constraints: args.constraints,
+        count: 0,
+    };
+
+    escrow_constraints_model
+        .serialize(&mut *escrow_constraints_model_account.try_borrow_mut_data()?)?;
 
     Ok(())
 }
