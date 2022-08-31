@@ -924,7 +924,7 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
     Instruction {
         program_id,
         accounts,
-        data: MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(
+        data: MetadataInstruction::DeprecatedMintNewEditionFromMasterEditionViaVaultProxy(
             MintNewEditionFromMasterEditionViaTokenArgs { edition },
         )
         .try_to_vec()
