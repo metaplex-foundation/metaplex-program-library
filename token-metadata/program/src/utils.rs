@@ -523,7 +523,13 @@ pub fn calculate_supply_change<'a>(
             }
 
             if edition > me_supply {
-                new_supply = edition;
+                // Instead of using edition override to set the supply to the highest edition number minted,
+                // we increment this by one if the edition number is greater than the current supply.
+                // This allows users to mint out missing edition numbers that are less than the supply, but
+                // tracks the supply correctly once all missing editions are minted.
+                new_supply = me_supply
+                    .checked_add(1)
+                    .ok_or(MetadataError::NumericalOverflowError)?;
             } else {
                 new_supply = me_supply;
             }

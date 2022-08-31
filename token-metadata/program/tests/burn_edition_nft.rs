@@ -509,7 +509,7 @@ mod burn_edition_nft {
     }
 
     #[tokio::test]
-    pub async fn master_supply_is_decremented() {
+    pub async fn master_supplies_are_decremented() {
         let mut context = program_test().start_with_context().await;
 
         let original_nft = Metadata::new();
@@ -549,6 +549,7 @@ mod burn_edition_nft {
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
         assert!(master_edition_struct.supply == 1);
+        assert!(master_edition_struct.max_supply == Some(10));
 
         let second_print_edition = EditionMarker::new(&original_nft, &master_edition, 2);
         second_print_edition.create(&mut context).await.unwrap();
@@ -593,6 +594,7 @@ mod burn_edition_nft {
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
         assert!(master_edition_struct.supply == 1);
+        assert!(master_edition_struct.max_supply == Some(9));
 
         burn_edition(
             &mut context,
@@ -619,6 +621,7 @@ mod burn_edition_nft {
             ProgramMasterEdition::safe_deserialize(&master_edition_account.data).unwrap();
 
         assert!(master_edition_struct.supply == 0);
+        assert!(master_edition_struct.max_supply == Some(8));
     }
 
     #[tokio::test]
