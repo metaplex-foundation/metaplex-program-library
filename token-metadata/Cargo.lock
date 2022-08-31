@@ -1844,7 +1844,6 @@ version = "1.3.4"
 dependencies = [
  "arrayref",
  "borsh",
- "getrandom 0.2.7",
  "mpl-token-vault",
  "num-derive",
  "num-traits",

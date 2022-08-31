@@ -158,9 +158,9 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Convert Master Edition V1 to V2");
             process_convert_master_edition_v1_to_v2(program_id, accounts)
         }
-        MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(args) => {
-            msg!("Instruction: Mint New Edition from Master Edition Via Vault Proxy");
-            process_mint_new_edition_from_master_edition_via_vault_proxy(
+        MetadataInstruction::DeprecatedMintNewEditionFromMasterEditionViaVaultProxy(args) => {
+            msg!("Instruction: Deprecated Mint New Edition from Master Edition Via Vault Proxy, removed in 1.3.4");
+            process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy(
                 program_id,
                 accounts,
                 args.edition,
@@ -671,7 +671,7 @@ pub fn process_convert_master_edition_v1_to_v2(
     Ok(())
 }
 
-pub fn process_mint_new_edition_from_master_edition_via_vault_proxy<'a>(
+pub fn process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     edition: u64,

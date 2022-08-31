@@ -301,7 +301,7 @@ pub enum MetadataInstruction {
     #[account(14, name="token_vault_program", desc="Token vault program")]
     #[account(15, name="system_program", desc="System program")]
     #[account(16, name="rent", desc="Rent info")]
-    MintNewEditionFromMasterEditionViaVaultProxy(MintNewEditionFromMasterEditionViaTokenArgs),
+    DeprecatedMintNewEditionFromMasterEditionViaVaultProxy(MintNewEditionFromMasterEditionViaTokenArgs),
 
     /// Puff a Metadata - make all of it's variable length fields (name/uri/symbol) a fixed length using a null character
     /// so that it can be found using offset searches by the RPC to make client lookups cheaper.
