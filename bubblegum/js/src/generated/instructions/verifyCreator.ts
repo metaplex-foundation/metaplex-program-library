@@ -49,6 +49,7 @@ export const verifyCreatorStruct = new beet.FixableBeetArgsStruct<
  * @property [] authority
  * @property [] owner
  * @property [] delegate
+ * @property [**signer**] payer
  * @property [**signer**] creator
  * @property [] candyWrapper
  * @property [] gummyrollProgram
@@ -61,6 +62,7 @@ export type VerifyCreatorInstructionAccounts = {
   authority: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
+  payer: web3.PublicKey
   creator: web3.PublicKey
   candyWrapper: web3.PublicKey
   gummyrollProgram: web3.PublicKey
@@ -105,6 +107,11 @@ export function createVerifyCreatorInstruction(
       pubkey: accounts.delegate,
       isWritable: false,
       isSigner: false,
+    },
+    {
+      pubkey: accounts.payer,
+      isWritable: false,
+      isSigner: true,
     },
     {
       pubkey: accounts.creator,

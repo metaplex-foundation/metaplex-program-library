@@ -900,6 +900,8 @@ pub const BUBBLEGUM_PROGRAM_ADDRESS: Pubkey = Pubkey::new_from_array([
     0x98, 0x8b, 0x80, 0xeb, 0x79, 0x35, 0x28, 0x69, 0xb2, 0x24, 0x74, 0x5f, 0x59, 0xdd, 0xbf, 0x8a,
     0x26, 0x58, 0xca, 0x13, 0xdc, 0x68, 0x81, 0x21, 0x26, 0x35, 0x1c, 0xae, 0x07, 0xc1, 0xa5, 0xa5,
 ]);
+// This flag activates certain program authority features of the Bubblegum program.
+pub const BUBBLEGUM_ACTIVATED: bool = false;
 
 /// Create a new account instruction
 pub fn process_create_metadata_accounts_logic(
@@ -976,7 +978,6 @@ pub fn process_create_metadata_accounts_logic(
 
     // This allows the Bubblegum program to create metadata with verified creators since they were
     // verified already by the Bubblegum program.
-    const BUBBLEGUM_ACTIVATED: bool = false;
     let allow_direct_creator_writes = if BUBBLEGUM_ACTIVATED
         && mint_authority_info.owner == &BUBBLEGUM_PROGRAM_ADDRESS
         && mint_authority_info.is_signer

@@ -293,6 +293,11 @@
           "isSigner": false
         },
         {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
           "name": "creator",
           "isMut": false,
           "isSigner": true
@@ -376,6 +381,11 @@
           "isSigner": false
         },
         {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
           "name": "creator",
           "isMut": false,
           "isSigner": true
@@ -436,6 +446,381 @@
           "name": "message",
           "type": {
             "defined": "MetadataArgs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "verifyCollection",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "delegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "the case of `set_and_verify_collection` where",
+            "we are actually changing the NFT metadata."
+          ]
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "editionAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bubblegumSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gummyrollProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unverifyCollection",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "delegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "the case of `set_and_verify_collection` where",
+            "we are actually changing the NFT metadata."
+          ]
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "editionAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bubblegumSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gummyrollProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        }
+      ]
+    },
+    {
+      "name": "setAndVerifyCollection",
+      "accounts": [
+        {
+          "name": "authority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "delegate",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "payer",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "treeDelegate",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "the case of `set_and_verify_collection` where",
+            "we are actually changing the NFT metadata."
+          ]
+        },
+        {
+          "name": "collectionAuthority",
+          "isMut": false,
+          "isSigner": true
+        },
+        {
+          "name": "collectionMint",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "collectionMetadata",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "editionAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "bubblegumSigner",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "candyWrapper",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "gummyrollProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "merkleSlab",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenMetadataProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "root",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "dataHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "creatorHash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "index",
+          "type": "u32"
+        },
+        {
+          "name": "message",
+          "type": {
+            "defined": "MetadataArgs"
+          }
+        },
+        {
+          "name": "collection",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
           }
         }
       ]
@@ -1497,6 +1882,41 @@
       "code": 6018,
       "name": "CloseMintRequestError",
       "msg": "Something went wrong closing mint request"
+    },
+    {
+      "code": 6019,
+      "name": "NumericalOverflowError",
+      "msg": "NumericalOverflowError"
+    },
+    {
+      "code": 6020,
+      "name": "IncorrectOwner",
+      "msg": "Incorrect account owner"
+    },
+    {
+      "code": 6021,
+      "name": "CollectionCannotBeVerifiedInThisInstruction",
+      "msg": "Cannot Verify Collection in this Instruction"
+    },
+    {
+      "code": 6022,
+      "name": "CollectionNotFound",
+      "msg": "Collection Not Found on Metadata"
+    },
+    {
+      "code": 6023,
+      "name": "AlreadyVerified",
+      "msg": "Collection item is already verified."
+    },
+    {
+      "code": 6024,
+      "name": "AlreadyUnverified",
+      "msg": "Collection item is already unverified."
+    },
+    {
+      "code": 6025,
+      "name": "UpdateAuthorityIncorrect",
+      "msg": "Incorrect leaf metadata update authority."
     }
   ],
   "metadata": {
