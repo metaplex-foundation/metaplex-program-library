@@ -1,5 +1,5 @@
 {
-  "version": "4.2.0",
+  "version": "4.3.0",
   "name": "candy_machine",
   "instructions": [
     {
@@ -363,7 +363,7 @@
         },
         {
           "name": "collectionMetadata",
-          "isMut": false,
+          "isMut": true,
           "isSigner": false
         },
         {
@@ -1108,6 +1108,17 @@
       "code": 6049,
       "name": "NoUnlockWithNFTsStillFrozen",
       "msg": "Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first."
+    },
+    {
+      "code": 6050,
+      "name": "SizedCollectionMetadataMustBeMutable",
+      "msg": "Setting a sized collection requires the collection metadata to be mutable."
     }
-  ]
+  ],
+  "metadata": {
+    "address": "cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ",
+    "origin": "anchor",
+    "binaryVersion": "0.24.2",
+    "libVersion": "0.24.2"
+  }
 }

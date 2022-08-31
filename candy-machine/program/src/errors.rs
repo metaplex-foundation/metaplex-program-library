@@ -106,4 +106,6 @@ pub enum CandyError {
     InvalidFreezeWithdrawTokenAddress,
     #[msg("Can't unlock funds while NFTs are still frozen. Run thaw on all NFTs first.")]
     NoUnlockWithNFTsStillFrozen,
+    #[msg("Setting a sized collection requires the collection metadata to be mutable.")]
+    SizedCollectionMetadataMustBeMutable,
 }

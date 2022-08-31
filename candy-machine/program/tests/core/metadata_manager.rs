@@ -1,3 +1,4 @@
+use mpl_token_metadata::state::CollectionDetails;
 use mpl_token_metadata::{
     instruction,
     state::{Collection, Creator, Metadata, Uses, PREFIX},
@@ -74,7 +75,7 @@ impl MetadataManager {
         try_from_slice_unchecked(&account.data).unwrap()
     }
 
-    pub async fn create_v2(
+    pub async fn create_v3(
         &self,
         context: &mut ProgramTestContext,
         name: String,
@@ -86,6 +87,7 @@ impl MetadataManager {
         freeze_authority: Option<&Pubkey>,
         collection: Option<Collection>,
         uses: Option<Uses>,
+        sized: bool,
     ) -> transport::Result<()> {
         create_mint(
             context,
@@ -103,9 +105,15 @@ impl MetadataManager {
         )
         .await?;
 
+        let collection_details = if sized {
+            Some(CollectionDetails::V1 { size: 0 })
+        } else {
+            None
+        };
+
         update_blockhash(context).await?;
         let tx = Transaction::new_signed_with_payer(
-            &[instruction::create_metadata_accounts_v2(
+            &[instruction::create_metadata_accounts_v3(
                 mpl_token_metadata::id(),
                 self.pubkey,
                 self.mint.pubkey(),
@@ -121,6 +129,7 @@ impl MetadataManager {
                 is_mutable,
                 collection,
                 uses,
+                collection_details,
             )],
             Some(&self.authority.pubkey()),
             &[&self.authority],

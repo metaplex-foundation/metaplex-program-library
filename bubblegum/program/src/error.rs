@@ -40,4 +40,18 @@ pub enum BubblegumError {
     MintRequestDiscriminatorMismatch,
     #[msg("Something went wrong closing mint request")]
     CloseMintRequestError,
+    #[msg("NumericalOverflowError")]
+    NumericalOverflowError,
+    #[msg("Incorrect account owner")]
+    IncorrectOwner,
+    #[msg("Cannot Verify Collection in this Instruction")]
+    CollectionCannotBeVerifiedInThisInstruction,
+    #[msg("Collection Not Found on Metadata")]
+    CollectionNotFound,
+    #[msg("Collection item is already verified.")]
+    AlreadyVerified,
+    #[msg("Collection item is already unverified.")]
+    AlreadyUnverified,
+    #[msg("Incorrect leaf metadata update authority.")]
+    UpdateAuthorityIncorrect,
 }
