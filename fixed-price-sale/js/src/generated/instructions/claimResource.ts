@@ -35,6 +35,17 @@ const claimResourceStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _claimResource_ instruction
+ *
+ * @property [] market
+ * @property [] treasuryHolder
+ * @property [] sellingResource
+ * @property [**signer**] sellingResourceOwner
+ * @property [_writable_] vault
+ * @property [_writable_] metadata
+ * @property [] owner
+ * @property [_writable_] destination
+ * @property [] clock
+ * @property [] tokenMetadataProgram
  * @category Instructions
  * @category ClaimResource
  * @category generated

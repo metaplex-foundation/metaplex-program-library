@@ -39,6 +39,17 @@ const initSellingResourceStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _initSellingResource_ instruction
+ *
+ * @property [] store
+ * @property [_writable_, **signer**] admin
+ * @property [_writable_, **signer**] sellingResource
+ * @property [] sellingResourceOwner
+ * @property [] resourceMint
+ * @property [] masterEdition
+ * @property [] metadata
+ * @property [_writable_] vault
+ * @property [] owner
+ * @property [_writable_] resourceToken
  * @category Instructions
  * @category InitSellingResource
  * @category generated

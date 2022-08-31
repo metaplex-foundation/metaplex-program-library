@@ -37,6 +37,10 @@ const savePrimaryMetadataCreatorsStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _savePrimaryMetadataCreators_ instruction
+ *
+ * @property [_writable_, **signer**] admin
+ * @property [_writable_] metadata
+ * @property [_writable_] primaryMetadataCreators
  * @category Instructions
  * @category SavePrimaryMetadataCreators
  * @category generated

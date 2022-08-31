@@ -151,7 +151,17 @@ export class SellingResource implements SellingResourceArgs {
       resource: this.resource.toBase58(),
       vault: this.vault.toBase58(),
       vaultOwner: this.vaultOwner.toBase58(),
-      supply: this.supply,
+      supply: (() => {
+        const x = <{ toNumber: () => number }>this.supply;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       maxSupply: this.maxSupply,
       state: 'SellingResourceState.' + SellingResourceState[this.state],
     };

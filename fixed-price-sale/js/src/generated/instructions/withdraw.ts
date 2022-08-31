@@ -37,6 +37,19 @@ const withdrawStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _withdraw_ instruction
+ *
+ * @property [] market
+ * @property [] sellingResource
+ * @property [] metadata
+ * @property [_writable_] treasuryHolder
+ * @property [] treasuryMint
+ * @property [] owner
+ * @property [_writable_] destination
+ * @property [] funder
+ * @property [_writable_, **signer**] payer
+ * @property [_writable_] payoutTicket
+ * @property [] clock
+ * @property [] associatedTokenProgram
  * @category Instructions
  * @category Withdraw
  * @category generated
@@ -54,7 +67,6 @@ export type WithdrawInstructionAccounts = {
   payoutTicket: web3.PublicKey;
   clock: web3.PublicKey;
   associatedTokenProgram: web3.PublicKey;
-  primaryMetadataCreators?: web3.PublicKey[];
 };
 
 const withdrawInstructionDiscriminator = [183, 18, 70, 156, 148, 109, 161, 34];
@@ -86,7 +98,6 @@ export function createWithdrawInstruction(
     payoutTicket,
     clock,
     associatedTokenProgram,
-    primaryMetadataCreators,
   } = accounts;
 
   const [data] = withdrawStruct.serialize({
@@ -170,16 +181,6 @@ export function createWithdrawInstruction(
       isSigner: false,
     },
   ];
-
-  if (primaryMetadataCreators && primaryMetadataCreators.length > 0) {
-    primaryMetadataCreators.forEach((pubkey) => {
-      keys.push({
-        pubkey,
-        isWritable: false,
-        isSigner: false,
-      });
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),

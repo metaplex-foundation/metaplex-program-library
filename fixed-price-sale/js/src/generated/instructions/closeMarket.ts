@@ -21,6 +21,10 @@ const closeMarketStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _closeMarket_ instruction
+ *
+ * @property [_writable_] market
+ * @property [**signer**] owner
+ * @property [] clock
  * @category Instructions
  * @category CloseMarket
  * @category generated
@@ -37,7 +41,6 @@ const closeMarketInstructionDiscriminator = [88, 154, 248, 186, 48, 14, 123, 244
  * Creates a _CloseMarket_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category CloseMarket
  * @category generated

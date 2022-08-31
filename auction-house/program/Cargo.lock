@@ -1746,7 +1746,7 @@ dependencies = [
  "num",
  "num-derive",
  "num-traits",
- "rand 0.7.3",
+ "rand 0.8.5",
  "serde_json",
  "shellexpand",
  "solana-program",

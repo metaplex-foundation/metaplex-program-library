@@ -177,12 +177,42 @@ export class Market implements MarketArgs {
       name: this.name,
       description: this.description,
       mutable: this.mutable,
-      price: this.price,
+      price: (() => {
+        const x = <{ toNumber: () => number }>this.price;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       piecesInOneWallet: this.piecesInOneWallet,
-      startDate: this.startDate,
+      startDate: (() => {
+        const x = <{ toNumber: () => number }>this.startDate;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       endDate: this.endDate,
       state: 'MarketState.' + MarketState[this.state],
-      fundsCollected: this.fundsCollected,
+      fundsCollected: (() => {
+        const x = <{ toNumber: () => number }>this.fundsCollected;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
       gatekeeper: this.gatekeeper,
     };
   }

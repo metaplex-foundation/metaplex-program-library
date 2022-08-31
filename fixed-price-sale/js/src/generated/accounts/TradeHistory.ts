@@ -126,7 +126,17 @@ export class TradeHistory implements TradeHistoryArgs {
     return {
       market: this.market.toBase58(),
       wallet: this.wallet.toBase58(),
-      alreadyBought: this.alreadyBought,
+      alreadyBought: (() => {
+        const x = <{ toNumber: () => number }>this.alreadyBought;
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber();
+          } catch (_) {
+            return x;
+          }
+        }
+        return x;
+      })(),
     };
   }
 }

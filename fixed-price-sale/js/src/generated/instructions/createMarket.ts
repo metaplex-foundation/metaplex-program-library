@@ -51,6 +51,14 @@ const createMarketStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _createMarket_ instruction
+ *
+ * @property [_writable_, **signer**] market
+ * @property [] store
+ * @property [_writable_, **signer**] sellingResourceOwner
+ * @property [_writable_] sellingResource
+ * @property [] mint
+ * @property [_writable_] treasuryHolder
+ * @property [] owner
  * @category Instructions
  * @category CreateMarket
  * @category generated
@@ -63,7 +71,6 @@ export type CreateMarketInstructionAccounts = {
   mint: web3.PublicKey;
   treasuryHolder: web3.PublicKey;
   owner: web3.PublicKey;
-  collectionMint?: web3.PublicKey;
 };
 
 const createMarketInstructionDiscriminator = [103, 226, 97, 235, 200, 188, 251, 254];
@@ -82,16 +89,8 @@ export function createCreateMarketInstruction(
   accounts: CreateMarketInstructionAccounts,
   args: CreateMarketInstructionArgs,
 ) {
-  const {
-    market,
-    store,
-    sellingResourceOwner,
-    sellingResource,
-    mint,
-    treasuryHolder,
-    owner,
-    collectionMint,
-  } = accounts;
+  const { market, store, sellingResourceOwner, sellingResource, mint, treasuryHolder, owner } =
+    accounts;
 
   const [data] = createMarketStruct.serialize({
     instructionDiscriminator: createMarketInstructionDiscriminator,
@@ -139,14 +138,6 @@ export function createCreateMarketInstruction(
       isSigner: false,
     },
   ];
-
-  if (collectionMint) {
-    keys.push({
-      pubkey: collectionMint,
-      isWritable: false,
-      isSigner: false,
-    });
-  }
 
   const ix = new web3.TransactionInstruction({
     programId: new web3.PublicKey('SaLeTjyUa5wXHnGuewUSyJ5JWZaHwz3TxqUntCE9czo'),

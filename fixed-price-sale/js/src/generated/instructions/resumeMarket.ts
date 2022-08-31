@@ -21,6 +21,10 @@ const resumeMarketStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _resumeMarket_ instruction
+ *
+ * @property [_writable_] market
+ * @property [**signer**] owner
+ * @property [] clock
  * @category Instructions
  * @category ResumeMarket
  * @category generated
@@ -37,7 +41,6 @@ const resumeMarketInstructionDiscriminator = [198, 120, 104, 87, 44, 103, 108, 1
  * Creates a _ResumeMarket_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category ResumeMarket
  * @category generated

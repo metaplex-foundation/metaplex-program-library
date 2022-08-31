@@ -21,6 +21,10 @@ const suspendMarketStruct = new beet.BeetArgsStruct<{
 );
 /**
  * Accounts required by the _suspendMarket_ instruction
+ *
+ * @property [_writable_] market
+ * @property [**signer**] owner
+ * @property [] clock
  * @category Instructions
  * @category SuspendMarket
  * @category generated
@@ -37,7 +41,6 @@ const suspendMarketInstructionDiscriminator = [246, 27, 129, 46, 10, 196, 165, 1
  * Creates a _SuspendMarket_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
- *
  * @category Instructions
  * @category SuspendMarket
  * @category generated

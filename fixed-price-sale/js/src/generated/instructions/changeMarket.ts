@@ -42,6 +42,10 @@ const changeMarketStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _changeMarket_ instruction
+ *
+ * @property [_writable_] market
+ * @property [**signer**] owner
+ * @property [] clock
  * @category Instructions
  * @category ChangeMarket
  * @category generated

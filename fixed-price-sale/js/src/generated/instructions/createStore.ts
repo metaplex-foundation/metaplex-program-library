@@ -36,6 +36,9 @@ const createStoreStruct = new beet.FixableBeetArgsStruct<
 );
 /**
  * Accounts required by the _createStore_ instruction
+ *
+ * @property [_writable_, **signer**] admin
+ * @property [_writable_, **signer**] store
  * @category Instructions
  * @category CreateStore
  * @category generated
