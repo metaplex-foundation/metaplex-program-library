@@ -1980,11 +1980,13 @@ pub fn create_escrow_account(
         return Err(MetadataError::MintMismatch.into());
     }
 
+    // Only non-fungible tokens (i.e. unique) can have escrow accounts.
     assert!(
         check_token_standard(mint_account_info, Some(edition_account_info))?
             == TokenStandard::NonFungible,
     );
 
+    // Assert that this is the canonical PDA for this mint.
     let bump_seed = assert_derivation(
         program_id,
         escrow_account_info,
@@ -1998,6 +2000,7 @@ pub fn create_escrow_account(
 
     //assert_update_authority_is_correct(&metadata, update_authority_info)?;
 
+    // Derive the seeds for PDA signing.
     let escrow_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -2006,8 +2009,19 @@ pub fn create_escrow_account(
         &[bump_seed],
     ];
 
+    // Initialize a default (empty) escrow structure.
     let mut toe = TokenOwnedEscrow::default();
 
+    // If there is a constraint model and the signer is the update authority, then add the model to the TOE.
+    if args.constraint_model.is_some() {
+        if *payer_account_info.key == metadata.update_authority {
+            toe.model = args.constraint_model;
+        } else {
+            return Err(MetadataError::MustBeUpdateAuthToSetModel.into());
+        }
+    }
+
+    // Create the account.
     create_or_allocate_account_raw(
         *program_id,
         escrow_account_info,
@@ -2017,14 +2031,6 @@ pub fn create_escrow_account(
         toe.len(),
         escrow_authority_seeds,
     )?;
-
-    if args.constraint_model.is_some() {
-        if *payer_account_info.key == metadata.update_authority {
-            toe.model = args.constraint_model;
-        } else {
-            return Err(MetadataError::MustBeUpdateAuthToSetModel.into());
-        }
-    }
 
     Ok(())
 }
@@ -2131,6 +2137,7 @@ pub fn transfer_into_escrow(
 
     //assert_update_authority_is_correct(&metadata, update_authority_info)?;
 
+    // Derive the seeds for PDA signing.
     let escrow_authority_seeds = &[
         PREFIX.as_bytes(),
         program_id.as_ref(),
@@ -2163,24 +2170,27 @@ pub fn transfer_into_escrow(
             ata_program_info.clone(),
             rent_info.clone(),
         ],
-        //&[escrow_authority_seeds],
     )?;
 
-    // Deserialize the token accounts.
+    // Deserialize the token accounts and perform checks.
     let attribute_src = spl_token::state::Account::unpack(&attribute_src_info.data.borrow())?;
     assert!(attribute_src.mint == *attribute_mint_info.key);
     assert!(attribute_src.delegate.is_none());
     assert!(attribute_src.amount >= args.amount);
-    msg!("\n{:#?}\n{:#?}", attribute_src_info.key, attribute_src);
+    //msg!("\n{:#?}\n{:#?}", attribute_src_info.key, attribute_src);
     let attribute_dst = spl_token::state::Account::unpack(&attribute_dst_info.data.borrow())?;
     assert!(attribute_dst.mint == *attribute_mint_info.key);
     assert!(attribute_dst.delegate.is_none());
-    msg!("\n{:#?}\n{:#?}", attribute_dst_info.key, attribute_dst);
+    //msg!("\n{:#?}\n{:#?}", attribute_dst_info.key, attribute_dst);
     let escrow_account = spl_token::state::Account::unpack(&escrow_account_info.data.borrow())?;
-    msg!("\n{:#?}\n{:#?}", escrow_account_info.key, escrow_account);
+    //msg!("\n{:#?}\n{:#?}", escrow_account_info.key, escrow_account);
 
     assert!(attribute_src.owner == escrow_account.owner);
 
+    // Check constraints.
+    //TODO
+
+    // Transfer the token from the current owner into the escrow.
     let transfer_ix = spl_token::instruction::transfer(
         &spl_token::id(),
         attribute_src_info.key,
@@ -2191,13 +2201,23 @@ pub fn transfer_into_escrow(
     )
     .unwrap();
 
+    invoke(
+        &transfer_ix,
+        &[
+            attribute_src_info.clone(),
+            attribute_dst_info.clone(),
+            payer_info.clone(),
+            token_program_info.clone(),
+        ],
+    )?;
+
     // let escrow_info_clone = escrow_info.clone();
     // let buf = &escrow_info_clone.data.borrow_mut();
     //let mut buf = escrow_info.data.borrow().as_ref();
     // let mut toe = TokenOwnedEscrow::deserialize(&mut buf.as_ref())?;
 
+    // Update the TOE to point to the token it now owns.
     let mut toe: TokenOwnedEscrow = TokenOwnedEscrow::from_account_info(escrow_info)?;
-
     toe.tokens.push(*attribute_mint_info.key);
     toe.serialize(&mut *escrow_info.try_borrow_mut_data()?)?;
 

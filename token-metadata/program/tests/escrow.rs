@@ -14,6 +14,7 @@ use utils::*;
 
 mod escrow {
     use mpl_token_metadata::pda::find_escrow_account;
+    use solana_program::program_pack::Pack;
 
     use super::*;
 
@@ -189,6 +190,18 @@ mod escrow {
             context.last_blockhash,
         );
 
+        let attribute_src_account =
+            get_account(&mut context, &attribute_test_metadata.token.pubkey()).await;
+        let attribute_src =
+            spl_token::state::Account::unpack_from_slice(&attribute_src_account.data).unwrap();
+        assert!(attribute_src.amount == 1);
+        println!("{:#?}", attribute_src);
+        // let attribute_dst_account =
+        //     get_account(&mut context, &escrow_attribute_token_account).await;
+        // let attribute_dst =
+        //     spl_token::state::Account::unpack_from_slice(&attribute_dst_account.data).unwrap();
+        // println!("{:#?}", attribute_dst);
+
         context.banks_client.process_transaction(tx1).await.unwrap();
 
         let metadata = attribute_test_metadata.get_data(&mut context).await;
@@ -197,5 +210,19 @@ mod escrow {
             try_from_slice_unchecked(&escrow_account.data).unwrap();
 
         print!("\n{:#?}\n", escrow);
+        let attribute_src_account =
+            get_account(&mut context, &attribute_test_metadata.token.pubkey()).await;
+        let attribute_src =
+            spl_token::state::Account::unpack_from_slice(&attribute_src_account.data).unwrap();
+        assert!(attribute_src.amount == 0);
+        println!("{:#?}", attribute_src);
+        let attribute_dst_account =
+            get_account(&mut context, &escrow_attribute_token_account).await;
+        let attribute_dst =
+            spl_token::state::Account::unpack_from_slice(&attribute_dst_account.data).unwrap();
+        assert!(attribute_dst.amount == 1);
+        assert!(attribute_dst.mint == attribute_src.mint);
+        assert!(attribute_dst.owner == escrow_address.0);
+        println!("{:#?}", attribute_dst);
     }
 }

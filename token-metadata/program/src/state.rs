@@ -972,6 +972,10 @@ impl TokenOwnedEscrow {
         len += mem::size_of::<Option<Pubkey>>();
         len
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.tokens.is_empty() && self.delegates.is_empty() && self.model.is_none()
+    }
 }
 
 impl TokenOwnedEscrowAccount for TokenOwnedEscrow {}
