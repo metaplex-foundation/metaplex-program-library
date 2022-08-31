@@ -15,19 +15,19 @@ import {
 
 /**
  * @category Instructions
- * @category MintNewEditionFromMasterEditionViaVaultProxy
+ * @category DeprecatedMintNewEditionFromMasterEditionViaVaultProxy
  * @category generated
  */
-export type MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs = {
+export type DeprecatedMintNewEditionFromMasterEditionViaVaultProxyInstructionArgs = {
   mintNewEditionFromMasterEditionViaTokenArgs: MintNewEditionFromMasterEditionViaTokenArgs;
 };
 /**
  * @category Instructions
- * @category MintNewEditionFromMasterEditionViaVaultProxy
+ * @category DeprecatedMintNewEditionFromMasterEditionViaVaultProxy
  * @category generated
  */
-export const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStruct<
-  MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs & {
+export const DeprecatedMintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetArgsStruct<
+  DeprecatedMintNewEditionFromMasterEditionViaVaultProxyInstructionArgs & {
     instructionDiscriminator: number;
   }
 >(
@@ -38,10 +38,10 @@ export const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetA
       mintNewEditionFromMasterEditionViaTokenArgsBeet,
     ],
   ],
-  'MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs',
+  'DeprecatedMintNewEditionFromMasterEditionViaVaultProxyInstructionArgs',
 );
 /**
- * Accounts required by the _MintNewEditionFromMasterEditionViaVaultProxy_ instruction
+ * Accounts required by the _DeprecatedMintNewEditionFromMasterEditionViaVaultProxy_ instruction
  *
  * @property [_writable_] newMetadata New Metadata key (pda of ['metadata', program id, mint id])
  * @property [_writable_] newEdition New Edition (pda of ['metadata', program id, mint id, 'edition'])
@@ -58,10 +58,10 @@ export const MintNewEditionFromMasterEditionViaVaultProxyStruct = new beet.BeetA
  * @property [] metadata Master record metadata account
  * @property [] tokenVaultProgram Token vault program
  * @category Instructions
- * @category MintNewEditionFromMasterEditionViaVaultProxy
+ * @category DeprecatedMintNewEditionFromMasterEditionViaVaultProxy
  * @category generated
  */
-export type MintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts = {
+export type DeprecatedMintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts = {
   newMetadata: web3.PublicKey;
   newEdition: web3.PublicKey;
   masterEdition: web3.PublicKey;
@@ -81,25 +81,26 @@ export type MintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts = {
   rent?: web3.PublicKey;
 };
 
-export const mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator = 13;
+export const deprecatedMintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator = 13;
 
 /**
- * Creates a _MintNewEditionFromMasterEditionViaVaultProxy_ instruction.
+ * Creates a _DeprecatedMintNewEditionFromMasterEditionViaVaultProxy_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category MintNewEditionFromMasterEditionViaVaultProxy
+ * @category DeprecatedMintNewEditionFromMasterEditionViaVaultProxy
  * @category generated
  */
-export function createMintNewEditionFromMasterEditionViaVaultProxyInstruction(
-  accounts: MintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts,
-  args: MintNewEditionFromMasterEditionViaVaultProxyInstructionArgs,
+export function createDeprecatedMintNewEditionFromMasterEditionViaVaultProxyInstruction(
+  accounts: DeprecatedMintNewEditionFromMasterEditionViaVaultProxyInstructionAccounts,
+  args: DeprecatedMintNewEditionFromMasterEditionViaVaultProxyInstructionArgs,
   programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const [data] = MintNewEditionFromMasterEditionViaVaultProxyStruct.serialize({
-    instructionDiscriminator: mintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator,
+  const [data] = DeprecatedMintNewEditionFromMasterEditionViaVaultProxyStruct.serialize({
+    instructionDiscriminator:
+      deprecatedMintNewEditionFromMasterEditionViaVaultProxyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
