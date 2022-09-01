@@ -994,6 +994,7 @@ pub struct EscrowConstraintsModel {
 
 impl EscrowConstraintsModel {
     pub fn try_len(&self) -> Result<usize, ProgramError> {
+        let unknown_overhead = 8; // TODO: find out where this is coming from
         self.constraints
             .iter()
             .try_fold(0usize, |acc, ec| {
@@ -1006,6 +1007,7 @@ impl EscrowConstraintsModel {
                     + mem::size_of::<Pubkey>()
                     + mem::size_of::<Pubkey>()
                     + mem::size_of::<u64>()
+                    + unknown_overhead
             })
     }
 }
@@ -1021,9 +1023,10 @@ pub struct EscrowConstraint {
 
 impl EscrowConstraint {
     pub fn try_len(&self) -> Result<usize, ProgramError> {
+        let unknown_overhead = 4; // TODO: find out where this is coming from
         self.constraint_type
             .try_len()
-            .map(|ct_len| Ok(ct_len + self.name.len() + mem::size_of::<u64>()))?
+            .map(|ct_len| Ok(ct_len + self.name.len() + mem::size_of::<u64>() + unknown_overhead))?
     }
 }
 
@@ -1043,12 +1046,23 @@ impl EscrowConstraintType {
             EscrowConstraintType::Collection(_) => Ok(1 + mem::size_of::<Pubkey>()),
             EscrowConstraintType::Tokens(hm) => {
                 return if let Some(len) = hm.len().checked_mul(mem::size_of::<Pubkey>()) {
-                    Ok(1 + len)
+                    len.checked_add(1) // enum overhead
+                        .ok_or(MetadataError::NumericalOverflowError)?
+                        .checked_add(4) // map overhead
+                        .ok_or(MetadataError::NumericalOverflowError.into())
                 } else {
                     Err(MetadataError::NumericalOverflowError.into())
                 };
             }
         }
+    }
+
+    pub fn tokens_from_slice(tokens: &[Pubkey]) -> EscrowConstraintType {
+        let mut hm = HashMap::new();
+        for token in tokens {
+            hm.insert(*token, ());
+        }
+        EscrowConstraintType::Tokens(hm)
     }
 }
 
