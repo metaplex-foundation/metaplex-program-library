@@ -17,9 +17,6 @@ use mpl_listing_rewards::{
     offers::{close::CloseOfferParams, create::CreateOfferParams},
     pda::{self, find_listing_address, find_offer_address, find_reward_center_address},
     reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
-    rewardable_collection::{
-        create::CreateRewardableCollectionParams, delete::DeleteRewardableCollectionParams,
-    },
 };
 use spl_associated_token_account::get_associated_token_address;
 
@@ -83,71 +80,11 @@ pub fn edit_reward_center(
     }
 }
 
-pub fn create_rewardable_collection(
-    wallet: Pubkey,
-    auction_house: Pubkey,
-    reward_center: Pubkey,
-    collection: Pubkey,
-) -> Instruction {
-    let (rewardable_collection, _) =
-        pda::find_rewardable_collection_address(&reward_center, &collection);
-
-    let accounts = rewards_accounts::CreateRewardableCollection {
-        wallet,
-        reward_center,
-        rewardable_collection,
-        auction_house,
-        system_program: system_program::id(),
-    }
-    .to_account_metas(None);
-
-    let data = instruction::CreateRewardableCollection {
-        rewardable_collection_params: CreateRewardableCollectionParams { collection },
-    }
-    .data();
-
-    Instruction {
-        program_id: id(),
-        accounts,
-        data,
-    }
-}
-
-pub fn delete_rewardable_collection(
-    wallet: Pubkey,
-    auction_house: Pubkey,
-    reward_center: Pubkey,
-    collection: Pubkey,
-) -> Instruction {
-    let (rewardable_collection, _) =
-        pda::find_rewardable_collection_address(&reward_center, &collection);
-
-    let accounts = rewards_accounts::DeleteRewardableCollection {
-        wallet,
-        reward_center,
-        rewardable_collection,
-        auction_house,
-    }
-    .to_account_metas(None);
-
-    let data = instruction::DeleteRewardableCollection {
-        rewardable_collection_params: DeleteRewardableCollectionParams { collection },
-    }
-    .data();
-
-    Instruction {
-        program_id: id(),
-        accounts,
-        data,
-    }
-}
-
 pub fn create_listing(
     CreateListingAccounts {
         wallet,
         listing,
         reward_center,
-        rewardable_collection,
         token_account,
         metadata,
         authority,
@@ -173,7 +110,6 @@ pub fn create_listing(
         auction_house_program: mpl_auction_house::id(),
         listing,
         reward_center,
-        rewardable_collection,
         wallet,
         token_account,
         metadata,
@@ -213,7 +149,6 @@ pub fn cancel_listing(
         auction_house,
         listing,
         reward_center,
-        rewardable_collection,
         authority,
         metadata,
         token_account,
@@ -245,7 +180,6 @@ pub fn cancel_listing(
         listing,
         metadata,
         reward_center,
-        rewardable_collection,
         token_account,
         token_mint,
         trade_state: seller_trade_state,
@@ -279,7 +213,6 @@ pub fn create_offer(
         treasury_mint,
         token_mint,
         wallet,
-        rewardable_collection,
     }: CreateOfferAccounts,
     CreateOfferData {
         buyer_price,
@@ -303,7 +236,7 @@ pub fn create_offer(
         token_size,
     );
 
-    let (offer, _) = pda::find_offer_address(&wallet, &metadata, &rewardable_collection);
+    let (offer, _) = pda::find_offer_address(&wallet, &metadata, &reward_center);
 
     let accounts = rewards_accounts::CreateOffer {
         ah_auctioneer_pda,
@@ -319,7 +252,6 @@ pub fn create_offer(
         treasury_mint,
         escrow_payment_account,
         wallet,
-        rewardable_collection,
         offer,
         auction_house_program: mpl_auction_house::id(),
         token_program: spl_token::id(),
@@ -352,7 +284,6 @@ pub fn close_offer(
         metadata,
         receipt_account,
         reward_center,
-        rewardable_collection,
         token_account,
         token_mint,
         treasury_mint,
@@ -379,7 +310,7 @@ pub fn close_offer(
         token_size,
     );
 
-    let (offer, _) = pda::find_offer_address(&wallet, &metadata, &rewardable_collection);
+    let (offer, _) = pda::find_offer_address(&wallet, &metadata, &reward_center);
 
     let accounts = rewards_accounts::CloseOffer {
         wallet,
@@ -392,7 +323,6 @@ pub fn close_offer(
         offer,
         receipt_account,
         reward_center,
-        rewardable_collection,
         token_account,
         token_mint,
         trade_state: buyer_trade_state,
@@ -425,7 +355,6 @@ pub fn close_offer(
 pub fn execute_sale(
     ExecuteSaleAccounts {
         auction_house,
-        rewardable_collection,
         seller,
         buyer,
         authority,
@@ -443,8 +372,8 @@ pub fn execute_sale(
     }: ExecuteSaleData,
 ) -> Instruction {
     let (reward_center, _) = find_reward_center_address(&auction_house);
-    let (offer, _) = find_offer_address(&buyer, &metadata, &rewardable_collection);
-    let (listing, _) = find_listing_address(&seller, &metadata, &rewardable_collection);
+    let (offer, _) = find_offer_address(&buyer, &metadata, &reward_center);
+    let (listing, _) = find_listing_address(&seller, &metadata, &reward_center);
 
     let (auction_house_fee_account, _) =
         mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
@@ -497,7 +426,6 @@ pub fn execute_sale(
         seller_reward_token_account,
         listing,
         offer,
-        rewardable_collection,
         authority,
         treasury_mint,
         token_mint,

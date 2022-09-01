@@ -1,10 +1,8 @@
 use anchor_lang::prelude::*;
-use mpl_auction_house::state::AuctionHouse;
 
 use crate::{
     errors::ListingRewardsError,
-    state::{Listing, RewardCenter, RewardableCollection},
-    MetadataAccount,
+    state::{Listing, RewardCenter},
 };
 
 pub fn assert_listing_reward_redemption_eligibility(
@@ -25,59 +23,4 @@ pub fn assert_listing_reward_redemption_eligibility(
     }
 
     err!(ListingRewardsError::IneligibaleForRewards)
-}
-
-pub fn assert_belongs_to_rewardable_collection(
-    metadata: &Box<Account<MetadataAccount>>,
-    rewardable_collection: &Box<Account<RewardableCollection>>,
-) -> Result<()> {
-    let collection = metadata
-        .collection
-        .as_ref()
-        .ok_or(ListingRewardsError::NFTMissingCollection)?;
-
-    require_eq!(
-        collection.key,
-        rewardable_collection.collection,
-        ListingRewardsError::NFTMismatchRewardableCollection
-    );
-
-    Ok(())
-}
-
-pub fn assert_rewardable_collection_deleted_if_initialized(
-    rewardable_collection: &Account<RewardableCollection>,
-) -> Result<()> {
-    if !rewardable_collection.is_initialized {
-        return Ok(());
-    }
-
-    require!(
-        rewardable_collection.is_initialized && rewardable_collection.deleted_at.is_some(),
-        ListingRewardsError::RewardableCollectionAlreadyActive,
-    );
-
-    Ok(())
-}
-
-pub fn assert_rewardable_collection_maintainer(
-    wallet: Pubkey,
-    auction_house: &Box<Account<AuctionHouse>>,
-    reward_center: &Account<RewardCenter>,
-) -> Result<()> {
-    if auction_house.authority == wallet {
-        return Ok(());
-    }
-
-    let collection_oracle = reward_center
-        .collection_oracle
-        .ok_or(ListingRewardsError::InvalidCollectionMaintainer)?;
-
-    require_eq!(
-        collection_oracle,
-        wallet,
-        ListingRewardsError::InvalidCollectionMaintainer
-    );
-
-    Ok(())
 }

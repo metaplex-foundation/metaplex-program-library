@@ -7,7 +7,6 @@ pub mod offers;
 pub mod pda;
 pub mod redeem_rewards;
 pub mod reward_center;
-pub mod rewardable_collection;
 pub mod state;
 
 use anchor_lang::prelude::*;
@@ -19,7 +18,6 @@ use crate::{
     offers::{close::*, create::*},
     redeem_rewards::*,
     reward_center::{create::*, edit::*},
-    rewardable_collection::{create::*, delete::*},
 };
 
 // TODO: Remove when added to Anchor https://github.com/coral-xyz/anchor/pull/2014
@@ -70,20 +68,6 @@ pub mod listing_rewards {
         edit_reward_center_params: EditRewardCenterParams,
     ) -> Result<()> {
         reward_center::edit::handler(ctx, edit_reward_center_params)
-    }
-
-    pub fn create_rewardable_collection(
-        ctx: Context<CreateRewardableCollection>,
-        rewardable_collection_params: CreateRewardableCollectionParams,
-    ) -> Result<()> {
-        rewardable_collection::create::handler(ctx, rewardable_collection_params)
-    }
-
-    pub fn delete_rewardable_collection(
-        ctx: Context<DeleteRewardableCollection>,
-        rewardable_collection_params: DeleteRewardableCollectionParams,
-    ) -> Result<()> {
-        rewardable_collection::delete::handler(ctx, rewardable_collection_params)
     }
 
     pub fn create_listing(

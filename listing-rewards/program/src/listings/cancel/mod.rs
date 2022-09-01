@@ -1,8 +1,6 @@
 use crate::{
-    assertions::assert_belongs_to_rewardable_collection,
-    constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
-    errors::ListingRewardsError,
-    state::{Listing, RewardCenter, RewardableCollection},
+    constants::{LISTING, REWARD_CENTER},
+    state::{Listing, RewardCenter},
     MetadataAccount,
 };
 use anchor_lang::{prelude::*, InstructionData};
@@ -35,22 +33,11 @@ pub struct CancelListing<'info> {
             LISTING.as_bytes(),
             wallet.key().as_ref(),
             metadata.key().as_ref(),
-            rewardable_collection.key().as_ref(),
+            reward_center.key().as_ref(),
         ],
         bump = listing.bump,
     )]
     pub listing: Account<'info, Listing>,
-
-    /// The collection eligable for rewards
-    #[account(
-        seeds = [
-            REWARDABLE_COLLECTION.as_bytes(),
-            reward_center.key().as_ref(),
-            metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
-        ],
-        bump = rewardable_collection.bump
-    )]
-    pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     /// Metaplex metadata account decorating SPL mint account.
     pub metadata: Box<Account<'info, MetadataAccount>>,
@@ -130,14 +117,10 @@ pub fn handler(
     ctx: Context<CancelListing>,
     CancelListingParams { price, token_size }: CancelListingParams,
 ) -> Result<()> {
-    let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
-    let rewardable_collection = &ctx.accounts.rewardable_collection;
     let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
-
-    assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
 
     let listing = &mut ctx.accounts.listing;
 

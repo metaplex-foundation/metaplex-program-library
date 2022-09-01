@@ -3,10 +3,9 @@ use anchor_spl::token::{Token, TokenAccount};
 use solana_program::{instruction::Instruction, program::invoke_signed};
 
 use crate::{
-    assertions::assert_belongs_to_rewardable_collection,
-    constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
+    constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{Listing, RewardCenter, RewardableCollection},
+    state::{Listing, RewardCenter},
     MetadataAccount,
 };
 use mpl_auction_house::{
@@ -43,7 +42,7 @@ pub struct CreateListing<'info> {
             LISTING.as_bytes(),
             wallet.key().as_ref(),
             metadata.key().as_ref(),
-            rewardable_collection.key().as_ref(),
+            reward_center.key().as_ref(),
         ],
         bump,
     )]
@@ -58,17 +57,6 @@ pub struct CreateListing<'info> {
         bump = reward_center.bump
     )]
     pub reward_center: Box<Account<'info, RewardCenter>>,
-
-    /// The collection eligable for rewards
-    #[account(
-        seeds = [
-            REWARDABLE_COLLECTION.as_bytes(),
-            reward_center.key().as_ref(),
-            metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
-        ],
-        bump = rewardable_collection.bump
-    )]
-    pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     // Accounts passed into Auction House CPI call
     /// User wallet account.
@@ -197,20 +185,15 @@ pub fn handler(
     let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
-    let rewardable_collection = &ctx.accounts.rewardable_collection;
-    let metadata_account = &ctx.accounts.metadata;
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
-
-    assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
 
     let listing = &mut ctx.accounts.listing;
 
     listing.reward_center = reward_center.key();
     listing.seller = wallet.key();
-    listing.metadata = metadata_account.key();
-    listing.rewardable_collection = rewardable_collection.key();
+    listing.metadata = metadata.key();
     listing.price = price;
     listing.token_size = token_size;
     listing.bump = *ctx
@@ -230,9 +213,9 @@ pub fn handler(
     let auction_house_program = ctx.accounts.auction_house_program.to_account_info();
 
     let create_listing_ctx_accounts = AuctioneerSell {
+        metadata: metadata.to_account_info(),
         wallet: ctx.accounts.wallet.to_account_info(),
         token_account: ctx.accounts.token_account.to_account_info(),
-        metadata: ctx.accounts.metadata.to_account_info(),
         auction_house: ctx.accounts.auction_house.to_account_info(),
         auction_house_fee_account: ctx.accounts.auction_house_fee_account.to_account_info(),
         seller_trade_state: ctx.accounts.seller_trade_state.to_account_info(),

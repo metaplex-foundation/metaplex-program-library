@@ -97,7 +97,6 @@ pub struct Listing {
     pub created_at: i64,
     pub canceled_at: Option<i64>,
     pub purchased_at: Option<i64>,
-    pub rewardable_collection: Pubkey,
     pub reward_redeemed_at: Option<i64>,
 }
 
@@ -113,7 +112,6 @@ impl Listing {
         8 + // created_at
         1 + 8 + // canceled_at
         1 + 8 + // purchased_at
-        32 + // rewardable_collection
         1 + 8 // reward_redeemed_at
     }
 }
@@ -129,7 +127,6 @@ pub struct Offer {
     pub created_at: i64,
     pub canceled_at: Option<i64>,
     pub purchased_at: Option<i64>,
-    pub rewardable_collection: Pubkey,
 }
 
 impl Offer {
@@ -143,7 +140,6 @@ impl Offer {
         1 + // bump
         8 + // created_at
         1 + 8 + // canceled_at
-        1 + 8 + // purchased_at
-        32 // rewardable_collection
+        1 + 8 // purchased_at
     }
 }

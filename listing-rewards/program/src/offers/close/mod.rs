@@ -12,10 +12,8 @@ use mpl_auction_house::{
 };
 
 use crate::{
-    assertions::assert_belongs_to_rewardable_collection,
-    constants::{OFFER, REWARDABLE_COLLECTION, REWARD_CENTER},
-    errors::ListingRewardsError,
-    state::{Offer, RewardCenter, RewardableCollection},
+    constants::{OFFER, REWARD_CENTER},
+    state::{Offer, RewardCenter},
     MetadataAccount,
 };
 use solana_program::{instruction::Instruction, program::invoke_signed};
@@ -42,22 +40,11 @@ pub struct CloseOffer<'info> {
             OFFER.as_bytes(),
             wallet.key().as_ref(),
             metadata.key().as_ref(),
-            rewardable_collection.key().as_ref()
+            reward_center.key().as_ref()
         ],  
         bump = offer.bump
     )]
     pub offer: Box<Account<'info, Offer>>,
-
-    /// The collection eligable for rewards
-    #[account(
-        seeds = [
-            REWARDABLE_COLLECTION.as_bytes(),
-            reward_center.key().as_ref(),
-            metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
-        ],
-        bump = rewardable_collection.bump
-    )]
-    pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     pub treasury_mint: Box<Account<'info, Mint>>,
 
@@ -165,14 +152,10 @@ pub fn handler(
         ..
     }: CloseOfferParams,
 ) -> Result<()> {
-    let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
-    let rewardable_collection = &ctx.accounts.rewardable_collection;
     let wallet = &ctx.accounts.wallet;
     let auction_house_key = auction_house.key();
-
-    assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
 
     let clock = Clock::get()?;
     let offer = &mut ctx.accounts.offer;

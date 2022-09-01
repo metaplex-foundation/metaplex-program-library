@@ -1,6 +1,6 @@
-use crate::constants::{LISTING, OFFER, REWARDABLE_COLLECTION, REWARD_CENTER};
+use crate::constants::{LISTING, OFFER, REWARD_CENTER};
 use crate::errors::ListingRewardsError;
-use crate::state::{Listing, Offer, RewardableCollection};
+use crate::state::{Listing, Offer};
 use crate::{state::RewardCenter, MetadataAccount};
 use anchor_lang::{prelude::*, InstructionData};
 use anchor_spl::token::{transfer, Transfer};
@@ -63,7 +63,7 @@ pub struct ExecuteSale<'info> {
             LISTING.as_bytes(),
             seller.key().as_ref(),
             metadata.key().as_ref(),
-            rewardable_collection.key().as_ref(),
+            reward_center.key().as_ref(),
         ],
         bump,
     )]
@@ -76,22 +76,11 @@ pub struct ExecuteSale<'info> {
             OFFER.as_bytes(),
             buyer.key().as_ref(),
             metadata.key().as_ref(),
-            rewardable_collection.key().as_ref()
+            reward_center.key().as_ref()
         ],  
         bump = offer.bump
     )]
     pub offer: Box<Account<'info, Offer>>,
-
-    /// The collection eligable for rewards
-    #[account(
-        seeds = [
-            REWARDABLE_COLLECTION.as_bytes(),
-            reward_center.key().as_ref(),
-            metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
-        ],
-        bump = rewardable_collection.bump
-    )]
-    pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     ///Token account where the SPL token is stored.
     #[account(

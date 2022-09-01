@@ -13,7 +13,7 @@ use mpl_auction_house::{
     AuthorityScope,
 };
 use mpl_listing_rewards::{
-    pda::{find_listing_address, find_reward_center_address, find_rewardable_collection_address},
+    pda::{find_listing_address, find_reward_center_address},
     reward_center, state,
 };
 
@@ -72,13 +72,8 @@ async fn execute_sale_success() {
 
     let (auction_house, _) = find_auction_house_address(&wallet, &mint);
     let (reward_center, _) = find_reward_center_address(&auction_house);
-    let (rewardable_collection, _) =
-        find_rewardable_collection_address(&reward_center, &collection);
-    let (listing, _) = find_listing_address(
-        &metadata_owner_address,
-        &metadata_address,
-        &rewardable_collection,
-    );
+    let (listing, _) =
+        find_listing_address(&metadata_owner_address, &metadata_address, &reward_center);
 
     // Creating Rewards mint and token account
     let token_program = &spl_token::id();
@@ -165,13 +160,6 @@ async fn execute_sale_success() {
         reward_center_params,
     );
 
-    let create_rewardable_collection_ix = mpl_listing_rewards_sdk::create_rewardable_collection(
-        wallet,
-        auction_house,
-        reward_center,
-        collection,
-    );
-
     let delegate_auctioneer_accounts = mpl_auction_house_sdk::DelegateAuctioneerAccounts {
         auction_house,
         authority: wallet,
@@ -221,7 +209,6 @@ async fn execute_sale_success() {
         wallet: metadata_owner.pubkey(),
         listing,
         reward_center,
-        rewardable_collection,
         token_account,
         metadata: metadata.pubkey,
         authority: wallet,
@@ -246,7 +233,6 @@ async fn execute_sale_success() {
             init_rewards_reward_mint_ix,
             create_reward_center_ix,
             mint_reward_tokens_ix,
-            create_rewardable_collection_ix,
             delegate_auctioneer_ix,
         ],
         Some(&wallet),
@@ -283,7 +269,6 @@ async fn execute_sale_success() {
 
     let create_offer_accounts = CreateOfferAccounts {
         wallet: *buyer_pubkey,
-        rewardable_collection,
         transfer_authority: *buyer_pubkey,
         payment_account: *buyer_pubkey,
         treasury_mint: mint,
@@ -339,7 +324,6 @@ async fn execute_sale_success() {
     let execute_sale_accounts = ExecuteSaleAccounts {
         auction_house,
         token_account,
-        rewardable_collection,
         buyer: buyer.pubkey(),
         seller: metadata_owner.pubkey(),
         authority: wallet,
