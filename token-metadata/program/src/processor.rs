@@ -32,8 +32,9 @@ use crate::{
         create_or_allocate_account_raw, decrement_collection_size, get_owner_from_token_account,
         increment_collection_size, process_create_metadata_accounts_logic,
         process_mint_new_edition_from_master_edition_via_token_logic, puff_out_data_fields,
-        spl_token_burn, spl_token_close, transfer_mint_authority, CreateMetadataAccountsLogicArgs,
-        MintNewEditionFromMasterEditionViaTokenLogicArgs, TokenBurnParams, TokenCloseParams,
+        resize_or_reallocate_account_raw, spl_token_burn, spl_token_close, transfer_mint_authority,
+        CreateMetadataAccountsLogicArgs, MintNewEditionFromMasterEditionViaTokenLogicArgs,
+        TokenBurnParams, TokenCloseParams,
     },
 };
 use arrayref::array_ref;
@@ -2028,7 +2029,7 @@ pub fn create_escrow_account(
         rent_info,
         system_account_info,
         payer_account_info,
-        toe.len() * 2,
+        toe.len(),
         escrow_authority_seeds,
     )?;
 
@@ -2090,13 +2091,6 @@ pub fn close_escrow_account(
 
     // Close the account.
     close_account_raw(payer_account_info, escrow_account_info)?;
-
-    // let mut edition = MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info)?;
-
-    // edition.key = Key::MasterEditionV2;
-    // edition.supply = 0;
-    // edition.max_supply = max_supply;
-    // edition.serialize(&mut *edition_account_info.try_borrow_mut_data()?)?;
 
     Ok(())
 }
@@ -2223,6 +2217,7 @@ pub fn transfer_into_escrow(
     // Update the TOE to point to the token it now owns.
     let mut toe: TokenOwnedEscrow = TokenOwnedEscrow::from_account_info(escrow_info)?;
     toe.tokens.push(Some(*attribute_mint_info.key));
+    resize_or_reallocate_account_raw(escrow_info, payer_info, system_account_info, toe.len())?;
     toe.serialize(&mut *escrow_info.try_borrow_mut_data()?)?;
 
     Ok(())
@@ -2366,6 +2361,7 @@ pub fn transfer_out_of_escrow(
     for token in toe.tokens.iter_mut() {
         *token = None;
     }
+    resize_or_reallocate_account_raw(escrow_info, payer_info, system_account_info, toe.len())?;
     toe.serialize(&mut *escrow_info.try_borrow_mut_data()?)?;
 
     Ok(())
