@@ -22,7 +22,7 @@ spl-associated-token-account = { version = "1.0.5", features = ["no-entrypoint"]
 mpl-token-metadata = { version = "1.3.3", features = ["no-entrypoint"] }
 spl-compression = { git = "https://github.com/solana-labs/solana-program-library", features = ["cpi"] }
 bytemuck = "1.8.0"
-solana-program = "^1.10.35"
+solana-program = "1.10.29"
 
 [profile.release]
 overflow-checks = true
