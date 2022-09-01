@@ -128,7 +128,9 @@ pub struct CreateEscrowAccountArgs {
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
-pub struct CloseEscrowAccountArgs {}
+pub struct CloseEscrowAccountArgs {
+    pub _padding: u8,
+}
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
