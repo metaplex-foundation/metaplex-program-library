@@ -5,10 +5,10 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from '@metaplex-foundation/beet';
 export type LiveDate = {
-  date: beet.COption<beet.bignum>
-}
+  date: beet.COption<beet.bignum>;
+};
 
 /**
  * @category userTypes
@@ -16,5 +16,5 @@ export type LiveDate = {
  */
 export const liveDateBeet = new beet.FixableBeetArgsStruct<LiveDate>(
   [['date', beet.coption(beet.i64)]],
-  'LiveDate'
-)
+  'LiveDate',
+);

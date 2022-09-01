@@ -5,41 +5,40 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import { BotTax, botTaxBeet } from './BotTax'
-import { LiveDate, liveDateBeet } from './LiveDate'
-import { Lamports, lamportsBeet } from './Lamports'
-import { SplToken, splTokenBeet } from './SplToken'
-import { ThirdPartySigner, thirdPartySignerBeet } from './ThirdPartySigner'
-import { Whitelist, whitelistBeet } from './Whitelist'
-import { Gatekeeper, gatekeeperBeet } from './Gatekeeper'
-import { EndSettings, endSettingsBeet } from './EndSettings'
+import * as beet from '@metaplex-foundation/beet';
+import { BotTax, botTaxBeet } from './BotTax';
+import { LiveDate, liveDateBeet } from './LiveDate';
+import { Lamports, lamportsBeet } from './Lamports';
+import { SplToken, splTokenBeet } from './SplToken';
+import { ThirdPartySigner, thirdPartySignerBeet } from './ThirdPartySigner';
+import { Whitelist, whitelistBeet } from './Whitelist';
+import { Gatekeeper, gatekeeperBeet } from './Gatekeeper';
+import { EndSettings, endSettingsBeet } from './EndSettings';
 export type CandyGuardData = {
-  botTax: beet.COption<BotTax>
-  liveDate: beet.COption<LiveDate>
-  lamports: beet.COption<Lamports>
-  splToken: beet.COption<SplToken>
-  thirdPartySigner: beet.COption<ThirdPartySigner>
-  whitelist: beet.COption<Whitelist>
-  gatekeeper: beet.COption<Gatekeeper>
-  endSettings: beet.COption<EndSettings>
-}
+  botTax: beet.COption<BotTax>;
+  liveDate: beet.COption<LiveDate>;
+  lamports: beet.COption<Lamports>;
+  splToken: beet.COption<SplToken>;
+  thirdPartySigner: beet.COption<ThirdPartySigner>;
+  whitelist: beet.COption<Whitelist>;
+  gatekeeper: beet.COption<Gatekeeper>;
+  endSettings: beet.COption<EndSettings>;
+};
 
 /**
  * @category userTypes
  * @category generated
  */
-export const candyGuardDataBeet =
-  new beet.FixableBeetArgsStruct<CandyGuardData>(
-    [
-      ['botTax', beet.coption(botTaxBeet)],
-      ['liveDate', beet.coption(liveDateBeet)],
-      ['lamports', beet.coption(lamportsBeet)],
-      ['splToken', beet.coption(splTokenBeet)],
-      ['thirdPartySigner', beet.coption(thirdPartySignerBeet)],
-      ['whitelist', beet.coption(whitelistBeet)],
-      ['gatekeeper', beet.coption(gatekeeperBeet)],
-      ['endSettings', beet.coption(endSettingsBeet)],
-    ],
-    'CandyGuardData'
-  )
+export const candyGuardDataBeet = new beet.FixableBeetArgsStruct<CandyGuardData>(
+  [
+    ['botTax', beet.coption(botTaxBeet)],
+    ['liveDate', beet.coption(liveDateBeet)],
+    ['lamports', beet.coption(lamportsBeet)],
+    ['splToken', beet.coption(splTokenBeet)],
+    ['thirdPartySigner', beet.coption(thirdPartySignerBeet)],
+    ['whitelist', beet.coption(whitelistBeet)],
+    ['gatekeeper', beet.coption(gatekeeperBeet)],
+    ['endSettings', beet.coption(endSettingsBeet)],
+  ],
+  'CandyGuardData',
+);

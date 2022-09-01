@@ -5,13 +5,13 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 export type SplToken = {
-  amount: beet.bignum
-  tokenMint: web3.PublicKey
-}
+  amount: beet.bignum;
+  tokenMint: web3.PublicKey;
+};
 
 /**
  * @category userTypes
@@ -22,5 +22,5 @@ export const splTokenBeet = new beet.BeetArgsStruct<SplToken>(
     ['amount', beet.u64],
     ['tokenMint', beetSolana.publicKey],
   ],
-  'SplToken'
-)
+  'SplToken',
+);

@@ -5,13 +5,13 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
+import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
+import * as beet from '@metaplex-foundation/beet';
 export type Gatekeeper = {
-  gatekeeperNetwork: web3.PublicKey
-  expireOnUse: boolean
-}
+  gatekeeperNetwork: web3.PublicKey;
+  expireOnUse: boolean;
+};
 
 /**
  * @category userTypes
@@ -22,5 +22,5 @@ export const gatekeeperBeet = new beet.BeetArgsStruct<Gatekeeper>(
     ['gatekeeperNetwork', beetSolana.publicKey],
     ['expireOnUse', beet.bool],
   ],
-  'Gatekeeper'
-)
+  'Gatekeeper',
+);

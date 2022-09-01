@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
-import { CandyGuardData, candyGuardDataBeet } from '../types/CandyGuardData'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
+import { CandyGuardData, candyGuardDataBeet } from '../types/CandyGuardData';
 
 /**
  * @category Instructions
@@ -15,8 +15,8 @@ import { CandyGuardData, candyGuardDataBeet } from '../types/CandyGuardData'
  * @category generated
  */
 export type UpdateInstructionArgs = {
-  data: CandyGuardData
-}
+  data: CandyGuardData;
+};
 /**
  * @category Instructions
  * @category Update
@@ -24,15 +24,15 @@ export type UpdateInstructionArgs = {
  */
 export const updateStruct = new beet.FixableBeetArgsStruct<
   UpdateInstructionArgs & {
-    instructionDiscriminator: number[] /* size: 8 */
+    instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['data', candyGuardDataBeet],
   ],
-  'UpdateInstructionArgs'
-)
+  'UpdateInstructionArgs',
+);
 /**
  * Accounts required by the _update_ instruction
  *
@@ -44,15 +44,13 @@ export const updateStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type UpdateInstructionAccounts = {
-  candyGuard: web3.PublicKey
-  authority: web3.PublicKey
-  payer: web3.PublicKey
-  systemProgram?: web3.PublicKey
-}
+  candyGuard: web3.PublicKey;
+  authority: web3.PublicKey;
+  payer: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+};
 
-export const updateInstructionDiscriminator = [
-  219, 200, 88, 176, 158, 63, 253, 127,
-]
+export const updateInstructionDiscriminator = [219, 200, 88, 176, 158, 63, 253, 127];
 
 /**
  * Creates a _Update_ instruction.
@@ -67,12 +65,12 @@ export const updateInstructionDiscriminator = [
 export function createUpdateInstruction(
   accounts: UpdateInstructionAccounts,
   args: UpdateInstructionArgs,
-  programId = new web3.PublicKey('grd1hVewsa8dR1T1JfSFGzQUqgWmc1xXZ3uRRFJJ8XJ')
+  programId = new web3.PublicKey('grd1hVewsa8dR1T1JfSFGzQUqgWmc1xXZ3uRRFJJ8XJ'),
 ) {
   const [data] = updateStruct.serialize({
     instructionDiscriminator: updateInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyGuard,
@@ -94,12 +92,12 @@ export function createUpdateInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

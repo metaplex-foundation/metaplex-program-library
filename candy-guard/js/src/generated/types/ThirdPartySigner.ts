@@ -5,12 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
+import * as web3 from '@solana/web3.js';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
+import * as beet from '@metaplex-foundation/beet';
 export type ThirdPartySigner = {
-  signerKey: web3.PublicKey
-}
+  signerKey: web3.PublicKey;
+};
 
 /**
  * @category userTypes
@@ -18,5 +18,5 @@ export type ThirdPartySigner = {
  */
 export const thirdPartySignerBeet = new beet.BeetArgsStruct<ThirdPartySigner>(
   [['signerKey', beetSolana.publicKey]],
-  'ThirdPartySigner'
-)
+  'ThirdPartySigner',
+);

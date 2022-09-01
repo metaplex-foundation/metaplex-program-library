@@ -5,8 +5,8 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from '@metaplex-foundation/beet';
+import * as web3 from '@solana/web3.js';
 
 /**
  * @category Instructions
@@ -14,11 +14,8 @@ import * as web3 from '@solana/web3.js'
  * @category generated
  */
 export const wrapStruct = new beet.BeetArgsStruct<{
-  instructionDiscriminator: number[] /* size: 8 */
-}>(
-  [['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]],
-  'WrapInstructionArgs'
-)
+  instructionDiscriminator: number[] /* size: 8 */;
+}>([['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)]], 'WrapInstructionArgs');
 /**
  * Accounts required by the _wrap_ instruction
  *
@@ -31,15 +28,13 @@ export const wrapStruct = new beet.BeetArgsStruct<{
  * @category generated
  */
 export type WrapInstructionAccounts = {
-  candyGuard: web3.PublicKey
-  candyMachine: web3.PublicKey
-  candyMachineProgram: web3.PublicKey
-  authority: web3.PublicKey
-}
+  candyGuard: web3.PublicKey;
+  candyMachine: web3.PublicKey;
+  candyMachineProgram: web3.PublicKey;
+  authority: web3.PublicKey;
+};
 
-export const wrapInstructionDiscriminator = [
-  178, 40, 10, 189, 228, 129, 186, 140,
-]
+export const wrapInstructionDiscriminator = [178, 40, 10, 189, 228, 129, 186, 140];
 
 /**
  * Creates a _Wrap_ instruction.
@@ -51,11 +46,11 @@ export const wrapInstructionDiscriminator = [
  */
 export function createWrapInstruction(
   accounts: WrapInstructionAccounts,
-  programId = new web3.PublicKey('grd1hVewsa8dR1T1JfSFGzQUqgWmc1xXZ3uRRFJJ8XJ')
+  programId = new web3.PublicKey('grd1hVewsa8dR1T1JfSFGzQUqgWmc1xXZ3uRRFJJ8XJ'),
 ) {
   const [data] = wrapStruct.serialize({
     instructionDiscriminator: wrapInstructionDiscriminator,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.candyGuard,
@@ -77,12 +72,12 @@ export function createWrapInstruction(
       isWritable: false,
       isSigner: true,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }

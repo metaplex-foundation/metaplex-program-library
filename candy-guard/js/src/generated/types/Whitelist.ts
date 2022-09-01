@@ -5,19 +5,16 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import {
-  WhitelistTokenMode,
-  whitelistTokenModeBeet,
-} from './WhitelistTokenMode'
+import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
+import { WhitelistTokenMode, whitelistTokenModeBeet } from './WhitelistTokenMode';
 export type Whitelist = {
-  mint: web3.PublicKey
-  presale: boolean
-  discountPrice: beet.COption<beet.bignum>
-  mode: WhitelistTokenMode
-}
+  mint: web3.PublicKey;
+  presale: boolean;
+  discountPrice: beet.COption<beet.bignum>;
+  mode: WhitelistTokenMode;
+};
 
 /**
  * @category userTypes
@@ -30,5 +27,5 @@ export const whitelistBeet = new beet.FixableBeetArgsStruct<Whitelist>(
     ['discountPrice', beet.coption(beet.u64)],
     ['mode', whitelistTokenModeBeet],
   ],
-  'Whitelist'
-)
+  'Whitelist',
+);

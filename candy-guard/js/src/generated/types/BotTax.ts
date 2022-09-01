@@ -5,11 +5,11 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from '@metaplex-foundation/beet';
 export type BotTax = {
-  lamports: beet.bignum
-  lastInstruction: boolean
-}
+  lamports: beet.bignum;
+  lastInstruction: boolean;
+};
 
 /**
  * @category userTypes
@@ -20,5 +20,5 @@ export const botTaxBeet = new beet.BeetArgsStruct<BotTax>(
     ['lamports', beet.u64],
     ['lastInstruction', beet.bool],
   ],
-  'BotTax'
-)
+  'BotTax',
+);

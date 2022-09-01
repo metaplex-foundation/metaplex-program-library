@@ -1,5 +1,5 @@
-export * from './CandyGuard'
+export * from './CandyGuard';
 
-import { CandyGuard } from './CandyGuard'
+import { CandyGuard } from './CandyGuard';
 
-export const accountProviders = { CandyGuard }
+export const accountProviders = { CandyGuard };

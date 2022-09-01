@@ -5,12 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import { EndSettingType, endSettingTypeBeet } from './EndSettingType'
+import * as beet from '@metaplex-foundation/beet';
+import { EndSettingType, endSettingTypeBeet } from './EndSettingType';
 export type EndSettings = {
-  endSettingType: EndSettingType
-  number: beet.bignum
-}
+  endSettingType: EndSettingType;
+  number: beet.bignum;
+};
 
 /**
  * @category userTypes
@@ -21,5 +21,5 @@ export const endSettingsBeet = new beet.BeetArgsStruct<EndSettings>(
     ['endSettingType', endSettingTypeBeet],
     ['number', beet.u64],
   ],
-  'EndSettings'
-)
+  'EndSettings',
+);

@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
+import * as web3 from '@solana/web3.js';
+import * as beet from '@metaplex-foundation/beet';
+import * as beetSolana from '@metaplex-foundation/beet-solana';
 
 /**
  * Arguments used to create {@link CandyGuard}
@@ -15,13 +15,13 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
  * @category generated
  */
 export type CandyGuardArgs = {
-  base: web3.PublicKey
-  bump: number
-  authority: web3.PublicKey
-  features: beet.bignum
-}
+  base: web3.PublicKey;
+  bump: number;
+  authority: web3.PublicKey;
+  features: beet.bignum;
+};
 
-export const candyGuardDiscriminator = [44, 207, 199, 184, 112, 103, 34, 181]
+export const candyGuardDiscriminator = [44, 207, 199, 184, 112, 103, 34, 181];
 /**
  * Holds the data for the {@link CandyGuard} Account and provides de/serialization
  * functionality for that data
@@ -34,25 +34,22 @@ export class CandyGuard implements CandyGuardArgs {
     readonly base: web3.PublicKey,
     readonly bump: number,
     readonly authority: web3.PublicKey,
-    readonly features: beet.bignum
+    readonly features: beet.bignum,
   ) {}
 
   /**
    * Creates a {@link CandyGuard} instance from the provided args.
    */
   static fromArgs(args: CandyGuardArgs) {
-    return new CandyGuard(args.base, args.bump, args.authority, args.features)
+    return new CandyGuard(args.base, args.bump, args.authority, args.features);
   }
 
   /**
    * Deserializes the {@link CandyGuard} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static fromAccountInfo(
-    accountInfo: web3.AccountInfo<Buffer>,
-    offset = 0
-  ): [CandyGuard, number] {
-    return CandyGuard.deserialize(accountInfo.data, offset)
+  static fromAccountInfo(accountInfo: web3.AccountInfo<Buffer>, offset = 0): [CandyGuard, number] {
+    return CandyGuard.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -63,13 +60,13 @@ export class CandyGuard implements CandyGuardArgs {
    */
   static async fromAccountAddress(
     connection: web3.Connection,
-    address: web3.PublicKey
+    address: web3.PublicKey,
   ): Promise<CandyGuard> {
-    const accountInfo = await connection.getAccountInfo(address)
+    const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo == null) {
-      throw new Error(`Unable to find CandyGuard account at ${address}`)
+      throw new Error(`Unable to find CandyGuard account at ${address}`);
     }
-    return CandyGuard.fromAccountInfo(accountInfo, 0)[0]
+    return CandyGuard.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -79,11 +76,9 @@ export class CandyGuard implements CandyGuardArgs {
    * @param programId - the program that owns the accounts we are filtering
    */
   static gpaBuilder(
-    programId: web3.PublicKey = new web3.PublicKey(
-      'grd1hVewsa8dR1T1JfSFGzQUqgWmc1xXZ3uRRFJJ8XJ'
-    )
+    programId: web3.PublicKey = new web3.PublicKey('grd1hVewsa8dR1T1JfSFGzQUqgWmc1xXZ3uRRFJJ8XJ'),
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, candyGuardBeet)
+    return beetSolana.GpaBuilder.fromStruct(programId, candyGuardBeet);
   }
 
   /**
@@ -91,7 +86,7 @@ export class CandyGuard implements CandyGuardArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [CandyGuard, number] {
-    return candyGuardBeet.deserialize(buf, offset)
+    return candyGuardBeet.deserialize(buf, offset);
   }
 
   /**
@@ -102,7 +97,7 @@ export class CandyGuard implements CandyGuardArgs {
     return candyGuardBeet.serialize({
       accountDiscriminator: candyGuardDiscriminator,
       ...this,
-    })
+    });
   }
 
   /**
@@ -110,7 +105,7 @@ export class CandyGuard implements CandyGuardArgs {
    * {@link CandyGuard}
    */
   static get byteSize() {
-    return candyGuardBeet.byteSize
+    return candyGuardBeet.byteSize;
   }
 
   /**
@@ -121,12 +116,9 @@ export class CandyGuard implements CandyGuardArgs {
    */
   static async getMinimumBalanceForRentExemption(
     connection: web3.Connection,
-    commitment?: web3.Commitment
+    commitment?: web3.Commitment,
   ): Promise<number> {
-    return connection.getMinimumBalanceForRentExemption(
-      CandyGuard.byteSize,
-      commitment
-    )
+    return connection.getMinimumBalanceForRentExemption(CandyGuard.byteSize, commitment);
   }
 
   /**
@@ -134,7 +126,7 @@ export class CandyGuard implements CandyGuardArgs {
    * hold {@link CandyGuard} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === CandyGuard.byteSize
+    return buf.byteLength - offset === CandyGuard.byteSize;
   }
 
   /**
@@ -147,17 +139,17 @@ export class CandyGuard implements CandyGuardArgs {
       bump: this.bump,
       authority: this.authority.toBase58(),
       features: (() => {
-        const x = <{ toNumber: () => number }>this.features
+        const x = <{ toNumber: () => number }>this.features;
         if (typeof x.toNumber === 'function') {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
-    }
+    };
   }
 }
 
@@ -168,7 +160,7 @@ export class CandyGuard implements CandyGuardArgs {
 export const candyGuardBeet = new beet.BeetStruct<
   CandyGuard,
   CandyGuardArgs & {
-    accountDiscriminator: number[] /* size: 8 */
+    accountDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
@@ -179,5 +171,5 @@ export const candyGuardBeet = new beet.BeetStruct<
     ['features', beet.u64],
   ],
   CandyGuard.fromArgs,
-  'CandyGuard'
-)
+  'CandyGuard',
+);

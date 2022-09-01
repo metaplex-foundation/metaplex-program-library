@@ -5,16 +5,13 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
+import * as beet from '@metaplex-foundation/beet';
 export type Lamports = {
-  amount: beet.bignum
-}
+  amount: beet.bignum;
+};
 
 /**
  * @category userTypes
  * @category generated
  */
-export const lamportsBeet = new beet.BeetArgsStruct<Lamports>(
-  [['amount', beet.u64]],
-  'Lamports'
-)
+export const lamportsBeet = new beet.BeetArgsStruct<Lamports>([['amount', beet.u64]], 'Lamports');
