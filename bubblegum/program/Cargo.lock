@@ -1336,7 +1336,7 @@ dependencies = [
 [[package]]
 name = "spl-compression"
 version = "0.1.0"
-source = "git+https://github.com/solana-labs/solana-program-library#90626fc4c92b9ec00bcd326c4d13d30845fd8ee9"
+source = "git+https://github.com/solana-labs/solana-program-library?rev=592960c2dec22158c6a1e3127c54e8cd808d39d5#592960c2dec22158c6a1e3127c54e8cd808d39d5"
 dependencies = [
  "anchor-lang",
  "bytemuck",
@@ -1347,7 +1347,7 @@ dependencies = [
 [[package]]
 name = "spl-concurrent-merkle-tree"
 version = "0.1.0"
-source = "git+https://github.com/solana-labs/solana-program-library#90626fc4c92b9ec00bcd326c4d13d30845fd8ee9"
+source = "git+https://github.com/solana-labs/solana-program-library?rev=592960c2dec22158c6a1e3127c54e8cd808d39d5#592960c2dec22158c6a1e3127c54e8cd808d39d5"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -1561,7 +1561,7 @@ checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
 [[package]]
 name = "wrapper"
 version = "0.1.0"
-source = "git+https://github.com/solana-labs/solana-program-library#90626fc4c92b9ec00bcd326c4d13d30845fd8ee9"
+source = "git+https://github.com/solana-labs/solana-program-library?rev=592960c2dec22158c6a1e3127c54e8cd808d39d5#592960c2dec22158c6a1e3127c54e8cd808d39d5"
 dependencies = [
  "solana-program",
 ]

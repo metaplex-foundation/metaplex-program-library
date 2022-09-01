@@ -85,7 +85,7 @@ pub fn append_leaf<'info>(
     gummyroll_program: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
     merkle_roll: &AccountInfo<'info>,
-    candy_wrapper: &AccountInfo<'info>,
+    log_wrapper: &AccountInfo<'info>,
     leaf_node: Node,
 ) -> Result<()> {
     let seeds = &[seed.as_ref(), &[bump]];
@@ -95,7 +95,7 @@ pub fn append_leaf<'info>(
         spl_compression::cpi::accounts::Modify {
             authority: authority.clone(),
             merkle_tree: merkle_roll.clone(),
-            log_wrapper: candy_wrapper.clone(),
+            log_wrapper: log_wrapper.clone(),
         },
         authority_pda_signer,
     );
