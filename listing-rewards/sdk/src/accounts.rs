@@ -4,7 +4,6 @@ pub struct CreateListingAccounts {
     pub wallet: Pubkey,
     pub listing: Pubkey,
     pub reward_center: Pubkey,
-    pub rewardable_collection: Pubkey,
     pub token_account: Pubkey,
     pub metadata: Pubkey,
     pub authority: Pubkey,
@@ -17,7 +16,6 @@ pub struct CancelListingAccounts {
     pub wallet: Pubkey,
     pub listing: Pubkey,
     pub reward_center: Pubkey,
-    pub rewardable_collection: Pubkey,
     pub metadata: Pubkey,
     pub token_account: Pubkey,
     pub authority: Pubkey,
@@ -29,7 +27,6 @@ pub struct CancelListingAccounts {
 pub struct CreateOfferAccounts {
     pub wallet: Pubkey,
     pub payment_account: Pubkey,
-    pub rewardable_collection: Pubkey,
     pub transfer_authority: Pubkey,
     pub treasury_mint: Pubkey,
     pub token_mint: Pubkey,
@@ -43,7 +40,6 @@ pub struct CreateOfferAccounts {
 pub struct CloseOfferAccounts {
     pub wallet: Pubkey,
     pub receipt_account: Pubkey,
-    pub rewardable_collection: Pubkey,
     pub treasury_mint: Pubkey,
     pub token_mint: Pubkey,
     pub token_account: Pubkey,
@@ -56,7 +52,6 @@ pub struct CloseOfferAccounts {
 pub struct ExecuteSaleAccounts {
     pub buyer: Pubkey,
     pub seller: Pubkey,
-    pub rewardable_collection: Pubkey,
     pub authority: Pubkey,
     pub auction_house: Pubkey,
     pub treasury_mint: Pubkey,
