@@ -22,7 +22,7 @@
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
     "prettier": "prettier \"{src,test}/**/*.ts\" --check",
-    "fix:prettier": "prettier --write src/",
+    "fix:prettier": "prettier --write src/ prettier --write test/",
     "fix": "yarn fix:lint && yarn fix:prettier"
   },
   "files": [
