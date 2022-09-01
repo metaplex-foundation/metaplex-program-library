@@ -18,7 +18,6 @@ jobs:
     outputs:
       core: ${{ steps.filter.outputs.core }}
       package: ${{ steps.filter.outputs.package }}
-      workflow: ${{ steps.filter.outputs.workflow }}
     steps:
     - uses: actions/checkout@v2
     # For pull requests it's not necessary to checkout the code
@@ -30,14 +29,13 @@ jobs:
             - 'core/**'
           package:
             - 'fixed-price-sale/**'
-          workflow:
-            - '.github/workflows/integration-fixed-price-sale.yml '
+
   build-and-integration-test-fixed-price-sale:
     runs-on: ubuntu-latest
     env:
       cache_id: program-fixed-price-sale
     needs: changes
-    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' || needs.changes.outputs.workflow == 'true' }}
+    if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}
     steps:
       # Setup Deps
       - uses: actions/checkout@v2
