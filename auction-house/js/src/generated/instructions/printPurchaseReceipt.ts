@@ -21,7 +21,7 @@ export type PrintPurchaseReceiptInstructionArgs = {
  * @category PrintPurchaseReceipt
  * @category generated
  */
-const printPurchaseReceiptStruct = new beet.BeetArgsStruct<
+export const printPurchaseReceiptStruct = new beet.BeetArgsStruct<
   PrintPurchaseReceiptInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -49,10 +49,13 @@ export type PrintPurchaseReceiptInstructionAccounts = {
   listingReceipt: web3.PublicKey;
   bidReceipt: web3.PublicKey;
   bookkeeper: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
   instruction: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const printPurchaseReceiptInstructionDiscriminator = [227, 154, 251, 7, 180, 56, 100, 143];
+export const printPurchaseReceiptInstructionDiscriminator = [227, 154, 251, 7, 180, 56, 100, 143];
 
 /**
  * Creates a _PrintPurchaseReceipt_ instruction.
@@ -67,53 +70,58 @@ const printPurchaseReceiptInstructionDiscriminator = [227, 154, 251, 7, 180, 56,
 export function createPrintPurchaseReceiptInstruction(
   accounts: PrintPurchaseReceiptInstructionAccounts,
   args: PrintPurchaseReceiptInstructionArgs,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
 ) {
-  const { purchaseReceipt, listingReceipt, bidReceipt, bookkeeper, instruction } = accounts;
-
   const [data] = printPurchaseReceiptStruct.serialize({
     instructionDiscriminator: printPurchaseReceiptInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: purchaseReceipt,
+      pubkey: accounts.purchaseReceipt,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: listingReceipt,
+      pubkey: accounts.listingReceipt,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: bidReceipt,
+      pubkey: accounts.bidReceipt,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: bookkeeper,
+      pubkey: accounts.bookkeeper,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: instruction,
+      pubkey: accounts.instruction,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });
