@@ -957,9 +957,9 @@ where {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone, Default)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub struct TokenOwnedEscrow {
-    pub tokens: Vec<Pubkey>,
+    pub tokens: Vec<Option<Pubkey>>,
     pub delegates: Vec<Pubkey>,
     pub model: Option<Pubkey>,
 }
