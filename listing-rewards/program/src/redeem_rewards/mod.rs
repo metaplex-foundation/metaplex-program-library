@@ -6,9 +6,9 @@ use anchor_spl::{
 
 use crate::{
     assertions::assert_listing_reward_redemption_eligibility,
-    constants::{LISTING, REWARDABLE_COLLECTION, REWARD_CENTER},
+    constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{Listing, RewardCenter, RewardableCollection},
+    state::{Listing, RewardCenter},
     MetadataAccount,
 };
 
@@ -22,7 +22,7 @@ pub struct RedemRewards<'info> {
             LISTING.as_bytes(),
             wallet.key().as_ref(),
             metadata.key().as_ref(),
-            rewardable_collection.key().as_ref(),
+            reward_center.key().as_ref(),
         ],
         bump = listing.bump,
     )]
@@ -59,10 +59,6 @@ pub struct RedemRewards<'info> {
     #[account(seeds = [REWARD_CENTER.as_bytes(), reward_center.auction_house.as_ref()], bump = reward_center.bump)]
     pub reward_center: Account<'info, RewardCenter>,
 
-    /// The collection eligable for rewards
-    #[account(seeds = [REWARDABLE_COLLECTION.as_bytes(), reward_center.key().as_ref(), rewardable_collection.collection.as_ref()], bump = rewardable_collection.bump)]
-    pub rewardable_collection: Account<'info, RewardableCollection>,
-
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -71,7 +67,6 @@ pub struct RedemRewards<'info> {
 
 pub fn redeem_rewards(ctx: Context<RedemRewards>) -> Result<()> {
     let listing = &ctx.accounts.listing;
-    let _rewardable_collection = &ctx.accounts.rewardable_collection;
     let reward_center = &ctx.accounts.reward_center;
 
     assert_listing_reward_redemption_eligibility(listing, reward_center)?;
