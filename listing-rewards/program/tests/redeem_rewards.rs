@@ -12,7 +12,7 @@ use mpl_auction_house::{
     AuthorityScope,
 };
 use mpl_listing_rewards::{
-    pda::{find_listing_address, find_reward_center_address, find_rewardable_collection_address},
+    pda::{find_listing_address, find_reward_center_address},
     reward_center, state,
 };
 
@@ -101,13 +101,8 @@ async fn redeem_rewards_success() {
 
     let (auction_house, _) = find_auction_house_address(&wallet, &mint.pubkey());
     let (reward_center, _) = find_reward_center_address(&auction_house);
-    let (rewardable_collection, _) =
-        find_rewardable_collection_address(&reward_center, &collection);
-    let (listing, _) = find_listing_address(
-        &metadata_owner_address,
-        &metadata_address,
-        &rewardable_collection,
-    );
+    let (listing, _) =
+        find_listing_address(&metadata_owner_address, &metadata_address, &reward_center);
     let treasury_withdraw_desintiation = get_associated_token_address(&wallet, &mint.pubkey());
 
     let reward_center_params = reward_center::create::CreateRewardCenterParams {
@@ -142,13 +137,6 @@ async fn redeem_rewards_success() {
         mint.pubkey(),
         auction_house,
         reward_center_params,
-    );
-
-    let create_rewardable_collection_ix = mpl_listing_rewards_sdk::create_rewardable_collection(
-        wallet,
-        auction_house,
-        reward_center,
-        collection,
     );
 
     let delegate_auctioneer_accounts = mpl_auction_house_sdk::DelegateAuctioneerAccounts {
@@ -200,7 +188,6 @@ async fn redeem_rewards_success() {
         wallet: metadata_owner.pubkey(),
         listing,
         reward_center,
-        rewardable_collection,
         token_account,
         metadata: metadata.pubkey,
         authority: wallet,
@@ -222,7 +209,6 @@ async fn redeem_rewards_success() {
         &[
             create_auction_house_ix,
             create_reward_center_ix,
-            create_rewardable_collection_ix,
             delegate_auctioneer_ix,
         ],
         Some(&wallet),
