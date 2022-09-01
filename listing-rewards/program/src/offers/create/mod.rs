@@ -1,8 +1,7 @@
 use crate::{
-    assertions::assert_belongs_to_rewardable_collection,
-    constants::{OFFER, REWARDABLE_COLLECTION, REWARD_CENTER},
+    constants::{OFFER, REWARD_CENTER},
     errors::ListingRewardsError,
-    state::{Offer, RewardCenter, RewardableCollection},
+    state::{Offer, RewardCenter},
     MetadataAccount,
 };
 use anchor_lang::prelude::{Result, *};
@@ -37,22 +36,11 @@ pub struct CreateOffer<'info> {
             OFFER.as_bytes(),
             wallet.key().as_ref(),
             metadata.key().as_ref(),
-            rewardable_collection.key().as_ref()
+            reward_center.key().as_ref()
         ],  
         bump
     )]
     pub offer: Account<'info, Offer>,
-
-    /// The collection eligable for rewards
-    #[account(
-        seeds = [
-            REWARDABLE_COLLECTION.as_bytes(),
-            reward_center.key().as_ref(),
-            metadata.collection.as_ref().ok_or(ListingRewardsError::NFTMissingCollection)?.key.as_ref()
-        ],
-        bump = rewardable_collection.bump
-    )]
-    pub rewardable_collection: Box<Account<'info, RewardableCollection>>,
 
     /// CHECK: Validated in public_bid_logic.
     #[account(mut)]
@@ -172,19 +160,15 @@ pub fn handler(
     let metadata = &ctx.accounts.metadata;
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
-    let rewardable_collection = &ctx.accounts.rewardable_collection;
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
     let auction_house_key = auction_house.key();
-
-    assert_belongs_to_rewardable_collection(metadata, rewardable_collection)?;
 
     let offer = &mut ctx.accounts.offer;
 
     offer.reward_center = reward_center.key();
     offer.buyer = wallet.key();
     offer.metadata = metadata.key();
-    offer.rewardable_collection = rewardable_collection.key();
     offer.price = buyer_price;
     offer.token_size = token_size;
     offer.bump = *ctx
