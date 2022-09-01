@@ -77,3 +77,16 @@ pub fn find_escrow_account(mint: &Pubkey) -> (Pubkey, u8) {
         &crate::id(),
     )
 }
+
+pub fn find_escrow_constraints_model_account(creator: &Pubkey, name: &str) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            PREFIX.as_bytes(),
+            crate::id().as_ref(),
+            ESCROW_PREFIX.as_ref(),
+            creator.as_ref(),
+            name.as_bytes(),
+        ],
+        &crate::id(),
+    )
+}

@@ -2302,28 +2302,59 @@ pub fn transfer_out_of_escrow(
 }
 
 fn create_escrow_contstraints_model_account(
-    _program_id: &Pubkey,
+    program_id: &Pubkey,
     accounts: &[AccountInfo],
     args: CreateEscrowConstraintsModelAccountArgs,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
     let escrow_constraints_model_account = next_account_info(account_info_iter)?;
-    let payer_account = next_account_info(account_info_iter)?;
+    let payer = next_account_info(account_info_iter)?;
     let update_authority = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
     let rent = next_account_info(account_info_iter)?;
 
-    todo!("figure out what the derivation path should be");
-    todo!("assert derivation path is correct");
-    todo!("create the account with system_program and set the payer.");
-
     let escrow_constraints_model = EscrowConstraintsModel {
-        name: args.name,
+        name: args.name.to_owned(),
+        creator: payer.key.to_owned(),
         update_authority: update_authority.key.to_owned(),
-        constraints: args.constraints,
+        constraints: vec![],
         count: 0,
     };
+
+    msg!("{:#?}", escrow_constraints_model);
+    msg!("{:#?}", escrow_constraints_model.try_len()?);
+
+    let bump = assert_derivation(
+        program_id,
+        escrow_constraints_model_account,
+        &[
+            PREFIX.as_bytes(),
+            program_id.as_ref(),
+            ESCROW_PREFIX.as_bytes(),
+            payer.key.as_ref(),
+            args.name.as_bytes(),
+        ],
+    )?;
+
+    let escrow_constraints_model_seeds = &[
+        PREFIX.as_ref(),
+        program_id.as_ref(),
+        ESCROW_PREFIX.as_ref(),
+        payer.key.as_ref(),
+        args.name.as_ref(),
+        &[bump],
+    ];
+
+    create_or_allocate_account_raw(
+        *program_id,
+        escrow_constraints_model_account,
+        rent,
+        system_program,
+        payer,
+        escrow_constraints_model.try_len()?,
+        escrow_constraints_model_seeds,
+    )?;
 
     escrow_constraints_model
         .serialize(&mut *escrow_constraints_model_account.try_borrow_mut_data()?)?;

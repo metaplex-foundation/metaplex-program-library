@@ -149,7 +149,6 @@ pub struct TransferOutOfEscrowArgs {
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
 pub struct CreateEscrowConstraintsModelAccountArgs {
     pub name: String,
-    pub constraints: Vec<EscrowConstraint>,
 }
 
 /// Instructions supported by the Metadata program.
@@ -599,7 +598,7 @@ pub enum MetadataInstruction {
 
     /// Create an constraints model to be used by one or many escrow accounts.
     #[account(0, writable, name="escrow_constraints_model", desc="Constraints model account")]
-    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account, will be set as the creator of the constraints model")]
     #[account(2, name="update_authority", desc="Update authority of the constraints model")]
     #[account(3, name="system_program", desc="System program")]
     #[account(4, name="rent", desc="Rent info")]

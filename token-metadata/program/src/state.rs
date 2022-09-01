@@ -986,9 +986,28 @@ impl TokenOwnedEscrowAccount for TokenOwnedEscrow {}
 pub struct EscrowConstraintsModel {
     pub name: String,
     pub constraints: Vec<EscrowConstraint>,
+    pub creator: Pubkey,
     pub update_authority: Pubkey,
     /// The number of Token Owned Escrow accounts that are using this model.
     pub count: u64,
+}
+
+impl EscrowConstraintsModel {
+    pub fn try_len(&self) -> Result<usize, ProgramError> {
+        self.constraints
+            .iter()
+            .try_fold(0usize, |acc, ec| {
+                acc.checked_add(ec.try_len()?)
+                    .ok_or(MetadataError::NumericalOverflowError.into())
+            })
+            .map(|ecs_len| {
+                ecs_len
+                    + self.name.len()
+                    + mem::size_of::<Pubkey>()
+                    + mem::size_of::<Pubkey>()
+                    + mem::size_of::<u64>()
+            })
+    }
 }
 
 #[repr(C)]
@@ -1000,6 +1019,14 @@ pub struct EscrowConstraint {
     pub constraint_type: EscrowConstraintType,
 }
 
+impl EscrowConstraint {
+    pub fn try_len(&self) -> Result<usize, ProgramError> {
+        self.constraint_type
+            .try_len()
+            .map(|ct_len| Ok(ct_len + self.name.len() + mem::size_of::<u64>()))?
+    }
+}
+
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
@@ -1007,6 +1034,22 @@ pub enum EscrowConstraintType {
     None,
     Collection(Pubkey),
     Tokens(HashMap<Pubkey, ()>),
+}
+
+impl EscrowConstraintType {
+    pub fn try_len(&self) -> Result<usize, ProgramError> {
+        match self {
+            EscrowConstraintType::None => Ok(1),
+            EscrowConstraintType::Collection(_) => Ok(1 + mem::size_of::<Pubkey>()),
+            EscrowConstraintType::Tokens(hm) => {
+                return if let Some(len) = hm.len().checked_mul(mem::size_of::<Pubkey>()) {
+                    Ok(1 + len)
+                } else {
+                    Err(MetadataError::NumericalOverflowError.into())
+                };
+            }
+        }
+    }
 }
 
 impl Default for EscrowConstraintType {
