@@ -952,6 +952,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metaplex-foundation/amman-client@npm:^0.2.0, @metaplex-foundation/amman-client@npm:^0.2.2":
+  version: 0.2.2
+  resolution: "@metaplex-foundation/amman-client@npm:0.2.2"
+  dependencies:
+    "@metaplex-foundation/cusper": ^0.0.2
+    "@solana/spl-token-registry": ^0.2.2405
+    "@solana/web3.js": ^1.55.0
+    bn.js: ^5.2.1
+    debug: ^4.3.3
+    js-sha3: ^0.8.0
+    socket.io-client: ^4.4.1
+    tweetnacl: ^1.0.3
+  checksum: 22c316d16668f28feabb0e201ee3ac3dff0225ab9df147f8310d0072dec93f73a9e6d92209b5d70f2f3659729656fb40889c012f7e10c79d62fdd61e8b97c7a3
+  languageName: node
+  linkType: hard
+
 "@metaplex-foundation/amman@npm:0.10.0, @metaplex-foundation/amman@npm:^0.10.0":
   version: 0.10.0
   resolution: "@metaplex-foundation/amman@npm:0.10.0"
@@ -995,6 +1011,35 @@ __metadata:
   bin:
     amman: dist/cli/amman.js
   checksum: 7d81073def86e29d7557722c1acf27db26cdbc8a5120af02c89578f7d9fec1b061c8fd23e072c5432d4d68539e14ea21fa6e27250362a6cf6cd4d955e9f6db7a
+  languageName: node
+  linkType: hard
+
+"@metaplex-foundation/amman@npm:^0.11.1":
+  version: 0.11.1
+  resolution: "@metaplex-foundation/amman@npm:0.11.1"
+  dependencies:
+    "@metaplex-foundation/amman-client": ^0.2.0
+    "@solana/spl-token": ^0.2.0
+    "@solana/web3.js": ^1.43.4
+    ansi-colors: ^4.1.1
+    bn.js: ^5.2.0
+    buffer-hexdump: ^1.0.0
+    date-fns: ^2.28.0
+    debug: ^4.3.3
+    deep-diff: ^1.0.2
+    diff: ^5.1.0
+    numeral: ^2.0.6
+    port-pid: ^0.0.7
+    socket.io: ^4.4.1
+    split2: ^4.1.0
+    text-table: ^0.2.0
+    timeago.js: ^4.0.2
+    ts-essentials: ^9.3.0
+    wait-on: ^6.0.0
+    yargs: ^17.3.0
+  bin:
+    amman: dist/cli/amman.js
+  checksum: c06aead7e0c06b5005e98ab1591226442940c9fd68e012b4f123018f5ea206a144c6b62b168a2a07c936a5bed1a2d5a261521df4eea12e5eeef962c5dc426050
   languageName: node
   linkType: hard
 
@@ -1171,7 +1216,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@metaplex-foundation/mpl-candy-guard@workspace:candy-guard/js"
   dependencies:
-    "@metaplex-foundation/amman": ^0.10.0
+    "@metaplex-foundation/amman": ^0.11.1
+    "@metaplex-foundation/amman-client": ^0.2.2
     "@metaplex-foundation/beet": ^0.4.0
     "@metaplex-foundation/beet-solana": ^0.3.0
     "@metaplex-foundation/cusper": ^0.0.2
@@ -1507,6 +1553,27 @@ __metadata:
   bin:
     solita: dist/src/cli/solita.js
   checksum: 16cc9a2ce058217eea6546bff058291f24437c5e021b37c1c59884b6934788cab0f619e2e61e2cd5e7ae5a7897aff5c5343a146c2cd1a90b0ca4d64f58dcff6d
+  languageName: node
+  linkType: hard
+
+"@noble/ed25519@npm:^1.7.0":
+  version: 1.7.0
+  resolution: "@noble/ed25519@npm:1.7.0"
+  checksum: 9a2cd37885c46d6fec2d5b08f59601894314e8cb984a1b69c616ed079d9b96ebc288706b3fcfb16a6bb175667c15c7ef80042c7d3b5a173d44dc051101364415
+  languageName: node
+  linkType: hard
+
+"@noble/hashes@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "@noble/hashes@npm:1.1.2"
+  checksum: 3c2a8cb7c2e053811032f242155d870c5eb98844d924d69702244d48804cb03b42d4a666c49c2b71164420d8229cb9a6f242b972d50d5bb2f1d673b98b041de2
+  languageName: node
+  linkType: hard
+
+"@noble/secp256k1@npm:^1.6.3":
+  version: 1.6.3
+  resolution: "@noble/secp256k1@npm:1.6.3"
+  checksum: 16eb3242533e645deb64444c771515f66bdc2ee0759894efd42fdeed4ab226ed29827aaaf6caa27d3d95b831452fd4246aa1007cd688aa462ad48fc084ab76e6
   languageName: node
   linkType: hard
 
@@ -1967,6 +2034,30 @@ __metadata:
     superstruct: ^0.14.2
     tweetnacl: ^1.0.3
   checksum: cb7020c3ff6c13784b6073316ea3895ff413090be96b8e332ee0fc74c5981cef40582cfa8cb796e7263fd023e920f9b6403dc56292a2e07558361618236b4926
+  languageName: node
+  linkType: hard
+
+"@solana/web3.js@npm:^1.55.0":
+  version: 1.56.0
+  resolution: "@solana/web3.js@npm:1.56.0"
+  dependencies:
+    "@babel/runtime": ^7.12.5
+    "@noble/ed25519": ^1.7.0
+    "@noble/hashes": ^1.1.2
+    "@noble/secp256k1": ^1.6.3
+    "@solana/buffer-layout": ^4.0.0
+    bigint-buffer: ^1.1.5
+    bn.js: ^5.0.0
+    borsh: ^0.7.0
+    bs58: ^4.0.1
+    buffer: 6.0.1
+    fast-stable-stringify: ^1.0.0
+    jayson: ^3.4.4
+    js-sha3: ^0.8.0
+    node-fetch: 2
+    rpc-websockets: ^7.5.0
+    superstruct: ^0.14.2
+  checksum: c804b3ddc655c349d247bc107bf2e74321916d55fc602ded241d6b822b725b4726298d976cef130199b7c9e6fb935e674e12f8390e6ec8770ca51533e7c6c17b
   languageName: node
   linkType: hard
 
@@ -9173,6 +9264,15 @@ __metadata:
   version: 0.0.1
   resolution: "trim@npm:0.0.1"
   checksum: 2b4646dff99a222e8e1526edd4e3a43bbd925af0b8e837c340455d250157e7deefaa4da49bb891ab841e5c27b1afc5e9e32d4b57afb875d2dfcabf4e319b8f7f
+  languageName: node
+  linkType: hard
+
+"ts-essentials@npm:^9.3.0":
+  version: 9.3.0
+  resolution: "ts-essentials@npm:9.3.0"
+  peerDependencies:
+    typescript: ">=4.1.0"
+  checksum: fd001aff21324d5025f8d4258a517f765cfea60aa57361869f43dc0d8b6b89400c413b149f05c395438ae525dd3a3b891b4a3bb92eaec691d135ba2b03a590fb
   languageName: node
   linkType: hard
 
