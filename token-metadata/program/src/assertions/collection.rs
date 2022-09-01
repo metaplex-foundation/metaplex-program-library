@@ -74,12 +74,12 @@ pub fn assert_has_collection_authority(
 }
 
 pub fn assert_collection_verify_is_valid(
-    collection_member: &Metadata,
+    member_collection: &Option<Collection>,
     collection_data: &Metadata,
     collection_mint: &AccountInfo,
     edition_account_info: &AccountInfo,
 ) -> Result<(), ProgramError> {
-    match &collection_member.collection {
+    match member_collection {
         Some(collection) => {
             if collection.key != *collection_mint.key
                 || collection_data.mint != *collection_mint.key

@@ -503,7 +503,7 @@ pub fn mint_nft_ix(
     instructions.push(mint_ix);
 
     if collection_info.set {
-        let accounts = mpl_candy_machine::accounts::SetCollectionDuringMint {
+        let mut accounts = mpl_candy_machine::accounts::SetCollectionDuringMint {
             candy_machine: *candy_machine,
             metadata,
             payer: payer.pubkey(),
@@ -517,6 +517,13 @@ pub fn mint_nft_ix(
             collection_authority_record: collection_info.authority_record,
         }
         .to_account_metas(None);
+        if collection_info.sized {
+            accounts
+                .iter_mut()
+                .find(|m| m.pubkey == collection_info.metadata)
+                .unwrap()
+                .is_writable = true;
+        }
         let data = mpl_candy_machine::instruction::SetCollectionDuringMint {}.data();
         let set_ix = Instruction {
             program_id: mpl_candy_machine::id(),
