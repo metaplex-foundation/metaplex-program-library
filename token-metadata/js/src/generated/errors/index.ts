@@ -2503,6 +2503,29 @@ createErrorFromCodeLookup.set(0x73, () => new AlreadyUnverifiedError());
 createErrorFromNameLookup.set('AlreadyUnverified', () => new AlreadyUnverifiedError());
 
 /**
+ * MustBeUpdateAuthToSetModel: 'Must be Update Authority to set the Constraint Model.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MustBeUpdateAuthToSetModelError extends Error {
+  readonly code: number = 0x74;
+  readonly name: string = 'MustBeUpdateAuthToSetModel';
+  constructor() {
+    super('Must be Update Authority to set the Constraint Model.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MustBeUpdateAuthToSetModelError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x74, () => new MustBeUpdateAuthToSetModelError());
+createErrorFromNameLookup.set(
+  'MustBeUpdateAuthToSetModel',
+  () => new MustBeUpdateAuthToSetModelError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -120,26 +120,28 @@ pub struct SetCollectionSizeArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateEscrowAccountArgs {
     pub constraint_model: Option<Pubkey>,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
-pub struct CloseEscrowAccountArgs {}
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+pub struct CloseEscrowAccountArgs {
+    pub _padding: u8,
+}
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct TransferIntoEscrowArgs {
     pub amount: u64,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct TransferOutOfEscrowArgs {
     pub amount: u64,
 }
@@ -550,6 +552,15 @@ pub enum MetadataInstruction {
     #[account(3, optional, name="edition", desc="Edition account")]
     SetTokenStandard,
 
+    /// Set size of an existing collection using CPI from the Bubblegum program.  This is how
+    /// collection size is incremented and decremented for compressed NFTs.
+    #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, name="collection_mint", desc="Mint of the Collection")]
+    #[account(3, signer, name="bubblegum_signer", desc="Signing PDA of Bubblegum program")]
+    #[account(4, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    BubblegumSetCollectionSize(SetCollectionSizeArgs),
+
     /// Create an escrow account to hold tokens.
     #[account(0, writable, name="escrow", desc="Escrow account")]
     #[account(1, name="metadata", desc="Metadata account")]
@@ -588,12 +599,18 @@ pub enum MetadataInstruction {
 
     /// Create an escrow account to hold tokens.
     #[account(0, writable, name="escrow", desc="Escrow account")]
-    #[account(1, name="metadata", desc="Metadata account")]
-    #[account(2, name="mint", desc="Mint account")]
-    #[account(3, name="edition", desc="Edition account")]
-    #[account(4, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
-    #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="rent", desc="Rent info")]
+    #[account(1, writable, signer, name="payer", desc="Wallet paying for the transaction and new account")]
+    #[account(2, name="attribute_mint", desc="Mint account for the new attribute")]
+    #[account(3, writable, name="attribute_src", desc="Token account source for the new attribute")]
+    #[account(4, writable, name="attribute_dst", desc="Token account, owned by TM, destination for the new attribute")]
+    #[account(5, name="attribute_metadata", desc="Metadata account of the new attribute")]
+    #[account(6, name="escrow_mint", desc="Mint account that the escrow is attached")]
+    #[account(7, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
+    #[account(8, name="constraint_model", desc="The constraint model to check against")]
+    #[account(9, name="system_program", desc="System program")]
+    #[account(10, name="ata_program", desc="Associated Token program")]
+    #[account(11, name="token_program", desc="Token program")]
+    #[account(12, name="rent", desc="Rent info")]
     TransferOutOfEscrow(TransferOutOfEscrowArgs),
 
     /// Create an constraints model to be used by one or many escrow accounts.
@@ -1748,6 +1765,35 @@ pub fn set_collection_size(
     }
 }
 
+pub fn bubblegum_set_collection_size(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    update_authority: Pubkey,
+    mint: Pubkey,
+    bubblegum_signer: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+    size: u64,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new_readonly(bubblegum_signer, true),
+    ];
+
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::BubblegumSetCollectionSize(SetCollectionSizeArgs { size })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
 pub fn set_token_standard(
     program_id: Pubkey,
     metadata_account: Pubkey,
@@ -1846,9 +1892,6 @@ pub fn transfer_into_escrow(
     escrow_mint: Pubkey,
     escrow_account: Pubkey,
     constraint_model: Pubkey,
-    // ata_program: Pubkey,
-    // token_program: Pubkey,
-    // rent: Pubkey,
     amount: u64,
 ) -> Instruction {
     let accounts = vec![
@@ -1879,22 +1922,30 @@ pub fn transfer_into_escrow(
 
 pub fn transfer_out_of_escrow(
     program_id: Pubkey,
+    escrow: Pubkey,
+    payer: Pubkey,
+    attribute_mint: Pubkey,
+    attribute_src: Pubkey,
+    attribute_dst: Pubkey,
+    attribute_metadata: Pubkey,
+    escrow_mint: Pubkey,
     escrow_account: Pubkey,
-    metadata_account: Pubkey,
-    mint_account: Pubkey,
-    edition_account: Pubkey,
-    payer_account: Pubkey,
-    // system_account: Pubkey,
-    // rent: Pubkey,
+    constraint_model: Pubkey,
     amount: u64,
 ) -> Instruction {
     let accounts = vec![
-        AccountMeta::new(escrow_account, false),
-        AccountMeta::new(metadata_account, false),
-        AccountMeta::new(mint_account, false),
-        AccountMeta::new(edition_account, false),
-        AccountMeta::new(payer_account, true),
+        AccountMeta::new(escrow, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(attribute_mint, false),
+        AccountMeta::new(attribute_src, false),
+        AccountMeta::new(attribute_dst, false),
+        AccountMeta::new_readonly(attribute_metadata, false),
+        AccountMeta::new_readonly(escrow_mint, false),
+        AccountMeta::new_readonly(escrow_account, false),
+        AccountMeta::new_readonly(constraint_model, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
+        AccountMeta::new_readonly(spl_associated_token_account::id(), false),
+        AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
     ];
     let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount })

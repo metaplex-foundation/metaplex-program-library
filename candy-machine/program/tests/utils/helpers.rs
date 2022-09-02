@@ -3,7 +3,7 @@ use solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey};
 use spl_associated_token_account::get_associated_token_address;
 
 use crate::utils::{FreezeInfo, TokenInfo};
-use mpl_candy_machine::{constants::PREFIX as CANDY_PREFIX, ConfigLine};
+use mpl_candy_machine::{constants::PREFIX as CANDY_PREFIX, CollectionPDA, ConfigLine};
 
 pub fn make_config_lines(start_index: u32, total: u8) -> Vec<ConfigLine> {
     let mut config_lines = Vec::with_capacity(total as usize);
@@ -23,7 +23,7 @@ pub fn find_candy_creator(candy_machine_key: &Pubkey) -> (Pubkey, u8) {
 
 pub fn find_collection_pda(candy_machine_key: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
-        &[b"collection".as_ref(), candy_machine_key.as_ref()],
+        &[CollectionPDA::PREFIX.as_bytes(), candy_machine_key.as_ref()],
         &mpl_candy_machine::id(),
     )
 }

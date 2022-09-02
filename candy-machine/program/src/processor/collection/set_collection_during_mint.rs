@@ -1,10 +1,14 @@
 use anchor_lang::prelude::*;
-use mpl_token_metadata::{instruction::set_and_verify_collection, utils::assert_derivation};
+use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
+use mpl_token_metadata::{
+    instruction::{set_and_verify_collection, set_and_verify_sized_collection_item},
+    utils::assert_derivation,
+};
 use solana_program::{
     program::invoke_signed, sysvar, sysvar::instructions::get_instruction_relative,
 };
 
-use crate::{cmp_pubkeys, CandyMachine, CollectionPDA};
+use crate::{cmp_pubkeys, CandyError, CandyMachine, CollectionPDA};
 
 /// Sets and verifies the collection during a candy machine mint
 #[derive(Accounts)]
@@ -95,6 +99,39 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
     if !cmp_pubkeys(&collection_pda.mint, &collection_mint.key()) {
         return Ok(());
     }
+
+    let collection_metadata: Metadata =
+        Metadata::safe_deserialize(&ctx.accounts.collection_metadata.data.borrow_mut())?;
+
+    let collection_instruction = if collection_metadata.collection_details.is_some() {
+        if !ctx.accounts.collection_metadata.is_writable {
+            return err!(CandyError::SizedCollectionMetadataMustBeMutable);
+        }
+        set_and_verify_sized_collection_item(
+            ctx.accounts.token_metadata_program.key(),
+            ctx.accounts.metadata.key(),
+            collection_pda.key(),
+            ctx.accounts.payer.key(),
+            ctx.accounts.authority.key(),
+            collection_mint.key(),
+            ctx.accounts.collection_metadata.key(),
+            ctx.accounts.collection_master_edition.key(),
+            Some(ctx.accounts.collection_authority_record.key()),
+        )
+    } else {
+        set_and_verify_collection(
+            ctx.accounts.token_metadata_program.key(),
+            ctx.accounts.metadata.key(),
+            collection_pda.key(),
+            ctx.accounts.payer.key(),
+            ctx.accounts.authority.key(),
+            collection_mint.key(),
+            ctx.accounts.collection_metadata.key(),
+            ctx.accounts.collection_master_edition.key(),
+            Some(ctx.accounts.collection_authority_record.key()),
+        )
+    };
+
     let seeds = [CollectionPDA::PREFIX.as_bytes(), candy_key.as_ref()];
     let bump = assert_derivation(&crate::id(), &collection_pda.to_account_info(), &seeds)?;
     let signer_seeds = [
@@ -113,17 +150,7 @@ pub fn handle_set_collection_during_mint(ctx: Context<SetCollectionDuringMint>) 
         ctx.accounts.collection_authority_record.to_account_info(),
     ];
     invoke_signed(
-        &set_and_verify_collection(
-            ctx.accounts.token_metadata_program.key(),
-            ctx.accounts.metadata.key(),
-            collection_pda.key(),
-            ctx.accounts.payer.key(),
-            ctx.accounts.authority.key(),
-            collection_mint.key(),
-            ctx.accounts.collection_metadata.key(),
-            ctx.accounts.collection_master_edition.key(),
-            Some(ctx.accounts.collection_authority_record.key()),
-        ),
+        &collection_instruction,
         set_collection_infos.as_slice(),
         &[&signer_seeds],
     )?;

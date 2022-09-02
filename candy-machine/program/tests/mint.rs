@@ -12,7 +12,7 @@ use solana_sdk::transport::TransportError;
 use solana_sdk::{signature::Keypair, signer::Signer};
 
 use crate::core::helpers::{prepare_nft, update_blockhash};
-use crate::utils::helpers::find_candy_creator;
+use crate::utils::helpers::{find_candy_creator, test_start};
 use crate::utils::{mint_nft, mint_nft_ix, WhitelistConfig, WhitelistInfo};
 use crate::{
     core::helpers::airdrop,
@@ -24,9 +24,10 @@ pub mod utils;
 
 #[tokio::test]
 async fn fail_metadata_not_blank() {
+    test_start("Fail Metadata Not Blank");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
-    let mut candy_manager = CandyManager::init(context, false, false, None, None, None).await;
+    let mut candy_manager = CandyManager::init(context, None, false, None, None, None).await;
 
     airdrop(context, &candy_manager.minter.pubkey(), sol(6.0))
         .await
@@ -83,9 +84,10 @@ async fn fail_metadata_not_blank() {
 
 #[tokio::test]
 async fn metadata_check_before_bot_tax() {
+    test_start("Metadata Check Before Bot Tax");
     let mut context = candy_machine_program_test().start_with_context().await;
     let context = &mut context;
-    let mut candy_manager = CandyManager::init(context, false, false, None, None, None).await;
+    let mut candy_manager = CandyManager::init(context, None, false, None, None, None).await;
 
     airdrop(context, &candy_manager.minter.pubkey(), sol(6.0))
         .await
