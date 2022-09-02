@@ -1,13 +1,17 @@
 #![cfg(feature = "test-bpf")]
 pub mod utils;
 
+use borsh::BorshDeserialize;
 use solana_program::borsh::try_from_slice_unchecked;
 use solana_program_test::*;
 use solana_sdk::{signer::Signer, transaction::Transaction};
 use utils::*;
 
 mod escrow {
-    use mpl_token_metadata::pda::find_escrow_account;
+    use mpl_token_metadata::{
+        pda::{find_escrow_account, find_escrow_constraints_model_account},
+        state::EscrowConstraintsModel,
+    };
     use solana_program::program_pack::Pack;
 
     use super::*;
@@ -289,5 +293,48 @@ mod escrow {
         assert!(attribute_dst.mint == attribute_src.mint);
         assert!(attribute_dst.owner == context.payer.pubkey());
         println!("{:#?}", attribute_dst);
+    }
+
+    #[tokio::test]
+    async fn create_escrow_constraints_model() {
+        let mut context = program_test().start_with_context().await;
+
+        let (escrow_constraints_model_addr, _escrow_constraints_model_bump) =
+            find_escrow_constraints_model_account(&context.payer.pubkey(), "test_model");
+
+        let ix = mpl_token_metadata::instruction::create_escrow_constraints_model(
+            mpl_token_metadata::id(),
+            escrow_constraints_model_addr,
+            context.payer.pubkey(),
+            context.payer.pubkey(),
+            solana_program::sysvar::rent::id(),
+            solana_program::system_program::id(),
+            "test_model",
+        );
+
+        let tx = Transaction::new_signed_with_payer(
+            &[ix],
+            Some(&context.payer.pubkey()),
+            &[&context.payer],
+            context.last_blockhash,
+        );
+
+        context
+            .banks_client
+            .process_transaction(tx)
+            .await
+            .expect("failed to process create_escrow_constraints_model_account");
+
+        let model = context
+            .banks_client
+            .get_account(escrow_constraints_model_addr)
+            .await
+            .unwrap()
+            .expect("failed to find escrow constraints model account");
+
+        let model = EscrowConstraintsModel::deserialize(&mut model.data.as_slice())
+            .expect("failed to deserialize escrow constraints model");
+
+        assert_eq!(model.name, "test_model");
     }
 }

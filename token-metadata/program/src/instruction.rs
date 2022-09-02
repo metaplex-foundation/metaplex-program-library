@@ -1,7 +1,7 @@
 use crate::{
     deprecated_instruction::{MintPrintingTokensViaTokenArgs, SetReservationListArgs},
     state::{
-        Collection, CollectionDetails, Creator, Data, DataV2, EscrowConstraint, Uses, EDITION,
+        Collection, CollectionDetails, Creator, Data, DataV2, Uses, EDITION,
         EDITION_MARKER_BIT_SIZE, PREFIX,
     },
 };
@@ -1870,7 +1870,7 @@ pub fn close_escrow_account(
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
     ];
-    let data = MetadataInstruction::CloseEscrowAccount(CloseEscrowAccountArgs {})
+    let data = MetadataInstruction::CloseEscrowAccount(CloseEscrowAccountArgs { _padding: 0 })
         .try_to_vec()
         .unwrap();
 
@@ -1951,6 +1951,37 @@ pub fn transfer_out_of_escrow(
     let data = MetadataInstruction::TransferOutOfEscrow(TransferOutOfEscrowArgs { amount })
         .try_to_vec()
         .unwrap();
+
+    Instruction {
+        program_id,
+        accounts,
+        data,
+    }
+}
+
+pub fn create_escrow_constraints_model(
+    program_id: Pubkey,
+    escrow_constraints_model: Pubkey,
+    payer: Pubkey,
+    update_authority: Pubkey,
+    rent: Pubkey,
+    system_program: Pubkey,
+    name: &str,
+) -> Instruction {
+    let name = name.to_owned();
+    let accounts = vec![
+        AccountMeta::new(escrow_constraints_model, false),
+        AccountMeta::new(payer, true),
+        AccountMeta::new_readonly(update_authority, false),
+        AccountMeta::new_readonly(system_program, false),
+        AccountMeta::new_readonly(rent, false),
+    ];
+
+    let data = MetadataInstruction::CreateEscrowConstraintsModelAccount(
+        CreateEscrowConstraintsModelAccountArgs { name },
+    )
+    .try_to_vec()
+    .unwrap();
 
     Instruction {
         program_id,
