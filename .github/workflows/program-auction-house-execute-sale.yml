@@ -40,9 +40,10 @@ jobs:
       # Build deps
       - uses: ./.github/actions/build-token-metadata
 
-      # Just build for now
+      # Run test
       - name: test-auction-house-program
         id: run_test
         working-directory: ./auction-house/program
         run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} build-bpf
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --version
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --bpf-out-dir ../../target/deploy/ --test execute_sale -- --nocapture --test-threads 1
