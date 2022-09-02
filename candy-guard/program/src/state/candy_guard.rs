@@ -36,6 +36,7 @@ pub struct CandyGuard {
     // 5) third party signer
     // 6) whitelist
     // 7) gatekeeper
+    // 8) allow list
 }
 
 #[derive(CandyGuard, AnchorSerialize, AnchorDeserialize, Clone, Debug)]
@@ -56,4 +57,6 @@ pub struct CandyGuardData {
     pub gatekeeper: Option<Gatekeeper>,
     /// End settings guard
     pub end_settings: Option<EndSettings>,
+    /// Allow list guard
+    pub allow_list: Option<AllowList>,
 }

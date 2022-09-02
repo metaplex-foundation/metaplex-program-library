@@ -57,4 +57,13 @@ pub enum CandyGuardError {
     AfterEndSettingsDate,
     #[msg("Current items minted is at the set end settings amount")]
     AfterEndSettingsMintAmount,
+    // allow list
+    #[msg("Current time is not within the allowed mint time")]
+    InvalidMintTime,
+    #[msg("Address not found on the allowed list")]
+    AddressNotFoundInAllowedList,
+    #[msg("Missing allowed list proof")]
+    MissingAllowedListProof,
+    #[msg("The maximum number of allowed mints was reached")]
+    AllowedMintLimitReached,
 }

@@ -20,6 +20,7 @@ impl Condition for ThirdPartySigner {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
+        _mint_args: &MintArgs,
         _candy_guard_data: &CandyGuardData,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {

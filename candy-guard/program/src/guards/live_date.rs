@@ -20,6 +20,7 @@ impl Condition for LiveDate {
     fn validate<'info>(
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
+        _mint_args: &MintArgs,
         candy_guard_data: &CandyGuardData,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {

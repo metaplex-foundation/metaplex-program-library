@@ -30,6 +30,7 @@ impl Condition for BotTax {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
+        _mint_args: &MintArgs,
         _candy_guard_data: &CandyGuardData,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {

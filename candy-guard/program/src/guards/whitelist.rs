@@ -33,6 +33,7 @@ impl Condition for Whitelist {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
+        _mint_args: &MintArgs,
         candy_guard_data: &CandyGuardData,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
@@ -75,7 +76,7 @@ impl Condition for Whitelist {
                         // is the mint account the one expected?
                         assert_keys_equal(&whitelist_token_mint.key(), &self.mint)?;
 
-                        evaluation_context.whitelist_index = whitelist_index;
+                        evaluation_context.indices.insert("whitelist_index", whitelist_index);
                     }
                     // user is whitelisted
                     evaluation_context.whitelist = true;
@@ -121,11 +122,12 @@ impl Condition for Whitelist {
     fn pre_actions<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
+        _mint_args: &MintArgs,
         _candy_guard_data: &CandyGuardData,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if evaluation_context.whitelist && self.mode == WhitelistTokenMode::BurnEveryTime {
-            let index = evaluation_context.whitelist_index;
+            let index = evaluation_context.indices["whitelist_index"];
             // the accounts have already being validated
             let whitelist_token_account = Self::get_account_info(ctx, index)?;
             let whitelist_token_mint = Self::get_account_info(ctx, index + 1)?;

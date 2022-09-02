@@ -1,9 +1,12 @@
+use std::collections::BTreeMap;
+
 pub use anchor_lang::prelude::*;
 
 pub use crate::errors::CandyGuardError;
 pub use crate::instructions::mint::*;
 pub use crate::state::CandyGuardData;
 
+pub use allow_list::AllowList;
 pub use bot_tax::BotTax;
 pub use end_settings::EndSettings;
 pub use gatekeeper::Gatekeeper;
@@ -13,6 +16,7 @@ pub use spltoken::SplToken;
 pub use third_party_signer::ThirdPartySigner;
 pub use whitelist::Whitelist;
 
+mod allow_list;
 mod bot_tax;
 mod end_settings;
 mod gatekeeper;
@@ -35,6 +39,7 @@ pub trait Condition {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
+        mint_args: &MintArgs,
         candy_guard_data: &CandyGuardData,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()>;
@@ -46,6 +51,7 @@ pub trait Condition {
     fn pre_actions<'info>(
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
+        _mint_args: &MintArgs,
         _candy_guard_data: &CandyGuardData,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
@@ -59,6 +65,7 @@ pub trait Condition {
     fn post_actions<'info>(
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
+        _mint_args: &MintArgs,
         _candy_guard_data: &CandyGuardData,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
@@ -122,12 +129,14 @@ pub trait Guard: Condition + AnchorSerialize + AnchorDeserialize {
     }
 }
 
-pub struct EvaluationContext {
+pub struct EvaluationContext<'a>{
     /// Indicate whether the transaction was sent by the candy guard authority or not.
     pub is_authority: bool,
     /// The counter for the remaining account list. When a guard "consumes" one of the
     /// remaining accounts, it should increment the counter.
     pub remaining_account_counter: usize,
+    /// Convenience mapping of remaining account indices.
+    pub indices: BTreeMap<&'a str, usize>,
     // > live_date
     /// Indicates whether the transaction started before the live date.
     pub is_presale: bool,
@@ -138,16 +147,7 @@ pub struct EvaluationContext {
     /// The amount to charge for the mint (this can be updated by the whitelist guard
     /// when the `lamports_charge` is not in use).
     pub amount: u64,
-    /// The index from the remaining accounts to find the token_account and
-    /// transfer_authority_account
-    pub spl_token_index: usize,
     // > whitelist
     /// Indicates whether the user is whitelisted or not.
     pub whitelist: bool,
-    /// The index from the remaining accounts to find the whitelist_token_account,
-    /// whitelist_token_mint and whitelist_burn_authority
-    pub whitelist_index: usize,
-    /// The index from the remaining accounts to find the gateway_token, gateway_program,
-    /// and network_expire_feature
-    pub gatekeeper_index: usize,
 }
