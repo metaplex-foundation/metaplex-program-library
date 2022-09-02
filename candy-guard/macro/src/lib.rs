@@ -88,7 +88,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
     let expanded = quote! {
         impl #name {
-            pub fn from_data(features: u64, data: &std::cell::Ref<&mut [u8]>) -> anchor_lang::Result<Self> {
+            pub fn from_data(features: u64, data: &[u8]) -> anchor_lang::Result<Self> {
                 let mut current = DATA_OFFSET;
 
                 #(#from_data)*
