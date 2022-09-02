@@ -20,7 +20,7 @@ jobs:
       with:
         filters: |
           package:
-            - 'nft-packs/**'
+            - 'nft-packs/js/**'
 
   build-lint-and-test-token-metadata:
     needs: changes
