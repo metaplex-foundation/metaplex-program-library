@@ -43,7 +43,7 @@ jobs:
           working-directory: ./auction-house/program
 
       # Build deps
-      - uses: ./.github/actions/build-token-vault
+      - uses: ./.github/actions/build-token-metadata
 
       # Run test
       - name: test-auction-house-program
