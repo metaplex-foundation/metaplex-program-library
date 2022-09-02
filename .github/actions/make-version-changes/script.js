@@ -1,60 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const toml = require('@iarna/toml');
 
-// todo: move somewhere, like a separate config/constants file.
-const MPL_PROGRAM_CONFIG = {
-  'auction-house': {
-    has_idl: true,
-    uses_anchor: true,
-  },
-  auction: {
-    has_idl: false,
-    uses_anchor: false,
-  },
-  auctioneer: {
-    has_idl: true,
-    uses_anchor: true,
-  },
-  core: {
-    has_idl: false,
-    uses_anchor: false,
-  },
-  'candy-machine': {
-    has_idl: true,
-    uses_anchor: true,
-  },
-  'fixed-price-sale': {
-    has_idl: true,
-    uses_anchor: true,
-  },
-  gumdrop: {
-    has_idl: true,
-    uses_anchor: true,
-  },
-  metaplex: {
-    has_idl: false,
-    uses_anchor: false,
-  },
-  'nft-packs': {
-    has_idl: false,
-    uses_anchor: false,
-  },
-  'token-entangler': {
-    has_idl: true,
-    uses_anchor: true,
-  },
-  // uses shank
-  'token-metadata': {
-    has_idl: true,
-    uses_anchor: false,
-  },
-  // uses shank
-  'token-vault': {
-    has_idl: true,
-    uses_anchor: false,
-  },
-};
+const CONTRACT_VERSION_FIELD = 'contractVersion';
+const IDL_VERSION_FIELD = 'version';
+
+const MPL_PROGRAM_CONFIG = fs.readFileSync('./config.json', 'utf-8');
 
 const wrappedExec = (cmd, cwd) => {
   let args = {
@@ -93,6 +45,51 @@ const isNpmPackage = (actual) => isPackageType(actual, 'js');
 const parseVersioningCommand = (cmd) => cmd.split(':');
 const shouldUpdate = (actual, target) => target === '*' || target === actual;
 
+const updateIdlVersion = (cwdArgs, crateInfo) => {
+  // logic assumes IDL already exists for program, if it uses one; we rely on Solita to later tell us if IDLs need
+  // to be regenerated
+  if (!packageHasIdl(pkg)) return;
+
+  // create ../js/idl dir if it does not exist; back one dir + js dir + idl dir
+  const idlPath = [...cwdArgs.slice(0, cwdArgs.length - 1), 'js', 'idl', getIdlFilename(pkg)];
+  let idl = JSON.parse(fs.readFileSync(idlPath, 'utf-8'));
+  // we shouldn't exit on failure
+  if (!idl[IDL_VERSION_FIELD]) {
+    throw new Error(
+      `No '${IDL_VERSION_FIELD}' field in found in ${idlPath} - cannot perform IDL version update...`,
+    );
+  }
+
+  console.log('idlPath: ', idlPath);
+
+  idl[IDL_VERSION_FIELD] = crateInfo.version;
+  fs.writeFileSync(idlPath, JSON.stringify(idl, null, 2));
+
+  // append IDL change to rust version bump commit
+  wrappedExec(`git add ${idlPath} && git commit --amend -C HEAD`);
+};
+
+const getIdlFilename = (pkg) => {
+  // replace all instances of - with _
+  let idlName = `${pkg.replace(/\-/g, '_')}.json`;
+  if (!packageUsesAnchor(pkg)) {
+    idlName = `mpl_${idlName}`;
+  }
+  console.log('final IDL name: ', idlName);
+  return idlName;
+};
+
+const getCrateInfo = (cwd) => {
+  const cargoPath = `${cwd}/Cargo.toml`;
+  let tomlObj = toml.parse(fs.readFileSync(cargoPath, 'utf-8'));
+  if (!tomlObj.package) throw new Error('No package tag defined in Cargo.toml');
+
+  return {
+    name: tomlObj.package.name,
+    version: tomlObj.package.version,
+  };
+};
+
 const updateCratesPackage = async (io, cwdArgs, pkg, semvar) => {
   console.log('updating rust package');
   const currentDir = cwdArgs.join('/');
@@ -103,40 +100,18 @@ const updateCratesPackage = async (io, cwdArgs, pkg, semvar) => {
     currentDir,
   );
 
-  const sourceIdlDir = [...cwdArgs.slice(0, cwdArgs.length - 2), 'target', 'idl'].join('/');
+  const rootDir = cwdArgs.slice(0, cwdArgs.length - 2);
 
-  // generate IDL
-  if (packageHasIdl(pkg)) {
-    // replace all instances of - with _
-    let idlName = `${pkg.replace(/\-/g, '_')}.json`;
-    if (packageUsesAnchor(pkg)) {
-      console.log(
-        'generate IDL via anchor',
-        wrappedExec(`~/.cargo/bin/anchor build --skip-lint --idl ${sourceIdlDir}`, currentDir),
-      );
-    } else {
-      console.log(
-        'generate IDL via shank',
-        wrappedExec(`~/.cargo/bin/shank idl --out-dir ${sourceIdlDir}  --crate-root .`, currentDir),
-      );
-      idlName = `mpl_${idlName}`;
-    }
+  // if we globally installed `@iarna/toml`, the root `yarn.lock` file will have been committed
+  // along with `cargo release` command. so, we need to resolve this.
+  const rootYarnLockPath = [...rootDir, 'yarn.lock'].join('/');
+  wrappedExec(`git restore --source=HEAD^ --staged -- ${rootYarnLockPath}`);
+  wrappedExec('git commit --amend --allow-empty -C HEAD');
 
-    // create ../js/idl dir if it does not exist; back one dir + js dir + idl dir
-    // note: cwdArgs == currentDir.split("/")
-    const destIdlDir = [...cwdArgs.slice(0, cwdArgs.length - 1), 'js', 'idl'].join('/');
+  const crateInfo = getCrateInfo(currentDir);
+  console.log(`Found crate info: ${crateInfo.name} is at version ${crateInfo.version}`);
 
-    if (!fs.existsSync(destIdlDir)) {
-      console.log(`creating ${destIdlDir} because it DNE`, await io.mkdirP(destIdlDir));
-    }
-
-    console.log('final IDL name: ', idlName);
-    // cp IDL to js dir
-    wrappedExec(`cp ${sourceIdlDir}/${idlName} ${destIdlDir}`, currentDir);
-
-    // append IDL change to rust version bump commit
-    wrappedExec(`git add ${destIdlDir} && git commit --amend -C HEAD`);
-  }
+  updateIdlVersion(cwdArgs, crateInfo);
 
   // finally, push changes from local to remote
   wrappedExec('git push');
@@ -166,7 +141,11 @@ const updateNpmPackage = (cwdArgs, _pkg, semvar) => {
  * @return void
  *
  */
-module.exports = async ({ github, context, core, glob, io, change_config }, packages, versioning) => {
+module.exports = async (
+  { github, context, core, glob, io, change_config },
+  packages,
+  versioning,
+) => {
   console.log('change_config: ', change_config);
 
   const base = process.env.GITHUB_ACTION_PATH; // alt: path.join(__dirname);
@@ -199,7 +178,7 @@ module.exports = async ({ github, context, core, glob, io, change_config }, pack
       continue;
     }
 
-    for (let package of JSON.parse(packages)) {
+    for (let package of packages) {
       // make sure package doesn't have extra quotes or spacing
       package = package.replace(/\s+|\"|\'/g, '');
 

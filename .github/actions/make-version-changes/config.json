@@ -1,0 +1,50 @@
+{
+  "auction-house": {
+    "has_idl": true,
+    "uses_anchor": true
+  },
+  "auction": {
+    "has_idl": false,
+    "uses_anchor": false
+  },
+  "auctioneer": {
+    "has_idl": true,
+    "uses_anchor": true
+  },
+  "core": {
+    "has_idl": false,
+    "uses_anchor": false
+  },
+  "candy-machine": {
+    "has_idl": true,
+    "uses_anchor": true
+  },
+  "fixed-price-sale": {
+    "has_idl": true,
+    "uses_anchor": true
+  },
+  "gumdrop": {
+    "has_idl": true,
+    "uses_anchor": true
+  },
+  "metaplex": {
+    "has_idl": false,
+    "uses_anchor": false
+  },
+  "nft-packs": {
+    "has_idl": true,
+    "uses_anchor": false
+  },
+  "token-entangler": {
+    "has_idl": true,
+    "uses_anchor": true
+  },
+  "token-metadata": {
+    "has_idl": true,
+    "uses_anchor": false
+  },
+  "token-vault": {
+    "has_idl": true,
+    "uses_anchor": false
+  }
+}
