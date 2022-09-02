@@ -3075,8 +3075,18 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
 
     match &error {
         TransportError::IoError(err) if env::var("CI").is_ok() => {
-            eprintln!("Encountered {:#?} error", err);
-            eprintln!("However since we are running in CI this is acceptable and we can ignore it");
+            match err.kind() {
+                std::io::ErrorKind::Other
+                    if &err.to_string() == "the request exceeded its deadline" =>
+                {
+                    eprintln!("Encountered {:#?} error", err);
+                    eprintln!("However since we are running in CI this is acceptable and we can ignore it");
+                }
+                _ => {
+                    eprintln!("Encountered {:#?} error ({})", err, err.to_string());
+                    assert!(false, "Encountered unknown IoError");
+                }
+            }
         }
         _ => {
             assert_error!(error, PARTIAL_BUY_PRICE_MISMATCH)
