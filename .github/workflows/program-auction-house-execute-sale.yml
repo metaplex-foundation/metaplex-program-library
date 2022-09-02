@@ -45,4 +45,4 @@ jobs:
         id: run_test
         working-directory: ./auction-house/program
         run: |
-          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf --test execute_sale -- --nocapture --test-threads 1
+          cargo +${{ env.RUST_TOOLCHAIN }} test-bpf execute_sale_partial_order_fail_price_mismatch -- --nocapture --test-threads 1
