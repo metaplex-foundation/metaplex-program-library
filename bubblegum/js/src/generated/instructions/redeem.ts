@@ -45,10 +45,10 @@ export const redeemStruct = new beet.BeetArgsStruct<
  *
  * @property [] authority
  * @property [] candyWrapper
- * @property [] gummyrollProgram
+ * @property [] compressionProgram
  * @property [_writable_, **signer**] owner
  * @property [] delegate
- * @property [_writable_] merkleSlab
+ * @property [_writable_] merkleTree
  * @property [_writable_] voucher
  * @category Instructions
  * @category Redeem
@@ -57,10 +57,10 @@ export const redeemStruct = new beet.BeetArgsStruct<
 export type RedeemInstructionAccounts = {
   authority: web3.PublicKey
   candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
+  compressionProgram: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  merkleTree: web3.PublicKey
   voucher: web3.PublicKey
   systemProgram?: web3.PublicKey
 }
@@ -100,7 +100,7 @@ export function createRedeemInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.gummyrollProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },
@@ -115,7 +115,7 @@ export function createRedeemInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },

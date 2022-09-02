@@ -24,7 +24,7 @@ export const compressStruct = new beet.BeetArgsStruct<{
  * Accounts required by the _compress_ instruction
  *
  * @property [] authority
- * @property [] merkleSlab
+ * @property [] merkleTree
  * @property [**signer**] owner
  * @property [] delegate
  * @property [_writable_] tokenAccount
@@ -34,14 +34,14 @@ export const compressStruct = new beet.BeetArgsStruct<{
  * @property [_writable_, **signer**] payer
  * @property [] tokenMetadataProgram
  * @property [] candyWrapper
- * @property [] gummyrollProgram
+ * @property [] compressionProgram
  * @category Instructions
  * @category Compress
  * @category generated
  */
 export type CompressInstructionAccounts = {
   authority: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  merkleTree: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
   tokenAccount: web3.PublicKey
@@ -53,7 +53,7 @@ export type CompressInstructionAccounts = {
   tokenMetadataProgram: web3.PublicKey
   tokenProgram?: web3.PublicKey
   candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
+  compressionProgram: web3.PublicKey
 }
 
 export const compressInstructionDiscriminator = [
@@ -82,7 +82,7 @@ export function createCompressInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: false,
       isSigner: false,
     },
@@ -142,7 +142,7 @@ export function createCompressInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.gummyrollProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },

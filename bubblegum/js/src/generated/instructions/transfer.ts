@@ -48,8 +48,8 @@ export const transferStruct = new beet.BeetArgsStruct<
  * @property [] delegate
  * @property [] newOwner
  * @property [] candyWrapper
- * @property [] gummyrollProgram
- * @property [_writable_] merkleSlab
+ * @property [] compressionProgram
+ * @property [_writable_] merkleTree
  * @category Instructions
  * @category Transfer
  * @category generated
@@ -60,8 +60,8 @@ export type TransferInstructionAccounts = {
   delegate: web3.PublicKey
   newOwner: web3.PublicKey
   candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  compressionProgram: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const transferInstructionDiscriminator = [
@@ -114,12 +114,12 @@ export function createTransferInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.gummyrollProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },
