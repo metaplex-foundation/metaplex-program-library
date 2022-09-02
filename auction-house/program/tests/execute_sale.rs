@@ -3072,7 +3072,9 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
         .process_transaction(tx)
         .await
         .unwrap_err();
-    eprintln!("{:#?}", error);
+    eprintln!("+++++++++++++++++++++++++++++++++++++++++++++++++");
+    eprintln!("PartialPriceError: {:#?}", error);
+    eprintln!("+++++++++++++++++++++++++++++++++++++++++++++++++");
     assert_error!(error, PARTIAL_BUY_PRICE_MISMATCH);
 }
 
