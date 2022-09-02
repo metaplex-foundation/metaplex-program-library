@@ -3,10 +3,11 @@ use {
     crate::state::metaplex_adapter::MetadataArgs,
     crate::ASSET_PREFIX,
     anchor_lang::{
-        prelude::*, solana_program::program_memory::sol_memcmp,
+        prelude::*,
+        solana_program::program_memory::sol_memcmp,
         solana_program::pubkey::PUBKEY_BYTES,
     },
-    gummyroll::Node,
+    spl_compression::Node,
 };
 
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
@@ -67,15 +68,15 @@ pub fn replace_leaf<'info>(
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
         gummyroll_program.clone(),
-        gummyroll::cpi::accounts::Modify {
+        spl_compression::cpi::accounts::Modify {
             authority: authority.clone(),
-            merkle_roll: merkle_roll.clone(),
-            candy_wrapper: candy_wrapper.clone(),
+            merkle_tree: merkle_roll.clone(),
+            log_wrapper: candy_wrapper.clone(),
         },
         authority_pda_signer,
     )
     .with_remaining_accounts(remaining_accounts.to_vec());
-    gummyroll::cpi::replace_leaf(cpi_ctx, root_node, previous_leaf, new_leaf, index)
+    spl_compression::cpi::replace_leaf(cpi_ctx, root_node, previous_leaf, new_leaf, index)
 }
 
 pub fn append_leaf<'info>(
@@ -84,21 +85,21 @@ pub fn append_leaf<'info>(
     gummyroll_program: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
     merkle_roll: &AccountInfo<'info>,
-    candy_wrapper: &AccountInfo<'info>,
+    log_wrapper: &AccountInfo<'info>,
     leaf_node: Node,
 ) -> Result<()> {
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
         gummyroll_program.clone(),
-        gummyroll::cpi::accounts::Modify {
+        spl_compression::cpi::accounts::Modify {
             authority: authority.clone(),
-            merkle_roll: merkle_roll.clone(),
-            candy_wrapper: candy_wrapper.clone(),
+            merkle_tree: merkle_roll.clone(),
+            log_wrapper: log_wrapper.clone(),
         },
         authority_pda_signer,
     );
-    gummyroll::cpi::append(cpi_ctx, leaf_node)
+    spl_compression::cpi::append(cpi_ctx, leaf_node)
 }
 
 pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
