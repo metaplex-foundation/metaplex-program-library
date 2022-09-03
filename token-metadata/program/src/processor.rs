@@ -508,7 +508,6 @@ pub fn process_create_master_edition(
     let metadata_account_info = next_account_info(account_info_iter)?;
     let token_program_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     let metadata: Metadata = Metadata::from_account_info(metadata_account_info)?;
     let mint: Mint = assert_initialized(mint_info)?;
