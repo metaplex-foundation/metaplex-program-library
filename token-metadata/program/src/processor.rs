@@ -2099,6 +2099,8 @@ pub fn create_escrow_account(
         escrow_authority_seeds,
     )?;
 
+    toe.serialize(&mut *escrow_account_info.try_borrow_mut_data()?)?;
+
     Ok(())
 }
 
@@ -2176,17 +2178,18 @@ pub fn transfer_into_escrow(
     let attribute_metadata_info = next_account_info(account_info_iter)?;
     let escrow_mint_info = next_account_info(account_info_iter)?;
     let escrow_account_info = next_account_info(account_info_iter)?;
-    let _constraint_model_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
     let ata_program_info = next_account_info(account_info_iter)?;
     let token_program_info = next_account_info(account_info_iter)?;
     let rent_info = next_account_info(account_info_iter)?;
+    if let Ok(_constraint_model_info) = next_account_info(account_info_iter) {
+        msg!("constraint model info present")
+    };
 
     // Owned by token-metadata program.
     assert_owned_by(attribute_metadata_info, program_id)?;
     let _attribute_metadata: Metadata = Metadata::from_account_info(attribute_metadata_info)?;
 
-    msg!("Asserting Derivation");
     let bump_seed = assert_derivation(
         program_id,
         escrow_info,
@@ -2197,7 +2200,6 @@ pub fn transfer_into_escrow(
             ESCROW_PREFIX.as_bytes(),
         ],
     )?;
-    msg!("Derivation Correct");
 
     //assert_update_authority_is_correct(&metadata, update_authority_info)?;
 
@@ -2215,12 +2217,11 @@ pub fn transfer_into_escrow(
     //msg!("Creating ATA: {:#?}", attribute_dst_info.key);
 
     // Allocate the escrow accounts new ATA.
-    let create_escrow_ata_ix =
-        spl_associated_token_account::instruction::create_associated_token_account(
-            payer_info.key,
-            escrow_info.key,
-            attribute_mint_info.key,
-        );
+    let create_escrow_ata_ix = spl_associated_token_account::create_associated_token_account(
+        payer_info.key,
+        escrow_info.key,
+        attribute_mint_info.key,
+    );
 
     invoke(
         &create_escrow_ata_ix,
@@ -2231,7 +2232,6 @@ pub fn transfer_into_escrow(
             attribute_mint_info.clone(),
             system_account_info.clone(),
             token_program_info.clone(),
-            ata_program_info.clone(),
             rent_info.clone(),
         ],
     )?;

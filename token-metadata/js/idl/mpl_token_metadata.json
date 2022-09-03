@@ -2215,12 +2215,6 @@
           "desc": "Token account that holds the token the escrow is attached to"
         },
         {
-          "name": "constraintModel",
-          "isMut": false,
-          "isSigner": false,
-          "desc": "The constraint model to check against"
-        },
-        {
           "name": "systemProgram",
           "isMut": false,
           "isSigner": false,
@@ -2243,6 +2237,12 @@
           "isMut": false,
           "isSigner": false,
           "desc": "Rent info"
+        },
+        {
+          "name": "constraintModel",
+          "isMut": false,
+          "isSigner": false,
+          "desc": "The constraint model to check against"
         }
       ],
       "args": [
@@ -3109,6 +3109,15 @@
       "type": {
         "kind": "struct",
         "fields": [
+          {
+            "name": "discriminator",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
           {
             "name": "tokens",
             "type": {

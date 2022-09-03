@@ -3,6 +3,13 @@
 const base = require('../../.base-ammanrc.js');
 const validator = {
     ...base.validator,
-    programs: [base.programs.metadata, base.programs.token_sale],
+    programs: [base.programs.metadata],
 };
-module.exports = {validator};
+
+const storage = {
+    enabled: true,
+    storageId: 'mock-storage',
+    clearOnStart: true,
+};
+
+module.exports = { validator, storage };

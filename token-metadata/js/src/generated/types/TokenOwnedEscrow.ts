@@ -9,6 +9,7 @@ import * as web3 from '@solana/web3.js';
 import * as beet from '@metaplex-foundation/beet';
 import * as beetSolana from '@metaplex-foundation/beet-solana';
 export type TokenOwnedEscrow = {
+  discriminator: number[] /* size: 8 */;
   tokens: beet.COption<web3.PublicKey>[];
   delegates: web3.PublicKey[];
   model: beet.COption<web3.PublicKey>;
@@ -20,6 +21,7 @@ export type TokenOwnedEscrow = {
  */
 export const tokenOwnedEscrowBeet = new beet.FixableBeetArgsStruct<TokenOwnedEscrow>(
   [
+    ['discriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['tokens', beet.array(beet.coption(beetSolana.publicKey))],
     ['delegates', beet.array(beetSolana.publicKey)],
     ['model', beet.coption(beetSolana.publicKey)],

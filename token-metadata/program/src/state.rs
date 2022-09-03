@@ -957,16 +957,28 @@ where {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, Default)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct TokenOwnedEscrow {
+    pub discriminator: [u8; 8],
     pub tokens: Vec<Option<Pubkey>>,
     pub delegates: Vec<Pubkey>,
     pub model: Option<Pubkey>,
 }
 
+impl Default for TokenOwnedEscrow {
+    fn default() -> Self {
+        Self {
+            discriminator: "toescrow".as_bytes().try_into().unwrap(),
+            tokens: vec![],
+            delegates: vec![],
+            model: None,
+        }
+    }
+}
+
 impl TokenOwnedEscrow {
     pub fn len(&self) -> usize {
-        let mut len = 0;
+        let mut len = 8;
         len += 4 + self.tokens.len() * mem::size_of::<Pubkey>();
         len += 4 + self.delegates.len() * mem::size_of::<Pubkey>();
         len += mem::size_of::<Option<Pubkey>>();
