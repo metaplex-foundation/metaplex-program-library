@@ -356,6 +356,8 @@ pub enum MetadataInstruction {
     #[account(5, name="token_program", desc="Token program")]
     #[account(6, name="ata_program", desc="Associated Token program")]
     #[account(7, name="system_program", desc="System program")]
+    // Rent is technically not needed but there isn't a way to "ignore" an account without 
+    // preventing latter accounts from being passed in.
     #[account(8, name="rent", desc="Rent info")]
     #[account(9, optional, writable, name="use_authority_record", desc="Use Authority Record PDA If present the program Assumes a delegated use authority")]
     #[account(10, optional, name="burner", desc="Program As Signer (Burner)")]
@@ -1043,7 +1045,7 @@ pub fn unverify_collection(
 ///   5. `[]` Token program
 ///   6. `[]` Associated Token program
 ///   7. `[]` System program
-///   8. `[]` Rent info
+///   8. Optional `[]` Rent info
 ///   9. Optional `[writable]` Use Authority Record PDA If present the program Assumes a delegated use authority
 #[allow(clippy::too_many_arguments)]
 pub fn utilize(
@@ -1066,7 +1068,6 @@ pub fn utilize(
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
     match use_authority_record_pda {
         Some(use_authority_record_pda) => {

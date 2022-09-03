@@ -36,6 +36,8 @@ use crate::{
 use arrayref::array_ref;
 use borsh::{BorshDeserialize, BorshSerialize};
 use mpl_token_vault::{error::VaultError, state::VaultState};
+use solana_program::rent::Rent;
+use solana_program::sysvar::SysvarId;
 use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
@@ -1225,7 +1227,7 @@ pub fn process_utilize(
     accounts: &[AccountInfo],
     number_of_uses: u64,
 ) -> ProgramResult {
-    let account_info_iter = &mut accounts.iter();
+    let account_info_iter = &mut accounts.iter().peekable();
     let metadata_info = next_account_info(account_info_iter)?;
     let token_account_info = next_account_info(account_info_iter)?;
     let mint_info = next_account_info(account_info_iter)?;
@@ -1234,9 +1236,19 @@ pub fn process_utilize(
     let token_program_account_info = next_account_info(account_info_iter)?;
     let _ata_program_account_info = next_account_info(account_info_iter)?;
     let _system_account_info = next_account_info(account_info_iter)?;
-    let _rent_info = next_account_info(account_info_iter)?;
+    // consume the next account only if it is Rent
+    let approved_authority_is_using = if account_info_iter
+        .next_if(|info| info.key == &Rent::id())
+        .is_some()
+    {
+        // rent was passed in
+        accounts.len() == 11
+    } else {
+        // necessary accounts is one less if rent isn't passed in.
+        accounts.len() == 10
+    };
+
     let metadata: Metadata = Metadata::from_account_info(metadata_info)?;
-    let approved_authority_is_using = accounts.len() == 11;
     if metadata.uses.is_none() {
         return Err(MetadataError::Unusable.into());
     }
