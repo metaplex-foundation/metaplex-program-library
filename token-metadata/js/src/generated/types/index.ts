@@ -17,7 +17,6 @@ export * from './Reservation';
 export * from './ReservationV1';
 export * from './SetCollectionSizeArgs';
 export * from './SetReservationListArgs';
-export * from './TokenOwnedEscrow';
 export * from './TokenStandard';
 export * from './TransferIntoEscrowArgs';
 export * from './TransferOutOfEscrowArgs';

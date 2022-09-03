@@ -2641,6 +2641,43 @@
           }
         ]
       }
+    },
+    {
+      "name": "TokenOwnedEscrow",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "discriminator",
+            "type": {
+              "array": [
+                "u8",
+                8
+              ]
+            }
+          },
+          {
+            "name": "tokens",
+            "type": {
+              "vec": {
+                "option": "publicKey"
+              }
+            }
+          },
+          {
+            "name": "delegates",
+            "type": {
+              "vec": "publicKey"
+            }
+          },
+          {
+            "name": "model",
+            "type": {
+              "option": "publicKey"
+            }
+          }
+        ]
+      }
     }
   ],
   "types": [
@@ -3100,43 +3137,6 @@
           {
             "name": "totalSpots",
             "type": "u8"
-          }
-        ]
-      }
-    },
-    {
-      "name": "TokenOwnedEscrow",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "discriminator",
-            "type": {
-              "array": [
-                "u8",
-                8
-              ]
-            }
-          },
-          {
-            "name": "tokens",
-            "type": {
-              "vec": {
-                "option": "publicKey"
-              }
-            }
-          },
-          {
-            "name": "delegates",
-            "type": {
-              "vec": "publicKey"
-            }
-          },
-          {
-            "name": "model",
-            "type": {
-              "option": "publicKey"
-            }
           }
         ]
       }

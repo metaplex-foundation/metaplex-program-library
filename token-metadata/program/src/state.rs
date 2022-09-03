@@ -957,7 +957,7 @@ where {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone, ShankAccount)]
 pub struct TokenOwnedEscrow {
     pub discriminator: [u8; 8],
     pub tokens: Vec<Option<Pubkey>>,
