@@ -300,7 +300,7 @@ pub enum MetadataInstruction {
     #[account(13, name="token_program", desc="Token program")]
     #[account(14, name="token_vault_program", desc="Token vault program")]
     #[account(15, name="system_program", desc="System program")]
-    #[account(16, name="rent", desc="Rent info")]
+    #[account(16, optional, name="rent", desc="Rent info")]
     MintNewEditionFromMasterEditionViaVaultProxy(MintNewEditionFromMasterEditionViaTokenArgs),
 
     /// Puff a Metadata - make all of it's variable length fields (name/uri/symbol) a fixed length using a null character
@@ -917,7 +917,6 @@ pub fn mint_edition_from_master_edition_via_vault_proxy(
         AccountMeta::new_readonly(token_program, false),
         AccountMeta::new_readonly(token_vault_program_info, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     Instruction {

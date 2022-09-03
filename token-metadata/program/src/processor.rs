@@ -700,7 +700,6 @@ pub fn process_mint_new_edition_from_master_edition_via_vault_proxy<'a>(
     // not sure how they would get away with it - they'd need to actually own that account! - J.
     let token_vault_program_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     let vault_data = vault_info.data.borrow();
     let safety_deposit_data = safety_deposit_info.data.borrow();
