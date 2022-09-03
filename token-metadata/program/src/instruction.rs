@@ -386,7 +386,7 @@ pub enum MetadataInstruction {
     #[account(5, name="metadata", desc="Metadata account")]
     #[account(6, name="token_program", desc="Token program")]
     #[account(7, name="system_program", desc="System program")]
-    #[account(8, name="rent", desc="Rent info")]
+    #[account(8, optional, name="rent", desc="Rent info")]
     RevokeUseAuthority,
 
     /// If a MetadataAccount Has a Collection allow an Authority of the Collection to unverify an NFT in a Collection.
@@ -1161,7 +1161,7 @@ pub fn approve_use_authority(
 ///   6. `[]` Mint of Metadata
 ///   7. `[]` Token program
 ///   8. `[]` System program
-///   9. `[]` Rent info
+///   9. Optional `[]` Rent info
 #[allow(clippy::too_many_arguments)]
 pub fn revoke_use_authority(
     program_id: Pubkey,
@@ -1183,7 +1183,6 @@ pub fn revoke_use_authority(
             AccountMeta::new_readonly(metadata, false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::RevokeUseAuthority
             .try_to_vec()
