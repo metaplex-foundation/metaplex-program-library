@@ -35,7 +35,7 @@ import { deprecated } from "@metaplex-foundation/mpl-token-metadata";
 In order to update the generated SDK when the rust contract was updated please run:
 
 ```
-yarn gen:api
+yarn api:gen
 ```
 
 and then update the wrapper code and tests.
