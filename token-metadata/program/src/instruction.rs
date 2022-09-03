@@ -272,7 +272,7 @@ pub enum MetadataInstruction {
     #[account(10, name="metadata", desc="Master record metadata account")]
     #[account(11, name="token_program", desc="Token program")]
     #[account(12, name="system_program", desc="System program")]
-    #[account(13, name="rent", desc="Rent info")]
+    #[account(13, optional, name="rent", desc="Rent info")]
     MintNewEditionFromMasterEditionViaToken(MintNewEditionFromMasterEditionViaTokenArgs),
 
     /// Converts the Master Edition V1 to a Master Edition V2, draining lamports from the two printing mints
@@ -813,7 +813,6 @@ pub fn mint_new_edition_from_master_edition_via_token(
         AccountMeta::new_readonly(metadata, false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
-        AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
     Instruction {

@@ -1,5 +1,5 @@
 {
-  "version": "1.3.5",
+  "version": "1.3.6",
   "name": "mpl_token_metadata",
   "instructions": [
     {
@@ -721,7 +721,8 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info"
+          "desc": "Rent info",
+          "optional": true
         }
       ],
       "args": [

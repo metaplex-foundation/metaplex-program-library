@@ -266,7 +266,6 @@ pub fn process_create_metadata_accounts_v2<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
         },
         data,
         false,
@@ -302,7 +301,6 @@ pub fn process_create_metadata_accounts_v3<'a>(
             payer_account_info,
             update_authority_info,
             system_account_info,
-            rent_info,
         },
         data,
         false,
@@ -556,7 +554,6 @@ pub fn process_create_master_edition(
     create_or_allocate_account_raw(
         *program_id,
         edition_account_info,
-        rent_info,
         system_account_info,
         payer_account_info,
         MAX_MASTER_EDITION_LEN,
@@ -609,7 +606,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
     let master_metadata_account_info = next_account_info(account_info_iter)?;
     let token_program_account_info = next_account_info(account_info_iter)?;
     let system_account_info = next_account_info(account_info_iter)?;
-    let rent_info = next_account_info(account_info_iter)?;
 
     process_mint_new_edition_from_master_edition_via_token_logic(
         program_id,
@@ -627,7 +623,6 @@ pub fn process_mint_new_edition_from_master_edition_via_token<'a>(
             master_metadata_account_info,
             token_program_account_info,
             system_account_info,
-            rent_info,
         },
         edition,
         ignore_owner_signer,
@@ -785,7 +780,6 @@ pub fn process_mint_new_edition_from_master_edition_via_vault_proxy<'a>(
         master_metadata_account_info,
         token_program_account_info,
         system_account_info,
-        rent_info,
     };
 
     process_mint_new_edition_from_master_edition_via_token_logic(program_id, args, edition, true)
@@ -1122,7 +1116,6 @@ pub fn process_approve_use_authority(
     create_or_allocate_account_raw(
         *program_id,
         use_authority_record_info,
-        rent_info,
         system_account_info,
         payer,
         USE_AUTHORITY_RECORD_SIZE,
@@ -1380,7 +1373,6 @@ pub fn process_approve_collection_authority(
     create_or_allocate_account_raw(
         *program_id,
         collection_authority_record,
-        rent_info,
         system_account_info,
         payer,
         COLLECTION_AUTHORITY_RECORD_SIZE,
