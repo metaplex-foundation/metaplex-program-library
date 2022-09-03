@@ -374,7 +374,7 @@ pub enum MetadataInstruction {
     #[account(7, name="burner", desc="Program As Signer (Burner)")]
     #[account(8, name="token_program", desc="Token program")]
     #[account(9, name="system_program", desc="System program")]
-    #[account(10, name="rent", desc="Rent info")]
+    #[account(10, optional, name="rent", desc="Rent info")]
     ApproveUseAuthority(ApproveUseAuthorityArgs),
 
     /// Revoke account to call [utilize] on this NFT.
@@ -1112,7 +1112,7 @@ pub fn utilize(
 ///   7. `[]` Program As Signer (Burner)
 ///   8. `[]` Token program
 ///   9. `[]` System program
-///   10. `[]` Rent info
+///   10. Optional `[]` Rent info
 #[allow(clippy::too_many_arguments)]
 pub fn approve_use_authority(
     program_id: Pubkey,
@@ -1139,7 +1139,6 @@ pub fn approve_use_authority(
             AccountMeta::new_readonly(burner, false),
             AccountMeta::new_readonly(spl_token::id(), false),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::ApproveUseAuthority(ApproveUseAuthorityArgs { number_of_uses })
             .try_to_vec()
