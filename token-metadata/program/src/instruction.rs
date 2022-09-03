@@ -502,7 +502,7 @@ pub enum MetadataInstruction {
     #[account(3, signer, writable, name="payer", desc="payer")]
     #[account(4, name="update_authority", desc="update authority info")]
     #[account(5, name="system_program", desc="System program")]
-    #[account(6, name="rent", desc="Rent info")]
+    #[account(6, optional, name="rent", desc="Rent info")]
     CreateMetadataAccountV3(CreateMetadataAccountArgsV3),
 
     /// Set size of an existing collection.
@@ -1587,7 +1587,7 @@ pub fn set_and_verify_sized_collection_item(
 ///   3. `[signer]` payer
 ///   4. `[signer]` Update authority
 ///   5. `[]` System program
-///   6. `[]` Rent sysvar
+///   6. Optional `[]` Rent sysvar
 ///
 /// Creates an CreateMetadataAccounts instruction
 #[allow(clippy::too_many_arguments)]
@@ -1618,7 +1618,6 @@ pub fn create_metadata_accounts_v3(
             AccountMeta::new(payer, true),
             AccountMeta::new_readonly(update_authority, update_authority_is_signer),
             AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: MetadataInstruction::CreateMetadataAccountV3(CreateMetadataAccountArgsV3 {
             data: DataV2 {
