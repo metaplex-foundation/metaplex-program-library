@@ -5,7 +5,7 @@ Recommend using or building your own solana development Docker container.
 Install Docker, and docker-compose.
 If you don't want to build your own dev container - you can use this one I built and
 deployed on DockerHub if not have an AVX2 enabled CPU. NOT A PRODUCTION CONTAINER.
-`dmitryr117/anchor-noavx2:0.24.2`
+`dmitryr117/anchor-noavx2:0.25.0`
 
 # Steps to Install
 

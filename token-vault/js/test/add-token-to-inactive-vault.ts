@@ -68,7 +68,7 @@ test('inactive vault: add tokens once', async (t) => {
   assertTransactionSummary(t, res.txSummary, {
     msgRx: [
       /InitializeMint/i,
-      /Transfer \d+ lamports to.+ associated token account/i,
+      /Transfer \d+ lamports to the new account/i,
       /Approve/i,
       /Add token to vault/i,
       /Transfer/i,
@@ -146,7 +146,7 @@ test('inactive vault: add tokens thrice via three different safety deposit boxes
     assertTransactionSummary(t, res.txSummary, {
       msgRx: [
         /InitializeMint/i,
-        /Transfer \d+ lamports to.+ associated token account/i,
+        /Transfer \d+ lamports to the new account/i,
         /Approve/i,
         /Add token to vault/i,
         /Transfer/i,

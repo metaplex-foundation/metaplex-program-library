@@ -43,8 +43,8 @@
   "license": "MIT",
   "dependencies": {
     "@metaplex-foundation/mpl-auction": "^0.0.2",
-    "@metaplex-foundation/mpl-core": "^0.0.5",
-    "@metaplex-foundation/mpl-token-metadata": "^0.0.2",
+    "@metaplex-foundation/mpl-core": "^0.6.1",
+    "@metaplex-foundation/mpl-token-metadata": "^2.2.5",
     "@metaplex-foundation/mpl-token-vault": "^0.0.2",
     "@solana/spl-token": "^0.2.0",
     "@solana/web3.js": "^1.35.1"
