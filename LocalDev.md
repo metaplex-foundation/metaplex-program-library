@@ -3,26 +3,27 @@
 
 Recommend using or building your own solana development Docker container.
 Install Docker, and docker-compose.
-If you don't want to build your own dev container - you can use this one I built and
-deployed on DockerHub if not have an AVX2 enabled CPU. NOT A PRODUCTION CONTAINER.
-`dmitryr117/anchor-noavx2:0.25.0`
+If you don't want to build your own dev container - you can use one of these I built and
+deployed on DockerHub. These are NOT PRODUCTION CONTAINERS.
+`dmitryr117/anchor:0.25.0-noavx2` or `dmitryr117/anchor:0.25.0` depending if your CPU
+can support AVX2.
 
 # Steps to Install
 
-IMPORTANT. Make sure to fallow first setup instructions in: https://github.com/dmitryr117/solana-local-env
+IMPORTANT. Make sure to follow first setup instructions in: https://github.com/dmitryr117/solana-local-env
 Readme.md file to set up docker solana development environment.
 
 Usage introduction video link: https://youtu.be/R2A4KbDA24g
 
 Installing Metaplex Development Environment:
 
-1. Have to be inside `appdev` directory `cd appdev`.
+1. Have to be inside `appdev/metaplex`. Create directories as required change into directory `cd appdev/metaplex`.
 
-2. Git clone metaplex program library: `git clone https://github.com/dmitryr117/metaplex-program-library.git`
+2. Git clone metaplex program library: `git clone https://github.com/dmitryr117/metaplex-program-library.git program-library`
 
 3. Go inside cloned directory and switch git branch and pull for changes:
 ```
-cd metaplex-program-library
+cd program-library
 git checkout local-dev-env
 git pull
 ```
@@ -37,7 +38,7 @@ container images if this is your first time running this command.
 7. Sign into docker container from your terminal using: `docker exec -ti soldev /bin/bash` command.
 Your terminal look should might change to signify that you are inside container.
 
-8. cd into `cd /appdev/metaplex-program-library`
+8. cd into `cd /appdev/metaplex/program-library`
 
 9. Run `yarn install`
 
@@ -54,7 +55,7 @@ container again. `docker exec -ti soldev /bin/bash`. Make sure you are in root d
 and run `solana-test-validator` should see validator starting chowing blockchain information with
 number of blocks increasing.
 
-13. Switch to first terminal window, make sure you are still in `/appdev/metaplex-program-library`,
+13. Switch to first terminal window, make sure you are still in `/appdev/metaplex/program-library`,
 and run `yarn deploy.contracts`. This will fund a generic `/wallets/metaplex.key.json` wallet with
 100 SOL, and upload all 10 Solana programs / smart contracts to your local solana test network.
 
@@ -68,7 +69,7 @@ the `docker-compose.yml` file, and run `sudo rm -rf /verdaccio/storage/@metaplex
 will remove your local @metaplex-foundation packages.
 
 16. After you are done developing, and want to push your code updates - make sure to transform your workspace
-back to original. Make sure you are inside your `soldev` container inside `/appdev/metaplex-program-library` 
+back to original. Make sure you are inside your `soldev` container inside `/appdev/metaplex/program-library` 
 And run `yarn unset.dev.env`. After it completes - you can do `git status`, `git add .`
 and other commands without your public keys trying to overwrite original keys in repository. 
 
