@@ -39,7 +39,7 @@ export const requestMintAuthorityStruct = new beet.BeetArgsStruct<
  * @property [_writable_, **signer**] payer
  * @property [**signer**] mintAuthority
  * @property [_writable_] treeAuthority
- * @property [] merkleSlab
+ * @property [] merkleTree
  * @category Instructions
  * @category RequestMintAuthority
  * @category generated
@@ -50,7 +50,7 @@ export type RequestMintAuthorityInstructionAccounts = {
   mintAuthority: web3.PublicKey
   treeAuthority: web3.PublicKey
   systemProgram?: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const requestMintAuthorityInstructionDiscriminator = [
@@ -103,7 +103,7 @@ export function createRequestMintAuthorityInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: false,
       isSigner: false,
     },

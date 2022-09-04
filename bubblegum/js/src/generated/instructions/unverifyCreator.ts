@@ -49,10 +49,11 @@ export const unverifyCreatorStruct = new beet.FixableBeetArgsStruct<
  * @property [] authority
  * @property [] owner
  * @property [] delegate
+ * @property [**signer**] payer
  * @property [**signer**] creator
  * @property [] candyWrapper
- * @property [] gummyrollProgram
- * @property [_writable_] merkleSlab
+ * @property [] compressionProgram
+ * @property [_writable_] merkleTree
  * @category Instructions
  * @category UnverifyCreator
  * @category generated
@@ -61,10 +62,11 @@ export type UnverifyCreatorInstructionAccounts = {
   authority: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
+  payer: web3.PublicKey
   creator: web3.PublicKey
   candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  compressionProgram: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const unverifyCreatorInstructionDiscriminator = [
@@ -107,6 +109,11 @@ export function createUnverifyCreatorInstruction(
       isSigner: false,
     },
     {
+      pubkey: accounts.payer,
+      isWritable: false,
+      isSigner: true,
+    },
+    {
       pubkey: accounts.creator,
       isWritable: false,
       isSigner: true,
@@ -117,12 +124,12 @@ export function createUnverifyCreatorInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.gummyrollProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },
