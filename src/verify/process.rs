@@ -94,7 +94,11 @@ pub fn process_verify(args: VerifyArgs) -> Result<()> {
         println!("Verifying {} config line(s): (Ctrl+C to abort)", num_items);
         let pb = progress_bar_with_style(num_items as u64);
         // sleeps for a about 1 second
-        let step: u64 = 1_000_000 / num_items as u64;
+        let step: u64 = if num_items > 0 {
+            1_000_000 / num_items as u64
+        } else {
+            0
+        };
 
         for i in 0..num_items {
             let name_start = CONFIG_ARRAY_START
