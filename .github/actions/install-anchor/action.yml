@@ -1,16 +1,12 @@
-name: Setup Anchor cli
+name: Setup Anchor CLI
+description: 'Setup Anchor CLI'
 
-inputs:
-  anchor_git:
-    description: Link to Anchor cli GH repository
-    required: true
-  
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - uses: actions/cache@v2
-      name: Cache Cargo registry + index
-      id: cache-anchor
+      name: Cache Anchor CLI
+      id: cache-anchor-cli
       with:
         path: |
           ~/.cargo/bin/
@@ -18,10 +14,8 @@ runs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
           ./target/
-        key: cargo-${{ runner.os }}-anchor-${{ hashFiles('**/Cargo.lock') }}
-    - run: cargo install --git ${{inputs.anchor_git}} anchor-cli --locked --force
+        key: anchor-cli-${{ runner.os }}-v0000-${{ env.ANCHOR_VERSION }}
+    - run:
+        cargo install --git https://github.com/project-serum/anchor --tag "v$ANCHOR_VERSION" anchor-cli --locked
       shell: bash
-    - uses: actions/upload-artifact@v2
-      with:
-        name: anchor-binary
-        path: ~/.cargo/bin/anchor
+      if: steps.cache-anchor-cli.outputs.cache-hit != 'true'

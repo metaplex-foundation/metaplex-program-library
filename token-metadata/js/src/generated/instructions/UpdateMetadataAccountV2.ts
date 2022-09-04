@@ -25,7 +25,7 @@ export type UpdateMetadataAccountV2InstructionArgs = {
  * @category UpdateMetadataAccountV2
  * @category generated
  */
-const UpdateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
+export const UpdateMetadataAccountV2Struct = new beet.FixableBeetArgsStruct<
   UpdateMetadataAccountV2InstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -50,7 +50,7 @@ export type UpdateMetadataAccountV2InstructionAccounts = {
   updateAuthority: web3.PublicKey;
 };
 
-const updateMetadataAccountV2InstructionDiscriminator = 15;
+export const updateMetadataAccountV2InstructionDiscriminator = 15;
 
 /**
  * Creates a _UpdateMetadataAccountV2_ instruction.
@@ -65,28 +65,27 @@ const updateMetadataAccountV2InstructionDiscriminator = 15;
 export function createUpdateMetadataAccountV2Instruction(
   accounts: UpdateMetadataAccountV2InstructionAccounts,
   args: UpdateMetadataAccountV2InstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { metadata, updateAuthority } = accounts;
-
   const [data] = UpdateMetadataAccountV2Struct.serialize({
     instructionDiscriminator: updateMetadataAccountV2InstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: updateAuthority,
+      pubkey: accounts.updateAuthority,
       isWritable: false,
       isSigner: true,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

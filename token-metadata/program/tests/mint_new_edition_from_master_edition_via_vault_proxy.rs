@@ -10,7 +10,6 @@ use solana_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
-    transport::TransportError,
 };
 use utils::*;
 
@@ -39,6 +38,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -110,6 +110,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -213,6 +214,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();
@@ -312,6 +314,7 @@ mod mint_new_edition_from_master_edition_via_vault_proxy {
                 None,
                 10,
                 false,
+                0,
             )
             .await
             .unwrap();

@@ -22,7 +22,7 @@ export type InitializeCandyMachineInstructionArgs = {
  * @category InitializeCandyMachine
  * @category generated
  */
-const initializeCandyMachineStruct = new beet.FixableBeetArgsStruct<
+export const initializeCandyMachineStruct = new beet.FixableBeetArgsStruct<
   InitializeCandyMachineInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -49,9 +49,13 @@ export type InitializeCandyMachineInstructionAccounts = {
   wallet: web3.PublicKey;
   authority: web3.PublicKey;
   payer: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
-const initializeCandyMachineInstructionDiscriminator = [142, 137, 167, 107, 47, 39, 240, 124];
+export const initializeCandyMachineInstructionDiscriminator = [
+  142, 137, 167, 107, 47, 39, 240, 124,
+];
 
 /**
  * Creates a _InitializeCandyMachine_ instruction.
@@ -66,48 +70,47 @@ const initializeCandyMachineInstructionDiscriminator = [142, 137, 167, 107, 47, 
 export function createInitializeCandyMachineInstruction(
   accounts: InitializeCandyMachineInstructionAccounts,
   args: InitializeCandyMachineInstructionArgs,
+  programId = new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
 ) {
-  const { candyMachine, wallet, authority, payer } = accounts;
-
   const [data] = initializeCandyMachineStruct.serialize({
     instructionDiscriminator: initializeCandyMachineInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: candyMachine,
+      pubkey: accounts.candyMachine,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: wallet,
+      pubkey: accounts.wallet,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: payer,
+      pubkey: accounts.payer,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ'),
+    programId,
     keys,
     data,
   });

@@ -24,6 +24,7 @@ jobs:
             - 'core/**'
           package:
             - 'token-entangler/**'
+
   build-lint-and-test-token-entangler:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}

@@ -32,7 +32,7 @@ pub struct UpdateAuctioneer<'info> {
             auction_house.key().as_ref(),
             auctioneer_authority.key().as_ref()
         ],
-        bump=auction_house.auctioneer_pda_bump,
+        bump=ah_auctioneer_pda.bump,
         has_one=auctioneer_authority
     )]
     pub ah_auctioneer_pda: Account<'info, Auctioneer>,
@@ -53,15 +53,15 @@ pub fn update_auctioneer<'info>(
         return Err(AuctionHouseError::AuctionHouseNotDelegated.into());
     }
 
+    // Set all scopes false and then update as true the ones passed into the handler.
+    auction_house.scopes = [false; MAX_NUM_SCOPES];
+    for scope in scopes {
+        auction_house.scopes[scope as usize] = true;
+    }
+
     let auctioneer = &mut ctx.accounts.ah_auctioneer_pda;
     auctioneer.auctioneer_authority = ctx.accounts.auctioneer_authority.key();
     auctioneer.auction_house = ctx.accounts.auction_house.key();
-
-    // Set all scopes false and then update as true the ones passed into the handler.
-    auctioneer.scopes = [false; MAX_NUM_SCOPES];
-    for scope in scopes {
-        auctioneer.scopes[scope as usize] = true;
-    }
 
     Ok(())
 }

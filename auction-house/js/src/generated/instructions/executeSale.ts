@@ -43,6 +43,24 @@ const executeSaleStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _executeSale_ instruction
+ *
+ * @property [_writable_] buyer
+ * @property [_writable_] seller
+ * @property [_writable_] tokenAccount
+ * @property [] tokenMint
+ * @property [] metadata
+ * @property [] treasuryMint
+ * @property [_writable_] escrowPaymentAccount
+ * @property [_writable_] sellerPaymentReceiptAccount
+ * @property [_writable_] buyerReceiptTokenAccount
+ * @property [] authority
+ * @property [] auctionHouse
+ * @property [_writable_] auctionHouseFeeAccount
+ * @property [_writable_] auctionHouseTreasury
+ * @property [_writable_] buyerTradeState
+ * @property [_writable_] sellerTradeState
+ * @property [_writable_] freeTradeState
+ * @property [] programAsSigner
  * @category Instructions
  * @category ExecuteSale
  * @category generated

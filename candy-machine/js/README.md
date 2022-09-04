@@ -5,7 +5,7 @@ This package contains the Candy Machine contract SDK code. This MPL package targ
 
 ## Developing
 
-In order to update the generated SDK when the rust contract was updated please run:
+In order to update the generated lib when the rust contract was updated please run:
 
 ```
 yarn gen:api

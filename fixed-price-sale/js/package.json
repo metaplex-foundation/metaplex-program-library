@@ -1,6 +1,6 @@
 {
   "name": "@metaplex-foundation/mpl-fixed-price-sale",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "MPL Fixed Price Sale JavaScript API.",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",

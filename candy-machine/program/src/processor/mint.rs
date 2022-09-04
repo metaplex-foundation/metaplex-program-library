@@ -3,6 +3,7 @@ use std::{cell::RefMut, ops::Deref};
 use anchor_lang::prelude::*;
 use anchor_spl::token::Token;
 use arrayref::array_ref;
+use mpl_token_metadata::instruction::freeze_delegated_account;
 use mpl_token_metadata::{
     instruction::{
         create_master_edition_v3, create_metadata_accounts_v2, update_metadata_accounts_v2,
@@ -20,15 +21,17 @@ use solana_program::{
     system_instruction, sysvar,
     sysvar::{instructions::get_instruction_relative, SysvarId},
 };
+use spl_token::instruction::approve;
 
+use crate::constants::{COMPUTE_BUDGET, FREEZE_FEATURE_INDEX};
 use crate::{
     constants::{
         A_TOKEN, BLOCK_HASHES, BOT_FEE, COLLECTIONS_FEATURE_INDEX, CONFIG_ARRAY_START,
-        CONFIG_LINE_SIZE, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
+        CONFIG_LINE_SIZE, CUPCAKE_ID, EXPIRE_OFFSET, GUMDROP_ID, PREFIX,
     },
     utils::*,
-    CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, WhitelistMintMode,
-    WhitelistMintSettings,
+    CandyError, CandyMachine, CandyMachineData, ConfigLine, EndSettingType, FreezePDA,
+    WhitelistMintMode, WhitelistMintSettings,
 };
 
 /// Mint a new NFT pseudo-randomly from the config array.
@@ -87,6 +90,10 @@ pub struct MintNFT<'info> {
     // > Only needed if candy machine has token mint
     // token_account_info
     // transfer_authority_info
+    // > Only needed if freeze token until after mint is set to true
+    // freeze_pda (writable)
+    // nft_token_account (writable)
+    // freeze_ata (writable) // Only needed if spl token mint is enabled
 }
 
 pub fn handle_mint_nft<'info>(
@@ -106,9 +113,33 @@ pub fn handle_mint_nft<'info>(
     let instruction_sysvar_account_info = instruction_sysvar_account.to_account_info();
     let instruction_sysvar = instruction_sysvar_account_info.data.borrow();
     let current_ix = get_instruction_relative(0, &instruction_sysvar_account_info).unwrap();
+    // We must ensure the metadata cannot be passed in with data in it, this must remain the first check before any bot taxes
     if !ctx.accounts.metadata.data_is_empty() {
         return err!(CandyError::MetadataAccountMustBeEmpty);
     }
+
+    if get_expected_remaining_accounts_count(candy_machine) < ctx.remaining_accounts.len() {
+        punish_bots(
+            CandyError::IncorrectRemainingAccountsLen,
+            payer.to_account_info(),
+            ctx.accounts.candy_machine.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            BOT_FEE,
+        )?;
+        return Ok(());
+    }
+
+    if candy_machine.items_redeemed >= candy_machine.data.items_available {
+        punish_bots(
+            CandyError::CandyMachineEmpty,
+            payer.to_account_info(),
+            ctx.accounts.candy_machine.to_account_info(),
+            ctx.accounts.system_program.to_account_info(),
+            BOT_FEE,
+        )?;
+        return Ok(());
+    }
+
     if cmp_pubkeys(&recent_slothashes.key(), &BLOCK_HASHES) {
         msg!("recent_blockhashes is deprecated and will break soon");
     }
@@ -120,6 +151,7 @@ pub fn handle_mint_nft<'info>(
     // Restrict Who can call Candy Machine via CPI
     if !cmp_pubkeys(&current_ix.program_id, &crate::id())
         && !cmp_pubkeys(&current_ix.program_id, &GUMDROP_ID)
+        && !cmp_pubkeys(&current_ix.program_id, &CUPCAKE_ID)
     {
         punish_bots(
             CandyError::SuspiciousTransaction,
@@ -172,11 +204,9 @@ pub fn handle_mint_nft<'info>(
 
         if !cmp_pubkeys(&program_id, &crate::id())
             && !cmp_pubkeys(&program_id, &spl_token::id())
-            && !cmp_pubkeys(
-                &program_id,
-                &anchor_lang::solana_program::system_program::ID,
-            )
+            && !cmp_pubkeys(&program_id, &solana_program::system_program::ID)
             && !cmp_pubkeys(&program_id, &A_TOKEN)
+            && !cmp_pubkeys(&program_id, &COMPUTE_BUDGET)
         {
             msg!("Transaction had ix with program id {}", program_id);
             punish_bots(
@@ -226,17 +256,8 @@ pub fn handle_mint_nft<'info>(
     }
     let mut remaining_accounts_counter: usize = 0;
     if let Some(gatekeeper) = &candy_machine.data.gatekeeper {
-        if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-            punish_bots(
-                CandyError::GatewayTokenMissing,
-                payer.to_account_info(),
-                ctx.accounts.candy_machine.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-                BOT_FEE,
-            )?;
-            return Ok(());
-        }
         let gateway_token_info = &ctx.remaining_accounts[remaining_accounts_counter];
+
         remaining_accounts_counter += 1;
 
         // Eval function used in the gateway CPI
@@ -261,32 +282,47 @@ pub fn handle_mint_nft<'info>(
             };
 
         if gatekeeper.expire_on_use {
-            if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-                return err!(CandyError::GatewayAppMissing);
-            }
             let gateway_app = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-            if ctx.remaining_accounts.len() <= remaining_accounts_counter {
-                return err!(CandyError::NetworkExpireFeatureMissing);
-            }
             let network_expire_feature = &ctx.remaining_accounts[remaining_accounts_counter];
             remaining_accounts_counter += 1;
-            Gateway::verify_and_expire_token_with_eval(
+
+            if Gateway::verify_and_expire_token_with_eval(
                 gateway_app.clone(),
                 gateway_token_info.clone(),
                 payer.deref().clone(),
                 &gatekeeper.gatekeeper_network,
                 network_expire_feature.clone(),
                 eval_function,
+            )
+            .is_err()
+            {
+                punish_bots(
+                    CandyError::GatewayProgramError,
+                    payer.to_account_info(),
+                    ctx.accounts.candy_machine.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                    BOT_FEE,
+                )?;
+                return Ok(());
+            }
+        } else if Gateway::verify_gateway_token_with_eval(
+            gateway_token_info,
+            &payer.key(),
+            &gatekeeper.gatekeeper_network,
+            None,
+            eval_function,
+        )
+        .is_err()
+        {
+            punish_bots(
+                CandyError::GatewayProgramError,
+                payer.to_account_info(),
+                ctx.accounts.candy_machine.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+                BOT_FEE,
             )?;
-        } else {
-            Gateway::verify_gateway_token_with_eval(
-                gateway_token_info,
-                &payer.key(),
-                &gatekeeper.gatekeeper_network,
-                None,
-                eval_function,
-            )?;
+            return Ok(());
         }
     }
 
@@ -341,7 +377,7 @@ pub fn handle_mint_nft<'info>(
                             &ctx.remaining_accounts[remaining_accounts_counter];
                         remaining_accounts_counter += 1;
 
-                        let key_check = assert_keys_equal(whitelist_token_mint.key(), ws.mint);
+                        let key_check = assert_keys_equal(&whitelist_token_mint.key(), &ws.mint);
 
                         if key_check.is_err() {
                             punish_bots(
@@ -381,7 +417,7 @@ pub fn handle_mint_nft<'info>(
                         )?;
                         return Ok(());
                     }
-                    let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                    let go_live = assert_valid_go_live(payer, &clock, candy_machine);
                     if go_live.is_err() {
                         punish_bots(
                             CandyError::CandyMachineNotLive,
@@ -414,7 +450,7 @@ pub fn handle_mint_nft<'info>(
                 if ws.mode == WhitelistMintMode::BurnEveryTime {
                     remaining_accounts_counter += 2;
                 }
-                let go_live = assert_valid_go_live(payer, clock, candy_machine);
+                let go_live = assert_valid_go_live(payer, &clock, candy_machine);
                 if go_live.is_err() {
                     punish_bots(
                         CandyError::CandyMachineNotLive,
@@ -429,7 +465,7 @@ pub fn handle_mint_nft<'info>(
         }
     } else {
         // no whitelist means normal datecheck
-        let go_live = assert_valid_go_live(payer, clock, candy_machine);
+        let go_live = assert_valid_go_live(payer, &clock, candy_machine);
         if go_live.is_err() {
             punish_bots(
                 CandyError::CandyMachineNotLive,
@@ -442,23 +478,37 @@ pub fn handle_mint_nft<'info>(
         }
     }
 
-    if candy_machine.items_redeemed >= candy_machine.data.items_available {
-        punish_bots(
-            CandyError::CandyMachineEmpty,
-            payer.to_account_info(),
-            ctx.accounts.candy_machine.to_account_info(),
-            ctx.accounts.system_program.to_account_info(),
-            BOT_FEE,
-        )?;
-        return Ok(());
-    }
+    let (wallet_to_use, freeze_pda): (&AccountInfo, Option<Account<FreezePDA>>) =
+        if is_feature_active(&candy_machine.data.uuid, FREEZE_FEATURE_INDEX) {
+            if let Some(mint) = candy_machine.token_mint {
+                let freeze_pda_info = &ctx.remaining_accounts[remaining_accounts_counter + 2];
+                let freeze_ata = &ctx.remaining_accounts[remaining_accounts_counter + 2 + 2];
+                assert_is_ata(freeze_ata, freeze_pda_info.key, &mint)?;
+                let freeze_pda: Account<FreezePDA> = Account::try_from(freeze_pda_info)?;
+                if freeze_pda.thaw_eligible(clock.unix_timestamp, candy_machine) {
+                    (wallet, None)
+                } else {
+                    (freeze_ata, Some(freeze_pda))
+                }
+            } else {
+                let freeze_pda_info = &ctx.remaining_accounts[remaining_accounts_counter];
+                let freeze_pda: Account<FreezePDA> = Account::try_from(freeze_pda_info)?;
+                if freeze_pda.thaw_eligible(clock.unix_timestamp, candy_machine) {
+                    (wallet, None)
+                } else {
+                    (freeze_pda_info, Some(freeze_pda))
+                }
+            }
+        } else {
+            (wallet, None)
+        };
 
     if let Some(mint) = candy_machine.token_mint {
         let token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
         remaining_accounts_counter += 1;
         let transfer_authority_info = &ctx.remaining_accounts[remaining_accounts_counter];
-        // If we add more extra accounts later on we need to uncomment the following line out.
-        // remaining_accounts_counter += 1;
+        remaining_accounts_counter += 1;
+
         let token_account = assert_is_ata(token_account_info, &payer.key(), &mint)?;
 
         if token_account.amount < price {
@@ -467,7 +517,7 @@ pub fn handle_mint_nft<'info>(
 
         spl_token_transfer(TokenTransferParams {
             source: token_account_info.clone(),
-            destination: wallet.to_account_info(),
+            destination: wallet_to_use.to_account_info(),
             authority: transfer_authority_info.clone(),
             authority_signer_seeds: &[],
             token_program: token_program.to_account_info(),
@@ -477,12 +527,11 @@ pub fn handle_mint_nft<'info>(
         if ctx.accounts.payer.lamports() < price {
             return err!(CandyError::NotEnoughSOL);
         }
-
         invoke(
-            &system_instruction::transfer(&ctx.accounts.payer.key(), &wallet.key(), price),
+            &system_instruction::transfer(&ctx.accounts.payer.key(), &wallet_to_use.key(), price),
             &[
                 ctx.accounts.payer.to_account_info(),
-                wallet.to_account_info(),
+                wallet_to_use.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
             ],
         )?;
@@ -545,6 +594,7 @@ pub fn handle_mint_nft<'info>(
         ctx.accounts.rent.to_account_info(),
         candy_machine_creator.to_account_info(),
     ];
+
     invoke_signed(
         &create_metadata_accounts_v2(
             ctx.accounts.token_metadata_program.key(),
@@ -607,6 +657,87 @@ pub fn handle_mint_nft<'info>(
         ],
         &[&authority_seeds],
     )?;
+
+    if let Some(mut freeze_pda) = freeze_pda {
+        msg!("About to freeze nft");
+        let mint_pubkey = ctx.accounts.mint.key();
+        let candy_pubkey = ctx.accounts.candy_machine.key();
+        // counter incremented here since we sorta incremented it in our hearts during the wallet_to_use block.
+        remaining_accounts_counter += 1;
+        let nft_token_account_info = &ctx.remaining_accounts[remaining_accounts_counter];
+        // If we add more extra accounts later on we need to uncomment the following line out.
+        // remaining_accounts_counter += 1;
+
+        assert_is_ata(nft_token_account_info, &payer.key(), &mint_pubkey)?;
+        let seeds: &[&[u8]] = &[FreezePDA::PREFIX.as_bytes(), candy_pubkey.as_ref()];
+        let (expected_freeze_key, freeze_bump) = Pubkey::find_program_address(seeds, &crate::id());
+        assert_keys_equal(&expected_freeze_key, &freeze_pda.key())?;
+        // redundant check
+        freeze_pda.assert_from_candy(&candy_pubkey)?;
+
+        freeze_pda.frozen_count += 1;
+
+        if freeze_pda.freeze_fee > 0 {
+            invoke(
+                &system_instruction::transfer(
+                    &ctx.accounts.payer.key(),
+                    &freeze_pda.key(),
+                    freeze_pda.freeze_fee,
+                ),
+                &[
+                    ctx.accounts.payer.to_account_info(),
+                    freeze_pda.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+            )?;
+        }
+
+        if freeze_pda.mint_start.is_none() {
+            freeze_pda.mint_start = Some(clock.unix_timestamp);
+        }
+
+        let freeze_seeds = [
+            FreezePDA::PREFIX.as_bytes(),
+            candy_pubkey.as_ref(),
+            &[freeze_bump],
+        ];
+        let mut freeze_ix = freeze_delegated_account(
+            mpl_token_metadata::ID,
+            freeze_pda.key(),
+            nft_token_account_info.key(),
+            ctx.accounts.master_edition.key(),
+            ctx.accounts.mint.key(),
+        );
+        // token metadata ix is sorta bad, so this line fixes it to enable freeze without marking signer as mutable
+        freeze_ix.accounts[0] = AccountMeta::new_readonly(freeze_pda.key(), true);
+
+        invoke(
+            &approve(
+                &spl_token::ID,
+                &nft_token_account_info.key(),
+                &freeze_pda.key(),
+                &payer.key(),
+                &[],
+                1,
+            )?,
+            &[
+                nft_token_account_info.to_account_info(),
+                freeze_pda.to_account_info(),
+                payer.to_account_info(),
+            ],
+        )?;
+        invoke_signed(
+            &freeze_ix,
+            &[
+                freeze_pda.to_account_info(),
+                nft_token_account_info.to_account_info(),
+                ctx.accounts.master_edition.to_account_info(),
+                ctx.accounts.mint.to_account_info(),
+            ],
+            &[&freeze_seeds],
+        )?;
+        freeze_pda.exit(&crate::id())?;
+    }
 
     Ok(())
 }
@@ -746,4 +877,31 @@ pub fn get_config_line(
     };
 
     Ok(config_line)
+}
+
+pub fn get_expected_remaining_accounts_count(candy: &CandyMachine) -> usize {
+    let mut expected_count = 0;
+    if let Some(gatekeeper) = &candy.data.gatekeeper {
+        expected_count += 1;
+        if gatekeeper.expire_on_use {
+            expected_count += 2;
+        }
+    }
+    if let Some(whitelist) = &candy.data.whitelist_mint_settings {
+        expected_count += 1;
+        if whitelist.mode == WhitelistMintMode::BurnEveryTime {
+            expected_count += 2;
+        }
+    }
+    if candy.token_mint.is_some() {
+        expected_count += 2;
+    }
+
+    if is_feature_active(&candy.data.uuid, FREEZE_FEATURE_INDEX) {
+        expected_count += 2;
+        if candy.token_mint.is_some() {
+            expected_count += 1;
+        }
+    }
+    expected_count
 }

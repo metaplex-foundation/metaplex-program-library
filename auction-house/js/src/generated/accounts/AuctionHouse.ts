@@ -28,6 +28,10 @@ export type AuctionHouseArgs = {
   sellerFeeBasisPoints: number;
   requiresSignOff: boolean;
   canChangeSalePrice: boolean;
+  escrowPaymentBump: number;
+  hasAuctioneer: boolean;
+  auctioneerAddress: web3.PublicKey;
+  scopes: boolean[] /* size: 7 */;
 };
 
 const auctionHouseDiscriminator = [40, 108, 215, 107, 213, 85, 245, 48];
@@ -53,6 +57,10 @@ export class AuctionHouse implements AuctionHouseArgs {
     readonly sellerFeeBasisPoints: number,
     readonly requiresSignOff: boolean,
     readonly canChangeSalePrice: boolean,
+    readonly escrowPaymentBump: number,
+    readonly hasAuctioneer: boolean,
+    readonly auctioneerAddress: web3.PublicKey,
+    readonly scopes: boolean[] /* size: 7 */,
   ) {}
 
   /**
@@ -73,6 +81,10 @@ export class AuctionHouse implements AuctionHouseArgs {
       args.sellerFeeBasisPoints,
       args.requiresSignOff,
       args.canChangeSalePrice,
+      args.escrowPaymentBump,
+      args.hasAuctioneer,
+      args.auctioneerAddress,
+      args.scopes,
     );
   }
 
@@ -171,6 +183,10 @@ export class AuctionHouse implements AuctionHouseArgs {
       sellerFeeBasisPoints: this.sellerFeeBasisPoints,
       requiresSignOff: this.requiresSignOff,
       canChangeSalePrice: this.canChangeSalePrice,
+      escrowPaymentBump: this.escrowPaymentBump,
+      hasAuctioneer: this.hasAuctioneer,
+      auctioneerAddress: this.auctioneerAddress.toBase58(),
+      scopes: this.scopes,
     };
   }
 }
@@ -200,6 +216,10 @@ export const auctionHouseBeet = new beet.BeetStruct<
     ['sellerFeeBasisPoints', beet.u16],
     ['requiresSignOff', beet.bool],
     ['canChangeSalePrice', beet.bool],
+    ['escrowPaymentBump', beet.u8],
+    ['hasAuctioneer', beet.bool],
+    ['auctioneerAddress', beetSolana.publicKey],
+    ['scopes', beet.uniformFixedSizeArray(beet.bool, 7)],
   ],
   AuctionHouse.fromArgs,
   'AuctionHouse',

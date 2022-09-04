@@ -1,4 +1,5 @@
 #![cfg(feature = "test-bpf")]
+pub mod common;
 pub mod utils;
 use anchor_lang::AccountDeserialize;
 
@@ -13,7 +14,9 @@ use solana_sdk::{
     transaction::TransactionError, transport::TransportError,
 };
 
+use common::*;
 use std::assert_eq;
+use utils::helpers::*;
 use utils::setup_functions;
 #[tokio::test]
 async fn init_native_success() {
@@ -323,4 +326,108 @@ async fn init_mint_failure() {
     .unwrap_err();
     println!("{:?}", err.to_string());
     assert_error!(err, 6000);
+}
+
+#[tokio::test]
+async fn init_native_noncanonical_fee_payer_failure() {
+    let mut context = setup_functions::auction_house_program_test()
+        .start_with_context()
+        .await;
+    // Payer Wallet
+    let payer_wallet = Keypair::new();
+
+    airdrop(&mut context, &payer_wallet.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    let twd_key = payer_wallet.pubkey();
+    let fwd_key = payer_wallet.pubkey();
+    let t_mint_key = spl_token::native_mint::id();
+    let tdw_ata = twd_key;
+    let seller_fee_basis_points: u16 = 100;
+    let authority = Keypair::new();
+    airdrop(&mut context, &authority.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    // Derive Auction House Key
+    let (auction_house_address, bump) =
+        find_auction_house_address(&authority.pubkey(), &t_mint_key);
+    let (auction_fee_account_key, _fee_payer_bump) =
+        find_auction_house_fee_account_address(&auction_house_address);
+    let (_malicious_auction_fee_account_key, malicious_fee_payer_bump) =
+        find_noncanonical_auction_house_fee_account_address(&auction_house_address);
+    // Derive Auction House Treasury Key
+    let (auction_house_treasury_key, treasury_bump) =
+        find_auction_house_treasury_address(&auction_house_address);
+    let auction_house = setup_functions::create_auction_house(
+        &mut context,
+        &authority,
+        &twd_key,
+        &fwd_key,
+        &t_mint_key,
+        &tdw_ata,
+        &auction_house_address,
+        bump,
+        &auction_fee_account_key,
+        malicious_fee_payer_bump,
+        &auction_house_treasury_key,
+        treasury_bump,
+        seller_fee_basis_points,
+        false,
+        false,
+    );
+
+    let result = auction_house.await.unwrap_err();
+    assert_error!(result, BUMP_SEED_NOT_IN_HASHMAP)
+}
+
+#[tokio::test]
+async fn init_native_noncanonical_treasury_failure() {
+    let mut context = setup_functions::auction_house_program_test()
+        .start_with_context()
+        .await;
+    // Payer Wallet
+    let payer_wallet = Keypair::new();
+
+    airdrop(&mut context, &payer_wallet.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    let twd_key = payer_wallet.pubkey();
+    let fwd_key = payer_wallet.pubkey();
+    let t_mint_key = spl_token::native_mint::id();
+    let tdw_ata = twd_key;
+    let seller_fee_basis_points: u16 = 100;
+    let authority = Keypair::new();
+    airdrop(&mut context, &authority.pubkey(), 10_000_000_000)
+        .await
+        .unwrap();
+    // Derive Auction House Key
+    let (auction_house_address, bump) =
+        find_auction_house_address(&authority.pubkey(), &t_mint_key);
+    let (auction_fee_account_key, fee_payer_bump) =
+        find_auction_house_fee_account_address(&auction_house_address);
+    // Derive Auction House Treasury Key
+    let (auction_house_treasury_key, _treasury_bump) =
+        find_auction_house_treasury_address(&auction_house_address);
+    let (_malicious_auction_house_treasury_key, malicious_treasury_bump) =
+        find_noncanonical_auction_house_treasury_address(&auction_house_address);
+    let auction_house = setup_functions::create_auction_house(
+        &mut context,
+        &authority,
+        &twd_key,
+        &fwd_key,
+        &t_mint_key,
+        &tdw_ata,
+        &auction_house_address,
+        bump,
+        &auction_fee_account_key,
+        fee_payer_bump,
+        &auction_house_treasury_key,
+        malicious_treasury_bump,
+        seller_fee_basis_points,
+        false,
+        false,
+    );
+
+    let result = auction_house.await.unwrap_err();
+    assert_error!(result, BUMP_SEED_NOT_IN_HASHMAP)
 }
