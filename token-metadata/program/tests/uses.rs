@@ -6,7 +6,7 @@ use num_traits::FromPrimitive;
 use solana_program_test::*;
 use solana_sdk::{
     instruction::InstructionError, signature::Signer, transaction::Transaction,
-    transaction::TransactionError, transport::TransportError,
+    transaction::TransactionError,
 };
 
 use utils::*;

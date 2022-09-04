@@ -7,7 +7,7 @@ use crate::{
 use anchor_lang::prelude::*;
 use anchor_lang::{
     solana_program::{program::invoke, program_pack::Pack, system_instruction},
-    System,
+    system_program::System,
 };
 use anchor_spl::token;
 use mpl_token_metadata::{state::Metadata, utils::get_supply_off_master_edition};
@@ -262,7 +262,7 @@ impl<'info> Buy<'info> {
             return Err(ErrorCode::WrongOwnerInTokenGatingAcc.into());
         }
 
-        if user_token_acc_data.mint != *collection {
+        if user_token_acc_data.mint != *collection || user_token_acc_data.amount == 0 {
             return Err(ErrorCode::WrongGatingToken.into());
         }
 

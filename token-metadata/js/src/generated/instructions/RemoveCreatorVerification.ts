@@ -13,7 +13,7 @@ import * as web3 from '@solana/web3.js';
  * @category RemoveCreatorVerification
  * @category generated
  */
-const RemoveCreatorVerificationStruct = new beet.BeetArgsStruct<{
+export const RemoveCreatorVerificationStruct = new beet.BeetArgsStruct<{
   instructionDiscriminator: number;
 }>([['instructionDiscriminator', beet.u8]], 'RemoveCreatorVerificationInstructionArgs');
 /**
@@ -30,7 +30,7 @@ export type RemoveCreatorVerificationInstructionAccounts = {
   creator: web3.PublicKey;
 };
 
-const removeCreatorVerificationInstructionDiscriminator = 28;
+export const removeCreatorVerificationInstructionDiscriminator = 28;
 
 /**
  * Creates a _RemoveCreatorVerification_ instruction.
@@ -42,27 +42,26 @@ const removeCreatorVerificationInstructionDiscriminator = 28;
  */
 export function createRemoveCreatorVerificationInstruction(
   accounts: RemoveCreatorVerificationInstructionAccounts,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const { metadata, creator } = accounts;
-
   const [data] = RemoveCreatorVerificationStruct.serialize({
     instructionDiscriminator: removeCreatorVerificationInstructionDiscriminator,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: creator,
+      pubkey: accounts.creator,
       isWritable: false,
       isSigner: true,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

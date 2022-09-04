@@ -89,7 +89,7 @@ mod save_primary_metadata_creators {
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: admin_wallet.pubkey(),
                 share: 100,
                 verified: false,
@@ -197,32 +197,32 @@ mod save_primary_metadata_creators {
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
             creators: vec![
-                mpl_token_metadata::state::Creator {
+                mpl_fixed_price_sale::state::Creator {
                     address: admin_wallet.pubkey(),
                     share: 10,
                     verified: false,
                 },
-                mpl_token_metadata::state::Creator {
+                mpl_fixed_price_sale::state::Creator {
                     address: admin_wallet.pubkey(),
                     share: 10,
                     verified: false,
                 },
-                mpl_token_metadata::state::Creator {
+                mpl_fixed_price_sale::state::Creator {
                     address: admin_wallet.pubkey(),
                     share: 10,
                     verified: false,
                 },
-                mpl_token_metadata::state::Creator {
+                mpl_fixed_price_sale::state::Creator {
                     address: admin_wallet.pubkey(),
                     share: 10,
                     verified: false,
                 },
-                mpl_token_metadata::state::Creator {
+                mpl_fixed_price_sale::state::Creator {
                     address: admin_wallet.pubkey(),
                     share: 10,
                     verified: false,
                 },
-                mpl_token_metadata::state::Creator {
+                mpl_fixed_price_sale::state::Creator {
                     address: admin_wallet.pubkey(),
                     share: 10,
                     verified: false,
@@ -425,7 +425,7 @@ mod save_primary_metadata_creators {
 
         let data = mpl_fixed_price_sale_instruction::SavePrimaryMetadataCreators {
             primary_metadata_creators_bump: primary_metadata_creators_bump,
-            creators: vec![mpl_token_metadata::state::Creator {
+            creators: vec![mpl_fixed_price_sale::state::Creator {
                 address: admin_wallet.pubkey(),
                 share: 10,
                 verified: false,

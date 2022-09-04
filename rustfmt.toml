@@ -1,7 +1,6 @@
 edition = "2018"
 max_width = 100 
 imports_indent = "Block"
-imports_layout = "Mixed"
 imports_granularity = "Crate"
 group_imports = "Preserve"
 reorder_imports = true

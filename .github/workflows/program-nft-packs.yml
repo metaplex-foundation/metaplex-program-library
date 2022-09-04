@@ -29,6 +29,7 @@ jobs:
             - 'core/**'
           package:
             - 'nft-packs/**'
+
   build-and-test-nft-packs:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}

@@ -26,7 +26,7 @@ export type DeprecatedMintPrintingTokensViaTokenInstructionArgs = {
  * @category DeprecatedMintPrintingTokensViaToken
  * @category generated
  */
-const DeprecatedMintPrintingTokensViaTokenStruct = new beet.BeetArgsStruct<
+export const DeprecatedMintPrintingTokensViaTokenStruct = new beet.BeetArgsStruct<
   DeprecatedMintPrintingTokensViaTokenInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -59,9 +59,11 @@ export type DeprecatedMintPrintingTokensViaTokenInstructionAccounts = {
   burnAuthority: web3.PublicKey;
   metadata: web3.PublicKey;
   masterEdition: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
 };
 
-const deprecatedMintPrintingTokensViaTokenInstructionDiscriminator = 8;
+export const deprecatedMintPrintingTokensViaTokenInstructionDiscriminator = 8;
 
 /**
  * Creates a _DeprecatedMintPrintingTokensViaToken_ instruction.
@@ -76,71 +78,62 @@ const deprecatedMintPrintingTokensViaTokenInstructionDiscriminator = 8;
 export function createDeprecatedMintPrintingTokensViaTokenInstruction(
   accounts: DeprecatedMintPrintingTokensViaTokenInstructionAccounts,
   args: DeprecatedMintPrintingTokensViaTokenInstructionArgs,
+  programId = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
 ) {
-  const {
-    destination,
-    token,
-    oneTimePrintingAuthorizationMint,
-    printingMint,
-    burnAuthority,
-    metadata,
-    masterEdition,
-  } = accounts;
-
   const [data] = DeprecatedMintPrintingTokensViaTokenStruct.serialize({
     instructionDiscriminator: deprecatedMintPrintingTokensViaTokenInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: destination,
+      pubkey: accounts.destination,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: token,
+      pubkey: accounts.token,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: oneTimePrintingAuthorizationMint,
+      pubkey: accounts.oneTimePrintingAuthorizationMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: printingMint,
+      pubkey: accounts.printingMint,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: burnAuthority,
+      pubkey: accounts.burnAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: masterEdition,
+      pubkey: accounts.masterEdition,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+    programId,
     keys,
     data,
   });

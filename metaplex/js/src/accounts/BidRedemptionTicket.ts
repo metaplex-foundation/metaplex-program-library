@@ -64,4 +64,22 @@ export class BidRedemptionTicket extends Account<BidRedemptionTicketV2Data> {
   static isBidRedemptionTicketV2(data: Buffer) {
     return data[0] === MetaplexKey.BidRedemptionTicketV2;
   }
+
+  hasBeenRedeemed(order: number): boolean {
+    const data = this.data?.data;
+    if (!data) {
+      return false;
+    }
+
+    let offset = 42;
+    if (data[1] == 0) {
+      offset -= 8;
+    }
+
+    const index = Math.floor(order / 8) + offset;
+    const positionFromRight = 7 - (order % 8);
+    const mask = Math.pow(2, positionFromRight);
+    const appliedMask = data[index] & mask;
+    return appliedMask != 0;
+  }
 }

@@ -29,7 +29,7 @@ pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
 
 pub fn assert_valid_go_live<'info>(
     payer: &Signer<'info>,
-    clock: Clock,
+    clock: &Clock,
     candy_machine: &Account<'info, CandyMachine>,
 ) -> Result<()> {
     match candy_machine.data.go_live_date {
@@ -114,14 +114,14 @@ pub fn assert_is_ata(
 ) -> core::result::Result<spl_token::state::Account, ProgramError> {
     assert_owned_by(ata, &spl_token::id())?;
     let ata_account: spl_token::state::Account = assert_initialized(ata)?;
-    assert_keys_equal(ata_account.owner, *wallet)?;
-    assert_keys_equal(ata_account.mint, *mint)?;
-    assert_keys_equal(get_associated_token_address(wallet, mint), *ata.key)?;
+    assert_keys_equal(&ata_account.owner, wallet)?;
+    assert_keys_equal(&ata_account.mint, mint)?;
+    assert_keys_equal(&get_associated_token_address(wallet, mint), ata.key)?;
     Ok(ata_account)
 }
 
-pub fn assert_keys_equal(key1: Pubkey, key2: Pubkey) -> Result<()> {
-    if !cmp_pubkeys(&key1, &key2) {
+pub fn assert_keys_equal(key1: &Pubkey, key2: &Pubkey) -> Result<()> {
+    if !cmp_pubkeys(key1, key2) {
         err!(CandyError::PublicKeyMismatch)
     } else {
         Ok(())
@@ -225,7 +225,7 @@ pub fn remove_feature_flag(uuid: &mut String, feature_index: usize) {
 }
 
 pub fn punish_bots<'a>(
-    err: CandyError,
+    error: CandyError,
     bot_account: AccountInfo<'a>,
     payment_account: AccountInfo<'a>,
     system_program: AccountInfo<'a>,
@@ -233,9 +233,10 @@ pub fn punish_bots<'a>(
 ) -> Result<()> {
     msg!(
         "{}, Candy Machine Botting is taxed at {:?} lamports",
-        err.to_string(),
+        error.to_string(),
         fee
     );
+
     let final_fee = fee.min(bot_account.lamports());
     invoke(
         &system_instruction::transfer(bot_account.key, payment_account.key, final_fee),

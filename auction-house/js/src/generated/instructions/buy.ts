@@ -41,6 +41,18 @@ const buyStruct = new beet.BeetArgsStruct<
 );
 /**
  * Accounts required by the _buy_ instruction
+ *
+ * @property [**signer**] wallet
+ * @property [_writable_] paymentAccount
+ * @property [] transferAuthority
+ * @property [] treasuryMint
+ * @property [] tokenAccount
+ * @property [] metadata
+ * @property [_writable_] escrowPaymentAccount
+ * @property [] authority
+ * @property [] auctionHouse
+ * @property [_writable_] auctionHouseFeeAccount
+ * @property [_writable_] buyerTradeState
  * @category Instructions
  * @category Buy
  * @category generated

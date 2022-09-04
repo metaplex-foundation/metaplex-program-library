@@ -1,0 +1,13 @@
+name: "Setup AWS environment variables"
+description: "Export AWS environment variables to GH context"
+runs:
+  using: "composite"
+  steps:
+    - run: echo "BINARY_STORAGE_ACCOUNT_ID=813125037859" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "BINARY_STORAGE_REGION=us-east-1" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "BINARY_STORAGE_ROLE=uploadToS3Role" >> $GITHUB_ENV
+      shell: bash
+    - run: echo "BINARY_STORAGE_BUCKET=programbinarystorage-programbinaries5c3d16e8-kzk7oebhpkxe" >> $GITHUB_ENV
+      shell: bash

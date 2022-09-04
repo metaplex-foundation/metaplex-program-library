@@ -13,6 +13,7 @@ import { Data, dataBeet } from '../types/Data';
 import { TokenStandard, tokenStandardBeet } from '../types/TokenStandard';
 import { Collection, collectionBeet } from '../types/Collection';
 import { Uses, usesBeet } from '../types/Uses';
+import { CollectionDetails, collectionDetailsBeet } from '../types/CollectionDetails';
 import * as customSerializer from '../../custom/metadata-deserializer';
 
 /**
@@ -31,6 +32,7 @@ export type MetadataArgs = {
   tokenStandard: beet.COption<TokenStandard>;
   collection: beet.COption<Collection>;
   uses: beet.COption<Uses>;
+  collectionDetails: beet.COption<CollectionDetails>;
 };
 /**
  * Holds the data for the {@link Metadata} Account and provides de/serialization
@@ -51,6 +53,7 @@ export class Metadata implements MetadataArgs {
     readonly tokenStandard: beet.COption<TokenStandard>,
     readonly collection: beet.COption<Collection>,
     readonly uses: beet.COption<Uses>,
+    readonly collectionDetails: beet.COption<CollectionDetails>,
   ) {}
 
   /**
@@ -68,6 +71,7 @@ export class Metadata implements MetadataArgs {
       args.tokenStandard,
       args.collection,
       args.uses,
+      args.collectionDetails,
     );
   }
 
@@ -94,6 +98,18 @@ export class Metadata implements MetadataArgs {
       throw new Error(`Unable to find Metadata account at ${address}`);
     }
     return Metadata.fromAccountInfo(accountInfo, 0)[0];
+  }
+
+  /**
+   * Provides a {@link web3.Connection.getProgramAccounts} config builder,
+   * to fetch accounts matching filters that can be specified via that builder.
+   *
+   * @param programId - the program that owns the accounts we are filtering
+   */
+  static gpaBuilder(
+    programId: web3.PublicKey = new web3.PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'),
+  ) {
+    return beetSolana.GpaBuilder.fromStruct(programId, metadataBeet);
   }
 
   /**
@@ -156,6 +172,7 @@ export class Metadata implements MetadataArgs {
       tokenStandard: this.tokenStandard,
       collection: this.collection,
       uses: this.uses,
+      collectionDetails: this.collectionDetails,
     };
   }
 }
@@ -176,6 +193,7 @@ export const metadataBeet = new beet.FixableBeetStruct<Metadata, MetadataArgs>(
     ['tokenStandard', beet.coption(tokenStandardBeet)],
     ['collection', beet.coption(collectionBeet)],
     ['uses', beet.coption(usesBeet)],
+    ['collectionDetails', beet.coption(collectionDetailsBeet)],
   ],
   Metadata.fromArgs,
   'Metadata',

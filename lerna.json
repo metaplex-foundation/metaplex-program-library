@@ -3,11 +3,15 @@
   "packages": [
     "core/js",
     "auction/js",
+    "auctioneer/js",
     "token-vault/js",
     "token-metadata/js",
     "metaplex/js",
     "auction-house/js",
-    "fixed-price-sale/js"
+    "fixed-price-sale/js",
+    "bubblegum/js",
+    "candy-wrapper/js",
+    "nft-packs-wrapper/js"
   ],
   "useWorkspaces": true,
   "version": "independent",
