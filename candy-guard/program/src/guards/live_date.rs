@@ -21,7 +21,7 @@ impl Condition for LiveDate {
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        tier: &Group,
+        tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // the decision on whether or not the user is part of the whitelist

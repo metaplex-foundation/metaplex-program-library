@@ -1,8 +1,7 @@
-use anchor_lang::prelude::*;
-use anchor_lang::AnchorDeserialize;
+use anchor_lang::{prelude::*, AnchorDeserialize};
 
 use crate::guards::*;
-use mpl_candy_guard_derive::CandyGuard;
+use mpl_candy_guard_derive::GuardSet;
 
 // Bytes offset for the start of the data section:
 //     8 (discriminator)
@@ -21,26 +20,27 @@ pub struct CandyGuard {
     // Authority of the guard
     pub authority: Pubkey,
     // after this there is a flexible amount of data to serialize
-    // data (struct) of the available guards; the size of the data
-    // is adjustable as new guards are implemented (the account is
-    // resized using realloc)
+    // data (CandyGuardData struct) of the available guards; the size
+    // of the data is adjustable as new guards are implemented (the
+    // account is resized using realloc)
     //
     // available guards:
-    // 1) bot tax
-    // 2) live date
-    // 3) lamports
-    // 4) spltoken
-    // 5) third party signer
-    // 6) whitelist
-    // 7) gatekeeper
-    // 8) end settings
-    // 9) allow list
+    //  1) bot tax
+    //  2) live date
+    //  3) lamports
+    //  4) spltoken
+    //  5) third party signer
+    //  6) whitelist
+    //  7) gatekeeper
+    //  8) end settings
+    //  9) allow list
+    // 10) mint limit
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct CandyGuardData {
-    pub default: Group,
-    pub groups: Option<Vec<Group>>,
+    pub default: GuardSet,
+    pub groups: Option<Vec<GuardSet>>,
 }
 
 impl CandyGuardData {
@@ -75,7 +75,7 @@ impl CandyGuardData {
     /// Deserializes the guards. Only attempts the deserialization of individuals guards
     /// if the data slice is large enough.
     pub fn load(data: &[u8]) -> Result<Self> {
-        let (default, _) = Group::from_data(&data)?;
+        let (default, _) = GuardSet::from_data(data)?;
         let mut cursor = default.size();
 
         let group_counter = u32::from_le_bytes(*arrayref::array_ref![data, cursor, 4]);
@@ -85,7 +85,7 @@ impl CandyGuardData {
             let mut groups = Vec::with_capacity(group_counter as usize);
 
             for _i in 0..group_counter {
-                let (group, _) = Group::from_data(&data[cursor..])?;
+                let (group, _) = GuardSet::from_data(&data[cursor..])?;
                 cursor += group.size();
                 groups.push(group);
             }
@@ -98,9 +98,9 @@ impl CandyGuardData {
         Ok(Self { default, groups })
     }
 
-    pub fn active_set(data: &[u8]) -> Result<Group> {
+    pub fn active_set(data: &[u8]) -> Result<GuardSet> {
         // root guard set
-        let (mut root, _) = Group::from_data(&data)?;
+        let (mut root, _) = GuardSet::from_data(data)?;
         let mut cursor = root.size();
 
         // number of groups
@@ -136,7 +136,7 @@ impl CandyGuardData {
                     }
                 }
 
-                cursor += Group::bytes_count(features);
+                cursor += GuardSet::bytes_count(features);
             }
 
             // deserialize the active group
@@ -144,7 +144,7 @@ impl CandyGuardData {
             (_, cursor) = active;
 
             if cursor > 0 {
-                let (group, _) = Group::from_data(&data[cursor..])?;
+                let (group, _) = GuardSet::from_data(&data[cursor..])?;
                 root.merge(group);
             }
         }
@@ -164,8 +164,8 @@ impl CandyGuardData {
     }
 }
 
-#[derive(CandyGuard, AnchorSerialize, AnchorDeserialize, Clone, Debug)]
-pub struct Group {
+#[derive(GuardSet, AnchorSerialize, AnchorDeserialize, Clone, Debug)]
+pub struct GuardSet {
     /// Last instruction check and bot tax (penalty for invalid transactions).
     pub bot_tax: Option<BotTax>,
     /// Live data guard (controls when minting is allowed).
@@ -184,4 +184,6 @@ pub struct Group {
     pub end_settings: Option<EndSettings>,
     /// Allow list guard
     pub allow_list: Option<AllowList>,
+    /// Mint limit guard
+    pub mint_limit: Option<MintLimit>,
 }

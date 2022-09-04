@@ -3,9 +3,11 @@ use anchor_spl::token::Token;
 use mpl_candy_machine_core::{constants::COLLECTION_ACCOUNTS_COUNT, CandyMachine};
 use std::collections::BTreeMap;
 
-use crate::guards::{CandyGuardError, EvaluationContext};
-use crate::state::{CandyGuard, Group};
-use crate::utils::cmp_pubkeys;
+use crate::{
+    guards::{CandyGuardError, EvaluationContext},
+    state::{CandyGuard, GuardSet},
+    utils::cmp_pubkeys,
+};
 
 pub fn mint<'info>(
     ctx: Context<'_, '_, '_, 'info, Mint<'info>>,
@@ -14,7 +16,7 @@ pub fn mint<'info>(
     let candy_guard = &ctx.accounts.candy_guard;
     let account_info = &candy_guard.to_account_info();
 
-    let (tier, _features) = Group::from_data(&account_info.data.borrow())?;
+    let (tier, _features) = GuardSet::from_data(&account_info.data.borrow())?;
     let conditions = tier.enabled_conditions();
     let process_error = |error: Error| -> Result<()> {
         if let Some(bot_tax) = &tier.bot_tax {
@@ -44,9 +46,7 @@ pub fn mint<'info>(
     // validates enabled guards (any error at this point is subject to bot tax)
 
     for condition in &conditions {
-        if let Err(error) =
-            condition.validate(&ctx, &mint_args, &tier, &mut evaluation_context)
-        {
+        if let Err(error) = condition.validate(&ctx, &mint_args, &tier, &mut evaluation_context) {
             return process_error(error);
         }
     }

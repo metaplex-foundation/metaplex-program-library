@@ -35,7 +35,7 @@ impl Condition for Gatekeeper {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // retrieves the (potential) gateway token
@@ -70,7 +70,7 @@ impl Condition for Gatekeeper {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if self.expire_on_use {

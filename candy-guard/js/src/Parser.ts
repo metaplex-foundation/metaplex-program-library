@@ -14,32 +14,11 @@ import { BN } from 'bn.js';
 import * as beet from '@metaplex-foundation/beet';
 import { logDebug } from './utils/log';
 
-/*
-pub struct CandyGuardData {
-    /// Last instruction check and bot tax (penalty for invalid transactions).
-    pub bot_tax: Option<BotTax>,
-    /// Live data guard (controls when minting is allowed).
-    pub live_date: Option<LiveDate>,
-    /// Lamports guard (set the price for the mint in lamports).
-    pub lamports: Option<Lamports>,
-    /// Spl-token guard (set the price for the mint in spl-token amount).
-    pub spl_token: Option<SplToken>,
-    /// Third party signer guard.
-    pub third_party_signer: Option<ThirdPartySigner>,
-    /// Whitelist guard (whitelist mint settings).
-    pub whitelist: Option<Whitelist>,
-    /// Gatekeeper guard
-    pub gatekeeper: Option<Gatekeeper>,
-    /// End settings guard
-    pub end_settings: Option<EndSettings>,
-}
-*/
-
 /**
  * Matching the guards of the related struct in the Rust program.
  * Make sure to update this whenever the Rust struct changes.
  * ```
- * pub struct CandyGuardData {
+ * pub struct GuardSet {
  *     /// Last instruction check and bot tax (penalty for invalid transactions).
  *     pub bot_tax: Option<BotTax>,
  *     /// Live data guard (controls when minting is allowed).
@@ -56,6 +35,10 @@ pub struct CandyGuardData {
  *     pub gatekeeper: Option<Gatekeeper>,
  *     /// End settings guard
  *     pub end_settings: Option<EndSettings>,
+ *     /// Allow list guard
+ *     pub allow_list: Option<AllowList>,
+ *     /// Mint limit guard
+ *     pub mint_limit: Option<MintLimit>,
  * }
  * ```
  */
@@ -69,6 +52,7 @@ type Guards = {
   /* 07 */ gatekeeperEnabled: boolean;
   /* 08 */ endSettingsEnabled: boolean;
   /* 09 */ allowListEnabled: boolean;
+  /* 10 */ mintLimitEnabled: boolean;
 };
 const GUARDS_COUNT = 9;
 
@@ -90,6 +74,7 @@ function determineGuards(buffer: Buffer): Guards {
     gatekeeperEnabled,
     endSettingsEnabled,
     allowListEnabled,
+    mintLimitEnabled,
   ] = guards;
 
   return {
@@ -102,6 +87,7 @@ function determineGuards(buffer: Buffer): Guards {
     gatekeeperEnabled,
     endSettingsEnabled,
     allowListEnabled,
+    mintLimitEnabled,
   };
 }
 
@@ -190,6 +176,7 @@ export function parseData(buffer: Buffer): CandyGuardData {
       gatekeeper: data['gateKeeper'] ?? null,
       endSettings: data['endSettings'] ?? null,
       allowList: data['allowList'] ?? null,
+      mintLimit: data['mintLimit'] ?? null,
     },
     groups: null,
   };

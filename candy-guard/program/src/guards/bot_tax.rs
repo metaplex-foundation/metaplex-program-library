@@ -31,7 +31,7 @@ impl Condition for BotTax {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if self.last_instruction {

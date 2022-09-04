@@ -11,7 +11,7 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyGuardData) -> Result<()> 
     let account_info = candy_guard.to_account_info();
     let mut account_data = account_info.data.borrow_mut();
 
-    Ok(data.save(&mut account_data[DATA_OFFSET..])?)
+    data.save(&mut account_data[DATA_OFFSET..])
 }
 
 #[derive(Accounts)]

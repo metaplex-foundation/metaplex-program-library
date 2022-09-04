@@ -248,7 +248,7 @@
   ],
   "accounts": [
     {
-      "name": "Allowance",
+      "name": "MintCounter",
       "docs": [
         "PDA to track the number of mints for an individual address."
       ],
@@ -256,7 +256,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "mintCount",
+            "name": "count",
             "type": "u32"
           }
         ]
@@ -293,63 +293,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "uuid",
+            "name": "merkleRoot",
             "docs": [
-              "Name of the allowed list."
+              "Merkle root of the addresses allowed to mint."
             ],
             "type": {
               "array": [
                 "u8",
-                6
+                32
               ]
-            }
-          },
-          {
-            "name": "merkleRoot",
-            "docs": [
-              "Merkle root of the addresses allowed to mint. If the root is not",
-              "set, any address is allowed to mint."
-            ],
-            "type": {
-              "option": {
-                "array": [
-                  "u8",
-                  32
-                ]
-              }
-            }
-          },
-          {
-            "name": "startDate",
-            "docs": [
-              "Start date for the mint."
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "endDate",
-            "docs": [
-              "End date for the mint."
-            ],
-            "type": "i64"
-          },
-          {
-            "name": "limit",
-            "docs": [
-              "Limit of mints per individual address. If this is not set, there",
-              "is no limit on the number of mints."
-            ],
-            "type": {
-              "option": "u32"
-            }
-          },
-          {
-            "name": "price",
-            "docs": [
-              "Price applicable for the allowed addresses."
-            ],
-            "type": {
-              "option": "u64"
             }
           }
         ]
@@ -440,6 +392,31 @@
             "type": {
               "option": "i64"
             }
+          }
+        ]
+      }
+    },
+    {
+      "name": "MintLimit",
+      "docs": [
+        "Configurations options for mint limit."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "id",
+            "docs": [
+              "Unique identifier of the mint limit."
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "limit",
+            "docs": [
+              "Limit of mints per individual address."
+            ],
+            "type": "u32"
           }
         ]
       }
@@ -536,7 +513,7 @@
           {
             "name": "default",
             "type": {
-              "defined": "Group"
+              "defined": "GuardSet"
             }
           },
           {
@@ -544,7 +521,7 @@
             "type": {
               "option": {
                 "vec": {
-                  "defined": "Group"
+                  "defined": "GuardSet"
                 }
               }
             }
@@ -553,7 +530,7 @@
       }
     },
     {
-      "name": "Group",
+      "name": "GuardSet",
       "type": {
         "kind": "struct",
         "fields": [
@@ -653,6 +630,17 @@
             "type": {
               "option": {
                 "defined": "AllowList"
+              }
+            }
+          },
+          {
+            "name": "mintLimit",
+            "docs": [
+              "Mint limit guard"
+            ],
+            "type": {
+              "option": {
+                "defined": "MintLimit"
               }
             }
           }

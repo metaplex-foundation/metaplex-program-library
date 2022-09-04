@@ -21,7 +21,7 @@ impl Condition for ThirdPartySigner {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         let signer_index = evaluation_context.remaining_account_counter;

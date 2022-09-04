@@ -24,6 +24,7 @@ test('update: enable guards', async (t) => {
       gatekeeper: null,
       endSettings: null,
       allowList: null,
+      mintLimit: null,
     },
     groups: null,
   };
@@ -59,6 +60,7 @@ test('update: enable guards', async (t) => {
       gatekeeper: null,
       endSettings: null,
       allowList: null,
+      mintLimit: null,
     },
     groups: null
   };
@@ -107,6 +109,7 @@ test('update: disable guards', async (t) => {
       gatekeeper: null,
       endSettings: null,
       allowList: null,
+      mintLimit: null,
     },
     groups: [{
       uuid: [0, 0, 0, 0, 0, 2],
@@ -121,6 +124,7 @@ test('update: disable guards', async (t) => {
       gatekeeper: null,
       endSettings: null,
       allowList: null,
+      mintLimit: null,
     }]
   };
 
@@ -147,7 +151,8 @@ test('update: disable guards', async (t) => {
       whitelist: null,
       gatekeeper: null,
       endSettings: null,
-      allowList: null
+      allowList: null,
+      mintLimit: null,
     },
     groups: null
   };

@@ -15,7 +15,8 @@ import { Whitelist, whitelistBeet } from './Whitelist';
 import { Gatekeeper, gatekeeperBeet } from './Gatekeeper';
 import { EndSettings, endSettingsBeet } from './EndSettings';
 import { AllowList, allowListBeet } from './AllowList';
-export type Group = {
+import { MintLimit, mintLimitBeet } from './MintLimit';
+export type GuardSet = {
   botTax: beet.COption<BotTax>;
   liveDate: beet.COption<LiveDate>;
   lamports: beet.COption<Lamports>;
@@ -25,13 +26,14 @@ export type Group = {
   gatekeeper: beet.COption<Gatekeeper>;
   endSettings: beet.COption<EndSettings>;
   allowList: beet.COption<AllowList>;
+  mintLimit: beet.COption<MintLimit>;
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-export const groupBeet = new beet.FixableBeetArgsStruct<Group>(
+export const guardSetBeet = new beet.FixableBeetArgsStruct<GuardSet>(
   [
     ['botTax', beet.coption(botTaxBeet)],
     ['liveDate', beet.coption(liveDateBeet)],
@@ -42,6 +44,7 @@ export const groupBeet = new beet.FixableBeetArgsStruct<Group>(
     ['gatekeeper', beet.coption(gatekeeperBeet)],
     ['endSettings', beet.coption(endSettingsBeet)],
     ['allowList', beet.coption(allowListBeet)],
+    ['mintLimit', beet.coption(mintLimitBeet)],
   ],
-  'Group',
+  'GuardSet',
 );

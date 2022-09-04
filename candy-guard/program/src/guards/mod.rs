@@ -2,9 +2,7 @@ use std::collections::BTreeMap;
 
 pub use anchor_lang::prelude::*;
 
-pub use crate::errors::CandyGuardError;
-pub use crate::instructions::mint::*;
-pub use crate::state::Group;
+pub use crate::{errors::CandyGuardError, instructions::mint::*, state::GuardSet};
 
 pub use allow_list::AllowList;
 pub use bot_tax::BotTax;
@@ -12,6 +10,7 @@ pub use end_settings::EndSettings;
 pub use gatekeeper::Gatekeeper;
 pub use lamports::Lamports;
 pub use live_date::LiveDate;
+pub use mint_limit::MintLimit;
 pub use spltoken::SplToken;
 pub use third_party_signer::ThirdPartySigner;
 pub use whitelist::Whitelist;
@@ -22,6 +21,7 @@ mod end_settings;
 mod gatekeeper;
 mod lamports;
 mod live_date;
+mod mint_limit;
 mod spltoken;
 mod third_party_signer;
 mod whitelist;
@@ -40,7 +40,7 @@ pub trait Condition {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         mint_args: &MintArgs,
-        tier: &Group,
+        tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()>;
 
@@ -52,7 +52,7 @@ pub trait Condition {
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         Ok(())
@@ -66,7 +66,7 @@ pub trait Condition {
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         Ok(())
@@ -129,7 +129,7 @@ pub trait Guard: Condition + AnchorSerialize + AnchorDeserialize {
     }
 }
 
-pub struct EvaluationContext<'a>{
+pub struct EvaluationContext<'a> {
     /// Indicate whether the transaction was sent by the candy guard authority or not.
     pub is_authority: bool,
     /// The counter for the remaining account list. When a guard "consumes" one of the

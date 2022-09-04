@@ -7,26 +7,14 @@
 
 import * as beet from '@metaplex-foundation/beet';
 export type AllowList = {
-  uuid: number[] /* size: 6 */;
-  merkleRoot: beet.COption<number[] /* size: 32 */>;
-  startDate: beet.bignum;
-  endDate: beet.bignum;
-  limit: beet.COption<number>;
-  price: beet.COption<beet.bignum>;
+  merkleRoot: number[] /* size: 32 */;
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-export const allowListBeet = new beet.FixableBeetArgsStruct<AllowList>(
-  [
-    ['uuid', beet.uniformFixedSizeArray(beet.u8, 6)],
-    ['merkleRoot', beet.coption(beet.uniformFixedSizeArray(beet.u8, 32))],
-    ['startDate', beet.i64],
-    ['endDate', beet.i64],
-    ['limit', beet.coption(beet.u32)],
-    ['price', beet.coption(beet.u64)],
-  ],
+export const allowListBeet = new beet.BeetArgsStruct<AllowList>(
+  [['merkleRoot', beet.uniformFixedSizeArray(beet.u8, 32)]],
   'AllowList',
 );

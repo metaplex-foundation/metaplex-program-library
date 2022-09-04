@@ -1,7 +1,9 @@
 use super::*;
 
-use crate::errors::CandyGuardError;
-use crate::utils::{assert_is_ata, spl_token_transfer, TokenTransferParams};
+use crate::{
+    errors::CandyGuardError,
+    utils::{assert_is_ata, spl_token_transfer, TokenTransferParams},
+};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct SplToken {
@@ -25,7 +27,7 @@ impl Condition for SplToken {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // token
@@ -46,7 +48,9 @@ impl Condition for SplToken {
         }
 
         evaluation_context.amount = self.amount;
-        evaluation_context.indices.insert("spl_token_index", token_account_index);
+        evaluation_context
+            .indices
+            .insert("spl_token_index", token_account_index);
 
         Ok(())
     }
@@ -55,7 +59,7 @@ impl Condition for SplToken {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         let index = evaluation_context.indices["spl_token_index"];

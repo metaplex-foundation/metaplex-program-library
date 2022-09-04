@@ -24,6 +24,7 @@ test('initialize: new candy guard (no guards)', async (t) => {
       gatekeeper: null,
       endSettings: null,
       allowList: null,
+      mintLimit: null,
     },
     groups: null,
   };
@@ -72,7 +73,8 @@ test('initialize: new candy guard (with guards)', async (t) => {
       whitelist: null,
       gatekeeper: null,
       endSettings: null,
-      allowList: null
+      allowList: null,
+      mintLimit: null,
     },
     groups: null
   };

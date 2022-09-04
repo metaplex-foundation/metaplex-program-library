@@ -1,7 +1,7 @@
-export * from './Allowance';
 export * from './CandyGuard';
+export * from './MintCounter';
 
-import { Allowance } from './Allowance';
+import { MintCounter } from './MintCounter';
 import { CandyGuard } from './CandyGuard';
 
-export const accountProviders = { Allowance, CandyGuard };
+export const accountProviders = { MintCounter, CandyGuard };

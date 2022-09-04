@@ -797,7 +797,7 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-guard-derive"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "quote",
  "syn",

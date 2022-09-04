@@ -34,7 +34,7 @@ impl Condition for Whitelist {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        tier: &Group,
+        tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // retrieves the (potential) whitelist token account
@@ -76,7 +76,9 @@ impl Condition for Whitelist {
                         // is the mint account the one expected?
                         assert_keys_equal(&whitelist_token_mint.key(), &self.mint)?;
 
-                        evaluation_context.indices.insert("whitelist_index", whitelist_index);
+                        evaluation_context
+                            .indices
+                            .insert("whitelist_index", whitelist_index);
                     }
                     // user is whitelisted
                     evaluation_context.whitelist = true;
@@ -123,7 +125,7 @@ impl Condition for Whitelist {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _tier: &Group,
+        _tier: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if evaluation_context.whitelist && self.mode == WhitelistTokenMode::BurnEveryTime {
