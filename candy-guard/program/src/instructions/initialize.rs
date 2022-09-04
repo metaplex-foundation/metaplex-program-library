@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 
-//use crate::guards::*;
-use crate::state::{CandyGuard, CandyGuardData};
+use crate::state::{CandyGuard, CandyGuardData, DATA_OFFSET};
 
 pub fn initialize(ctx: Context<Initialize>, data: CandyGuardData) -> Result<()> {
     let candy_guard = &mut ctx.accounts.candy_guard;
@@ -11,9 +10,8 @@ pub fn initialize(ctx: Context<Initialize>, data: CandyGuardData) -> Result<()> 
 
     let account_info = candy_guard.to_account_info();
     let mut account_data = account_info.data.borrow_mut();
-    candy_guard.features = data.to_data(&mut account_data)?;
 
-    Ok(())
+    Ok(data.save(&mut account_data[DATA_OFFSET..])?)
 }
 
 #[derive(Accounts)]

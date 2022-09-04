@@ -490,6 +490,89 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * InvalidMintTime: 'Current time is not within the allowed mint time'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidMintTimeError extends Error {
+  readonly code: number = 0x1787;
+  readonly name: string = 'InvalidMintTime';
+  constructor() {
+    super('Current time is not within the allowed mint time');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidMintTimeError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1787, () => new InvalidMintTimeError());
+createErrorFromNameLookup.set('InvalidMintTime', () => new InvalidMintTimeError());
+
+/**
+ * AddressNotFoundInAllowedList: 'Address not found on the allowed list'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AddressNotFoundInAllowedListError extends Error {
+  readonly code: number = 0x1788;
+  readonly name: string = 'AddressNotFoundInAllowedList';
+  constructor() {
+    super('Address not found on the allowed list');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AddressNotFoundInAllowedListError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1788, () => new AddressNotFoundInAllowedListError());
+createErrorFromNameLookup.set(
+  'AddressNotFoundInAllowedList',
+  () => new AddressNotFoundInAllowedListError(),
+);
+
+/**
+ * MissingAllowedListProof: 'Missing allowed list proof'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class MissingAllowedListProofError extends Error {
+  readonly code: number = 0x1789;
+  readonly name: string = 'MissingAllowedListProof';
+  constructor() {
+    super('Missing allowed list proof');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, MissingAllowedListProofError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x1789, () => new MissingAllowedListProofError());
+createErrorFromNameLookup.set('MissingAllowedListProof', () => new MissingAllowedListProofError());
+
+/**
+ * AllowedMintLimitReached: 'The maximum number of allowed mints was reached'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class AllowedMintLimitReachedError extends Error {
+  readonly code: number = 0x178a;
+  readonly name: string = 'AllowedMintLimitReached';
+  constructor() {
+    super('The maximum number of allowed mints was reached');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, AllowedMintLimitReachedError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x178a, () => new AllowedMintLimitReachedError());
+createErrorFromNameLookup.set('AllowedMintLimitReached', () => new AllowedMintLimitReachedError());
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

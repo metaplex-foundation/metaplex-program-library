@@ -30,7 +30,7 @@ impl Condition for EndSettings {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         let candy_machine = &ctx.accounts.candy_machine;

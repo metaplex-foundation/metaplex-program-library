@@ -34,7 +34,7 @@ impl Condition for Whitelist {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        candy_guard_data: &CandyGuardData,
+        tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // retrieves the (potential) whitelist token account
@@ -59,9 +59,9 @@ impl Condition for Whitelist {
                     if let Some(price) = self.discount_price {
                         // user will pay the discount price (either lamports or spl-token
                         // amount)
-                        if candy_guard_data.lamports.is_some() {
+                        if tier.lamports.is_some() {
                             evaluation_context.lamports = price;
-                        } else if candy_guard_data.spl_token.is_some() {
+                        } else if tier.spl_token.is_some() {
                             evaluation_context.amount = price;
                         }
                     }
@@ -123,7 +123,7 @@ impl Condition for Whitelist {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if evaluation_context.whitelist && self.mode == WhitelistTokenMode::BurnEveryTime {

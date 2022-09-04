@@ -25,7 +25,7 @@ impl Condition for SplToken {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // token
@@ -55,7 +55,7 @@ impl Condition for SplToken {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         let index = evaluation_context.indices["spl_token_index"];

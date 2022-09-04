@@ -46,7 +46,7 @@ impl Condition for AllowList {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // (1) checks if the mint time is within the allowed range
@@ -107,7 +107,7 @@ impl Condition for AllowList {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if self.limit.is_some() {

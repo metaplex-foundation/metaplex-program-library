@@ -5,7 +5,7 @@ use solana_program::{
 
 use crate::{
     errors::CandyGuardError,
-    state::{CandyGuard, CandyGuardData},
+    state::{CandyGuard, CandyGuardData, DATA_OFFSET},
 };
 
 pub fn update(ctx: Context<Update>, data: CandyGuardData) -> Result<()> {
@@ -69,7 +69,7 @@ pub fn update(ctx: Context<Update>, data: CandyGuardData) -> Result<()> {
     // save the guards information to the account data and stores
     // the updated feature flag
     let mut account_data = account_info.data.borrow_mut();
-    ctx.accounts.candy_guard.features = data.to_data(&mut account_data)?;
+    data.save(&mut account_data[DATA_OFFSET..])?;
 
     Ok(())
 }

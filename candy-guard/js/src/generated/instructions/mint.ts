@@ -8,6 +8,7 @@
 import * as splToken from '@solana/spl-token';
 import * as beet from '@metaplex-foundation/beet';
 import * as web3 from '@solana/web3.js';
+import { MintArgs, mintArgsBeet } from '../types/MintArgs';
 
 /**
  * @category Instructions
@@ -15,21 +16,21 @@ import * as web3 from '@solana/web3.js';
  * @category generated
  */
 export type MintInstructionArgs = {
-  creatorBump: number;
+  mintArgs: MintArgs;
 };
 /**
  * @category Instructions
  * @category Mint
  * @category generated
  */
-export const mintStruct = new beet.BeetArgsStruct<
+export const mintStruct = new beet.FixableBeetArgsStruct<
   MintInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
 >(
   [
     ['instructionDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
-    ['creatorBump', beet.u8],
+    ['mintArgs', mintArgsBeet],
   ],
   'MintInstructionArgs',
 );

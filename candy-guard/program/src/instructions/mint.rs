@@ -4,7 +4,7 @@ use mpl_candy_machine_core::{constants::COLLECTION_ACCOUNTS_COUNT, CandyMachine}
 use std::collections::BTreeMap;
 
 use crate::guards::{CandyGuardError, EvaluationContext};
-use crate::state::{CandyGuard, CandyGuardData};
+use crate::state::{CandyGuard, Group};
 use crate::utils::cmp_pubkeys;
 
 pub fn mint<'info>(
@@ -14,11 +14,10 @@ pub fn mint<'info>(
     let candy_guard = &ctx.accounts.candy_guard;
     let account_info = &candy_guard.to_account_info();
 
-    let candy_guard_data =
-        CandyGuardData::from_data(candy_guard.features, &account_info.data.borrow())?;
-    let conditions = candy_guard_data.enabled_conditions();
+    let (tier, _features) = Group::from_data(&account_info.data.borrow())?;
+    let conditions = tier.enabled_conditions();
     let process_error = |error: Error| -> Result<()> {
-        if let Some(bot_tax) = &candy_guard_data.bot_tax {
+        if let Some(bot_tax) = &tier.bot_tax {
             bot_tax.punish_bots(error, &ctx)?;
             Ok(())
         } else {
@@ -46,7 +45,7 @@ pub fn mint<'info>(
 
     for condition in &conditions {
         if let Err(error) =
-            condition.validate(&ctx, &mint_args, &candy_guard_data, &mut evaluation_context)
+            condition.validate(&ctx, &mint_args, &tier, &mut evaluation_context)
         {
             return process_error(error);
         }
@@ -56,7 +55,7 @@ pub fn mint<'info>(
     // no bot tax at this point since the actions must be reverted in case of an error
 
     for condition in &conditions {
-        condition.pre_actions(&ctx, &mint_args, &candy_guard_data, &mut evaluation_context)?;
+        condition.pre_actions(&ctx, &mint_args, &tier, &mut evaluation_context)?;
     }
 
     // we are good to go, forward the transaction to the candy machine (if errors occur, the
@@ -68,7 +67,7 @@ pub fn mint<'info>(
     // no bot tax at this point since the actions must be reverted in case of an error
 
     for condition in &conditions {
-        condition.post_actions(&ctx, &mint_args, &candy_guard_data, &mut evaluation_context)?;
+        condition.post_actions(&ctx, &mint_args, &tier, &mut evaluation_context)?;
     }
 
     Ok(())

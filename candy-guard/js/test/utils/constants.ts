@@ -3,5 +3,4 @@
 //  + 32 (base)
 //  +  1 (bump)
 //  + 32 (authority)
-//  +  8 (features)
-export const DATA_OFFSET = 8 + 32 + 1 + 32 + 8;
+export const DATA_OFFSET = 8 + 32 + 1 + 32;

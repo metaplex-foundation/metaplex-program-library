@@ -24,7 +24,7 @@ impl Condition for Lamports {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if ctx.accounts.payer.lamports() < self.amount {
@@ -45,7 +45,7 @@ impl Condition for Lamports {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // sanity check: other guards might have updated the price on the

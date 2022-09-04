@@ -142,8 +142,10 @@
       ],
       "args": [
         {
-          "name": "creatorBump",
-          "type": "u8"
+          "name": "mintArgs",
+          "type": {
+            "defined": "MintArgs"
+          }
         }
       ]
     },
@@ -246,6 +248,21 @@
   ],
   "accounts": [
     {
+      "name": "Allowance",
+      "docs": [
+        "PDA to track the number of mints for an individual address."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mintCount",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
       "name": "CandyGuard",
       "type": {
         "kind": "struct",
@@ -261,16 +278,83 @@
           {
             "name": "authority",
             "type": "publicKey"
-          },
-          {
-            "name": "features",
-            "type": "u64"
           }
         ]
       }
     }
   ],
   "types": [
+    {
+      "name": "AllowList",
+      "docs": [
+        "Configurations options for allow list."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "uuid",
+            "docs": [
+              "Name of the allowed list."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                6
+              ]
+            }
+          },
+          {
+            "name": "merkleRoot",
+            "docs": [
+              "Merkle root of the addresses allowed to mint. If the root is not",
+              "set, any address is allowed to mint."
+            ],
+            "type": {
+              "option": {
+                "array": [
+                  "u8",
+                  32
+                ]
+              }
+            }
+          },
+          {
+            "name": "startDate",
+            "docs": [
+              "Start date for the mint."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "endDate",
+            "docs": [
+              "End date for the mint."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "limit",
+            "docs": [
+              "Limit of mints per individual address. If this is not set, there",
+              "is no limit on the number of mints."
+            ],
+            "type": {
+              "option": "u32"
+            }
+          },
+          {
+            "name": "price",
+            "docs": [
+              "Price applicable for the allowed addresses."
+            ],
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
     {
       "name": "BotTax",
       "type": {
@@ -417,7 +501,59 @@
       }
     },
     {
+      "name": "MintArgs",
+      "docs": [
+        "Struct to hold argument required for the mint."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creatorBump",
+            "type": "u8"
+          },
+          {
+            "name": "merkleProof",
+            "type": {
+              "option": {
+                "vec": {
+                  "array": [
+                    "u8",
+                    32
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "CandyGuardData",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "default",
+            "type": {
+              "defined": "Group"
+            }
+          },
+          {
+            "name": "groups",
+            "type": {
+              "option": {
+                "vec": {
+                  "defined": "Group"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Group",
       "type": {
         "kind": "struct",
         "fields": [
@@ -506,6 +642,17 @@
             "type": {
               "option": {
                 "defined": "EndSettings"
+              }
+            }
+          },
+          {
+            "name": "allowList",
+            "docs": [
+              "Allow list guard"
+            ],
+            "type": {
+              "option": {
+                "defined": "AllowList"
               }
             }
           }
@@ -656,6 +803,26 @@
       "code": 6022,
       "name": "AfterEndSettingsMintAmount",
       "msg": "Current items minted is at the set end settings amount"
+    },
+    {
+      "code": 6023,
+      "name": "InvalidMintTime",
+      "msg": "Current time is not within the allowed mint time"
+    },
+    {
+      "code": 6024,
+      "name": "AddressNotFoundInAllowedList",
+      "msg": "Address not found on the allowed list"
+    },
+    {
+      "code": 6025,
+      "name": "MissingAllowedListProof",
+      "msg": "Missing allowed list proof"
+    },
+    {
+      "code": 6026,
+      "name": "AllowedMintLimitReached",
+      "msg": "The maximum number of allowed mints was reached"
     }
   ],
   "metadata": {

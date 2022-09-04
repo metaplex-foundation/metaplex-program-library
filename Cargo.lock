@@ -785,6 +785,7 @@ version = "0.0.1"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "arrayref",
  "mpl-candy-guard-derive",
  "mpl-candy-machine-core",
  "mpl-token-metadata",

@@ -6,20 +6,19 @@
  */
 
 import * as beet from '@metaplex-foundation/beet';
-import { Group, groupBeet } from './Group';
-export type CandyGuardData = {
-  default: Group;
-  groups: beet.COption<Group[]>;
+export type MintArgs = {
+  creatorBump: number;
+  merkleProof: beet.COption<number[] /* size: 32 */[]>;
 };
 
 /**
  * @category userTypes
  * @category generated
  */
-export const candyGuardDataBeet = new beet.FixableBeetArgsStruct<CandyGuardData>(
+export const mintArgsBeet = new beet.FixableBeetArgsStruct<MintArgs>(
   [
-    ['default', groupBeet],
-    ['groups', beet.coption(beet.array(groupBeet))],
+    ['creatorBump', beet.u8],
+    ['merkleProof', beet.coption(beet.array(beet.uniformFixedSizeArray(beet.u8, 32)))],
   ],
-  'CandyGuardData',
+  'MintArgs',
 );

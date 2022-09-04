@@ -13,14 +13,19 @@ test('update: enable guards', async (t) => {
   const { fstTxHandler, payerPair, connection } = await API.payer();
 
   const data = {
-    botTax: null,
-    liveDate: null,
-    lamports: null,
-    splToken: null,
-    thirdPartySigner: null,
-    whitelist: null,
-    gatekeeper: null,
-    endSettings: null,
+    default: {
+      uuid: [1, 2, 3, 4, 5, 6],
+      botTax: null,
+      liveDate: null,
+      lamports: null,
+      splToken: null,
+      thirdPartySigner: null,
+      whitelist: null,
+      gatekeeper: null,
+      endSettings: null,
+      allowList: null,
+    },
+    groups: null,
   };
 
   const { tx: transaction, candyGuard: address } = await API.initialize(
@@ -36,21 +41,26 @@ test('update: enable guards', async (t) => {
   const balance = accountInfo?.lamports!;
 
   const updateData = {
-    botTax: {
-      lamports: new BN(100000000),
-      lastInstruction: true,
+    default: {
+      uuid: [1, 2, 3, 4, 5, 6],
+      botTax: {
+        lamports: new BN(100000000),
+        lastInstruction: true,
+      },
+      liveDate: {
+        date: null,
+      },
+      lamports: {
+        amount: new BN(100000000),
+      },
+      splToken: null,
+      thirdPartySigner: null,
+      whitelist: null,
+      gatekeeper: null,
+      endSettings: null,
+      allowList: null,
     },
-    liveDate: {
-      date: null,
-    },
-    lamports: {
-      amount: new BN(100000000),
-    },
-    splToken: null,
-    thirdPartySigner: null,
-    whitelist: null,
-    gatekeeper: null,
-    endSettings: null,
+    groups: null
   };
 
   const { tx: updateTransaction } = await API.update(
@@ -66,8 +76,6 @@ test('update: enable guards', async (t) => {
   const candyGuard = await CandyGuard.fromAccountAddress(connection, address);
 
   spok(t, candyGuard, {
-    // bot_tax (b001) + live_date (b010) + lamports_charge (b100)
-    features: spokSameBignum(7),
     authority: spokSamePubkey(payerPair.publicKey),
   });
 
@@ -81,21 +89,39 @@ test('update: disable guards', async (t) => {
   const { fstTxHandler, payerPair, connection } = await API.payer();
 
   const data = {
-    botTax: {
-      lamports: new BN(100000000),
-      lastInstruction: true,
+    default: {
+      uuid: [0, 0, 0, 0, 0, 1],
+      botTax: {
+        lamports: new BN(100000000),
+        lastInstruction: true,
+      },
+      liveDate: {
+        date: null,
+      },
+      lamports: {
+        amount: new BN(100000000),
+      },
+      splToken: null,
+      thirdPartySigner: null,
+      whitelist: null,
+      gatekeeper: null,
+      endSettings: null,
+      allowList: null,
     },
-    liveDate: {
-      date: null,
-    },
-    lamports: {
-      amount: new BN(100000000),
-    },
-    splToken: null,
-    thirdPartySigner: null,
-    whitelist: null,
-    gatekeeper: null,
-    endSettings: null,
+    groups: [{
+      uuid: [0, 0, 0, 0, 0, 2],
+      botTax: null,
+      liveDate: null,
+      lamports: {
+        amount: new BN(500),
+      },
+      splToken: null,
+      thirdPartySigner: null,
+      whitelist: null,
+      gatekeeper: null,
+      endSettings: null,
+      allowList: null,
+    }]
   };
 
   const { tx: transaction, candyGuard: address } = await API.initialize(
@@ -111,14 +137,19 @@ test('update: disable guards', async (t) => {
   const balance = accountInfo?.lamports!;
 
   const updateData = {
-    botTax: null,
-    liveDate: null,
-    lamports: null,
-    splToken: null,
-    thirdPartySigner: null,
-    whitelist: null,
-    gatekeeper: null,
-    endSettings: null,
+    default: {
+      uuid: [1, 2, 3, 4, 5, 6],
+      botTax: null,
+      liveDate: null,
+      lamports: null,
+      splToken: null,
+      thirdPartySigner: null,
+      whitelist: null,
+      gatekeeper: null,
+      endSettings: null,
+      allowList: null
+    },
+    groups: null
   };
 
   const { tx: updateTransaction } = await API.update(
@@ -134,7 +165,6 @@ test('update: disable guards', async (t) => {
   const candyGuard = await CandyGuard.fromAccountAddress(connection, address);
 
   spok(t, candyGuard, {
-    features: spokSameBignum(0),
     authority: spokSamePubkey(payerPair.publicKey),
   });
 

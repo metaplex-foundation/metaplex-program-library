@@ -4,7 +4,7 @@ pub use anchor_lang::prelude::*;
 
 pub use crate::errors::CandyGuardError;
 pub use crate::instructions::mint::*;
-pub use crate::state::CandyGuardData;
+pub use crate::state::Group;
 
 pub use allow_list::AllowList;
 pub use bot_tax::BotTax;
@@ -40,7 +40,7 @@ pub trait Condition {
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         mint_args: &MintArgs,
-        candy_guard_data: &CandyGuardData,
+        tier: &Group,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()>;
 
@@ -52,7 +52,7 @@ pub trait Condition {
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         Ok(())
@@ -66,7 +66,7 @@ pub trait Condition {
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
         _mint_args: &MintArgs,
-        _candy_guard_data: &CandyGuardData,
+        _tier: &Group,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         Ok(())

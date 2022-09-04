@@ -8,9 +8,10 @@ import {
   whitelistBeet,
   gatekeeperBeet,
   endSettingsBeet,
+  allowListBeet,
 } from './generated/types';
-import { CandyGuard } from './generated/accounts/CandyGuard';
 import { BN } from 'bn.js';
+import * as beet from '@metaplex-foundation/beet';
 import { logDebug } from './utils/log';
 
 /*
@@ -67,14 +68,15 @@ type Guards = {
   /* 06 */ whitelistEnabled: boolean;
   /* 07 */ gatekeeperEnabled: boolean;
   /* 08 */ endSettingsEnabled: boolean;
+  /* 09 */ allowListEnabled: boolean;
 };
-const GUARDS_COUNT = 8;
+const GUARDS_COUNT = 9;
 
-function determineGuards(candyGuard: CandyGuard): Guards {
-  const enabled = new BN(candyGuard.features).toNumber();
+function determineGuards(buffer: Buffer): Guards {
+  const enabled = new BN(beet.u64.read(buffer, 0)).toNumber();
 
-  const guards = [];
-  for (let i = 1; i <= GUARDS_COUNT; i++) {
+  const guards: boolean[] = [];
+  for (let i = 0; i < GUARDS_COUNT; i++) {
     guards.push(!!((1 << i) & enabled));
   }
 
@@ -87,6 +89,7 @@ function determineGuards(candyGuard: CandyGuard): Guards {
     whitelistEnabled,
     gatekeeperEnabled,
     endSettingsEnabled,
+    allowListEnabled,
   ] = guards;
 
   return {
@@ -98,11 +101,12 @@ function determineGuards(candyGuard: CandyGuard): Guards {
     whitelistEnabled,
     gatekeeperEnabled,
     endSettingsEnabled,
+    allowListEnabled,
   };
 }
 
-export function parseData(candyGuard: CandyGuard, buffer: Buffer): CandyGuardData {
-  const guards = determineGuards(candyGuard);
+export function parseData(buffer: Buffer): CandyGuardData {
+  const guards = determineGuards(buffer);
   const {
     botTaxEnabled,
     liveDateEnabled,
@@ -112,11 +116,12 @@ export function parseData(candyGuard: CandyGuard, buffer: Buffer): CandyGuardDat
     whitelistEnabled,
     gatekeeperEnabled,
     endSettingsEnabled,
+    allowListEnabled,
   } = guards;
   logDebug('Guards: %O', guards);
 
-  // data offset for deserialization
-  let cursor = 0;
+  // data offset for deserialization (skip u64 features flag)
+  let cursor = 8;
   // deserialized guards
   let data = {};
 
@@ -168,14 +173,24 @@ export function parseData(candyGuard: CandyGuard, buffer: Buffer): CandyGuardDat
     cursor = offset;
   }
 
+  if (allowListEnabled) {
+    const [allowList, offset] = allowListBeet.deserialize(buffer, cursor);
+    data['allowList'] = allowList
+    cursor = offset;
+  }
+
   return {
-    botTax: data['botTax'] ?? null,
-    liveDate: data['liveDate'] ?? null,
-    lamports: data['lamports'] ?? null,
-    splToken: data['splToken'] ?? null,
-    thirdPartySigner: data['thirdPartySigner'] ?? null,
-    whitelist: data['whitelist'] ?? null,
-    gatekeeper: data['gateKeeper'] ?? null,
-    endSettings: data['endSettings'] ?? null,
+    default: {
+      botTax: data['botTax'] ?? null,
+      liveDate: data['liveDate'] ?? null,
+      lamports: data['lamports'] ?? null,
+      splToken: data['splToken'] ?? null,
+      thirdPartySigner: data['thirdPartySigner'] ?? null,
+      whitelist: data['whitelist'] ?? null,
+      gatekeeper: data['gateKeeper'] ?? null,
+      endSettings: data['endSettings'] ?? null,
+      allowList: data['allowList'] ?? null,
+    },
+    groups: null,
   };
 }
