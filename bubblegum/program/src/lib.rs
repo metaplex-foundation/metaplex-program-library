@@ -44,6 +44,9 @@ pub mod error;
 pub mod state;
 pub mod utils;
 
+#[cfg(test)]
+pub mod tests;
+
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
 #[derive(Accounts)]
@@ -926,8 +929,8 @@ pub mod bubblegum {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.compression_program.to_account_info(),
             spl_compression::cpi::accounts::Initialize {
-                authority: ctx.accounts.authority.to_account_info(),
                 merkle_tree,
+                authority: ctx.accounts.authority.to_account_info(),
                 log_wrapper: ctx.accounts.candy_wrapper.to_account_info(),
             },
             authority_pda_signer,
