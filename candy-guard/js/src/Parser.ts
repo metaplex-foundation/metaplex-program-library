@@ -112,7 +112,7 @@ export function parseData(buffer: Buffer): CandyGuardData {
   const groupsCount = new BN(beet.u32.read(buffer, offset)).toNumber();
   const groups: GuardSet[] = [];
 
-  let cursor = 4 + offset;
+  let cursor = beet.u32.byteSize + offset;
   for (let i = 0; i < groupsCount; i++) {
     // parses each individual guard set
     const { guardSet: group, offset } = parseGuardSet(buffer.subarray(cursor));
@@ -122,11 +122,11 @@ export function parseData(buffer: Buffer): CandyGuardData {
 
   return {
     default: defaultSet,
-    groups: groups.length == 0 ? null : groups,
+    groups: groups.length === 0 ? null : groups,
   };
 }
 
-function parseGuardSet(buffer: Buffer): { guardSet: GuardSet, offset: number } {
+function parseGuardSet(buffer: Buffer): { guardSet: GuardSet; offset: number } {
   const guards = determineGuards(buffer);
   const {
     botTaxEnabled,
@@ -143,67 +143,67 @@ function parseGuardSet(buffer: Buffer): { guardSet: GuardSet, offset: number } {
   logDebug('Guards: %O', guards);
 
   // data offset for deserialization (skip u64 features flag)
-  let cursor = 8;
+  let cursor = beet.u64.byteSize;
   // deserialized guards
-  let data = {};
+  const data = {};
 
   if (botTaxEnabled) {
-    const [botTax, offset] = botTaxBeet.deserialize(buffer, cursor);
+    const [botTax] = botTaxBeet.deserialize(buffer, cursor);
     data['botTax'] = botTax;
     cursor += GUARDS_SIZE.botTax;
   }
 
   if (liveDateEnabled) {
-    const [liveDate, offset] = liveDateBeet.deserialize(buffer, cursor);
+    const [liveDate] = liveDateBeet.deserialize(buffer, cursor);
     data['liveDate'] = liveDate;
     cursor += GUARDS_SIZE.liveDate;
   }
 
   if (lamportsEnabled) {
-    const [lamports, offset] = lamportsBeet.deserialize(buffer, cursor);
+    const [lamports] = lamportsBeet.deserialize(buffer, cursor);
     data['lamports'] = lamports;
     cursor += GUARDS_SIZE.lamports;
   }
 
   if (splTokenEnabled) {
-    const [splToken, offset] = splTokenBeet.deserialize(buffer, cursor);
+    const [splToken] = splTokenBeet.deserialize(buffer, cursor);
     data['splToken'] = splToken;
     cursor += GUARDS_SIZE.splToken;
   }
 
   if (thirdPartySignerEnabled) {
-    const [thirdPartySigner, offset] = thirdPartySignerBeet.deserialize(buffer, cursor);
+    const [thirdPartySigner] = thirdPartySignerBeet.deserialize(buffer, cursor);
     data['thirdPartySigner'] = thirdPartySigner;
     cursor += GUARDS_SIZE.thirdPartySigner;
   }
 
   if (whitelistEnabled) {
-    const [whitelist, offset] = whitelistBeet.deserialize(buffer, cursor);
+    const [whitelist] = whitelistBeet.deserialize(buffer, cursor);
     data['whitelist'] = whitelist;
     cursor += GUARDS_SIZE.whitelist;
   }
 
   if (gatekeeperEnabled) {
-    const [gatekeeper, offset] = gatekeeperBeet.deserialize(buffer, cursor);
+    const [gatekeeper] = gatekeeperBeet.deserialize(buffer, cursor);
     data['gatekeeper'] = gatekeeper;
     cursor += GUARDS_SIZE.gatekeeper;
   }
 
   if (endSettingsEnabled) {
-    const [endSettings, offset] = endSettingsBeet.deserialize(buffer, cursor);
+    const [endSettings] = endSettingsBeet.deserialize(buffer, cursor);
     data['endSettings'] = endSettings;
     cursor += GUARDS_SIZE.endSettings;
   }
 
   if (allowListEnabled) {
-    const [allowList, offset] = allowListBeet.deserialize(buffer, cursor);
-    data['allowList'] = allowList
+    const [allowList] = allowListBeet.deserialize(buffer, cursor);
+    data['allowList'] = allowList;
     cursor += GUARDS_SIZE.allowList;
   }
 
   if (mintLimitEnabled) {
-    const [mintLimit, offset] = mintLimitBeet.deserialize(buffer, cursor);
-    data['mintLimit'] = mintLimit
+    const [mintLimit] = mintLimitBeet.deserialize(buffer, cursor);
+    data['mintLimit'] = mintLimit;
     cursor += GUARDS_SIZE.mintLimit;
   }
 

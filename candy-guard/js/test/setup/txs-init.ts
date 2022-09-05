@@ -64,7 +64,7 @@ export class InitTransactions {
     payer: Keypair,
     handler: PayerTransactionHandler,
   ): Promise<{ tx: ConfirmedTransactionAssertablePromise; candyGuard: PublicKey }> {
-    const [_, keypair] = await this.getKeypair('Candy Guard Base Pubkey');
+    const [, keypair] = await this.getKeypair('Candy Guard Base Pubkey');
     const pda = await getCandyGuardPDA(PROGRAM_ID, keypair);
     amman.addr.addLabel('Candy Guard Account', pda);
 

@@ -61,7 +61,7 @@ test('update: enable guards', async (t) => {
       allowList: null,
       mintLimit: null,
     },
-    groups: null
+    groups: null,
   };
 
   const { tx: updateTransaction } = await API.update(
@@ -109,22 +109,23 @@ test('update: disable guards', async (t) => {
       allowList: null,
       mintLimit: null,
     },
-    groups: [{
-      botTax: null,
-      liveDate: {
-        date: 1662394820,
-      },
-      lamports: {
-        amount: new BN(500),
-      },
-      splToken: null,
-      thirdPartySigner: null,
-      whitelist: null,
-      gatekeeper: null,
-      endSettings: null,
-      allowList: null,
-      mintLimit: null,
-    }]
+    groups: [
+      {
+        botTax: null,
+        liveDate: {
+          date: 1662394820,
+        },
+        lamports: {
+          amount: new BN(500),
+        },
+        splToken: null,
+        thirdPartySigner: null,
+        whitelist: null,
+        gatekeeper: null,
+        endSettings: null,
+        allowList: null,
+        mintLimit: null,
+      }]
   };
 
   const { tx: transaction, candyGuard: address } = await API.initialize(
@@ -145,11 +146,11 @@ test('update: disable guards', async (t) => {
   const guardSet = candyGuardData.groups?.at(0);
   spok(t, guardSet, {
     liveDate: {
-      date: spokSameBignum(1662394820)
+      date: spokSameBignum(1662394820),
     },
     lamports: {
-      amount: spokSameBignum(500)
-    }
+      amount: spokSameBignum(500),
+    },
   });
 
   accountInfo = await connection.getAccountInfo(payerPair.publicKey);
@@ -168,7 +169,7 @@ test('update: disable guards', async (t) => {
       allowList: null,
       mintLimit: null,
     },
-    groups: null
+    groups: null,
   };
 
   const { tx: updateTransaction } = await API.update(

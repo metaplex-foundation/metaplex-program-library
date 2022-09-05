@@ -68,7 +68,7 @@ test('initialize: new candy guard (with guards)', async (t) => {
       },
       splToken: null,
       thirdPartySigner: {
-        signerKey: payerPair.publicKey
+        signerKey: payerPair.publicKey,
       },
       whitelist: null,
       gatekeeper: null,
@@ -76,7 +76,7 @@ test('initialize: new candy guard (with guards)', async (t) => {
       allowList: null,
       mintLimit: null,
     },
-    groups: null
+    groups: null,
   };
 
   const { tx: transaction, candyGuard: address } = await API.initialize(
