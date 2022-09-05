@@ -43,6 +43,9 @@ pub mod error;
 pub mod state;
 pub mod utils;
 
+#[cfg(test)]
+pub mod tests;
+
 declare_id!("BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY");
 
 #[derive(Accounts)]
@@ -854,8 +857,6 @@ pub mod bubblegum {
             return Err(BubblegumError::InsufficientMintCapacity.into());
         }
 
-        authority.increment_mint_count();
-
         // Create a HashSet to store signers to use with creator validation.  Any signer can be
         // counted as a validated creator.
         let mut metadata_auth = HashSet::<Pubkey>::new();
@@ -882,6 +883,8 @@ pub mod bubblegum {
             &ctx.accounts.log_wrapper,
             &ctx.accounts.compression_program,
         )?;
+
+        authority.increment_mint_count();
 
         Ok(())
     }

@@ -14,7 +14,7 @@ pub const ASSET_PREFIX: &str = "asset";
 pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
 
 #[account]
-#[derive(Copy)]
+#[derive(Copy, Debug)]
 pub struct TreeConfig {
     pub tree_creator: Pubkey,
     pub tree_delegate: Pubkey,
