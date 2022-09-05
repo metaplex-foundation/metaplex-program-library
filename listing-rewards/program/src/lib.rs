@@ -14,7 +14,7 @@ use core::ops::Deref;
 
 use crate::{
     execute_sale::*,
-    listings::{cancel::*, create::*},
+    listings::{cancel::*, create::*, update::*},
     offers::{close::*, create::*},
     redeem_rewards::*,
     reward_center::{create::*, edit::*},
@@ -54,6 +54,8 @@ declare_id!("rwdLstiU8aJU1DPdoPtocaNKApMhCFdCg283hz8dd3u");
 
 #[program]
 pub mod listing_rewards {
+    use crate::listings::update::UpdateListing;
+
     use super::*;
 
     pub fn create_reward_center(
@@ -72,9 +74,16 @@ pub mod listing_rewards {
 
     pub fn create_listing(
         ctx: Context<CreateListing>,
-        sell_params: CreateListingParams,
+        create_listing_params: CreateListingParams,
     ) -> Result<()> {
-        listings::create::handler(ctx, sell_params)
+        listings::create::handler(ctx, create_listing_params)
+    }
+
+    pub fn update_listing(
+        ctx: Context<UpdateListing>,
+        update_listing_params: UpdateListingParams,
+    ) -> Result<()> {
+        listings::update::handler(ctx, update_listing_params)
     }
 
     pub fn cancel_listing(

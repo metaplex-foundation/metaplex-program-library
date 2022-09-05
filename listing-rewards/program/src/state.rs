@@ -2,34 +2,6 @@ use anchor_lang::prelude::*;
 
 use crate::errors::ListingRewardsError;
 
-#[account]
-pub struct RewardableCollection {
-    /// is Initialized
-    pub is_initialized: bool,
-    /// rewardable collection maintainer
-    pub maintainer: Pubkey,
-    /// the mint address of the collection
-    pub collection: Pubkey,
-    /// the address of the associated reward center
-    pub reward_center: Pubkey,
-    /// the pda bump
-    pub bump: u8,
-    /// deleted at timestamp
-    pub deleted_at: Option<i64>,
-}
-
-impl RewardableCollection {
-    pub fn size() -> usize {
-        8 + // deliminator
-      1 + // is_initialized
-      32 + // maintainer
-      32 + // collection
-      32 + // reward_center
-      1 + // pda bump
-      1 + 8 // deleted_at
-    }
-}
-
 #[derive(AnchorDeserialize, AnchorSerialize, Clone, Debug)]
 pub struct ListingRewardRules {
     // Basis Points to determine reward ratio for seller

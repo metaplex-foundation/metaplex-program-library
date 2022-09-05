@@ -35,22 +35,30 @@ pub enum ListingRewardsError {
     IneligibaleForRewards,
 
     // 6008
-    #[msg("Cannot delete an already flushed out rewardable collection")]
-    RewardableCollectionAlreadyDeleted,
-
-    // 6009
-    #[msg("The rewardable collection is already created/active")]
-    RewardableCollectionAlreadyActive,
-
-    // 6010
     #[msg("Math numerical overflow")]
     NumericalOverflowError,
 
-    // 6011
+    // 6009
     #[msg("The mints do not match")]
     MintMismatch,
 
-    // 6012
+    // 6010
     #[msg("Listing and offer prices do not match")]
     PriceMismatch,
+
+    // 6011
+    #[msg("Cannot update price on an already cancelled listing")]
+    ListingAlreadyCancelled,
+
+    // 6012
+    #[msg("Cannot update price on an already purchased listing")]
+    ListingAlreadyPurchased,
+
+    // 6013
+    #[msg("Cannot update price on an already cancelled offer")]
+    OfferAlreadyCancelled,
+
+    // 6014
+    #[msg("Cannot update price on an already purchased offer")]
+    OfferPurchasedAlready,
 }

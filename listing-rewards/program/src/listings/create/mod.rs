@@ -27,7 +27,7 @@ pub struct CreateListingParams {
 
 /// Accounts for the [`sell` handler](listing_rewards/fn.sell.html).
 #[derive(Accounts, Clone)]
-#[instruction(sell_params: CreateListingParams)]
+#[instruction(create_listing_params: CreateListingParams)]
 pub struct CreateListing<'info> {
     /// Auction House Program used for CPI call
     pub auction_house_program: Program<'info, AuctionHouseProgram>,
@@ -117,10 +117,10 @@ pub struct CreateListing<'info> {
             auction_house.treasury_mint.as_ref(),
             token_account.mint.as_ref(),
             &u64::MAX.to_le_bytes(),
-            &sell_params.token_size.to_le_bytes()
+            &create_listing_params.token_size.to_le_bytes()
         ],
         seeds::program = auction_house_program,
-        bump = sell_params.trade_state_bump
+        bump = create_listing_params.trade_state_bump
     )]
     pub seller_trade_state: UncheckedAccount<'info>,
 
@@ -136,10 +136,10 @@ pub struct CreateListing<'info> {
             auction_house.treasury_mint.as_ref(),
             token_account.mint.as_ref(),
             &0u64.to_le_bytes(),
-            &sell_params.token_size.to_le_bytes()
+            &create_listing_params.token_size.to_le_bytes()
         ],
         seeds::program = auction_house_program,
-        bump = sell_params.free_trade_state_bump
+        bump = create_listing_params.free_trade_state_bump
     )]
     pub free_seller_trade_state: UncheckedAccount<'info>,
 
@@ -163,7 +163,7 @@ pub struct CreateListing<'info> {
             SIGNER.as_bytes()
         ],
         seeds::program = auction_house_program,
-        bump = sell_params.program_as_signer_bump
+        bump = create_listing_params.program_as_signer_bump
     )]
     pub program_as_signer: UncheckedAccount<'info>,
 

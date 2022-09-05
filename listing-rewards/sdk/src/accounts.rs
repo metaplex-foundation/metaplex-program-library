@@ -24,6 +24,13 @@ pub struct CancelListingAccounts {
     pub treasury_mint: Pubkey,
 }
 
+pub struct UpdateListingAccounts {
+    pub seller: Pubkey,
+    pub metadata: Pubkey,
+    pub token_account: Pubkey,
+    pub auction_house: Pubkey,
+}
+
 pub struct CreateOfferAccounts {
     pub wallet: Pubkey,
     pub payment_account: Pubkey,

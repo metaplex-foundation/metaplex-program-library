@@ -13,7 +13,9 @@ use mpl_listing_rewards::{
     accounts as rewards_accounts,
     execute_sale::ExecuteSaleParams,
     id, instruction,
-    listings::{cancel::CancelListingParams, create::CreateListingParams},
+    listings::{
+        cancel::CancelListingParams, create::CreateListingParams, update::UpdateListingParams,
+    },
     offers::{close::CloseOfferParams, create::CreateOfferParams},
     pda::{self, find_listing_address, find_offer_address, find_reward_center_address},
     reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
@@ -127,7 +129,7 @@ pub fn create_listing(
     .to_account_metas(None);
 
     let data = instruction::CreateListing {
-        sell_params: CreateListingParams {
+        create_listing_params: CreateListingParams {
             price,
             token_size,
             trade_state_bump,
@@ -191,6 +193,41 @@ pub fn cancel_listing(
 
     let data = instruction::CancelListing {
         cancel_listing_params: CancelListingParams { price, token_size },
+    }
+    .data();
+
+    Instruction {
+        program_id: id(),
+        accounts,
+        data,
+    }
+}
+
+pub fn update_listing(
+    UpdateListingAccounts {
+        auction_house,
+        metadata,
+        token_account,
+        seller,
+    }: UpdateListingAccounts,
+    UpdateListingData { new_price }: UpdateListingData,
+) -> Instruction {
+    let (reward_center, _) = find_reward_center_address(&auction_house);
+    let (listing, _) = find_listing_address(&seller, &metadata, &reward_center);
+
+    let accounts = rewards_accounts::UpdateListing {
+        auction_house,
+        listing,
+        metadata,
+        reward_center,
+        seller,
+        token_account,
+        auction_house_program: mpl_auction_house::id(),
+    }
+    .to_account_metas(None);
+
+    let data = instruction::UpdateListing {
+        update_listing_params: UpdateListingParams { new_price },
     }
     .data();
 

@@ -7,6 +7,10 @@ pub struct CreateListingData {
     pub free_trade_state_bump: u8,
 }
 
+pub struct UpdateListingData {
+    pub new_price: u64,
+}
+
 pub struct CancelListingData {
     pub price: u64,
     pub token_size: u64,
