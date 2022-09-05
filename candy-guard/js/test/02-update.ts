@@ -2,7 +2,7 @@ import test from 'tape';
 import spok from 'spok';
 import { InitTransactions, killStuckProcess } from './setup';
 import { CandyGuard } from '../src/generated';
-import { spokSameBignum, spokSamePubkey } from './utils';
+import { spokSamePubkey } from './utils';
 import { BN } from 'bn.js';
 
 const API = new InitTransactions();
