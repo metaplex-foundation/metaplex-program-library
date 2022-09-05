@@ -13,6 +13,8 @@ import {
 import { BN } from 'bn.js';
 import * as beet from '@metaplex-foundation/beet';
 import { logDebug } from './utils/log';
+import { mintLimitBeet } from './generated/types/MintLimit';
+import { GuardSet } from './generated/types/GuardSet';
 
 /**
  * Matching the guards of the related struct in the Rust program.
@@ -54,6 +56,18 @@ type Guards = {
   /* 09 */ allowListEnabled: boolean;
   /* 10 */ mintLimitEnabled: boolean;
 };
+const GUARDS_SIZE = {
+  /* 01 */ botTax: 9,
+  /* 02 */ liveDate: 9,
+  /* 01 */ lamports: 8,
+  /* 04 */ splToken: 40,
+  /* 05 */ thirdPartySigner: 32,
+  /* 06 */ whitelist: 43,
+  /* 07 */ gatekeeper: 33,
+  /* 08 */ endSettings: 9,
+  /* 09 */ allowList: 32,
+  /* 10 */ mintLimit: 5,
+};
 const GUARDS_COUNT = 9;
 
 function determineGuards(buffer: Buffer): Guards {
@@ -92,6 +106,27 @@ function determineGuards(buffer: Buffer): Guards {
 }
 
 export function parseData(buffer: Buffer): CandyGuardData {
+  // parses the default guard set
+  const { guardSet: defaultSet, offset } = parseGuardSet(buffer);
+  // retrieves the number of groups
+  const groupsCount = new BN(beet.u32.read(buffer, offset)).toNumber();
+  const groups: GuardSet[] = [];
+
+  let cursor = 4 + offset;
+  for (let i = 0; i < groupsCount; i++) {
+    // parses each individual guard set
+    const { guardSet: group, offset } = parseGuardSet(buffer.subarray(cursor));
+    groups.push(group);
+    cursor += offset;
+  }
+
+  return {
+    default: defaultSet,
+    groups: groups.length == 0 ? null : groups,
+  };
+}
+
+function parseGuardSet(buffer: Buffer): { guardSet: GuardSet, offset: number } {
   const guards = determineGuards(buffer);
   const {
     botTaxEnabled,
@@ -103,6 +138,7 @@ export function parseData(buffer: Buffer): CandyGuardData {
     gatekeeperEnabled,
     endSettingsEnabled,
     allowListEnabled,
+    mintLimitEnabled,
   } = guards;
   logDebug('Guards: %O', guards);
 
@@ -114,59 +150,65 @@ export function parseData(buffer: Buffer): CandyGuardData {
   if (botTaxEnabled) {
     const [botTax, offset] = botTaxBeet.deserialize(buffer, cursor);
     data['botTax'] = botTax;
-    cursor = offset;
+    cursor += GUARDS_SIZE.botTax;
   }
 
   if (liveDateEnabled) {
     const [liveDate, offset] = liveDateBeet.deserialize(buffer, cursor);
     data['liveDate'] = liveDate;
-    cursor = offset;
+    cursor += GUARDS_SIZE.liveDate;
   }
 
   if (lamportsEnabled) {
     const [lamports, offset] = lamportsBeet.deserialize(buffer, cursor);
     data['lamports'] = lamports;
-    cursor = offset;
+    cursor += GUARDS_SIZE.lamports;
   }
 
   if (splTokenEnabled) {
     const [splToken, offset] = splTokenBeet.deserialize(buffer, cursor);
     data['splToken'] = splToken;
-    cursor = offset;
+    cursor += GUARDS_SIZE.splToken;
   }
 
   if (thirdPartySignerEnabled) {
     const [thirdPartySigner, offset] = thirdPartySignerBeet.deserialize(buffer, cursor);
     data['thirdPartySigner'] = thirdPartySigner;
-    cursor = offset;
+    cursor += GUARDS_SIZE.thirdPartySigner;
   }
 
   if (whitelistEnabled) {
     const [whitelist, offset] = whitelistBeet.deserialize(buffer, cursor);
     data['whitelist'] = whitelist;
-    cursor = offset;
+    cursor += GUARDS_SIZE.whitelist;
   }
 
   if (gatekeeperEnabled) {
     const [gatekeeper, offset] = gatekeeperBeet.deserialize(buffer, cursor);
     data['gatekeeper'] = gatekeeper;
-    cursor = offset;
+    cursor += GUARDS_SIZE.gatekeeper;
   }
 
   if (endSettingsEnabled) {
     const [endSettings, offset] = endSettingsBeet.deserialize(buffer, cursor);
     data['endSettings'] = endSettings;
-    cursor = offset;
+    cursor += GUARDS_SIZE.endSettings;
   }
 
   if (allowListEnabled) {
     const [allowList, offset] = allowListBeet.deserialize(buffer, cursor);
     data['allowList'] = allowList
-    cursor = offset;
+    cursor += GUARDS_SIZE.allowList;
+  }
+
+  if (mintLimitEnabled) {
+    const [mintLimit, offset] = mintLimitBeet.deserialize(buffer, cursor);
+    data['mintLimit'] = mintLimit
+    cursor += GUARDS_SIZE.mintLimit;
   }
 
   return {
-    default: {
+    guardSet: {
       botTax: data['botTax'] ?? null,
       liveDate: data['liveDate'] ?? null,
       lamports: data['lamports'] ?? null,
@@ -178,6 +220,6 @@ export function parseData(buffer: Buffer): CandyGuardData {
       allowList: data['allowList'] ?? null,
       mintLimit: data['mintLimit'] ?? null,
     },
-    groups: null,
+    offset: cursor,
   };
 }

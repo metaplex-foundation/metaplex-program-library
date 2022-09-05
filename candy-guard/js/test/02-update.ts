@@ -2,8 +2,9 @@ import test from 'tape';
 import spok from 'spok';
 import { InitTransactions, killStuckProcess } from './setup';
 import { CandyGuard } from '../src/generated';
-import { spokSamePubkey } from './utils';
+import { DATA_OFFSET, spokSameBignum, spokSamePubkey } from './utils';
 import { BN } from 'bn.js';
+import { parseData } from '../src';
 
 const API = new InitTransactions();
 
@@ -110,7 +111,9 @@ test('update: disable guards', async (t) => {
     },
     groups: [{
       botTax: null,
-      liveDate: null,
+      liveDate: {
+        date: 1662394820,
+      },
       lamports: {
         amount: new BN(500),
       },
@@ -133,7 +136,23 @@ test('update: disable guards', async (t) => {
   // executes the transaction
   await transaction.assertSuccess(t);
 
-  let accountInfo = await connection.getAccountInfo(payerPair.publicKey);
+  // parse the guards configuration
+  let accountInfo = await connection.getAccountInfo(address);
+  const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET)!);
+
+  t.true(candyGuardData.groups?.length == 1, 'expected 1 group');
+
+  const guardSet = candyGuardData.groups?.at(0);
+  spok(t, guardSet, {
+    liveDate: {
+      date: spokSameBignum(1662394820)
+    },
+    lamports: {
+      amount: spokSameBignum(500)
+    }
+  });
+
+  accountInfo = await connection.getAccountInfo(payerPair.publicKey);
   const balance = accountInfo?.lamports!;
 
   const updateData = {
