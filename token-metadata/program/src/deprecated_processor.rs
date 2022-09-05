@@ -18,7 +18,6 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
     program_id: &'a Pubkey,
     accounts: &'a [AccountInfo<'a>],
     data: Data,
-    allow_direct_creator_writes: bool,
     is_mutable: bool,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
@@ -50,7 +49,7 @@ pub fn process_deprecated_create_metadata_accounts<'a>(
             collection: None,
             uses: None,
         },
-        allow_direct_creator_writes,
+        false,
         is_mutable,
         false,
         false,

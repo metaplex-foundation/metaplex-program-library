@@ -1087,6 +1087,29 @@ createErrorFromNameLookup.set(
 );
 
 /**
+ * SizedCollectionMetadataMustBeMutable: 'Setting a sized collection requires the collection metadata to be mutable.'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SizedCollectionMetadataMustBeMutableError extends Error {
+  readonly code: number = 0x17a2;
+  readonly name: string = 'SizedCollectionMetadataMustBeMutable';
+  constructor() {
+    super('Setting a sized collection requires the collection metadata to be mutable.');
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SizedCollectionMetadataMustBeMutableError);
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x17a2, () => new SizedCollectionMetadataMustBeMutableError());
+createErrorFromNameLookup.set(
+  'SizedCollectionMetadataMustBeMutable',
+  () => new SizedCollectionMetadataMustBeMutableError(),
+);
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

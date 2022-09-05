@@ -11,24 +11,25 @@ import { MetadataArgs, metadataArgsBeet } from '../types/MetadataArgs'
 
 /**
  * @category Instructions
- * @category VerifyCreator
+ * @category SetAndVerifyCollection
  * @category generated
  */
-export type VerifyCreatorInstructionArgs = {
+export type SetAndVerifyCollectionInstructionArgs = {
   root: number[] /* size: 32 */
   dataHash: number[] /* size: 32 */
   creatorHash: number[] /* size: 32 */
   nonce: beet.bignum
   index: number
   message: MetadataArgs
+  collection: number[] /* size: 32 */
 }
 /**
  * @category Instructions
- * @category VerifyCreator
+ * @category SetAndVerifyCollection
  * @category generated
  */
-export const verifyCreatorStruct = new beet.FixableBeetArgsStruct<
-  VerifyCreatorInstructionArgs & {
+export const setAndVerifyCollectionStruct = new beet.FixableBeetArgsStruct<
+  SetAndVerifyCollectionInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */
   }
 >(
@@ -40,56 +41,69 @@ export const verifyCreatorStruct = new beet.FixableBeetArgsStruct<
     ['nonce', beet.u64],
     ['index', beet.u32],
     ['message', metadataArgsBeet],
+    ['collection', beet.uniformFixedSizeArray(beet.u8, 32)],
   ],
-  'VerifyCreatorInstructionArgs'
+  'SetAndVerifyCollectionInstructionArgs'
 )
 /**
- * Accounts required by the _verifyCreator_ instruction
+ * Accounts required by the _setAndVerifyCollection_ instruction
  *
  * @property [] authority
  * @property [] owner
  * @property [] delegate
  * @property [**signer**] payer
- * @property [**signer**] creator
+ * @property [] treeDelegate
+ * @property [**signer**] collectionAuthority
+ * @property [] collectionMint
+ * @property [] collectionMetadata
+ * @property [] editionAccount
+ * @property [] bubblegumSigner
  * @property [] candyWrapper
  * @property [] compressionProgram
  * @property [_writable_] merkleTree
+ * @property [] tokenMetadataProgram
  * @category Instructions
- * @category VerifyCreator
+ * @category SetAndVerifyCollection
  * @category generated
  */
-export type VerifyCreatorInstructionAccounts = {
+export type SetAndVerifyCollectionInstructionAccounts = {
   authority: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
   payer: web3.PublicKey
-  creator: web3.PublicKey
+  treeDelegate: web3.PublicKey
+  collectionAuthority: web3.PublicKey
+  collectionMint: web3.PublicKey
+  collectionMetadata: web3.PublicKey
+  editionAccount: web3.PublicKey
+  bubblegumSigner: web3.PublicKey
   candyWrapper: web3.PublicKey
   compressionProgram: web3.PublicKey
   merkleTree: web3.PublicKey
+  tokenMetadataProgram: web3.PublicKey
 }
 
-export const verifyCreatorInstructionDiscriminator = [
-  52, 17, 96, 132, 71, 4, 85, 194,
+export const setAndVerifyCollectionInstructionDiscriminator = [
+  235, 242, 121, 216, 158, 234, 180, 234,
 ]
 
 /**
- * Creates a _VerifyCreator_ instruction.
+ * Creates a _SetAndVerifyCollection_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category VerifyCreator
+ * @category SetAndVerifyCollection
  * @category generated
  */
-export function createVerifyCreatorInstruction(
-  accounts: VerifyCreatorInstructionAccounts,
-  args: VerifyCreatorInstructionArgs,
+export function createSetAndVerifyCollectionInstruction(
+  accounts: SetAndVerifyCollectionInstructionAccounts,
+  args: SetAndVerifyCollectionInstructionArgs,
   programId = new web3.PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY')
 ) {
-  const [data] = verifyCreatorStruct.serialize({
-    instructionDiscriminator: verifyCreatorInstructionDiscriminator,
+  const [data] = setAndVerifyCollectionStruct.serialize({
+    instructionDiscriminator: setAndVerifyCollectionInstructionDiscriminator,
     ...args,
   })
   const keys: web3.AccountMeta[] = [
@@ -114,9 +128,34 @@ export function createVerifyCreatorInstruction(
       isSigner: true,
     },
     {
-      pubkey: accounts.creator,
+      pubkey: accounts.treeDelegate,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionAuthority,
       isWritable: false,
       isSigner: true,
+    },
+    {
+      pubkey: accounts.collectionMint,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.collectionMetadata,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.editionAccount,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.bubblegumSigner,
+      isWritable: false,
+      isSigner: false,
     },
     {
       pubkey: accounts.candyWrapper,
@@ -131,6 +170,11 @@ export function createVerifyCreatorInstruction(
     {
       pubkey: accounts.merkleTree,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.tokenMetadataProgram,
+      isWritable: false,
       isSigner: false,
     },
   ]
