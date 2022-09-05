@@ -68,7 +68,7 @@ const GUARDS_SIZE = {
   /* 09 */ allowList: 32,
   /* 10 */ mintLimit: 5,
 };
-const GUARDS_COUNT = 9;
+const GUARDS_COUNT = 10;
 
 function determineGuards(buffer: Buffer): Guards {
   const enabled = new BN(beet.u64.read(buffer, 0)).toNumber();
