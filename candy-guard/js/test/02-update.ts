@@ -14,7 +14,6 @@ test('update: enable guards', async (t) => {
 
   const data = {
     default: {
-      uuid: [1, 2, 3, 4, 5, 6],
       botTax: null,
       liveDate: null,
       lamports: null,
@@ -43,7 +42,6 @@ test('update: enable guards', async (t) => {
 
   const updateData = {
     default: {
-      uuid: [1, 2, 3, 4, 5, 6],
       botTax: {
         lamports: new BN(100000000),
         lastInstruction: true,
@@ -92,7 +90,6 @@ test('update: disable guards', async (t) => {
 
   const data = {
     default: {
-      uuid: [0, 0, 0, 0, 0, 1],
       botTax: {
         lamports: new BN(100000000),
         lastInstruction: true,
@@ -112,7 +109,6 @@ test('update: disable guards', async (t) => {
       mintLimit: null,
     },
     groups: [{
-      uuid: [0, 0, 0, 0, 0, 2],
       botTax: null,
       liveDate: null,
       lamports: {
@@ -142,7 +138,6 @@ test('update: disable guards', async (t) => {
 
   const updateData = {
     default: {
-      uuid: [1, 2, 3, 4, 5, 6],
       botTax: null,
       liveDate: null,
       lamports: null,
