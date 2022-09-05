@@ -60,5 +60,5 @@ pub enum ListingRewardsError {
 
     // 6014
     #[msg("Cannot update price on an already purchased offer")]
-    OfferPurchasedAlready,
+    OfferAlreadyPurchased,
 }

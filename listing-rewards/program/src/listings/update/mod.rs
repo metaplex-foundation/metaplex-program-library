@@ -13,27 +13,26 @@ use crate::{
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct UpdateListingParams {
-   pub new_price: u64,
+    pub new_price: u64,
 }
 
 #[derive(Accounts, Clone)]
 #[instruction(update_listing_params: UpdateListingParams)]
 pub struct UpdateListing<'info> {
     /// Seller wallet
-    #[account(mut)]
-    pub seller: Signer<'info>,
+    #[account(mut, address = listing.seller)]
+    pub wallet: Signer<'info>,
 
     /// The Listing Config used for listing settings
     #[account(
         mut,
         has_one = metadata,
-        has_one = seller,
         has_one = reward_center,
         constraint = listing.canceled_at.is_none() @ ListingRewardsError::ListingAlreadyCancelled,
-        constraint = listing.purchased_at.is_none() @ ListingRewardsError::ListingAlreadyCancelled,
+        constraint = listing.purchased_at.is_none() @ ListingRewardsError::ListingAlreadyPurchased,
         seeds = [
             LISTING.as_bytes(),
-            seller.key().as_ref(),
+            wallet.key().as_ref(),
             metadata.key().as_ref(),
             reward_center.key().as_ref(),
         ],
@@ -72,7 +71,7 @@ pub struct UpdateListing<'info> {
 
     /// SPL token account containing token for sale.
     #[account(
-        constraint = token_account.owner == seller.key(),
+        constraint = token_account.owner == wallet.key(),
         constraint = token_account.amount == 1
     )]
     pub token_account: Box<Account<'info, TokenAccount>>,

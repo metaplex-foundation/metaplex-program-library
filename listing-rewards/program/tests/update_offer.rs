@@ -17,8 +17,8 @@ use mpl_listing_rewards::{
 };
 
 use mpl_listing_rewards_sdk::{
-    accounts::{CreateListingAccounts, UpdateListingAccounts},
-    args::{CreateListingData, UpdateListingData},
+    accounts::{CreateListingAccounts, CreateOfferAccounts, UpdateOfferAccounts},
+    args::{CreateListingData, CreateOfferData, UpdateOfferData},
     *,
 };
 
@@ -37,7 +37,7 @@ use spl_token::{
 };
 
 #[tokio::test]
-async fn update_listing_success() {
+async fn create_offer_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -182,8 +182,6 @@ async fn update_listing_success() {
         delegate_auctioneer_data,
     );
 
-    // CREATE LISTING
-
     let token_account =
         get_associated_token_address(&metadata_owner_address, &metadata_mint_address);
 
@@ -227,21 +225,6 @@ async fn update_listing_success() {
 
     let create_listing_ix = create_listing(create_listing_accounts, create_listing_params);
 
-    // UPDATE LISTING
-
-    let update_listing_accounts = UpdateListingAccounts {
-        wallet: metadata_owner.pubkey(),
-        auction_house,
-        metadata: metadata.pubkey,
-        token_account,
-    };
-
-    let update_listing_params = UpdateListingData {
-        new_price: listing_rewards_test::ONE_SOL * 2,
-    };
-
-    let update_listing_ix = update_listing(update_listing_accounts, update_listing_params);
-
     let tx = Transaction::new_signed_with_payer(
         &[
             create_auction_house_ix,
@@ -265,9 +248,88 @@ async fn update_listing_success() {
     assert!(tx_response.is_ok());
 
     let tx = Transaction::new_signed_with_payer(
-        &[create_listing_ix, update_listing_ix],
+        &[create_listing_ix],
         Some(&metadata_owner_address),
         &[&metadata_owner],
+        context.last_blockhash,
+    );
+
+    let tx_response = context.banks_client.process_transaction(tx).await;
+
+    assert!(tx_response.is_ok());
+
+    // CREATE OFFER TEST
+
+    let buyer = Keypair::new();
+    let buyer_pubkey = &buyer.pubkey();
+    airdrop(&mut context, buyer_pubkey, listing_rewards_test::TEN_SOL)
+        .await
+        .unwrap();
+
+    let create_offer_accounts = CreateOfferAccounts {
+        wallet: *buyer_pubkey,
+        transfer_authority: *buyer_pubkey,
+        payment_account: *buyer_pubkey,
+        treasury_mint: mint,
+        token_mint: metadata_mint_address,
+        auction_house,
+        reward_center,
+        token_account,
+        metadata: metadata_address,
+        authority: wallet,
+    };
+
+    let create_offer_params = CreateOfferData {
+        token_size: 1,
+        buyer_price: listing_rewards_test::ONE_SOL,
+    };
+
+    let create_offer_ix = create_offer(create_offer_accounts, create_offer_params);
+
+    // UPDATE OFFER TEST
+
+    let update_offer_inc_accounts = UpdateOfferAccounts {
+        wallet: *buyer_pubkey,
+        transfer_authority: *buyer_pubkey,
+        buyer_token_account: *buyer_pubkey,
+        treasury_mint: mint,
+        token_mint: metadata_mint_address,
+        auction_house,
+        reward_center,
+        token_account,
+        metadata: metadata_address,
+        authority: wallet,
+    };
+
+    let update_offer_inc_params = UpdateOfferData {
+        new_buyer_price: listing_rewards_test::ONE_SOL * 2,
+    };
+
+    let update_offer_dec_accounts = UpdateOfferAccounts {
+        wallet: *buyer_pubkey,
+        transfer_authority: *buyer_pubkey,
+        buyer_token_account: *buyer_pubkey,
+        treasury_mint: mint,
+        token_mint: metadata_mint_address,
+        auction_house,
+        reward_center,
+        token_account,
+        metadata: metadata_address,
+        authority: wallet,
+    };
+
+    let update_offer_dec_params = UpdateOfferData {
+        new_buyer_price: listing_rewards_test::ONE_SOL,
+    };
+
+    let update_offer_inc_ix = update_offer(update_offer_inc_accounts, update_offer_inc_params);
+
+    let update_offer_dec_ix = update_offer(update_offer_dec_accounts, update_offer_dec_params);
+
+    let tx = Transaction::new_signed_with_payer(
+        &[create_offer_ix, update_offer_inc_ix, update_offer_dec_ix],
+        Some(buyer_pubkey),
+        &[&buyer],
         context.last_blockhash,
     );
 

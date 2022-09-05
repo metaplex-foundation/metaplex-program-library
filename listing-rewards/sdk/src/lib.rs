@@ -16,7 +16,7 @@ use mpl_listing_rewards::{
     listings::{
         cancel::CancelListingParams, create::CreateListingParams, update::UpdateListingParams,
     },
-    offers::{close::CloseOfferParams, create::CreateOfferParams},
+    offers::{close::CloseOfferParams, create::CreateOfferParams, update::UpdateOfferParams},
     pda::{self, find_listing_address, find_offer_address, find_reward_center_address},
     reward_center::{create::CreateRewardCenterParams, edit::EditRewardCenterParams},
 };
@@ -208,19 +208,19 @@ pub fn update_listing(
         auction_house,
         metadata,
         token_account,
-        seller,
+        wallet,
     }: UpdateListingAccounts,
     UpdateListingData { new_price }: UpdateListingData,
 ) -> Instruction {
     let (reward_center, _) = find_reward_center_address(&auction_house);
-    let (listing, _) = find_listing_address(&seller, &metadata, &reward_center);
+    let (listing, _) = find_listing_address(&wallet, &metadata, &reward_center);
 
     let accounts = rewards_accounts::UpdateListing {
         auction_house,
         listing,
         metadata,
         reward_center,
-        seller,
+        wallet,
         token_account,
         auction_house_program: mpl_auction_house::id(),
     }
@@ -303,6 +303,66 @@ pub fn create_offer(
             escrow_payment_bump,
             token_size,
             trade_state_bump,
+        },
+    }
+    .data();
+
+    Instruction {
+        program_id: id(),
+        accounts,
+        data,
+    }
+}
+
+pub fn update_offer(
+    UpdateOfferAccounts {
+        auction_house,
+        authority,
+        metadata,
+        buyer_token_account,
+        reward_center,
+        token_account,
+        transfer_authority,
+        treasury_mint,
+        token_mint,
+        wallet,
+    }: UpdateOfferAccounts,
+    UpdateOfferData { new_buyer_price }: UpdateOfferData,
+) -> Instruction {
+    let (auction_house_fee_account, _) =
+        mpl_auction_house::pda::find_auction_house_fee_account_address(&auction_house);
+    let (ah_auctioneer_pda, _) =
+        mpl_auction_house::pda::find_auctioneer_pda(&auction_house, &reward_center);
+    let (escrow_payment_account, escrow_payment_bump) =
+        mpl_auction_house::pda::find_escrow_payment_address(&auction_house, &wallet);
+    let (offer, _) = pda::find_offer_address(&wallet, &metadata, &reward_center);
+
+    let accounts = rewards_accounts::UpdateOffer {
+        ah_auctioneer_pda,
+        auction_house,
+        auction_house_fee_account,
+        authority,
+        metadata,
+        buyer_token_account,
+        reward_center,
+        token_account,
+        transfer_authority,
+        treasury_mint,
+        escrow_payment_account,
+        wallet,
+        offer,
+        auction_house_program: mpl_auction_house::id(),
+        ata_program: spl_associated_token_account::id(),
+        token_program: spl_token::id(),
+        system_program: system_program::id(),
+        rent: sysvar::rent::id(),
+    }
+    .to_account_metas(None);
+
+    let data = instruction::UpdateOffer {
+        update_offer_params: UpdateOfferParams {
+            new_buyer_price,
+            escrow_payment_bump,
         },
     }
     .data();

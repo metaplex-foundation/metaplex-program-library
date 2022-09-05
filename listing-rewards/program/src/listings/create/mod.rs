@@ -50,6 +50,7 @@ pub struct CreateListing<'info> {
 
     /// The auctioneer program PDA running this auction.
     #[account(
+        has_one = auction_house,
         seeds = [
             REWARD_CENTER.as_bytes(), 
             auction_house.key().as_ref()
