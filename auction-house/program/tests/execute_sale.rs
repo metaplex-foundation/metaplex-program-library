@@ -5,7 +5,9 @@ pub mod utils;
 
 use common::*;
 use utils::{
-    helpers::{assert_error_ignoring_io_error_in_ci, default_scopes},
+    helpers::{
+        assert_error_ignoring_io_error_in_ci, default_scopes, unwrap_ignoring_io_error_in_ci,
+    },
     setup_functions::*,
 };
 
@@ -2226,7 +2228,7 @@ async fn execute_sale_partial_order_success() {
         .await
         .unwrap();
     assert!(!buyer_token_before.is_none());
-    context.banks_client.process_transaction(tx).await.unwrap();
+    unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
     let seller_after = context
         .banks_client
@@ -2822,6 +2824,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
         .process_transaction(tx)
         .await
         .unwrap_err();
+
     assert_error_ignoring_io_error_in_ci(&error, NOT_ENOUGH_TOKENS_AVAIL_FOR_PURCHASE);
 }
 
