@@ -7,7 +7,6 @@ export * from './Gatekeeper';
 export * from './GuardSet';
 export * from './Lamports';
 export * from './LiveDate';
-export * from './MintArgs';
 export * from './MintLimit';
 export * from './SplToken';
 export * from './ThirdPartySigner';

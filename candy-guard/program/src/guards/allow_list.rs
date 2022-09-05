@@ -21,18 +21,23 @@ impl Condition for AllowList {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        mint_args: &MintArgs,
-        _tier: &GuardSet,
-        _evaluation_context: &mut EvaluationContext,
+        mint_args: &[u8],
+        _guard_set: &GuardSet,
+        evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         let user = ctx.accounts.payer.key();
 
-        if let Some(merkle_proof) = &mint_args.merkle_proof {
-            if !verify(merkle_proof, &self.merkle_root, &user.to_bytes()) {
-                return err!(CandyGuardError::AddressNotFoundInAllowedList);
-            }
-        } else {
-            return err!(CandyGuardError::MissingAllowedListProof);
+        let merkle_proof: Vec<[u8; 32]> =
+            if let Ok(proof) = Vec::try_from_slice(&mint_args[evaluation_context.args_cursor..]) {
+                proof
+            } else {
+                return err!(CandyGuardError::MissingAllowedListProof);
+            };
+        // updates the number of bytes read
+        evaluation_context.args_cursor += 4 + (merkle_proof.len() * 32);
+
+        if !verify(&merkle_proof[..], &self.merkle_root, &user.to_bytes()) {
+            return err!(CandyGuardError::AddressNotFoundInAllowedList);
         }
 
         Ok(())

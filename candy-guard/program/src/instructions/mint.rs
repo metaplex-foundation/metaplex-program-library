@@ -5,21 +5,22 @@ use std::collections::BTreeMap;
 
 use crate::{
     guards::{CandyGuardError, EvaluationContext},
-    state::{CandyGuard, GuardSet},
+    state::{CandyGuard, CandyGuardData},
     utils::cmp_pubkeys,
 };
 
 pub fn mint<'info>(
     ctx: Context<'_, '_, '_, 'info, Mint<'info>>,
-    mint_args: MintArgs,
+    creator_bump: u8,
+    mint_args: Vec<u8>,
 ) -> Result<()> {
     let candy_guard = &ctx.accounts.candy_guard;
     let account_info = &candy_guard.to_account_info();
 
-    let (tier, _features) = GuardSet::from_data(&account_info.data.borrow())?;
-    let conditions = tier.enabled_conditions();
+    let guard_set = CandyGuardData::active_set(&account_info.data.borrow())?;
+    let conditions = guard_set.enabled_conditions();
     let process_error = |error: Error| -> Result<()> {
-        if let Some(bot_tax) = &tier.bot_tax {
+        if let Some(bot_tax) = &guard_set.bot_tax {
             bot_tax.punish_bots(error, &ctx)?;
             Ok(())
         } else {
@@ -30,7 +31,8 @@ pub fn mint<'info>(
     // evaluation context for this transaction
     let mut evaluation_context = EvaluationContext {
         is_authority: cmp_pubkeys(&candy_guard.authority, &ctx.accounts.payer.key()),
-        remaining_account_counter: 0,
+        account_cursor: 0,
+        args_cursor: 0,
         is_presale: false,
         indices: BTreeMap::new(),
         lamports: 0,
@@ -46,7 +48,9 @@ pub fn mint<'info>(
     // validates enabled guards (any error at this point is subject to bot tax)
 
     for condition in &conditions {
-        if let Err(error) = condition.validate(&ctx, &mint_args, &tier, &mut evaluation_context) {
+        if let Err(error) =
+            condition.validate(&ctx, &mint_args, &guard_set, &mut evaluation_context)
+        {
             return process_error(error);
         }
     }
@@ -55,19 +59,19 @@ pub fn mint<'info>(
     // no bot tax at this point since the actions must be reverted in case of an error
 
     for condition in &conditions {
-        condition.pre_actions(&ctx, &mint_args, &tier, &mut evaluation_context)?;
+        condition.pre_actions(&ctx, &mint_args, &guard_set, &mut evaluation_context)?;
     }
 
     // we are good to go, forward the transaction to the candy machine (if errors occur, the
     // actions are reverted and the trasaction fails)
 
-    cpi_mint(&ctx, mint_args.creator_bump)?;
+    cpi_mint(&ctx, creator_bump)?;
 
     // performs guard post-actions (errors might occur, which will cause the transaction to fail)
     // no bot tax at this point since the actions must be reverted in case of an error
 
     for condition in &conditions {
-        condition.post_actions(&ctx, &mint_args, &tier, &mut evaluation_context)?;
+        condition.post_actions(&ctx, &mint_args, &guard_set, &mut evaluation_context)?;
     }
 
     Ok(())
@@ -91,7 +95,7 @@ fn validate<'info>(
             return err!(CandyGuardError::IncorrectOwner);
         }
 
-        evaluation_context.remaining_account_counter += COLLECTION_ACCOUNTS_COUNT;
+        evaluation_context.account_cursor += COLLECTION_ACCOUNTS_COUNT;
     }
     Ok(())
 }
@@ -142,7 +146,7 @@ fn cpi_mint<'info>(ctx: &Context<'_, '_, '_, 'info, Mint<'info>>, creator_bump: 
 }
 
 #[derive(Accounts)]
-#[instruction(mint_args: MintArgs)]
+#[instruction(creator_bump: u8, mint_args: Vec<u8>)]
 pub struct Mint<'info> {
     #[account(seeds = [b"candy_guard", candy_guard.base.key().as_ref()], bump)]
     pub candy_guard: Account<'info, CandyGuard>,
@@ -215,11 +219,4 @@ pub struct Mint<'info> {
     // > needed if gatekeeper guard enabled and expire_on_use is true
     // gateway program
     // network_expire_feature
-}
-
-/// Struct to hold argument required for the mint.
-#[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
-pub struct MintArgs {
-    pub creator_bump: u8,
-    pub merkle_proof: Option<Vec<[u8; 32]>>,
 }

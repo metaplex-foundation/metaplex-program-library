@@ -33,15 +33,15 @@ impl Condition for Whitelist {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        tier: &GuardSet,
+        _mint_args: &[u8],
+        guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // retrieves the (potential) whitelist token account
-        let whitelist_index = evaluation_context.remaining_account_counter;
+        let whitelist_index = evaluation_context.account_cursor;
         let whitelist_token_account = Self::get_account_info(ctx, whitelist_index)?;
         // consumes the whitelist token account
-        evaluation_context.remaining_account_counter += 1;
+        evaluation_context.account_cursor += 1;
 
         // if the user has not actually made this account, this explodes and we just
         // check normal dates. if they have, we check amount: if it's > 0 we let them
@@ -59,9 +59,9 @@ impl Condition for Whitelist {
                     if let Some(price) = self.discount_price {
                         // user will pay the discount price (either lamports or spl-token
                         // amount)
-                        if tier.lamports.is_some() {
+                        if guard_set.lamports.is_some() {
                             evaluation_context.lamports = price;
-                        } else if tier.spl_token.is_some() {
+                        } else if guard_set.spl_token.is_some() {
                             evaluation_context.amount = price;
                         }
                     }
@@ -72,7 +72,7 @@ impl Condition for Whitelist {
                         // validates that we have the whitelist_burn_authority account
                         let _ = Self::get_account_info(ctx, whitelist_index + 2)?;
                         // consumes the remaning account
-                        evaluation_context.remaining_account_counter += 2;
+                        evaluation_context.account_cursor += 2;
                         // is the mint account the one expected?
                         assert_keys_equal(&whitelist_token_mint.key(), &self.mint)?;
 
@@ -96,7 +96,7 @@ impl Condition for Whitelist {
                     }
                     // no presale period, consumes the remaning accounts if needed
                     if self.mode == WhitelistTokenMode::BurnEveryTime {
-                        evaluation_context.remaining_account_counter += 2;
+                        evaluation_context.account_cursor += 2;
                     }
                 }
             }
@@ -113,7 +113,7 @@ impl Condition for Whitelist {
                 }
                 // no presale period, consumes the remaning accounts if needed
                 if self.mode == WhitelistTokenMode::BurnEveryTime {
-                    evaluation_context.remaining_account_counter += 2;
+                    evaluation_context.account_cursor += 2;
                 }
             }
         }
@@ -124,8 +124,8 @@ impl Condition for Whitelist {
     fn pre_actions<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        _tier: &GuardSet,
+        _mint_args: &[u8],
+        _guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if evaluation_context.whitelist && self.mode == WhitelistTokenMode::BurnEveryTime {

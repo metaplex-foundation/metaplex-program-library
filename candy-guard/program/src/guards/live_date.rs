@@ -20,13 +20,13 @@ impl Condition for LiveDate {
     fn validate<'info>(
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        tier: &GuardSet,
+        _mint_args: &[u8],
+        guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // the decision on whether or not the user is part of the whitelist
         // is done by the whitelist guard
-        let whitelist_presale = if let Some(whitelist) = &tier.whitelist {
+        let whitelist_presale = if let Some(whitelist) = &guard_set.whitelist {
             whitelist.presale
         } else {
             false

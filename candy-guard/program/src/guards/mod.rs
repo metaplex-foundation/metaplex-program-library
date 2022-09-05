@@ -4,6 +4,7 @@ pub use anchor_lang::prelude::*;
 
 pub use crate::{errors::CandyGuardError, instructions::mint::*, state::GuardSet};
 
+pub use self::spl_token::SplToken;
 pub use allow_list::AllowList;
 pub use bot_tax::BotTax;
 pub use end_settings::EndSettings;
@@ -11,7 +12,6 @@ pub use gatekeeper::Gatekeeper;
 pub use lamports::Lamports;
 pub use live_date::LiveDate;
 pub use mint_limit::MintLimit;
-pub use spltoken::SplToken;
 pub use third_party_signer::ThirdPartySigner;
 pub use whitelist::Whitelist;
 
@@ -22,7 +22,7 @@ mod gatekeeper;
 mod lamports;
 mod live_date;
 mod mint_limit;
-mod spltoken;
+mod spl_token;
 mod third_party_signer;
 mod whitelist;
 
@@ -39,8 +39,8 @@ pub trait Condition {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        mint_args: &MintArgs,
-        tier: &GuardSet,
+        mint_args: &[u8],
+        guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()>;
 
@@ -51,8 +51,8 @@ pub trait Condition {
     fn pre_actions<'info>(
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        _tier: &GuardSet,
+        _mint_args: &[u8],
+        _guard_set: &GuardSet,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         Ok(())
@@ -65,8 +65,8 @@ pub trait Condition {
     fn post_actions<'info>(
         &self,
         _ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        _tier: &GuardSet,
+        _mint_args: &[u8],
+        _guard_set: &GuardSet,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         Ok(())
@@ -132,20 +132,22 @@ pub trait Guard: Condition + AnchorSerialize + AnchorDeserialize {
 pub struct EvaluationContext<'a> {
     /// Indicate whether the transaction was sent by the candy guard authority or not.
     pub is_authority: bool,
-    /// The counter for the remaining account list. When a guard "consumes" one of the
-    /// remaining accounts, it should increment the counter.
-    pub remaining_account_counter: usize,
+    /// The cursor for the remaining account list. When a guard "consumes" one of the
+    /// remaining accounts, it should increment the cursor.
+    pub account_cursor: usize,
+    /// The cursor for the remaining bytes on the mint args. When a guard "consumes" one
+    /// argument, it should increment the number of bytes read.
+    pub args_cursor: usize,
     /// Convenience mapping of remaining account indices.
     pub indices: BTreeMap<&'a str, usize>,
     // > live_date
     /// Indicates whether the transaction started before the live date.
     pub is_presale: bool,
     // > lamports
-    /// The amount to charge for the mint (this can be updated by the whitelist guard).
+    /// The amount to charge for the mint (this can be updated by guards).
     pub lamports: u64,
     // > spl_token
-    /// The amount to charge for the mint (this can be updated by the whitelist guard
-    /// when the `lamports_charge` is not in use).
+    /// The amount to charge for the mint (this can be updated by guards).
     pub amount: u64,
     // > whitelist
     /// Indicates whether the user is whitelisted or not.

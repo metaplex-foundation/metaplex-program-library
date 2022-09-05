@@ -30,8 +30,8 @@ impl Condition for BotTax {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        _tier: &GuardSet,
+        _mint_args: &[u8],
+        _guard_set: &GuardSet,
         _evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if self.last_instruction {
@@ -71,7 +71,7 @@ impl Condition for BotTax {
                 let program_id = read_pubkey(&mut current, &instruction_sysvar).unwrap();
 
                 if !cmp_pubkeys(&program_id, &crate::id())
-                    && !cmp_pubkeys(&program_id, &spl_token::id())
+                    && !cmp_pubkeys(&program_id, &::spl_token::id())
                     && !cmp_pubkeys(
                         &program_id,
                         &anchor_lang::solana_program::system_program::ID,

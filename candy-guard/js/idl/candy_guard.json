@@ -142,10 +142,12 @@
       ],
       "args": [
         {
+          "name": "creatorBump",
+          "type": "u8"
+        },
+        {
           "name": "mintArgs",
-          "type": {
-            "defined": "MintArgs"
-          }
+          "type": "bytes"
         }
       ]
     },
@@ -472,34 +474,6 @@
             "name": "mode",
             "type": {
               "defined": "WhitelistTokenMode"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "MintArgs",
-      "docs": [
-        "Struct to hold argument required for the mint."
-      ],
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "creatorBump",
-            "type": "u8"
-          },
-          {
-            "name": "merkleProof",
-            "type": {
-              "option": {
-                "vec": {
-                  "array": [
-                    "u8",
-                    32
-                  ]
-                }
-              }
             }
           }
         ]

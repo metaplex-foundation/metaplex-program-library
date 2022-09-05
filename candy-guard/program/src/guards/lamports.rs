@@ -23,14 +23,14 @@ impl Condition for Lamports {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        _tier: &GuardSet,
+        _mint_args: &[u8],
+        _guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         if ctx.accounts.payer.lamports() < self.amount {
             msg!(
                 "Require {} lamports, accounts has {} lamports",
-                evaluation_context.amount,
+                self.amount,
                 ctx.accounts.payer.lamports(),
             );
             return err!(CandyGuardError::NotEnoughSOL);
@@ -44,8 +44,8 @@ impl Condition for Lamports {
     fn pre_actions<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        _tier: &GuardSet,
+        _mint_args: &[u8],
+        _guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // sanity check: other guards might have updated the price on the

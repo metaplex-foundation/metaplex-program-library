@@ -26,16 +26,16 @@ impl Condition for SplToken {
     fn validate<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        _tier: &GuardSet,
+        _mint_args: &[u8],
+        _guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         // token
-        let token_account_index = evaluation_context.remaining_account_counter;
+        let token_account_index = evaluation_context.account_cursor;
         let token_account_info = Self::get_account_info(ctx, token_account_index)?;
         // validates that we have the transfer_authority_info account
         let _ = Self::get_account_info(ctx, token_account_index + 1)?;
-        evaluation_context.remaining_account_counter += 2;
+        evaluation_context.account_cursor += 2;
 
         let token_account = assert_is_ata(
             token_account_info,
@@ -58,8 +58,8 @@ impl Condition for SplToken {
     fn pre_actions<'info>(
         &self,
         ctx: &Context<'_, '_, '_, 'info, Mint<'info>>,
-        _mint_args: &MintArgs,
-        _tier: &GuardSet,
+        _mint_args: &[u8],
+        _guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         let index = evaluation_context.indices["spl_token_index"];
