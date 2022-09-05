@@ -4,7 +4,10 @@ pub mod common;
 pub mod utils;
 
 use common::*;
-use utils::{helpers::default_scopes, setup_functions::*};
+use utils::{
+    helpers::{assert_error_ignoring_io_error_in_ci, default_scopes},
+    setup_functions::*,
+};
 
 use anchor_lang::{AccountDeserialize, InstructionData, ToAccountMetas};
 use mpl_auction_house::pda::find_auctioneer_pda;
@@ -14,7 +17,7 @@ use mpl_testing_utils::{
 };
 use solana_sdk::signer::Signer;
 
-use std::{assert_eq, env};
+use std::assert_eq;
 
 use solana_program::{
     instruction::{Instruction, InstructionError},
@@ -2819,7 +2822,7 @@ async fn execute_sale_partial_order_order_exceeds_tokens() {
         .process_transaction(tx)
         .await
         .unwrap_err();
-    assert_error!(error, NOT_ENOUGH_TOKENS_AVAIL_FOR_PURCHASE);
+    assert_error_ignoring_io_error_in_ci(&error, NOT_ENOUGH_TOKENS_AVAIL_FOR_PURCHASE);
 }
 
 #[tokio::test]
@@ -3073,25 +3076,7 @@ async fn execute_sale_partial_order_fail_price_mismatch() {
         .await
         .unwrap_err();
 
-    match &error {
-        TransportError::IoError(err) if env::var("CI").is_ok() => {
-            match err.kind() {
-                std::io::ErrorKind::Other
-                    if &err.to_string() == "the request exceeded its deadline" =>
-                {
-                    eprintln!("Encountered {:#?} error", err);
-                    eprintln!("However since we are running in CI this is acceptable and we can ignore it");
-                }
-                _ => {
-                    eprintln!("Encountered {:#?} error ({})", err, err.to_string());
-                    assert!(false, "Encountered unknown IoError");
-                }
-            }
-        }
-        _ => {
-            assert_error!(error, PARTIAL_BUY_PRICE_MISMATCH)
-        }
-    }
+    assert_error_ignoring_io_error_in_ci(&error, PARTIAL_BUY_PRICE_MISMATCH);
 }
 
 #[tokio::test]
