@@ -5,7 +5,7 @@ use std::collections::BTreeMap;
 
 use crate::{
     guards::{CandyGuardError, EvaluationContext},
-    state::{CandyGuard, CandyGuardData},
+    state::{CandyGuard, CandyGuardData, DATA_OFFSET},
     utils::cmp_pubkeys,
 };
 
@@ -16,8 +16,10 @@ pub fn mint<'info>(
 ) -> Result<()> {
     let candy_guard = &ctx.accounts.candy_guard;
     let account_info = &candy_guard.to_account_info();
+    // loads the active guard set
+    let account_data = account_info.data.borrow();
+    let guard_set = CandyGuardData::active_set(&account_data[DATA_OFFSET..])?;
 
-    let guard_set = CandyGuardData::active_set(&account_info.data.borrow())?;
     let conditions = guard_set.enabled_conditions();
     let process_error = |error: Error| -> Result<()> {
         if let Some(bot_tax) = &guard_set.bot_tax {
