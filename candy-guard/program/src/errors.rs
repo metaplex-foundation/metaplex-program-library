@@ -66,4 +66,6 @@ pub enum CandyGuardError {
     MissingAllowedListProof,
     #[msg("The maximum number of allowed mints was reached")]
     AllowedMintLimitReached,
+    #[msg("Invalid NFT Collection Payment")]
+    InvalidNFTCollectionPayment,
 }

@@ -186,4 +186,6 @@ pub struct GuardSet {
     pub allow_list: Option<AllowList>,
     /// Mint limit guard
     pub mint_limit: Option<MintLimit>,
+    /// NFT Payment
+    pub nft_payment: Option<NftPayment>
 }

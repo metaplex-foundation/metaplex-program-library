@@ -14,6 +14,7 @@ pub use live_date::LiveDate;
 pub use mint_limit::MintLimit;
 pub use third_party_signer::ThirdPartySigner;
 pub use whitelist::Whitelist;
+pub use nft_payment::NftPayment;
 
 mod allow_list;
 mod bot_tax;
@@ -25,6 +26,7 @@ mod mint_limit;
 mod spl_token;
 mod third_party_signer;
 mod whitelist;
+mod nft_payment;
 
 pub trait Condition {
     /// Validate the condition of the guard. When the guard condition is
@@ -128,7 +130,7 @@ pub trait Guard: Condition + AnchorSerialize + AnchorDeserialize {
         }
     }
 }
-
+// TODO -> this should be a poly morphic btree map
 pub struct EvaluationContext<'a> {
     /// Indicate whether the transaction was sent by the candy guard authority or not.
     pub is_authority: bool,
@@ -151,5 +153,5 @@ pub struct EvaluationContext<'a> {
     pub amount: u64,
     // > whitelist
     /// Indicates whether the user is whitelisted or not.
-    pub whitelist: bool,
+    pub whitelist: bool
 }
