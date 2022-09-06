@@ -60,6 +60,7 @@ impl RewardCenter {
 
 #[account]
 pub struct Listing {
+    pub is_initialized: bool,
     pub reward_center: Pubkey,
     pub seller: Pubkey,
     pub metadata: Pubkey,
@@ -74,7 +75,8 @@ pub struct Listing {
 
 impl Listing {
     pub fn size() -> usize {
-        8 + // deliminator
+        8 + // delimiter
+        1 + // is_initialized
         32 + // reward_center
         32 + // seller
         32 + // metadata
@@ -90,6 +92,7 @@ impl Listing {
 
 #[account]
 pub struct Offer {
+    pub is_initialized: bool,
     pub reward_center: Pubkey,
     pub buyer: Pubkey,
     pub metadata: Pubkey,
@@ -103,7 +106,8 @@ pub struct Offer {
 
 impl Offer {
     pub fn size() -> usize {
-        8 + // deliminator
+        8 + // delimiter
+        1 + // is_initialized
         32 + // reward_center
         32 + // buyer
         32 + // metadata
