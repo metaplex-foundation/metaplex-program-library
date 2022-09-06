@@ -35,6 +35,5 @@ members = [
   "token-metadata/program",
   "auction-house/program",
   "fixed-price-sale/program",
-  "bubblegum/program",
-  "candy-wrapper/program"
+  "bubblegum/program"
 ]

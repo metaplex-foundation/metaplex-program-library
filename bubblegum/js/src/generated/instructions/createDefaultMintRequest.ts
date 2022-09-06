@@ -39,7 +39,7 @@ export const createDefaultMintRequestStruct = new beet.BeetArgsStruct<
  * @property [_writable_, **signer**] payer
  * @property [**signer**] creator
  * @property [_writable_] treeAuthority
- * @property [] merkleSlab
+ * @property [] merkleTree
  * @category Instructions
  * @category CreateDefaultMintRequest
  * @category generated
@@ -50,7 +50,7 @@ export type CreateDefaultMintRequestInstructionAccounts = {
   creator: web3.PublicKey
   treeAuthority: web3.PublicKey
   systemProgram?: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const createDefaultMintRequestInstructionDiscriminator = [
@@ -103,7 +103,7 @@ export function createCreateDefaultMintRequestInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: false,
       isSigner: false,
     },

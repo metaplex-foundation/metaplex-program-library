@@ -21,9 +21,9 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/js/**'
           package:
-            - 'candy-machine/**'
+            - 'candy-machine/js/**'
 
   build-lint-and-test-candy-machine:
     needs: changes

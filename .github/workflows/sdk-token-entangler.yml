@@ -21,9 +21,9 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/js/**'
           package:
-            - 'token-entangler/**'
+            - 'token-entangler/js/**'
 
   build-lint-and-test-token-entangler:
     needs: changes

@@ -25,7 +25,7 @@ export const closeMintRequestStruct = new beet.BeetArgsStruct<{
  * @property [_writable_] mintAuthorityRequest
  * @property [_writable_, **signer**] mintAuthority
  * @property [_writable_] treeAuthority
- * @property [] merkleSlab
+ * @property [] merkleTree
  * @category Instructions
  * @category CloseMintRequest
  * @category generated
@@ -34,7 +34,7 @@ export type CloseMintRequestInstructionAccounts = {
   mintAuthorityRequest: web3.PublicKey
   mintAuthority: web3.PublicKey
   treeAuthority: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const closeMintRequestInstructionDiscriminator = [
@@ -73,7 +73,7 @@ export function createCloseMintRequestInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: false,
       isSigner: false,
     },
