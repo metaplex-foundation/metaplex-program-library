@@ -25,7 +25,7 @@ export type AuctioneerBuyInstructionArgs = {
  * @category AuctioneerBuy
  * @category generated
  */
-const auctioneerBuyStruct = new beet.BeetArgsStruct<
+export const auctioneerBuyStruct = new beet.BeetArgsStruct<
   AuctioneerBuyInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -73,9 +73,13 @@ export type AuctioneerBuyInstructionAccounts = {
   auctionHouseFeeAccount: web3.PublicKey;
   buyerTradeState: web3.PublicKey;
   ahAuctioneerPda: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  rent?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const auctioneerBuyInstructionDiscriminator = [17, 106, 133, 46, 229, 48, 45, 208];
+export const auctioneerBuyInstructionDiscriminator = [17, 106, 133, 46, 229, 48, 45, 208];
 
 /**
  * Creates a _AuctioneerBuy_ instruction.
@@ -90,112 +94,103 @@ const auctioneerBuyInstructionDiscriminator = [17, 106, 133, 46, 229, 48, 45, 20
 export function createAuctioneerBuyInstruction(
   accounts: AuctioneerBuyInstructionAccounts,
   args: AuctioneerBuyInstructionArgs,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
 ) {
-  const {
-    wallet,
-    paymentAccount,
-    transferAuthority,
-    treasuryMint,
-    tokenAccount,
-    metadata,
-    escrowPaymentAccount,
-    authority,
-    auctioneerAuthority,
-    auctionHouse,
-    auctionHouseFeeAccount,
-    buyerTradeState,
-    ahAuctioneerPda,
-  } = accounts;
-
   const [data] = auctioneerBuyStruct.serialize({
     instructionDiscriminator: auctioneerBuyInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: wallet,
+      pubkey: accounts.wallet,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: paymentAccount,
+      pubkey: accounts.paymentAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: transferAuthority,
+      pubkey: accounts.transferAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: treasuryMint,
+      pubkey: accounts.treasuryMint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: tokenAccount,
+      pubkey: accounts.tokenAccount,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: escrowPaymentAccount,
+      pubkey: accounts.escrowPaymentAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: auctioneerAuthority,
+      pubkey: accounts.auctioneerAuthority,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: auctionHouse,
+      pubkey: accounts.auctionHouse,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: auctionHouseFeeAccount,
+      pubkey: accounts.auctionHouseFeeAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: buyerTradeState,
+      pubkey: accounts.buyerTradeState,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: ahAuctioneerPda,
+      pubkey: accounts.ahAuctioneerPda,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });

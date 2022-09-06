@@ -39,11 +39,11 @@ export const mintV1Struct = new beet.FixableBeetArgsStruct<
  * @property [] mintAuthority
  * @property [_writable_] authority
  * @property [] candyWrapper
- * @property [] gummyrollProgram
+ * @property [] compressionProgram
  * @property [] owner
  * @property [] delegate
  * @property [_writable_] mintAuthorityRequest
- * @property [_writable_] merkleSlab
+ * @property [_writable_] merkleTree
  * @category Instructions
  * @category MintV1
  * @category generated
@@ -52,11 +52,11 @@ export type MintV1InstructionAccounts = {
   mintAuthority: web3.PublicKey
   authority: web3.PublicKey
   candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
+  compressionProgram: web3.PublicKey
   owner: web3.PublicKey
   delegate: web3.PublicKey
   mintAuthorityRequest: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const mintV1InstructionDiscriminator = [
@@ -99,7 +99,7 @@ export function createMintV1Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.gummyrollProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },
@@ -119,7 +119,7 @@ export function createMintV1Instruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },

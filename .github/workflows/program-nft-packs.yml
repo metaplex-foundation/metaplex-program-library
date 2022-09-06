@@ -26,9 +26,9 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/rust/**'
           package:
-            - 'nft-packs/**'
+            - 'nft-packs/program/**'
 
   build-and-test-nft-packs:
     needs: changes

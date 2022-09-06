@@ -21,9 +21,9 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/js/**'
           package:
-            - 'token-metadata/**'
+            - 'token-metadata/js/**'
 
   build-lint-and-test-token-metadata:
     needs: changes

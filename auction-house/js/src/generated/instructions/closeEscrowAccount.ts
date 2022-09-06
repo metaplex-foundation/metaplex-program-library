@@ -21,7 +21,7 @@ export type CloseEscrowAccountInstructionArgs = {
  * @category CloseEscrowAccount
  * @category generated
  */
-const closeEscrowAccountStruct = new beet.BeetArgsStruct<
+export const closeEscrowAccountStruct = new beet.BeetArgsStruct<
   CloseEscrowAccountInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -46,9 +46,11 @@ export type CloseEscrowAccountInstructionAccounts = {
   wallet: web3.PublicKey;
   escrowPaymentAccount: web3.PublicKey;
   auctionHouse: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const closeEscrowAccountInstructionDiscriminator = [209, 42, 208, 179, 140, 78, 18, 43];
+export const closeEscrowAccountInstructionDiscriminator = [209, 42, 208, 179, 140, 78, 18, 43];
 
 /**
  * Creates a _CloseEscrowAccount_ instruction.
@@ -63,38 +65,43 @@ const closeEscrowAccountInstructionDiscriminator = [209, 42, 208, 179, 140, 78, 
 export function createCloseEscrowAccountInstruction(
   accounts: CloseEscrowAccountInstructionAccounts,
   args: CloseEscrowAccountInstructionArgs,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
 ) {
-  const { wallet, escrowPaymentAccount, auctionHouse } = accounts;
-
   const [data] = closeEscrowAccountStruct.serialize({
     instructionDiscriminator: closeEscrowAccountInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: wallet,
+      pubkey: accounts.wallet,
       isWritable: false,
       isSigner: true,
     },
     {
-      pubkey: escrowPaymentAccount,
+      pubkey: accounts.escrowPaymentAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: auctionHouse,
+      pubkey: accounts.auctionHouse,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });

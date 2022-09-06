@@ -6,7 +6,7 @@ use {
         prelude::*, solana_program::program_memory::sol_memcmp,
         solana_program::pubkey::PUBKEY_BYTES,
     },
-    gummyroll::Node,
+    spl_compression::Node,
 };
 
 /// Assert that the provided MetadataArgs are compatible with MPL `Data`
@@ -26,7 +26,7 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
     if metadata.seller_fee_basis_points > 10000 {
         return Err(BubblegumError::MetadataBasisPointsTooHigh.into());
     }
-    if metadata.creators.len() > 0 {
+    if !metadata.creators.is_empty() {
         if metadata.creators.len() > mpl_token_metadata::state::MAX_CREATOR_LIMIT - 1 {
             return Err(BubblegumError::CreatorsTooLong.into());
         }
@@ -67,15 +67,15 @@ pub fn replace_leaf<'info>(
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
         gummyroll_program.clone(),
-        gummyroll::cpi::accounts::Modify {
+        spl_compression::cpi::accounts::Modify {
             authority: authority.clone(),
-            merkle_roll: merkle_roll.clone(),
-            candy_wrapper: candy_wrapper.clone(),
+            merkle_tree: merkle_roll.clone(),
+            log_wrapper: candy_wrapper.clone(),
         },
         authority_pda_signer,
     )
     .with_remaining_accounts(remaining_accounts.to_vec());
-    gummyroll::cpi::replace_leaf(cpi_ctx, root_node, previous_leaf, new_leaf, index)
+    spl_compression::cpi::replace_leaf(cpi_ctx, root_node, previous_leaf, new_leaf, index)
 }
 
 pub fn append_leaf<'info>(
@@ -84,21 +84,21 @@ pub fn append_leaf<'info>(
     gummyroll_program: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
     merkle_roll: &AccountInfo<'info>,
-    candy_wrapper: &AccountInfo<'info>,
+    log_wrapper: &AccountInfo<'info>,
     leaf_node: Node,
 ) -> Result<()> {
     let seeds = &[seed.as_ref(), &[bump]];
     let authority_pda_signer = &[&seeds[..]];
     let cpi_ctx = CpiContext::new_with_signer(
         gummyroll_program.clone(),
-        gummyroll::cpi::accounts::Modify {
+        spl_compression::cpi::accounts::Modify {
             authority: authority.clone(),
-            merkle_roll: merkle_roll.clone(),
-            candy_wrapper: candy_wrapper.clone(),
+            merkle_tree: merkle_roll.clone(),
+            log_wrapper: log_wrapper.clone(),
         },
         authority_pda_signer,
     );
-    gummyroll::cpi::append(cpi_ctx, leaf_node)
+    spl_compression::cpi::append(cpi_ctx, leaf_node)
 }
 
 pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
@@ -106,7 +106,7 @@ pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
 }
 
 pub fn cmp_bytes(a: &[u8], b: &[u8], size: usize) -> bool {
-    sol_memcmp(a.as_ref(), b.as_ref(), size) == 0
+    sol_memcmp(a, b, size) == 0
 }
 
 pub fn assert_pubkey_equal(
@@ -115,11 +115,11 @@ pub fn assert_pubkey_equal(
     error: Option<anchor_lang::error::Error>,
 ) -> Result<()> {
     if !cmp_pubkeys(a, b) {
-        if error.is_some() {
-            let err = error.unwrap();
-            return Err(err);
+        if let Some(err) = error {
+            Err(err)
+        } else {
+            Err(BubblegumError::PublicKeyMismatch.into())
         }
-        return Err(BubblegumError::PublicKeyMismatch.into());
     } else {
         Ok(())
     }
@@ -131,17 +131,18 @@ pub fn assert_derivation(
     path: &[&[u8]],
     error: Option<error::Error>,
 ) -> Result<u8> {
-    let (key, bump) = Pubkey::find_program_address(&path, program_id);
+    let (key, bump) = Pubkey::find_program_address(path, program_id);
     if !cmp_pubkeys(&key, account.key) {
-        if error.is_some() {
-            let err = error.unwrap();
+        if let Some(err) = error {
             msg!("Derivation {:?}", err);
-            return Err(err.into());
+            Err(err)
+        } else {
+            msg!("DerivedKeyInvalid");
+            Err(ProgramError::InvalidInstructionData.into())
         }
-        msg!("DerivedKeyInvalid");
-        return Err(ProgramError::InvalidInstructionData.into());
+    } else {
+        Ok(bump)
     }
-    Ok(bump)
 }
 
 pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {

@@ -26,9 +26,9 @@ jobs:
         with:
           filters: |
             core:
-              - 'core/**'
+              - 'core/rust/**'
             package:
-              - 'fixed-price-sale/**'
+              - 'fixed-price-sale/program/**'
             workflow:
               - '.github/workflows/program-fixed-price-sale.yml'
   build-and-test-fixed-price-sale:
