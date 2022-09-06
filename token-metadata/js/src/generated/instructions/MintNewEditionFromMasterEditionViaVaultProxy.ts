@@ -183,15 +183,12 @@ export function createMintNewEditionFromMasterEditionViaVaultProxyInstruction(
       isWritable: false,
       isSigner: false,
     },
-  ];
-
-  if (accounts.rent != null) {
-    keys.push({
-      pubkey: accounts.rent,
+    {
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
-    });
-  }
+    },
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,

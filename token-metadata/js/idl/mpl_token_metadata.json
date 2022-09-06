@@ -721,8 +721,7 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info",
-          "optional": true
+          "desc": "Rent info"
         }
       ],
       "args": [
@@ -869,8 +868,7 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info",
-          "optional": true
+          "desc": "Rent info"
         }
       ],
       "args": [
@@ -1045,8 +1043,7 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info",
-          "optional": true
+          "desc": "Rent info"
         }
       ],
       "args": [
@@ -1260,8 +1257,7 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info",
-          "optional": true
+          "desc": "Rent info"
         }
       ],
       "args": [
@@ -1332,8 +1328,7 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info",
-          "optional": true
+          "desc": "Rent info"
         }
       ],
       "args": [],
@@ -1438,8 +1433,7 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info",
-          "optional": true
+          "desc": "Rent info"
         }
       ],
       "args": [],
@@ -1910,8 +1904,7 @@
           "name": "rent",
           "isMut": false,
           "isSigner": false,
-          "desc": "Rent info",
-          "optional": true
+          "desc": "Rent info"
         }
       ],
       "args": [
