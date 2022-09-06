@@ -902,6 +902,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "dirs"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ca3aa72a6f96ea37bbc5aa912f6788242832f75369bdfdadcb0e38423f100059"
+dependencies = [
+ "dirs-sys",
+]
+
+[[package]]
 name = "dirs-next"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -909,6 +918,17 @@ checksum = "b98cf8ebf19c3d1b223e151f99a4f9f0690dca41414773390fc824184ac833e1"
 dependencies = [
  "cfg-if",
  "dirs-sys-next",
+]
+
+[[package]]
+name = "dirs-sys"
+version = "0.3.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b1d1d91c932ef41c0f2663aa8b0ca0342d444d842c06914aa0a7e352d0bada6"
+dependencies = [
+ "libc",
+ "redox_users",
+ "winapi",
 ]
 
 [[package]]
@@ -1274,15 +1294,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "418d37c8b1d42553c93648be529cb70f920d3baf8ef469b74b9638df426e0b4c"
 dependencies = [
  "cfg-if",
-<<<<<<< HEAD
  "js-sys",
  "libc",
  "wasi 0.10.2+wasi-snapshot-preview1",
  "wasm-bindgen",
-=======
- "libc",
- "wasi 0.10.2+wasi-snapshot-preview1",
->>>>>>> origin/master
 ]
 
 [[package]]
@@ -1725,8 +1740,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "metaplex-token-vault-test-client"
 version = "0.1.0"
 dependencies = [
@@ -1743,7 +1756,6 @@ dependencies = [
 ]
 
 [[package]]
->>>>>>> origin/master
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1784,16 +1796,6 @@ dependencies = [
 [[package]]
 name = "mpl-auction"
 version = "0.0.2"
-<<<<<<< HEAD
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8d763de66c9f224482208e621ef0e8e28056e0aeed2eb0ba796dead291a4985"
-dependencies = [
- "arrayref",
- "borsh 0.9.3",
- "num-derive",
- "num-traits",
- "solana-program",
-=======
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
@@ -1803,7 +1805,21 @@ dependencies = [
  "solana-program",
  "solana-program-test",
  "solana-sdk",
->>>>>>> origin/master
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-auction"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8d763de66c9f224482208e621ef0e8e28056e0aeed2eb0ba796dead291a4985"
+dependencies = [
+ "arrayref",
+ "borsh 0.9.3",
+ "num-derive",
+ "num-traits",
+ "solana-program",
  "spl-token",
  "thiserror",
 ]
@@ -1815,10 +1831,7 @@ dependencies = [
  "anchor-client",
  "anchor-lang",
  "anchor-spl",
-<<<<<<< HEAD
  "getrandom 0.2.4",
-=======
->>>>>>> origin/master
  "mpl-token-metadata",
  "solana-program",
  "solana-program-test",
@@ -1830,29 +1843,36 @@ dependencies = [
 [[package]]
 name = "mpl-metaplex"
 version = "0.0.3"
-<<<<<<< HEAD
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "426eee9c8c553b340db442bb3b3299ef97203c7a370a9cf819dbe1d3c7356a29"
-=======
->>>>>>> origin/master
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "mpl-auction",
+ "mpl-auction 0.0.2",
  "mpl-token-metadata",
-<<<<<<< HEAD
- "mpl-token-vault",
- "num-derive",
- "num-traits",
- "solana-program",
-=======
  "mpl-token-vault 0.1.1",
  "num-derive",
  "num-traits",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
->>>>>>> origin/master
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "mpl-metaplex"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "426eee9c8c553b340db442bb3b3299ef97203c7a370a9cf819dbe1d3c7356a29"
+dependencies = [
+ "arrayref",
+ "borsh 0.9.3",
+ "mpl-auction 0.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mpl-token-metadata",
+ "mpl-token-vault 0.1.0",
+ "num-derive",
+ "num-traits",
+ "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -1864,20 +1884,14 @@ version = "0.1.0"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
-<<<<<<< HEAD
  "getrandom 0.2.4",
- "mpl-metaplex",
+ "mpl-metaplex 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "mpl-token-metadata",
- "mpl-token-vault",
-=======
- "mpl-metaplex",
- "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
->>>>>>> origin/master
+ "mpl-token-vault 0.1.0",
  "num-derive",
  "num-traits",
  "num_enum",
- "rand 0.8.4",
+ "rand 0.8.5",
  "shank 0.0.8",
  "solana-program",
  "solana-program-test",
@@ -1888,19 +1902,18 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "mpl-testing-utils"
 version = "0.0.2"
 dependencies = [
  "anchor-client",
  "borsh 0.9.3",
+ "getrandom 0.2.4",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
+ "mpl-token-vault 0.1.0",
  "num",
  "num-derive",
  "num-traits",
- "rand 0.7.3",
+ "rand 0.8.5",
  "serde_json",
  "shellexpand",
  "solana-program",
@@ -1911,17 +1924,13 @@ dependencies = [
 ]
 
 [[package]]
->>>>>>> origin/master
 name = "mpl-token-entangler"
 version = "0.1.3"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
  "arrayref",
-<<<<<<< HEAD
  "getrandom 0.2.4",
-=======
->>>>>>> origin/master
  "mpl-token-metadata",
  "solana-program-test",
  "solana-sdk",
@@ -1938,14 +1947,10 @@ checksum = "741990cd07cb31d009a345806f30ace8eab99c063cd9440eba8d3df7be2a6988"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
-<<<<<<< HEAD
- "mpl-token-vault",
-=======
  "mpl-token-vault 0.1.0",
->>>>>>> origin/master
  "num-derive",
  "num-traits",
- "shank 0.0.2",
+ "shank 0.0.8",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
@@ -1967,8 +1972,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "mpl-token-vault"
 version = "0.1.1"
 dependencies = [
@@ -1982,7 +1985,6 @@ dependencies = [
 ]
 
 [[package]]
->>>>>>> origin/master
 name = "nix"
 version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2005,8 +2007,6 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "num"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2021,7 +2021,6 @@ dependencies = [
 ]
 
 [[package]]
->>>>>>> origin/master
 name = "num-bigint"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2033,18 +2032,15 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "num-complex"
-version = "0.4.0"
+version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26873667bbbb7c5182d4a37c1add32cdf09f841af72da53318fdb81543c15085"
+checksum = "7ae39348c8bc5fbd7f40c727a9925f03517afd2ab27d46702108b6a7e5414c19"
 dependencies = [
  "num-traits",
 ]
 
 [[package]]
->>>>>>> origin/master
 name = "num-derive"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2066,12 +2062,10 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "num-iter"
-version = "0.1.42"
+version = "0.1.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2021c8337a54d21aca0d59a92577a029af9431cb59b909b03252b9c164fad59"
+checksum = "7d03e6c028c5dc5cac6e2dec0efda81fc887605bb3d884578bb6d6bf7514e252"
 dependencies = [
  "autocfg",
  "num-integer",
@@ -2080,9 +2074,9 @@ dependencies = [
 
 [[package]]
 name = "num-rational"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
+checksum = "0638a1c9d0a3c0914158145bc76cff373a75a627e6ecbfb71cbe6f453a5a19b0"
 dependencies = [
  "autocfg",
  "num-bigint",
@@ -2091,7 +2085,6 @@ dependencies = [
 ]
 
 [[package]]
->>>>>>> origin/master
 name = "num-traits"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2171,7 +2164,7 @@ dependencies = [
  "lazy_static",
  "percent-encoding",
  "pin-project",
- "rand 0.8.4",
+ "rand 0.8.5",
  "thiserror",
 ]
 
@@ -2409,20 +2402,19 @@ dependencies = [
  "libc",
  "rand_chacha 0.2.2",
  "rand_core 0.5.1",
- "rand_hc 0.2.0",
+ "rand_hc",
  "rand_pcg",
 ]
 
 [[package]]
 name = "rand"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e7573632e6454cf6b99d7aac4ccca54be06da05aca2ef7423d22d27d4d4bcd8"
+checksum = "34af8d1a0e25924bc5b7c43c079c942339d8f0a8b57c39049bef581b46327404"
 dependencies = [
  "libc",
  "rand_chacha 0.3.1",
  "rand_core 0.6.3",
- "rand_hc 0.3.1",
 ]
 
 [[package]]
@@ -2470,15 +2462,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca3129af7b92a17112d59ad498c6f81eaf463253766b90396d39ea7a39d6613c"
 dependencies = [
  "rand_core 0.5.1",
-]
-
-[[package]]
-name = "rand_hc"
-version = "0.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d51e9f596de227fda2ea6c84607f5558e196eeaf43c986b724ba4fb8fdf497e7"
-dependencies = [
- "rand_core 0.6.3",
 ]
 
 [[package]]
@@ -2914,18 +2897,15 @@ dependencies = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "shellexpand"
-version = "2.1.0"
+version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "83bdb7831b2d85ddf4a7b148aa19d0587eddbe8671a436b7bd1182eaad0f2829"
+checksum = "7ccc8076840c4da029af4f87e4e8daeb0fca6b87bbb02e10cb60b791450e11e4"
 dependencies = [
- "dirs-next",
+ "dirs",
 ]
 
 [[package]]
->>>>>>> origin/master
 name = "signal-hook-registry"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3836,7 +3816,7 @@ dependencies = [
  "humantime",
  "opentelemetry",
  "pin-project",
- "rand 0.8.4",
+ "rand 0.8.5",
  "serde",
  "static_assertions",
  "tarpc-plugins",
@@ -4148,7 +4128,7 @@ dependencies = [
  "http",
  "httparse",
  "log",
- "rand 0.8.4",
+ "rand 0.8.5",
  "rustls",
  "sha-1",
  "thiserror",
