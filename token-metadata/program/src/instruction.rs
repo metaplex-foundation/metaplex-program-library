@@ -20,7 +20,7 @@ use {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for update call
 pub struct UpdateMetadataAccountArgs {
     pub data: Option<Data>,
@@ -34,7 +34,7 @@ pub struct UpdateMetadataAccountArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for update call
 pub struct UpdateMetadataAccountArgsV2 {
     pub data: Option<DataV2>,
@@ -49,7 +49,7 @@ pub struct UpdateMetadataAccountArgsV2 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for create call
 pub struct CreateMetadataAccountArgs {
     /// Note that unique metadatas are disabled for now.
@@ -60,7 +60,7 @@ pub struct CreateMetadataAccountArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for create call
 pub struct CreateMetadataAccountArgsV2 {
     /// Note that unique metadatas are disabled for now.
@@ -71,7 +71,7 @@ pub struct CreateMetadataAccountArgsV2 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 /// Args for create call
 pub struct CreateMetadataAccountArgsV3 {
     /// Note that unique metadatas are disabled for now.
@@ -84,7 +84,7 @@ pub struct CreateMetadataAccountArgsV3 {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct CreateMasterEditionArgs {
     /// If set, means that no more than this number of editions can ever be minted. This is immutable.
     pub max_supply: Option<u64>,
@@ -92,28 +92,28 @@ pub struct CreateMasterEditionArgs {
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct MintNewEditionFromMasterEditionViaTokenArgs {
     pub edition: u64,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ApproveUseAuthorityArgs {
     pub number_of_uses: u64,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct UtilizeArgs {
     pub number_of_uses: u64,
 }
 
 #[repr(C)]
 #[cfg_attr(feature = "serde-feature", derive(Serialize, Deserialize))]
-#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Eq, Debug, Clone)]
 pub struct SetCollectionSizeArgs {
     pub size: u64,
 }
@@ -516,6 +516,15 @@ pub enum MetadataInstruction {
     #[account(2, name="mint", desc="Mint account")]
     #[account(3, optional, name="edition", desc="Edition account")]
     SetTokenStandard,
+
+    /// Set size of an existing collection using CPI from the Bubblegum program.  This is how
+    /// collection size is incremented and decremented for compressed NFTs.
+    #[account(0, writable, name="collection_metadata", desc="Collection Metadata account")]
+    #[account(1, signer, writable, name="collection_authority", desc="Collection Update authority")]
+    #[account(2, name="collection_mint", desc="Mint of the Collection")]
+    #[account(3, signer, name="bubblegum_signer", desc="Signing PDA of Bubblegum program")]
+    #[account(4, optional, name="collection_authority_record", desc="Collection Authority Record PDA")]
+    BubblegumSetCollectionSize(SetCollectionSizeArgs),
 }
 
 /// Creates an CreateMetadataAccounts instruction
@@ -1656,6 +1665,35 @@ pub fn set_collection_size(
         program_id,
         accounts,
         data: MetadataInstruction::SetCollectionSize(SetCollectionSizeArgs { size })
+            .try_to_vec()
+            .unwrap(),
+    }
+}
+
+pub fn bubblegum_set_collection_size(
+    program_id: Pubkey,
+    metadata_account: Pubkey,
+    update_authority: Pubkey,
+    mint: Pubkey,
+    bubblegum_signer: Pubkey,
+    collection_authority_record: Option<Pubkey>,
+    size: u64,
+) -> Instruction {
+    let mut accounts = vec![
+        AccountMeta::new(metadata_account, false),
+        AccountMeta::new_readonly(update_authority, true),
+        AccountMeta::new_readonly(mint, false),
+        AccountMeta::new_readonly(bubblegum_signer, true),
+    ];
+
+    if let Some(record) = collection_authority_record {
+        accounts.push(AccountMeta::new_readonly(record, false));
+    }
+
+    Instruction {
+        program_id,
+        accounts,
+        data: MetadataInstruction::BubblegumSetCollectionSize(SetCollectionSizeArgs { size })
             .try_to_vec()
             .unwrap(),
     }

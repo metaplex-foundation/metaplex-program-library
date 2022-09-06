@@ -48,6 +48,11 @@ pub fn assert_has_collection_authority(
     mint: &Pubkey,
     delegate_collection_authority_record: Option<&AccountInfo>,
 ) -> Result<(), ProgramError> {
+    // Mint is the correct one for the metadata account.
+    if collection_data.mint != *mint {
+        return Err(MetadataError::MintMismatch.into());
+    }
+
     if let Some(collection_authority_record) = delegate_collection_authority_record {
         let bump = assert_is_collection_delegated_authority(
             collection_authority_record,
@@ -69,12 +74,12 @@ pub fn assert_has_collection_authority(
 }
 
 pub fn assert_collection_verify_is_valid(
-    collection_member: &Metadata,
+    member_collection: &Option<Collection>,
     collection_data: &Metadata,
     collection_mint: &AccountInfo,
     edition_account_info: &AccountInfo,
 ) -> Result<(), ProgramError> {
-    match &collection_member.collection {
+    match member_collection {
         Some(collection) => {
             if collection.key != *collection_mint.key
                 || collection_data.mint != *collection_mint.key

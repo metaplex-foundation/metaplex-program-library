@@ -20,16 +20,15 @@ jobs:
       package: ${{ steps.filter.outputs.package }}
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/checkout@v2
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/rust/**'
           package:
-            - 'metaplex/**'
+            - 'metaplex/program/**'
 
   build-and-test-metaplex:
     needs: changes

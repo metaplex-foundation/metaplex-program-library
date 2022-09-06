@@ -21,9 +21,10 @@ jobs:
       with:
         filters: |
           core:
-            - 'core/**'
+            - 'core/js/**'
           package:
-            - 'metaplex/**'
+            - 'metaplex/js/**'
+
   build-lint-and-test-metaplex:
     needs: changes
     if: ${{ needs.changes.outputs.core == 'true' || needs.changes.outputs.package == 'true' }}

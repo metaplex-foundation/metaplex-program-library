@@ -18,7 +18,7 @@ import { LeafSchema, leafSchemaBeet } from '../types/LeafSchema'
 export type VoucherArgs = {
   leafSchema: LeafSchema
   index: number
-  merkleSlab: web3.PublicKey
+  merkleTree: web3.PublicKey
 }
 
 export const voucherDiscriminator = [191, 204, 149, 234, 213, 165, 13, 65]
@@ -33,14 +33,14 @@ export class Voucher implements VoucherArgs {
   private constructor(
     readonly leafSchema: LeafSchema,
     readonly index: number,
-    readonly merkleSlab: web3.PublicKey
+    readonly merkleTree: web3.PublicKey
   ) {}
 
   /**
    * Creates a {@link Voucher} instance from the provided args.
    */
   static fromArgs(args: VoucherArgs) {
-    return new Voucher(args.leafSchema, args.index, args.merkleSlab)
+    return new Voucher(args.leafSchema, args.index, args.merkleTree)
   }
 
   /**
@@ -146,7 +146,7 @@ export class Voucher implements VoucherArgs {
     return {
       leafSchema: this.leafSchema.__kind,
       index: this.index,
-      merkleSlab: this.merkleSlab.toBase58(),
+      merkleTree: this.merkleTree.toBase58(),
     }
   }
 }
@@ -165,7 +165,7 @@ export const voucherBeet = new beet.FixableBeetStruct<
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['leafSchema', leafSchemaBeet],
     ['index', beet.u32],
-    ['merkleSlab', beetSolana.publicKey],
+    ['merkleTree', beetSolana.publicKey],
   ],
   Voucher.fromArgs,
   'Voucher'

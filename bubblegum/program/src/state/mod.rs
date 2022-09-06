@@ -12,6 +12,8 @@ pub const TREE_AUTHORITY_SIZE: usize = 88 + 8;
 pub const VOUCHER_SIZE: usize = 8 + 1 + 32 + 32 + 32 + 8 + 32 + 32 + 4 + 32;
 pub const VOUCHER_PREFIX: &str = "voucher";
 pub const ASSET_PREFIX: &str = "asset";
+pub const COLLECTION_CPI_PREFIX: &str = "collection_cpi";
+
 #[account]
 #[derive(Copy)]
 pub struct TreeConfig {
@@ -47,15 +49,15 @@ impl TreeConfig {
 pub struct Voucher {
     pub leaf_schema: LeafSchema,
     pub index: u32,
-    pub merkle_slab: Pubkey,
+    pub merkle_tree: Pubkey,
 }
 
 impl Voucher {
-    pub fn new(leaf_schema: LeafSchema, index: u32, merkle_slab: Pubkey) -> Self {
+    pub fn new(leaf_schema: LeafSchema, index: u32, merkle_tree: Pubkey) -> Self {
         Self {
             leaf_schema,
             index,
-            merkle_slab,
+            merkle_tree,
         }
     }
 }
