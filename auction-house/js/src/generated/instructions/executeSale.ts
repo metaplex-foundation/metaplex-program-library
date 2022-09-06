@@ -26,7 +26,7 @@ export type ExecuteSaleInstructionArgs = {
  * @category ExecuteSale
  * @category generated
  */
-const executeSaleStruct = new beet.BeetArgsStruct<
+export const executeSaleStruct = new beet.BeetArgsStruct<
   ExecuteSaleInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -82,10 +82,15 @@ export type ExecuteSaleInstructionAccounts = {
   buyerTradeState: web3.PublicKey;
   sellerTradeState: web3.PublicKey;
   freeTradeState: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  ataProgram?: web3.PublicKey;
   programAsSigner: web3.PublicKey;
+  rent?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const executeSaleInstructionDiscriminator = [37, 74, 217, 157, 79, 49, 35, 6];
+export const executeSaleInstructionDiscriminator = [37, 74, 217, 157, 79, 49, 35, 6];
 
 /**
  * Creates a _ExecuteSale_ instruction.
@@ -100,141 +105,128 @@ const executeSaleInstructionDiscriminator = [37, 74, 217, 157, 79, 49, 35, 6];
 export function createExecuteSaleInstruction(
   accounts: ExecuteSaleInstructionAccounts,
   args: ExecuteSaleInstructionArgs,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
 ) {
-  const {
-    buyer,
-    seller,
-    tokenAccount,
-    tokenMint,
-    metadata,
-    treasuryMint,
-    escrowPaymentAccount,
-    sellerPaymentReceiptAccount,
-    buyerReceiptTokenAccount,
-    authority,
-    auctionHouse,
-    auctionHouseFeeAccount,
-    auctionHouseTreasury,
-    buyerTradeState,
-    sellerTradeState,
-    freeTradeState,
-    programAsSigner,
-  } = accounts;
-
   const [data] = executeSaleStruct.serialize({
     instructionDiscriminator: executeSaleInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: buyer,
+      pubkey: accounts.buyer,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: seller,
+      pubkey: accounts.seller,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: tokenAccount,
+      pubkey: accounts.tokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: tokenMint,
+      pubkey: accounts.tokenMint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: treasuryMint,
+      pubkey: accounts.treasuryMint,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: escrowPaymentAccount,
+      pubkey: accounts.escrowPaymentAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: sellerPaymentReceiptAccount,
+      pubkey: accounts.sellerPaymentReceiptAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: buyerReceiptTokenAccount,
+      pubkey: accounts.buyerReceiptTokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: auctionHouse,
+      pubkey: accounts.auctionHouse,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: auctionHouseFeeAccount,
+      pubkey: accounts.auctionHouseFeeAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: auctionHouseTreasury,
+      pubkey: accounts.auctionHouseTreasury,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: buyerTradeState,
+      pubkey: accounts.buyerTradeState,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: sellerTradeState,
+      pubkey: accounts.sellerTradeState,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: freeTradeState,
+      pubkey: accounts.freeTradeState,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
+      pubkey: accounts.ataProgram ?? splToken.ASSOCIATED_TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: programAsSigner,
+      pubkey: accounts.programAsSigner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });

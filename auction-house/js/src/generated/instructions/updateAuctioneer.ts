@@ -22,7 +22,7 @@ export type UpdateAuctioneerInstructionArgs = {
  * @category UpdateAuctioneer
  * @category generated
  */
-const updateAuctioneerStruct = new beet.FixableBeetArgsStruct<
+export const updateAuctioneerStruct = new beet.FixableBeetArgsStruct<
   UpdateAuctioneerInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -49,9 +49,11 @@ export type UpdateAuctioneerInstructionAccounts = {
   authority: web3.PublicKey;
   auctioneerAuthority: web3.PublicKey;
   ahAuctioneerPda: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const updateAuctioneerInstructionDiscriminator = [103, 255, 80, 234, 94, 56, 168, 208];
+export const updateAuctioneerInstructionDiscriminator = [103, 255, 80, 234, 94, 56, 168, 208];
 
 /**
  * Creates a _UpdateAuctioneer_ instruction.
@@ -66,43 +68,48 @@ const updateAuctioneerInstructionDiscriminator = [103, 255, 80, 234, 94, 56, 168
 export function createUpdateAuctioneerInstruction(
   accounts: UpdateAuctioneerInstructionAccounts,
   args: UpdateAuctioneerInstructionArgs,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
 ) {
-  const { auctionHouse, authority, auctioneerAuthority, ahAuctioneerPda } = accounts;
-
   const [data] = updateAuctioneerStruct.serialize({
     instructionDiscriminator: updateAuctioneerInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: auctionHouse,
+      pubkey: accounts.auctionHouse,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: true,
       isSigner: true,
     },
     {
-      pubkey: auctioneerAuthority,
+      pubkey: accounts.auctioneerAuthority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: ahAuctioneerPda,
+      pubkey: accounts.ahAuctioneerPda,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });
