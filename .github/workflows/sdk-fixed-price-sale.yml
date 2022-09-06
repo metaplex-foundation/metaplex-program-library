@@ -21,9 +21,9 @@ jobs:
         with:
           filters: |
             core:
-              - 'core/**'
+              - 'core/js/**'
             package:
-              - 'fixed-price-sale/**'
+              - 'fixed-price-sale/js/**'
 
   build-lint-and-test-fixed-price-sale:
     needs: changes

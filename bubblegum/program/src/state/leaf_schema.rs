@@ -1,5 +1,5 @@
 use anchor_lang::{prelude::*, solana_program::keccak};
-use gummyroll::Node;
+use spl_compression::Node;
 
 #[event]
 pub struct LeafSchemaEvent {

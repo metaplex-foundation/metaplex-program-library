@@ -20,6 +20,12 @@ export enum InstructionName {
   DecompressV1,
   Compress,
   Burn,
+  CreateTree,
+  VerifyCreator,
+  UnverifyCreator,
+  VerifyCollection,
+  UnverifyCollection,
+  SetAndVerifyCollection,
 }
 
 /**
