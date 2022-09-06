@@ -14,6 +14,7 @@ pub use live_date::LiveDate;
 pub use mint_limit::MintLimit;
 pub use third_party_signer::ThirdPartySigner;
 pub use whitelist::Whitelist;
+pub use nft_payment::NftPayment;
 
 mod allow_list;
 mod bot_tax;

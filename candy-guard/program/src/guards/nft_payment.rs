@@ -1,11 +1,9 @@
-use std::io::Write;
 use super::*;
 use crate::{
     errors::CandyGuardError,
-    utils::{assert_is_ata, spl_token_transfer, TokenTransferParams},
+    utils::{spl_token_transfer, TokenTransferParams, assert_is_token_account, assert_keys_equal, spl_token_burn, TokenBurnParams},
 };
 use mpl_token_metadata::state::{Metadata, TokenMetadataAccount};
-use crate::utils::{assert_is_token_account, assert_keys_equal, spl_token_burn, TokenBurnParams};
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct NftPayment {
