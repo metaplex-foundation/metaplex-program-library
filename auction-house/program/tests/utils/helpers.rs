@@ -92,8 +92,8 @@ pub fn assert_error_ignoring_io_error_in_ci(error: &TransportError, error_code: 
                     eprintln!("However since we are running in CI this is acceptable and we can ignore it");
                 }
                 _ => {
-                    eprintln!("Encountered {:#?} error ({})", err, err.to_string());
-                    assert!(false, "Encountered unknown IoError");
+                    eprintln!("Encountered {:#?} error ({})", err, err);
+                    panic!("Encountered unknown IoError");
                 }
             }
         }
@@ -116,12 +116,12 @@ pub fn unwrap_ignoring_io_error_in_ci(result: Result<(), TransportError>) {
                     eprintln!("However since we are running in CI this is acceptable and we can ignore it");
                 }
                 _ => {
-                    eprintln!("Encountered {:#?} error ({})", err, err.to_string());
-                    assert!(false, "Encountered unknown IoError");
+                    eprintln!("Encountered {:#?} error ({})", err, err);
+                    panic!("Encountered unknown IoError");
                 }
             },
             _ => {
-                assert!(false, "Encountered: {:#?}", error);
+                panic!("Encountered: {:#?}", error);
             }
         },
     }
