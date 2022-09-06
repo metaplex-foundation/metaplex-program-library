@@ -65,7 +65,7 @@ jobs:
         with:
           # exclude packages either do not have `js` dirs or do not have `api:gen` scripts in their local package.json
           script: |
-            const exclude = ['metaplex', 'auction', 'core', 'candy-wrapper']
+            const exclude = ['metaplex', 'auction', 'core']
             const files = ${{ steps.map-changed-files-to-pkg.outputs.result }}
             const result = files
               .filter(f => !exclude.includes(f))
