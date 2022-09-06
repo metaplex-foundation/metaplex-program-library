@@ -14,8 +14,8 @@ use core::ops::Deref;
 
 use crate::{
     execute_sale::*,
-    listings::{cancel::*, create::*},
-    offers::{close::*, create::*},
+    listings::{cancel::*, create::*, update::*},
+    offers::{close::*, create::*, update::*},
     redeem_rewards::*,
     reward_center::{create::*, edit::*},
 };
@@ -72,9 +72,16 @@ pub mod listing_rewards {
 
     pub fn create_listing(
         ctx: Context<CreateListing>,
-        sell_params: CreateListingParams,
+        create_listing_params: CreateListingParams,
     ) -> Result<()> {
-        listings::create::handler(ctx, sell_params)
+        listings::create::handler(ctx, create_listing_params)
+    }
+
+    pub fn update_listing(
+        ctx: Context<UpdateListing>,
+        update_listing_params: UpdateListingParams,
+    ) -> Result<()> {
+        listings::update::handler(ctx, update_listing_params)
     }
 
     pub fn cancel_listing(
@@ -89,6 +96,13 @@ pub mod listing_rewards {
         create_offer_params: CreateOfferParams,
     ) -> Result<()> {
         offers::create::handler(ctx, create_offer_params)
+    }
+
+    pub fn update_offer(
+        ctx: Context<UpdateOffer>,
+        update_offer_params: UpdateOfferParams,
+    ) -> Result<()> {
+        offers::update::handler(ctx, update_offer_params)
     }
 
     pub fn close_offer(

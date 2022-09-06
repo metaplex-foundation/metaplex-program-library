@@ -215,6 +215,7 @@ pub struct ExecuteSale<'info> {
     /// CHECK: Verified through CPI
     /// The auctioneer authority PDA running this auction.
     #[account(
+        has_one = auction_house,
         seeds = [
             REWARD_CENTER.as_bytes(), 
             auction_house.key().as_ref()

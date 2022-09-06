@@ -83,6 +83,7 @@ pub struct CloseOffer<'info> {
     /// CHECK: Verified in ah_auctioneer_pda seeds and in bid logic.
     /// The auctioneer authority - typically a PDA of the Auctioneer program running this action.
     #[account(
+        has_one = auction_house,
         seeds = [
             REWARD_CENTER.as_bytes(), 
             auction_house.key().as_ref()
