@@ -44,7 +44,7 @@ jobs:
           script: |
             const files = ${{ steps.list-changed-files.outputs.changed-files }}
             // yarn doc flow only generates docs for JS
-            const regexp = /[a-zA-Z\-]+\/(js)/g
+            const regexp = /*.ts/g
             const uniqueFilesObj = files
               .filter(f => regexp.test(f))
               .reduce((p, file) => {
