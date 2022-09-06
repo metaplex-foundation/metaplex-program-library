@@ -1,6 +1,7 @@
 {
   "name": "@metaplex-foundation/mpl-auction-house",
   "version": "2.2.1",
+  "contractVersion": "1.2.4",
   "description": "MPL Auction House JavaScript API.",
   "main": "dist/src/mpl-auction-house.js",
   "types": "dist/src/mpl-auction-house.d.ts",
@@ -13,7 +14,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "build:watch": "rimraf dist && tsc -p tsconfig.json --watch",
-    "test": "esr ./test/*.test.ts",
+    "test": "tape ./dist/test/*.test.js",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
