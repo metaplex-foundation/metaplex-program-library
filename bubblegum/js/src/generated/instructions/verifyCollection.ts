@@ -57,8 +57,8 @@ export const verifyCollectionStruct = new beet.FixableBeetArgsStruct<
  * @property [] editionAccount
  * @property [] bubblegumSigner
  * @property [] candyWrapper
- * @property [] gummyrollProgram
- * @property [_writable_] merkleSlab
+ * @property [] compressionProgram
+ * @property [_writable_] merkleTree
  * @property [] tokenMetadataProgram
  * @category Instructions
  * @category VerifyCollection
@@ -76,8 +76,8 @@ export type VerifyCollectionInstructionAccounts = {
   editionAccount: web3.PublicKey
   bubblegumSigner: web3.PublicKey
   candyWrapper: web3.PublicKey
-  gummyrollProgram: web3.PublicKey
-  merkleSlab: web3.PublicKey
+  compressionProgram: web3.PublicKey
+  merkleTree: web3.PublicKey
   tokenMetadataProgram: web3.PublicKey
 }
 
@@ -161,12 +161,12 @@ export function createVerifyCollectionInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.gummyrollProgram,
+      pubkey: accounts.compressionProgram,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: accounts.merkleSlab,
+      pubkey: accounts.merkleTree,
       isWritable: true,
       isSigner: false,
     },

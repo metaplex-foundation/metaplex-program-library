@@ -3,8 +3,7 @@ use {
     crate::state::metaplex_adapter::MetadataArgs,
     crate::ASSET_PREFIX,
     anchor_lang::{
-        prelude::*,
-        solana_program::program_memory::sol_memcmp,
+        prelude::*, solana_program::program_memory::sol_memcmp,
         solana_program::pubkey::PUBKEY_BYTES,
     },
     spl_compression::Node,
@@ -27,7 +26,7 @@ pub fn assert_metadata_is_mpl_compatible(metadata: &MetadataArgs) -> Result<()> 
     if metadata.seller_fee_basis_points > 10000 {
         return Err(BubblegumError::MetadataBasisPointsTooHigh.into());
     }
-    if metadata.creators.len() > 0 {
+    if !metadata.creators.is_empty() {
         if metadata.creators.len() > mpl_token_metadata::state::MAX_CREATOR_LIMIT - 1 {
             return Err(BubblegumError::CreatorsTooLong.into());
         }
@@ -107,7 +106,7 @@ pub fn cmp_pubkeys(a: &Pubkey, b: &Pubkey) -> bool {
 }
 
 pub fn cmp_bytes(a: &[u8], b: &[u8], size: usize) -> bool {
-    sol_memcmp(a.as_ref(), b.as_ref(), size) == 0
+    sol_memcmp(a, b, size) == 0
 }
 
 pub fn assert_pubkey_equal(
@@ -116,11 +115,11 @@ pub fn assert_pubkey_equal(
     error: Option<anchor_lang::error::Error>,
 ) -> Result<()> {
     if !cmp_pubkeys(a, b) {
-        if error.is_some() {
-            let err = error.unwrap();
-            return Err(err);
+        if let Some(err) = error {
+            Err(err)
+        } else {
+            Err(BubblegumError::PublicKeyMismatch.into())
         }
-        return Err(BubblegumError::PublicKeyMismatch.into());
     } else {
         Ok(())
     }
@@ -132,17 +131,18 @@ pub fn assert_derivation(
     path: &[&[u8]],
     error: Option<error::Error>,
 ) -> Result<u8> {
-    let (key, bump) = Pubkey::find_program_address(&path, program_id);
+    let (key, bump) = Pubkey::find_program_address(path, program_id);
     if !cmp_pubkeys(&key, account.key) {
-        if error.is_some() {
-            let err = error.unwrap();
+        if let Some(err) = error {
             msg!("Derivation {:?}", err);
-            return Err(err.into());
+            Err(err)
+        } else {
+            msg!("DerivedKeyInvalid");
+            Err(ProgramError::InvalidInstructionData.into())
         }
-        msg!("DerivedKeyInvalid");
-        return Err(ProgramError::InvalidInstructionData.into());
+    } else {
+        Ok(bump)
     }
-    Ok(bump)
 }
 
 pub fn assert_owned_by(account: &AccountInfo, owner: &Pubkey) -> Result<()> {

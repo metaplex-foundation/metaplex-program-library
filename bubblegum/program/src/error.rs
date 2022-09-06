@@ -20,6 +20,10 @@ pub enum BubblegumError {
     CreatorNotFound,
     #[msg("No creators in creator Vec")]
     NoCreatorsPresent,
+    #[msg("User-provided creator Vec must result in same user-provided creator hash")]
+    CreatorHashMismatch,
+    #[msg("User-provided metadata must result in same user-provided data hash")]
+    DataHashMismatch,
     #[msg("Creators list too long")]
     CreatorsTooLong,
     #[msg("Name in metadata is too long")]
@@ -40,6 +44,8 @@ pub enum BubblegumError {
     MintRequestDiscriminatorMismatch,
     #[msg("Something went wrong closing mint request")]
     CloseMintRequestError,
+    #[msg("The mint authority must sign if it is not equal to the tree authority")]
+    MintAuthorityMustSign,
     #[msg("NumericalOverflowError")]
     NumericalOverflowError,
     #[msg("Incorrect account owner")]
@@ -54,4 +60,6 @@ pub enum BubblegumError {
     AlreadyUnverified,
     #[msg("Incorrect leaf metadata update authority.")]
     UpdateAuthorityIncorrect,
+    #[msg("This transaction must be signed by either the leaf owner or leaf delegate")]
+    LeafAuthorityMustSign,
 }
