@@ -24,8 +24,17 @@ export function spokSamePubkey(a: PublicKey | COption<PublicKey>): Specification
   return same;
 }
 
-export function spokSameBignum(a: BN | bignum): Specification<bignum> {
-  const same = (b?: BN | bignum) => b != null && new BN(a).eq(new BN(b));
+export function spokSameBignum(a?: BN | bignum): Specification<bignum> {
+  const same = (b?: BN | bignum) => {
+    if (a == null && b ==null) {      
+      return true;
+    }
+    if (a == null) {
+      return false;
+    }
+
+    return (b != null && new BN(a).eq(new BN(b)));
+  };
 
   same.$spec = `spokSameBignum(${a})`;
   same.$description = `${a} equal`;

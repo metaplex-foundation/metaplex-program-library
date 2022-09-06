@@ -1221,6 +1221,7 @@ __metadata:
     "@metaplex-foundation/beet": ^0.4.0
     "@metaplex-foundation/beet-solana": ^0.3.0
     "@metaplex-foundation/cusper": ^0.0.2
+    "@metaplex-foundation/mpl-candy-machine-core": "https://github.com/febo/candy-core"
     "@metaplex-foundation/mpl-core": ^0.6.1
     "@metaplex-foundation/solita": ^0.12.0
     "@solana/spl-token": ^0.2.0
@@ -1237,6 +1238,19 @@ __metadata:
     typescript: ^4.6.2
   languageName: unknown
   linkType: soft
+
+"@metaplex-foundation/mpl-candy-machine-core@https://github.com/febo/candy-core":
+  version: 0.0.1
+  resolution: "@metaplex-foundation/mpl-candy-machine-core@https://github.com/febo/candy-core.git#commit=bef89410117f69e60ba06f4bb5355a76c9e48b0a"
+  dependencies:
+    "@metaplex-foundation/beet": ^0.4.0
+    "@metaplex-foundation/beet-solana": ^0.3.0
+    "@metaplex-foundation/cusper": ^0.0.2
+    "@metaplex-foundation/mpl-core": ^0.6.1
+    "@solana/spl-token": ^0.2.0
+  checksum: 8832dada508fc5d2a270d47f1c533f619f6fc11c8f2f6a0f6ff9ccc485c5a9beb7af5cfd98310dfe30bb4f565460034e6b4d77b6b464741f5536abfef046cc3a
+  languageName: node
+  linkType: hard
 
 "@metaplex-foundation/mpl-candy-machine-core@workspace:candy-core/js":
   version: 0.0.0-use.local

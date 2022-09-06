@@ -141,17 +141,11 @@ test('update: disable guards', async (t) => {
   let accountInfo = await connection.getAccountInfo(address);
   const candyGuardData = parseData(accountInfo?.data.subarray(DATA_OFFSET)!);
 
-  t.true(candyGuardData.groups?.length == 1, 'expected 1 group');
+  t.true(candyGuardData.groups?.length === 1, 'expected 1 group');
 
   const guardSet = candyGuardData.groups?.at(0);
-  spok(t, guardSet, {
-    liveDate: {
-      date: spokSameBignum(1662394820),
-    },
-    lamports: {
-      amount: spokSameBignum(500),
-    },
-  });
+  spok(t, guardSet?.liveDate?.date, spokSameBignum(1662394820));
+  spok(t, guardSet?.lamports?.amount, spokSameBignum(500));
 
   accountInfo = await connection.getAccountInfo(payerPair.publicKey);
   const balance = accountInfo?.lamports!;

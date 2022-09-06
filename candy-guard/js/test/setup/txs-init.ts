@@ -5,20 +5,37 @@ import {
   LOCALHOST,
   PayerTransactionHandler,
 } from '@metaplex-foundation/amman-client';
-import { Connection, Keypair, PublicKey, SystemProgram, Transaction } from '@solana/web3.js';
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionInstruction,
+  SYSVAR_RENT_PUBKEY,
+  SYSVAR_SLOT_HASHES_PUBKEY,
+  SYSVAR_INSTRUCTIONS_PUBKEY
+} from '@solana/web3.js';
 import { Test } from 'tape';
 import { amman } from '.';
-import { getCandyGuardPDA } from '../utils';
+import { CANDY_MACHINE_PROGRAM, getCandyGuardPDA, METAPLEX_PROGRAM_ID } from '../utils';
 import {
   CandyGuardData,
   createInitializeInstruction,
+  createMintInstruction,
   createUpdateInstruction,
+  createWrapInstruction,
   InitializeInstructionAccounts,
   InitializeInstructionArgs,
+  MintInstructionAccounts,
+  MintInstructionArgs,
   PROGRAM_ID,
   UpdateInstructionAccounts,
   UpdateInstructionArgs,
+  WrapInstructionAccounts,
 } from '../../src/generated';
+import { CandyMachine } from '../../../../candy-core/js/src/generated';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMintToInstruction, MintLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
@@ -58,6 +75,22 @@ export class InitTransactions {
     };
   }
 
+  async minter() {
+    const [minter, minterPair] = await this.getKeypair('Minter');
+
+    const connection = new Connection(LOCALHOST, 'confirmed');
+    await amman.airdrop(connection, minter, 2);
+
+    const transactionHandler = amman.payerTransactionHandler(connection, minterPair);
+
+    return {
+      fstTxHandler: transactionHandler,
+      connection,
+      minter,
+      minterPair,
+    };
+  }
+
   async initialize(
     t: Test,
     data: CandyGuardData,
@@ -88,6 +121,27 @@ export class InitTransactions {
     };
   }
 
+  async wrap(
+    t: Test,
+    candyGuard: PublicKey,
+    candyMachine: PublicKey,
+    payer: Keypair,
+    handler: PayerTransactionHandler,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    const accounts: WrapInstructionAccounts = {
+      candyGuard,
+      authority: payer.publicKey,
+      candyMachine: candyMachine,
+      candyMachineProgram: CANDY_MACHINE_PROGRAM,
+    };
+
+    const tx = new Transaction().add(createWrapInstruction(accounts));
+
+    return {
+      tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Wrap'),
+    };
+  }
+
   async update(
     t: Test,
     candyGuard: PublicKey,
@@ -111,5 +165,102 @@ export class InitTransactions {
     return {
       tx: handler.sendAndConfirmTransaction(tx, [payer], 'tx: Update'),
     };
+  }
+
+  async mint(
+    t: Test,
+    candyGuard: PublicKey,
+    candyMachine: PublicKey,
+    payer: Keypair,
+    mint: Keypair,
+    handler: PayerTransactionHandler,
+    connection: Connection,
+  ): Promise<{ tx: ConfirmedTransactionAssertablePromise }> {
+    // candy machine object
+    const candyMachineObject = await CandyMachine.fromAccountAddress(connection, candyMachine);
+
+    // PDAs required for the mint
+
+    // creator address
+    const [candyMachineCreator, bump] = await PublicKey.findProgramAddress(
+      [Buffer.from('candy_machine'), candyMachine.toBuffer()],
+      CANDY_MACHINE_PROGRAM,
+    );
+    amman.addr.addLabel('Mint Creator', candyMachineCreator);
+
+    // associated token address
+    const [associatedToken,] = await PublicKey.findProgramAddress(
+      [payer.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.publicKey.toBuffer()],
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Mint Associated Token', associatedToken);
+
+    // metadata address
+    const [metadataAddress,] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        mint.publicKey.toBuffer(),
+      ],
+      METAPLEX_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Mint Metadata', metadataAddress);
+
+    // master edition address
+    const [masterEdition,] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        METAPLEX_PROGRAM_ID.toBuffer(),
+        mint.publicKey.toBuffer(),
+        Buffer.from('edition'),
+      ],
+      METAPLEX_PROGRAM_ID,
+    );
+    amman.addr.addLabel('Mint Master Edition', masterEdition);
+
+    const accounts: MintInstructionAccounts = {
+      candyGuard: candyGuard,
+      candyMachineProgram: CANDY_MACHINE_PROGRAM,
+      candyMachine: candyMachine,
+      updateAuthority: candyMachineObject.updateAuthority,
+      payer: payer.publicKey,
+      wallet: candyMachineObject.wallet,
+      candyMachineCreator: candyMachineCreator,
+      masterEdition: masterEdition,
+      metadata: metadataAddress,
+      mint: mint.publicKey,
+      mintAuthority: payer.publicKey,
+      mintUpdateAuthority: payer.publicKey,
+      tokenMetadataProgram: METAPLEX_PROGRAM_ID,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+      recentSlothashes: SYSVAR_SLOT_HASHES_PUBKEY,
+      instructionSysvarAccount: SYSVAR_INSTRUCTIONS_PUBKEY,
+    };
+
+    const args: MintInstructionArgs = {
+      creatorBump: bump,
+      mintArgs: new Uint8Array(),
+    };
+
+    const ixs: TransactionInstruction[] = [];
+    ixs.push(SystemProgram.createAccount({
+      fromPubkey: payer.publicKey,
+      newAccountPubkey: mint.publicKey,
+      lamports: await connection.getMinimumBalanceForRentExemption(
+        MintLayout.span,
+      ),
+      space: MintLayout.span,
+      programId: TOKEN_PROGRAM_ID,
+    }));
+    ixs.push(createInitializeMintInstruction(mint.publicKey, 0, payer.publicKey, payer.publicKey));
+    ixs.push(createAssociatedTokenAccountInstruction(payer.publicKey, associatedToken, payer.publicKey, mint.publicKey));
+    ixs.push(createMintToInstruction(mint.publicKey, associatedToken, payer.publicKey, 1, []));
+    // candy guard mint instruction
+    ixs.push(createMintInstruction(accounts, args));
+    const tx = new Transaction().add(...ixs);
+
+    return { tx: handler.sendAndConfirmTransaction(tx, [payer, mint], 'tx: Candy Guard Mint') };
   }
 }
