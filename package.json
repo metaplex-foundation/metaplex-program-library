@@ -26,7 +26,6 @@
     "candy-machine/js",
     "fixed-price-sale/js",
     "bubblegum/js",
-    "candy-wrapper/js",
     "nft-packs/js"
   ],
   "repository": "git@github.com:metaplex-foundation/metaplex-program-library.git",
