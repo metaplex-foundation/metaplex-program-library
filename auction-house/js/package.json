@@ -14,7 +14,7 @@
     "build:docs": "typedoc",
     "build": "rimraf dist && tsc -p tsconfig.json",
     "build:watch": "rimraf dist && tsc -p tsconfig.json --watch",
-    "test": "esr ./test/*.test.ts",
+    "test": "tape ./dist/test/*.test.js",
     "api:gen": "DEBUG='(solita|rustbin):(info|error)' solita",
     "lint": "eslint \"{src,test}/**/*.ts\" --format stylish",
     "fix:lint": "yarn lint --fix",
