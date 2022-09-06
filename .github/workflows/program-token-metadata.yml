@@ -26,9 +26,9 @@ jobs:
         with:
           filters: |
             core:
-              - 'core/**'
+              - 'core/rust/**'
             package:
-              - 'token-metadata/**'
+              - 'token-metadata/program/**'
 
   build-and-test-token-metadata:
     needs: changes
