@@ -54,8 +54,6 @@ declare_id!("rwdLstiU8aJU1DPdoPtocaNKApMhCFdCg283hz8dd3u");
 
 #[program]
 pub mod listing_rewards {
-    use crate::listings::update::UpdateListing;
-
     use super::*;
 
     pub fn create_reward_center(
