@@ -40,9 +40,15 @@ const programs = {
         programId: 'cndy3Z4yapfJBmL3ShUp5exZKqR3z33thTzeNMm2gRZ',
         deployPath: localDeployPath('mpl_candy_machine'),
     },
+    auction_house: {
+        label: "Auction House",
+        programId: 'hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk',
+        deployPath:  localDeployPath('mpl_auction_house'),
+    },
 };
 
 const validator = {
+    accountsCluster: 'https://api.metaplex.solana.com',
     killRunningValidators: true,
     programs,
     commitment: 'singleGossip',

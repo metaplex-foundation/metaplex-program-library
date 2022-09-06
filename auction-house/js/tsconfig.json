@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "rootDir": "."
+    "rootDirs": [".", ".."]
   },
-  "include": ["./src", "test"]
+  "include": ["./src", "test", "../cli/js"]
 }

@@ -16,7 +16,8 @@
     "suppressImplicitAnyIndexErrors": true,
     "resolveJsonModule": true,
     "lib": ["dom", "es2019"],
-    "types": ["jest", "node", "webgl2"]
+    "types": ["jest", "node", "webgl2"],
+    "skipLibCheck": true
   },
   "exclude": ["node_modules", "typings/browser", "typings/browser.d.ts"],
   "atom": {
