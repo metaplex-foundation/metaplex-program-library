@@ -1,0 +1,15 @@
+[workspace]
+members=[
+  "token-entangler/program",
+  "nft-packs/program",
+  "fixed-price-sale/program",
+]
+exclude = [
+  "fixed-price-sale/cli",
+  "token-metadata",
+  "auction-house/program",
+  "candy-machine/program", 
+  "hydra/program",
+  "bubblegum/program",
+  "candy-wrapper/program",
+]

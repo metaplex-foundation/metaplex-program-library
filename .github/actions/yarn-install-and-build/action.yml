@@ -1,0 +1,67 @@
+name: Yarn Install and Build
+
+inputs:
+  cache_id:
+    description: ID to use in order to cache yarn install
+    required: true
+  working_dir:
+    description: Directory in which to perform the yarn tasks
+    required: true
+
+  build_core:
+    description: If not false it will build the core package
+    required: false
+    default: true
+  build_token_metadata:
+    description: If true it will build the token_metadata package
+    required: false
+    default: false
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v2
+      with:
+        path: '**/node_modules'
+        key: ${{ inputs.cache_id }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+    ##############
+    # Prepare Core and Dependencies
+    ##############
+    
+    # All contract SDKs depend on mpl-core so we need to build at least that
+    # We avoid running build in the project root to avoid a check for a contract failing due to
+    # an issue in another contract which would cause a build failure.
+   
+    - name: Install and Build core
+      if: inputs.build_core == 'true'
+      run: |
+        echo 'Install and Build core: yarn install'
+        yarn install
+        echo 'Install and Build core: yarn build'
+        yarn build
+      working-directory: ./core/js 
+      shell: bash
+
+    - name: Install and Build token-metadata
+      if: inputs.build_token_metadata == 'true'
+      run: |
+        echo 'Install and Build token-metadata: yarn install'
+        yarn install
+        echo 'Install and Build token-metadata: yarn build'
+        yarn build
+      working-directory: ./token-metadata/js 
+      shell: bash
+
+    ##############
+    # Build Contract 
+    ##############
+    - name: Install modules
+      run: yarn install
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash
+
+    - name: Build TypeScript 
+      run: yarn build
+      working-directory: ${{ inputs.working_dir }}
+      shell: bash

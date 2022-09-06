@@ -1,0 +1,34 @@
+name: 'List changed files in a PR'
+description: 'List changed files in a PR'
+inputs:
+  pull-number:
+    description: 'PR number'
+    required: true
+  include:
+    description: 'Matching files and paths will to include. Any non-matches will be excluded.'
+    required: false
+  exclude:
+    description: 'Matching files and paths will to exclude'
+    required: false
+
+outputs:
+  changed-files:
+    description: Version
+    value: ${{ steps.set-changed-files.outputs.changed-files }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+    - name: List changed files in a PR
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const script = require('.github/actions/list-changed-files/script.js')
+          await script({github, context, core}, ${{ inputs.pull-number }}, '${{ inputs.include }}', '${{ inputs.exclude }}')
+
+    - name: Set changed-files from PR
+      id: set-changed-files
+      # env.CHANGED_FILES exported from script.js
+      run: echo "::set-output name=changed-files::${{ env.CHANGED_FILES }}"
+      shell: bash

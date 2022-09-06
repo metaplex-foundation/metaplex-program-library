@@ -1,0 +1,9 @@
+**/js/ @metaplex-foundation/developer-experience
+*.md @metaplex-foundation/developer-experience
+lerna.json @metaplex-foundation/developer-experience
+package.json @metaplex-foundation/developer-experience
+yarn.lock @metaplex-foundation/developer-experience
+*.js @metaplex-foundation/developer-experience
+/fixed-price-sale @metaplex-foundation/everstake-protocol
+/nft-packs @metaplex-foundation/everstake-protocol
+* @metaplex-foundation/protocol

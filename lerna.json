@@ -1,0 +1,25 @@
+{
+  "npmClient": "yarn",
+  "packages": [
+    "core/js",
+    "auctioneer/js",
+    "token-metadata/js",
+    "auction-house/js",
+    "fixed-price-sale/js",
+    "hydra/js",
+    "bubblegum/js",
+    "nft-packs-wrapper/js"
+  ],
+  "useWorkspaces": true,
+  "version": "independent",
+  "command": {
+    "version": {
+      "allowBranch": ["master"],
+      "message": "chore: version updated packages",
+      "ignoreChanges": ["**/test/**", "**/*.md"]
+    },
+    "publish": {
+      "registry": "https://registry.npmjs.org/"
+    }
+  }
+}

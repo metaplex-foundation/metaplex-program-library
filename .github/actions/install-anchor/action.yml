@@ -1,0 +1,21 @@
+name: Setup Anchor CLI
+description: 'Setup Anchor CLI'
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/cache@v2
+      name: Cache Anchor CLI
+      id: cache-anchor-cli
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ./target/
+        key: anchor-cli-${{ runner.os }}-v0000-${{ env.ANCHOR_VERSION }}
+    - run:
+        cargo install --git https://github.com/project-serum/anchor --tag "v$ANCHOR_VERSION" anchor-cli --locked
+      shell: bash
+      if: steps.cache-anchor-cli.outputs.cache-hit != 'true'
