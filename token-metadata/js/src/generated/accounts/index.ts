@@ -6,6 +6,7 @@ export * from './MasterEditionV2';
 export * from './Metadata';
 export * from './ReservationListV1';
 export * from './ReservationListV2';
+export * from './TokenOwnedEscrow';
 export * from './UseAuthorityRecord';
 
 import { UseAuthorityRecord } from './UseAuthorityRecord';
@@ -17,6 +18,7 @@ import { Edition } from './Edition';
 import { ReservationListV2 } from './ReservationListV2';
 import { ReservationListV1 } from './ReservationListV1';
 import { EditionMarker } from './EditionMarker';
+import { TokenOwnedEscrow } from './TokenOwnedEscrow';
 
 export const accountProviders = {
   UseAuthorityRecord,
@@ -28,4 +30,5 @@ export const accountProviders = {
   ReservationListV2,
   ReservationListV1,
   EditionMarker,
+  TokenOwnedEscrow,
 };

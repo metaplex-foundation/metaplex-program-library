@@ -590,11 +590,11 @@ pub enum MetadataInstruction {
     #[account(5, name="attribute_metadata", desc="Metadata account of the new attribute")]
     #[account(6, name="escrow_mint", desc="Mint account that the escrow is attached")]
     #[account(7, name="escrow_account", desc="Token account that holds the token the escrow is attached to")]
-    #[account(8, name="constraint_model", desc="The constraint model to check against")]
-    #[account(9, name="system_program", desc="System program")]
-    #[account(10, name="ata_program", desc="Associated Token program")]
-    #[account(11, name="token_program", desc="Token program")]
-    #[account(12, name="rent", desc="Rent info")]
+    #[account(8, name="system_program", desc="System program")]
+    #[account(9, name="ata_program", desc="Associated Token program")]
+    #[account(10, name="token_program", desc="Token program")]
+    #[account(11, name="rent", desc="Rent info")]
+    #[account(12, name="constraint_model", desc="The constraint model to check against")]
     TransferIntoEscrow(TransferIntoEscrowArgs),
 
     /// Create an escrow account to hold tokens.
@@ -1903,11 +1903,11 @@ pub fn transfer_into_escrow(
         AccountMeta::new_readonly(attribute_metadata, false),
         AccountMeta::new_readonly(escrow_mint, false),
         AccountMeta::new_readonly(escrow_account, false),
-        AccountMeta::new_readonly(constraint_model, false),
         AccountMeta::new_readonly(solana_program::system_program::id(), false),
         AccountMeta::new_readonly(spl_associated_token_account::id(), false),
         AccountMeta::new_readonly(spl_token::id(), false),
         AccountMeta::new_readonly(solana_program::sysvar::rent::id(), false),
+        AccountMeta::new_readonly(constraint_model, false),
     ];
     let data = MetadataInstruction::TransferIntoEscrow(TransferIntoEscrowArgs { amount })
         .try_to_vec()

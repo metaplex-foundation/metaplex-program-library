@@ -62,11 +62,11 @@ export type TransferIntoEscrowInstructionAccounts = {
   attributeMetadata: web3.PublicKey;
   escrowMint: web3.PublicKey;
   escrowAccount: web3.PublicKey;
-  constraintModel: web3.PublicKey;
   systemProgram?: web3.PublicKey;
   ataProgram?: web3.PublicKey;
   tokenProgram?: web3.PublicKey;
   rent?: web3.PublicKey;
+  constraintModel: web3.PublicKey;
 };
 
 export const transferIntoEscrowInstructionDiscriminator = 39;
@@ -132,11 +132,6 @@ export function createTransferIntoEscrowInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.constraintModel,
-      isWritable: false,
-      isSigner: false,
-    },
-    {
       pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
@@ -153,6 +148,11 @@ export function createTransferIntoEscrowInstruction(
     },
     {
       pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.constraintModel,
       isWritable: false,
       isSigner: false,
     },
