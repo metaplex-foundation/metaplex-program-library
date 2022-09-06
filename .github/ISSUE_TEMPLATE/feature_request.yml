@@ -9,6 +9,7 @@ body:
       label: Which package is this feature request for?
       options:
         - auction-house
+        - auction
         - candy-machine
         - core
         - fixed-price-sale
