@@ -563,7 +563,7 @@ pub fn process_create_master_edition(
         edition_authority_seeds,
     )?;
 
-    let mut edition = MasterEditionV2::from_account_info::<MasterEditionV2>(edition_account_info)?;
+    let mut edition = MasterEditionV2::from_account_info(edition_account_info)?;
 
     edition.key = Key::MasterEditionV2;
     edition.supply = 0;
