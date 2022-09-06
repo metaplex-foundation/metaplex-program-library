@@ -36,4 +36,4 @@ jobs:
         with: 
           cache_id: sdk-auction-house
           working_dir: ./auction-house/js
-          skip_test: true
+          skip_test: false
