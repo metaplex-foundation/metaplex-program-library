@@ -12,7 +12,7 @@ const HELPER = new CandyMachineHelper();
 
 killStuckProcess()
 
-test('mint', async (t) => {
+test('mint (CPI)', async (t) => {
     const { fstTxHandler, payerPair, connection } = await API.payer();
 
     // candy machine
@@ -182,5 +182,5 @@ test('mint', async (t) => {
         minterHandler,
         minterConnection
     );
-    await mintTx5.assertSuccess(t)
+    await mintTx5.assertSuccess(t);
 })

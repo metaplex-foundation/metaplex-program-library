@@ -18,7 +18,7 @@ import {
 } from '@solana/web3.js';
 import { Test } from 'tape';
 import { amman } from '.';
-import { CANDY_MACHINE_PROGRAM, getCandyGuardPDA, METAPLEX_PROGRAM_ID } from '../utils';
+import { CandyMachineHelper, CANDY_MACHINE_PROGRAM, getCandyGuardPDA, METAPLEX_PROGRAM_ID } from '../utils';
 import {
   CandyGuardData,
   createInitializeInstruction,
@@ -35,7 +35,16 @@ import {
   WrapInstructionAccounts,
 } from '../../src/generated';
 import { CandyMachine } from '../../../../candy-core/js/src/generated';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, createAssociatedTokenAccountInstruction, createInitializeMintInstruction, createMintToInstruction, MintLayout, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  createInitializeMintInstruction,
+  createMintToInstruction,
+  MintLayout,
+  TOKEN_PROGRAM_ID
+} from '@solana/spl-token';
+
+const HELPER = new CandyMachineHelper();
 
 export class InitTransactions {
   readonly getKeypair: LoadOrGenKeypair | GenLabeledKeypair;
@@ -262,5 +271,94 @@ export class InitTransactions {
     const tx = new Transaction().add(...ixs);
 
     return { tx: handler.sendAndConfirmTransaction(tx, [payer, mint], 'tx: Candy Guard Mint') };
+  }
+
+  async deploy(
+    t: Test,
+    guards: CandyGuardData,
+    payer: Keypair,
+    handler: PayerTransactionHandler,
+    connection: Connection,
+  ): Promise<{ candyGuard: PublicKey; candyMachine: PublicKey }> {
+
+
+    // candy machine
+    const [, candyMachine] = await amman.genLabeledKeypair('Candy Machine Account');
+
+    const items = 10;
+
+    const candyMachineData = {
+        itemsAvailable: items,
+        symbol: 'CORE',
+        sellerFeeBasisPoints: 500,
+        maxSupply: 0,
+        isMutable: true,
+        retainAuthority: true,
+        creators: [{
+            address: payer.publicKey,
+            verified: false,
+            percentageShare: 100
+        }],
+        configLineSettings: {
+            prefixName: 'TEST ',
+            nameLength: 10,
+            prefixUri: 'https://arweave.net/',
+            uriLength: 50,
+            isSequential: false
+        },
+        hiddenSettings: null
+    };
+
+    const { tx: createTxCM } = await HELPER.create(
+        t,
+        payer,
+        candyMachine,
+        candyMachineData,
+        handler,
+        connection
+    );
+    // executes the transaction
+    await createTxCM.assertSuccess(t);
+
+    const lines: { name: string; uri: string }[] = [];
+
+    for (let i = 0; i < items; i++) {
+        const line = {
+            name: `NFT #${i + 1}`,
+            uri: 'uJSdJIsz_tYTcjUEWdeVSj0aR90K-hjDauATWZSi-tQ'
+        };
+
+        lines.push(line);
+    }
+    const { txs } = await HELPER.addConfigLines(t, candyMachine.publicKey, payer, lines, handler);
+    // confirms that all lines have been written
+    for (const tx of txs) {
+        await handler.sendAndConfirmTransaction(
+            tx,
+            [payer],
+            'tx: AddConfigLines'
+        ).assertNone();
+    }
+
+    const { tx: initializeTxCG, candyGuard: address } = await this.initialize(
+        t,
+        guards,
+        payer,
+        handler,
+    );
+    // executes the transaction
+    await initializeTxCG.assertSuccess(t);
+
+    const { tx: wrapTx } = await this.wrap(
+      t,
+      address,
+      candyMachine.publicKey,
+      payer,
+      handler
+    );
+
+    await wrapTx.assertSuccess(t, [/SetAuthority/i]);
+
+    return { candyGuard: address, candyMachine: candyMachine.publicKey };
   }
 }
