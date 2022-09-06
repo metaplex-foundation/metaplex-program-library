@@ -204,9 +204,12 @@ pub struct Mint<'info> {
     // collection_mint
     // collection_metadata
     // collection_master_edition
-    // > needed if spl_token guard enabled
+    // > needed if spl_token guard enabled or nft payment guard
     // token_account_info
     // transfer_authority_info
+    // > needed if NFT payment and burn is on
+    // payment_mint
+    // token_account_metadata_info
     // > needed if third_party_signer guard enabled
     // signer
     // > needed if whitelist guard enabled
