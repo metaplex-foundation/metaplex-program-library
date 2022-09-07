@@ -26,7 +26,7 @@ export type SellInstructionArgs = {
  * @category Sell
  * @category generated
  */
-const sellStruct = new beet.BeetArgsStruct<
+export const sellStruct = new beet.BeetArgsStruct<
   SellInstructionArgs & {
     instructionDiscriminator: number[] /* size: 8 */;
   }
@@ -66,10 +66,14 @@ export type SellInstructionAccounts = {
   auctionHouseFeeAccount: web3.PublicKey;
   sellerTradeState: web3.PublicKey;
   freeSellerTradeState: web3.PublicKey;
+  tokenProgram?: web3.PublicKey;
+  systemProgram?: web3.PublicKey;
   programAsSigner: web3.PublicKey;
+  rent?: web3.PublicKey;
+  anchorRemainingAccounts?: web3.AccountMeta[];
 };
 
-const sellInstructionDiscriminator = [51, 230, 133, 164, 1, 127, 131, 173];
+export const sellInstructionDiscriminator = [51, 230, 133, 164, 1, 127, 131, 173];
 
 /**
  * Creates a _Sell_ instruction.
@@ -84,88 +88,83 @@ const sellInstructionDiscriminator = [51, 230, 133, 164, 1, 127, 131, 173];
 export function createSellInstruction(
   accounts: SellInstructionAccounts,
   args: SellInstructionArgs,
+  programId = new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
 ) {
-  const {
-    wallet,
-    tokenAccount,
-    metadata,
-    authority,
-    auctionHouse,
-    auctionHouseFeeAccount,
-    sellerTradeState,
-    freeSellerTradeState,
-    programAsSigner,
-  } = accounts;
-
   const [data] = sellStruct.serialize({
     instructionDiscriminator: sellInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: wallet,
+      pubkey: accounts.wallet,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: tokenAccount,
+      pubkey: accounts.tokenAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: metadata,
+      pubkey: accounts.metadata,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: authority,
+      pubkey: accounts.authority,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: auctionHouse,
+      pubkey: accounts.auctionHouse,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: auctionHouseFeeAccount,
+      pubkey: accounts.auctionHouseFeeAccount,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: sellerTradeState,
+      pubkey: accounts.sellerTradeState,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: freeSellerTradeState,
+      pubkey: accounts.freeSellerTradeState,
       isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: splToken.TOKEN_PROGRAM_ID,
+      pubkey: accounts.tokenProgram ?? splToken.TOKEN_PROGRAM_ID,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SystemProgram.programId,
+      pubkey: accounts.systemProgram ?? web3.SystemProgram.programId,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: programAsSigner,
+      pubkey: accounts.programAsSigner,
       isWritable: false,
       isSigner: false,
     },
     {
-      pubkey: web3.SYSVAR_RENT_PUBKEY,
+      pubkey: accounts.rent ?? web3.SYSVAR_RENT_PUBKEY,
       isWritable: false,
       isSigner: false,
     },
   ];
 
+  if (accounts.anchorRemainingAccounts != null) {
+    for (const acc of accounts.anchorRemainingAccounts) {
+      keys.push(acc);
+    }
+  }
+
   const ix = new web3.TransactionInstruction({
-    programId: new web3.PublicKey('hausS13jsjafwWwGqZTUQRmWyvyxn9EQpqMwV1PBBmk'),
+    programId,
     keys,
     data,
   });
