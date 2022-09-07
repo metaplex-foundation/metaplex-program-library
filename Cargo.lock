@@ -2301,9 +2301,9 @@ dependencies = [
 
 [[package]]
 name = "mpl-candy-machine"
-version = "4.1.0"
+version = "4.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2feb2837b75c59a4476820ca2b96e157727a023b73a48315c3b9595907ab8306"
+checksum = "3cb48fe37fe9268a56f78452ec5191b1d55f0671398ae04a4cea78e8f00b1ef6"
 dependencies = [
  "anchor-lang",
  "anchor-spl",

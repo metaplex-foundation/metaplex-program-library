@@ -1,9 +1,9 @@
 use anchor_client::{solana_sdk::pubkey::Pubkey, Client};
 use anyhow::Result;
 use mpl_token_metadata::{
-    instruction::{create_master_edition_v3, create_metadata_accounts_v2},
+    instruction::{create_master_edition_v3, create_metadata_accounts_v3},
     pda::find_collection_authority_account,
-    state::Creator,
+    state::{CollectionDetails, Creator},
 };
 use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
@@ -81,7 +81,7 @@ pub fn create_and_set_collection(
     };
     let collection_metadata_pubkey = find_metadata_pda(&collection_mint.pubkey());
 
-    let create_metadata_account_ix = create_metadata_accounts_v2(
+    let create_metadata_account_ix = create_metadata_accounts_v3(
         mpl_token_metadata::ID,
         collection_metadata_pubkey,
         collection_mint.pubkey(),
@@ -97,6 +97,7 @@ pub fn create_and_set_collection(
         true,
         None,
         None,
+        Some(CollectionDetails::V1 { size: 0 }),
     );
 
     let collection_edition_pubkey = find_master_edition_pda(&collection_mint.pubkey());

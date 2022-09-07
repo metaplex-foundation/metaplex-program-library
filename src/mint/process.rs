@@ -6,7 +6,7 @@ use anchor_client::solana_sdk::{
     signature::{Keypair, Signature, Signer},
     system_instruction, system_program, sysvar,
 };
-use anchor_lang::prelude::AccountMeta;
+use anchor_lang::{prelude::AccountMeta, ToAccountMetas};
 use anyhow::Result;
 use chrono::Utc;
 use console::style;
@@ -422,20 +422,27 @@ pub async fn mint(
     if let Some((collection_pda_pubkey, collection_pda)) = collection_pda_info.as_ref() {
         let collection_authority_record =
             find_collection_authority_account(&collection_pda.mint, collection_pda_pubkey).0;
+
+        let mut accounts = nft_accounts::SetCollectionDuringMint {
+            candy_machine: candy_machine_id,
+            metadata: metadata_pda,
+            payer,
+            collection_pda: *collection_pda_pubkey,
+            token_metadata_program: mpl_token_metadata::ID,
+            instructions: sysvar::instructions::ID,
+            collection_mint: collection_pda.mint,
+            collection_metadata: find_metadata_pda(&collection_pda.mint),
+            collection_master_edition: find_master_edition_pda(&collection_pda.mint),
+            authority,
+            collection_authority_record,
+        }
+        .to_account_metas(None);
+
+        // Make collection metadata account mutable for sized collections.
+        accounts[7].is_writable = true;
+
         builder = builder
-            .accounts(nft_accounts::SetCollectionDuringMint {
-                candy_machine: candy_machine_id,
-                metadata: metadata_pda,
-                payer,
-                collection_pda: *collection_pda_pubkey,
-                token_metadata_program: mpl_token_metadata::ID,
-                instructions: sysvar::instructions::ID,
-                collection_mint: collection_pda.mint,
-                collection_metadata: find_metadata_pda(&collection_pda.mint),
-                collection_master_edition: find_master_edition_pda(&collection_pda.mint),
-                authority,
-                collection_authority_record,
-            })
+            .accounts(accounts)
             .args(nft_instruction::SetCollectionDuringMint {});
     }
 
