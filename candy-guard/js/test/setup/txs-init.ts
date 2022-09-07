@@ -279,10 +279,10 @@ export class InitTransactions {
     payer: Keypair,
     handler: PayerTransactionHandler,
     connection: Connection,
+    collection?: PublicKey | null,
   ): Promise<{ candyGuard: PublicKey; candyMachine: PublicKey }> {
-
-
     // candy machine
+
     const [, candyMachine] = await amman.genLabeledKeypair('Candy Machine Account');
 
     const items = 10;
@@ -339,6 +339,20 @@ export class InitTransactions {
             'tx: AddConfigLines'
         ).assertNone();
     }
+
+    if (collection) {
+      const { tx: addCollectionTx } = await HELPER.addCollection(
+        t,
+        candyMachine.publicKey,
+        collection,
+        payer,
+        handler,
+        connection
+      );
+      await addCollectionTx.assertNone();
+    }
+
+    // candy guard
 
     const { tx: initializeTxCG, candyGuard: address } = await this.initialize(
         t,
