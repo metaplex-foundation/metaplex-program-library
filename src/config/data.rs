@@ -137,8 +137,8 @@ where
     Ok(Some(pubkey))
 }
 
-fn discount_price_to_lamports(discount_price: Option<f64>) -> Option<u64> {
-    discount_price.map(|price| (price * LAMPORTS_PER_SOL as f64) as u64)
+fn discount_price_to_base_units(discount_price: Option<f64>, decimals: u8) -> Option<u64> {
+    discount_price.map(|price| (price * 10u64.pow(decimals as u32) as f64) as u64)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -258,12 +258,12 @@ impl WhitelistMintSettings {
             discount_price,
         }
     }
-    pub fn to_candy_format(&self) -> CandyWhitelistMintSettings {
+    pub fn to_candy_format(&self, decimals: u8) -> CandyWhitelistMintSettings {
         CandyWhitelistMintSettings {
             mode: self.mode.to_candy_format(),
             mint: self.mint,
             presale: self.presale,
-            discount_price: discount_price_to_lamports(self.discount_price),
+            discount_price: discount_price_to_base_units(self.discount_price, decimals),
         }
     }
 }
