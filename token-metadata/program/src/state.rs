@@ -399,11 +399,11 @@ pub fn get_master_edition(account: &AccountInfo) -> Result<Box<dyn MasterEdition
     // For some reason when converting Key to u8 here, it becomes unreachable. Use direct constant instead.
     let master_edition_result: Result<Box<dyn MasterEdition>, ProgramError> = match version {
         2 => {
-            let me: MasterEditionV1 = MasterEditionV1::from_account_info(account)?;
+            let me = MasterEditionV1::from_account_info(account)?;
             Ok(Box::new(me))
         }
         6 => {
-            let me: MasterEditionV2 = MasterEditionV2::from_account_info(account)?;
+            let me = MasterEditionV2::from_account_info(account)?;
             Ok(Box::new(me))
         }
         _ => Err(MetadataError::DataTypeMismatch.into()),

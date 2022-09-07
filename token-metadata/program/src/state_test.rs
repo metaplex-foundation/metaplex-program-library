@@ -33,7 +33,7 @@ mod metadata {
         let expected_metadata = expected_pesky_metadata();
         let mut corrupted_data = pesky_data();
 
-        let metadata: Metadata = Metadata::deserialize(&mut corrupted_data).unwrap();
+        let metadata = Metadata::deserialize(&mut corrupted_data).unwrap();
 
         assert_eq!(metadata, expected_metadata);
     }
@@ -62,7 +62,7 @@ mod metadata {
             1_000_000_000,
         );
 
-        let md: Metadata = Metadata::from_account_info(&md_account_info).unwrap();
+        let md = Metadata::from_account_info(&md_account_info).unwrap();
         assert_eq!(md.key, Key::MetadataV1);
         assert_eq!(md, expected_metadata);
     }
