@@ -1207,14 +1207,14 @@ __metadata:
   resolution: "@metaplex-foundation/mpl-fixed-price-sale@workspace:fixed-price-sale/js"
   dependencies:
     "@metaplex-foundation/amman": ^0.1.0
-    "@metaplex-foundation/beet": ^0.1.0
-    "@metaplex-foundation/beet-solana": ^0.1.1
+    "@metaplex-foundation/beet": ^0.6.1
+    "@metaplex-foundation/beet-solana": ^0.3.1
     "@metaplex-foundation/mpl-core": ^0.0.5
-    "@metaplex-foundation/mpl-token-metadata": 2.0.0
+    "@metaplex-foundation/mpl-token-metadata": ~2.0.0
     "@metaplex-foundation/solita": ^0.15.2
     "@solana/buffer-layout": ^4.0.0
     "@solana/spl-token": ^0.2.0
-    "@solana/web3.js": ^1.37.0
+    "@solana/web3.js": ^1.56.2
     "@types/bn.js": ^5.1.0
     "@types/debug": ^4.1.7
     "@types/tape": ^4.13.2
@@ -1301,7 +1301,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@metaplex-foundation/mpl-token-metadata@npm:2.0.0":
+"@metaplex-foundation/mpl-token-metadata@npm:~2.0.0":
   version: 2.0.0
   resolution: "@metaplex-foundation/mpl-token-metadata@npm:2.0.0"
   dependencies:
@@ -1897,7 +1897,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/web3.js@npm:^1.17.0, @solana/web3.js@npm:^1.21.0, @solana/web3.js@npm:^1.31.0, @solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.35.0, @solana/web3.js@npm:^1.35.1, @solana/web3.js@npm:^1.36.0, @solana/web3.js@npm:^1.37.0, @solana/web3.js@npm:^1.43.4, @solana/web3.js@npm:^1.44.0, @solana/web3.js@npm:^1.50.1":
+"@solana/web3.js@npm:^1.17.0, @solana/web3.js@npm:^1.21.0, @solana/web3.js@npm:^1.31.0, @solana/web3.js@npm:^1.32.0, @solana/web3.js@npm:^1.35.1, @solana/web3.js@npm:^1.36.0, @solana/web3.js@npm:^1.43.4, @solana/web3.js@npm:^1.44.0, @solana/web3.js@npm:^1.50.1":
   version: 1.55.0
   resolution: "@solana/web3.js@npm:1.55.0"
   dependencies:
@@ -1918,6 +1918,29 @@ __metadata:
     rpc-websockets: ^7.5.0
     superstruct: ^0.14.2
   checksum: 775bfb797c70625434cbb92a1919add1d422eaa696ce91d7b0f80dbb0ff2d6c7839dc0a9d1f6c58680c187e1d7176c54b76480c65bc70eafa905fa753e80d765
+  languageName: node
+  linkType: hard
+
+"@solana/web3.js@npm:^1.35.0":
+  version: 1.59.0
+  resolution: "@solana/web3.js@npm:1.59.0"
+  dependencies:
+    "@babel/runtime": ^7.12.5
+    "@noble/ed25519": ^1.7.0
+    "@noble/hashes": ^1.1.2
+    "@noble/secp256k1": ^1.6.3
+    "@solana/buffer-layout": ^4.0.0
+    bigint-buffer: ^1.1.5
+    bn.js: ^5.0.0
+    borsh: ^0.7.0
+    bs58: ^4.0.1
+    buffer: 6.0.1
+    fast-stable-stringify: ^1.0.0
+    jayson: ^3.4.4
+    node-fetch: 2
+    rpc-websockets: ^7.5.0
+    superstruct: ^0.14.2
+  checksum: 8e74b9461bba06037c9510d80e8952384aa2e1599e5f1d69772cc2703c88b7b70a259f7c1e47069adf58b63b9b7ea0a2bfbd95fb547b6022964a1f6aa718d596
   languageName: node
   linkType: hard
 
