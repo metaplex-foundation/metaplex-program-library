@@ -44,7 +44,6 @@ export const mintStruct = new beet.FixableBeetArgsStruct<
  * @property [] updateAuthority
  * @property [_writable_] candyMachineCreator
  * @property [_writable_, **signer**] payer
- * @property [_writable_] wallet
  * @property [_writable_] metadata
  * @property [_writable_] mint
  * @property [**signer**] mintAuthority
@@ -64,7 +63,6 @@ export type MintInstructionAccounts = {
   updateAuthority: web3.PublicKey;
   candyMachineCreator: web3.PublicKey;
   payer: web3.PublicKey;
-  wallet: web3.PublicKey;
   metadata: web3.PublicKey;
   mint: web3.PublicKey;
   mintAuthority: web3.PublicKey;
@@ -129,11 +127,6 @@ export function createMintInstruction(
       pubkey: accounts.payer,
       isWritable: true,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.wallet,
-      isWritable: true,
-      isSigner: false,
     },
     {
       pubkey: accounts.metadata,

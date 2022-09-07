@@ -116,11 +116,6 @@
           "isSigner": false
         },
         {
-          "name": "wallet",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
           "name": "authority",
           "isMut": false,
           "isSigner": false
@@ -337,11 +332,6 @@
           "name": "authority",
           "isMut": false,
           "isSigner": true
-        },
-        {
-          "name": "wallet",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -388,13 +378,6 @@
               "Features versioning flags."
             ],
             "type": "u64"
-          },
-          {
-            "name": "wallet",
-            "docs": [
-              "Treasury wallet address."
-            ],
-            "type": "publicKey"
           },
           {
             "name": "authority",

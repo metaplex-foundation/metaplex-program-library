@@ -92,7 +92,7 @@ impl CandyMachineData {
 
     /// Validates the hidden and config lines settings against the maximum
     /// allowed values for name and URI.
-    /// 
+    ///
     /// Hidden settings take precedence over config lines since when hidden
     /// settings are used, the account does not need to include space for
     /// config lines.

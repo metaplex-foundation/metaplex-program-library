@@ -67,7 +67,6 @@ test('update', async (t) => {
     const { tx: updateTransaction1 } = await init.updateCandyMachine(
         t,
         address,
-        payerPair.publicKey,
         payerPair,
         data,
         fstTxHandler
@@ -88,7 +87,6 @@ test('update', async (t) => {
     const { tx: updateTransaction2 } = await init.updateCandyMachine(
         t,
         address,
-        payerPair.publicKey,
         payerPair,
         data,
         fstTxHandler
@@ -103,7 +101,6 @@ test('update', async (t) => {
     const { tx: updateTransaction3 } = await init.updateCandyMachine(
         t,
         address,
-        payerPair.publicKey,
         payerPair,
         data,
         fstTxHandler
@@ -159,7 +156,6 @@ test('update (hidden settings)', async (t) => {
     const { tx: updateTransaction1 } = await init.updateCandyMachine(
         t,
         address,
-        payerPair.publicKey,
         payerPair,
         data,
         fstTxHandler
@@ -196,7 +192,6 @@ test('update (hidden settings)', async (t) => {
     const { tx: updateTransaction2 } = await init.updateCandyMachine(
         t,
         address,
-        payerPair.publicKey,
         payerPair,
         updatedData,
         fstTxHandler

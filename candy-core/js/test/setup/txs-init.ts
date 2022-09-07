@@ -107,7 +107,6 @@ export class InitTransactions {
 
     const accounts: program.InitializeInstructionAccounts = {
       candyMachine: candyMachine.publicKey,
-      wallet: payer.publicKey,
       authority: payer.publicKey,
       updateAuthority: payer.publicKey,
       payer: payer.publicKey,
@@ -173,7 +172,6 @@ export class InitTransactions {
   async updateCandyMachine(
     t: Test,
     candyMachine: PublicKey,
-    wallet: PublicKey,
     payer: Keypair,
     data: CandyMachineData,
     handler: PayerTransactionHandler
@@ -181,7 +179,6 @@ export class InitTransactions {
     const accounts: program.UpdateInstructionAccounts = {
       candyMachine: candyMachine,
       authority: payer.publicKey,
-      wallet: wallet
     };
 
     const args: program.UpdateInstructionArgs = {

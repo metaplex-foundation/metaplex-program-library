@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
-    assertions::collection::assert_master_edition, instruction::approve_collection_authority,
-    state::Metadata, state::TokenMetadataAccount,
+    assertions::collection::assert_master_edition,
+    instruction::approve_collection_authority,
+    state::{Metadata, TokenMetadataAccount},
 };
 use solana_program::program::invoke;
 
@@ -12,7 +13,10 @@ pub fn add_collection(ctx: Context<AddCollection>) -> Result<()> {
     let metadata: Metadata =
         Metadata::from_account_info(&ctx.accounts.collection_metadata.to_account_info())?;
 
-    if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.update_authority.key()) {
+    if !cmp_pubkeys(
+        &metadata.update_authority,
+        &ctx.accounts.update_authority.key(),
+    ) {
         return err!(CandyError::IncorrectCollectionAuthority);
     }
 

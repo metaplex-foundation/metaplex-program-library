@@ -49,7 +49,6 @@ pub fn update(ctx: Context<Update>, data: CandyMachineData) -> Result<()> {
 
     candy_machine.data = data;
     candy_machine.data.symbol = symbol;
-    candy_machine.wallet = ctx.accounts.wallet.key();
 
     Ok(())
 }
@@ -60,6 +59,4 @@ pub struct Update<'info> {
     #[account(mut, has_one = authority)]
     candy_machine: Account<'info, CandyMachine>,
     authority: Signer<'info>,
-    /// CHECK: wallet can be any account and is not written to or read
-    wallet: UncheckedAccount<'info>,
 }

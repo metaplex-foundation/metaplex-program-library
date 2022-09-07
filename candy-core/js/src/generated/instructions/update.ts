@@ -41,7 +41,6 @@ export const updateStruct = new beet.FixableBeetArgsStruct<
  *
  * @property [_writable_] candyMachine
  * @property [**signer**] authority
- * @property [] wallet
  * @category Instructions
  * @category Update
  * @category generated
@@ -49,7 +48,6 @@ export const updateStruct = new beet.FixableBeetArgsStruct<
 export type UpdateInstructionAccounts = {
   candyMachine: web3.PublicKey
   authority: web3.PublicKey
-  wallet: web3.PublicKey
 }
 
 export const updateInstructionDiscriminator = [
@@ -85,11 +83,6 @@ export function createUpdateInstruction(
       pubkey: accounts.authority,
       isWritable: false,
       isSigner: true,
-    },
-    {
-      pubkey: accounts.wallet,
-      isWritable: false,
-      isSigner: false,
     },
   ]
 

@@ -110,9 +110,9 @@ test('mint (CPI)', async (t) => {
     const candyGuardData = {
         default: {
             botTax: null,
-            liveDate: null,
             lamports: null,
             splToken: null,
+            liveDate: null,
             thirdPartySigner: null,
             whitelist: null,
             gatekeeper: null,

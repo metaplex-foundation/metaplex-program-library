@@ -169,12 +169,12 @@ impl CandyGuardData {
 pub struct GuardSet {
     /// Last instruction check and bot tax (penalty for invalid transactions).
     pub bot_tax: Option<BotTax>,
-    /// Live data guard (controls when minting is allowed).
-    pub live_date: Option<LiveDate>,
     /// Lamports guard (set the price for the mint in lamports).
     pub lamports: Option<Lamports>,
     /// Spl-token guard (set the price for the mint in spl-token amount).
     pub spl_token: Option<SplToken>,
+    /// Live data guard (controls when minting is allowed).
+    pub live_date: Option<LiveDate>,
     /// Third party signer guard.
     pub third_party_signer: Option<ThirdPartySigner>,
     /// Whitelist guard (whitelist mint settings).

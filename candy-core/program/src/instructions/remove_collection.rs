@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 use mpl_token_metadata::{
-    instruction::revoke_collection_authority, state::Metadata, state::TokenMetadataAccount,
+    instruction::revoke_collection_authority,
+    state::{Metadata, TokenMetadataAccount},
 };
 use solana_program::program::invoke;
 
@@ -14,7 +15,10 @@ pub fn remove_collection(ctx: Context<RemoveCollection>) -> Result<()> {
     }
     let metadata: Metadata =
         Metadata::from_account_info(&ctx.accounts.collection_metadata.to_account_info())?;
-    if !cmp_pubkeys(&metadata.update_authority, &ctx.accounts.update_authority.key()) {
+    if !cmp_pubkeys(
+        &metadata.update_authority,
+        &ctx.accounts.update_authority.key(),
+    ) {
         return err!(CandyError::IncorrectCollectionAuthority);
     };
     if !cmp_pubkeys(&metadata.mint, &mint.key()) {

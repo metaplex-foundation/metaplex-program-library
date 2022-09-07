@@ -20,7 +20,6 @@ import {
  */
 export type CandyMachineArgs = {
   features: beet.bignum
-  wallet: web3.PublicKey
   authority: web3.PublicKey
   updateAuthority: web3.PublicKey
   collectionMint: beet.COption<web3.PublicKey>
@@ -39,7 +38,6 @@ export const candyMachineDiscriminator = [51, 173, 177, 113, 25, 241, 109, 189]
 export class CandyMachine implements CandyMachineArgs {
   private constructor(
     readonly features: beet.bignum,
-    readonly wallet: web3.PublicKey,
     readonly authority: web3.PublicKey,
     readonly updateAuthority: web3.PublicKey,
     readonly collectionMint: beet.COption<web3.PublicKey>,
@@ -53,7 +51,6 @@ export class CandyMachine implements CandyMachineArgs {
   static fromArgs(args: CandyMachineArgs) {
     return new CandyMachine(
       args.features,
-      args.wallet,
       args.authority,
       args.updateAuthority,
       args.collectionMint,
@@ -174,7 +171,6 @@ export class CandyMachine implements CandyMachineArgs {
         }
         return x
       })(),
-      wallet: this.wallet.toBase58(),
       authority: this.authority.toBase58(),
       updateAuthority: this.updateAuthority.toBase58(),
       collectionMint: this.collectionMint,
@@ -207,7 +203,6 @@ export const candyMachineBeet = new beet.FixableBeetStruct<
   [
     ['accountDiscriminator', beet.uniformFixedSizeArray(beet.u8, 8)],
     ['features', beet.u64],
-    ['wallet', beetSolana.publicKey],
     ['authority', beetSolana.publicKey],
     ['updateAuthority', beetSolana.publicKey],
     ['collectionMint', beet.coption(beetSolana.publicKey)],

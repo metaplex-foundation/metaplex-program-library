@@ -157,7 +157,6 @@ pub struct Mint<'info> {
     pub candy_machine_program: AccountInfo<'info>,
     #[account(
         mut,
-        has_one = wallet,
         has_one = update_authority,
         constraint = candy_guard.key() == candy_machine.authority
     )]
@@ -171,9 +170,6 @@ pub struct Mint<'info> {
     pub candy_machine_creator: UncheckedAccount<'info>,
     #[account(mut)]
     pub payer: Signer<'info>,
-    /// CHECK: wallet can be any account and is not written to or read
-    #[account(mut)]
-    pub wallet: UncheckedAccount<'info>,
     // with the following accounts we aren't using anchor macros because they are CPI'd
     // through to token-metadata which will do all the validations we need on them.
     /// CHECK: account checked in CPI
@@ -206,9 +202,12 @@ pub struct Mint<'info> {
     // collection_mint
     // collection_metadata
     // collection_master_edition
+    // > needed if lamports guard enabled
+    // lamports_wallet
     // > needed if spl_token guard enabled
     // token_account_info
     // transfer_authority_info
+    // token_wallet
     // > needed if third_party_signer guard enabled
     // signer
     // > needed if whitelist guard enabled
@@ -222,11 +221,13 @@ pub struct Mint<'info> {
     // gateway program
     // network_expire_feature
     // > needed if nft_payment guard enabled
-    // token_account_info
-    // token_account_metadata_info
-    // transfer_authority_info
-    // > needed if nft_payment guard enabled and burn is on
+    // token_account
+    // token_metadata
+    // > needed if nft_payment guard enabled and burn is true
+    // token_edition
     // mint_account
-    // mint_master_edition
     // mint_collection_metadata
+    // > needed if nft_payment guard enabled and burn is false (transfer)
+    // transfer_authority
+    // wallet
 }

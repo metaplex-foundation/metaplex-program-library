@@ -8,8 +8,6 @@ use super::candy_machine_data::CandyMachineData;
 pub struct CandyMachine {
     /// Features versioning flags.
     pub features: u64,
-    /// Treasury wallet address.
-    pub wallet: Pubkey,
     /// Authority address.
     pub authority: Pubkey,
     /// Update authority address to use when retaining authority.

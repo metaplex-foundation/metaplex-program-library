@@ -19,6 +19,7 @@ impl Guard for NftPayment {
     fn size() -> usize {
         1    // burn or transfer
         + 32 // required_collection
+        + 32 // wallet
     }
 
     fn mask() -> u64 {
@@ -34,33 +35,15 @@ impl Condition for NftPayment {
         _guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
-        let token_account_index = evaluation_context.account_cursor;
+        let index = evaluation_context.account_cursor;
         // validates that we received all required accounts
-        let token_account_info = Self::get_account_info(ctx, token_account_index)?;
-        let token_account_metadata = Self::get_account_info(ctx, token_account_index + 1)?;
-        // transfer_authority_info account
-        let _ = Self::get_account_info(ctx, token_account_index + 2)?;
-        evaluation_context.account_cursor += 3;
+        let token_account_info = Self::get_account_info(ctx, index)?;
+        let token_metadata = Self::get_account_info(ctx, index + 1)?;
+        evaluation_context.account_cursor += 2;
 
-        // when burn is enabled, we need mint_account and mint_master_edition
-        let (mint_account, _mint_master_edition, _mint_collection_metadata) = if self.burn {
-            (
-                Some(Self::get_account_info(ctx, token_account_index + 3)?),
-                Some(Self::get_account_info(ctx, token_account_index + 4)?),
-                Some(Self::get_account_info(ctx, token_account_index + 5)?),
-            )
-        } else {
-            (None, None, None)
-        };
-
-        let metadata: Metadata = Metadata::from_account_info(token_account_metadata)?;
+        let metadata: Metadata = Metadata::from_account_info(token_metadata)?;
         // validates the account information
-        assert_keys_equal(token_account_metadata.owner, &mpl_token_metadata::id())?;
-
-        if self.burn {
-            evaluation_context.account_cursor += 3;
-            assert_keys_equal(&metadata.mint, mint_account.unwrap().key)?;
-        }
+        assert_keys_equal(token_metadata.owner, &mpl_token_metadata::id())?;
 
         let token_account = assert_is_token_account(
             token_account_info,
@@ -77,10 +60,25 @@ impl Condition for NftPayment {
             _ => Err(CandyGuardError::InvalidNFTCollectionPayment),
         }?;
 
-        evaluation_context.amount = 1;
+        if self.burn {
+            let _token_edition = Self::get_account_info(ctx, index + 2)?;
+            let mint_account = Self::get_account_info(ctx, index + 3)?;
+            let _mint_collection_metadata = Self::get_account_info(ctx, index + 4)?;
+            evaluation_context.account_cursor += 3;
+
+            let metadata: Metadata = Metadata::from_account_info(token_metadata)?;
+            // validates the account information
+            assert_keys_equal(token_metadata.owner, &mpl_token_metadata::id())?;
+            assert_keys_equal(&metadata.mint, mint_account.key)?;
+        } else {
+            let _transfer_authority = Self::get_account_info(ctx, index + 2)?;
+            let _wallet = Self::get_account_info(ctx, index + 3)?;
+            evaluation_context.account_cursor += 2;
+        }
+
         evaluation_context
             .indices
-            .insert("nft_payment_index", token_account_index);
+            .insert("nft_payment_index", index);
 
         Ok(())
     }
@@ -93,22 +91,20 @@ impl Condition for NftPayment {
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
         let index = evaluation_context.indices["nft_payment_index"];
-        // the accounts have already been validated
-        let token_account_info = Self::get_account_info(ctx, index)?;
-        let token_account_metadata = Self::get_account_info(ctx, index + 1)?;
-        let transfer_authority_info = Self::get_account_info(ctx, index + 2)?;
+        let token_account = Self::get_account_info(ctx, index)?;
 
         if self.burn {
+            let token_metadata = Self::get_account_info(ctx, index + 1)?;
+            let token_edition = Self::get_account_info(ctx, index + 2)?;
             let mint_account = Self::get_account_info(ctx, index + 3)?;
-            let mint_master_edition = Self::get_account_info(ctx, index + 4)?;
-            let mint_collection_metadata = Self::get_account_info(ctx, index + 5)?;
+            let mint_collection_metadata = Self::get_account_info(ctx, index + 4)?;
 
             let burn_nft_infos = vec![
-                token_account_metadata.to_account_info(),
+                token_metadata.to_account_info(),
                 ctx.accounts.payer.to_account_info(),
                 mint_account.to_account_info(),
-                token_account_info.to_account_info(),
-                mint_master_edition.to_account_info(),
+                token_account.to_account_info(),
+                token_edition.to_account_info(),
                 ctx.accounts.token_program.to_account_info(),
                 mint_collection_metadata.to_account_info(),
             ];
@@ -116,21 +112,24 @@ impl Condition for NftPayment {
             invoke(
                 &burn_nft(
                     mpl_token_metadata::ID,
-                    token_account_metadata.key(),
+                    token_metadata.key(),
                     ctx.accounts.payer.key(),
                     mint_account.key(),
-                    token_account_info.key(),
-                    mint_master_edition.key(),
+                    token_account.key(),
+                    token_edition.key(),
                     ::spl_token::ID,
                     Some(mint_collection_metadata.key()),
                 ),
                 burn_nft_infos.as_slice(),
             )?;
         } else {
+            let transfer_authority = Self::get_account_info(ctx, index + 2)?;
+            let wallet = Self::get_account_info(ctx, index + 3)?;
+
             spl_token_transfer(TokenTransferParams {
-                source: token_account_info.to_account_info(),
-                destination: ctx.accounts.wallet.to_account_info(),
-                authority: transfer_authority_info.to_account_info(),
+                source: token_account.to_account_info(),
+                destination: wallet.to_account_info(),
+                authority: transfer_authority.to_account_info(),
                 authority_signer_seeds: &[],
                 token_program: ctx.accounts.token_program.to_account_info(),
                 amount: evaluation_context.amount,

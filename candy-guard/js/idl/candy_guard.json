@@ -80,11 +80,6 @@
           "isSigner": true
         },
         {
-          "name": "wallet",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
           "name": "metadata",
           "isMut": true,
           "isSigner": false
@@ -380,6 +375,10 @@
           {
             "name": "amount",
             "type": "u64"
+          },
+          {
+            "name": "wallet",
+            "type": "publicKey"
           }
         ]
       }
@@ -450,6 +449,10 @@
           },
           {
             "name": "tokenMint",
+            "type": "publicKey"
+          },
+          {
+            "name": "wallet",
             "type": "publicKey"
           }
         ]
@@ -536,17 +539,6 @@
             }
           },
           {
-            "name": "liveDate",
-            "docs": [
-              "Live data guard (controls when minting is allowed)."
-            ],
-            "type": {
-              "option": {
-                "defined": "LiveDate"
-              }
-            }
-          },
-          {
             "name": "lamports",
             "docs": [
               "Lamports guard (set the price for the mint in lamports)."
@@ -565,6 +557,17 @@
             "type": {
               "option": {
                 "defined": "SplToken"
+              }
+            }
+          },
+          {
+            "name": "liveDate",
+            "docs": [
+              "Live data guard (controls when minting is allowed)."
+            ],
+            "type": {
+              "option": {
+                "defined": "LiveDate"
               }
             }
           },

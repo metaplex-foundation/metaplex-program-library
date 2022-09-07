@@ -24,12 +24,12 @@ import { nftPaymentBeet } from './generated/types/NftPayment';
  * pub struct GuardSet {
  *     /// Last instruction check and bot tax (penalty for invalid transactions).
  *     pub bot_tax: Option<BotTax>,
- *     /// Live data guard (controls when minting is allowed).
- *     pub live_date: Option<LiveDate>,
  *     /// Lamports guard (set the price for the mint in lamports).
  *     pub lamports: Option<Lamports>,
  *     /// Spl-token guard (set the price for the mint in spl-token amount).
  *     pub spl_token: Option<SplToken>,
+ *     /// Live data guard (controls when minting is allowed).
+ *     pub live_date: Option<LiveDate>,
  *     /// Third party signer guard.
  *     pub third_party_signer: Option<ThirdPartySigner>,
  *     /// Whitelist guard (whitelist mint settings).
@@ -48,9 +48,9 @@ import { nftPaymentBeet } from './generated/types/NftPayment';
 
 type Guards = {
   /* 01 */ botTaxEnabled: boolean;
-  /* 02 */ liveDateEnabled: boolean;
-  /* 01 */ lamportsEnabled: boolean;
-  /* 04 */ splTokenEnabled: boolean;
+  /* 02 */ lamportsEnabled: boolean;
+  /* 03 */ splTokenEnabled: boolean;
+  /* 04 */ liveDateEnabled: boolean;
   /* 05 */ thirdPartySignerEnabled: boolean;
   /* 06 */ whitelistEnabled: boolean;
   /* 07 */ gatekeeperEnabled: boolean;
@@ -62,16 +62,16 @@ type Guards = {
 
 const GUARDS_SIZE = {
   /* 01 */ botTax: 9,
-  /* 02 */ liveDate: 9,
-  /* 01 */ lamports: 8,
-  /* 04 */ splToken: 40,
+  /* 02 */ lamports: 40,
+  /* 03 */ splToken: 72,
+  /* 04 */ liveDate: 9,
   /* 05 */ thirdPartySigner: 32,
   /* 06 */ whitelist: 43,
   /* 07 */ gatekeeper: 33,
   /* 08 */ endSettings: 9,
   /* 09 */ allowList: 32,
   /* 10 */ mintLimit: 5,
-  /* 11 */ nftPayment: 33,
+  /* 11 */ nftPayment: 65,
 };
 const GUARDS_COUNT = 11;
 
@@ -85,9 +85,9 @@ function determineGuards(buffer: Buffer): Guards {
 
   const [
     botTaxEnabled,
-    liveDateEnabled,
     lamportsEnabled,
     splTokenEnabled,
+    liveDateEnabled,
     thirdPartySignerEnabled,
     whitelistEnabled,
     gatekeeperEnabled,
@@ -99,9 +99,9 @@ function determineGuards(buffer: Buffer): Guards {
 
   return {
     botTaxEnabled,
-    liveDateEnabled,
     lamportsEnabled,
     splTokenEnabled,
+    liveDateEnabled,
     thirdPartySignerEnabled,
     whitelistEnabled,
     gatekeeperEnabled,
@@ -161,12 +161,6 @@ function parseGuardSet(buffer: Buffer): { guardSet: GuardSet; offset: number } {
     cursor += GUARDS_SIZE.botTax;
   }
 
-  if (liveDateEnabled) {
-    const [liveDate] = liveDateBeet.deserialize(buffer, cursor);
-    data.liveDate = liveDate;
-    cursor += GUARDS_SIZE.liveDate;
-  }
-
   if (lamportsEnabled) {
     const [lamports] = lamportsBeet.deserialize(buffer, cursor);
     data.lamports = lamports;
@@ -177,6 +171,12 @@ function parseGuardSet(buffer: Buffer): { guardSet: GuardSet; offset: number } {
     const [splToken] = splTokenBeet.deserialize(buffer, cursor);
     data.splToken = splToken;
     cursor += GUARDS_SIZE.splToken;
+  }
+
+  if (liveDateEnabled) {
+    const [liveDate] = liveDateBeet.deserialize(buffer, cursor);
+    data.liveDate = liveDate;
+    cursor += GUARDS_SIZE.liveDate;
   }
 
   if (thirdPartySignerEnabled) {

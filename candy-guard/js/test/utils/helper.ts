@@ -41,7 +41,6 @@ import {
     MintLayout,
     TOKEN_PROGRAM_ID
 } from '@solana/spl-token'
-import { Account } from '@metaplex-foundation/js'
 
 export const CANDY_MACHINE_PROGRAM = PROGRAM_ID;
 export const METAPLEX_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
@@ -58,7 +57,6 @@ export class CandyMachineHelper {
 
         const accounts: InitializeInstructionAccounts = {
             candyMachine: address.publicKey,
-            wallet: payer.publicKey,
             authority: payer.publicKey,
             updateAuthority: payer.publicKey,
             payer: payer.publicKey,

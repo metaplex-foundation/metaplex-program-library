@@ -7,15 +7,17 @@ use crate::errors::CandyGuardError;
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Debug)]
 pub struct Lamports {
     pub amount: u64,
+    pub wallet: Pubkey,
 }
 
 impl Guard for Lamports {
     fn size() -> usize {
-        8 // amount
+        8    // amount
+        + 32 // wallet
     }
 
     fn mask() -> u64 {
-        0b1u64 << 2
+        0b1u64 << 1
     }
 }
 
@@ -27,6 +29,14 @@ impl Condition for Lamports {
         _guard_set: &GuardSet,
         evaluation_context: &mut EvaluationContext,
     ) -> Result<()> {
+        let wallet_index = evaluation_context.account_cursor;
+        // validates that we received all required accounts
+        let _wallet = Self::get_account_info(ctx, wallet_index)?;
+        evaluation_context
+            .indices
+            .insert("lamports_wallet", wallet_index);
+        evaluation_context.account_cursor += 1;
+
         if ctx.accounts.payer.lamports() < self.amount {
             msg!(
                 "Require {} lamports, accounts has {} lamports",
@@ -36,7 +46,7 @@ impl Condition for Lamports {
             return err!(CandyGuardError::NotEnoughSOL);
         }
 
-        evaluation_context.amount = self.amount;
+        evaluation_context.lamports = self.amount;
 
         Ok(())
     }
@@ -51,24 +61,26 @@ impl Condition for Lamports {
         // sanity check: other guards might have updated the price on the
         // evaluation context. While it would be usually to decrease the
         // value, we need to check that there is enough balance on the account
-        if ctx.accounts.payer.lamports() < evaluation_context.amount {
+        if ctx.accounts.payer.lamports() < evaluation_context.lamports {
             msg!(
                 "Require {} lamports, accounts has {} lamports",
-                evaluation_context.amount,
+                evaluation_context.lamports,
                 ctx.accounts.payer.lamports(),
             );
             return err!(CandyGuardError::NotEnoughSOL);
         }
 
+        let wallet = Self::get_account_info(ctx, evaluation_context.indices["lamports_wallet"])?;
+
         invoke(
             &system_instruction::transfer(
                 &ctx.accounts.payer.key(),
-                &ctx.accounts.wallet.key(),
-                evaluation_context.amount,
+                &wallet.key(),
+                evaluation_context.lamports,
             ),
             &[
                 ctx.accounts.payer.to_account_info(),
-                ctx.accounts.wallet.to_account_info(),
+                wallet.to_account_info(),
                 ctx.accounts.system_program.to_account_info(),
             ],
         )?;

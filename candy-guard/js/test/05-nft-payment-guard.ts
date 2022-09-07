@@ -1,11 +1,5 @@
 import test from 'tape';
-import spok from 'spok';
 import { amman, InitTransactions, killStuckProcess } from './setup';
-import { CandyGuard } from '../src/generated';
-import { DATA_OFFSET, spokSameBignum, spokSamePubkey } from './utils';
-import { BN } from 'bn.js';
-import { parseData } from '../src';
-import { initCusper } from '@metaplex-foundation/cusper';
 import { Metaplex, keypairIdentity } from '@metaplex-foundation/js'
 import { COLLECTION_METADATA } from '../../../candy-core/js/test/utils';
 
@@ -67,7 +61,7 @@ test('nft payment (missing accounts)', async (t) => {
     fstTxHandler,
     connection
   );
-  await authorityMintTx.assertError(t, /Missing expected remaining account/i);
+  await authorityMintTx.assertError(t, /Missing collection accounts/i);
 
   // mint (as a minter)
 
@@ -82,7 +76,7 @@ test('nft payment (missing accounts)', async (t) => {
     minterHandler,
     minterConnection
   );
-  await minterMintTx.assertError(t, /Missing expected remaining account/i);
+  await minterMintTx.assertError(t, /Missing collection accounts/i);
 
   /*
   const data = {
