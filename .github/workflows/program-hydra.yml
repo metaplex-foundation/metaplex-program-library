@@ -67,7 +67,6 @@ jobs:
           working-directory: ./hydra/program
 
       # Build deps
-      - uses: ./.github/actions/build-metaplex
       - uses: ./.github/actions/build-token-metadata
 
       # Run test
