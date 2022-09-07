@@ -126,7 +126,7 @@ pub trait TokenMetadataAccount: BorshDeserialize {
 
     fn from_account_info(a: &AccountInfo) -> Result<Self, ProgramError>
 where {
-        let ua: Self = Self::safe_deserialize(&a.data.borrow_mut())
+        let ua = Self::safe_deserialize(&a.data.borrow_mut())
             .map_err(|_| MetadataError::DataTypeMismatch)?;
 
         // Check that this is a `token-metadata` owned account.
