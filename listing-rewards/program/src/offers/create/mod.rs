@@ -2,7 +2,7 @@ use crate::{
     constants::{OFFER, REWARD_CENTER},
     errors::ListingRewardsError,
     state::{Offer, RewardCenter},
-    MetadataAccount,
+    MetadataAccount, assertions::assert_offer_init_eligibility,
 };
 use anchor_lang::prelude::{Result, *};
 use anchor_spl::token::{Mint, Token, TokenAccount};
@@ -29,7 +29,7 @@ pub struct CreateOffer<'info> {
 
     /// The Offer config account used for bids
     #[account(
-        init,
+        init_if_needed,
         payer = wallet,
         space = Offer::size(),
         seeds = [
@@ -162,10 +162,13 @@ pub fn handler(
     let auction_house = &ctx.accounts.auction_house;
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
-    let auction_house_key = auction_house.key();
-
     let offer = &mut ctx.accounts.offer;
 
+    assert_offer_init_eligibility(&offer)?;
+    
+    let auction_house_key = auction_house.key();
+
+    offer.is_initialized = true;
     offer.reward_center = reward_center.key();
     offer.buyer = wallet.key();
     offer.metadata = metadata.key();
@@ -177,6 +180,7 @@ pub fn handler(
         .ok_or(ListingRewardsError::BumpSeedNotInHashMap)?;
     offer.created_at = clock.unix_timestamp;
     offer.canceled_at = None;
+    offer.purchased_at = None;
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[
         REWARD_CENTER.as_bytes(),

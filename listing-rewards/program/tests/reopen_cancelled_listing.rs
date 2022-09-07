@@ -17,8 +17,8 @@ use mpl_listing_rewards::{
 };
 
 use mpl_listing_rewards_sdk::{
-    accounts::{CreateListingAccounts, CreateOfferAccounts, UpdateOfferAccounts},
-    args::{CreateListingData, CreateOfferData, UpdateOfferData},
+    accounts::{CancelListingAccounts, *},
+    args::{CancelListingData, *},
     *,
 };
 
@@ -37,7 +37,7 @@ use spl_token::{
 };
 
 #[tokio::test]
-async fn create_offer_success() {
+async fn reopen_cancelled_listing_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -71,6 +71,7 @@ async fn create_offer_success() {
 
     let (auction_house, _) = find_auction_house_address(&wallet, &mint);
     let (reward_center, _) = find_reward_center_address(&auction_house);
+
     let (listing, _) =
         find_listing_address(&metadata_owner_address, &metadata_address, &reward_center);
 
@@ -258,76 +259,54 @@ async fn create_offer_success() {
 
     assert!(tx_response.is_ok());
 
-    // CREATE OFFER TEST
+    // CANCEL LISTING TEST
 
-    let buyer = Keypair::new();
-    let buyer_pubkey = &buyer.pubkey();
-    airdrop(&mut context, buyer_pubkey, listing_rewards_test::TEN_SOL)
-        .await
-        .unwrap();
-
-    let create_offer_accounts = CreateOfferAccounts {
-        wallet: *buyer_pubkey,
-        transfer_authority: *buyer_pubkey,
-        payment_account: *buyer_pubkey,
+    let cancel_listing_accounts = CancelListingAccounts {
+        wallet: metadata_owner_address,
+        listing,
+        reward_center,
+        token_account,
+        metadata: metadata_address,
+        authority: wallet,
+        auction_house,
         treasury_mint: mint,
         token_mint: metadata_mint_address,
-        auction_house,
-        reward_center,
-        token_account,
-        metadata: metadata_address,
-        authority: wallet,
     };
 
-    let create_offer_params = CreateOfferData {
+    let cancel_listing_params = CancelListingData {
+        price: u64::MAX,
         token_size: 1,
-        buyer_price: listing_rewards_test::ONE_SOL,
     };
 
-    let create_offer_ix = create_offer(create_offer_accounts, create_offer_params);
+    let cancel_listing_ix = cancel_listing(cancel_listing_accounts, cancel_listing_params);
 
-    // UPDATE OFFER TEST
+    // REOPEN LISTING TEST
 
-    let update_offer_inc_accounts = UpdateOfferAccounts {
-        wallet: *buyer_pubkey,
-        transfer_authority: *buyer_pubkey,
-        buyer_token_account: *buyer_pubkey,
-        treasury_mint: mint,
-        auction_house,
+    let reopen_listing_accounts = CreateListingAccounts {
+        wallet: metadata_owner.pubkey(),
+        listing,
         reward_center,
         token_account,
-        metadata: metadata_address,
+        metadata: metadata.pubkey,
         authority: wallet,
-    };
-
-    let update_offer_inc_params = UpdateOfferData {
-        new_buyer_price: listing_rewards_test::ONE_SOL * 2,
-    };
-
-    let update_offer_dec_accounts = UpdateOfferAccounts {
-        wallet: *buyer_pubkey,
-        transfer_authority: *buyer_pubkey,
-        buyer_token_account: *buyer_pubkey,
-        treasury_mint: mint,
         auction_house,
-        reward_center,
-        token_account,
-        metadata: metadata_address,
-        authority: wallet,
+        seller_trade_state,
+        free_seller_trade_state,
     };
 
-    let update_offer_dec_params = UpdateOfferData {
-        new_buyer_price: listing_rewards_test::ONE_SOL,
+    let reopen_listing_params = CreateListingData {
+        price: listing_rewards_test::ONE_SOL,
+        token_size: 1,
+        trade_state_bump,
+        free_trade_state_bump,
     };
 
-    let update_offer_inc_ix = update_offer(update_offer_inc_accounts, update_offer_inc_params);
-
-    let update_offer_dec_ix = update_offer(update_offer_dec_accounts, update_offer_dec_params);
+    let reopen_listing_ix = create_listing(reopen_listing_accounts, reopen_listing_params);
 
     let tx = Transaction::new_signed_with_payer(
-        &[create_offer_ix, update_offer_inc_ix, update_offer_dec_ix],
-        Some(buyer_pubkey),
-        &[&buyer],
+        &[cancel_listing_ix, reopen_listing_ix],
+        Some(&metadata_owner_address),
+        &[&metadata_owner],
         context.last_blockhash,
     );
 

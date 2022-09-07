@@ -29,6 +29,7 @@ pub struct CancelListing<'info> {
 
     /// The Listing Config used for listing settings
     #[account(
+        mut,
         seeds = [
             LISTING.as_bytes(),
             wallet.key().as_ref(),
@@ -120,9 +121,9 @@ pub fn handler(
     let reward_center = &ctx.accounts.reward_center;
     let auction_house = &ctx.accounts.auction_house;
     let clock = Clock::get()?;
-    let auction_house_key = auction_house.key();
-
     let listing = &mut ctx.accounts.listing;
+    
+    let auction_house_key = auction_house.key();
 
     listing.canceled_at = Some(clock.unix_timestamp);
 

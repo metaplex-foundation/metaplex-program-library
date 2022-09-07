@@ -7,7 +7,8 @@ use listing_rewards_test::fixtures::metadata;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::Signer, transaction::Transaction};
 use mpl_auction_house::{
     pda::{
-        find_auction_house_address, find_auctioneer_trade_state_address, find_trade_state_address,
+        find_auction_house_address, find_auction_house_fee_account_address,
+        find_auctioneer_trade_state_address, find_trade_state_address,
     },
     AuthorityScope,
 };
@@ -17,8 +18,8 @@ use mpl_listing_rewards::{
 };
 
 use mpl_listing_rewards_sdk::{
-    accounts::{CreateListingAccounts, CreateOfferAccounts, UpdateOfferAccounts},
-    args::{CreateListingData, CreateOfferData, UpdateOfferData},
+    accounts::{ExecuteSaleAccounts, *},
+    args::{ExecuteSaleData, *},
     *,
 };
 
@@ -29,15 +30,15 @@ use std::str::FromStr;
 
 use mpl_token_metadata::state::Collection;
 
-use spl_associated_token_account::get_associated_token_address;
+use spl_associated_token_account::{create_associated_token_account, get_associated_token_address};
 use spl_token::{
-    instruction::{initialize_mint, mint_to_checked},
+    instruction::{initialize_mint, mint_to_checked, transfer_checked as token_transfer},
     native_mint,
     state::Mint,
 };
 
 #[tokio::test]
-async fn create_offer_success() {
+async fn reopen_purchased_listing_success() {
     let program = listing_rewards_test::setup_program();
     let mut context = program.start_with_context().await;
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -286,48 +287,137 @@ async fn create_offer_success() {
 
     let create_offer_ix = create_offer(create_offer_accounts, create_offer_params);
 
-    // UPDATE OFFER TEST
-
-    let update_offer_inc_accounts = UpdateOfferAccounts {
-        wallet: *buyer_pubkey,
-        transfer_authority: *buyer_pubkey,
-        buyer_token_account: *buyer_pubkey,
-        treasury_mint: mint,
-        auction_house,
-        reward_center,
-        token_account,
-        metadata: metadata_address,
-        authority: wallet,
-    };
-
-    let update_offer_inc_params = UpdateOfferData {
-        new_buyer_price: listing_rewards_test::ONE_SOL * 2,
-    };
-
-    let update_offer_dec_accounts = UpdateOfferAccounts {
-        wallet: *buyer_pubkey,
-        transfer_authority: *buyer_pubkey,
-        buyer_token_account: *buyer_pubkey,
-        treasury_mint: mint,
-        auction_house,
-        reward_center,
-        token_account,
-        metadata: metadata_address,
-        authority: wallet,
-    };
-
-    let update_offer_dec_params = UpdateOfferData {
-        new_buyer_price: listing_rewards_test::ONE_SOL,
-    };
-
-    let update_offer_inc_ix = update_offer(update_offer_inc_accounts, update_offer_inc_params);
-
-    let update_offer_dec_ix = update_offer(update_offer_dec_accounts, update_offer_dec_params);
-
     let tx = Transaction::new_signed_with_payer(
-        &[create_offer_ix, update_offer_inc_ix, update_offer_dec_ix],
+        &[create_offer_ix],
         Some(buyer_pubkey),
         &[&buyer],
+        context.last_blockhash,
+    );
+
+    let tx_response = context.banks_client.process_transaction(tx).await;
+
+    assert!(tx_response.is_ok());
+
+    context.warp_to_slot(120 * 400).unwrap();
+
+    // EXECUTE SALE TEST
+
+    let auction_house_fee_account = &find_auction_house_fee_account_address(&auction_house).0;
+
+    airdrop(
+        &mut context,
+        auction_house_fee_account,
+        listing_rewards_test::ONE_SOL,
+    )
+    .await
+    .unwrap();
+
+    // Creating Associated Token accounts
+    let create_buyer_reward_token_ix =
+        create_associated_token_account(&wallet, &buyer_pubkey, &reward_mint_pubkey);
+
+    let create_seller_reward_token_ix =
+        create_associated_token_account(&wallet, &metadata_owner_address, &reward_mint_pubkey);
+
+    let buyer_token_account = get_associated_token_address(&buyer.pubkey(), &metadata_mint_address);
+
+    let execute_sale_accounts = ExecuteSaleAccounts {
+        auction_house,
+        token_account,
+        buyer: buyer.pubkey(),
+        seller: metadata_owner.pubkey(),
+        authority: wallet,
+        token_mint: metadata_mint_address,
+        treasury_mint: mint,
+        buyer_receipt_token_account: buyer_token_account,
+        seller_payment_receipt_account: metadata_owner.pubkey(),
+        metadata: metadata_address,
+    };
+
+    let execute_sale_params = ExecuteSaleData {
+        price: listing_rewards_test::ONE_SOL,
+        token_size: 1,
+        reward_mint: reward_mint_pubkey,
+    };
+
+    let execute_sale_ix = execute_sale(execute_sale_accounts, execute_sale_params);
+
+    let tx = Transaction::new_signed_with_payer(
+        &[
+            create_buyer_reward_token_ix,
+            create_seller_reward_token_ix,
+            execute_sale_ix,
+        ],
+        Some(&wallet),
+        &[&context.payer],
+        context.last_blockhash,
+    );
+
+    let tx_response = context.banks_client.process_transaction(tx).await;
+
+    assert!(tx_response.is_ok());
+
+    // Resending NFT to seller
+    let resend_nft_to_seller_ix = token_transfer(
+        token_program,
+        &buyer_token_account,
+        &metadata_mint_address,
+        &token_account,
+        buyer_pubkey,
+        &[],
+        1,
+        0,
+    )
+    .unwrap();
+
+    // REOPENING LISTING TEST
+    let reopen_listing_accounts = CreateListingAccounts {
+        wallet: metadata_owner.pubkey(),
+        listing,
+        reward_center,
+        token_account,
+        metadata: metadata.pubkey,
+        authority: wallet,
+        auction_house,
+        seller_trade_state,
+        free_seller_trade_state,
+    };
+
+    let reopen_listing_params = CreateListingData {
+        price: listing_rewards_test::ONE_SOL,
+        token_size: 1,
+        trade_state_bump,
+        free_trade_state_bump,
+    };
+
+    let reopen_listing_ix = create_listing(reopen_listing_accounts, reopen_listing_params);
+
+    // REOPEN PURCHASED OFFER TEST
+
+    let reopen_offer_accounts = CreateOfferAccounts {
+        wallet: *buyer_pubkey,
+        transfer_authority: *buyer_pubkey,
+        payment_account: *buyer_pubkey,
+        treasury_mint: mint,
+        token_mint: metadata_mint_address,
+        auction_house,
+        reward_center,
+        token_account,
+        metadata: metadata_address,
+        authority: wallet,
+    };
+
+    let reopen_offer_params = CreateOfferData {
+        token_size: 1,
+        buyer_price: listing_rewards_test::ONE_SOL,
+    };
+
+    let reopen_offer_ix = create_offer(reopen_offer_accounts, reopen_offer_params);
+
+    let tx = Transaction::new_signed_with_payer(
+        &[resend_nft_to_seller_ix, reopen_listing_ix, reopen_offer_ix],
+        Some(buyer_pubkey),
+        &[&buyer, &metadata_owner],
         context.last_blockhash,
     );
 

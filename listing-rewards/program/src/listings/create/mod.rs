@@ -6,7 +6,7 @@ use crate::{
     constants::{LISTING, REWARD_CENTER},
     errors::ListingRewardsError,
     state::{Listing, RewardCenter},
-    MetadataAccount,
+    MetadataAccount, assertions::assert_listing_init_eligibility,
 };
 use mpl_auction_house::{
     constants::{AUCTIONEER, FEE_PAYER, PREFIX, SIGNER},
@@ -35,7 +35,7 @@ pub struct CreateListing<'info> {
     // Accounts used for Auctioneer
     /// The Listing Config used for listing settings
     #[account(
-        init,
+        init_if_needed,
         payer = wallet,
         space = Listing::size(),
         seeds = [
@@ -188,10 +188,12 @@ pub fn handler(
     let auction_house = &ctx.accounts.auction_house;
     let wallet = &ctx.accounts.wallet;
     let clock = Clock::get()?;
+    let listing = &mut ctx.accounts.listing;
     let auction_house_key = auction_house.key();
 
-    let listing = &mut ctx.accounts.listing;
+    assert_listing_init_eligibility(&listing)?;
 
+    listing.is_initialized = true;
     listing.reward_center = reward_center.key();
     listing.seller = wallet.key();
     listing.metadata = metadata.key();
@@ -203,6 +205,7 @@ pub fn handler(
         .ok_or(ListingRewardsError::BumpSeedNotInHashMap)?;
     listing.created_at = clock.unix_timestamp;
     listing.canceled_at = None;
+    listing.purchased_at = None;
     listing.reward_redeemed_at = None;
 
     let reward_center_signer_seeds: &[&[&[u8]]] = &[&[

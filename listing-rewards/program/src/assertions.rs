@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{
     errors::ListingRewardsError,
-    state::{Listing, RewardCenter},
+    state::{Listing, Offer, RewardCenter},
 };
 
 pub fn assert_listing_reward_redemption_eligibility(
@@ -23,4 +23,19 @@ pub fn assert_listing_reward_redemption_eligibility(
     }
 
     err!(ListingRewardsError::IneligibaleForRewards)
+}
+
+pub fn assert_listing_init_eligibility(listing: &Account<Listing>) -> Result<()> {
+    if listing.is_initialized && (listing.canceled_at.is_none() && listing.purchased_at.is_none()) {
+        return err!(ListingRewardsError::ListingAlreadyExists);
+    }
+
+    Ok(())
+}
+
+pub fn assert_offer_init_eligibility(offer: &Account<Offer>) -> Result<()> {
+    if offer.is_initialized && (offer.canceled_at.is_none() && offer.purchased_at.is_none()) {
+        return err!(ListingRewardsError::OfferAlreadyExists);
+    }
+    Ok(())
 }

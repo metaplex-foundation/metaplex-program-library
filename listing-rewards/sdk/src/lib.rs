@@ -324,7 +324,6 @@ pub fn update_offer(
         token_account,
         transfer_authority,
         treasury_mint,
-        token_mint,
         wallet,
     }: UpdateOfferAccounts,
     UpdateOfferData { new_buyer_price }: UpdateOfferData,
