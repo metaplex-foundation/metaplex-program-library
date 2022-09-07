@@ -118,7 +118,7 @@ pub fn handle_mint_nft<'info>(
         return err!(CandyError::MetadataAccountMustBeEmpty);
     }
 
-    if get_expected_remaining_accounts_count(candy_machine) < ctx.remaining_accounts.len() {
+    if get_expected_remaining_accounts_count(candy_machine) > ctx.remaining_accounts.len() {
         punish_bots(
             CandyError::IncorrectRemainingAccountsLen,
             payer.to_account_info(),
