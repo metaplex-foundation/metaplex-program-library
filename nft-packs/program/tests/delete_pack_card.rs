@@ -203,7 +203,7 @@ async fn fail_invalid_state() {
         context.last_blockhash,
     );
 
-    context.banks_client.process_transaction(tx).await.unwrap();
+    unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
     voucher_edition
         .create(
@@ -239,9 +239,10 @@ async fn fail_invalid_state() {
             &payer_pubkey,
             &fake_keypair.pubkey(),
         )
-        .await;
+        .await
+        .unwrap_err();
 
-    assert_custom_error!(result.unwrap_err(), NFTPacksError::WrongPackState, 0);
+    assert_custom_error!(result, NFTPacksError::WrongPackState, 0);
 }
 
 #[tokio::test]

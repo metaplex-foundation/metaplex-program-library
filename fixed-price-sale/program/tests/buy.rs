@@ -7,7 +7,7 @@ mod buy {
         utils::{
             helpers::{
                 airdrop, create_collection, create_master_nft, create_mint, create_token_account,
-                mint_to,
+                mint_to, unwrap_ignoring_io_error_in_ci,
             },
             setup_functions::{setup_selling_resource, setup_store},
         },
@@ -415,7 +415,7 @@ mod buy {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -556,7 +556,7 @@ mod buy {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 3).unwrap();
@@ -1539,7 +1539,7 @@ mod buy {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
         let clock = context.banks_client.get_sysvar::<Clock>().await.unwrap();
         context.warp_to_slot(clock.slot + 1500).unwrap();
@@ -1674,7 +1674,7 @@ mod buy {
             context.last_blockhash,
         );
 
-        context.banks_client.process_transaction(tx).await.unwrap();
+        unwrap_ignoring_io_error_in_ci(context.banks_client.process_transaction(tx).await);
 
         // Buy
         let accounts = mpl_fixed_price_sale_accounts::Buy {

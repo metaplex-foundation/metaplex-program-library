@@ -1740,22 +1740,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "metaplex-token-vault-test-client"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "borsh 0.9.3",
- "clap",
- "mpl-token-vault 0.1.1",
- "solana-clap-utils",
- "solana-cli-config",
- "solana-client",
- "solana-program",
- "solana-sdk",
- "spl-token",
-]
-
-[[package]]
 name = "mime"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1796,15 +1780,14 @@ dependencies = [
 [[package]]
 name = "mpl-auction"
 version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8d763de66c9f224482208e621ef0e8e28056e0aeed2eb0ba796dead291a4985"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "mpl-testing-utils",
  "num-derive",
  "num-traits",
  "solana-program",
- "solana-program-test",
- "solana-sdk",
  "spl-token",
  "thiserror",
 ]
@@ -1831,7 +1814,7 @@ dependencies = [
  "anchor-client",
  "anchor-lang",
  "anchor-spl",
- "getrandom 0.2.4",
+ "mpl-testing-utils",
  "mpl-token-metadata",
  "solana-program",
  "solana-program-test",
@@ -1843,17 +1826,17 @@ dependencies = [
 [[package]]
 name = "mpl-metaplex"
 version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "426eee9c8c553b340db442bb3b3299ef97203c7a370a9cf819dbe1d3c7356a29"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
  "mpl-auction 0.0.2",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.1",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "solana-program",
- "solana-program-test",
- "solana-sdk",
  "spl-associated-token-account",
  "spl-token",
  "thiserror",
@@ -1885,14 +1868,14 @@ dependencies = [
  "arrayref",
  "borsh 0.9.3",
  "getrandom 0.2.4",
- "mpl-metaplex 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mpl-metaplex",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
  "num_enum",
  "rand 0.8.5",
- "shank 0.0.8",
+ "shank",
  "solana-program",
  "solana-program-test",
  "solana-sdk",
@@ -1909,7 +1892,7 @@ dependencies = [
  "borsh 0.9.3",
  "getrandom 0.2.4",
  "mpl-token-metadata",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault",
  "num",
  "num-derive",
  "num-traits",
@@ -1947,10 +1930,10 @@ checksum = "741990cd07cb31d009a345806f30ace8eab99c063cd9440eba8d3df7be2a6988"
 dependencies = [
  "arrayref",
  "borsh 0.9.3",
- "mpl-token-vault 0.1.0",
+ "mpl-token-vault",
  "num-derive",
  "num-traits",
- "shank 0.0.8",
+ "shank",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
@@ -1966,19 +1949,6 @@ dependencies = [
  "borsh 0.9.3",
  "num-derive",
  "num-traits",
- "solana-program",
- "spl-token",
- "thiserror",
-]
-
-[[package]]
-name = "mpl-token-vault"
-version = "0.1.1"
-dependencies = [
- "borsh 0.9.3",
- "num-derive",
- "num-traits",
- "shank 0.0.2",
  "solana-program",
  "spl-token",
  "thiserror",
@@ -2821,32 +2791,11 @@ dependencies = [
 
 [[package]]
 name = "shank"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9cfd616747d1ce69f15e62ea30589e393115e4b884d7c1cbceb751b8753e95d"
-dependencies = [
- "shank_macro 0.0.2",
-]
-
-[[package]]
-name = "shank"
 version = "0.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2935c06d5a141ad2854622a014e30c5eeaa40096667df6bdd682dba9f8f81819"
 dependencies = [
- "shank_macro 0.0.8",
-]
-
-[[package]]
-name = "shank_macro"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a27d3b536acc60a3ff359181d3a912d10b91539f85909447ca7d33ea0a91d56"
-dependencies = [
- "proc-macro2 1.0.36",
- "quote 1.0.15",
- "shank_macro_impl 0.0.2",
- "syn 1.0.86",
+ "shank_macro",
 ]
 
 [[package]]
@@ -2857,20 +2806,7 @@ checksum = "6ab8a1eb550845e36c88007f4c00175eeeb436d2fc6c70d05207a338cba7519f"
 dependencies = [
  "proc-macro2 1.0.36",
  "quote 1.0.15",
- "shank_macro_impl 0.0.8",
- "syn 1.0.86",
-]
-
-[[package]]
-name = "shank_macro_impl"
-version = "0.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7466a15559fd11aeb5fe12a700923f75bb4eaa7bc90962f2bd822708698ab5d"
-dependencies = [
- "anyhow",
- "proc-macro2 1.0.36",
- "quote 1.0.15",
- "serde",
+ "shank_macro_impl",
  "syn 1.0.86",
 ]
 
