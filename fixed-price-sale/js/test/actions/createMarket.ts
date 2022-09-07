@@ -70,9 +70,11 @@ export const createMarket = async ({
 
   const market = Keypair.generate();
 
-  const remainingAccounts: web3.AccountMeta[] = [
-    { pubkey: collectionMint!, isWritable: true, isSigner: false },
-  ];
+  const remainingAccounts: web3.AccountMeta[] = [];
+
+  if (collectionMint) {
+    remainingAccounts.push({ pubkey: collectionMint!, isWritable: true, isSigner: false });
+  }
 
   const instruction = createCreateMarketInstruction(
     {

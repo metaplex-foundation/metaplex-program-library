@@ -24,10 +24,10 @@ use solana_program::clock::Clock;
 use solana_program_test::*;
 use solana_sdk::{
     account::Account, program_pack::Pack, pubkey::Pubkey, signature::Signer,
-    signer::keypair::Keypair, system_instruction, transaction::Transaction, transport,
+    signer::keypair::Keypair, system_instruction, transaction::Transaction, transport::{self, TransportError},
 };
 use spl_token::state::Mint;
-use std::time;
+use std::{time, env};
 pub use user::*;
 pub use vault::TestVault;
 
@@ -257,4 +257,28 @@ pub async fn create_store(
     context.banks_client.process_transaction(tx).await.unwrap();
 
     Ok(store_key)
+}
+
+/// See `assert_error_ignoring_io_error_in_ci` for more details regarding this workaround
+pub fn unwrap_ignoring_io_error_in_ci(result: Result<(), TransportError>) {
+    match result {
+        Ok(()) => (),
+        Err(error) => match error {
+            TransportError::IoError(err) if env::var("CI").is_ok() => match err.kind() {
+                std::io::ErrorKind::Other
+                    if &err.to_string() == "the request exceeded its deadline" =>
+                {
+                    eprintln!("Encountered {:#?} error", err);
+                    eprintln!("However since we are running in CI this is acceptable and we can ignore it");
+                }
+                _ => {
+                    eprintln!("Encountered {:#?} error ({})", err, err);
+                    panic!("Encountered unknown IoError");
+                }
+            },
+            _ => {
+                panic!("Encountered: {:#?}", error);
+            }
+        },
+    }
 }
