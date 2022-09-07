@@ -1856,7 +1856,6 @@ version = "0.0.2"
 dependencies = [
  "anchor-client",
  "borsh 0.9.3",
- "getrandom 0.2.4",
  "mpl-token-metadata",
  "mpl-token-vault",
  "num",
