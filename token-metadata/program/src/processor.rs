@@ -159,7 +159,7 @@ pub fn process_instruction<'a>(
             msg!("Instruction: Convert Master Edition V1 to V2");
             process_convert_master_edition_v1_to_v2(program_id, accounts)
         }
-        MetadataInstruction::DeprecatedMintNewEditionFromMasterEditionViaVaultProxy(args) => {
+        MetadataInstruction::MintNewEditionFromMasterEditionViaVaultProxy(args) => {
             msg!("Instruction: Mint New Edition from Master Edition Via Vault Proxy, deprecated as of 1.4.0.");
             process_deprecated_mint_new_edition_from_master_edition_via_vault_proxy(
                 program_id,
